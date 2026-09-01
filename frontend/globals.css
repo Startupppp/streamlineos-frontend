@@ -171,8 +171,8 @@
   --secondary-foreground: #f4f4f5;
   --accent: #202023; /* dark surface wash â€” neutral for dark mode hover */
   --accent-foreground: #f4f4f5;
-  --destructive: #ef4444;
-  --destructive-foreground: #f4f4f5;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
 
   /* â”€â”€â”€ Charts (slightly punchier in dark for legibility) â”€â”€â”€ */
   --chart-1: #3b82f6;

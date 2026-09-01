@@ -40,7 +40,7 @@ export const WorkflowCard = memo(function WorkflowCard({
     <Card
       className={cn(
         "bg-card rounded-xl border border-border shadow-sm border-l-4 transition-all duration-200 hover:shadow-md h-full",
-        STATUS_LEFT_BORDER[workflow.status]
+        STATUS_LEFT_BORDER[workflow.status],
       )}
     >
       <CardContent className="p-4">
@@ -53,7 +53,7 @@ export const WorkflowCard = memo(function WorkflowCard({
               <span
                 className={cn(
                   "inline-flex items-center px-2 py-0.5 rounded-full text-micro font-medium capitalize",
-                  STATUS_BADGE_CLASS[workflow.status]
+                  STATUS_BADGE_CLASS[workflow.status],
                 )}
               >
                 {workflow.status}
@@ -78,15 +78,12 @@ export const WorkflowCard = memo(function WorkflowCard({
           </div>
 
           <div className="flex items-center gap-0.5 shrink-0">
-            <Button
-              asChild
-              size="icon"
-              variant="ghost"
-              className="w-7"
-              aria-label="Edit workflow in builder"
-            >
-              <Link href={`/workflows/${workflow.id}/builder`}>
-                <Pencil className="h-3.5 w-3.5" />
+            <Button asChild size="icon" variant="ghost" className="w-7">
+              <Link
+                href={`/workflows/${workflow.id}/builder`}
+                aria-label="Edit workflow in builder"
+              >
+                <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
               </Link>
             </Button>
             <AnimatedIconButton
