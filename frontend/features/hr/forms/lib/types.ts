@@ -95,15 +95,13 @@ export interface SubmitHrFormPayload {
 export interface HrFormListResponse {
   data: HrForm[];
   total: number;
-  page: number;
-  limit: number;
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 export interface HrFormSubmissionListResponse {
   data: HrFormSubmission[];
   total: number;
-  page: number;
-  limit: number;
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 export interface HrCustomFieldSettings {

@@ -19,6 +19,7 @@ import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCan } from "@/hooks/api/access";
@@ -113,20 +114,22 @@ export default function HrTemplatesPage() {
   const [status, setStatus] = useState<HrTemplateStatus | "all">(ALL_SENTINEL);
   const [upsertOpen, setUpsertOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<HrTemplateListItem | undefined>(undefined);
-  const [page, setPage] = useState(1);
+  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
+  const page = cursorHistory.length;
+  const cursor = cursorHistory.at(-1);
 
   const params = useMemo(
     () => ({
       ...(kind !== ALL_SENTINEL && { kind }),
       ...(status !== ALL_SENTINEL && { status }),
       ...(debouncedSearch.trim() && { search: debouncedSearch.trim() }),
-      page,
+      cursor,
       limit: 50,
     }),
-    [kind, status, debouncedSearch, page],
+    [kind, status, debouncedSearch, cursor],
   );
 
-  const { data, isLoading, isError } = useHrTemplates(params);
+  const { data, isLoading, isFetching, isError } = useHrTemplates(params);
   const seedDefaults = useSeedHrTemplateDefaults();
 
   const handleOpenCreate = useCallback(() => {
@@ -154,8 +157,17 @@ export default function HrTemplatesPage() {
 
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
-    setPage(1);
+    setCursorHistory([undefined]);
   }, []);
+
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((history) => history.length > 1 ? history.slice(0, -1) : history);
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = data?.pagination.nextCursor;
+    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
+  }, [data?.pagination.nextCursor]);
 
   const templates = data?.data ?? [];
   const total = data?.total ?? 0;
@@ -207,7 +219,7 @@ export default function HrTemplatesPage() {
                 onValueChange={handleSearchChange}
                />
             </div>
-            <Select value={kind} onValueChange={(v) => { setKind(v as HrTemplateKind | "all"); setPage(1); }}>
+            <Select value={kind} onValueChange={(v) => { setKind(v as HrTemplateKind | "all"); setCursorHistory([undefined]); }}>
               <SelectTrigger className={cn("w-44", FILTER_SELECT_TRIGGER)}>
                 <SelectValue placeholder="All Kinds" />
               </SelectTrigger>
@@ -218,7 +230,7 @@ export default function HrTemplatesPage() {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={status} onValueChange={(v) => { setStatus(v as HrTemplateStatus | "all"); setPage(1); }}>
+            <Select value={status} onValueChange={(v) => { setStatus(v as HrTemplateStatus | "all"); setCursorHistory([undefined]); }}>
               <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
@@ -241,17 +253,6 @@ export default function HrTemplatesPage() {
           columns={buildTemplateColumns(handleOpenEdit)}
           getRowKey={(t) => t.id}
           isLoading={isLoading}
-          pagination={
-            total > 50
-              ? {
-                  mode: "server",
-                  page,
-                  pageSize: 50,
-                  total,
-                  onPageChange: setPage,
-                }
-              : undefined
-          }
           emptyState={
             isError ? (
               <EmptyState
@@ -269,6 +270,16 @@ export default function HrTemplatesPage() {
             )
           }
         />
+        {data && (page > 1 || data.pagination.hasMore) ? (
+          <CursorPageControls
+            page={page}
+            hasNext={data.pagination.hasMore}
+            disabled={isFetching}
+            onPrevious={handlePreviousPage}
+            onNext={handleNextPage}
+            className="mt-3"
+          />
+        ) : null}
       </PageWrapper>
 
       <TemplateUpsertSheet

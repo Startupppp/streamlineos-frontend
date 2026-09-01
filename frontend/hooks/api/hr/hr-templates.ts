@@ -17,7 +17,7 @@ interface ListParams {
   kind?: HrTemplateKind;
   status?: HrTemplateStatus;
   search?: string;
-  page?: number;
+  cursor?: string;
   limit?: number;
 }
 

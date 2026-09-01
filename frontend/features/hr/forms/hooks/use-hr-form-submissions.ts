@@ -16,13 +16,13 @@ function submissionsKey(formId: number, params?: Record<string, unknown>) {
 
 export function useHrFormSubmissions(
   formId: number,
-  params?: { page?: number; limit?: number; status?: HrFormSubmissionStatus },
+  params?: { cursor?: string; limit?: number; status?: HrFormSubmissionStatus },
 ) {
   return useQuery<HrFormSubmissionListResponse>({
     queryKey: submissionsKey(formId, params),
     queryFn: () => {
       const p: Record<string, unknown> = {};
-      if (params?.page) p["page"] = params.page;
+      if (params?.cursor) p["cursor"] = params.cursor;
       if (params?.limit) p["limit"] = params.limit;
       if (params?.status) p["status"] = params.status;
       return apiClient.get<HrFormSubmissionListResponse>(`/hr/forms/${formId}/submissions`, p);

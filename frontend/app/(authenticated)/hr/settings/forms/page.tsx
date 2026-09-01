@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -14,12 +14,16 @@ import { FormsDataTable } from "@/features/hr/forms/components/forms-data-table"
 import { FormBuilder } from "@/features/hr/forms/components/form-builder";
 import { useHrForms, useCreateHrForm } from "@/features/hr/forms/hooks/use-hr-forms";
 import type { CreateHrFormPayload } from "@/features/hr/forms/lib/types";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 
 export default function HrFormsSettingsPage() {
   const canView = useCan("hr:forms:view");
   const canManage = useCan("hr:forms:manage");
   const [open, setOpen] = useState(false);
-  const { data, isLoading, isError, refetch } = useHrForms();
+  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
+  const page = cursorHistory.length;
+  const cursor = cursorHistory.at(-1);
+  const { data, isLoading, isFetching, isError, refetch } = useHrForms({ cursor, limit: 20 });
   const create = useCreateHrForm();
 
   async function handleCreate(payload: CreateHrFormPayload) {
@@ -39,6 +43,15 @@ export default function HrFormsSettingsPage() {
   function handleCreateClick() {
     setOpen(true);
   }
+
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((history) => history.length > 1 ? history.slice(0, -1) : history);
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = data?.pagination.nextCursor;
+    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
+  }, [data?.pagination.nextCursor]);
 
   if (!canView) {
     return (
@@ -81,6 +94,16 @@ export default function HrFormsSettingsPage() {
         ) : (
           <div className="flex flex-1 min-h-0 flex-col pt-2">
             <FormsDataTable forms={data?.data ?? []} />
+            {data && (page > 1 || data.pagination.hasMore) ? (
+              <CursorPageControls
+                page={page}
+                hasNext={data.pagination.hasMore}
+                disabled={isFetching}
+                onPrevious={handlePreviousPage}
+                onNext={handleNextPage}
+                className="mt-3"
+              />
+            ) : null}
           </div>
         )}
       </PageWrapper>

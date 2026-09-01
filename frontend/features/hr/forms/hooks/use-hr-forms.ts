@@ -15,14 +15,14 @@ function formKeys(params?: Record<string, unknown>) {
   return params ? [...FORMS_KEY, params] : FORMS_KEY;
 }
 
-export function useHrForms(params?: { status?: string; audience?: string; page?: number; limit?: number }) {
+export function useHrForms(params?: { status?: string; audience?: string; cursor?: string; limit?: number }) {
   return useQuery<HrFormListResponse>({
     queryKey: formKeys(params),
     queryFn: () => {
       const p: Record<string, unknown> = {};
       if (params?.status) p["status"] = params.status;
       if (params?.audience) p["audience"] = params.audience;
-      if (params?.page) p["page"] = params.page;
+      if (params?.cursor) p["cursor"] = params.cursor;
       if (params?.limit) p["limit"] = params.limit;
       return apiClient.get<HrFormListResponse>("/hr/forms", p);
     },
