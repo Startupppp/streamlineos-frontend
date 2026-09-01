@@ -133,12 +133,29 @@ Targets, each equal to the value its alert actually fires on and asserted equal 
 named humans and an on-call schedule is the repository owner's decision, not a code artifact. The
 vocabulary is enforced in one place (`SLO_OWNERS`) so the mapping has exactly one place to land.
 
-**Module objectives are alerted, but not yet attributed per module.** `alert-seam-latency` fires on
-a seam breach across all routes; it does not currently say which module's routes breached, so the
-page reaches `platform-reliability` rather than the owning team. `alert-p95` already groups by route
-with ids collapsed, so the attribution data exists — routing a seam breach to the owning module
-means mapping an observed route prefix through `moduleOwningNamespace`. That is a real remaining
-gap, recorded here rather than papered over.
+**Module objectives are attributed per module — this gap is now closed.** `backend/src/scripts/route-attribution.mjs`
+is the single route-to-module resolver:
+
+- It maps an API route's first path segment through the same logic as `moduleOwningNamespace()` in
+  `module-vocabulary.ts` — Home administering `chat`, `mail`, `calendar` and `notifications` is
+  encoded, CRM administering `party` is encoded, and the two route-segment exceptions (`/knowledge`
+  → `kb`, `/dashboard` → `home`) where the module id differs from the route segment are also handled.
+- `PLATFORM_NAMESPACES` (`health`, `auth`, `cron`, `platform`) is declared explicitly so a new
+  namespace that appears in neither the module map nor that set is returned as `{ unattributable: true }`
+  rather than silently defaulted to `platform-reliability`.
+- Modules excluded from the SLO scope (`crm`, `inventory`) return `{ sloExcluded: true }` and are
+  routed to `platform-reliability` so they page someone, but are distinguishable from platform surfaces.
+
+`alert-p95.mjs` now adds an `attribution` field to every endpoint in `hottest` and `breached`.
+`alert-seam-latency.mjs` now groups route-level seam spans (`route.cached.read`, `route.write`) by
+module and includes `attributedModules` in every breached seam entry — so a seam page names the
+owning team alongside each contributing module.
+
+Four self-tests cover the cases: `/hr/...` → people-team, `/chat/...` → communications-team (via
+home), `/health` → platform-reliability, undeclared namespace → `unattributable`. An anti-vacuity
+guard asserts that HR and chat return different owners, so a resolver that maps everything to one
+team fails the test. All fourteen alert scripts pass `node src/scripts/check-alert-system.mjs` and
+the spec suite at `src/common/slo/slo-catalogue.spec.ts` covers the attribution logic.
 
 **No alert reaches a human in any environment.** `ALERT_WEBHOOK_URL` is unset. Every objective above
 is measured and every alert fires with the correct payload and a working runbook link, but the
