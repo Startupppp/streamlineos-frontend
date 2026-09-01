@@ -72,4 +72,5 @@ The remaining required backend type/spec checks cannot be certified from this sh
 - [x] Re-ran scanner: HR remains absent from actionable modules (`hr actionable=0`).
 - [x] Re-ran migration discipline and chain checks: both pass.
 - [x] Focused S01 regression suite passes: 5 tests.
+- [x] Additional HR engagement, calendar, attendance, workflow, and recruitment slices were reviewed and committed (`8fb84bc6`, `93ad32ba`, `96869909`).
 - [ ] Full completion remains open until the residual HR authority-path audit and the required typecheck gates pass.
