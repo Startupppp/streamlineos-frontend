@@ -6,7 +6,7 @@ Eliminate every actionable or unclassified growing read without data-loss caps. 
 
 ## Baseline
 
-Run `pnpm -C backend check:unbounded-reads` and record exact paths and counts. The latest root run found 0 actionable offsets, 101 actionable unbounded reads, and 0 unclassified paths.
+Run `pnpm -C backend check:unbounded-reads` and record exact paths and counts. The latest root run scanned 2,107 service files and found 0 actionable offsets, 0 actionable unbounded reads, 0 unordered paging, and 0 unclassified paths.
 
 ## Work
 
@@ -17,10 +17,10 @@ Run `pnpm -C backend check:unbounded-reads` and record exact paths and counts. T
 - [x] Ensure tenant predicates remain on changed primary/fallback/retry/export queries; focused isolation suites passed.
 - [x] Add tenant-leading and sort-covering indexes only for measured access patterns. Tenant-index coverage passed, and live Build plans now prove the covering indexes with Index Only Scan access.
 - [x] Add duplicate-sort, boundary, resume, overflow, and no-row-loss coverage for completed batches; reported focused suites passed.
-- [x] Seed production-shaped HRMS, Payroll, Build, Home, Chat, Calendar, Notifications, Knowledge and Accounting data. HRMS, Build, mail, roadmap/feedback/changelog, finance, module access, calendar, announcements and leave-accrual fixtures are seeded; only CRM search fixtures remain absent because CRM is excluded from S02.
+- [ ] Restore a reproducible production-shaped HRMS, Payroll, Build, Home, Chat, Calendar, Notifications, Knowledge and Accounting dataset. A prior seeded run passed, but the current configured database fails 43 minimum-row assertions and skips 27 budgets for absent fixtures; CRM and Inventory remain excluded from acceptance.
 - [ ] Run `EXPLAIN (ANALYZE, BUFFERS)` as the application role, not the owner, for declared read budgets and expensive reminder/export/fanout/free-busy/search paths. All 67 in-scope declared budgets and HR/Build read-cost paths were measured as the application role; the three skipped budgets are CRM exclusions, while request-transaction load evidence remains open.
 - [ ] Record row counts, plans, buffers, duration, pool/replica behavior, and justified thresholds. Verify no full tenant/table scan occurs where an index access path is required. All in-scope budget row counts, plans and buffers are within declared ceilings with index assertions passing; pool/replica behavior and request-transaction evidence remain open.
-- [x] Re-run backend typechecks and query/read-budget tests. Backend typecheck, spec-inclusive typecheck, unbounded-read gate, tenant-index gate, migration-discipline gate, plan walker, full available read budgets, and HR/Build read-cost checks passed.
+- [ ] Re-run backend typechecks and the complete in-scope query/read-budget suite at the final commit and retained dataset. Typechecks, the unbounded-read gate and tenant-index gate pass; the current read-budget run does not.
 
 ## Exit criteria
 
@@ -44,5 +44,12 @@ Run `pnpm -C backend check:unbounded-reads` and record exact paths and counts. T
 - Full available read-budget run: all 67 in-scope budgets passed; 3 CRM search budgets skipped because CRM is out of S02 scope. Inventory budgets ran but remains excluded from acceptance decisions.
 - Seeded the remaining in-scope fixture tables and scaled mail metadata and announcements to 20,100 rows each. The rerun measured every in-scope budget successfully; only `search-lead-party-sdf`, `search-contact-party-sdf`, and `search-client-party-sdf` remain skipped as CRM exclusions.
 - Added and applied `0932_s02_announcements_read_cost_index.sql`; mail metadata and announcements now use index-backed plans within budget.
+
+## Fresh reconciliation — 2026-09-01
+
+- [x] `check:unbounded-reads` passes with 0 actionable/unclassified reads, 0 actionable offsets and 0 unordered paging across 2,107 service files.
+- [x] `check:tenant-indexes` passes for all 742 tenant tables.
+- [ ] `db:check-read-budgets` fails on the current configured database: 43 budgets are below their minimum seed size and 27 are skipped for missing fixture data. This supersedes any claim that the final evidence dataset is presently reproducible.
+- [ ] Re-seed the declared in-scope dataset, run all in-scope budgets as `streamline_app`, retain plans/buffers/durations, then run request-transaction, pool/replica and 40% headroom measurements under S04 production-load conditions.
 - Added a bound to the GDPR employment lookup; the final unbounded-read scan remains at 0 actionable, 0 unclassified and 0 unordered reads.
 - Request-transaction probe against the local API did not pass: `/me` and `/me/access` exceeded raw transaction ceilings under the 100-request load, and the dev API subsequently reset. No request-transaction acceptance checkbox was marked.

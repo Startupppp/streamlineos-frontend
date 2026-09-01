@@ -22,7 +22,7 @@ Remove only proven dead or duplicated surface, resolve mixed-responsibility size
 
 - [ ] All listed static, type, contract and architecture gates pass at one commit.
 - [ ] Full representative E2E and outage/replay matrices pass with environment identity and command output.
-- [ ] No unowned API/UI capability or proven dead surface remains.
+- [x] No unowned API/UI capability or proven dead surface remains; the gate reports zero DEAD/WIRE/UNCLASSIFIED entries and every deferred capability has an owner and review date.
 - [x] No unjustified hard-size violation remains; the current hard-size gate passes with all 12 exceptions documented.
 - [ ] No unresolved code-level P0/P1 finding remains.
 

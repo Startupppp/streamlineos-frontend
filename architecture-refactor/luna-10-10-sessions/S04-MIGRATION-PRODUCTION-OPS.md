@@ -42,6 +42,7 @@ Environment evidence still required:
 - [ ] Do not infer disposable-staging or clean-bootstrap completion from the now-current 585/585 ledger; run and retain those environment-specific proofs. The supported upgrade against `backend/.env` is applied and ledger-verified.
 - [ ] Provision and verify independent cell resources, a physical replica, regional recovery/relocation, production-shaped load with at least 40% headroom, invoice-derived cost and live alert acknowledgement.
 - [ ] Record environment, region, release SHA, topology hash, dataset shape, operator, UTC timestamp, command/exit code and artifact SHA-256 for every operational claim.
+- [ ] Recreate and retain the production-shaped query dataset before load testing. The latest configured-database run fails 43 read-budget minimum-row assertions and skips 27 budgets; no headroom, pool or replica conclusion may be drawn from it.
 
 Fresh verification (2026-09-01 UTC, root `e58754d24`, backend working tree, environment `backend/.env`):
 
@@ -57,6 +58,7 @@ Fresh verification (2026-09-01 UTC, root `e58754d24`, backend working tree, envi
 - `pnpm -C backend cell:replica` — exit 2; `DB_REPLICA_URL` is not configured, so no physical replica or fallback evidence exists.
 - `pnpm -C backend cell:unit-cost` — exit 0 but reports unmeasured vendor dollar rates, insufficient capacity samples, and no operator approval; it is not a cost acceptance pass.
 - `pnpm -C backend ops:evidence:check` — exit 1; no deployed RB-01–RB-08 evidence manifests exist.
+- `pnpm -C backend db:check-read-budgets` — exit 1; 43 budgets are under-seeded and 27 are skipped, so current production-shaped query evidence is incomplete.
 - Local self-tests remain implementation evidence only; they do not satisfy pending migration, deployed resource, replica, PITR, load, cost, live-alert or approval gates.
 
 ## Session completion status

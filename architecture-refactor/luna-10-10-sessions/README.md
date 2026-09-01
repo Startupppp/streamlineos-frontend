@@ -1,6 +1,6 @@
 # Independent final completion tickets
 
-These five tickets are the only active architecture-refactor tickets. They may run in parallel and must not assume another session has completed first.
+These four tickets are the only active architecture-refactor tickets. They may run in parallel and must not assume another session has completed first. S01 authority and tenant integrity is complete and its ticket was removed after fresh verification.
 
 ## Session protocol
 
@@ -16,7 +16,6 @@ At the start of every session:
 
 Tickets:
 
-- [S01 — Authority and tenant integrity](S01-AUTHORITY-TENANT-INTEGRITY.md)
 - [S02 — Query bounds and read cost](S02-QUERY-READ-COST.md)
 - [S03 — Repository quality and release verification](S03-QUALITY-RELEASE.md)
 - [S04 — Migration and production operations](S04-MIGRATION-PRODUCTION-OPS.md)

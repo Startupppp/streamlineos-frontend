@@ -4,7 +4,7 @@ Status: active
 Last reconciled: 2026-09-01
 Scope: all platform domains except CRM and Inventory
 
-This is the only authoritative remaining-work checklist. Completing every unchecked acceptance criterion in the five linked tickets, with current reproducible evidence, is the condition for a truthful 10/10 result. Old reports, scores, and completed tickets are not evidence.
+This is the only authoritative remaining-work checklist. Completing every unchecked acceptance criterion in the four linked tickets, with current reproducible evidence, is the condition for a truthful 10/10 result. Old reports, scores, and completed tickets are not evidence.
 
 ## Product constraints
 
@@ -23,19 +23,18 @@ These values describe the working tree at reconciliation time and must be re-mea
 
 - Legacy organization actors: 434 total; 116 CRM/Inventory excluded; 318 classified historical/display-only; 0 actionable according to the scanner.
 - Offset pagination: 0 actionable; unordered offset paging: 0.
-- Unbounded reads: 223 actionable instances across 105 files, 0 unclassified paths, 0 actionable offsets, and 0 unordered paging in the latest run. The gate is structurally green, but the zero-actionable target is not complete.
+- Unbounded reads: 0 actionable, 0 unclassified, 0 actionable offsets, and 0 unordered paging across 2,107 scanned service files. The current configured database is not production-shaped: 43 read budgets fail minimum seed requirements and 27 are skipped for absent fixture data.
 - Migration ledger: 585 applied rows against 585 journal entries; 0 pending and no orphan, duplicate, or unreachable entries. Migration chain, discipline, rollback, and drop-column gates pass locally; clean-bootstrap and deployed-environment proof remain open.
 - OpenAPI: the last verified release gate covered 3,579/3,579 operations for exposure, responses, 4xx errors, and mutating request bodies. Re-run at final head.
 - Tenant-isolation, route classification, permission-catalog, module-gate, cache-invalidation, outbox-consumer, and feature-flag gates previously passed. Re-run at final head.
 - Production cells, physical replica/PITR drills, production-shaped load/cost proof, live alert acknowledgement, and compliance approvals are not proven by repository code.
 
-The actor scanner reaching zero closes the broad legacy-actor migration count, but it does not close the specific tenant-FK and realtime-revocation defects in Ticket 01.
+The completed S01 authority ticket was removed after fresh actor, membership-FK, tenant-isolation, owner-authority and permission-catalog gates passed. Its durable invariants remain in [PRD-IN-SCOPE.md](PRD-IN-SCOPE.md) and executable gates.
 
 ## Remaining independent tickets
 
 | Ticket | Concrete failure prevented | Completion result |
 |---|---|---|
-| [S01 — Authority and tenant integrity](luna-10-10-sessions/S01-AUTHORITY-TENANT-INTEGRITY.md) | Cross-tenant membership references and revoked chat access remaining usable | Authority cutover is structurally tenant-safe |
 | [S02 — Query bounds and read cost](luna-10-10-sessions/S02-QUERY-READ-COST.md) | Memory/DB saturation, skipped rows, N+1 cost and tenant-wide scans | Every growing read has a bounded, stable contract |
 | [S03 — Repository quality and release verification](luna-10-10-sessions/S03-QUALITY-RELEASE.md) | Dead surface, contract drift, oversized mixed services and untested release behavior | Code and API gates are reproducibly green |
 | [S04 — Migration and production operations](luna-10-10-sessions/S04-MIGRATION-PRODUCTION-OPS.md) | Non-rebuildable databases, shared-cell blast radius and unrecoverable incidents | The deployed platform is resilient and measured |
@@ -64,6 +63,7 @@ Verified complete at the audited working tree:
 - [x] Backend hard file-size gate: 3,392 files scanned, all within 500 lines with 12 registered exceptions.
 - [x] Frontend type-check, route-access contract, contract drift, module manifest, dead-code classification, cycle, query-scope, SEO metadata, color-token and icon-label gates pass.
 - [x] Backend permission-key, owner-authority, scope-application, record-access, module-gate/DI, route-classification, navigation, tenant-index, cache-invalidation, outbox-consumer, idempotency, feature-flag, mock-surface and drop-column gates pass.
+- [x] Authority completion recheck: actor scan has 0 actionable fields; membership-FK restriction, owner-authority and permission-catalog gates pass; tenant-isolation has 895/895 declared coverage.
 
 Verified pending or failing at the same working tree:
 
@@ -75,12 +75,14 @@ Verified pending or failing at the same working tree:
 - [x] Frontend capability reconciliation has 0 WIRE, 0 DEAD, and 0 UNCLASSIFIED entries; 22 deferred capabilities have named owners and a 2026-10-01 review date.
 - [x] Web-vitals evidence exists in `.browser-driver-results.json`; local development measurements breach the declared budgets and production/reference-device evidence remains pending.
 - [ ] Production cells, replica, recovery, load/headroom, live alerts, invoice-derived cost, privacy drills and named compliance approvals remain unproven.
+- [ ] Read-cost evidence is not reproducible in the current configured database: 43 budgets fail minimum seed requirements and 27 are skipped because required fixtures are absent.
+- [ ] Retention coverage currently reports 4 uncovered high-growth tables: `helpdesk_tickets`, `performance_reviews`, `mail_message_metadata`, and `announcements`.
 
 ## Final 10/10 gate
 
 All of the following are mandatory:
 
-- [ ] Every checkbox in Tickets S01–S05 is complete with current evidence.
+- [ ] Every checkbox in Tickets S02–S05 is complete with current evidence.
 - [ ] CRM and Inventory remain excluded rather than silently counted as complete.
 - [ ] Backend build typecheck, spec typecheck, frontend typecheck, focused tests, representative E2E, and all architecture gates pass at one recorded commit.
 - [ ] A clean database bootstraps to the current migration head and its catalog matches the expected schema.
