@@ -16,7 +16,7 @@ This file supersedes older pending lists in reports, scorecards and session tick
 - Route classification: 3,568 handlers, 0 undeclared. Permission catalog: 3,105 usages resolved, 624 unique keys.
 - Tenant isolation: 896/896 tenant-owned services have a declared isolation test. Cache invalidation: 1,027 service files, 0 gaps. Outbox registry: 22 emitted event types, all consumed.
 - Authenticated accessibility: 9 suites / 102 tests PASS. SEO metadata PASS. Mock-surface: 3,206 doubles, 0 genuine defects.
-- Current blockers: the complete backend `test:e2e:ci` matrix remains unverified after the Build relation bootstrap defect was fixed and the calendar suite passed 9/9; hard file-size gate reports HR recruitment sourcing at 508 lines and Support macros at 524 lines; full frontend Knip must be rerun under quiescent host conditions.
+- Current blockers: the complete backend `test:e2e:ci` matrix remains unverified after the Build relation bootstrap defect was fixed and the calendar suite passed 9/9; the bounded hard file-size scan reports five files over 500 lines; full frontend Knip must be rerun under quiescent host conditions.
 - Query gate is not complete: serial output reports 60 actionable offsets, 280 actionable unbounded reads, 2 unclassified paths and 3 regressions; this remains Session 05 ownership.
 
 - Backend build typecheck: PASS. Spec-inclusive typecheck: PASS.
@@ -87,7 +87,7 @@ Measured 2026-09-01. Every figure here was produced by running the named command
 - Read-cost budgets: 56 pass, 14 skip for absent seed data, 0 fail — down from 30 failures.
 - Dependency vulnerabilities and licences: pass. SBOM generated, 914 components.
 - Alert system: 13 scripts, all self-tests pass; every registered alert resolves to a real runbook heading.
-- Outbox consumer registry, RBAC referential integrity, cache invalidation, dropped-column safety and restrictive membership-FK gates: PASS. File-size currently FAILS on `hr/recruitment/recruitment-sourcing.service.ts` (508 lines) and `support/core/support-macros.service.ts` (524 lines); circular-dependency status must be rerun after the current working-tree changes.
+- Outbox consumer registry, RBAC referential integrity, cache invalidation, dropped-column safety and restrictive membership-FK gates: PASS. File-size currently FAILS on five files over 500 lines (`projects-tickets-read.service.ts` 502, `attendance.service.ts` 543, `filings.service.ts` 516, `reports.service.ts` 596, and `support-macros.service.ts` 524); circular-dependency status must be rerun after the current working-tree changes.
 - Billing, chat, calendar, notification, knowledge-retrieval evidence: complete, as previously recorded.
 
 ## 3. P0 — Code, authority and data correctness

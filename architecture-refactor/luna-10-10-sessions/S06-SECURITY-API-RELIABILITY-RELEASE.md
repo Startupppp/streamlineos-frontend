@@ -12,11 +12,11 @@ Shared backend/frontend code, test tooling, CI, OpenAPI, outbox, webhook/email/n
 
 - [x] Re-run route/module/permission/tenant-isolation gates; fix real failures rather than allowing exceptions. Route classification has 0 undeclared handlers; permission catalog, module gate, and tenant-isolation coverage pass.
 - [x] Reconcile OpenAPI operation, request, response, error, and path parameter coverage to exact equality. Current coverage is 3,579/3,579 operations for exposure, 4xx errors, responses, and mutating request bodies; path-parameter self-test passes.
-- [ ] Verify all external effects are transactional-outbox-backed where a domain mutation promises delivery; retries, DLQ, idempotency, cancellation, and authorization-at-delivery must be tested.
+- [x] Verify all external effects are transactional-outbox-backed where a domain mutation promises delivery; retries, DLQ, idempotency, cancellation, and authorization-at-delivery are covered by the provider-reliability ledger and outbox consumer tests.
 - [x] Verify cache keys include organization and authorization dimensions and mutation invalidation is cross-instance safe. The live checker reports 0 documentation gaps and the evidence inventory is current.
 - [ ] Remove or decompose remaining files above the hard review threshold only where a concrete mixed-responsibility failure exists.
 - [ ] Run dead-code analysis before deleting files; remove unused APIs, hooks, components, schemas, and types with dependency proof. The frontend self-test passes, but the full Knip scan must be rerun under lower host contention after an allocation failure.
-- [ ] Ensure E2E harnesses do not replace security-critical behavior with contradictory stubs.
+- [x] Ensure E2E harnesses do not replace security-critical behavior with contradictory stubs. The security-stub contract and mock-transaction gate pass.
 - [x] Re-run authenticated SEO/a11y checks; keep landing visuals and animation unchanged. SEO passes and the authenticated a11y run passes 9 suites / 102 tests.
 
 ## Exit criteria
@@ -67,7 +67,7 @@ pnpm -C frontend type-check
 
 - [ ] Backend controller E2E — the prior app-bootstrap defect is fixed in `backend/src/db/schema/build/relations.ts`; the calendar controller suite now passes 9/9. The complete `pnpm -C backend test:e2e:ci` matrix still requires disposable migrated-database evidence.
 - [x] Authenticated a11y suites — 9 suites / 102 tests passed serially (`frontend/features/__tests__/*-a11y.test.*`).
-- [ ] Hard file-size gate — currently fails on two files: `backend/src/modules/hr/recruitment/recruitment-sourcing.service.ts` (508 lines) and `backend/src/modules/support/core/support-macros.service.ts` (524 lines). These are cross-session-owned HR/Support files; remediation belongs in the owning session, with a mixed-responsibility decomposition proof.
+- [ ] Hard file-size gate — the bounded scan reports five files over 500 lines: `projects-tickets-read.service.ts` (502), `attendance.service.ts` (543), `filings.service.ts` (516), `reports.service.ts` (596), and `support-macros.service.ts` (524). These are cross-session-owned files; remediation belongs in the owning sessions with mixed-responsibility decomposition proof.
 - [x] Tenant-isolation coverage scan — 896/896 tenant-owned services have a declared isolation test; the checker reports 590 isolation test files.
 - [ ] Full dead-code and unbounded-read scans — dead-code scan hit a host-level `Array buffer allocation failed` in Knip; the serial unbounded-read gate failed with the handoff counts below. Rerun dead-code from a quiescent checkout and resolve the Session 05 findings.
 - [ ] Unbounded-read handoff — the serial gate reports 60 actionable offsets, 280 actionable unbounded reads, 2 unclassified paths, and 3 regressions. Ownership is Session 05; do not alter its classifications or query paths from Session 06.
