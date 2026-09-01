@@ -121,14 +121,14 @@ export function useQualityInspections(filters?: InspectionFilters) {
   const canView = useCan("inventory:quality:read");
   return useQuery<InspectionListResponse, Error>({
     queryKey: queryKeys.inventory.qualityInspections(filters),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<InspectionListResponse>("/inventory/quality/inspections", {
         ...(filters?.status ? { status: filters.status } : {}),
         ...(filters?.source ? { source: filters.source } : {}),
         ...(filters?.variantId ? { variantId: String(filters.variantId) } : {}),
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(filters?.limit ? { limit: String(filters.limit) } : {}),
-      }),
+      }, signal),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -138,8 +138,8 @@ export function useQualityInspection(inspectionId: number) {
   const canView = useCan("inventory:quality:read");
   return useQuery<InspectionDetail, Error>({
     queryKey: queryKeys.inventory.qualityInspection(inspectionId),
-    queryFn: () =>
-      apiClient.get<InspectionDetail>(`/inventory/quality/inspections/${inspectionId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<InspectionDetail>(`/inventory/quality/inspections/${inspectionId}`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && inspectionId > 0,
   });
@@ -262,12 +262,12 @@ export function useQualityHolds(params?: QualityHoldsParams) {
   const canView = useCan("inventory:quality:read");
   return useQuery<HoldListResponse, Error>({
     queryKey: queryKeys.inventory.qualityHolds(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<HoldListResponse>("/inventory/quality/holds", {
         ...(params?.status ? { status: params.status } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
-      }),
+      }, signal),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -277,7 +277,7 @@ export function useQualityHold(holdId: number) {
   const canView = useCan("inventory:quality:read");
   return useQuery<QualityHold, Error>({
     queryKey: queryKeys.inventory.qualityHold(holdId),
-    queryFn: () => apiClient.get<QualityHold>(`/inventory/quality/holds/${holdId}`),
+    queryFn: ({ signal }) => apiClient.get<QualityHold>(`/inventory/quality/holds/${holdId}`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && holdId > 0,
   });
@@ -334,11 +334,11 @@ export function useRecalls(params?: RecallsParams) {
   const canView = useCan("inventory:quality:read");
   return useQuery<RecallListResponse, Error>({
     queryKey: queryKeys.inventory.recalls(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<RecallListResponse>("/inventory/quality/recalls", {
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
-      }),
+      }, signal),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -348,7 +348,7 @@ export function useRecall(recallId: number) {
   const canView = useCan("inventory:quality:read");
   return useQuery<Recall, Error>({
     queryKey: queryKeys.inventory.recall(recallId),
-    queryFn: () => apiClient.get<Recall>(`/inventory/quality/recalls/${recallId}`),
+    queryFn: ({ signal }) => apiClient.get<Recall>(`/inventory/quality/recalls/${recallId}`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && recallId > 0,
   });

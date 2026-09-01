@@ -10,7 +10,7 @@ export function useAllReferrals() {
   const canEmployees = useCan("hr:employees:view");
   return useQuery({
     queryKey: queryKeys.hr.referrals(),
-    queryFn: () => apiClient.get<CandidateReferral[]>("/hr/recruitment/referrals"),
+    queryFn: ({ signal }) => apiClient.get<CandidateReferral[]>("/hr/recruitment/referrals", undefined, signal),
     staleTime: 60_000,
     enabled: canEmployees,
   });

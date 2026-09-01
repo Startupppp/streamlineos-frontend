@@ -50,7 +50,7 @@ export interface UpdateSlaPolicyInput {
 export function useSlaPoliciesList() {
   return useQuery({
     queryKey: queryKeys.supportSlaPolicies.list(),
-    queryFn: () => apiClient.get<SlaPolicy[]>("/support/sla-policies"),
+    queryFn: ({ signal }) => apiClient.get<SlaPolicy[]>("/support/sla-policies", undefined, signal),
     staleTime: 60_000,
   });
 }

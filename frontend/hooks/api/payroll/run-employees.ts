@@ -25,10 +25,10 @@ export function useRunEmployees(
   const canView = useCan("payroll:runs:view");
   return useQuery({
     queryKey: queryKeys.payroll.runEmployeesList(runId, params as Record<string, unknown> | undefined),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<RunEmployeesPage>(
         `/payroll/runs/${runId}/employees`,
-        params as Record<string, string | number> | undefined,
+        params as Record<string, string | number> | undefined, signal,
       ),
     staleTime: 30_000,
     enabled: canView && runId > 0,
@@ -39,8 +39,8 @@ export function useRunEmployee(runId: number, runEmployeeId: number) {
   const canView = useCan("payroll:runs:view");
   return useQuery({
     queryKey: queryKeys.payroll.runEmployee(runId, runEmployeeId),
-    queryFn: () =>
-      apiClient.get<RunEmployeeDetail>(`/payroll/runs/${runId}/employees/${runEmployeeId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<RunEmployeeDetail>(`/payroll/runs/${runId}/employees/${runEmployeeId}`, undefined, signal),
     staleTime: 30_000,
     enabled: canView && runId > 0 && runEmployeeId > 0,
   });
@@ -50,7 +50,7 @@ export function useRunVariance(runId: number) {
   const canView = useCan("payroll:runs:view");
   return useQuery({
     queryKey: queryKeys.payroll.runVariance(runId),
-    queryFn: () => apiClient.get<VarianceData>(`/payroll/runs/${runId}/variance`),
+    queryFn: ({ signal }) => apiClient.get<VarianceData>(`/payroll/runs/${runId}/variance`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && runId > 0,
   });

@@ -13,7 +13,7 @@ export const useBranches = (
   const canView = useCan("branch:view");
   return useQuery<Branch[], Error>({
     queryKey: queryKeys.branches.list(),
-    queryFn: () => apiClient.get<Branch[]>("/branches"),
+    queryFn: ({ signal }) => apiClient.get<Branch[]>("/branches", undefined, signal),
     staleTime: 30 * 60_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),

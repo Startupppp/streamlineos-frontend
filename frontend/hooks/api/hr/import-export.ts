@@ -128,12 +128,12 @@ export function useHrImportJobs(
   const limit = pagination?.limit ?? 20;
   return useQuery<PaginatedJobs>({
     queryKey: [...queryKeys.hr.importJobs(entity), cursor, limit] as const,
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PaginatedJobs>("/hr/import/jobs", {
         ...(cursor ? { cursor } : {}),
         limit: String(limit),
         ...(entity ? { entity } : {}),
-      }),
+      }, signal),
     staleTime: 30_000,
     enabled: hrEnabled && canImport,
   });
@@ -144,8 +144,8 @@ export function useHrImportJob(jobId: string | null) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<HrImportJobDetail>({
     queryKey: queryKeys.hr.importJob(jobId ?? ""),
-    queryFn: () =>
-      apiClient.get<HrImportJobDetail>(`/hr/import/jobs/${jobId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<HrImportJobDetail>(`/hr/import/jobs/${jobId}`, undefined, signal),
     enabled: hrEnabled && canImport && !!jobId,
     staleTime: 10_000,
   });
@@ -226,8 +226,8 @@ export function useHrEmployeeExportJob(exportJobId: string | null) {
       accessVersion,
       exportJobId ?? "",
     ),
-    queryFn: () =>
-      apiClient.get<HrEmployeeExportJob>(`/hr/export/jobs/${exportJobId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<HrEmployeeExportJob>(`/hr/export/jobs/${exportJobId}`, undefined, signal),
     enabled:
       hrEnabled && canExport && Boolean(orgId && actorUserId && exportJobId),
     staleTime: 1_000,

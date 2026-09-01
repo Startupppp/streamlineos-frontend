@@ -12,7 +12,7 @@ export function useBudgets(enabled = true) {
   const canView = useCan("timesheets:budgets:view");
   return useQuery({
     queryKey: queryKeys.timesheets.budgets(),
-    queryFn: () => apiClient.get<TimesheetBudget[]>("/timesheets/budgets"),
+    queryFn: ({ signal }) => apiClient.get<TimesheetBudget[]>("/timesheets/budgets", undefined, signal),
     staleTime: 60_000,
     enabled: enabled && canView,
   });

@@ -118,7 +118,7 @@ export function usePaymentRuns(params: ListPaymentRunsParams = {}) {
   const can = useCan("accounting:payment-runs:read");
   return useQuery<CursorPage<PaymentRunSummary>, Error>({
     queryKey: apRunKeys.paymentRuns(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPage<PaymentRunSummary>>(
         "/accounting/payment-runs",
         toQuery(params),
@@ -132,7 +132,7 @@ export function useVendorPayments(params: ListVendorPaymentsParams = {}) {
   const can = useCan("accounting:payables:read");
   return useQuery<CursorPage<VendorPayment>, Error>({
     queryKey: ["streamlineos", "accounting", "ap", "vendor-payments", params],
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPage<VendorPayment>>(
         "/accounting/vendor-payments",
         toQuery(params),
@@ -146,7 +146,7 @@ export function usePaymentRun(runId: number) {
   const can = useCan("accounting:payment-runs:read");
   return useQuery<PaymentRunDetail, Error>({
     queryKey: apRunKeys.paymentRun(runId),
-    queryFn: () => apiClient.get<PaymentRunDetail>(`/accounting/payment-runs/${runId}`),
+    queryFn: ({ signal }) => apiClient.get<PaymentRunDetail>(`/accounting/payment-runs/${runId}`, undefined, signal),
     staleTime: 30_000,
     enabled: can && Number.isInteger(runId) && runId > 0,
   });

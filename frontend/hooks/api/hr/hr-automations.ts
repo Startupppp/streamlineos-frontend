@@ -49,7 +49,7 @@ export function useHrAutomationEvents() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: hrAutomationKeys.events(),
-    queryFn: () => apiClient.get<{ events: HrEventDefinition[] }>("/hr/automations/events"),
+    queryFn: ({ signal }) => apiClient.get<{ events: HrEventDefinition[] }>("/hr/automations/events", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canView && hrEnabled,
   });

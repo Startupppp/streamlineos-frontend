@@ -46,7 +46,7 @@ export function useExpensePageData(
   return useQuery({
     enabled: (options?.selfService === true || (canExpenses && accountingEnabled)) && (options?.enabled ?? true),
     queryKey: [...queryKeys.hr.expenses(), "pageData", params] as const,
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<{
         expenses: ExpenseWithRelations[];
         pendingExpenses: ExpenseWithRelations[];
@@ -162,8 +162,8 @@ export function useExpenseExportJob(jobId: string | null) {
   const canRead = useCan("hr:expenses:read");
   return useQuery<ExpenseExportJob, Error>({
     queryKey: queryKeys.hr.expenseExportJob(jobId ?? ""),
-    queryFn: () =>
-      apiClient.get<ExpenseExportJob>(`/hr/expenses/export/jobs/${jobId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<ExpenseExportJob>(`/hr/expenses/export/jobs/${jobId}`, undefined, signal),
     enabled: canRead && !!jobId,
     staleTime: 1_000,
     refetchInterval: (query) => {

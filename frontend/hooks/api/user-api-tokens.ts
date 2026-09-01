@@ -42,11 +42,11 @@ export interface UserApiTokenPage {
 export function useUserApiTokens(params: { cursor?: string; limit: number }) {
   return useQuery({
     queryKey: queryKeys.userApiTokens.list(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<UserApiTokenPage>("/me/api-tokens", {
         ...(params.cursor ? { cursor: params.cursor } : {}),
         limit: String(params.limit),
-      }),
+      }, signal),
     staleTime: 30_000,
   });
 }
@@ -54,7 +54,7 @@ export function useUserApiTokens(params: { cursor?: string; limit: number }) {
 export function useGrantableUserApiTokenPermissions() {
   return useQuery({
     queryKey: queryKeys.userApiTokens.permissions(),
-    queryFn: () => apiClient.get<Permission[]>("/me/api-tokens/permissions"),
+    queryFn: ({ signal }) => apiClient.get<Permission[]>("/me/api-tokens/permissions", undefined, signal),
     staleTime: 5 * 60_000,
   });
 }

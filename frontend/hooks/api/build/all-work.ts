@@ -29,7 +29,7 @@ export function useAllWork(
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<CursorPaginatedResponse<AllWorkTicket>>({
     queryKey: queryKeys.projects.allWork(filters ? { ...filters } : undefined),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPaginatedResponse<AllWorkTicket>>("/build/all-work", filters ? { ...filters } : undefined),
     staleTime: 30_000,
     placeholderData: (prev) => prev,
@@ -54,7 +54,7 @@ export function useInfiniteAllWork(
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useInfiniteQuery({
     queryKey: queryKeys.projects.allWorkInfinite({ ...filters }),
-    queryFn: ({ pageParam }) =>
+    queryFn: ({ pageParam, signal }) =>
       apiClient.get<CursorPaginatedResponse<AllWorkTicket>>("/build/all-work", {
         ...filters,
         ...(pageParam ? { cursor: pageParam } : {}),

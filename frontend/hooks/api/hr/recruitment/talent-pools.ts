@@ -44,7 +44,7 @@ export function useTalentPools() {
   const canEmployees = useCan("hr:employees:view");
   return useQuery({
     queryKey: poolsKey,
-    queryFn: () => apiClient.get<TalentPool[]>("/hr/recruitment/talent-pools"),
+    queryFn: ({ signal }) => apiClient.get<TalentPool[]>("/hr/recruitment/talent-pools", undefined, signal),
     staleTime: 60_000,
     enabled: canEmployees,
   });

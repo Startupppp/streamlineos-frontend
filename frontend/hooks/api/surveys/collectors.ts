@@ -50,7 +50,7 @@ export interface PatchCollectorInput {
 export function useCollectors(surveyId: number) {
   return useQuery({
     queryKey: queryKeys.surveys.collectors(surveyId),
-    queryFn: () => apiClient.get<SurveyCollector[]>(`/surveys/${surveyId}/collectors`),
+    queryFn: ({ signal }) => apiClient.get<SurveyCollector[]>(`/surveys/${surveyId}/collectors`, undefined, signal),
     staleTime: 15_000,
   });
 }

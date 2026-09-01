@@ -31,8 +31,8 @@ export interface SupportActivityEntry {
 export function useSupportActivity(ticketId: number) {
   return useQuery({
     queryKey: queryKeys.supportActivity.list(ticketId),
-    queryFn: () =>
-      apiClient.get<SupportActivityEntry[]>(`/support/${ticketId}/activity`),
+    queryFn: ({ signal }) =>
+      apiClient.get<SupportActivityEntry[]>(`/support/${ticketId}/activity`, undefined, signal),
     enabled: Number.isFinite(ticketId) && ticketId > 0,
     staleTime: 30_000,
   });

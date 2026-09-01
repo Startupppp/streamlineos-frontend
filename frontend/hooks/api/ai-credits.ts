@@ -90,7 +90,7 @@ export function useAiCreditsWallet() {
   const canView = useCan("billing:ai-credits:view");
   return useQuery<AiCreditsWallet>({
     queryKey: queryKeys.billing.aiCredits(),
-    queryFn: () => apiClient.get<AiCreditsWallet>("/billing/ai-credits"),
+    queryFn: ({ signal }) => apiClient.get<AiCreditsWallet>("/billing/ai-credits", undefined, signal),
     staleTime: 300_000,
     enabled: canView,
   });
@@ -109,11 +109,11 @@ export function useAiCreditTransactions(params: { cursor?: string; limit: number
   const canView = useCan("billing:ai-credits:view");
   return useQuery<AiCreditTransactionsPage>({
     queryKey: queryKeys.billing.aiCreditTransactions(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<AiCreditTransactionsPage>("/billing/ai-credits/transactions", {
         ...(params.cursor ? { cursor: params.cursor } : {}),
         limit: String(params.limit),
-      }),
+      }, signal),
     staleTime: 30 * 1000,
     placeholderData: keepPreviousData,
     enabled: canView,
@@ -174,10 +174,10 @@ export function useAiCreditsUsage(days: AiCreditsUsageDays) {
   const canView = useCan("billing:ai-credits:view");
   return useQuery<AiCreditsUsage>({
     queryKey: queryKeys.billing.aiCreditsUsage(days),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<AiCreditsUsage>("/billing/ai-credits/usage", {
         days: String(days),
-      }),
+      }, signal),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,

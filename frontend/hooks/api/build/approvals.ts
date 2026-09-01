@@ -21,7 +21,7 @@ export function useApprovalInbox() {
   const canView = useCan("build:approvals:view");
   return useQuery<ApprovalInboxItem[]>({
     queryKey: queryKeys.projects.approvals.inbox(),
-    queryFn: () => apiClient.get<ApprovalInboxItem[]>("/build/approvals/inbox"),
+    queryFn: ({ signal }) => apiClient.get<ApprovalInboxItem[]>("/build/approvals/inbox", undefined, signal),
     enabled: canView,
     staleTime: 120_000,
     refetchInterval: 120_000,
@@ -40,7 +40,7 @@ export function useProjectApprovals(projectId: number, filters?: ApprovalFilters
       projectId,
       Object.keys(params).length > 0 ? params : undefined,
     ),
-    queryFn: () => apiClient.get<Approval[]>(`/build/${projectId}/approvals`, params),
+    queryFn: ({ signal }) => apiClient.get<Approval[]>(`/build/${projectId}/approvals`, params, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });

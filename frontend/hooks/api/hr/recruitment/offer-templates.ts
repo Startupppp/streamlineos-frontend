@@ -19,7 +19,7 @@ export interface OfferLetterTemplate {
 export function useOfferTemplates() {
   return useQuery({
     queryKey: queryKeys.hr.offerTemplates(),
-    queryFn: () => apiClient.get<OfferLetterTemplate[]>("/hr/recruitment/offer-templates"),
+    queryFn: ({ signal }) => apiClient.get<OfferLetterTemplate[]>("/hr/recruitment/offer-templates", undefined, signal),
     staleTime: 5 * 60_000,
   });
 }

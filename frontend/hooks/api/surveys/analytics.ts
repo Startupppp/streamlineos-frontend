@@ -66,7 +66,7 @@ export interface ListResponsesParams {
 export function useAnalyticsOverview(surveyId: number) {
   return useQuery({
     queryKey: queryKeys.surveys.analyticsOverview(surveyId),
-    queryFn: () => apiClient.get<SurveyAnalyticsOverview>(`/surveys/${surveyId}/analytics/overview`),
+    queryFn: ({ signal }) => apiClient.get<SurveyAnalyticsOverview>(`/surveys/${surveyId}/analytics/overview`, undefined, signal),
     staleTime: 15_000,
   });
 }
@@ -74,7 +74,7 @@ export function useAnalyticsOverview(surveyId: number) {
 export function useQuestionAnalytics(surveyId: number) {
   return useQuery({
     queryKey: queryKeys.surveys.analyticsQuestions(surveyId),
-    queryFn: () => apiClient.get<QuestionAnalytics[]>(`/surveys/${surveyId}/analytics/questions`),
+    queryFn: ({ signal }) => apiClient.get<QuestionAnalytics[]>(`/surveys/${surveyId}/analytics/questions`, undefined, signal),
     staleTime: 15_000,
   });
 }
@@ -82,7 +82,7 @@ export function useQuestionAnalytics(surveyId: number) {
 export function useSurveyResponses(surveyId: number, params?: ListResponsesParams) {
   return useQuery({
     queryKey: queryKeys.surveys.responses(surveyId, params as Record<string, unknown>),
-    queryFn: () => apiClient.get<SurveyResponseSession[]>(`/surveys/${surveyId}/responses`, params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get<SurveyResponseSession[]>(`/surveys/${surveyId}/responses`, params as Record<string, unknown>, signal),
     staleTime: 15_000,
   });
 }
@@ -90,9 +90,9 @@ export function useSurveyResponses(surveyId: number, params?: ListResponsesParam
 export function useSurveyResponse(surveyId: number, sessionId: number | undefined) {
   return useQuery({
     queryKey: queryKeys.surveys.response(surveyId, sessionId ?? -1),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<{ session: SurveyResponseSession; answers: SurveyResponseAnswer[] }>(
-        `/surveys/${surveyId}/responses/${sessionId}`,
+        `/surveys/${surveyId}/responses/${sessionId}`, signal,
       ),
     enabled: typeof sessionId === "number",
     staleTime: 15_000,

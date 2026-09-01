@@ -38,13 +38,15 @@ export function useActivityTimeline(anchor: TimelineAnchor | null, limit = 25) {
   return gated(
     useInfiniteQuery({
       queryKey: queryKeys.crm.activityTimeline({ ...params, limit }),
-      queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
+      queryFn: ({ pageParam, signal }) =>
         apiClient.get<TimelinePage>(
           `/crm/activities/timeline?${new URLSearchParams({
             ...params,
             limit: String(limit),
-            ...(pageParam ? { cursor: pageParam } : {}),
+            ...(pageParam ? { cursor: pageParam as string } : {}),
           }).toString()}`,
+          undefined,
+          signal,
         ),
       getNextPageParam: (lastPage: TimelinePage) => lastPage.pagination.nextCursor ?? undefined,
       initialPageParam: undefined as string | undefined,
@@ -65,13 +67,15 @@ export function useMyActivityTasks(includeCompleted = false, limit = 25) {
   return gated(
     useInfiniteQuery({
       queryKey: queryKeys.crm.myActivityTasks({ includeCompleted, limit }),
-      queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
+      queryFn: ({ pageParam, signal }) =>
         apiClient.get<TaskPage>(
           `/crm/activities/my-tasks?${new URLSearchParams({
             includeCompleted: String(includeCompleted),
             limit: String(limit),
-            ...(pageParam ? { cursor: pageParam } : {}),
+            ...(pageParam ? { cursor: pageParam as string } : {}),
           }).toString()}`,
+          undefined,
+          signal,
         ),
       getNextPageParam: (lastPage: TaskPage) => lastPage.pagination.nextCursor ?? undefined,
       initialPageParam: undefined as string | undefined,
@@ -85,9 +89,9 @@ export function useMyActivityTasks(includeCompleted = false, limit = 25) {
 export function useActivityParticipants(activityId: string | null) {
   return useGatedQuery("crm:activities:view", {
     queryKey: queryKeys.crm.activityParticipants(activityId ?? ""),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<{ data: ActivityParticipant[] }>(
-        `/crm/activities/${activityId}/participants`,
+        `/crm/activities/${activityId}/participants`, signal,
       ),
     staleTime: 60_000,
     enabled: !!activityId,

@@ -15,7 +15,7 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { type InfiniteData, useQueryClient } from "@tanstack/react-query";
-import { AnimatedLogo } from "@/features/landing/components/animated-logo";
+import { AnimatedLogo } from "@/components/brand/animated-logo";
 import {
   useAskAI,
   useAiConversations,

@@ -32,8 +32,8 @@ const AR_KEY = ["streamlineos", "hr", "access-requests"] as const;
 export function useAccessRequests(employeeId?: string) {
   return useQuery<AccessRequest[]>({
     queryKey: [...AR_KEY, { employeeId }],
-    queryFn: () =>
-      apiClient.get<AccessRequest[]>("/hr/access-requests", employeeId ? { employeeId } : undefined),
+    queryFn: ({ signal }) =>
+      apiClient.get<AccessRequest[]>("/hr/access-requests", employeeId ? { employeeId } : undefined, signal),
     staleTime: 60_000,
   });
 }

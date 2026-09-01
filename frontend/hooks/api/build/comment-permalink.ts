@@ -37,9 +37,9 @@ export function commentPermalinkQueryOptions(
 ) {
   return queryOptions<CommentPermalinkData>({
     queryKey: queryKeys.projects.commentPermalinkWithComment(projectId, ticketId, commentId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CommentPermalinkData>(
-        `/build/${projectId}/tickets/${ticketId}/comments/${commentId}`,
+        `/build/${projectId}/tickets/${ticketId}/comments/${commentId}`, signal,
       ),
     staleTime: 60_000,
     retry: false,
@@ -49,8 +49,8 @@ export function commentPermalinkQueryOptions(
 export function ticketPermalinkQueryOptions(projectId: number, ticketId: number) {
   return queryOptions<TicketPermalinkData>({
     queryKey: queryKeys.projects.commentPermalinkTicket(projectId, ticketId),
-    queryFn: () =>
-      apiClient.get<TicketPermalinkData>(`/build/${projectId}/tickets/${ticketId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<TicketPermalinkData>(`/build/${projectId}/tickets/${ticketId}`, undefined, signal),
     staleTime: 60_000,
     retry: false,
   });

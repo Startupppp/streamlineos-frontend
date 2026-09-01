@@ -35,8 +35,8 @@ export interface PersonalDetails {
 export function usePersonalDetailsQuery() {
   return useQuery({
     queryKey: queryKeys.onboardingFlow.personalDetails(),
-    queryFn: () =>
-      apiClient.get<PersonalDetails>("/onboarding/personal-details"),
+    queryFn: ({ signal }) =>
+      apiClient.get<PersonalDetails>("/onboarding/personal-details", undefined, signal),
     staleTime: 30_000,
   });
 }
@@ -72,7 +72,7 @@ export type BankDetails = BankDetailsPayload;
 export function useBankDetailsQuery() {
   return useQuery({
     queryKey: queryKeys.onboardingFlow.bankDetails(),
-    queryFn: () => apiClient.get<BankDetails>("/onboarding/bank-details"),
+    queryFn: ({ signal }) => apiClient.get<BankDetails>("/onboarding/bank-details", undefined, signal),
     staleTime: 30_000,
   });
 }

@@ -41,7 +41,7 @@ export function useLeavePolicies() {
   const canView = useCan("hr:leaves:view");
   return useQuery<LeavePolicy[]>({
     queryKey: queryKeys.hr.leavePolicies(),
-    queryFn: () => apiClient.get<LeavePolicy[]>("/hr/leave-policies"),
+    queryFn: ({ signal }) => apiClient.get<LeavePolicy[]>("/hr/leave-policies", undefined, signal),
     staleTime: 60_000,
     enabled: canView,
   });

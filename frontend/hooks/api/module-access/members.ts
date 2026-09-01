@@ -158,9 +158,9 @@ export function useModuleMemberGrants(
   const canManage = useCan(manageKey(moduleKey));
   return useQuery<{ grants: MemberGrant[] }, Error>({
     queryKey: queryKeys.moduleAccess.memberGrants(moduleKey, membershipId ?? 0),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<{ grants: MemberGrant[] }>(
-        `/module-access/${moduleKey}/members/${membershipId}/grants`,
+        `/module-access/${moduleKey}/members/${membershipId}/grants`, signal,
       ),
     enabled: canManage && membershipId !== null && (options?.enabled ?? true),
     staleTime: 30_000,

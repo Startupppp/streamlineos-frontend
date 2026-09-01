@@ -26,7 +26,7 @@ interface EnrollmentsResponse {
 export function useCrmSequences() {
   return useGatedQuery("crm:sequences:manage", {
     queryKey: queryKeys.crmSequences.list(),
-    queryFn: () => apiClient.get<SequencesResponse>("/crm/sequences"),
+    queryFn: ({ signal }) => apiClient.get<SequencesResponse>("/crm/sequences", undefined, signal),
     staleTime: 2 * 60_000,
   });
 }
@@ -81,7 +81,7 @@ export function useDeleteCrmSequence() {
 export function useCrmSequenceSteps(sequenceId: string) {
   return useGatedQuery("crm:sequences:manage", {
     queryKey: queryKeys.crmSequences.steps(sequenceId),
-    queryFn: () => apiClient.get<StepsResponse>(`/crm/sequences/${sequenceId}/steps`),
+    queryFn: ({ signal }) => apiClient.get<StepsResponse>(`/crm/sequences/${sequenceId}/steps`, undefined, signal),
     enabled: !!sequenceId,
     staleTime: 60_000,
   });
@@ -114,8 +114,8 @@ export function useDeleteCrmSequenceStep(sequenceId: string) {
 export function useCrmSequenceEnrollments(sequenceId: string, page: number) {
   return useGatedQuery("crm:sequences:manage", {
     queryKey: queryKeys.crmSequences.enrollments(sequenceId, page),
-    queryFn: () =>
-      apiClient.get<EnrollmentsResponse>(`/crm/sequences/${sequenceId}/enrollments`, { page }),
+    queryFn: ({ signal }) =>
+      apiClient.get<EnrollmentsResponse>(`/crm/sequences/${sequenceId}/enrollments`, { page }, signal),
     enabled: !!sequenceId,
     staleTime: 30_000,
   });

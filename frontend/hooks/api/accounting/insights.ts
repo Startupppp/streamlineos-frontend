@@ -58,7 +58,7 @@ export function useAnomalies(params: { from?: string; to?: string } = {}) {
   const query = toQuery(params);
   return useQuery<Anomaly[], Error>({
     queryKey: insightKeys.anomalies(query),
-    queryFn: () => apiClient.get<Anomaly[]>("/accounting/insights/anomalies", query),
+    queryFn: ({ signal }) => apiClient.get<Anomaly[]>("/accounting/insights/anomalies", query, signal),
     staleTime: 300_000,
     enabled: can,
   });
@@ -68,7 +68,7 @@ export function useInsightsDigest() {
   const can = useCan("accounting:reports:read");
   return useQuery<InsightsDigest, Error>({
     queryKey: insightKeys.digest(),
-    queryFn: () => apiClient.get<InsightsDigest>("/accounting/insights/digest"),
+    queryFn: ({ signal }) => apiClient.get<InsightsDigest>("/accounting/insights/digest", undefined, signal),
     staleTime: 300_000,
     enabled: can,
   });

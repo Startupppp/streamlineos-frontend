@@ -24,7 +24,7 @@ export const useOrgSettings = (
   const { enabled: callerEnabled, ...restOptions } = options ?? {};
   return useQuery<OrgSettings, Error>({
     queryKey: queryKeys.organization.settings(),
-    queryFn: () => apiClient.get<OrgSettings>("/organization/settings"),
+    queryFn: ({ signal }) => apiClient.get<OrgSettings>("/organization/settings", undefined, signal),
     staleTime: 30 * 60_000,
     ...restOptions,
     enabled: canViewSettings && (callerEnabled ?? true),
@@ -48,12 +48,12 @@ export const useOrgMembers = (
       ...queryKeys.organization.members(),
       { page, limit: safeLimit, search, includeInactive: false },
     ] as const,
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<MembersResponse>("/organization/members", {
         page: String(page),
         limit: String(safeLimit),
         ...(search ? { search } : {}),
-      }),
+      }, signal),
     staleTime: 30_000,
     ...restOptions,
     enabled: canViewMembers && (callerEnabled ?? true),
@@ -75,13 +75,13 @@ export const useOrgMembersByIds = (
       ...queryKeys.organization.members(),
       { userIds: ids, includeInactive: true },
     ] as const,
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<MembersResponse>("/organization/members", {
         page: "1",
         limit: String(Math.min(Math.max(ids.length, 1), 100)),
         userIds: ids.join(","),
         includeInactive: "true",
-      }),
+      }, signal),
     staleTime: 5 * 60_000,
     ...restOptions,
     enabled: canViewMembers && ids.length > 0 && (callerEnabled ?? true),
@@ -192,8 +192,8 @@ export const useArchivedOrganizations = (
   const { enabled: callerEnabled, ...restOptions } = options ?? {};
   return useQuery<ArchivedOrganization[], Error>({
     queryKey: queryKeys.organization.archived(),
-    queryFn: () =>
-      apiClient.get<ArchivedOrganization[]>("/organization/archived"),
+    queryFn: ({ signal }) =>
+      apiClient.get<ArchivedOrganization[]>("/organization/archived", undefined, signal),
     staleTime: 30_000,
     ...restOptions,
     enabled: callerEnabled ?? true,

@@ -36,7 +36,7 @@ export function usePayrollTemplates(params?: TemplateListParams) {
   const canView = useCan("payroll:templates:view");
   return useQuery({
     queryKey: queryKeys.payroll.templates(params as Record<string, unknown> | undefined),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PaginatedResult<TemplateRow>>(
         "/payroll/templates",
         params as Record<string, unknown> | undefined,

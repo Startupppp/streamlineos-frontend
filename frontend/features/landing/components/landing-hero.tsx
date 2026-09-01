@@ -8,7 +8,7 @@ import { BRAND_NAME } from "@/lib/branding";
 import { cheapestAnnualLabel, PRICING } from "@/lib/pricing";
 import { Magnetic } from "./motion/magnetic";
 import { FloatingComposition } from "@/components/brand/floating-composition";
-import { AnimatedLogo } from "./animated-logo";
+import { AnimatedLogo } from "@/components/brand/animated-logo";
 
 const EASE_OUT_QUART = [0.22, 1, 0.36, 1] as const;
 

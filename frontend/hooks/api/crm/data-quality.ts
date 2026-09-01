@@ -30,7 +30,7 @@ export interface DataQualityReport {
 export function useCrmDataQuality() {
   return useGatedQuery("crm:data-quality:view", {
     queryKey: queryKeys.crmDataQuality.report(),
-    queryFn: () => apiClient.get<DataQualityReport>("/crm/data-quality"),
+    queryFn: ({ signal }) => apiClient.get<DataQualityReport>("/crm/data-quality", undefined, signal),
     staleTime: 60_000,
   });
 }

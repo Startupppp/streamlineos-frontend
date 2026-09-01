@@ -15,10 +15,10 @@ export function useWatchers(
   const canView = useCan("build:tickets:view");
   return useQuery<TicketWatcher[]>({
     queryKey: queryKeys.projects.watchers(ticketId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<TicketWatcher[]>(
         `/build/${projectId}/tickets/${ticketId}/watchers`
-      ),
+      , undefined, signal),
     enabled: canView && !!ticketId && !!projectId,
     staleTime: 30_000,
     ...options,

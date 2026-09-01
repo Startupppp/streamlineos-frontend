@@ -95,10 +95,10 @@ export function useConfirmReorderProposal() {
 export function useSupplierDelayBriefing(vendorId?: string) {
   return useQuery<SupplierDelayBriefing, Error>({
     queryKey: queryKeys.inventory.supplierDelayBriefing(vendorId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<SupplierDelayBriefing>(
         "/inventory/ai/supplier-delay",
-        vendorId ? { vendorId } : {},
+        vendorId ? { vendorId } : {}, signal,
       ),
     staleTime: 5 * 60_000,
   });

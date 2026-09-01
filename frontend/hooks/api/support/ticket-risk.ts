@@ -19,7 +19,7 @@ export interface TicketRisk {
 export function useTicketRisk(ticketId: number) {
   return useQuery({
     queryKey: queryKeys.supportTicketRisk.detail(ticketId),
-    queryFn: () => apiClient.get<TicketRisk>(`/support/${ticketId}/risk`),
+    queryFn: ({ signal }) => apiClient.get<TicketRisk>(`/support/${ticketId}/risk`, undefined, signal),
     staleTime: 30_000,
     enabled: Number.isFinite(ticketId) && ticketId > 0,
   });

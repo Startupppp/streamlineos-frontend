@@ -68,7 +68,7 @@ export const useSupportTickets = (
 ) => {
   return useQuery<SupportTicketsResponse, Error>({
     queryKey: queryKeys.support.list(filters as Record<string, unknown>),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<SupportTicketsResponse>("/support", {
         ...(filters?.status ? { status: filters.status } : {}),
         ...(filters?.priority ? { priority: filters.priority } : {}),
@@ -78,7 +78,7 @@ export const useSupportTickets = (
         ...(filters?.snoozed !== undefined ? { snoozed: String(filters.snoozed) } : {}),
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(filters?.limit ? { limit: String(filters.limit) } : {}),
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     ...options,
   });
@@ -93,7 +93,7 @@ export const useSupportTicket = (
 ) => {
   return useQuery<SupportTicket, Error>({
     queryKey: queryKeys.support.detail(id),
-    queryFn: () => apiClient.get<SupportTicket>(`/support/${id}`),
+    queryFn: ({ signal }) => apiClient.get<SupportTicket>(`/support/${id}`, undefined, signal),
     enabled: id > 0,
     staleTime: 2 * 60_000,
     ...options,
@@ -152,7 +152,7 @@ export const useSupportStats = (
 ) => {
   return useQuery<SupportStats, Error>({
     queryKey: [...queryKeys.support.all, "stats"] as const,
-    queryFn: () => apiClient.get<SupportStats>("/support/stats"),
+    queryFn: ({ signal }) => apiClient.get<SupportStats>("/support/stats", undefined, signal),
     staleTime: 5 * 60_000,
     ...options,
   });

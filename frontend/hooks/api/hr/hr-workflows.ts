@@ -21,7 +21,7 @@ const DELEGATIONS_KEY = ["streamlineos", "hr", "workflow-delegations"] as const;
 export function useHrWorkflowDefinitions(params?: { objectType?: HrWorkflowObjectType; status?: HrWorkflowStatus; page?: number; limit?: number }) {
   return useQuery({
     queryKey: [...WORKFLOWS_KEY, params],
-    queryFn: () => apiClient.get<PaginatedResult<HrWorkflowDefinition>>("/hr/workflows", params),
+    queryFn: ({ signal }) => apiClient.get<PaginatedResult<HrWorkflowDefinition>>("/hr/workflows", params),
     staleTime: 2 * 60_000,
   });
 }
@@ -29,7 +29,7 @@ export function useHrWorkflowDefinitions(params?: { objectType?: HrWorkflowObjec
 export function useHrWorkflowDefinition(workflowId: number | null) {
   return useQuery({
     queryKey: [...WORKFLOWS_KEY, workflowId],
-    queryFn: () => apiClient.get<HrWorkflowDefinition>(`/hr/workflows/${workflowId}`),
+    queryFn: ({ signal }) => apiClient.get<HrWorkflowDefinition>(`/hr/workflows/${workflowId}`, undefined, signal),
     enabled: workflowId !== null,
     staleTime: 2 * 60_000,
   });
@@ -149,7 +149,7 @@ export function useDeleteWorkflow() {
 export function useWorkflowInbox(page = 1, limit = 50) {
   return useQuery({
     queryKey: [...INSTANCES_KEY, "inbox", page, limit],
-    queryFn: () => apiClient.get<PaginatedResult<HrWorkflowInstance>>("/hr/workflows/instances/inbox", { page, limit }),
+    queryFn: ({ signal }) => apiClient.get<PaginatedResult<HrWorkflowInstance>>("/hr/workflows/instances/inbox", { page, limit }),
     staleTime: 30_000,
   });
 }
@@ -160,7 +160,7 @@ export function useWorkflowActed(
 ) {
   return useQuery({
     queryKey: [...INSTANCES_KEY, "acted", params],
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPaginatedResult<HrWorkflowInstance>>(
         "/hr/workflows/instances/acted",
         params,
@@ -173,7 +173,7 @@ export function useWorkflowActed(
 export function useWorkflowInstanceDetail(instanceId: number | null) {
   return useQuery({
     queryKey: [...INSTANCES_KEY, "detail", instanceId],
-    queryFn: () => apiClient.get<HrWorkflowInstance>(`/hr/workflows/instances/${instanceId}`),
+    queryFn: ({ signal }) => apiClient.get<HrWorkflowInstance>(`/hr/workflows/instances/${instanceId}`, undefined, signal),
     enabled: instanceId !== null,
     staleTime: 30_000,
   });
@@ -209,7 +209,7 @@ export function useRejectInstance() {
 export function useMyDelegations(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: [...DELEGATIONS_KEY, "mine"],
-    queryFn: () => apiClient.get<HrWorkflowDelegation[]>("/hr/workflows/delegations/mine"),
+    queryFn: ({ signal }) => apiClient.get<HrWorkflowDelegation[]>("/hr/workflows/delegations/mine", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: options?.enabled ?? true,
   });

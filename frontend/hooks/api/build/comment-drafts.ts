@@ -39,7 +39,7 @@ export function useMyCommentDrafts() {
   const canView = useCan("build:tickets:view");
   return useQuery<CommentDraft[]>({
     queryKey: queryKeys.projects.commentDrafts.mine(),
-    queryFn: () => apiClient.get<CommentDraft[]>("/build/comment-drafts/mine"),
+    queryFn: ({ signal }) => apiClient.get<CommentDraft[]>("/build/comment-drafts/mine", undefined, signal),
     enabled: canView,
     staleTime: 60_000,
   });

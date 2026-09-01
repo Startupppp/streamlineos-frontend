@@ -35,7 +35,7 @@ export function useKbResearchBrief(briefId: number | undefined) {
   const canViewPages = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.researchBrief(briefId ?? 0),
-    queryFn: () => apiClient.get<KbResearchBrief>(`/kb/research-briefs/${briefId}`),
+    queryFn: ({ signal }) => apiClient.get<KbResearchBrief>(`/kb/research-briefs/${briefId}`, undefined, signal),
     enabled: canViewPages && briefId !== undefined && briefId > 0,
     staleTime: 10_000,
     refetchInterval: (query) => {

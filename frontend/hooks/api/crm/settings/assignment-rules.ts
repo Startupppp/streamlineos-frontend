@@ -85,7 +85,7 @@ export interface AssignmentPreviewResult {
 export function useAssignmentRules() {
   return useGatedQuery("crm:assignment-rules:manage", {
     queryKey: queryKeys.crmSettings.assignmentRules(),
-    queryFn: () => apiClient.get<AssignmentRule[]>("/crm/assignment-rules"),
+    queryFn: ({ signal }) => apiClient.get<AssignmentRule[]>("/crm/assignment-rules", undefined, signal),
     staleTime: 2 * 60_000,
   });
 }

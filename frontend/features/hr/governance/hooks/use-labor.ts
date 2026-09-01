@@ -80,8 +80,8 @@ export function useCollectiveAgreements(params?: { status?: string; unionName?: 
 export function useExpiringAgreements(days = 30) {
   return useQuery<{ data: CollectiveAgreement[]; daysWindow: number }>({
     queryKey: [...LABOR_KEY, "agreements", "expiring", days],
-    queryFn: () =>
-      apiClient.get<{ data: CollectiveAgreement[]; daysWindow: number }>("/hr/governance/labor/agreements/expiring", { days }),
+    queryFn: ({ signal }) =>
+      apiClient.get<{ data: CollectiveAgreement[]; daysWindow: number }>("/hr/governance/labor/agreements/expiring", { days }, signal),
     staleTime: 60_000,
   });
 }

@@ -28,13 +28,13 @@ export function useVendors(filters?: VendorFilters) {
   const limit = filters?.pageSize ?? filters?.limit;
   return useQuery<VendorListResponse, Error>({
     queryKey: queryKeys.inventory.vendors(filters),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<VendorListResponse>("/inventory/vendors", {
         ...(filters?.search ? { search: filters.search } : {}),
         ...(filters?.isActive !== undefined ? { isActive: String(filters.isActive) } : {}),
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(limit ? { limit: String(limit) } : {}),
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,
@@ -45,7 +45,7 @@ export function useVendor(vendorId: number) {
   const canView = useCan("inventory:vendors:read");
   return useQuery<InventoryVendor, Error>({
     queryKey: queryKeys.inventory.vendor(vendorId),
-    queryFn: () => apiClient.get<InventoryVendor>(`/inventory/vendors/${vendorId}`),
+    queryFn: ({ signal }) => apiClient.get<InventoryVendor>(`/inventory/vendors/${vendorId}`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canView && vendorId > 0,
   });
@@ -82,7 +82,7 @@ export function useVendorPerformance(vendorId: number) {
   const canView = useCan("inventory:vendors:read");
   return useQuery<VendorPerformance, Error>({
     queryKey: [...queryKeys.inventory.vendor(vendorId), "performance"],
-    queryFn: () => apiClient.get<VendorPerformance>(`/inventory/vendors/${vendorId}/performance`),
+    queryFn: ({ signal }) => apiClient.get<VendorPerformance>(`/inventory/vendors/${vendorId}/performance`, undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canView && vendorId > 0,
   });

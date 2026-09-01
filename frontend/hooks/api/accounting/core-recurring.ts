@@ -56,7 +56,7 @@ export function useRecurringJournals(params: RecurringJournalParams = {}) {
   const can = useCan("accounting:recurring:read");
   return useQuery<CursorPage<RecurringJournal>, Error>({
     queryKey: coreKeys.recurringJournals(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPage<RecurringJournal>>(
         "/accounting/recurring-journals",
         toQuery(params),

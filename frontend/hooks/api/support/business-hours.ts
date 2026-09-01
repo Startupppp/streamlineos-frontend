@@ -47,7 +47,7 @@ export interface UpdateBusinessHoursInput {
 export function useBusinessHoursList() {
   return useQuery({
     queryKey: queryKeys.supportBusinessHours.list(),
-    queryFn: () => apiClient.get<BusinessHours[]>("/support/business-hours"),
+    queryFn: ({ signal }) => apiClient.get<BusinessHours[]>("/support/business-hours", undefined, signal),
     staleTime: 60_000,
   });
 }

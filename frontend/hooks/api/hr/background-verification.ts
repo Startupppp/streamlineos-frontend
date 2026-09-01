@@ -30,7 +30,7 @@ export function useBackgroundVerifications() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: bgvKeys.list(),
-    queryFn: () => apiClient.get<BackgroundVerification[]>("/hr/background-verification"),
+    queryFn: ({ signal }) => apiClient.get<BackgroundVerification[]>("/hr/background-verification", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canView && hrEnabled,
   });

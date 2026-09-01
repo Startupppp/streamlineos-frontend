@@ -42,8 +42,8 @@ export function useAutonomyDecisions(filters: DecisionFilters = {}, limit = 25) 
   return gated(
     useInfiniteQuery({
       queryKey: queryKeys.crm.autonomyDecisions({ ...filters, limit }),
-      queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
-        apiClient.get<DecisionPage>(`/crm/autonomy/decisions?${toParams(filters, limit, pageParam)}`),
+      queryFn: ({ pageParam, signal }) =>
+        apiClient.get<DecisionPage>(`/crm/autonomy/decisions?${toParams(filters, limit, pageParam as string | undefined)}`, undefined, signal),
       getNextPageParam: (lastPage: DecisionPage) => lastPage.pagination.nextCursor ?? undefined,
       initialPageParam: undefined as string | undefined,
       // Short, because a manager watching the feed wants to see the system act.
@@ -88,7 +88,7 @@ export function useReverseDecision() {
 export function useAutonomySwitches() {
   return useGatedQuery("crm:autonomy:view", {
     queryKey: queryKeys.crm.autonomySwitches(),
-    queryFn: () => apiClient.get<SwitchesResponse>("/crm/autonomy/switches"),
+    queryFn: ({ signal }) => apiClient.get<SwitchesResponse>("/crm/autonomy/switches", undefined, signal),
     staleTime: 30_000,
   });
 }
@@ -117,7 +117,7 @@ export function useSetAutonomySwitch() {
 export function useAutonomyScoreboard(days = 30) {
   return useGatedQuery("crm:autonomy:view", {
     queryKey: queryKeys.crm.autonomyScoreboard(days),
-    queryFn: () => apiClient.get<Scoreboard>(`/crm/autonomy/scoreboard?days=${days}`),
+    queryFn: ({ signal }) => apiClient.get<Scoreboard>(`/crm/autonomy/scoreboard?days=${days}`, undefined, signal),
     staleTime: 60_000,
   });
 }
@@ -126,7 +126,7 @@ export function useAutonomyScoreboard(days = 30) {
 export function useAutonomyReviewQueue() {
   return useGatedQuery("crm:autonomy:view", {
     queryKey: queryKeys.crm.autonomyReviewQueue(),
-    queryFn: () => apiClient.get<ReviewQueueItem[]>("/crm/autonomy/review-queue"),
+    queryFn: ({ signal }) => apiClient.get<ReviewQueueItem[]>("/crm/autonomy/review-queue", undefined, signal),
     staleTime: 30_000,
   });
 }
@@ -150,7 +150,7 @@ export function useMarkReviewed() {
 export function useAutonomySettings() {
   return useGatedQuery("crm:autonomy:view", {
     queryKey: queryKeys.crm.autonomySettings(),
-    queryFn: () => apiClient.get<AutonomySettings>("/crm/autonomy/settings"),
+    queryFn: ({ signal }) => apiClient.get<AutonomySettings>("/crm/autonomy/settings", undefined, signal),
     staleTime: 60_000,
   });
 }
@@ -178,7 +178,7 @@ export function useUpdateAutonomySettings() {
 export function useLiveHolds() {
   return useGatedQuery("crm:autonomy:view", {
     queryKey: queryKeys.crm.autonomyHolds(),
-    queryFn: () => apiClient.get<LiveHold[]>("/crm/autonomy/holds"),
+    queryFn: ({ signal }) => apiClient.get<LiveHold[]>("/crm/autonomy/holds", undefined, signal),
     refetchInterval: 10_000,
     staleTime: 0,
   });

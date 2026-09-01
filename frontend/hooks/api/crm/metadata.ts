@@ -53,8 +53,8 @@ function normalizeRaw(raw: CrmMetadataRaw): CrmMetadataResponse {
 export function crmMetadataQueryOptions() {
   return queryOptions({
     queryKey: queryKeys.crmMetadata.detail(),
-    queryFn: async () => {
-      const raw = await apiClient.get<CrmMetadataRaw>("/crm/metadata");
+    queryFn: async ({ signal }) => {
+      const raw = await apiClient.get<CrmMetadataRaw>("/crm/metadata", undefined, signal);
       return normalizeRaw(raw);
     },
     staleTime: CRM_METADATA_STALE_TIME,
@@ -241,8 +241,8 @@ export function useDeleteOption() {
 export function useValidationRules(params?: Record<string, unknown>) {
   return useGatedQuery("crm:settings:view", {
     queryKey: queryKeys.crmMetadata.validationRules(params),
-    queryFn: () =>
-      apiClient.get<CrmValidationRule[]>("/crm/validation-rules", params),
+    queryFn: ({ signal }) =>
+      apiClient.get<CrmValidationRule[]>("/crm/validation-rules", params, signal),
     staleTime: CRM_METADATA_STALE_TIME,
   });
 }
@@ -299,7 +299,7 @@ export function useTestValidationRules() {
 export function useBlueprints(params?: Record<string, unknown>) {
   return useGatedQuery("crm:settings:view", {
     queryKey: queryKeys.crmMetadata.blueprints(params),
-    queryFn: () => apiClient.get<CrmBlueprint[]>("/crm/blueprints", params),
+    queryFn: ({ signal }) => apiClient.get<CrmBlueprint[]>("/crm/blueprints", params, signal),
     staleTime: CRM_METADATA_STALE_TIME,
   });
 }
@@ -344,8 +344,8 @@ export type UpdateTransitionInput = Partial<CreateTransitionInput>;
 export function useBlueprintTransitions(blueprintId: string | null) {
   return useGatedQuery("crm:settings:view", {
     queryKey: queryKeys.crmMetadata.blueprintTransitions(blueprintId),
-    queryFn: () =>
-      apiClient.get<CrmBlueprintTransition[]>(`/crm/blueprints/${blueprintId}/transitions`),
+    queryFn: ({ signal }) =>
+      apiClient.get<CrmBlueprintTransition[]>(`/crm/blueprints/${blueprintId}/transitions`, undefined, signal),
     enabled: blueprintId !== null,
     staleTime: 60_000,
   });

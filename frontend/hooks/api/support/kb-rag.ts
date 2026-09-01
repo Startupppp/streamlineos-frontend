@@ -52,8 +52,8 @@ export function usePublicAskSupportKb() {
 export function useSupportKbIndexStatus(id: number) {
   return useQuery({
     queryKey: [...queryKeys.supportKb.article(id), "index-status"] as const,
-    queryFn: () =>
-      apiClient.get<KbIndexStatus>(`/support/kb/articles/${id}/index-status`),
+    queryFn: ({ signal }) =>
+      apiClient.get<KbIndexStatus>(`/support/kb/articles/${id}/index-status`, undefined, signal),
     enabled: Number.isFinite(id) && id > 0,
     staleTime: 15_000,
   });

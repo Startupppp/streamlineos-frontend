@@ -56,7 +56,7 @@ export interface ReplyPortalTicketInput {
 export function usePortalTickets() {
   return useQuery({
     queryKey: queryKeys.supportPortalTickets.list(),
-    queryFn: () => apiClient.get<PortalTicket[]>("/support/portal/tickets"),
+    queryFn: ({ signal }) => apiClient.get<PortalTicket[]>("/support/portal/tickets", undefined, signal),
     staleTime: 30_000,
   });
 }
@@ -76,7 +76,7 @@ export function useCreatePortalTicket() {
 export function usePortalTicket(ticketId: number) {
   return useQuery({
     queryKey: queryKeys.supportPortalTickets.detail(ticketId),
-    queryFn: () => apiClient.get<PortalTicketDetail>(`/support/portal/tickets/${ticketId}`),
+    queryFn: ({ signal }) => apiClient.get<PortalTicketDetail>(`/support/portal/tickets/${ticketId}`, undefined, signal),
     enabled: Number.isFinite(ticketId) && ticketId > 0,
     staleTime: 15_000,
   });

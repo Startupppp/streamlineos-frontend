@@ -56,7 +56,7 @@ export function useDimensions() {
   const can = useCan("accounting:dimensions:read");
   return useQuery<{ items: AccountingDimension[] }, Error>({
     queryKey: dimensionKeys.list(),
-    queryFn: () => apiClient.get<{ items: AccountingDimension[] }>("/accounting/dimensions"),
+    queryFn: ({ signal }) => apiClient.get<{ items: AccountingDimension[] }>("/accounting/dimensions", undefined, signal),
     staleTime: 120_000,
     enabled: can,
   });
@@ -90,9 +90,9 @@ export function useDimensionValues(dimensionId: number, enabled = true) {
   const can = useCan("accounting:dimensions:read");
   return useQuery<{ items: AccountingDimensionValue[] }, Error>({
     queryKey: dimensionKeys.values(dimensionId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<{ items: AccountingDimensionValue[] }>(
-        `/accounting/dimensions/${dimensionId}/values`,
+        `/accounting/dimensions/${dimensionId}/values`, signal,
       ),
     staleTime: 60_000,
     enabled: can && enabled && dimensionId > 0,

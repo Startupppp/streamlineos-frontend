@@ -9,7 +9,7 @@ import type { Pricebook, PricebookEntry, QuoteSettings, QuoteTemplate } from "@/
 export function usePricebooks() {
   return useGatedQuery("crm:pricebooks:manage", {
     queryKey: queryKeys.crmPricebooks.list(),
-    queryFn: () => apiClient.get<Pricebook[]>("/crm/pricebooks"),
+    queryFn: ({ signal }) => apiClient.get<Pricebook[]>("/crm/pricebooks", undefined, signal),
     staleTime: 5 * 60_000,
   });
 }
@@ -17,7 +17,7 @@ export function usePricebooks() {
 export function usePricebookEntries(pricebookId: string) {
   return useGatedQuery("crm:pricebooks:manage", {
     queryKey: queryKeys.crmPricebooks.entries(pricebookId),
-    queryFn: () => apiClient.get<PricebookEntry[]>(`/crm/pricebooks/${pricebookId}/entries`),
+    queryFn: ({ signal }) => apiClient.get<PricebookEntry[]>(`/crm/pricebooks/${pricebookId}/entries`, undefined, signal),
     enabled: !!pricebookId,
     staleTime: 2 * 60_000,
   });
@@ -101,7 +101,7 @@ export function useDeletePricebookEntry() {
 export function useQuoteSettings() {
   return useGatedQuery("crm:pricebooks:manage", {
     queryKey: queryKeys.crmQuoteSettings.all,
-    queryFn: () => apiClient.get<QuoteSettings>("/crm/quote-settings"),
+    queryFn: ({ signal }) => apiClient.get<QuoteSettings>("/crm/quote-settings", undefined, signal),
     staleTime: 5 * 60_000,
   });
 }
@@ -121,7 +121,7 @@ export function useUpdateQuoteSettings() {
 export function useQuoteTemplates() {
   return useGatedQuery("crm:pricebooks:manage", {
     queryKey: queryKeys.crmQuoteTemplates.list(),
-    queryFn: () => apiClient.get<QuoteTemplate[]>("/crm/quote-templates"),
+    queryFn: ({ signal }) => apiClient.get<QuoteTemplate[]>("/crm/quote-templates", undefined, signal),
     staleTime: 5 * 60_000,
   });
 }

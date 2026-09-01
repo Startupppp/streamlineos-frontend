@@ -19,7 +19,7 @@ export function useCalendarOrgMembers() {
   const canView = useCan("directory:people:view");
   return useQuery({
     queryKey: queryKeys.calendar.orgMembers(),
-    queryFn: () => apiClient.get<CalendarOrgMember[]>("/org/members"),
+    queryFn: ({ signal }) => apiClient.get<CalendarOrgMember[]>("/org/members", undefined, signal),
     staleTime: 5 * 60 * 1000,
     enabled: canView,
   });
@@ -31,11 +31,11 @@ export function useCalendarMemberSearch(search: string, enabled = true) {
   const term = search.trim();
   return useQuery({
     queryKey: queryKeys.calendar.memberSearch(term),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CalendarOrgMember[]>("/org/members", {
         search: term,
         limit: 25,
-      }),
+      }, signal),
     enabled: enabled && term.length > 0,
     staleTime: 30 * 1000,
     placeholderData: keepPreviousData,
@@ -173,11 +173,11 @@ export function useCalendarEvents(start: Date, end: Date) {
   const canView = useCan("calendar:read");
   return useQuery({
     queryKey: queryKeys.calendar.events(start.toISOString(), end.toISOString()),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CalendarEventsResponse>("/calendar/events", {
         start: start.toISOString(),
         end: end.toISOString(),
-      }),
+      }, signal),
     staleTime: 2 * 60 * 1000,
     enabled: canView,
   });
@@ -262,7 +262,7 @@ interface EventAttendee {
 export function useEventAttendees(eventId: number | null) {
   return useQuery({
     queryKey: queryKeys.calendar.attendees(eventId ?? 0),
-    queryFn: () => apiClient.get<EventAttendee[]>(`/calendar/events/${eventId}/rsvp`),
+    queryFn: ({ signal }) => apiClient.get<EventAttendee[]>(`/calendar/events/${eventId}/rsvp`, undefined, signal),
     enabled: eventId !== null,
     staleTime: 60 * 1000,
   });
@@ -305,11 +305,11 @@ export function useExternalCalendarEvents(start: Date, end: Date, enabled: boole
   const canView = useCan("calendar:read");
   return useQuery({
     queryKey: queryKeys.calendar.externalEvents(start.toISOString(), end.toISOString()),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ExternalCalendarEventsResponse>("/calendar/external-events", {
         start: start.toISOString(),
         end: end.toISOString(),
-      }),
+      }, signal),
     enabled: canView && enabled,
     staleTime: 60_000,
   });
@@ -326,7 +326,7 @@ export function useCalendarSources() {
   const canView = useCan("calendar:read");
   return useQuery({
     queryKey: queryKeys.calendar.sources(),
-    queryFn: () => apiClient.get<CalendarSource[]>("/calendar/sources"),
+    queryFn: ({ signal }) => apiClient.get<CalendarSource[]>("/calendar/sources", undefined, signal),
     staleTime: 30_000,
     enabled: canView,
   });

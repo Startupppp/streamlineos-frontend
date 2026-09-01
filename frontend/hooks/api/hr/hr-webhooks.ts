@@ -25,8 +25,8 @@ export function useHrWebhooks(params?: { page?: number; limit?: number }) {
   const canManage = useCan("hr:integrations:manage");
   return useQuery({
     queryKey: hrWebhookKeys.list(params),
-    queryFn: () =>
-      apiClient.get<HrWebhookSubscription[]>("/hr/webhooks", params as Record<string, unknown>),
+    queryFn: ({ signal }) =>
+      apiClient.get<HrWebhookSubscription[]>("/hr/webhooks", params as Record<string, unknown>, signal),
     staleTime: 30_000,
     enabled: canManage,
   });
@@ -36,7 +36,7 @@ export function useHrWebhookEvents() {
   const canManage = useCan("hr:integrations:manage");
   return useQuery({
     queryKey: hrWebhookKeys.events(),
-    queryFn: () => apiClient.get<HrWebhookEventsResponse>("/hr/webhooks/events"),
+    queryFn: ({ signal }) => apiClient.get<HrWebhookEventsResponse>("/hr/webhooks/events", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canManage,
   });
@@ -46,11 +46,11 @@ export function useHrWebhookDeliveries(subscriptionId: number, page = 1, limit =
   const canManage = useCan("hr:integrations:manage");
   return useQuery({
     queryKey: hrWebhookKeys.deliveries(subscriptionId, page),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<HrWebhookDelivery[]>(`/hr/webhooks/${subscriptionId}/deliveries`, {
         page: String(page),
         limit: String(limit),
-      }),
+      }, signal),
     enabled: canManage && subscriptionId > 0,
     staleTime: 15_000,
   });

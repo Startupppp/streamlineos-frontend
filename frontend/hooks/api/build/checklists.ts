@@ -13,9 +13,9 @@ export function useChecklists(projectId: number, ticketId: number) {
   const canView = useCan("build:tickets:view");
   return useQuery<Checklist[]>({
     queryKey: checklistKeys(projectId, ticketId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<Checklist[]>(
-        `/build/${projectId}/tickets/${ticketId}/checklists`,
+        `/build/${projectId}/tickets/${ticketId}/checklists`, signal,
       ),
     enabled: canView && !!projectId && !!ticketId,
     staleTime: 30_000,

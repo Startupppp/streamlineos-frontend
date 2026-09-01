@@ -28,8 +28,8 @@ export function useHrOrgChart(
 
   return useQuery({
     queryKey: [...queryKeys.hr.orgChart(), orgId, userId, requestParams] as const,
-    queryFn: (): Promise<OrgChartCursorPage> =>
-      apiClient.get<OrgChartCursorPage>("/hr/org-chart", requestParams),
+    queryFn: ({ signal }): Promise<OrgChartCursorPage> =>
+      apiClient.get<OrgChartCursorPage>("/hr/org-chart", requestParams, signal),
     staleTime: 2 * 60_000,
     enabled: !!orgId && !!userId && canView && (options?.enabled ?? true),
   });

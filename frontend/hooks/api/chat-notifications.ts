@@ -65,11 +65,11 @@ export function useChatGlobalNotifications(
           if (!payload?.id || payload.senderId === currentUserIdRef.current) return;
 
           queryClient.invalidateQueries({
-            queryKey: queryKeys.chat.myChannels(orgId),
+            queryKey: queryKeys.chat.myChannels(),
             exact: true,
           });
           queryClient.invalidateQueries({
-            queryKey: queryKeys.chat.unreadTotal(orgId),
+            queryKey: queryKeys.chat.unreadTotal(),
             exact: true,
           });
 

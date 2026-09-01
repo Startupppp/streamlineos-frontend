@@ -54,7 +54,7 @@ export const useAuditLogs = (
   const canView = useCan("audit-log:read");
   return useQuery<AuditLogListResponse, Error>({
     queryKey: queryKeys.auditLog.list(filters as Record<string, unknown>),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<AuditLogListResponse>("/audit-log", {
         ...(filters?.cursor ? { cursor: filters.cursor } : {}),
         ...(filters?.limit ? { limit: String(filters.limit) } : {}),
@@ -64,7 +64,7 @@ export const useAuditLogs = (
         ...(filters?.dateFrom ? { dateFrom: filters.dateFrom } : {}),
         ...(filters?.dateTo ? { dateTo: filters.dateTo } : {}),
         ...(filters?.userSearch ? { userSearch: filters.userSearch } : {}),
-      }),
+      }, signal),
     staleTime: 30_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),
@@ -77,7 +77,7 @@ export const useAuditLogActions = (
   const canView = useCan("audit-log:read");
   return useQuery<string[], Error>({
     queryKey: queryKeys.auditLog.actions(),
-    queryFn: () => apiClient.get<string[]>("/audit-log/actions"),
+    queryFn: ({ signal }) => apiClient.get<string[]>("/audit-log/actions", undefined, signal),
     staleTime: 10 * 60 * 1000,
     ...options,
     enabled: canView && (options?.enabled ?? true),
@@ -90,7 +90,7 @@ export const useAuditLogTargetTypes = (
   const canView = useCan("audit-log:read");
   return useQuery<string[], Error>({
     queryKey: queryKeys.auditLog.targetTypes(),
-    queryFn: () => apiClient.get<string[]>("/audit-log/target-types"),
+    queryFn: ({ signal }) => apiClient.get<string[]>("/audit-log/target-types", undefined, signal),
     staleTime: 10 * 60 * 1000,
     ...options,
     enabled: canView && (options?.enabled ?? true),

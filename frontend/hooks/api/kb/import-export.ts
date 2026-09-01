@@ -72,7 +72,7 @@ export function useKbImportJobs() {
   const canImport = useCan("kb:pages:import");
   return useQuery({
     queryKey: queryKeys.kb.importJobs(),
-    queryFn: () => apiClient.get<KbImportJob[]>("/kb/import-jobs"),
+    queryFn: ({ signal }) => apiClient.get<KbImportJob[]>("/kb/import-jobs", undefined, signal),
     enabled: canImport,
     staleTime: 30_000,
   });
@@ -82,7 +82,7 @@ export function useKbExportJobs() {
   const canExport = useCan("kb:pages:export");
   return useQuery({
     queryKey: queryKeys.kb.exportJobs(),
-    queryFn: () => apiClient.get<KbExportJob[]>("/kb/export-jobs"),
+    queryFn: ({ signal }) => apiClient.get<KbExportJob[]>("/kb/export-jobs", undefined, signal),
     enabled: canExport,
     staleTime: 30_000,
   });

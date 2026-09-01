@@ -3,10 +3,7 @@ import { queryKeyBase as base } from "./base";
 export const collaborationQueryKeys = {
   chat: {
     all: [...base, "chat"] as const,
-    myChannels: (orgId?: string | null) =>
-      orgId
-        ? ([...base, "chat", "myChannels", orgId] as const)
-        : ([...base, "chat", "myChannels"] as const),
+    myChannels: () => [...base, "chat", "myChannels"] as const,
     archivedChannels: () => [...base, "chat", "archivedChannels"] as const,
     publicChannels: () => [...base, "chat", "publicChannels"] as const,
     channel: (channelId: number) =>
@@ -19,10 +16,7 @@ export const collaborationQueryKeys = {
       [...base, "chat", "entityActions", channelId, referenceKeys] as const,
     entityActionOptions: (channelId: number, referenceKey: string) =>
       [...base, "chat", "entityActionOptions", channelId, referenceKey] as const,
-    unreadTotal: (orgId?: string | null) =>
-      orgId
-        ? ([...base, "chat", "unreadTotal", orgId] as const)
-        : ([...base, "chat", "unreadTotal"] as const),
+    unreadTotal: () => [...base, "chat", "unreadTotal"] as const,
     onlineUsers: () => [...base, "chat", "onlineUsers"] as const,
     orgUsers: () => [...base, "chat", "orgUsers"] as const,
     search: (query: string) => [...base, "chat", "search", query] as const,

@@ -7,7 +7,7 @@ import {
   SearchIcon,
   UserIcon,
 } from "@animateicons/react/lucide";
-import { AnimatedLogo } from "@/features/landing/components/animated-logo";
+import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { useAskOs } from "@/components/assistant/ask-os-context";
 import { useCommandPalette } from "@/features/command-palette";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";

@@ -25,10 +25,10 @@ export interface HrGoal {
 export function useHrGoals(params?: { userId?: string }) {
   return useQuery({
     queryKey: queryKeys.hr.goals(params?.userId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<HrGoal[]>(
         "/hr/performance/goals",
-        params as Record<string, unknown> | undefined,
+        params as Record<string, unknown> | undefined, signal,
       ),
     staleTime: 60_000,
   });

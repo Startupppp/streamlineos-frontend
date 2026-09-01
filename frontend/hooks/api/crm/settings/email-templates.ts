@@ -31,8 +31,8 @@ export interface UpdateEmailTemplateInput {
 export function useEmailTemplates(params?: { limit?: number; offset?: number }) {
   return useGatedQuery("crm:email-templates:manage", {
     queryKey: queryKeys.crmSettings.emailTemplates(params as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<EmailTemplate[]>("/crm/email-templates", params as Record<string, unknown>),
+    queryFn: ({ signal }) =>
+      apiClient.get<EmailTemplate[]>("/crm/email-templates", params as Record<string, unknown>, signal),
     staleTime: 2 * 60_000,
   });
 }

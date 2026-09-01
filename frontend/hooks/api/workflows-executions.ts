@@ -18,7 +18,7 @@ export function useWorkflowExecutions(workflowId: string, params?: ExecutionList
   const canView = useCan("workflows:executions:view");
   return useQuery({
     queryKey: queryKeys.workflows.executions(workflowId, params as Record<string, unknown>),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<WorkflowCursorPage<WorkflowExecution>>(
         `/workflows/${workflowId}/executions`,
         params as Record<string, unknown>,
@@ -32,7 +32,7 @@ export function useAllExecutions(params?: ExecutionListParams) {
   const canView = useCan("workflows:executions:view");
   return useQuery({
     queryKey: [...queryKeys.workflows.all, "all-executions", params] as const,
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<WorkflowCursorPage<WorkflowExecution>>(
         "/workflows/executions",
         params as Record<string, unknown>,

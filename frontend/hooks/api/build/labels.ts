@@ -17,7 +17,7 @@ export function useOrgLabels() {
   const canView = useCan("build:view");
   return useQuery<TicketLabel[]>({
     queryKey: LABELS_KEY,
-    queryFn: () => apiClient.get<TicketLabel[]>("/build/labels"),
+    queryFn: ({ signal }) => apiClient.get<TicketLabel[]>("/build/labels", undefined, signal),
     enabled: canView,
     staleTime: 60_000,
   });

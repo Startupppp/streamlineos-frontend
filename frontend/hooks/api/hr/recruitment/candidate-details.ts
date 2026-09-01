@@ -144,7 +144,7 @@ export interface CandidateActivityEvent {
 export function useCandidateActivity(candidateId: number) {
   return useQuery({
     queryKey: [...queryKeys.hr.candidate(candidateId), "activity"],
-    queryFn: () => apiClient.get<CandidateActivityEvent[]>(`/hr/recruitment/candidates/${candidateId}/activity`),
+    queryFn: ({ signal }) => apiClient.get<CandidateActivityEvent[]>(`/hr/recruitment/candidates/${candidateId}/activity`, undefined, signal),
     staleTime: 60_000,
     enabled: !!candidateId,
   });
@@ -153,8 +153,8 @@ export function useCandidateActivity(candidateId: number) {
 export function useCandidateVault(candidateId: number) {
   return useQuery({
     queryKey: queryKeys.hr.candidateVault(candidateId),
-    queryFn: () =>
-      apiClient.get<VaultDocument[]>(`/hr/recruitment/candidates/${candidateId}/vault`),
+    queryFn: ({ signal }) =>
+      apiClient.get<VaultDocument[]>(`/hr/recruitment/candidates/${candidateId}/vault`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: !!candidateId,
   });
@@ -194,10 +194,10 @@ export function useDeleteVaultDocument(candidateId: number) {
 export function useRolloutDocuments(candidateId: number) {
   return useQuery({
     queryKey: queryKeys.hr.rolloutDocuments(candidateId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<RolloutDocumentRecord[]>(
         `/hr/recruitment/candidates/${candidateId}/rollout-documents`
-      ),
+      , undefined, signal),
     staleTime: 2 * 60_000,
     enabled: !!candidateId,
   });
@@ -233,10 +233,10 @@ export function useUpdateCandidateBgv(candidateId: number) {
 export function useVaultAccessLogs(candidateId: number) {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "vaultAccessLogs", candidateId] as const,
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<VaultAccessLog[]>(
         `/hr/recruitment/candidates/${candidateId}/vault/access-logs`
-      ),
+      , undefined, signal),
     staleTime: 2 * 60_000,
     enabled: candidateId > 0,
   });
@@ -246,7 +246,7 @@ export function useBgvComplianceDashboard() {
   const canSensitive = useCan("hr:sensitive:view");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "bgv-compliance"],
-    queryFn: () => apiClient.get<BgvComplianceRow[]>("/hr/recruitment/bgv-compliance"),
+    queryFn: ({ signal }) => apiClient.get<BgvComplianceRow[]>("/hr/recruitment/bgv-compliance", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canSensitive,
   });
@@ -255,8 +255,8 @@ export function useBgvComplianceDashboard() {
 export function useCandidateReferrals(candidateId: number) {
   return useQuery<CandidateReferral[]>({
     queryKey: [...queryKeys.hr.candidate(candidateId), "referrals"],
-    queryFn: () =>
-      apiClient.get<CandidateReferral[]>(`/hr/recruitment/candidates/${candidateId}/referral`),
+    queryFn: ({ signal }) =>
+      apiClient.get<CandidateReferral[]>(`/hr/recruitment/candidates/${candidateId}/referral`, undefined, signal),
     enabled: candidateId > 0,
     staleTime: 2 * 60_000,
   });
@@ -299,8 +299,8 @@ export function useUpdateReferral(candidateId: number) {
 export function useCalibrationSessions(candidateId: number) {
   return useQuery<CalibrationSession[]>({
     queryKey: [...queryKeys.hr.candidate(candidateId), "calibration"],
-    queryFn: () =>
-      apiClient.get<CalibrationSession[]>(`/hr/recruitment/candidates/${candidateId}/calibration`),
+    queryFn: ({ signal }) =>
+      apiClient.get<CalibrationSession[]>(`/hr/recruitment/candidates/${candidateId}/calibration`, undefined, signal),
     enabled: candidateId > 0,
     staleTime: 2 * 60_000,
   });
@@ -343,8 +343,8 @@ export function useUpdateCalibration(candidateId: number) {
 export function useReferenceChecks(candidateId: number) {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "referenceChecks", candidateId] as const,
-    queryFn: () =>
-      apiClient.get<ReferenceCheck[]>(`/hr/recruitment/candidates/${candidateId}/reference-checks`),
+    queryFn: ({ signal }) =>
+      apiClient.get<ReferenceCheck[]>(`/hr/recruitment/candidates/${candidateId}/reference-checks`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: candidateId > 0,
   });

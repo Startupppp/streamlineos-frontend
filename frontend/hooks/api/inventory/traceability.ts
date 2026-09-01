@@ -144,7 +144,7 @@ export function useLots(params?: LotsParams) {
   const canView = useCan("inventory:stock:read");
   return useQuery<LotListResponse, Error>({
     queryKey: queryKeys.inventory.lots(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<LotListResponse>("/inventory/lots", {
         variantId: params?.variantId,
         status: params?.status,
@@ -152,7 +152,7 @@ export function useLots(params?: LotsParams) {
         search: params?.search,
         page: params?.page,
         limit: params?.limit,
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,
@@ -163,7 +163,7 @@ export function useLot(id: number) {
   const canView = useCan("inventory:stock:read");
   return useQuery<LotDetail, Error>({
     queryKey: queryKeys.inventory.lot(id),
-    queryFn: () => apiClient.get<LotDetail>(`/inventory/lots/${id}`),
+    queryFn: ({ signal }) => apiClient.get<LotDetail>(`/inventory/lots/${id}`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && id > 0,
   });
@@ -186,14 +186,14 @@ export function useSerials(params?: SerialsParams) {
   const canView = useCan("inventory:stock:read");
   return useQuery<SerialListResponse, Error>({
     queryKey: queryKeys.inventory.serials(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<SerialListResponse>("/inventory/serials", {
         variantId: params?.variantId,
         status: params?.status,
         search: params?.search,
         page: params?.page,
         limit: params?.limit,
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,
@@ -204,7 +204,7 @@ export function useSerial(id: number) {
   const canView = useCan("inventory:stock:read");
   return useQuery<SerialDetail, Error>({
     queryKey: queryKeys.inventory.serial(id),
-    queryFn: () => apiClient.get<SerialDetail>(`/inventory/serials/${id}`),
+    queryFn: ({ signal }) => apiClient.get<SerialDetail>(`/inventory/serials/${id}`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && id > 0,
   });
@@ -214,8 +214,8 @@ export function useExpiryItems(params?: { days?: number }) {
   const canView = useCan("inventory:stock:read");
   return useQuery<ExpiryItem[], Error>({
     queryKey: queryKeys.inventory.expiry(params),
-    queryFn: () =>
-      apiClient.get<ExpiryItem[]>("/inventory/expiry", { days: params?.days }),
+    queryFn: ({ signal }) =>
+      apiClient.get<ExpiryItem[]>("/inventory/expiry", { days: params?.days }, signal),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -225,11 +225,11 @@ export function useTraceability(params: { lotId?: number; serialId?: number }) {
   const canView = useCan("inventory:stock:read");
   return useQuery<TraceabilityResult, Error>({
     queryKey: queryKeys.inventory.traceability(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<TraceabilityResult>("/inventory/traceability", {
         lotId: params.lotId,
         serialId: params.serialId,
-      }),
+      }, signal),
     staleTime: 60_000,
     enabled: canView && (params.lotId !== undefined || params.serialId !== undefined),
   });

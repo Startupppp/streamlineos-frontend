@@ -46,7 +46,7 @@ export function useKpis() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.kpis(),
-    queryFn: () => apiClient.get<KpiDefinition[]>("/hr/kpis"),
+    queryFn: ({ signal }) => apiClient.get<KpiDefinition[]>("/hr/kpis", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canView && hrEnabled,
   });
@@ -87,7 +87,7 @@ export function useCompetencyFrameworks() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.competencyFrameworks(),
-    queryFn: () => apiClient.get<CompetencyFramework[]>("/hr/kpis/frameworks"),
+    queryFn: ({ signal }) => apiClient.get<CompetencyFramework[]>("/hr/kpis/frameworks", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canView && hrEnabled,
   });

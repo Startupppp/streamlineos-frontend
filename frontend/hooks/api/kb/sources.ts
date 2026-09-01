@@ -23,7 +23,7 @@ export function useKbSources() {
   const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.sources(),
-    queryFn: () => apiClient.get<KbSource[]>("/kb/sources"),
+    queryFn: ({ signal }) => apiClient.get<KbSource[]>("/kb/sources", undefined, signal),
     staleTime: 15_000,
     enabled: canView,
     refetchInterval: (query) =>

@@ -174,7 +174,7 @@ export interface OrgFeatureFlags {
 export function useOrgFeatureFlags() {
   return useQuery({
     queryKey: queryKeys.settings.featureFlags(),
-    queryFn: () => apiClient.get<OrgFeatureFlags>("/settings/feature-flags"),
+    queryFn: ({ signal }) => apiClient.get<OrgFeatureFlags>("/settings/feature-flags", undefined, signal),
     staleTime: 30_000,
   });
 }
@@ -228,7 +228,7 @@ export function useAiUsage() {
   const canView = Boolean(access?.isOrgOwner);
   return useQuery({
     queryKey: queryKeys.settings.aiUsage(),
-    queryFn: () => apiClient.get<AiUsageData>("/settings/ai-usage"),
+    queryFn: ({ signal }) => apiClient.get<AiUsageData>("/settings/ai-usage", undefined, signal),
     enabled: canView,
     staleTime: 5 * 60_000,
   });

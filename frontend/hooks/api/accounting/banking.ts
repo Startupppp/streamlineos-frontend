@@ -164,7 +164,7 @@ export function useBankAccounts(params: ListBankAccountsParams = {}) {
   const can = useCan("accounting:banking:read");
   return useQuery<CursorPage<BankAccount>, Error>({
     queryKey: bankingKeys.accounts(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPage<BankAccount>>("/finance/bank-accounts", toQuery(params)),
     staleTime: 60_000,
     enabled: can,
@@ -175,7 +175,7 @@ export function useBankAccount(id: number) {
   const can = useCan("accounting:banking:read");
   return useQuery<BankAccount, Error>({
     queryKey: bankingKeys.account(id),
-    queryFn: () => apiClient.get<BankAccount>(`/finance/bank-accounts/${id}`),
+    queryFn: ({ signal }) => apiClient.get<BankAccount>(`/finance/bank-accounts/${id}`, undefined, signal),
     staleTime: 60_000,
     enabled: can,
   });
@@ -194,7 +194,7 @@ export function useBankTransactions(bankAccountId: number, params: ListTxnParams
   const can = useCan("accounting:banking:read");
   return useQuery<CursorPage<BankTransaction>, Error>({
     queryKey: bankingKeys.transactions(bankAccountId, params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPage<BankTransaction>>(
         `/finance/bank-accounts/${bankAccountId}/transactions`,
         toQuery(params),
@@ -266,9 +266,9 @@ export function useReconciliationWorkspace(bankAccountId: number) {
   const can = useCan("accounting:banking:reconcile");
   return useQuery<ReconciliationWorkspace, Error>({
     queryKey: bankingKeys.reconciliation(bankAccountId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ReconciliationWorkspace>(
-        `/finance/reconciliation/${bankAccountId}`,
+        `/finance/reconciliation/${bankAccountId}`, signal,
       ),
     staleTime: 0,
     enabled: can,
@@ -412,7 +412,7 @@ export function useReconciliationRules(bankAccountId: number, params: ListRulesP
   const can = useCan("accounting:banking:reconcile");
   return useQuery<CursorPage<ReconciliationRule>, Error>({
     queryKey: bankingKeys.rules(bankAccountId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPage<ReconciliationRule>>(
         `/finance/reconciliation/${bankAccountId}/rules`,
         toQuery(params),
@@ -484,7 +484,7 @@ export function useBankImports(params: ListBankImportsParams = {}) {
   const can = useCan("accounting:banking:read");
   return useQuery<CursorPage<BankImport>, Error>({
     queryKey: bankingKeys.imports(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPage<BankImport>>("/finance/bank-imports", toQuery(params)),
     staleTime: 30_000,
     enabled: can,
@@ -495,7 +495,7 @@ export function useTransfers(params: ListTransfersParams = {}) {
   const can = useCan("accounting:banking:read");
   return useQuery<CursorPage<BankTransfer>, Error>({
     queryKey: bankingKeys.transfers(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPage<BankTransfer>>("/finance/transfers", toQuery(params)),
     staleTime: 30_000,
     enabled: can,

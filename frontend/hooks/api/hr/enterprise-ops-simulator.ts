@@ -28,7 +28,7 @@ const BASE = "/hr/enterprise/ops/simulator";
 export function useSimulationHistory(params: { cursor?: string; type?: SimulationType } = {}) {
   return useQuery({
     queryKey: queryKeys.hrSimulations.history(params as Record<string, unknown>),
-    queryFn: () => apiClient.get<PaginatedResult<SimulationRecord>>(`${BASE}/history`, params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get<PaginatedResult<SimulationRecord>>(`${BASE}/history`, params as Record<string, unknown>),
     staleTime: 30_000,
   });
 }
@@ -98,7 +98,7 @@ export function useComparePolicy(params: {
 } | null) {
   return useQuery({
     queryKey: queryKeys.hrSimulations.compare(params),
-    queryFn: () => apiClient.get<Record<string, unknown>>(`${BASE}/compare`, params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get<Record<string, unknown>>(`${BASE}/compare`, params as Record<string, unknown>),
     enabled: !!params,
     staleTime: 60_000,
   });

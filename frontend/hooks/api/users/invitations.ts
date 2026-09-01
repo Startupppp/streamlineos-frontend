@@ -72,14 +72,14 @@ export const useInvitations = (
   const canView = useCanManageOrganizationMembership();
   return useQuery<InvitationsResponse, Error>({
     queryKey: queryKeys.users.invitations(params as Record<string, unknown> | undefined),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<InvitationsResponse>("/users/invitations", {
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
         ...(params?.includeAccepted ? { includeAccepted: "true" } : {}),
         ...(params?.status ? { status: params.status } : {}),
         ...(params?.q ? { q: params.q } : {}),
-      }),
+      }, signal),
     staleTime: 30_000,
     refetchOnWindowFocus: "always",
     ...options,

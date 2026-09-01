@@ -24,10 +24,10 @@ export const useEmploymentFacts = (userIds: readonly string[]) => {
 
   const query = useQuery<EmploymentFactsResponse, Error>({
     queryKey: queryKeys.directory.employment(wanted),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<EmploymentFactsResponse>("/directory/employment", {
         userIds: wanted.join(","),
-      }),
+      }, signal),
     staleTime: 30_000,
     enabled: wanted.length > 0,
   });

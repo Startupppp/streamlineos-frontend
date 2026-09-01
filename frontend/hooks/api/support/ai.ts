@@ -166,7 +166,7 @@ function invalidateSuggestions(qc: ReturnType<typeof useQueryClient>, ticketId: 
 export function useTicketAiSuggestions(ticketId: number) {
   return useQuery({
     queryKey: queryKeys.supportAiSuggestions.list(ticketId),
-    queryFn: () => apiClient.get<AiSuggestion[]>(`/support/${ticketId}/ai/suggestions`),
+    queryFn: ({ signal }) => apiClient.get<AiSuggestion[]>(`/support/${ticketId}/ai/suggestions`, undefined, signal),
     enabled: Number.isFinite(ticketId) && ticketId > 0,
     staleTime: 30_000,
   });
@@ -326,7 +326,7 @@ export function useSupportAiReport(params?: SupportAiReportParams) {
   const record = reportParamsToRecord(params);
   return useQuery({
     queryKey: queryKeys.supportAiReport.get(record),
-    queryFn: () => apiClient.get<SupportAiReportResult>(`/support/ai/report`, record),
+    queryFn: ({ signal }) => apiClient.get<SupportAiReportResult>(`/support/ai/report`, record, signal),
     staleTime: 2 * 60_000,
   });
 }

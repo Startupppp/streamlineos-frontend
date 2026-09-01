@@ -14,8 +14,8 @@ export function useModuleAccessCatalog(
   const canView = useCan(viewKey(moduleKey));
   return useQuery<ModulePermission[], Error>({
     queryKey: queryKeys.moduleAccess.catalog(moduleKey),
-    queryFn: () =>
-      apiClient.get<ModulePermission[]>(`/module-access/${moduleKey}/catalog`),
+    queryFn: ({ signal }) =>
+      apiClient.get<ModulePermission[]>(`/module-access/${moduleKey}/catalog`, undefined, signal),
     enabled: canView && (options?.enabled ?? true),
     staleTime: 5 * 60_000,
   });
@@ -25,8 +25,8 @@ export function useModuleMyPermissions(moduleKey: string) {
   const canView = useCan(viewKey(moduleKey));
   return useQuery<ModuleMyPermissions, Error>({
     queryKey: queryKeys.moduleAccess.myPermissions(moduleKey),
-    queryFn: () =>
-      apiClient.get<ModuleMyPermissions>(`/module-access/${moduleKey}/me/permissions`),
+    queryFn: ({ signal }) =>
+      apiClient.get<ModuleMyPermissions>(`/module-access/${moduleKey}/me/permissions`, undefined, signal),
     enabled: canView,
     staleTime: 30_000,
   });

@@ -33,7 +33,7 @@ export function useHrDepartments(options?: { enabled?: boolean }) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.departments(),
-    queryFn: () => apiClient.get<Department[]>("/hr/departments"),
+    queryFn: ({ signal }) => apiClient.get<Department[]>("/hr/departments", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canView && (options?.enabled ?? true),
   });
@@ -49,7 +49,7 @@ export function useLegacyHrDepartments() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.legacyDepartments(),
-    queryFn: () => apiClient.get<LegacyDepartment[]>("/hr/departments/legacy"),
+    queryFn: ({ signal }) => apiClient.get<LegacyDepartment[]>("/hr/departments/legacy", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canView,
   });
@@ -161,10 +161,11 @@ export function useHrEmployees(params?: HrEmployeesParams, options?: { enabled?:
   const limit = params?.limit ?? 20;
   return useQuery({
     queryKey: queryKeys.hr.employees(params),
-    queryFn: async (): Promise<EmployeeCursorPage> => {
+    queryFn: async ({ signal }): Promise<EmployeeCursorPage> => {
       const res = await apiClient.get<Employee[] | EmployeeCursorPage>(
         "/hr/employees",
         params,
+        signal,
       );
       return normalizeEmployeeCursorResponse(res, limit);
     },
@@ -182,10 +183,11 @@ export function useInfiniteHrEmployees(
   const limit = params?.limit ?? 20;
   return useInfiniteQuery({
     queryKey: [...queryKeys.hr.employees(params), "pages"] as const,
-    queryFn: async ({ pageParam }): Promise<EmployeeCursorPage> => {
+    queryFn: async ({ pageParam, signal }): Promise<EmployeeCursorPage> => {
       const res = await apiClient.get<Employee[] | EmployeeCursorPage>(
         "/hr/employees",
         { ...params, cursor: pageParam },
+        signal,
       );
       return normalizeEmployeeCursorResponse(res, limit);
     },
@@ -233,8 +235,8 @@ export function useHrEmployeeStats(userId: string) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.employeeStats(userId),
-    queryFn: () =>
-      apiClient.get<EmployeeStats>("/hr/employees/stats", { userId }),
+    queryFn: ({ signal }) =>
+      apiClient.get<EmployeeStats>("/hr/employees/stats", { userId }, signal),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && !!userId && canView,
   });
@@ -245,7 +247,7 @@ export function useHrEmployeeProjects(userId: string) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "employeeProjects", userId] as const,
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<Record<string, unknown>[]>("/hr/employees/projects", { userId }),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && !!userId && canView,
@@ -257,7 +259,7 @@ export function useHrEmployeeTickets(userId: string) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "employeeTickets", userId] as const,
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<{ data: Record<string, unknown>[] }>("/hr/employees/tickets", { userId }),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && !!userId && canView,
@@ -303,8 +305,8 @@ export function useEmployeeAvailability(userIds?: string[]) {
   const param = userIds ? userIds.join(",") : undefined;
   return useQuery({
     queryKey: [...queryKeys.hr.all, "availability", param] as const,
-    queryFn: () =>
-      apiClient.get<AvailabilityEntry[]>("/hr/employees/availability", param ? { userIds: param } : undefined),
+    queryFn: ({ signal }) =>
+      apiClient.get<AvailabilityEntry[]>("/hr/employees/availability", param ? { userIds: param } : undefined, signal),
     staleTime: 5 * 60_000,
     enabled: hrEnabled && canView,
   });
@@ -335,7 +337,7 @@ export function useFindExpert(params: FindExpertParams) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "findExpert", params] as const,
-    queryFn: () => apiClient.get<ExpertResult[]>("/hr/employees/find-expert", params as unknown as Record<string, string>),
+    queryFn: ({ signal }) => apiClient.get<ExpertResult[]>("/hr/employees/find-expert", params as unknown as Record<string, string>, signal),
     enabled: hrEnabled && canView && params.skill.trim().length > 0,
     staleTime: 2 * 60_000,
   });
@@ -369,10 +371,10 @@ export function useSkillsMatrix(params: SkillsMatrixParams = {}) {
   const requestParams = { cursor, limit };
   return useQuery({
     queryKey: [...queryKeys.hr.all, "skillsMatrix", requestParams] as const,
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<SkillsMatrixData>(
         "/hr/employees/skills-matrix",
-        requestParams,
+        requestParams, signal,
       ),
     staleTime: 60_000,
     enabled: hrEnabled && canView && enabled,
@@ -393,7 +395,7 @@ export function useDirectReports(employeeId: string) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "directReports", employeeId] as const,
-    queryFn: () => apiClient.get<DirectReport[]>(`/hr/employees/${employeeId}/reports-to-me`),
+    queryFn: ({ signal }) => apiClient.get<DirectReport[]>(`/hr/employees/${employeeId}/reports-to-me`, undefined, signal),
     enabled: hrEnabled && !!employeeId && canView,
     staleTime: 5 * 60_000,
   });
@@ -420,8 +422,8 @@ export function useManagerScorecard(employeeId: string) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "managerScorecard", employeeId] as const,
-    queryFn: () =>
-      apiClient.get<ManagerScorecard>(`/hr/employees/${employeeId}/manager-scorecard`),
+    queryFn: ({ signal }) =>
+      apiClient.get<ManagerScorecard>(`/hr/employees/${employeeId}/manager-scorecard`, undefined, signal),
     enabled: hrEnabled && !!employeeId && canView,
     staleTime: 5 * 60_000,
   });
@@ -432,7 +434,7 @@ export function useEmployeeEmployment(userId: string) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.employeeEmployment(userId),
-    queryFn: () => apiClient.get<HrEmployment>(`/hr/employees/${userId}/employment`),
+    queryFn: ({ signal }) => apiClient.get<HrEmployment>(`/hr/employees/${userId}/employment`, undefined, signal),
     enabled: hrEnabled && !!userId && canView,
     staleTime: 5 * 60_000,
   });
@@ -447,13 +449,13 @@ export function useEmployeeTimeline(
   const limit = params?.limit ?? 20;
   return useInfiniteQuery({
     queryKey: queryKeys.hr.employeeTimeline(employmentId ?? 0, { limit }),
-    queryFn: ({ pageParam }) =>
+    queryFn: ({ pageParam, signal }) =>
       apiClient.get<HrTimelineResponse>(
         `/hr/employees/${employmentId}/timeline`,
         {
           limit,
           ...(pageParam ? { cursor: pageParam } : {}),
-        },
+        }, signal,
       ),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.pageInfo.nextCursor ?? undefined,
@@ -467,7 +469,7 @@ export function useEmployeeSensitive(employmentId: number | undefined) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.employeeSensitive(employmentId ?? 0),
-    queryFn: () => apiClient.get<HrSensitiveData>(`/hr/employees/${employmentId}/sensitive`),
+    queryFn: ({ signal }) => apiClient.get<HrSensitiveData>(`/hr/employees/${employmentId}/sensitive`, undefined, signal),
     enabled: hrEnabled && !!employmentId && canViewSensitive,
     staleTime: 30_000,
   });

@@ -50,7 +50,7 @@ export function useRichDocuments(params?: RichDocumentListParams) {
   };
   return useQuery({
     queryKey: richDocKeys.list(queryParams),
-    queryFn: () => apiClient.get<RichDocumentListResponse>("/hr/rich-documents", queryParams),
+    queryFn: ({ signal }) => apiClient.get<RichDocumentListResponse>("/hr/rich-documents", queryParams, signal),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     enabled: hrEnabled && canView,
@@ -62,8 +62,8 @@ export function useRichDocument(documentId: number) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: richDocKeys.detail(documentId),
-    queryFn: () =>
-      apiClient.get<RichDocument>(`/hr/rich-documents/${documentId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<RichDocument>(`/hr/rich-documents/${documentId}`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && documentId > 0 && canView,
   });

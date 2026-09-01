@@ -17,10 +17,10 @@ export function useJournalBatches(params?: { periodKey?: string; page?: number; 
   const canView = useCan("payroll:accounting:view");
   return useQuery({
     queryKey: queryKeys.payroll.journalBatches(params as Record<string, unknown> | undefined),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PaginatedJournalBatches>(
         "/payroll/accounting/journal-batches",
-        params as Record<string, string | number> | undefined,
+        params as Record<string, string | number> | undefined, signal,
       ),
     staleTime: 60_000,
     enabled: canView,
@@ -31,10 +31,10 @@ export function usePeriodReconciliation(periodKey: string, enabled = true) {
   const canView = useCan("payroll:accounting:view");
   return useQuery({
     queryKey: queryKeys.payroll.periodReconciliation(periodKey),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PeriodReconciliationReport>(
         "/payroll/accounting/journal-batches/period-reconciliation",
-        { periodKey },
+        { periodKey }, signal,
       ),
     enabled: enabled && canView && /^\d{4}-\d{2}$/.test(periodKey),
     staleTime: 30_000,

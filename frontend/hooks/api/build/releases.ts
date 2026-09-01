@@ -14,7 +14,7 @@ export function useReleases(projectId: number) {
   const canView = useCan("build:view");
   return useQuery<Release[]>({
     queryKey: releaseKey(projectId),
-    queryFn: () => apiClient.get<Release[]>(`/build/${projectId}/releases`),
+    queryFn: ({ signal }) => apiClient.get<Release[]>(`/build/${projectId}/releases`, undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });

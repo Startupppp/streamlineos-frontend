@@ -91,7 +91,7 @@ export function useReorgScenarios(params?: { status?: string; page?: number; lim
 export function useSimulateScenario(scenarioId: number | undefined) {
   return useQuery<SimulationResult>({
     queryKey: [...SCENARIOS_KEY, scenarioId, "simulate"],
-    queryFn: () => apiClient.get<SimulationResult>(`/hr/governance/scenarios/${scenarioId}/simulate`),
+    queryFn: ({ signal }) => apiClient.get<SimulationResult>(`/hr/governance/scenarios/${scenarioId}/simulate`, undefined, signal),
     enabled: scenarioId !== undefined,
     staleTime: 0,
   });

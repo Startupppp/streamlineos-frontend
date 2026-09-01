@@ -60,8 +60,8 @@ export function useTeamExpenses(params: TeamExpensesParams = {}) {
   const can = useCan("accounting:reimbursements:read");
   return useQuery<TeamExpensesResponse, Error>({
     queryKey: expenseKeys.team(params),
-    queryFn: () =>
-      apiClient.get<TeamExpensesResponse>("/hr/expenses/page-data", toQuery({ ...params, includeStats: true, includePending: false, includeCategories: true })),
+    queryFn: ({ signal }) =>
+      apiClient.get<TeamExpensesResponse>("/hr/expenses/page-data", toQuery({ ...params, includeStats: true, includePending: false, includeCategories: true }), signal),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
     enabled: can,
@@ -77,7 +77,7 @@ export function useReceiptInbox(params: ReceiptInboxParams = {}) {
   const can = useCan("accounting:reimbursements:read");
   return useQuery<ListResponse<FinReceiptInboxItem>, Error>({
     queryKey: expenseKeys.receipts(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ListResponse<FinReceiptInboxItem>>("/accounting/expenses/receipts", toQuery(params)),
     staleTime: 30_000,
     enabled: can,
@@ -107,7 +107,7 @@ export function useReimbursementBatches(params: BatchListParams = {}) {
   const can = useCan("accounting:reimbursements:read");
   return useQuery<ListResponse<FinReimbursementBatch>, Error>({
     queryKey: expenseKeys.batches(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ListResponse<FinReimbursementBatch>>("/accounting/reimbursements", toQuery(params)),
     staleTime: 30_000,
     enabled: can,
@@ -118,8 +118,8 @@ export function useReimbursementBatch(batchId: number) {
   const can = useCan("accounting:reimbursements:read");
   return useQuery<FinReimbursementBatchDetail, Error>({
     queryKey: expenseKeys.batch(batchId),
-    queryFn: () =>
-      apiClient.get<FinReimbursementBatchDetail>(`/accounting/reimbursements/${batchId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<FinReimbursementBatchDetail>(`/accounting/reimbursements/${batchId}`, undefined, signal),
     staleTime: 30_000,
     enabled: can && Number.isInteger(batchId) && batchId > 0,
   });
@@ -170,14 +170,14 @@ export function usePendingForBatch() {
   const can = useCan("accounting:reimbursements:manage");
   return useQuery<{ expenses: ExpenseWithRelations[]; pagination: { total: number } }, Error>({
     queryKey: expenseKeys.pendingForBatch(),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<{ expenses: ExpenseWithRelations[]; pagination: { total: number } }>("/hr/expenses/page-data", {
         status: "REIMBURSEMENT_PENDING",
         pageSize: "200",
         includeStats: "false",
         includePending: "false",
         includeCategories: "false",
-      }),
+      }, signal),
     staleTime: 30_000,
     enabled: can,
   });
@@ -187,7 +187,7 @@ export function useExpensePolicies() {
   const can = useCan("accounting:reimbursements:manage");
   return useQuery<FinExpensePolicy[], Error>({
     queryKey: expenseKeys.policies(),
-    queryFn: () => apiClient.get<FinExpensePolicy[]>("/accounting/expenses/policies"),
+    queryFn: ({ signal }) => apiClient.get<FinExpensePolicy[]>("/accounting/expenses/policies", undefined, signal),
     staleTime: 60_000,
     enabled: can,
   });
@@ -232,7 +232,7 @@ export function useFinBankAccounts() {
   const can = useCan("accounting:banking:read");
   return useQuery<FinBankAccount[], Error>({
     queryKey: expenseKeys.bankAccounts(),
-    queryFn: () => apiClient.get<FinBankAccount[]>("/finance/bank-accounts"),
+    queryFn: ({ signal }) => apiClient.get<FinBankAccount[]>("/finance/bank-accounts", undefined, signal),
     staleTime: 120_000,
     enabled: can,
   });

@@ -12,7 +12,7 @@ export function useCurrentPeriod() {
   const canView = useCan("timesheets:entries:view");
   return useQuery({
     queryKey: queryKeys.timesheets.periodCurrent(),
-    queryFn: () => apiClient.get<PeriodDetail>("/timesheets/periods/current"),
+    queryFn: ({ signal }) => apiClient.get<PeriodDetail>("/timesheets/periods/current", undefined, signal),
     staleTime: 15_000,
     enabled: canView,
   });
@@ -22,7 +22,7 @@ export function usePeriod(periodId: number | null) {
   const canView = useCan("timesheets:entries:view");
   return useQuery({
     queryKey: queryKeys.timesheets.period(periodId ?? 0),
-    queryFn: () => apiClient.get<PeriodDetail>(`/timesheets/periods/${periodId}`),
+    queryFn: ({ signal }) => apiClient.get<PeriodDetail>(`/timesheets/periods/${periodId}`, undefined, signal),
     staleTime: 15_000,
     enabled: periodId !== null && canView,
   });

@@ -45,7 +45,7 @@ export function useKbPageReviews(params?: KbPageReviewsParams) {
   const queryParams: Record<string, unknown> = { ...params };
   return useQuery({
     queryKey: queryKeys.kb.pageReviews(queryParams),
-    queryFn: () => apiClient.get<KbPageReview[]>("/kb/page-reviews", queryParams),
+    queryFn: ({ signal }) => apiClient.get<KbPageReview[]>("/kb/page-reviews", queryParams, signal),
     staleTime: 30_000,
     enabled: canViewReviews,
   });

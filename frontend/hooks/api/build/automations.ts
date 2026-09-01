@@ -30,7 +30,7 @@ export function useAutomations(projectId: number) {
   const canView = useCan("build:view");
   return useQuery<ProjectAutomation[]>({
     queryKey: automationKeys(projectId),
-    queryFn: () => apiClient.get<ProjectAutomation[]>(`/build/${projectId}/automations`),
+    queryFn: ({ signal }) => apiClient.get<ProjectAutomation[]>(`/build/${projectId}/automations`, undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });

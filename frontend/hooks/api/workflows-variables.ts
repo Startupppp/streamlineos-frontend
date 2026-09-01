@@ -14,7 +14,7 @@ export function useGlobalVariables() {
   const canManage = useCan("workflows:variables:manage");
   return useQuery({
     queryKey: [...queryKeys.workflows.all, "global-variables"] as const,
-    queryFn: () => apiClient.get<WorkflowVariable[]>("/workflows/variables"),
+    queryFn: ({ signal }) => apiClient.get<WorkflowVariable[]>("/workflows/variables", undefined, signal),
     staleTime: 30_000,
     enabled: canManage,
   });

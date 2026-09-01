@@ -20,7 +20,7 @@ export interface SupportQueue {
 export function useSupportQueues() {
   return useQuery({
     queryKey: queryKeys.supportQueues.list(),
-    queryFn: () => apiClient.get<SupportQueue[]>("/support/queues"),
+    queryFn: ({ signal }) => apiClient.get<SupportQueue[]>("/support/queues", undefined, signal),
     staleTime: 60_000,
   });
 }

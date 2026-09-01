@@ -44,8 +44,8 @@ export interface UpdateCustomFieldInput {
 export function useSupportCustomFields(activeOnly?: boolean) {
   return useQuery({
     queryKey: queryKeys.supportCustomFields.list(activeOnly),
-    queryFn: () =>
-      apiClient.get<SupportCustomField[]>("/support/custom-fields", activeOnly ? { activeOnly: "true" } : undefined),
+    queryFn: ({ signal }) =>
+      apiClient.get<SupportCustomField[]>("/support/custom-fields", activeOnly ? { activeOnly: "true" } : undefined, signal),
     staleTime: 60_000,
   });
 }
@@ -53,7 +53,7 @@ export function useSupportCustomFields(activeOnly?: boolean) {
 export function usePortalActiveCustomFields() {
   return useQuery({
     queryKey: queryKeys.supportCustomFields.portalActive(),
-    queryFn: () => apiClient.get<SupportCustomField[]>("/support/portal/custom-fields"),
+    queryFn: ({ signal }) => apiClient.get<SupportCustomField[]>("/support/portal/custom-fields", undefined, signal),
     staleTime: 60_000,
   });
 }

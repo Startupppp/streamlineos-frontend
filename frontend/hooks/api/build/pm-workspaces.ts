@@ -33,7 +33,7 @@ export function usePmWorkspaces(params?: ListPmWorkspacesParams) {
     queryKey: queryKeys.projects.pmWorkspaces.list(
       Object.keys(queryParams).length > 0 ? queryParams : undefined,
     ),
-    queryFn: () => apiClient.get<PmWorkspacesPage>(BASE, queryParams),
+    queryFn: ({ signal }) => apiClient.get<PmWorkspacesPage>(BASE, queryParams, signal),
     enabled: canView,
     staleTime: 60_000,
   });
@@ -100,10 +100,10 @@ export function usePmWorkspaceMembers(
       pmWorkspaceId ?? "",
       Object.keys(queryParams).length > 0 ? queryParams : undefined,
     ),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PmWorkspaceMembersPage>(
         `${BASE}/${pmWorkspaceId}/members`,
-        queryParams,
+        queryParams, signal,
       ),
     enabled: canView && !!pmWorkspaceId,
     staleTime: 60_000,

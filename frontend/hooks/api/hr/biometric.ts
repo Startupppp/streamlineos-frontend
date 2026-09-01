@@ -30,7 +30,7 @@ export function useBiometricDevices() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "biometricDevices"],
-    queryFn: () => apiClient.get<BiometricDevice[]>("/hr/biometric/devices"),
+    queryFn: ({ signal }) => apiClient.get<BiometricDevice[]>("/hr/biometric/devices", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: hrEnabled && canManage,
   });
@@ -61,7 +61,7 @@ export function useBiometricLogs() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "biometricLogs"],
-    queryFn: () => apiClient.get<BiometricLog[]>("/hr/biometric/logs"),
+    queryFn: ({ signal }) => apiClient.get<BiometricLog[]>("/hr/biometric/logs", undefined, signal),
     staleTime: 30_000,
     enabled: hrEnabled && canView,
   });

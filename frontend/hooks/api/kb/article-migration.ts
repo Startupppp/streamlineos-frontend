@@ -25,7 +25,7 @@ export function useArticleMigrationPreview() {
   const canManageSettings = useCan("kb:settings:manage");
   return useQuery({
     queryKey: queryKeys.kb.articleMigrationPreview(),
-    queryFn: () => apiClient.get<ArticleMigrationPreview>("/kb/article-migration/preview"),
+    queryFn: ({ signal }) => apiClient.get<ArticleMigrationPreview>("/kb/article-migration/preview", undefined, signal),
     staleTime: 60_000,
     enabled: canManageSettings,
   });

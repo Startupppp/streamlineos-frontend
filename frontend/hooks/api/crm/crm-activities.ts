@@ -67,8 +67,8 @@ function buildParams(filters?: CrmActivitiesFilters): Record<string, unknown> {
 export function useCrmActivities(filters?: CrmActivitiesFilters) {
   return useGatedQuery("tasks:read", {
     queryKey: queryKeys.crmActivities.list(filters as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<CrmActivitiesResponse>("/tasks", buildParams(filters)),
+    queryFn: ({ signal }) =>
+      apiClient.get<CrmActivitiesResponse>("/tasks", buildParams(filters), signal),
     staleTime: 60_000,
   });
 }

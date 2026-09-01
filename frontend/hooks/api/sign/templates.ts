@@ -23,7 +23,7 @@ export interface CreateEnvelopeFromTemplateInput {
 export function useSignTemplates() {
   return useQuery({
     queryKey: queryKeys.signTemplates.list(),
-    queryFn: () => apiClient.get<SignTemplate[]>("/sign/templates"),
+    queryFn: ({ signal }) => apiClient.get<SignTemplate[]>("/sign/templates", undefined, signal),
     staleTime: 30_000,
   });
 }

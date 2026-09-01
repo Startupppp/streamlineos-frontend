@@ -36,7 +36,7 @@ const BASE = "/crm/issues";
 export function useIssueRecordTypes() {
   return useGatedQuery("crm:issues:view", {
     queryKey: queryKeys.crm.issueRecordTypes(),
-    queryFn: () => apiClient.get<IssueRecordTypesResponse>(`${BASE}/record-types`),
+    queryFn: ({ signal }) => apiClient.get<IssueRecordTypesResponse>(`${BASE}/record-types`, undefined, signal),
     staleTime: 30 * 60_000,
   });
 }
@@ -66,7 +66,7 @@ export function useIssues(params: UseIssuesParams) {
 export function useIssue(issueRecordId: string | null) {
   return useGatedQuery("crm:issues:view", {
     queryKey: queryKeys.crm.issue(issueRecordId ?? ""),
-    queryFn: () => apiClient.get<IssueDetailResponse>(`${BASE}/${issueRecordId}`),
+    queryFn: ({ signal }) => apiClient.get<IssueDetailResponse>(`${BASE}/${issueRecordId}`, undefined, signal),
     enabled: !!issueRecordId,
   });
 }

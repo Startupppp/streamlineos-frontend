@@ -43,8 +43,8 @@ export function useChatPins(channelId: number) {
   const canRead = useCan("chat:messages:read");
   return useQuery({
     queryKey: queryKeys.chat.pins(channelId),
-    queryFn: () =>
-      apiClient.get<PinnedMessage[]>(`/chat/channels/${channelId}/pins`),
+    queryFn: ({ signal }) =>
+      apiClient.get<PinnedMessage[]>(`/chat/channels/${channelId}/pins`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canRead && channelId > 0,
   });
@@ -98,10 +98,10 @@ export function useThreadReplies(channelId: number, messageId: number) {
   const canRead = useCan("chat:messages:read");
   return useInfiniteQuery({
     queryKey: queryKeys.chat.thread(channelId, messageId),
-    queryFn: ({ pageParam }) =>
+    queryFn: ({ pageParam, signal }) =>
       apiClient.get<ThreadPage>(
         `/chat/channels/${channelId}/messages/${messageId}/thread`,
-        pageParam ? { cursor: pageParam } : undefined,
+        pageParam ? { cursor: pageParam } : undefined, signal,
       ),
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     initialPageParam: undefined as number | undefined,
@@ -130,10 +130,10 @@ export function useSearchMessages(query: string, enabled: boolean) {
   const canRead = useCan("chat:messages:read");
   return useQuery({
     queryKey: [...queryKeys.chat.all, "search", "messages", query] as const,
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<SearchMessagesResult>("/chat/search/messages", {
         q: query,
-      }),
+      }, signal),
     enabled: enabled && canRead && query.trim().length >= 2,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -144,10 +144,10 @@ export function useSearchChannels(query: string, enabled: boolean) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: [...queryKeys.chat.all, "search", "channels", query] as const,
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<SearchChannelResult[]>("/chat/search/channels", {
         q: query,
-      }),
+      }, signal),
     enabled: enabled && canRead && query.trim().length >= 1,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -158,8 +158,8 @@ export function useSearchUsers(query: string, enabled: boolean) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: [...queryKeys.chat.all, "search", "users", query] as const,
-    queryFn: () =>
-      apiClient.get<SearchUserResult[]>("/chat/search/users", { q: query }),
+    queryFn: ({ signal }) =>
+      apiClient.get<SearchUserResult[]>("/chat/search/users", { q: query }, signal),
     enabled: enabled && canRead && query.trim().length >= 1,
     staleTime: 30_000,
     placeholderData: keepPreviousData,

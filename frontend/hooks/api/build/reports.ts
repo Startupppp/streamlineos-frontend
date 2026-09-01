@@ -61,7 +61,7 @@ export function useVelocityReport(projectId: number) {
   const canView = useCan("build:view");
   return useQuery({
     queryKey: queryKeys.projectReports.velocity(projectId),
-    queryFn: () => apiClient.get<VelocitySprint[]>(`/build/${projectId}/reports/velocity`),
+    queryFn: ({ signal }) => apiClient.get<VelocitySprint[]>(`/build/${projectId}/reports/velocity`, undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -71,10 +71,10 @@ export function useBurnupReport(projectId: number, sprintId?: number) {
   const canView = useCan("build:view");
   return useQuery({
     queryKey: queryKeys.projectReports.burnup(projectId, sprintId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<BurnupPoint[]>(
         `/build/${projectId}/reports/burnup`,
-        sprintId ? { sprintId } : undefined,
+        sprintId ? { sprintId } : undefined, signal,
       ),
     enabled: canView && !!projectId,
     staleTime: 60_000,
@@ -85,8 +85,8 @@ export function useCfdReport(projectId: number, days = 30) {
   const canView = useCan("build:view");
   return useQuery({
     queryKey: queryKeys.projectReports.cfd(projectId, { days }),
-    queryFn: () =>
-      apiClient.get<CfdReport>(`/build/${projectId}/reports/cfd`, { days }),
+    queryFn: ({ signal }) =>
+      apiClient.get<CfdReport>(`/build/${projectId}/reports/cfd`, { days }, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -96,8 +96,8 @@ export function useCriticalPath(projectId: number) {
   const canView = useCan("build:view");
   return useQuery({
     queryKey: queryKeys.projectReports.criticalPath(projectId),
-    queryFn: () =>
-      apiClient.get<CriticalPathReport>(`/build/${projectId}/reports/critical-path`),
+    queryFn: ({ signal }) =>
+      apiClient.get<CriticalPathReport>(`/build/${projectId}/reports/critical-path`, undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -107,7 +107,7 @@ export function useCycleTimeReport(projectId: number) {
   const canView = useCan("build:view");
   return useQuery<Array<{ week: string; avgDays: number; count: number }>>({
     queryKey: queryKeys.projectReports.cycleTime(projectId),
-    queryFn: () => apiClient.get(`/build/${projectId}/reports/cycle-time`),
+    queryFn: ({ signal }) => apiClient.get(`/build/${projectId}/reports/cycle-time`, undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -117,7 +117,7 @@ export function useLeadTimeReport(projectId: number) {
   const canView = useCan("build:view");
   return useQuery<Array<{ week: string; avgDays: number; p50Days: number; p90Days: number; count: number }>>({
     queryKey: queryKeys.projectReports.leadTime(projectId),
-    queryFn: () => apiClient.get(`/build/${projectId}/reports/lead-time`),
+    queryFn: ({ signal }) => apiClient.get(`/build/${projectId}/reports/lead-time`, undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });

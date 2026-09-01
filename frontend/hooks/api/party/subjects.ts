@@ -28,7 +28,7 @@ export function useSubjectTypes(options?: { enabled?: boolean }) {
 
   return useQuery({
     queryKey: queryKeys.party.subjectTypes,
-    queryFn: () => apiClient.get<{ data: SubjectType[] }>("/party/subject-types"),
+    queryFn: ({ signal }) => apiClient.get<{ data: SubjectType[] }>("/party/subject-types", undefined, signal),
     // A declaration changes when an administrator edits it, which is rare.
     staleTime: 30 * 60_000,
     enabled: canView && (options?.enabled ?? true),
@@ -58,7 +58,7 @@ export function useSubject(subjectId: string | null) {
 
   return useQuery({
     queryKey: queryKeys.party.subject(subjectId ?? ""),
-    queryFn: () => apiClient.get<SubjectWithParties>(`/party/subjects/${subjectId}`),
+    queryFn: ({ signal }) => apiClient.get<SubjectWithParties>(`/party/subjects/${subjectId}`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && !!subjectId,
   });
@@ -70,8 +70,8 @@ export function usePartySubjects(partyId: string | null) {
 
   return useQuery({
     queryKey: queryKeys.party.partySubjects(partyId ?? ""),
-    queryFn: () =>
-      apiClient.get<{ data: PartySubjectLink[] }>(`/party/parties/${partyId}/subjects`),
+    queryFn: ({ signal }) =>
+      apiClient.get<{ data: PartySubjectLink[] }>(`/party/parties/${partyId}/subjects`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && !!partyId,
   });

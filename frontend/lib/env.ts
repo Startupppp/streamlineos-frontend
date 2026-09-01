@@ -14,14 +14,6 @@ const serverSchema = z.object({
       "In production, NEXTAUTH_SECRET must be at least 44 characters (256-bit base64)",
     ),
 
-  BACKEND_JWT_SECRET: z
-    .string()
-    .min(
-      44,
-      "BACKEND_JWT_SECRET must be at least 44 characters (256-bit base64, matching the backend)",
-    )
-    .optional(),
-
   INTERNAL_API_SECRET: z
     .string()
     .min(

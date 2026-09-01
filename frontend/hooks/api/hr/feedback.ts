@@ -49,7 +49,7 @@ export function useFeedbackCycles() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.feedbackCycles(),
-    queryFn: () => apiClient.get<FeedbackCycle[]>("/hr/feedback/cycles"),
+    queryFn: ({ signal }) => apiClient.get<FeedbackCycle[]>("/hr/feedback/cycles", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canView && hrEnabled,
   });
@@ -87,8 +87,8 @@ export function useMyPendingReviews() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.myPendingReviews(),
-    queryFn: () =>
-      apiClient.get<FeedbackCycleRequest[]>("/hr/feedback/my-reviews"),
+    queryFn: ({ signal }) =>
+      apiClient.get<FeedbackCycleRequest[]>("/hr/feedback/my-reviews", undefined, signal),
     staleTime: 30_000,
     enabled: canView && hrEnabled,
   });
@@ -121,8 +121,8 @@ export function useFeedbackResults(subjectId: string) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.feedbackResults(subjectId),
-    queryFn: () =>
-      apiClient.get<FeedbackResult>(`/hr/feedback/results/${subjectId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<FeedbackResult>(`/hr/feedback/results/${subjectId}`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: subjectId.length > 0 && canView && hrEnabled,
   });

@@ -32,10 +32,10 @@ export function useOvertimeRequests(params?: { cursor?: string; pageSize?: numbe
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "overtimeRequests", params ?? {}],
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<OvertimeRequestsResponse>(
         "/hr/overtime",
-        params as Record<string, unknown> | undefined,
+        params as Record<string, unknown> | undefined, signal,
       ),
     staleTime: 30_000,
     placeholderData: (prev) => prev,
@@ -76,7 +76,7 @@ export function useCompOffBalance() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "compOffBalance"],
-    queryFn: () => apiClient.get<CompOffBalance[]>("/hr/overtime/comp-off"),
+    queryFn: ({ signal }) => apiClient.get<CompOffBalance[]>("/hr/overtime/comp-off", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canView,
   });

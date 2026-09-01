@@ -108,7 +108,7 @@ export function useTimeDevices(params?: Record<string, unknown>) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...DEVICES_KEY, params],
-    queryFn: () => apiClient.get<CursorPaginatedResponse<TimeDevice>>("/hr/enterprise/comp/devices", { params }),
+    queryFn: ({ signal }) => apiClient.get<CursorPaginatedResponse<TimeDevice>>("/hr/enterprise/comp/devices", { params }),
     staleTime: 2 * 60_000,
     enabled: canManage && hrEnabled,
   });
@@ -148,7 +148,7 @@ export function useDeviceSyncLogs(params?: Record<string, unknown>) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...SYNC_LOGS_KEY, params],
-    queryFn: () => apiClient.get<CursorPaginatedResponse<DeviceSyncLog>>("/hr/enterprise/comp/devices/sync-logs", { params }),
+    queryFn: ({ signal }) => apiClient.get<CursorPaginatedResponse<DeviceSyncLog>>("/hr/enterprise/comp/devices/sync-logs", { params }),
     staleTime: 30_000,
     enabled: canManage && hrEnabled,
   });
@@ -159,7 +159,7 @@ export function useFailedSyncs() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...SYNC_LOGS_KEY, "failed"],
-    queryFn: () => apiClient.get<DeviceSyncLog[]>("/hr/enterprise/comp/devices/failed-syncs"),
+    queryFn: ({ signal }) => apiClient.get<DeviceSyncLog[]>("/hr/enterprise/comp/devices/failed-syncs", undefined, signal),
     staleTime: 30_000,
     enabled: canManage && hrEnabled,
   });
@@ -174,7 +174,7 @@ export function useCompCycles(params?: Record<string, unknown>) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...COMP_CYCLES_KEY, params],
-    queryFn: () => apiClient.get<CursorPaginatedResponse<CompCycle>>("/hr/enterprise/comp/planning/cycles", { params }),
+    queryFn: ({ signal }) => apiClient.get<CursorPaginatedResponse<CompCycle>>("/hr/enterprise/comp/planning/cycles", { params }),
     staleTime: 2 * 60_000,
     enabled: canManage && hrEnabled,
   });
@@ -185,7 +185,7 @@ export function useCompCycle(cycleId: number) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...COMP_CYCLES_KEY, cycleId],
-    queryFn: () => apiClient.get<CompCycle>(`/hr/enterprise/comp/planning/cycles/${cycleId}`),
+    queryFn: ({ signal }) => apiClient.get<CompCycle>(`/hr/enterprise/comp/planning/cycles/${cycleId}`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: !!cycleId && canManage && hrEnabled,
   });
@@ -206,7 +206,7 @@ export function useCompRecommendations(cycleId?: number, params?: Record<string,
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...COMP_RECS_KEY, cycleId, params],
-    queryFn: () => apiClient.get<CursorPaginatedResponse<CompRecommendation>>("/hr/enterprise/comp/planning/recommendations", { params: { ...params, ...(cycleId ? { cycleId } : {}) } }),
+    queryFn: ({ signal }) => apiClient.get<CursorPaginatedResponse<CompRecommendation>>("/hr/enterprise/comp/planning/recommendations", { params: { ...params, ...(cycleId ? { cycleId } : {}) } }),
     staleTime: 60_000,
     enabled: !!cycleId && canManage && hrEnabled,
   });
@@ -227,7 +227,7 @@ export function useBudgetPools(cycleId: number) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...COMP_BUDGET_KEY, cycleId],
-    queryFn: () => apiClient.get<CompBudgetPool[]>(`/hr/enterprise/comp/planning/cycles/${cycleId}/budget-pools`),
+    queryFn: ({ signal }) => apiClient.get<CompBudgetPool[]>(`/hr/enterprise/comp/planning/cycles/${cycleId}/budget-pools`, undefined, signal),
     staleTime: 60_000,
     enabled: !!cycleId && canManage && hrEnabled,
   });
@@ -240,7 +240,7 @@ export function useEquityGrants(params?: Record<string, unknown>) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...EQUITY_GRANTS_KEY, params],
-    queryFn: () => apiClient.get<CursorPaginatedResponse<EquityGrant>>("/hr/enterprise/comp/equity/grants", { params }),
+    queryFn: ({ signal }) => apiClient.get<CursorPaginatedResponse<EquityGrant>>("/hr/enterprise/comp/equity/grants", { params }),
     staleTime: 5 * 60_000,
     enabled: canView && hrEnabled,
   });
@@ -261,7 +261,7 @@ export function useVestingSchedule(grantId: number) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...EQUITY_GRANTS_KEY, grantId, "vesting"],
-    queryFn: () => apiClient.get<VestingEvent[]>(`/hr/enterprise/comp/equity/grants/${grantId}/vesting-schedule`),
+    queryFn: ({ signal }) => apiClient.get<VestingEvent[]>(`/hr/enterprise/comp/equity/grants/${grantId}/vesting-schedule`, undefined, signal),
     staleTime: 10 * 60_000,
     enabled: !!grantId && canView && hrEnabled,
   });
@@ -284,7 +284,7 @@ export function useWorkforceCostSummary() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...COSTING_KEY, "summary"],
-    queryFn: () => apiClient.get<Record<string, unknown>>("/hr/enterprise/comp/costing/summary"),
+    queryFn: ({ signal }) => apiClient.get<Record<string, unknown>>("/hr/enterprise/comp/costing/summary"),
     staleTime: 5 * 60_000,
     enabled: canRead && hrEnabled,
   });
@@ -295,7 +295,7 @@ export function useCostByDepartment(periodKey: string) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...COSTING_KEY, "byDepartment", periodKey],
-    queryFn: () => apiClient.get<Record<string, unknown>[]>("/hr/enterprise/comp/costing/by-department", { params: { periodKey } }),
+    queryFn: ({ signal }) => apiClient.get<Record<string, unknown>[]>("/hr/enterprise/comp/costing/by-department", { params: { periodKey } }),
     staleTime: 5 * 60_000,
     enabled: !!periodKey && canRead && hrEnabled,
   });
@@ -306,7 +306,7 @@ export function useCostByLocation() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...COSTING_KEY, "byLocation"],
-    queryFn: () => apiClient.get<Record<string, unknown>[]>("/hr/enterprise/comp/costing/by-location"),
+    queryFn: ({ signal }) => apiClient.get<Record<string, unknown>[]>("/hr/enterprise/comp/costing/by-location"),
     staleTime: 5 * 60_000,
     enabled: canRead && hrEnabled,
   });

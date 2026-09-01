@@ -71,12 +71,12 @@ export function usePendingOrgTransfers() {
 
   return useQuery<OrgTransfersResponse, Error>({
     queryKey: queryKeys.ownership.orgTransfers(),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<OrgTransfersResponse>("/ownership/transfers", {
         scope: "ORGANIZATION",
         status: "PENDING",
         limit: "5",
-      }),
+      }, signal),
     enabled: isOwner,
     staleTime: 30_000,
   });
@@ -88,8 +88,8 @@ export function useIncomingOrgTransfers() {
 
   return useQuery<IncomingTransfersResponse, Error>({
     queryKey: queryKeys.ownership.incomingTransfers(),
-    queryFn: () =>
-      apiClient.get<IncomingTransfersResponse>("/ownership/transfers/incoming"),
+    queryFn: ({ signal }) =>
+      apiClient.get<IncomingTransfersResponse>("/ownership/transfers/incoming", undefined, signal),
     enabled: !accessPending && canRespond,
     staleTime: 0,
     refetchOnMount: "always",

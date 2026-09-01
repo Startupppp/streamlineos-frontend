@@ -16,7 +16,7 @@ export interface PublicWhiteboard {
 export function usePublicWhiteboard(token: string) {
   return useQuery({
     queryKey: queryKeys.whiteboards.publicLink(token),
-    queryFn: () => apiClient.get<PublicWhiteboard>(`/public/whiteboard-links/${token}`),
+    queryFn: ({ signal }) => apiClient.get<PublicWhiteboard>(`/public/whiteboard-links/${token}`, undefined, signal),
     enabled: !!token,
     staleTime: 30_000,
     retry: false,

@@ -24,7 +24,7 @@ export interface TravelRequest {
 export function useMyTravelRequests() {
   return useQuery<TravelRequest[]>({
     queryKey: queryKeys.hr.travelMine(),
-    queryFn: () => apiClient.get<TravelRequest[]>("/hr/travel"),
+    queryFn: ({ signal }) => apiClient.get<TravelRequest[]>("/hr/travel", undefined, signal),
     staleTime: 60_000,
   });
 }
@@ -32,7 +32,7 @@ export function useMyTravelRequests() {
 export function usePendingTravelApprovals() {
   return useQuery<TravelRequest[]>({
     queryKey: queryKeys.hr.travelApprovals(),
-    queryFn: () => apiClient.get<TravelRequest[]>("/hr/travel/approvals"),
+    queryFn: ({ signal }) => apiClient.get<TravelRequest[]>("/hr/travel/approvals", undefined, signal),
     staleTime: 30_000,
   });
 }

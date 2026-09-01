@@ -20,7 +20,7 @@ export interface IntegrationConnection {
 export function useIntegrationConnections(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.integrations.connections(),
-    queryFn: () => apiClient.get<IntegrationConnection[]>("/integrations/connections"),
+    queryFn: ({ signal }) => apiClient.get<IntegrationConnection[]>("/integrations/connections", undefined, signal),
     staleTime: 60_000,
     enabled: options?.enabled ?? true,
   });

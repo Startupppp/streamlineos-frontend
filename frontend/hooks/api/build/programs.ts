@@ -24,7 +24,7 @@ export function usePrograms(filters?: ListFilters) {
     queryKey: queryKeys.projects.programs.list(
       Object.keys(params).length > 0 ? params : undefined,
     ),
-    queryFn: () => apiClient.get<Program[]>("/build/programs", params),
+    queryFn: ({ signal }) => apiClient.get<Program[]>("/build/programs", params, signal),
     enabled: canView,
     staleTime: 60_000,
   });

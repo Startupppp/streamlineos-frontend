@@ -39,10 +39,10 @@ export function useEmployeeProfiles(params?: {
   const canView = useCan("payroll:salaries:view");
   return useQuery({
     queryKey: queryKeys.payroll.employees(params as Record<string, unknown> | undefined),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PaginatedProfiles>(
         "/payroll/employees",
-        params as Record<string, string | number> | undefined,
+        params as Record<string, string | number> | undefined, signal,
       ),
     staleTime: 60_000,
     enabled: canView,
@@ -53,8 +53,8 @@ export function useEmployeeProfile(employeeUserId: string) {
   const canView = useCan("payroll:salaries:view");
   return useQuery({
     queryKey: queryKeys.payroll.employee(employeeUserId),
-    queryFn: () =>
-      apiClient.get<EmployeeProfileDetail>(`/payroll/employees/${employeeUserId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<EmployeeProfileDetail>(`/payroll/employees/${employeeUserId}`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && !!employeeUserId,
   });
@@ -64,8 +64,8 @@ export function useEmployeeProfileHistory(employeeUserId: string) {
   const canView = useCan("payroll:salaries:view");
   return useQuery({
     queryKey: queryKeys.payroll.employeeHistory(employeeUserId),
-    queryFn: () =>
-      apiClient.get<EmployeeSalaryProfile[]>(`/payroll/employees/${employeeUserId}/history`),
+    queryFn: ({ signal }) =>
+      apiClient.get<EmployeeSalaryProfile[]>(`/payroll/employees/${employeeUserId}/history`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && !!employeeUserId,
   });
@@ -104,8 +104,8 @@ export function useWorkerProfile(workerId: string) {
   const canView = useCan("payroll:salaries:view");
   return useQuery({
     queryKey: queryKeys.payroll.worker(workerId),
-    queryFn: () =>
-      apiClient.get<EmployeeProfileDetail>(`/payroll/workers/${workerId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<EmployeeProfileDetail>(`/payroll/workers/${workerId}`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && !!workerId,
   });
@@ -115,8 +115,8 @@ export function useWorkerProfileHistory(workerId: string) {
   const canView = useCan("payroll:salaries:view");
   return useQuery({
     queryKey: [...queryKeys.payroll.worker(workerId), "history"],
-    queryFn: () =>
-      apiClient.get<EmployeeSalaryProfile[]>(`/payroll/workers/${workerId}/history`),
+    queryFn: ({ signal }) =>
+      apiClient.get<EmployeeSalaryProfile[]>(`/payroll/workers/${workerId}/history`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && !!workerId,
   });

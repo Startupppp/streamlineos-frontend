@@ -30,10 +30,10 @@ export interface SettingsAuditLogEntry {
 export function useSettingsAuditLog(entityType?: SettingsAuditEntityType) {
   return useQuery({
     queryKey: queryKeys.supportSettingsAuditLog.list(entityType),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<SettingsAuditLogEntry[]>(
         "/support/settings/audit-log",
-        entityType ? { entityType } : undefined,
+        entityType ? { entityType } : undefined, signal,
       ),
     staleTime: 30_000,
   });

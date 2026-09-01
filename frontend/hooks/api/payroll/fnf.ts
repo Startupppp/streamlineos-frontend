@@ -12,7 +12,7 @@ export function useFnfSettlements() {
   const canView = useCan("payroll:fnf:view");
   return useQuery({
     queryKey: queryKeys.payroll.fnfList(),
-    queryFn: () => apiClient.get<FnfSettlement[]>("/payroll/fnf"),
+    queryFn: ({ signal }) => apiClient.get<FnfSettlement[]>("/payroll/fnf", undefined, signal),
     staleTime: 60_000,
     enabled: canView,
   });
@@ -22,7 +22,7 @@ export function useFnfSettlement(settlementId: number) {
   const canView = useCan("payroll:fnf:view");
   return useQuery({
     queryKey: queryKeys.payroll.fnfSettlement(settlementId),
-    queryFn: () => apiClient.get<FnfSettlement>(`/payroll/fnf/${settlementId}`),
+    queryFn: ({ signal }) => apiClient.get<FnfSettlement>(`/payroll/fnf/${settlementId}`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && settlementId > 0,
   });
@@ -32,8 +32,8 @@ export function useFnfStatement(settlementId: number) {
   const canView = useCan("payroll:fnf:view");
   return useQuery({
     queryKey: queryKeys.payroll.fnfStatement(settlementId),
-    queryFn: () =>
-      apiClient.get<FnfStatement>(`/payroll/fnf/${settlementId}/statement`),
+    queryFn: ({ signal }) =>
+      apiClient.get<FnfStatement>(`/payroll/fnf/${settlementId}/statement`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && settlementId > 0,
   });

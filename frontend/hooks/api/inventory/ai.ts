@@ -28,13 +28,13 @@ export function useInventoryInsights(params?: InsightsParams) {
   const canView = useCan("inventory:reports:read");
   return useQuery<InsightsPaginatedResponse, Error>({
     queryKey: queryKeys.inventory.aiInsights(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<InsightsPaginatedResponse>("/inventory/ai/insights", {
         ...(params?.status ? { status: params.status } : {}),
         ...(params?.type ? { type: params.type } : {}),
         ...(params?.page !== undefined ? { page: String(params.page) } : {}),
         ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     enabled: canView,
   });

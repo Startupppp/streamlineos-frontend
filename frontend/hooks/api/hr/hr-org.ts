@@ -16,7 +16,7 @@ export function useOrgJobRoles(options?: { enabled?: boolean }) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.orgRoles(),
-    queryFn: () => apiClient.get<HrJobRole[]>("/hr/org/roles"),
+    queryFn: ({ signal }) => apiClient.get<HrJobRole[]>("/hr/org/roles", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: hrEnabled && canView && (options?.enabled ?? true),
   });
@@ -56,7 +56,7 @@ export function useOrgJobLevels(options?: { enabled?: boolean }) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.orgLevels(),
-    queryFn: () => apiClient.get<HrJobLevel[]>("/hr/org/levels"),
+    queryFn: ({ signal }) => apiClient.get<HrJobLevel[]>("/hr/org/levels", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: hrEnabled && canView && (options?.enabled ?? true),
   });
@@ -96,7 +96,7 @@ export function useOrgHeadcount(groupBy: "department" | "location" | "role" = "d
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.orgHeadcount(groupBy),
-    queryFn: () => apiClient.get<HrHeadcountGroup[]>("/hr/org/headcount", { groupBy }),
+    queryFn: ({ signal }) => apiClient.get<HrHeadcountGroup[]>("/hr/org/headcount", { groupBy }, signal),
     staleTime: 5 * 60_000,
     enabled: hrEnabled && canEmployees,
   });

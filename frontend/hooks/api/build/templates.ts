@@ -59,7 +59,7 @@ export function useProjectTemplates() {
   const canView = useCan("build:view");
   return useQuery({
     queryKey: TEMPLATES_KEY,
-    queryFn: () => apiClient.get<ProjectTemplate[]>("/build/templates"),
+    queryFn: ({ signal }) => apiClient.get<ProjectTemplate[]>("/build/templates", undefined, signal),
     enabled: canView,
     staleTime: 60_000,
   });

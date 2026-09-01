@@ -15,7 +15,7 @@ export function useTimesheetSettings(enabled = true) {
   const canView = useCan("timesheets:settings:view");
   return useQuery({
     queryKey: queryKeys.timesheets.settings(),
-    queryFn: () => apiClient.get<TimesheetSettings>("/timesheets/settings"),
+    queryFn: ({ signal }) => apiClient.get<TimesheetSettings>("/timesheets/settings", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: enabled && canView,
   });

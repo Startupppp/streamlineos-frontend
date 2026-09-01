@@ -67,7 +67,7 @@ const BASE_KEY = ["hr", "pipelineAutomations"] as const;
 function useAutomations() {
   return useQuery({
     queryKey: BASE_KEY,
-    queryFn: () => apiClient.get<PipelineAutomation[]>("/hr/recruitment/automations"),
+    queryFn: ({ signal }) => apiClient.get<PipelineAutomation[]>("/hr/recruitment/automations", undefined, signal),
   });
 }
 

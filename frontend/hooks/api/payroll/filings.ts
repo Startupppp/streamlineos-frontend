@@ -62,7 +62,7 @@ export function usePayrollFilings() {
   const canView = useCan("payroll:tax:view");
   return useQuery({
     queryKey: queryKeys.payroll.filingsAll,
-    queryFn: () => apiClient.get<PayrollFiling[]>("/payroll/filings"),
+    queryFn: ({ signal }) => apiClient.get<PayrollFiling[]>("/payroll/filings", undefined, signal),
     staleTime: 60_000,
     enabled: canView,
   });
@@ -72,7 +72,7 @@ export function useFilingCapabilities() {
   const canView = useCan("payroll:tax:view");
   return useQuery({
     queryKey: queryKeys.payroll.filingCapabilities(),
-    queryFn: () => apiClient.get<FilingCapability>("/payroll/filings/capabilities"),
+    queryFn: ({ signal }) => apiClient.get<FilingCapability>("/payroll/filings/capabilities", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canView,
   });

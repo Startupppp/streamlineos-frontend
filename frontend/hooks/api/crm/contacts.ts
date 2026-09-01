@@ -19,7 +19,7 @@ import type {
 export function useContacts(filters?: ContactFilters) {
   return useGatedQuery("crm:contacts:view", {
     queryKey: queryKeys.contacts.list(filters),
-    queryFn: () => apiClient.get<PaginatedContacts>("/contacts", filters),
+    queryFn: ({ signal }) => apiClient.get<PaginatedContacts>("/contacts", filters, signal),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
   });
@@ -28,7 +28,7 @@ export function useContacts(filters?: ContactFilters) {
 export function useContactDetail(id: number) {
   return useGatedQuery("crm:contacts:view", {
     queryKey: queryKeys.contacts.detail(id),
-    queryFn: () => apiClient.get<Contact>(`/contacts/${id}`),
+    queryFn: ({ signal }) => apiClient.get<Contact>(`/contacts/${id}`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: id > 0,
   });
@@ -76,8 +76,8 @@ export function useDeleteContact() {
 export function useContactRoles(contactId: number, params?: { entityType?: string; entityId?: number }) {
   return useGatedQuery("crm:contacts:view", {
     queryKey: queryKeys.contactRoles.list(contactId, params as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<ContactRole[]>(`/contacts/${contactId}/roles`, params as Record<string, unknown>),
+    queryFn: ({ signal }) =>
+      apiClient.get<ContactRole[]>(`/contacts/${contactId}/roles`, params as Record<string, unknown>, signal),
     staleTime: 2 * 60_000,
     enabled: contactId > 0,
   });
@@ -110,8 +110,8 @@ export function useRemoveContactRole() {
 export function useContactDuplicates(params?: { page?: number; limit?: number }) {
   return useGatedQuery("crm:contacts:view", {
     queryKey: queryKeys.contactDuplicates.list(params as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<DuplicateContactPair[]>("/contacts/duplicates", params as Record<string, unknown>),
+    queryFn: ({ signal }) =>
+      apiClient.get<DuplicateContactPair[]>("/contacts/duplicates", params as Record<string, unknown>, signal),
     staleTime: 5 * 60_000,
   });
 }

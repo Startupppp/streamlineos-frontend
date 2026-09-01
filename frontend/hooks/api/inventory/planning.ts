@@ -140,12 +140,12 @@ export function useReplenishmentRules(params?: ReplenishmentRuleParams) {
   const canView = useCan("inventory:replenishment:manage");
   return useQuery<ReplenishmentRuleListResponse, Error>({
     queryKey: queryKeys.inventory.replenishmentRules(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ReplenishmentRuleListResponse>("/inventory/replenishment/rules", {
         ...(params?.isActive !== undefined ? { isActive: String(params.isActive) } : {}),
         ...(params?.warehouseId ? { warehouseId: String(params.warehouseId) } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     enabled: canView,
   });
@@ -214,11 +214,11 @@ export function useReplenishmentSuggestions(params?: ReplenishmentSuggestionsPar
   const canView = useCan("inventory:reports:read");
   return useQuery<ReplenishmentSuggestionsResponse, Error>({
     queryKey: queryKeys.inventory.replenishmentSuggestions(params),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const raw = await apiClient.get<RawReplenishmentSuggestionsResponse>("/inventory/replenishment/suggestions", {
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
-      });
+      }, signal);
       return { items: raw.items.map(mapSuggestion), total: raw.total, page: raw.page, totalPages: raw.totalPages };
     },
     staleTime: 5 * 60_000,
@@ -242,11 +242,11 @@ export function useForecasting(params?: ForecastParams) {
   const canView = useCan("inventory:reports:read");
   return useQuery<ForecastListResponse, Error>({
     queryKey: queryKeys.inventory.forecasting(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ForecastListResponse>("/inventory/forecasting", {
         ...(params?.search ? { search: params.search } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
-      }),
+      }, signal),
     staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,

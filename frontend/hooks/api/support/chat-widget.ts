@@ -38,7 +38,7 @@ export function useStartChatSession(orgId: string) {
 export function useChatSession(orgId: string, sessionToken: string | null) {
   return useQuery({
     queryKey: queryKeys.supportChatWidget.session(orgId, sessionToken ?? ""),
-    queryFn: () => apiClient.get<ChatSession>(`/support/chat/${orgId}/${sessionToken}/messages`),
+    queryFn: ({ signal }) => apiClient.get<ChatSession>(`/support/chat/${orgId}/${sessionToken}/messages`, undefined, signal),
     enabled: Boolean(orgId) && Boolean(sessionToken),
     refetchInterval: 30_000,
     staleTime: 0,

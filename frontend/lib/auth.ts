@@ -5,13 +5,9 @@ import Google from "next-auth/providers/google";
 import axios from "axios";
 import { randomUUID } from "crypto";
 import { headers as nextHeaders } from "next/headers";
-import { SignJWT, decodeJwt } from "jose";
+import { decodeJwt, SignJWT } from "jose";
 import type { Plan } from "@/lib/billing/feature-gates";
 import { BACKEND_URL } from "@/lib/backend-url";
-import {
-  INTERNAL_TOKEN_AUDIENCE,
-  INTERNAL_TOKEN_ISSUER,
-} from "@/lib/backend-token-contract";
 
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET ?? "";
 
@@ -56,6 +52,57 @@ function setBackendJwtInStore(key: string, token: string): void {
       backendJwtStore.set(key, { token, expiresAt });
     }
   } catch {
+  }
+}
+
+async function exchangeSessionForBackendJwt(
+  userId: string,
+  sessionId: string,
+  orgId: string | null,
+): Promise<string | null> {
+  const internalSecret = process.env.INTERNAL_API_SECRET ?? "";
+  if (!internalSecret) return null;
+  const nextAuthSecret = process.env.NEXTAUTH_SECRET ?? "";
+  if (!nextAuthSecret) return null;
+
+  const nonce = randomUUID();
+  let proof: string;
+  try {
+    proof = await new SignJWT({ sessionId })
+      .setProtectedHeader({ alg: "HS256" })
+      .setSubject(userId)
+      .setIssuer("streamlineos-web-session-proof")
+      .setAudience("streamlineos-api-exchange")
+      .setJti(nonce)
+      .setIssuedAt()
+      .setExpirationTime("30s")
+      .sign(new TextEncoder().encode(nextAuthSecret));
+  } catch {
+    return null;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8_000);
+  try {
+    const res = await fetch(`${BACKEND_URL}/auth/session-exchange`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-internal-secret": internalSecret,
+        "x-session-proof": proof,
+      },
+      body: JSON.stringify({ orgId: orgId ?? null }),
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+    const body = (await res.json()) as unknown;
+    const data = unwrapBackend<{ token?: string }>(body);
+    return typeof data?.token === "string" && data.token.length > 0 ? data.token : null;
+  } catch {
+    clearTimeout(timeout);
+    return null;
   }
 }
 
@@ -410,25 +457,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           (token.suspendedOrganizationName as string | null | undefined) ??
           null;
 
-        const jwtSecret = process.env.BACKEND_JWT_SECRET;
         const sessionId = (token.sessionId as string | undefined)?.trim();
-        if (jwtSecret && token.id && sessionId) {
+        if (token.id && sessionId) {
           const userId = token.id as string;
           const jwtCacheKey = `${userId}:${orgId ?? ""}`;
           const cachedJwt = getBackendJwtFromStore(jwtCacheKey);
           if (cachedJwt) {
             session.backendJwt = cachedJwt;
           } else {
-            const minted = await new SignJWT({ orgId, sessionId })
-              .setProtectedHeader({ alg: "HS256" })
-              .setSubject(userId)
-              .setIssuer(INTERNAL_TOKEN_ISSUER)
-              .setAudience(INTERNAL_TOKEN_AUDIENCE)
-              .setIssuedAt()
-              .setExpirationTime("10m")
-              .sign(new TextEncoder().encode(jwtSecret));
-            setBackendJwtInStore(jwtCacheKey, minted);
-            session.backendJwt = minted;
+            const exchanged = await exchangeSessionForBackendJwt(userId, sessionId, orgId);
+            if (exchanged) {
+              setBackendJwtInStore(jwtCacheKey, exchanged);
+              session.backendJwt = exchanged;
+            }
           }
         }
 

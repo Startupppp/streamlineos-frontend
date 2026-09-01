@@ -122,9 +122,9 @@ export function useModuleGroupMembers(moduleKey: string, groupId: number | null)
   const canView = useCan(viewKey(moduleKey));
   return useQuery<ModuleGroupMember[], Error>({
     queryKey: queryKeys.moduleAccess.groupMembers(moduleKey, groupId ?? 0),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ModuleGroupMember[]>(
-        `/module-access/${moduleKey}/groups/${groupId}/members`,
+        `/module-access/${moduleKey}/groups/${groupId}/members`, signal,
       ),
     enabled: canView && groupId !== null,
     staleTime: 2 * 60_000,

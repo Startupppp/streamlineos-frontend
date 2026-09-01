@@ -33,7 +33,7 @@ export function useCreateBulkSendJob() {
 export function useBulkSendJobs() {
   return useQuery({
     queryKey: queryKeys.signBulkSend.all,
-    queryFn: () => apiClient.get<SignBulkSendJob[]>("/sign/bulk-send/jobs"),
+    queryFn: ({ signal }) => apiClient.get<SignBulkSendJob[]>("/sign/bulk-send/jobs", undefined, signal),
     staleTime: 15_000,
   });
 }

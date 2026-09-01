@@ -23,11 +23,11 @@ export function useComplianceCalendar(year: number, month: number) {
   const canManage = useCan("hr:compliance:manage");
   return useQuery<ComplianceCalendarResponse>({
     queryKey: queryKeys.hr.complianceCalendar(year, month),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ComplianceCalendarResponse>("/hr/compliance/calendar", {
         year: String(year),
         month: String(month),
-      }),
+      }, signal),
     staleTime: 5 * 60_000,
     enabled: canManage,
   });

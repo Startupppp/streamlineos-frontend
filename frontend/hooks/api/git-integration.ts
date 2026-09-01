@@ -50,7 +50,7 @@ interface UpdateGitConnectionInput {
 export function useGitConnections() {
   return useQuery({
     queryKey: queryKeys.gitIntegration.connections(),
-    queryFn: () => apiClient.get<GitConnection[]>("/settings/integrations/git"),
+    queryFn: ({ signal }) => apiClient.get<GitConnection[]>("/settings/integrations/git", undefined, signal),
     staleTime: 60_000,
   });
 }
@@ -102,9 +102,9 @@ export interface TicketGitLink {
 export function useTicketGitLinks(projectId: number, ticketId: number) {
   return useQuery({
     queryKey: queryKeys.gitIntegration.ticketLinks(ticketId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<TicketGitLink[]>(
-        `/build/${projectId}/tickets/${ticketId}/git-links`,
+        `/build/${projectId}/tickets/${ticketId}/git-links`, signal,
       ),
     enabled: !!projectId && !!ticketId,
     staleTime: 30_000,

@@ -30,7 +30,7 @@ export function useRosters() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "rosters"],
-    queryFn: () => apiClient.get<Roster[]>("/hr/rosters"),
+    queryFn: ({ signal }) => apiClient.get<Roster[]>("/hr/rosters", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canView,
   });
@@ -51,7 +51,7 @@ export function useRosterEntries(rosterId: number) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "rosterEntries", rosterId],
-    queryFn: () => apiClient.get<RosterEntry[]>(`/hr/rosters/${rosterId}/entries`),
+    queryFn: ({ signal }) => apiClient.get<RosterEntry[]>(`/hr/rosters/${rosterId}/entries`, undefined, signal),
     staleTime: 30_000,
     enabled: hrEnabled && canView && rosterId > 0,
   });

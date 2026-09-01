@@ -12,7 +12,7 @@ import type {
 export function useEmailSequences() {
   return useQuery({
     queryKey: queryKeys.hr.emailSequences(),
-    queryFn: () => apiClient.get<EmailSequence[]>("/hr/recruitment/email-sequences"),
+    queryFn: ({ signal }) => apiClient.get<EmailSequence[]>("/hr/recruitment/email-sequences", undefined, signal),
     staleTime: 2 * 60_000,
   });
 }

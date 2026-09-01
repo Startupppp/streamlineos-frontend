@@ -62,8 +62,8 @@ export function useWorkerEngagements(workerId: string) {
   const canView = useCan("directory:workers:view");
   return useQuery({
     queryKey: queryKeys.directory.engagements(workerId),
-    queryFn: () =>
-      apiClient.get<WorkerEngagement[]>(`/directory/workers/${workerId}/engagements`),
+    queryFn: ({ signal }) =>
+      apiClient.get<WorkerEngagement[]>(`/directory/workers/${workerId}/engagements`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && !!workerId,
   });

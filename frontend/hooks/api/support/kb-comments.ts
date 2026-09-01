@@ -18,10 +18,10 @@ interface KbArticleComment {
 export function useSupportKbComments(articleId: number) {
   return useQuery({
     queryKey: queryKeys.kbComments.list(articleId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<KbArticleComment[]>(
         `/support/kb/articles/${articleId}/comments`
-      ),
+      , undefined, signal),
     enabled: Number.isFinite(articleId) && articleId > 0,
     staleTime: 30_000,
   });

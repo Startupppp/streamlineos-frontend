@@ -21,8 +21,8 @@ export function useProjectCustomFields(projectId: number) {
   const canView = useCan("build:view");
   return useQuery<ProjectCustomField[]>({
     queryKey: customFieldKeys(projectId),
-    queryFn: () =>
-      apiClient.get<ProjectCustomField[]>(`/build/${projectId}/custom-fields`),
+    queryFn: ({ signal }) =>
+      apiClient.get<ProjectCustomField[]>(`/build/${projectId}/custom-fields`, undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -62,9 +62,9 @@ export function useTicketCustomFieldValues(projectId: number, ticketId: number) 
   const canView = useCan("build:tickets:view");
   return useQuery<TicketCustomFieldValue[]>({
     queryKey: ticketCustomFieldValueKeys(projectId, ticketId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<TicketCustomFieldValue[]>(
-        `/build/${projectId}/tickets/${ticketId}/custom-field-values`,
+        `/build/${projectId}/tickets/${ticketId}/custom-field-values`, signal,
       ),
     enabled: canView && !!projectId && !!ticketId,
     staleTime: 30_000,

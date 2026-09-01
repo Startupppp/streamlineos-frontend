@@ -33,7 +33,7 @@ export function useHrForms(params?: { status?: string; audience?: string; cursor
 export function useHrForm(formId: number | undefined) {
   return useQuery<HrForm>({
     queryKey: [...FORMS_KEY, formId],
-    queryFn: () => apiClient.get<HrForm>(`/hr/forms/${formId}`),
+    queryFn: ({ signal }) => apiClient.get<HrForm>(`/hr/forms/${formId}`, undefined, signal),
     enabled: formId !== undefined,
     staleTime: 30_000,
   });

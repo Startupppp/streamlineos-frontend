@@ -19,7 +19,7 @@ export interface UserSession {
 export const useSessions = () =>
   useQuery<UserSession[]>({
     queryKey: queryKeys.sessions.list(),
-    queryFn: () => apiClient.get<UserSession[]>("/sessions"),
+    queryFn: ({ signal }) => apiClient.get<UserSession[]>("/sessions", undefined, signal),
     staleTime: 30 * 1000,
   });
 

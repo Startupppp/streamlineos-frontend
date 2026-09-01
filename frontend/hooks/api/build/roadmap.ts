@@ -141,7 +141,7 @@ export function useRoadmapItems(filters: RoadmapItemFilters = {}) {
   const canView = useCan("build:roadmap:view");
   return useQuery({
     queryKey: queryKeys.roadmap.items(params),
-    queryFn: () => apiClient.get<CursorPaginated<RoadmapItem>>("/build/roadmap", params),
+    queryFn: ({ signal }) => apiClient.get<CursorPaginated<RoadmapItem>>("/build/roadmap", params),
     enabled: canView,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -183,7 +183,7 @@ export function useFeedbackPosts(filters: FeedbackPostFilters = {}) {
   const canView = useCan("build:roadmap:view");
   return useQuery({
     queryKey: queryKeys.roadmap.feedback(params),
-    queryFn: () => apiClient.get<CursorPaginated<FeedbackPost>>("/build/feedback", params),
+    queryFn: ({ signal }) => apiClient.get<CursorPaginated<FeedbackPost>>("/build/feedback", params),
     enabled: canView,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -225,7 +225,7 @@ export function useChangelog(filters: ChangelogFilters = {}) {
   const canView = useCan("build:roadmap:view");
   return useQuery({
     queryKey: queryKeys.roadmap.changelog(params),
-    queryFn: () => apiClient.get<CursorPaginated<ChangelogEntry>>("/build/changelog", params),
+    queryFn: ({ signal }) => apiClient.get<CursorPaginated<ChangelogEntry>>("/build/changelog", params),
     enabled: canView,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -265,7 +265,7 @@ export function useDeleteChangelogEntry() {
 export function usePublicRoadmap(orgId: string) {
   return useQuery({
     queryKey: queryKeys.roadmap.publicBoard(orgId),
-    queryFn: () => apiClient.get<PublicRoadmapBoard>("/public/roadmap", { org: orgId }),
+    queryFn: ({ signal }) => apiClient.get<PublicRoadmapBoard>("/public/roadmap", { org: orgId }, signal),
     enabled: Boolean(orgId),
     staleTime: 60_000,
     retry: false,

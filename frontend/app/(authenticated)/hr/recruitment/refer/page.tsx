@@ -2,7 +2,6 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useAllReferrals, useSubmitReferral } from "@/hooks/api/hr/recruitment/referrals";
 import { useJobPostings } from "@/hooks/api/hr/recruitment";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -22,6 +21,10 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
 import type { ReferralStatus } from "@/types/hr/recruitment";
 import { ErrorState } from "@/components/shared/error-state";
+import {
+  referSchema,
+  type ReferFormValues,
+} from "@/features/hr/recruitment/refer-schema";
 
 const STATUS_CONFIG: Record<ReferralStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   SUBMITTED: { label: "Submitted", variant: "secondary" },
@@ -30,18 +33,6 @@ const STATUS_CONFIG: Record<ReferralStatus, { label: string; variant: "default" 
   REJECTED: { label: "Not Selected", variant: "destructive" },
   BONUS_PAID: { label: "Bonus Paid", variant: "default" },
 };
-
-const referSchema = z.object({
-  firstName: z.string().min(1, "First name required").trim(),
-  lastName: z.string().min(1, "Last name required").trim(),
-  email: z.string().email("Invalid email"),
-  phone: z.string().optional(),
-  jobPostingId: z.string().optional(),
-  relationship: z.string().max(200).optional(),
-  notes: z.string().max(2000).optional(),
-});
-
-type ReferFormValues = z.infer<typeof referSchema>;
 
 export default function ReferPage() {
   const {

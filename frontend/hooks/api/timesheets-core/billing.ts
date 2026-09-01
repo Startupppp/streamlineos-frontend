@@ -23,7 +23,7 @@ export function useBillingUninvoiced(query: UninvoicedQuery = {}, enabled = true
   const params = { startDate: query.startDate, endDate: query.endDate, projectId: query.projectId };
   return useQuery({
     queryKey: queryKeys.timesheets.billingUninvoiced(params),
-    queryFn: () => apiClient.get<BillingUninvoiced>("/timesheets/billing/uninvoiced", params),
+    queryFn: ({ signal }) => apiClient.get<BillingUninvoiced>("/timesheets/billing/uninvoiced", params, signal),
     staleTime: 30_000,
     placeholderData: (prev) => prev,
     enabled: enabled && canView,

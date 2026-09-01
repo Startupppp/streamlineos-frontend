@@ -47,13 +47,13 @@ export function useProjectWorkspaceMembers(
 
   return useQuery<WorkspaceMembersResponse, Error>({
     queryKey: projectWorkspaceMembersQueryKeys.list(params as Record<string, unknown> | undefined),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<WorkspaceMembersResponse>("/build/members", {
         ...(params?.cursor ? { cursor: params.cursor } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
         ...(params?.search ? { search: params.search } : {}),
         ...(params?.status ? { status: params.status } : {}),
-      }),
+      }, signal),
     staleTime: 30_000,
     enabled,
     ...restOptions,

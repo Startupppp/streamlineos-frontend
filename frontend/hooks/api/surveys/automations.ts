@@ -37,7 +37,7 @@ export interface CreateAutomationInput {
 export function useSurveyAutomations(surveyId: number) {
   return useQuery({
     queryKey: queryKeys.surveys.automations(surveyId),
-    queryFn: () => apiClient.get<AutomationRule[]>(`/surveys/${surveyId}/automations`),
+    queryFn: ({ signal }) => apiClient.get<AutomationRule[]>(`/surveys/${surveyId}/automations`, undefined, signal),
     staleTime: 30_000,
   });
 }

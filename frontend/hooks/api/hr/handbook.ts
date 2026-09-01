@@ -39,7 +39,7 @@ const handbookKeys = {
 export function useHandbookVersions() {
   return useQuery({
     queryKey: handbookKeys.list(),
-    queryFn: () => apiClient.get<HandbookVersion[]>("/hr/handbook"),
+    queryFn: ({ signal }) => apiClient.get<HandbookVersion[]>("/hr/handbook", undefined, signal),
     staleTime: 2 * 60_000,
   });
 }

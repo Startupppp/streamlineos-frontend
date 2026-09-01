@@ -34,8 +34,8 @@ export function usePerson(
   const canView = useCan("directory:people:view");
   return useQuery({
     queryKey: queryKeys.directory.person(organizationPersonId),
-    queryFn: () =>
-      apiClient.get<OrganizationPerson>(`/directory/people/${organizationPersonId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<OrganizationPerson>(`/directory/people/${organizationPersonId}`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && !!organizationPersonId && (options?.enabled ?? true),
   });

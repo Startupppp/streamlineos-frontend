@@ -31,7 +31,7 @@ export function useForms(projectId: number, filters?: FormFilters) {
       projectId,
       Object.keys(params).length > 0 ? params : undefined,
     ),
-    queryFn: () => apiClient.get<ProjectForm[]>(`/build/${projectId}/forms`, params),
+    queryFn: ({ signal }) => apiClient.get<ProjectForm[]>(`/build/${projectId}/forms`, params, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -41,7 +41,7 @@ export function useForm(projectId: number, formId: number) {
   const canView = useCan("build:forms:view");
   return useQuery<ProjectForm>({
     queryKey: queryKeys.projects.forms.detail(projectId, formId),
-    queryFn: () => apiClient.get<ProjectForm>(`/build/${projectId}/forms/${formId}`),
+    queryFn: ({ signal }) => apiClient.get<ProjectForm>(`/build/${projectId}/forms/${formId}`, undefined, signal),
     enabled: canView && !!projectId && !!formId,
     staleTime: 60_000,
   });
@@ -88,8 +88,8 @@ export function useFormSubmissions(projectId: number, formId: number) {
   const canManage = useCan("build:forms:manage");
   return useQuery<FormSubmission[]>({
     queryKey: queryKeys.projects.forms.submissions(projectId, formId),
-    queryFn: () =>
-      apiClient.get<FormSubmission[]>(`/build/${projectId}/forms/${formId}/submissions`),
+    queryFn: ({ signal }) =>
+      apiClient.get<FormSubmission[]>(`/build/${projectId}/forms/${formId}/submissions`, undefined, signal),
     enabled: canManage && !!projectId && !!formId,
     staleTime: 60_000,
   });

@@ -97,11 +97,48 @@ Note on low current row counts: this is a dev/staging instance. `timesheets`, `h
 - Decision: 90-day body purge (set `html = ''`, `text = null`), 13-month record deletion.
 - Worker: `CronNotificationRetentionService`. Sweeps globally (no RLS on `email_outbox`) and reports capped runs as truncated for explicit retry.
 
-### outbox_events — PARTITION+ARCHIVE
+### outbox_events — PENDING-DECISION
 - Measured: 18 rows live, 54 dead, 288 KB.
 - Write path: every mutation that needs reliable side-effect delivery emits an outbox event. At scale this grows proportionally to mutation rate.
-- Decision: 90-day retention. The outbox relay processes rows to completion; a 90-day-old pending row indicates a stuck relay, not legitimate backlog.
-- Partitioning: gated on c21-04 (same as `notifications`, `chat_messages`). `notification_outbox` partition naming convention. Worker: `NotificationRetentionService`.
+- Decision: no automated deletion is approved. Pending and in-flight events may be required for replay; delivered and dead events require an approved lifecycle and replay policy before deletion.
+- Worker: none. The coverage gate reports this table as uncovered until that policy and an implementation are approved.
+
+### documents — RETAIN-BOUNDED
+- Decision: policy-driven deletion or anonymization through `CronHrRetentionService` using `hr_retention_policies` with bounded batches and legal-hold exclusion.
+- Worker: `CronHrRetentionService` (`recordType=document`).
+
+### attendance — RETAIN-BOUNDED
+- Decision: policy-driven physical deletion through `CronHrRetentionService` using `hr_retention_policies` with bounded batches and subject legal-hold exclusion.
+- Worker: `CronHrRetentionService` (`recordType=attendance`).
+- The worker scopes selection and deletion to the organization and excludes subjects covered by active HR legal holds.
+
+### helpdesk_tickets — RETAIN-BOUNDED
+- Decision: 730-day (2-year) retention after `resolved_at`. Only resolved or closed tickets are eligible; open and in-progress tickets are never swept.
+- Rationale: Employee-support cases may be referenced in escalation investigations or HR disputes for up to 2 years post-resolution. Beyond that, the statutory and business justification lapses.
+- Worker: `CronHelpdeskRetentionService` (`cron-helpdesk-retention.service.ts`). Uses `forEachOrg`, batch 200, legal-hold exclusion (subjects under `hr_legal_holds` where `status = 'active'`). Comments cascade-delete via FK (`onDelete: cascade`). Writes audit record to `hr_audit_logs`.
+- Route: `GET`/`POST /cron/helpdesk-retention-sweep`, `CRON_SECRET` + `CronLeaseService` lease `helpdesk-retention-sweep` (1800 seconds).
+- Immutable obligation: ticket comments and assignee history that are referenced by an active HR legal hold are excluded from deletion.
+
+### performance_reviews — KEEP-FOREVER
+- Decision: KEEP-FOREVER. Performance reviews are employment records used in succession planning, compensation decisions, and dispute resolution. They are referenced by `review_cycles`, feed into `goals` and `key_results`, and constitute evidence of HR decision-making under employment law in most jurisdictions (typically 7 years). Scheduling automated deletion without a per-org statutory-retention rule risks destroying legally required evidence.
+- No worker. Any deletion is operator-triggered following legal advice and is restricted to orgs with an approved statutory-retention policy.
+- Immutable obligation: `performance_reviews` carries no `deleted_at` column. Physical deletion requires an approved per-org policy and a migration that adds the lifecycle column first.
+
+### mail_message_metadata — RETAIN-BOUNDED
+- Decision: 365-day (1-year) retention from `synced_at`. Mail metadata is synced from provider mailboxes as a cache for the platform's mail UI. The authoritative record remains at the provider; this table is a re-syncable projection, not the system of record.
+- Worker: `CronMailRetentionService` (`cron-mail-retention.service.ts`). Uses `forEachOrg`, batch 500. Physical DELETE (no `deleted_at` — records are a re-syncable projection). No legal-hold interaction — the authoritative records remain at the provider.
+- Route: `GET`/`POST /cron/mail-metadata-retention-sweep`, `CRON_SECRET` + lease `mail-metadata-retention-sweep` (1800 seconds).
+
+### announcements — RETAIN-BOUNDED
+- Decision: Two sweep phases.
+  1. Expired announcements: delete where `expires_at IS NOT NULL AND expires_at < NOW() - 90 days`. A 90-day grace period allows analytics and read-receipt data to be captured before physical deletion.
+  2. Aged announcements: delete where `created_at < NOW() - 730 days`. Any announcement older than 2 years — expired or not — is no longer relevant to the organization's communication record.
+- `announcementTargets` and `announcementReads` cascade-delete via FK (`onDelete: cascade`).
+- Worker: `CronAnnouncementsRetentionService` (`cron-announcements-retention.service.ts`). Uses `forEachOrg`, batch 200 per phase. Writes audit record to `hr_audit_logs`.
+- Route: `GET`/`POST /cron/announcements-retention-sweep`, `CRON_SECRET` + lease `announcements-retention-sweep` (1800 seconds).
+
+### notification_outbox — PENDING-DECISION
+- No automated retention worker is wired. Pending and in-flight notification intents must be preserved; processed and dead-state deletion requires an approved policy and replay/dependency review.
 
 ### audit_logs — KEEP-FOREVER
 - Measured: 11 rows, 208 KB.
@@ -163,6 +200,9 @@ service's presence and unit tests must not be read as proof of operational execu
 | KB chat history retention | `GET`/`POST /cron/kb-chat-history-purge` | `CRON_SECRET` plus lease `kb-chat-history-purge` (600 seconds); bounded purge batches | Route is present and contract-tested; deployed cadence and successful execution remain unverified |
 | KB chunk retention | `GET`/`POST /cron/kb-chunk-retention-sweep` | `CRON_SECRET` plus lease `kb-chunk-retention-sweep` (600 seconds); bounded prune batches | Route is present and contract-tested; deployed cadence and successful execution remain unverified |
 | Build webhook retention | `GET`/`POST /cron/build-retention-prune` | `CRON_SECRET` plus lease `build-retention-prune` (120 seconds); bounded prune batches | Route is present and contract-tested; deployed cadence and successful execution remain unverified |
+| Helpdesk ticket retention | `GET`/`POST /cron/helpdesk-retention-sweep` | `CRON_SECRET` plus `CronLeaseService` lease `helpdesk-retention-sweep` (1,800 seconds); resolved tickets older than 2 years, batch 200, legal-hold exclusion | Route and lease are contract-tested; deployment cadence and successful execution remain unverified |
+| Mail metadata retention | `GET`/`POST /cron/mail-metadata-retention-sweep` | `CRON_SECRET` plus lease `mail-metadata-retention-sweep` (1,800 seconds); synced mail metadata older than 1 year, batch 500 | Route and lease are contract-tested; deployment cadence and successful execution remain unverified |
+| Announcements retention | `GET`/`POST /cron/announcements-retention-sweep` | `CRON_SECRET` plus lease `announcements-retention-sweep` (1,800 seconds); expired (grace 90 days) and aged (2 years) announcements, batch 200 per phase | Route and lease are contract-tested; deployment cadence and successful execution remain unverified |
 
 The scheduling contract test is `s05-retention-scheduling-contract.spec.ts`. It verifies route,
 secret, lease, and service wiring for the operations above and deliberately asserts that the

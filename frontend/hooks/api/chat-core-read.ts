@@ -46,8 +46,8 @@ export function useChatChannels(enabled = true) {
   const canRead = useCan("chat:channels:read");
   const chatEnabled = useModuleEnabled("chat");
   return useQuery({
-    queryKey: queryKeys.chat.myChannels(orgId),
-    queryFn: () => apiClient.get<Channel[]>("/chat/channels"),
+    queryKey: queryKeys.chat.myChannels(),
+    queryFn: ({ signal }) => apiClient.get<Channel[]>("/chat/channels", undefined, signal),
     staleTime: 300_000,
     refetchOnWindowFocus: true,
     enabled: !!orgId && enabled && chatEnabled && canRead,
@@ -58,7 +58,7 @@ export function useArchivedChannels(enabled = true) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: queryKeys.chat.archivedChannels(),
-    queryFn: () => apiClient.get<Channel[]>("/chat/channels/archived"),
+    queryFn: ({ signal }) => apiClient.get<Channel[]>("/chat/channels/archived", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: enabled && canRead,
   });
@@ -68,7 +68,7 @@ export function usePublicChannels(enabled = true) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: queryKeys.chat.publicChannels(),
-    queryFn: () => apiClient.get<PublicChannel[]>("/chat/channels/public"),
+    queryFn: ({ signal }) => apiClient.get<PublicChannel[]>("/chat/channels/public", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: enabled && canRead,
   });
@@ -78,7 +78,7 @@ export function useChatChannel(channelId: number) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: queryKeys.chat.channel(channelId),
-    queryFn: () => apiClient.get<Channel>(`/chat/channels/${channelId}`),
+    queryFn: ({ signal }) => apiClient.get<Channel>(`/chat/channels/${channelId}`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canRead && channelId > 0,
   });
@@ -88,10 +88,10 @@ export function useChatMessages(channelId: number) {
   const canRead = useCan("chat:messages:read");
   return useInfiniteQuery({
     queryKey: queryKeys.chat.messages(channelId),
-    queryFn: ({ pageParam }) =>
+    queryFn: ({ pageParam, signal }) =>
       apiClient.get<MessagesPage>(
         `/chat/channels/${channelId}/messages`,
-        pageParam ? { cursor: pageParam } : undefined,
+        pageParam ? { cursor: pageParam } : undefined, signal,
       ),
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     initialPageParam: undefined as number | undefined,
@@ -108,10 +108,10 @@ export function useChatPoll(
   const pollInterval = useRealtimePollInterval(30_000);
   return useQuery({
     queryKey: queryKeys.chat.poll(channelId, since),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<Message[]>(`/chat/channels/${channelId}/messages/poll`, {
         since,
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     enabled: enabled && canRead && channelId > 0,
     refetchInterval: enabled && canRead ? pollInterval : false,
@@ -124,8 +124,8 @@ export function useChatUnreadTotal(enabled = true) {
   const canRead = useCan("chat:messages:read");
   const chatEnabled = useModuleEnabled("chat");
   return useQuery({
-    queryKey: queryKeys.chat.unreadTotal(orgId),
-    queryFn: () => apiClient.get<{ total: number }>("/chat/unread"),
+    queryKey: queryKeys.chat.unreadTotal(),
+    queryFn: ({ signal }) => apiClient.get<{ total: number }>("/chat/unread", undefined, signal),
     staleTime: 300_000,
     refetchOnWindowFocus: true,
     enabled: !!orgId && enabled && chatEnabled && canRead,
@@ -136,7 +136,7 @@ export function useChatOnlineUsers(enabled = true) {
   const canRead = useCan("chat:messages:read");
   return useQuery({
     queryKey: queryKeys.chat.onlineUsers(),
-    queryFn: () => apiClient.get<OnlineUser[]>("/chat/presence/online"),
+    queryFn: ({ signal }) => apiClient.get<OnlineUser[]>("/chat/presence/online", undefined, signal),
     refetchInterval: 60_000,
     staleTime: 65_000,
     enabled: enabled && canRead,
@@ -147,7 +147,7 @@ export function useChatOrgUsers(enabled = true) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: queryKeys.chat.orgUsers(),
-    queryFn: () => apiClient.get<OrgUser[]>("/chat/users"),
+    queryFn: ({ signal }) => apiClient.get<OrgUser[]>("/chat/users", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: enabled && canRead,
   });

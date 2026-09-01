@@ -39,7 +39,7 @@ export function useHrDashboardMetrics() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.dashboardMetrics(),
-    queryFn: () => apiClient.get<HrDashboardMetrics>("/hr/dashboard/metrics"),
+    queryFn: ({ signal }) => apiClient.get<HrDashboardMetrics>("/hr/dashboard/metrics", undefined, signal),
     staleTime: 60_000,
     enabled: hrEnabled && canView,
   });
@@ -54,8 +54,8 @@ export function useHrLeaveCalendar(month?: number, year?: number) {
 
   return useQuery({
     queryKey: queryKeys.hr.leaveCalendar(month ?? 0, year ?? 0),
-    queryFn: () =>
-      apiClient.get<HrLeaveCalendarEntry[]>(`/hr/leave-calendar${qs ? `?${qs}` : ""}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<HrLeaveCalendarEntry[]>(`/hr/leave-calendar${qs ? `?${qs}` : ""}`, undefined, signal),
     staleTime: 60_000,
     enabled: canView,
   });
@@ -80,7 +80,7 @@ export function useHrOnboardingStatus() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.dashboardOnboardingStatus(),
-    queryFn: () => apiClient.get<HrOnboardingStatus>("/hr/dashboard/onboarding-status"),
+    queryFn: ({ signal }) => apiClient.get<HrOnboardingStatus>("/hr/dashboard/onboarding-status", undefined, signal),
     staleTime: 60_000,
     enabled: hrEnabled && canView,
   });

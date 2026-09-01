@@ -38,7 +38,7 @@ function useDocReviewSummary(cursor: string | undefined, search: string, status:
   if (status !== "ALL") params.status = status;
   return useQuery<DocReviewSummaryResponse>({
     queryKey: queryKeys.hr.onboardingDocsSummary(params),
-    queryFn: () => apiClient.get<DocReviewSummaryResponse>("/hr/onboarding-docs/summary", params),
+    queryFn: ({ signal }) => apiClient.get<DocReviewSummaryResponse>("/hr/onboarding-docs/summary", params, signal),
     placeholderData: keepPreviousData,
     staleTime: 30_000,
   });

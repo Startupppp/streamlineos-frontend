@@ -29,7 +29,7 @@ const pipKeys = { all: [...queryKeys.hr.all, "pip"] as const, list: () => [...pi
 export function usePIPs() {
   const canView = useCan("hr:performance:view");
   const hrEnabled = useModuleEnabled("hr");
-  return useQuery({ queryKey: pipKeys.list(), queryFn: () => apiClient.get<PIP[]>("/hr/performance/pip"), staleTime: 2 * 60_000, enabled: canView && hrEnabled });
+  return useQuery({ queryKey: pipKeys.list(), queryFn: ({ signal }) => apiClient.get<PIP[]>("/hr/performance/pip", undefined, signal), staleTime: 2 * 60_000, enabled: canView && hrEnabled });
 }
 
 export function useCreatePIP() {

@@ -34,7 +34,7 @@ export function useAdminLoans() {
   const canView = useCan("hr:payroll:view");
   return useQuery({
     queryKey: queryKeys.payroll.loansAdmin(),
-    queryFn: () => apiClient.get<LoanAdminItem[]>("/hr/loans"),
+    queryFn: ({ signal }) => apiClient.get<LoanAdminItem[]>("/hr/loans", undefined, signal),
     staleTime: 30_000,
     enabled: canView,
   });

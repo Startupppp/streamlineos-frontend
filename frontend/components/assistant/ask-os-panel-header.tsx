@@ -1,5 +1,5 @@
 import { ArrowLeft, Clock, PenLine, Trash2, X } from "lucide-react";
-import { AnimatedLogo } from "@/features/landing/components/animated-logo";
+import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { cn } from "@/lib/utils";
 
 interface AskOsPanelHeaderProps {

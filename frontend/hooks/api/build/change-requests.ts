@@ -24,8 +24,8 @@ export function useChangeRequests(projectId: number, filters?: CrFilters) {
       projectId,
       filters?.status ? { status: filters.status } : undefined,
     ),
-    queryFn: () =>
-      apiClient.get<ChangeRequest[]>(`/build/${projectId}/change-requests`, params),
+    queryFn: ({ signal }) =>
+      apiClient.get<ChangeRequest[]>(`/build/${projectId}/change-requests`, params, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });

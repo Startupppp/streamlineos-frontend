@@ -41,12 +41,12 @@ export function useUpdateMyProfile() {
 export function useLoginHistory(params?: { page?: number; limit?: number; success?: boolean }) {
   return useQuery({
     queryKey: queryKeys.auth.loginHistory(params as Record<string, unknown>),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<LoginHistoryPage>("/me/login-history", {
         page: params?.page ?? 1,
         limit: params?.limit ?? 20,
         ...(params?.success !== undefined && { success: String(params.success) }),
-      }),
+      }, signal),
     staleTime: 30_000,
     placeholderData: (prev) => prev,
   });

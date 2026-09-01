@@ -44,7 +44,7 @@ export function useHrShifts() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "shifts"],
-    queryFn: () => apiClient.get<ShiftTemplate[]>("/hr/shifts"),
+    queryFn: ({ signal }) => apiClient.get<ShiftTemplate[]>("/hr/shifts", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canView,
   });
@@ -84,7 +84,7 @@ export function useShiftAssignments() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "shiftAssignments"],
-    queryFn: () => apiClient.get<ShiftAssignment[]>("/hr/shifts/assignments"),
+    queryFn: ({ signal }) => apiClient.get<ShiftAssignment[]>("/hr/shifts/assignments", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canView,
   });
@@ -95,7 +95,7 @@ export function useShiftSwaps() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "shiftSwaps"],
-    queryFn: () => apiClient.get<ShiftSwap[]>("/hr/shifts/swaps"),
+    queryFn: ({ signal }) => apiClient.get<ShiftSwap[]>("/hr/shifts/swaps", undefined, signal),
     staleTime: 30_000,
     enabled: hrEnabled && canView,
   });

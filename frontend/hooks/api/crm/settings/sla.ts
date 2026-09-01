@@ -51,7 +51,7 @@ export interface UpdateSlaPolicyInput {
 export function useSlaPolicies() {
   return useGatedQuery("crm:sla:manage", {
     queryKey: queryKeys.crmSettings.slaPolicies(),
-    queryFn: () => apiClient.get<SlaPolicy[]>("/crm/sla/policies"),
+    queryFn: ({ signal }) => apiClient.get<SlaPolicy[]>("/crm/sla/policies", undefined, signal),
     staleTime: 2 * 60_000,
   });
 }
@@ -59,7 +59,7 @@ export function useSlaPolicies() {
 export function useSlaReport() {
   return useGatedQuery("crm:sla:manage", {
     queryKey: queryKeys.crmSettings.slaReport(),
-    queryFn: () => apiClient.get<SlaReport>("/crm/sla/report"),
+    queryFn: ({ signal }) => apiClient.get<SlaReport>("/crm/sla/report", undefined, signal),
     staleTime: 2 * 60_000,
   });
 }
@@ -67,8 +67,8 @@ export function useSlaReport() {
 export function useSlaBreachedLeads(params?: { limit?: number }) {
   return useGatedQuery("crm:sla:manage", {
     queryKey: queryKeys.crmSettings.slaBreachedLeads(params as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<SlaBreachedLead[]>("/crm/sla/breached", params as Record<string, unknown>),
+    queryFn: ({ signal }) =>
+      apiClient.get<SlaBreachedLead[]>("/crm/sla/breached", params as Record<string, unknown>, signal),
     staleTime: 2 * 60_000,
   });
 }

@@ -24,7 +24,7 @@ export function useProjectRisks(projectId: number, filters?: ListFilters) {
       projectId,
       Object.keys(params).length > 0 ? params : undefined,
     ),
-    queryFn: () => apiClient.get<Risk[]>(`/build/${projectId}/risks`, params),
+    queryFn: ({ signal }) => apiClient.get<Risk[]>(`/build/${projectId}/risks`, params, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -77,7 +77,7 @@ export function useProjectDecisions(projectId: number, filters?: ListFilters) {
       projectId,
       Object.keys(params).length > 0 ? params : undefined,
     ),
-    queryFn: () => apiClient.get<Decision[]>(`/build/${projectId}/decisions`, params),
+    queryFn: ({ signal }) => apiClient.get<Decision[]>(`/build/${projectId}/decisions`, params, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });

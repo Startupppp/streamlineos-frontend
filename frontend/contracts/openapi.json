@@ -6,14 +6,11 @@
         "operationId": "DelegationsController_list",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -24,7 +21,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -203,14 +200,11 @@
         "operationId": "DelegationsController_listGiven",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -221,7 +215,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -501,7 +495,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -750,7 +744,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -1093,7 +1087,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -1313,7 +1307,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -1407,7 +1401,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -1841,7 +1835,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -2079,7 +2073,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -2294,7 +2288,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -2390,7 +2384,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -2496,7 +2490,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -3499,7 +3493,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -3740,7 +3734,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -4207,7 +4201,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -4731,7 +4725,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -5169,7 +5163,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -5474,7 +5468,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -5688,7 +5682,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -6396,7 +6390,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -7158,7 +7152,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -7881,7 +7875,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -8463,7 +8457,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -8859,7 +8853,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -9258,7 +9252,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -9615,7 +9609,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -9669,7 +9663,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -12044,7 +12038,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -12516,7 +12510,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -12792,7 +12786,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -12883,7 +12877,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -12974,7 +12968,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -13039,7 +13033,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -13403,7 +13397,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -13571,7 +13565,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -13897,7 +13891,7 @@
               "default": 9,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -14241,17 +14235,6 @@
             }
           },
           {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            }
-          },
-          {
             "name": "limit",
             "in": "query",
             "required": false,
@@ -14259,7 +14242,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -14268,19 +14251,6 @@
             "required": false,
             "schema": {
               "type": "string"
-            }
-          },
-          {
-            "name": "paging",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "default": "page",
-              "type": "string",
-              "enum": [
-                "page",
-                "cursor"
-              ]
             }
           },
           {
@@ -14625,7 +14595,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -19339,14 +19309,13 @@
         "operationId": "ApiTokensController_listTokens",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -19357,7 +19326,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -19524,7 +19493,7 @@
               "default": 25,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -19767,6 +19736,31 @@
         "x-exposure": "permissioned",
         "x-permission": "audit-log:read",
         "description": "Exposure: permission — audit-log:read"
+      }
+    },
+    "/auth/.well-known/jwks.json": {
+      "get": {
+        "operationId": "AuthController_getJwks",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "Auth"
+        ],
+        "x-exposure": "public",
+        "description": "Exposure: public — unauthenticated"
       }
     },
     "/auth/audit/analytics": {
@@ -20540,6 +20534,76 @@
         "description": "Exposure: public — unauthenticated"
       }
     },
+    "/auth/session-exchange": {
+      "post": {
+        "operationId": "AuthController_sessionExchange",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "Auth"
+        ],
+        "x-exposure": "public",
+        "description": "Exposure: public — unauthenticated",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "sessionId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
+                  },
+                  "orgId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "userId",
+                  "sessionId"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
     "/auth/verify-email": {
       "post": {
         "operationId": "AuthController_verifyEmail",
@@ -21022,14 +21086,11 @@
         "operationId": "BillingMarketplaceController_listAiCreditTransactions",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -21040,7 +21101,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -21585,14 +21646,11 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -21603,7 +21661,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -23750,7 +23808,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -24162,7 +24220,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -24873,7 +24931,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -24946,7 +25004,7 @@
               "default": 9,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -27996,6 +28054,102 @@
       }
     },
     "/build/{projectId}/custom-states": {
+      "put": {
+        "operationId": "ProjectsController_bulkReorderCustomStates",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "Projects"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "build:manage",
+        "description": "Exposure: permission — build:manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "items": {
+                    "minItems": 1,
+                    "maxItems": 50,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "stateId": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "order": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "expectedOrder": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "stateId",
+                        "order"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "items"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      },
       "get": {
         "operationId": "ProjectsController_listCustomStates",
         "parameters": [
@@ -30659,7 +30813,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -31327,6 +31481,7 @@
                     "maximum": 9007199254740991
                   },
                   "attendeeUserIds": {
+                    "maxItems": 100,
                     "type": "array",
                     "items": {
                       "type": "string",
@@ -36144,17 +36299,6 @@
             }
           },
           {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            }
-          },
-          {
             "name": "limit",
             "in": "query",
             "required": false,
@@ -36162,7 +36306,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -36171,19 +36315,6 @@
             "required": false,
             "schema": {
               "type": "string"
-            }
-          },
-          {
-            "name": "paging",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "default": "page",
-              "type": "string",
-              "enum": [
-                "page",
-                "cursor"
-              ]
             }
           },
           {
@@ -36964,7 +37095,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -41789,7 +41920,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -42102,7 +42233,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -42636,7 +42767,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -42735,7 +42866,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -43402,7 +43533,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -43727,7 +43858,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -44129,7 +44260,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -45181,7 +45312,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -45525,7 +45656,7 @@
               "default": 10,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -45577,7 +45708,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -45905,7 +46036,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -46687,7 +46818,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -47030,7 +47161,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -48627,7 +48758,16 @@
     "/chat/channels": {
       "get": {
         "operationId": "ChatChannelsController_list",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -49898,7 +50038,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -50487,7 +50627,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -51627,7 +51767,16 @@
     "/chat/channels/archived": {
       "get": {
         "operationId": "ChatChannelsController_listArchived",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -53491,7 +53640,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -54006,7 +54155,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -54517,7 +54666,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -55412,7 +55561,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -56263,7 +56412,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -56881,7 +57030,7 @@
               "default": 25,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -56975,7 +57124,7 @@
               "default": 25,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -58312,7 +58461,7 @@
               "default": 25,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -58685,7 +58834,7 @@
               "default": 25,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -59781,7 +59930,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -61063,7 +61212,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -61297,7 +61446,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -61385,7 +61534,7 @@
               "default": 25,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -62740,7 +62889,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -63367,7 +63516,7 @@
               "default": 100,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -64093,7 +64242,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -64770,7 +64919,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -68348,7 +68497,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -69793,6 +69942,152 @@
         "x-bodyless": true
       }
     },
+    "/cron/ai-usage-retention-sweep": {
+      "get": {
+        "operationId": "CronPlatformController_getAiUsageRetentionSweep",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "CronPlatform"
+        ],
+        "x-exposure": "public",
+        "description": "Exposure: public — unauthenticated"
+      },
+      "post": {
+        "operationId": "CronPlatformController_postAiUsageRetentionSweep",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "CronPlatform"
+        ],
+        "x-exposure": "public",
+        "description": "Exposure: public — unauthenticated",
+        "x-bodyless": true
+      }
+    },
+    "/cron/announcements-retention-sweep": {
+      "get": {
+        "operationId": "CronPlatformController_getAnnouncementsRetentionSweep",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "CronPlatform"
+        ],
+        "x-exposure": "public",
+        "description": "Exposure: public — unauthenticated"
+      },
+      "post": {
+        "operationId": "CronPlatformController_postAnnouncementsRetentionSweep",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "CronPlatform"
+        ],
+        "x-exposure": "public",
+        "description": "Exposure: public — unauthenticated",
+        "x-bodyless": true
+      }
+    },
     "/cron/auto-checkout": {
       "get": {
         "operationId": "CronHrController_getAutoCheckout",
@@ -70961,6 +71256,79 @@
         "x-bodyless": true
       }
     },
+    "/cron/helpdesk-retention-sweep": {
+      "get": {
+        "operationId": "CronHrController_getHelpdeskRetentionSweep",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "CronHr"
+        ],
+        "x-exposure": "public",
+        "description": "Exposure: public — unauthenticated"
+      },
+      "post": {
+        "operationId": "CronHrController_postHelpdeskRetentionSweep",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "CronHr"
+        ],
+        "x-exposure": "public",
+        "description": "Exposure: public — unauthenticated",
+        "x-bodyless": true
+      }
+    },
     "/cron/holiday-notifications": {
       "get": {
         "operationId": "CronHrController_getHolidayNotifications",
@@ -71788,6 +72156,79 @@
         "x-bodyless": true
       }
     },
+    "/cron/mail-metadata-retention-sweep": {
+      "get": {
+        "operationId": "CronPlatformController_getMailMetadataRetentionSweep",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "CronPlatform"
+        ],
+        "x-exposure": "public",
+        "description": "Exposure: public — unauthenticated"
+      },
+      "post": {
+        "operationId": "CronPlatformController_postMailMetadataRetentionSweep",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "CronPlatform"
+        ],
+        "x-exposure": "public",
+        "description": "Exposure: public — unauthenticated",
+        "x-bodyless": true
+      }
+    },
     "/cron/monthly-leave-reset": {
       "get": {
         "operationId": "CronHrController_getMonthlyLeaveReset",
@@ -72512,6 +72953,79 @@
         },
         "tags": [
           "CronHr"
+        ],
+        "x-exposure": "public",
+        "description": "Exposure: public — unauthenticated",
+        "x-bodyless": true
+      }
+    },
+    "/cron/operator-grant-expiry": {
+      "get": {
+        "operationId": "CronPlatformController_getOperatorGrantExpiry",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "CronPlatform"
+        ],
+        "x-exposure": "public",
+        "description": "Exposure: public — unauthenticated"
+      },
+      "post": {
+        "operationId": "CronPlatformController_postOperatorGrantExpiry",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "CronPlatform"
         ],
         "x-exposure": "public",
         "description": "Exposure: public — unauthenticated",
@@ -73905,7 +74419,7 @@
               "default": 100,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -75184,7 +75698,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -77073,7 +77587,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -77707,7 +78221,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -78255,7 +78769,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -78751,7 +79265,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -79126,7 +79640,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -80199,7 +80713,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -80481,7 +80995,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -80588,7 +81102,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -80994,7 +81508,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -81355,7 +81869,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -81841,6 +82355,73 @@
         }
       }
     },
+    "/gdpr/rectification/me": {
+      "post": {
+        "operationId": "GdprController_rectifyOwnProfile",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKeyHeader"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "Gdpr"
+        ],
+        "x-exposure": "in-service",
+        "x-authorized-in-service": "JWT sub is the subject — rectification is limited to the caller's own profile name",
+        "description": "Exposure: authorized in service — JWT sub is the subject — rectification is limited to the caller's own profile name",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "field": {
+                    "type": "string",
+                    "const": "profile.name"
+                  },
+                  "value": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "field",
+                  "value"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "x-idempotency-command": "gdpr.rectification.profile-name",
+        "x-idempotent": true
+      }
+    },
     "/goals": {
       "get": {
         "operationId": "GoalsController_list",
@@ -81918,7 +82499,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -82919,7 +83500,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -83241,7 +83822,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -84275,7 +84856,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -85415,7 +85996,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -85640,14 +86221,13 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -85658,7 +86238,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -85695,14 +86275,13 @@
         "operationId": "AttendanceController_teamStatus",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -85713,7 +86292,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -85847,7 +86426,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -87092,7 +87671,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -87325,7 +87904,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -87543,7 +88122,9 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -87554,7 +88135,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -87577,7 +88158,8 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -88203,6 +88785,16 @@
         "operationId": "HrBenefitsController_listPlans",
         "parameters": [
           {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            }
+          },
+          {
             "name": "status",
             "in": "query",
             "required": false,
@@ -88240,7 +88832,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -88648,7 +89240,46 @@
     "/hr/benefits/plans/available": {
       "get": {
         "operationId": "HrBenefitsController_listActivePlans",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "health",
+                "life",
+                "accident",
+                "retirement",
+                "wellness",
+                "perk",
+                "other"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -89160,13 +89791,13 @@
         "operationId": "BonusesController_list",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -89176,7 +89807,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -89449,7 +90080,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -90246,7 +90877,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -92334,7 +92965,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -92668,7 +93299,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -93756,7 +94387,9 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -93767,7 +94400,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -94621,7 +95254,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -94948,14 +95581,13 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -94966,7 +95598,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -95371,7 +96003,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -95593,7 +96225,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -96016,7 +96648,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -96127,16 +96759,6 @@
             }
           },
           {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            }
-          },
-          {
             "name": "limit",
             "in": "query",
             "required": false,
@@ -96144,7 +96766,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -97190,7 +97812,7 @@
               "default": 30,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -98240,14 +98862,11 @@
         "operationId": "DevicesController_list",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -98258,7 +98877,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -98635,14 +99254,11 @@
         "operationId": "DevicesController_listMappings",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -98653,7 +99269,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -98778,14 +99394,11 @@
         "operationId": "DevicesController_listSyncLogs",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -98796,7 +99409,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -99007,14 +99620,11 @@
         "operationId": "EquityController_listGrants",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -99025,7 +99635,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -99424,14 +100034,11 @@
         "operationId": "PayrollComplianceController_listArrears",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -99442,7 +100049,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -99629,14 +100236,11 @@
         "operationId": "PayrollComplianceController_listTasks",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -99647,7 +100251,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -99926,14 +100530,11 @@
         "operationId": "PayrollComplianceController_listVariance",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -99944,7 +100545,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -100142,14 +100743,11 @@
         "operationId": "CompPlanningController_listCycles",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -100160,7 +100758,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -100568,14 +101166,11 @@
         "operationId": "CompPlanningController_listRecommendations",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -100586,7 +101181,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -101046,7 +101641,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -101808,7 +102403,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -102322,14 +102917,11 @@
         "operationId": "EventStreamController_listEvents",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -102340,7 +102932,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -102455,11 +103047,8 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "page": {
-                    "default": 1,
-                    "type": "integer",
-                    "minimum": 1,
-                    "maximum": 9007199254740991
+                  "cursor": {
+                    "type": "string"
                   },
                   "limit": {
                     "default": 20,
@@ -102581,7 +103170,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -103251,14 +103840,11 @@
         "operationId": "SimulatorController_listHistory",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -103269,7 +103855,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -103643,7 +104229,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -104444,7 +105030,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -105412,7 +105998,7 @@
               "default": 10,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -105628,14 +106214,13 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -105646,7 +106231,7 @@
               "default": 100,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -106537,7 +107122,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -106779,13 +107364,11 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -106795,7 +107378,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -107552,13 +108135,11 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -107568,7 +108149,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -107632,13 +108213,11 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -107648,7 +108227,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -108060,7 +108639,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -108258,7 +108837,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -108750,7 +109329,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -109390,7 +109969,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -109814,7 +110393,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -110116,7 +110695,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -110196,7 +110775,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -110539,7 +111118,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -110825,7 +111404,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -111113,7 +111692,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -112195,7 +112774,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -112575,7 +113154,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -112647,7 +113226,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -112956,7 +113535,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -112983,7 +113562,8 @@
               "enum": [
                 "export",
                 "delete",
-                "anonymize"
+                "anonymize",
+                "correction"
               ]
             }
           },
@@ -113074,7 +113654,8 @@
                     "enum": [
                       "export",
                       "delete",
-                      "anonymize"
+                      "anonymize",
+                      "correction"
                     ]
                   },
                   "reason": {
@@ -113291,7 +113872,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -113964,7 +114545,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -114914,14 +115495,11 @@
         "operationId": "HrImportController_listJobs",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -114932,7 +115510,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -115141,13 +115719,13 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -115157,7 +115735,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -117603,7 +118181,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -118081,7 +118659,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -118443,14 +119021,13 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -118461,7 +119038,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -118723,14 +119300,13 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -118741,7 +119317,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -118899,14 +119475,13 @@
         "operationId": "HrOnboardingDocsAdminController_summary",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -118917,7 +119492,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -119014,7 +119589,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -120123,14 +120698,11 @@
         "operationId": "OvertimeController_list",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -120141,7 +120713,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -120640,14 +121212,13 @@
         "operationId": "PayrollInputsController_listPeriods",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -120658,7 +121229,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -120824,14 +121395,13 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -120842,7 +121412,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -120900,14 +121470,13 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -120918,7 +121487,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -121029,14 +121598,13 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -121047,7 +121615,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -121158,14 +121726,13 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -121176,7 +121743,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -121234,14 +121801,13 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -121252,7 +121818,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -121353,13 +121919,13 @@
         "operationId": "SalaryStructureTemplatesController_list",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -121369,7 +121935,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -121762,16 +122328,6 @@
             }
           },
           {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            }
-          },
-          {
             "name": "limit",
             "in": "query",
             "required": false,
@@ -121779,7 +122335,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -123844,7 +124400,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -124240,7 +124796,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -125144,7 +125700,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -125999,7 +126555,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -126009,7 +126565,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -130600,18 +131156,15 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
-            "name": "offset",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 0,
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           }
         ],
@@ -131005,7 +131558,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -131916,7 +132469,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -131926,7 +132479,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -132936,13 +133489,11 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -132952,7 +133503,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -132962,17 +133513,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
-            }
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -134194,7 +134735,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -134795,14 +135336,11 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -134813,7 +135351,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -135087,7 +135625,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -136801,14 +137339,11 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -136819,7 +137354,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -137631,7 +138166,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -137845,7 +138380,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -138464,7 +138999,9 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -138475,7 +139012,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -138528,6 +139065,7 @@
             "required": false,
             "schema": {
               "type": "string",
+              "minLength": 1,
               "maxLength": 200
             }
           },
@@ -139955,7 +140493,7 @@
               "default": 30,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -140782,14 +141320,11 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -140800,7 +141335,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -141180,6 +141715,27 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
           }
         ],
         "responses": {
@@ -141419,14 +141975,11 @@
         "operationId": "TerminationController_list",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -141437,7 +141990,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -142789,7 +143342,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -143474,7 +144027,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -144222,7 +144775,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -144682,7 +145235,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -145253,14 +145806,13 @@
         "operationId": "HrWorkflowInstancesController_acted",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -145271,7 +145823,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -145326,7 +145878,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -146214,7 +146766,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -147065,7 +147617,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -147261,7 +147813,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -147629,7 +148181,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -148223,7 +148775,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -148380,7 +148932,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -148473,7 +149025,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -148723,7 +149275,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -148910,7 +149462,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -149333,7 +149885,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -149531,7 +150083,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -149959,7 +150511,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -150474,7 +151026,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -151714,7 +152266,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -151795,7 +152347,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -152526,7 +153078,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -152797,7 +153349,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -153369,7 +153921,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -153661,7 +154213,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -153954,7 +154506,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -154167,7 +154719,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -154240,7 +154792,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -154295,7 +154847,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -154361,7 +154913,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -154416,7 +154968,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -154491,7 +155043,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -154577,7 +155129,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -155560,7 +156112,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -156040,7 +156592,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -156550,7 +157102,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -156621,7 +157173,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -157256,7 +157808,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -157522,7 +158074,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -157647,7 +158199,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -158203,7 +158755,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -158268,7 +158820,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -158336,7 +158888,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -158700,7 +159252,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -159126,7 +159678,7 @@
               "default": 100,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -159786,7 +160338,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -160116,7 +160668,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -160252,7 +160804,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -161639,7 +162191,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -162275,6 +162827,24 @@
             "name": "articleId",
             "required": true,
             "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "afterCreatedAt",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "afterId",
+            "in": "query",
+            "required": false,
             "schema": {
               "type": "integer",
               "exclusiveMinimum": 0,
@@ -166919,7 +167489,16 @@
     "/kb/pages/reindex-all": {
       "post": {
         "operationId": "KbPageIndexingController_reindexAllPages",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "afterPageId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -167479,7 +168058,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -168603,7 +169182,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -168725,7 +169304,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -170306,7 +170885,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -171212,7 +171791,7 @@
               "default": 25,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -171760,14 +172339,13 @@
         "operationId": "UserApiTokensController_list",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -171778,7 +172356,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -172239,7 +172817,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -172562,7 +173140,7 @@
               "default": 10,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -172931,7 +173509,7 @@
               "default": 25,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -173009,7 +173587,7 @@
               "default": 25,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -173336,7 +173914,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -173664,7 +174242,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -173837,7 +174415,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -173854,7 +174432,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 32,
+              "pattern": "^[a-z][a-z0-9_-]*$"
             }
           }
         ],
@@ -173896,7 +174476,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 32,
+              "pattern": "^[a-z][a-z0-9_-]*$"
             }
           }
         ],
@@ -173948,7 +174530,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -173957,7 +174539,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 32,
+              "pattern": "^[a-z][a-z0-9_-]*$"
             }
           }
         ],
@@ -173997,7 +174581,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 32,
+              "pattern": "^[a-z][a-z0-9_-]*$"
             }
           }
         ],
@@ -174065,7 +174651,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 32,
+              "pattern": "^[a-z][a-z0-9_-]*$"
             }
           },
           {
@@ -174073,8 +174661,9 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 1
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -174140,7 +174729,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 32,
+              "pattern": "^[a-z][a-z0-9_-]*$"
             }
           },
           {
@@ -174148,8 +174739,9 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 1
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -174197,7 +174789,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 32,
+              "pattern": "^[a-z][a-z0-9_-]*$"
             }
           },
           {
@@ -174205,8 +174799,9 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 1
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -174246,7 +174841,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 32,
+              "pattern": "^[a-z][a-z0-9_-]*$"
             }
           },
           {
@@ -174254,8 +174851,9 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 1
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -174322,7 +174920,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 32,
+              "pattern": "^[a-z][a-z0-9_-]*$"
             }
           },
           {
@@ -174330,8 +174930,9 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 1
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           {
@@ -174388,7 +174989,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 32,
+              "pattern": "^[a-z][a-z0-9_-]*$"
             }
           },
           {
@@ -174396,8 +174999,9 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 1
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -174493,7 +175097,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 32,
+              "pattern": "^[a-z][a-z0-9_-]*$"
             }
           }
         ],
@@ -174537,7 +175143,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -174588,7 +175194,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 32,
+              "pattern": "^[a-z][a-z0-9_-]*$"
             }
           }
         ],
@@ -174632,7 +175240,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -174661,7 +175269,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 32,
+              "pattern": "^[a-z][a-z0-9_-]*$"
             }
           }
         ],
@@ -174701,7 +175311,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 32,
+              "pattern": "^[a-z][a-z0-9_-]*$"
             }
           }
         ],
@@ -175003,7 +175615,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 32,
+              "pattern": "^[a-z][a-z0-9_-]*$"
             }
           },
           {
@@ -175083,7 +175697,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 32,
+              "pattern": "^[a-z][a-z0-9_-]*$"
             }
           },
           {
@@ -175140,7 +175756,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 32,
+              "pattern": "^[a-z][a-z0-9_-]*$"
             }
           }
         ],
@@ -175182,7 +175800,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 32,
+              "pattern": "^[a-z][a-z0-9_-]*$"
             }
           },
           {
@@ -175252,7 +175872,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 32,
+              "pattern": "^[a-z][a-z0-9_-]*$"
             }
           },
           {
@@ -175305,7 +175927,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 32,
+              "pattern": "^[a-z][a-z0-9_-]*$"
             }
           }
         ],
@@ -175347,7 +175971,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 32,
+              "pattern": "^[a-z][a-z0-9_-]*$"
             }
           },
           {
@@ -175355,8 +175981,9 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 1
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -175452,7 +176079,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 32,
+              "pattern": "^[a-z][a-z0-9_-]*$"
             }
           }
         ],
@@ -175494,7 +176123,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 32,
+              "pattern": "^[a-z][a-z0-9_-]*$"
             }
           },
           {
@@ -175502,8 +176133,9 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 1
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -175550,7 +176182,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 32,
+              "pattern": "^[a-z][a-z0-9_-]*$"
             }
           },
           {
@@ -175558,8 +176192,9 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "minLength": 1
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           }
         ],
@@ -175607,7 +176242,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 32,
+              "pattern": "^[a-z][a-z0-9_-]*$"
             }
           }
         ],
@@ -175649,7 +176286,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "maxLength": 32,
+              "pattern": "^[a-z][a-z0-9_-]*$"
             }
           }
         ],
@@ -176359,7 +176998,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -177033,7 +177672,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -178939,14 +179578,11 @@
         "operationId": "OfferFulfillmentController_listComponents",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -178957,7 +179593,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -180900,7 +181536,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -181400,7 +182036,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -181762,7 +182398,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -182045,7 +182681,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -182512,7 +183148,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -182873,7 +183509,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -183372,6 +184008,7 @@
                   },
                   "targetIds": {
                     "default": [],
+                    "maxItems": 1000,
                     "type": "array",
                     "items": {
                       "type": "string",
@@ -183511,6 +184148,7 @@
                   },
                   "targetIds": {
                     "default": [],
+                    "maxItems": 1000,
                     "type": "array",
                     "items": {
                       "type": "string",
@@ -184933,14 +185571,13 @@
         "operationId": "OrganizationController_listMembers",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -184951,7 +185588,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -186119,14 +186756,11 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -186137,7 +186771,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -186805,7 +187439,7 @@
               "default": 100,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -186871,7 +187505,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -188278,7 +188912,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -190399,13 +191033,13 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -190415,7 +191049,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -191252,25 +191886,24 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
-            "name": "pageSize",
+            "name": "limit",
             "in": "query",
             "required": false,
             "schema": {
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -191613,14 +192246,13 @@
         "operationId": "ProfilesController_list",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -191631,7 +192263,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -192389,14 +193021,13 @@
         "operationId": "PayrollFilingsController_list",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -192407,7 +193038,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -192853,7 +193484,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -193150,7 +193781,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -194143,7 +194774,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -195064,14 +195695,13 @@
         "operationId": "PayslipTemplatesController_list",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -195082,7 +195712,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -196410,17 +197040,17 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
-            "name": "offset",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           }
         ],
@@ -196511,17 +197141,17 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
-            "name": "offset",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           }
         ],
@@ -196612,17 +197242,17 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
-            "name": "offset",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           }
         ],
@@ -196713,17 +197343,17 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
-            "name": "offset",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           }
         ],
@@ -196814,17 +197444,17 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
-            "name": "offset",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           }
         ],
@@ -196969,17 +197599,17 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
-            "name": "offset",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           }
         ],
@@ -197070,17 +197700,17 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
-            "name": "offset",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           }
         ],
@@ -197171,17 +197801,17 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
-            "name": "offset",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           }
         ],
@@ -197272,17 +197902,17 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
-            "name": "offset",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           }
         ],
@@ -197373,17 +198003,17 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
-            "name": "offset",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           }
         ],
@@ -198266,14 +198896,13 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -198284,7 +198913,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -198563,14 +199192,13 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -198581,7 +199209,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -199933,13 +200561,13 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -199949,7 +200577,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -200135,13 +200763,13 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
@@ -200151,7 +200779,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -200227,25 +200855,24 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
             }
           },
           {
-            "name": "pageSize",
+            "name": "limit",
             "in": "query",
             "required": false,
             "schema": {
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -201052,10 +201679,10 @@
                     "minLength": 1,
                     "maxLength": 500
                   },
-                  "grantedBy": {
+                  "reason": {
                     "type": "string",
-                    "minLength": 1,
-                    "maxLength": 256
+                    "minLength": 3,
+                    "maxLength": 1000
                   },
                   "scope": {
                     "type": "string",
@@ -201077,7 +201704,7 @@
                   "operatorUserId",
                   "orgId",
                   "incidentRef",
-                  "grantedBy",
+                  "reason",
                   "scope",
                   "expiresAt"
                 ],
@@ -201109,7 +201736,9 @@
               "enum": [
                 "pending",
                 "active",
-                "rejected"
+                "rejected",
+                "revoked",
+                "expired"
               ]
             }
           }
@@ -201252,27 +201881,7 @@
         "x-exposure": "in-service",
         "x-authorized-in-service": "INTERNAL_API_SECRET header — approves a pending grant; approverId must differ from the original requester (grantedBy)",
         "description": "Exposure: authorized in service — INTERNAL_API_SECRET header — approves a pending grant; approverId must differ from the original requester (grantedBy)",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "approverId": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 256
-                  }
-                },
-                "required": [
-                  "approverId"
-                ],
-                "additionalProperties": false
-              }
-            }
-          }
-        }
+        "x-bodyless": true
       }
     },
     "/platform/operator-access/grants/{grantId}/reject": {
@@ -201364,7 +201973,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 500
+              "maximum": 100
             }
           }
         ],
@@ -201391,6 +202000,92 @@
         "x-exposure": "in-service",
         "x-authorized-in-service": "INTERNAL_API_SECRET header — StreamlineOS platform admin only; lists access log for an org",
         "description": "Exposure: authorized in service — INTERNAL_API_SECRET header — StreamlineOS platform admin only; lists access log for an org"
+      }
+    },
+    "/platform/operator/organizations/{orgId}": {
+      "get": {
+        "operationId": "PlatformOperatorCustomerController_getCustomer",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organization identity and recent members"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "PlatformOperatorCustomer"
+        ],
+        "x-exposure": "in-service",
+        "x-authorized-in-service": "OperatorSessionGuard validates and audits a target-organization grant before the tenant transaction opens",
+        "description": "Exposure: authorized in service — OperatorSessionGuard validates and audits a target-organization grant before the tenant transaction opens"
+      }
+    },
+    "/platform/operator/organizations/{orgId}/billing": {
+      "get": {
+        "operationId": "PlatformOperatorCustomerController_getBilling",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Subscription and recent payment history"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "PlatformOperatorCustomer"
+        ],
+        "x-exposure": "in-service",
+        "x-authorized-in-service": "OperatorSessionGuard validates and audits a target-organization grant before the tenant transaction opens",
+        "description": "Exposure: authorized in service — OperatorSessionGuard validates and audits a target-organization grant before the tenant transaction opens"
       }
     },
     "/platform/visit": {
@@ -201505,17 +202200,6 @@
         "operationId": "PortalAccessController_listGrants",
         "parameters": [
           {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            }
-          },
-          {
             "name": "limit",
             "in": "query",
             "required": false,
@@ -201523,7 +202207,15 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -201806,17 +202498,6 @@
         "operationId": "PortalAccessController_listMemberships",
         "parameters": [
           {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            }
-          },
-          {
             "name": "limit",
             "in": "query",
             "required": false,
@@ -201824,7 +202505,15 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -202227,14 +202916,11 @@
         "operationId": "PrincipalGroupsController_list",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -202245,7 +202931,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -202776,7 +203462,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -203079,7 +203765,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -204232,17 +204918,6 @@
             }
           },
           {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            }
-          },
-          {
             "name": "pageSize",
             "in": "query",
             "required": false,
@@ -204250,7 +204925,15 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -204363,7 +205046,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -206978,7 +207661,7 @@
               "default": 25,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -208356,14 +209039,11 @@
         "operationId": "RolesController_list",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -208374,7 +209054,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -209148,14 +209828,11 @@
         "operationId": "RolesController_listSimulationCandidates",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -209166,7 +209843,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -209447,7 +210124,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -210313,7 +210990,7 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -210448,7 +211125,7 @@
               "default": 5,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -210774,14 +211451,11 @@
         "operationId": "SettingsController_listAutomations",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -210792,7 +211466,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -212319,6 +212993,12 @@
                     "type": "string",
                     "format": "email",
                     "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                  },
+                  "locale": {
+                    "default": "en",
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 35
                   }
                 },
                 "required": [
@@ -214194,7 +214874,7 @@
               "default": 25,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -216976,7 +217656,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -219569,7 +220249,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -219736,7 +220416,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -226283,7 +226963,7 @@
               "default": 25,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -226743,7 +227423,7 @@
               "default": 25,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -228238,7 +228918,7 @@
               "default": 25,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -229341,7 +230021,7 @@
               "default": 25,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -230080,7 +230760,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -230513,7 +231193,7 @@
               "default": 100,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -231043,7 +231723,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -231398,7 +232078,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -232114,7 +232794,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -232493,7 +233173,7 @@
               "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -232851,7 +233531,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -233262,7 +233942,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -235087,17 +235767,6 @@
         "operationId": "UsersController_listUsersV2",
         "parameters": [
           {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            }
-          },
-          {
             "name": "limit",
             "in": "query",
             "required": false,
@@ -235105,7 +235774,15 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -235661,7 +236338,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -235787,14 +236464,11 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -235805,7 +236479,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -236473,7 +237147,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -237070,7 +237744,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -237431,14 +238105,11 @@
         "operationId": "WebhooksController_list",
         "parameters": [
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -237449,7 +238120,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -237737,14 +238408,11 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "default": 1,
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -237755,7 +238423,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           }
         ],
@@ -238116,7 +238784,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -238612,7 +239280,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {
@@ -239544,7 +240212,7 @@
               "default": 20,
               "type": "integer",
               "minimum": 1,
-              "maximum": 9007199254740991
+              "maximum": 100
             }
           },
           {

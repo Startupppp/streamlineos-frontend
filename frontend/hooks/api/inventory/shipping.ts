@@ -109,13 +109,13 @@ export function usePackages(params?: PackageQueryParams) {
   const canView = useCan("inventory:packages:manage");
   return useQuery<PackageListResponse, Error>({
     queryKey: queryKeys.inventory.packages(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PackageListResponse>("/inventory/packages", {
         ...(params?.shipmentId ? { shipmentId: String(params.shipmentId) } : {}),
         ...(params?.status ? { status: params.status } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
-      }),
+      }, signal),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -125,7 +125,7 @@ export function usePackageDetail(packageId: number) {
   const canView = useCan("inventory:packages:manage");
   return useQuery<Package, Error>({
     queryKey: queryKeys.inventory.packageDetail(packageId),
-    queryFn: () => apiClient.get<Package>(`/inventory/packages/${packageId}`),
+    queryFn: ({ signal }) => apiClient.get<Package>(`/inventory/packages/${packageId}`, undefined, signal),
     enabled: canView && packageId > 0,
     staleTime: 60_000,
   });
@@ -203,7 +203,7 @@ export function useShipments(params?: ShipmentQueryParams) {
   const canView = useCan("inventory:shipments:manage");
   return useQuery<ShipmentListResponse, Error>({
     queryKey: queryKeys.inventory.shipments(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ShipmentListResponse>("/inventory/shipments", {
         ...(params?.status ? { status: params.status } : {}),
         ...(params?.carrierId ? { carrierId: String(params.carrierId) } : {}),
@@ -211,7 +211,7 @@ export function useShipments(params?: ShipmentQueryParams) {
         ...(params?.soId ? { soId: String(params.soId) } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
-      }),
+      }, signal),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -221,7 +221,7 @@ export function useShipment(shipmentId: number) {
   const canView = useCan("inventory:shipments:manage");
   return useQuery<Shipment, Error>({
     queryKey: queryKeys.inventory.shipment(shipmentId),
-    queryFn: () => apiClient.get<Shipment>(`/inventory/shipments/${shipmentId}`),
+    queryFn: ({ signal }) => apiClient.get<Shipment>(`/inventory/shipments/${shipmentId}`, undefined, signal),
     enabled: canView && shipmentId > 0,
     staleTime: 60_000,
   });
@@ -297,11 +297,11 @@ export function useLoads(params?: LoadsQueryParams) {
   const canView = useCan("inventory:loads:manage");
   return useQuery<LoadListResponse, Error>({
     queryKey: queryKeys.inventory.loads(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<LoadListResponse>("/inventory/loads", {
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
-      }),
+      }, signal),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -311,7 +311,7 @@ export function useLoad(loadId: number) {
   const canView = useCan("inventory:loads:manage");
   return useQuery<Load, Error>({
     queryKey: queryKeys.inventory.load(loadId),
-    queryFn: () => apiClient.get<Load>(`/inventory/loads/${loadId}`),
+    queryFn: ({ signal }) => apiClient.get<Load>(`/inventory/loads/${loadId}`, undefined, signal),
     enabled: canView && loadId > 0,
     staleTime: 60_000,
   });
@@ -375,7 +375,7 @@ export function useCarriers() {
   const canView = useCan("inventory:shipments:manage");
   return useQuery<Carrier[], Error>({
     queryKey: queryKeys.inventory.carriers(),
-    queryFn: () => apiClient.get<Carrier[]>("/inventory/carriers"),
+    queryFn: ({ signal }) => apiClient.get<Carrier[]>("/inventory/carriers", undefined, signal),
     staleTime: 30_000,
     enabled: canView,
   });

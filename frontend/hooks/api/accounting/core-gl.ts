@@ -53,8 +53,8 @@ export function useGeneralLedger(params: GlParams) {
   const can = useCan("accounting:general-ledger:read");
   return useQuery<GlResponse, Error>({
     queryKey: coreKeys.gl(params),
-    queryFn: () =>
-      apiClient.get<GlResponse>("/accounting/general-ledger", toQuery(params)),
+    queryFn: ({ signal }) =>
+      apiClient.get<GlResponse>("/accounting/general-ledger", toQuery(params), signal),
     staleTime: 30_000,
     enabled: can && !!params.from && !!params.to,
   });
@@ -64,10 +64,10 @@ export function useGlAccounts(params: GlAccountsParams) {
   const can = useCan("accounting:general-ledger:read");
   return useQuery<{ items: GlAccount[] }, Error>({
     queryKey: coreKeys.glAccounts(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<{ items: GlAccount[] }>(
         "/accounting/general-ledger/accounts",
-        toQuery(params),
+        toQuery(params), signal,
       ),
     staleTime: 60_000,
     enabled: can && !!params.from && !!params.to,

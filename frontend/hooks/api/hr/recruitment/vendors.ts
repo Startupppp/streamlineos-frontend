@@ -98,7 +98,7 @@ export interface UpdateSubmissionInput {
 export function useRecruitmentVendors() {
   return useQuery({
     queryKey: queryKeys.hr.recruitmentVendors(),
-    queryFn: () => apiClient.get<RecruitmentVendor[]>("/hr/recruitment/vendors"),
+    queryFn: ({ signal }) => apiClient.get<RecruitmentVendor[]>("/hr/recruitment/vendors", undefined, signal),
     staleTime: 2 * 60_000,
   });
 }
@@ -140,7 +140,7 @@ export function useDeleteVendor() {
 export function useVendorSubmissions(vendorId: number) {
   return useQuery({
     queryKey: queryKeys.hr.vendorSubmissions(vendorId),
-    queryFn: () => apiClient.get<VendorSubmission[]>(`/hr/recruitment/vendors/${vendorId}/submissions`),
+    queryFn: ({ signal }) => apiClient.get<VendorSubmission[]>(`/hr/recruitment/vendors/${vendorId}/submissions`, undefined, signal),
     enabled: vendorId > 0,
     staleTime: 60_000,
   });

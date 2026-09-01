@@ -80,7 +80,7 @@ export function useBonuses() {
   const canView = useCan("hr:payroll:view");
   return useQuery({
     queryKey: queryKeys.payroll.bonuses(),
-    queryFn: () => apiClient.get<Bonus[]>("/hr/bonuses"),
+    queryFn: ({ signal }) => apiClient.get<Bonus[]>("/hr/bonuses", undefined, signal),
     staleTime: 60_000,
     enabled: canView,
   });
@@ -106,8 +106,8 @@ export function useIncentives(params?: { status?: string; page?: number; limit?:
 
   return useQuery({
     queryKey: queryKeys.payroll.incentives(hasParams ? queryParams : undefined),
-    queryFn: () =>
-      apiClient.get<IncentivesResponse>("/hr/incentives", hasParams ? queryParams : undefined),
+    queryFn: ({ signal }) =>
+      apiClient.get<IncentivesResponse>("/hr/incentives", hasParams ? queryParams : undefined, signal),
     staleTime: 60_000,
     enabled: canView,
   });

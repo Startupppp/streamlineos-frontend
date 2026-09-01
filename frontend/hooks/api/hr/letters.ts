@@ -51,10 +51,10 @@ export function useLetters(employmentId?: number) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<LetterRender[]>({
     queryKey: [...LETTERS_KEY, { employmentId }],
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<LetterRender[]>(
         "/hr/documents/letters",
-        employmentId ? { employmentId } : undefined,
+        employmentId ? { employmentId } : undefined, signal,
       ),
     staleTime: 60_000,
     enabled: hrEnabled && canView,

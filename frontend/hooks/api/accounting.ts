@@ -72,7 +72,7 @@ function toQuery<P extends object>(params: P): Record<string, string> {
 export function useAccounts(params: ListAccountsParams = {}) {
   return useQuery<CursorResponse<Account>, Error>({
     queryKey: queryKeys.accounting.accounts(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorResponse<Account>>("/accounting/accounts", toQuery(params)),
     staleTime: 60_000,
   });
@@ -126,7 +126,7 @@ export function useJournal(params: ListJournalParams = {}) {
   const can = useCan("accounting:journal:read");
   return useQuery<CursorResponse<JournalEntry>, Error>({
     queryKey: queryKeys.accounting.journal(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorResponse<JournalEntry>>("/accounting/journal", toQuery(params)),
     staleTime: 30_000,
     enabled: can,
@@ -136,7 +136,7 @@ export function useJournal(params: ListJournalParams = {}) {
 export function useJournalEntry(entryId: number) {
   return useQuery<JournalEntry, Error>({
     queryKey: queryKeys.accounting.journalEntry(entryId),
-    queryFn: () => apiClient.get<JournalEntry>(`/accounting/journal/${entryId}`),
+    queryFn: ({ signal }) => apiClient.get<JournalEntry>(`/accounting/journal/${entryId}`, undefined, signal),
     enabled: Number.isInteger(entryId) && entryId > 0,
     staleTime: 30_000,
   });
@@ -213,8 +213,8 @@ export function usePostJournalEntry(entryId: number) {
 export function useTrialBalance(asOf: string) {
   return useQuery<TrialBalanceResponse, Error>({
     queryKey: queryKeys.accounting.trialBalance(asOf),
-    queryFn: () =>
-      apiClient.get<TrialBalanceResponse>("/accounting/reports/trial-balance", { asOf }),
+    queryFn: ({ signal }) =>
+      apiClient.get<TrialBalanceResponse>("/accounting/reports/trial-balance", { asOf }, signal),
     enabled: !!asOf,
     staleTime: 30_000,
   });
@@ -223,8 +223,8 @@ export function useTrialBalance(asOf: string) {
 export function useProfitLoss(from: string, to: string) {
   return useQuery<ProfitLossReport, Error>({
     queryKey: queryKeys.accounting.profitLoss(from, to),
-    queryFn: () =>
-      apiClient.get<ProfitLossReport>("/accounting/reports/profit-loss", { from, to }),
+    queryFn: ({ signal }) =>
+      apiClient.get<ProfitLossReport>("/accounting/reports/profit-loss", { from, to }, signal),
     enabled: !!from && !!to,
     staleTime: 30_000,
   });
@@ -262,7 +262,7 @@ interface CashFlowParams {
 export function useCashFlow({ from, to }: CashFlowParams) {
   return useQuery<CashFlowReport, Error>({
     queryKey: queryKeys.accounting.cashFlow({ from, to }),
-    queryFn: () => apiClient.get<CashFlowReport>("/accounting/reports/cash-flow", { from, to }),
+    queryFn: ({ signal }) => apiClient.get<CashFlowReport>("/accounting/reports/cash-flow", { from, to }, signal),
     enabled: !!from && !!to,
     staleTime: 30_000,
   });
@@ -278,7 +278,7 @@ interface ListCustomersOutstandingParams {
 export function useCustomersOutstanding(params: ListCustomersOutstandingParams = {}) {
   return useQuery<CursorPage<CustomerOutstanding>, Error>({
     queryKey: queryKeys.accounting.customersOutstanding(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPage<CustomerOutstanding>>("/accounting/customers", toQuery(params)),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
@@ -293,8 +293,8 @@ interface CustomerLedgerParams {
 export function useCustomerLedger(clientId: number, params: CustomerLedgerParams = {}) {
   return useQuery<CustomerLedger, Error>({
     queryKey: queryKeys.accounting.customerLedger(clientId, params),
-    queryFn: () =>
-      apiClient.get<CustomerLedger>(`/accounting/customers/${clientId}/ledger`, toQuery(params)),
+    queryFn: ({ signal }) =>
+      apiClient.get<CustomerLedger>(`/accounting/customers/${clientId}/ledger`, toQuery(params), signal),
     enabled: Number.isInteger(clientId) && clientId > 0,
     staleTime: 60_000,
   });
@@ -303,7 +303,7 @@ export function useCustomerLedger(clientId: number, params: CustomerLedgerParams
 export function useGstr1(from: string, to: string) {
   return useQuery<Gstr1Report, Error>({
     queryKey: queryKeys.accounting.gstr1({ from, to }),
-    queryFn: () => apiClient.get<Gstr1Report>("/accounting/reports/gstr-1", { from, to }),
+    queryFn: ({ signal }) => apiClient.get<Gstr1Report>("/accounting/reports/gstr-1", { from, to }, signal),
     enabled: !!from && !!to,
     staleTime: 30_000,
   });
@@ -312,7 +312,7 @@ export function useGstr1(from: string, to: string) {
 export function useBalanceSheet(asOf: string) {
   return useQuery<BalanceSheetReport, Error>({
     queryKey: queryKeys.accounting.balanceSheet({ asOf }),
-    queryFn: () => apiClient.get<BalanceSheetReport>("/accounting/reports/balance-sheet", { asOf }),
+    queryFn: ({ signal }) => apiClient.get<BalanceSheetReport>("/accounting/reports/balance-sheet", { asOf }, signal),
     enabled: !!asOf,
     staleTime: 30_000,
   });
@@ -321,7 +321,7 @@ export function useBalanceSheet(asOf: string) {
 export function useAgedReceivables(asOf: string) {
   return useQuery<AgedReceivablesReport, Error>({
     queryKey: queryKeys.accounting.agedReceivables({ asOf }),
-    queryFn: () => apiClient.get<AgedReceivablesReport>("/accounting/reports/aged-receivables", { asOf }),
+    queryFn: ({ signal }) => apiClient.get<AgedReceivablesReport>("/accounting/reports/aged-receivables", { asOf }, signal),
     enabled: !!asOf,
     staleTime: 30_000,
   });
@@ -338,7 +338,7 @@ interface ListPurchaseBillsParams {
 export function usePurchaseBills(params: ListPurchaseBillsParams = {}) {
   return useQuery<CursorResponse<PurchaseBillSummary>, Error>({
     queryKey: queryKeys.accounting.purchaseBills(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorResponse<PurchaseBillSummary>>("/accounting/purchase-bills", toQuery(params)),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
@@ -348,7 +348,7 @@ export function usePurchaseBills(params: ListPurchaseBillsParams = {}) {
 export function usePurchaseBill(billId: number) {
   return useQuery<PurchaseBill, Error>({
     queryKey: queryKeys.accounting.purchaseBill(billId),
-    queryFn: () => apiClient.get<PurchaseBill>(`/accounting/purchase-bills/${billId}`),
+    queryFn: ({ signal }) => apiClient.get<PurchaseBill>(`/accounting/purchase-bills/${billId}`, undefined, signal),
     enabled: Number.isInteger(billId) && billId > 0,
     staleTime: 60_000,
   });
@@ -411,7 +411,7 @@ export function usePostPurchaseBill(billId: number) {
 export function useGstr3B(from: string, to: string) {
   return useQuery<Gstr3BReport, Error>({
     queryKey: queryKeys.accounting.gstr3B({ from, to }),
-    queryFn: () => apiClient.get<Gstr3BReport>("/accounting/reports/gstr-3b", { from, to }),
+    queryFn: ({ signal }) => apiClient.get<Gstr3BReport>("/accounting/reports/gstr-3b", { from, to }, signal),
     enabled: !!from && !!to,
     staleTime: 30_000,
   });
@@ -427,7 +427,7 @@ interface ListVendorsOutstandingParams {
 export function useVendorsOutstanding(params: ListVendorsOutstandingParams = {}) {
   return useQuery<CursorPage<VendorOutstanding>, Error>({
     queryKey: queryKeys.accounting.vendorsOutstanding(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPage<VendorOutstanding>>("/accounting/vendors", toQuery(params)),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
@@ -442,8 +442,8 @@ interface VendorLedgerParams {
 export function useVendorLedger(vendorId: number, params: VendorLedgerParams = {}) {
   return useQuery<VendorLedger, Error>({
     queryKey: queryKeys.accounting.vendorLedger(vendorId, params),
-    queryFn: () =>
-      apiClient.get<VendorLedger>(`/accounting/vendors/${vendorId}/ledger`, toQuery(params)),
+    queryFn: ({ signal }) =>
+      apiClient.get<VendorLedger>(`/accounting/vendors/${vendorId}/ledger`, toQuery(params), signal),
     enabled: Number.isInteger(vendorId) && vendorId > 0,
     staleTime: 60_000,
   });
@@ -452,7 +452,7 @@ export function useVendorLedger(vendorId: number, params: VendorLedgerParams = {
 export function useAgedPayables(asOf: string) {
   return useQuery<AgedPayablesReport, Error>({
     queryKey: queryKeys.accounting.agedPayables({ asOf }),
-    queryFn: () => apiClient.get<AgedPayablesReport>("/accounting/reports/aged-payables", { asOf }),
+    queryFn: ({ signal }) => apiClient.get<AgedPayablesReport>("/accounting/reports/aged-payables", { asOf }, signal),
     enabled: !!asOf,
     staleTime: 30_000,
   });

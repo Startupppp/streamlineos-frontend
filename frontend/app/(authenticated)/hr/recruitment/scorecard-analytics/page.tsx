@@ -75,7 +75,7 @@ export default function ScorecardAnalyticsPage() {
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.hr.scorecardAnalytics({ days }),
-    queryFn: () => apiClient.get<ScorecardAnalytics>(`/hr/recruitment/scorecard-analytics?days=${days}`),
+    queryFn: ({ signal }) => apiClient.get<ScorecardAnalytics>(`/hr/recruitment/scorecard-analytics?days=${days}`, undefined, signal),
     staleTime: 5 * 60_000,
   });
 

@@ -17,7 +17,7 @@ export function useActiveTimer() {
   const canView = useCan("timesheets:entries:view");
   return useQuery({
     queryKey: queryKeys.timesheets.timerActive(),
-    queryFn: () => apiClient.get<TimerSession | null>("/timesheets/timer/active"),
+    queryFn: ({ signal }) => apiClient.get<TimerSession | null>("/timesheets/timer/active", undefined, signal),
     staleTime: 30_000,
     refetchInterval: (query) => (query.state.data ? 30_000 : 120_000),
     refetchIntervalInBackground: false,

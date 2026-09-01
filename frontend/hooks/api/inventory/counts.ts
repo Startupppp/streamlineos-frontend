@@ -112,8 +112,8 @@ export function useCycleCounts(params?: CountsParams) {
   const canView = useCan("inventory:stock:read");
   return useQuery<CycleCountListResponse, Error>({
     queryKey: queryKeys.inventory.cycleCounts(toApiParams(params)),
-    queryFn: () =>
-      apiClient.get<CycleCountListResponse>("/inventory/cycle-counts", toApiParams(params)),
+    queryFn: ({ signal }) =>
+      apiClient.get<CycleCountListResponse>("/inventory/cycle-counts", toApiParams(params), signal),
     staleTime: 2 * 60_000,
     enabled: canView,
   });
@@ -123,7 +123,7 @@ export function useCycleCount(id: number) {
   const canView = useCan("inventory:stock:read");
   return useQuery<CycleCount, Error>({
     queryKey: queryKeys.inventory.cycleCount(id),
-    queryFn: () => apiClient.get<CycleCount>(`/inventory/cycle-counts/${id}`),
+    queryFn: ({ signal }) => apiClient.get<CycleCount>(`/inventory/cycle-counts/${id}`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && id > 0,
   });
@@ -215,8 +215,8 @@ export function usePhysicalAudits(params?: CountsParams) {
   const canView = useCan("inventory:stock:read");
   return useQuery<PhysicalAuditListResponse, Error>({
     queryKey: queryKeys.inventory.physicalAudits(toApiParams(params)),
-    queryFn: () =>
-      apiClient.get<PhysicalAuditListResponse>("/inventory/physical-audits", toApiParams(params)),
+    queryFn: ({ signal }) =>
+      apiClient.get<PhysicalAuditListResponse>("/inventory/physical-audits", toApiParams(params), signal),
     staleTime: 2 * 60_000,
     enabled: canView,
   });
@@ -226,7 +226,7 @@ export function usePhysicalAudit(id: number) {
   const canView = useCan("inventory:stock:read");
   return useQuery<PhysicalAudit, Error>({
     queryKey: queryKeys.inventory.physicalAudit(id),
-    queryFn: () => apiClient.get<PhysicalAudit>(`/inventory/physical-audits/${id}`),
+    queryFn: ({ signal }) => apiClient.get<PhysicalAudit>(`/inventory/physical-audits/${id}`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && id > 0,
   });

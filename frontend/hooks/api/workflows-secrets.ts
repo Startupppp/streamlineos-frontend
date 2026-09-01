@@ -20,7 +20,7 @@ export function useGlobalSecrets() {
   const canManage = useCan("workflows:secrets:manage");
   return useQuery({
     queryKey: [...queryKeys.workflows.all, "global-secrets"] as const,
-    queryFn: () => apiClient.get<WorkflowSecret[]>("/workflows/secrets"),
+    queryFn: ({ signal }) => apiClient.get<WorkflowSecret[]>("/workflows/secrets", undefined, signal),
     staleTime: 30_000,
     enabled: canManage,
   });
@@ -30,7 +30,7 @@ export function useWorkflowSecrets(workflowId: string) {
   const canManage = useCan("workflows:secrets:manage");
   return useQuery({
     queryKey: queryKeys.workflows.secrets(workflowId),
-    queryFn: () => apiClient.get<WorkflowSecret[]>(`/workflows/${workflowId}/secrets`),
+    queryFn: ({ signal }) => apiClient.get<WorkflowSecret[]>(`/workflows/${workflowId}/secrets`, undefined, signal),
     staleTime: 30_000,
     enabled: canManage && workflowId.length > 0,
   });

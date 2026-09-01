@@ -60,9 +60,9 @@ export function useLayoutAdjustment(layoutKey: string) {
 
   return useQuery({
     queryKey: queryKeys.recordLayouts.adjustment(orgId, layoutKey),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<LayoutAdjustment | null>(
-        `/renderer/layouts/${encodeURIComponent(layoutKey)}`,
+        `/renderer/layouts/${encodeURIComponent(layoutKey)}`, signal,
       ),
     // An arrangement changes when an administrator edits it, which is rare, and
     // every record surface in the product reads it.
@@ -140,9 +140,9 @@ export function useLayoutUsage(layoutKey: string, options?: { enabled?: boolean 
 
   return useQuery({
     queryKey: queryKeys.recordLayouts.usage(orgId, layoutKey),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<LayoutUsage>(
-        `/renderer/layouts/${encodeURIComponent(layoutKey)}/usage`,
+        `/renderer/layouts/${encodeURIComponent(layoutKey)}/usage`, signal,
       ),
     staleTime: 10 * 60_000,
     enabled: !!orgId && !!layoutKey && canAdjust && (options?.enabled ?? true),

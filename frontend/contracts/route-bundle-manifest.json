@@ -1,0 +1,100 @@
+{
+  "version": "1",
+  "schemaVersion": "1.0",
+  "description": "Route-level bundle size budgets for authenticated Next.js pages. Budgets cover the First Load JS (shared chunks + page chunk) for each route segment. Values are in bytes. Measured values are filled by the post-build bundle analyzer and compared against the declared ceiling by the orchestrator. A null measured value means the route has not been profiled yet.",
+  "referenceProfile": {
+    "viewport": {
+      "mobile": { "width": 390, "height": 844, "deviceScaleFactor": 3 },
+      "desktop": { "width": 1440, "height": 900, "deviceScaleFactor": 1 }
+    },
+    "network": {
+      "mobile": "~1.6 Mbps down, 750 Kbps up, 150ms RTT — close to Fast 3G+ (browser-driver.mjs hardcoded: 1,600,000/8 bytes/s down, 750,000/8 bytes/s up, 150ms latency)",
+      "desktop": "No throttling"
+    },
+    "cpu": {
+      "mobile": "4x CPU slowdown (Chrome DevTools mid-tier mobile preset)",
+      "desktop": "No throttling"
+    },
+    "coreWebVitalsBudgets": {
+      "mobile": {
+        "lcp_p75_ms": 2500,
+        "inp_p75_ms": 200,
+        "cls_p75": 0.1,
+        "fcp_p75_ms": 1800,
+        "ttfb_p95_ms": 600
+      },
+      "desktop": {
+        "lcp_p75_ms": 1500,
+        "inp_p75_ms": 200,
+        "cls_p75": 0.1,
+        "fcp_p75_ms": 1200,
+        "ttfb_p95_ms": 400
+      }
+    },
+    "notes": "Measured with Lighthouse 12 in CI using the Chrome DevTools Protocol. Field data (CrUX) is the source of truth for production; lab data here is the gating proxy. The 100ms responsiveness rule (CLAUDE.md §12.2) is enforced by INP ≤ 200ms. Bundle byte measurements require pnpm build (production webpack output); the current .next is a Turbopack dev build which cannot be compared to these ceilings."
+  },
+  "defaults": {
+    "maxFirstLoadJsBytes": 524288,
+    "maxPageChunkBytes": 204800,
+    "maxCssBytes": 65536,
+    "maxImageBytes": 524288,
+    "maxThirdPartyBytes": 102400
+  },
+  "budgets": {
+    "/mail": {
+      "maxFirstLoadJsBytes": 614400,
+      "maxPageChunkBytes": 307200,
+      "maxCssBytes": 65536,
+      "maxImageBytes": 0,
+      "maxThirdPartyBytes": 102400,
+      "measuredFirstLoadJsBytes": null,
+      "measuredPageChunkBytes": null,
+      "lazyLoadedModules": ["mail-compose-sheet", "mail-ai-compose-toolbar", "mail-inbox-summary-sheet"],
+      "note": "Mail shell — first-load budget is higher because DOMPurify (isomorphic-dompurify) is a non-trivial dependency; compose sheet, AI toolbar and inbox summary sheet are lazy-loaded via next/dynamic"
+    },
+    "/inbox": {
+      "maxFirstLoadJsBytes": 524288,
+      "maxPageChunkBytes": 204800,
+      "maxCssBytes": 65536,
+      "maxImageBytes": 0,
+      "maxThirdPartyBytes": 102400,
+      "measuredFirstLoadJsBytes": null,
+      "measuredPageChunkBytes": null,
+      "lazyLoadedModules": [],
+      "note": "Home inbox — lightweight notification-style inbox; no external mail provider calls"
+    },
+    "/build/[projectId]/inbox": {
+      "maxFirstLoadJsBytes": 614400,
+      "maxPageChunkBytes": 204800,
+      "maxCssBytes": 65536,
+      "maxImageBytes": 0,
+      "maxThirdPartyBytes": 102400,
+      "measuredFirstLoadJsBytes": null,
+      "measuredPageChunkBytes": null,
+      "lazyLoadedModules": [],
+      "note": "Build module approval inbox"
+    },
+    "/crm/inbox": {
+      "maxFirstLoadJsBytes": 614400,
+      "maxPageChunkBytes": 204800,
+      "maxCssBytes": 65536,
+      "maxImageBytes": 0,
+      "maxThirdPartyBytes": 102400,
+      "measuredFirstLoadJsBytes": null,
+      "measuredPageChunkBytes": null,
+      "lazyLoadedModules": [],
+      "note": "CRM inbox — deals and contact conversations"
+    },
+    "/support/inbox": {
+      "maxFirstLoadJsBytes": 614400,
+      "maxPageChunkBytes": 204800,
+      "maxCssBytes": 65536,
+      "maxImageBytes": 0,
+      "maxThirdPartyBytes": 102400,
+      "measuredFirstLoadJsBytes": null,
+      "measuredPageChunkBytes": null,
+      "lazyLoadedModules": [],
+      "note": "Support ticket inbox"
+    }
+  }
+}

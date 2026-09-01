@@ -15,7 +15,7 @@ export function useRunApprovals(runId: number, options?: { enabled?: boolean }) 
   const canView = useCan("payroll:runs:view");
   return useQuery<PayrollApprovalRow[]>({
     queryKey: queryKeys.payroll.runApprovals(runId),
-    queryFn: () => apiClient.get<PayrollApprovalRow[]>(`/payroll/runs/${runId}/approvals`),
+    queryFn: ({ signal }) => apiClient.get<PayrollApprovalRow[]>(`/payroll/runs/${runId}/approvals`, undefined, signal),
     staleTime: 30_000,
     enabled: canView && runId > 0 && (options?.enabled ?? true),
   });

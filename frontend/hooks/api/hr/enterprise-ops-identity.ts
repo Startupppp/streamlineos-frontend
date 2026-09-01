@@ -63,7 +63,7 @@ export function useAccessProvisioning(params: {
 } = {}) {
   return useQuery({
     queryKey: identityKeys.provisioning(params as Record<string, unknown>),
-    queryFn: () => apiClient.get<PaginatedResult<AccessProvisioningRecord>>(`${BASE}/provisioning`, params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get<PaginatedResult<AccessProvisioningRecord>>(`${BASE}/provisioning`, params as Record<string, unknown>),
     staleTime: 30_000,
   });
 }
@@ -71,7 +71,7 @@ export function useAccessProvisioning(params: {
 export function useProvisioningTemplates() {
   return useQuery({
     queryKey: identityKeys.templates,
-    queryFn: () => apiClient.get<ProvisioningTemplate[]>(`${BASE}/templates`),
+    queryFn: ({ signal }) => apiClient.get<ProvisioningTemplate[]>(`${BASE}/templates`, undefined, signal),
     staleTime: 60_000,
   });
 }
@@ -79,7 +79,7 @@ export function useProvisioningTemplates() {
 export function useExitVerification(userId: string) {
   return useQuery({
     queryKey: identityKeys.exitVerification(userId),
-    queryFn: () => apiClient.get<ExitVerificationResult>(`${BASE}/exit-verification`, { userId }),
+    queryFn: ({ signal }) => apiClient.get<ExitVerificationResult>(`${BASE}/exit-verification`, { userId }, signal),
     enabled: !!userId,
     staleTime: 15_000,
   });

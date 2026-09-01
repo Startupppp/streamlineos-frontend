@@ -18,9 +18,9 @@ export function usePayoutValidation(runId: number) {
   const canManage = useCan("payroll:bank:manage");
   return useQuery<ValidationItem[]>({
     queryKey: queryKeys.payroll.bankValidation(runId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ValidationItem[]>(
-        `/payroll/runs/${runId}/payout/validation`,
+        `/payroll/runs/${runId}/payout/validation`, signal,
       ),
     staleTime: 30_000,
     enabled: canManage && runId > 0,
@@ -36,10 +36,10 @@ export function usePayoutBatches(runId?: number) {
   const canManage = useCan("payroll:bank:manage");
   return useQuery<PayoutBatchesPage>({
     queryKey: queryKeys.payroll.bankBatches(runId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PayoutBatchesPage>(
         "/payroll/payout/batches",
-        runId ? { runId } : undefined,
+        runId ? { runId } : undefined, signal,
       ),
     staleTime: 30_000,
     enabled: canManage,
@@ -50,8 +50,8 @@ export function usePayoutBatch(batchId: number) {
   const canManage = useCan("payroll:bank:manage");
   return useQuery<GetBatchResult>({
     queryKey: queryKeys.payroll.bankBatch(batchId),
-    queryFn: () =>
-      apiClient.get<GetBatchResult>(`/payroll/payout/batches/${batchId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<GetBatchResult>(`/payroll/payout/batches/${batchId}`, undefined, signal),
     staleTime: 30_000,
     enabled: canManage && batchId > 0,
   });
@@ -227,9 +227,9 @@ export function useEmployeeBankDetails(
   const canView = useCan("payroll:bank:view");
   return useQuery<EmployeeBankDetails>({
     queryKey: queryKeys.payroll.employeeBank(employeeUserId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<EmployeeBankDetails>(
-        `/payroll/employees/${employeeUserId}/bank`,
+        `/payroll/employees/${employeeUserId}/bank`, signal,
       ),
     staleTime: 0,
     enabled: enabled && !!employeeUserId && canView,

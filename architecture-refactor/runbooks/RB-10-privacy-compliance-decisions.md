@@ -118,13 +118,34 @@ Tables with retention-related data:
 
 **Data categories the system processes (from pg_catalog, 2026-09-01):**
 - Identity: `users` (email, name, auth credentials)
-- Employment: `hr_people`, `hr_employments`, `hr_people_payroll`, `hr_banking_details`
-- Payroll: `payroll_runs`, `payroll_payslips`, bank account details
-- Communication: `chat_messages`, `mail_messages`, `notifications`
+- Employment: `hr_people`, `hr_employments`, `employee_salary_profiles`, `fin_bank_accounts`
+- Payroll: `payroll_runs`, `payslip_publications`, bank account details
+- Communication: `chat_messages`, `mail_message_metadata`, `notifications`, and queued attendance report emails from `hr/time/attendance-email-report.service.ts`
 - Time: `attendance`, `timesheets`, `leave_requests`
-- Documents: `candidate_documents_vault`, `hr_documents`
+- Documents: `candidate_documents_vault`, `documents`
 - Financial: `expenses`, `invoices`, `salary_loans`
-- Recruitment: `candidates`, `applications`, `offer_letters`
+- Recruitment: `candidates`, `candidate_applications`, `candidate_offers`
+- Sensitive workplace records: `biometric_logs`, `hr_wellness_checkins`,
+  `hr_accommodation_requests`, `hr_safety_incidents`, and `hr_work_authorizations`
+- AI processing: `ai_chat_conversations`, `ai_chat_messages`, `ai_feedback`, `ai_jobs`, and
+  `ai_usage_logs`
+- Knowledge base: `kb_chat_conversations`, `kb_chat_messages`, `kb_pages`, `kb_page_versions`,
+  and `kb_article_chunks`
+- Support: `support_tickets`, `support_ticket_messages`, `support_ticket_attachments`, and
+  `support_csat_requests`
+- Signatures: `sign_documents` and `sign_audit_events`
+- Notifications: `notification_preferences`, `notification_consents`, `notification_deliveries`,
+  `notification_outbox`, and `notification_digest_runs`
+- Integrations and webhooks: `user_integration_connections`, `webhook_deliveries`, and
+  `webhook_logs`
+- Organization and collaboration metadata: `organizations`, `organization_members`,
+  `calendar_events`, `event_attendees`, `project_meetings`, `meeting_attendees`, `projects`, and
+  `project_members`
+
+The detailed schema-backed inventory is maintained in
+`architecture-refactor/DATA-CATALOGUE.md`; the reviewable row-based form is maintained in
+`architecture-refactor/runbooks/data-map-template.md`. Neither is approval evidence until a
+dated decision record is signed.
 
 ### Decisions required
 
@@ -165,6 +186,27 @@ must decide: (a) this is approved (traceability for audit trail under Art. 5(1)(
 Record here: DPO name, sign-off date, chosen lawful bases per category, retention periods per
 category, owner assignments.
 
+### Additional inventory decisions required
+
+The following policy choices are unresolved and must be recorded before the expanded inventory
+can be approved:
+
+| Decision | Options to record | Recommended default |
+|---|---|---|
+| Sensitive HR data and Art. 9 conditions | Permit each field with a documented condition; restrict collection; or remove the field | Restrict collection until the condition, access group and retention are approved |
+| AI prompts, responses and usage | Retain for service history; retain only redacted metadata; or delete after processing | Delete prompts/responses after 90 days and retain non-content usage metadata for 2 years |
+| Knowledge-base and support content | Category-specific periods and special-category handling | KB chat active account + 1 year; support closure + 2 years; derived chunks follow source deletion |
+| Signature records | Statutory period, contract period, or shorter period | 7 years after document expiry or applicable statutory period |
+| Notification consent and delivery records | Evidence period and operational message period | Consent evidence for processing period + 3 years; operational delivery records 90 days |
+| Integrations and webhooks | Permitted payload classes, provider disclosures and deletion periods | Delete connections on disconnect; payloads 30 days; no unapproved special-category payloads |
+| Organization, membership, calendar, meeting and project metadata | Owners, closure events and retention periods | Retain access/audit history only as required; delete collaboration content on approved closure-based periods |
+
+### AWAITING OPERATOR APPROVAL
+
+Record the decision maker, selected option, lawful basis, special-category condition where
+applicable, retention period, owner and rationale for each additional inventory decision. Do not
+mark any row approved based on this template or the repository catalogue alone.
+
 ---
 
 ## 3. Residency policy
@@ -187,7 +229,7 @@ configured. No deployed EU cell or customer commitment is evidenced here.
 
 | Option | What it means | What it requires |
 |---|---|---|
-| A — No residency guarantee (current) | All data in ap-southeast-1; documented in ToS | Document in ToS; no code change |
+| A — No residency guarantee (current) | Data remains in the configured deployment region; the repository does not establish the deployed region | Document the deployed region in ToS; no code change |
 | B — Residency by request | Orgs can request a specific region cell; provisioning is manual | Provision cell(s) per region; `cell:place-org` to move org |
 | C — Residency by org country | Org's `country` field automatically determines cell | Add cell-placement logic to org-creation flow |
 
@@ -208,21 +250,28 @@ Record here: chosen option, ToS statement language, any commitments made to cust
 
 | Subprocessor | Data transferred | Region | Mechanism |
 |---|---|---|---|
-| Neon (postgres) | All tenant data | ap-southeast-1 (Singapore) | Primary database |
+| Neon (postgres) | All tenant data | Configured deployment region; repository does not establish the deployed location | Primary database |
 | Upstash | Session tokens, cache keys, rate-limit counters, permission-version numbers | Configurable (env) | Redis REST API |
 | Cloudflare R2 | File uploads, exports, attachments | Configurable (env) | S3-compatible API |
-| Resend | Email content + recipient addresses | US (Resend infrastructure) | SMTP/API |
+| Resend | Email content + recipient addresses | Provider-configured region | SMTP/API |
 | Ably | Realtime event payloads (channel names + message bodies) | Global (Ably edge) | WebSocket |
-| OpenAI / Anthropic | AI prompt content (if `AI_LLM_PROVIDER` or `AI_CHAT_PROVIDER` selects the provider) | US | HTTPS API |
+| OpenAI | LLM prompt content when `AI_LLM_PROVIDER=openai` and embeddings for KB RAG via `OPENAI_API_KEY` | Provider/deployment dependent | HTTPS API |
+| Google | Chat prompt content when `AI_CHAT_PROVIDER=google` | Provider/deployment dependent | HTTPS API |
+| OpenRouter | LLM or chat prompt content when `AI_LLM_PROVIDER=openrouter` or `AI_CHAT_PROVIDER=openrouter` | Provider and underlying model dependent | HTTPS API |
+| ZeptoMail | Email content and recipient addresses when configured | Provider/deployment dependent | HTTPS API |
+| Razorpay | Payment amount and customer billing contact data when configured | India/provider dependent | HTTPS API |
 | Composio | Third-party integration credentials (OAuth tokens) | US | REST API |
 
 Sources: `backend/src/modules/mail/resend.service.ts`, `backend/src/common/ably/ably.service.ts`,
-`backend/src/modules/ai/ai-gateway.service.ts`, `backend/src/modules/integrations/`.
+`backend/src/modules/ai/core/providers/llm-provider.config.ts`,
+`backend/src/modules/ai/core/services/chat-assistant-model.ts`,
+`backend/src/modules/ai/core/providers/embeddings.service.ts`, `backend/src/modules/integrations/`.
 
 ### Decisions required
 
 **4a. Standard contractual clauses (SCCs):**
-For transfers from the EU/EEA to the US (Resend, Ably, OpenAI/Anthropic, Composio), the operator
+For transfers from the EU/EEA to a provider or region outside the approved residency boundary
+(including Resend, Ably, OpenAI, Google, OpenRouter, ZeptoMail, Razorpay, or Composio where applicable), the operator
 must ensure SCCs or an equivalent adequacy mechanism is in place with each subprocessor.
 
 **4b. Subprocessor list publication:**
@@ -233,7 +282,7 @@ this list.
 AI prompt content may contain personal data (names, employment details in HR AI features). The
 operator must decide: (a) accept transfer to the AI provider's US infrastructure under SCCs, or
 (b) use an EU-hosted model, or (c) strip PII from prompts before sending.
-Current state: prompts are sent as-is; no PII-stripping layer exists.
+Current state: the shared AI gateway applies default regex redaction, but the streaming chat path also sends conversation content and requires separate minimization verification before approval.
 
 **4d. Composio token storage:**
 OAuth tokens from third-party integrations are stored via Composio (US). The operator must confirm
@@ -282,7 +331,7 @@ disclosure decision.
 
 **Repository status (2026-09-01):** `backend/src/scripts/compliance-drill-e2e.mjs` exists and
 has self-test/live dry-run commands, but no redacted deployed evidence bundle is committed.
-Repository focused S05 tests also pass 21 suites / 189 tests for the current operator, GDPR,
+Repository focused S05 tests also pass 48 suites / 617 tests for the current operator, GDPR,
 retention, purge, and scheduling implementation. Commands:
 
 ```bash

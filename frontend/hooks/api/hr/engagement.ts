@@ -113,7 +113,7 @@ export function useEngagementOverview() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<EngagementOverview>({
     queryKey: KEYS.overview,
-    queryFn: () => apiClient.get<EngagementOverview>("/hr/engagement/overview"),
+    queryFn: ({ signal }) => apiClient.get<EngagementOverview>("/hr/engagement/overview", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canView && hrEnabled,
   });
@@ -124,7 +124,7 @@ export function useMyMoodHistory() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<MoodCheckin[]>({
     queryKey: KEYS.moodHistory,
-    queryFn: () => apiClient.get<MoodCheckin[]>("/hr/engagement/mood/history"),
+    queryFn: ({ signal }) => apiClient.get<MoodCheckin[]>("/hr/engagement/mood/history", undefined, signal),
     staleTime: 60_000,
     enabled: canView && hrEnabled,
   });
@@ -135,7 +135,7 @@ export function useOrgMoodAggregate() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<MoodAggregate[]>({
     queryKey: KEYS.moodAggregate,
-    queryFn: () => apiClient.get<MoodAggregate[]>("/hr/engagement/mood/aggregate"),
+    queryFn: ({ signal }) => apiClient.get<MoodAggregate[]>("/hr/engagement/mood/aggregate", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canManage && hrEnabled,
   });
@@ -156,7 +156,7 @@ export function useEngagementBadges() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<HrBadge[]>({
     queryKey: KEYS.badges,
-    queryFn: () => apiClient.get<HrBadge[]>("/hr/engagement/badges"),
+    queryFn: ({ signal }) => apiClient.get<HrBadge[]>("/hr/engagement/badges", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canView && hrEnabled,
   });
@@ -180,7 +180,7 @@ export function useLeaderboard(top = 20) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<LeaderboardEntry[]>({
     queryKey: KEYS.leaderboard(top),
-    queryFn: () => apiClient.get<LeaderboardEntry[]>(`/hr/engagement/points/leaderboard?top=${top}`),
+    queryFn: ({ signal }) => apiClient.get<LeaderboardEntry[]>(`/hr/engagement/points/leaderboard?top=${top}`, undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canView && hrEnabled,
   });
@@ -191,7 +191,7 @@ export function useEngagementPolls() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<HrPoll[]>({
     queryKey: KEYS.polls,
-    queryFn: () => apiClient.get<HrPoll[]>("/hr/engagement/polls"),
+    queryFn: ({ signal }) => apiClient.get<HrPoll[]>("/hr/engagement/polls", undefined, signal),
     staleTime: 60_000,
     enabled: canView && hrEnabled,
   });
@@ -235,7 +235,7 @@ export function usePollResults(pollId: number) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<PollResults>({
     queryKey: KEYS.pollResults(pollId),
-    queryFn: () => apiClient.get<PollResults>(`/hr/engagement/polls/${pollId}/results`),
+    queryFn: ({ signal }) => apiClient.get<PollResults>(`/hr/engagement/polls/${pollId}/results`, undefined, signal),
     staleTime: 30_000,
     enabled: pollId > 0 && canView && hrEnabled,
   });
@@ -298,7 +298,7 @@ export function useEngagementCampaigns() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<HrCampaign[]>({
     queryKey: KEYS.campaigns,
-    queryFn: () => apiClient.get<HrCampaign[]>("/hr/engagement/campaigns"),
+    queryFn: ({ signal }) => apiClient.get<HrCampaign[]>("/hr/engagement/campaigns", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canView && hrEnabled,
   });

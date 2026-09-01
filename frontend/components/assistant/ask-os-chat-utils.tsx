@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
-import { AnimatedLogo } from "@/features/landing/components/animated-logo";
+import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { MarkdownContent } from "@/components/markdown/markdown-content";
 import type { AskAiHistoryMessage } from "@/hooks/api/chat-ai-assistant";
 

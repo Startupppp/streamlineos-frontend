@@ -13,10 +13,10 @@ import type {
 export function useFeedbucketSubmissions(params?: ListFeedbucketSubmissionsQuery) {
   return useQuery({
     queryKey: queryKeys.feedbucket.submissions(params as Record<string, unknown>),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PaginatedFeedbucketSubmissions>(
         "/feedbucket/submissions",
-        params as Record<string, unknown>,
+        params as Record<string, unknown>, signal,
       ),
     staleTime: 30_000,
   });
@@ -25,8 +25,8 @@ export function useFeedbucketSubmissions(params?: ListFeedbucketSubmissionsQuery
 export function useFeedbucketSubmission(submissionId: number) {
   return useQuery({
     queryKey: queryKeys.feedbucket.submission(submissionId),
-    queryFn: () =>
-      apiClient.get<FeedbucketSubmission>(`/feedbucket/submissions/${submissionId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<FeedbucketSubmission>(`/feedbucket/submissions/${submissionId}`, undefined, signal),
     staleTime: 30_000,
     enabled: submissionId > 0,
   });

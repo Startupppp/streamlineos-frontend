@@ -26,7 +26,7 @@ export function useIncidents(projectId?: number, filters?: IncidentFilters) {
 
   return useQuery<Incident[]>({
     queryKey: queryKeys.projects.incidents.list(projectId, filters),
-    queryFn: () => apiClient.get<Incident[]>(`/build/${projectId}/incidents`, params),
+    queryFn: ({ signal }) => apiClient.get<Incident[]>(`/build/${projectId}/incidents`, params, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -36,8 +36,8 @@ export function useIncident(projectId?: number, incidentId?: number) {
   const canView = useCan("build:incidents:view");
   return useQuery<IncidentDetail>({
     queryKey: queryKeys.projects.incidents.detail(projectId, incidentId),
-    queryFn: () =>
-      apiClient.get<IncidentDetail>(`/build/${projectId}/incidents/${incidentId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<IncidentDetail>(`/build/${projectId}/incidents/${incidentId}`, undefined, signal),
     enabled: canView && !!projectId && !!incidentId,
     staleTime: 60_000,
   });

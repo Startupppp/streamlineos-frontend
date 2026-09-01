@@ -55,8 +55,8 @@ export function useAccountingOverview(params: OverviewParams = {}) {
   const can = useCan("accounting:read");
   return useQuery<AccountingOverview, Error>({
     queryKey: [...queryKeys.accounting.all, "overview", params],
-    queryFn: () =>
-      apiClient.get<AccountingOverview>("/accounting/overview", toQuery(params)),
+    queryFn: ({ signal }) =>
+      apiClient.get<AccountingOverview>("/accounting/overview", toQuery(params), signal),
     staleTime: 60_000,
     enabled: can,
   });

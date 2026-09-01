@@ -42,7 +42,7 @@ export function useMeetings(projectId: number, filters?: MeetingFilters) {
 
   return useQuery<Meeting[]>({
     queryKey: queryKeys.projects.meetings.list(projectId, hasParams ? params : undefined),
-    queryFn: () => apiClient.get<Meeting[]>(`/build/${projectId}/meetings`, hasParams ? params : undefined),
+    queryFn: ({ signal }) => apiClient.get<Meeting[]>(`/build/${projectId}/meetings`, hasParams ? params : undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -52,7 +52,7 @@ export function useMeeting(projectId: number, meetingId: number) {
   const canView = useCan("build:meetings:view");
   return useQuery<MeetingDetail>({
     queryKey: queryKeys.projects.meetings.detail(projectId, meetingId),
-    queryFn: () => apiClient.get<MeetingDetail>(`/build/${projectId}/meetings/${meetingId}`),
+    queryFn: ({ signal }) => apiClient.get<MeetingDetail>(`/build/${projectId}/meetings/${meetingId}`, undefined, signal),
     enabled: canView && !!projectId && !!meetingId,
     staleTime: 60_000,
   });

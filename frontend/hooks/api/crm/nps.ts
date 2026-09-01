@@ -22,8 +22,8 @@ interface SubmitNpsResponseInput {
 export function usePublicNpsSurvey(token: string) {
   return useQuery({
     queryKey: queryKeys.nps.publicSurvey(token),
-    queryFn: async () => {
-      const data = await apiClient.get<{ survey: PublicNpsSurvey }>(`/public/nps/${token}`);
+    queryFn: async ({ signal }) => {
+      const data = await apiClient.get<{ survey: PublicNpsSurvey }>(`/public/nps/${token}`, undefined, signal);
       return data.survey;
     },
     enabled: Boolean(token),

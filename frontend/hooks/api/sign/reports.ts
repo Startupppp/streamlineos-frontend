@@ -30,7 +30,7 @@ export interface SignSummaryStats {
 export function useSignDashboard() {
   return useQuery({
     queryKey: [...queryKeys.signEnvelopes.all, "dashboard"] as const,
-    queryFn: () => apiClient.get<SignDashboardStats>("/sign/reports/dashboard"),
+    queryFn: ({ signal }) => apiClient.get<SignDashboardStats>("/sign/reports/dashboard", undefined, signal),
     staleTime: 30_000,
   });
 }
@@ -38,7 +38,7 @@ export function useSignDashboard() {
 export function useSignSummary() {
   return useQuery({
     queryKey: [...queryKeys.signEnvelopes.all, "summary"] as const,
-    queryFn: () => apiClient.get<SignSummaryStats>("/sign/reports/summary"),
+    queryFn: ({ signal }) => apiClient.get<SignSummaryStats>("/sign/reports/summary", undefined, signal),
     staleTime: 60_000,
   });
 }

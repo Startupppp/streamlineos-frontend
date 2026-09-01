@@ -55,7 +55,7 @@ export function useGenerateReport() {
 export function useScheduledReports() {
   return useQuery({
     queryKey: queryKeys.hr.scheduledReports(),
-    queryFn: () => apiClient.get<ScheduledReport[]>("/hr/recruitment/reports/scheduled"),
+    queryFn: ({ signal }) => apiClient.get<ScheduledReport[]>("/hr/recruitment/reports/scheduled", undefined, signal),
     staleTime: 5 * 60_000,
   });
 }
@@ -158,7 +158,7 @@ export function useDiversityReport(filters: DiversityFilters) {
 
   return useQuery<DiversityReport>({
     queryKey: [...queryKeys.hr.diversityReport(), params],
-    queryFn: () => apiClient.get<DiversityReport>("/hr/recruitment/diversity-report", params),
+    queryFn: ({ signal }) => apiClient.get<DiversityReport>("/hr/recruitment/diversity-report", params, signal),
     staleTime: 5 * 60_000,
   });
 }

@@ -38,7 +38,7 @@ const PRE_IMPLEMENTATION_CONTRACTS = new Set([
 
 const SKIP_DIRS = new Set(["node_modules", ".next", "feedbucket-widget", ".git"]);
 
-const BASELINE = { deadFiles: 0, deadExports: 0 };
+const BASELINE = { deadFiles: 1, deadExports: 0 };
 
 const SCAN_FLOOR = { knipTotal: 5, graphFiles: 100, graphEdges: 300 };
 

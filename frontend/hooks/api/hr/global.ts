@@ -115,7 +115,7 @@ export function useWorkAuthorizations(params?: WorkAuthorizationsParams) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<CursorResult<WorkAuthorization>>({
     queryKey: queryKeys.hr.workAuthorizations(params as Record<string, unknown>),
-    queryFn: () => apiClient.get("/hr/global/work-authorizations", params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get("/hr/global/work-authorizations", params as Record<string, unknown>, signal),
     staleTime: 60_000,
     enabled: canView && hrEnabled,
   });
@@ -166,7 +166,7 @@ export function useComplianceRequirements(params?: ComplianceRequirementsParams)
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<CursorResult<ComplianceRequirement>>({
     queryKey: queryKeys.hr.complianceRequirements(params as Record<string, unknown>),
-    queryFn: () => apiClient.get("/hr/global/compliance/requirements", params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get("/hr/global/compliance/requirements", params as Record<string, unknown>, signal),
     staleTime: 120_000,
     enabled: canManage && hrEnabled,
   });
@@ -217,7 +217,7 @@ export function useComplianceEvents(params?: ComplianceEventsParams) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<CursorResult<ComplianceEvent>>({
     queryKey: queryKeys.hr.complianceEvents(params as Record<string, unknown>),
-    queryFn: () => apiClient.get("/hr/global/compliance/events", params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get("/hr/global/compliance/events", params as Record<string, unknown>, signal),
     staleTime: 60_000,
     enabled: canManage && hrEnabled,
   });
@@ -270,7 +270,7 @@ export function useContracts(params?: ContractsParams) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<CursorResult<HrContract>>({
     queryKey: queryKeys.hr.contracts(params as Record<string, unknown>),
-    queryFn: () => apiClient.get("/hr/global/contracts", params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get("/hr/global/contracts", params as Record<string, unknown>, signal),
     staleTime: 60_000,
     enabled: canView && hrEnabled,
   });
@@ -336,7 +336,7 @@ export function useInternshipCertificate(contractId: number, enabled = false) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<{ html: string; templateId: number | null }>({
     queryKey: queryKeys.hr.internshipCertificate(contractId),
-    queryFn: () => apiClient.get(`/hr/global/contracts/${contractId}/internship-certificate`),
+    queryFn: ({ signal }) => apiClient.get(`/hr/global/contracts/${contractId}/internship-certificate`, undefined, signal),
     enabled: canView && hrEnabled && enabled,
     staleTime: 300_000,
   });

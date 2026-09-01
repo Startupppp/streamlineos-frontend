@@ -15,7 +15,7 @@ import type {
 export function useHiringFlows() {
   return useQuery({
     queryKey: queryKeys.hr.hiringFlows(),
-    queryFn: () => apiClient.get<HiringFlow[]>("/hr/recruitment/hiring-flows"),
+    queryFn: ({ signal }) => apiClient.get<HiringFlow[]>("/hr/recruitment/hiring-flows", undefined, signal),
     staleTime: 2 * 60_000,
   });
 }

@@ -61,7 +61,7 @@ const accKeys = {
 export function useAccommodations(params: ListAccommodationsParams = {}) {
   return useQuery({
     queryKey: accKeys.list(params),
-    queryFn: () => apiClient.get<PaginatedResult<AccommodationRequest>>(BASE, params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get<PaginatedResult<AccommodationRequest>>(BASE, params as Record<string, unknown>),
     staleTime: 30_000,
   });
 }
@@ -69,7 +69,7 @@ export function useAccommodations(params: ListAccommodationsParams = {}) {
 export function useAccommodation(id: string) {
   return useQuery({
     queryKey: accKeys.detail(id),
-    queryFn: () => apiClient.get<AccommodationRequest>(`${BASE}/${id}`),
+    queryFn: ({ signal }) => apiClient.get<AccommodationRequest>(`${BASE}/${id}`, undefined, signal),
     enabled: !!id,
     staleTime: 30_000,
   });
@@ -78,7 +78,7 @@ export function useAccommodation(id: string) {
 export function useAccommodationTasks(requestId: string) {
   return useQuery({
     queryKey: accKeys.tasks(requestId),
-    queryFn: () => apiClient.get<AccommodationTask[]>(`${BASE}/${requestId}/tasks`),
+    queryFn: ({ signal }) => apiClient.get<AccommodationTask[]>(`${BASE}/${requestId}/tasks`, undefined, signal),
     enabled: !!requestId,
     staleTime: 30_000,
   });

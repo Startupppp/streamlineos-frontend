@@ -35,9 +35,9 @@ export function useTicketActivity(projectId: number, ticketId: number) {
   const canView = useCan("build:tickets:view");
   return useQuery({
     queryKey: queryKeys.ticketActivity.list(ticketId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<TicketActivityEntry[]>(
-        `/build/${projectId}/tickets/${ticketId}/activity`,
+        `/build/${projectId}/tickets/${ticketId}/activity`, signal,
       ),
     enabled: canView && !!projectId && !!ticketId,
     staleTime: 30_000,

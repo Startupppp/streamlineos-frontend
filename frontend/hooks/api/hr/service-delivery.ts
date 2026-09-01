@@ -61,8 +61,8 @@ export function useServiceDeliveryOpsInbox(enabled = true) {
   const canCases = useCan("hr:cases:view");
   return useQuery({
     queryKey: serviceDeliveryKeys.opsInbox,
-    queryFn: () =>
-      apiClient.get<ServiceDeliveryOpsInbox>("/hr/service-delivery/ops-inbox"),
+    queryFn: ({ signal }) =>
+      apiClient.get<ServiceDeliveryOpsInbox>("/hr/service-delivery/ops-inbox", undefined, signal),
     staleTime: 30_000,
     enabled: canCases && enabled,
   });
@@ -72,8 +72,8 @@ export function useServiceDeliveryMyItems(enabled = true) {
   const canHelpdesk = useCan("hr:helpdesk:view");
   return useQuery({
     queryKey: serviceDeliveryKeys.myItems,
-    queryFn: () =>
-      apiClient.get<ServiceDeliveryMyItems>("/hr/service-delivery/my-items"),
+    queryFn: ({ signal }) =>
+      apiClient.get<ServiceDeliveryMyItems>("/hr/service-delivery/my-items", undefined, signal),
     staleTime: 30_000,
     enabled: canHelpdesk && enabled,
   });

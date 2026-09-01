@@ -33,7 +33,7 @@ export function useTimesheetEntries(query: EntriesQuery = {}, enabled = true) {
   const params = toParams(query);
   return useQuery({
     queryKey: queryKeys.timesheets.entries(params),
-    queryFn: () => apiClient.get<CursorPage<TimesheetEntry>>("/timesheets/entries", params),
+    queryFn: ({ signal }) => apiClient.get<CursorPage<TimesheetEntry>>("/timesheets/entries", params),
     staleTime: 30_000,
     placeholderData: (prev) => prev,
     enabled: enabled && canView,

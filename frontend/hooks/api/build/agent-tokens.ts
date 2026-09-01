@@ -12,7 +12,7 @@ export function useAgentTokens() {
   const canView = useCan("settings:api-tokens:read");
   return useQuery<AgentToken[]>({
     queryKey: queryKeys.projects.agentTokens(),
-    queryFn: () => apiClient.get<AgentToken[]>("/agent-tokens"),
+    queryFn: ({ signal }) => apiClient.get<AgentToken[]>("/agent-tokens", undefined, signal),
     enabled: canView,
     staleTime: 60_000,
   });

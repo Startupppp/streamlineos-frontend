@@ -31,9 +31,9 @@ const KB_ATTACHMENT_FOLDER = "kb-attachments";
 export function useSupportKbAttachments(articleId: number) {
   return useQuery({
     queryKey: queryKeys.kbAttachments.list(articleId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<KbAttachment[]>(
-        `/support/kb/articles/${articleId}/attachments`,
+        `/support/kb/articles/${articleId}/attachments`, signal,
       ),
     enabled: Number.isFinite(articleId) && articleId > 0,
     staleTime: 30_000,

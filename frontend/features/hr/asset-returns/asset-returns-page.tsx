@@ -85,7 +85,7 @@ export function AssetReturnsPage() {
 
   const { data: items, isLoading, isError, refetch } = useQuery({
     queryKey: arKeys.list(),
-    queryFn: () => apiClient.get<AssetReturn[]>("/hr/asset-returns"),
+    queryFn: ({ signal }) => apiClient.get<AssetReturn[]>("/hr/asset-returns", undefined, signal),
     staleTime: 60_000,
   });
 

@@ -53,7 +53,7 @@ export function usePurchaseOrders(filters?: PurchaseOrderFilters) {
   const canView = useCan("inventory:purchase-orders:read");
   return useQuery<PaginatedResponse<PurchaseOrderSummary>, Error>({
     queryKey: queryKeys.inventory.purchaseOrders(filters),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PaginatedResponse<PurchaseOrderSummary>>("/inventory/purchase-orders", {
         ...(filters?.vendorId ? { vendorId: String(filters.vendorId) } : {}),
         ...(filters?.status ? { status: filters.status } : {}),
@@ -69,7 +69,7 @@ export function useVendorPurchaseOrders(vendorId: number) {
   const canView = useCan("inventory:purchase-orders:read");
   return useQuery<PaginatedResponse<PurchaseOrderSummary>, Error>({
     queryKey: queryKeys.inventory.purchaseOrders({ vendorId }),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PaginatedResponse<PurchaseOrderSummary>>("/inventory/purchase-orders", {
         vendorId: String(vendorId),
       }),
@@ -82,7 +82,7 @@ export function usePurchaseOrder(poId: number) {
   const canView = useCan("inventory:purchase-orders:read");
   return useQuery<PurchaseOrder, Error>({
     queryKey: queryKeys.inventory.purchaseOrder(poId),
-    queryFn: () => apiClient.get<PurchaseOrder>(`/inventory/purchase-orders/${poId}`),
+    queryFn: ({ signal }) => apiClient.get<PurchaseOrder>(`/inventory/purchase-orders/${poId}`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canView && poId > 0,
   });

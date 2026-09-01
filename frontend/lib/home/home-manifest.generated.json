@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "generatedFrom": "backend/src/modules/dashboard/dashboard.controller.ts",
+  "sections": [
+    { "endpoint": "/dashboard/stats",              "universal": true,  "module": null,        "permission": null               },
+    { "endpoint": "/dashboard/personal",           "universal": true,  "module": null,        "permission": null               },
+    { "endpoint": "/dashboard/announcements",      "universal": true,  "module": null,        "permission": null               },
+    { "endpoint": "/dashboard/my-issues",          "universal": true,  "module": "build",     "permission": null               },
+    { "endpoint": "/dashboard/active-sprint",      "universal": true,  "module": "build",     "permission": null               },
+    { "endpoint": "/dashboard/recent-projects",    "universal": false, "module": "build",     "permission": "build:tickets:view" },
+    { "endpoint": "/dashboard/recent-activity",    "universal": false, "module": "build",     "permission": "build:tickets:view" },
+    { "endpoint": "/dashboard/today-activities",   "universal": false, "module": "crm",       "permission": "crm:leads:view"   },
+    { "endpoint": "/dashboard/leaves-today",       "universal": false, "module": "hr",        "permission": "hr:leaves:view"   },
+    { "endpoint": "/dashboard/pending-approvals",  "universal": false, "module": "hr",        "permission": "hr:leaves:approve" },
+    { "endpoint": "/dashboard/team-attendance",    "universal": false, "module": "hr",        "permission": "hr:attendance:view" },
+    { "endpoint": "/dashboard/team-availability",  "universal": false, "module": "hr",        "permission": "hr:attendance:view" },
+    { "endpoint": "/dashboard/executive",          "universal": false, "module": null,        "permission": "hr:analytics:read" },
+    { "endpoint": "/dashboard/birthdays",          "universal": true,  "module": "hr",        "permission": null               },
+    { "endpoint": "/dashboard/upcoming-holidays",  "universal": true,  "module": "hr",        "permission": null               },
+    { "endpoint": "/dashboard/my-leave-balance",   "universal": true,  "module": "hr",        "permission": null               }
+  ]
+}

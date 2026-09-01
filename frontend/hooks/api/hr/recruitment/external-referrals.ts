@@ -44,7 +44,7 @@ export interface UpdateExternalReferralInput {
 export function useExternalReferrals() {
   return useQuery({
     queryKey: queryKeys.hr.externalReferrals(),
-    queryFn: () => apiClient.get<ExternalReferral[]>("/hr/recruitment/external-referrals"),
+    queryFn: ({ signal }) => apiClient.get<ExternalReferral[]>("/hr/recruitment/external-referrals", undefined, signal),
     staleTime: 60_000,
   });
 }
@@ -64,7 +64,7 @@ export function useUpdateExternalReferral() {
 export function useExternalReferrers() {
   return useQuery({
     queryKey: queryKeys.hr.externalReferrers(),
-    queryFn: () => apiClient.get<ExternalReferrer[]>("/hr/recruitment/external-referrers"),
+    queryFn: ({ signal }) => apiClient.get<ExternalReferrer[]>("/hr/recruitment/external-referrers", undefined, signal),
     staleTime: 60_000,
   });
 }

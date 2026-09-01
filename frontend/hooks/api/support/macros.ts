@@ -154,7 +154,7 @@ export function useSupportMacros(params?: MacrosParams) {
   const queryParams: Record<string, unknown> = { ...params };
   return useQuery({
     queryKey: queryKeys.supportMacros.list(queryParams),
-    queryFn: () => apiClient.get<SupportMacro[]>("/support/macros", queryParams),
+    queryFn: ({ signal }) => apiClient.get<SupportMacro[]>("/support/macros", queryParams, signal),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   });
@@ -193,7 +193,7 @@ export function useDeleteMacro() {
 export function useMacroUsage() {
   return useQuery({
     queryKey: queryKeys.supportMacros.usage(),
-    queryFn: () => apiClient.get<MacroUsage[]>("/support/macros/usage"),
+    queryFn: ({ signal }) => apiClient.get<MacroUsage[]>("/support/macros/usage", undefined, signal),
     staleTime: 30_000,
   });
 }
@@ -222,7 +222,7 @@ export function useApplyMacro() {
 export function useRoutingRules() {
   return useQuery({
     queryKey: queryKeys.supportRouting.list(),
-    queryFn: () => apiClient.get<SupportRoutingRule[]>("/support/routing-rules"),
+    queryFn: ({ signal }) => apiClient.get<SupportRoutingRule[]>("/support/routing-rules", undefined, signal),
     staleTime: 60_000,
   });
 }
@@ -260,7 +260,7 @@ export function useDeleteRoutingRule() {
 export function useAgentSkills() {
   return useQuery({
     queryKey: queryKeys.supportAgentSkills.list(),
-    queryFn: () => apiClient.get<SupportAgentSkill[]>("/support/agent-skills"),
+    queryFn: ({ signal }) => apiClient.get<SupportAgentSkill[]>("/support/agent-skills", undefined, signal),
     staleTime: 60_000,
   });
 }
@@ -278,7 +278,7 @@ export function useSetAgentSkills() {
 export function useAgentAvailability() {
   return useQuery({
     queryKey: queryKeys.supportAgentAvailability.list(),
-    queryFn: () => apiClient.get<SupportAgentAvailability[]>("/support/agent-availability"),
+    queryFn: ({ signal }) => apiClient.get<SupportAgentAvailability[]>("/support/agent-availability", undefined, signal),
     staleTime: 30_000,
   });
 }
@@ -296,7 +296,7 @@ export function useSetMyAvailability() {
 export function useVipClients() {
   return useQuery({
     queryKey: queryKeys.supportVipClients.list(),
-    queryFn: () => apiClient.get<SupportVipClient[]>("/support/vip-clients"),
+    queryFn: ({ signal }) => apiClient.get<SupportVipClient[]>("/support/vip-clients", undefined, signal),
     staleTime: 60_000,
   });
 }

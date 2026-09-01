@@ -30,8 +30,8 @@ import type {
 export function useLeads(filters?: LeadFilters, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.leads.list(filters as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<PaginatedLeads>("/leads", filters as Record<string, unknown>),
+    queryFn: ({ signal }) =>
+      apiClient.get<PaginatedLeads>("/leads", filters as Record<string, unknown>, signal),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     ...(options?.enabled !== undefined ? { enabled: options.enabled } : {}),
@@ -41,7 +41,7 @@ export function useLeads(filters?: LeadFilters, options?: { enabled?: boolean })
 export function useLeadDetail(id: number) {
   return useQuery({
     queryKey: queryKeys.leads.detail(id),
-    queryFn: () => apiClient.get<LeadWithActivities>(`/leads/${id}`),
+    queryFn: ({ signal }) => apiClient.get<LeadWithActivities>(`/leads/${id}`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: id > 0,
   });
@@ -50,7 +50,7 @@ export function useLeadDetail(id: number) {
 export function useLeadBoard() {
   return useQuery({
     queryKey: queryKeys.leads.board(),
-    queryFn: () => apiClient.get<LeadBoard>("/leads/board"),
+    queryFn: ({ signal }) => apiClient.get<LeadBoard>("/leads/board", undefined, signal),
     staleTime: 2 * 60_000,
   });
 }
@@ -58,8 +58,8 @@ export function useLeadBoard() {
 export function useLeadStats(filters?: { dateFrom?: string; dateTo?: string }) {
   return useQuery({
     queryKey: queryKeys.leads.stats(filters),
-    queryFn: () =>
-      apiClient.get<LeadStats>("/leads/stats", filters as Record<string, unknown>),
+    queryFn: ({ signal }) =>
+      apiClient.get<LeadStats>("/leads/stats", filters as Record<string, unknown>, signal),
     staleTime: 2 * 60_000,
   });
 }
@@ -67,8 +67,8 @@ export function useLeadStats(filters?: { dateFrom?: string; dateTo?: string }) {
 export function useLeadTimeline(leadId: number, limit?: number) {
   return useQuery({
     queryKey: queryKeys.leads.timeline(leadId),
-    queryFn: () =>
-      apiClient.get<TimelineItem[]>(`/leads/${leadId}/timeline`, limit ? { limit } : undefined),
+    queryFn: ({ signal }) =>
+      apiClient.get<TimelineItem[]>(`/leads/${leadId}/timeline`, limit ? { limit } : undefined, signal),
     staleTime: 2 * 60_000,
     enabled: leadId > 0,
   });
@@ -77,7 +77,7 @@ export function useLeadTimeline(leadId: number, limit?: number) {
 export function useLeadSlaAlerts() {
   return useQuery({
     queryKey: queryKeys.leads.slaAlerts(),
-    queryFn: () => apiClient.get<SlaAlertResponse>("/leads/sla-alerts"),
+    queryFn: ({ signal }) => apiClient.get<SlaAlertResponse>("/leads/sla-alerts", undefined, signal),
     staleTime: 2 * 60_000,
   });
 }
@@ -88,8 +88,8 @@ export function useLeadAnalyticsSummary(filters?: {
 }) {
   return useQuery({
     queryKey: queryKeys.leads.analyticsSummary(filters),
-    queryFn: () =>
-      apiClient.get<LeadAnalyticsSummary>("/leads/analytics", filters as Record<string, unknown>),
+    queryFn: ({ signal }) =>
+      apiClient.get<LeadAnalyticsSummary>("/leads/analytics", filters as Record<string, unknown>, signal),
     staleTime: 2 * 60_000,
   });
 }
@@ -255,8 +255,8 @@ export function useAssignLead() {
 export function useSalesLeaderboard() {
   return useQuery({
     queryKey: queryKeys.salesLeaderboard.list(),
-    queryFn: () =>
-      apiClient.get<SalesLeaderboardEntry[]>("/leads/sales-leaderboard"),
+    queryFn: ({ signal }) =>
+      apiClient.get<SalesLeaderboardEntry[]>("/leads/sales-leaderboard", undefined, signal),
     staleTime: 2 * 60_000,
   });
 }
@@ -264,8 +264,8 @@ export function useSalesLeaderboard() {
 export function useSalesTeamCapacity() {
   return useQuery({
     queryKey: queryKeys.salesTeamCapacity.list(),
-    queryFn: () =>
-      apiClient.get<SalesTeamCapacityEntry[]>("/leads/sales-team-capacity"),
+    queryFn: ({ signal }) =>
+      apiClient.get<SalesTeamCapacityEntry[]>("/leads/sales-team-capacity", undefined, signal),
     staleTime: 2 * 60_000,
   });
 }
@@ -286,7 +286,7 @@ export function useCheckLeadDuplicates(params: { email?: string; phone?: string 
   const hasParams = !!(params.email || params.phone);
   return useQuery({
     queryKey: [...queryKeys.leads.all, "duplicateCheck", params] as const,
-    queryFn: () => apiClient.get<DuplicateCheckResult>("/leads/check-duplicates", params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get<DuplicateCheckResult>("/leads/check-duplicates", params as Record<string, unknown>, signal),
     enabled: hasParams && (options?.enabled !== false),
     staleTime: 30_000,
   });
@@ -301,7 +301,7 @@ interface ScoreExplanation {
 export function useLeadScoreExplanation(leadId: number, enabled: boolean) {
   return useQuery({
     queryKey: [...queryKeys.leads.all, "scoreExplanation", leadId] as const,
-    queryFn: () => apiClient.get<ScoreExplanation>(`/leads/${leadId}/score-explanation`),
+    queryFn: ({ signal }) => apiClient.get<ScoreExplanation>(`/leads/${leadId}/score-explanation`, undefined, signal),
     enabled,
     staleTime: 60_000,
   });

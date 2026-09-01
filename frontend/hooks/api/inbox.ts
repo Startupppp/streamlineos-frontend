@@ -36,14 +36,14 @@ export function useInfiniteInbox(
       infinite: true,
     }),
     initialPageParam: undefined as number | undefined,
-    queryFn: ({ pageParam }) =>
+    queryFn: ({ pageParam, signal }) =>
       apiClient.get<Notification[]>(
         "/me/inbox",
         toStringParams({
           ...(params as Record<string, unknown>),
           limit,
           cursor: pageParam,
-        }),
+        }), signal,
       ),
     getNextPageParam: (lastPage) =>
       lastPage.length < limit ? undefined : lastPage[lastPage.length - 1]?.id,
@@ -58,7 +58,7 @@ export function useInboxCount() {
 
   return useQuery<UnreadCount, Error>({
     queryKey: queryKeys.inbox.count(),
-    queryFn: () => apiClient.get<UnreadCount>("/me/inbox/count"),
+    queryFn: ({ signal }) => apiClient.get<UnreadCount>("/me/inbox/count", undefined, signal),
     staleTime: 30_000,
     enabled: !!orgId,
   });

@@ -31,7 +31,7 @@ export function useSalaryStructureTemplates(options?: { enabled?: boolean }) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<SalaryStructureTemplate[]>({
     queryKey: queryKeys.hr.salaryStructureTemplates(),
-    queryFn: () => apiClient.get<SalaryStructureTemplate[]>("/hr/payroll/salary-structures"),
+    queryFn: ({ signal }) => apiClient.get<SalaryStructureTemplate[]>("/hr/payroll/salary-structures", undefined, signal),
     staleTime: 120_000,
     enabled: canView && hrEnabled && (options?.enabled ?? true),
   });

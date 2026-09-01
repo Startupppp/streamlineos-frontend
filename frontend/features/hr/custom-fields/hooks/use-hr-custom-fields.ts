@@ -18,8 +18,8 @@ export function useHrCustomFields(
 ) {
   return useQuery<HrCustomFieldDefinition[]>({
     queryKey: cfDefsKey(entityType),
-    queryFn: () =>
-      apiClient.get<HrCustomFieldDefinition[]>("/hr/custom-fields/definitions", { entityType }),
+    queryFn: ({ signal }) =>
+      apiClient.get<HrCustomFieldDefinition[]>("/hr/custom-fields/definitions", { entityType }, signal),
     staleTime: 60_000,
     enabled: options?.enabled ?? true,
   });

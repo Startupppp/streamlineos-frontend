@@ -23,7 +23,7 @@ export function useHolidays() {
   const canView = useCan("self:attendance");
   return useQuery<Holiday[]>({
     queryKey: queryKeys.hr.holidays(),
-    queryFn: () => apiClient.get<Holiday[]>("/me/attendance/holidays"),
+    queryFn: ({ signal }) => apiClient.get<Holiday[]>("/me/attendance/holidays", undefined, signal),
     staleTime: 300_000,
     enabled: canView,
   });

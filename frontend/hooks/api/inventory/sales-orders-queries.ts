@@ -30,7 +30,7 @@ export function useSalesOrders(filters?: SalesOrderFilters) {
           }
         : undefined,
     ),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const raw = await apiClient.get<RawListResponse>("/inventory/sales-orders", {
         ...(filters?.status ? { status: filters.status } : {}),
         ...(filters?.clientId ? { clientId: String(filters.clientId) } : {}),
@@ -38,7 +38,7 @@ export function useSalesOrders(filters?: SalesOrderFilters) {
         ...(filters?.dateTo ? { dateTo: filters.dateTo } : {}),
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(filters?.limit ? { limit: String(filters.limit) } : {}),
-      });
+      }, signal);
       return {
         items: raw.items.map(mapListItem),
         total: raw.total,
@@ -55,9 +55,9 @@ export function useSalesOrder(soId: number) {
   const canView = useCan("inventory:sales-orders:read");
   return useQuery<SalesOrderDetail, Error>({
     queryKey: queryKeys.inventory.salesOrder(soId),
-    queryFn: async () =>
+    queryFn: async ({ signal }) =>
       mapDetail(
-        await apiClient.get<RawDetailSalesOrder>(`/inventory/sales-orders/${soId}`),
+        await apiClient.get<RawDetailSalesOrder>(`/inventory/sales-orders/${soId}`, undefined, signal),
       ),
     staleTime: 2 * 60_000,
     enabled: canView && soId > 0,
@@ -68,9 +68,9 @@ export function useSoAtp(soId: number) {
   const canView = useCan("inventory:sales-orders:read");
   return useQuery<AtpEntry[], Error>({
     queryKey: [...queryKeys.inventory.salesOrder(soId), "atp"] as const,
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const raw = await apiClient.get<RawAtpEntry[]>(
-        `/inventory/sales-orders/${soId}/atp`,
+        `/inventory/sales-orders/${soId}/atp`, signal,
       );
       return raw.map(mapAtp);
     },

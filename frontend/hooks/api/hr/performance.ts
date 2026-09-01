@@ -22,7 +22,7 @@ export function useReviewCycles() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.reviewCycles(),
-    queryFn: () => apiClient.get<ReviewCycle[]>("/hr/performance/cycles"),
+    queryFn: ({ signal }) => apiClient.get<ReviewCycle[]>("/hr/performance/cycles", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canView && hrEnabled,
   });
@@ -116,8 +116,8 @@ export function useOneOnOneMeetings(params?: { upcoming?: boolean }) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.oneOnOnes(params as Record<string, unknown> | undefined),
-    queryFn: () =>
-      apiClient.get<OneOnOneMeeting[]>("/hr/performance/one-on-ones", params as Record<string, unknown> | undefined),
+    queryFn: ({ signal }) =>
+      apiClient.get<OneOnOneMeeting[]>("/hr/performance/one-on-ones", params as Record<string, unknown> | undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canView && hrEnabled,
   });

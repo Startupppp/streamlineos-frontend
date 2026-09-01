@@ -10,7 +10,7 @@ export function useKbSpaces() {
   const canView = useCan("kb:spaces:view");
   return useQuery({
     queryKey: queryKeys.kb.spaces(),
-    queryFn: () => apiClient.get<KbSpace[]>("/kb/spaces"),
+    queryFn: ({ signal }) => apiClient.get<KbSpace[]>("/kb/spaces", undefined, signal),
     staleTime: 60_000,
     enabled: canView,
   });
@@ -20,7 +20,7 @@ export function useKbSpace(spaceId: number) {
   const canView = useCan("kb:spaces:view");
   return useQuery({
     queryKey: queryKeys.kb.space(spaceId),
-    queryFn: () => apiClient.get<KbSpace>(`/kb/spaces/${spaceId}`),
+    queryFn: ({ signal }) => apiClient.get<KbSpace>(`/kb/spaces/${spaceId}`, undefined, signal),
     enabled: canView && Number.isFinite(spaceId) && spaceId > 0,
     staleTime: 60_000,
   });

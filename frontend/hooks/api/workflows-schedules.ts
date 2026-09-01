@@ -26,7 +26,7 @@ export function useAllSchedules() {
   const canManage = useCan("workflows:schedules:manage");
   return useQuery({
     queryKey: [...queryKeys.workflows.all, "all-schedules"] as const,
-    queryFn: () => apiClient.get<WorkflowSchedule[]>("/workflows/schedules"),
+    queryFn: ({ signal }) => apiClient.get<WorkflowSchedule[]>("/workflows/schedules", undefined, signal),
     staleTime: 30_000,
     enabled: canManage,
   });
@@ -36,7 +36,7 @@ export function useWorkflowSchedules(workflowId: string) {
   const canManage = useCan("workflows:schedules:manage");
   return useQuery({
     queryKey: queryKeys.workflows.schedules(workflowId),
-    queryFn: () => apiClient.get<WorkflowSchedule[]>(`/workflows/${workflowId}/schedules`),
+    queryFn: ({ signal }) => apiClient.get<WorkflowSchedule[]>(`/workflows/${workflowId}/schedules`, undefined, signal),
     staleTime: 30_000,
     enabled: canManage && workflowId.length > 0,
   });

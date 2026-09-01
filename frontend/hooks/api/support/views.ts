@@ -21,7 +21,7 @@ export interface SupportSavedView {
 export function useSupportSavedViews() {
   return useQuery({
     queryKey: queryKeys.supportViews.list(),
-    queryFn: () => apiClient.get<SupportSavedView[]>("/support/views"),
+    queryFn: ({ signal }) => apiClient.get<SupportSavedView[]>("/support/views", undefined, signal),
     staleTime: 60_000,
   });
 }

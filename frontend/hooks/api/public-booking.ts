@@ -23,9 +23,9 @@ export class InterviewBookingExpiredError extends Error {
 export function usePublicInterviewBooking(token: string) {
   return useQuery<InterviewBookingData, Error>({
     queryKey: queryKeys.publicBooking.detail(token),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       try {
-        return await apiClient.get<InterviewBookingData>(`/public/interview-booking/${token}`);
+        return await apiClient.get<InterviewBookingData>(`/public/interview-booking/${token}`, undefined, signal);
       } catch (e) {
         if (e instanceof Error && e.message.startsWith("410")) {
           throw new InterviewBookingExpiredError();

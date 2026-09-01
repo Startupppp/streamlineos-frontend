@@ -30,8 +30,8 @@ export function useProjectCustomers(filters?: ProjectCustomersFilters) {
   if (filters?.industry) params["industry"] = filters.industry;
   return useQuery({
     queryKey: projectCustomersQueryKeys.list(filters as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<BuildCustomersPage>("/build/customers", params),
+    queryFn: ({ signal }) =>
+      apiClient.get<BuildCustomersPage>("/build/customers", params, signal),
     enabled: canView,
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,

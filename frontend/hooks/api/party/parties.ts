@@ -50,7 +50,7 @@ export function useParty(partyId: string | null) {
 
   return useQuery({
     queryKey: queryKeys.party.party(partyId ?? ""),
-    queryFn: () => apiClient.get<BusinessParty>(`/party/parties/${partyId}`),
+    queryFn: ({ signal }) => apiClient.get<BusinessParty>(`/party/parties/${partyId}`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && !!partyId,
   });

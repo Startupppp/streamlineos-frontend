@@ -51,7 +51,7 @@ const jobBoardPostingsKey = (jobId: number) => ["hr", "jobBoardPostings", jobId]
 export function useJobBoardPostings(jobId: number) {
   return useQuery({
     queryKey: jobBoardPostingsKey(jobId),
-    queryFn: () => apiClient.get<JobBoardPosting[]>(`/hr/recruitment/jobs/${jobId}/board-postings`),
+    queryFn: ({ signal }) => apiClient.get<JobBoardPosting[]>(`/hr/recruitment/jobs/${jobId}/board-postings`, undefined, signal),
     staleTime: 60_000,
     enabled: !!jobId,
   });

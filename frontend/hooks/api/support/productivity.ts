@@ -65,7 +65,7 @@ export function useSplitTicket() {
 export function useTicketDraft(ticketId: number) {
   return useQuery({
     queryKey: [...queryKeys.support.detail(ticketId), "draft"] as const,
-    queryFn: () => apiClient.get<SupportTicketDraft | null>(`/support/${ticketId}/draft`),
+    queryFn: ({ signal }) => apiClient.get<SupportTicketDraft | null>(`/support/${ticketId}/draft`, undefined, signal),
     enabled: Number.isFinite(ticketId) && ticketId > 0,
     staleTime: 60_000,
   });

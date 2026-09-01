@@ -209,6 +209,8 @@ export const buildWorkQueryKeys = {
       [...base, "projects", "all-work", filters] as const,
     allWorkInfinite: (filters: Record<string, unknown>) =>
       [...base, "projects", "all-work", filters, "infinite"] as const,
+    customStates: (projectId: number) =>
+      [...base, "projects", projectId, "custom-states"] as const,
     columnCounts: (projectId: number) =>
       [...base, "projects", "column-counts", projectId] as const,
     webhooks: (projectId: number) =>

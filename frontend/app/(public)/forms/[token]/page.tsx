@@ -4,7 +4,6 @@ import { useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,14 +15,11 @@ import {
 } from "@/components/ui/select";
 import { Loader2, CheckCircle2, Send } from "lucide-react";
 import { buildUrl } from "@/lib/api-client";
-
-interface FormField {
-  key: string;
-  label: string;
-  type: string;
-  required: boolean;
-  options?: string[];
-}
+import {
+  type FormField,
+  buildFieldSchema,
+  buildDynamicSchema,
+} from "@/features/build/forms/form-submission-schema";
 
 interface PublicFormDefinition {
   id: number;
@@ -79,39 +75,6 @@ async function submitPublicForm(
     throw new Error(message);
   }
   return res.json() as Promise<SubmitResponse>;
-}
-
-type StringSchema = z.ZodString;
-
-function buildFieldSchema(field: FormField): StringSchema {
-  if (field.type === "email") {
-    return field.required
-      ? z.string().trim().min(1, `${field.label} is required`).email(`${field.label} must be a valid email`)
-      : z.string().trim().refine((v) => v === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), {
-          message: `${field.label} must be a valid email`,
-        });
-  }
-  if (field.type === "number") {
-    return field.required
-      ? z.string().trim().min(1, `${field.label} is required`).refine((v) => /^-?\d+(\.\d+)?$/.test(v), {
-          message: `${field.label} must be a number`,
-        })
-      : z.string().trim().refine((v) => v === "" || /^-?\d+(\.\d+)?$/.test(v), {
-          message: `${field.label} must be a number`,
-        });
-  }
-  if (field.required) {
-    return z.string().trim().min(1, `${field.label} is required`);
-  }
-  return z.string();
-}
-
-function buildDynamicSchema(fields: FormField[]): z.ZodObject<Record<string, StringSchema>> {
-  const shape: Record<string, StringSchema> = {};
-  for (const field of fields) {
-    shape[field.key] = buildFieldSchema(field);
-  }
-  return z.object(shape);
 }
 
 function FieldInput({

@@ -21,7 +21,7 @@ interface LeadSourceReport {
 export function useLeadSourceReport() {
   return useGatedQuery("crm:leads:view", {
     queryKey: queryKeys.leads.sourceReport(),
-    queryFn: () => apiClient.get<LeadSourceReport>("/leads/source-report"),
+    queryFn: ({ signal }) => apiClient.get<LeadSourceReport>("/leads/source-report", undefined, signal),
     staleTime: 2 * 60_000,
   });
 }
@@ -46,7 +46,7 @@ export interface DuplicateGroup {
 export function useDuplicateLeads() {
   return useGatedQuery("crm:leads:view", {
     queryKey: queryKeys.leads.duplicates(),
-    queryFn: () => apiClient.get<{ groups: DuplicateGroup[]; total: number }>("/leads/duplicates"),
+    queryFn: ({ signal }) => apiClient.get<{ groups: DuplicateGroup[]; total: number }>("/leads/duplicates", undefined, signal),
     staleTime: 2 * 60 * 1000,
   });
 }

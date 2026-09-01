@@ -153,7 +153,7 @@ export function useVendorCredits(params: ListVendorCreditsParams = {}) {
   const can = useCan("accounting:vendor-credits:read");
   return useQuery<CursorPage<VendorCreditSummary>, Error>({
     queryKey: apVendorKeys.vendorCredits(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPage<VendorCreditSummary>>(
         "/accounting/vendor-credits",
         toQuery(params),
@@ -167,8 +167,8 @@ export function useVendorCredit(creditId: number) {
   const can = useCan("accounting:vendor-credits:read");
   return useQuery<VendorCreditDetail, Error>({
     queryKey: apVendorKeys.vendorCredit(creditId),
-    queryFn: () =>
-      apiClient.get<VendorCreditDetail>(`/accounting/vendor-credits/${creditId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<VendorCreditDetail>(`/accounting/vendor-credits/${creditId}`, undefined, signal),
     staleTime: 60_000,
     enabled: can && Number.isInteger(creditId) && creditId > 0,
   });
@@ -225,7 +225,7 @@ export function useRecurringBills(params: ListRecurringBillsParams = {}) {
   const can = useCan("accounting:recurring:read");
   return useQuery<CursorPage<RecurringBillTemplate>, Error>({
     queryKey: apVendorKeys.recurringBills(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPage<RecurringBillTemplate>>(
         "/accounting/recurring-bills",
         toQuery(params),

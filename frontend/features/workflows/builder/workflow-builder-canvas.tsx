@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-client";
 import { usePublishWorkflow, useUpdateWorkflow, useWorkflow, type Workflow } from "@/hooks/api/workflows";
 import { WorkflowBuilderCanvasSurface } from "./workflow-builder-canvas-surface";
 import { WorkflowBuilderToolbar } from "./workflow-builder-toolbar";
@@ -47,7 +48,18 @@ function BuilderCanvas({ workflow, workflowId }: BuilderCanvasProps) {
     updateWorkflow.mutate({ id: workflowId, name: workflowName }, { onSuccess: () => toast.success("Draft saved"), onError: (error) => toast.error(getErrorMessage(error)) });
   }
   function handlePublish() {
-    publishWorkflow.mutate({ id: workflowId, definitionJson: definition }, { onSuccess: () => toast.success("Workflow published"), onError: (error) => toast.error(getErrorMessage(error)) });
+    publishWorkflow.mutate(
+      { id: workflowId, definitionJson: definition },
+      {
+        onSuccess: () => toast.success("Workflow published"),
+        onError: (error) => {
+          if (isApiError(error) && error.status === 409)
+            toast.error("Another user published a newer version — refresh before publishing", { duration: 6000 });
+          else
+            toast.error(getErrorMessage(error));
+        },
+      },
+    );
   }
   function handleBack() { router.push(`/workflows/${workflowId}`); }
 

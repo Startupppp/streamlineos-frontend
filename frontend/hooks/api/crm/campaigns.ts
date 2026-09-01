@@ -35,7 +35,7 @@ export function useCampaigns(params?: CampaignListParams) {
 
   return useGatedQuery("crm:campaigns:view", {
     queryKey: queryKeys.crmCampaigns.list(p),
-    queryFn: () => apiClient.get<PaginatedCampaigns>("/crm/campaigns", p),
+    queryFn: ({ signal }) => apiClient.get<PaginatedCampaigns>("/crm/campaigns", p, signal),
     staleTime: 2 * 60_000,
   });
 }
@@ -68,7 +68,7 @@ export function useUpdateCampaign() {
 export function useCampaignRoi(campaignId: number) {
   return useGatedQuery("crm:campaigns:view", {
     queryKey: queryKeys.crmCampaigns.roi(campaignId),
-    queryFn: () => apiClient.get<CampaignRoi>(`/crm/campaigns/${campaignId}/roi`),
+    queryFn: ({ signal }) => apiClient.get<CampaignRoi>(`/crm/campaigns/${campaignId}/roi`, undefined, signal),
     staleTime: 2 * 60_000,
   });
 }
@@ -80,7 +80,7 @@ export function useCampaignLeads(campaignId: number, params?: CampaignLeadsParam
 
   return useGatedQuery("crm:campaigns:view", {
     queryKey: queryKeys.crmCampaigns.leads(campaignId, p),
-    queryFn: () => apiClient.get<{ items: unknown[]; total: number; page: number; limit: number }>(`/crm/campaigns/${campaignId}/leads`, p),
+    queryFn: ({ signal }) => apiClient.get<{ items: unknown[]; total: number; page: number; limit: number }>(`/crm/campaigns/${campaignId}/leads`, p, signal),
     staleTime: 60_000,
   });
 }
@@ -88,7 +88,7 @@ export function useCampaignLeads(campaignId: number, params?: CampaignLeadsParam
 export function useFirstTouchAttribution() {
   return useGatedQuery("crm:reports:view", {
     queryKey: queryKeys.crmCampaigns.attribution("first-touch"),
-    queryFn: () => apiClient.get<CampaignAttribution[]>("/crm/campaigns/attribution/first-touch"),
+    queryFn: ({ signal }) => apiClient.get<CampaignAttribution[]>("/crm/campaigns/attribution/first-touch", undefined, signal),
     staleTime: 5 * 60_000,
   });
 }
@@ -96,7 +96,7 @@ export function useFirstTouchAttribution() {
 export function useLastTouchAttribution() {
   return useGatedQuery("crm:reports:view", {
     queryKey: queryKeys.crmCampaigns.attribution("last-touch"),
-    queryFn: () => apiClient.get<CampaignAttribution[]>("/crm/campaigns/attribution/last-touch"),
+    queryFn: ({ signal }) => apiClient.get<CampaignAttribution[]>("/crm/campaigns/attribution/last-touch", undefined, signal),
     staleTime: 5 * 60_000,
   });
 }

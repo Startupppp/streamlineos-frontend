@@ -20,7 +20,7 @@ export const useNotificationPreferences = (
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<NotificationPreferences, Error>({
     queryKey: queryKeys.notifications.preferences(),
-    queryFn: () => apiClient.get<NotificationPreferences>("/notification-preferences"),
+    queryFn: ({ signal }) => apiClient.get<NotificationPreferences>("/notification-preferences", undefined, signal),
     staleTime: 5 * 60_000,
     ...restOptions,
     enabled: !!orgId && (enabledOption ?? true),
@@ -46,7 +46,7 @@ export const useSuppressions = (
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<SuppressionRule[], Error>({
     queryKey: queryKeys.notifications.suppressions(),
-    queryFn: () => apiClient.get<SuppressionRule[]>("/notification-preferences/suppressions"),
+    queryFn: ({ signal }) => apiClient.get<SuppressionRule[]>("/notification-preferences/suppressions", undefined, signal),
     staleTime: 60_000,
     ...restOptions,
     enabled: !!orgId && (enabledOption ?? true),

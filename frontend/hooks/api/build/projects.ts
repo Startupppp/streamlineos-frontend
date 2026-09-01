@@ -121,7 +121,7 @@ export function useProjects(
   const canView = useCan("build:view");
   return useQuery<PaginatedResponse<ProjectListItem>>({
     queryKey: queryKeys.projects.list(filters ? { ...filters } : undefined),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PaginatedResponse<ProjectListItem>>(
         "/build",
         filters ? { ...filters } : undefined,
@@ -142,7 +142,7 @@ export function useProject(
   const canView = useCan("build:view");
   return useQuery<ProjectWithDetails | null>({
     queryKey: queryKeys.projects.detail(id),
-    queryFn: () => apiClient.get<ProjectWithDetails | null>(`/build/${id}`),
+    queryFn: ({ signal }) => apiClient.get<ProjectWithDetails | null>(`/build/${id}`, undefined, signal),
     enabled: canView && !!id,
     staleTime: 30_000,
     ...options,
@@ -352,8 +352,8 @@ export function useProjectMembers(
   const canView = useCan("build:view");
   return useQuery<ProjectMemberRecord[]>({
     queryKey: queryKeys.projects.members(projectId),
-    queryFn: () =>
-      apiClient.get<ProjectMemberRecord[]>(`/build/${projectId}/members`),
+    queryFn: ({ signal }) =>
+      apiClient.get<ProjectMemberRecord[]>(`/build/${projectId}/members`, undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 30_000,
     ...options,
@@ -425,9 +425,9 @@ export function useProjectLabels(
   const canView = useCan("build:view");
   return useQuery<TicketLabel[]>({
     queryKey: queryKeys.projects.labels(projectId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       projectId
-        ? apiClient.get<TicketLabel[]>(`/build/${projectId}/labels`)
+        ? apiClient.get<TicketLabel[]>(`/build/${projectId}/labels`, undefined, signal)
         : apiClient.get<TicketLabel[]>("/build/labels"),
     staleTime: 60_000,
     ...options,

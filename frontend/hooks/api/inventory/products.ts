@@ -73,7 +73,7 @@ export function useProducts(filters?: ProductFilters) {
   const canView = useCan("inventory:products:read");
   return useQuery<ProductListResponse, Error>({
     queryKey: queryKeys.inventory.products(filters),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ProductListResponse>("/inventory/products", {
         ...(filters?.categoryId ? { categoryId: String(filters.categoryId) } : {}),
         ...(filters?.search ? { search: filters.search } : {}),
@@ -81,7 +81,7 @@ export function useProducts(filters?: ProductFilters) {
         ...(filters?.limit ? { limit: String(filters.limit) } : {}),
         ...(filters?.status ? { status: filters.status } : {}),
         ...(filters?.productType ? { productType: filters.productType } : {}),
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,
@@ -92,7 +92,7 @@ export function useProduct(productId: number) {
   const canView = useCan("inventory:products:read");
   return useQuery<InventoryProduct, Error>({
     queryKey: queryKeys.inventory.product(productId),
-    queryFn: () => apiClient.get<InventoryProduct>(`/inventory/products/${productId}`),
+    queryFn: ({ signal }) => apiClient.get<InventoryProduct>(`/inventory/products/${productId}`, undefined, signal),
     enabled: canView && productId > 0,
     staleTime: 2 * 60_000,
   });
@@ -102,7 +102,7 @@ export function useCategories() {
   const canView = useCan("inventory:products:read");
   return useQuery<InventoryCategory[], Error>({
     queryKey: queryKeys.inventory.categories(),
-    queryFn: () => apiClient.get<InventoryCategory[]>("/inventory/products/categories"),
+    queryFn: ({ signal }) => apiClient.get<InventoryCategory[]>("/inventory/products/categories", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canView,
   });
@@ -112,7 +112,7 @@ export function useUom() {
   const canView = useCan("inventory:products:read");
   return useQuery<InventoryUom[], Error>({
     queryKey: queryKeys.inventory.uom(),
-    queryFn: () => apiClient.get<InventoryUom[]>("/inventory/products/uom"),
+    queryFn: ({ signal }) => apiClient.get<InventoryUom[]>("/inventory/products/uom", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canView,
   });
@@ -194,10 +194,10 @@ export function useProductVariants(filters?: ProductVariantFilters) {
   const canView = useCan("inventory:products:read");
   return useQuery<ProductVariantFlat[], Error>({
     queryKey: queryKeys.inventory.productVariants(filters),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ProductVariantFlat[]>("/inventory/products/variants", {
         ...(filters?.activeOnly ? { activeOnly: "true" } : {}),
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     enabled: canView,
   });

@@ -76,7 +76,7 @@ export function useSubscription() {
   const canViewSubscription = useCan("billing:subscription:view");
   return useQuery<SubscriptionResponse, Error>({
     queryKey: queryKeys.billing.subscription(),
-    queryFn: () => apiClient.get<SubscriptionResponse>("/billing/razorpay"),
+    queryFn: ({ signal }) => apiClient.get<SubscriptionResponse>("/billing/razorpay", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: !!orgId && canViewSubscription,
   });
@@ -131,7 +131,7 @@ export interface BillingPlansResponse {
 export function useBillingPlans() {
   return useQuery<BillingPlansResponse, Error>({
     queryKey: queryKeys.billing.plans(),
-    queryFn: () => apiClient.get<BillingPlansResponse>("/billing/plans"),
+    queryFn: ({ signal }) => apiClient.get<BillingPlansResponse>("/billing/plans", undefined, signal),
     staleTime: 60 * 60_000,
   });
 }
@@ -139,9 +139,9 @@ export function useBillingPlans() {
 export function useValidateCoupon(code: string, plan: SubscriptionPlan | null) {
   return useQuery<CouponValidationResult, Error>({
     queryKey: queryKeys.billing.coupon(code, plan),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CouponValidationResult>(
-        `/billing/coupons/validate?code=${encodeURIComponent(code)}&plan=${plan ?? ""}`,
+        `/billing/coupons/validate?code=${encodeURIComponent(code)}&plan=${plan ?? ""}`, signal,
       ),
     enabled: code.trim().length >= 3 && plan !== null,
     staleTime: 30_000,
@@ -179,7 +179,7 @@ export function useBillingProfile() {
   const canViewProfile = useCan("billing:profile:view");
   return useQuery<BillingProfile>({
     queryKey: queryKeys.billing.profile(),
-    queryFn: () => apiClient.get<BillingProfile>("/billing/profile"),
+    queryFn: ({ signal }) => apiClient.get<BillingProfile>("/billing/profile", undefined, signal),
     staleTime: 5 * 60 * 1000,
     enabled: canViewProfile,
   });
@@ -201,7 +201,7 @@ export function useSeatInfo() {
   const canViewSeats = useCan("billing:seats:view");
   return useQuery<SeatInfo>({
     queryKey: queryKeys.billing.seats(),
-    queryFn: () => apiClient.get<SeatInfo>("/billing/seats"),
+    queryFn: ({ signal }) => apiClient.get<SeatInfo>("/billing/seats", undefined, signal),
     staleTime: 2 * 60 * 1000,
     enabled: canViewSeats,
   });

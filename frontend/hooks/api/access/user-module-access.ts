@@ -17,8 +17,8 @@ export function useUserModuleAccess(userId: string, enabled = true) {
   const canViewEmployees = useCan("settings:view");
   return useQuery<UserModuleAccess[]>({
     queryKey: userModuleAccessKey(userId),
-    queryFn: () =>
-      apiClient.get<UserModuleAccess[]>(`/access/user-module-access/${userId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<UserModuleAccess[]>(`/access/user-module-access/${userId}`, undefined, signal),
     staleTime: 30_000,
     enabled: canViewEmployees && enabled && !!userId,
   });

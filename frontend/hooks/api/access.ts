@@ -34,7 +34,7 @@ export const useAccess = (
     refetchOnWindowFocus: "always",
     refetchOnReconnect: "always",
     queryKey: queryKeys.access.me(),
-    queryFn: () => apiClient.get<AccessResponse>("/me/access"),
+    queryFn: ({ signal }) => apiClient.get<AccessResponse>("/me/access", undefined, signal),
     ...restOptions,
     enabled: !!orgId && !!userId && (enabledOption ?? true),
   });
@@ -84,7 +84,7 @@ export const usePermissionCatalog = (
 ) =>
   useQuery<Permission[], Error>({
     queryKey: queryKeys.roles.permissionCatalog(),
-    queryFn: () => apiClient.get<Permission[]>("/rbac/permissions"),
+    queryFn: ({ signal }) => apiClient.get<Permission[]>("/rbac/permissions", undefined, signal),
     staleTime: 30 * 60_000,
     ...options,
   });
@@ -97,8 +97,8 @@ export const useRbacDiscoveryGrantable = (
 ) =>
   useQuery<RbacDiscoveryGrantable, Error>({
     queryKey: queryKeys.roles.discoveryGrantable(),
-    queryFn: () =>
-      apiClient.get<RbacDiscoveryGrantable>("/rbac/discovery/grantable"),
+    queryFn: ({ signal }) =>
+      apiClient.get<RbacDiscoveryGrantable>("/rbac/discovery/grantable", undefined, signal),
     staleTime: 60_000,
     ...options,
   });
@@ -111,8 +111,8 @@ export const useRbacDiscoveryMembers = (
 ) =>
   useQuery<RbacDiscoveryMember[], Error>({
     queryKey: queryKeys.roles.discoveryMembers(),
-    queryFn: () =>
-      apiClient.get<RbacDiscoveryMember[]>("/rbac/discovery/members"),
+    queryFn: ({ signal }) =>
+      apiClient.get<RbacDiscoveryMember[]>("/rbac/discovery/members", undefined, signal),
     staleTime: 5 * 60_000,
     ...options,
   });

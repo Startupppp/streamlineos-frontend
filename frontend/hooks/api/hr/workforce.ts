@@ -60,7 +60,7 @@ export function useHrWorkforcePlans() {
   const canHeadcount = useCan("hr:headcount:read");
   return useQuery({
     queryKey: workforceKeys.plans(),
-    queryFn: () => apiClient.get<HeadcountPlan[]>("/hr/analytics-plus/workforce/plans"),
+    queryFn: ({ signal }) => apiClient.get<HeadcountPlan[]>("/hr/analytics-plus/workforce/plans", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canHeadcount,
   });
@@ -70,7 +70,7 @@ export function useHrBudgetVsActual() {
   const canHeadcount = useCan("hr:headcount:read");
   return useQuery({
     queryKey: workforceKeys.budgetVsActual(),
-    queryFn: () => apiClient.get<BudgetVsActual[]>("/hr/analytics-plus/workforce/budget-vs-actual"),
+    queryFn: ({ signal }) => apiClient.get<BudgetVsActual[]>("/hr/analytics-plus/workforce/budget-vs-actual", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canHeadcount,
   });
@@ -79,8 +79,8 @@ export function useHrBudgetVsActual() {
 export function useHrSkillsGap() {
   return useQuery({
     queryKey: workforceKeys.skillsGap(),
-    queryFn: () =>
-      apiClient.get<{ gaps: SkillsGap[] }>("/hr/analytics-plus/workforce/skills-gap"),
+    queryFn: ({ signal }) =>
+      apiClient.get<{ gaps: SkillsGap[] }>("/hr/analytics-plus/workforce/skills-gap", undefined, signal),
     staleTime: 10 * 60_000,
   });
 }
@@ -89,9 +89,9 @@ export function useHrSuccessionRisk() {
   const canSuccession = useCan("hr:succession:view");
   return useQuery({
     queryKey: workforceKeys.successionRisk(),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<{ riskyRoles: SuccessionRisk[] }>(
-        "/hr/analytics-plus/workforce/succession-risk",
+        "/hr/analytics-plus/workforce/succession-risk", signal,
       ),
     staleTime: 10 * 60_000,
     enabled: canSuccession,
@@ -101,8 +101,8 @@ export function useHrSuccessionRisk() {
 export function useHrAttritionForecast() {
   return useQuery({
     queryKey: workforceKeys.attritionForecast(),
-    queryFn: () =>
-      apiClient.get<AttritionForecast>("/hr/analytics-plus/workforce/attrition-forecast"),
+    queryFn: ({ signal }) =>
+      apiClient.get<AttritionForecast>("/hr/analytics-plus/workforce/attrition-forecast", undefined, signal),
     staleTime: 30 * 60_000,
   });
 }

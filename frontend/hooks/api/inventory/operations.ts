@@ -54,7 +54,7 @@ export function useGoodsReceipts(filters?: GrnFilters) {
   const canView = useCan("inventory:purchase-orders:read");
   return useQuery<PaginatedResponse<GrnSummary>, Error>({
     queryKey: queryKeys.inventory.goodsReceipts(filters),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PaginatedResponse<GrnSummary>>("/inventory/goods-receipts", {
         ...(filters?.poId !== undefined ? { poId: String(filters.poId) } : {}),
         ...(filters?.vendorId !== undefined ? { vendorId: String(filters.vendorId) } : {}),
@@ -72,7 +72,7 @@ export function useGoodsReceipt(grnId: number) {
   const canView = useCan("inventory:purchase-orders:read");
   return useQuery<GrnDetail, Error>({
     queryKey: queryKeys.inventory.goodsReceipt(grnId),
-    queryFn: () => apiClient.get<GrnDetail>(`/inventory/goods-receipts/${grnId}`),
+    queryFn: ({ signal }) => apiClient.get<GrnDetail>(`/inventory/goods-receipts/${grnId}`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canView && grnId > 0,
   });
@@ -143,7 +143,7 @@ export function useVendorReturns(filters?: VendorReturnFilters) {
   const canView = useCan("inventory:vendor-returns:manage");
   return useQuery<PaginatedResponse<VendorReturnSummary>, Error>({
     queryKey: queryKeys.inventory.vendorReturns(filters),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PaginatedResponse<VendorReturnSummary>>("/inventory/vendor-returns", {
         ...(filters?.status !== undefined ? { status: filters.status } : {}),
         ...(filters?.page !== undefined ? { page: String(filters.page) } : {}),
@@ -248,7 +248,7 @@ export function useCustomerReturns(filters?: CustomerReturnFilters) {
   const canView = useCan("inventory:customer-returns:manage");
   return useQuery<PaginatedResponse<CustomerReturnSummary>, Error>({
     queryKey: queryKeys.inventory.customerReturns(filters),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PaginatedResponse<CustomerReturnSummary>>("/inventory/customer-returns", {
         ...(filters?.status !== undefined ? { status: filters.status } : {}),
         ...(filters?.page !== undefined ? { page: String(filters.page) } : {}),

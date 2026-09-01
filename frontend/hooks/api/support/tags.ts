@@ -15,7 +15,7 @@ export interface SupportTag {
 export function useSupportTags() {
   return useQuery({
     queryKey: queryKeys.supportTags.list(),
-    queryFn: () => apiClient.get<SupportTag[]>("/support/tags"),
+    queryFn: ({ signal }) => apiClient.get<SupportTag[]>("/support/tags", undefined, signal),
     staleTime: 60_000,
   });
 }
@@ -23,7 +23,7 @@ export function useSupportTags() {
 export function useTicketTags(ticketId: number) {
   return useQuery({
     queryKey: [...queryKeys.support.detail(ticketId), "tags"] as const,
-    queryFn: () => apiClient.get<SupportTag[]>(`/support/${ticketId}/tags`),
+    queryFn: ({ signal }) => apiClient.get<SupportTag[]>(`/support/${ticketId}/tags`, undefined, signal),
     enabled: Number.isFinite(ticketId) && ticketId > 0,
     staleTime: 30_000,
   });

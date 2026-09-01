@@ -6,7 +6,7 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ArrowRight, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Magnetic } from "./motion/magnetic";
-import { AnimatedLogo } from "./animated-logo";
+import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { BRAND_NAME } from "@/lib/branding";
 
 const navLinks = [

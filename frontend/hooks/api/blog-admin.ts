@@ -48,7 +48,7 @@ export function useAdminBlogPosts(params: AdminBlogPostsParams) {
   if (status && status !== "all") queryParams.status = status;
   return useQuery({
     queryKey: queryKeys.blogAdmin.posts(queryParams),
-    queryFn: () => apiClient.get<AdminBlogPostsResponse>("/blog/admin/posts", queryParams),
+    queryFn: ({ signal }) => apiClient.get<AdminBlogPostsResponse>("/blog/admin/posts", queryParams, signal),
     staleTime: 30_000,
     enabled: canManage,
   });
@@ -58,7 +58,7 @@ export function useAdminBlogPost(postId: string) {
   const canManage = useCan("blog:posts:manage");
   return useQuery({
     queryKey: queryKeys.blogAdmin.post(postId),
-    queryFn: () => apiClient.get<AdminBlogPost>(`/blog/admin/posts/${postId}`),
+    queryFn: ({ signal }) => apiClient.get<AdminBlogPost>(`/blog/admin/posts/${postId}`, undefined, signal),
     staleTime: 60_000,
     enabled: canManage && !!postId,
   });
@@ -132,7 +132,7 @@ export function useAdminBlogCategories() {
   const canManage = useCan("blog:categories:manage");
   return useQuery({
     queryKey: queryKeys.blogAdmin.categories(),
-    queryFn: () => apiClient.get<AdminBlogCategory[]>("/blog/admin/categories"),
+    queryFn: ({ signal }) => apiClient.get<AdminBlogCategory[]>("/blog/admin/categories", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canManage,
   });

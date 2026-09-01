@@ -30,7 +30,7 @@ export function useJobRequisitions(status?: string) {
   const canRequisitions = useCan("hr:requisitions:view");
   return useQuery<JobRequisition[]>({
     queryKey: queryKeys.hr.requisitions(status),
-    queryFn: () => apiClient.get<JobRequisition[]>("/hr/recruitment/requisitions", status ? { status } : undefined),
+    queryFn: ({ signal }) => apiClient.get<JobRequisition[]>("/hr/recruitment/requisitions", status ? { status } : undefined, signal),
     staleTime: 60_000,
     enabled: canRequisitions,
   });

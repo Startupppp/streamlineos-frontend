@@ -27,7 +27,7 @@ export function useKbPageComments(pageId: number) {
   const canUpdatePages = useCan("kb:pages:update");
   return useQuery({
     queryKey: queryKeys.kb.pageComments(pageId),
-    queryFn: () => apiClient.get<KbPageComment[]>(`/kb/pages/${pageId}/comments`),
+    queryFn: ({ signal }) => apiClient.get<KbPageComment[]>(`/kb/pages/${pageId}/comments`, undefined, signal),
     staleTime: 30_000,
     enabled: canUpdatePages && pageId > 0,
   });

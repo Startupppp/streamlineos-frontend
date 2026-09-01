@@ -130,7 +130,7 @@ export function useHelpdeskTickets(params?: HelpdeskListParams) {
   const canHelpdesk = useCan("hr:helpdesk:view");
   return useQuery({
     queryKey: keys.list(params),
-    queryFn: () => apiClient.get<HelpdeskListResult>("/hr/helpdesk", params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get<HelpdeskListResult>("/hr/helpdesk", params as Record<string, unknown>, signal),
     staleTime: 60_000,
     enabled: canHelpdesk,
   });
@@ -139,7 +139,7 @@ export function useHelpdeskTickets(params?: HelpdeskListParams) {
 export function useHelpdeskTicket(ticketId: number) {
   return useQuery({
     queryKey: keys.detail(ticketId),
-    queryFn: () => apiClient.get<HelpdeskTicketDetail>(`/hr/helpdesk/${ticketId}`),
+    queryFn: ({ signal }) => apiClient.get<HelpdeskTicketDetail>(`/hr/helpdesk/${ticketId}`, undefined, signal),
     staleTime: 30_000,
   });
 }
@@ -147,7 +147,7 @@ export function useHelpdeskTicket(ticketId: number) {
 export function useHelpdeskSuggest(query: string) {
   return useQuery({
     queryKey: keys.suggest(query),
-    queryFn: () => apiClient.get<SuggestResult>("/hr/helpdesk/suggest", { query }),
+    queryFn: ({ signal }) => apiClient.get<SuggestResult>("/hr/helpdesk/suggest", { query }, signal),
     enabled: query.length >= 2,
     staleTime: 5 * 60_000,
   });
@@ -156,7 +156,7 @@ export function useHelpdeskSuggest(query: string) {
 export function useHelpdeskRoutingRules() {
   return useQuery({
     queryKey: keys.routing(),
-    queryFn: () => apiClient.get<HelpdeskRoutingRule[]>("/hr/helpdesk/routing"),
+    queryFn: ({ signal }) => apiClient.get<HelpdeskRoutingRule[]>("/hr/helpdesk/routing", undefined, signal),
     staleTime: 5 * 60_000,
   });
 }

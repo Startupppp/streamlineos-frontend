@@ -51,7 +51,7 @@ interface SubmitCsatResponseResult {
 export function useCsatReport() {
   return useQuery({
     queryKey: queryKeys.supportCsat.report(),
-    queryFn: () => apiClient.get<CsatReport>("/support/reports/csat"),
+    queryFn: ({ signal }) => apiClient.get<CsatReport>("/support/reports/csat", undefined, signal),
     staleTime: 60_000,
   });
 }
@@ -59,7 +59,7 @@ export function useCsatReport() {
 export function usePublicCsatSurvey(token: string) {
   return useQuery({
     queryKey: queryKeys.supportCsat.survey(token),
-    queryFn: () => apiClient.get<PublicCsatSurvey>(`/support/csat/${token}`),
+    queryFn: ({ signal }) => apiClient.get<PublicCsatSurvey>(`/support/csat/${token}`, undefined, signal),
     enabled: Boolean(token),
     retry: false,
     staleTime: 0,

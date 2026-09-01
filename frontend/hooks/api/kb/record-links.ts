@@ -22,7 +22,7 @@ export function useKbPageRecordLinks(pageId: number) {
   const canViewPages = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pageRecordLinks(pageId),
-    queryFn: () => apiClient.get<KbPageRecordLink[]>(`/kb/pages/${pageId}/record-links`),
+    queryFn: ({ signal }) => apiClient.get<KbPageRecordLink[]>(`/kb/pages/${pageId}/record-links`, undefined, signal),
     enabled: canViewPages,
     staleTime: 30_000,
   });

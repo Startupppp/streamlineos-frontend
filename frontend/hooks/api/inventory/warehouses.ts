@@ -104,7 +104,7 @@ export function useWarehouses(filters?: WarehouseListFilters) {
     queryKey: hasActiveFilters
       ? [...queryKeys.inventory.warehouses(), params]
       : queryKeys.inventory.warehouses(),
-    queryFn: () => apiClient.get<Warehouse[]>("/inventory/warehouses", hasActiveFilters ? params : undefined),
+    queryFn: ({ signal }) => apiClient.get<Warehouse[]>("/inventory/warehouses", hasActiveFilters ? params : undefined, signal),
     staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,
@@ -115,7 +115,7 @@ export function useWarehouse(warehouseId: number) {
   const canView = useCan("inventory:warehouses:read");
   return useQuery<Warehouse, Error>({
     queryKey: queryKeys.inventory.warehouse(warehouseId),
-    queryFn: () => apiClient.get<Warehouse>(`/inventory/warehouses/${warehouseId}`),
+    queryFn: ({ signal }) => apiClient.get<Warehouse>(`/inventory/warehouses/${warehouseId}`, undefined, signal),
     enabled: canView && warehouseId > 0,
     staleTime: 5 * 60_000,
   });
@@ -125,8 +125,8 @@ export function useLocations(warehouseId: number) {
   const canView = useCan("inventory:warehouses:read");
   return useQuery<WarehouseLocation[], Error>({
     queryKey: queryKeys.inventory.locations(warehouseId),
-    queryFn: () =>
-      apiClient.get<WarehouseLocation[]>(`/inventory/warehouses/${warehouseId}/locations`),
+    queryFn: ({ signal }) =>
+      apiClient.get<WarehouseLocation[]>(`/inventory/warehouses/${warehouseId}/locations`, undefined, signal),
     enabled: canView && warehouseId > 0,
     staleTime: 5 * 60_000,
   });
@@ -196,11 +196,11 @@ export function useWarehouseStock(
   const canView = useCan("inventory:stock:read");
   return useQuery<WarehouseStockResult, Error>({
     queryKey: [...queryKeys.inventory.warehouse(warehouseId), "stock", filters] as const,
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<WarehouseStockResult>(`/inventory/warehouses/${warehouseId}/stock`, {
         page: filters?.page,
         limit: filters?.limit,
-      }),
+      }, signal),
     enabled: canView && warehouseId > 0,
     staleTime: 60_000,
   });

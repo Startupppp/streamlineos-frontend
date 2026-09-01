@@ -79,7 +79,7 @@ export function useWhiteboards(projectId: number) {
   const canView = useCan("build:view");
   return useQuery({
     queryKey: queryKeys.whiteboards.list(projectId),
-    queryFn: () => apiClient.get<WhiteboardSummary[]>(`/build/${projectId}/whiteboards`),
+    queryFn: ({ signal }) => apiClient.get<WhiteboardSummary[]>(`/build/${projectId}/whiteboards`, undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 30_000,
   });
@@ -89,8 +89,8 @@ export function useWhiteboard(projectId: number, whiteboardId: number | null) {
   const canView = useCan("build:view");
   return useQuery({
     queryKey: queryKeys.whiteboards.detail(whiteboardId ?? 0),
-    queryFn: () =>
-      apiClient.get<WhiteboardDetail>(`/build/${projectId}/whiteboards/${whiteboardId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<WhiteboardDetail>(`/build/${projectId}/whiteboards/${whiteboardId}`, undefined, signal),
     enabled: canView && !!projectId && !!whiteboardId,
     staleTime: 60_000,
   });

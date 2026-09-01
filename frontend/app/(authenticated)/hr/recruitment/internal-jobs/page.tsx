@@ -156,7 +156,7 @@ export default function InternalJobsPage() {
   const qc = useQueryClient();
   const { data: jobs = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["internalJobs"],
-    queryFn: () => apiClient.get<InternalJob[]>("/hr/recruitment/internal-jobs"),
+    queryFn: ({ signal }) => apiClient.get<InternalJob[]>("/hr/recruitment/internal-jobs", undefined, signal),
     staleTime: 2 * 60_000,
   });
 

@@ -49,7 +49,7 @@ const emergencyKeys = {
 export function useEmergencyEvents(params: { cursor?: string; status?: EmergencyEventStatus } = {}) {
   return useQuery({
     queryKey: emergencyKeys.list(params as Record<string, unknown>),
-    queryFn: () => apiClient.get<PaginatedResult<EmergencyEvent>>(`${BASE}/events`, params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get<PaginatedResult<EmergencyEvent>>(`${BASE}/events`, params as Record<string, unknown>),
     staleTime: 30_000,
   });
 }
@@ -57,7 +57,7 @@ export function useEmergencyEvents(params: { cursor?: string; status?: Emergency
 export function useEmergencyEvent(eventId: string) {
   return useQuery({
     queryKey: emergencyKeys.detail(eventId),
-    queryFn: () => apiClient.get<EmergencyEvent>(`${BASE}/events/${eventId}`),
+    queryFn: ({ signal }) => apiClient.get<EmergencyEvent>(`${BASE}/events/${eventId}`, undefined, signal),
     enabled: !!eventId,
     staleTime: 15_000,
   });
@@ -66,7 +66,7 @@ export function useEmergencyEvent(eventId: string) {
 export function useEmergencyEventStatus(eventId: string) {
   return useQuery({
     queryKey: emergencyKeys.status(eventId),
-    queryFn: () => apiClient.get<{ aggregate: Record<string, number>; total: number }>(`${BASE}/events/${eventId}/status`),
+    queryFn: ({ signal }) => apiClient.get<{ aggregate: Record<string, number>; total: number }>(`${BASE}/events/${eventId}/status`),
     enabled: !!eventId,
     staleTime: 35_000,
     refetchInterval: 30_000,

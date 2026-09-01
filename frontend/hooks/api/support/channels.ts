@@ -33,7 +33,7 @@ export interface UpdateSupportChannelInput {
 export function useSupportChannels() {
   return useQuery({
     queryKey: queryKeys.supportChannels.list(),
-    queryFn: () => apiClient.get<SupportChannel[]>("/support/channels"),
+    queryFn: ({ signal }) => apiClient.get<SupportChannel[]>("/support/channels", undefined, signal),
     staleTime: 60_000,
   });
 }

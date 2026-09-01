@@ -9,7 +9,7 @@ import type { Product, CreateProductInput, UpdateProductInput, ProductsResponse 
 export function useProducts(search?: string) {
   return useGatedQuery("crm:products:manage", {
     queryKey: queryKeys.crmProducts.list(search ? { search } : undefined),
-    queryFn: () => apiClient.get<ProductsResponse>("/crm/products", search ? { search } : undefined),
+    queryFn: ({ signal }) => apiClient.get<ProductsResponse>("/crm/products", search ? { search } : undefined, signal),
     staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,
   });

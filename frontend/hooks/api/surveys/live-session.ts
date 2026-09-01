@@ -56,7 +56,7 @@ export function useCreateLiveSession(surveyId: number) {
 export function useLiveSession(sessionId: number) {
   return useQuery({
     queryKey: queryKeys.surveys.liveSession(sessionId),
-    queryFn: () => apiClient.get<SurveyLiveSession>(`/surveys/live-sessions/${sessionId}`),
+    queryFn: ({ signal }) => apiClient.get<SurveyLiveSession>(`/surveys/live-sessions/${sessionId}`, undefined, signal),
     refetchInterval: LIVE_POLL_INTERVAL,
   });
 }
@@ -64,7 +64,7 @@ export function useLiveSession(sessionId: number) {
 export function useLiveSessionResults(sessionId: number) {
   return useQuery({
     queryKey: [...queryKeys.surveys.liveSession(sessionId), "results"],
-    queryFn: () => apiClient.get<LiveSessionResults>(`/surveys/live-sessions/${sessionId}/results`),
+    queryFn: ({ signal }) => apiClient.get<LiveSessionResults>(`/surveys/live-sessions/${sessionId}/results`, undefined, signal),
     refetchInterval: LIVE_POLL_INTERVAL,
   });
 }
@@ -94,7 +94,7 @@ export function useEndLiveSession() {
 export function usePublicLiveSession(sessionCode: string) {
   return useQuery({
     queryKey: queryKeys.surveys.publicLiveSession(sessionCode),
-    queryFn: () => apiClient.get<PublicLiveSession>(`/public/surveys/live/${sessionCode}`),
+    queryFn: ({ signal }) => apiClient.get<PublicLiveSession>(`/public/surveys/live/${sessionCode}`, undefined, signal),
     enabled: Boolean(sessionCode),
     refetchInterval: LIVE_POLL_INTERVAL,
     retry: false,

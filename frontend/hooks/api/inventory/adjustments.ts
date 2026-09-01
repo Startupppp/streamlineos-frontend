@@ -86,12 +86,12 @@ export function useAdjustments(filters?: { page?: number; limit?: number; status
   const canView = useCan("inventory:stock:read");
   return useQuery<AdjustmentsResult, Error>({
     queryKey: queryKeys.inventory.adjustments(filters),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const res = await apiClient.get<RawAdjustmentsResponse>("/inventory/stock/adjustments", {
         page: filters?.page,
         limit: filters?.limit,
         status: filters?.status,
-      });
+      }, signal);
       return {
         items: res.items.map(toAdjustmentListItem),
         total: res.total,
@@ -108,7 +108,7 @@ export function useAdjustmentDetail(adjustmentId: number) {
   const canView = useCan("inventory:stock:read");
   return useQuery<AdjustmentDetail, Error>({
     queryKey: [...queryKeys.inventory.adjustments(), adjustmentId] as const,
-    queryFn: () => apiClient.get<AdjustmentDetail>(`/inventory/stock/adjustments/${adjustmentId}`),
+    queryFn: ({ signal }) => apiClient.get<AdjustmentDetail>(`/inventory/stock/adjustments/${adjustmentId}`, undefined, signal),
     enabled: canView && adjustmentId > 0,
     staleTime: 60_000,
   });

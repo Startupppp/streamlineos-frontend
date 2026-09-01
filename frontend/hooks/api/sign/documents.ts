@@ -8,7 +8,7 @@ import type { SignDocument } from "@/types/sign";
 export function useSignDocumentPreview(documentId: number | undefined) {
   return useQuery({
     queryKey: queryKeys.signDocuments.preview(documentId ?? 0),
-    queryFn: () => apiClient.get<{ url: string; expiresInSeconds: number }>(`/sign/documents/${documentId}/preview`),
+    queryFn: ({ signal }) => apiClient.get<{ url: string; expiresInSeconds: number }>(`/sign/documents/${documentId}/preview`, undefined, signal),
     enabled: documentId !== undefined,
     staleTime: 60_000,
   });

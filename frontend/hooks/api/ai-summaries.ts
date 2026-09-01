@@ -8,8 +8,8 @@ import type { SnapshotWithDiff, SaveSnapshotPayload, AiSummarySnapshot } from "@
 export function useLatestSnapshot(entityType: string, entityId: string) {
   return useQuery({
     queryKey: queryKeys.aiSummaries.latest(entityType, entityId),
-    queryFn: () =>
-      apiClient.get<SnapshotWithDiff | null>(`/ai/summaries/${entityType}/${entityId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<SnapshotWithDiff | null>(`/ai/summaries/${entityType}/${entityId}`, undefined, signal),
     staleTime: 2 * 60_000,
   });
 }

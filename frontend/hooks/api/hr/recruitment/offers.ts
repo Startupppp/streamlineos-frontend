@@ -106,8 +106,8 @@ export function useAllOffers(params?: AllOffersParams) {
 export function useOfferVersions(candidateId: number, offerId: number) {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "offerVersions", offerId] as const,
-    queryFn: () =>
-      apiClient.get<OfferVersion[]>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/versions`),
+    queryFn: ({ signal }) =>
+      apiClient.get<OfferVersion[]>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/versions`, undefined, signal),
     enabled: candidateId > 0 && offerId > 0,
     staleTime: 60_000,
   });
@@ -116,8 +116,8 @@ export function useOfferVersions(candidateId: number, offerId: number) {
 export function useOfferNegotiations(candidateId: number, offerId: number) {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "offerNegotiations", offerId] as const,
-    queryFn: () =>
-      apiClient.get<OfferNegotiation[]>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/negotiations`),
+    queryFn: ({ signal }) =>
+      apiClient.get<OfferNegotiation[]>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/negotiations`, undefined, signal),
     enabled: candidateId > 0 && offerId > 0,
     staleTime: 30_000,
   });
@@ -152,8 +152,8 @@ export function useRespondToNegotiation(candidateId: number) {
 export function useCandidateOffers(candidateId: number) {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "candidateOffers", candidateId] as const,
-    queryFn: () =>
-      apiClient.get<CandidateOffer[]>(`/hr/recruitment/candidates/${candidateId}/offers`),
+    queryFn: ({ signal }) =>
+      apiClient.get<CandidateOffer[]>(`/hr/recruitment/candidates/${candidateId}/offers`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: candidateId > 0,
   });

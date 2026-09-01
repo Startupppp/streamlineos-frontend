@@ -50,7 +50,7 @@ export interface ParticipantImportRow {
 export function useParticipants(surveyId: number, params?: ListParticipantsParams) {
   return useQuery({
     queryKey: queryKeys.surveys.participants(surveyId, params as Record<string, unknown>),
-    queryFn: () => apiClient.get<SurveyParticipant[]>(`/surveys/${surveyId}/participants`, params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get<SurveyParticipant[]>(`/surveys/${surveyId}/participants`, params as Record<string, unknown>, signal),
     staleTime: 15_000,
   });
 }

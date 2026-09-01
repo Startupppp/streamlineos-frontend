@@ -247,4 +247,7 @@ export type ExtendedPermissionKey =
   | "workflows:workflows:update"
   | "workflows:workflows:view"
   | "timesheets:access:view"
-  | "timesheets:access:manage";
+  | "timesheets:access:manage"
+  | "storage:files:manage"
+  | "storage:quarantine:manage"
+  | "storage:quarantine:view";

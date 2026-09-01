@@ -172,7 +172,7 @@ export function FnfPageClient() {
   const qc = useQueryClient();
   const { data: items, isLoading, isError, refetch } = useQuery({
     queryKey: fnfKeys.list(),
-    queryFn: () => apiClient.get<FnfSettlement[]>("/hr/fnf"),
+    queryFn: ({ signal }) => apiClient.get<FnfSettlement[]>("/hr/fnf", undefined, signal),
   });
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 

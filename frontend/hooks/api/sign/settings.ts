@@ -8,7 +8,7 @@ import type { SignOrgSettings, SignWatermarkPolicy } from "@/types/sign";
 export function useSignSettings() {
   return useQuery({
     queryKey: queryKeys.signAdmin.settings(),
-    queryFn: () => apiClient.get<SignOrgSettings>("/sign/admin/settings"),
+    queryFn: ({ signal }) => apiClient.get<SignOrgSettings>("/sign/admin/settings", undefined, signal),
     staleTime: 60_000,
   });
 }
@@ -25,7 +25,7 @@ export function useUpdateSignSettings() {
 export function useSignWatermarkPolicies() {
   return useQuery({
     queryKey: queryKeys.signAdmin.watermarkPolicies(),
-    queryFn: () => apiClient.get<SignWatermarkPolicy[]>("/sign/admin/watermark-policies"),
+    queryFn: ({ signal }) => apiClient.get<SignWatermarkPolicy[]>("/sign/admin/watermark-policies", undefined, signal),
     staleTime: 60_000,
   });
 }

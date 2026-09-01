@@ -3,7 +3,6 @@
 import { useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
@@ -16,6 +15,11 @@ import {
 } from "@/components/ui/select";
 import { Loader2, CheckCircle2, Send } from "lucide-react";
 import { buildUrl } from "@/lib/api-client";
+import {
+  intakeFormSchema,
+  type IntakeFormValues,
+  type IntakeFormOutput,
+} from "@/features/build/intake/public-intake-schema";
 
 const PRIORITY_OPTIONS = [
   { value: "low", label: "Low" },
@@ -31,21 +35,6 @@ const REQUEST_TYPE_OPTIONS = [
   { value: "question", label: "Question" },
   { value: "other", label: "Other" },
 ] as const;
-
-const intakeFormSchema = z.object({
-  title: z.string().min(1, "Request title is required").max(200, "Title must be 200 characters or fewer"),
-  description: z.string().max(5000, "Description must be 5000 characters or fewer").optional(),
-  submitterName: z.string().max(200, "Name must be 200 characters or fewer").optional(),
-  submitterEmail: z
-    .union([z.string().email("Please enter a valid email address"), z.literal("")])
-    .optional()
-    .transform((v) => (v === "" ? undefined : v)),
-  priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
-  requestType: z.enum(["bug", "feature", "task", "question", "other"]).optional(),
-});
-
-type IntakeFormValues = z.input<typeof intakeFormSchema>;
-type IntakeFormOutput = z.output<typeof intakeFormSchema>;
 
 interface IntakeResponse {
   id: number;

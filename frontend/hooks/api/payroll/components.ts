@@ -45,7 +45,7 @@ export function usePayrollComponents(params?: ComponentListParams) {
   const canView = useCan("payroll:components:view");
   return useQuery({
     queryKey: queryKeys.payroll.components(params as Record<string, unknown> | undefined),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PaginatedResult<SalaryComponent>>(
         "/payroll/components",
         params as Record<string, unknown> | undefined,

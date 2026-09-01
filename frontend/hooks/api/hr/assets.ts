@@ -37,7 +37,7 @@ export function useHrAssetList(params?: HrAssetListParams) {
   };
   return useQuery({
     queryKey: queryKeys.hr.assets(queryParams),
-    queryFn: () => apiClient.get<HrAssetListResponse>("/hr/assets", queryParams),
+    queryFn: ({ signal }) => apiClient.get<HrAssetListResponse>("/hr/assets", queryParams, signal),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
     enabled: canAssets,

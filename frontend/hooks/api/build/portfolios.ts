@@ -26,7 +26,7 @@ export function usePortfolios(filters?: ListFilters) {
   if (filters?.status) params["status"] = filters.status;
   return useQuery<PortfoliosPage>({
     queryKey: queryKeys.projects.portfolios.list(Object.keys(params).length > 0 ? params : undefined),
-    queryFn: () => apiClient.get<PortfoliosPage>("/build/portfolios", params),
+    queryFn: ({ signal }) => apiClient.get<PortfoliosPage>("/build/portfolios", params, signal),
     enabled: canView,
     staleTime: 60_000,
   });
@@ -35,7 +35,7 @@ export function usePortfolios(filters?: ListFilters) {
 export function usePortfolio(id: number) {
   return useQuery<PortfolioDetail>({
     queryKey: queryKeys.projects.portfolios.detail(id),
-    queryFn: () => apiClient.get<PortfolioDetail>(`/build/portfolios/${id}`),
+    queryFn: ({ signal }) => apiClient.get<PortfolioDetail>(`/build/portfolios/${id}`, undefined, signal),
     enabled: !!id,
     staleTime: 60_000,
   });

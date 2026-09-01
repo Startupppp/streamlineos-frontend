@@ -3,7 +3,6 @@
 import { use, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { AnimatePresence } from "framer-motion";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -46,6 +45,10 @@ import {
 } from "@/features/build/shared/pm-chrome";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { WebhookCard } from "@/features/build/settings/webhook-card";
+import {
+  webhookSchema,
+  type WebhookFormValues,
+} from "@/features/build/webhooks/webhook-schema";
 
 const WEBHOOK_EVENTS = [
   { value: "ticket.created", label: "Ticket Created" },
@@ -58,14 +61,6 @@ const WEBHOOK_EVENTS = [
   { value: "member.added", label: "Member Added" },
   { value: "member.removed", label: "Member Removed" },
 ];
-
-const schema = z.object({
-  url: z.string().url("Must be a valid URL starting with https://"),
-  events: z.array(z.string()).min(1, "Select at least one event"),
-  secret: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof schema>;
 
 function AddWebhookButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -90,13 +85,13 @@ export default function WebhooksPage({ params }: PageProps) {
   const createWebhook = useCreateWebhook(projectId);
   const deleteWebhook = useDeleteWebhook(projectId);
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const form = useForm<WebhookFormValues>({
+    resolver: zodResolver(webhookSchema),
     defaultValues: { url: "", events: [], secret: "" },
   });
 
   const handleSubmit = useCallback(
-    (values: FormValues) => {
+    (values: WebhookFormValues) => {
       createWebhook.mutate(
         { url: values.url, events: values.events, secret: values.secret || undefined },
         {

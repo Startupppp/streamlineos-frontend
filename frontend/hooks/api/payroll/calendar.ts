@@ -14,7 +14,7 @@ export function usePayrollCalendar(params: { from: string; to: string }) {
   const canView = useCan("payroll:runs:view");
   return useQuery({
     queryKey: queryKeys.payroll.calendar({ from: params.from, to: params.to }),
-    queryFn: () => apiClient.get<PayrollCalendarEvent[]>("/payroll/calendar", params),
+    queryFn: ({ signal }) => apiClient.get<PayrollCalendarEvent[]>("/payroll/calendar", params, signal),
     staleTime: 5 * 60_000,
     enabled: canView && !!params.from && !!params.to,
   });

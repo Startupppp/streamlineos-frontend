@@ -26,8 +26,8 @@ export function useHrTemplates(params?: ListParams) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.hrTemplates(params as Record<string, unknown> | undefined),
-    queryFn: () =>
-      apiClient.get<TemplateListResponse>("/hr/templates", params as Record<string, unknown> | undefined),
+    queryFn: ({ signal }) =>
+      apiClient.get<TemplateListResponse>("/hr/templates", params as Record<string, unknown> | undefined, signal),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
     enabled: hrEnabled && canView,
@@ -39,7 +39,7 @@ export function useHrTemplate(templateId: number) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.hrTemplate(templateId),
-    queryFn: () => apiClient.get<HrTemplate>(`/hr/templates/${templateId}`),
+    queryFn: ({ signal }) => apiClient.get<HrTemplate>(`/hr/templates/${templateId}`, undefined, signal),
     staleTime: 60_000,
     enabled: hrEnabled && canView && !!templateId,
   });
@@ -50,7 +50,7 @@ export function useHrTemplateVariables() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.hrTemplateVariables(),
-    queryFn: () => apiClient.get<TemplateVariable[]>("/hr/templates/variables"),
+    queryFn: ({ signal }) => apiClient.get<TemplateVariable[]>("/hr/templates/variables", undefined, signal),
     staleTime: 10 * 60_000,
     enabled: hrEnabled && canView,
   });

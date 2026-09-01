@@ -38,7 +38,7 @@ export function useReservations(filters?: ReservationsFilters) {
   const canView = useCan("inventory:stock:read");
   return useQuery<ReservationsResult, Error>({
     queryKey: queryKeys.inventory.reservations(filters as Record<string, unknown>),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ReservationsResult>("/inventory/stock/reservations", {
         ...(filters?.sourceType ? { sourceType: filters.sourceType } : {}),
         ...(filters?.status ? { status: filters.status } : {}),
@@ -46,7 +46,7 @@ export function useReservations(filters?: ReservationsFilters) {
         ...(filters?.warehouseId ? { warehouseId: filters.warehouseId } : {}),
         ...(filters?.page !== undefined ? { page: filters.page } : {}),
         ...(filters?.limit !== undefined ? { limit: filters.limit } : {}),
-      }),
+      }, signal),
     staleTime: 60_000,
     refetchInterval: 60_000,
     refetchIntervalInBackground: false,

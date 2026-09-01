@@ -29,7 +29,7 @@ export function useReimbursements() {
   const payrollEnabled = useModuleEnabled("payroll");
   return useQuery({
     queryKey: reimbursementKeys.list(),
-    queryFn: () => apiClient.get<Reimbursement[]>("/hr/reimbursements"),
+    queryFn: ({ signal }) => apiClient.get<Reimbursement[]>("/hr/reimbursements", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canPayroll && payrollEnabled,
   });

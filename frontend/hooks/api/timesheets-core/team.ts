@@ -27,8 +27,8 @@ export function useTeamWeekSummary(
   const params = { userIds: userIds.join(","), startDate, endDate };
   return useQuery({
     queryKey: queryKeys.timesheets.teamWeekSummary(params),
-    queryFn: () =>
-      apiClient.get<TeamWeekSummaryResponse>("/timesheets/team/week-summary", params),
+    queryFn: ({ signal }) =>
+      apiClient.get<TeamWeekSummaryResponse>("/timesheets/team/week-summary", params, signal),
     staleTime: 30_000,
     placeholderData: (prev) => prev,
     enabled: enabled && canView && userIds.length > 0,

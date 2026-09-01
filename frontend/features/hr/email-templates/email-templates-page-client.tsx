@@ -114,7 +114,7 @@ export function EmailTemplatesPageClient() {
 
   const { data: templates, isLoading, isError, refetch } = useQuery({
     queryKey: etKeys.list(),
-    queryFn: () => apiClient.get<EmailTemplate[]>("/hr/email-templates"),
+    queryFn: ({ signal }) => apiClient.get<EmailTemplate[]>("/hr/email-templates", undefined, signal),
     enabled: !!orgId,
     staleTime: 60 * 1000,
   });

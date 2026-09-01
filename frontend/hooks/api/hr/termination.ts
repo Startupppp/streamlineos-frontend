@@ -109,9 +109,9 @@ export function useTerminations(params: UseTerminationsParams = {}) {
       limit,
       status: params.status ?? "ALL",
     }),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<TerminationListResponse>(
-        `/hr/termination?${search.toString()}`,
+        `/hr/termination?${search.toString()}`, signal,
       ),
     enabled: hrEnabled && canView,
     staleTime: 2 * 60_000,

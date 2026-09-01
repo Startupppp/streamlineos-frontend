@@ -38,8 +38,8 @@ export function useSimulationCandidates(search: string) {
   const params = { limit: 100, ...(search ? { search } : {}) };
   return useQuery<SimulationCandidatesResult, Error>({
     queryKey: queryKeys.access.simulationCandidates(params),
-    queryFn: () =>
-      apiClient.get<SimulationCandidatesResult>("/roles/simulate/candidates", params),
+    queryFn: ({ signal }) =>
+      apiClient.get<SimulationCandidatesResult>("/roles/simulate/candidates", params, signal),
     enabled: !!orgId && canManageRbac,
     staleTime: 30_000,
   });
@@ -51,8 +51,8 @@ export function useSimulateAccess(targetUserId: string | undefined) {
   const canManageRbac = useCan("settings:rbac:manage");
   return useQuery<SimulateAccessResult, Error>({
     queryKey: queryKeys.access.simulate(targetUserId ?? ""),
-    queryFn: () =>
-      apiClient.get<SimulateAccessResult>(`/roles/simulate/${targetUserId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<SimulateAccessResult>(`/roles/simulate/${targetUserId}`, undefined, signal),
     enabled: !!orgId && canManageRbac && !!targetUserId,
     staleTime: 30 * 1000,
   });

@@ -20,8 +20,8 @@ export function useRunInputs(runId: number, params?: { userId?: string }) {
   const canView = useCan("payroll:runs:view");
   return useQuery({
     queryKey: queryKeys.payroll.runInputs(runId, params as Record<string, unknown> | undefined),
-    queryFn: () =>
-      apiClient.get<RunInput[]>(`/payroll/runs/${runId}/inputs`, params),
+    queryFn: ({ signal }) =>
+      apiClient.get<RunInput[]>(`/payroll/runs/${runId}/inputs`, params, signal),
     staleTime: 30_000,
     enabled: canView && runId > 0,
   });

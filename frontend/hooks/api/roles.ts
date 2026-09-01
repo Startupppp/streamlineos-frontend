@@ -42,10 +42,10 @@ export const useRoles = (
   const canManage = useCan("settings:rbac:manage");
   return useQuery<Role[], Error>({
     queryKey: queryKeys.roles.selectorList(),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const response = await apiClient.get<PaginatedRolesResponse>(
         "/roles",
-        ROLE_SELECTOR_PARAMS,
+        ROLE_SELECTOR_PARAMS, signal,
       );
       return response.data;
     },
@@ -65,12 +65,12 @@ export const usePaginatedRoles = (
   const canManage = useCan("settings:rbac:manage");
   return useQuery<PaginatedRolesResponse, Error>({
     queryKey: queryKeys.roles.list(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PaginatedRolesResponse>("/roles", {
         cursor: params.cursor,
         limit: params.limit,
         search: params.search,
-      }),
+      }, signal),
     staleTime: 60_000,
     ...options,
     enabled: canManage && (options?.enabled ?? true),
@@ -87,7 +87,7 @@ export const useRole = (
   const canManage = useCan("settings:rbac:manage");
   return useQuery<Role, Error>({
     queryKey: queryKeys.roles.detail(id),
-    queryFn: () => apiClient.get<Role>(`/roles/${id}`),
+    queryFn: ({ signal }) => apiClient.get<Role>(`/roles/${id}`, undefined, signal),
     staleTime: 30 * 60_000,
     ...options,
     enabled: canManage && id > 0 && (options?.enabled ?? true),
@@ -162,8 +162,8 @@ export const useRolePermissionGrants = (
   const canManage = useCan("settings:rbac:manage");
   return useQuery<RolePermissionGrant[], Error>({
     queryKey: queryKeys.roles.permissions(roleId),
-    queryFn: () =>
-      apiClient.get<RolePermissionGrant[]>(`/roles/${roleId}/permissions`),
+    queryFn: ({ signal }) =>
+      apiClient.get<RolePermissionGrant[]>(`/roles/${roleId}/permissions`, undefined, signal),
     staleTime: 5 * 60_000,
     ...options,
     enabled: canManage && roleId > 0 && (options?.enabled ?? true),
@@ -200,7 +200,7 @@ export const useRoleMembers = (
   const canManage = useCan("settings:rbac:manage");
   return useQuery<RoleMember[], Error>({
     queryKey: queryKeys.roles.members(roleId),
-    queryFn: () => apiClient.get<RoleMember[]>(`/roles/${roleId}/members`),
+    queryFn: ({ signal }) => apiClient.get<RoleMember[]>(`/roles/${roleId}/members`, undefined, signal),
     staleTime: 5 * 60_000,
     ...options,
     enabled: canManage && roleId > 0 && (options?.enabled ?? true),
@@ -254,7 +254,7 @@ export function useRolesAnalytics(
   const canManage = useCan("settings:rbac:manage");
   return useQuery<RolesAnalytics, Error>({
     queryKey: queryKeys.roles.analytics(),
-    queryFn: () => apiClient.get<RolesAnalytics>("/roles/analytics"),
+    queryFn: ({ signal }) => apiClient.get<RolesAnalytics>("/roles/analytics", undefined, signal),
     staleTime: 2 * 60_000,
     ...options,
     enabled: canManage && (options?.enabled ?? true),
@@ -272,7 +272,7 @@ export function useAssignableDepartments(
   const canManage = useCan("settings:rbac:manage");
   return useQuery<AssignableDepartment[], Error>({
     queryKey: queryKeys.roles.departments(),
-    queryFn: () => apiClient.get<AssignableDepartment[]>("/roles/departments"),
+    queryFn: ({ signal }) => apiClient.get<AssignableDepartment[]>("/roles/departments", undefined, signal),
     staleTime: 5 * 60_000,
     ...options,
     enabled: canManage && (options?.enabled ?? true),

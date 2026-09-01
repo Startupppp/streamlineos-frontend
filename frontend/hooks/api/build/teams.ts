@@ -43,7 +43,7 @@ export function useProjectTeams(params?: {
   if (params?.search) query["search"] = params.search;
   return useQuery<TeamListResponse>({
     queryKey: teamQueryKeys.list(Object.keys(query).length ? query : undefined),
-    queryFn: () => apiClient.get<TeamListResponse>("/build/teams", query),
+    queryFn: ({ signal }) => apiClient.get<TeamListResponse>("/build/teams", query, signal),
     staleTime: 60_000,
   });
 }
@@ -58,8 +58,8 @@ export function useProjectTeamMembers(
   if (params?.pageSize) query["pageSize"] = String(params.pageSize);
   return useQuery<TeamMembersPage>({
     queryKey: teamQueryKeys.members(teamId, Object.keys(query).length ? query : undefined),
-    queryFn: () =>
-      apiClient.get<TeamMembersPage>(`/build/teams/${teamId}/members`, query),
+    queryFn: ({ signal }) =>
+      apiClient.get<TeamMembersPage>(`/build/teams/${teamId}/members`, query, signal),
     enabled: canView && !!teamId,
     staleTime: 60_000,
   });
@@ -68,7 +68,7 @@ export function useProjectTeamMembers(
 export function useProjectTeam(teamId: number) {
   return useQuery<ProjectTeamDetail>({
     queryKey: teamQueryKeys.detail(teamId),
-    queryFn: () => apiClient.get<ProjectTeamDetail>(`/build/teams/${teamId}`),
+    queryFn: ({ signal }) => apiClient.get<ProjectTeamDetail>(`/build/teams/${teamId}`, undefined, signal),
     enabled: !!teamId,
     staleTime: 60_000,
   });
@@ -162,7 +162,7 @@ export function useTeamProjects(
 
   return useQuery<TeamProject[], Error>({
     queryKey: teamQueryKeys.projects(teamId),
-    queryFn: () => apiClient.get<TeamProject[]>(`/build/teams/${teamId}/projects`),
+    queryFn: ({ signal }) => apiClient.get<TeamProject[]>(`/build/teams/${teamId}/projects`, undefined, signal),
     staleTime: 30_000,
     enabled,
     ...restOptions,

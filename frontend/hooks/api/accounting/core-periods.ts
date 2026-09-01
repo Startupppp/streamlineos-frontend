@@ -66,7 +66,7 @@ export function usePeriods() {
   const can = useCan("accounting:periods:read");
   return useQuery<AccountingPeriod[], Error>({
     queryKey: coreKeys.periods(),
-    queryFn: () => apiClient.get<AccountingPeriod[]>("/accounting/periods"),
+    queryFn: ({ signal }) => apiClient.get<AccountingPeriod[]>("/accounting/periods", undefined, signal),
     staleTime: 60_000,
     enabled: can,
   });
@@ -88,8 +88,8 @@ export function usePeriodChecklist(periodId: number, enabled: boolean) {
   const can = useCan("accounting:periods:manage");
   return useQuery<PeriodChecklist, Error>({
     queryKey: coreKeys.periodChecklist(periodId),
-    queryFn: () =>
-      apiClient.get<PeriodChecklist>(`/accounting/periods/${periodId}/close-checklist`),
+    queryFn: ({ signal }) =>
+      apiClient.get<PeriodChecklist>(`/accounting/periods/${periodId}/close-checklist`, undefined, signal),
     staleTime: 30_000,
     enabled: can && enabled && Number.isInteger(periodId) && periodId > 0,
   });
@@ -135,7 +135,7 @@ export function useOpeningBalance() {
   const can = useCan("accounting:accounts:read");
   return useQuery<OpeningBalanceResponse, Error>({
     queryKey: coreKeys.openingBalance(),
-    queryFn: () => apiClient.get<OpeningBalanceResponse>("/accounting/opening-balances"),
+    queryFn: ({ signal }) => apiClient.get<OpeningBalanceResponse>("/accounting/opening-balances", undefined, signal),
     staleTime: 60_000,
     enabled: can,
   });

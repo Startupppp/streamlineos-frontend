@@ -98,7 +98,7 @@ function useInvalidateBuilder(surveyId: number) {
 export function useSurveyBuilder(surveyId: number | undefined) {
   return useQuery({
     queryKey: queryKeys.surveys.builder(surveyId ?? -1),
-    queryFn: () => apiClient.get<SurveyBuilderData>(`/surveys/${surveyId}/builder`),
+    queryFn: ({ signal }) => apiClient.get<SurveyBuilderData>(`/surveys/${surveyId}/builder`, undefined, signal),
     enabled: typeof surveyId === "number",
     staleTime: 10_000,
   });

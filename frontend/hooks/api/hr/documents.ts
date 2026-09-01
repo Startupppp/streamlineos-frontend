@@ -37,7 +37,7 @@ export function useHrDocumentList(params?: HrDocumentListParams) {
   };
   return useQuery({
     queryKey: queryKeys.hr.documents(queryParams),
-    queryFn: () => apiClient.get<HrDocumentListResponse>("/hr/documents", queryParams),
+    queryFn: ({ signal }) => apiClient.get<HrDocumentListResponse>("/hr/documents", queryParams, signal),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
     enabled: hrEnabled && canDocs,
@@ -57,7 +57,7 @@ export function useHrDocumentStats(options?: { enabled?: boolean }) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.documentsStats(),
-    queryFn: () => apiClient.get<HrDocumentStats>("/hr/documents/stats"),
+    queryFn: ({ signal }) => apiClient.get<HrDocumentStats>("/hr/documents/stats", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canDocs && (options?.enabled ?? true),
   });
@@ -84,8 +84,8 @@ export function useHrDocumentExpiry(
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.documentsExpiry(days),
-    queryFn: () =>
-      apiClient.get<HrDocumentExpiryResponse>("/hr/document-expiry", { days }),
+    queryFn: ({ signal }) =>
+      apiClient.get<HrDocumentExpiryResponse>("/hr/document-expiry", { days }, signal),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canDocs && (options?.enabled ?? true),
   });
@@ -121,8 +121,8 @@ export function useMyOnboardingDocs(options?: { enabled?: boolean }) {
   const params = { limit: MY_DOCS_LIMIT };
   return useQuery({
     queryKey: queryKeys.hr.onboardingDocs(params),
-    queryFn: () =>
-      apiClient.get<MyOnboardingDocsResponse>("/hr/onboarding-docs/me", params),
+    queryFn: ({ signal }) =>
+      apiClient.get<MyOnboardingDocsResponse>("/hr/onboarding-docs/me", params, signal),
     staleTime: 60_000,
     enabled: canView && (options?.enabled ?? true),
   });
@@ -138,20 +138,20 @@ export function useMissingOnboardingDocsCount(options?: { enabled?: boolean }) {
 
   const totalQuery = useQuery({
     queryKey: queryKeys.hr.onboardingDocsSummary({ limit: 1 }),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<OnboardingDocsSummaryTotals>("/hr/onboarding-docs/summary", {
         limit: 1,
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     enabled,
   });
   const approvedQuery = useQuery({
     queryKey: queryKeys.hr.onboardingDocsSummary({ limit: 1, status: "APPROVED" }),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<OnboardingDocsSummaryTotals>("/hr/onboarding-docs/summary", {
         limit: 1,
         status: "APPROVED",
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     enabled,
   });

@@ -145,7 +145,7 @@ interface SubmitKbFeedbackInput {
 export function useSupportKbCategories(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.supportKb.categories(),
-    queryFn: () => apiClient.get<KbCategory[]>("/support/kb/categories"),
+    queryFn: ({ signal }) => apiClient.get<KbCategory[]>("/support/kb/categories", undefined, signal),
     staleTime: 60_000,
     enabled: options?.enabled ?? true,
   });
@@ -188,7 +188,7 @@ export function useSupportKbArticles(params?: KbArticlesParams, options?: { enab
   const queryParams: Record<string, unknown> = { ...params };
   return useQuery({
     queryKey: queryKeys.supportKb.articles(queryParams),
-    queryFn: () => apiClient.get<KbArticleListItem[]>("/support/kb/articles", queryParams),
+    queryFn: ({ signal }) => apiClient.get<KbArticleListItem[]>("/support/kb/articles", queryParams, signal),
     staleTime: 30_000,
     enabled: options?.enabled ?? true,
     placeholderData: keepPreviousData,
@@ -198,7 +198,7 @@ export function useSupportKbArticles(params?: KbArticlesParams, options?: { enab
 export function useSupportKbArticle(id: number) {
   return useQuery({
     queryKey: queryKeys.supportKb.article(id),
-    queryFn: () => apiClient.get<KbArticleDetail>(`/support/kb/articles/${id}`),
+    queryFn: ({ signal }) => apiClient.get<KbArticleDetail>(`/support/kb/articles/${id}`, undefined, signal),
     enabled: Number.isFinite(id) && id > 0,
     staleTime: 15_000,
   });
@@ -207,7 +207,7 @@ export function useSupportKbArticle(id: number) {
 export function useSupportKbArticleFeedback(id: number) {
   return useQuery({
     queryKey: [...queryKeys.supportKb.article(id), "feedback"] as const,
-    queryFn: () => apiClient.get<KbArticleFeedbackItem[]>(`/support/kb/articles/${id}/feedback`),
+    queryFn: ({ signal }) => apiClient.get<KbArticleFeedbackItem[]>(`/support/kb/articles/${id}/feedback`, undefined, signal),
     enabled: Number.isFinite(id) && id > 0,
     staleTime: 30_000,
   });

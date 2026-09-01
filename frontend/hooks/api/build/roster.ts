@@ -41,7 +41,7 @@ export function useProjectRoster(
 
   return useQuery<ProjectRoster, Error>({
     queryKey: rosterQueryKeys.detail(projectId),
-    queryFn: () => apiClient.get<ProjectRoster>(`/build/${projectId}/roster`),
+    queryFn: ({ signal }) => apiClient.get<ProjectRoster>(`/build/${projectId}/roster`, undefined, signal),
     staleTime: 30_000,
     enabled,
     ...restOptions,

@@ -170,8 +170,8 @@ export function useTicketRelations(ticketId: number, projectId: number) {
   const canView = useCan("build:tickets:view");
   return useQuery({
     queryKey: queryKeys.projects.ticketRelations(ticketId),
-    queryFn: () =>
-      apiClient.get<TicketRelation[]>(`/build/${projectId}/tickets/${ticketId}/relations`),
+    queryFn: ({ signal }) =>
+      apiClient.get<TicketRelation[]>(`/build/${projectId}/tickets/${ticketId}/relations`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canView && !!ticketId && !!projectId,
   });

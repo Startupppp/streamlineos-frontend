@@ -79,7 +79,7 @@ export function useBenefitPlans(query: BenefitPlansQuery = {}) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.benefitPlans(query),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<BenefitsCursorPage<BenefitPlan>>(
         "/hr/benefits/plans",
         query as Record<string, unknown>,
@@ -114,8 +114,8 @@ export function useMyBenefits() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.benefitMy,
-    queryFn: () =>
-      apiClient.get<{ enrollments: BenefitEnrollment[]; dependents: Dependent[] }>("/hr/benefits/my"),
+    queryFn: ({ signal }) =>
+      apiClient.get<{ enrollments: BenefitEnrollment[]; dependents: Dependent[] }>("/hr/benefits/my", undefined, signal),
     staleTime: 60_000,
     enabled: canView && hrEnabled,
   });
@@ -146,7 +146,7 @@ export function useDependents() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.benefitDependents,
-    queryFn: () => apiClient.get<Dependent[]>("/hr/benefits/dependents"),
+    queryFn: ({ signal }) => apiClient.get<Dependent[]>("/hr/benefits/dependents", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canView && hrEnabled,
   });
@@ -186,7 +186,7 @@ export function useInsuranceClaims(query: InsuranceClaimsQuery = {}) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.benefitClaims(query),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<BenefitsCursorPage<InsuranceClaim>>(
         "/hr/benefits/claims",
         query as Record<string, unknown>,

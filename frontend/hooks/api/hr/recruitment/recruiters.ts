@@ -38,7 +38,7 @@ export interface RecruiterActivityEntry {
 export function useRecruiters() {
   return useQuery({
     queryKey: queryKeys.hr.recruiters(),
-    queryFn: () => apiClient.get<RecruiterSummary[]>("/hr/recruitment/recruiters"),
+    queryFn: ({ signal }) => apiClient.get<RecruiterSummary[]>("/hr/recruitment/recruiters", undefined, signal),
     staleTime: 2 * 60_000,
   });
 }

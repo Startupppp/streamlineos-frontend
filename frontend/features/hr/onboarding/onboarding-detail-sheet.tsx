@@ -43,8 +43,8 @@ interface OnboardingDocsResponse {
 function useMyOnboardingDocs() {
   return useQuery<OnboardingDoc[]>({
     queryKey: queryKeys.hr.myOnboardingDocs(),
-    queryFn: async () => {
-      const res = await apiClient.get<OnboardingDocsResponse>("/hr/onboarding-docs", { limit: 100 });
+    queryFn: async ({ signal }) => {
+      const res = await apiClient.get<OnboardingDocsResponse>("/hr/onboarding-docs", { limit: 100 }, signal);
       return res.data;
     },
     staleTime: 60_000,

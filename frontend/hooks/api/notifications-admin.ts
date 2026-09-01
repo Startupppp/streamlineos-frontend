@@ -27,7 +27,7 @@ export const useNotificationProviders = (
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<NotificationProvider[], Error>({
     queryKey: queryKeys.notifications.providers(),
-    queryFn: () => apiClient.get<NotificationProvider[]>("/notifications/admin/providers"),
+    queryFn: ({ signal }) => apiClient.get<NotificationProvider[]>("/notifications/admin/providers", undefined, signal),
     staleTime: 60_000,
     ...restOptions,
     enabled: canView && (enabledOption ?? true),
@@ -87,7 +87,7 @@ export const useNotificationEventCatalog = (
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<NotificationEventDefinition[], Error>({
     queryKey: queryKeys.notifications.events(),
-    queryFn: () => apiClient.get<NotificationEventDefinition[]>("/notifications/admin/events"),
+    queryFn: ({ signal }) => apiClient.get<NotificationEventDefinition[]>("/notifications/admin/events", undefined, signal),
     staleTime: 60_000,
     ...restOptions,
     enabled: canView && (enabledOption ?? true),
@@ -129,7 +129,7 @@ export const useNotificationPolicies = (
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<NotificationPolicyDefault[], Error>({
     queryKey: queryKeys.notifications.policy(),
-    queryFn: () => apiClient.get<NotificationPolicyDefault[]>("/notifications/admin/policy"),
+    queryFn: ({ signal }) => apiClient.get<NotificationPolicyDefault[]>("/notifications/admin/policy", undefined, signal),
     staleTime: 60_000,
     ...restOptions,
     enabled: canView && (enabledOption ?? true),

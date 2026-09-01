@@ -57,7 +57,7 @@ export function useReminderPolicies(params: ListReminderPoliciesParams = {}) {
   const can = useCan("accounting:reminders:read");
   return useQuery<ListResponse<ReminderPolicy>, Error>({
     queryKey: [...arCollectionsKeys.reminders.policies, params] as const,
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ListResponse<ReminderPolicy>>(
         "/accounting/reminders/policies",
         toQuery(params),
@@ -77,7 +77,7 @@ export function useReminderLog(params: ListReminderLogParams = {}) {
   const can = useCan("accounting:reminders:read");
   return useQuery<ListResponse<ReminderLogEntry>, Error>({
     queryKey: arCollectionsKeys.reminders.log(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ListResponse<ReminderLogEntry>>(
         "/accounting/reminders/log",
         toQuery(params),
@@ -91,8 +91,8 @@ export function useCollectionsSummary() {
   const can = useCan("accounting:collections:read");
   return useQuery<CollectionsSummary, Error>({
     queryKey: arCollectionsKeys.collections.summary,
-    queryFn: () =>
-      apiClient.get<CollectionsSummary>("/accounting/collections/summary"),
+    queryFn: ({ signal }) =>
+      apiClient.get<CollectionsSummary>("/accounting/collections/summary", undefined, signal),
     staleTime: 60_000,
     enabled: can,
   });
@@ -108,7 +108,7 @@ export function useCollectionActivities(params: ListCollectionActivitiesParams =
   const can = useCan("accounting:collections:read");
   return useQuery<CursorPage<CollectionActivity>, Error>({
     queryKey: arCollectionsKeys.collections.activities(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPage<CollectionActivity>>(
         "/accounting/collections/activities",
         toQuery(params),

@@ -63,13 +63,13 @@ export default function InvitationPage() {
     isPending: isValidating,
   } = useQuery({
     queryKey: ["invitation", token],
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<{
         email: string;
         organizationName: string;
         role: string;
         userExists: boolean;
-      }>("/organization/invitations/validate", { token }),
+      }>("/organization/invitations/validate", { token }, signal),
     enabled: !!token,
     retry: false,
   });

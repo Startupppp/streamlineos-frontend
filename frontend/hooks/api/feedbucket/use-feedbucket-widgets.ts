@@ -12,7 +12,7 @@ import type {
 export function useFeedbucketWidgets() {
   return useQuery({
     queryKey: queryKeys.feedbucket.widgets(),
-    queryFn: () => apiClient.get<FeedbucketWidget[]>("/feedbucket/widgets"),
+    queryFn: ({ signal }) => apiClient.get<FeedbucketWidget[]>("/feedbucket/widgets", undefined, signal),
     staleTime: 30_000,
   });
 }

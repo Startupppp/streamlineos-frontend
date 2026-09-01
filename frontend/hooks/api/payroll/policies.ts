@@ -62,7 +62,7 @@ export function usePayrollPolicyCurrent() {
   const canView = useCan("payroll:policies:view");
   return useQuery({
     queryKey: queryKeys.payroll.policy(),
-    queryFn: () => apiClient.get<PolicyCurrentResult>("/payroll/policies/current"),
+    queryFn: ({ signal }) => apiClient.get<PolicyCurrentResult>("/payroll/policies/current", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canView,
   });
@@ -72,10 +72,10 @@ export function useToggleImpact(toggle: string, enabled = false) {
   const canView = useCan("payroll:policies:view");
   return useQuery({
     queryKey: queryKeys.payroll.toggleImpact(toggle),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ToggleImpactResult>("/payroll/policies/toggle-impact", {
         toggle,
-      }),
+      }, signal),
     staleTime: 30_000,
     enabled: enabled && !!toggle && canView,
   });
@@ -129,8 +129,8 @@ export function usePolicyVersions(policyId: number, enabled = true) {
   const canView = useCan("payroll:policies:view");
   return useQuery({
     queryKey: queryKeys.payroll.policyVersions(policyId),
-    queryFn: () =>
-      apiClient.get<VersionRow[]>(`/payroll/policies/${policyId}/versions`),
+    queryFn: ({ signal }) =>
+      apiClient.get<VersionRow[]>(`/payroll/policies/${policyId}/versions`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: enabled && policyId > 0 && canView,
   });

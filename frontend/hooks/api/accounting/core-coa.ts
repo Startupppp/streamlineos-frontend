@@ -36,7 +36,7 @@ export function useCoaTree() {
   const can = useCan("accounting:accounts:read");
   return useQuery<{ items: AccountTreeNode[] }, Error>({
     queryKey: coreKeys.coaTree(),
-    queryFn: () => apiClient.get<{ items: AccountTreeNode[] }>("/accounting/coa/tree"),
+    queryFn: ({ signal }) => apiClient.get<{ items: AccountTreeNode[] }>("/accounting/coa/tree", undefined, signal),
     staleTime: 60_000,
     enabled: can,
   });
@@ -46,7 +46,7 @@ export function useCoaTemplates() {
   const can = useCan("accounting:accounts:read");
   return useQuery<{ items: CoaTemplate[] }, Error>({
     queryKey: coreKeys.coaTemplates(),
-    queryFn: () => apiClient.get<{ items: CoaTemplate[] }>("/accounting/coa/templates"),
+    queryFn: ({ signal }) => apiClient.get<{ items: CoaTemplate[] }>("/accounting/coa/templates", undefined, signal),
     staleTime: 300_000,
     enabled: can,
   });
@@ -56,7 +56,7 @@ export function useSetupStatus() {
   const can = useCan("accounting:settings:read");
   return useQuery<{ steps: SetupStep[] }, Error>({
     queryKey: coreKeys.setupStatus(),
-    queryFn: () => apiClient.get<{ steps: SetupStep[] }>("/accounting/settings/setup-status"),
+    queryFn: ({ signal }) => apiClient.get<{ steps: SetupStep[] }>("/accounting/settings/setup-status", undefined, signal),
     staleTime: 60_000,
     enabled: can,
   });

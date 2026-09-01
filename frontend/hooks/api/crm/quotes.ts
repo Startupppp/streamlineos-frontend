@@ -46,7 +46,7 @@ export function useQuotes(params?: QuotesParams) {
 export function useQuoteDetail(id: number) {
   return useGatedQuery("crm:quotes:read", {
     queryKey: queryKeys.crmQuotes.detail(id),
-    queryFn: () => apiClient.get<Quote>(`/quotes/${id}`),
+    queryFn: ({ signal }) => apiClient.get<Quote>(`/quotes/${id}`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: id > 0,
   });
@@ -55,7 +55,7 @@ export function useQuoteDetail(id: number) {
 export function useDealQuotes(dealId: number) {
   return useGatedQuery("crm:quotes:read", {
     queryKey: queryKeys.crmQuotes.byDeal(dealId),
-    queryFn: () => apiClient.get<QuoteListResponse>("/quotes", { dealId, pageSize: 100 }),
+    queryFn: ({ signal }) => apiClient.get<QuoteListResponse>("/quotes", { dealId, pageSize: 100 }, signal),
     staleTime: 2 * 60_000,
     enabled: dealId > 0,
   });

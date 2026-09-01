@@ -12,7 +12,7 @@ export function useRates(enabled = true) {
   const canView = useCan("timesheets:rates:view");
   return useQuery({
     queryKey: queryKeys.timesheets.rates(),
-    queryFn: () => apiClient.get<RatesResponse>("/timesheets/rates"),
+    queryFn: ({ signal }) => apiClient.get<RatesResponse>("/timesheets/rates", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: enabled && canView,
   });

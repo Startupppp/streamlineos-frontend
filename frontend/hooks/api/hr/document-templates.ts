@@ -42,11 +42,11 @@ export function useDocumentTemplates(type?: string) {
   const params = type ? { type } : undefined;
   return useQuery({
     queryKey: queryKeys.hr.documentTemplates(params as Record<string, unknown> | undefined),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<DocumentTemplate[]>(
         "/hr/documents/templates",
         params as Record<string, unknown> | undefined
-      ),
+      , signal),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canView,
   });
@@ -57,8 +57,8 @@ export function useDocumentTemplate(templateId: number) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.documentTemplate(templateId),
-    queryFn: () =>
-      apiClient.get<DocumentTemplate>(`/hr/documents/templates/${templateId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<DocumentTemplate>(`/hr/documents/templates/${templateId}`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && templateId > 0 && canView,
   });
@@ -125,10 +125,10 @@ export function useDocumentTemplateVersions(templateId: number) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.documentTemplate(templateId), "versions"],
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<DocumentTemplateVersion[]>(
         `/hr/documents/templates/${templateId}/versions`
-      ),
+      , undefined, signal),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && !!templateId && canView,
   });

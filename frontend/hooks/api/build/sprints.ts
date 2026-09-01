@@ -18,8 +18,8 @@ export function useSprints(
   const canView = useCan("build:sprints:view");
   return useQuery<Sprint[]>({
     queryKey: queryKeys.projects.sprints(projectId),
-    queryFn: () =>
-      apiClient.get<Sprint[]>(`/build/${projectId}/sprints`),
+    queryFn: ({ signal }) =>
+      apiClient.get<Sprint[]>(`/build/${projectId}/sprints`, undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
     ...options,

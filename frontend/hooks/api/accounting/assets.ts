@@ -61,7 +61,7 @@ export function useAssetCategories(params: ListCategoriesParams = {}) {
   const can = useCan("accounting:assets:read");
   return useQuery<CursorPage<AssetCategory>, Error>({
     queryKey: assetKeys.categories(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPage<AssetCategory>>("/accounting/assets/categories", toQuery(params)),
     staleTime: 120_000,
     enabled: can,
@@ -95,7 +95,7 @@ export function useAssets(params: ListAssetsParams = {}) {
   const can = useCan("accounting:assets:read");
   return useQuery<CursorPage<AssetListItem>, Error>({
     queryKey: assetKeys.assets(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPage<AssetListItem>>("/accounting/assets", toQuery(params)),
     staleTime: 60_000,
     enabled: can,
@@ -117,7 +117,7 @@ export function useAsset(assetId: number) {
   const can = useCan("accounting:assets:read");
   return useQuery<AssetDetail, Error>({
     queryKey: assetKeys.asset(assetId),
-    queryFn: () => apiClient.get<AssetDetail>(`/accounting/assets/${assetId}`),
+    queryFn: ({ signal }) => apiClient.get<AssetDetail>(`/accounting/assets/${assetId}`, undefined, signal),
     staleTime: 30_000,
     enabled: can && assetId > 0,
   });
@@ -163,7 +163,7 @@ export function useDepreciationRuns(params: ListRunsParams = {}) {
   const can = useCan("accounting:assets:read");
   return useQuery<CursorPage<DepreciationRun>, Error>({
     queryKey: assetKeys.runs(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPage<DepreciationRun>>("/accounting/assets/depreciation/runs", toQuery(params)),
     staleTime: 60_000,
     enabled: can,

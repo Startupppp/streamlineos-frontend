@@ -49,7 +49,7 @@ const streamKeys = {
 export function useHrEvents(params: ListEventsParams = {}) {
   return useQuery({
     queryKey: streamKeys.list(params),
-    queryFn: () => apiClient.get<PaginatedResult<HrEvent>>(`${BASE}/events`, params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get<PaginatedResult<HrEvent>>(`${BASE}/events`, params as Record<string, unknown>),
     staleTime: 30_000,
   });
 }
@@ -57,7 +57,7 @@ export function useHrEvents(params: ListEventsParams = {}) {
 export function useHrEventDataDictionary() {
   return useQuery({
     queryKey: streamKeys.dictionary,
-    queryFn: () => apiClient.get<{ catalog: EventCatalogEntry[]; immutable: boolean }>(`${BASE}/data-dictionary`),
+    queryFn: ({ signal }) => apiClient.get<{ catalog: EventCatalogEntry[]; immutable: boolean }>(`${BASE}/data-dictionary`, undefined, signal),
     staleTime: 300_000,
   });
 }
@@ -65,7 +65,7 @@ export function useHrEventDataDictionary() {
 export function useHrMetricDefinitions() {
   return useQuery({
     queryKey: streamKeys.metrics,
-    queryFn: () => apiClient.get<{ metrics: Array<{ name: string; description: string; aggregation: string }> }>(`${BASE}/metric-definitions`),
+    queryFn: ({ signal }) => apiClient.get<{ metrics: Array<{ name: string; description: string; aggregation: string }> }>(`${BASE}/metric-definitions`),
     staleTime: 300_000,
   });
 }

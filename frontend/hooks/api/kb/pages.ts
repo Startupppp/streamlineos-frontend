@@ -112,7 +112,7 @@ export function useKbPagesTree() {
   const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pagesTree(),
-    queryFn: () => apiClient.get<KbPageTreeNode[]>("/kb/pages/tree"),
+    queryFn: ({ signal }) => apiClient.get<KbPageTreeNode[]>("/kb/pages/tree", undefined, signal),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -122,7 +122,7 @@ export function useKbProjectPagesTree(projectId: number) {
   const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pagesTreeByProject(projectId),
-    queryFn: () => apiClient.get<KbPageTreeNode[]>("/kb/pages/tree", { projectId }),
+    queryFn: ({ signal }) => apiClient.get<KbPageTreeNode[]>("/kb/pages/tree", { projectId }, signal),
     staleTime: 30_000,
     enabled: canView && Number.isFinite(projectId) && projectId > 0,
   });
@@ -132,7 +132,7 @@ export function useKbPagesRecent() {
   const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pagesRecent(),
-    queryFn: () => apiClient.get<KbPageListItem[]>("/kb/pages/recent"),
+    queryFn: ({ signal }) => apiClient.get<KbPageListItem[]>("/kb/pages/recent", undefined, signal),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -142,7 +142,7 @@ export function useKbPagesFavorites() {
   const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pagesFavorites(),
-    queryFn: () => apiClient.get<KbPageListItem[]>("/kb/pages/favorites"),
+    queryFn: ({ signal }) => apiClient.get<KbPageListItem[]>("/kb/pages/favorites", undefined, signal),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -152,7 +152,7 @@ export function useKbPagesTrash() {
   const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pagesTrash(),
-    queryFn: () => apiClient.get<KbPage[]>("/kb/pages/trash"),
+    queryFn: ({ signal }) => apiClient.get<KbPage[]>("/kb/pages/trash", undefined, signal),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -162,7 +162,7 @@ export function useKbPagesSearch(q: string) {
   const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pagesSearch(q),
-    queryFn: () => apiClient.get<KbPageSearchResult[]>("/kb/pages/search", { q }),
+    queryFn: ({ signal }) => apiClient.get<KbPageSearchResult[]>("/kb/pages/search", { q }, signal),
     staleTime: 0,
     enabled: canView && q.length > 0,
   });
@@ -172,7 +172,7 @@ export function useKbPage(pageId: number) {
   const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.page(pageId),
-    queryFn: () => apiClient.get<KbPageDetail>(`/kb/pages/${pageId}`),
+    queryFn: ({ signal }) => apiClient.get<KbPageDetail>(`/kb/pages/${pageId}`, undefined, signal),
     staleTime: 15_000,
     enabled: canView && Number.isFinite(pageId) && pageId > 0,
   });
@@ -182,7 +182,7 @@ export function useKbPageBacklinks(pageId: number) {
   const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pageBacklinks(pageId),
-    queryFn: () => apiClient.get<KbPageBacklink[]>(`/kb/pages/${pageId}/backlinks`),
+    queryFn: ({ signal }) => apiClient.get<KbPageBacklink[]>(`/kb/pages/${pageId}/backlinks`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && Number.isFinite(pageId) && pageId > 0,
   });
@@ -192,7 +192,7 @@ export function useKbPageVersions(pageId: number) {
   const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pageVersions(pageId),
-    queryFn: () => apiClient.get<KbPageVersion[]>(`/kb/pages/${pageId}/versions`),
+    queryFn: ({ signal }) => apiClient.get<KbPageVersion[]>(`/kb/pages/${pageId}/versions`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && Number.isFinite(pageId) && pageId > 0,
   });
@@ -202,7 +202,7 @@ export function useKbPageVersion(pageId: number, versionNumber: number) {
   const canView = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pageVersion(pageId, versionNumber),
-    queryFn: () => apiClient.get<KbPageVersion>(`/kb/pages/${pageId}/versions/${versionNumber}`),
+    queryFn: ({ signal }) => apiClient.get<KbPageVersion>(`/kb/pages/${pageId}/versions/${versionNumber}`, undefined, signal),
     staleTime: 300_000,
     enabled:
       canView &&

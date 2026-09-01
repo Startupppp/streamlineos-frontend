@@ -9,7 +9,7 @@ import type { CrmInboxCounts, CrmInboxResponse } from "@/types/crm";
 export function useInbox() {
   return useGatedQuery("crm:leads:view", {
     queryKey: queryKeys.crmInbox.data(),
-    queryFn: () => apiClient.get<CrmInboxResponse>("/crm/inbox"),
+    queryFn: ({ signal }) => apiClient.get<CrmInboxResponse>("/crm/inbox", undefined, signal),
     staleTime: 65_000,
     refetchInterval: 60_000,
   });
@@ -18,7 +18,7 @@ export function useInbox() {
 export function useInboxCounts() {
   return useGatedQuery("crm:leads:view", {
     queryKey: queryKeys.crmInbox.counts(),
-    queryFn: () => apiClient.get<CrmInboxCounts>("/crm/inbox/counts"),
+    queryFn: ({ signal }) => apiClient.get<CrmInboxCounts>("/crm/inbox/counts", undefined, signal),
     staleTime: 65_000,
     refetchInterval: 60_000,
   });

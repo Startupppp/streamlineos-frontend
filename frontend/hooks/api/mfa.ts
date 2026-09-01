@@ -6,7 +6,7 @@ import { queryKeys } from "@/lib/query-keys";
 export function useMfaStatus() {
   return useQuery({
     queryKey: queryKeys.mfa.status(),
-    queryFn: () => apiClient.get<{ enabled: boolean }>("/auth/mfa/status"),
+    queryFn: ({ signal }) => apiClient.get<{ enabled: boolean }>("/auth/mfa/status", undefined, signal),
     staleTime: 2 * 60_000,
   });
 }

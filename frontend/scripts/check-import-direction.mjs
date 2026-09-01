@@ -1,0 +1,203 @@
+#!/usr/bin/env node
+/**
+ * Import-direction gate (PRD §2.1).
+ *
+ * Two rules:
+ *   shared-imports-feature: files under components/ must not import from features/
+ *   cross-feature-import:   features/A must not import from features/B (A ≠ B)
+ *
+ * Uses a ratchet baseline — the gate fails if violation counts INCREASE beyond
+ * the baseline. Lower the baseline after fixing violations and commit the change.
+ *
+ * Flags:
+ *   --self-test   Run internal assertions against synthetic violations and exit.
+ */
+
+import { readFileSync, readdirSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { join, relative, extname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const REAL_ROOT = fileURLToPath(new URL("..", import.meta.url));
+
+const BASELINE_SHARED_IMPORTS_FEATURE = 19;
+const BASELINE_CROSS_FEATURE = 210;
+
+const EXCLUDED_DIRS = new Set(["node_modules", ".next", "feedbucket-widget", ".git"]);
+
+function* walkTs(dir) {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (EXCLUDED_DIRS.has(entry.name)) continue;
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      yield* walkTs(full);
+    } else {
+      const ext = extname(entry.name);
+      if ((ext === ".ts" || ext === ".tsx") && !entry.name.endsWith(".d.ts")) {
+        if (!entry.name.endsWith(".spec.ts") && !entry.name.endsWith(".spec.tsx")) {
+          yield full;
+        }
+      }
+    }
+  }
+}
+
+const FROM_RE = /from\s+['"](@\/[^'"]+|\.\.?\/[^'"]+)['"]/g;
+const DYNAMIC_RE = /import\(['"](@\/[^'"]+|\.\.?\/[^'"]+)['"]\)/g;
+
+function extractImports(content) {
+  const imports = [];
+  for (const re of [FROM_RE, DYNAMIC_RE]) {
+    re.lastIndex = 0;
+    let m;
+    while ((m = re.exec(content)) !== null) {
+      if (m[1]) imports.push(m[1]);
+    }
+  }
+  return imports;
+}
+
+function resolveAlias(specifier) {
+  if (specifier.startsWith("@/")) return specifier.slice(2);
+  return null;
+}
+
+function classify(resolved) {
+  if (!resolved) return null;
+  if (resolved.startsWith("features/")) return "feature";
+  if (resolved.startsWith("components/")) return "shared";
+  if (resolved.startsWith("app/")) return "app";
+  if (resolved.startsWith("lib/")) return "lib";
+  return null;
+}
+
+function fileKind(rel) {
+  if (rel.startsWith("features/")) return "feature";
+  if (rel.startsWith("components/")) return "shared";
+  if (rel.startsWith("app/")) return "app";
+  if (rel.startsWith("lib/")) return "lib";
+  return null;
+}
+
+function featureDomain(path) {
+  const m = path.match(/^features\/([^/]+)/);
+  return m ? m[1] : null;
+}
+
+function scanViolations(rootDir) {
+  const violations = [];
+  for (const filePath of walkTs(rootDir)) {
+    const rel = relative(rootDir, filePath).replace(/\\/g, "/");
+    if (rel.startsWith("scripts/")) continue;
+
+    const kind = fileKind(rel);
+    if (!kind) continue;
+
+    const content = readFileSync(filePath, "utf8");
+    for (const specifier of extractImports(content)) {
+      const resolved = resolveAlias(specifier);
+      if (!resolved) continue;
+      const targetKind = classify(resolved);
+      if (!targetKind) continue;
+
+      if (kind === "shared" && targetKind === "feature") {
+        violations.push({ file: rel, specifier, rule: "shared-imports-feature" });
+      }
+
+      if (kind === "feature" && targetKind === "feature") {
+        const srcDomain = featureDomain(rel);
+        const tgtDomain = featureDomain(resolved);
+        if (srcDomain && tgtDomain && srcDomain !== tgtDomain) {
+          violations.push({ file: rel, specifier, rule: "cross-feature-import" });
+        }
+      }
+    }
+  }
+  return violations;
+}
+
+function runSelfTest() {
+  console.log("Running self-test...\n");
+  const synthDir = join(REAL_ROOT, ".check-import-direction-self-test");
+  const featDir = join(synthDir, "features", "auth");
+  const sharedDir = join(synthDir, "components", "layout");
+  const feat2Dir = join(synthDir, "features", "billing");
+
+  try {
+    mkdirSync(featDir, { recursive: true });
+    mkdirSync(sharedDir, { recursive: true });
+    mkdirSync(feat2Dir, { recursive: true });
+
+    writeFileSync(join(featDir, "widget.tsx"), 'export function Widget() { return null; }\n');
+    writeFileSync(
+      join(sharedDir, "shell.tsx"),
+      'import { Widget } from "@/features/auth/widget";\nexport function Shell() { return null; }\n',
+    );
+    writeFileSync(
+      join(feat2Dir, "page.tsx"),
+      'import { Widget } from "@/features/auth/widget";\nexport function Page() { return null; }\n',
+    );
+
+    const violations = scanViolations(synthDir);
+    const sharedVio = violations.filter((v) => v.rule === "shared-imports-feature");
+    const crossVio = violations.filter((v) => v.rule === "cross-feature-import");
+
+    if (sharedVio.length !== 1) {
+      console.error(`SELF-TEST FAIL: expected 1 shared-imports-feature violation, got ${sharedVio.length}`);
+      process.exitCode = 1;
+      return;
+    }
+    if (crossVio.length !== 1) {
+      console.error(`SELF-TEST FAIL: expected 1 cross-feature-import violation, got ${crossVio.length}`);
+      process.exitCode = 1;
+      return;
+    }
+    console.log("Self-test passed: shared-imports-feature and cross-feature-import detected correctly.\n");
+  } finally {
+    rmSync(synthDir, { recursive: true, force: true });
+  }
+}
+
+const args = process.argv.slice(2);
+
+if (args.includes("--self-test")) {
+  runSelfTest();
+} else {
+  const violations = scanViolations(REAL_ROOT);
+  const sharedCount = violations.filter((v) => v.rule === "shared-imports-feature").length;
+  const crossCount = violations.filter((v) => v.rule === "cross-feature-import").length;
+
+  let failed = false;
+
+  if (sharedCount > BASELINE_SHARED_IMPORTS_FEATURE) {
+    console.error(
+      `shared-imports-feature: ${sharedCount} violations (baseline ${BASELINE_SHARED_IMPORTS_FEATURE}) — REGRESSED`,
+    );
+    for (const v of violations.filter((v) => v.rule === "shared-imports-feature")) {
+      console.error(`  ${v.file}: ${v.specifier}`);
+    }
+    failed = true;
+  } else {
+    const delta = BASELINE_SHARED_IMPORTS_FEATURE - sharedCount;
+    console.log(
+      `shared-imports-feature: ${sharedCount}/${BASELINE_SHARED_IMPORTS_FEATURE} (${delta > 0 ? `${delta} fixed` : "at baseline"})`,
+    );
+  }
+
+  if (crossCount > BASELINE_CROSS_FEATURE) {
+    console.error(
+      `cross-feature-import: ${crossCount} violations (baseline ${BASELINE_CROSS_FEATURE}) — REGRESSED`,
+    );
+    for (const v of violations.filter((v) => v.rule === "cross-feature-import")) {
+      console.error(`  ${v.file}: ${v.specifier}`);
+    }
+    failed = true;
+  } else {
+    const delta = BASELINE_CROSS_FEATURE - crossCount;
+    console.log(
+      `cross-feature-import: ${crossCount}/${BASELINE_CROSS_FEATURE} (${delta > 0 ? `${delta} fixed` : "at baseline"})`,
+    );
+  }
+
+  if (failed) process.exit(1);
+  else console.log("\nImport direction: within baselines.");
+}

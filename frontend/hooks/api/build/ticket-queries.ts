@@ -25,7 +25,7 @@ export function useTickets(
   const canView = useCan("build:tickets:view");
   return useQuery<CursorPageResponse<Ticket>>({
     queryKey: queryKeys.projects.tickets({ projectId, ...filters }),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPageResponse<Ticket>>(`/build/${projectId}/tickets`, filters ? { ...filters } : undefined),
     enabled: canView && !!projectId,
     staleTime: 30_000,
@@ -117,8 +117,8 @@ export function useTicket(
   const canView = useCan("build:tickets:view");
   return useQuery<Ticket | null>({
     queryKey: queryKeys.projects.ticket(ticketId),
-    queryFn: () =>
-      apiClient.get<Ticket | null>(`/build/${projectId}/tickets/${ticketId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<Ticket | null>(`/build/${projectId}/tickets/${ticketId}`, undefined, signal),
     enabled: canView && !!ticketId && !!projectId,
     staleTime: 30_000,
     ...options,
@@ -134,9 +134,9 @@ export function useTicketByKey(
   const queryClient = useQueryClient();
   return useQuery<Ticket | null>({
     queryKey: queryKeys.projects.ticketByKey(projectId, ticketNumber ?? 0),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const ticket = await apiClient.get<Ticket | null>(
-        `/build/${projectId}/tickets/key/${ticketNumber}`,
+        `/build/${projectId}/tickets/key/${ticketNumber}`, signal,
       );
       if (ticket) {
         queryClient.setQueryData(queryKeys.projects.ticket(ticket.id), ticket);
@@ -161,7 +161,7 @@ export function useSubtasks(
   const canView = useCan("build:tickets:view");
   return useQuery<Ticket[]>({
     queryKey: queryKeys.projects.subtasks(ticketId),
-    queryFn: () => apiClient.get<Ticket[]>(`/build/${projectId ?? 0}/tickets/${ticketId}/subtasks`),
+    queryFn: ({ signal }) => apiClient.get<Ticket[]>(`/build/${projectId ?? 0}/tickets/${ticketId}/subtasks`, undefined, signal),
     enabled: canView && ticketId > 0 && (projectId ?? 0) > 0,
     staleTime: 30_000,
     ...options,
@@ -172,7 +172,7 @@ export function useTicketColumnCounts(projectId: number) {
   const canView = useCan("build:tickets:view");
   return useQuery<Record<string, number>>({
     queryKey: queryKeys.projects.columnCounts(projectId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<Record<string, number>>(`/build/${projectId}/tickets/column-counts`),
     enabled: canView && projectId > 0,
     staleTime: 30_000,

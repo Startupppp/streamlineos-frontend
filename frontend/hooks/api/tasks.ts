@@ -77,8 +77,8 @@ export interface TasksFilters {
 export function useTasks(filters?: TasksFilters) {
   return useQuery({
     queryKey: queryKeys.tasks.list(filters as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<TasksListResponse>("/tasks", filters as Record<string, unknown>),
+    queryFn: ({ signal }) =>
+      apiClient.get<TasksListResponse>("/tasks", filters as Record<string, unknown>, signal),
     staleTime: 2 * 60_000,
   });
 }
@@ -164,7 +164,7 @@ interface TaskAnalytics {
 export function useTaskAnalytics(days = 30) {
   return useQuery({
     queryKey: [...queryKeys.tasks.all, "analytics", days] as const,
-    queryFn: () => apiClient.get<TaskAnalytics>(`/tasks/analytics?days=${days}`),
+    queryFn: ({ signal }) => apiClient.get<TaskAnalytics>(`/tasks/analytics?days=${days}`, undefined, signal),
     staleTime: 120_000,
   });
 }

@@ -18,10 +18,10 @@ export const knowledgeGapsKeys = {
 export function useKnowledgeGaps(cursor?: number) {
   return useQuery<ListKnowledgeGapsResponse, Error>({
     queryKey: knowledgeGapsKeys.list(cursor),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ListKnowledgeGapsResponse>("/support/knowledge-gaps", {
         ...(cursor !== undefined ? { cursor: String(cursor) } : {}),
-      }),
+      }, signal),
     staleTime: 30_000,
   });
 }

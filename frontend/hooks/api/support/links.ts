@@ -20,7 +20,7 @@ export interface SupportTicketLink {
 export function useSupportTicketLinks(ticketId: number) {
   return useQuery({
     queryKey: [...queryKeys.support.detail(ticketId), "links"] as const,
-    queryFn: () => apiClient.get<SupportTicketLink[]>(`/support/${ticketId}/links`),
+    queryFn: ({ signal }) => apiClient.get<SupportTicketLink[]>(`/support/${ticketId}/links`, undefined, signal),
     enabled: Number.isFinite(ticketId) && ticketId > 0,
     staleTime: 30_000,
   });

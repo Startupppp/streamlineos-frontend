@@ -48,10 +48,10 @@ export function useHrDocumentTypes(options?: { enabled?: boolean }) {
       (canManageDocuments || canViewDocuments || canViewOwnDocuments) &&
       (options?.enabled ?? true),
     queryKey: [...queryKeys.hr.documentTypes(), "all"] as const,
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const res = await apiClient.get<
         PaginatedHrDocumentTypes | HrDocumentType[]
-      >("/hr/document-types", { page: 1, limit: 100 });
+      >("/hr/document-types", { page: 1, limit: 100 }, signal);
       return unwrapDocumentTypes(res);
     },
     staleTime: 5 * 60_000,
@@ -62,11 +62,11 @@ export function useHrDocumentTypesPage(page: number, limit: number) {
   const canManageDocuments = useCan("hr:documents:manage");
   return useQuery<PaginatedHrDocumentTypes>({
     queryKey: [...queryKeys.hr.documentTypes(), { page, limit }] as const,
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PaginatedHrDocumentTypes>("/hr/document-types", {
         page,
         limit,
-      }),
+      }, signal),
     enabled: canManageDocuments,
     staleTime: 30_000,
     placeholderData: keepPreviousData,

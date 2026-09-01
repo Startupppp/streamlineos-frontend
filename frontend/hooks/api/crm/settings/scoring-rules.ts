@@ -33,7 +33,7 @@ export interface UpdateScoringRuleInput {
 export function useScoringRules() {
   return useGatedQuery("crm:scoring-rules:manage", {
     queryKey: queryKeys.crmSettings.scoringRules(),
-    queryFn: () => apiClient.get<ScoringRule[]>("/crm/scoring-rules"),
+    queryFn: ({ signal }) => apiClient.get<ScoringRule[]>("/crm/scoring-rules", undefined, signal),
     staleTime: 2 * 60_000,
   });
 }

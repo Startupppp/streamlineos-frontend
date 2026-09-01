@@ -1,5 +1,6 @@
-﻿"use client";
+"use client";
 
+import { useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -28,24 +29,27 @@ type UpdateContext = {
   previous: CustomState[] | undefined;
 };
 
-function stateKeys(projectId: number) {
-  return ["projects", projectId, "custom-states"] as const;
-}
+type ReorderItem = { stateId: number; order: number };
+type ReorderPayloadItem = { stateId: number; order: number; expectedOrder?: number };
+type BulkReorderResult = { items: { id: number; order: number }[] };
+type ReorderContext = { previousStates: CustomState[] | undefined };
+
+const MAX_BULK_REORDER = 50;
 
 function invalidateStateCaches(
   qc: ReturnType<typeof useQueryClient>,
   projectId: number,
 ) {
-  void qc.invalidateQueries({ queryKey: stateKeys(projectId) });
+  void qc.invalidateQueries({ queryKey: queryKeys.projects.customStates(projectId) });
   void qc.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
 }
 
 export function useCustomStates(projectId: number) {
   const canView = useCan("build:view");
   return useQuery<CustomState[]>({
-    queryKey: stateKeys(projectId),
-    queryFn: () =>
-      apiClient.get<CustomState[]>(`/build/${projectId}/custom-states`),
+    queryKey: queryKeys.projects.customStates(projectId),
+    queryFn: ({ signal }) =>
+      apiClient.get<CustomState[]>(`/build/${projectId}/custom-states`, undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -77,9 +81,9 @@ export function useUpdateCustomState(projectId: number) {
         data,
       ),
     onMutate: async (vars): Promise<UpdateContext> => {
-      await qc.cancelQueries({ queryKey: stateKeys(projectId) });
-      const previous = qc.getQueryData<CustomState[]>(stateKeys(projectId));
-      qc.setQueryData<CustomState[]>(stateKeys(projectId), (old) =>
+      await qc.cancelQueries({ queryKey: queryKeys.projects.customStates(projectId) });
+      const previous = qc.getQueryData<CustomState[]>(queryKeys.projects.customStates(projectId));
+      qc.setQueryData<CustomState[]>(queryKeys.projects.customStates(projectId), (old) =>
         old?.map((s) => {
           if (s.id !== vars.stateId) return s;
           return {
@@ -94,9 +98,8 @@ export function useUpdateCustomState(projectId: number) {
       return { previous };
     },
     onError: (_, _vars, context) => {
-      if (context?.previous) {
-        qc.setQueryData(stateKeys(projectId), context.previous);
-      }
+      if (context?.previous)
+        qc.setQueryData(queryKeys.projects.customStates(projectId), context.previous);
     },
     onSettled: () => {
       invalidateStateCaches(qc, projectId);
@@ -106,21 +109,44 @@ export function useUpdateCustomState(projectId: number) {
 
 export function useReorderCustomStates(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  const snapshotRef = useRef<CustomState[] | undefined>(undefined);
+
+  return useMutation<BulkReorderResult, Error, ReorderItem[], ReorderContext>({
     mutationKey: ["projects", projectId, "custom-states", "reorder"],
-    mutationFn: async (items: { stateId: number; order: number }[]) => {
-      await Promise.all(
-        items.map(({ stateId, order }) =>
-          apiClient.patch<CustomState>(
-            `/build/${projectId}/custom-states/${stateId}`,
-            { order },
-          ),
-        ),
+    mutationFn: (items) => {
+      if (items.length > MAX_BULK_REORDER)
+        throw new Error(`Cannot reorder more than ${MAX_BULK_REORDER} states at once (got ${items.length})`);
+      const snapshot = snapshotRef.current;
+      const payload: ReorderPayloadItem[] = items.map((item) => ({
+        stateId: item.stateId,
+        order: item.order,
+        expectedOrder: snapshot?.find((s) => s.id === item.stateId)?.order,
+      }));
+      return apiClient.put<BulkReorderResult>(
+        `/build/${projectId}/custom-states`,
+        { items: payload },
       );
     },
-    onSuccess: () => {
-      invalidateStateCaches(qc, projectId);
+    onMutate: async (items): Promise<ReorderContext> => {
+      await qc.cancelQueries({ queryKey: queryKeys.projects.customStates(projectId) });
+      const previousStates = qc.getQueryData<CustomState[]>(
+        queryKeys.projects.customStates(projectId),
+      );
+      snapshotRef.current = previousStates;
+      const orderMap = new Map(items.map((i) => [i.stateId, i.order]));
+      qc.setQueryData<CustomState[]>(queryKeys.projects.customStates(projectId), (old) => {
+        if (!old) return old;
+        return [...old]
+          .map((s) => ({ ...s, order: orderMap.get(s.id) ?? s.order }))
+          .sort((a, b) => a.order - b.order);
+      });
+      return { previousStates };
     },
+    onError: (_, __, context) => {
+      if (context?.previousStates !== undefined)
+        qc.setQueryData(queryKeys.projects.customStates(projectId), context.previousStates);
+    },
+    onSettled: () => invalidateStateCaches(qc, projectId),
   });
 }
 
@@ -131,17 +157,16 @@ export function useDeleteCustomState(projectId: number) {
     mutationFn: (stateId: number) =>
       apiClient.delete(`/build/${projectId}/custom-states/${stateId}`),
     onMutate: async (stateId): Promise<UpdateContext> => {
-      await qc.cancelQueries({ queryKey: stateKeys(projectId) });
-      const previous = qc.getQueryData<CustomState[]>(stateKeys(projectId));
-      qc.setQueryData<CustomState[]>(stateKeys(projectId), (old) =>
+      await qc.cancelQueries({ queryKey: queryKeys.projects.customStates(projectId) });
+      const previous = qc.getQueryData<CustomState[]>(queryKeys.projects.customStates(projectId));
+      qc.setQueryData<CustomState[]>(queryKeys.projects.customStates(projectId), (old) =>
         old?.filter((s) => s.id !== stateId),
       );
       return { previous };
     },
     onError: (_, _stateId, context) => {
-      if (context?.previous) {
-        qc.setQueryData(stateKeys(projectId), context.previous);
-      }
+      if (context?.previous)
+        qc.setQueryData(queryKeys.projects.customStates(projectId), context.previous);
     },
     onSettled: () => {
       invalidateStateCaches(qc, projectId);

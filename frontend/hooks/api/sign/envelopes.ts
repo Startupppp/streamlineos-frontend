@@ -35,7 +35,7 @@ function invalidateEnvelope(qc: ReturnType<typeof useQueryClient>, id: number) {
 export function useSignEnvelopes(params?: { status?: string; page?: number; limit?: number }) {
   return useQuery({
     queryKey: queryKeys.signEnvelopes.list(params),
-    queryFn: () => apiClient.get<SignEnvelope[]>("/sign/envelopes", params),
+    queryFn: ({ signal }) => apiClient.get<SignEnvelope[]>("/sign/envelopes", params, signal),
     staleTime: 30_000,
   });
 }
@@ -43,7 +43,7 @@ export function useSignEnvelopes(params?: { status?: string; page?: number; limi
 export function useSignEnvelope(id: number | undefined) {
   return useQuery({
     queryKey: queryKeys.signEnvelopes.detail(id ?? 0),
-    queryFn: () => apiClient.get<SignEnvelopeFull>(`/sign/envelopes/${id}`),
+    queryFn: ({ signal }) => apiClient.get<SignEnvelopeFull>(`/sign/envelopes/${id}`, undefined, signal),
     enabled: id !== undefined,
     staleTime: 15_000,
   });
@@ -122,7 +122,7 @@ export function useSendSignEnvelopeReminder(id: number) {
 export function useSignEnvelopeAudit(id: number | undefined) {
   return useQuery({
     queryKey: queryKeys.signEnvelopes.audit(id ?? 0),
-    queryFn: () => apiClient.get<SignAuditEvent[]>(`/sign/envelopes/${id}/audit`),
+    queryFn: ({ signal }) => apiClient.get<SignAuditEvent[]>(`/sign/envelopes/${id}/audit`, undefined, signal),
     enabled: id !== undefined,
     staleTime: 15_000,
   });

@@ -112,8 +112,8 @@ export function useHrPerformanceReviews(params?: HrPerformanceReviewParams) {
   };
   return useQuery({
     queryKey: queryKeys.hr.performanceReviews(queryParams),
-    queryFn: () =>
-      apiClient.get<PerformanceReviewPage>("/hr/performance/reviews", queryParams),
+    queryFn: ({ signal }) =>
+      apiClient.get<PerformanceReviewPage>("/hr/performance/reviews", queryParams, signal),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     enabled: hrEnabled && canView,
@@ -138,7 +138,7 @@ export function useHrWfhRequests() {
   const canSelf = useCan("self:attendance");
   return useQuery({
     queryKey: queryKeys.hr.wfhRequests(),
-    queryFn: () => apiClient.get<WfhRequest[]>("/me/time-off/wfh"),
+    queryFn: ({ signal }) => apiClient.get<WfhRequest[]>("/me/time-off/wfh", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canSelf,
   });
@@ -149,7 +149,7 @@ export function useHrPendingWfhRequests(options?: { enabled?: boolean }) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: queryKeys.hr.pendingWfhRequests(),
-    queryFn: () => apiClient.get<WfhRequest[]>("/hr/wfh/pending"),
+    queryFn: ({ signal }) => apiClient.get<WfhRequest[]>("/hr/wfh/pending", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canAttendance && (options?.enabled ?? true),
   });

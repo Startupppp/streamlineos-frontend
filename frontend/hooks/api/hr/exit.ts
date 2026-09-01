@@ -143,8 +143,8 @@ export function useResignationProgress(
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: exitKeys.progress(resignationId),
-    queryFn: () =>
-      apiClient.get<ResignationProgress>(`/hr/exit/${resignationId}/progress`),
+    queryFn: ({ signal }) =>
+      apiClient.get<ResignationProgress>(`/hr/exit/${resignationId}/progress`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canView && resignationId > 0 && enabled,
   });

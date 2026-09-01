@@ -62,8 +62,8 @@ export function useTimesheetExceptions(
 export function useExceptionsSummary(enabled = true) {
   return useQuery({
     queryKey: queryKeys.timesheets.exceptionsSummary(),
-    queryFn: () =>
-      apiClient.get<ExceptionsSummary>("/timesheets/exceptions/summary"),
+    queryFn: ({ signal }) =>
+      apiClient.get<ExceptionsSummary>("/timesheets/exceptions/summary", undefined, signal),
     staleTime: 60_000,
     enabled,
   });

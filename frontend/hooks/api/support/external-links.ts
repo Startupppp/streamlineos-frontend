@@ -20,7 +20,7 @@ export interface SupportTicketExternalLink {
 export function useSupportTicketExternalLinks(ticketId: number) {
   return useQuery({
     queryKey: [...queryKeys.support.detail(ticketId), "external-links"] as const,
-    queryFn: () => apiClient.get<SupportTicketExternalLink[]>(`/support/${ticketId}/external-links`),
+    queryFn: ({ signal }) => apiClient.get<SupportTicketExternalLink[]>(`/support/${ticketId}/external-links`, undefined, signal),
     enabled: Number.isFinite(ticketId) && ticketId > 0,
     staleTime: 30_000,
   });

@@ -66,7 +66,7 @@ export type ListIncidentsParams = {
 export function useSafetyIncidents(params: ListIncidentsParams = {}) {
   return useQuery({
     queryKey: queryKeys.hrSafety.incidents(params),
-    queryFn: () => apiClient.get<CursorPage<SafetyIncident>>("/hr/safety/incidents", params),
+    queryFn: ({ signal }) => apiClient.get<CursorPage<SafetyIncident>>("/hr/safety/incidents", params),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
   });
@@ -110,8 +110,8 @@ export function useSubmitCheckin() {
 export function useMyCheckins(fromDate?: string, toDate?: string) {
   return useQuery({
     queryKey: queryKeys.hrSafety.myCheckins(fromDate, toDate),
-    queryFn: () =>
-      apiClient.get<WellnessCheckin[]>("/hr/safety/wellness/my", { fromDate, toDate }),
+    queryFn: ({ signal }) =>
+      apiClient.get<WellnessCheckin[]>("/hr/safety/wellness/my", { fromDate, toDate }, signal),
     staleTime: 60_000,
   });
 }
@@ -119,8 +119,8 @@ export function useMyCheckins(fromDate?: string, toDate?: string) {
 export function useWellnessTrend(fromDate?: string, toDate?: string) {
   return useQuery({
     queryKey: queryKeys.hrSafety.wellnessTrend(fromDate, toDate),
-    queryFn: () =>
-      apiClient.get<WellnessTrendPoint[]>("/hr/safety/wellness/trend", { fromDate, toDate }),
+    queryFn: ({ signal }) =>
+      apiClient.get<WellnessTrendPoint[]>("/hr/safety/wellness/trend", { fromDate, toDate }, signal),
     staleTime: 120_000,
   });
 }
@@ -128,7 +128,7 @@ export function useWellnessTrend(fromDate?: string, toDate?: string) {
 export function useBurnoutFlags() {
   return useQuery({
     queryKey: queryKeys.hrSafety.burnout,
-    queryFn: () => apiClient.get<BurnoutFlag[]>("/hr/safety/wellness/burnout"),
+    queryFn: ({ signal }) => apiClient.get<BurnoutFlag[]>("/hr/safety/wellness/burnout", undefined, signal),
     staleTime: 120_000,
   });
 }
@@ -148,7 +148,7 @@ export interface WellnessPulse {
 export function useWellnessPulse(enabled = true) {
   return useQuery({
     queryKey: queryKeys.hrSafety.wellnessPulse,
-    queryFn: () => apiClient.get<WellnessPulse>("/hr/safety/wellness/pulse"),
+    queryFn: ({ signal }) => apiClient.get<WellnessPulse>("/hr/safety/wellness/pulse", undefined, signal),
     staleTime: 120_000,
     enabled,
   });

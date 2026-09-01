@@ -37,7 +37,7 @@ export function useCalibrationEntries(cycleId: number) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: keys.entries(cycleId),
-    queryFn: () => apiClient.get<CalibrationEntry[]>(`/hr/performance/calibration/cycles/${cycleId}/entries`),
+    queryFn: ({ signal }) => apiClient.get<CalibrationEntry[]>(`/hr/performance/calibration/cycles/${cycleId}/entries`, undefined, signal),
     staleTime: 30_000,
     enabled: cycleId > 0 && canManage && hrEnabled,
   });
@@ -48,7 +48,7 @@ export function useNineBox(cycleId: number) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: keys.nineBox(cycleId),
-    queryFn: () => apiClient.get<NineBoxEntry[]>(`/hr/performance/calibration/nine-box?cycleId=${cycleId}`),
+    queryFn: ({ signal }) => apiClient.get<NineBoxEntry[]>(`/hr/performance/calibration/nine-box?cycleId=${cycleId}`, undefined, signal),
     staleTime: 60_000,
     enabled: cycleId > 0 && canManage && hrEnabled,
   });

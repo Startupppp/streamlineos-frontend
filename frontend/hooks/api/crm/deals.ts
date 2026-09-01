@@ -68,7 +68,7 @@ interface AgingResponse {
 export function useDeals(filters?: DealFilters) {
   return useGatedQuery("crm:deals:read", {
     queryKey: queryKeys.deals.list(filters as Record<string, unknown>),
-    queryFn: () => apiClient.get<Deal[]>("/deals", filters as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get<Deal[]>("/deals", filters as Record<string, unknown>, signal),
     staleTime: 2 * 60_000,
   });
 }
@@ -76,7 +76,7 @@ export function useDeals(filters?: DealFilters) {
 export function useDealStats() {
   return useGatedQuery<DealStats, Error>("crm:deals:read", {
     queryKey: queryKeys.deals.stats(),
-    queryFn: () => apiClient.get<DealStats>("/deals/stats"),
+    queryFn: ({ signal }) => apiClient.get<DealStats>("/deals/stats", undefined, signal),
     staleTime: 2 * 60_000,
   });
 }
@@ -84,7 +84,7 @@ export function useDealStats() {
 export function useDealDetail(id: number) {
   return useGatedQuery("crm:deals:read", {
     queryKey: queryKeys.deals.detail(id),
-    queryFn: () => apiClient.get<Deal>(`/deals/${id}`),
+    queryFn: ({ signal }) => apiClient.get<Deal>(`/deals/${id}`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: id > 0,
   });
@@ -196,7 +196,7 @@ export function useLogDealActivity() {
 export function useDealMeetings(dealId: number) {
   return useGatedQuery("crm:deals:read", {
     queryKey: queryKeys.deals.meetings(dealId),
-    queryFn: () => apiClient.get<DealMeeting[]>(`/deals/${dealId}/meetings`),
+    queryFn: ({ signal }) => apiClient.get<DealMeeting[]>(`/deals/${dealId}/meetings`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: dealId > 0,
   });
@@ -229,7 +229,7 @@ export function useDeleteDealMeeting(dealId: number) {
 export function useWinLossAnalysis() {
   return useGatedQuery("crm:deals:read", {
     queryKey: queryKeys.deals.winLoss(),
-    queryFn: () => apiClient.get<WinLossAnalysis>("/deals/win-loss"),
+    queryFn: ({ signal }) => apiClient.get<WinLossAnalysis>("/deals/win-loss", undefined, signal),
     staleTime: 2 * 60_000,
   });
 }
@@ -237,7 +237,7 @@ export function useWinLossAnalysis() {
 export function useDealApprovals(params?: { status?: string }) {
   return useGatedQuery("crm:deals:read", {
     queryKey: queryKeys.deals.approvals(params as Record<string, unknown>),
-    queryFn: () => apiClient.get<DealApproval[]>("/deals/approvals", params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get<DealApproval[]>("/deals/approvals", params as Record<string, unknown>, signal),
     staleTime: 2 * 60_000,
   });
 }
@@ -245,7 +245,7 @@ export function useDealApprovals(params?: { status?: string }) {
 export function useDealAging() {
   return useGatedQuery<AgingResponse>("crm:deals:read", {
     queryKey: queryKeys.deals.aging(),
-    queryFn: () => apiClient.get<AgingResponse>("/deals/aging"),
+    queryFn: ({ signal }) => apiClient.get<AgingResponse>("/deals/aging", undefined, signal),
     staleTime: 305_000,
     refetchInterval: 300_000,
   });
@@ -267,7 +267,7 @@ export function useResolveDealApproval() {
 export function useForecastSnapshots(params?: { period?: string; limit?: number }) {
   return useGatedQuery("crm:deals:forecast", {
     queryKey: queryKeys.deals.forecastSnapshots(params as Record<string, unknown>),
-    queryFn: () => apiClient.get<ForecastSnapshot[]>("/deals/forecast/snapshots", params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get<ForecastSnapshot[]>("/deals/forecast/snapshots", params as Record<string, unknown>, signal),
     staleTime: 2 * 60_000,
   });
 }
@@ -287,7 +287,7 @@ export function useCaptureForecastSnapshot() {
 export function useDealCompetitors(dealId: number) {
   return useGatedQuery("crm:deals:read", {
     queryKey: queryKeys.deals.competitors(dealId),
-    queryFn: () => apiClient.get<DealCompetitor[]>(`/deals/${dealId}/competitors`),
+    queryFn: ({ signal }) => apiClient.get<DealCompetitor[]>(`/deals/${dealId}/competitors`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: dealId > 0,
   });
@@ -320,7 +320,7 @@ export function useDeleteDealCompetitor(dealId: number) {
 export function useDealHealth(dealId: number) {
   return useGatedQuery("crm:deals:read", {
     queryKey: queryKeys.deals.health(dealId),
-    queryFn: () => apiClient.get<DealHealth>(`/deals/${dealId}/health`),
+    queryFn: ({ signal }) => apiClient.get<DealHealth>(`/deals/${dealId}/health`, undefined, signal),
     staleTime: 5 * 60_000,
     enabled: dealId > 0,
   });
@@ -341,7 +341,7 @@ export function usePatchNextStep(dealId: number) {
 export function useStakeholders(dealId: number) {
   return useGatedQuery("crm:deals:read", {
     queryKey: queryKeys.deals.stakeholders(dealId),
-    queryFn: () => apiClient.get<DealStakeholder[]>(`/deals/${dealId}/stakeholders`),
+    queryFn: ({ signal }) => apiClient.get<DealStakeholder[]>(`/deals/${dealId}/stakeholders`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: dealId > 0,
   });
@@ -409,8 +409,8 @@ export function useOverrideForecast() {
 export function useDealStageTransitions(dealId: number | null) {
   return useGatedQuery("crm:deals:read", {
     queryKey: queryKeys.crm.dealStageTransitions(dealId ?? 0),
-    queryFn: () =>
-      apiClient.get<{ data: DealStageTransition[] }>(`/deals/${dealId}/transitions`),
+    queryFn: ({ signal }) =>
+      apiClient.get<{ data: DealStageTransition[] }>(`/deals/${dealId}/transitions`, undefined, signal),
     staleTime: 60_000,
     enabled: !!dealId,
   });

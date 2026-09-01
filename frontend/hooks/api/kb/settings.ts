@@ -13,7 +13,7 @@ export function useKbSettings() {
   const canManageSettings = useCan("kb:settings:manage");
   return useQuery({
     queryKey: queryKeys.kb.settings(),
-    queryFn: () => apiClient.get<KbSettings>("/kb/settings"),
+    queryFn: ({ signal }) => apiClient.get<KbSettings>("/kb/settings", undefined, signal),
     staleTime: 300_000,
     enabled: canManageSettings,
   });

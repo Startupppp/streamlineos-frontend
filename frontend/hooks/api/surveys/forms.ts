@@ -82,7 +82,7 @@ function invalidateSurveyLists(qc: ReturnType<typeof useQueryClient>) {
 export function useSurveys(params?: ListSurveysParams) {
   return useQuery({
     queryKey: queryKeys.surveys.list(params as Record<string, unknown>),
-    queryFn: () => apiClient.get<SurveyForm[]>("/surveys", params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get<SurveyForm[]>("/surveys", params as Record<string, unknown>, signal),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
   });
@@ -91,7 +91,7 @@ export function useSurveys(params?: ListSurveysParams) {
 export function useSurvey(surveyId: number | undefined) {
   return useQuery({
     queryKey: queryKeys.surveys.detail(surveyId ?? -1),
-    queryFn: () => apiClient.get<SurveyForm>(`/surveys/${surveyId}`),
+    queryFn: ({ signal }) => apiClient.get<SurveyForm>(`/surveys/${surveyId}`, undefined, signal),
     enabled: typeof surveyId === "number",
     staleTime: 15_000,
   });
@@ -100,7 +100,7 @@ export function useSurvey(surveyId: number | undefined) {
 export function useSurveyTemplates() {
   return useQuery({
     queryKey: queryKeys.surveys.templates(),
-    queryFn: () => apiClient.get<SurveyTemplate[]>("/surveys/templates"),
+    queryFn: ({ signal }) => apiClient.get<SurveyTemplate[]>("/surveys/templates", undefined, signal),
     staleTime: 5 * 60_000,
   });
 }

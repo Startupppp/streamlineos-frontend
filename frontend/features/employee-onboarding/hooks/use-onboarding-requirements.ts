@@ -11,10 +11,10 @@ import {
 export function useOnboardingRequirements(country: string, enabled = true) {
   return useQuery({
     queryKey: queryKeys.onboardingFlow.requirements(country),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const res = await apiClient.get<unknown>("/onboarding/requirements", {
         country,
-      });
+      }, signal);
       return onboardingRequirementsSchema.parse(
         res,
       ) satisfies OnboardingRequirements;

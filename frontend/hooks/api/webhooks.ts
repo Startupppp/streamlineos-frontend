@@ -68,11 +68,11 @@ export function useWebhooks(params: { cursor?: string; limit: number }) {
   const canManage = useCan("settings:webhooks:manage");
   return useQuery({
     queryKey: queryKeys.webhooks.list(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<WebhooksPageResponse>("/webhooks", {
         ...(params.cursor ? { cursor: params.cursor } : {}),
         limit: String(params.limit),
-      }),
+      }, signal),
     placeholderData: keepPreviousData,
     staleTime: 60_000,
     enabled: canManage,
@@ -86,11 +86,11 @@ export function useWebhookLogs(
   const canManage = useCan("settings:webhooks:manage");
   return useQuery({
     queryKey: queryKeys.webhooks.logs(endpointId ?? 0, params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<WebhookLogsResponse>(`/webhooks/${endpointId}/logs`, {
         ...(params.cursor ? { cursor: params.cursor } : {}),
         limit: String(params.limit),
-      }),
+      }, signal),
     placeholderData: keepPreviousData,
     staleTime: 30_000,
     enabled: canManage && endpointId !== null,

@@ -157,7 +157,7 @@ export function useAutomationRuns(ruleId: number) {
   const canView = useCan("settings:automations:view");
   return useQuery({
     queryKey: queryKeys.automations.runs(ruleId),
-    queryFn: () => apiClient.get<AutomationRun[]>(`/settings/automations/${ruleId}/runs`),
+    queryFn: ({ signal }) => apiClient.get<AutomationRun[]>(`/settings/automations/${ruleId}/runs`, undefined, signal),
     enabled: canView && Number.isFinite(ruleId) && ruleId > 0,
     staleTime: 35_000,
     refetchInterval: 30_000,

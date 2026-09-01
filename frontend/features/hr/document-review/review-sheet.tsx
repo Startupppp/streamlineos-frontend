@@ -43,12 +43,12 @@ function useEmployeeOnboardingDocs(
 ) {
   return useQuery<OnboardingDocsResponse>({
     queryKey: queryKeys.hr.onboardingDocs({ userId: userId ?? undefined, cursor, limit: DOCS_PAGE_SIZE }),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<OnboardingDocsResponse>("/hr/onboarding-docs", {
         userId,
         cursor,
         limit: DOCS_PAGE_SIZE,
-      }),
+      }, signal),
     enabled: !!userId,
     staleTime: 30_000,
   });

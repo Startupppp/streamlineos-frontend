@@ -52,7 +52,7 @@ export const useDashboardStats = (
   const orgId = session?.orgId ?? "";
   return useQuery<DashboardStats, Error>({
     queryKey: queryKeys.dashboard.stats(),
-    queryFn: () => apiClient.get<DashboardStats>("/dashboard/stats"),
+    queryFn: ({ signal }) => apiClient.get<DashboardStats>("/dashboard/stats", undefined, signal),
     staleTime: 5 * 60 * 1000,
     ...options,
     enabled: !!orgId && (options?.enabled ?? true),
@@ -65,7 +65,7 @@ export const useMyIssues = (
   const buildEnabled = useModuleEnabled("build");
   return useQuery<MyIssue[], Error>({
     queryKey: queryKeys.dashboard.myIssues(),
-    queryFn: () => apiClient.get<MyIssue[]>("/dashboard/my-issues"),
+    queryFn: ({ signal }) => apiClient.get<MyIssue[]>("/dashboard/my-issues", undefined, signal),
     staleTime: 5 * 60 * 1000,
     ...options,
     enabled: buildEnabled && (options?.enabled ?? true),
@@ -85,7 +85,7 @@ export const useTodayActivities = (
   const canView = useCan("crm:leads:view");
   return useQuery<ScheduledActivity[], Error>({
     queryKey: queryKeys.dashboard.todayActivities(),
-    queryFn: () => apiClient.get<ScheduledActivity[]>("/dashboard/today-activities"),
+    queryFn: ({ signal }) => apiClient.get<ScheduledActivity[]>("/dashboard/today-activities", undefined, signal),
     staleTime: 5 * 60 * 1000,
     ...options,
     enabled: !!orgId && canView && (options?.enabled ?? true),
@@ -103,7 +103,7 @@ export const useRecentProjects = (
   const canView = useCan("build:tickets:view");
   return useQuery<RecentProject[], Error>({
     queryKey: queryKeys.dashboard.recentProjects(),
-    queryFn: () => apiClient.get<RecentProject[]>("/dashboard/recent-projects"),
+    queryFn: ({ signal }) => apiClient.get<RecentProject[]>("/dashboard/recent-projects", undefined, signal),
     staleTime: 5 * 60 * 1000,
     ...options,
     enabled: !!orgId && canView && (options?.enabled ?? true),
@@ -121,8 +121,8 @@ export const useActiveSprintSummary = (
   const buildEnabled = useModuleEnabled("build");
   return useQuery<SprintSummary | null, Error>({
     queryKey: queryKeys.dashboard.activeSprintSummary(),
-    queryFn: () =>
-      apiClient.get<SprintSummary | null>("/dashboard/active-sprint"),
+    queryFn: ({ signal }) =>
+      apiClient.get<SprintSummary | null>("/dashboard/active-sprint", undefined, signal),
     staleTime: 5 * 60 * 1000,
     ...options,
     enabled: !!orgId && buildEnabled && (options?.enabled ?? true),
@@ -140,8 +140,8 @@ export const useRecentActivity = (
   const canView = useCan("build:tickets:view");
   return useQuery<RecentActivity[], Error>({
     queryKey: queryKeys.dashboard.recentActivity(),
-    queryFn: () =>
-      apiClient.get<RecentActivity[]>("/dashboard/recent-activity"),
+    queryFn: ({ signal }) =>
+      apiClient.get<RecentActivity[]>("/dashboard/recent-activity", undefined, signal),
     staleTime: 5 * 60 * 1000,
     ...options,
     enabled: !!orgId && canView && (options?.enabled ?? true),
@@ -213,7 +213,7 @@ export const useLeavesToday = (
   const canView = useCan("hr:leaves:view");
   return useQuery<LeaveToday[], Error>({
     queryKey: queryKeys.dashboard.leavesToday(),
-    queryFn: () => apiClient.get<LeaveToday[]>("/dashboard/leaves-today"),
+    queryFn: ({ signal }) => apiClient.get<LeaveToday[]>("/dashboard/leaves-today", undefined, signal),
     staleTime: 2 * 60_000,
     ...options,
     enabled: !!orgId && canView && (options?.enabled ?? true),
@@ -226,7 +226,7 @@ export const useUpcomingHolidays = () => {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<UpcomingHoliday[]>({
     queryKey: queryKeys.dashboard.upcomingHolidays(),
-    queryFn: () => apiClient.get<UpcomingHoliday[]>("/dashboard/upcoming-holidays"),
+    queryFn: ({ signal }) => apiClient.get<UpcomingHoliday[]>("/dashboard/upcoming-holidays", undefined, signal),
     staleTime: DAILY_DATA_STALE_TIME_MS,
     enabled: !!orgId && hrEnabled,
   });
@@ -238,7 +238,7 @@ export const useMyLeaveBalance = () => {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<LeaveBalance[]>({
     queryKey: queryKeys.dashboard.myLeaveBalance(),
-    queryFn: () => apiClient.get<LeaveBalance[]>("/dashboard/my-leave-balance"),
+    queryFn: ({ signal }) => apiClient.get<LeaveBalance[]>("/dashboard/my-leave-balance", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: !!orgId && hrEnabled,
   });
@@ -252,7 +252,7 @@ export const useBirthdays = (
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<BirthdayEntry[], Error>({
     queryKey: queryKeys.dashboard.birthdays(),
-    queryFn: () => apiClient.get<BirthdayEntry[]>("/dashboard/birthdays"),
+    queryFn: ({ signal }) => apiClient.get<BirthdayEntry[]>("/dashboard/birthdays", undefined, signal),
     staleTime: DAILY_DATA_STALE_TIME_MS,
     ...options,
     enabled: !!orgId && hrEnabled && (options?.enabled ?? true),
@@ -268,7 +268,7 @@ export const usePendingApprovals = (
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<PendingApprovalsCount, Error>({
     queryKey: queryKeys.dashboard.pendingApprovals(),
-    queryFn: () => apiClient.get<PendingApprovalsCount>("/dashboard/pending-approvals"),
+    queryFn: ({ signal }) => apiClient.get<PendingApprovalsCount>("/dashboard/pending-approvals", undefined, signal),
     staleTime: NOTIFICATION_FALLBACK_INTERVAL_MS,
     refetchInterval: NOTIFICATION_FALLBACK_INTERVAL_MS,
     refetchIntervalInBackground: false,
@@ -285,7 +285,7 @@ export const useTeamAttendance = (
   const canView = useCan("hr:attendance:view");
   return useQuery<TeamAttendance>({
     queryKey: queryKeys.dashboard.teamAttendance(),
-    queryFn: () => apiClient.get<TeamAttendance>("/dashboard/team-attendance"),
+    queryFn: ({ signal }) => apiClient.get<TeamAttendance>("/dashboard/team-attendance", undefined, signal),
     staleTime: 65_000,
     ...options,
     enabled: !!orgId && canView && (options?.enabled ?? true),
@@ -330,7 +330,7 @@ export const useAnnouncements = (
   const orgId = session?.orgId ?? "";
   return useQuery<Announcement[], Error>({
     queryKey: queryKeys.dashboard.announcements(),
-    queryFn: () => apiClient.get<Announcement[]>("/dashboard/announcements"),
+    queryFn: ({ signal }) => apiClient.get<Announcement[]>("/dashboard/announcements", undefined, signal),
     staleTime: 60_000,
     ...options,
     enabled: !!orgId && (options?.enabled ?? true),
@@ -368,7 +368,7 @@ export const usePersonalDashboard = (
   const orgId = session?.orgId ?? "";
   return useQuery<PersonalDashboard, Error>({
     queryKey: queryKeys.dashboard.personal(),
-    queryFn: () => apiClient.get<PersonalDashboard>("/dashboard/personal"),
+    queryFn: ({ signal }) => apiClient.get<PersonalDashboard>("/dashboard/personal", undefined, signal),
     staleTime: 2 * 60_000,
     ...options,
     enabled: !!orgId && (options?.enabled ?? true),
@@ -383,7 +383,7 @@ export const useExecutiveDashboard = (
   const canView = useCan("hr:analytics:read");
   return useQuery<ExecutiveDashboard, Error>({
     queryKey: queryKeys.dashboard.executive(),
-    queryFn: () => apiClient.get<ExecutiveDashboard>("/dashboard/executive"),
+    queryFn: ({ signal }) => apiClient.get<ExecutiveDashboard>("/dashboard/executive", undefined, signal),
     staleTime: 5 * 60_000,
     ...options,
     enabled: !!orgId && canView && (options?.enabled ?? true),
@@ -397,8 +397,8 @@ export const usePublicDocuments = (limit = 6, enabled = true) => {
   const canView = useCan("hr:documents:view");
   return useQuery<PublicDoc[]>({
     queryKey: queryKeys.dashboard.publicDocuments(limit),
-    queryFn: async () => {
-      const res = await apiClient.get<{ data: PublicDoc[] }>("/hr/documents", { limit });
+    queryFn: async ({ signal }) => {
+      const res = await apiClient.get<{ data: PublicDoc[] }>("/hr/documents", { limit }, signal);
       return res.data;
     },
     staleTime: 5 * 60_000,

@@ -57,7 +57,7 @@ export type PaymentProvider = {
 export function usePaymentCatalog() {
   return useQuery({
     queryKey: queryKeys.payments.catalog(),
-    queryFn: () => apiClient.get<PaymentProviderCatalogEntry[]>("/payments/providers/catalog"),
+    queryFn: ({ signal }) => apiClient.get<PaymentProviderCatalogEntry[]>("/payments/providers/catalog", undefined, signal),
     staleTime: 5 * 60_000,
   });
 }
@@ -65,7 +65,7 @@ export function usePaymentCatalog() {
 export function usePaymentProviders() {
   return useQuery({
     queryKey: queryKeys.payments.providers(),
-    queryFn: () => apiClient.get<PaymentProvider[]>("/payments/providers"),
+    queryFn: ({ signal }) => apiClient.get<PaymentProvider[]>("/payments/providers", undefined, signal),
     staleTime: 30_000,
   });
 }
@@ -134,7 +134,7 @@ export type PaymentTestTransaction = {
 export function useTestTransactions(providerKey: string, enabled = true) {
   return useQuery({
     queryKey: queryKeys.payments.testTransactions(providerKey),
-    queryFn: () => apiClient.get<PaymentTestTransaction[]>(`/payments/providers/${providerKey}/test-transactions`),
+    queryFn: ({ signal }) => apiClient.get<PaymentTestTransaction[]>(`/payments/providers/${providerKey}/test-transactions`, undefined, signal),
     staleTime: 15_000,
     enabled,
   });
@@ -203,7 +203,7 @@ export type PaymentWebhookEvent = {
 export function useWebhookEvents(providerKey: string, enabled = true) {
   return useQuery({
     queryKey: queryKeys.payments.webhookEvents(providerKey),
-    queryFn: () => apiClient.get<PaymentWebhookEvent[]>(`/payments/providers/${providerKey}/webhooks/events`),
+    queryFn: ({ signal }) => apiClient.get<PaymentWebhookEvent[]>(`/payments/providers/${providerKey}/webhooks/events`, undefined, signal),
     staleTime: 15_000,
     enabled,
   });
@@ -229,7 +229,7 @@ export type PaymentReadiness = {
 export function usePaymentReadiness(providerKey: string, enabled = true) {
   return useQuery({
     queryKey: queryKeys.payments.readiness(providerKey),
-    queryFn: () => apiClient.get<PaymentReadiness>(`/payments/providers/${providerKey}/readiness`),
+    queryFn: ({ signal }) => apiClient.get<PaymentReadiness>(`/payments/providers/${providerKey}/readiness`, undefined, signal),
     staleTime: 10_000,
     enabled,
   });
@@ -261,7 +261,7 @@ export type PaymentAuditEvent = {
 export function usePaymentAudit(providerKey: string, enabled = true) {
   return useQuery({
     queryKey: queryKeys.payments.audit(providerKey),
-    queryFn: () => apiClient.get<PaymentAuditEvent[]>(`/payments/providers/${providerKey}/audit`),
+    queryFn: ({ signal }) => apiClient.get<PaymentAuditEvent[]>(`/payments/providers/${providerKey}/audit`, undefined, signal),
     staleTime: 30_000,
     enabled,
   });
@@ -301,7 +301,7 @@ export type SaveManualMethodPayload = {
 export function useManualMethods() {
   return useQuery({
     queryKey: [...queryKeys.payments.all, "manual-methods"],
-    queryFn: () => apiClient.get<PaymentManualMethod[]>("/payments/manual-methods"),
+    queryFn: ({ signal }) => apiClient.get<PaymentManualMethod[]>("/payments/manual-methods", undefined, signal),
     staleTime: 30_000,
   });
 }

@@ -22,12 +22,12 @@ export const useUserLoginHistory = (
       userId,
       params as Record<string, unknown> | undefined,
     ),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<LoginHistoryResponse>(`/users/${userId}/login-history`, {
         ...(params?.cursor ? { cursor: params.cursor } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
         ...(params?.success !== undefined ? { success: String(params.success) } : {}),
-      }),
+      }, signal),
     staleTime: 30_000,
     ...options,
     enabled: !!userId && canManage && (options?.enabled ?? true),
@@ -41,7 +41,7 @@ export const useUserMembership = (
   const canView = useCan("settings:view");
   return useQuery<UserMembership, Error>({
     queryKey: queryKeys.users.membership(userId),
-    queryFn: () => apiClient.get<UserMembership>(`/users/${userId}/membership`),
+    queryFn: ({ signal }) => apiClient.get<UserMembership>(`/users/${userId}/membership`, undefined, signal),
     staleTime: 30_000,
     ...options,
     enabled: !!userId && canView && (options?.enabled ?? true),

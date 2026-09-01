@@ -13,7 +13,7 @@ export function useActiveHuddle(channelId: number) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: queryKeys.chat.huddle(channelId),
-    queryFn: () => apiClient.get<Huddle | null>(`/chat/channels/${channelId}/huddle`),
+    queryFn: ({ signal }) => apiClient.get<Huddle | null>(`/chat/channels/${channelId}/huddle`, undefined, signal),
     staleTime: 10_000,
     enabled: canRead && channelId > 0,
   });

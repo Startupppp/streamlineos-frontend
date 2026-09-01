@@ -27,7 +27,7 @@ export type UpdateHrAnnouncementData = Partial<CreateHrAnnouncementData> & { id:
 export function useHrAnnouncements() {
   return useQuery<HrAnnouncement[]>({
     queryKey: queryKeys.hr.announcements(),
-    queryFn: () => apiClient.get<HrAnnouncement[]>("/org/announcements"),
+    queryFn: ({ signal }) => apiClient.get<HrAnnouncement[]>("/org/announcements", undefined, signal),
     staleTime: 60_000,
   });
 }
@@ -35,7 +35,7 @@ export function useHrAnnouncements() {
 export function useAllHrAnnouncements(options?: { enabled?: boolean }) {
   return useQuery<HrAnnouncement[]>({
     queryKey: queryKeys.hr.announcementsAll(),
-    queryFn: () => apiClient.get<HrAnnouncement[]>("/org/announcements/all"),
+    queryFn: ({ signal }) => apiClient.get<HrAnnouncement[]>("/org/announcements/all", undefined, signal),
     staleTime: 30_000,
     enabled: options?.enabled,
   });

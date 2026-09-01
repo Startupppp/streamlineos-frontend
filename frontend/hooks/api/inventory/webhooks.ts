@@ -79,7 +79,7 @@ export function useWebhooks() {
   const canView = useCan("inventory:webhooks:manage");
   return useQuery<Webhook[], Error>({
     queryKey: queryKeys.inventory.webhooks(),
-    queryFn: () => apiClient.get<Webhook[]>("/inventory/webhooks"),
+    queryFn: ({ signal }) => apiClient.get<Webhook[]>("/inventory/webhooks", undefined, signal),
     staleTime: 60_000,
     enabled: canView,
   });
@@ -131,12 +131,12 @@ export function useWebhookEvents(webhookId: number, params?: WebhookEventsParams
   const canView = useCan("inventory:webhooks:manage");
   return useQuery<WebhookEventsResponse, Error>({
     queryKey: queryKeys.inventory.webhookEvents(webhookId, params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<WebhookEventsResponse>(`/inventory/webhooks/${webhookId}/events`, {
         ...(params?.status ? { status: params.status } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
-      }),
+      }, signal),
     enabled: canView && webhookId > 0,
     staleTime: 30_000,
   });

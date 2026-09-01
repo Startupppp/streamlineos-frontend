@@ -34,8 +34,8 @@ export function useHrPolicies(params?: {
 
   return useQuery({
     queryKey: queryKeys.hr.hrPoliciesList(params),
-    queryFn: () =>
-      apiClient.get<PoliciesListResponse>(`/hr/policies${qs ? `?${qs}` : ""}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<PoliciesListResponse>(`/hr/policies${qs ? `?${qs}` : ""}`, undefined, signal),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
     enabled: canView && hrEnabled,
@@ -106,9 +106,9 @@ export function usePolicyConflicts(policyId: number) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.hrPoliciesAll, "conflicts", policyId] as const,
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<{ conflicts: PolicyConflict[]; canActivate: boolean }>(
-        `/hr/policies/${policyId}/conflicts`,
+        `/hr/policies/${policyId}/conflicts`, signal,
       ),
     enabled: canView && hrEnabled && policyId > 0,
     staleTime: 30_000,
@@ -121,8 +121,8 @@ export function useOrgPolicyConflicts(type?: HrPolicyType) {
   const qs = type ? `?type=${encodeURIComponent(type)}` : "";
   return useQuery({
     queryKey: [...queryKeys.hr.hrPoliciesAll, "org-conflicts", type] as const,
-    queryFn: () =>
-      apiClient.get<{ conflicts: PolicyConflict[] }>(`/hr/policies/conflicts${qs}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<{ conflicts: PolicyConflict[] }>(`/hr/policies/conflicts${qs}`, undefined, signal),
     staleTime: 30_000,
     enabled: canView && hrEnabled,
   });

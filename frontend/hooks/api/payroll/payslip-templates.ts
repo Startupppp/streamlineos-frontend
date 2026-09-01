@@ -11,7 +11,7 @@ export function usePayslipTemplates() {
   const canView = useCan("payroll:payslips:view");
   return useQuery<PayslipTemplate[]>({
     queryKey: queryKeys.payroll.payslipTemplates(),
-    queryFn: () => apiClient.get<PayslipTemplate[]>("/payroll/payslip-templates"),
+    queryFn: ({ signal }) => apiClient.get<PayslipTemplate[]>("/payroll/payslip-templates", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canView,
   });

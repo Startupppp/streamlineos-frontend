@@ -43,10 +43,10 @@ export function useSavedMessages() {
   const canRead = useCan("chat:messages:read");
   return useInfiniteQuery({
     queryKey: queryKeys.chat.savedMessages(),
-    queryFn: ({ pageParam }) =>
+    queryFn: ({ pageParam, signal }) =>
       apiClient.get<SavedMessagesPage>(
         "/chat/saved",
-        pageParam ? { cursor: pageParam } : undefined,
+        pageParam ? { cursor: pageParam } : undefined, signal,
       ),
     getNextPageParam: (last) => last.nextCursor,
     initialPageParam: undefined as number | undefined,

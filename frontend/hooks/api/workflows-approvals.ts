@@ -19,7 +19,7 @@ export function usePendingApprovals() {
   const canView = useCan("workflows:approvals:view");
   return useQuery({
     queryKey: queryKeys.workflows.approvals(),
-    queryFn: () => apiClient.get<WorkflowApproval[]>("/workflows/approvals/pending"),
+    queryFn: ({ signal }) => apiClient.get<WorkflowApproval[]>("/workflows/approvals/pending", undefined, signal),
     staleTime: 120_000,
     refetchInterval: 120_000,
     refetchIntervalInBackground: false,

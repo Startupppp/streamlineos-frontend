@@ -28,8 +28,8 @@ export function useManagedProducts(params?: ListManagedProductsParams) {
     queryKey: queryKeys.projects.managedProducts.list(
       Object.keys(queryParams).length > 0 ? queryParams : undefined,
     ),
-    queryFn: () =>
-      apiClient.get<ManagedProductsPage>("/build/managed-products", queryParams),
+    queryFn: ({ signal }) =>
+      apiClient.get<ManagedProductsPage>("/build/managed-products", queryParams, signal),
     enabled: canView,
     staleTime: 60_000,
   });
@@ -39,8 +39,8 @@ export function useManagedProduct(managedProductId: number) {
   const canView = useCan("build:managed-products:view");
   return useQuery<ManagedProduct>({
     queryKey: queryKeys.projects.managedProducts.detail(managedProductId),
-    queryFn: () =>
-      apiClient.get<ManagedProduct>(`/build/managed-products/${managedProductId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<ManagedProduct>(`/build/managed-products/${managedProductId}`, undefined, signal),
     enabled: canView && !!managedProductId,
     staleTime: 60_000,
   });

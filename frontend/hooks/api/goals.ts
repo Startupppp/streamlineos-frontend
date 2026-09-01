@@ -154,7 +154,7 @@ export function useGoals(params?: GoalsParams) {
   const queryParams = toQueryParams(params);
   return useQuery({
     queryKey: queryKeys.goals.list(queryParams),
-    queryFn: () => apiClient.get<GoalListItem[]>("/goals", queryParams),
+    queryFn: ({ signal }) => apiClient.get<GoalListItem[]>("/goals", queryParams, signal),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
   });
@@ -163,7 +163,7 @@ export function useGoals(params?: GoalsParams) {
 export function useGoal(id: number) {
   return useQuery({
     queryKey: queryKeys.goals.detail(id),
-    queryFn: () => apiClient.get<GoalDetail>(`/goals/${id}`),
+    queryFn: ({ signal }) => apiClient.get<GoalDetail>(`/goals/${id}`, undefined, signal),
     enabled: id > 0,
     staleTime: 30_000,
   });
@@ -172,7 +172,7 @@ export function useGoal(id: number) {
 export function useGoalStats() {
   return useQuery({
     queryKey: queryKeys.goals.stats(),
-    queryFn: () => apiClient.get<GoalStats>("/goals/stats"),
+    queryFn: ({ signal }) => apiClient.get<GoalStats>("/goals/stats", undefined, signal),
     staleTime: 60_000,
   });
 }

@@ -101,8 +101,8 @@ export function useEntityChannel(
   const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: [...queryKeys.chat.all, "entity", entityType, entityId] as const,
-    queryFn: () =>
-      apiClient.get<Channel>(`/chat/channels/entity/${entityType}/${entityId}`),
+    queryFn: ({ signal }) =>
+      apiClient.get<Channel>(`/chat/channels/entity/${entityType}/${entityId}`, undefined, signal),
     enabled: canRead && Boolean(entityType && entityId),
     staleTime: 5 * 60_000,
   });
@@ -169,9 +169,9 @@ export function useChannelInviteLink(channelId: number, enabled: boolean) {
   const canManage = useCan("chat:invite-links:manage");
   return useQuery({
     queryKey: queryKeys.chat.inviteLink(channelId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.post<{ token: string }>(
-        `/chat/channels/${channelId}/invite-link`,
+        `/chat/channels/${channelId}/invite-link`, signal,
       ),
     enabled: canManage && enabled && channelId > 0,
     staleTime: 60_000,
@@ -242,10 +242,10 @@ export function useChannelFiles(channelId: number) {
   const canRead = useCan("chat:messages:read");
   return useInfiniteQuery({
     queryKey: [...queryKeys.chat.all, "channelFiles", channelId] as const,
-    queryFn: ({ pageParam }) =>
+    queryFn: ({ pageParam, signal }) =>
       apiClient.get<{ files: ChannelFile[]; nextCursor?: number }>(
         `/chat/channels/${channelId}/files`,
-        pageParam !== undefined ? { cursor: String(pageParam) } : undefined,
+        pageParam !== undefined ? { cursor: String(pageParam) } : undefined, signal,
       ),
     getNextPageParam: (last) => last.nextCursor,
     initialPageParam: undefined as number | undefined,

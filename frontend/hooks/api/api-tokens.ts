@@ -41,8 +41,8 @@ export interface CreateApiTokenResponse {
 export function useApiTokens(params?: { page?: number; limit?: number }) {
   return useQuery({
     queryKey: queryKeys.apiTokens.list(params),
-    queryFn: () =>
-      apiClient.get<ApiTokenPage>("/api-tokens", params as Record<string, unknown>),
+    queryFn: ({ signal }) =>
+      apiClient.get<ApiTokenPage>("/api-tokens", params as Record<string, unknown>, signal),
     staleTime: 30_000,
   });
 }

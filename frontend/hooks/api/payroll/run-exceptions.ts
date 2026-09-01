@@ -14,8 +14,8 @@ export function useRunExceptions(
   const canView = useCan("payroll:runs:view");
   return useQuery({
     queryKey: queryKeys.payroll.runExceptions(runId, params as Record<string, unknown> | undefined),
-    queryFn: () =>
-      apiClient.get<PayrollException[]>(`/payroll/runs/${runId}/exceptions`, params),
+    queryFn: ({ signal }) =>
+      apiClient.get<PayrollException[]>(`/payroll/runs/${runId}/exceptions`, params, signal),
     staleTime: 30_000,
     enabled: canView && runId > 0,
   });

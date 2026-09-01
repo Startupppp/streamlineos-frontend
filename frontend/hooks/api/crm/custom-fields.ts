@@ -44,10 +44,10 @@ export function useCustomFields(entityType: "lead" | "deal" | "contact") {
   const canManage = useCan("settings:custom-fields:manage");
   return useQuery({
     queryKey: queryKeys.settings.customFields(entityType),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<{ fields: CustomFieldDefinition[] }>(
         `/settings/custom-fields?entityType=${entityType}`
-      ),
+      , undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canManage,
   });

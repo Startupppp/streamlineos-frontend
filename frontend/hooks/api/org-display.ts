@@ -19,7 +19,7 @@ import { DEFAULT_MONEY_DISPLAY, type MoneyDisplay } from "@/lib/format-utils";
 export function useOrgDisplay(): MoneyDisplay {
   const { data } = useQuery<MoneyDisplay, Error>({
     queryKey: queryKeys.organization.display(),
-    queryFn: () => apiClient.get<MoneyDisplay>("/me/org-display"),
+    queryFn: ({ signal }) => apiClient.get<MoneyDisplay>("/me/org-display", undefined, signal),
     staleTime: 30 * 60_000,
   });
 

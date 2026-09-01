@@ -11,8 +11,8 @@ export function useModuleOwnership(moduleKey: string) {
   const canView = useCan(viewKey(moduleKey));
   return useQuery<ModuleOwnership, Error>({
     queryKey: queryKeys.moduleAccess.ownership(moduleKey),
-    queryFn: () =>
-      apiClient.get<ModuleOwnership>(`/module-access/${moduleKey}/ownership`),
+    queryFn: ({ signal }) =>
+      apiClient.get<ModuleOwnership>(`/module-access/${moduleKey}/ownership`, undefined, signal),
     enabled: canView,
     staleTime: 2 * 60_000,
   });

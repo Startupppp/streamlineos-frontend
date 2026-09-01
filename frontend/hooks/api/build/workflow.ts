@@ -23,8 +23,8 @@ export function useWorkflowTransitions(projectId: number) {
   const canView = useCan("build:workflow:view");
   return useQuery<WorkflowTransition[]>({
     queryKey: queryKeys.projects.workflow.transitions(projectId),
-    queryFn: () =>
-      apiClient.get<WorkflowTransition[]>(`/build/${projectId}/workflow/transitions`),
+    queryFn: ({ signal }) =>
+      apiClient.get<WorkflowTransition[]>(`/build/${projectId}/workflow/transitions`, undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });

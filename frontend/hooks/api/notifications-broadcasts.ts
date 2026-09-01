@@ -21,10 +21,10 @@ export const useBroadcasts = (
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<BroadcastListResponse, Error>({
     queryKey: queryKeys.notifications.broadcasts(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<BroadcastListResponse>(
         "/broadcasts",
-        params ? toStringParams(params) : undefined,
+        params ? toStringParams(params) : undefined, signal,
       ),
     staleTime: 60_000,
     ...restOptions,

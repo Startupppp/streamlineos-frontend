@@ -30,11 +30,11 @@ const recruitmentKey = ["employee-self-service", "recruitment"] as const;
 export function useAssignedInterviews(page: number) {
   return useQuery({
     queryKey: [...recruitmentKey, page],
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<AssignedInterviewsResponse>("/me/recruitment", {
         page,
         pageSize: 20,
-      }),
+      }, signal),
     staleTime: 60_000,
   });
 }

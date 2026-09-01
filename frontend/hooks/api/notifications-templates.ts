@@ -22,10 +22,10 @@ export const useNotificationTemplates = (
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<NotificationTemplate[], Error>({
     queryKey: queryKeys.notifications.templates(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<NotificationTemplate[]>(
         "/notification-templates",
-        params ? toStringParams(params) : undefined,
+        params ? toStringParams(params) : undefined, signal,
       ),
     staleTime: 60_000,
     ...restOptions,

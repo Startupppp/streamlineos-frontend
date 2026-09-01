@@ -85,7 +85,7 @@ export function useChannels() {
   const canView = useCan("inventory:channels:manage");
   return useQuery<Channel[], Error>({
     queryKey: queryKeys.inventory.channels(),
-    queryFn: () => apiClient.get<Channel[]>("/inventory/channels"),
+    queryFn: ({ signal }) => apiClient.get<Channel[]>("/inventory/channels", undefined, signal),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -97,10 +97,10 @@ export function useChannelPublications(channelId: number, statusFilter?: Publica
     queryKey: statusFilter
       ? [...queryKeys.inventory.channelPublications(channelId), statusFilter]
       : queryKeys.inventory.channelPublications(channelId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<Publication[]>(
         `/inventory/channels/${channelId}/publications`,
-        statusFilter ? { status: statusFilter } : undefined,
+        statusFilter ? { status: statusFilter } : undefined, signal,
       ),
     enabled: canView && channelId > 0,
     staleTime: 30_000,
@@ -160,7 +160,7 @@ export function useThreePlConnections() {
   const canView = useCan("inventory:3pl:manage");
   return useQuery<ThreePlConnection[], Error>({
     queryKey: queryKeys.inventory.threePlConnections(),
-    queryFn: () => apiClient.get<ThreePlConnection[]>("/inventory/3pl/connections"),
+    queryFn: ({ signal }) => apiClient.get<ThreePlConnection[]>("/inventory/3pl/connections", undefined, signal),
     staleTime: 30_000,
     enabled: canView,
   });

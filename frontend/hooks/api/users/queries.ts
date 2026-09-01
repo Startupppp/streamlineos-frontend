@@ -21,7 +21,7 @@ export const useUsers = (
   const canView = useCan("settings:view");
   return useQuery<UsersResponse, Error>({
     queryKey: queryKeys.users.list(params as Record<string, unknown> | undefined),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<UsersResponse>("/v2/users", {
         ...(params?.cursor ? { cursor: params.cursor } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
@@ -34,7 +34,7 @@ export const useUsers = (
         ...(params?.managerUserId ? { managerUserId: params.managerUserId } : {}),
         ...(params?.sortBy ? { sortBy: params.sortBy } : {}),
         ...(params?.sortOrder ? { sortOrder: params.sortOrder } : {}),
-      }),
+      }, signal),
     staleTime: 30_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),
@@ -48,7 +48,7 @@ export const useUser = (
   const canView = useCan("settings:view");
   return useQuery<User, Error>({
     queryKey: queryKeys.users.detail(userId),
-    queryFn: () => apiClient.get<User>(`/v2/users/${userId}`),
+    queryFn: ({ signal }) => apiClient.get<User>(`/v2/users/${userId}`, undefined, signal),
     staleTime: 30_000,
     ...options,
     enabled: !!userId && canView && (options?.enabled ?? true),
@@ -62,7 +62,7 @@ export const useUserSessions = (
   const canManage = useCan("settings:organization:manage");
   return useQuery<UserSession[], Error>({
     queryKey: queryKeys.users.sessions(userId),
-    queryFn: () => apiClient.get<UserSession[]>(`/users/${userId}/sessions`),
+    queryFn: ({ signal }) => apiClient.get<UserSession[]>(`/users/${userId}/sessions`, undefined, signal),
     staleTime: 30_000,
     ...options,
     enabled: !!userId && canManage && (options?.enabled ?? true),
@@ -76,7 +76,7 @@ export const useUserPreferences = (
   const canView = useCan("settings:view");
   return useQuery<UserPreferences, Error>({
     queryKey: queryKeys.users.preferences(userId),
-    queryFn: () => apiClient.get<UserPreferences>(`/users/${userId}/preferences`),
+    queryFn: ({ signal }) => apiClient.get<UserPreferences>(`/users/${userId}/preferences`, undefined, signal),
     staleTime: 30_000,
     ...options,
     enabled: !!userId && canView && (options?.enabled ?? true),
@@ -89,7 +89,7 @@ export const useUserStats = (
   const canView = useCan("settings:view");
   return useQuery<UserStats, Error>({
     queryKey: queryKeys.users.stats(),
-    queryFn: () => apiClient.get<UserStats>("/users/stats"),
+    queryFn: ({ signal }) => apiClient.get<UserStats>("/users/stats", undefined, signal),
     staleTime: 60_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),

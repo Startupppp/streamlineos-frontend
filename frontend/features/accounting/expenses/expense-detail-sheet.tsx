@@ -15,7 +15,7 @@ import { getUserDisplayName } from "@/lib/person-display";
 import { useApproveExpense, useRejectExpense } from "@/hooks/api/accounting/expenses";
 import type { ExpenseWithRelations } from "@/types/hr/expenses";
 import type { ExpenseStatus } from "@/features/accounting/shared";
-import { parseExpenseReceipts } from "@/features/hr/expenses/expense-constants";
+import { parseExpenseReceipts } from "@/lib/expense-receipts";
 import { formatShortDate } from "@/lib/date-utils";
 
 interface ExpenseDetailSheetProps {

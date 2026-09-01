@@ -79,9 +79,9 @@ export function useOrgModules() {
   const canManage = useCan("settings:manage");
   return useQuery<OrgModule[], Error>({
     queryKey: queryKeys.access.orgModules(),
-    queryFn: async () =>
+    queryFn: async ({ signal }) =>
       normalizeOrgModulesResponse(
-        await apiClient.get<unknown>("/access/org-modules"),
+        await apiClient.get<unknown>("/access/org-modules", undefined, signal),
       ),
     // Also protects an in-memory query cache created by an older hot-reloaded
     // bundle that stored the response envelope instead of the list.

@@ -34,7 +34,7 @@ interface ExportJobListResponse {
 function useExportJobsWithPolling() {
   return useQuery<ExportJobListResponse, Error>({
     queryKey: queryKeys.inventory.exportJobs(),
-    queryFn: () => apiClient.get<ExportJobListResponse>("/inventory/export/jobs"),
+    queryFn: ({ signal }) => apiClient.get<ExportJobListResponse>("/inventory/export/jobs", undefined, signal),
     staleTime: 10_000,
     refetchInterval: (query) => {
       const items = query.state.data?.items ?? [];

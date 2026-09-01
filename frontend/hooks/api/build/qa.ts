@@ -32,7 +32,7 @@ export function useTestSuites(projectId?: number) {
   const canView = useCan("build:qa:view");
   return useQuery<TestSuite[]>({
     queryKey: queryKeys.projects.qa.suites(projectId),
-    queryFn: () => apiClient.get<TestSuite[]>(`/build/${projectId}/test-suites`),
+    queryFn: ({ signal }) => apiClient.get<TestSuite[]>(`/build/${projectId}/test-suites`, undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -48,7 +48,7 @@ export function useTestCases(projectId?: number, filters?: TestCaseFilters) {
 
   return useQuery<TestCase[]>({
     queryKey: queryKeys.projects.qa.cases(projectId, filters),
-    queryFn: () => apiClient.get<TestCase[]>(`/build/${projectId}/test-cases`, params),
+    queryFn: ({ signal }) => apiClient.get<TestCase[]>(`/build/${projectId}/test-cases`, params, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
     placeholderData: keepPreviousData,
@@ -102,7 +102,7 @@ export function useTestRuns(projectId?: number, filters?: TestRunFilters) {
 
   return useQuery<TestRun[]>({
     queryKey: queryKeys.projects.qa.runs(projectId, filters?.status),
-    queryFn: () => apiClient.get<TestRun[]>(`/build/${projectId}/test-runs`, params),
+    queryFn: ({ signal }) => apiClient.get<TestRun[]>(`/build/${projectId}/test-runs`, params, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
   });
@@ -112,7 +112,7 @@ export function useTestRunDetail(projectId?: number, runId?: number) {
   const canView = useCan("build:qa:view");
   return useQuery<TestRunDetail>({
     queryKey: queryKeys.projects.qa.run(projectId, runId),
-    queryFn: () => apiClient.get<TestRunDetail>(`/build/${projectId}/test-runs/${runId}`),
+    queryFn: ({ signal }) => apiClient.get<TestRunDetail>(`/build/${projectId}/test-runs/${runId}`, undefined, signal),
     enabled: canView && !!projectId && !!runId,
     staleTime: 30_000,
   });

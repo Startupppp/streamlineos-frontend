@@ -16,7 +16,7 @@ export interface SupportTicketWatcher {
 export function useSupportWatchers(ticketId: number) {
   return useQuery({
     queryKey: queryKeys.supportWatchers.list(ticketId),
-    queryFn: () => apiClient.get<SupportTicketWatcher[]>(`/support/${ticketId}/watchers`),
+    queryFn: ({ signal }) => apiClient.get<SupportTicketWatcher[]>(`/support/${ticketId}/watchers`, undefined, signal),
     enabled: Number.isFinite(ticketId) && ticketId > 0,
     staleTime: 30_000,
   });

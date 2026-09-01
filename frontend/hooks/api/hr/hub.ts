@@ -156,7 +156,7 @@ export function useHrHubSnapshot() {
 
   return useQuery({
     queryKey: queryKeys.hr.hub(today),
-    queryFn: () => apiClient.get<HrHubSnapshot>("/hr/hub", { today }),
+    queryFn: ({ signal }) => apiClient.get<HrHubSnapshot>("/hr/hub", { today }, signal),
     enabled: Boolean(orgId && userId),
     staleTime: 30_000,
     refetchInterval: 60_000,

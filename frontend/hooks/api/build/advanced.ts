@@ -29,7 +29,7 @@ export function useEpics(
   const canView = useCan("build:view");
   return useQuery<Epic[]>({
     queryKey: queryKeys.projects.epics(projectId),
-    queryFn: () => apiClient.get<Epic[]>(`/build/${projectId}/epics`),
+    queryFn: ({ signal }) => apiClient.get<Epic[]>(`/build/${projectId}/epics`, undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 30_000,
     ...options,
@@ -44,7 +44,7 @@ export function useCycles(
   const canView = useCan("build:view");
   return useQuery<Cycle[]>({
     queryKey: queryKeys.projects.cycles(projectId),
-    queryFn: () => apiClient.get<Cycle[]>(`/build/${projectId}/cycles`),
+    queryFn: ({ signal }) => apiClient.get<Cycle[]>(`/build/${projectId}/cycles`, undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
     ...options,
@@ -73,7 +73,7 @@ export function useModules(
   const canView = useCan("build:view");
   return useQuery<Module[]>({
     queryKey: queryKeys.projects.modules(projectId),
-    queryFn: () => apiClient.get<Module[]>(`/build/${projectId}/modules`),
+    queryFn: ({ signal }) => apiClient.get<Module[]>(`/build/${projectId}/modules`, undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
     ...options,
@@ -102,7 +102,7 @@ export function useViews(
   const canView = useCan("build:view");
   return useQuery<ProjectView[]>({
     queryKey: queryKeys.projects.views(projectId),
-    queryFn: () => apiClient.get<ProjectView[]>(`/build/${projectId}/views`),
+    queryFn: ({ signal }) => apiClient.get<ProjectView[]>(`/build/${projectId}/views`, undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
     ...options,
@@ -160,7 +160,7 @@ export function useWorkspaceViews(
   const canView = useCan("build:view");
   return useQuery<ProjectView[]>({
     queryKey: queryKeys.projects.workspaceViews(),
-    queryFn: () => apiClient.get<ProjectView[]>("/build/views"),
+    queryFn: ({ signal }) => apiClient.get<ProjectView[]>("/build/views", undefined, signal),
     staleTime: 60_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),
@@ -229,11 +229,11 @@ export function useIntakeRequests(
   if (params?.limit) query["limit"] = String(params.limit);
   return useQuery<IntakePage>({
     queryKey: queryKeys.projects.intake(projectId),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<IntakePage>(
         `/build/${projectId}/intake`,
         Object.keys(query).length ? query : undefined
-      ),
+      , signal),
     enabled: canView && !!projectId,
     staleTime: 30_000,
     ...options,
@@ -283,8 +283,8 @@ export function useProjectAnalytics(
   const canView = useCan("build:view");
   return useQuery<ProjectAnalytics>({
     queryKey: queryKeys.projects.analytics(projectId),
-    queryFn: () =>
-      apiClient.get<ProjectAnalytics>(`/build/${projectId}/analytics`),
+    queryFn: ({ signal }) =>
+      apiClient.get<ProjectAnalytics>(`/build/${projectId}/analytics`, undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 5 * 60_000,
     ...options,

@@ -11,7 +11,7 @@ export function useWebhooks(projectId: number) {
   const canManage = useCan("build:manage");
   return useQuery<ProjectWebhook[]>({
     queryKey: queryKeys.projects.webhooks(projectId),
-    queryFn: () => apiClient.get<ProjectWebhook[]>(`/build/${projectId}/webhooks`),
+    queryFn: ({ signal }) => apiClient.get<ProjectWebhook[]>(`/build/${projectId}/webhooks`, undefined, signal),
     enabled: canManage && !!projectId,
     staleTime: 30_000,
   });
@@ -21,7 +21,7 @@ export function useWebhookDeliveries(projectId: number, webhookId: number, enabl
   const canManage = useCan("build:manage");
   return useQuery<WebhookDelivery[]>({
     queryKey: queryKeys.projects.webhookDeliveries(projectId, webhookId),
-    queryFn: () => apiClient.get<WebhookDelivery[]>(`/build/${projectId}/webhooks/${webhookId}/deliveries`),
+    queryFn: ({ signal }) => apiClient.get<WebhookDelivery[]>(`/build/${projectId}/webhooks/${webhookId}/deliveries`, undefined, signal),
     enabled: canManage && enabled && !!projectId && !!webhookId,
     staleTime: 15_000,
   });

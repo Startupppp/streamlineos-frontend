@@ -26,7 +26,7 @@ export interface LatestBriefResponse {
 
 const briefQueryOptions = queryOptions({
   queryKey: ["executive-brief"] as const,
-  queryFn: () => apiClient.get<LatestBriefResponse>("/ai/executive-brief"),
+  queryFn: ({ signal }) => apiClient.get<LatestBriefResponse>("/ai/executive-brief", undefined, signal),
   staleTime: 5 * 60 * 1000,
 });
 

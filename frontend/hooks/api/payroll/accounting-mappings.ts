@@ -14,7 +14,7 @@ export function useAccountingMappings() {
   const canManage = useCan("payroll:settings:manage");
   return useQuery({
     queryKey: queryKeys.payroll.accountingMappings(),
-    queryFn: () => apiClient.get<AccountingMapping[]>("/payroll/accounting-mappings"),
+    queryFn: ({ signal }) => apiClient.get<AccountingMapping[]>("/payroll/accounting-mappings", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canManage,
   });

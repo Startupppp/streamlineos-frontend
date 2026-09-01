@@ -46,7 +46,7 @@ export function useApprovalPolicies(params: ListApprovalPoliciesParams = {}) {
   const can = useCan("accounting:approvals:read");
   return useQuery<CursorPage<ApprovalPolicy>, Error>({
     queryKey: settingsKeys.policies(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPage<ApprovalPolicy>>(
         "/accounting/approval-policies",
         toQuery(params),
@@ -113,7 +113,7 @@ export function useApprovals(params: ListApprovalsParams = {}) {
   const can = useCan("accounting:approvals:read");
   return useQuery<CursorPage<ApprovalRequest>, Error>({
     queryKey: approvalsKeys.list(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPage<ApprovalRequest>>(
         "/accounting/approvals",
         toQuery(params),
@@ -133,7 +133,7 @@ export function useApprovalCounts() {
   const can = useCan("accounting:approvals:read");
   return useQuery<ApprovalCounts, Error>({
     queryKey: approvalsKeys.counts,
-    queryFn: () => apiClient.get<ApprovalCounts>("/accounting/approvals/counts"),
+    queryFn: ({ signal }) => apiClient.get<ApprovalCounts>("/accounting/approvals/counts", undefined, signal),
     staleTime: 30_000,
     enabled: can,
   });
@@ -182,7 +182,7 @@ export function useExchangeRates(params: ListExchangeRatesParams = {}) {
   const can = useCan("accounting:settings:read");
   return useQuery<CursorPage<ExchangeRate>, Error>({
     queryKey: settingsKeys.rates(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPage<ExchangeRate>>(
         "/accounting/exchange-rates",
         toQuery(params),

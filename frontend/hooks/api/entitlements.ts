@@ -43,7 +43,7 @@ export interface Entitlements {
 export function useEntitlements(enabled = true) {
   return useQuery<Entitlements, Error>({
     queryKey: queryKeys.billing.entitlements(),
-    queryFn: () => apiClient.get<Entitlements>("/billing/entitlements"),
+    queryFn: ({ signal }) => apiClient.get<Entitlements>("/billing/entitlements", undefined, signal),
     staleTime: 900_000,
     retry: false,
     enabled,

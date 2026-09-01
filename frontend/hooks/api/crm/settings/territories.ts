@@ -60,7 +60,7 @@ export interface TerritoryPreviewResult {
 export function useTerritories() {
   return useGatedQuery("crm:territories:manage", {
     queryKey: queryKeys.crmSettings.territories(),
-    queryFn: () => apiClient.get<Territory[]>("/crm/territories"),
+    queryFn: ({ signal }) => apiClient.get<Territory[]>("/crm/territories", undefined, signal),
     staleTime: 2 * 60_000,
   });
 }

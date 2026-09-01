@@ -76,11 +76,11 @@ export function useValuationReport(params?: ValuationReportParams) {
   const canView = useCan("inventory:valuation:read");
   return useQuery<ValuationSummary, Error>({
     queryKey: queryKeys.inventory.valuationReport(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ValuationSummary>("/inventory/reports/valuation", {
         ...(params?.warehouseId ? { warehouseId: String(params.warehouseId) } : {}),
         ...(params?.categoryId ? { categoryId: String(params.categoryId) } : {}),
-      }),
+      }, signal),
     staleTime: 5 * 60_000,
     enabled: canView,
   });
@@ -90,11 +90,11 @@ export function useValuationLayers(variantId: number, page?: number) {
   const canView = useCan("inventory:valuation:read");
   return useQuery<ValuationLayersResponse, Error>({
     queryKey: queryKeys.inventory.valuationLayers(variantId, page),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ValuationLayersResponse>("/inventory/valuation/layers", {
         variantId: String(variantId),
         ...(page ? { page: String(page) } : {}),
-      }),
+      }, signal),
     enabled: canView && variantId > 0,
     staleTime: 2 * 60_000,
   });
@@ -104,11 +104,11 @@ export function useCostingProducts(params?: CostingParams) {
   const canView = useCan("inventory:valuation:read");
   return useQuery<CostingListResponse, Error>({
     queryKey: queryKeys.inventory.costingProducts(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CostingListResponse>("/inventory/products/variants", {
         ...(params?.search ? { search: params.search } : {}),
         ...(params?.page ? { page: String(params.page) } : {}),
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,

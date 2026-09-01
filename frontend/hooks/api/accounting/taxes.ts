@@ -60,7 +60,7 @@ export function useListTaxCodes(params: ListTaxCodesParams = {}) {
   const can = useCan("accounting:taxes:read");
   return useQuery<CursorPage<TaxCode>, Error>({
     queryKey: taxKeys.codes(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPage<TaxCode>>("/accounting/tax-codes", toQuery(params)),
     staleTime: 60_000,
     enabled: can,
@@ -118,8 +118,8 @@ export function useTaxDashboard(from: string, to: string) {
   const can = useCan("accounting:taxes:read");
   return useQuery<TaxDashboard, Error>({
     queryKey: taxKeys.dashboard(from, to),
-    queryFn: () =>
-      apiClient.get<TaxDashboard>("/accounting/taxes/dashboard", { from, to }),
+    queryFn: ({ signal }) =>
+      apiClient.get<TaxDashboard>("/accounting/taxes/dashboard", { from, to }, signal),
     enabled: can && !!from && !!to,
     staleTime: 120_000,
   });
@@ -137,7 +137,7 @@ export function useTaxReportOutput(params: TaxReportParams = {}) {
   const can = useCan("accounting:taxes:read");
   return useQuery<CursorPage<TaxReportLine>, Error>({
     queryKey: taxKeys.reportOutput(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPage<TaxReportLine>>(
         "/accounting/taxes/reports/output",
         toQuery(params),
@@ -151,7 +151,7 @@ export function useTaxReportInput(params: TaxReportParams = {}) {
   const can = useCan("accounting:taxes:read");
   return useQuery<CursorPage<TaxReportLine>, Error>({
     queryKey: taxKeys.reportInput(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPage<TaxReportLine>>(
         "/accounting/taxes/reports/input",
         toQuery(params),
@@ -165,10 +165,10 @@ export function useTaxLiabilitySummary(from: string, to: string) {
   const can = useCan("accounting:taxes:read");
   return useQuery<LiabilitySummaryResponse, Error>({
     queryKey: taxKeys.liabilitySummary(from, to),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<LiabilitySummaryResponse>(
         "/accounting/taxes/reports/liability-summary",
-        { from, to },
+        { from, to }, signal,
       ),
     enabled: can && !!from && !!to,
     staleTime: 30_000,
@@ -187,7 +187,7 @@ export function useTaxPayments(params: ListTaxPaymentsParams = {}) {
   const can = useCan("accounting:taxes:read");
   return useQuery<ListResponse<TaxPayment>, Error>({
     queryKey: taxKeys.payments(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ListResponse<TaxPayment>>(
         "/accounting/taxes/payments",
         toQuery(params),

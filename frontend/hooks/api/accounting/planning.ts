@@ -78,7 +78,7 @@ export function useBudgets(params: ListBudgetsParams = {}) {
   const can = useCan("accounting:budgets:read");
   return useQuery<CursorPage<BudgetSummary>, Error>({
     queryKey: planningKeys.budgets(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPage<BudgetSummary>>("/accounting/budgets", toQuery(params)),
     staleTime: 60_000,
     enabled: can,
@@ -100,7 +100,7 @@ export function useBudget(id: number) {
   const can = useCan("accounting:budgets:read");
   return useQuery<BudgetDetail, Error>({
     queryKey: planningKeys.budget(id),
-    queryFn: () => apiClient.get<BudgetDetail>(`/accounting/budgets/${id}`),
+    queryFn: ({ signal }) => apiClient.get<BudgetDetail>(`/accounting/budgets/${id}`, undefined, signal),
     staleTime: 30_000,
     enabled: can && id > 0,
   });
@@ -144,7 +144,7 @@ export function useBudgetRevisions(id: number) {
   const can = useCan("accounting:budgets:read");
   return useQuery<{ items: BudgetRevision[] }, Error>({
     queryKey: planningKeys.budgetRevisions(id),
-    queryFn: () => apiClient.get<{ items: BudgetRevision[] }>(`/accounting/budgets/${id}/revisions`),
+    queryFn: ({ signal }) => apiClient.get<{ items: BudgetRevision[] }>(`/accounting/budgets/${id}/revisions`, undefined, signal),
     staleTime: 30_000,
     enabled: can && id > 0,
   });
@@ -165,8 +165,8 @@ export function useBudgetVsActual(id: number, params: BvaParams = {}) {
   const can = useCan("accounting:budgets:read");
   return useQuery<BvaResponse, Error>({
     queryKey: planningKeys.bva(id, params),
-    queryFn: () =>
-      apiClient.get<BvaResponse>(`/accounting/budgets/${id}/vs-actual`, toQuery(params)),
+    queryFn: ({ signal }) =>
+      apiClient.get<BvaResponse>(`/accounting/budgets/${id}/vs-actual`, toQuery(params), signal),
     staleTime: 30_000,
     enabled: can && id > 0,
   });
@@ -176,8 +176,8 @@ export function useForecast(params: ForecastParams = {}) {
   const can = useCan("accounting:forecast:read");
   return useQuery<ForecastResponse, Error>({
     queryKey: planningKeys.forecast(params),
-    queryFn: () =>
-      apiClient.get<ForecastResponse>("/accounting/forecast", toQuery(params)),
+    queryFn: ({ signal }) =>
+      apiClient.get<ForecastResponse>("/accounting/forecast", toQuery(params), signal),
     staleTime: 60_000,
     enabled: can,
   });
@@ -187,10 +187,10 @@ export function useForecastCompare(scenarioIds: number[]) {
   const can = useCan("accounting:forecast:read");
   return useQuery<ScenarioCompareResponse, Error>({
     queryKey: planningKeys.forecastCompare(scenarioIds),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ScenarioCompareResponse>("/accounting/forecast/compare", {
         scenarioIds: scenarioIds.join(","),
-      }),
+      }, signal),
     staleTime: 60_000,
     enabled: can && scenarioIds.length >= 2,
   });
@@ -200,7 +200,7 @@ export function useScenarios() {
   const can = useCan("accounting:forecast:read");
   return useQuery<ListResponse<Scenario>, Error>({
     queryKey: planningKeys.scenarios(),
-    queryFn: () => apiClient.get<ListResponse<Scenario>>("/accounting/scenarios"),
+    queryFn: ({ signal }) => apiClient.get<ListResponse<Scenario>>("/accounting/scenarios"),
     staleTime: 60_000,
     enabled: can,
   });

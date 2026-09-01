@@ -19,7 +19,7 @@ export function useGeofences() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "geofences"],
-    queryFn: () => apiClient.get<Geofence[]>("/hr/geofencing"),
+    queryFn: ({ signal }) => apiClient.get<Geofence[]>("/hr/geofencing", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: hrEnabled && canView,
   });

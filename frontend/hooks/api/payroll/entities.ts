@@ -51,7 +51,7 @@ export function usePayrollEntities() {
   const canView = useCan("payroll:policies:view");
   return useQuery({
     queryKey: queryKeys.payroll.entitiesAll,
-    queryFn: () => apiClient.get<PayrollEntity[]>("/payroll/entities"),
+    queryFn: ({ signal }) => apiClient.get<PayrollEntity[]>("/payroll/entities", undefined, signal),
     staleTime: 60_000,
     enabled: canView,
   });
@@ -61,12 +61,12 @@ export function useCountryPacks() {
   const canView = useCan("payroll:policies:view");
   return useQuery({
     queryKey: queryKeys.payroll.entityCountryPacks(),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<{
         mode: string;
         honestyNote: string;
         packs: CountryPackDescriptor[];
-      }>("/payroll/entities/country-packs"),
+      }>("/payroll/entities/country-packs", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canView,
   });
@@ -76,8 +76,8 @@ export function useEntityContext(entityId: number | null) {
   const canView = useCan("payroll:policies:view");
   return useQuery({
     queryKey: queryKeys.payroll.entityContext(entityId ?? 0),
-    queryFn: () =>
-      apiClient.get<EntityContext>(`/payroll/entities/${entityId}/context`),
+    queryFn: ({ signal }) =>
+      apiClient.get<EntityContext>(`/payroll/entities/${entityId}/context`, undefined, signal),
     enabled: canView && entityId != null && entityId > 0,
     staleTime: 60_000,
   });

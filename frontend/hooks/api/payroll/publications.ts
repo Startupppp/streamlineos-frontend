@@ -11,8 +11,8 @@ export function useRunPublications(runId: number) {
   const canView = useCan("payroll:payslips:view");
   return useQuery<PayslipPublication[]>({
     queryKey: queryKeys.payroll.runPublications(runId),
-    queryFn: () =>
-      apiClient.get<PayslipPublication[]>(`/payroll/runs/${runId}/payslips`),
+    queryFn: ({ signal }) =>
+      apiClient.get<PayslipPublication[]>(`/payroll/runs/${runId}/payslips`, undefined, signal),
     staleTime: 30_000,
     enabled: canView && runId > 0,
   });

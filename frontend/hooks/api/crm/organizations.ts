@@ -21,11 +21,11 @@ import type {
 export function useCrmOrganizations(filters?: CrmOrganizationFilters) {
   return useGatedQuery<PaginatedCrmOrganizations>("crm:organizations:view", {
     queryKey: queryKeys.crmOrganizations.list(filters as Record<string, unknown>),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PaginatedCrmOrganizations>(
         "/crm/organizations",
         filters as Record<string, unknown>
-      ),
+      , signal),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
   });
@@ -35,12 +35,12 @@ export function useCrmOrganizationsForPicker(search?: string) {
   const canView = useCan("crm:organizations:view");
   return useQuery({
     queryKey: queryKeys.crmOrganizations.list({ picker: true, search: search ?? "" }),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PaginatedCrmOrganizations>("/crm/organizations", {
         page: 1,
         limit: 100,
         search: search ?? undefined,
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,
@@ -51,7 +51,7 @@ export function useCrmOrganizationDetail(id: number) {
   const canView = useCan("crm:organizations:view");
   return useQuery({
     queryKey: queryKeys.crmOrganizations.detail(id),
-    queryFn: () => apiClient.get<CrmOrganization>(`/crm/organizations/${id}`),
+    queryFn: ({ signal }) => apiClient.get<CrmOrganization>(`/crm/organizations/${id}`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canView && id > 0,
   });
@@ -98,7 +98,7 @@ export function useCrmOrgHierarchy(id: number) {
   const canView = useCan("crm:organizations:view");
   return useQuery({
     queryKey: queryKeys.crmOrganizations.hierarchy(id),
-    queryFn: () => apiClient.get<OrgHierarchyNode>(`/crm/organizations/${id}/hierarchy`),
+    queryFn: ({ signal }) => apiClient.get<OrgHierarchyNode>(`/crm/organizations/${id}/hierarchy`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canView && id > 0,
   });
@@ -108,7 +108,7 @@ export function useCrmOrgRollup(id: number) {
   const canView = useCan("crm:organizations:view");
   return useQuery({
     queryKey: queryKeys.crmOrganizations.rollup(id),
-    queryFn: () => apiClient.get<OrgRollup>(`/crm/organizations/${id}/roll-up`),
+    queryFn: ({ signal }) => apiClient.get<OrgRollup>(`/crm/organizations/${id}/roll-up`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canView && id > 0,
   });
@@ -118,7 +118,7 @@ export function useCrmOrgTimeline(id: number) {
   const canView = useCan("crm:organizations:view");
   return useQuery({
     queryKey: queryKeys.crmOrganizations.timeline(id),
-    queryFn: () => apiClient.get<OrgTimelineEvent[]>(`/crm/organizations/${id}/timeline`),
+    queryFn: ({ signal }) => apiClient.get<OrgTimelineEvent[]>(`/crm/organizations/${id}/timeline`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canView && id > 0,
   });
@@ -128,7 +128,7 @@ export function useCrmOrgRelatedLeads(id: number) {
   const canView = useCan("crm:organizations:view");
   return useQuery({
     queryKey: queryKeys.crmOrganizations.relatedLeads(id),
-    queryFn: () => apiClient.get<RelatedLead[]>(`/crm/organizations/${id}/related-leads`),
+    queryFn: ({ signal }) => apiClient.get<RelatedLead[]>(`/crm/organizations/${id}/related-leads`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canView && id > 0,
   });
@@ -138,7 +138,7 @@ export function useCrmPeopleSlugs() {
   const canView = useCan("crm:contacts:view");
   return useQuery({
     queryKey: queryKeys.crm.peopleSlugs(),
-    queryFn: () => apiClient.get<Record<string, string>>("/crm/people-slugs"),
+    queryFn: ({ signal }) => apiClient.get<Record<string, string>>("/crm/people-slugs"),
     staleTime: 2 * 60_000,
     enabled: canView,
   });

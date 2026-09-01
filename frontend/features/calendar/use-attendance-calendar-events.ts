@@ -36,8 +36,8 @@ export function useAttendanceCalendarEvents(
       };
       return {
         queryKey: queryKeys.hr.monthlyAttendance(params),
-        queryFn: () =>
-          apiClient.get<AttendanceLog[]>("/me/attendance/monthly", params),
+        queryFn: ({ signal }) =>
+          apiClient.get<AttendanceLog[]>("/me/attendance/monthly", params, signal),
         staleTime: 2 * 60_000,
         enabled: canViewAttendance && attendanceVisible,
       };

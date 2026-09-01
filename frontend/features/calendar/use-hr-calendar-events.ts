@@ -35,12 +35,12 @@ export function useHrCalendarEventsMapped(
 
   const { data, isError, error } = useQuery({
     queryKey: queryKeys.calendar.hrSupplemental(from, to),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<HrCalendarEvent[]>("/hr/calendar", {
         from,
         to,
         types: "BIRTHDAY,ANNIVERSARY,REVIEW_CYCLE,TRAVEL",
-      }),
+      }, signal),
     staleTime: 5 * 60_000,
     retry: false,
     enabled: !forbidden && hrVisible,

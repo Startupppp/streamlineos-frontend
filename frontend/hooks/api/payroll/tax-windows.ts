@@ -15,7 +15,7 @@ export function useTaxWindows() {
   const canManage = useCan("payroll:tax:manage");
   return useQuery({
     queryKey: queryKeys.payroll.taxWindows(),
-    queryFn: () => apiClient.get<TaxWindow[]>("/payroll/tax-windows"),
+    queryFn: ({ signal }) => apiClient.get<TaxWindow[]>("/payroll/tax-windows", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canManage,
   });

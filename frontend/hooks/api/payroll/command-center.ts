@@ -10,8 +10,8 @@ export function useCommandCenter(month: string) {
   const canView = useCan("payroll:runs:view");
   return useQuery({
     queryKey: queryKeys.payroll.commandCenter(month),
-    queryFn: () =>
-      apiClient.get<CommandCenterData>("/payroll/command-center", { month }),
+    queryFn: ({ signal }) =>
+      apiClient.get<CommandCenterData>("/payroll/command-center", { month }, signal),
     staleTime: 30_000,
     enabled: canView && !!month,
   });

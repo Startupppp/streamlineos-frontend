@@ -225,9 +225,9 @@ export function useTransfer(transferId: number) {
   const canView = useCan("inventory:stock:read");
   return useQuery<TransferDetail | null, Error>({
     queryKey: queryKeys.inventory.transfer(transferId),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const res = await apiClient.get<RawTransferDetail | null>(
-        `/inventory/stock/transfers/${transferId}`,
+        `/inventory/stock/transfers/${transferId}`, signal,
       );
       return res ? toTransferDetail(res) : null;
     },

@@ -64,9 +64,9 @@ export function useEffectiveRules(params: { employeeId: string; date: string } |
 export function useEntityVersions(entity: VersionEntity, id: number | null) {
   return useQuery({
     queryKey: queryKeys.hr.settingsHubVersions(entity, id),
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const qs = new URLSearchParams({ entity, id: String(id) });
-      return apiClient.get<VersionsResponse>(`/hr/settings-hub/versions?${qs}`);
+      return apiClient.get<VersionsResponse>(`/hr/settings-hub/versions?${qs}`, undefined, signal);
     },
     staleTime: 60_000,
     enabled: id !== null && id > 0,

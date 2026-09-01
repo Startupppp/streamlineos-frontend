@@ -15,13 +15,13 @@ export const useUserAuditLog = (
   const canManage = useCan("settings:organization:manage");
   return useQuery<AuditResponse, Error>({
     queryKey: [...queryKeys.users.detail(userId), "audit", params] as readonly unknown[],
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<AuditResponse>(`/users/${userId}/audit`, {
         ...(params?.cursor ? { cursor: params.cursor } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
         ...(params?.from ? { from: params.from } : {}),
         ...(params?.to ? { to: params.to } : {}),
-      }),
+      }, signal),
     staleTime: 30_000,
     ...options,
     enabled: !!userId && canManage && (options?.enabled ?? true),

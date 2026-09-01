@@ -66,7 +66,7 @@ export interface StartSessionResponse {
 export function usePublicSurvey(collectorToken: string) {
   return useQuery({
     queryKey: queryKeys.surveys.publicSurvey(collectorToken),
-    queryFn: () => apiClient.get<PublicSurveyResponse>(`/public/surveys/${collectorToken}`),
+    queryFn: ({ signal }) => apiClient.get<PublicSurveyResponse>(`/public/surveys/${collectorToken}`, undefined, signal),
     enabled: Boolean(collectorToken),
     retry: false,
     staleTime: 0,

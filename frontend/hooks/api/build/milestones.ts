@@ -29,7 +29,7 @@ export function useProjectMilestones(projectId: number) {
   const canView = useCan("build:view");
   return useQuery({
     queryKey: milestoneKey(projectId),
-    queryFn: () => apiClient.get<ProjectMilestone[]>(`/build/${projectId}/milestones`),
+    queryFn: ({ signal }) => apiClient.get<ProjectMilestone[]>(`/build/${projectId}/milestones`, undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 30_000,
   });
@@ -69,7 +69,7 @@ export function useProjectBudget(projectId: number) {
   const canManage = useCan("build:manage");
   return useQuery({
     queryKey: queryKeys.projects.budget(projectId),
-    queryFn: () => apiClient.get<ProjectBudget>(`/build/${projectId}/budget`),
+    queryFn: ({ signal }) => apiClient.get<ProjectBudget>(`/build/${projectId}/budget`, undefined, signal),
     enabled: canManage && !!projectId,
     staleTime: 60_000,
   });

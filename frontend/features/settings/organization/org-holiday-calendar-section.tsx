@@ -55,7 +55,7 @@ type AddHolidayValues = z.infer<typeof addHolidaySchema>;
 function useOrgHolidays() {
   return useQuery<OrgHoliday[]>({
     queryKey: ["org", "holidays"],
-    queryFn: () => apiClient.get<OrgHoliday[]>("/organization/holidays"),
+    queryFn: ({ signal }) => apiClient.get<OrgHoliday[]>("/organization/holidays", undefined, signal),
   });
 }
 

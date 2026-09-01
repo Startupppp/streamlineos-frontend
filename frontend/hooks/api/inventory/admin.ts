@@ -85,7 +85,7 @@ export function useInventorySettings() {
   const canView = useCan("inventory:settings:manage");
   return useQuery<InventorySettings, Error>({
     queryKey: queryKeys.inventory.settings(),
-    queryFn: () => apiClient.get<InventorySettings>("/inventory/settings"),
+    queryFn: ({ signal }) => apiClient.get<InventorySettings>("/inventory/settings", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canView,
   });
@@ -106,7 +106,7 @@ export function useNumberSequences() {
   const canView = useCan("inventory:settings:manage");
   return useQuery<NumberSequence[], Error>({
     queryKey: queryKeys.inventory.numberSequences(),
-    queryFn: () => apiClient.get<NumberSequence[]>("/inventory/settings/number-sequences"),
+    queryFn: ({ signal }) => apiClient.get<NumberSequence[]>("/inventory/settings/number-sequences", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canView,
   });
@@ -135,7 +135,7 @@ export function useSettingsHealth() {
   const canView = useCan("inventory:settings:manage");
   return useQuery<SettingsHealth, Error>({
     queryKey: [...queryKeys.inventory.settings(), "health"],
-    queryFn: () => apiClient.get<SettingsHealth>("/inventory/settings/health"),
+    queryFn: ({ signal }) => apiClient.get<SettingsHealth>("/inventory/settings/health", undefined, signal),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -162,8 +162,8 @@ export function useBarcodeLookup(code: string) {
   const canView = useCan("inventory:stock:read");
   return useQuery<BarcodeLookupResult, Error>({
     queryKey: queryKeys.inventory.barcodeLookup(code),
-    queryFn: () =>
-      apiClient.get<BarcodeLookupResult>("/inventory/barcode/lookup", { code }),
+    queryFn: ({ signal }) =>
+      apiClient.get<BarcodeLookupResult>("/inventory/barcode/lookup", { code }, signal),
     enabled: canView && code.length > 0,
     staleTime: 2 * 60_000,
   });
@@ -192,10 +192,10 @@ export function useImportJobs(params?: { page?: number }) {
   const canView = useCan("inventory:import");
   return useQuery<ImportJobListResponse, Error>({
     queryKey: queryKeys.inventory.importJobs(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<ImportJobListResponse>("/inventory/import/jobs", {
         ...(params?.page !== undefined ? { page: String(params.page) } : {}),
-      }),
+      }, signal),
     staleTime: 30_000,
     enabled: canView,
   });
@@ -205,7 +205,7 @@ export function useImportJob(id: number, refetchInterval?: number | false) {
   const canView = useCan("inventory:import");
   return useQuery<ImportJobDetail, Error>({
     queryKey: queryKeys.inventory.importJob(id),
-    queryFn: () => apiClient.get<ImportJobDetail>(`/inventory/import/jobs/${id}`),
+    queryFn: ({ signal }) => apiClient.get<ImportJobDetail>(`/inventory/import/jobs/${id}`, undefined, signal),
     enabled: canView && id > 0,
     staleTime: 15_000,
     ...(refetchInterval !== undefined ? { refetchInterval } : {}),

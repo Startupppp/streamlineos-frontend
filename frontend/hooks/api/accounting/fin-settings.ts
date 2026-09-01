@@ -28,7 +28,7 @@ export function useAccountingSettings() {
   const can = useCan("accounting:settings:read");
   return useQuery<AccountingSettings, Error>({
     queryKey: finSettingsKeys.settings(),
-    queryFn: () => apiClient.get<AccountingSettings>("/accounting/settings"),
+    queryFn: ({ signal }) => apiClient.get<AccountingSettings>("/accounting/settings", undefined, signal),
     staleTime: 120_000,
     enabled: can,
   });
@@ -50,7 +50,7 @@ export function useSetupStatus() {
   const can = useCan("accounting:settings:read");
   return useQuery<SetupStatus, Error>({
     queryKey: finSettingsKeys.setupStatus(),
-    queryFn: () => apiClient.get<SetupStatus>("/accounting/settings/setup-status"),
+    queryFn: ({ signal }) => apiClient.get<SetupStatus>("/accounting/settings/setup-status", undefined, signal),
     staleTime: 300_000,
     enabled: can,
   });
@@ -60,7 +60,7 @@ export function useNumberSequences() {
   const can = useCan("accounting:settings:read");
   return useQuery<{ items: NumberSequence[] }, Error>({
     queryKey: finSettingsKeys.sequences(),
-    queryFn: () => apiClient.get<{ items: NumberSequence[] }>("/accounting/settings/sequences"),
+    queryFn: ({ signal }) => apiClient.get<{ items: NumberSequence[] }>("/accounting/settings/sequences", undefined, signal),
     staleTime: 300_000,
     enabled: can,
   });
@@ -85,8 +85,8 @@ export function useSystemAccounts() {
   const can = useCan("accounting:settings:manage");
   return useQuery<{ items: SystemAccountMapping[] }, Error>({
     queryKey: finSettingsKeys.systemAccounts(),
-    queryFn: () =>
-      apiClient.get<{ items: SystemAccountMapping[] }>("/accounting/settings/system-accounts"),
+    queryFn: ({ signal }) =>
+      apiClient.get<{ items: SystemAccountMapping[] }>("/accounting/settings/system-accounts", undefined, signal),
     staleTime: 300_000,
     enabled: can,
   });

@@ -29,7 +29,7 @@ export type OrgSetupSession = {
 export function useOrgSetupSessionQuery(enabled = true) {
   return useQuery({
     queryKey: queryKeys.orgSetup.session(),
-    queryFn: () => apiClient.get<OrgSetupSession>("/org/setup/session"),
+    queryFn: ({ signal }) => apiClient.get<OrgSetupSession>("/org/setup/session", undefined, signal),
     staleTime: 30_000,
     retry: false,
     enabled,

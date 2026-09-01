@@ -57,7 +57,7 @@ export function useCreditNotes(params: ListCreditNotesParams = {}) {
   const can = useCan("accounting:credit-notes:read");
   return useQuery<CursorPage<CreditNote>, Error>({
     queryKey: arKeys.creditNotes.list(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPage<CreditNote>>(
         "/accounting/credit-notes",
         toQuery(params),
@@ -79,7 +79,7 @@ export function useRecurringTemplates(
   const can = useCan("accounting:recurring:read");
   return useQuery<CursorPage<RecurringInvoiceTemplate>, Error>({
     queryKey: arKeys.recurringTemplates.list(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPage<RecurringInvoiceTemplate>>(
         "/accounting/recurring-invoices",
         toQuery(params),
@@ -102,7 +102,7 @@ export function useArPayments(params: ArPaymentsParams = {}) {
   const can = useCan("accounting:receivables:read");
   return useQuery<CursorPage<ArPayment>, Error>({
     queryKey: arKeys.arPayments.list(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<CursorPage<ArPayment>>(
         "/accounting/ar-payments",
         toQuery(params),

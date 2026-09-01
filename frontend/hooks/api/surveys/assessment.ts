@@ -32,7 +32,7 @@ export interface SurveyCertificate {
 export function useAssessmentAttempts(surveyId: number, params?: { status?: AssessmentAttemptStatus; page?: number; pageSize?: number }) {
   return useQuery({
     queryKey: queryKeys.surveys.assessmentAttempts(surveyId, params as Record<string, unknown>),
-    queryFn: () => apiClient.get<SurveyAssessmentAttempt[]>(`/surveys/${surveyId}/assessment/attempts`, params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get<SurveyAssessmentAttempt[]>(`/surveys/${surveyId}/assessment/attempts`, params as Record<string, unknown>, signal),
     staleTime: 15_000,
   });
 }
@@ -40,7 +40,7 @@ export function useAssessmentAttempts(surveyId: number, params?: { status?: Asse
 export function useSurveyCertificates(surveyId: number) {
   return useQuery({
     queryKey: queryKeys.surveys.certificates(surveyId),
-    queryFn: () => apiClient.get<SurveyCertificate[]>(`/surveys/${surveyId}/certificates`),
+    queryFn: ({ signal }) => apiClient.get<SurveyCertificate[]>(`/surveys/${surveyId}/certificates`, undefined, signal),
     staleTime: 15_000,
   });
 }

@@ -47,8 +47,8 @@ type UpdateRuleInput = { id: number } & Partial<CreateRuleInput>;
 export function useAutomationEvents() {
   return useGatedQuery("crm:automations:manage", {
     queryKey: queryKeys.crmAutomations.events(),
-    queryFn: () =>
-      apiClient.get<{ events: CrmAutomationEvent[] }>("/crm/automation/events"),
+    queryFn: ({ signal }) =>
+      apiClient.get<{ events: CrmAutomationEvent[] }>("/crm/automation/events", undefined, signal),
     staleTime: 5 * 60_000,
   });
 }
@@ -56,10 +56,10 @@ export function useAutomationEvents() {
 export function useAutomationActions() {
   return useGatedQuery("crm:automations:manage", {
     queryKey: queryKeys.crmAutomations.actions(),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<{ actions: CrmAutomationAction[] }>(
         "/crm/automation/actions"
-      ),
+      , undefined, signal),
     staleTime: 5 * 60_000,
   });
 }
@@ -67,8 +67,8 @@ export function useAutomationActions() {
 export function useCrmAutomationRules() {
   return useGatedQuery("crm:automations:manage", {
     queryKey: queryKeys.crmAutomations.list(),
-    queryFn: () =>
-      apiClient.get<{ rules: CrmAutomationRule[] }>("/crm/automations"),
+    queryFn: ({ signal }) =>
+      apiClient.get<{ rules: CrmAutomationRule[] }>("/crm/automations", undefined, signal),
     staleTime: 30_000,
   });
 }
@@ -152,11 +152,11 @@ export function useTestCrmAutomationRule() {
 export function useCrmAutomationRuns(ruleId: number, page: number) {
   return useGatedQuery("crm:automations:manage", {
     queryKey: queryKeys.crmAutomations.runs(ruleId, page),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<AutomationRunsResponse>(
         `/crm/automations/${ruleId}/runs`,
         { page, limit: 20 }
-      ),
+      , signal),
     staleTime: 30_000,
   });
 }

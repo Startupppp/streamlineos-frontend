@@ -23,7 +23,7 @@ export function useBugs(projectId?: number, filters?: BugFilters) {
 
   return useQuery<Bug[]>({
     queryKey: queryKeys.projects.bugs.list(projectId, filters),
-    queryFn: () => apiClient.get<Bug[]>(`/build/${projectId}/bugs`, params),
+    queryFn: ({ signal }) => apiClient.get<Bug[]>(`/build/${projectId}/bugs`, params, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
     placeholderData: keepPreviousData,

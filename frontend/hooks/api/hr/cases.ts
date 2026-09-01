@@ -96,7 +96,7 @@ export function useHrCases(params: ListCasesParams = {}) {
   const canCases = useCan("hr:cases:view");
   return useQuery({
     queryKey: caseKeys.list(params),
-    queryFn: () => apiClient.get<CursorResult<HrCase>>("/hr/cases", params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get<CursorResult<HrCase>>("/hr/cases", params as Record<string, unknown>),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
     enabled: canCases,
@@ -106,7 +106,7 @@ export function useHrCases(params: ListCasesParams = {}) {
 export function useHrCase(id: number) {
   return useQuery({
     queryKey: caseKeys.detail(id),
-    queryFn: () => apiClient.get<HrCase>(`/hr/cases/${id}`),
+    queryFn: ({ signal }) => apiClient.get<HrCase>(`/hr/cases/${id}`, undefined, signal),
     enabled: id > 0,
     staleTime: 30_000,
   });
@@ -186,7 +186,7 @@ export function useStartInvestigation(id: number) {
 export function useCaseNotes(caseId: number) {
   return useQuery({
     queryKey: caseKeys.notes(caseId),
-    queryFn: () => apiClient.get<CaseNote[]>(`/hr/cases/${caseId}/notes`),
+    queryFn: ({ signal }) => apiClient.get<CaseNote[]>(`/hr/cases/${caseId}/notes`, undefined, signal),
     enabled: caseId > 0,
     staleTime: 20_000,
   });
@@ -209,7 +209,7 @@ export function useAddCaseNote(caseId: number) {
 export function useCaseDocuments(caseId: number) {
   return useQuery({
     queryKey: caseKeys.documents(caseId),
-    queryFn: () => apiClient.get<CaseDocument[]>(`/hr/cases/${caseId}/documents`),
+    queryFn: ({ signal }) => apiClient.get<CaseDocument[]>(`/hr/cases/${caseId}/documents`, undefined, signal),
     enabled: caseId > 0,
     staleTime: 30_000,
   });
@@ -218,7 +218,7 @@ export function useCaseDocuments(caseId: number) {
 export function useDisciplinaryActions(params: { employeeId?: string; cursor?: string; limit?: number; actionType?: string } = {}) {
   return useQuery({
     queryKey: caseKeys.disciplinaryList(params),
-    queryFn: () => apiClient.get<CursorResult<DisciplinaryAction>>("/hr/cases/disciplinary", params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get<CursorResult<DisciplinaryAction>>("/hr/cases/disciplinary", params as Record<string, unknown>),
     staleTime: 30_000,
   });
 }
@@ -249,7 +249,7 @@ export function useCreateDisciplinaryAction() {
 export function useMyDisciplinaryActions() {
   return useQuery({
     queryKey: [...caseKeys.disciplinary, "mine"] as const,
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<
         Array<{
           id: number;

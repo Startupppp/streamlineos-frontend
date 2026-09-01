@@ -27,7 +27,7 @@ export function useKbPageTemplates() {
   const canViewPages = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pageTemplates(),
-    queryFn: () => apiClient.get<KbPageTemplate[]>("/kb/page-templates"),
+    queryFn: ({ signal }) => apiClient.get<KbPageTemplate[]>("/kb/page-templates", undefined, signal),
     enabled: canViewPages,
     staleTime: 300_000,
   });

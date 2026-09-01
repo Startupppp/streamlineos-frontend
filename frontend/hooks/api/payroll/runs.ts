@@ -26,8 +26,8 @@ export function usePayrollRuns(params?: {
   const canView = useCan("payroll:runs:view");
   return useQuery({
     queryKey: queryKeys.payroll.runs(params as Record<string, unknown> | undefined),
-    queryFn: () =>
-      apiClient.get<RunsPage>("/payroll/runs", params as Record<string, string | number> | undefined),
+    queryFn: ({ signal }) =>
+      apiClient.get<RunsPage>("/payroll/runs", params as Record<string, string | number> | undefined, signal),
     staleTime: 60_000,
     enabled: canView,
   });
@@ -37,7 +37,7 @@ export function usePayrollRun(runId: number) {
   const canView = useCan("payroll:runs:view");
   return useQuery({
     queryKey: queryKeys.payroll.run(runId),
-    queryFn: () => apiClient.get<RunDetail>(`/payroll/runs/${runId}`),
+    queryFn: ({ signal }) => apiClient.get<RunDetail>(`/payroll/runs/${runId}`, undefined, signal),
     staleTime: 30_000,
     enabled: canView && runId > 0,
   });

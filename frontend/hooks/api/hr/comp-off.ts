@@ -14,7 +14,7 @@ export function useCompOff() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<CompOffRecord[]>({
     queryKey: queryKeys.hr.compOff(),
-    queryFn: () => apiClient.get<CompOffRecord[]>("/hr/overtime/comp-off"),
+    queryFn: ({ signal }) => apiClient.get<CompOffRecord[]>("/hr/overtime/comp-off", undefined, signal),
     staleTime: 60_000,
     enabled: hrEnabled && canView,
   });

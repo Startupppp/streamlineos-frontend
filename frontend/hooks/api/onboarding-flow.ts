@@ -21,7 +21,7 @@ export type OnboardingSessionPatch = {
 export function useOnboardingSessionQuery(enabled = true) {
   return useQuery({
     queryKey: queryKeys.onboardingFlow.session(),
-    queryFn: () => apiClient.get<OnboardingFlowSession>("/onboarding/session"),
+    queryFn: ({ signal }) => apiClient.get<OnboardingFlowSession>("/onboarding/session", undefined, signal),
     staleTime: 30_000,
     retry: false,
     enabled,
@@ -67,7 +67,7 @@ export type ModuleChecklist = {
 export function useModuleChecklists(enabled = true) {
   return useQuery({
     queryKey: queryKeys.onboardingFlow.moduleChecklists(),
-    queryFn: () => apiClient.get<ModuleChecklist[]>("/onboarding/module-checklists"),
+    queryFn: ({ signal }) => apiClient.get<ModuleChecklist[]>("/onboarding/module-checklists", undefined, signal),
     staleTime: 30_000,
     enabled,
   });
@@ -76,7 +76,7 @@ export function useModuleChecklists(enabled = true) {
 export function useModuleChecklist(moduleKey: string, enabled = true) {
   return useQuery({
     queryKey: queryKeys.onboardingFlow.moduleChecklist(moduleKey),
-    queryFn: () => apiClient.get<ModuleChecklist>(`/onboarding/module-checklists/${moduleKey}`),
+    queryFn: ({ signal }) => apiClient.get<ModuleChecklist>(`/onboarding/module-checklists/${moduleKey}`, undefined, signal),
     staleTime: 30_000,
     enabled,
   });
@@ -146,7 +146,7 @@ export type GuidedTour = {
 export function useGuidedTours(enabled = true) {
   return useQuery({
     queryKey: queryKeys.onboardingFlow.tours(),
-    queryFn: () => apiClient.get<GuidedTour[]>("/onboarding/tours"),
+    queryFn: ({ signal }) => apiClient.get<GuidedTour[]>("/onboarding/tours", undefined, signal),
     staleTime: 30_000,
     enabled,
   });

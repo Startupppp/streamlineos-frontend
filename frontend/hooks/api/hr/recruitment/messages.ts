@@ -46,9 +46,9 @@ export interface SendCandidateMessageInput {
 export function useCandidateMessages(candidateId?: number) {
   return useQuery({
     queryKey: queryKeys.hr.candidateMessages(candidateId),
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const params = candidateId ? `?candidateId=${candidateId}` : "";
-      return apiClient.get<CandidateMessage[]>(`/hr/recruitment/messages${params}`);
+      return apiClient.get<CandidateMessage[]>(`/hr/recruitment/messages${params}`, undefined, signal);
     },
     staleTime: 30_000,
     enabled: candidateId !== undefined,
@@ -58,7 +58,7 @@ export function useCandidateMessages(candidateId?: number) {
 export function useMessageThreads() {
   return useQuery({
     queryKey: queryKeys.hr.messageThreads(),
-    queryFn: () => apiClient.get<MessageThread[]>("/hr/recruitment/messages/threads"),
+    queryFn: ({ signal }) => apiClient.get<MessageThread[]>("/hr/recruitment/messages/threads", undefined, signal),
     staleTime: 65_000,
     refetchInterval: 60_000,
   });

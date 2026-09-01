@@ -9,7 +9,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AnimatedLogo } from "@/features/landing/components/animated-logo";
+import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";

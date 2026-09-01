@@ -49,11 +49,11 @@ export function usePrincipalGroups(
   const canManage = useCan("settings:rbac:manage");
   return useQuery<PaginatedGroupsResponse, Error>({
     queryKey: queryKeys.principalGroups.list(params),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<PaginatedGroupsResponse>("/principal-groups", {
         cursor: params.cursor,
         limit: params.limit,
-      }),
+      }, signal),
     staleTime: 60_000,
     ...options,
     enabled: canManage && (options?.enabled ?? true),
@@ -67,7 +67,7 @@ export function useGroupMembers(
   const canManage = useCan("settings:rbac:manage");
   return useQuery<GroupMember[], Error>({
     queryKey: queryKeys.principalGroups.members(groupId),
-    queryFn: () => apiClient.get<GroupMember[]>(`/principal-groups/${groupId}/members`),
+    queryFn: ({ signal }) => apiClient.get<GroupMember[]>(`/principal-groups/${groupId}/members`, undefined, signal),
     staleTime: 60_000,
     ...options,
     enabled: canManage && !!groupId && (options?.enabled ?? true),
@@ -81,7 +81,7 @@ export function useGroupRoles(
   const canManage = useCan("settings:rbac:manage");
   return useQuery<GroupRole[], Error>({
     queryKey: queryKeys.principalGroups.roles(groupId),
-    queryFn: () => apiClient.get<GroupRole[]>(`/principal-groups/${groupId}/roles`),
+    queryFn: ({ signal }) => apiClient.get<GroupRole[]>(`/principal-groups/${groupId}/roles`, undefined, signal),
     staleTime: 60_000,
     ...options,
     enabled: canManage && !!groupId && (options?.enabled ?? true),

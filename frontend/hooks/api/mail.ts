@@ -25,7 +25,7 @@ import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 export function useMailAccounts() {
   return useQuery({
     queryKey: queryKeys.mail.accounts(),
-    queryFn: () => apiClient.get<MailAccount[]>("/mail/accounts"),
+    queryFn: ({ signal }) => apiClient.get<MailAccount[]>("/mail/accounts", undefined, signal),
     staleTime: 5 * 60_000,
   });
 }
@@ -58,9 +58,9 @@ export function useMailMessages(params: MailMessagesParams) {
 export function useMailThread(accountId: number | undefined, threadId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.mail.thread(accountId ?? 0, threadId ?? ""),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<MailMessageDetail[]>(
-        `/mail/threads/${threadId}?accountId=${accountId}`,
+        `/mail/threads/${threadId}?accountId=${accountId}`, signal,
       ),
     enabled: accountId !== undefined && threadId !== undefined && threadId !== "",
     staleTime: 2 * 60_000,
@@ -70,9 +70,9 @@ export function useMailThread(accountId: number | undefined, threadId: string | 
 export function useMailMessage(accountId: number | undefined, messageId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.mail.message(accountId ?? 0, messageId ?? ""),
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiClient.get<MailMessageDetail>(
-        `/mail/messages/${messageId}?accountId=${accountId}`,
+        `/mail/messages/${messageId}?accountId=${accountId}`, signal,
       ),
     enabled: accountId !== undefined && messageId !== undefined && messageId !== "",
     staleTime: 2 * 60_000,

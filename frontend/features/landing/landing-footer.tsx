@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { AnimatedLogo } from "./components/animated-logo";
+import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { BRAND_NAME, BRAND_TAGLINE } from "@/lib/branding";
 import { MotionItem, MotionReveal, MotionStagger } from "./components/motion/motion-reveal";
 import { EASE_OUT } from "./components/motion/variants";
