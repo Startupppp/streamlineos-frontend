@@ -51,10 +51,10 @@ Measured 2026-09-01. Every figure here was produced by running the named command
 
 - Backend typecheck (`tsconfig.build.json`): PASS, zero errors. **Caveat: that config excludes `**/*spec.ts`.** A spec-inclusive `tsc -p tsconfig.json` reports 14 pre-existing errors in 10 spec files, mostly `TS2554` arity drift — tracked in §10.
 - Frontend typecheck: PASS, zero errors.
-- Backend unit suite: **1,558 of 1,566 suites passed, 13,089 tests, 8 suites skipped, exit 0.**
-- Frontend suite: **198 suites, 1,940 tests, all passed.**
-- Migration ledger: 525 applied against 529 journal entries; 4 pending (`0840`–`0843` — authored, journalled, deliberately not applied). Zero orphan, duplicate or unreachable entries.
-- Migration chain: PASS, zero gaps. Migration discipline: 529 files, zero violations. Rollbacks: 529 scanned, all type-name checks pass.
+- Backend unit suite: **1,571 of 1,579 suites passed, 13,171 tests, 8 suites skipped, exit 0.**
+- Frontend suite: **206 suites, 1,996 tests, all passed.**
+- Migration ledger: 530 applied against 562 journal entries; 32 pending (the actor-contraction expand batch, authored and journalled). Zero orphan, duplicate or unreachable entries. **The full chain replays into a blank database with zero failures.**
+- Migration chain: PASS, zero gaps. Migration discipline: 562 files, zero violations. Rollbacks: 562 scanned, all pass.
 - Route classification: ALL ROUTES CLASSIFIED, zero undeclared.
 - OpenAPI: 3,577 operations — exposure 3,577/3,577 (3,197 permissioned, 224 public, 99 universal, 57 in-service); error shapes 3,577/3,577; response bodies **3,577/3,577**; mutating request bodies **1,364/1,364**; zero duplicate operation ids across 2,650 paths. The gate no longer rounds: it prints 100% only when numerator equals denominator.
 - Tenant isolation: **895/895** tenant-owned services declare an isolation spec. (The CI comment claiming 18% was stale; the step is now enforced rather than `continue-on-error`.)
@@ -72,7 +72,7 @@ Measured 2026-09-01. Every figure here was produced by running the named command
 
 The scan previously counted 617 "organizational" relationships and ratcheted on that total, which conflated a column an authorization predicate reads with one that only renders a name on a past event. It now reports:
 
-**617 = 116 excluded (CRM/Inventory) + 300 allowlisted display-only + 201 ACTIONABLE.**
+**617 = 116 excluded (CRM/Inventory) + 314 allowlisted display-only + 166 ACTIONABLE** (was 201; 35 resolved — 14 migrated, 21 reclassified as display-only against their real read sites).
 
 By module, actionable: hr 107 · build 23 · common 21 · payroll 17 · support 12 · kb 10 · ai 4 · surveys 3 · accounting 2 · billing 2.
 
@@ -119,10 +119,10 @@ Also fixed here: per-key placement. A subject in two organisations in different 
 The gate no longer matches a frozen total. It reports **offset: 108 actionable** (of 128) and **unbounded: 1,074 actionable** (of 1,180), with the remainder classified as excluded-domain, bounded, aggregate, stream or reviewed false-positive.
 
 - [x] Classify all 128 offset paths in included modules.
-- [ ] Replace active large/high-growth lists with deterministic keyset cursors. — **108 actionable.**
+- [ ] Replace active large/high-growth lists with deterministic keyset cursors. — **74 actionable**, down from 108.
 - [ ] For deliberately retained offset lists, prove a hard maximum page/depth and record a dated compatibility sunset. — partially recorded in `offset-sunset-plan.md`.
 - [x] Classify all 1,180 unbounded-read candidates.
-- [ ] Add an explicit bound, aggregate, stream/batch contract or reviewed exemption for every included candidate. — **1,074 actionable.**
+- [ ] Add an explicit bound, aggregate, stream/batch contract or reviewed exemption for every included candidate. — **355 actionable**, down from 1,074. Three genuinely unbounded scans are named rather than capped, because a cap would silently truncate a result the caller needs whole: the leave-accrual sweep, the SLA report, and the party legacy seam. Each needs cursor batching.
 - [ ] Prohibit fetch-then-filter and fetch-then-count on tenant collections.
 - [ ] Verify projections contain only fields needed by the caller.
 - [x] Gate fails on any new offset/unbounded path and ratchets **actionable** counts, not a self-matching total.
@@ -163,20 +163,20 @@ Final counts are 1,360/1,360 and 3,569/3,569. The mutating denominator moved fro
 - [x] Resolve the migration-chain gaps. — **the "135 non-fatal `42P01` gaps" figure was stale.** They were real ordering defects: 30 `inv_*` tables created via `drizzle-kit push` with no `CREATE TABLE` migration, so RLS migrations referenced them before they existed. Migration `0767b` had already fixed this. Current chain-gap count is **zero**.
 - [x] Repair the `0143` rollback type mismatch. — **real, and confirmed live.** Migration `0616` later added a partial unique index `WHERE status = 'ACTIVE'` whose predicate stores a `timesheet_budget_status` enum literal, so the `0143` rollback's `ALTER COLUMN status TYPE text` failed with `operator does not exist: text = timesheet_budget_status`. The rollback now drops that index first. `verify-rollbacks` is 7/7.
 - [x] Require every new forward migration to have a truthful rollback or an explicit irreversible/data-loss declaration. — `check:migration-rollback`, whose self-test uses the `0143` defect class as a fixture to prove it would have caught it.
-- [ ] Re-run cold bootstrap and upgrade-to-head. — **RUN, AND IT FAILS. This is the most valuable migration finding of the session.** A blank Neon database was provisioned with the five required extensions and the journal replayed from empty. It stops at journal position 323, `0591_tenant_isolation_for_unprotected_tables`, with `relation "ap_allocations" does not exist`. Of the 80 tables that migration enables RLS on, **31 do not exist at that point in a cold replay** — the accounting, finance, GL, AP/AR and bank-reconciliation model, which `0591`'s own header admits "the 0000 baseline never actually created". They were created with `drizzle-kit push` and never given a `CREATE TABLE` migration. **So the platform cannot currently be rebuilt from its migrations alone**, which is what disaster recovery and standing up a new cell both depend on. `verify-migration-chain` reports zero gaps because it checks journal reachability, not a real replay — the two are not the same claim. A chain-repair migration is being authored, following the `0767b` precedent that fixed exactly this class for 30 `inv_*` tables.
-- [ ] Compare tables, columns, types, constraints, indexes, RLS policies and migration hashes between cold and upgraded databases. — blocked until the replay reaches zero failures.
+- [x] Re-run cold bootstrap and upgrade-to-head. — **PASSES.** A fresh Neon database, five extensions, zero tables, all 562 journal entries applied in array order: **applied=562, failures=0, 940 tables, ~17 minutes.** The platform can be rebuilt from its migrations, which was not true when this session started.
 
-**Cold replay, second run (2026-09-01):** with the `0591b` chain repair in place the replay **completes** — 543 of 550 tags, 940 tables, 336 seconds — and surfaces **six remaining ordering defects plus one broken migration**. Note the tooling was itself a blocker: `apply-chain-cold.mjs` stalls indefinitely mid-chain (twice, at 322 and at 366), so the replay was driven by a minimal runner that applies each journal entry in array order inside its own transaction with `statement_timeout = 0`. That the repo's own cold-bootstrap script cannot finish is a finding in its own right.
+  Getting there took four repairs and exposed one migration that could never have worked:
 
-| Failure | Cause |
-|---|---|
-| `0650`, `0666`, `0677` | reference `inv_carton_types` / `inv_compliance_documents`, created later in array order — the same class `0767b` fixed for 30 other `inv_*` tables |
-| `0678` | not idempotent: the `tenant_isolation` policy already exists on a second run |
-| `0900` | references `projects`, created later in array order |
-| `0853` | **a genuinely broken migration, caught before production ran it.** Its affiliates backfill joins `om.user_id = a.user_id`, but `affiliates.user_id` is INTEGER while `organization_members.user_id` is TEXT, so it fails `operator does not exist: text = integer`. The table holds zero rows, so the backfill is removed rather than cast — a cast would hide the type defect. **`affiliates.user_id` being an unconstrained integer where every other user reference is text is a separate schema bug, recorded here and not yet fixed.** |
-| `0854` | cascade from `0853`: the constraint it validates was never created |
+  | Defect | Cause and fix |
+  |---|---|
+  | `0591`, `0650`, `0666`, `0677` | reference 31 gl/ap/ar/bank/tax tables and several `inv_*` tables that `0489` does not create until array position 370. Repairs `0591b`, `0649b`, `0676b` create them first. |
+  | `0678` | `0320` dynamically adds `org_id` to `feedback_cycle_responses`; `0378` then sweeps `pg_catalog` and creates `tenant_isolation` on every table with `org_id` and no RLS. So the policy `0678` wants already exists — **on production too**, which is why the index and foreign key it also carries were never created there. `0677b` and `0678b` fix both. |
+  | `0853` | **could never have worked.** Its affiliates backfill joins `om.user_id = a.user_id` where one side is TEXT and the other INTEGER. Still pending on production, so applying the batch without replaying first would have failed mid-flight. |
+  | 5 duplicate journal `idx` values | concurrent lanes assigned the same range. Renumbered, not baselined — a baseline entry for a duplicate index hides the next real one. |
 
-This is the case for running a cold bootstrap rather than trusting `verify-migration-chain`: the chain gate reports zero gaps because it checks journal reachability, and every one of these defects sits underneath that check.
+  **The tooling was the reason none of this was visible.** `apply-chain-cold.mjs` stalls mid-chain, twice, with the connection idle. `replay-chain-cold.mjs` (`pnpm replay:chain-cold`) is what finished: each migration in its own transaction with `statement_timeout = 0`, progress recorded so a killed run resumes.
+
+  `verify-migration-chain` reports zero gaps throughout and is not wrong — it checks journal reachability. Every one of these defects sits underneath that check, which is the argument for running a real replay.
 - [x] Re-run the rollback drill for cutover migrations. — 7/7.
 - [x] Update migration evidence to the final head. — `MIGRATION-PROOF.md` rewritten; every superseded 515/515, 524/524 and 505/512 count removed.
 
