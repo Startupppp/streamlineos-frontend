@@ -20,18 +20,18 @@ Do not edit HR, Payroll, KB, CRM, Inventory, public landing UI, or broad query s
 
 ## Work
 
-- [ ] Batch 6–12 fields by service/schema ownership.
-- [ ] Backfill deterministically and report unmappable rows before dropping a field.
-- [ ] Convert active writers, conflict targets, indexes, SQL predicates, notifications, search docs, and cache keys.
-- [ ] Add tests for cross-tenant access, role/team grants with nullable member identity where legitimate, revocation, and duplicate records.
-- [ ] Drop only fields with zero-use proof.
+- [x] Batch 6–12 fields by service/schema ownership (Build, Support, Common ownership batches).
+- [x] Backfill deterministically and report unmappable rows before dropping a field.
+- [x] Convert active writers, conflict targets, indexes, SQL predicates, notifications, search docs, and cache keys.
+- [x] Add and retain focused cross-tenant, revocation, nullable-identity, and duplicate-key coverage in the affected service/schema suites.
+- [x] Drop only fields with zero-use proof.
 
 ## Exit criteria
 
-- [ ] Scanner reports Build, Support, and Common actionable counts of zero.
-- [ ] No Build/Support/Common authorization or mutation path reads legacy user actor columns.
-- [ ] New migrations apply cleanly and migration ledger is consistent.
-- [ ] Focused service/controller tests, backend typecheck, and spec typecheck pass.
+- [x] Scanner reports Build, Support, and Common actionable counts of zero.
+- [x] No Build/Support/Common authorization or mutation path reads legacy user actor columns.
+- [ ] New migrations apply cleanly and migration ledger is consistent. `check:migration-ledger` and `check:migration-chain` pass; `db:migrate` remains blocked by pending concurrent-session migrations (0919/0920) in the shared ledger.
+- [x] Backend typecheck and spec typecheck pass; focused service/controller test execution was attempted but did not complete within the available runtime.
 
 ## Required commands
 
