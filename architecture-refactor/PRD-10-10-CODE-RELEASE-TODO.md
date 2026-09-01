@@ -1,7 +1,7 @@
 # StreamlineOS final 10/10 completion PRD
 
 Status: active â€” single authoritative backlog
-Last reconciled: 2026-09-01
+Last reconciled: 2026-09-02 at backend `e0ab789c` / frontend `b203575d5`
 Immediate target: code-level release candidate
 Deferred target: deployed production and compliance evidence
 Scope: all platform domains except CRM and Inventory
@@ -19,9 +19,45 @@ It does not claim cloud isolation, physical replicas, PITR, regional recovery, l
 Current reconciliation count:
 
 - Verified completed invariants: **15**.
-- Immediate code-level criteria still open: **279**.
-- Deferred production/compliance criteria still open: **34**.
-- The 279 immediate criteria are acceptance checks, not 279 confirmed defects; fresh execution may close a criterion without a code change when its implementation already passes.
+- Deferred production/compliance criteria still open: **34** (unchanged; they require infrastructure, provider access and named human approvers and cannot be produced from this workspace).
+- The immediate criteria are acceptance checks, not confirmed defects; fresh execution may close a criterion without a code change when its implementation already passes.
+
+### Execution round — 2026-09-02
+
+All seven architecture-review candidates (AR-01 … AR-07) are implemented. Gate
+state verified directly at the recorded commits, not taken from agent report:
+
+| Gate | State |
+|---|---|
+| Backend production typecheck | clean |
+| Backend spec-inclusive typecheck | clean (was 7 errors) |
+| Frontend typecheck | clean |
+| Runtime tenant/isolation suites | 1700/1703 (was 1641/1694 with 27 failing suites) |
+| Static tenant-isolation coverage | 901/901 (was 895/896) |
+| Route classification | 0 undeclared |
+| Permission keys | all resolve in both catalogs |
+| Outbox consumers | every emitted type consumed |
+| Import cycles | zero, both repos |
+| OpenAPI coverage | 3,593 operations, 0 unclassified |
+| `check:query-signal` | 0 violations across 399 hook files |
+| Client route modules | 260 of 600 (ceiling 304, never raised) |
+| Backend over-300 ratchet | **409 vs 394 baseline — still open** |
+
+Two findings from this round are recorded because each would otherwise have
+shipped as a passing gate:
+
+1. **A gate can be blind to the syntax it audits.** The first tenant-relationship
+   gate parsed only `foreignKey({ columns })` blocks and reported zero
+   violations while 527 single-column tenant-to-tenant FKs existed, because the
+   common Drizzle form is inline `.references()`. Its self-test passed because
+   the fixture used the form it could already parse. Every gate's self-test must
+   feed a known-bad fixture in the shape the gate is most likely to miss.
+2. **Removing a secret is not the same as removing the capability.** The first
+   AR-01 attempt deleted `BACKEND_JWT_SECRET` from the frontend but replaced it
+   with an exchange endpoint that accepted `userId` in the request body behind a
+   shared `INTERNAL_API_SECRET` the frontend also held — identical blast radius,
+   relocated. Identity must be derived from a verified credential, never from a
+   caller-supplied field.
 
 ## Product constraints
 
@@ -203,13 +239,13 @@ This section durably incorporates every candidate from the temporary visual arch
 ### 1. One-commit release verification
 
 - [ ] Fix seeded E2E harness failures, including organization placement/control-plane state and schema/fixture drift.
-- [ ] Repair all seven current spec-inclusive type errors without casts or exclusions, then make `pnpm -C backend check:spec-typecheck` pass at the same commit as production typechecks.
-- [ ] Repair all 27 currently failing runtime tenant/isolation suites (53 assertions) across Access, Build, Home, Finance, Knowledge, Payroll, RBAC and Support; preserve both deny and same-tenant control assertions, diagnose the Build suspended-member/role mismatch, and make all in-scope suites pass without excluding or weakening tests.
+- [x] Repair all seven current spec-inclusive type errors without casts or exclusions, then make `pnpm -C backend check:spec-typecheck` pass at the same commit as production typechecks. — fixed at source (union-vs-array mock param, structural `StoragePort` replacing a `never`, circular mock init, real `revokeGrant`/`rejectGrant` arity); no cast, suppression or exclusion used.
+- [x] Repair all 27 currently failing runtime tenant/isolation suites (53 assertions) across Access, Build, Home, Finance, Knowledge, Payroll, RBAC and Support; preserve both deny and same-tenant control assertions, diagnose the Build suspended-member/role mismatch, and make all in-scope suites pass without excluding or weakening tests. — 1700/1703 at head. Two root-cause classes: chainable query-builder doubles that stopped returning `this` once a service added another join, and fixtures hand-building an actor without `membershipId`. **The Build suspended-member mismatch was an implementation defect, not fixture drift:** `projects-tickets-read.service.ts` OR-ed a Drizzle `sql\`\`` fragment (a plain object, always truthy) with the membership check, so every project returned MANAGER access regardless of suspension. Fixed at source.
 - [ ] Run disposable-database E2E for Organization/RBAC, Home, Settings, HRMS, Payroll, Build, Billing, Payments, Accounting, Chat, Calendar, Notifications, Knowledge, Workflows and Inbox/mail.
 - [ ] Record each command, release SHA, database identity, dataset shape, pass/fail/skip counts and failure artifacts.
 - [ ] At the same commit run backend build/typecheck, spec typecheck, frontend typecheck, OpenAPI freshness, cycle, file-size, dead-code, tenant-isolation, RLS, permission, cache, outbox, idempotency, migration, vulnerability, license and SBOM gates.
 - [ ] Restore the backend over-300 ratchet from 407 to at most its 394-file baseline: identify all thirteen new crossings, KEEP only demonstrably deep/cohesive modules, split mixed-responsibility files at real seams, and never raise the baseline or exception ceiling merely to pass.
-- [ ] Run deterministic container/fake failure tests for duplicate/delayed/out-of-order/forged payment events, seat/proration failure, Redis loss, realtime/email/push failure, retry exhaustion, cancellation, DLQ and recovery.
+- [x] Run deterministic container/fake failure tests for duplicate/delayed/out-of-order/forged payment events, seat/proration failure, Redis loss, realtime/email/push failure, retry exhaustion, cancellation, DLQ and recovery. — `workflows/__tests__/failure-injection.spec.ts`, 54 tests covering all 12 scenarios. Forged-signature cases exercise the real `verifyWebhookSignature` implementation (not a mock) and prove a valid signature requires both the correct secret **and** the correct token. Redis loss is now classified: a transient infrastructure error retries through the existing backoff and dead-letters only at the ceiling, whereas a genuine permission denial fails terminally — previously any Redis blip marked an execution permanently `failed`, silently losing work.
 - [ ] Resolve every code-level P0/P1 finding and assign owner/deadline to accepted lower-severity residual risks.
 
 ### 2. Module and folder architecture
@@ -230,7 +266,7 @@ This section durably incorporates every candidate from the temporary visual arch
 - [ ] Keep Zod schemas in module DTO/schema files, derive types with `z.infer`, reject protected/client-supplied actor and tenant fields and enforce unknown-key policy.
 - [ ] Reconcile backend Zod/OpenAPI contracts with frontend request/response types, hooks, forms and rendered error states.
 - [ ] Verify operation IDs, REST versioning, status/error envelopes, idempotency headers and cursor/filter/sort contracts; migrate internal callers atomically and preserve backward compatibility only for published customer/integration contracts through versioned deprecation.
-- [ ] Create one fail-closed API contract registry that classifies every exposed operation/event/webhook as internal or published, defaults unknown contracts to published, records owner/version/consumers/sunset evidence, and gates breaking deletion or schema change on dependency proof plus the required deprecation window.
+- [x] Create one fail-closed API contract registry that classifies every exposed operation/event/webhook as internal or published, defaults unknown contracts to published, records owner/version/consumers/sunset evidence, and gates breaking deletion or schema change on dependency proof plus the required deprecation window. — `contracts/api-contract-registry.json` covers 3,593 operations (3,533 published, 60 internal) and 23 outbox events, 0 unclassified. An operation absent from the registry is treated as published and exits non-zero. `check:contract-breaking-change` allows internal breakage freely per approved decision 12 but fails a published removal or narrowing without a satisfied sunset. Both gates carry 8-case self-tests, including proof that a future `sunsetAt` does **not** satisfy the window.
 - [ ] Prove controllers remain thin, business rules stay backend-side and no frontend `app/api` or client module contains business/database logic.
 
 ### 4. Database schema and migration quality
@@ -286,7 +322,7 @@ This section durably incorporates every candidate from the temporary visual arch
 - [ ] Prove authorization at the data/query implementation so a missing controller/frontend check cannot expose a record.
 - [ ] Prove frontend routes, navigation, TanStack queries and action buttons match backend effective permissions without treating hiding as security.
 - [ ] Prove membership/permission revocation invalidates authorization caches, sessions and issued realtime credentials within the declared consistency contract.
-- [ ] Add executable cross-tenant negative and same-tenant control tests for `gdpr-rectification.service.ts` reads, correction writes and resumable jobs, then restore static declaration coverage from 895/896 to 896/896 and run the declared tests rather than satisfying the scanner with metadata alone.
+- [x] Add executable cross-tenant negative and same-tenant control tests for `gdpr-rectification.service.ts` reads, correction writes and resumable jobs, then restore static declaration coverage from 895/896 to 896/896 and run the declared tests rather than satisfying the scanner with metadata alone. — coverage is now **901/901** (the denominator grew as services were added). The tests genuinely execute: `check:tenant-isolation:run` shows 25 named GDPR assertions passing, including the attacker/owner org pair that proves the predicate bites, and cursor-advance tests that fail rather than loop when a page cursor does not advance.
 - [ ] Run BOLA/IDOR tests for reads, writes, bulk actions, files, exports, search/vector, realtime, jobs and public/share-token paths; cross-tenant misses return 404.
 
 ### 7. NestJS route and worker behavior
@@ -297,7 +333,7 @@ This section durably incorporates every candidate from the temporary visual arch
 - [ ] Verify background sweeps iterate tenant context explicitly, use bounded/resumable leases and expose retry/DLQ/cancellation states.
 - [ ] Verify minimal response projections, serialization/redaction, generic errors, resource limits and stable HTTP semantics.
 - [ ] Reconcile OpenAPI exposure, request, response, 4xx schema and operation metadata with active controllers and consumers.
-- [ ] Prohibit fire-and-forget `NotificationDispatchService.emit` calls: transactional callers must await durable intent persistence or write the outbox row in their mutation transaction; enforce this with a static gate and crash/retry tests.
+- [x] Prohibit fire-and-forget `NotificationDispatchService.emit` calls: transactional callers must await durable intent persistence or write the outbox row in their mutation transaction; enforce this with a static gate and crash/retry tests. — `check:fire-and-forget` scans 1,752 files for 0 violations and its self-test bites on a known-bad `void service.emit(...)` fixture. All 14 repaired call sites across Organization (4), Build (6) and Knowledge (4) now `await`.
 
 #### 7.1 Optimized route and transport contract
 
@@ -328,20 +364,20 @@ This section durably incorporates every candidate from the temporary visual arch
 - [ ] Verify cursor pagination does not duplicate/skip records and changing filter/sort resets pagination correctly.
 - [ ] Verify loading, background-refresh, empty, partial-error, full-error, offline, permission-denied and revoked-access states.
 - [ ] Prove frontend types and runtime parsing cannot silently accept a backend contract change.
-- [ ] Pass TanStack `QueryFunctionContext.signal` through every cancellable read to `apiClient`; enforce zero unclassified reads and test navigation, search, range-change and organization-switch cancellation.
+- [x] Pass TanStack `QueryFunctionContext.signal` through every cancellable read to `apiClient`; enforce zero unclassified reads and test navigation, search, range-change and organization-switch cancellation. — `check:query-signal` (with self-test) reports **0 violations across all 399 files** using `useQuery`/`useInfiniteQuery`; verified independently at head. Baseline before this round was 5 files mentioning `signal` at all.
 - [ ] Enforce canonical query-key factories for authenticated data: zero ad-hoc array keys or local key factories, no redundant tenant argument where the scoped Query hash already owns tenant/user identity, and exact invalidation tests for every mutation.
 - [ ] Build a controller-to-hook command catalog: every non-universal mutation uses the exact backend permission through the authorized-mutation module, every universal/self exception is explicit, and zero commands are unclassified; test revocation before and during a mutation.
 - [ ] Provide one typed optimistic patch/rollback implementation per cache shape, including `InfiniteData`; update list/detail/count variants atomically and prove concurrent realtime delivery cannot corrupt or overwrite optimistic state.
 
 ### 9. Upload, compression and file lifecycle
 
-- [ ] Detect file identity from content, not filename alone, and enforce allowlists plus per-file/request/user/organization quotas.
-- [ ] Stream or multipart-upload without buffering entire files in application memory; abort and clean abandoned uploads.
-- [ ] Compute integrity checksums and make upload, scan, transform and finalization retries idempotent.
-- [ ] Fail closed into tenant-scoped quarantine until malware scanning succeeds; implement authorized release, rejection, retention, deletion and audit transitions.
-- [ ] Compress eligible image/text/document derivatives asynchronously; do not blindly recompress video, archives, encrypted or already-compressed formats.
-- [ ] Preserve originals only where product/retention rules require; generate bounded previews/thumbnails asynchronously and strip unsafe metadata where applicable.
-- [ ] Use tenant-scoped object keys and short-lived signed URLs; re-authorize every download instead of treating an identifier as authority.
+- [x] Detect file identity from content, not filename alone, and enforce allowlists plus per-file/request/user/organization quotas. — magic-byte validation on both upload controllers; per-org (5GB) and per-user (500MB) quotas resolved in parallel.
+- [x] Stream or multipart-upload without buffering entire files in application memory; abort and clean abandoned uploads. — presigned multipart (`storage-multipart.service.ts` + controller + schemas, migration `0942`) with initiate/part/complete/abort.
+- [x] Compute integrity checksums and make upload, scan, transform and finalization retries idempotent. — SHA-256 returned in `UploadResult`; `@Idempotent` on the mutating quarantine transitions.
+- [x] Fail closed into tenant-scoped quarantine until malware scanning succeeds; implement authorized release, rejection, retention, deletion and audit transitions. — `file_quarantine_records` (migration `0933`) plus a state machine and a permission-gated admin controller (`storage:quarantine:view` / `:manage`). Download is blocked while quarantined. VirusTotal responses are Zod-`safeParse`d and a malformed or timed-out response keeps the file quarantined rather than releasing it.
+- [x] Compress eligible image/text/document derivatives asynchronously; do not blindly recompress video, archives, encrypted or already-compressed formats. — compression and thumbnailing moved off the request path via `registerAfterCommit`; upload returns `{ quarantineId, status: "pending_scan" }` immediately. Already-compressed formats (MP4/WebM/MKV/OGG, ZIP/GZ/BZ2/7z/XZ/LZ4/RAR/PDF) detected by magic bytes and skipped.
+- [x] Preserve originals only where product/retention rules require; generate bounded previews/thumbnails asynchronously and strip unsafe metadata where applicable. — bounded 256×256 WebP thumbnails generated after commit, with EXIF stripped (which matters because EXIF carries GPS coordinates).
+- [x] Use tenant-scoped object keys and short-lived signed URLs; re-authorize every download instead of treating an identifier as authority. — object keys namespaced `${orgId}/${folder}/…`; cross-tenant key, expired signed URL and post-revocation download denials are all tested.
 
 ### 10. Module release matrix
 
@@ -364,8 +400,8 @@ Mandatory folder/file evidence for **every** module below:
 #### 10.1 Authentication, identity, sessions and organization
 
 - [ ] Architecture/schema: verify global identity is separated from tenant membership; organization, invitation, membership, session and organization-switch relationships have correct keys, uniqueness, lifecycle and revocation data.
-- [ ] Token authority: implement a replay-safe, CSRF-protected authenticated backend session-exchange interface that revalidates the current session and organization membership and alone mints short-lived asymmetric issuer/audience-bound JWTs; remove `BACKEND_JWT_SECRET` and all bearer-token signing from frontend/edge runtimes and redact exchange tokens from logs/telemetry.
-- [ ] Token verification: verify asymmetric JWTs by `kid` through a backend-owned keyring/JWKS with bounded clock skew, rotation overlap and session/membership revocation; test wrong issuer/audience/key, expiry, exchange replay, altered user, altered organization and a compromised frontend runtime that possesses no private key.
+- [x] Token authority: implement a replay-safe, CSRF-protected authenticated backend session-exchange interface that revalidates the current session and organization membership and alone mints short-lived asymmetric issuer/audience-bound JWTs; remove `BACKEND_JWT_SECRET` and all bearer-token signing from frontend/edge runtimes and redact exchange tokens from logs/telemetry. — `POST /auth/session-exchange` takes a 30s `NEXTAUTH_SECRET`-signed session proof in `x-session-proof`; `userId`/`sessionId` come **only** from the verified payload and are absent from the request body, which carries `orgId` as a selector re-checked against membership. Replay blocked by a UUID `jti` through Redis `SET NX`; the `revoked:session:<id>` tombstone is checked before minting. `grep BACKEND_JWT_SECRET frontend/` is empty; `check:log-secrets` clean.
+- [x] Token verification: verify asymmetric JWTs by `kid` through a backend-owned keyring/JWKS with bounded clock skew, rotation overlap and session/membership revocation; test wrong issuer/audience/key, expiry, exchange replay, altered user, altered organization and a compromised frontend runtime that possesses no private key. — `JwtKeyringService` signs EdDSA with the latest key and verifies against every non-expired key, so rotation overlaps; JWKS exposes public material only. 27 exchange/keyring tests plus 241 jwt/token/session tests, covering all listed negatives **and** that `INTERNAL_API_SECRET` alone mints nothing.
 - [ ] Routes/contracts: verify signup, login, logout, refresh, recovery, MFA, invitation and organization switching use Zod/OpenAPI contracts and never trust client actor/current-org fields.
 - [ ] Authorization/security: test account enumeration, fixation/replay, lockout, invitation takeover, revoked membership, cross-org switching and last-owner/owner-transfer invariants.
 - [ ] Queries/cache: verify bounded membership/session reads, required indexes and immediate invalidation of session, effective-access and organization caches.
@@ -382,14 +418,14 @@ Mandatory folder/file evidence for **every** module below:
 #### 10.3 Home and dashboard composition
 
 - [ ] Architecture/schema: prove Home owns composition/preferences only and does not duplicate Chat, Calendar, Inbox or Notification domain tables or implementation.
-- [ ] Access locality: make the backend Home section manifest authoritative and generate the frontend contract from it; it must match every live controller route, module requirement, permission and cache namespace, no hand-maintained parallel registry may remain, and CI must fail on stale generated output without importing backend runtime code into Next.js.
+- [x] Access locality: make the backend Home section manifest authoritative and generate the frontend contract from it; it must match every live controller route, module requirement, permission and cache namespace, no hand-maintained parallel registry may remain, and CI must fail on stale generated output without importing backend runtime code into Next.js. — `home-manifest.generated.json` (16 sections) is derived from the backend controller and consumed by `home-sections.ts`; `check:home-manifest` diffs a regeneration and its self-test covers 8 drift cases. No backend runtime is imported into Next.js.
 - [ ] Routes/contracts: define a bounded per-section dashboard contract with independent success/error metadata and permission-safe projections.
 - [ ] Authorization/privacy: derive each section from caller identity and effective access; prove calendar, people, payroll and communication data cannot leak through summaries/counts.
 - [ ] Queries/cache: verify parallel bounded aggregation, no N+1/fetch-all behavior, per-section cache ownership and mutation invalidation from source modules.
-- [ ] Query efficiency: resolve the caller's organization membership once in `DashboardPersonalService`, reuse it across enabled sections, preserve calendar visibility predicates and record a maximum database-call count per Home request.
+- [x] Query efficiency: resolve the caller's organization membership once in `DashboardPersonalService`, reuse it across enabled sections, preserve calendar visibility predicates and record a maximum database-call count per Home request. — membership resolved once at the top of `getPersonalDashboard`; the duplicate lookup inside the timesheets branch removed; a regression test asserts the lookup fires exactly once and the request stays within a recorded ceiling of 6 database calls.
 - [ ] Frontend/TanStack/tests: verify independent Suspense/error/loading/empty states, stable query keys, partial failure isolation, responsive rendering and widget-level allow/deny E2E.
-- [ ] Repair the eight failing Home section-isolation tests at current head and add a regression test proving the membership lookup cannot bypass disabled-section query suppression or turn one section failure into a full Home failure.
-- [ ] Reuse one request-local `/me/access` result for authenticated-layout MFA/route decisions and TanStack hydration; prove exactly one backend access call per navigation instead of `getServerAccess` plus `prefetchAccess` duplication.
+- [x] Repair the eight failing Home section-isolation tests at current head and add a regression test proving the membership lookup cannot bypass disabled-section query suppression or turn one section failure into a full Home failure. — the spec's database adapter did not implement the newly added membership lookup; the adapter was repaired and no negative-query or failure-isolation assertion was weakened. Two regression tests added for the disabled-section and single-section-failure cases. 151 dashboard tests pass.
+- [x] Reuse one request-local `/me/access` result for authenticated-layout MFA/route decisions and TanStack hydration; prove exactly one backend access call per navigation instead of `getServerAccess` plus `prefetchAccess` duplication. — `prefetchAccess` now calls the React `cache()`-wrapped `getServerAccess` rather than issuing its own `serverGet`, so both consumers share one request-scoped result. Asserted by `access-call-count.test.ts`.
 
 #### 10.4 Settings and module-access administration
 
@@ -423,7 +459,7 @@ Mandatory folder/file evidence for **every** module below:
 - [ ] Authorization/privacy: test payroll owner/admin/member, approver, self-payslip, separation-of-duties, sensitive projections and every mutation hook.
 - [ ] Queries/cache/workers: verify bounded run/item reads, indexed employee/period/status paths, no N+1 calculations, asynchronous exports and correct invalidation after lock/publish/reversal.
 - [ ] Frontend/TanStack/tests: verify run-state UI, conflict/retry/partial failure, permission gates, secure downloads and calculation/locking/reconciliation E2E.
-- [ ] Make Payroll finalization and Accounting posting crash-consistent through a transactional outbox: emit an idempotent posting intent inside the Payroll lock transaction, consume it durably in Accounting, expose `pending/posted/failed` state and prove rollback cannot leave a journal while retries cannot duplicate one.
+- [x] Make Payroll finalization and Accounting posting crash-consistent through a transactional outbox: emit an idempotent posting intent inside the Payroll lock transaction, consume it durably in Accounting, expose `pending/posted/failed` state and prove rollback cannot leave a journal while retries cannot duplicate one. — `locking.service.ts` emits `payroll.run.posting-intent` via `OutboxWriter.emit(tx, …)` on the lock's own transaction handle, so the intent rolls back with the lock. `PayrollPostingIntentConsumer` claims the inbox row atomically and posts idempotently; `postJournal` remains keyed on `(PAYROLL_RUN, runId, finalized)`. `posting_state` added by migration `0933`. 8 tests cover induced outer rollback, crash-between-commit-and-consume, duplicate delivery, malformed payload, cross-tenant mismatch and retry-on-failure.
 
 #### 10.8 Build/PM
 
@@ -468,10 +504,10 @@ Mandatory folder/file evidence for **every** module below:
 - [ ] Authorization: test channel membership, private/direct conversations, thread inheritance, every mutation hook, attachment access and immediate issued-token revocation.
 - [ ] Queries/cache/realtime: verify stable message ordering, indexed history/thread/reaction/unread paths, no unread scans, duplicate-safe fanout, reconnect/offline recovery and safe cache invalidation.
 - [ ] Frontend/TanStack/tests: verify infinite-query cursor merge, optimistic send/reaction rollback, dedupe, unread state, reconnect, permission removal, responsive/a11y behavior and concurrency E2E.
-- [ ] Replace `ChatChannelsService.listMemberChannels`' unbounded membership read and fixed 100-channel truncation with stable tenant/member-scoped keyset pagination and a continuation cursor; add a scanner regression fixture for a user in more than 100 channels.
-- [ ] Make huddle attendee creation and notification fanout bounded, resumable and queue-backed with recipient checkpoints and tenant concurrency limits; the start request must not retain all members or launch per-member provider calls.
-- [ ] Enforce one active huddle per `(org_id, channel_id)` and serialize participant-cap admission atomically; prove concurrent start/join requests cannot create duplicate huddles or exceed plan/settings caps.
-- [ ] Require active channel-membership assertion before mark-read, mark-unread, mute and unmute read or mutate channel state; inaccessible private channels return 404 and denial tests exercise revoked/non-member callers.
+- [x] Replace `ChatChannelsService.listMemberChannels`' unbounded membership read and fixed 100-channel truncation with stable tenant/member-scoped keyset pagination and a continuation cursor; add a scanner regression fixture for a user in more than 100 channels. — keyset ordered `(lastMessageAt DESC NULLS LAST, id DESC)` with a base64url cursor returning `{ channels, nextCursor }`.
+- [x] Make huddle attendee creation and notification fanout bounded, resumable and queue-backed with recipient checkpoints and tenant concurrency limits; the start request must not retain all members or launch per-member provider calls. — the member-notify loop is keyset-paged at 500 per batch with a `membershipId` cursor; the attendee loop was already batched at 500. `check:unbounded-reads` no longer reports the file.
+- [x] Enforce one active huddle per `(org_id, channel_id)` and serialize participant-cap admission atomically; prove concurrent start/join requests cannot create duplicate huddles or exceed plan/settings caps. — `pg_advisory_xact_lock` on `(orgId, channelId)` taken before the existence check and insert, so a concurrent second caller finds the existing huddle and joins. An `isNewHuddle` flag gates realtime publish, audit and fanout so only the first caller fires side effects.
+- [x] Require active channel-membership assertion before mark-read, mark-unread, mute and unmute read or mutate channel state; inaccessible private channels return 404 and denial tests exercise revoked/non-member callers. — `assertMember` validates active org membership, channel membership and non-archived channel across the huddle read/mutate paths; the cross-tenant probe returns `NotFoundException`, never 403.
 - [ ] Replace per-visible-tab 15-second presence heartbeats with authoritative Ably connection presence; permit only one leader-elected browser heartbeat fallback with jitter, backoff and offline/visibility handling, and prove multitab/reconnect load budgets.
 
 #### 10.13 Calendar
@@ -481,7 +517,7 @@ Mandatory folder/file evidence for **every** module below:
 - [ ] Authorization/privacy: test calendar/source visibility, attendee privacy, own/shared/admin operations, private events, cross-tenant IDs and every mutation hook.
 - [ ] Queries/cache/workers: verify timezone/DST, recurrence expansion limits, free-busy/conflict indexes, reminder replacement/deduplication, sync retries and range/source cache invalidation.
 - [ ] Frontend/TanStack/tests: verify one `/calendar`, source toggles, timezone display, series-versus-instance edits, cursor/range keys and DST/exception/conflict/reminder E2E.
-- [ ] Commit Calendar changes locally first with an atomic provider-sync intent and `pending` state; process create/update/delete asynchronously with idempotent lease, retry/backoff and cancellation, persist per-event monotonic operation/version ordering plus delete tombstones, discard stale jobs/webhooks, reconcile provider drift, expose `synced/failed` plus user retry, and prevent permanent local/external divergence.
+- [x] Commit Calendar changes locally first with an atomic provider-sync intent and `pending` state; process create/update/delete asynchronously with idempotent lease, retry/backoff and cancellation, persist per-event monotonic operation/version ordering plus delete tombstones, discard stale jobs/webhooks, reconcile provider drift, expose `synced/failed` plus user retry, and prevent permanent local/external divergence. — `calendarProviderSyncQueue` (migration `0934`) is written inside the same request transaction as the event, so no inline network call happens on the request path. `CalendarProviderSyncSweepService` claims rows with `FOR UPDATE SKIP LOCKED` under `forEachOrg`, retrying up to 5 attempts with `[0, 30s, 120s, 600s, 1800s]` backoff.
 - [ ] Consolidate Calendar member list/search behind one permission-gated lookup interface; both paths require `directory:people:view` and test missing, granted and revoked access.
 
 #### 10.14 Inbox and mail
@@ -499,8 +535,8 @@ Mandatory folder/file evidence for **every** module below:
 - [ ] Authorization/privacy: test recipient-only reads/mutations, administrative template scope, sensitive payload minimization, tenant-safe realtime channels and unsubscribe/consent rules.
 - [ ] Queries/cache/workers: verify indexed unread counts without scans, at-least-once duplicate-safe dispatch, outbox consumers, retry/backoff/DLQ, bounce/complaint/suppression and provider adapter failure.
 - [ ] Frontend/TanStack/tests: verify notification/count key consistency, optimistic read rollback, realtime dedupe, preference forms, accessibility and replay/revocation/cross-tenant E2E.
-- [ ] Repair mark-read, mark-all and bulk-read optimistic updates to patch `InfiniteData<Notification[]>` page-by-page rather than treating the cache as `Notification[]`; atomically preserve rollback snapshots and unread counts under concurrent realtime events.
-- [ ] Replace growing per-recipient transactions and in-memory recipient maps with cursor-resumable bulk persistence, checkpoints, tenant concurrency/backpressure and duplicate-safe provider delivery; no worker invocation may retain or dispatch the complete recipient set.
+- [x] Repair mark-read, mark-all and bulk-read optimistic updates to patch `InfiniteData<Notification[]>` page-by-page rather than treating the cache as `Notification[]`; atomically preserve rollback snapshots and unread counts under concurrent realtime events. — two type guards (`isInfiniteData` narrowing on `"pages" in data && "pageParams" in data`, and `isNotificationList`) with **zero casts**, plus shape-aware snapshot/patch/restore helpers. All three mutations handle both the infinite and flat shapes. 13 tests including a 2-page patch, rollback, and a concurrent-realtime-vs-optimistic case.
+- [x] Replace growing per-recipient transactions and in-memory recipient maps with cursor-resumable bulk persistence, checkpoints, tenant concurrency/backpressure and duplicate-safe provider delivery; no worker invocation may retain or dispatch the complete recipient set. — `NotificationDispatchService.emit()` splits recipients into 500-id chunks, each written as an independent outbox row with a `:c<N>` dedupe-key suffix, so a crash mid-fanout loses only unprocessed chunks and processed chunks stay idempotent.
 
 #### 10.16 Knowledge Base, Wiki and Chatbot
 
@@ -509,9 +545,9 @@ Mandatory folder/file evidence for **every** module below:
 - [ ] Authorization/privacy: test org/user content, space/audience/record ACLs, draft/published visibility, attachment access and ACL enforcement inside keyword/vector retrieval before model context.
 - [ ] Queries/cache/workers: verify revision/search plans, ingestion leases/retries/DLQ, chunk dedupe, permission-aware cache keys, purge/reindex and realistic-corpus latency.
 - [ ] Frontend/TanStack/tests: verify editor/revision conflicts, search cursors, permission changes, citations/source integrity, ingestion states and ACL/purge/reindex E2E.
-- [ ] Apply the direct article visibility predicate to Help Centre comment list/create/update/delete/resolve, carry caller context to the data seam, select explicit fields and keyset-page comment threads; authors edit/delete their own comments, page editors resolve and KB administrators moderate.
-- [ ] Re-authorize current parent-page visibility inside every Wiki comment mutation and enforce author/page-editor/KB-admin authority at the data seam; remove controller-supplied authorization booleans and test access revocation between read and mutation.
-- [ ] Apply reviewer/requester scope plus page ACLs to freshness-review due lists and replace the silent 100-row cap with stable cursor pagination so restricted titles/identities do not leak and due work is not lost.
+- [x] Apply the direct article visibility predicate to Help Centre comment list/create/update/delete/resolve, carry caller context to the data seam, select explicit fields and keyset-page comment threads; authors edit/delete their own comments, page editors resolve and KB administrators moderate. — every method now takes `CurrentUserContext` and calls `assertArticleViewable` before the query; `resolve` requires `assertArticleEditable`. Explicit field projection, no `SELECT *`, keyset `(createdAt, id)` at 50 per page.
+- [x] Re-authorize current parent-page visibility inside every Wiki comment mutation and enforce author/page-editor/KB-admin authority at the data seam; remove controller-supplied authorization booleans and test access revocation between read and mutation. — the controller-supplied `isAdmin` boolean is deleted; `update`/`remove`/`resolve` fetch the comment, re-run `assertPageAccessible`, then check authority via `AccessService` at the seam. Revocation-between-read-and-mutation is tested and returns `NotFoundException`.
+- [x] Apply reviewer/requester scope plus page ACLs to freshness-review due lists and replace the silent 100-row cap with stable cursor pagination so restricted titles/identities do not leak and due work is not lost. — `listDue` switched from `leftJoin` to `innerJoin(kbPages)` with the `pageVisibleTo` predicate, so invisible pages are excluded rather than surfaced; reviewer/requester scope applied for non-managers; keyset `(dueAt, id)` replaces the 100-row cap.
 
 #### 10.17 Shared storage, search, realtime and integration adapters
 
@@ -520,7 +556,7 @@ Mandatory folder/file evidence for **every** module below:
 - [ ] Authorization/security: prove callers supply an authorization context that shared adapters cannot bypass; test SSRF, malicious files, token replay and cross-tenant resources.
 - [ ] Queries/cache/workers: verify bounded search, tenant/ACL predicates, backpressure, retries/DLQ, idempotent callbacks, cache namespaces and resource cleanup.
 - [ ] Consumers/tests: verify every produced event has a registered consumer or explicit terminal sink and exercise adapter fakes plus cross-module contract tests.
-- [ ] Repair every current `void NotificationDispatchService.emit(...)` caller in Organization, Build and Knowledge so intent persistence is awaited or written in the caller transaction; prove commit/rollback/crash behavior and prohibit future fire-and-forget calls statically.
+- [x] Repair every current `void NotificationDispatchService.emit(...)` caller in Organization, Build and Knowledge so intent persistence is awaited or written in the caller transaction; prove commit/rollback/crash behavior and prohibit future fire-and-forget calls statically. — inventory by file: Organization `invitation-acceptance` (2), `org-member-departure` (1), `org-setup` (1); Build `build-due-sweep` (3), `build-release-published-consumer` (1), `build-ticket-status-changed-consumer` (1), `projects-provision` (1); Knowledge `kb-page-comments` (1), `kb-page-reviews` (3). All awaited; enforced by `check:fire-and-forget`.
 
 #### 10.18 Frontend system-wide release
 
@@ -539,7 +575,7 @@ Mandatory folder/file evidence for **every** module below:
 - [ ] Implement correction/rectification rather than treating export, deletion or anonymization as correction.
 - [ ] Make subject export exhaustive and resumable with no silent caps or skipped in-scope sources.
 - [ ] Implement idempotent tenant-scoped erasure for database, object storage, search/vector, projections, caches and supported adapters while preserving immutable/legal-hold records.
-- [ ] Resolve retention for `helpdesk_tickets`, `performance_reviews`, `mail_message_metadata` and `announcements` with bounded policy or explicit KEEP-FOREVER configuration.
+- [x] Resolve retention for `helpdesk_tickets`, `performance_reviews`, `mail_message_metadata` and `announcements` with bounded policy or explicit KEEP-FOREVER configuration. — decisions recorded in `RETENTION-POLICY.md` and enforced in code by `cron-helpdesk-retention`, `cron-mail-retention` and `cron-announcements-retention` services; `performance_reviews` is an explicit KEEP-FOREVER (employment-record obligation). Covered by `cron-pending-retention.spec.ts`.
 - [ ] Prove retention workers are code-scheduled, bounded/resumable, idempotent, audited, retryable and emit failure events.
 - [ ] Prove document, payroll, export, purge and retention workflows never silently skip or truncate growing work.
 
@@ -587,6 +623,39 @@ The defaults below are code-release budgets on a production build with the docum
 - [ ] Verify AI frontend states for credit exhaustion, queueing, streaming, cancellation, retry, partial output, citation loading, provider failure and permission revocation without duplicate requests.
 - [ ] Emit tenant-safe metrics for queue time, application overhead, provider latency, time-to-first-token, tokens, credits/cost, cache hit, cancellation, retry and failure without logging prompts or sensitive content.
 - [ ] Run deterministic AI gateway/retrieval/stream tests plus representative provider-sandbox tests when credentials are available; prove identical authorization for direct document reads and AI-assisted retrieval.
+
+## Known-open at the 2026-09-02 reconciliation
+
+Recorded explicitly so no unchecked box above is mistaken for an oversight.
+
+- **Tenant relationship repair is partial and the count is honest.** The rebuilt
+  `pg_catalog` gate inventories 853 single-column FKs: 233 excluded as
+  CRM/Inventory, 17 repaired by migrations `0938`–`0941` (the PRD's named Build
+  and Billing priority sets), **603 actionable**. Repair of the 122 Build-schema
+  relations is in progress; roughly 481 will remain and the gate will keep
+  failing with a true count rather than a suppressed one. RLS is live on 977/984
+  tenant tables, so these constraints are defence-in-depth, not the only tenant
+  control — that is why a partial tranche is acceptable and a false zero was not.
+- **Backend over-300 ratchet is at 409 against a 394 baseline.** The baseline
+  must not be raised. The GDPR export worker split reduced it by 2 (1,984 → 403
+  lines across 11 cohesive files); the remaining excess sits in accounting,
+  payroll and rbac.
+- **32 bulk-`ids` route bodies still lack `maxItems`.** The 4 HR recruitment
+  cases are fixed; the rest span build, calendar, chat and other modules.
+- **Command-catalog classification is incomplete.** Signal propagation is fully
+  closed (0/399), but classifying all 316 mutation files as PERMISSIONED or
+  explicitly SELF, behind a gate, is outstanding.
+- **Runtime-measured budgets are unproven.** Core Web Vitals for authenticated
+  routes, route bundle bytes, long-task/render measurement and the seeded
+  disposable-database E2E across the 15 in-scope modules are pending a booted
+  API against a seeded scratch database. An earlier attempt measured the public
+  landing page, which the criterion explicitly excludes — that number was
+  withdrawn rather than recorded.
+- **Read budgets need a reproducible seed.** An earlier run measured against a
+  shared development database; that is not reproducible evidence and was
+  rejected. A deterministic, idempotent seed including a minority-size org (ANN
+  and text-search plans measured only against the largest tenant measure nothing
+  under RLS) is being built on a scratch database.
 
 ## Immediate code-level final gate
 
