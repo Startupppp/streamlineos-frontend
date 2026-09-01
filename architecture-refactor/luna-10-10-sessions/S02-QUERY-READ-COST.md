@@ -6,7 +6,7 @@ Eliminate every actionable or unclassified growing read without data-loss caps. 
 
 ## Baseline
 
-Run `pnpm -C backend check:unbounded-reads` and record exact paths and counts. The latest root run found 0 actionable offsets, 278 actionable unbounded reads, and two unclassified files: Payroll filings source and Payroll reports read.
+Run `pnpm -C backend check:unbounded-reads` and record exact paths and counts. The latest root run found 0 actionable offsets, 282 actionable unbounded reads, and 0 unclassified paths.
 
 ## Work
 
@@ -28,3 +28,10 @@ Run `pnpm -C backend check:unbounded-reads` and record exact paths and counts. T
 - [ ] No workflow silently truncates results.
 - [ ] Production-shaped plans meet declared budgets with at least 40% capacity headroom where this ticket can measure it.
 - [ ] Tests prove isolation, stable pagination, bounded memory and resumability.
+
+## Execution record — 2026-09-01
+
+- Baseline rerun: `check:unbounded-reads` scans 2,095 service files across 74 modules; 0 actionable offsets, 282 actionable unbounded reads, 0 unordered paging, and 0 unclassified paths. The gate itself passes because actionable entries are ratcheted rather than rejected.
+- The 282 actionable reads remain owned by this ticket. Implement them in cohesive domain batches; CRM/Inventory exclusions stay excluded. No source path may be marked fixed without source proof.
+- Required verification is not green: backend `typecheck` and `check:spec-typecheck` fail on broad schema/API drift (including Build ticket fields, cursor response contracts, billing cursor contracts, support projections, and timesheet relations). No acceptance checkbox is checked from these failures.
+- Completion remains open until all actionable reads are corrected, source-backed continuation/overflow tests and query-plan evidence exist, and all required typechecks pass. Superseded ticket paths must not be recreated.
