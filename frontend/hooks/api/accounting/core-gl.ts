@@ -16,11 +16,10 @@ export interface GlRow {
 }
 
 export interface GlResponse {
-  rows: GlRow[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
+  openingBalance: string;
+  closingBalance: string;
+  items: GlRow[];
+  nextCursor: string | null;
 }
 
 export interface GlAccount {
@@ -40,8 +39,8 @@ export interface GlParams {
   vendorId?: number;
   projectId?: number;
   departmentId?: string;
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
 }
 
 export interface GlAccountsParams {

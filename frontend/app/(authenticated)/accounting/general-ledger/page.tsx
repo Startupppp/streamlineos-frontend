@@ -18,7 +18,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { TablePagination } from "@/components/ui/table-pagination";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { ErrorState } from "@/components/shared";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useGeneralLedger, useGlAccounts } from "@/hooks/api/accounting/core";
@@ -33,7 +33,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 import type { GlRow } from "@/hooks/api/accounting/core";
 
-const GL_PAGE_SIZE = 50;
+const GL_LIMIT = 50;
 
 function getMonthStart(): string {
   const d = new Date();
@@ -54,13 +54,6 @@ function formatMoney(value: string): string {
   });
 }
 
-function sumDebit(rows: GlRow[]): number {
-  return rows.reduce((sum, r) => sum + (parseFloat(r.debit) || 0), 0);
-}
-
-function sumCredit(rows: GlRow[]): number {
-  return rows.reduce((sum, r) => sum + (parseFloat(r.credit) || 0), 0);
-}
 
 const glColumns: DataTableColumn<GlRow>[] = [
   {
@@ -160,7 +153,8 @@ export default function GeneralLedgerPage() {
   const [clientId, setClientId] = useState<string>("");
   const [vendorId, setVendorId] = useState<string>("");
   const [showMoreFilters, setShowMoreFilters] = useState<boolean>(false);
-  const [page, setPage] = useState(1);
+  const [cursors, setCursors] = useState<(string | null)[]>([null]);
+  const [cursorIndex, setCursorIndex] = useState(0);
 
   const canExport = useCan("accounting:reports:export");
   const { iconRef: exportIconRef, hoverHandlers: exportHoverHandlers } =
@@ -178,48 +172,56 @@ export default function GeneralLedgerPage() {
     accountId: accountId ? parseInt(accountId, 10) : undefined,
     clientId: clientId ? parseInt(clientId, 10) : undefined,
     vendorId: vendorId ? parseInt(vendorId, 10) : undefined,
-    page,
-    pageSize: GL_PAGE_SIZE,
+    cursor: cursors[cursorIndex] ?? undefined,
+    limit: GL_LIMIT,
   });
 
   const glData = glQuery.data;
-  const rows = glData?.rows ?? [];
-  const total = glData?.total ?? 0;
+  const rows = glData?.items ?? [];
+  const hasMore = glData?.nextCursor !== null && glData?.nextCursor !== undefined;
 
-  const periodDebit = sumDebit(rows);
-  const periodCredit = sumCredit(rows);
-
-  function resetPage(): void {
-    setPage(1);
+  function resetCursors(): void {
+    setCursors([null]);
+    setCursorIndex(0);
   }
 
   function handleFromChange(value: string): void {
     setFrom(value);
-    resetPage();
+    resetCursors();
   }
 
   function handleToChange(value: string): void {
     setTo(value);
-    resetPage();
+    resetCursors();
   }
 
   function handleAccountChange(value: string): void {
     setAccountId(value === "__none__" ? "" : value);
-    resetPage();
+    resetCursors();
   }
 
   function handleClientChange(value: string): void {
     setClientId(value === "__none__" ? "" : value);
-    resetPage();
+    resetCursors();
   }
 
   function handleVendorChange(value: string): void {
     setVendorId(value === "__none__" ? "" : value);
-    resetPage();
+    resetCursors();
   }
 
-  function handlePageChange(p: number): void {
-    setPage(p);
+  function handlePreviousPage(): void {
+    setCursorIndex((prev) => Math.max(0, prev - 1));
+  }
+
+  function handleNextPage(): void {
+    const next = glData?.nextCursor ?? null;
+    setCursors((prev) => {
+      const copy = prev.slice(0, cursorIndex + 1);
+      copy.push(next);
+      return copy;
+    });
+    setCursorIndex((prev) => prev + 1);
   }
 
   function handleToggleMoreFilters(): void {
@@ -363,22 +365,16 @@ export default function GeneralLedgerPage() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col space-y-4">
-        {rows.length > 0 && (
+        {glData && (
           <StatCardGrid cols={2}>
             <StatCard
-              label="Period Debits"
-              value={periodDebit.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-              tone="red"
+              label="Opening Balance"
+              value={formatMoney(glData.openingBalance)}
+              tone="default"
             />
             <StatCard
-              label="Period Credits"
-              value={periodCredit.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
+              label="Closing Balance"
+              value={formatMoney(glData.closingBalance)}
               tone="emerald"
             />
           </StatCardGrid>
@@ -419,13 +415,14 @@ export default function GeneralLedgerPage() {
               }
               minWidth="700px"
             />
-            {total > GL_PAGE_SIZE ? (
-              <TablePagination
-                page={page}
-                pageSize={GL_PAGE_SIZE}
-                total={total}
-                onPageChange={handlePageChange}
+            {(cursorIndex > 0 || hasMore) ? (
+              <CursorPageControls
+                page={cursorIndex + 1}
+                hasNext={hasMore}
                 disabled={glQuery.isFetching}
+                onPrevious={handlePreviousPage}
+                onNext={handleNextPage}
+                className="mt-2"
               />
             ) : null}
           </>

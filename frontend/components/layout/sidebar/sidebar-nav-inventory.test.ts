@@ -10,13 +10,16 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 // Moved 2026-08-27 (c25-03): 55 finance gates, plus /crm/deals/approvals and
 // /hr/goals, named keys no route enforces — each now names the key its own
 // endpoints check. `pnpm -C backend check:navigation-permissions` proves it.
+// Moved 2026-09-01 by the HR dashboard route ("Dashboard", /hr/dashboard,
+// gated on hr:analytics:read to match the page's own requirePermission call —
+// not hr:employees:view, which would show it to people the page then denies).
 // Moved 2026-08-25 by the CRM import/export route ("Import & export",
 // /crm/import, gated on party:parties:view because export is ungated by design).
 // Moved 2026-08-24 by the CRM autonomy review route ("What the system did",
 // /crm/autonomy, gated on crm:autonomy:view). The digest exists so a route or
 // its permission cannot change without somebody saying why.
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "5bf9eeab85643ea8e3a42147f6ebb0e52750a7cc07d0dc8d6bcc649ebebfb8ed";
+  "687edf720c46826da38a43bc25d19f2677832fcb3d274d3f2be489b448b2d66a";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {

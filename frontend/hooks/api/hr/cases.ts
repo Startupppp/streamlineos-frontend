@@ -66,13 +66,13 @@ export interface DisciplinaryAction {
   createdAt: string;
 }
 
-interface PaginatedResult<T> {
+interface CursorResult<T> {
   data: T[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
 export interface ListCasesParams {
-  page?: number;
+  cursor?: string;
   limit?: number;
   status?: CaseStatus;
   category?: CaseCategory;
@@ -96,7 +96,7 @@ export function useHrCases(params: ListCasesParams = {}) {
   const canCases = useCan("hr:cases:view");
   return useQuery({
     queryKey: caseKeys.list(params),
-    queryFn: () => apiClient.get<PaginatedResult<HrCase>>("/hr/cases", params as Record<string, unknown>),
+    queryFn: () => apiClient.get<CursorResult<HrCase>>("/hr/cases", params as Record<string, unknown>),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
     enabled: canCases,
@@ -215,10 +215,10 @@ export function useCaseDocuments(caseId: number) {
   });
 }
 
-export function useDisciplinaryActions(params: { employeeId?: string; page?: number; limit?: number } = {}) {
+export function useDisciplinaryActions(params: { employeeId?: string; cursor?: string; limit?: number; actionType?: string } = {}) {
   return useQuery({
     queryKey: caseKeys.disciplinaryList(params),
-    queryFn: () => apiClient.get<PaginatedResult<DisciplinaryAction>>("/hr/cases/disciplinary", params as Record<string, unknown>),
+    queryFn: () => apiClient.get<CursorResult<DisciplinaryAction>>("/hr/cases/disciplinary", params as Record<string, unknown>),
     staleTime: 30_000,
   });
 }
