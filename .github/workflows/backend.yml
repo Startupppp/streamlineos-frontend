@@ -160,6 +160,55 @@ jobs:
         working-directory: .
         run: docker build -f backend/Dockerfile backend
 
+  migration-proof:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: streamlineos
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U user -d streamlineos"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgres://user:password@localhost:5432/streamlineos
+      PGSSLMODE: disable
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: backend/package.json
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: backend/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # Run the complete migration chain twice from disposable databases: once from
+      # zero and once split at the supported upgrade watermark. The proof compares the
+      # full catalog and drops both probes in a finally block.
+      - name: Cold bootstrap and supported-upgrade catalog proof
+        run: pnpm migration:proof
+
   txn-ceiling:
     runs-on: ubuntu-latest
     needs: [backend]

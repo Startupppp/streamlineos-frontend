@@ -24,49 +24,42 @@ Migration `0747` applied. Tables: `platform_operator_access_grants` — schema a
 
 **What IS built (2026-09-01):**
 - `PlatformOperatorAccessService` — full grant lifecycle: create, approve (dual-control), reject,
-  revoke, assertGrant (checks status + expiry + revokedAt in one query), assertAndLog (asserts +
-  writes `operator_access_log`). 34 tests pass, all four guard behaviors proven with bite proofs.
-- `OperatorSessionGuard` — reads `req.user.userId` (JWT sub) + `:orgId` route param, calls
-  `assertAndLog`, writes a log row on every privileged call. 7 tests, all bite proofs labeled.
+  revoke, `assertGrant` (checks status + expiry + revokedAt in one query), and transactional
+  `authorizeRequest` (checks the grant and writes `operator_access_log` before the tenant read).
+- `OperatorSessionGuard` — requires an authenticated human session, reads `userId` + `:orgId`,
+  calls `authorizeRequest`, and sets the target organization on the request before the data
+  service runs.
 - `@RequireOperatorGrant(scope)` — decorator, attached to the guard via `Reflector`.
 
 **What is NOT built:**
 - No `OperatorAuditInterceptor` — individual API calls are logged by the guard, but a
   dedicated interceptor (diffing data accessed) is not implemented.
 
-**Why the guard is attached to no route — a route-by-route decision:**
+**Current repository data-plane routes:**
 
-All routes in `PlatformOperatorAccessController` use `INTERNAL_API_SECRET` header auth (no JWT).
-The `OperatorSessionGuard` reads `req.user?.userId` (set by `JwtAuthGuard`), so the two auth
-models are incompatible. Bolting the guard onto an `INTERNAL_API_SECRET` route would cause it to
-throw `UnauthorizedException` on every request since `req.user` is always undefined there.
+The management-plane routes in `PlatformOperatorAccessController` use `INTERNAL_API_SECRET`
+plus an eligible human session. The separate customer data-plane controller is JWT-backed and
+uses `OperatorSessionGuard` with `:orgId`:
 
 | Route | Auth model | Reads tenant data? | Can take OperatorSessionGuard? |
 |---|---|---|---|
-| `POST /platform/operator-access/grants` | INTERNAL_API_SECRET | No — creates a pending grant | No: no JWT user |
-| `POST /platform/operator-access/grants/:grantId/approve` | INTERNAL_API_SECRET | No — updates grant status | No: no JWT user |
-| `POST /platform/operator-access/grants/:grantId/reject` | INTERNAL_API_SECRET | No — updates grant status | No: no JWT user |
-| `GET /platform/operator-access/grants` | INTERNAL_API_SECRET | No — lists grant metadata | No: no JWT user |
-| `DELETE /platform/operator-access/grants/:grantId` | INTERNAL_API_SECRET | No — revokes grant | No: no JWT user |
-| `GET /platform/operator-access/logs` | INTERNAL_API_SECRET | No — lists audit log metadata | No: no JWT user |
-| `GET /health/workflows` | INTERNAL_API_SECRET | No — infrastructure read | No: no JWT user |
-| `GET /health/db` | INTERNAL_API_SECRET | No — infrastructure read | No: no JWT user |
-| `POST /internal/audit` | INTERNAL_API_SECRET | No — writes audit log | No: no JWT user |
+| `GET /platform/operator/organizations/:orgId` | JWT human session | Yes — customer/member data | `read_customer_data` |
+| `GET /platform/operator/organizations/:orgId/billing` | JWT human session | Yes — billing/payment data | `read_payments` |
+| `POST /platform/operator-access/grants` | INTERNAL_API_SECRET + human session | No — creates a pending grant | Management plane |
+| `POST /platform/operator-access/grants/:grantId/approve` | INTERNAL_API_SECRET + human session | No — updates grant status | Management plane |
+| `POST /platform/operator-access/grants/:grantId/reject` | INTERNAL_API_SECRET + human session | No — updates grant status | Management plane |
+| `GET /platform/operator-access/grants` | INTERNAL_API_SECRET + human session | No — lists grant metadata | Management plane |
+| `DELETE /platform/operator-access/grants/:grantId` | INTERNAL_API_SECRET + human session | No — revokes grant | Management plane |
+| `GET /platform/operator-access/logs` | INTERNAL_API_SECRET + human session | No — lists access-log metadata | Management plane |
 
-`PlatformAdminService` has methods that read per-org business data (`listCustomers`,
-`getCustomerBySlug` with `users.email`/`users.name`, `listMessages`, `listLeads`, `listPayments`),
-but these are not exposed via any HTTP controller. When those routes are wired (under JWT auth +
-`:orgId` param), `OperatorSessionGuard` + `@RequireOperatorGrant(scope)` can be applied directly.
+`PlatformOperatorAdminService` also contains additional per-organization readers, but only the
+customer and billing routes above are currently exposed. The repository proves those two route
+bindings and focused behavior tests; it does not prove that every future data-plane route is
+protected or that the deployed route set matches the repository.
 
-**Guard is architecturally correct and fully tested.** The absence of compatible routes to attach it
-to is not a guard defect — it reflects the current state of the admin surface. The INTERNAL_API_SECRET
-pattern is appropriate for the management plane (grant lifecycle); the guard is appropriate for the
-data plane (operator reading customer data under an active grant). They are different surfaces and
-require different auth models.
-
-Current enforcement level: DB schema + `PlatformOperatorAccessService` layer. Guard enforces
-per-request expiry and writes audit rows wherever it is applied.
-Application layer enforcement: guard is tested and ready; awaiting compatible routes.
+Current enforcement level: DB schema + service + two repository data-plane routes. The guard
+enforces per-request expiry, organization/scope matching, human-session identity, and audit-row
+creation where applied. Deployed route coverage remains open.
 
 ### Decision required: policy parameters
 
@@ -138,9 +131,11 @@ Art. 6(1)(b) + Art. 9(2)(b); marketing is consent.
 
 **2c. Retention owner:**
 Each category needs a named owner accountable for enforcing the retention period.
-Current state: `hr_retention_policies` table exists but no automatic enforcement. The operator
-must name an owner for each category, set a retention period, and commission the retention-sweep
-worker (see OPERATOR-EVIDENCE.md Gap 1).
+Current state: `CronHrRetentionService` reads active `hr_retention_policies` per organization,
+applies the supported employee/case/attendance/document/payroll outcomes in bounded batches, and
+writes retention audit rows. Repository coverage is partial and deployed scheduling/execution
+evidence is still required. The operator must name an owner for each category and approve the
+policy periods.
 
 **2d. Audit log PII review:**
 `audit_logs.metadata` contains `{ email, companyName }` in `user.registered` events. The operator
@@ -168,13 +163,15 @@ category, owner assignments.
 
 ### Current implementation state
 
-All data resides in Neon Postgres, region `ap-southeast-1` (Singapore). Redis via Upstash (region
-set per deployment environment variable). Object storage: Cloudflare R2 (regional bucket configurable).
-No data residency enforcement in code — all orgs share the same region.
+The checked-in example describes a primary region/cell and optional explicitly configured
+secondary regions. The current production values and deployed placement are not established by
+the repository alone. Redis uses `UPSTASH_REDIS_REST_URL`; object storage uses `R2_REGION`,
+`R2_ENDPOINT`, and placement-specific settings.
 
 **Cell-model implication:** The cell architecture supports per-region databases (`REGION_KEYS`,
 `REGION_CELL_2_APP_DATABASE_URL`). An org can be placed in a specific cell via `cell:place-org`.
-This would allow EU-resident data to be placed in an EU cell. No EU cell exists.
+The source supports an `eu` region when its database, storage, and cell variables are explicitly
+configured. No deployed EU cell or customer commitment is evidenced here.
 
 ### Decision required
 
@@ -273,9 +270,10 @@ disclosure decision.
 
 **Context:** The four drills were each exercised individually on 2026-09-01. Ticket S05 requires fresh deployed evidence for the complete end-to-end workflow.
 
-**Status (2026-09-01):** `backend/src/scripts/compliance-drill-e2e.mjs` is built and verified.
-It runs all five phases as a single ordered workflow against the live DB. Self-test PASS (8/8
-assertion bite proofs). Live dry-run PASS (13/13 checks). Commands:
+**Repository status (2026-09-01):** `backend/src/scripts/compliance-drill-e2e.mjs` exists and
+has self-test/live dry-run commands, but no redacted deployed evidence bundle is committed.
+Repository focused tests also pass 11 suites / 105 tests for the current operator, GDPR, and HR
+retention implementation. Commands:
 
 ```bash
 # Verify each assertion bites (no DB required)
@@ -373,7 +371,7 @@ const priv = await sql`
 console.log('streamline_app privileges on audit_logs:', priv.map(r => r.privilege_type));
 await sql.end();
 EOF
-# Current result (2026-09-01): DELETE, INSERT, SELECT, UPDATE
+# Recorded result in the prior runbook snapshot (2026-09-01): DELETE, INSERT, SELECT, UPDATE
 # FINDING P1: DELETE and UPDATE should be revoked — see §Handoffs
 ```
 
@@ -397,20 +395,21 @@ node src/scripts/audit-storage-keys.mjs --subject "$SUBJECT_EMAIL"
 | Erasure | RESULT: PASS; 0 residual rows in simulation |
 | Compliance audit | All required audit actions present |
 | Immutability | 6 specs pass; privilege list noted for migration handoff |
-| Object storage | DECISION REQUIRED — manual until adapter is implemented |
+| Object storage | Adapter enumerates/deletes/retries/verifies keys in code; deployed provider evidence and failed-key evidence are still required |
 
 ### Known gaps owned by Ticket S05
 
-1. Export worker is implemented but not exhaustive — it produces a file for a bounded set of sections and marks capped output as truncated; a complete subject-data inventory and resumable export are still required.
-2. Object storage purge is implemented for enumerated keys, but live configuration and immutable evidence are missing; failed keys remain release-blocking.
+1. Export worker is resumable by stable per-section cursor, but it only exports the currently implemented sections (memberships, employment, data requests, legal holds, and audit-entry presence); complete subject-data inventory and deployed evidence are still required.
+2. Object storage purge enumerates all pages, retries failed deletes, and verifies absence when the adapter exposes `fileExists`; live configuration and immutable evidence are missing, and failed keys remain release-blocking.
 3. Database rows adapter marks `statusV2=PURGED` as a soft flag only — physical deletion not implemented.
-4. No background retention-sweep service — `hr_retention_policies` are inserted but no worker reads them.
+4. `CronHrRetentionService` reads `hr_retention_policies`, but the repository covers only selected record types and deployed scheduling/execution are not evidenced.
 
 ---
 
 ## Evidence trail
 
-Once each section above is approved, file a signed decision record in
+Once each section above is approved, copy
+`architecture-refactor/decisions/README.md` to a dated decision record in
 `architecture-refactor/decisions/privacy-YYYY-MM-DD.md` with:
 - Item number (1–4)
 - Decision maker name + role
