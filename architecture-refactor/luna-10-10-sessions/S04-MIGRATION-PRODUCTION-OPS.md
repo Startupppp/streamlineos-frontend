@@ -28,3 +28,17 @@ Prove the current schema can be created, upgraded, recovered and operated under 
 - [ ] Clean bootstrap and supported upgrade produce the same expected catalog at current head.
 - [ ] Cell isolation, replica/PITR/recovery, load/headroom, unit cost and live alerts have reproducible deployed evidence.
 - [ ] No mandatory operational gate is represented by a local mock or an unexplained waiver.
+
+## Audit evidence — 2026-09-01
+
+Repository evidence complete:
+
+- [x] Local migration ledger is at 579/579 with zero pending, orphan, duplicate or unreachable entries.
+- [x] Migration chain, discipline, rollback and drop-column-safety gates pass across all 579 journaled migrations.
+- [x] Fail-closed self-tests exist and pass for cell isolation, replica predicates, PITR assertions, load/headroom guard, unit-cost anomaly guard, alert dispatch, retention classification and erasure FK ordering.
+
+Environment evidence still required:
+
+- [ ] Do not infer disposable-staging, clean-bootstrap or upgraded-catalog completion from the local 579/579 ledger; run and retain those three environment-specific proofs.
+- [ ] Provision and verify independent cell resources, a physical replica, regional recovery/relocation, production-shaped load with at least 40% headroom, invoice-derived cost and live alert acknowledgement.
+- [ ] Record environment, region, release SHA, topology hash, dataset shape, operator, UTC timestamp, command/exit code and artifact SHA-256 for every operational claim.

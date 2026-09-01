@@ -21,3 +21,17 @@ Close the human-governance and deployed privacy gates that code cannot approve f
 - [ ] Every policy decision has an accountable approver and review date.
 - [ ] Operator access is enforced and audited, not merely documented.
 - [ ] No unresolved P0/P1 privacy, security or compliance finding remains.
+
+## Audit evidence — 2026-09-01
+
+Code-ready behavior:
+
+- [x] Operator grant implementation contains a four-hour maximum, second-person approval, expiry/revocation, tenant scope and audit writes. This is implementation evidence only, not policy approval or deployed enforcement proof.
+- [x] GDPR export worker, subject-storage purge, object-key deletion, legal-hold checks and an HR retention sweep exist with fail-closed self-tests.
+
+Remaining approval and coverage work:
+
+- [ ] Obtain named Product/Security approval and prove eligible-role enforcement, per-request audit, tenant notification, periodic review and emergency handling for operator access.
+- [ ] Make GDPR export exhaustive and prove physical organization-row deletion plus all search/vector, cache, object-storage and downstream-provider purge adapters.
+- [ ] Complete document and Payroll retention coverage, then run access/export/correction/portability/erasure, retention and legal-hold drills in a deployed disposable environment.
+- [ ] Record DPO/legal decisions for lawful purpose, residency, international transfers, subprocessors/DPAs, breach handling, retention, payroll/tax jurisdictions and controller/processor responsibilities. Inventory remains excluded from this PRD.
