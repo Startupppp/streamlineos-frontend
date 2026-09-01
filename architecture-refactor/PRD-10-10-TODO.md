@@ -57,6 +57,17 @@ Local mocks and self-tests prove implementation behavior only. They never prove 
 - [ ] Run backend build/type-check, spec type-check, frontend type-check, OpenAPI freshness, import-cycle, file-size, dead-code, tenant-isolation, RLS, permission, cache, outbox, idempotency and migration gates at one recorded commit.
 - [ ] Resolve every remaining code-level P0/P1 finding and record lower-severity residual risks with owner and deadline.
 
+### 1A. Security, API and supply-chain verification
+
+- [ ] Run cross-tenant BOLA/IDOR tests against reads, writes, exports, files, search, realtime channels, background jobs and public/share-token routes; client-side hiding never counts as authorization.
+- [ ] Verify authentication and account-recovery abuse cases: session fixation, token replay, revoked membership, organization switching, invitation takeover, password reset, MFA/recovery, brute force and credential stuffing.
+- [ ] Verify CSRF, stored/reflected XSS, SSRF, SQL injection, unsafe redirects, path traversal, CORS, CSP, security headers, request-size limits and rate limits against the deployed edge and application.
+- [ ] Verify TLS, encryption at rest, secret isolation, log/trace redaction, credential rotation and signing/encryption-key rotation without cross-tenant cache or session leakage.
+- [ ] Run dependency vulnerability, license and SBOM gates at the release commit; resolve or explicitly approve every reachable critical/high vulnerability and prohibited license.
+- [ ] Reconcile the OpenAPI contract with frontend callers and any external consumers. Prove operation IDs, REST versioning, pagination/filter/sort/error contracts and backward compatibility for the supported upgrade window.
+- [ ] Prove no dead, duplicated or overlapping endpoint, validator, schema, hook, cache-key factory, worker or UI surface remains in scope; deletion requires dependency-graph and build evidence.
+- [ ] Verify module folder ownership and import direction remain coherent: domain modules expose small interfaces, internal implementation stays local, shared modules do not depend on features, and no new oversized mixed-responsibility file is accepted.
+
 ### 2. Production-shaped query and capacity evidence
 
 - [ ] Restore a reproducible in-scope seed dataset for HRMS, Payroll, Build, Home, Chat, Calendar, Notifications, Knowledge and Accounting.
@@ -66,6 +77,21 @@ Local mocks and self-tests prove implementation behavior only. They never prove 
 - [ ] Exercise expensive reminder, export, fanout, unread, free/busy, recurrence, search/vector and dashboard paths.
 - [ ] Run request-transaction load with realistic concurrency and record connection-pool saturation, queue age, memory, CPU, replica lag/fallback and error rate.
 - [ ] Prove declared SLOs with at least 40% sustained capacity headroom and acceptable burst behavior.
+- [ ] Verify cache keys include tenant, subject and permission dimensions where applicable; prove mutation invalidation, revocation invalidation, TTL correctness, stampede protection and fail-safe Redis degradation without cross-org leakage.
+- [ ] Verify every growing list has a validated hard limit, deterministic order, unique tie-breaker, signed scope-bound cursor, filter/sort contract and no fetch-then-filter/count or per-row query expansion.
+
+### 2A. Domain-specific release matrix
+
+- [ ] Organization/Settings/RBAC: prove owner transfer, last-owner protection, admin/member/custom-role behavior, module owner/admin/member behavior, direct grants, descendant protection, organization switching and immediate revocation across backend and frontend routes.
+- [ ] Home: prove every section is permission-scoped, privacy-safe, independently failure-isolated and bounded; one failing widget must not fail or leak the whole dashboard.
+- [ ] HRMS and Payroll: prove self-service versus administrative scope, sensitive projection controls, approval routing, payroll locking/reconciliation, payslip publication, immutable financial history, export bounds and retry/idempotency.
+- [ ] Build/PM and Workflows: prove project/workspace membership, ticket and board cursor stability, workflow schedules/secrets/versioning, retries, cancellation, approvals, idempotency and event-consumer behavior.
+- [ ] Billing/Payments/Accounting: run real provider-sandbox webhook replay, outage and proration/seat-placement tests; prove entitlement caching, usage metering, tax/currency rules, invoice immutability, journal consistency, asynchronous exports/reminders and DLQ recovery.
+- [ ] Chat/Inbox/Notifications: prove tenant/channel/thread authorization, ordering guarantees, duplicate-safe at-least-once delivery, fanout, reconnect/offline recovery, unread/read-state correctness without scans, revocation of issued realtime tokens and bounded history/export.
+- [ ] Email and alerts: prove templates, localization, bounce/complaint/suppression handling, retry/DLQ, unsubscribe/consent behavior, provider failover policy, deliverability observability and no duplicate user-facing mail on replay.
+- [ ] Calendar: prove RFC-compliant RRULE parsing, exceptions, timezone/DST boundaries, attendee privacy, free/busy and conflict correctness, reminder replacement/deduplication, provider synchronization and export limits.
+- [ ] Knowledge/Wiki/Chatbot: prove revisions/version history, ingestion retry/idempotency, file lifecycle, malware gate, permissioned keyword/vector retrieval with ACL enforcement inside retrieval, citation/source integrity, deletion/purge/reindex and realistic-corpus latency.
+- [ ] Frontend: prove responsive behavior, keyboard/screen-reader use, loading/empty/error/permission states, server-side pagination/filtering, route/action permission parity, bundle budgets, authenticated rendering performance and public-page SEO metadata.
 
 ### 3. Migration and database reproducibility
 
@@ -89,6 +115,15 @@ Local mocks and self-tests prove implementation behavior only. They never prove 
 - [ ] Test live queue-age, DLQ, provider-failure, tenant-context, latency and recovery alerts; record human acknowledgement using [RB-06](runbooks/RB-06-live-alert-delivery.md).
 - [ ] Capture passing RB-01 through RB-08 manifests under [production evidence](final-refactor/evidence/42-production-ops/README.md). The current evidence gate fails because no deployed manifests exist.
 - [ ] Redact credentials and personal data; retain environment, region, cell, topology hash, release SHA, operator, timestamps, command/exit code and SHA-256 for every artifact.
+
+### 4A. Deployment, rollback and incident readiness
+
+- [ ] Prove backward-compatible application/database deployment across the supported rolling window; old and new application versions must coexist safely during migration.
+- [ ] Run canary deployment with automated SLO/error-budget checks, tenant-isolation checks and abort thresholds before broad rollout.
+- [ ] Verify feature flags, provider kill switches, queue pause/resume, degraded-mode behavior and rollback/forward-fix procedures under an induced failure.
+- [ ] Verify health/readiness probes, graceful shutdown, connection draining, worker lease recovery and no duplicate/lost durable work during deploys and autoscaling.
+- [ ] Publish current on-call ownership, escalation paths, incident severity definitions, customer/status communication procedure and post-incident review process.
+- [ ] Prove backup artifacts are encrypted, access-controlled, restorable and periodically tested; document key ownership and rotation responsibilities.
 
 ### 5. Privacy, compliance and operator access
 
