@@ -19,9 +19,9 @@ It does not claim cloud isolation, physical replicas, PITR, regional recovery, l
 Current reconciliation count:
 
 - Verified completed invariants: **15**.
-- Immediate code-level criteria still open: **273**.
+- Immediate code-level criteria still open: **279**.
 - Deferred production/compliance criteria still open: **34**.
-- The 273 immediate criteria are acceptance checks, not 273 confirmed defects; fresh execution may close a criterion without a code change when its implementation already passes.
+- The 279 immediate criteria are acceptance checks, not 279 confirmed defects; fresh execution may close a criterion without a code change when its implementation already passes.
 
 ## Product constraints
 
@@ -57,13 +57,13 @@ These decisions are final for this release and remove implementation alternative
 - [x] Legacy actor contraction: 434 organizational fields scanned; 318 display-only; 116 CRM/Inventory excluded; 0 actionable.
 - [x] Invitation tenant-composite membership constraints, Calendar attendee normalization and Chat durable token revocation/retry behavior.
 - [x] Membership-FK removal-policy, owner-authority, permission-catalog, record-access, module-gate and tenant-index gates.
-- [x] Cursor migration and bounded-read implementation: 0 actionable offsets, unbounded reads, unordered paging or unclassified paths across 2,107 service files.
+- [x] Cursor migration and bounded-read implementation: 0 actionable offsets, unbounded reads, unordered paging or unclassified paths across 2,109 service files.
 - [x] Migration ledger baseline: 585/585 applied; zero pending, orphan, duplicate or unreachable entries; structural gates pass locally.
-- [x] Backend production and spec-inclusive typechecks pass at the recorded audit workspace.
+- [x] Backend production typecheck passes at the current audit workspace; spec-inclusive typecheck is explicitly open below because seven test-source errors remain.
 - [x] Frontend typecheck passes at the recorded audit workspace.
 - [x] Backend and frontend import graphs have no circular dependencies.
-- [x] Backend hard file-size gate passes: 3,392 files with 12 documented exceptions.
-- [x] Frontend capability gate reports zero DEAD, WIRE or UNCLASSIFIED entries; deferred capabilities have owners and a review date.
+- [x] Backend hard file-size gate passes: 3,394 files with 12 documented exceptions; the separate over-300 ratchet regression remains open below.
+- [x] Frontend capability classification reports zero DEAD, WIRE or UNCLASSIFIED entries; the 22 entries still classified DEFERRED are explicitly open below because approved decision 10 no longer permits speculative deferral.
 - [x] OpenAPI structural baseline: 3,583/3,583 operations and 1,363/1,363 mutating bodies covered.
 - [x] Cache invalidation, outbox-consumer, idempotency, feature-flag, mock-surface, route-classification and navigation gates exist and passed at the audit workspace.
 - [x] Billing provider abstraction, webhook idempotency, entitlements, seat/proration ledgers, immutable invoices and transactional outbox exist.
@@ -74,22 +74,31 @@ These decisions are final for this release and remove implementation alternative
 ### VERIFIED DONE
 
 - KEEP the centralized deterministic authorization module, Home section-failure isolation, Billing ledgers/provider adapter, Calendar recurrence/attendee/reminder implementation, notification outbox, tenant-scoped Query cache and unified Inbox/Mail split. Current gates still protect their interfaces; cosmetic replacement would add risk without preventing a concrete failure.
-- Static gates pass for 3,572/3,572 classified routes, 624 used permission keys, 895/895 declared tenant-isolation paths, 742/742 tenant-indexed tables, 3,583/3,583 OpenAPI operations, 1,363/1,363 mutating bodies, zero actionable bounded-read findings and zero unregistered emitted outbox events.
+- Static gates pass for 3,573/3,573 classified routes, 624 used permission keys, 742/742 tenant-indexed tables, 3,583/3,583 OpenAPI operations, 1,363/1,363 mutating bodies, zero actionable bounded-read findings across 2,109 service files and zero unregistered emitted outbox events. Tenant-isolation declaration coverage is the exception: 895/896 passes and `gdpr-rectification.service.ts` is missing.
+- RBAC referential-integrity execution passes all ten cross-tenant/catalog controls. The RLS runtime verifier passes its behavioral controls and 977/984 tenant tables; its only two hard failures are excluded Inventory tables, so final in-scope evidence must exclude CRM/Inventory explicitly without suppressing any in-scope table.
+- Representative focused tests pass for Payroll/Accounting, Chat, Calendar, Knowledge, Notifications and frontend Home/Query behavior: 13 suites and 123 tests at current head.
 
 ### REGRESSED
 
 - Home section execution proof regressed: `backend/src/modules/dashboard/dashboard-section-isolation.spec.ts` has eight failures because `DashboardPersonalService.getPersonalDashboard` added an organization-membership lookup that its database adapter does not implement. Repair the test adapter and preserve the negative-query/failure-isolation assertions; do not weaken or delete them.
 - Backend spec-inclusive typecheck regressed with seven current errors in `billing/core/revenue-analytics.service.spec.ts`, `organization/core/lifecycle/organization-purge-adapters.spec.ts`, `platform/platform-operator-access-policy.spec.ts` and `platform/platform-operator-access.spec.ts`; production backend and frontend typechecks still pass.
+- The complete runtime tenant/isolation suite currently has 27 failing suites and 53 failing tests out of 428 suites/1,694 tests. Failures are concentrated in stale database/query-builder or principal-context test adapters across Access, Build, Home, Finance, Knowledge, Payroll, RBAC and Support; `projects-tickets-read-tenant-isolation.spec.ts` additionally observes incorrect suspended-member/role behavior and must be diagnosed as implementation versus fixture drift rather than blindly updating expectations.
+- Exact failing-suite inventory: Access `user-module-access`; Build `build-approvals-inbox`, `comment-drafts`, `projects-provision`, `build-core-services`, `projects-analytics-workspace-members-budget`, `projects-ticket-links`, `projects-tickets-read`, `whiteboards`, `meetings` and `teams`; Home `dashboard-personal` and `dashboard-section`; Finance `vendor-payments-allocations` and `reconciliation-workspace`; Knowledge `kb-page-ai`, `kb-page-comments`, `kb-page-record-links`, `kb-pages`, `kb-page-tree`, `kb-page-versions` and `kb-page-visits`; Payroll `locking` and `payroll-approver-resolver`; RBAC `principal-groups`; Support `support-drafts` and `support-portal`.
+- Static tenant-isolation coverage regressed to 895/896 because `backend/src/modules/gdpr/gdpr-rectification.service.ts` has no declared executable negative test.
+- Backend size-ratchet coverage regressed to 407 production files over 300 lines against a baseline of 394. The hard 500-line gate still passes, but raising either baseline would hide thirteen new shallow/mixed-responsibility crossings.
+- The frontend capability report still contains 22 DEFERRED exports after the approved decision to remove out-of-release speculative capabilities. These cover duplicate Workflow schedule/secret hooks, Onboarding checklist hooks, `MemberExpenseStats`, Accounting bank-import/collection/vendor-payment hooks, Party deletion, Build team-member hooks, legacy Inbox hooks and HR attendance heatmap hooks.
 - The PRD previously named runtime custom roles, contradicting [PRD-IN-SCOPE.md](PRD-IN-SCOPE.md), `backend/CLAUDE.md` and the implemented six-standing authority model. The checklist below now requires fixed templates plus per-person grants instead of a second authority model.
 
 ### STILL PENDING
 
-- Production-shaped read-cost evidence, cold bootstrap/catalog parity, runtime cross-tenant execution and the four retention decisions remain open under their existing criteria; they are not duplicated below.
+- Production-shaped read-cost evidence, destructive clean-baseline bootstrap/catalog parity, runtime cross-tenant execution and the four retention decisions remain open under their existing criteria; they are not duplicated below. The existing 585/585 migration chain is internally valid but does not implement approved migration decision 9.
 - Payroll finalization still calls Accounting posting through a nested top-level transaction, so an Accounting journal can commit while the Payroll lock rolls back.
+- Frontend client-route containment is exactly at its 304-page ceiling (304 of 600 pages are client pages), leaving no regression headroom and keeping too much route orchestration in the browser.
 
 ### NEW
 
 - Current source proves additional release blockers in token-signing authority, tenant-composite foreign keys, Home access locality, TanStack cancellation/query-key/cache-shape correctness, frontend command authorization, Chat scale/concurrency, Calendar synchronization durability, Knowledge comment/review ACLs and durable notification fanout. Their exact acceptance criteria are added to the owning sections below.
+- Published-versus-internal API compatibility has no fail-closed source registry. Without one, deletion and breaking-change reviews cannot determine which contracts require versioned deprecation.
 
 ## Architecture-review candidate coverage — 2026-09-01
 
@@ -195,9 +204,11 @@ This section durably incorporates every candidate from the temporary visual arch
 
 - [ ] Fix seeded E2E harness failures, including organization placement/control-plane state and schema/fixture drift.
 - [ ] Repair all seven current spec-inclusive type errors without casts or exclusions, then make `pnpm -C backend check:spec-typecheck` pass at the same commit as production typechecks.
+- [ ] Repair all 27 currently failing runtime tenant/isolation suites (53 assertions) across Access, Build, Home, Finance, Knowledge, Payroll, RBAC and Support; preserve both deny and same-tenant control assertions, diagnose the Build suspended-member/role mismatch, and make all in-scope suites pass without excluding or weakening tests.
 - [ ] Run disposable-database E2E for Organization/RBAC, Home, Settings, HRMS, Payroll, Build, Billing, Payments, Accounting, Chat, Calendar, Notifications, Knowledge, Workflows and Inbox/mail.
 - [ ] Record each command, release SHA, database identity, dataset shape, pass/fail/skip counts and failure artifacts.
 - [ ] At the same commit run backend build/typecheck, spec typecheck, frontend typecheck, OpenAPI freshness, cycle, file-size, dead-code, tenant-isolation, RLS, permission, cache, outbox, idempotency, migration, vulnerability, license and SBOM gates.
+- [ ] Restore the backend over-300 ratchet from 407 to at most its 394-file baseline: identify all thirteen new crossings, KEEP only demonstrably deep/cohesive modules, split mixed-responsibility files at real seams, and never raise the baseline or exception ceiling merely to pass.
 - [ ] Run deterministic container/fake failure tests for duplicate/delayed/out-of-order/forged payment events, seat/proration failure, Redis loss, realtime/email/push failure, retry exhaustion, cancellation, DLQ and recovery.
 - [ ] Resolve every code-level P0/P1 finding and assign owner/deadline to accepted lower-severity residual risks.
 
@@ -209,7 +220,7 @@ This section durably incorporates every candidate from the temporary visual arch
 - [ ] Re-run file-size ratchets and split every unjustified mixed-responsibility file over 500 lines without cosmetic fragmentation.
 - [ ] Prove zero circular imports, forbidden new `forwardRef`, barrel self-imports and erased Nest injection tokens.
 - [ ] Prove every active Nest module is registered and every frontend route has one canonical owner; remove obsolete routes rather than preserving hidden duplicates.
-- [ ] Prove no dead or duplicated endpoint, schema, type, validator, hook, query key, worker, page or UI element using dependency graphs plus build/typecheck evidence; remove every deferred capability outside the approved release scope instead of retaining speculative flags.
+- [ ] Prove no dead or duplicated endpoint, schema, type, validator, hook, query key, worker, page or UI element using dependency graphs plus build/typecheck evidence; remove every deferred capability outside the approved release scope instead of retaining speculative flags, and make the final capability report contain zero DEFERRED entries as well as zero DEAD/WIRE/UNCLASSIFIED entries.
 - [ ] Keep authenticated `app/**/page.tsx` and `layout.tsx` files as thin route modules for metadata, parameters, server authorization and composition; move state, forms, queries and mutations behind feature-owned interfaces and gate route-file size/import direction without changing landing visuals or animations.
 
 ### 3. TypeScript, Zod and cross-layer contracts
@@ -219,6 +230,7 @@ This section durably incorporates every candidate from the temporary visual arch
 - [ ] Keep Zod schemas in module DTO/schema files, derive types with `z.infer`, reject protected/client-supplied actor and tenant fields and enforce unknown-key policy.
 - [ ] Reconcile backend Zod/OpenAPI contracts with frontend request/response types, hooks, forms and rendered error states.
 - [ ] Verify operation IDs, REST versioning, status/error envelopes, idempotency headers and cursor/filter/sort contracts; migrate internal callers atomically and preserve backward compatibility only for published customer/integration contracts through versioned deprecation.
+- [ ] Create one fail-closed API contract registry that classifies every exposed operation/event/webhook as internal or published, defaults unknown contracts to published, records owner/version/consumers/sunset evidence, and gates breaking deletion or schema change on dependency proof plus the required deprecation window.
 - [ ] Prove controllers remain thin, business rules stay backend-side and no frontend `app/api` or client module contains business/database logic.
 
 ### 4. Database schema and migration quality
@@ -231,6 +243,7 @@ This section durably incorporates every candidate from the temporary visual arch
 - [ ] Add a `pg_catalog`-backed tenant-relationship gate that inventories every FK whose parent and child are tenant-owned, explicitly excludes CRM/Inventory and approved global relations, and reports zero actionable single-column tenant relationships.
 - [ ] Repair every actionable in-scope relationship with `(org_id, child_id) -> (org_id, id)`, supporting uniqueness/indexes, `NOT VALID` then `VALIDATE` migration sequencing and cross-tenant insertion tests; explicitly cover Build ticket hierarchy/recurrence/release/feedback/product/work-item/workflow/sprint-event relations and Billing subscription/proration/invoice/credit-note relations.
 - [ ] Reconcile Drizzle declarations, migration snapshots and the live catalog so each tenant relationship has one canonical composite constraint; remove redundant single-column constraints only after dependency proof, cold bootstrap and upgraded-catalog parity.
+- [ ] Make the RLS verification command scope-aware: prove every in-scope tenant table is covered, report excluded CRM/Inventory tables separately, and fail if any unclassified or in-scope table lacks policy coverage; do not globally ignore the current `inv_project_requirements`/`inv_projects` failures.
 - [ ] Verify high-growth append-only tables have justified retention/partition decisions and indexes matched to real access patterns.
 - [ ] Remove obsolete schema only with symbol, raw table-name, FK, migration, barrel and integrity-spec evidence.
 - [ ] Cold-bootstrap an empty database to migration head and record zero pending, orphan, duplicate or unreachable migrations.
@@ -273,6 +286,7 @@ This section durably incorporates every candidate from the temporary visual arch
 - [ ] Prove authorization at the data/query implementation so a missing controller/frontend check cannot expose a record.
 - [ ] Prove frontend routes, navigation, TanStack queries and action buttons match backend effective permissions without treating hiding as security.
 - [ ] Prove membership/permission revocation invalidates authorization caches, sessions and issued realtime credentials within the declared consistency contract.
+- [ ] Add executable cross-tenant negative and same-tenant control tests for `gdpr-rectification.service.ts` reads, correction writes and resumable jobs, then restore static declaration coverage from 895/896 to 896/896 and run the declared tests rather than satisfying the scanner with metadata alone.
 - [ ] Run BOLA/IDOR tests for reads, writes, bulk actions, files, exports, search/vector, realtime, jobs and public/share-token paths; cross-tenant misses return 404.
 
 ### 7. NestJS route and worker behavior
@@ -350,8 +364,8 @@ Mandatory folder/file evidence for **every** module below:
 #### 10.1 Authentication, identity, sessions and organization
 
 - [ ] Architecture/schema: verify global identity is separated from tenant membership; organization, invitation, membership, session and organization-switch relationships have correct keys, uniqueness, lifecycle and revocation data.
-- [ ] Token authority: implement an authenticated backend session-exchange interface that alone mints short-lived asymmetric issuer/audience-bound JWTs; remove `BACKEND_JWT_SECRET` and all bearer-token signing from frontend/edge runtimes.
-- [ ] Token verification: verify asymmetric JWTs by key identifier with rotation overlap and revocation; test wrong issuer/audience/key, expiry, replay, altered user, altered organization and a compromised frontend runtime that possesses no private key.
+- [ ] Token authority: implement a replay-safe, CSRF-protected authenticated backend session-exchange interface that revalidates the current session and organization membership and alone mints short-lived asymmetric issuer/audience-bound JWTs; remove `BACKEND_JWT_SECRET` and all bearer-token signing from frontend/edge runtimes and redact exchange tokens from logs/telemetry.
+- [ ] Token verification: verify asymmetric JWTs by `kid` through a backend-owned keyring/JWKS with bounded clock skew, rotation overlap and session/membership revocation; test wrong issuer/audience/key, expiry, exchange replay, altered user, altered organization and a compromised frontend runtime that possesses no private key.
 - [ ] Routes/contracts: verify signup, login, logout, refresh, recovery, MFA, invitation and organization switching use Zod/OpenAPI contracts and never trust client actor/current-org fields.
 - [ ] Authorization/security: test account enumeration, fixation/replay, lockout, invitation takeover, revoked membership, cross-org switching and last-owner/owner-transfer invariants.
 - [ ] Queries/cache: verify bounded membership/session reads, required indexes and immediate invalidation of session, effective-access and organization caches.
@@ -368,7 +382,7 @@ Mandatory folder/file evidence for **every** module below:
 #### 10.3 Home and dashboard composition
 
 - [ ] Architecture/schema: prove Home owns composition/preferences only and does not duplicate Chat, Calendar, Inbox or Notification domain tables or implementation.
-- [ ] Access locality: make the backend Home section manifest authoritative and generate the frontend contract from it; it must match every live controller route, module requirement, permission and cache namespace, and no hand-maintained parallel registry may remain.
+- [ ] Access locality: make the backend Home section manifest authoritative and generate the frontend contract from it; it must match every live controller route, module requirement, permission and cache namespace, no hand-maintained parallel registry may remain, and CI must fail on stale generated output without importing backend runtime code into Next.js.
 - [ ] Routes/contracts: define a bounded per-section dashboard contract with independent success/error metadata and permission-safe projections.
 - [ ] Authorization/privacy: derive each section from caller identity and effective access; prove calendar, people, payroll and communication data cannot leak through summaries/counts.
 - [ ] Queries/cache: verify parallel bounded aggregation, no N+1/fetch-all behavior, per-section cache ownership and mutation invalidation from source modules.
@@ -467,7 +481,7 @@ Mandatory folder/file evidence for **every** module below:
 - [ ] Authorization/privacy: test calendar/source visibility, attendee privacy, own/shared/admin operations, private events, cross-tenant IDs and every mutation hook.
 - [ ] Queries/cache/workers: verify timezone/DST, recurrence expansion limits, free-busy/conflict indexes, reminder replacement/deduplication, sync retries and range/source cache invalidation.
 - [ ] Frontend/TanStack/tests: verify one `/calendar`, source toggles, timezone display, series-versus-instance edits, cursor/range keys and DST/exception/conflict/reminder E2E.
-- [ ] Commit Calendar changes locally first with an atomic provider-sync intent and `pending` state; process create/update/delete asynchronously with idempotent lease, retry/backoff and cancellation, expose `synced/failed` plus user retry, and prevent permanent local/external divergence.
+- [ ] Commit Calendar changes locally first with an atomic provider-sync intent and `pending` state; process create/update/delete asynchronously with idempotent lease, retry/backoff and cancellation, persist per-event monotonic operation/version ordering plus delete tombstones, discard stale jobs/webhooks, reconcile provider drift, expose `synced/failed` plus user retry, and prevent permanent local/external divergence.
 - [ ] Consolidate Calendar member list/search behind one permission-gated lookup interface; both paths require `directory:people:view` and test missing, granted and revoked access.
 
 #### 10.14 Inbox and mail
@@ -515,6 +529,7 @@ Mandatory folder/file evidence for **every** module below:
 - [ ] RBAC/UI: verify authenticated layout, route/action parity, module navigation, permission changes and organization switching without flashes of unauthorized content.
 - [ ] UX/accessibility: verify loading/empty/error/offline/permission states, keyboard/screen reader, focus, contrast and responsive 375/768/1280 behavior.
 - [ ] Performance/SEO/tests: verify bundle boundaries, lazy loading, rendering/Web Vitals budgets and public metadata without changing landing visuals/animations; run representative browser E2E.
+- [ ] Reduce authenticated client route modules below the current 304-page ceiling, never raise that ceiling, and move data/authorization/orchestration to server or feature seams while preserving interactive leaf components; public landing visuals and animations remain untouched.
 
 ### 11. Application security and privacy implementation
 
