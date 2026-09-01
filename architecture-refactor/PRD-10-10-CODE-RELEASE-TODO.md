@@ -640,17 +640,34 @@ Recorded explicitly so no unchecked box above is mistaken for an oversight.
   must not be raised. The GDPR export worker split reduced it by 2 (1,984 → 403
   lines across 11 cohesive files); the remaining excess sits in accounting,
   payroll and rbac.
-- **32 bulk-`ids` route bodies still lack `maxItems`.** The 4 HR recruitment
-  cases are fixed; the rest span build, calendar, chat and other modules.
+- **22 bulk-`ids` request bodies still lack an upper bound**, not 32 — the
+  earlier figure was carried forward without measurement. A parse of every
+  `src/**/*.schemas.ts`, excluding CRM/Inventory, finds 31 id-arrays already
+  bounded with `.max()` and 22 unbounded, in build (5), calendar (2), leads (3),
+  payroll (2), surveys (2), notifications (2), and one each in chat, expenses,
+  finance/ap, hr/performance ×2 and kb. Repair plus a regression gate is in
+  progress. Note two are outbox event payloads rather than HTTP bodies, where a
+  cap could silently truncate a legitimate org-wide fan-out; those are being
+  judged individually rather than capped by rule.
 - **Command-catalog classification is incomplete.** Signal propagation is fully
   closed (0/399), but classifying all 316 mutation files as PERMISSIONED or
   explicitly SELF, behind a gate, is outstanding.
-- **Runtime-measured budgets are unproven.** Core Web Vitals for authenticated
-  routes, route bundle bytes, long-task/render measurement and the seeded
-  disposable-database E2E across the 15 in-scope modules are pending a booted
-  API against a seeded scratch database. An earlier attempt measured the public
-  landing page, which the criterion explicitly excludes — that number was
-  withdrawn rather than recorded.
+- **Runtime-measured budgets are unproven, and both gates now say so.** Core Web
+  Vitals for authenticated routes, long-task/render measurement and the seeded
+  disposable-database E2E across the 15 in-scope modules are pending a booted API
+  against a seeded scratch database.
+  Two gate defects of the same class were found and fixed rather than worked
+  around. `check:web-vitals-budget` exited 0 when a budget had **no**
+  measurement, and accepted public-landing-page figures as evidence for budgets
+  that govern authenticated routes; it now fails on an unmeasured budget and
+  fails outright when no authenticated route was measured. Separately,
+  `frontend/contracts/route-bundle-manifest.json` had **no gate at all** — the
+  similarly-named `check:route-budgets` reads `backend/contracts/route-budgets.json`
+  (DB calls, latency) and never saw it, so measured bundle bytes sat in the repo
+  with nothing comparing them to their ceiling. The new
+  `check:route-bundle-budget` closes that and is **RED on two real breaches**:
+  `/inbox` +35,354 bytes and `/build/inbox` +42,852 bytes over their First Load
+  JS ceilings. Both new gates ship a self-test with a known-bad fixture.
 - **Read budgets need a reproducible seed.** An earlier run measured against a
   shared development database; that is not reproducible evidence and was
   rejected. A deterministic, idempotent seed including a minority-size org (ANN
