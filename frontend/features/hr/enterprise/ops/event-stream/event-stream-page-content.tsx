@@ -21,6 +21,7 @@ import {
 } from "@/hooks/api/hr/enterprise-ops-event-stream";
 import { format } from "date-fns";
 import { useOrgMembers } from "@/hooks/api/organization";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import {
   getUserDisplayName,
   type NamedUser,
@@ -28,10 +29,12 @@ import {
 
 export function EventStreamPageContent() {
   const canExport = useCan("hr:analytics:read");
-  const [page, setPage] = useState(1);
+  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
+  const page = cursorHistory.length;
+  const cursor = cursorHistory.at(-1);
   const [activeTab, setActiveTab] = useState("events");
 
-  const { data, isLoading } = useHrEvents({ page });
+  const { data, isLoading, isFetching } = useHrEvents({ cursor });
   const { data: dictionary } = useHrEventDataDictionary();
   const { data: metrics } = useHrMetricDefinitions();
   const exportMutation = useExportHrEvents();
@@ -117,6 +120,15 @@ export function EventStreamPageContent() {
     },
   ];
 
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((history) => history.length > 1 ? history.slice(0, -1) : history);
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = data?.pagination.nextCursor;
+    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
+  }, [data?.pagination.nextCursor]);
+
   return (
     <PageWrapper
       title="HR Event Stream"
@@ -153,32 +165,32 @@ export function EventStreamPageContent() {
           <div className="mb-3 shrink-0 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-foreground">
             This log is <strong>append-only</strong>. Events cannot be edited or deleted.
           </div>
-          <DataTable
-            className="flex-1 min-h-0"
-            data={data?.data ?? []}
-            columns={eventColumns}
-            getRowKey={(r) => r.id}
-            isLoading={isLoading}
-            emptyState={
-              <EmptyState
-                illustrationPreset="documents"
-                title="No events in the stream"
-                description="HR events will appear here as an append-only audit log."
-                compact
+          <div className="flex flex-1 min-h-0 flex-col gap-3">
+            <DataTable
+              className="flex-1 min-h-0"
+              data={data?.data ?? []}
+              columns={eventColumns}
+              getRowKey={(r) => r.id}
+              isLoading={isLoading}
+              emptyState={
+                <EmptyState
+                  illustrationPreset="documents"
+                  title="No events in the stream"
+                  description="HR events will appear here as an append-only audit log."
+                  compact
+                />
+              }
+            />
+            {data && (page > 1 || data.pagination.hasMore) ? (
+              <CursorPageControls
+                page={page}
+                hasNext={data.pagination.hasMore}
+                disabled={isFetching}
+                onPrevious={handlePreviousPage}
+                onNext={handleNextPage}
               />
-            }
-            pagination={
-              data
-                ? {
-                    mode: "server",
-                    page,
-                    pageSize: data.pagination.limit,
-                    total: data.pagination.total,
-                    onPageChange: setPage,
-                  }
-                : undefined
-            }
-          />
+            ) : null}
+          </div>
         </TabsContent>
 
         <TabsContent value="dictionary" className="mt-0 flex flex-1 min-h-0 flex-col">

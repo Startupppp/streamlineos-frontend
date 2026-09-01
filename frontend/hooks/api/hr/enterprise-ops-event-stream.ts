@@ -24,11 +24,11 @@ export interface EventCatalogEntry {
 
 interface PaginatedResult<T> {
   data: T[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 export interface ListEventsParams {
-  page?: number;
+  cursor?: string;
   limit?: number;
   eventType?: string;
   entityType?: string;

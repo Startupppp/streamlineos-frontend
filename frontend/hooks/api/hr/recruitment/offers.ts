@@ -4,10 +4,6 @@ import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tansta
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import {
-  normalizeRecruitmentList,
-  type RecruitmentListResponse,
-} from "./list-response";
 
 export interface CandidateOffer {
   id: number;
@@ -77,26 +73,29 @@ export interface OfferNegotiation {
 }
 
 export type AllOffersParams = {
-  page?: number;
+  cursor?: string;
   pageSize?: number;
   status?: OfferListItem["offerStatus"];
 };
 
 export function useAllOffers(params?: AllOffersParams) {
   const canOffers = useCan("hr:offers:view");
-  const page = params?.page ?? 1;
   const pageSize = params?.pageSize ?? 20;
-  const queryParams: Record<string, unknown> = { page, pageSize };
+  const queryParams: Record<string, unknown> = { pageSize };
+  if (params?.cursor) queryParams.cursor = params.cursor;
   if (params?.status) queryParams.status = params.status;
 
   return useQuery({
     queryKey: [...queryKeys.hr.all, "allOffers", queryParams] as const,
-    queryFn: async (): Promise<RecruitmentListResponse<OfferListItem>> => {
-      const res = await apiClient.get<OfferListItem[] | RecruitmentListResponse<OfferListItem>>(
+    queryFn: (): Promise<{
+      items: OfferListItem[];
+      total: number;
+      pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
+    }> => {
+      return apiClient.get(
         "/hr/recruitment/offers",
         queryParams,
       );
-      return normalizeRecruitmentList(res, pageSize);
     },
     staleTime: 60_000,
     placeholderData: keepPreviousData,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,7 @@ import { format } from "date-fns";
 import { formatINR } from "@/lib/format-utils";
 import { useAllOffers, type OfferListItem } from "@/hooks/api/hr/recruitment/offers";
 import { ErrorState } from "@/components/shared/error-state";
-import { DataTablePagination } from "@/components/shared/data-table-pagination";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 
@@ -75,9 +75,11 @@ const PAGE_SIZE = 20;
 
 export default function OffersPage() {
   const [statusFilter, setStatusFilter] = useState<OfferListItem["offerStatus"] | "ALL">("ALL");
-  const [page, setPage] = useState(1);
-  const { data, isLoading, isError, refetch } = useAllOffers({
-    page,
+  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
+  const page = cursorHistory.length;
+  const cursor = cursorHistory.at(-1);
+  const { data, isLoading, isFetching, isError, refetch } = useAllOffers({
+    cursor,
     pageSize: PAGE_SIZE,
     status: statusFilter === "ALL" ? undefined : statusFilter,
   });
@@ -86,8 +88,17 @@ export default function OffersPage() {
   function handleStatusChange(value: string) {
     const match = OFFER_STATUS_FILTERS.find((s) => s.value === value);
     setStatusFilter(match?.value ?? "ALL");
-    setPage(1);
+    setCursorHistory([undefined]);
   }
+
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((history) => history.length > 1 ? history.slice(0, -1) : history);
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = data?.pagination.nextCursor;
+    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
+  }, [data?.pagination.nextCursor]);
 
   if (isLoading) {
     return (
@@ -112,7 +123,6 @@ export default function OffersPage() {
   }
 
   const total = data?.total ?? 0;
-  const totalPages = data?.totalPages ?? 0;
 
   return (
     <PageWrapper
@@ -155,13 +165,13 @@ export default function OffersPage() {
         ) : (
           <div className="flex flex-1 min-h-0 flex-col gap-3">
             {offers.map((offer) => <OfferRow key={offer.id} offer={offer} />)}
-            {totalPages > 1 && (
-              <DataTablePagination
+            {(page > 1 || data?.pagination.hasMore) && (
+              <CursorPageControls
                 page={page}
-                totalPages={totalPages}
-                total={total}
-                limit={PAGE_SIZE}
-                onPageChange={setPage}
+                hasNext={data?.pagination.hasMore ?? false}
+                disabled={isFetching}
+                onPrevious={handlePreviousPage}
+                onNext={handleNextPage}
               />
             )}
           </div>
