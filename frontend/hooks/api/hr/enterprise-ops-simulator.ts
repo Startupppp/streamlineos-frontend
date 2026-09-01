@@ -20,12 +20,12 @@ export interface SimulationRecord {
 
 interface PaginatedResult<T> {
   data: T[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 const BASE = "/hr/enterprise/ops/simulator";
 
-export function useSimulationHistory(params: { page?: number; type?: SimulationType } = {}) {
+export function useSimulationHistory(params: { cursor?: string; type?: SimulationType } = {}) {
   return useQuery({
     queryKey: queryKeys.hrSimulations.history(params as Record<string, unknown>),
     queryFn: () => apiClient.get<PaginatedResult<SimulationRecord>>(`${BASE}/history`, params as Record<string, unknown>),

@@ -29,11 +29,11 @@ export interface TalentPoolMember {
 
 export interface PaginatedPoolMembers {
   data: TalentPoolMember[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
 interface PoolMembersParams {
-  page?: number;
+  cursor?: string;
   limit?: number;
 }
 
@@ -74,7 +74,7 @@ export function usePoolMembers(poolId: number, params?: PoolMembersParams) {
     queryKey: [...poolMembersKey(poolId), params] as const,
     queryFn: () => {
       const search = new URLSearchParams();
-      if (params?.page) search.set("page", String(params.page));
+      if (params?.cursor) search.set("cursor", params.cursor);
       if (params?.limit) search.set("limit", String(params.limit));
       const qs = search.toString();
       return apiClient.get<PaginatedPoolMembers>(`/hr/recruitment/talent-pools/${poolId}/members${qs ? `?${qs}` : ""}`);

@@ -22,7 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
-import { TablePagination } from "@/components/ui/table-pagination";
+import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger, SheetBody } from "@/components/ui/sheet";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -211,8 +211,10 @@ function PoolMemberRow({ member: m, onRemove }: PoolMemberRowProps) {
 }
 
 function PoolMembersList({ poolId }: { poolId: number }) {
-  const [page, setPage] = useState(1);
-  const { data: membersData, isLoading } = usePoolMembers(poolId, { page, limit: 20 });
+  const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
+  const page = cursorHistory.length;
+  const cursor = cursorHistory.at(-1);
+  const { data: membersData, isLoading, isFetching } = usePoolMembers(poolId, { cursor, limit: 20 });
   const members = membersData?.data;
   const pagination = membersData?.pagination;
   const removeMember = useRemovePoolMember(poolId);
@@ -227,9 +229,14 @@ function PoolMembersList({ poolId }: { poolId: number }) {
     [removeMember],
   );
 
-  function handlePageChange(nextPage: number) {
-    setPage(nextPage);
-  }
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((history) => history.length > 1 ? history.slice(0, -1) : history);
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = pagination?.nextCursor;
+    if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
+  }, [pagination?.nextCursor]);
 
   if (isLoading) {
     return <div className="space-y-2">{[1, 2].map((i) => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}</div>;
@@ -244,12 +251,13 @@ function PoolMembersList({ poolId }: { poolId: number }) {
       {members.map((m) => (
         <PoolMemberRow key={m.membershipId} member={m} onRemove={handleRemove} />
       ))}
-      {pagination && pagination.totalPages > 1 && (
-        <TablePagination
+      {pagination && (page > 1 || pagination.hasMore) && (
+        <CursorPageControls
           page={page}
-          pageSize={pagination.limit}
-          total={pagination.total}
-          onPageChange={handlePageChange}
+          hasNext={pagination.hasMore}
+          disabled={isFetching}
+          onPrevious={handlePreviousPage}
+          onNext={handleNextPage}
         />
       )}
     </div>
@@ -337,7 +345,7 @@ export default function TalentPoolsPage() {
                       />
                     </div>
                   </div>
-                  <PoolMembersList poolId={selectedPoolId} />
+                  <PoolMembersList key={selectedPoolId} poolId={selectedPoolId} />
                 </div>
               ) : (
                 <div className="rounded-2xl border border-dashed border-border p-8 text-center">
