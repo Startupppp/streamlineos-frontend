@@ -29,7 +29,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { ZodIssue } from "zod";
-import { basicsStepSchema } from "../lib/basics-schema";
+import {
+  basicsStepSchema,
+  COMPANY_NAME_MAX_LENGTH,
+  INDUSTRY_MAX_LENGTH,
+} from "../lib/basics-schema";
 import {
   GOALS,
   INDUSTRIES,
@@ -302,7 +306,10 @@ export function StepBasics({
               onChange={(e) => patch({ industry: e.target.value })}
               placeholder="Your industry"
               aria-label="Your industry"
+              maxLength={INDUSTRY_MAX_LENGTH}
               className="w-full text-sm"
+              aria-invalid={!!errors.industry}
+              aria-describedby={errors.industry ? "industry-error" : undefined}
             />
           )}
         </div>
@@ -331,6 +338,7 @@ export function StepBasics({
               value={data.companyName}
               onChange={(e) => patch({ companyName: e.target.value })}
               placeholder="Acme Corp"
+              maxLength={COMPANY_NAME_MAX_LENGTH}
               className="w-full text-sm"
               aria-invalid={!!errors.companyName}
               aria-describedby={

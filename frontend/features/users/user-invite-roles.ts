@@ -5,6 +5,14 @@ export const USER_INVITE_ROLES = [
   { value: "ORG_ADMIN", label: "Org Admin" },
 ] as const;
 
+/**
+ * The role a fresh invite starts on. Least privilege, and the same default the
+ * backend applies when a bulk-invite request omits `role` — elevating someone
+ * to Org Admin should always be a deliberate choice, never the path of least
+ * resistance.
+ */
+export const DEFAULT_INVITE_ROLE = "MEMBER";
+
 export const USER_STRUCTURAL_ROLES = [
   { value: "OWNER", label: "Owner" },
   ...USER_INVITE_ROLES,
