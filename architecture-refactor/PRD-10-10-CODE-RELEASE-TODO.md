@@ -711,20 +711,29 @@ Recorded explicitly so no unchecked box above is mistaken for an oversight.
   own**, so deleting the entire page would not bring it under. The ceiling was
   never raised. Closing this means trimming the shared shell or re-deriving that
   ceiling from measured shell cost as a deliberate decision.
-- **The backend jest suite is RED and the pre-existing share is UNVERIFIED.**
-  A full unfiltered run reports roughly 51 failing suites of 1,627. Six were
-  confirmed lane-introduced and fixed, including a genuine production race in the
-  KB ingestion consumer where the concurrency counter was incremented after the
-  first `await`, so all 20 concurrent calls read `current = 0`. The remaining
-  failures are *classified* as pre-existing, but that classification is not
-  established: many of the stated reasons are "mock arity mismatch after service
-  split", and this programme performed the splits. Confirming it requires running
-  the suite at the pre-programme commit `d054dab9`, which needs a checkout this
-  session was not authorised to perform. **Do not read the current suite as
-  green, and do not assume the 51 are harmless.**
+- **The backend jest suite is RED: 51 failing suites, 156 failing tests, of
+  1,627.** Down from 53/169. Six were confirmed lane-introduced and fixed,
+  including a genuine production race in the KB ingestion consumer where the
+  per-org concurrency counter was incremented AFTER the first `await`, so all 20
+  concurrent calls read `current = 0` and the limit never limited anything.
+  The remaining 51 were reported as pre-existing. That classification is only
+  partly supportable, and the split matters:
+  - **10 are in modules this programme never touched** -- `common/pagination`,
+    `common/slo`, `build/entity`, `delegations/dto`, `finance/banking`,
+    `organization/setup`, `party`, `payroll/lib`, `payroll/runs/lib`, and
+    `test/security/upload-controls`. Pre-existing is well evidenced here.
+  - **41 are in specs or module directories this programme edited.** Their
+    provenance is NOT established, and several of the stated reasons are "mock
+    arity mismatch after service split" -- this programme performed the splits.
+  Settling the 41 requires running the suite at the pre-programme commit
+  `d054dab9`, which needs a checkout this session was not authorised to perform.
+  Until then, **do not read the suite as green and do not assume the 41 are
+  harmless.** The cross-reference above is a proxy (does a failing spec live in
+  a directory this work modified), not proof.
   Two traps to carry forward: piping a jest run into `tail` and reading `$?`
-  returns tail's status and hides the failure, and a path-filtered run that looks
-  green proves nothing about the other 1,500 suites.
+  returns tail's status and hides the failure -- that produced a false "exit 0"
+  in this session -- and a path-filtered run that looks green proves nothing
+  about the other 1,500 suites.
 
 - **Read budgets need a reproducible seed.** An earlier run measured against a
   shared development database; that is not reproducible evidence and was
