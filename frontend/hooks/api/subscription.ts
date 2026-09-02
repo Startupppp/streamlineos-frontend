@@ -137,13 +137,14 @@ export function useBillingPlans() {
 }
 
 export function useValidateCoupon(code: string, plan: SubscriptionPlan | null) {
+  const canManage = useCan("billing:subscription:manage");
   return useQuery<CouponValidationResult, Error>({
     queryKey: queryKeys.billing.coupon(code, plan),
     queryFn: ({ signal }) =>
       apiClient.get<CouponValidationResult>(
         `/billing/coupons/validate?code=${encodeURIComponent(code)}&plan=${plan ?? ""}`, signal,
       ),
-    enabled: code.trim().length >= 3 && plan !== null,
+    enabled: canManage && code.trim().length >= 3 && plan !== null,
     staleTime: 30_000,
     retry: false,
   });

@@ -343,7 +343,7 @@ export function AiCreditsSettingsPage() {
                     id="auto-topup"
                     checked={autoTopUp}
                     onCheckedChange={handleAutoTopUpToggle}
-                    disabled={configureTopUp.isPending || packs.length === 0}
+                    disabled={!canPurchase || configureTopUp.isPending || packs.length === 0}
                   />
                 </div>
               </div>

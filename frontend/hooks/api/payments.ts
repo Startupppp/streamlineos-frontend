@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 import { queryKeys } from "@/lib/query-keys";
 
 export type PaymentEnvironment = "test" | "live";
@@ -55,18 +56,22 @@ export type PaymentProvider = {
 };
 
 export function usePaymentCatalog() {
+  const canView = useCan("payments:providers:view");
   return useQuery({
     queryKey: queryKeys.payments.catalog(),
     queryFn: ({ signal }) => apiClient.get<PaymentProviderCatalogEntry[]>("/payments/providers/catalog", undefined, signal),
     staleTime: 5 * 60_000,
+    enabled: canView,
   });
 }
 
 export function usePaymentProviders() {
+  const canView = useCan("payments:providers:view");
   return useQuery({
     queryKey: queryKeys.payments.providers(),
     queryFn: ({ signal }) => apiClient.get<PaymentProvider[]>("/payments/providers", undefined, signal),
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 
@@ -132,11 +137,12 @@ export type PaymentTestTransaction = {
 };
 
 export function useTestTransactions(providerKey: string, enabled = true) {
+  const canView = useCan("payments:providers:view");
   return useQuery({
     queryKey: queryKeys.payments.testTransactions(providerKey),
     queryFn: ({ signal }) => apiClient.get<PaymentTestTransaction[]>(`/payments/providers/${providerKey}/test-transactions`, undefined, signal),
     staleTime: 15_000,
-    enabled,
+    enabled: canView && enabled,
   });
 }
 
@@ -201,11 +207,12 @@ export type PaymentWebhookEvent = {
 };
 
 export function useWebhookEvents(providerKey: string, enabled = true) {
+  const canView = useCan("payments:providers:view");
   return useQuery({
     queryKey: queryKeys.payments.webhookEvents(providerKey),
     queryFn: ({ signal }) => apiClient.get<PaymentWebhookEvent[]>(`/payments/providers/${providerKey}/webhooks/events`, undefined, signal),
     staleTime: 15_000,
-    enabled,
+    enabled: canView && enabled,
   });
 }
 
@@ -227,11 +234,12 @@ export type PaymentReadiness = {
 };
 
 export function usePaymentReadiness(providerKey: string, enabled = true) {
+  const canView = useCan("payments:providers:view");
   return useQuery({
     queryKey: queryKeys.payments.readiness(providerKey),
     queryFn: ({ signal }) => apiClient.get<PaymentReadiness>(`/payments/providers/${providerKey}/readiness`, undefined, signal),
     staleTime: 10_000,
-    enabled,
+    enabled: canView && enabled,
   });
 }
 
@@ -259,11 +267,12 @@ export type PaymentAuditEvent = {
 };
 
 export function usePaymentAudit(providerKey: string, enabled = true) {
+  const canView = useCan("payments:providers:view");
   return useQuery({
     queryKey: queryKeys.payments.audit(providerKey),
     queryFn: ({ signal }) => apiClient.get<PaymentAuditEvent[]>(`/payments/providers/${providerKey}/audit`, undefined, signal),
     staleTime: 30_000,
-    enabled,
+    enabled: canView && enabled,
   });
 }
 
@@ -299,10 +308,12 @@ export type SaveManualMethodPayload = {
 };
 
 export function useManualMethods() {
+  const canView = useCan("payments:providers:view");
   return useQuery({
     queryKey: [...queryKeys.payments.all, "manual-methods"],
     queryFn: ({ signal }) => apiClient.get<PaymentManualMethod[]>("/payments/manual-methods", undefined, signal),
     staleTime: 30_000,
+    enabled: canView,
   });
 }
 
