@@ -36,7 +36,7 @@ import {
   type TaskEntityType,
   type TasksFilters,
 } from "@/hooks/api/tasks";
-import { useCalendarOrgMembers } from "@/hooks/api/calendar";
+import { useCalendarMemberLookup } from "@/hooks/api/calendar";
 import { MyTasksPanel } from "@/features/crm/timeline/my-tasks-panel";
 import { TaskBucketSection } from "@/features/crm/tasks/task-bucket-section";
 import { CreateTaskDialog } from "@/features/crm/tasks/create-task-dialog";
@@ -153,7 +153,7 @@ function CrmTasksContent() {
   };
 
   const { data, isLoading, isError, refetch } = useTasks(tasksFilters);
-  const { data: members = [] } = useCalendarOrgMembers();
+  const { data: members = [] } = useCalendarMemberLookup();
 
   const completeTaskMutation = useCompleteTask();
   const deleteTaskMutation = useDeleteTask();

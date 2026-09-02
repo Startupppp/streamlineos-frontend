@@ -43,11 +43,6 @@ const BASELINE = { deadFiles: 1, deadExports: 0 };
 const SCAN_FLOOR = { knipTotal: 5, graphFiles: 100, graphEdges: 300 };
 
 const EXPORT_VERDICTS = new Map([
-  ["hooks/api/workflows.ts:useWorkflowSchedules", { verdict: "DEFERRED", reason: "Product owner: Workflow PM; review 2026-10-01; per-workflow schedule CRUD awaits the scheduler page" }],
-  ["hooks/api/workflows.ts:useCreateSchedule", { verdict: "DEFERRED", reason: "Product owner: Workflow PM; review 2026-10-01; create action awaits the scheduler page" }],
-  ["hooks/api/workflows.ts:useWorkflowSecrets", { verdict: "DEFERRED", reason: "Product owner: Workflow PM; review 2026-10-01; per-workflow secrets panel is not in the current release" }],
-  ["hooks/api/workflows.ts:useCreateWorkflowSecret", { verdict: "DEFERRED", reason: "Product owner: Workflow PM; review 2026-10-01; create action awaits the secrets panel" }],
-  ["hooks/api/workflows.ts:useDeleteWorkflowSecret", { verdict: "DEFERRED", reason: "Product owner: Workflow PM; review 2026-10-01; delete action awaits the secrets panel" }],
   ["hooks/api/workflows.ts:TriggerType", { verdict: "KEEP", reason: "re-exported contract type used by Workflow.triggerType and consumed through live workflow query data" }],
   ["hooks/api/workflows.ts:ApprovalStatus", { verdict: "KEEP", reason: "re-exported contract type used by WorkflowApproval.status and consumed through live approval query data" }],
   ["hooks/api/workflows.ts:WorkflowSortField", { verdict: "KEEP", reason: "re-exported contract type used by live useWorkflows parameter contract" }],
@@ -57,35 +52,6 @@ const EXPORT_VERDICTS = new Map([
   ["hooks/api/workflows.ts:WorkflowCursorPage", { verdict: "KEEP", reason: "re-exported response wrapper used by live workflow and execution list API calls" }],
   ["hooks/api/workflows.ts:WorkflowListParams", { verdict: "KEEP", reason: "re-exported parameter type used by live useWorkflows calls on the workflow list page" }],
   ["hooks/api/workflows.ts:ExecutionListParams", { verdict: "KEEP", reason: "re-exported parameter type used by live execution list hooks and page calls" }],
-
-  ["hooks/api/workflows-secrets.ts:useWorkflowSecrets", { verdict: "DEFERRED", reason: "Product owner: Workflow PM; review 2026-10-01; secrets panel is not in the current release" }],
-  ["hooks/api/workflows-secrets.ts:useCreateWorkflowSecret", { verdict: "DEFERRED", reason: "Product owner: Workflow PM; review 2026-10-01; action awaits the secrets panel" }],
-  ["hooks/api/workflows-secrets.ts:useDeleteWorkflowSecret", { verdict: "DEFERRED", reason: "Product owner: Workflow PM; review 2026-10-01; action awaits the secrets panel" }],
-
-  ["hooks/api/workflows-schedules.ts:useWorkflowSchedules", { verdict: "DEFERRED", reason: "Product owner: Workflow PM; review 2026-10-01; schedules panel is not in the current release" }],
-  ["hooks/api/workflows-schedules.ts:useCreateSchedule", { verdict: "DEFERRED", reason: "Product owner: Workflow PM; review 2026-10-01; action awaits the schedules panel" }],
-
-
-  ["features/hr/expenses/expense-stats.tsx:MemberExpenseStats", { verdict: "DEFERRED", reason: "Product owner: HR PM; review 2026-10-01; member expense stats awaits the self-service expense surface" }],
-
-  ["hooks/api/accounting/banking.ts:useBankImports", { verdict: "DEFERRED", reason: "Product owner: Accounting PM; review 2026-10-01; bank-import list UI awaits the banking release" }],
-
-  ["hooks/api/onboarding-flow.ts:useModuleChecklist", { verdict: "DEFERRED", reason: "Product owner: Onboarding PM; review 2026-10-01; per-module checklist detail UI awaits the onboarding release" }],
-  ["hooks/api/onboarding-flow.ts:useSkipChecklistItem", { verdict: "DEFERRED", reason: "Product owner: Onboarding PM; review 2026-10-01; checklist skip action awaits the onboarding release" }],
-  ["hooks/api/onboarding-flow.ts:useRestartModuleChecklist", { verdict: "DEFERRED", reason: "Product owner: Onboarding PM; review 2026-10-01; checklist restart action awaits the onboarding release" }],
-
-  ["hooks/api/party/subjects.ts:useDeleteSubject", { verdict: "DEFERRED", reason: "Product owner: Platform PM; review 2026-10-01; party deletion awaits the retention/approval UX" }],
-
-
-  ["hooks/api/accounting/ar-collections.ts:useCollectionActivities", { verdict: "DEFERRED", reason: "Product owner: Accounting PM; review 2026-10-01; collection activities UI awaits the AR release" }],
-  ["hooks/api/accounting/ap-payment-runs.ts:useVendorPayments", { verdict: "DEFERRED", reason: "Product owner: Accounting PM; review 2026-10-01; vendor payments UI awaits the AP release" }],
-
-  ["hooks/api/build/teams.ts:useProjectTeamMembers", { verdict: "DEFERRED", reason: "Product owner: Build PM; review 2026-10-01; team-member management UI awaits the Build release" }],
-
-  ["hooks/api/inbox.ts:useInfiniteInbox", { verdict: "DEFERRED", reason: "Product owner: Inbox PM; review 2026-10-01; legacy /me/inbox remains retained for compatibility while unified inbox is canonical" }],
-  ["hooks/api/inbox.ts:useInboxCount", { verdict: "DEFERRED", reason: "Product owner: Inbox PM; review 2026-10-01; legacy /me/inbox/count remains retained for compatibility" }],
-
-  ["hooks/api/hr/attendance.ts:useAttendanceHeatmap", { verdict: "DEFERRED", reason: "Product owner: HR PM; review 2026-10-01; attendance heatmap awaits the analytics release" }],
 
   ["hooks/api/hr/recruitment/interviews.ts:SlaReportStage", { verdict: "KEEP", reason: "nested in live HrSlaReport response consumed by the SLA report page" }],
   ["hooks/api/hr/recruitment/interviews.ts:SlaReportMonth", { verdict: "KEEP", reason: "nested in live HrSlaReport response consumed by the SLA report page and chart" }],

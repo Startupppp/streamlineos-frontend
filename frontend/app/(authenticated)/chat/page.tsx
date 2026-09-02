@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { useChatHeartbeat, useChatChannels } from "@/hooks/api";
+import { useChatChannels } from "@/hooks/api";
 import { useChatGlobalNotifications } from "@/hooks/api/chat-notifications";
 import { ChannelSidebar } from "@/features/chat/channel-sidebar";
 import { MessagePanel } from "@/features/chat/message-panel";
@@ -15,6 +15,7 @@ import { NewDMDialog } from "@/features/chat/new-dm-dialog";
 import { NewGroupDialog } from "@/features/chat/new-group-dialog";
 import { ChatAblyProvider } from "@/features/chat/ably-provider";
 import { useChatSidebarCollapse } from "@/features/chat/chat-shell";
+import { useChatPresence } from "@/features/chat/use-chat-presence";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 
 function ChatNotifications({
@@ -26,6 +27,11 @@ function ChatNotifications({
 }) {
   const { data: channels } = useChatChannels();
   useChatGlobalNotifications(channels, activeChannelId, currentUserId);
+  return null;
+}
+
+function ChatPresenceManager() {
+  useChatPresence();
   return null;
 }
 
@@ -49,27 +55,6 @@ export default function ChatPage() {
   const [emptyGroupOpen, setEmptyGroupOpen] = useState(false);
   const [showSearchFocus, setShowSearchFocus] = useState(false);
   const { sidebarCollapsed, handleToggleSidebar } = useChatSidebarCollapse();
-
-  const heartbeat = useChatHeartbeat();
-  const heartbeatRef = useRef(heartbeat);
-  // eslint-disable-next-line react-hooks/refs
-  heartbeatRef.current = heartbeat;
-
-  useEffect(() => {
-    if (!currentUserId) return;
-    heartbeatRef.current.mutate();
-    const interval = setInterval(() => {
-      if (document.visibilityState === "visible") heartbeatRef.current.mutate();
-    }, 15_000);
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible") heartbeatRef.current.mutate();
-    };
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener("visibilitychange", handleVisibility);
-    };
-  }, [currentUserId]);
 
   const handleSelectChannel = useCallback((channelId: number) => {
     setActiveChannelId(channelId);
@@ -156,6 +141,7 @@ export default function ChatPage() {
 
   return (
     <ChatAblyProvider>
+      <ChatPresenceManager />
       <ChatNotifications
         activeChannelId={activeChannelId}
         currentUserId={currentUserId}

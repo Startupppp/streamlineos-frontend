@@ -21,7 +21,6 @@ import type {
   UpdateProjectInput,
   AddProjectMemberInput,
 } from "@/types/projects";
-import { projectWorkspaceMembersQueryKeys } from "@/hooks/api/build/workspace-members";
 import type { OrgMember } from "@/types/organization";
 
 type WorkspaceUser = {
@@ -84,7 +83,7 @@ function getWorkspaceUsersFromCache(
   queryClient: ReturnType<typeof useQueryClient>,
 ): WorkspaceUser[] {
   const workspaceEntries = queryClient.getQueriesData<{ data: WorkspaceUser[] }>({
-    queryKey: projectWorkspaceMembersQueryKeys.all,
+    queryKey: queryKeys.projects.workspaceMembers.all,
   });
   const fromWorkspace = workspaceEntries.flatMap(([, data]) => data?.data ?? []);
 

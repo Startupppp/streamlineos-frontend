@@ -3,7 +3,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { CheckCheck } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
 import {
   useInfiniteNotifications,
   useUnreadNotificationCount,
@@ -14,10 +13,10 @@ import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { NotificationCard } from "@/features/notifications/notification-card";
 import { NotificationDetailDrawer } from "@/features/notifications/notification-detail-drawer";
 import { NotificationFilterBar } from "@/features/notifications/notification-filter-bar";
 import { NotificationListSkeleton } from "@/features/notifications/notification-list-skeleton";
+import { NotificationVirtualList } from "@/features/notifications/notification-virtual-list";
 import { ErrorState } from "@/components/shared/error-state";
 import { useNotificationInbox } from "@/features/notifications/use-notification-inbox";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -27,7 +26,6 @@ import type {
   NotificationCategory,
   NotificationPriority,
 } from "@/features/notifications/notification-types";
-import type { Notification } from "@/types/notifications";
 
 export default function NotificationsPage() {
   const [activeSection, setActiveSection] = useState<NotificationSection>("ALL");
@@ -98,7 +96,7 @@ export default function NotificationsPage() {
     [detailId, items],
   );
 
-  const { handlers, mutations, emptyTitle, emptyDescription, rowVariants } = useNotificationInbox({
+  const { handlers, mutations, emptyTitle, emptyDescription } = useNotificationInbox({
     setSelectedIds,
     setDetailId,
     selectedIds,
@@ -239,67 +237,30 @@ export default function NotificationsPage() {
             className={CONTENT_FILL_PANEL}
           />
         ) : (
-          <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
-            <AnimatePresence initial={false}>
-              {items.map((n: Notification, idx: number) => (
-                <motion.div
-                  key={n.id}
-                  {...rowVariants}
-                  transition={
-                    Object.keys(rowVariants).length === 0
-                      ? undefined
-                      : { duration: 0.2, delay: Math.min(idx, 10) * 0.04, ease: "easeOut" }
-                  }
-                >
-                  <NotificationCard
-                    id={n.id}
-                    title={n.title}
-                    message={n.message}
-                    type={n.type}
-                    priority={n.priority ?? "NORMAL"}
-                    category={n.category ?? "SYSTEM"}
-                    sourceModule={n.sourceModule ?? null}
-                    isRead={n.isRead}
-                    pinned={n.pinned ?? false}
-                    archivedAt={n.archivedAt ?? null}
-                    createdAt={n.createdAt}
-                    link={n.link}
-                    selected={selectedIds.has(n.id)}
-                    isApproval={isApprovalSection}
-                    isApproving={approve.isPending && approve.variables === n.id}
-                    isRejecting={reject.isPending && reject.variables === n.id}
-                    isArchiving={archive.isPending && archive.variables === n.id}
-                    isPinning={
-                      (pin.isPending && pin.variables === n.id) ||
-                      (unpin.isPending && unpin.variables === n.id)
-                    }
-                    isDeleting={deleteMutation.isPending && deleteMutation.variables === n.id}
-                    onSelect={handleSelect}
-                    onClick={handleNotificationClick}
-                    onArchive={handleArchive}
-                    onPin={handlePin}
-                    onDelete={handleDelete}
-                    onApprove={isApprovalSection ? handleApprove : undefined}
-                    onReject={isApprovalSection ? handleReject : undefined}
-                  />
-                </motion.div>
-              ))}
-            </AnimatePresence>
+          <div className="flex-1 min-h-0 rounded-lg border border-border overflow-hidden">
+            <NotificationVirtualList
+              items={items}
+              selectedIds={selectedIds}
+              isApprovalSection={isApprovalSection}
+              approvingId={approve.isPending ? approve.variables : undefined}
+              rejectingId={reject.isPending ? reject.variables : undefined}
+              archivingId={archive.isPending ? archive.variables : undefined}
+              pinningId={pin.isPending ? pin.variables : unpin.isPending ? unpin.variables : undefined}
+              deletingId={deleteMutation.isPending ? deleteMutation.variables : undefined}
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+              onSelect={handleSelect}
+              onClick={handleNotificationClick}
+              onArchive={handleArchive}
+              onPin={handlePin}
+              onDelete={handleDelete}
+              onApprove={handleApprove}
+              onReject={handleReject}
+              onLoadMore={handleLoadMore}
+            />
           </div>
         )}
 
-        {hasNextPage ? (
-          <div className="flex justify-center pt-2">
-            <LoadingButton
-              variant="outline"
-              size="sm"
-              isPending={isFetchingNextPage}
-              onClick={handleLoadMore}
-            >
-              Load older notifications
-            </LoadingButton>
-          </div>
-        ) : null}
       </div>
 
       <NotificationDetailDrawer

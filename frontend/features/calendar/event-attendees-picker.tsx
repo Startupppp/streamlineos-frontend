@@ -9,7 +9,7 @@ import {
 } from "@/components/members/member-multi-select";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import {
-  useCalendarMemberSearch,
+  useCalendarMemberLookup,
   type CalendarOrgMember,
 } from "@/hooks/api/calendar";
 
@@ -33,10 +33,10 @@ export function EventAttendeesPicker({
   const debouncedSearch = useDebouncedValue(search, 300);
   const hasSearch = debouncedSearch.trim().length > 0;
 
-  const { data: searchResults = [], isFetching } = useCalendarMemberSearch(
-    debouncedSearch,
-    hasSearch,
-  );
+  const { data: searchResults = [], isFetching } = useCalendarMemberLookup({
+    search: debouncedSearch,
+    enabled: hasSearch,
+  });
 
   const knownById = useMemo(() => {
     const map = new Map<string, SelectableMember>();

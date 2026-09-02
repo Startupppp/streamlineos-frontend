@@ -98,26 +98,6 @@ export function useCollectionsSummary() {
   });
 }
 
-export interface ListCollectionActivitiesParams {
-  cursor?: string;
-  limit?: number;
-  invoiceId?: number;
-}
-
-export function useCollectionActivities(params: ListCollectionActivitiesParams = {}) {
-  const can = useCan("accounting:collections:read");
-  return useQuery<CursorPage<CollectionActivity>, Error>({
-    queryKey: arCollectionsKeys.collections.activities(params),
-    queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<CollectionActivity>>(
-        "/accounting/collections/activities",
-        toQuery(params),
-      ),
-    staleTime: 30_000,
-    enabled: can,
-  });
-}
-
 export function useCreateReminderPolicy() {
   const queryClient = useQueryClient();
   return useMutation<ReminderPolicy, Error, CreateReminderPolicyInput>({

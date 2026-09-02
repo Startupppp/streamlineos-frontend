@@ -141,17 +141,6 @@ export function useUpdateSubject() {
   });
 }
 
-export function useDeleteSubject() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["party", "subjects", "delete"],
-    mutationFn: (subjectId: string) => apiClient.delete(`/party/subjects/${subjectId}`),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.party.subjects() });
-    },
-  });
-}
-
 export function useLinkParty() {
   const qc = useQueryClient();
   return useMutation({

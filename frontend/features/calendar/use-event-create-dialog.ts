@@ -7,7 +7,7 @@ import {
   useCreateCalendarEvent,
   useUpdateCalendarEvent,
   useUpsertOccurrenceException,
-  useCalendarOrgMembers,
+  useCalendarMemberLookup,
   useEventAttendees,
   extractEventNumericId,
 } from "@/hooks/api/calendar";
@@ -64,7 +64,7 @@ export function useEventCreateDialog({
   const createEvent = useCreateCalendarEvent();
   const updateEvent = useUpdateCalendarEvent();
   const upsertOccurrenceException = useUpsertOccurrenceException();
-  const { data: members = [] } = useCalendarOrgMembers();
+  const { data: members = [] } = useCalendarMemberLookup();
   const { data: connections = [] } = useCalendarConnections();
   const { data: existingAttendees } = useEventAttendees(isEdit && open ? editNumericId : null);
 

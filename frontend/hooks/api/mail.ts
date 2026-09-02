@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan } from "@/hooks/api/access";
 import type {
   MailAccount,
   MailListResponse,
@@ -23,14 +24,17 @@ import type {
 import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 
 export function useMailAccounts() {
+  const can = useCan("mail:inbox:view");
   return useQuery({
     queryKey: queryKeys.mail.accounts(),
     queryFn: ({ signal }) => apiClient.get<MailAccount[]>("/mail/accounts", undefined, signal),
     staleTime: 5 * 60_000,
+    enabled: can,
   });
 }
 
 export function useMailMessages(params: MailMessagesParams) {
+  const can = useCan("mail:inbox:view");
   const queryParams: Record<string, unknown> = {};
   if (params.folder) queryParams.folder = params.folder;
   if (params.accountId !== undefined) queryParams.accountId = params.accountId;
@@ -52,29 +56,32 @@ export function useMailMessages(params: MailMessagesParams) {
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
+    enabled: can,
   });
 }
 
 export function useMailThread(accountId: number | undefined, threadId: string | undefined) {
+  const can = useCan("mail:inbox:view");
   return useQuery({
     queryKey: queryKeys.mail.thread(accountId ?? 0, threadId ?? ""),
     queryFn: ({ signal }) =>
       apiClient.get<MailMessageDetail[]>(
         `/mail/threads/${threadId}?accountId=${accountId}`, signal,
       ),
-    enabled: accountId !== undefined && threadId !== undefined && threadId !== "",
+    enabled: can && accountId !== undefined && threadId !== undefined && threadId !== "",
     staleTime: 2 * 60_000,
   });
 }
 
 export function useMailMessage(accountId: number | undefined, messageId: string | undefined) {
+  const can = useCan("mail:inbox:view");
   return useQuery({
     queryKey: queryKeys.mail.message(accountId ?? 0, messageId ?? ""),
     queryFn: ({ signal }) =>
       apiClient.get<MailMessageDetail>(
         `/mail/messages/${messageId}?accountId=${accountId}`, signal,
       ),
-    enabled: accountId !== undefined && messageId !== undefined && messageId !== "",
+    enabled: can && accountId !== undefined && messageId !== undefined && messageId !== "",
     staleTime: 2 * 60_000,
   });
 }

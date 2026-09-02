@@ -73,15 +73,6 @@ export function useModuleChecklists(enabled = true) {
   });
 }
 
-export function useModuleChecklist(moduleKey: string, enabled = true) {
-  return useQuery({
-    queryKey: queryKeys.onboardingFlow.moduleChecklist(moduleKey),
-    queryFn: ({ signal }) => apiClient.get<ModuleChecklist>(`/onboarding/module-checklists/${moduleKey}`, undefined, signal),
-    staleTime: 30_000,
-    enabled,
-  });
-}
-
 function invalidateChecklist(queryClient: ReturnType<typeof useQueryClient>, moduleKey: string) {
   void queryClient.invalidateQueries({ queryKey: queryKeys.onboardingFlow.moduleChecklists() });
   void queryClient.invalidateQueries({ queryKey: queryKeys.onboardingFlow.moduleChecklist(moduleKey) });
@@ -97,32 +88,12 @@ export function useCompleteChecklistItem() {
   });
 }
 
-export function useSkipChecklistItem() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationKey: ["onboarding", "module-checklists", "skip-item"],
-    mutationFn: ({ moduleKey, itemKey, reason }: { moduleKey: string; itemKey: string; reason?: string }) =>
-      apiClient.post(`/onboarding/module-checklists/${moduleKey}/items/${itemKey}/skip`, { reason }),
-    onSuccess: (_, { moduleKey }) => invalidateChecklist(queryClient, moduleKey),
-  });
-}
-
 export function useDismissModuleChecklist() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["onboarding", "module-checklists", "dismiss"],
     mutationFn: (moduleKey: string) =>
       apiClient.post(`/onboarding/module-checklists/${moduleKey}/dismiss`, {}),
-    onSuccess: (_, moduleKey) => invalidateChecklist(queryClient, moduleKey),
-  });
-}
-
-export function useRestartModuleChecklist() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationKey: ["onboarding", "module-checklists", "restart"],
-    mutationFn: (moduleKey: string) =>
-      apiClient.post(`/onboarding/module-checklists/${moduleKey}/restart`, {}),
     onSuccess: (_, moduleKey) => invalidateChecklist(queryClient, moduleKey),
   });
 }

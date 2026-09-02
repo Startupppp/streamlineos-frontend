@@ -252,3 +252,206 @@ node backend/src/scripts/alert-tenant-cost.mjs --window-hours=1
 **Recovery:** No recovery needed once the abuse is contained. Historical spend is already recorded.
 
 **Verification:** `alert-tenant-cost.mjs` exits 0 after the noisy tenant's usage normalises.
+
+---
+
+## #dead-outbox
+
+**What fires:** `dead-outbox` when any `outbox_events` row this consumer owns reaches DEAD state inside a 24h window. The objective is zero — a DEAD outbox row is lost domain intent, not a retryable blip.
+
+**Detection signal:** `alert-dead-outbox.mjs` reads `outbox_events` where `delivery_state = 'DEAD'`. DEAD means the relay exhausted its retry ceiling, so `last_error` carries the terminal reason.
+
+**First five minutes**
+
+```bash
+# 1. List the dead rows and their terminal errors
+node backend/src/scripts/alert-dead-outbox.mjs --hours=24
+
+# 2. Group by event type — a single failing consumer produces one cluster
+# 3. Confirm the consumer is registered; an unregistered type dead-letters every row
+node backend/src/scripts/check-outbox-consumers.mjs
+```
+
+**Containment:** Fix the consumer before replaying. A replay against an unfixed consumer re-deads every row and burns the retry budget again.
+
+**Recovery:** Consumers are idempotent by dedupe key, so a replay cannot double-apply. Reset the affected rows to PENDING and let the relay drain them.
+
+**Verification:** `alert-dead-outbox.mjs` exits 0 with no DEAD rows in the window.
+
+---
+
+## #dead-delivery
+
+**What fires:** `dead-delivery` when a delivery-channel row (notification, email, push) reaches DEAD state inside a 24h window.
+
+**Detection signal:** `alert-dead-delivery.mjs`. Unlike `#dead-outbox`, the intent was persisted successfully and only the outbound provider hop failed, so the domain state is correct and the user simply was not told.
+
+**First five minutes**
+
+```bash
+# 1. List dead deliveries by channel and provider
+node backend/src/scripts/alert-dead-delivery.mjs --hours=24
+
+# 2. If one provider dominates, treat it as a provider outage first
+```
+
+See `#provider-outage` when a single provider accounts for the cluster.
+
+**Containment:** Suppression and bounce state are authoritative — do not replay into a suppressed address, or the provider reputation degrades further.
+
+**Recovery:** Re-queue eligible deliveries. Dedupe keys make redelivery safe for recipients who already received the message.
+
+**Verification:** `alert-dead-delivery.mjs` exits 0 with no DEAD rows in the window.
+
+---
+
+## #job-queue-age
+
+**What fires:** `job-queue-age` when a job-channel row stays QUEUED or RUNNING longer than 900 seconds, or when retry pressure exceeds 500.
+
+**Detection signal:** `alert-job-queue-age.mjs`. A RUNNING row older than the threshold usually means a worker died holding its lease rather than a slow job.
+
+**First five minutes**
+
+```bash
+# 1. Show the oldest rows per job table and their state
+node backend/src/scripts/alert-job-queue-age.mjs
+
+# 2. Distinguish the two causes:
+#    QUEUED and growing  -> no worker is claiming (worker down, or cron not firing)
+#    RUNNING and stalled -> a worker died mid-lease; the lease must expire before reclaim
+```
+
+**Containment:** Never clear a RUNNING row by hand while a worker may still hold the lease — that is how a job runs twice. Wait for lease expiry, which is what makes reclaim safe.
+
+**Recovery:** Restart the worker. Leases expire and rows return to QUEUED for a clean claim.
+
+**Verification:** `alert-job-queue-age.mjs` exits 0 with `ageBreached: false`.
+
+---
+
+## #tenant-ctx-errors
+
+**What fires:** `tenant-ctx-errors` (critical, platform-reliability) when the log stream carries `permission denied for table …` / `missing tenant context` — a `42501` raised because a query ran without the tenant GUC.
+
+**Detection signal:** `alert-tenant-ctx-errors` reads the structured log. RLS fails closed, so `app.current_org_id()` raises `42501` rather than returning rows from the wrong tenant. **This alert firing means work was dropped, never that data leaked.**
+
+**First five minutes**
+
+```bash
+# 1. Find the failing call sites and their org context
+node backend/src/scripts/alert-dispatch.mjs --alert=tenant-ctx-errors
+
+# 2. Classify the caller — the three sources have different fixes:
+#    guard        -> guards run BEFORE interceptors, so they have no ambient GUC
+#    after-commit -> a `void fn()` kept context after the transaction committed
+#    background   -> a sweep has no ambient context at all
+```
+
+**Containment:** None available at runtime; the code path is broken, not overloaded. Restarting does not help.
+
+**Recovery:** Fix by source: wrap a guard's own queries explicitly, move deferred work into `registerAfterCommit` plus `runInNewTenantTransaction`, and iterate sweeps with `forEachOrg`. Never swallow the failure — a swallowed `42501` is how this class stayed invisible platform-wide.
+
+**Verification:** the alert stops firing and the affected writes appear.
+
+---
+
+## #sig-failures
+
+**What fires:** `sig-failures` (high, payments-team) when an inbound webhook fails HMAC signature verification.
+
+**Detection signal:** `alert-sig-failures.mjs`, primarily `payment_webhook_endpoints.status = 'failing'`.
+
+**Treat as a forgery attempt until proven otherwise.** The benign cause is a provider-side secret rotation that Settings > Payments never received; the malicious cause is replay or forgery. Both look identical in the first minute.
+
+**First five minutes**
+
+```bash
+# 1. Identify which endpoint and provider is failing
+node backend/src/scripts/alert-sig-failures.mjs
+
+# 2. Confirm whether the secret was rotated provider-side in the last 24h
+# 3. If it was NOT rotated, treat the source IP and payloads as hostile
+```
+
+**Containment:** Verification already fails closed, so nothing was accepted. Do not disable verification to "unblock" a provider — that converts a contained failure into an open forgery surface.
+
+**Recovery:** Update the stored secret to match the provider. Providers redeliver failed webhooks; idempotency keys make redelivery safe.
+
+**Verification:** `alert-sig-failures.mjs` exits 0 and the endpoint leaves `failing`.
+
+---
+
+## #p95
+
+**What fires:** `p95` (high, platform-reliability) when p95 latency on the ten hottest endpoints exceeds budget.
+
+**Detection signal:** `alert-p95.mjs` computes p95 from the structured log — `LogSpanExporter` writes one `SPAN` line per finished request. There is no APM agent, so the log stream is the only source and a log outage reads as silence, not as health.
+
+**First five minutes**
+
+```bash
+# 1. Rank the offending endpoints
+node backend/src/scripts/alert-p95.mjs
+
+# 2. Separate application overhead from database time
+node backend/src/scripts/alert-seam-latency.mjs
+```
+
+**Containment:** If one endpoint dominates, its module's rate-limit tier bounds the blast radius while the cause is found.
+
+**Recovery:** Latency regressions are usually a query plan, not capacity. Re-measure as `streamline_app` with the tenant GUC set — the owner role bypasses RLS and its plans hide the cost. `VACUUM ANALYZE` after any bulk load before concluding an index is unused.
+
+**Verification:** `alert-p95.mjs` exits 0.
+
+---
+
+## #seam-latency
+
+**What fires:** `seam-latency` (high, platform-reliability) when a named seam exceeds its budget: `db.pool.wait` 3ms, `db.guc.setup` 2ms, `db.query.execute` 9ms, `db.roundtrip.simple` 15ms, `db.roundtrip.complex` 37ms, `cache.roundtrip` 1.5ms, `route.cached.read` 112ms, `route.write` 375ms, `runtime.eventloop.delay` 37ms.
+
+**Detection signal:** `alert-seam-latency.mjs`. The seam that breaches names the layer, which is why this is more actionable than `#p95` alone.
+
+**First five minutes**
+
+```bash
+# 1. Identify the breaching seam
+node backend/src/scripts/alert-seam-latency.mjs
+
+# 2. Read the seam as a diagnosis:
+#    db.pool.wait          -> pool exhaustion; connections held across provider calls
+#    db.guc.setup          -> tenant transaction setup cost; too many tiny transactions
+#    cache.roundtrip       -> Redis degraded; see #cache-loss
+#    runtime.eventloop.delay -> CPU work on the request thread
+```
+
+**Containment:** For `db.pool.wait`, the cause is almost always a connection held across an external call. Release before the provider hop rather than enlarging the pool, which only defers exhaustion.
+
+**Recovery:** Move CPU/IO-heavy work off the request thread to a durable job.
+
+**Verification:** `alert-seam-latency.mjs` exits 0 for every seam.
+
+---
+
+## #cell-recovery
+
+**What fires:** `cell-recovery` (critical, platform-reliability) when a cell fails its recovery/health assertion.
+
+**Detection signal:** `alert-cell-recovery.mjs`.
+
+**First five minutes**
+
+```bash
+# 1. Establish which cell and which assertion failed
+node backend/src/scripts/alert-cell-recovery.mjs
+
+# 2. Confirm the blast radius is one cell — cross-cell impact is a placement fault, not a cell fault
+```
+
+See `#database-cell-failure` for the database-specific path and RB-01 for the isolation proof.
+
+**Containment:** Keep the failure inside the cell. Never repoint a failing cell's traffic at another cell's resources — that breaks the isolation guarantee RB-01 exists to prove.
+
+**Recovery:** Follow [RB-04](../../../runbooks/RB-04-recovery-drill.md); relocation is [RB-02](../../../runbooks/RB-02-pitr-backup.md).
+
+**Verification:** `alert-cell-recovery.mjs` exits 0 and RB-01 isolation checks still pass.

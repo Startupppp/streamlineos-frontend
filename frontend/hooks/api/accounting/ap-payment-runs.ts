@@ -53,29 +53,7 @@ export interface ListPaymentRunsParams {
   status?: PaymentRunStatus;
 }
 
-export interface VendorPayment {
-  id: number;
-  orgId: string;
-  billId: number | null;
-  billNumber: string | null;
-  vendorId: number | null;
-  vendorName: string | null;
-  amount: string;
-  paymentDate: string;
-  paymentMethod: string | null;
-  referenceNumber: string | null;
-  notes: string | null;
-  createdBy: string;
-  createdAt: string;
-}
 
-export type ListVendorPaymentsParams = {
-  cursor?: string;
-  limit?: number;
-  vendorId?: number;
-  from?: string;
-  to?: string;
-};
 
 export interface CreatePaymentRunFilters {
   vendorIds?: number[];
@@ -121,20 +99,6 @@ export function usePaymentRuns(params: ListPaymentRunsParams = {}) {
     queryFn: ({ signal }) =>
       apiClient.get<CursorPage<PaymentRunSummary>>(
         "/accounting/payment-runs",
-        toQuery(params),
-      ),
-    staleTime: 30_000,
-    enabled: can,
-  });
-}
-
-export function useVendorPayments(params: ListVendorPaymentsParams = {}) {
-  const can = useCan("accounting:payables:read");
-  return useQuery<CursorPage<VendorPayment>, Error>({
-    queryKey: queryKeys.accounting.apVendorPayments(params),
-    queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<VendorPayment>>(
-        "/accounting/vendor-payments",
         toQuery(params),
       ),
     staleTime: 30_000,

@@ -108,18 +108,6 @@ export interface BankTransfer {
   createdAt: string;
 }
 
-export interface BankImport {
-  id: number;
-  orgId: string;
-  bankAccountId: number;
-  fileName: string;
-  importedCount: number;
-  duplicateCount: number;
-  status: string;
-  createdBy: string;
-  createdAt: string;
-}
-
 export interface BankImportResult {
   importedCount: number;
   duplicateCount: number;
@@ -472,23 +460,6 @@ export interface ListTransfersParams {
   limit?: number;
   from?: string;
   to?: string;
-}
-
-export interface ListBankImportsParams {
-  cursor?: string;
-  limit?: number;
-  bankAccountId?: number;
-}
-
-export function useBankImports(params: ListBankImportsParams = {}) {
-  const can = useCan("accounting:banking:read");
-  return useQuery<CursorPage<BankImport>, Error>({
-    queryKey: bankingKeys.imports(params),
-    queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<BankImport>>("/finance/bank-imports", toQuery(params)),
-    staleTime: 30_000,
-    enabled: can,
-  });
 }
 
 export function useTransfers(params: ListTransfersParams = {}) {

@@ -238,6 +238,31 @@ export const buildWorkQueryKeys = {
       ] as const,
     commentPermalinkTicket: (projectId: number, ticketId: number) =>
       [...base, "projects", "comment-permalink", projectId, ticketId] as const,
+    customers: {
+      all: [...base, "projects", "customers"] as const,
+      list: (filters?: Record<string, unknown>) =>
+        [...base, "projects", "customers", "list", filters] as const,
+    },
+    roster: {
+      detail: (projectId: number) =>
+        [...base, "projects", "roster", projectId] as const,
+    },
+    teams: {
+      all: [...base, "projects", "teams"] as const,
+      list: (params?: Record<string, unknown>) =>
+        [...base, "projects", "teams", "list", params] as const,
+      detail: (teamId: number) =>
+        [...base, "projects", "teams", "detail", teamId] as const,
+      members: (teamId: number, params?: Record<string, unknown>) =>
+        [...base, "projects", "teams", "members", teamId, params] as const,
+      teamProjects: (teamId: number) =>
+        [...base, "projects", "teams", "projects", teamId] as const,
+    },
+    workspaceMembers: {
+      all: [...base, "projects", "workspaceMembers"] as const,
+      list: (params?: Record<string, unknown>) =>
+        [...base, "projects", "workspaceMembers", "list", params] as const,
+    },
   },
 
 } as const;

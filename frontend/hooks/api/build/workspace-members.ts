@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 
 export interface ProjectWorkspaceMember {
@@ -29,14 +30,6 @@ interface ProjectWorkspaceMembersParams {
   status?: string;
 }
 
-const WORKSPACE_MEMBERS_BASE = ["streamlineos", "projects", "workspaceMembers"] as const;
-
-export const projectWorkspaceMembersQueryKeys = {
-  all: WORKSPACE_MEMBERS_BASE,
-  list: (params?: Record<string, unknown>) =>
-    [...WORKSPACE_MEMBERS_BASE, "list", params] as const,
-};
-
 export function useProjectWorkspaceMembers(
   params?: ProjectWorkspaceMembersParams,
   options?: Omit<UseQueryOptions<WorkspaceMembersResponse, Error>, "queryKey" | "queryFn">,
@@ -46,7 +39,7 @@ export function useProjectWorkspaceMembers(
   const enabled = canView && (callerEnabled ?? true);
 
   return useQuery<WorkspaceMembersResponse, Error>({
-    queryKey: projectWorkspaceMembersQueryKeys.list(params as Record<string, unknown> | undefined),
+    queryKey: queryKeys.projects.workspaceMembers.list(params as Record<string, unknown> | undefined),
     queryFn: ({ signal }) =>
       apiClient.get<WorkspaceMembersResponse>("/build/members", {
         ...(params?.cursor ? { cursor: params.cursor } : {}),
@@ -63,11 +56,11 @@ export function useProjectWorkspaceMembers(
 export function useAddProjectWorkspaceMember() {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: ["projects", "workspaceMembers", "add"],
+    mutationKey: [...queryKeys.projects.workspaceMembers.all, "add"],
     mutationFn: (body: { userId: string; role?: "member" | "admin" }) =>
       apiClient.post<unknown>("/build/members", body),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: projectWorkspaceMembersQueryKeys.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.workspaceMembers.all });
     },
   });
 }
@@ -75,11 +68,11 @@ export function useAddProjectWorkspaceMember() {
 export function useRemoveProjectWorkspaceMember() {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: ["projects", "workspaceMembers", "remove"],
+    mutationKey: [...queryKeys.projects.workspaceMembers.all, "remove"],
     mutationFn: (userId: string) =>
       apiClient.delete<unknown>(`/build/members/${userId}`),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: projectWorkspaceMembersQueryKeys.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.workspaceMembers.all });
     },
   });
 }

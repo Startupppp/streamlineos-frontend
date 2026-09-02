@@ -51,7 +51,3 @@ export interface TeamListResponse {
   pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
-export interface TeamMembersPage {
-  data: ProjectTeamMember[];
-  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
-}

@@ -188,9 +188,6 @@ export function useHrCheckIn(
         queryKey: [...queryKeys.hr.all, "monthlyAttendance"],
       });
       void qc.invalidateQueries({
-        queryKey: [...queryKeys.hr.all, "attendanceHeatmap"],
-      });
-      void qc.invalidateQueries({
         queryKey: queryKeys.dashboard.teamAttendance(),
         exact: true,
       });
@@ -245,9 +242,6 @@ export function useHrCheckOut(
       });
       void qc.invalidateQueries({
         queryKey: [...queryKeys.hr.all, "monthlyAttendance"],
-      });
-      void qc.invalidateQueries({
-        queryKey: [...queryKeys.hr.all, "attendanceHeatmap"],
       });
       void qc.invalidateQueries({
         queryKey: queryKeys.dashboard.teamAttendance(),
@@ -310,32 +304,6 @@ export function useHrMonthlyAttendance(params: GetMonthlyAttendanceInput) {
       ),
     staleTime: 2 * 60_000,
     enabled: isOtherUser ? hrEnabled && canManage : canSelf,
-  });
-}
-
-export function useAttendanceHeatmap(params: { year: number }) {
-  const canAttendance = useCan("self:attendance");
-  return useQuery({
-    queryKey: queryKeys.hr.attendanceHeatmap(params),
-    queryFn: ({ signal }) =>
-      apiClient.get<{
-        year: number;
-        userId: string;
-        heatmap: {
-          date: string;
-          hours: number;
-          sessions: number;
-          intensity: number;
-        }[];
-        summary: {
-          totalDays: number;
-          totalHours: string;
-          avgHoursPerDay: string;
-          longestStreak: number;
-        };
-      }>("/me/attendance/heatmap", { year: params.year }),
-    staleTime: 2 * 60_000,
-    enabled: canAttendance,
   });
 }
 

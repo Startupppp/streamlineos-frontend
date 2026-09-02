@@ -26,16 +26,6 @@ export function useGlobalSecrets() {
   });
 }
 
-export function useWorkflowSecrets(workflowId: string) {
-  const canManage = useCan("workflows:secrets:manage");
-  return useQuery({
-    queryKey: queryKeys.workflows.secrets(workflowId),
-    queryFn: ({ signal }) => apiClient.get<WorkflowSecret[]>(`/workflows/${workflowId}/secrets`, undefined, signal),
-    staleTime: 30_000,
-    enabled: canManage && workflowId.length > 0,
-  });
-}
-
 export function useCreateGlobalSecret() {
   const qc = useQueryClient();
   const canManage = useCan("workflows:secrets:manage");
@@ -47,20 +37,6 @@ export function useCreateGlobalSecret() {
     },
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: [...queryKeys.workflows.all, "global-secrets"] }),
-  });
-}
-
-export function useCreateWorkflowSecret(workflowId: string) {
-  const qc = useQueryClient();
-  const canManage = useCan("workflows:secrets:manage");
-  return useMutation({
-    mutationKey: ["create", "workflow", "secret", workflowId],
-    mutationFn: (input: CreateSecretInput) => {
-      assertPermission(canManage);
-      return apiClient.post<WorkflowSecret>(`/workflows/${workflowId}/secrets`, input);
-    },
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.workflows.secrets(workflowId) }),
   });
 }
 
@@ -78,18 +54,3 @@ export function useDeleteGlobalSecret() {
   });
 }
 
-export function useDeleteWorkflowSecret(workflowId: string) {
-  const qc = useQueryClient();
-  const canManage = useCan("workflows:secrets:manage");
-  return useMutation({
-    mutationKey: ["delete", "workflow", "secret", workflowId],
-    mutationFn: (secretId: string) => {
-      assertPermission(canManage);
-      return apiClient.delete<{ success: boolean }>(
-        `/workflows/${workflowId}/secrets/${secretId}`,
-      );
-    },
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.workflows.secrets(workflowId) }),
-  });
-}

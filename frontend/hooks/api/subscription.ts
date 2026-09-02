@@ -42,7 +42,7 @@ interface Subscription {
 
 interface SubscriptionResponse {
   subscription: Subscription | null;
-  razorpayKeyId: string | null;
+  publicKeyId: string | null;
   isConfigured: boolean;
 }
 
@@ -58,9 +58,9 @@ interface CreateOrderResponse {
 }
 
 interface VerifySubscriptionInput {
-  razorpay_order_id: string;
-  razorpay_payment_id: string;
-  razorpay_signature: string;
+  orderId: string;
+  paymentId: string;
+  signature: string;
   plan: SubscriptionPlan;
 }
 
@@ -76,7 +76,7 @@ export function useSubscription() {
   const canViewSubscription = useCan("billing:subscription:view");
   return useQuery<SubscriptionResponse, Error>({
     queryKey: queryKeys.billing.subscription(),
-    queryFn: ({ signal }) => apiClient.get<SubscriptionResponse>("/billing/razorpay", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<SubscriptionResponse>("/billing", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: !!orgId && canViewSubscription,
   });
@@ -84,16 +84,16 @@ export function useSubscription() {
 
 export function useCreateSubscriptionOrder() {
   return useMutation<CreateOrderResponse, Error, { plan: SubscriptionPlan; billingCycle?: BillingCycle; couponId?: number }>({
-    mutationKey: ["billing", "razorpay", "create-order"],
-    mutationFn: (data) => apiClient.post<CreateOrderResponse>("/billing/razorpay", data),
+    mutationKey: ["billing", "checkout", "create-order"],
+    mutationFn: (data) => apiClient.post<CreateOrderResponse>("/billing/checkout", data),
   });
 }
 
 export function useVerifySubscription() {
   const queryClient = useQueryClient();
   return useMutation<VerifySubscriptionResponse, Error, VerifySubscriptionInput>({
-    mutationKey: ["billing", "razorpay", "verify"],
-    mutationFn: (data) => apiClient.patch<VerifySubscriptionResponse>("/billing/razorpay", data),
+    mutationKey: ["billing", "checkout", "confirm"],
+    mutationFn: (data) => apiClient.patch<VerifySubscriptionResponse>("/billing/checkout", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.billing.subscription() });
       queryClient.invalidateQueries({ queryKey: queryKeys.billing.summary() });

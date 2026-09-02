@@ -5,7 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 
-interface CalendarOrgMember {
+export interface CalendarOrgMember {
   id: string;
   firstName: string | null;
   lastName: string | null;
@@ -15,30 +15,31 @@ interface CalendarOrgMember {
   role: string;
 }
 
-export function useCalendarOrgMembers() {
+export function useCalendarMemberLookup({
+  search = "",
+  limit,
+  enabled = true,
+}: {
+  search?: string;
+  limit?: number;
+  enabled?: boolean;
+} = {}) {
   const canView = useCan("directory:people:view");
-  return useQuery({
-    queryKey: queryKeys.calendar.orgMembers(),
-    queryFn: ({ signal }) => apiClient.get<CalendarOrgMember[]>("/org/members", undefined, signal),
-    staleTime: 5 * 60 * 1000,
-    enabled: canView,
-  });
-}
-
-export type { CalendarOrgMember };
-
-export function useCalendarMemberSearch(search: string, enabled = true) {
   const term = search.trim();
+  const isSearch = term.length > 0;
   return useQuery({
-    queryKey: queryKeys.calendar.memberSearch(term),
+    queryKey: isSearch
+      ? queryKeys.calendar.memberSearch(term)
+      : queryKeys.calendar.orgMembers(),
     queryFn: ({ signal }) =>
-      apiClient.get<CalendarOrgMember[]>("/org/members", {
-        search: term,
-        limit: 25,
-      }, signal),
-    enabled: enabled && term.length > 0,
-    staleTime: 30 * 1000,
-    placeholderData: keepPreviousData,
+      apiClient.get<CalendarOrgMember[]>(
+        "/org/members",
+        isSearch ? { search: term, limit: limit ?? 25 } : undefined,
+        signal,
+      ),
+    staleTime: isSearch ? 30 * 1000 : 5 * 60 * 1000,
+    enabled: canView && enabled,
+    placeholderData: isSearch ? keepPreviousData : undefined,
   });
 }
 

@@ -31,7 +31,6 @@ const queryAccessCases: readonly QueryAccessCase[] = [
   ["attendance.ts", "useHrAttendanceStatus", "/me/attendance/status", "self:attendance", false],
   ["attendance.ts", "useHrAttendanceHistory", "/me/attendance/history", "self:attendance", false],
   ["attendance.ts", "useHrMonthlyAttendance", "/hr/attendance/monthly", "self:attendance|hr:attendance:view", true],
-  ["attendance.ts", "useAttendanceHeatmap", "/me/attendance/heatmap", "self:attendance", false],
   ["attendance.ts", "useGetWorkLogs", "/hr/work-logs", "hr:attendance:view", true],
   ["attendance.ts", "useHrTeamAttendanceStatus", "/hr/attendance/team-status", "hr:attendance:view", true],
   ["comp-off.ts", "useCompOff", "/hr/overtime/comp-off", "hr:attendance:view", true],

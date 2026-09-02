@@ -12,12 +12,6 @@ interface UpdateScheduleInput {
   isEnabled?: boolean;
 }
 
-interface CreateScheduleInput {
-  cronExpression: string;
-  timezone?: string;
-  isEnabled?: boolean;
-}
-
 function assertPermission(allowed: boolean): void {
   if (!allowed) throw new Error("You do not have permission for this workflow action.");
 }
@@ -29,32 +23,6 @@ export function useAllSchedules() {
     queryFn: ({ signal }) => apiClient.get<WorkflowSchedule[]>("/workflows/schedules", undefined, signal),
     staleTime: 30_000,
     enabled: canManage,
-  });
-}
-
-export function useWorkflowSchedules(workflowId: string) {
-  const canManage = useCan("workflows:schedules:manage");
-  return useQuery({
-    queryKey: queryKeys.workflows.schedules(workflowId),
-    queryFn: ({ signal }) => apiClient.get<WorkflowSchedule[]>(`/workflows/${workflowId}/schedules`, undefined, signal),
-    staleTime: 30_000,
-    enabled: canManage && workflowId.length > 0,
-  });
-}
-
-export function useCreateSchedule(workflowId: string) {
-  const qc = useQueryClient();
-  const canManage = useCan("workflows:schedules:manage");
-  return useMutation({
-    mutationKey: ["workflows", workflowId, "schedules", "create"],
-    mutationFn: (input: CreateScheduleInput) => {
-      assertPermission(canManage);
-      return apiClient.post<WorkflowSchedule>(`/workflows/${workflowId}/schedules`, input);
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.workflows.schedules(workflowId) });
-      qc.invalidateQueries({ queryKey: [...queryKeys.workflows.all, "all-schedules"] });
-    },
   });
 }
 

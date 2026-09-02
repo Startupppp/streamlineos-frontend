@@ -3,17 +3,15 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import type {
   AddTeamMemberInput,
   CreateTeamInput,
   ProjectTeamDetail,
   TeamListResponse,
-  TeamMembersPage,
   UpdateTeamInput,
 } from "@/types/projects";
 import { useCan } from "@/hooks/api/access";
-
-const TEAMS_BASE = ["streamlineos", "projects", "teams"] as const;
 
 export interface TeamProject {
   id: number;
@@ -22,15 +20,6 @@ export interface TeamProject {
   status: string;
   addedAt: string;
 }
-
-export const teamQueryKeys = {
-  list: (params?: Record<string, unknown>) =>
-    [...TEAMS_BASE, "list", params] as const,
-  detail: (teamId: number) => [...TEAMS_BASE, "detail", teamId] as const,
-  members: (teamId: number, params?: Record<string, unknown>) =>
-    [...TEAMS_BASE, "members", teamId, params] as const,
-  projects: (teamId: number) => [...TEAMS_BASE, "projects", teamId] as const,
-};
 
 export function useProjectTeams(params?: {
   cursor?: string;
@@ -42,32 +31,15 @@ export function useProjectTeams(params?: {
   if (params?.pageSize) query["pageSize"] = String(params.pageSize);
   if (params?.search) query["search"] = params.search;
   return useQuery<TeamListResponse>({
-    queryKey: teamQueryKeys.list(Object.keys(query).length ? query : undefined),
+    queryKey: queryKeys.projects.teams.list(Object.keys(query).length ? query : undefined),
     queryFn: ({ signal }) => apiClient.get<TeamListResponse>("/build/teams", query, signal),
-    staleTime: 60_000,
-  });
-}
-
-export function useProjectTeamMembers(
-  teamId: number,
-  params?: { cursor?: string; pageSize?: number },
-) {
-  const canView = useCan("build:teams:view");
-  const query: Record<string, string> = {};
-  if (params?.cursor) query["cursor"] = params.cursor;
-  if (params?.pageSize) query["pageSize"] = String(params.pageSize);
-  return useQuery<TeamMembersPage>({
-    queryKey: teamQueryKeys.members(teamId, Object.keys(query).length ? query : undefined),
-    queryFn: ({ signal }) =>
-      apiClient.get<TeamMembersPage>(`/build/teams/${teamId}/members`, query, signal),
-    enabled: canView && !!teamId,
     staleTime: 60_000,
   });
 }
 
 export function useProjectTeam(teamId: number) {
   return useQuery<ProjectTeamDetail>({
-    queryKey: teamQueryKeys.detail(teamId),
+    queryKey: queryKeys.projects.teams.detail(teamId),
     queryFn: ({ signal }) => apiClient.get<ProjectTeamDetail>(`/build/teams/${teamId}`, undefined, signal),
     enabled: !!teamId,
     staleTime: 60_000,
@@ -77,11 +49,11 @@ export function useProjectTeam(teamId: number) {
 export function useCreateProjectTeam() {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: [...TEAMS_BASE, "create"],
+    mutationKey: [...queryKeys.projects.teams.all, "create"],
     mutationFn: (data: CreateTeamInput) =>
       apiClient.post<ProjectTeamDetail>("/build/teams", data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: TEAMS_BASE });
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.teams.all });
     },
   });
 }
@@ -89,12 +61,12 @@ export function useCreateProjectTeam() {
 export function useUpdateProjectTeam() {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: [...TEAMS_BASE, "update"],
+    mutationKey: [...queryKeys.projects.teams.all, "update"],
     mutationFn: ({ id, ...data }: UpdateTeamInput & { id: number }) =>
       apiClient.patch<ProjectTeamDetail>(`/build/teams/${id}`, data),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: teamQueryKeys.list() });
-      qc.invalidateQueries({ queryKey: teamQueryKeys.detail(vars.id) });
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.teams.list() });
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.teams.detail(vars.id) });
     },
   });
 }
@@ -102,11 +74,11 @@ export function useUpdateProjectTeam() {
 export function useDeleteProjectTeam() {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: [...TEAMS_BASE, "delete"],
+    mutationKey: [...queryKeys.projects.teams.all, "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<void>(`/build/teams/${id}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: TEAMS_BASE });
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.teams.all });
     },
   });
 }
@@ -114,13 +86,13 @@ export function useDeleteProjectTeam() {
 export function useAddProjectTeamMember(teamId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: [...TEAMS_BASE, "members", teamId, "add"],
+    mutationKey: [...queryKeys.projects.teams.members(teamId), "add"],
     mutationFn: (data: AddTeamMemberInput) =>
       apiClient.post<void>(`/build/teams/${teamId}/members`, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: teamQueryKeys.members(teamId) });
-      qc.invalidateQueries({ queryKey: teamQueryKeys.detail(teamId) });
-      qc.invalidateQueries({ queryKey: teamQueryKeys.list() });
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.teams.members(teamId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.teams.detail(teamId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.teams.list() });
     },
   });
 }
@@ -128,13 +100,13 @@ export function useAddProjectTeamMember(teamId: number) {
 export function useRemoveProjectTeamMember(teamId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: [...TEAMS_BASE, "members", teamId, "remove"],
+    mutationKey: [...queryKeys.projects.teams.members(teamId), "remove"],
     mutationFn: (memberId: string) =>
       apiClient.delete<void>(`/build/teams/${teamId}/members/${memberId}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: teamQueryKeys.members(teamId) });
-      qc.invalidateQueries({ queryKey: teamQueryKeys.detail(teamId) });
-      qc.invalidateQueries({ queryKey: teamQueryKeys.list() });
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.teams.members(teamId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.teams.detail(teamId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.teams.list() });
     },
   });
 }
@@ -142,12 +114,12 @@ export function useRemoveProjectTeamMember(teamId: number) {
 export function useUpdateProjectTeamMemberRole(teamId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: [...TEAMS_BASE, "members", teamId, "updateRole"],
+    mutationKey: [...queryKeys.projects.teams.members(teamId), "updateRole"],
     mutationFn: ({ memberUserId, role }: { memberUserId: string; role: "member" | "lead" }) =>
       apiClient.patch<void>(`/build/teams/${teamId}/members/${memberUserId}`, { role }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: teamQueryKeys.members(teamId) });
-      qc.invalidateQueries({ queryKey: teamQueryKeys.detail(teamId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.teams.members(teamId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.teams.detail(teamId) });
     },
   });
 }
@@ -161,7 +133,7 @@ export function useTeamProjects(
   const enabled = canView && !!teamId && (callerEnabled ?? true);
 
   return useQuery<TeamProject[], Error>({
-    queryKey: teamQueryKeys.projects(teamId),
+    queryKey: queryKeys.projects.teams.teamProjects(teamId),
     queryFn: ({ signal }) => apiClient.get<TeamProject[]>(`/build/teams/${teamId}/projects`, undefined, signal),
     staleTime: 30_000,
     enabled,
@@ -172,11 +144,11 @@ export function useTeamProjects(
 export function useAddTeamProject(teamId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: [...TEAMS_BASE, "projects", teamId, "add"],
+    mutationKey: [...queryKeys.projects.teams.teamProjects(teamId), "add"],
     mutationFn: (projectId: number) =>
       apiClient.post<void>(`/build/teams/${teamId}/projects`, { projectId }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: teamQueryKeys.projects(teamId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.teams.teamProjects(teamId) });
     },
   });
 }
@@ -184,11 +156,11 @@ export function useAddTeamProject(teamId: number) {
 export function useRemoveTeamProject(teamId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: [...TEAMS_BASE, "projects", teamId, "remove"],
+    mutationKey: [...queryKeys.projects.teams.teamProjects(teamId), "remove"],
     mutationFn: (projectId: number) =>
       apiClient.delete<void>(`/build/teams/${teamId}/projects/${projectId}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: teamQueryKeys.projects(teamId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.projects.teams.teamProjects(teamId) });
     },
   });
 }
