@@ -3,3 +3,6 @@
 .cursor/mcp.json
 .DS_Store
 **/.DS_Store
+
+# Agent scratch probes: local-only, may hold credentials in the process env. Never commit.
+frontend/.scratch/
