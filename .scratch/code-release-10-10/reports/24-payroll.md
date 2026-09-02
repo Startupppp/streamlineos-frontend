@@ -1,7 +1,9 @@
 # 24 — Payroll module release matrix
 
-**Status:** 7 of 8 boxes closed. Box 2 was closed by a follow-up pass on 2026-09-02 (see *Follow-up pass* at the end);
-box 1 stays PARTIAL, blocked on migrations owned by ticket 08.
+**Status:** **8 of 8 boxes closed.** Box 2 was closed by the follow-up pass on 2026-09-02; box 1 was
+closed by the closing pass on 2026-09-02 (see *Closing pass* at the end) — ticket 08 had already
+shipped five of the six missing triggers in `1001`, and `1030_t24_payroll_tds_ytd_immutability.sql`
+adds the sixth.
 
 Territory: `streamlineos-backend/src/modules/payroll/**`, `streamlineos-frontend/frontend/features/payroll/**`,
 `frontend/app/(authenticated)/payroll/**`. One fix reached `frontend/hooks/api/payroll/**` — see
@@ -530,3 +532,229 @@ Frontend:
    None are payroll.
 4. `check:dead-code` (frontend) has 3 unclassified exports and `check:empty-states` one hand-rolled block,
    all outside payroll.
+
+---
+
+# Closing pass — box 1, data-layer immutability — 2026-09-02
+
+**Box 1 is now CLOSED.** What follows is what was actually found and run, not a restatement of the plan.
+
+## What was already done, verified against artifacts rather than reports
+
+The ticket text and the report above both said all six remaining financial tables lacked a DB-level
+guard. **Five of them already have one.** Ticket 08 shipped it in commit `5b63f195`:
+
+| migration | in HEAD | what it does |
+|---|---|---|
+| `1001_s08_payroll_financial_immutability.sql` | yes | guards `payroll_journal_batches`, `payroll_journal_batch_lines`, `payroll_bank_batches`, `payroll_bank_batch_items`, `payroll_filings` |
+| `1004_s08_payroll_lock_guard_org_purge.sql` | yes | forward-fixes 0445 — its `BEFORE DELETE` guards aborted `cron-org-purge-worker` |
+| `1002_s08_payroll_read_path_indexes.sql` | yes | the three index gaps this ticket assigned to 08 |
+
+The table names in the ticket were approximate: the real tables are `payroll_journal_batch_lines`
+and `payroll_bank_batch_items`, not `payroll_journal_lines` / `payroll_bank_items`.
+
+So the only table still unguarded was **`payroll_tds_ytd_ledger`**, which 1001 deliberately excluded
+and recorded as an open payroll decision rather than an omission.
+
+The six earlier fixes were re-verified in current source and are all intact — three application-level
+immutability guards (`payslip-bulk-publisher.service.ts:239` `setWhere: ne(status,"PUBLISHED")`;
+`filings.service.ts:384` the `ACKNOWLEDGED` `ConflictException`; `batch-status.service.ts:154` the
+`PAID` guard on `markItemFailed`) and three `orgId` write predicates
+(`payslip-bulk-publisher.service.ts:327`, `batch-status.service.ts markBatchPaid`,
+`run-result-persister.service.ts:229`). None were redone.
+
+## `1030_t24_payroll_tds_ytd_immutability.sql` — the last table
+
+Shape is 0445's and 1001's: one `BEFORE UPDATE OR DELETE` row trigger, an explicit column list, a
+parent-row escape hatch. It **reuses** 1001's `payroll_org_still_present()` rather than standing a
+second mechanism beside it.
+
+**Frozen predicate: the run recorded on the row has been paid out** — `payroll_runs.status IN
+('PAID','PAYSLIPS_PUBLISHED','CLOSED')`, via a new `payroll_run_is_paid_out(integer)`.
+
+1001 rejected both obvious predicates. Both objections are answered, not ignored:
+
+1. *"`payroll_run_is_locked()` breaks run locking, because `locking.service.ts` sets status `LOCKED`
+   at :145 and upserts the ledger at :244/:308 in the same transaction."* Correct — which is why the
+   predicate is narrower. `PAYROLL_RUN_TRANSITIONS` (`payroll.types.ts:303`) reads
+   `LOCKED → [PAID, REOPENED]`, `PAID → [PAYSLIPS_PUBLISHED]`, `PAYSLIPS_PUBLISHED → [CLOSED]`,
+   `CLOSED → []`, `REOPENED → [DRAFT]`. **`REOPENED` is reachable only from `LOCKED`**, so a run that
+   has reached `PAID` can never return to a lockable state and can never re-enter
+   `writeTdsYtdLedger`. Every legitimate reopen → re-lock therefore sees its own run in `LOCKED`,
+   which is outside the frozen set. Proved behaviourally below, and locked in by a spec.
+2. *"PAID/PUBLISHED/CLOSED then blocks an adjustment run writing the same
+   `(org, subject, fiscal_year, period_key)` after the regular run is paid."* That write is the one
+   the guard exists for, and **it is destructive today, not merely surprising.**
+   `uniq_payroll_runs_org_month_type_entity` admits a `BONUS`/`OFF_CYCLE`/`CORRECTION` run in the
+   same month; `writeTdsYtdLedger` keys the ledger on `payroll_runs.month` alone; and its
+   `ON CONFLICT DO UPDATE` **replaces** `taxable_income_paise`/`tds_paise` rather than accumulating
+   them. Locking a second run for a month whose regular run is already paid therefore overwrites the
+   tax actually withheld from the employee — the figure on their payslip and on the challan — with
+   the adjustment run's figure alone. Refusing it is the correct outcome for a financial record.
+   **Making off-cycle runs accumulate correctly needs `run_id` in the ledger's natural key**, which
+   is a `src/db/schema/**` change held by another agent this release. Recorded as a follow-up below,
+   not smuggled into this migration.
+
+**The `ON DELETE SET NULL` trap ticket 08 hit on `inv_stock_transactions` does not apply here**, and
+that was checked in `pg_constraint` rather than assumed. Every inbound action on
+`payroll_tds_ytd_ledger` is a DELETE or a RESTRICT:
+
+    payroll_tds_ytd_ledger_org_id_fkey     org_id            -> organizations ON DELETE CASCADE
+    payroll_tds_ytd_ledger_user_id_fkey    user_id           -> users         ON DELETE CASCADE
+    fk_payroll_tds_ytd_ledger_org_worker   (org_id,worker_id)-> workers       ON DELETE RESTRICT
+    (run_id carries no foreign key at all)
+
+No column had to be excluded to keep SET NULL working, so **every column on the table is guarded**.
+The two cascading deletes get 1001's escape-hatch shape instead: the `BEFORE DELETE` branch stands
+aside once the organisation *or* the user has already gone.
+
+## Behavioural proof — 45 assertions, exit 0
+
+`psql -d scratch_t24 -v ON_ERROR_STOP=1 -f t24-immutability-proof.sql` → **exit 0, 45 PASS, 0 FAIL.**
+A cold `scratch_t24` (zero → head, 659/659) with one organisation, two users, a REGULAR and a BONUS
+run in the same month, and a row in each of the eight guarded tables. Every group is
+insert → transition INTO the frozen state (must succeed) → forbidden mutation (must raise `23514`) →
+**permitted post-freeze lifecycle write (must succeed)** → delete (must raise).
+
+| table | frozen by | refused | still permitted |
+|---|---|---|---|
+| `payroll_journal_batches` | `status IN (POSTED,EXPORTED,REVERSED)` | rewrite `total_debits`, rewrite `source_hash`, delete | `DRAFT→POSTED`, `markExported`, `reconcile` |
+| `payroll_journal_batch_lines` | parent batch final | rewrite `debit`, delete | edits while parent is `DRAFT` |
+| `payroll_bank_batches` | `status IN (SENT,PARTIALLY_PAID,PAID)` | rewrite `total_amount`, repoint `run_id`, delete | `DRAFT→SENT`, the post-commit `file_key` hook, `SENT→PAID` |
+| `payroll_bank_batch_items` | parent batch released | rewrite `amount`, rewrite `account_masked`, delete | edits while parent is `DRAFT`, `markItemPaid` |
+| `payroll_filings` | `submitted_at IS NOT NULL` | rewrite `payload`, rewrite `fiscal_year`, delete | `DRAFT→SUBMITTED`, `attachAcknowledgement` |
+| `payroll_tds_ytd_ledger` | recorded run paid out | reduce `tds_paise`, rewrite `taxable_income_paise`, move to another taxpayer, move to another period, repoint `run_id`, delete, **and the literal `writeTdsYtdLedger` upsert replayed from the BONUS run** | **the reopen → re-lock upsert while the run is `LOCKED`**, and a fresh insert for the next month |
+
+Two cascade hatches, both PASS:
+
+- `DELETE FROM users WHERE id='t24_user2'` cascades through a frozen ledger row and removes it.
+- **`DELETE FROM organizations WHERE id='t24_org'`** — exactly what `cron-org-purge-worker.service.ts:241`
+  issues — succeeds with a `PAID` run and all eight guarded tables populated, and leaves **0 rows in
+  all nine payroll tables**.
+
+**The guard is not vacuous, proved by removing it.** Applying
+`migrations/rollback/1030_…down.sql` and deleting the ledger row drops the trigger (`pg_trigger`
+count on the table: 1 → 0), after which the identical forbidden write —
+`UPDATE payroll_tds_ytd_ledger SET tds_paise = 0` against a `PAID` run — **succeeds**. The trigger is
+what refuses it, not a coincidence of the fixture.
+
+## Migration chain
+
+The head moved twice under this pass — ticket 07b journalled `1023`–`1025` while the rollback
+round-trip was queued — so the file counts below are the live ones at each step, not a typo.
+
+| command | exit | number |
+|---|---|---|
+| `node src/scripts/db-bootstrap.mjs` (`scratch_t24`, **cold from zero at the new head**) | 0 | `REACHED_HEAD 659/659` |
+| `psql -f migrations/rollback/1030_…down.sql` | 0 | trigger + 2 functions dropped; `pg_trigger` on the table 1 → 0 |
+| `check:migration-ledger` (after rollback) | 0 | 658 applied vs 659 journal, **1 pending**, no orphans |
+| `node src/scripts/db-bootstrap.mjs` (re-apply after rollback) | 0 | `REACHED_HEAD 662/662`, `4 OK / 658 SKIP / 0 FAIL` — 1030 plus 07b's three |
+| behavioural proof re-run at head 662 | 0 | **45 PASS / 0 FAIL**, unchanged |
+| `check:migration-discipline` | 0 | 662 files, **0 new violations** |
+| `check:migration-chain` | 0 | chain verified, no issues; watermark 1803000010112 |
+| `check:migration-ledger` | 0 | 662 applied vs 662 journal, **0 pending**, no orphans |
+| `check:migration-rollback` | 0 | 662 scanned, all type-name checks passed |
+| `check:tenant-indexes` (declaration) | 0 | 839 / 839 |
+| `check:tenant-indexes --db` (`scratch_t24`) | 0 | 988 / 988 |
+| `check:set-null-column-lists` (`scratch_t24`) | 0 | 561 declared / 268 needing a list / 796 catalog; both halves OK |
+| `check:drop-column-safety` | 0 | 662 files, 126 dropped columns, 0 still declared |
+| `check:restrict-fks` | 0 | 345 schema files, clean |
+| `db:verify-rls` (`scratch_t24`) | 0 | `RESULT: RLS VERIFIED` |
+
+Journal: appended `idx 790`, `when 1803000010109` — unique idx, strictly increasing, and above the
+2027-02-19 watermark. Read-modify-write in one pass; `git diff -- migrations/meta/_journal.json`
+confirms **49 lines added and none removed**. Three other agents' uncommitted entries share the file
+— ticket 29's `1020`–`1022` and ticket 07b's `1023`–`1025` — and all six were left untouched. A
+pathspec bounds files, not hunks, so **the commit below necessarily carries their journal entries**;
+their `.sql` files are untracked in the shared tree and travel with their own commits.
+
+## The three index gaps — delivered by ticket 08, and not plan-measurable on this seed
+
+`1002_s08_payroll_read_path_indexes.sql` is in HEAD and all three exist in `pg_catalog` on a cold
+build, with the two strictly-subsumed predecessors dropped:
+
+    idx_payroll_run_employees_org_run_status   present   (idx_payroll_run_employees_org_run  gone)
+    idx_payroll_runs_org_entity_month          present   (idx_payroll_runs_org_entity        gone)
+    idx_payslip_publications_org_user_status   present
+
+**No buffer measurement is possible for them, and that is a property of the seed, not a skipped
+step.** Payroll is barely seeded in `scratch_perf_seed`: `payroll_runs` **6 rows / 1 page**,
+`payroll_run_employees` **30 rows / 1 page**, `payslip_publications` **0 rows / 0 pages**. Measured
+as `streamline_app` with `app.organization_id` set — the run-items read plans as a **Seq Scan,
+1 buffer**, "Rows Removed by Filter: 30". At one heap page no index can win and none is chosen, for
+either the majority or the minority tenant. Ticket 08 justified all three structurally
+(strict-prefix subsumption plus predicate coverage) and published no plan measurement; that remains
+the honest state. **Seeding payroll at production scale is the prerequisite for measuring them.**
+
+## Follow-up this pass could not take
+
+**`writeTdsYtdLedger` replaces where it should accumulate.** `locking.service.ts:244/:279` upserts on
+`(org, subject, fiscal_year, period_key)` and sets `taxable_income_paise`/`tds_paise` to the current
+run's figures. Two runs in one month is a supported product shape, so the second run's lock erases
+the first's monthly tax record. 1030 now refuses that write once the first run is paid, which stops
+the corruption but surfaces as a raw `23514` rather than a `409`. The correct fix is `run_id` in the
+ledger's natural key (one row per run, YTD by `SUM`), because a plain `+=` breaks the moment either
+run is reopened and re-locked. That is a `src/db/schema/payroll/entities-periods.ts` change plus a
+unique-index migration — **`src/db/schema/**` is held by the schema-declaration sweep this release**,
+so it is routed rather than attempted.
+
+`payroll_tds_ytd_ledger.run_id` also still carries **no foreign key** (the ticket's earlier finding),
+which is why a deleted run leaves the row unfrozen. Same territory, same routing.
+
+## Code gates — command, exit code, number
+
+| command | exit | number |
+|---|---:|---|
+| `$HEAVY 2 -- pnpm -C streamlineos-backend exec jest --runInBand --testPathPattern="payroll"` | **0** | **125 suites / 969 tests, all pass** (was 124/955 — the new spec adds 1 suite / 14 tests) |
+| `$HEAVY 2 -- pnpm -C streamlineos-backend check:spec-typecheck` | 2 | 223 errors, **0 in any payroll module file this pass wrote**, and **0 in the new spec** |
+| `$HEAVY 2 -- pnpm -C streamlineos-backend typecheck` | 2 | 208 errors, **0 attributable** |
+| `check:unbounded-reads` | 0 | offset ACTIONABLE=0, unbounded ACTIONABLE=0 |
+| `check:idempotent-commands` | 0 | every in-scope mutating handler carries `@Idempotent` |
+| `check:cache-invalidation` | 0 | LOW-only, 0 documentation gaps |
+| `check:module-di` | 0 | 217 modules · 1707 classes |
+| `check:route-classification` | 0 | PASS |
+| `check:outbox-consumers` | 1 | fails on `modules/organization/setup/__tests__/org-setup-durability.spec.ts` (the scanner reads `([^` as an event type). **Both payroll event types are REGISTERED.** Not payroll, not this pass. |
+
+**`typecheck` and `check:spec-typecheck` are red on a cause outside this territory, and the
+attribution is exact rather than asserted.** This pass added one `.sql`, one `.down.sql`, one
+`_journal.json` line and one `*.spec.ts`. `tsconfig.build.json` excludes `**/*spec.ts`, so
+`typecheck`'s input set is byte-identical with and without this pass — it cannot have contributed an
+error. `check:spec-typecheck` does compile the new spec, and the spec produces **zero** diagnostics.
+
+The root cause is another agent's in-flight edit to **`src/db/schema/payroll/policies.ts`** (dirty in
+`git status`, and its error line numbers moved between the two runs, so it is still being edited):
+`AnyPgColumn` was removed from the import while `payrollPolicies` and `payrollPolicyVersions` still
+reference each other, so `payrollPolicies` is `TS7022: implicitly has type 'any' because it ...
+is referenced directly or indirectly in its own initializer`. That collapses the schema barrel to
+`any`, which is why `payroll/runs/run-data-loader.service.ts:87,88,101` then report
+`Property 'payroll_policy_versions' does not exist on type '{}'` and why 200-odd unrelated
+`TS7006 implicitly any` errors appear across `hr/`, `chat/`, `inventory/`, `e-sign/`, `dashboard/`.
+`src/db/schema/**` is held by the schema-declaration sweep, so it was reported, not touched.
+
+## Files changed — closing pass
+
+Backend (`streamlineos-backend`):
+- `migrations/1030_t24_payroll_tds_ytd_immutability.sql` *(new)*
+- `migrations/rollback/1030_t24_payroll_tds_ytd_immutability.down.sql` *(new)*
+- `migrations/meta/_journal.json` — one appended entry (`idx 790`, `when 1803000010109`)
+- `src/modules/payroll/__tests__/payroll-financial-immutability.spec.ts` *(new)* — 14 assertions:
+  all eight guards exist with the right trigger shape on the right table, all eight are journalled,
+  1030 is reversible, and the reachability walk over `PAYROLL_RUN_TRANSITIONS` proves no paid-out
+  status can reach a lockable one (with a control that proves the walk can answer true).
+
+No file under `src/db/schema/**`, `contracts/`, `scripts/check-*.mjs`, `.github/workflows/**` or the
+frontend was touched.
+
+## Shared-file hazard the orchestrator must know about
+
+`migrations/meta/_journal.json` is one file and cannot be committed hunk-wise. At the moment of this
+commit (`c046faf1`) it also carried **six other agents' uncommitted entries** — ticket 29's
+`1020`–`1022` and ticket 07b's `1023`–`1025` — whose `.sql` files are still **untracked** in the
+shared working tree. Removing them to keep the commit clean would have been the forbidden act, so
+they travelled with it.
+
+Consequence, stated plainly: **at exactly `c046faf1`, `HEAD`'s journal names six migrations whose
+files are not in the repository.** `check:migration-discipline` reads the working tree, so it is
+green here and stays green; a clean clone pinned to this one commit would not build. It resolves the
+moment tickets 29 and 07b commit their `.sql` and `.down.sql` files — nothing needs undoing, but the
+two commits must land.
