@@ -287,6 +287,17 @@ jobs:
       # Measured rc=1: 3 unclassified exports — features/build/analytics/project-charts.tsx
       # CHART_COLORS, features/mail/mail-compose-sheet.tsx MailComposeMode,
       # app/api/media/image/media-image-schema.ts MediaImageQuery.
+      # Ticket 36. The frontend half of the backend's `check:type-assertions`.
+      # Hard zero for `as any` / `@ts-ignore` / `@ts-expect-error` / `@ts-nocheck`
+      # in application code, and a zero-GROWTH ledger for `as unknown as` where
+      # every file carries its count, its seam kind and a written invariant.
+      # Generated output cannot enter the count: every directory whose name
+      # begins `.next` is skipped, which is where the phantom "661 @ts-ignore"
+      # came from. Measured at head: rc=0, 4,258 application files, 7 sites in
+      # 6 files, 0 banned escapes.
+      - name: Type assertions stay at a proven seam
+        run: pnpm run check:type-assertions:self-test && pnpm run check:type-assertions
+
       - name: Every export is classified and no classification is stale
         continue-on-error: true
         run: pnpm run check:dead-code:self-test && pnpm run check:dead-code

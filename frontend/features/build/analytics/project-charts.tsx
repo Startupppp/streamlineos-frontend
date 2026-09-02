@@ -19,7 +19,7 @@ export type {
   VelocityChartRow,
   EstimateChartRow,
 };
-export { STATE_COLORS, PRIORITY_COLORS, CHART_COLORS } from "./project-stats";
+export { STATE_COLORS, PRIORITY_COLORS } from "./project-stats";
 
 const chartFallback = () => <Skeleton className="h-[220px] w-full rounded-lg" />;
 

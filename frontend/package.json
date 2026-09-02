@@ -31,6 +31,8 @@
     "check:command-catalog:self-test": "node scripts/check-command-catalog.mjs --self-test",
     "check:dead-code": "node scripts/check-dead-code.mjs",
     "check:dead-code:self-test": "node scripts/check-dead-code.mjs --self-test",
+    "check:type-assertions": "node scripts/check-type-assertions.mjs",
+    "check:type-assertions:self-test": "node scripts/check-type-assertions.mjs --self-test",
     "check:seo-metadata": "node scripts/check-seo-metadata.mjs",
     "check:seo-metadata:self-test": "node scripts/check-seo-metadata.mjs --self-test",
     "browser:journeys": "node scripts/browser-journeys.mjs",
