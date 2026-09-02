@@ -82,6 +82,14 @@ export function ExpenseByCategoryReport() {
     void refetch();
   }
 
+  function handleClearFilters(): void {
+    setFrom(defaults.from);
+    setTo(defaults.to);
+    updateUrl(defaults.from, defaults.to);
+  }
+
+  const filtersActive = from !== defaults.from || to !== defaults.to;
+
   function handleExport(): void {
     void downloadCsv(
       "/accounting/reports/expense-by-category/export",
@@ -122,8 +130,15 @@ export function ExpenseByCategoryReport() {
         ) : !isLoading && (data?.length ?? 0) === 0 ? (
           <EmptyState
             illustration={<EmptyReportIllustration />}
-            title="No expense data"
-            description="No expenses found in the selected date range."
+            title="No expense data yet"
+            description={
+              filtersActive
+                ? undefined
+                : "Approved and paid expenses appear here once employees submit them."
+            }
+            filtersActive={filtersActive}
+            filteredTitle="No expenses in this date range"
+            onClearFilters={handleClearFilters}
             compact
           />
         ) : (

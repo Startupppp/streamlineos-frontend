@@ -1,5 +1,6 @@
 import {
   isStorageObjectKey,
+  MEDIA_IMAGE_ROUTE,
   resolveImageUrl,
   storageKeyFromUrl,
   storageObjectUrl,
@@ -30,22 +31,30 @@ describe("isStorageObjectKey", () => {
 });
 
 describe("resolveImageUrl", () => {
-  it("routes an object key through the authorized image route", () => {
+  it("routes an object key through the same-origin media bridge", () => {
     expect(resolveImageUrl(KEY)).toBe(
-      `${API}/storage/image?key=${encodeURIComponent(KEY)}`,
+      `${MEDIA_IMAGE_ROUTE}?key=${encodeURIComponent(KEY)}`,
     );
   });
 
   it("routes a leading-slash key instead of serving it as a same-origin path", () => {
     expect(resolveImageUrl(`/${KEY}`)).toBe(
-      `${API}/storage/image?key=${encodeURIComponent(KEY)}`,
+      `${MEDIA_IMAGE_ROUTE}?key=${encodeURIComponent(KEY)}`,
     );
   });
 
   it("routes a legacy folder-first key", () => {
     expect(resolveImageUrl("uploads/1712-logo.png")).toBe(
-      `${API}/storage/image?key=${encodeURIComponent("uploads/1712-logo.png")}`,
+      `${MEDIA_IMAGE_ROUTE}?key=${encodeURIComponent("uploads/1712-logo.png")}`,
     );
+  });
+
+  it("never emits the API origin, which an <img> can neither authenticate to nor load under img-src", () => {
+    for (const value of [KEY, `/${KEY}`, KB_KEY, "uploads/1712-logo.png"]) {
+      const url = resolveImageUrl(value) ?? "";
+      expect(url.startsWith(API)).toBe(false);
+      expect(url.startsWith("/")).toBe(true);
+    }
   });
 
   it("leaves an absolute, data and blob source untouched", () => {
@@ -67,7 +76,7 @@ describe("resolveImageUrl", () => {
   it("never emits a raw key as the src", () => {
     for (const value of [KEY, `/${KEY}`, KB_KEY]) {
       expect(resolveImageUrl(value)).not.toBe(value);
-      expect(resolveImageUrl(value)).toContain("/storage/image?key=");
+      expect(resolveImageUrl(value)).toContain(`${MEDIA_IMAGE_ROUTE}?key=`);
     }
   });
 });
@@ -76,6 +85,10 @@ describe("storageKeyFromUrl", () => {
   it("inverts storageObjectUrl so a resolved src is never persisted", () => {
     expect(storageKeyFromUrl(storageObjectUrl(KEY))).toBe(KEY);
     expect(storageKeyFromUrl(storageObjectUrl(KB_KEY))).toBe(KB_KEY);
+  });
+
+  it("still inverts a legacy value that was persisted with the API image path", () => {
+    expect(storageKeyFromUrl(`${API}/storage/image?key=${encodeURIComponent(KEY)}`)).toBe(KEY);
   });
 
   it("is a no-op for a value that is already a key or a foreign URL", () => {

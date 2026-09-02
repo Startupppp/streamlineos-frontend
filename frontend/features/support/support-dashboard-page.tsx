@@ -26,6 +26,7 @@ import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 
 const formatTicketValue = (v: number) => v.toLocaleString();
 
@@ -100,7 +101,26 @@ export function SupportDashboardPage() {
     [ticketsByPriority],
   );
 
-  if (isLoading || !data) {
+  function handleRetry() {
+    void refetch();
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper
+        title="Support Analytics"
+        subtitle="Real-time insights into customer support performance across all channels"
+      >
+        <ErrorState
+          title="Failed to load support analytics"
+          description="We couldn't load the dashboard data. Please try again."
+          onRetry={handleRetry}
+        />
+      </PageWrapper>
+    );
+  }
+
+  if (isLoading) {
     return (
       <PageWrapper
         title="Support Analytics"
@@ -117,20 +137,17 @@ export function SupportDashboardPage() {
     );
   }
 
-  function handleRetry() {
-    void refetch();
-  }
-
-  if (isError) {
+  if (!data) {
     return (
       <PageWrapper
         title="Support Analytics"
         subtitle="Real-time insights into customer support performance across all channels"
       >
-        <ErrorState
-          title="Failed to load support analytics"
-          description="We couldn't load the dashboard data. Please try again."
-          onRetry={handleRetry}
+        <EmptyState
+          illustrationPreset="ticket"
+          title="No support activity yet"
+          description="Analytics appear once your first tickets are raised."
+          action={{ label: "Go to ticket inbox", href: "/support/inbox" }}
         />
       </PageWrapper>
     );

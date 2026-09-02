@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
-import { ChevronLeft, Pencil, ExternalLink, BookOpen } from "lucide-react";
+import { ChevronLeft, Pencil, ExternalLink } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";

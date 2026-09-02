@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   useJournalEntry,
   usePostJournalEntry,
@@ -162,9 +163,12 @@ export function JournalEntryDetailPage({ entryId: entryIdStr }: JournalEntryDeta
             onRetry={handleRetry}
           />
         ) : !entry || !Number.isInteger(entryId) ? (
-          <ErrorState
+          <EmptyState
+            className="flex-1"
+            illustrationPreset="search"
             title="Journal entry not found"
-            description="This journal entry does not exist or you do not have access to it."
+            description="This journal entry no longer exists, or you do not have access to it."
+            action={{ label: "Back to journal", href: "/accounting/journal" }}
           />
         ) : (
           <JournalEntryView

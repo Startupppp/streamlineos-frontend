@@ -6,6 +6,8 @@ import type { DataTableColumn } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { FlaskConical } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useSimulationHistory, type SimulationRecord, type SimulationType } from "@/hooks/api/hr/enterprise-ops-simulator";
 import { format } from "date-fns";
 import { useOrgMembers } from "@/hooks/api/organization";
@@ -27,7 +29,7 @@ export function SimulationHistory() {
   const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
   const page = cursorHistory.length;
   const cursor = cursorHistory.at(-1);
-  const { data, isLoading, isFetching } = useSimulationHistory({ cursor });
+  const { data, isLoading, isFetching, isError, error, refetch } = useSimulationHistory({ cursor });
   const { data: membersData } = useOrgMembers(1, 200);
 
   const memberById = useMemo(() => {
@@ -90,6 +92,21 @@ export function SimulationHistory() {
     const nextCursor = data?.pagination.nextCursor;
     if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
   }, [data?.pagination.nextCursor]);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load simulation history"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
+  }
 
   return (
     <div className="space-y-3">

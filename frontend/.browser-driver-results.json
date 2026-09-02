@@ -1,10 +1,10 @@
 {
-  "generatedAtMs": 1788350964543,
-  "generatedAt": "2026-09-02T12:09:24.543Z",
+  "generatedAtMs": 1788352077424,
+  "generatedAt": "2026-09-02T12:27:57.424Z",
   "baseUrl": "http://localhost:1000",
   "targetUrl": "http://localhost:1000",
   "serverMode": "production",
-  "buildId": "1tP6uxYzyqPr_9ZpgTFzs",
+  "buildId": "jkXo78QZJ_f6W45VodaWa",
   "repeat": 5,
   "authenticatedRoutes": [
     "/mail",
@@ -13,64 +13,73 @@
   ],
   "desktop": {
     "lcp": {
-      "p75_ms": 1132
+      "p75_ms": 1112
     },
     "inp": {
-      "p75_ms": 62
+      "p75_ms": 96
     },
     "cls": {
-      "p75": 0.000956741094393004
+      "p75": 0.0006645202385545267
     },
     "fcp": {
-      "p75_ms": 670
+      "p75_ms": 1080
     },
     "ttfb": {
-      "p95_ms": 987.5799999999807
+      "p95_ms": 1430.4999999998136
     },
     "longTasks": {
-      "p75_ms": 0
+      "p75_ms": 198.5
+    },
+    "usedJsHeap": {
+      "p75_bytes": 111034581.5
     }
   },
   "mobile": {
     "lcp": {
-      "p75_ms": 1620
+      "p75_ms": 3430
     },
     "inp": {
-      "p75_ms": null
+      "p75_ms": 1112
     },
     "cls": {
       "p75": 0
     },
     "fcp": {
-      "p75_ms": 1544
+      "p75_ms": 2646
     },
     "ttfb": {
-      "p95_ms": 1436.3799999999344
+      "p95_ms": 3726.8999999997204
     },
     "longTasks": {
-      "p75_ms": 151
+      "p75_ms": 2938.5
+    },
+    "usedJsHeap": {
+      "p75_bytes": 226975477.5
     }
   },
   "byRoute": {
     "/mail": {
       "desktop": {
         "lcp": {
-          "p75_ms": 1316
+          "p75_ms": 1048
         },
         "inp": {
-          "p75_ms": 48
+          "p75_ms": 96
         },
         "cls": {
           "p75": 0.000956741094393004
         },
         "fcp": {
-          "p75_ms": 596
+          "p75_ms": 872
         },
         "ttfb": {
-          "p95_ms": 744.1600000000558
+          "p95_ms": 1429.9799999997017
         },
         "longTasks": {
-          "p75_ms": 0
+          "p75_ms": 200
+        },
+        "usedJsHeap": {
+          "p75_bytes": 52174003
         }
       },
       "desktopContent": {
@@ -82,28 +91,31 @@
       },
       "mobile": {
         "lcp": {
-          "p75_ms": 1484
+          "p75_ms": 1416
         },
         "inp": {
-          "p75_ms": null
+          "p75_ms": 776
         },
         "cls": {
           "p75": 0
         },
         "fcp": {
-          "p75_ms": 1484
+          "p75_ms": 1416
         },
         "ttfb": {
-          "p95_ms": 1268.7199999999254
+          "p95_ms": 2160.1200000001118
         },
         "longTasks": {
-          "p75_ms": 133
+          "p75_ms": 2538
+        },
+        "usedJsHeap": {
+          "p75_bytes": 191685548
         }
       },
       "mobileContent": {
         "url": "http://localhost:1000/mail",
         "title": "StreamlineOS — The operating system for modern teams",
-        "words": 3,
+        "words": 20,
         "brandedLoader": false,
         "errorBoundary": false
       }
@@ -111,55 +123,61 @@
     "/inbox": {
       "desktop": {
         "lcp": {
-          "p75_ms": 924
+          "p75_ms": 892
         },
         "inp": {
-          "p75_ms": 64
+          "p75_ms": 96
         },
         "cls": {
-          "p75": 0.000956741094393004
+          "p75": 0.00037229938271604937
         },
         "fcp": {
-          "p75_ms": 624
+          "p75_ms": 892
         },
         "ttfb": {
-          "p95_ms": 739.1599999996834
+          "p95_ms": 828.5400000004098
         },
         "longTasks": {
-          "p75_ms": 0
+          "p75_ms": 134
+        },
+        "usedJsHeap": {
+          "p75_bytes": 83636756
         }
       },
       "desktopContent": {
         "url": "http://localhost:1000/inbox",
-        "title": "StreamlineOS",
-        "words": 47,
+        "title": "StreamlineOS — The operating system for modern teams",
+        "words": 48,
         "brandedLoader": false,
         "errorBoundary": false
       },
       "mobile": {
         "lcp": {
-          "p75_ms": 1636
+          "p75_ms": 2824
         },
         "inp": {
-          "p75_ms": null
+          "p75_ms": 1024
         },
         "cls": {
           "p75": 0
         },
         "fcp": {
-          "p75_ms": 1604
+          "p75_ms": 2328
         },
         "ttfb": {
-          "p95_ms": 1517.8999999999999
+          "p95_ms": 3303.4399999994785
         },
         "longTasks": {
-          "p75_ms": 184
+          "p75_ms": 2512
+        },
+        "usedJsHeap": {
+          "p75_bytes": 202705523
         }
       },
       "mobileContent": {
         "url": "http://localhost:1000/inbox",
         "title": "StreamlineOS — The operating system for modern teams",
-        "words": 3,
+        "words": 22,
         "brandedLoader": false,
         "errorBoundary": false
       }
@@ -167,55 +185,72 @@
     "/dashboard": {
       "desktop": {
         "lcp": {
-          "p75_ms": 1256
+          "p75_ms": 1340
         },
         "inp": {
-          "p75_ms": null
+          "p75_ms": 112
         },
         "cls": {
-          "p75": 0
+          "p75": 0.000956741094393004
         },
         "fcp": {
-          "p75_ms": 716
+          "p75_ms": 1340
         },
         "ttfb": {
-          "p95_ms": 1267.4399999997577
+          "p95_ms": 1307.0199999999254
         },
         "longTasks": {
-          "p75_ms": 0
+          "p75_ms": 205
+        },
+        "usedJsHeap": {
+          "p75_bytes": 142602103
         }
       },
       "desktopContent": {
         "url": "http://localhost:1000/dashboard",
         "title": "StreamlineOS — The operating system for modern teams",
-        "words": 3,
+        "words": 61,
         "brandedLoader": false,
         "errorBoundary": false
       },
+      "desktopLayoutShifts": [
+        {
+          "value": 0.0337,
+          "atMs": 2708,
+          "sources": [
+            "div.flex.flex-col.gap-4",
+            "div",
+            "div"
+          ]
+        }
+      ],
       "mobile": {
         "lcp": {
-          "p75_ms": 1360
+          "p75_ms": 3520
         },
         "inp": {
-          "p75_ms": null
+          "p75_ms": 1192
         },
         "cls": {
           "p75": 0
         },
         "fcp": {
-          "p75_ms": 1076
+          "p75_ms": 2836
         },
         "ttfb": {
-          "p95_ms": 1057.300000000093
+          "p95_ms": 3417.9800000002606
         },
         "longTasks": {
-          "p75_ms": 78
+          "p75_ms": 3634
+        },
+        "usedJsHeap": {
+          "p75_bytes": 252114518
         }
       },
       "mobileContent": {
         "url": "http://localhost:1000/dashboard",
-        "title": "StreamlineOS — The operating system for modern teams",
-        "words": 3,
+        "title": "StreamlineOS",
+        "words": 13,
         "brandedLoader": false,
         "errorBoundary": false
       }
@@ -223,14 +258,14 @@
   },
   "firstLoadBytesByRoute": {
     "/mail": {
-      "scriptBytes": 895910,
-      "stylesheetBytes": 58197,
+      "scriptBytes": 875909,
+      "stylesheetBytes": 58191,
       "imageBytes": 5744,
       "fontBytes": 55206,
-      "documentBytes": 19167,
-      "otherBytes": 26458,
+      "documentBytes": 19245,
+      "otherBytes": 24139,
       "thirdPartyBytes": 0,
-      "totalBytes": 1060682,
+      "totalBytes": 1038434,
       "notableResources": [
         {
           "kind": "font",
@@ -260,25 +295,7 @@
           "kind": "other",
           "thirdParty": true,
           "bytes": 0,
-          "url": "http://localhost:1500/notifications/events/token"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 0,
-          "url": "http://localhost:1500/notifications/unread-count"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 0,
-          "url": "http://localhost:1500/notifications/events/token"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 0,
-          "url": "http://localhost:1500/mail/messages?folder=inbox&accountId=all&limit=40"
+          "url": "http://localhost:1500/billing"
         },
         {
           "kind": "other",
@@ -290,13 +307,19 @@
           "kind": "other",
           "thirdParty": true,
           "bytes": 0,
-          "url": "http://localhost:1500/billing"
+          "url": "http://localhost:1500/organization"
         },
         {
           "kind": "other",
           "thirdParty": true,
           "bytes": 0,
           "url": "http://localhost:1500/integrations/connections"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1500/build/workspaces?limit=20"
         },
         {
           "kind": "other",
@@ -308,13 +331,7 @@
           "kind": "other",
           "thirdParty": true,
           "bytes": 0,
-          "url": "http://localhost:1500/organization"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 0,
-          "url": "http://localhost:1500/dashboard/stats"
+          "url": "http://localhost:1500/chat/unread"
         },
         {
           "kind": "other",
@@ -332,7 +349,13 @@
           "kind": "other",
           "thirdParty": true,
           "bytes": 0,
-          "url": "http://localhost:1500/build/workspaces?limit=20"
+          "url": "http://localhost:1500/dashboard/stats"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1500/notifications/unread-count"
         },
         {
           "kind": "other",
@@ -350,19 +373,19 @@
           "kind": "other",
           "thirdParty": true,
           "bytes": 0,
-          "url": "http://localhost:1500/chat/unread"
+          "url": "http://localhost:1500/mail/messages?folder=inbox&accountId=all&limit=40"
         }
       ]
     },
     "/inbox": {
-      "scriptBytes": 864098,
-      "stylesheetBytes": 58197,
+      "scriptBytes": 850428,
+      "stylesheetBytes": 58191,
       "imageBytes": 5744,
       "fontBytes": 55206,
-      "documentBytes": 20181,
-      "otherBytes": 48262,
-      "thirdPartyBytes": 13074,
-      "totalBytes": 1051688,
+      "documentBytes": 20245,
+      "otherBytes": 37618,
+      "thirdPartyBytes": 6997,
+      "totalBytes": 1027432,
       "notableResources": [
         {
           "kind": "font",
@@ -387,30 +410,6 @@
           "thirdParty": false,
           "bytes": 2872,
           "url": "http://localhost:1000/logo.svg"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1473,
-          "url": "http://localhost:1500/chat/unread"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1473,
-          "url": "http://localhost:1500/organization/settings"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1473,
-          "url": "http://localhost:1500/integrations/connections"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1473,
-          "url": "http://localhost:1500/users/stats"
         },
         {
           "kind": "other",
@@ -421,14 +420,8 @@
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1461,
-          "url": "http://localhost:1500/organization"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1422,
-          "url": "http://localhost:1500/dashboard/stats"
+          "bytes": 1418,
+          "url": "http://localhost:1500/billing"
         },
         {
           "kind": "other",
@@ -439,14 +432,20 @@
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1418,
-          "url": "http://localhost:1500/billing"
+          "bytes": 1349,
+          "url": "http://localhost:1500/notifications/events/token"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 1349,
+          "url": "http://localhost:1500/notifications/events/token"
         },
         {
           "kind": "other",
           "thirdParty": true,
           "bytes": 0,
-          "url": "http://localhost:1500/users/stats"
+          "url": "http://localhost:1500/notifications/unread-count"
         },
         {
           "kind": "other",
@@ -470,12 +469,6 @@
           "kind": "other",
           "thirdParty": true,
           "bytes": 0,
-          "url": "http://localhost:1500/dashboard/stats"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 0,
           "url": "http://localhost:1500/chat/unread"
         },
         {
@@ -483,204 +476,180 @@
           "thirdParty": true,
           "bytes": 0,
           "url": "http://localhost:1500/notifications/unread-count"
-        }
-      ]
-    },
-    "/dashboard": {
-      "scriptBytes": 956235,
-      "stylesheetBytes": 58197,
-      "imageBytes": 5744,
-      "fontBytes": 55206,
-      "documentBytes": 11107,
-      "otherBytes": 74083,
-      "thirdPartyBytes": 27169,
-      "totalBytes": 1160572,
-      "notableResources": [
-        {
-          "kind": "font",
-          "thirdParty": false,
-          "bytes": 30693,
-          "url": "http://localhost:1000/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2"
-        },
-        {
-          "kind": "font",
-          "thirdParty": false,
-          "bytes": 24513,
-          "url": "http://localhost:1000/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2"
         },
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 5129,
-          "url": "http://localhost:1500/me/access"
-        },
-        {
-          "kind": "image",
-          "thirdParty": false,
-          "bytes": 2872,
-          "url": "http://localhost:1000/logo.svg"
-        },
-        {
-          "kind": "image",
-          "thirdParty": false,
-          "bytes": 2872,
-          "url": "http://localhost:1000/logo.svg"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1473,
+          "bytes": 0,
           "url": "http://localhost:1500/dashboard/stats"
         },
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1473,
+          "bytes": 0,
           "url": "http://localhost:1500/integrations/connections"
         },
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1473,
+          "bytes": 0,
           "url": "http://localhost:1500/settings/ai-usage"
         },
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1473,
-          "url": "http://localhost:1500/organization/settings"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1473,
-          "url": "http://localhost:1500/me/inbox/unified?limit=25"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1473,
+          "bytes": 0,
           "url": "http://localhost:1500/leads?limit=1"
         },
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1473,
-          "url": "http://localhost:1500/notifications/unread-count"
+          "bytes": 0,
+          "url": "http://localhost:1500/organization/settings"
+        }
+      ]
+    },
+    "/dashboard": {
+      "scriptBytes": 954265,
+      "stylesheetBytes": 58191,
+      "imageBytes": 5744,
+      "fontBytes": 55206,
+      "documentBytes": 20570,
+      "otherBytes": 30426,
+      "thirdPartyBytes": 10821,
+      "totalBytes": 1124402,
+      "notableResources": [
+        {
+          "kind": "font",
+          "thirdParty": false,
+          "bytes": 30693,
+          "url": "http://localhost:1000/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2"
+        },
+        {
+          "kind": "font",
+          "thirdParty": false,
+          "bytes": 24513,
+          "url": "http://localhost:1000/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2"
+        },
+        {
+          "kind": "image",
+          "thirdParty": false,
+          "bytes": 2872,
+          "url": "http://localhost:1000/logo.svg"
+        },
+        {
+          "kind": "image",
+          "thirdParty": false,
+          "bytes": 2872,
+          "url": "http://localhost:1000/logo.svg"
         },
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1473,
+          "bytes": 1463,
           "url": "http://localhost:1500/build/workspaces?limit=20"
         },
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1473,
-          "url": "http://localhost:1500/chat/unread"
+          "bytes": 1418,
+          "url": "http://localhost:1500/me/inbox/unified?limit=25"
         },
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1473,
-          "url": "http://localhost:1500/organization"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1473,
-          "url": "http://localhost:1500/dashboard/stats"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1473,
-          "url": "http://localhost:1500/dashboard/today-activities"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1473,
-          "url": "http://localhost:1500/dashboard/executive"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1473,
-          "url": "http://localhost:1500/notifications?section=UNREAD&limit=20"
+          "bytes": 1418,
+          "url": "http://localhost:1500/integrations/connections"
         },
         {
           "kind": "other",
           "thirdParty": true,
           "bytes": 1418,
           "url": "http://localhost:1500/billing"
-        }
-      ]
-    },
-    "/build/inbox": {
-      "scriptBytes": 656635,
-      "stylesheetBytes": 58197,
-      "imageBytes": 2872,
-      "fontBytes": 55206,
-      "documentBytes": 10316,
-      "otherBytes": 11696,
-      "thirdPartyBytes": 2946,
-      "totalBytes": 794922,
-      "notableResources": [
-        {
-          "kind": "font",
-          "thirdParty": false,
-          "bytes": 30693,
-          "url": "http://localhost:1000/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2"
-        },
-        {
-          "kind": "font",
-          "thirdParty": false,
-          "bytes": 24513,
-          "url": "http://localhost:1000/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2"
-        },
-        {
-          "kind": "image",
-          "thirdParty": false,
-          "bytes": 2872,
-          "url": "http://localhost:1000/logo.svg"
         },
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1473,
-          "url": "http://localhost:1500/me/access"
+          "bytes": 1349,
+          "url": "http://localhost:1500/notifications/events/token"
         },
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1473,
-          "url": "http://localhost:1500/me/access"
+          "bytes": 1349,
+          "url": "http://localhost:1500/notifications/events/token"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 1203,
+          "url": "http://localhost:1500/users/stats"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 1203,
+          "url": "http://localhost:1500/leads?limit=1"
         },
         {
           "kind": "other",
           "thirdParty": true,
           "bytes": 0,
-          "url": "http://localhost:1500/me/access"
+          "url": "http://localhost:1500/notifications/unread-count"
         },
         {
           "kind": "other",
           "thirdParty": true,
           "bytes": 0,
-          "url": "http://localhost:1500/me/access"
+          "url": "http://localhost:1500/notifications/events/token"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1500/notifications/events/token"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1500/billing"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1500/organization"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1500/build/workspaces?limit=20"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1500/notifications/unread-count"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1500/organization/settings"
         }
       ]
     },
     "/crm/inbox": {
-      "scriptBytes": 684397,
-      "stylesheetBytes": 58197,
-      "imageBytes": 2872,
+      "scriptBytes": 868372,
+      "stylesheetBytes": 58191,
+      "imageBytes": 5744,
       "fontBytes": 55206,
-      "documentBytes": 11451,
-      "otherBytes": 11696,
-      "thirdPartyBytes": 2946,
-      "totalBytes": 823819,
+      "documentBytes": 21864,
+      "otherBytes": 32181,
+      "thirdPartyBytes": 11154,
+      "totalBytes": 1041558,
       "notableResources": [
         {
           "kind": "font",
@@ -701,54 +670,6 @@
           "url": "http://localhost:1000/logo.svg"
         },
         {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1473,
-          "url": "http://localhost:1500/me/access"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1473,
-          "url": "http://localhost:1500/me/access"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 0,
-          "url": "http://localhost:1500/me/access"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 0,
-          "url": "http://localhost:1500/me/access"
-        }
-      ]
-    },
-    "/support/inbox": {
-      "scriptBytes": 642705,
-      "stylesheetBytes": 58197,
-      "imageBytes": 2872,
-      "fontBytes": 55206,
-      "documentBytes": 12792,
-      "otherBytes": 11696,
-      "thirdPartyBytes": 2946,
-      "totalBytes": 783468,
-      "notableResources": [
-        {
-          "kind": "font",
-          "thirdParty": false,
-          "bytes": 30693,
-          "url": "http://localhost:1000/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2"
-        },
-        {
-          "kind": "font",
-          "thirdParty": false,
-          "bytes": 24513,
-          "url": "http://localhost:1000/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2"
-        },
-        {
           "kind": "image",
           "thirdParty": false,
           "bytes": 2872,
@@ -757,29 +678,113 @@
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1473,
-          "url": "http://localhost:1500/me/access"
+          "bytes": 2115,
+          "url": "http://localhost:1500/onboarding/module-checklists"
         },
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1473,
-          "url": "http://localhost:1500/me/access"
+          "bytes": 1463,
+          "url": "http://localhost:1500/build/workspaces?limit=20"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 1460,
+          "url": "http://localhost:1500/dashboard/executive"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 1303,
+          "url": "http://localhost:1500/dashboard/today-activities"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 1204,
+          "url": "http://localhost:1500/settings/ai-usage"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 1203,
+          "url": "http://localhost:1500/dashboard/stats"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 1203,
+          "url": "http://localhost:1500/users/stats"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 1203,
+          "url": "http://localhost:1500/leads?limit=1"
         },
         {
           "kind": "other",
           "thirdParty": true,
           "bytes": 0,
-          "url": "http://localhost:1500/me/access"
+          "url": "http://localhost:1500/billing"
         },
         {
           "kind": "other",
           "thirdParty": true,
           "bytes": 0,
-          "url": "http://localhost:1500/me/access"
+          "url": "http://localhost:1500/organization"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1500/build/workspaces?limit=20"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1500/dashboard/stats"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1500/integrations/connections"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1500/chat/unread"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1500/settings/ai-usage"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1500/leads?limit=1"
         }
       ]
     }
+  },
+  "hydration": {
+    "navigationsInspected": 30,
+    "mismatchesFound": 0,
+    "findings": [],
+    "verdict": "no React hydration mismatch was logged on any measured navigation"
+  },
+  "contentAssertion": {
+    "minWordsPerSample": 10,
+    "samplesMeasured": 30,
+    "unusableSamples": [],
+    "verdict": "every measured sample rendered real page content"
   },
   "conditions": {
     "driver": "frontend/scripts/measure-web-vitals.mjs",

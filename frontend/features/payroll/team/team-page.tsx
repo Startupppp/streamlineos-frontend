@@ -1,11 +1,13 @@
 "use client";
 
+import { useCallback } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Users, AlertTriangle, Info } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -132,7 +134,7 @@ const REWARDS_COLUMNS: DataTableColumn<TeamRewardsMember>[] = [
 ];
 
 export function TeamPayrollPageContent() {
-  const { data, isLoading } = useManagerInbox();
+  const { data, isLoading, isError, error, refetch } = useManagerInbox();
   const { data: teamRewards, isLoading: rewardsLoading } = useManagerTeamRewards();
   const approveReimb = useManagerApproveReimbursement();
   const rejectReimb = useManagerRejectReimbursement();
@@ -151,6 +153,10 @@ export function TeamPayrollPageContent() {
     rejectReimb.isPending ||
     approveLoan.isPending ||
     rejectLoan.isPending;
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   function onApproveClaim(row: ManagerPendingReimbursement) {
     approveReimb.mutate(row.id, {
@@ -181,6 +187,19 @@ export function TeamPayrollPageContent() {
       onSuccess: () => toast.success("Loan rejected"),
       onError: (err) => toast.error(getErrorMessage(err)),
     });
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Team payroll" subtitle="Direct reports — approval when permitted">
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load your team"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      </PageWrapper>
+    );
   }
 
   return (

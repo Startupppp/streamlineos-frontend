@@ -11,6 +11,7 @@ import { Form } from "@/components/ui/form";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   useAccounts,
   useCreatePurchaseBill,
@@ -211,6 +212,33 @@ export function NewPurchaseBillPage() {
 
   const vendors = clientsQuery.data?.accounts ?? [];
   const expenseAccounts = accountsQuery.data?.data ?? [];
+
+  if (vendors.length === 0 || expenseAccounts.length === 0) {
+    const noVendors = vendors.length === 0;
+    return (
+      <PageWrapper
+        title="New purchase bill"
+        subtitle="Record a vendor bill. Posting credits AP and debits the chosen expense account + Input GST."
+        backHref="/accounting/purchase-bills"
+      >
+        <EmptyState
+          className="flex-1"
+          illustrationPreset={noVendors ? "companies" : "report"}
+          title={noVendors ? "No vendors to bill" : "No expense accounts"}
+          description={
+            noVendors
+              ? "A bill needs a vendor. Add a company in CRM first, then come back here."
+              : "A bill needs an expense account to debit. Add one to your chart of accounts first."
+          }
+          action={
+            noVendors
+              ? { label: "Go to companies", href: "/crm/companies" }
+              : { label: "Go to chart of accounts", href: "/accounting/coa" }
+          }
+        />
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper

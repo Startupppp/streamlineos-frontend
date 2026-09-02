@@ -146,6 +146,12 @@ export function CustomerStatementReport() {
     void statementQuery.refetch();
   }
 
+  function handleClearFilters(): void {
+    setFrom(defaults.from);
+    setTo(defaults.to);
+    updateUrl(clientId, defaults.from, defaults.to);
+  }
+
   function handleExport(): void {
     if (!clientId) return;
     void downloadCsv(
@@ -156,6 +162,7 @@ export function CustomerStatementReport() {
   }
 
   const data = statementQuery.data;
+  const dateRangeNarrowed = from !== defaults.from || to !== defaults.to;
 
   const rows: CustomerStatementRow[] = data
     ? [
@@ -249,8 +256,15 @@ export function CustomerStatementReport() {
             emptyState={
               <EmptyState
                 illustration={<EmptyReportIllustration />}
-                title="No transactions in this period"
-                description="There are no AR transactions for this customer in the selected date range."
+                title="No transactions for this customer"
+                description={
+                  dateRangeNarrowed
+                    ? undefined
+                    : "This customer has no AR activity yet. Issue an invoice to start their statement."
+                }
+                filtersActive={dateRangeNarrowed}
+                filteredTitle="No transactions in this date range"
+                onClearFilters={handleClearFilters}
                 compact
               />
             }

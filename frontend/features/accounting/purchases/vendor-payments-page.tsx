@@ -163,6 +163,14 @@ export function VendorPaymentsPage() {
     setAllocationDialogOpen(open);
   }
 
+  function handleClearFilters(): void {
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("vendor");
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    });
+  }
+
   function handlePreviousPage(): void {
     setCursorIndex(Math.max(0, cursorIndex - 1));
   }
@@ -228,8 +236,14 @@ export function VendorPaymentsPage() {
               emptyState={
                 <EmptyState
                   illustrationPreset="tasks"
-                  title="No payments found"
-                  description="Paid and partially paid bills will appear here."
+                  title="No payments yet"
+                  description={
+                    vendorFilter !== "all"
+                      ? undefined
+                      : "Paid and partially paid bills will appear here."
+                  }
+                  filtersActive={vendorFilter !== "all"}
+                  onClearFilters={handleClearFilters}
                 />
               }
               minWidth="640px"

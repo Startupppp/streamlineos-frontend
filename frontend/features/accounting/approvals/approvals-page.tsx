@@ -259,6 +259,13 @@ export function FinanceApprovalsPage() {
     void approvalsQuery.refetch();
   }
 
+  function handleClearFilters() {
+    setStatusFilter("ALL");
+    setRecordTypeFilter("All");
+  }
+
+  const filtersActive = statusFilter !== "ALL" || recordTypeFilter !== "All";
+
   if (!canRead) {
     return (
       <PageWrapper title="Finance Approvals" subtitle="Review and approve financial transactions">
@@ -353,8 +360,14 @@ export function FinanceApprovalsPage() {
             emptyState={
               <EmptyState
                 illustration={<EmptyApprovalIllustration />}
-                title="No approvals"
-                description="There are no approval requests matching the current filters."
+                title="No approvals yet"
+                description={
+                  filtersActive
+                    ? undefined
+                    : "Requests appear here when a journal, bill, payment or expense needs a decision."
+                }
+                filtersActive={filtersActive}
+                onClearFilters={handleClearFilters}
               />
             }
             minWidth="700px"

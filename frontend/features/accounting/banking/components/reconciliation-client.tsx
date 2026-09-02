@@ -195,9 +195,20 @@ export function ReconciliationClient() {
 
               <ScrollArea hideScrollbar className="flex-1 min-h-0">
                 {displayedTxns.length === 0 ? (
-                  <div className="flex items-center justify-center h-32 text-xs text-muted-foreground">
-                    {tab === "unmatched" ? "All transactions matched!" : "No suggested matches."}
-                  </div>
+                  <EmptyState
+                    compact
+                    illustrationPreset={tab === "unmatched" ? "approval" : "search"}
+                    title={
+                      tab === "unmatched"
+                        ? "Every transaction is matched"
+                        : "No suggested matches"
+                    }
+                    description={
+                      tab === "unmatched"
+                        ? "Import a newer statement to bring in more transactions."
+                        : "Match an unmatched transaction by hand, or add a rule to suggest matches automatically."
+                    }
+                  />
                 ) : (
                   displayedTxns.map((txn) => {
                     const amount = parseFloat(txn.amount);

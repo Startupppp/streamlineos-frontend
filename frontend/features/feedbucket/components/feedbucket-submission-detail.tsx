@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { ErrorState } from "@/components/shared";
+import { EmptyState } from "@/components/ui/empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useFeedbucketSubmission,
@@ -179,8 +180,17 @@ export function FeedbucketSubmissionDetail({ submissionId }: FeedbucketSubmissio
     );
   }
 
-  if (isError || !submission) {
+  if (isError) {
     return <ErrorState description="Failed to load submission." onRetry={refetch} />;
+  }
+
+  if (!submission) {
+    return (
+      <EmptyState
+        title="Submission not found"
+        description="This feedback submission was deleted, or the link is out of date."
+      />
+    );
   }
 
   const linkedTicketId = convertedTicketId ?? submission.linkedTicketId;

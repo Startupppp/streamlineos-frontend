@@ -177,8 +177,14 @@ export function PlanningBacklogColumn({
               <EmptyState
                 compact
                 illustration={<PackageOpen className="h-8 w-8 text-muted-foreground opacity-40" />}
-                title={backlogFilters.hasActiveFilters ? "No tickets match the active filters" : "No backlog tickets"}
-                action={backlogFilters.hasActiveFilters ? { label: "Clear filters", onClick: backlogFilters.clearFilters } : undefined}
+                title="No backlog tickets"
+                description={
+                  backlogFilters.hasActiveFilters
+                    ? undefined
+                    : "Every ticket is already in a sprint."
+                }
+                filtersActive={backlogFilters.hasActiveFilters}
+                onClearFilters={backlogFilters.clearFilters}
               />
             )}
           </div>

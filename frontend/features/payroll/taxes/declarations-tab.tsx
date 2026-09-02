@@ -260,8 +260,14 @@ export function DeclarationsTab() {
         emptyState={
           <EmptyState
             illustration={<EmptyApprovalIllustration />}
-            title="No declarations found"
-            description="Declarations submitted by employees will appear here"
+            title="No declarations yet"
+            description={
+              filtersActive
+                ? undefined
+                : "Declarations submitted by employees will appear here"
+            }
+            filtersActive={filtersActive}
+            onClearFilters={handleClearFilters}
           />
         }
       />

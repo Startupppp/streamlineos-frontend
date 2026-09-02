@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-client";
 import { usePublishWorkflow, useUpdateWorkflow, useWorkflow, type Workflow } from "@/hooks/api/workflows";
@@ -124,10 +125,12 @@ function BuilderErrorState({ error, onRetry, onBack }: { error: unknown; onRetry
 function BuilderNotFoundState({ onBack }: { onBack: () => void }) {
   return (
     <div className="flex-1 flex items-center justify-center bg-background h-full">
-      <div className="text-center space-y-3">
-        <p className="text-sm font-medium text-foreground">Workflow not found</p>
-        <Button variant="outline" size="sm" onClick={onBack}>Back to Workflows</Button>
-      </div>
+      <EmptyState
+        illustrationPreset="automations"
+        title="Workflow not found"
+        description="This workflow was deleted, or the link is out of date."
+        action={{ label: "Back to Workflows", onClick: onBack }}
+      />
     </div>
   );
 }

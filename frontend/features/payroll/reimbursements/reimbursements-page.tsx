@@ -93,6 +93,17 @@ export function ReimbursementsPageContent() {
     updateParam("category", value);
   }
 
+  function handleClearFilters() {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("month");
+    params.delete("status");
+    params.delete("category");
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }
+
+  const filtersActive =
+    month !== getCurrentMonth() || status !== "all" || category !== "all";
+
   function makeApproveHandler(id: number) {
     function handleApprove() {
       processReimbursement.mutate(
@@ -274,8 +285,14 @@ export function ReimbursementsPageContent() {
             emptyState={
               <EmptyState
                 illustration={<EmptyExpensesIllustration />}
-                title="No claims found"
-                description="No reimbursement claims match the current filters."
+                title="No claims yet"
+                description={
+                  filtersActive
+                    ? undefined
+                    : "Expense claims submitted by employees will appear here."
+                }
+                filtersActive={filtersActive}
+                onClearFilters={handleClearFilters}
               />
             }
           />

@@ -3,19 +3,15 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import {
-  Shield,
-  Calendar,
-  Users,
-  AlertTriangle,
-  RefreshCw,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Shield, Calendar, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { RoleEditorSkeleton } from "@/features/settings/roles/role-editor-skeleton";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { PermissionMatrix } from "@/components/rbac/permission-matrix";
@@ -52,32 +48,37 @@ function RoleEditorContent({ roleId: roleIdParam }: RoleDetailPageProps) {
     return <RoleEditorSkeleton />;
   }
 
-  if (roleQuery.isError || !roleQuery.data) {
+  if (roleQuery.isError) {
     return (
       <PageWrapper
-        title="Role not found"
+        title="Role"
         subtitle="This role could not be loaded."
         backHref="/settings/roles"
         backLabel="Back to Roles"
       >
-        <div className="flex flex-col items-center justify-center flex-1 py-20 gap-4 text-center">
-          <AlertTriangle className="h-10 w-10 text-muted-foreground" />
-          <div>
-            <p className="text-sm font-medium text-foreground">Role not found</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              The role you are looking for does not exist or you do not have access.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={handleRetry} className="gap-2">
-              <RefreshCw className="h-4 w-4" />
-              Retry
-            </Button>
-            <Button variant="outline" onClick={handleBack} className="gap-2">
-              Back to Roles
-            </Button>
-          </div>
-        </div>
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load this role"
+          description={getErrorMessage(roleQuery.error)}
+          onRetry={handleRetry}
+        />
+      </PageWrapper>
+    );
+  }
+
+  if (!roleQuery.data) {
+    return (
+      <PageWrapper
+        title="Role not found"
+        backHref="/settings/roles"
+        backLabel="Back to Roles"
+      >
+        <EmptyState
+          illustrationPreset="security"
+          title="Role not found"
+          description="This role does not exist, or you do not have access to it."
+          action={{ label: "Back to Roles", onClick: handleBack }}
+        />
       </PageWrapper>
     );
   }

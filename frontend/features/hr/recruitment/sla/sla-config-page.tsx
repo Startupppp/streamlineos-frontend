@@ -18,8 +18,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared/error-state";
 import { toast } from "sonner";
-import { Pencil, Clock, AlertCircle } from "lucide-react";
+import { Pencil, Clock } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -152,7 +153,7 @@ function buildSlaColumns(
 }
 
 export function SlaConfigPage() {
-  const { data: slas, isLoading, isError, refetch } = useInterviewSlas();
+  const { data: slas, isLoading, isError, error, refetch } = useInterviewSlas();
   const upsertSla = useUpsertInterviewSla();
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -269,13 +270,13 @@ export function SlaConfigPage() {
         </CardHeader>
         <CardContent className="p-0">
           {isError ? (
-            <div className="flex flex-col items-center justify-center gap-3 py-12">
-              <AlertCircle className="w-8 text-destructive/60" />
-              <p className="text-sm text-muted-foreground">Failed to load SLA configuration.</p>
-              <Button variant="outline" size="sm" onClick={handleRetry}>
-                Try again
-              </Button>
-            </div>
+            <ErrorState
+              compact
+              className="m-4"
+              title="Couldn't load SLA configuration"
+              description={getErrorMessage(error)}
+              onRetry={handleRetry}
+            />
           ) : (
             <DataTable<SlaRow>
               data={CANDIDATE_STAGES.map((stage) => ({ stage, existing: slaByStage.get(stage) }))}

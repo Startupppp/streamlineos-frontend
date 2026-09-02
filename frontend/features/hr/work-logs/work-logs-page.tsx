@@ -230,10 +230,7 @@ export function WorkLogsPage() {
     [searchTerm, logs, filters.month, filters.dateFrom, filters.dateTo],
   );
 
-  const hasSearchResults = useMemo(() => {
-    if (!searchTerm.trim()) return true;
-    return days.some(filterDay);
-  }, [days, filterDay, searchTerm]);
+  const hasVisibleDays = useMemo(() => days.some(filterDay), [days, filterDay]);
 
   const handleExportWorkLogs = useCallback(async () => {
     const leaveRequests = (
@@ -274,7 +271,22 @@ export function WorkLogsPage() {
   );
 
   function handleRetryWorkLogs() { void refetch(); }
-  const handleClearSearch = useCallback(() => setSearchTerm(""), []);
+
+  const handleClearDayFilters = useCallback(() => {
+    setSearchTerm("");
+    setDraftFilters((prev) => ({
+      ...prev,
+      month: undefined,
+      dateFrom: undefined,
+      dateTo: undefined,
+    }));
+    setFilters((prev) => ({
+      ...prev,
+      month: undefined,
+      dateFrom: undefined,
+      dateTo: undefined,
+    }));
+  }, [setFilters]);
 
   const subtitle = selectedUserId
     ? (() => {
@@ -307,8 +319,8 @@ export function WorkLogsPage() {
           <WorkLogLoadingCard />
         ) : isError ? (
           <WorkLogErrorCard onRetry={handleRetryWorkLogs} />
-        ) : !hasSearchResults ? (
-          <WorkLogNoResultsCard searchTerm={searchTerm} onClear={handleClearSearch} />
+        ) : !hasVisibleDays ? (
+          <WorkLogNoResultsCard searchTerm={searchTerm} onClear={handleClearDayFilters} />
         ) : (
           <div className="space-y-3">
             {!isLoading && logs && totalHours > 0 && (

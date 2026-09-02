@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useCallback, useState, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
@@ -85,6 +85,14 @@ export function LoansTable() {
       ? all.filter((l) => l.status === statusFilter)
       : all;
   }, [loans, statusFilter]);
+
+  const filtersActive = statusFilter !== SENTINEL;
+
+  const handleClearFilters = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("status");
+    router.replace(`?${params.toString()}`);
+  }, [router, searchParams]);
 
   function handleStatusChange(value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -178,7 +186,13 @@ export function LoansTable() {
             <EmptyState
               illustration={<EmptyPersonIllustration />}
               title="No active loans"
-              description="Employee salary loans and advances will appear here"
+              description={
+                filtersActive
+                  ? undefined
+                  : "Employee salary loans and advances will appear here"
+              }
+              filtersActive={filtersActive}
+              onClearFilters={handleClearFilters}
             />
           }
         />

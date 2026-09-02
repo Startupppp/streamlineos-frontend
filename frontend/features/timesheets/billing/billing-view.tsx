@@ -172,6 +172,16 @@ export function BillingView() {
   const handleInvoiceOpen = useCallback(() => setInvoiceOpen(true), []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
+  const filtersActive =
+    parsedProjectId !== null ||
+    startDate !== DEFAULT_START ||
+    endDate !== DEFAULT_END;
+
+  const handleClearFilters = useCallback(
+    () => updateParams({ startDate: null, endDate: null, projectId: null }),
+    [updateParams],
+  );
+
   const totalsAmountLabel = totals
     ? totals.mixed
       ? totals.byCurrency.map((c) => formatCurrencyForBilling(c.amount, c.currency)).join(" + ")
@@ -195,7 +205,13 @@ export function BillingView() {
     <EmptyState
       illustration={<EmptyReportIllustration className="h-32 w-32" />}
       title="No uninvoiced billable hours"
-      description="All billable hours for this period have been invoiced."
+      description={
+        filtersActive
+          ? undefined
+          : "All billable hours for this period have been invoiced."
+      }
+      filtersActive={filtersActive}
+      onClearFilters={handleClearFilters}
     />
   );
 

@@ -16,6 +16,7 @@ import { formatClientDeviceLabel } from "@/lib/format-utils";
 import { useLoginHistory } from "@/hooks/api/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 
 function getDeviceIcon(session: { os: string | null; platform: string | null }) {
   const label = `${session.os ?? ""} ${session.platform ?? ""}`.toLowerCase();
@@ -160,7 +161,12 @@ function SessionsSection() {
           className="mt-3"
         />
       ) : !sessions?.length ? (
-        <p className="text-xs text-muted-foreground text-center py-4">No active sessions found.</p>
+        <EmptyState
+          compact
+          illustrationPreset="security"
+          title="No active sessions"
+          description="Signed-in devices appear here. Sign in on another device to see it listed."
+        />
       ) : (
         <div className="space-y-2">
           {sessions.map((s) => (
@@ -241,9 +247,12 @@ function RecentSignInsSection() {
             className="mt-3"
           />
         ) : entries.length === 0 ? (
-          <p className="py-4 text-center text-xs text-muted-foreground">
-            No sign-in activity has been recorded yet.
-          </p>
+          <EmptyState
+            compact
+            illustrationPreset="security"
+            title="No sign-in activity yet"
+            description="Successful and failed access attempts are recorded here as they happen."
+          />
         ) : (
           entries.map((entry) => <SignInRow key={entry.id} entry={entry} />)
         )}

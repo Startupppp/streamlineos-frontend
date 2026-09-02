@@ -1,0 +1,158 @@
+import { Component, type ReactNode } from "react";
+import { render, screen, waitFor } from "@testing-library/react";
+import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
+import { createAppQueryClient } from "@/components/providers/query-provider";
+import { ApiError } from "@/lib/api-envelope";
+import { queryKeys } from "@/lib/query-keys";
+import { authenticatedScope } from "@/lib/query-scope";
+import type { AccessResponse } from "@/types/access";
+import { CompOffPageClient } from "@/features/hr/overtime/comp-off-page-client";
+import { UserStatsCards } from "@/features/users/user-stats-cards";
+
+/**
+ * The shape this pins: a read that fails reaches a surface as `data === undefined`,
+ * which every one of these screens spells `?? 0`. Without the provider's
+ * `throwOnError` the user is told, in the largest type on the page, that they have
+ * earned 0.0 days of comp-off and that the organization has 0 users.
+ */
+
+const ORG_ID = "org-1";
+const USER_ID = "user-1";
+
+jest.mock("next-auth/react", () => ({
+  useSession: () => ({
+    data: { orgId: "org-1", user: { id: "user-1" } },
+    status: "authenticated",
+  }),
+}));
+
+jest.mock("@/lib/api-client", () => ({
+  apiClient: {
+    get: jest.fn(),
+    post: jest.fn(),
+  },
+  isApiError: (error: unknown) => error instanceof Error && error.name === "ApiError",
+}));
+
+import { apiClient } from "@/lib/api-client";
+
+const mockedGet = apiClient.get as jest.MockedFunction<typeof apiClient.get>;
+
+const ACCESS: AccessResponse = {
+  scopes: { "hr:attendance:view": "all", "settings:view": "all" },
+  isOrgOwner: false,
+  canManageOrganizationMembership: false,
+  modules: { hr: true },
+};
+
+class RouteErrorBoundaryProbe extends Component<
+  { children: ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  render() {
+    if (this.state.failed) return <p>route error boundary</p>;
+    return this.props.children;
+  }
+}
+
+function clientWithPolicy(): QueryClient {
+  const client = createAppQueryClient(authenticatedScope(ORG_ID, USER_ID));
+  const defaults = client.getDefaultOptions();
+  client.setDefaultOptions({
+    ...defaults,
+    queries: { ...defaults.queries, retry: false },
+  });
+  client.setQueryData(queryKeys.access.me(), ACCESS);
+  return client;
+}
+
+/** The provider exactly as it stood before this ticket: no `throwOnError` at all. */
+function clientWithoutPolicy(): QueryClient {
+  const client = clientWithPolicy();
+  const defaults = client.getDefaultOptions();
+  client.setDefaultOptions({
+    ...defaults,
+    queries: { ...defaults.queries, throwOnError: undefined },
+  });
+  return client;
+}
+
+function renderUnderBoundary(ui: ReactNode, client: QueryClient) {
+  return render(
+    <QueryClientProvider client={client}>
+      <RouteErrorBoundaryProbe>{ui}</RouteErrorBoundaryProbe>
+    </QueryClientProvider>,
+  );
+}
+
+let consoleError: jest.SpyInstance;
+
+beforeEach(() => {
+  mockedGet.mockReset();
+  mockedGet.mockRejectedValue(new ApiError("Internal server error", 500));
+  consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+});
+
+afterEach(() => {
+  consoleError.mockRestore();
+});
+
+describe("a 500 on /hr/overtime/comp-off", () => {
+  it("was rendered as a confident 0.0 days earned", async () => {
+    renderUnderBoundary(<CompOffPageClient />, clientWithoutPolicy());
+
+    expect(await screen.findByText("0.0")).toBeInTheDocument();
+    expect(screen.getByText("days earned")).toBeInTheDocument();
+    expect(screen.queryByText("route error boundary")).not.toBeInTheDocument();
+  });
+
+  it("reaches the error boundary instead", async () => {
+    renderUnderBoundary(<CompOffPageClient />, clientWithPolicy());
+
+    expect(await screen.findByText("route error boundary")).toBeInTheDocument();
+    expect(screen.queryByText("days earned")).not.toBeInTheDocument();
+  });
+});
+
+describe("a 500 on /users/stats", () => {
+  it("was rendered as five confident zeroes", async () => {
+    renderUnderBoundary(<UserStatsCards />, clientWithoutPolicy());
+
+    await waitFor(() =>
+      expect(screen.getByText("Total Users")).toBeInTheDocument(),
+    );
+    expect(screen.getAllByText("0").length).toBeGreaterThanOrEqual(5);
+    expect(screen.queryByText("route error boundary")).not.toBeInTheDocument();
+  });
+
+  it("reaches the error boundary instead", async () => {
+    renderUnderBoundary(<UserStatsCards />, clientWithPolicy());
+
+    expect(await screen.findByText("route error boundary")).toBeInTheDocument();
+    expect(screen.queryByText("Total Users")).not.toBeInTheDocument();
+  });
+});
+
+describe("a screen that already loaded", () => {
+  it("survives a failed background refresh rather than being replaced by an error", async () => {
+    const client = clientWithPolicy();
+    client.setQueryData(queryKeys.hr.compOff(), [
+      { orgId: ORG_ID, userId: USER_ID, earnedDays: "3.5" },
+    ]);
+
+    renderUnderBoundary(<CompOffPageClient />, client);
+
+    expect(await screen.findByText("3.5")).toBeInTheDocument();
+
+    await client.refetchQueries({ queryKey: queryKeys.hr.compOff() });
+
+    await waitFor(() => expect(screen.getByText("3.5")).toBeInTheDocument());
+    expect(screen.queryByText("route error boundary")).not.toBeInTheDocument();
+  });
+});

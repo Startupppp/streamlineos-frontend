@@ -185,6 +185,7 @@ export function BudgetsPage() {
 
   const items = query.data?.data ?? [];
   const hasMore = query.data?.pagination.hasMore ?? false;
+  const filtersActive = statusFilter !== "ALL" || fiscalYear.trim() !== "";
 
   function handleStatusFilterChange(value: string): void {
     if (isStatusFilter(value)) {
@@ -202,6 +203,13 @@ export function BudgetsPage() {
 
   function handleRetry(): void {
     void query.refetch();
+  }
+
+  function handleClearFilters(): void {
+    setStatusFilter("ALL");
+    setFiscalYear("");
+    setCursors([null]);
+    setCursorIndex(0);
   }
 
   function handleRowClick(row: BudgetSummary): void {
@@ -302,7 +310,18 @@ export function BudgetsPage() {
                 <EmptyState
                   illustration={<EmptyReportIllustration />}
                   title="No budgets yet"
-                  description="Create a budget to start tracking planned vs actual spend."
+                  description={
+                    filtersActive
+                      ? undefined
+                      : "Create a budget to start tracking planned vs actual spend."
+                  }
+                  filtersActive={filtersActive}
+                  onClearFilters={handleClearFilters}
+                  action={
+                    canCreate && !filtersActive
+                      ? { label: "New Budget", onClick: handleOpenCreate }
+                      : undefined
+                  }
                 />
               }
               minWidth="700px"

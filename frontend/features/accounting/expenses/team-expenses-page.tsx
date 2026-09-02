@@ -59,12 +59,25 @@ export function TeamExpensesPage() {
     setPage(1);
   }, []);
 
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setStatus("ALL");
+    setStartDate("");
+    setEndDate("");
+    setPage(1);
+  }, []);
+
   function handleRetry(): void {
     void query.refetch();
   }
 
   const expenses = query.data?.expenses ?? [];
   const pagination = query.data?.pagination;
+  const filtersActive =
+    search.trim() !== "" ||
+    status !== "ALL" ||
+    startDate !== "" ||
+    endDate !== "";
 
   return (
     <PageWrapper
@@ -109,8 +122,14 @@ export function TeamExpensesPage() {
             emptyState={
               <EmptyState
                 illustration={<EmptyExpensesIllustration />}
-                title="No expenses found"
-                description="Employee expenses will appear here once submitted."
+                title="No expenses yet"
+                description={
+                  filtersActive
+                    ? undefined
+                    : "Employee expenses will appear here once submitted."
+                }
+                filtersActive={filtersActive}
+                onClearFilters={handleClearFilters}
               />
             }
           />

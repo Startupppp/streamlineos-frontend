@@ -3,11 +3,14 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Users, DollarSign, Calendar } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import {
   useWorkforceCostSummary,
@@ -26,9 +29,13 @@ export function WorkforceCostPage() {
   const [periodKey, setPeriodKey] = useState(`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`);
   const [periodInput, setPeriodInput] = useState(periodKey);
 
-  const { data: summary, isLoading: summaryLoading } = useWorkforceCostSummary();
-  const { data: byDept, isLoading: deptLoading } = useCostByDepartment(periodKey);
-  const { data: byLoc, isLoading: locLoading } = useCostByLocation();
+  const { data: summary, isLoading: summaryLoading, isError: summaryIsError, error: summaryError, refetch: refetchSummary } = useWorkforceCostSummary();
+  const { data: byDept, isLoading: deptLoading, isError: deptIsError, error: deptError, refetch: refetchDept } = useCostByDepartment(periodKey);
+  const { data: byLoc, isLoading: locLoading, isError: locIsError, error: locError, refetch: refetchLoc } = useCostByLocation();
+
+  function handleRetrySummary() { void refetchSummary(); }
+  function handleRetryDept() { void refetchDept(); }
+  function handleRetryLoc() { void refetchLoc(); }
 
   if (!canView) {
     return (
@@ -51,6 +58,13 @@ export function WorkforceCostPage() {
       >
         {summaryLoading ? (
           <StatCardGridSkeleton cols={3} />
+        ) : summaryIsError ? (
+          <ErrorState
+            title="Couldn't load workforce cost summary"
+            description={getErrorMessage(summaryError)}
+            onRetry={handleRetrySummary}
+            compact
+          />
         ) : (
           <StatCardGrid cols={3}>
             <StatCard label="Total Headcount" value={String(summary?.total_headcount ?? "—")} hint="Active employees" icon={Users} tone="blue" />
@@ -76,8 +90,20 @@ export function WorkforceCostPage() {
             <p className="text-sm font-semibold mb-3">Cost by Department</p>
             {deptLoading ? (
               <div className="space-y-2">{Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-10 rounded-lg" />)}</div>
+            ) : deptIsError ? (
+              <ErrorState
+                title="Couldn't load cost by department"
+                description={getErrorMessage(deptError)}
+                onRetry={handleRetryDept}
+                compact
+              />
             ) : !byDept?.length ? (
-              <p className="text-sm text-muted-foreground text-center py-8">No department cost data</p>
+              <EmptyState
+                illustrationPreset="chart"
+                title="No department cost data"
+                description="Cost by department appears once employees have compensation recorded for this period."
+                compact
+              />
             ) : (
               <div className="space-y-2">
                 {byDept.map((row, i) => (
@@ -97,8 +123,20 @@ export function WorkforceCostPage() {
             <p className="text-sm font-semibold mb-3">Cost by Location</p>
             {locLoading ? (
               <div className="space-y-2">{Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-10 rounded-lg" />)}</div>
+            ) : locIsError ? (
+              <ErrorState
+                title="Couldn't load cost by location"
+                description={getErrorMessage(locError)}
+                onRetry={handleRetryLoc}
+                compact
+              />
             ) : !byLoc?.length ? (
-              <p className="text-sm text-muted-foreground text-center py-8">No location cost data</p>
+              <EmptyState
+                illustrationPreset="chart"
+                title="No location cost data"
+                description="Cost by location appears once employees are assigned to locations."
+                compact
+              />
             ) : (
               <div className="space-y-2">
                 {byLoc.map((row, i) => (

@@ -310,6 +310,16 @@ export function PurchaseBillsPage() {
     void query.refetch();
   }
 
+  function handleClearFilters(): void {
+    setSearchInput("");
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("q");
+      params.delete("status");
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    });
+  }
+
   function handlePreviousPage(): void {
     setCursorIndex(Math.max(0, cursorIndex - 1));
   }
@@ -327,6 +337,7 @@ export function PurchaseBillsPage() {
   const items = query.data?.data ?? [];
   const hasMore = query.data?.pagination?.hasMore ?? false;
   const columns = buildColumns(canApprove);
+  const filtersActive = searchInput.trim() !== "" || statusParam !== "ALL";
 
   return (
     <PageWrapper
@@ -380,8 +391,18 @@ export function PurchaseBillsPage() {
                 <EmptyState
                   illustration={<EmptyExpensesIllustration />}
                   title="No purchase bills yet"
-                  description="Record a vendor bill to start tracking accounts payable."
-                  action={{ label: "New bill", href: "/accounting/purchase-bills/new" }}
+                  description={
+                    filtersActive
+                      ? undefined
+                      : "Record a vendor bill to start tracking accounts payable."
+                  }
+                  filtersActive={filtersActive}
+                  onClearFilters={handleClearFilters}
+                  action={
+                    canManage && !filtersActive
+                      ? { label: "New bill", href: "/accounting/purchase-bills/new" }
+                      : undefined
+                  }
                 />
               }
             />

@@ -109,7 +109,7 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
     suiteId: suiteFilter !== "all" ? Number(suiteFilter) : undefined,
   };
 
-  const { data: cases, isLoading, isError, refetch } = useTestCases(projectId, filters);
+  const { data: cases, isLoading, isError, error, refetch } = useTestCases(projectId, filters);
   const { data: suites } = useTestSuites(projectId);
   const deleteCase = useDeleteTestCase();
 
@@ -148,6 +148,13 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const filtersActive = search.trim() !== "" || suiteFilter !== "all";
+
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setSuiteFilter("all");
+  }, []);
 
   const columns = useMemo<DataTableColumn<TestCase>[]>(() => [
     {
@@ -216,7 +223,15 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
   ], [canManage, handleEdit]);
 
   if (isLoading) return <DataTableSkeleton rows={12} columns={5} className="flex-1" />;
-  if (isError) return <ErrorState onRetry={handleRetry} />;
+  if (isError)
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load test cases"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col space-y-3">
@@ -246,8 +261,14 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
         <EmptyState
           illustrationPreset="ticket"
           title="No test cases"
-          description="Create a test case to get started."
-          action={canManage ? { label: "New Test Case", onClick: handleNewCase } : undefined}
+          description={filtersActive ? undefined : "Create a test case to get started."}
+          filtersActive={filtersActive}
+          onClearFilters={handleClearFilters}
+          action={
+            !filtersActive && canManage
+              ? { label: "New Test Case", onClick: handleNewCase }
+              : undefined
+          }
           className="min-h-[32dvh] flex-1"
         />
       ) : (

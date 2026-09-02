@@ -157,6 +157,16 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
     setCursorHistory([undefined]);
   }, []);
 
+  const filtersActive =
+    search.trim() !== "" || statusFilter !== "ALL" || departmentFilter !== "ALL";
+
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setStatusFilter("ALL");
+    setDepartmentFilter("ALL");
+    setCursorHistory([undefined]);
+  }, []);
+
   const handlePreviousPage = useCallback(() => {
     setCursorHistory((history) =>
       history.length > 1 ? history.slice(0, -1) : history,
@@ -290,12 +300,10 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
         ) : entries.length === 0 ? (
           <EmptyState
             illustrationPreset="team"
-            title="No teammates match"
-            description={
-              search || statusFilter !== "ALL" || departmentFilter !== "ALL"
-                ? "Try clearing search or filters."
-                : "No team attendance data for today yet."
-            }
+            title="No team attendance yet"
+            description={filtersActive ? undefined : "No team attendance data for today yet."}
+            filtersActive={filtersActive}
+            onClearFilters={handleClearFilters}
             compact
           />
         ) : (

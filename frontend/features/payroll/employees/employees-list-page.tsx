@@ -75,6 +75,13 @@ export function EmployeesListPage() {
     updateParams({ page: String(val) });
   }
 
+  function handleClearFilters() {
+    updateParams({ search: "", workerType: "all", status: "all", page: "1" });
+  }
+
+  const filtersActive =
+    search.trim() !== "" || workerType !== "all" || status !== "all";
+
   const { data, isLoading, isError, error, refetch } = useEmployeeProfiles({
     page,
     limit: 20,
@@ -264,7 +271,16 @@ export function EmployeesListPage() {
             <EmptyState
               illustration={<EmptyPersonIllustration />}
               title="No salary profiles"
-              description={workforceLabel.emptyDescription}
+              description={
+                filtersActive ? undefined : workforceLabel.emptyDescription
+              }
+              filtersActive={filtersActive}
+              onClearFilters={handleClearFilters}
+              action={
+                canUpdate && !filtersActive
+                  ? { label: "Add salary", onClick: handleAddOpen }
+                  : undefined
+              }
             />
           }
         />

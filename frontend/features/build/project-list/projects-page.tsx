@@ -35,6 +35,7 @@ import {
 import { fadeUp, fadeUpReduced } from "@/lib/motion-presets";
 import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { ProjectListItem } from "@/types/projects/projects";
 import type {
   ProjectOrderBy,
@@ -275,22 +276,21 @@ export function ProjectsPage({ pmWorkspaceId }: ProjectsPageProps) {
     [updateParams],
   );
 
-  const handleClearFilters = useCallback(
-    () =>
-      updateParams({
-        q: null,
-        page: null,
-        filterLead: null,
-        filterStatus: null,
-        filterHealth: null,
-      }),
-    [updateParams],
-  );
+  const handleClearFilters = useCallback(() => {
+    setActiveGroup(null);
+    updateParams({
+      q: null,
+      page: null,
+      filterLead: null,
+      filterStatus: null,
+      filterHealth: null,
+    });
+  }, [updateParams]);
 
   const apiStatus =
     activeFilters.status ?? (prefs.showClosed ? undefined : undefined);
 
-  const { data, isLoading, isError, refetch } = useProjects({
+  const { data, isLoading, isError, error, refetch } = useProjects({
     page,
     limit: viewMode === "grid" ? 12 : 25,
     search: debouncedSearch || undefined,
@@ -338,6 +338,8 @@ export function ProjectsPage({ pmWorkspaceId }: ProjectsPageProps) {
 
   const hasFiltersOrSearch =
     Boolean(debouncedSearch) || Object.values(activeFilters).some(Boolean);
+
+  const filtersActive = hasFiltersOrSearch || activeGroup !== null;
 
   return (
     <RequireModule module="build">
@@ -395,6 +397,8 @@ export function ProjectsPage({ pmWorkspaceId }: ProjectsPageProps) {
           ) : isError ? (
             <PmPanel className="flex flex-1 items-center justify-center">
               <ErrorState
+                title="Couldn't load projects"
+                description={getErrorMessage(error)}
                 onRetry={handleRetry}
                 className="border-0 bg-transparent"
               />
@@ -406,11 +410,14 @@ export function ProjectsPage({ pmWorkspaceId }: ProjectsPageProps) {
               className={PM_FILL_PANEL}
               illustration={<EmptySearchIllustration className="h-28 w-28" />}
               title="No projects match your filters"
-              description="Try adjusting the search or filters."
-              action={{
-                label: "Clear all filters",
-                onClick: handleClearFilters,
-              }}
+              description={filtersActive ? undefined : "Try adjusting the search or filters."}
+              filtersActive={filtersActive}
+              onClearFilters={handleClearFilters}
+              action={
+                filtersActive
+                  ? undefined
+                  : { label: "Clear all filters", onClick: handleClearFilters }
+              }
             />
           ) : viewMode === "grid" ? (
             <div role="list" aria-label="Projects grid">

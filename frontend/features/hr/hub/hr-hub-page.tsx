@@ -11,6 +11,7 @@ import {
   RefreshCcw,
 } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   HrHero,
   HrPageContent,
@@ -87,6 +88,8 @@ export function HrHubPage() {
     [access],
   );
 
+  const hasAnyPanel = Object.values(access).some(Boolean);
+
   return (
     <PageWrapper
       title="HR"
@@ -136,6 +139,15 @@ export function HrHubPage() {
                 Retry
               </button>
             </div>
+          ) : null}
+
+          {!hub.isLoading && !hub.isError && !hasAnyPanel ? (
+            <EmptyState
+              className="flex-1"
+              illustrationPreset="team"
+              title="No HR panels available to you"
+              description="Your access doesn't include any of this hub's sections yet. Ask an administrator to grant the HR permissions you need."
+            />
           ) : null}
 
           <HrHubQueues

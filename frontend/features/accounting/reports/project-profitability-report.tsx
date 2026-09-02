@@ -47,6 +47,14 @@ export function ProjectProfitabilityReport() {
     void refetch();
   }
 
+  function handleClearFilters(): void {
+    setFrom(defaults.from);
+    setTo(defaults.to);
+    updateUrl(defaults.from, defaults.to);
+  }
+
+  const filtersActive = from !== defaults.from || to !== defaults.to;
+
   function handleExport(): void {
     void downloadCsv(
       "/accounting/reports/project-profitability/export",
@@ -93,8 +101,15 @@ export function ProjectProfitabilityReport() {
         ) : !data || data.length === 0 ? (
           <EmptyState
             illustration={<EmptyReportIllustration />}
-            title="No project data"
-            description="No project profitability data found for the selected period."
+            title="No project data yet"
+            description={
+              filtersActive
+                ? undefined
+                : "Tag journal lines and expenses with a project to see profitability here."
+            }
+            filtersActive={filtersActive}
+            filteredTitle="No project data in this date range"
+            onClearFilters={handleClearFilters}
             compact
           />
         ) : (

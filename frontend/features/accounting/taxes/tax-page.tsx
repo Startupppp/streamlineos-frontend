@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { ErrorState } from "@/components/shared";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Money } from "@/features/accounting/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -273,7 +274,13 @@ export function TaxPage() {
             </CardHeader>
             <CardContent className="px-4 pb-3">
               {recentPayments.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4 text-center">No recent payments</p>
+                <EmptyState
+                  compact
+                  illustrationPreset="payroll"
+                  title="No tax payments recorded"
+                  description="Record a GST or TDS payment to see it here."
+                  action={{ label: "Record a payment", href: "/accounting/taxes/payments" }}
+                />
               ) : (
                 recentPayments.map((payment) => (
                   <RecentPaymentRow key={payment.id} payment={payment} />

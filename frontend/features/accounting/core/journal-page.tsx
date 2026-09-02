@@ -161,6 +161,18 @@ function EntriesTab() {
     void query.refetch();
   }
 
+  function handleClearFilters(): void {
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("from");
+      params.delete("to");
+      params.delete("sourceType");
+      params.delete("status");
+      params.delete("cursor");
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    });
+  }
+
   function handlePreviousPage(): void {
     setCursorIndex(Math.max(0, cursorIndex - 1));
   }
@@ -225,17 +237,22 @@ function EntriesTab() {
     },
   ];
 
+  const filtersActive =
+    from !== "" || to !== "" || sourceType !== "ALL" || statusFilter !== "ALL";
+
   const emptyStateNode = (
     <EmptyState
       illustration={<EmptyDocumentsIllustration />}
       title="No journal entries yet"
       description={
-        statusFilter !== "ALL" || sourceType !== "ALL"
-          ? "Try different filters."
+        filtersActive
+          ? undefined
           : "Entries appear once invoices, payments, or manual journals post."
       }
+      filtersActive={filtersActive}
+      onClearFilters={handleClearFilters}
       action={
-        canCreate
+        canCreate && !filtersActive
           ? { label: "New entry", href: "/accounting/journal/new" }
           : undefined
       }

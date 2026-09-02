@@ -47,6 +47,14 @@ export function DepartmentProfitabilityReport() {
     void refetch();
   }
 
+  function handleClearFilters(): void {
+    setFrom(defaults.from);
+    setTo(defaults.to);
+    updateUrl(defaults.from, defaults.to);
+  }
+
+  const filtersActive = from !== defaults.from || to !== defaults.to;
+
   function handleExport(): void {
     void downloadCsv(
       "/accounting/reports/department-profitability/export",
@@ -93,8 +101,15 @@ export function DepartmentProfitabilityReport() {
         ) : !data || data.length === 0 ? (
           <EmptyState
             illustration={<EmptyReportIllustration />}
-            title="No department data"
-            description="No department profitability data found for the selected period."
+            title="No department data yet"
+            description={
+              filtersActive
+                ? undefined
+                : "Tag journal lines with a department to see profitability here."
+            }
+            filtersActive={filtersActive}
+            filteredTitle="No department data in this date range"
+            onClearFilters={handleClearFilters}
             compact
           />
         ) : (

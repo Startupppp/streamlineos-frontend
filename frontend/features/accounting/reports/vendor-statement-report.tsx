@@ -146,6 +146,12 @@ export function VendorStatementReport() {
     void statementQuery.refetch();
   }
 
+  function handleClearFilters(): void {
+    setFrom(defaults.from);
+    setTo(defaults.to);
+    updateUrl(vendorId, defaults.from, defaults.to);
+  }
+
   function handleExport(): void {
     if (!vendorId) return;
     void downloadCsv(
@@ -156,6 +162,7 @@ export function VendorStatementReport() {
   }
 
   const data = statementQuery.data;
+  const dateRangeNarrowed = from !== defaults.from || to !== defaults.to;
 
   const rows: VendorStatementRow[] = data
     ? [
@@ -249,8 +256,15 @@ export function VendorStatementReport() {
             emptyState={
               <EmptyState
                 illustration={<EmptyReportIllustration />}
-                title="No transactions in this period"
-                description="There are no AP transactions for this vendor in the selected date range."
+                title="No transactions for this vendor"
+                description={
+                  dateRangeNarrowed
+                    ? undefined
+                    : "This vendor has no AP activity yet. Record a bill to start their statement."
+                }
+                filtersActive={dateRangeNarrowed}
+                filteredTitle="No transactions in this date range"
+                onClearFilters={handleClearFilters}
                 compact
               />
             }

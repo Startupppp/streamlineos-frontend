@@ -8,6 +8,8 @@ import { PlusIcon, Trash2Icon, SendIcon, ActivityIcon } from "@animateicons/reac
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
@@ -150,7 +152,7 @@ function WebhookRow({
 }
 
 export function WebhooksSection() {
-  const { data: subscriptions, isLoading } = useHrWebhooks();
+  const { data: subscriptions, isLoading, isError, error, refetch } = useHrWebhooks();
   const [upsertOpen, setUpsertOpen] = useState(false);
   const [editing, setEditing] = useState<HrWebhookSubscription | undefined>(undefined);
   const [deliveriesSub, setDeliveriesSub] = useState<HrWebhookSubscription | undefined>(undefined);
@@ -169,6 +171,10 @@ export function WebhooksSection() {
     setUpsertOpen(open);
     if (!open) setEditing(undefined);
   }, []);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   return (
     <div className="space-y-3">
@@ -192,14 +198,21 @@ export function WebhooksSection() {
               <Skeleton key={i} className="h-14 w-full rounded-md" />
             ))}
           </div>
+        ) : isError ? (
+          <ErrorState
+            title="Couldn't load webhooks"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+            compact
+          />
         ) : !subscriptions || subscriptions.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center text-sm text-muted-foreground">
-            <p>No webhooks configured yet.</p>
-            <Button size="sm" variant="ghost" onClick={handleNew} className="mt-3 gap-1.5">
-              <PlusIcon size={14} />
-              Add your first webhook
-            </Button>
-          </div>
+          <EmptyState
+            illustrationPreset="automations"
+            title="No webhooks configured"
+            description="Add a webhook to receive signed HTTPS payloads for HR events."
+            action={{ label: "Add webhook", onClick: handleNew }}
+            compact
+          />
         ) : (
           subscriptions.map((sub) => (
             <WebhookRow

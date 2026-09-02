@@ -13,6 +13,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { usePositions, useDeletePosition, type Position } from "../hooks/use-positions";
 import { format } from "date-fns";
@@ -27,7 +29,7 @@ export function PositionsTable() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(SENTINEL);
 
-  const { data, isLoading } = usePositions({
+  const { data, isLoading, isError, error, refetch } = usePositions({
     status: statusFilter === SENTINEL ? undefined : statusFilter,
     page,
     limit: 20,
@@ -42,6 +44,17 @@ export function PositionsTable() {
     setStatusFilter(value);
     setPage(1);
   }
+
+  function handleClearFilters() {
+    setStatusFilter(SENTINEL);
+    setPage(1);
+  }
+
+  function handleRetry() {
+    void refetch();
+  }
+
+  const filtersActive = statusFilter !== SENTINEL;
 
   const STATUS_COLORS: Record<Position["status"], string> = {
     open: "default",
@@ -123,6 +136,17 @@ export function PositionsTable() {
     );
   }
 
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load positions"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
+  }
+
   return (
     <>
       <div className="flex items-center justify-between mb-4">
@@ -149,8 +173,10 @@ export function PositionsTable() {
           <EmptyState
             illustrationPreset="person"
             illustrationSize="md"
-            title="No positions found"
-            description="Create positions to track roles, incumbents, and org structure."
+            title="No positions yet"
+            description={filtersActive ? undefined : "Create positions to track roles, incumbents, and org structure."}
+            filtersActive={filtersActive}
+            onClearFilters={handleClearFilters}
             compact
           />
         }

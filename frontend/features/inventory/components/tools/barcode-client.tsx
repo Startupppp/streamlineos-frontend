@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -194,13 +196,24 @@ function BarcodeResultSection({ code }: BarcodeResultSectionProps) {
     return <Skeleton className="h-20 w-full rounded-xl" />;
   }
 
-  if (isError || !data) {
+  if (isError) {
     return (
-      <Card>
-        <CardContent className="py-6 text-center text-sm text-destructive">
-          {getErrorMessage(error) || "Failed to look up barcode. Please try again."}
-        </CardContent>
-      </Card>
+      <ErrorState
+        compact
+        title="Barcode lookup failed"
+        description={getErrorMessage(error)}
+      />
+    );
+  }
+
+  if (!data) {
+    return (
+      <EmptyState
+        compact
+        illustrationPreset="inventory"
+        title="No product matches this barcode"
+        description="Check the code, or add the product and give it this barcode."
+      />
     );
   }
 

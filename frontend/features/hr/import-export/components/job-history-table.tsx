@@ -4,6 +4,8 @@ import { useState, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import {
   useHrImportJobs,
@@ -103,7 +105,7 @@ export function JobHistoryTable({ entity }: JobHistoryTableProps) {
   const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
   const page = cursorHistory.length;
   const cursor = cursorHistory.at(-1);
-  const { data, isLoading, isFetching } = useHrImportJobs(entity, { cursor, limit: 20 });
+  const { data, isLoading, isFetching, isError, error, refetch } = useHrImportJobs(entity, { cursor, limit: 20 });
 
   const handleViewErrors = useCallback((jobId: string) => {
     setErrorJobId(jobId);
@@ -124,6 +126,10 @@ export function JobHistoryTable({ entity }: JobHistoryTableProps) {
     if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
   }, [data?.pagination.nextCursor]);
 
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   const columns: DataTableColumn<HrImportJob>[] = [
     ...COLUMNS,
     {
@@ -143,6 +149,17 @@ export function JobHistoryTable({ entity }: JobHistoryTableProps) {
         ) : null,
     },
   ];
+
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load import history"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
+  }
 
   return (
     <>

@@ -106,6 +106,13 @@ export function FixedAssetsPage() {
     if (isAssetStatusFilter(value)) setStatusFilter(value);
   }
 
+  function handleClearAssetFilters(): void {
+    setStatusFilter("ALL");
+    setCategoryFilter("ALL");
+  }
+
+  const assetFiltersActive = statusFilter !== "ALL" || categoryFilter !== "ALL";
+
   function handleAssetRowClick(row: AssetListItem): void {
     router.push(`/accounting/assets/${row.asset.id}`);
   }
@@ -170,8 +177,18 @@ export function FixedAssetsPage() {
                   <EmptyState
                     illustration={<EmptyReportIllustration />}
                     title="No assets yet"
-                    description="Add your first fixed asset to start tracking depreciation."
-                    action={canCreate ? { label: "Add Asset", onClick: () => setCreateOpen(true) } : undefined}
+                    description={
+                      assetFiltersActive
+                        ? undefined
+                        : "Add your first fixed asset to start tracking depreciation."
+                    }
+                    filtersActive={assetFiltersActive}
+                    onClearFilters={handleClearAssetFilters}
+                    action={
+                      canCreate && !assetFiltersActive
+                        ? { label: "Add Asset", onClick: () => setCreateOpen(true) }
+                        : undefined
+                    }
                   />
                 }
               />

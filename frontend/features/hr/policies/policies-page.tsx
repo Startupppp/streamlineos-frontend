@@ -5,7 +5,6 @@ import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { motion } from "framer-motion";
 import { Plus, Pencil } from "lucide-react";
 import { EyeIcon } from "@animateicons/react/lucide";
-import { StateIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -21,6 +20,8 @@ import {
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCan } from "@/hooks/api/access";
 import { useHrPolicies, useSeedDefaultPolicies, useOrgPolicyConflicts } from "@/hooks/api/hr/policies";
@@ -89,7 +90,7 @@ export function HrPoliciesPage() {
 
   const seed = useSeedDefaultPolicies();
 
-  const { data, isLoading, isError, refetch } = useHrPolicies({
+  const { data, isLoading, isError, error, refetch } = useHrPolicies({
     page,
     limit: 20,
     search: debouncedSearch.trim() || undefined,
@@ -99,6 +100,16 @@ export function HrPoliciesPage() {
 
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
+    setPage(1);
+  }, []);
+
+  const filtersActive =
+    search.trim() !== "" || typeFilter !== "all" || statusFilter !== "all";
+
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setTypeFilter("all");
+    setStatusFilter("all");
     setPage(1);
   }, []);
 
@@ -292,41 +303,30 @@ export function HrPoliciesPage() {
             ))}
           </div>
         ) : isError ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <p className="text-sm text-muted-foreground mb-3">Failed to load policies.</p>
-            <Button variant="outline" size="sm" onClick={handleRetry}>
-              Retry
-            </Button>
-          </div>
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load policies"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
         ) : data?.data.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center py-12">
-            <StateIllustration preset="documents" className="h-28 w-28" />
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground">No policies found</p>
-              <p className="text-xs text-muted-foreground">
-                {search || typeFilter !== "all" || statusFilter !== "all"
-                  ? "Try adjusting your filters."
-                  : "Create your first policy or seed the defaults to get started."}
-              </p>
-            </div>
-            {canManage && !search && typeFilter === "all" && statusFilter === "all" && (
-              <div className="flex items-center gap-2 mt-1">
-                <LoadingButton
-                  variant="outline"
-                  size="sm"
-                  className="text-xs"
-                  isPending={seed.isPending}
-                  onClick={handleSeedDefaults}
-                >
-                  Seed Defaults
-                </LoadingButton>
-                <Button size="sm" className="text-xs gap-1" onClick={handleOpenCreate}>
-                  <Plus className="h-3.5 w-3.5" />
-                  New Policy
-                </Button>
-              </div>
-            )}
-          </div>
+          <EmptyState
+            className="flex-1"
+            illustrationPreset="documents"
+            title="No policies yet"
+            description={
+              filtersActive
+                ? undefined
+                : "Create your first policy or seed the defaults to get started."
+            }
+            filtersActive={filtersActive}
+            onClearFilters={handleClearFilters}
+            action={
+              canManage && !filtersActive
+                ? { label: "New Policy", onClick: handleOpenCreate }
+                : undefined
+            }
+          />
         ) : (
           <DataTable
             className="flex-1 min-h-0"

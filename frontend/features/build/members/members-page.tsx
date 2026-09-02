@@ -73,6 +73,12 @@ export function MembersPage() {
 
   const handleSearchChange = useCallback((value: string) => setSearch(value), []);
 
+  const filtersActive = search.trim() !== "";
+
+  const handleClearFilters = useCallback(() => setSearch(""), []);
+
+  const handleOpenAddDialog = useCallback(() => setAddDialogOpen(true), []);
+
   const handleDisplayChange = useCallback((next: DisplayProps) => {
     setDisplayProps(next);
     saveDisplayProps(next);
@@ -156,7 +162,7 @@ export function MembersPage() {
               ) : null}
               {canManage ? (
                 <div className="ml-auto shrink-0 sm:order-4 sm:ml-0">
-                  <AddMemberButton onClick={() => setAddDialogOpen(true)} />
+                  <AddMemberButton onClick={handleOpenAddDialog} />
                 </div>
               ) : null}
             </div>
@@ -196,17 +202,19 @@ export function MembersPage() {
               emptyState={
                 <EmptyState
                   illustrationPreset="team"
-                  title={q ? "No members found" : "No members yet"}
+                  title="No members yet"
                   description={
-                    q
-                      ? "Try adjusting your search."
+                    filtersActive
+                      ? undefined
                       : canManage
                         ? "Add the first person who should have access to Build."
                         : "People with access to Build will appear here."
                   }
+                  filtersActive={filtersActive}
+                  onClearFilters={handleClearFilters}
                   action={
-                    !q && canManage
-                      ? { label: "Add member", onClick: () => setAddDialogOpen(true) }
+                    !filtersActive && canManage
+                      ? { label: "Add member", onClick: handleOpenAddDialog }
                       : undefined
                   }
                 />

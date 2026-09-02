@@ -24,7 +24,7 @@
 import { readFileSync, writeFileSync, existsSync, rmSync } from "node:fs";
 import { spawn } from "node:child_process";
 import { join, resolve, dirname } from "node:path";
-import { tmpdir } from "node:os";
+import { tmpdir, loadavg, cpus } from "node:os";
 import { randomBytes } from "node:crypto";
 import { fileURLToPath } from "node:url";
 
@@ -133,14 +133,21 @@ export function resolveServerMode({ buildIdOnDisk, html }) {
   return html.includes(buildIdOnDisk) ? "production" : "unknown";
 }
 
-export function classifyResource({ type, url, baseOrigin }) {
+/**
+ * The app's own API is a different origin in every deployment, so an
+ * origin-equality test files every first-party API response under "third party"
+ * and makes that budget meaningless. First-party means the page origin plus the
+ * configured API origin; third party means a vendor.
+ */
+export function classifyResource({ type, url, baseOrigin, firstPartyOrigins = [] }) {
   let origin = "";
   try {
     origin = new URL(url).origin;
   } catch {
     origin = "";
   }
-  const thirdParty = origin !== "" && origin !== baseOrigin && !url.startsWith("data:");
+  const known = new Set([baseOrigin, ...firstPartyOrigins].filter(Boolean));
+  const thirdParty = origin !== "" && !known.has(origin) && !url.startsWith("data:");
   const kind =
     type === "Script" ? "script"
       : type === "Stylesheet" ? "stylesheet"
@@ -434,12 +441,12 @@ function attachConsoleRecorder(cdp) {
   };
 }
 
-function attachByteRecorder(cdp, baseOrigin) {
+function attachByteRecorder(cdp, baseOrigin, firstPartyOrigins) {
   const byRequest = new Map();
   let entries = [];
   cdp.on("Network.responseReceived", ({ requestId, type, response }) => {
     const url = response?.url ?? "";
-    byRequest.set(requestId, { ...classifyResource({ type, url, baseOrigin }), url: url.slice(0, 200) });
+    byRequest.set(requestId, { ...classifyResource({ type, url, baseOrigin, firstPartyOrigins }), url: url.slice(0, 200) });
   });
   cdp.on("Network.loadingFinished", ({ requestId, encodedDataLength }) => {
     const meta = byRequest.get(requestId);
@@ -476,6 +483,18 @@ async function run() {
   const cookieValue = readFileSync(cookieFile, "utf8").trim();
 
   const baseOrigin = new URL(baseUrl).origin;
+  const firstPartyOrigins = flag("first-party-origins", process.env.NEXT_PUBLIC_API_URL ?? "")
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean)
+    .map((o) => {
+      try {
+        return new URL(o).origin;
+      } catch {
+        return "";
+      }
+    })
+    .filter(Boolean);
   const buildIdPath = join(ROOT, ".next", "BUILD_ID");
   const buildIdOnDisk = existsSync(buildIdPath) ? readFileSync(buildIdPath, "utf8").trim() : "";
 
@@ -507,6 +526,7 @@ async function run() {
   log(`base ${baseUrl} · routes ${routes.join(", ")} · repeat ${repeat}`);
   log(`serverMode resolved to "${serverMode}" (build id on disk: ${buildIdOnDisk || "none"})`);
 
+  const loadAtStart = loadavg();
   const byProfile = {};
   const byRoute = {};
   const bytesByRoute = {};
@@ -526,7 +546,7 @@ async function run() {
     await cdp.send("Network.setCookie", { name: cookieName, value: cookieValue, url: baseUrl, httpOnly: true, path: "/" });
     await cdp.send("Page.addScriptToEvaluateOnNewDocument", { source: VITALS_SCRIPT });
 
-    const bytes = attachByteRecorder(cdp, baseOrigin);
+    const bytes = attachByteRecorder(cdp, baseOrigin, firstPartyOrigins);
     const consoleLog = attachConsoleRecorder(cdp);
 
     for (const profile of ["desktop", "mobile"]) {
@@ -630,8 +650,15 @@ async function run() {
       desktop: "1440x900, no CPU or network throttling",
       mobile: `${MOBILE_PROFILE.width}x${MOBILE_PROFILE.height}@${MOBILE_PROFILE.deviceScaleFactor}x, 4x CPU, 1.6 Mbps down / 750 Kbps up, 150ms RTT`,
       authMethod: "minted NextAuth session cookie, set once via CDP and reused for every navigation",
+      firstPartyOrigins: [baseOrigin, ...firstPartyOrigins],
       cache: "vitals navigations run with the HTTP cache enabled after one discarded warm-up; firstLoadBytesByRoute is a separate cache-disabled pass",
       serverModeDerivation: "the build id in the served HTML is compared against .next/BUILD_ID; it is not asserted by this driver",
+      host: {
+        cpuCount: cpus().length,
+        loadAverage1mAtStart: Number(loadAtStart[0].toFixed(2)),
+        loadAverage1mAtEnd: Number(loadavg()[0].toFixed(2)),
+        note: "A throttled mobile profile on a contended host measures the host. Compare captures only at similar load; a 1m average above the CPU count means the numbers are not the application's.",
+      },
     },
   };
 
@@ -691,6 +718,16 @@ function selfTest() {
     "a cross-origin script counts as third party",
     classifyResource({ type: "Script", url: "https://cdn.example.com/a.js", baseOrigin: "http://localhost:1000" }),
     { kind: "script", thirdParty: true },
+  );
+  check(
+    "the app's own API origin is first party, not a third party vendor",
+    classifyResource({
+      type: "XHR",
+      url: "http://localhost:1500/me/access",
+      baseOrigin: "http://localhost:1000",
+      firstPartyOrigins: ["http://localhost:1500"],
+    }),
+    { kind: "other", thirdParty: false },
   );
   check(
     "a same-origin stylesheet does not",

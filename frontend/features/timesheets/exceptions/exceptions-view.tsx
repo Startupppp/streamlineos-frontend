@@ -128,6 +128,12 @@ export function ExceptionsView() {
     runDetectionMutation.mutate();
   }, [runDetectionMutation]);
 
+  const handleClearFilters = useCallback(() => {
+    setStatusFilter("OPEN");
+    setSeverityFilter("all");
+    setRuleFilter("all");
+  }, []);
+
   const handleResolveRequest = useCallback((exception: TimesheetException) => {
     setDialogState({ action: "resolve", exception });
   }, []);
@@ -371,22 +377,23 @@ export function ExceptionsView() {
     </LoadingButton>
   ) : undefined;
 
-  const emptyState =
-    statusFilter === "OPEN" && severityFilter === "all" && ruleFilter === "all" ? (
-      <EmptyState
-        illustrationPreset="alert"
-        title="No open exceptions"
-        description="Great data hygiene — nothing needs your attention right now."
-        compact
-      />
-    ) : (
-      <EmptyState
-        illustrationPreset="alert"
-        title="No exceptions found"
-        description="No exceptions match the current filters."
-        compact
-      />
-    );
+  const filtersActive =
+    statusFilter !== "OPEN" || severityFilter !== "all" || ruleFilter !== "all";
+
+  const emptyState = (
+    <EmptyState
+      illustrationPreset="alert"
+      title="No open exceptions"
+      description={
+        filtersActive
+          ? undefined
+          : "Great data hygiene — nothing needs your attention right now."
+      }
+      filtersActive={filtersActive}
+      onClearFilters={handleClearFilters}
+      compact
+    />
+  );
 
   const isDialogPending =
     dialogState?.action === "resolve"

@@ -6,6 +6,7 @@ import { Moon, Edit2 } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,9 +23,13 @@ interface Props {
 }
 
 export function ShiftTemplatesTab({ canManage, onEdit }: Props) {
-  const { data: shifts, isLoading } = useHrShifts();
+  const { data: shifts, isLoading, isError, error, refetch } = useHrShifts();
   const deleteShift = useDeleteShift();
   const [pendingDelete, setPendingDelete] = useState<ShiftTemplate | null>(null);
+
+  function handleRetry() {
+    void refetch();
+  }
 
   function handleConfirmDelete() {
     if (!pendingDelete) return;
@@ -44,6 +49,17 @@ export function ShiftTemplatesTab({ canManage, onEdit }: Props) {
           <Skeleton key={i} className="h-40 rounded-2xl" />
         ))}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        className={CONTENT_FILL_PANEL}
+        title="Couldn't load shift templates"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
     );
   }
 

@@ -65,11 +65,11 @@
         "mail-inbox-summary-sheet"
       ],
       "note": "Mail shell — first-load budget is higher because DOMPurify (isomorphic-dompurify) is a non-trivial dependency; compose sheet, AI toolbar and inbox summary sheet are lazy-loaded via next/dynamic. PASSES: 507kB < 614kB ceiling",
-      "measuredCssBytes": 58197,
+      "measuredCssBytes": 58191,
       "measuredImageBytes": 5744,
       "measuredFontBytes": 55206,
       "measuredThirdPartyBytes": 0,
-      "measuredServerPayloadBytes": 19167
+      "measuredServerPayloadBytes": 19245
     },
     "/inbox": {
       "maxFirstLoadJsBytes": 524288,
@@ -83,11 +83,11 @@
         "notification-detail-drawer"
       ],
       "note": "Home inbox — lightweight notification-style inbox; no external mail provider calls. PASSES: 461kB < 512kB ceiling. NotificationDetailDrawer is lazy (next/dynamic ssr:false); chunk is preloaded after mount to avoid INP spike on first interaction. Dashboard baseline is 489kB (40 shared chunks).",
-      "measuredCssBytes": 58197,
+      "measuredCssBytes": 58191,
       "measuredImageBytes": 5744,
       "measuredFontBytes": 55206,
-      "measuredThirdPartyBytes": 13074,
-      "measuredServerPayloadBytes": 20181
+      "measuredThirdPartyBytes": 6997,
+      "measuredServerPayloadBytes": 20245
     },
     "/build/inbox": {
       "maxFirstLoadJsBytes": 614400,
@@ -118,11 +118,11 @@
       "measuredPageChunkBytes": 41136,
       "lazyLoadedModules": [],
       "note": "CRM inbox — deals and contact conversations. PASSES: 487kB < 614kB ceiling",
-      "measuredCssBytes": 58197,
-      "measuredImageBytes": 2872,
+      "measuredCssBytes": 58191,
+      "measuredImageBytes": 5744,
       "measuredFontBytes": 55206,
-      "measuredThirdPartyBytes": 2946,
-      "measuredServerPayloadBytes": 11451
+      "measuredThirdPartyBytes": 11154,
+      "measuredServerPayloadBytes": 21864
     },
     "/support/inbox": {
       "maxFirstLoadJsBytes": 614400,
@@ -157,11 +157,11 @@
         "hr-widgets"
       ],
       "note": "Home dashboard — the shared-chunk baseline every other route's measuredPageChunkBytes is taken against, so its page-only additive is 0 by definition.",
-      "measuredCssBytes": 58197,
+      "measuredCssBytes": 58191,
       "measuredImageBytes": 5744,
       "measuredFontBytes": 55206,
-      "measuredThirdPartyBytes": 27169,
-      "measuredServerPayloadBytes": 11107
+      "measuredThirdPartyBytes": 10821,
+      "measuredServerPayloadBytes": 20570
     }
   }
 }

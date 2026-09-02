@@ -81,7 +81,7 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
     return (
       <PageWrapper title="Invoice" backHref="/billing/invoices">
         <EmptyState
-          illustrationPreset="document"
+          illustrationPreset="documents"
           title="Invoice not found"
           description="This invoice no longer exists, or it was never issued to your organization."
           action={{ label: "Back to invoices", href: "/billing/invoices" }}

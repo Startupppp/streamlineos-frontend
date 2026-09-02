@@ -101,6 +101,20 @@ function toDueBucketMap(
   return buckets;
 }
 
+const MY_WORK_FILTER_PARAMS = [
+  "q",
+  "status",
+  "priority",
+  "type",
+  "assigneeId",
+  "labels",
+  "cycle",
+  "projectIds",
+  "sprintId",
+  "dueDateFrom",
+  "dueDateTo",
+] as const;
+
 interface MyWorkPageProps {
   pmWorkspaceId?: string;
 }
@@ -227,6 +241,15 @@ export function MyWorkPage({ pmWorkspaceId }: MyWorkPageProps) {
     else if (activeTab === "subscribed") void refetchSubscribed();
     else void refetchActivity();
   }, [activeTab, refetchAssigned, refetchCreated, refetchSubscribed, refetchActivity]);
+
+  const filtersActive = Object.keys(extraFilters).length > 0;
+
+  const handleClearFilters = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const param of MY_WORK_FILTER_PARAMS) params.delete(param);
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [router, pathname, searchParams]);
 
   const handleTabChange = useCallback(
     (value: string) => {
@@ -395,7 +418,9 @@ export function MyWorkPage({ pmWorkspaceId }: MyWorkPageProps) {
                   <EmptyState
                     illustrationPreset="projects"
                     title={emptyTitle}
-                    description={emptyDescription}
+                    description={filtersActive ? undefined : emptyDescription}
+                    filtersActive={filtersActive}
+                    onClearFilters={handleClearFilters}
                     className={CONTENT_FILL_PANEL}
                   />
                 ) : showBucketList ? (

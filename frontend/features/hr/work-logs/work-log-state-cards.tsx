@@ -3,6 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTimeIllustration } from "@/components/illustrations";
 
 const CARD_CLASS =
@@ -69,21 +70,21 @@ export function WorkLogNoResultsCard({
   searchTerm: string;
   onClear: () => void;
 }) {
+  const term = searchTerm.trim();
   return (
-    <Card className={CARD_CLASS}>
-      <CardContent className="py-12">
-        <div className="flex flex-col items-center justify-center text-center gap-3">
-          <EmptyTimeIllustration className="mb-2 h-40 w-40 opacity-95" />
-          <h3 className="text-sm font-semibold text-foreground">No results found</h3>
-          <p className="text-sm text-muted-foreground">
-            No work logs match &ldquo;{searchTerm}&rdquo;. Try a different keyword or date.
-          </p>
-          <Button variant="outline" size="sm" className="gap-1.5 mt-1" onClick={onClear}>
-            Clear Search
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    <EmptyState
+      className="flex-1"
+      illustration={<EmptyTimeIllustration className="h-40 w-40" />}
+      title="No work logs"
+      filtersActive
+      filteredTitle={term ? `No work logs match "${term}"` : undefined}
+      description={
+        term
+          ? "Try a different keyword or date."
+          : "No days fall inside the selected month or date range."
+      }
+      onClearFilters={onClear}
+    />
   );
 }
 

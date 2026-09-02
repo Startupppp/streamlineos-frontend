@@ -130,6 +130,12 @@ export function PaymentRunsPage() {
     setCreateOpen(open);
   }
 
+  function handleClearFilters(): void {
+    setStatusFilter("all");
+  }
+
+  const filtersActive = statusFilter !== "all";
+
   return (
     <PageWrapper
       title="Payment Runs"
@@ -174,8 +180,14 @@ export function PaymentRunsPage() {
               <EmptyState
                 illustrationPreset="tasks"
                 title="No payment runs"
-                description="Create a payment run to batch-process vendor payments."
-                action={{ label: "New run", onClick: handleNewClick }}
+                description={
+                  filtersActive
+                    ? undefined
+                    : "Create a payment run to batch-process vendor payments."
+                }
+                filtersActive={filtersActive}
+                onClearFilters={handleClearFilters}
+                action={filtersActive ? undefined : { label: "New run", onClick: handleNewClick }}
               />
             }
           />

@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useCan } from "@/hooks/api/access";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
@@ -44,7 +45,7 @@ export function PolicyVersionsPage() {
   const [idInput, setIdInput] = useState("");
   const [queriedId, setQueriedId] = useState<number | null>(null);
 
-  const { data, isLoading, isError, refetch } = useEntityVersions(entity, queriedId);
+  const { data, isLoading, isError, error, refetch } = useEntityVersions(entity, queriedId);
 
   const activate = useActivatePolicy();
 
@@ -117,9 +118,12 @@ export function PolicyVersionsPage() {
         </div>
 
         {queriedId === null ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <p className="text-sm text-muted-foreground">Enter an entity ID to view its version history.</p>
-          </div>
+          <EmptyState
+            className="flex-1"
+            illustrationPreset="search"
+            title="No entity selected"
+            description="Pick an entity type and enter its ID above to view the version history."
+          />
         ) : isLoading ? (
           <div className="space-y-2">
             {Array.from({ length: 10 }).map((_, i) => (
@@ -129,14 +133,17 @@ export function PolicyVersionsPage() {
         ) : isError ? (
           <ErrorState
             className="flex-1"
-            title="Failed to load versions"
-            description="Could not load version history. Please try again."
+            title="Couldn't load versions"
+            description={getErrorMessage(error)}
             onRetry={handleRetry}
           />
         ) : !data || data.items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <p className="text-sm text-muted-foreground">No versions found for this {entity}.</p>
-          </div>
+          <EmptyState
+            className="flex-1"
+            illustrationPreset="documents"
+            title={`No versions for this ${entity}`}
+            description={`Nothing has been versioned against this ${entity} ID yet. Check the ID, or create a version from the ${entity} itself.`}
+          />
         ) : (
           <div className="space-y-2">
             <p className="text-sm font-medium">{data.name}</p>

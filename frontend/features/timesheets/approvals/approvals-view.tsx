@@ -115,6 +115,13 @@ export function ApprovalsView() {
     setSelection(new Set());
   }, []);
 
+  const handleClearFilters = useCallback(() => {
+    setMemberFilter("all");
+    setDateFrom("");
+    setDateTo("");
+    setSelection(new Set());
+  }, []);
+
   const motionProps = shouldReduceMotion
     ? {}
     : {
@@ -195,6 +202,7 @@ export function ApprovalsView() {
     onBulkApprove: handleBulkApprove,
     onBulkReject: handleBulkRejectOpen,
     isBulkPending,
+    onClearFilters: handleClearFilters,
   };
 
   return (

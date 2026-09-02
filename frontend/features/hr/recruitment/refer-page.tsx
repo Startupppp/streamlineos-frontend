@@ -15,6 +15,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -39,6 +40,7 @@ export function ReferPage() {
     data: referrals = [],
     isLoading: loadingReferrals,
     isError: referralsError,
+    error: referralsErrorValue,
     refetch: refetchReferrals,
   } = useAllReferrals();
   const { data: jobs = [], isError: jobsError, refetch: refetchJobs } = useJobPostings({
@@ -160,8 +162,8 @@ export function ReferPage() {
             </div>
           ) : referralsError ? (
             <ErrorState
-              title="Unable to load your referrals"
-              description="Try again. If this keeps happening, check your permissions."
+              title="Couldn't load your referrals"
+              description={getErrorMessage(referralsErrorValue)}
               onRetry={() => {
                 void refetchReferrals();
                 if (jobsError) void refetchJobs();
@@ -169,11 +171,12 @@ export function ReferPage() {
               compact
             />
           ) : referrals.length === 0 ? (
-            <Card className="shadow-sm">
-              <CardContent className="py-8 text-center text-sm text-muted-foreground">
-                You haven&apos;t submitted any referrals yet.
-              </CardContent>
-            </Card>
+            <EmptyState
+              compact
+              illustrationPreset="invitation"
+              title="No referrals yet"
+              description="Submit the form beside this list to refer your first candidate."
+            />
           ) : (
             <div className="space-y-3">
               {referrals.map((referral) => {

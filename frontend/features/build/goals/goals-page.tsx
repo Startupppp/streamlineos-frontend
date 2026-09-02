@@ -63,6 +63,7 @@ import {
 import { TEXT_TWO_LINES } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 function NewGoalButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -175,7 +176,7 @@ export function GoalsPage() {
     [statusFilter, levelFilter, debouncedSearch],
   );
 
-  const { data: goals, isLoading, isError, refetch } = useGoals(params);
+  const { data: goals, isLoading, isError, error, refetch } = useGoals(params);
   const { data: stats } = useGoalStats();
 
   const grouped = useMemo(() => {
@@ -188,6 +189,15 @@ export function GoalsPage() {
   const hasGoals = (goals?.length ?? 0) > 0;
 
   const handleOpenCreate = useCallback(() => { openCreate(); }, [openCreate]);
+
+  const filtersActive =
+    search.trim() !== "" || statusFilter !== "all" || levelFilter !== "all";
+
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setStatusFilter("all");
+    setLevelFilter("all");
+  }, []);
 
   function handleSearchChange(value: string) { setSearch(value); }
 
@@ -281,8 +291,8 @@ export function GoalsPage() {
             ) : isError ? (
               <ErrorState
                 className={PM_FILL_PANEL}
-                title="Failed to load goals"
-                description="We couldn't load your goals. Please try again."
+                title="Couldn't load goals"
+                description={getErrorMessage(error)}
                 onRetry={handleRetry}
               />
             ) : !hasGoals ? (
@@ -290,8 +300,18 @@ export function GoalsPage() {
                 className={PM_FILL_PANEL}
                 illustration={<EmptyTargetIllustration />}
                 title="No goals yet"
-                description="Create your first objective with measurable key results to start tracking progress."
-                action={{ label: "New Goal", onClick: handleOpenCreate }}
+                description={
+                  filtersActive
+                    ? undefined
+                    : "Create your first objective with measurable key results to start tracking progress."
+                }
+                filtersActive={filtersActive}
+                onClearFilters={handleClearFilters}
+                action={
+                  filtersActive
+                    ? undefined
+                    : { label: "New Goal", onClick: handleOpenCreate }
+                }
               />
             ) : (
               <div className="space-y-8">

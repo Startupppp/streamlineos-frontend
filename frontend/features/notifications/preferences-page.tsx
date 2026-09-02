@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -319,13 +320,13 @@ export function NotificationPreferencesPage() {
                 ))}
               </div>
             ) : !suppressions || suppressions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-2 py-8 bg-card text-center">
-                <BellOff className="w-8 text-muted-foreground/40" />
-                <p className="text-sm text-muted-foreground">Nothing muted</p>
-                <p className="text-xs text-muted-foreground/70">
-                  Mute specific notification types from the notification detail drawer.
-                </p>
-              </div>
+              <EmptyState
+                compact
+                className="bg-card py-8"
+                illustration={<BellOff className="w-8 text-muted-foreground/40" />}
+                title="Nothing muted"
+                description="Mute specific notification types from the notification detail drawer."
+              />
             ) : (
               <div className="divide-y divide-border">
                 {suppressions.map((rule) => (

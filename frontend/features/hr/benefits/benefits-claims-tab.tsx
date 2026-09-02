@@ -73,6 +73,8 @@ export function BenefitsClaimsTab({ canManage }: BenefitsClaimsTabProps) {
   const handleReviewClaim = useCallback((claim: InsuranceClaim) => { setReviewClaim(claim); }, []);
   const handleReviewSheetOpenChange = useCallback((open: boolean) => { if (!open) setReviewClaim(null); }, []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleClearFilters = useCallback(() => { setStatusFilter("all"); setCursors([null]); setCursorIndex(0); }, []);
+  const filtersActive = statusFilter !== "all";
 
   function handlePreviousPage() {
     setCursorIndex((current) => Math.max(0, current - 1));
@@ -110,7 +112,16 @@ export function BenefitsClaimsTab({ canManage }: BenefitsClaimsTabProps) {
         columns={buildClaimColumns(canManage, handleReviewClaim)}
         getRowKey={(claim) => claim.id}
         isLoading={isLoading}
-        emptyState={<EmptyState illustrationPreset="documents" title="No claims found" description="No insurance claims match the current filter." className={CONTENT_FILL_PANEL} />}
+        emptyState={
+          <EmptyState
+            illustrationPreset="documents"
+            title="No claims yet"
+            description={filtersActive ? undefined : "Insurance claims submitted by employees will appear here."}
+            filtersActive={filtersActive}
+            onClearFilters={handleClearFilters}
+            className={CONTENT_FILL_PANEL}
+          />
+        }
       />
       {cursorIndex > 0 || data?.pagination.hasMore ? <CursorPageControls page={cursorIndex + 1} hasNext={data?.pagination.hasMore ?? false} disabled={isFetching} onPrevious={handlePreviousPage} onNext={handleNextPage} /> : null}
       <ClaimReviewSheet open={reviewClaim !== null} onOpenChange={handleReviewSheetOpenChange} claim={reviewClaim} />

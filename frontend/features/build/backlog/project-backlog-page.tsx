@@ -27,6 +27,21 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { resolveImageUrl } from "@/lib/utils";
 import { format } from "date-fns";
 
+const BACKLOG_FILTER_PARAMS = [
+  "q",
+  "status",
+  "priority",
+  "type",
+  "assigneeId",
+  "labels",
+  "cycle",
+  "projectIds",
+  "sprintId",
+  "dueDateFrom",
+  "dueDateTo",
+  "page",
+] as const;
+
 interface ProjectBacklogPageProps {
   projectId: string;
 }
@@ -51,6 +66,9 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
   const filterPriority = searchParams.get("priority") ?? "";
   const filterType = searchParams.get("type") ?? "";
   const filterAssigneeId = searchParams.get("assigneeId") ?? "";
+  const filtersActive = Boolean(
+    q || filterStatus || filterPriority || filterType || filterAssigneeId,
+  );
 
   const tickets = useMemo(() => boardTickets ?? [], [boardTickets]);
 
@@ -140,6 +158,13 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
   const handleSelectionChange = useCallback((sel: Set<string | number>) => {
     setSelectedIds(sel);
   }, []);
+
+  const handleClearFilters = useCallback(() => {
+    const next = new URLSearchParams(searchParams.toString());
+    for (const param of BACKLOG_FILTER_PARAMS) next.delete(param);
+    const qs = next.toString();
+    router.replace(qs ? `?${qs}` : "?", { scroll: false });
+  }, [router, searchParams]);
 
   const handleRowClick = useCallback(
     (ticket: Ticket) => handleTicketSelect(ticket.id),
@@ -266,8 +291,10 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
             emptyState={
               <EmptyState
                 illustrationPreset="projects"
-                title="No tickets found"
-                description={tickets.length === 0 ? "Create a ticket to get started." : "No tickets match the active filters."}
+                title="No tickets yet"
+                description={filtersActive ? undefined : "Create a ticket to get started."}
+                filtersActive={filtersActive}
+                onClearFilters={handleClearFilters}
                 compact
                 className="min-h-[200px] border-0 bg-transparent"
               />
