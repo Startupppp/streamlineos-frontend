@@ -192,8 +192,9 @@ returns it to 283 and exit **0**.
 
 | Command | Exit | Number |
 |---|---|---|
-| `$HEAVY 2 -- pnpm -C streamlineos-backend typecheck` | 0 | 0 TS errors |
-| `pnpm -C streamlineos-backend check:spec-typecheck` | 2 | 1 error, **not mine** — see below |
+| `$HEAVY 2 -- pnpm -C streamlineos-backend typecheck` | 0 | 0 TS errors, measured with all my changes in place |
+| `$HEAVY 2 -- pnpm -C streamlineos-backend typecheck` (re-run ~40 min later) | 2 | 195 errors, **0 in my files** — see below |
+| `pnpm -C streamlineos-backend check:spec-typecheck` | 2 | 205 errors, **0 in my files** — see below |
 | `$HEAVY 2 -- … jest --runInBand --testPathPattern="(modules/build\|modules/organization\|common/outbox)"` | 0 | 172 suites / 1044 tests passed |
 | `$HEAVY 2 -- … jest --runInBand --testPathPattern="(modules/organization/setup\|modules/build/core\|common/outbox)"` | 0 | 67 suites / 333 tests passed |
 | `pnpm check:outbox-consumers` | 0 | 3,551 files · 215 modules · 1,202 providers · 26 emitted / 29 registered / 0 orphans |
@@ -210,23 +211,48 @@ Bite proofs (mutation-tested, each reverted):
 | `setImmediate` reintroduced into `org-setup.service.ts` | 1 (2 failed / 8 passed) |
 | one extra `void this.x.y(` added | 1 (284 vs ratchet 283) |
 
-### `check:spec-typecheck` — the one red line, and why it is not mine
+### Both typechecks went red mid-session, from another territory
 
-The first run reported two errors. One **was** mine and is fixed:
-`org-setup-tenant-isolation.spec.ts:88` constructed `OrgSetupService` with 7 positional arguments
-after I reduced the constructor to 5 — a textbook case of the repo's own trap, since ts-jest runs
-`isolatedModules` and the spec passed jest while failing `tsc`.
-
-The one that remains is **outside my territory and outside my diff**:
+**`typecheck` was green with my changes in place** — `exit 0, 0 errors`, measured after every
+source edit in this ticket. A re-run roughly forty minutes later reports **195 errors, none of them
+in a file I touched**. Between the two runs another agent edited ten files under `src/db/schema/**`,
+which is on my explicit do-not-touch list:
 
 ```
-src/modules/gdpr/gdpr-erasure-chat-attachments.spec.ts(213,27): error TS2493:
-Tuple type '[]' of length '0' has no element at index '0'.
+M src/db/schema/payroll/policies.ts   M src/db/schema/common/access.ts
+M src/db/schema/payroll/runs.ts       M src/db/schema/hr/policy-engine.ts
+M src/db/schema/billing/billing.ts    M src/db/schema/hr/template-engine.ts
+M src/db/schema/kb/pages.ts           M src/db/schema/hr/automation-engine.ts
+M src/db/schema/support/tickets.ts    M src/db/schema/mail/mail-metadata.ts
 ```
 
-`git diff HEAD --stat -- src/modules/gdpr/` shows `gdpr-subject-erasure.service.ts` and
-`gdpr-subject-erasure-authored-content.ts` modified in the shared working tree by another agent.
-The spec breaks against that uncommitted change. Routed, not touched.
+The root of the cascade is visible in the first three errors:
+
+```
+src/db/schema/payroll/policies.ts(6,14): error TS7022: 'payrollPolicies' implicitly has type 'any'
+  because it does not have a type annotation and is referenced directly or indirectly in its own initializer.
+```
+
+That is the standard Drizzle self-referential-table failure. Once those tables infer as `any`, every
+module that queries them loses its row types, which is exactly the shape of the remaining errors:
+89 × `TS2339` (`Property 'orgId' does not exist on type '{ orgId: any } | { orgId: any }[]'`) and
+69 × `TS7006`/`TS7031` implicit-any parameters, spread across hr, chat, inventory, e-sign, dashboard,
+build, tasks and quotes. **Not one of them is in a file in my diff.**
+
+`check:spec-typecheck` tells the same story from the other end. Its **first** run reported exactly
+two errors, one of which **was** mine and is fixed: `org-setup-tenant-isolation.spec.ts:88`
+constructed `OrgSetupService` with 7 positional arguments after I reduced the constructor to 5 — a
+textbook instance of the repo's own trap, since ts-jest runs `isolatedModules`, so the spec passed
+jest while failing `tsc`. Only the spec-inclusive typecheck could have caught it. Its **second** run,
+after the schema edits landed, reports 205 errors with **zero in my files**.
+
+The other error from that first run was already someone else's:
+`gdpr-erasure-chat-attachments.spec.ts(213,27)`, breaking against uncommitted changes to
+`gdpr-subject-erasure.service.ts`. Routed, not touched.
+
+**Honest reading:** my own proof is the green `typecheck` (exit 0) taken with the full diff applied,
+plus 1,044 and 333 passing tests, plus four green gate runs on the committed tree. The repo-wide red
+that appeared afterwards is a live regression from `src/db/schema/**` and belongs to whoever owns it.
 
 ---
 
@@ -251,8 +277,11 @@ No `package.json` edit was needed — both gates and both `:self-test` variants 
 
 ## Cross-territory findings
 
-1. **`check:spec-typecheck` is red on `gdpr-erasure-chat-attachments.spec.ts:213`** from another
-   agent's uncommitted `gdpr-subject-erasure*` changes. Not mine; not touched.
+1. **`typecheck` and `check:spec-typecheck` are both red repo-wide (195 / 205 errors) from
+   uncommitted `src/db/schema/**` edits**, rooted in `payroll/policies.ts` inferring `any` via
+   `TS7022` self-referential inference and cascading into every module that queries those tables.
+   Zero errors in my diff; `typecheck` was exit 0 with my changes before those edits landed. This is
+   the highest-severity thing I found and cannot fix — `src/db/schema/**` is outside my territory.
 2. **The blindness pattern is probably not unique to this gate.** `check:outbox-consumers` proved a
    *string* existed and reported it as a *wiring*. Any `check:*` script that greps for a declaration
    rather than resolving a graph can certify something it cannot observe. The module-graph walker in
