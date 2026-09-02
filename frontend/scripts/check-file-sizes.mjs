@@ -288,6 +288,32 @@ function runSelfTests() {
     rmSync(tmpRoot, { recursive: true, force: true });
   }
 
+  assert(
+    "isExcludedDir keeps generated build output out of the corpus",
+    isExcludedDir(".next") && isExcludedDir(".next-buildmart") && isExcludedDir("node_modules"),
+  );
+  assert(
+    "isExcludedDir also drops the non-source dirs this gate does not measure",
+    isExcludedDir("public") && isExcludedDir("scripts") && isExcludedDir("contracts") && isExcludedDir("dist"),
+  );
+  assert(
+    "isExcludedDir does NOT swallow authored source — the exclusion is not a prefix match",
+    !isExcludedDir("features") && !isExcludedDir("next-intl") && !isExcludedDir("build") && !isExcludedDir("app"),
+  );
+  assert(
+    "isCrmOrInventory recognises both roots of each excluded module",
+    isCrmOrInventory("app/(authenticated)/crm/leads/page.tsx") &&
+      isCrmOrInventory("features/crm/leads/lead-table.tsx") &&
+      isCrmOrInventory("app/(authenticated)/inventory/stock/page.tsx") &&
+      isCrmOrInventory("features/inventory/stock/stock-table.tsx"),
+  );
+  assert(
+    "isCrmOrInventory does not exempt in-release code that merely mentions crm",
+    !isCrmOrInventory("features/crm-shared/util.ts") &&
+      !isCrmOrInventory("hooks/api/crm.ts") &&
+      !isCrmOrInventory("features/build/board.tsx"),
+  );
+
   if (failed > 0) {
     console.error(`check-file-sizes self-tests: ${failed} failed, ${passed} passed`);
     process.exit(1);

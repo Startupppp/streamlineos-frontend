@@ -103,6 +103,10 @@ function walkDir(dir) {
   return results;
 }
 
+// A run that reaches no route files prints the same "OK" as a compliant tree.
+// The floor is well under the real count (600+) but far above zero.
+const MIN_ROUTE_FILES = 100;
+
 function runChecks(appDir) {
   const failures = [];
   const all = walkDir(appDir);
@@ -192,7 +196,27 @@ async function selfTest() {
   const publicMetaFail = failures.filter((f) => f.includes("[public-meta-missing]"));
   const authLeakFail = failures.filter((f) => f.includes("[auth-in-public]"));
 
+  // The counts above hold even if these two predicates return a constant, because
+  // no fixture separates their true branch from their false branch.
+  const predicateCases = [
+    ["hasRobotsNoIndex sees a complete noindex block", hasRobotsNoIndex("robots: { index: false, follow: false }") === true],
+    ["hasRobotsNoIndex rejects a half-declared block", hasRobotsNoIndex("robots: { index: false }") === false],
+    ["hasRobotsNoIndex rejects an indexable block", hasRobotsNoIndex("robots: { index: true, follow: true }") === false],
+    ["hasRobotsNoIndex rejects a file with no robots key", hasRobotsNoIndex("export const metadata = { title: 'x' };") === false],
+    ["hasDynamicSegment sees a route parameter", hasDynamicSegment("app/(public)/blog/[slug]/page.tsx") === true],
+    ["hasDynamicSegment sees a catch-all", hasDynamicSegment("app/(public)/docs/[...path]/page.tsx") === true],
+    ["hasDynamicSegment leaves a static route alone", hasDynamicSegment("app/(public)/pricing/page.tsx") === false],
+  ];
+  let predicatesOk = true;
+  for (const [label, ok] of predicateCases) {
+    if (!ok) {
+      console.error(`SELF-TEST FAIL: ${label}`);
+      predicatesOk = false;
+    }
+  }
+
   const pass =
+    predicatesOk &&
     robotsFail.length === 2 &&
     publicMetaFail.length === 1 &&
     authLeakFail.length === 1;
@@ -216,9 +240,18 @@ async function selfTest() {
 }
 
 function main() {
+  const reached = walkDir(APP_DIR).filter((f) => f.endsWith(".tsx") || f.endsWith(".ts")).length;
+  if (reached < MIN_ROUTE_FILES) {
+    console.error(
+      `check-seo-metadata: INCONCLUSIVE — the walk reached only ${reached} route file(s) ` +
+        `(floor ${MIN_ROUTE_FILES}). This run proves nothing about robots or public metadata.`,
+    );
+    process.exitCode = 2;
+    return;
+  }
   const failures = runChecks(APP_DIR);
   if (failures.length === 0) {
-    console.log("check-seo-metadata: OK");
+    console.log(`check-seo-metadata: OK (${reached} route files scanned)`);
     return;
   }
   for (const f of failures) console.error(f);

@@ -390,6 +390,19 @@ function runSelfTest() {
     );
   }
 
+  assert(
+    "parseRegistryVersion reads the declared version as a number",
+    parseRegistryVersion("export const MODULE_MANIFEST_VERSION = 3;") === 3,
+  );
+  assert(
+    "parseRegistryVersion returns null when the registry declares no version — rule-1 must go INCONCLUSIVE, not silently agree",
+    parseRegistryVersion("export const MODULE_REGISTRY = [];") === null,
+  );
+  assert(
+    "parseRegistryVersion does not confuse a lookalike constant for the real one",
+    parseRegistryVersion("const LEGACY_MANIFEST_VERSION = 9;\nexport const MODULE_MANIFEST_VERSION = 1;") === 1,
+  );
+
   console.log(`\nSelf-test complete: ${passed} passed, ${failed} failed.`);
   if (failed > 0) process.exit(1);
 }

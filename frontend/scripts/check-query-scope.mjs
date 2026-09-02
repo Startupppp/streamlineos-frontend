@@ -129,6 +129,7 @@ function runSelfTest() {
         "export const rogue = new QueryClient();",
       ].join("\n"),
       detect: checkNewQueryClient,
+      reason: "new QueryClient() outside sanctioned factories",
     },
     {
       description: "rule 2 — queryKeyHashFn outside sanctioned files",
@@ -138,6 +139,7 @@ function runSelfTest() {
         "const c = new QueryClient({ defaultOptions: { queries: { queryKeyHashFn: () => '' } } });",
       ].join("\n"),
       detect: checkQueryKeyHashFn,
+      reason: "queryKeyHashFn set outside sanctioned files",
     },
     {
       description: "rule 3 — dehydrate() in lib/prefetch/ without createServerQueryClient",
@@ -149,6 +151,7 @@ function runSelfTest() {
         "}",
       ].join("\n"),
       detect: checkPrefetchDehydrate,
+      reason: "dehydrate() called without createServerQueryClient",
     },
     {
       description:
@@ -159,6 +162,7 @@ function runSelfTest() {
         "export const rogue = new QueryClient();",
       ].join("\n"),
       detect: checkNewQueryClient,
+      reason: "new QueryClient() outside sanctioned factories",
     },
   ];
 
@@ -168,12 +172,14 @@ function runSelfTest() {
       relPath: "hooks/api/hr/cases.ts",
       content: 'const caseKeys = { all: ["streamlineos", "hr", "cases"] as const };',
       detect: checkHardcodedKeyBase,
+      reason: 'hardcoded "streamlineos" key prefix',
     },
     {
       description: "rule 5 — the prefix alone, with no trailing segment",
       relPath: "hooks/api/hr/other.ts",
       content: 'const root = ["streamlineos"] as const;',
       detect: checkHardcodedKeyBase,
+      reason: 'hardcoded "streamlineos" key prefix',
     },
   );
 
@@ -208,14 +214,45 @@ function runSelfTest() {
       ].join("\n"),
       detect: checkNewQueryClient,
     },
+    {
+      description: "rule 2 — a sanctioned file may set queryKeyHashFn",
+      relPath: "components/providers/query-provider.tsx",
+      content: "const c = new QueryClient({ defaultOptions: { queries: { queryKeyHashFn: hashQueryKey } } });",
+      detect: checkQueryKeyHashFn,
+    },
+    {
+      description: "rule 2 — a file that never mentions queryKeyHashFn is not flagged",
+      relPath: "lib/some-hook.ts",
+      content: 'const c = new QueryClient();',
+      detect: checkQueryKeyHashFn,
+    },
+    {
+      description: "rule 3 — dehydrate() with createServerQueryClient is correct",
+      relPath: "lib/prefetch/good.ts",
+      content: [
+        'import { dehydrate } from "@tanstack/react-query";',
+        "export async function prefetchFoo() {",
+        "  return dehydrate(createServerQueryClient());",
+        "}",
+      ].join("\n"),
+      detect: checkPrefetchDehydrate,
+    },
+    {
+      description: "rule 3 — dehydrate() outside lib/prefetch/ is out of scope",
+      relPath: "lib/elsewhere/other.ts",
+      content: "export const x = dehydrate(new QueryClient());",
+      detect: checkPrefetchDehydrate,
+    },
   ];
 
   const selfFailures = [];
 
-  for (const { description, relPath, content, detect } of fixtures) {
+  for (const { description, relPath, content, detect, reason } of fixtures) {
     const result = detect(content, relPath);
-    if (result === null) {
-      selfFailures.push(`self-test MISSED: ${description}`);
+    if (typeof result !== "string" || !result.includes(relPath)) {
+      selfFailures.push(`self-test MISSED: ${description} (got ${JSON.stringify(result)})`);
+    } else if (reason && !result.includes(reason)) {
+      selfFailures.push(`self-test REJECTED FOR THE WRONG REASON: ${description} — expected "${reason}", got "${result}"`);
     } else {
       console.log(`✔ self-test detected ${description}`);
     }
@@ -228,11 +265,6 @@ function runSelfTest() {
     } else {
       console.log(`✔ self-test exempted ${description}`);
     }
-  }
-
-  if (selfFailures.length > 0) {
-    for (const f of selfFailures) console.error(`✖  ${f}`);
-    process.exit(1);
   }
 
   // Rule 4 fixtures
@@ -262,8 +294,8 @@ function runSelfTest() {
   };
 
   const r4bad = inlineKeyBad.detect(inlineKeyBad.content, inlineKeyBad.relPath);
-  if (r4bad === null) {
-    selfFailures.push(`self-test MISSED: ${inlineKeyBad.description}`);
+  if (typeof r4bad !== "string" || !r4bad.includes("inline queryKey array")) {
+    selfFailures.push(`self-test MISSED: ${inlineKeyBad.description} (got ${JSON.stringify(r4bad)})`);
   } else {
     console.log(`✔ self-test detected ${inlineKeyBad.description}`);
   }
@@ -276,7 +308,32 @@ function runSelfTest() {
     }
   }
 
-  console.log("\n✔ All 5 rules self-tested successfully — check-query-scope is live.");
+  if (selfFailures.length > 0) {
+    for (const f of selfFailures) console.error(`✖  ${f}`);
+    process.exit(1);
+  }
+
+  const rulesProven = new Set(
+    [...fixtures, inlineKeyBad].map((f) => f.detect.name),
+  );
+  const allRules = [
+    checkNewQueryClient,
+    checkQueryKeyHashFn,
+    checkInlineQueryKey,
+    checkHardcodedKeyBase,
+    checkPrefetchDehydrate,
+  ];
+  const unproven = allRules.filter((fn) => !rulesProven.has(fn.name));
+  if (unproven.length > 0) {
+    console.error(
+      `✖  ${unproven.length} rule(s) have no known-bad fixture: ${unproven.map((f) => f.name).join(", ")}`,
+    );
+    process.exit(1);
+  }
+
+  console.log(
+    `\n✔ All ${allRules.length} rules self-tested successfully — check-query-scope is live.`,
+  );
   process.exit(0);
 }
 
@@ -290,9 +347,15 @@ const violations3 = [];
 const violations4 = [];
 const violations5 = [];
 
+// Without a floor, a walk that reaches nothing prints the same green line as a
+// clean tree: the failure of the scan is indistinguishable from its success.
+const MIN_SCANNED_FILES = 500;
+let scanned = 0;
+
 for (const file of walkFiles(ROOT)) {
   const content = readFileSync(file, "utf8");
   const rel = relative(ROOT, file);
+  scanned++;
 
   const v1 = checkNewQueryClient(content, rel);
   if (v1) violations1.push(`  ${v1}`);
@@ -312,8 +375,16 @@ for (const file of walkFiles(ROOT)) {
 
 const allViolations = [...violations1, ...violations2, ...violations3, ...violations4, ...violations5];
 
+if (scanned < MIN_SCANNED_FILES) {
+  console.error(
+    `✖  INCONCLUSIVE — the scan reached only ${scanned} file(s) (floor ${MIN_SCANNED_FILES}). ` +
+      "This run proves nothing about query scoping.",
+  );
+  process.exit(2);
+}
+
 if (allViolations.length === 0) {
-  console.log("✔  No query-scope violations found.");
+  console.log(`✔  No query-scope violations found (${scanned} files scanned).`);
   process.exit(0);
 } else {
   if (violations1.length > 0) {
