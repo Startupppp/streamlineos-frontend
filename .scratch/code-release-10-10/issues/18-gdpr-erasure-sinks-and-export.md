@@ -4,9 +4,40 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** 6 of 7 boxes closed — box 1 open on one cross-territory sink (chat_attachments, chat module)
+**Status:** done — 7 of 7 boxes closed (chat_attachments sink closed in GDPR territory; outbox payload now validated)
 
-- [ ] Erasure is idempotent, tenant-scoped in SQL, audited and legal-hold-blocking across every remaining sink; immutable and legal-hold records are preserved rather than deleted.
+- [x] Erasure is idempotent, tenant-scoped in SQL, audited and legal-hold-blocking across every remaining sink; immutable and legal-hold records are preserved rather than deleted.
+  - **Session 18d — `chat_attachments`, the last open sink, is CLOSED, and it did not need the chat module.**
+    18c reverted its own attempt because reaching the subject's messages took an unpredicated read of
+    `chat_messages`, which pushed `check:lifecycle-predicates` to 76/75 and `check:unbounded-reads` to 1
+    unclassified. The reach-through was never necessary: `anonymiseSubjectConversations` already updates
+    exactly those rows and now returns their ids (`ConversationErasure { tables, chatMessageIds }`), so
+    `gdpr-subject-erasure-chat-attachments.ts` is driven by the redaction's own `RETURNING` instead of a
+    second read. No new read site exists, and both ratchets are unchanged: `pnpm -s check:lifecycle-predicates`
+    -> exit 0, primary-read candidates **75 (baseline 75)**, join candidates **335 (baseline 335)**;
+    `pnpm -s check:unbounded-reads` -> exit 0, **offset ACTIONABLE 0 / unbounded ACTIONABLE 0**.
+    The delete is `DELETE ... RETURNING file_key` inside the erasure transaction, keys ride the manifest
+    drained after commit, and they are tagged `source: "user-fk"` because `purgeFromManifest` skips
+    `org-id` keys by design — the exact reason the sink was unreachable from the file-key catalog.
+    Ids are spent `ERASURE_ID_PAGE` (200) at a time.
+    Evidence: `gdpr-erasure-chat-attachments.spec.ts`, 13 tests over a 413-message fixture (2 full pages
+    + 13), with in-suite bite proofs for the one-page case, the no-message case, the no-attachment case,
+    the second run, and the legal hold. Service-side bite proof, one-off: the drain capped to a single
+    page -> **2 failed / 11 passed / 13**, red at "spends every page of the subject's message ids"
+    ("Expected: 3, Received: 1") and "never asks for more than one page of ids in a single statement"
+    ("Expected length: 413, Received length: 200"); file restored byte-identical
+    (sha256 `7dcce89c...e55c2` before and after).
+  - **Session 18d — `gdpr.export.requested` had a payload schema nothing validated with.**
+    `GdprExportRequestedConsumer.handle` called `worker.wake()` on any row carrying the event type and
+    returned success, so the relay marked the event DELIVERED whatever it contained. Two failures were
+    invisible: a payload the producer had drifted away from still reported delivered while no export ever
+    ran, and a payload whose `orgId` disagreed with the outbox row's `organization_id` was waved through.
+    The schema is now `.strict()` (a bare `z.object({})` strips an unexpected key instead of rejecting it)
+    and the consumer `safeParse`s, cross-checks `payload.orgId === event.organizationId`, and throws on
+    either failure so the publisher retries and finally dead-letters where the dead-outbox alert reports
+    it. Evidence: `gdpr-export-outbox.consumer.spec.ts`, 9 tests. Bite proof, one-off: `.strict()` removed
+    and the org cross-check forced false -> **3 failed / 6 passed / 9**; both files restored byte-identical
+    (sha256 `c6546f78...ce503` and `9ce84e32...72062`).
   - **Session 18c — the support-ticket call site named below is now wired** (`gdpr-subject-erasure.service.ts:338`) and green; the sink audit was re-run against current source rather than trusted from these notes.
   - **P0 found and fixed: the subject's own GDPR export archive survived their erasure.** `gdpr_export_jobs.subject_user_id` is a bare `text` column with no FK to `users`, so `collectSubjectFileKeysWithLegalHold` classified the whole table as org-scoped, and `purgeFromManifest` skips org-scoped keys by design. A complete JSON dump of one person's personal data therefore stayed in object storage after their erasure — and, because `expireOldJobs` had zero callers, still marked `completed` and downloadable. New `gdpr-subject-erasure-export-artifacts.ts` keyset-drains the subject's artifacts BEFORE the transaction, appends them to the manifest as `source: "user-fk"`, and retires the rows inside it (`status=expired`, `expires_at=now`, `file_name=null`) while deliberately KEEPING `file_key` so a failed object delete is retried rather than orphaned.
   - Idempotency, legal-hold blocking and the drain are asserted, not assumed: `nice jest --runInBand --testPathPattern="src/modules/gdpr"` → 15 suites, 219 passed. `gdpr-erasure-export-artifacts.spec.ts` (13 tests) drives a 413-artifact fixture (2 full pages + 13) and asserts 3 select calls; neutering the drain fails with "Expected: 3, Received: 1". A hold blocks before any collection or manifest build (`artifactSelectCalls` 0, `buildManifest` not called, `db.transaction` not called), and the bite proof shows the same fixture DOES collect with the hold released. A second run claims no table and adds no key.

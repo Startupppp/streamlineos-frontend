@@ -47,3 +47,83 @@ Backend typecheck after all edits: `node --max-old-space-size=8192 tsc --noEmit 
 - `/Users/tarunchintakunta/Personal/streamline/streamlineos-frontend/.scratch/code-release-10-10/issues/18-gdpr-erasure-sinks-and-export.md`
 
 No git commands were run. No file outside `src/modules/gdpr/**` was edited.
+
+---
+
+## Session 18d — the two remaining items
+
+**1. `chat_attachments` — the last open sink — is closed, and it never needed the chat module.**
+
+18c reverted its own implementation because reaching the subject's messages took an
+unpredicated read of `chat_messages`, which pushed `check:lifecycle-predicates` to 76/75 and
+`check:unbounded-reads` to 1 unclassified. That reach-through was avoidable. The
+`chat_messages` redaction inside `anonymiseSubjectConversations` already updates exactly the
+rows the attachment sink must follow — every message the subject sent, soft-deleted ones
+included — so it now returns their ids (`ConversationErasure { tables, chatMessageIds }`) and
+`gdpr-subject-erasure-chat-attachments.ts` is driven by that `RETURNING` rather than by a second
+read. No new read site exists.
+
+- `DELETE ... RETURNING file_key` inside the erasure transaction, so there is no window in
+  which the row is gone and the object is unnamed.
+- Keys are tagged `source: "user-fk"`. `purgeFromManifest` skips `org-id` keys by design, which
+  is the precise reason the file-key catalog could never reach this table.
+- Ids are spent `ERASURE_ID_PAGE` (200) at a time.
+
+Ratchets, measured after the change:
+`pnpm -s check:lifecycle-predicates` -> exit 0, primary-read candidates **75 (baseline 75)**,
+join candidates **335 (baseline 335)**.
+`pnpm -s check:unbounded-reads` -> exit 0, **offset ACTIONABLE 0, unbounded ACTIONABLE 0**.
+
+**2. `gdpr.export.requested` had a payload schema nothing validated with.**
+
+`GdprExportRequestedConsumer.handle` called `worker.wake()` on any row carrying the event type
+and returned success, so `OutboxPublisherService` marked the event DELIVERED whatever it
+contained. Two failures were invisible: a payload the producer had drifted away from still
+reported delivered while no export ever ran, and a payload whose `orgId` disagreed with the
+outbox row's `organization_id` — the tenant binding the relay leases and audits on — was waved
+through. The schema is now `.strict()`; a bare `z.object({})` strips an unexpected key rather
+than rejecting it, which is what turns a dropped field into a wrong-subject write. The consumer
+`safeParse`s, cross-checks the tenant, and throws on either failure so the event goes to the
+retry ladder and finally to the dead-letter the dead-outbox alert reports.
+
+## Proofs run and read
+
+| Command | Exit | Number |
+|---|---|---|
+| `jest --runInBand --testPathPattern="src/modules/gdpr\|support-ticket-erasure\|src/common/outbox"` | 0 | 25 suites, 302 tests passed |
+| `pnpm -C streamlineos-backend typecheck` | 0 | 0 errors |
+| `pnpm -s check:lifecycle-predicates` | 0 | 75/75 primary, 335/335 join |
+| `pnpm -s check:unbounded-reads` | 0 | 0 actionable |
+| `pnpm -s check:dead-code` | 0 | 35 verdicts, 0 stale |
+
+Bite proofs, each run and read, each file restored byte-identical (sha256 verified):
+
+| Mutation | Result |
+|---|---|
+| attachment drain capped to a single page | **2 failed / 11 passed / 13** — "Expected: 3, Received: 1" and "Expected length: 413, Received length: 200" |
+| `.strict()` removed + org cross-check forced false | **3 failed / 6 passed / 9** |
+
+## Cross-territory findings
+
+1. **The dead GDPR export re-export chain cannot be removed from this territory alone.**
+   knip (importer graph 9,811 files / 68,252 edges) confirms five dead symbols:
+   `GDPR_EXPORT_SOURCE_ADAPTERS` in `gdpr-export-adapters.ts`, `gdpr-export-worker-implementation.ts`
+   and `gdpr-export-worker.service.ts`, plus `SUBJECT_SCOPED_GDPR_EXPORT_SOURCES` in the latter two.
+   (The brief's "four names nobody imports" in `gdpr-export-worker.service.ts` is two: the other four
+   forwarded names are imported by `gdpr-export-worker-tenant-isolation.spec.ts`.)
+   `check:dead-code` fails a verdict whose finding knip no longer reports, so deleting the exports
+   without deleting the five matching ledger lines in `src/scripts/check-dead-code.mjs` turns the gate
+   red. That script is outside this territory. **Coupled change required:** delete the 5 exports and
+   the 5 ledger entries in one commit.
+
+2. **Same coupling blocks the ledger's own WIRE prescription.** The ledger says
+   `GdprExportRequestedPayload` should be wired because "nothing validates the payload on the consuming
+   side today, which is the defect". The defect itself is now fixed — the consumer validates with
+   `gdprExportRequestedPayloadSchema`. Wiring the exported *type alias* as well was tried and
+   **measured**: `check:dead-code` exits **1** with "1 stale verdict — src/modules/gdpr/dto/
+   gdpr-export-outbox.schemas.ts:GdprExportRequestedPayload". Reverted to keep the gate green.
+   The ledger line should be deleted and the type wired in the same commit.
+
+3. `src/modules/gdpr/gdpr-subject-erasure-kb-erasure.spec.ts.neutered` is still tracked in git. It is
+   a superseded bite-proof copy of a live spec; jest and tsc both ignore it, but it reads like a real
+   spec in the tree. Left in place (an earlier report also flagged and left it).
