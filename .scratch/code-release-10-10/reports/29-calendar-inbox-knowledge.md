@@ -545,3 +545,343 @@ mutated file was restored and re-verified by `shasum -a 256`.
 **Frontend, deleted** — `features/mail/use-mail-connectivity.ts`
 
 **Ticket** — `.scratch/code-release-10-10/issues/29-module-matrix-calendar-inbox-knowledge.md`
+
+---
+
+# S10 pass — the schema and migration boxes, now that they are in territory
+
+The previous pass marked four boxes BLOCKED on "schema and migrations are off-limits". This
+pass had them. **Two of the four named schema defects turned out to be already fixed**, one was
+real, and the two mail defects were both real and both worse than described.
+
+## 1. Re-verification of the four named defects, against the live catalog
+
+Measured on `scratch_perf_seed` (journal head) with `psql`, not against the ticket notes.
+
+| Named defect | Verdict |
+|---|---|
+| `kb_space_grants.space_id → kb_spaces(id)` is a bare single-column FK | **STALE in SQL, REAL in Drizzle.** `0965_ar02_canonical_tenant_fks_3.sql:392-401` already added the composite `fk_kb_space_grants_space_id_org (org_id, space_id) → kb_spaces(org_id, id)`, and `0972_ar02_drop_superseded_tenant_fks_3.sql:55` already drops the single-column `fk_kb_space_grants_space`. Both are journalled and applied. What was still true is the **second half** of the ticket's sentence: the Drizzle table declared no FK at all, so the next `db:generate` would have proposed dropping a live tenant constraint. Fixed in the declaration only — no migration is owed. |
+| `kb_ingestion_checkpoints` has no uniqueness | **STALE.** `uniq_kb_ingestion_checkpoint (org_id, content_type, content_id, chunk_index)` exists in `migrations/0701` and in `db/schema/support/kb-ingestion-checkpoints.ts:29-35`, and is live in `pg_indexes`. Also note the table is under `schema/support/`, not `schema/kb/`, and its only service (`kb-ingestion-checkpoint.service.ts`) is in `kb/retrieval/**` — both outside this session's territory anyway. |
+| `kb_page_links` record links have no uniqueness | **REAL, and fixed.** `uniq_kb_page_links_source_target` is `(source_page_id, target_page_id)`, and for a record link `target_page_id` is NULL. NULLs are distinct in a btree, so that index constrains the record grain not at all. `kb-page-record-links.service.ts:34-44` was a read-then-insert with nothing behind it. |
+| Mail ordering and search | **REAL, both, and the paging one is a hard "cannot scroll".** See §3. |
+
+**Correction to the ticket's wording on search.** "Mail search does not work at all today" is not
+right. Provider search works: `mail.controller.ts:81` passes `query.q` down, `mail.service.ts`
+forwards it to `gmail.listMessages`/`outlook.listMessages`. What is dead is the **database**
+search — `listCached`'s `query` parameter has zero callers, and so does `isFreshForAccount`.
+Both are now live.
+
+## 2. `kb_page_links` — the record-link grain gets a constraint
+
+`migrations/1021_t29_kb_page_links_record_unique.sql`: a partial
+`UNIQUE (org_id, source_page_id, target_type, target_id) WHERE target_id IS NOT NULL`, preceded
+by a self-join DELETE of pre-existing duplicates (0 on the seeded database, so the index built
+without a repair). `KbPageRecordLinksService.add` no longer reads first — it inserts and maps
+`23505` to `ConflictException` through `getPostgresErrorCode`, which walks Drizzle's `cause`
+chain, so the wrapped form is caught too.
+
+**On making the polymorphic pointer referential — it cannot be, and here is why rather than a
+silent open box.** `target_type` ranges over seven entity types in five modules
+(`RECORD_LINK_TARGET_TYPES`: `crm_lead`, `crm_deal`, `crm_contact`, `project`, `project_ticket`,
+`support_ticket`, `hr_employee`) and `target_id` is `text` because those tables do not share a
+key type. An exclusive arc would put seven nullable FK columns on `kb_page_links` reaching into
+five other modules' schemas, which backend/CLAUDE.md §1 forbids outright. It stays what §3
+grandfathers: a display/dedupe pointer. The thing §3 actually requires of a grandfathered pair
+is that it never be the sole path to resolve, join or cascade a record — and it is not:
+`listByRecord` joins only `kb_page_links → kb_pages` (its own composite tenant FK) and treats
+the pair as opaque text.
+
+## 3. Mail — the two real product defects
+
+### 3a. The cached page was a dead end
+
+`mail.service.ts:65-88` served page one from `mail_message_metadata` and returned
+`nextCursor: null` **unconditionally**. So on the single-account path with a fresh mirror — the
+ordinary case — the inbox showed `limit` messages and "load more" did nothing, forever. That is
+the whole of "ordering is not stable": the DB-ordered path was not a paging regime at all, it
+was one page.
+
+Fixed by giving the mirror its own keyset cursor:
+
+- `providers/mail-metadata-cursor.ts` (new) — `{ d: ISO date | null, i: id }`, HMAC-signed and
+  reader-bound exactly like the provider cursor, but under a **different version prefix**
+  (`md1` vs `m1`) so neither decoder can read the other's cursor. That is what lets the regime
+  be chosen once, at page one, and held for the whole scroll. Mixing them mid-scroll is what
+  repeats and skips rows.
+- `providers/mail-cursor-signing.ts` (new) — the HMAC key derivation, previously private to
+  `mail-normalizers.ts`, extracted so both namespaces share one definition and neither imports
+  the other's internals. `mail-normalizers.ts` drops from 495 to 421 lines.
+- `mail-metadata.service.ts` — `listCached` orders by `(date DESC, id DESC)`, fetches
+  `limit + 1`, and returns a `nextCursor` from the last row of the page.
+- `mail.service.ts` — a metadata cursor continues in the database and an exhausted one **ends
+  the scroll** rather than falling through to the provider, where it would decode as "no
+  position" and replay page one.
+
+The null-date branch is a real branch, not defensive noise: `date` is nullable and Postgres
+sorts DESC NULLS FIRST, so a null-dated cursor is a position inside the leading block. A bare
+row comparison `(date, id) < (NULL, i)` evaluates to NULL and would drop **every dated row** —
+pinned by a BITE case.
+
+### 3b. Search had no index a leading wildcard could use, and RLS meant an ordinary one would not have helped
+
+`mail-metadata.service.ts:125-134` was three leading-wildcard `ILIKE`s. Adding a GIN trigram
+index alone does not fix that here, because `mail_message_metadata` has RLS on
+(`tenant_isolation: org_id = app.current_org_id()`) and `texticlike` is `proleakproof = false`,
+so the planner must evaluate the security qual first and refuses the index — measured below, the
+"before" plans never touch the trigram index even when it exists.
+
+`migrations/1022` therefore follows the 0424/0425/0453 pattern: `app.search_mail_message_ids`,
+SECURITY DEFINER, org from `app.current_org_id()` and never a parameter, ids only, EXECUTE
+revoked from PUBLIC, caller asks for `cap + 1` (cap 500) and falls back to the plain ILIKE at
+the cap. `p_membership_id`/`p_folder` are narrowing parameters only — the outer query re-applies
+both under RLS, so safety does not move into the function.
+
+The index is one GIN trigram over
+`coalesce(subject,'') || chr(1) || coalesce(sender_name,'') || chr(1) || coalesce(sender_email,'')`
+rather than three separate ones, on a table that is upserted on every inbox load. `chr(1)`
+cannot appear in a query string that reached the Zod boundary, so a term can never span a
+separator and the single match is **exactly** the OR of three column ILIKEs. Verified on the
+seeded copy over eight terms, including two deliberate boundary-spanning probes:
+
+```
+term                or_of_three   concat_expr
+Zephyrine                    27            27
+Invoice                      15            15
+sender17@example             60            60
+Sender 42                   548           548
+quarter                      42            42
+filing 7                      2             2
+e Sender                      0             0     <- spans subject|sender_name
+team sender                   0             0     <- spans subject|sender_name
+```
+
+The function also asserts `strpos(p_q, chr(1)) = 0`, so the equivalence holds unconditionally
+rather than by convention.
+
+## 4. Measurement
+
+`scratch_t29`, my own copy: schema dumped from `scratch_perf_seed` at journal head (1,025 tables,
+982 RLS policies, `streamline_app` grants intact), then 257,850 mail rows seeded across the
+seed's four perf tenants and topped up to a realistic per-mailbox depth (30,450 in each measured
+mailbox). Final tenant split 255,000 / 57,000 / 33,600 / 32,250. `VACUUM ANALYZE` after every
+load. All reads as the **non-owner `streamline_app`** with `app.organization_id` set, in
+**buffers**, across **four tenants**.
+
+Why the top-up: at the seed's own mail volume (4,448 rows, ~200 per mailbox) every plan is
+degenerate — a seq scan of 4,448 rows beats any index and the measurement says nothing. That is
+report 00 §1's trap, and it is why the first run of this benchmark read 47-98 buffers for
+everything.
+
+### Search, LIMIT 50
+
+| term | matches | before: leading-wildcard ILIKE | after: definer + trigram |
+|---|---|---|---|
+| `Zephyrine` | 27 | **13,595** (majority) · 13,814–13,820 (three minorities) | **693–697** |
+| `Invoice` | 15 | **13,595** · 13,814–13,817 | **573–575** |
+| `update` | >cap | 13,595 (majority) · **92** (minorities) | falls back to ILIKE — unchanged, deliberately |
+
+About **20× fewer buffers** on a selective term, consistently across the skew.
+
+Two things worth keeping:
+
+- **The plans genuinely differ per tenant.** The majority tenant takes a BitmapAnd on
+  `idx_mail_metadata_search`; the three minority tenants walk `idx_mail_metadata_list_keyset`.
+  A single-tenant reading would have shown one of these and missed the other.
+- **The `update` row is why the cap exists.** A term matching most of the mailbox is *already*
+  fast as an ILIKE under `LIMIT` (92 buffers on the minorities) because the scan stops as soon
+  as it has 50 rows, while a materialised id list would have to be built in full first. That
+  92 is not a number to "improve"; the fallback is there to preserve it.
+- Inside the definer the plan is `BitmapAnd(idx_mail_metadata_search_trgm, idx_mail_metadata_search)`
+  — the trigram index is reached only there, which is the whole point of the SECURITY DEFINER
+  escape.
+
+### Keyset paging, page 2, LIMIT 50
+
+| tenant | with `idx_mail_metadata_list_keyset` | without it |
+|---|---|---|
+| majority | **60** | 102 (Incremental Sort over the prefix index) · **13,592** once the prefix index is gone too |
+| tiny | **60** | 102 |
+
+### And the prefix index is dropped, on measurement not on containment
+
+`idx_mail_metadata_list (org_id, user_membership_id, folder, date DESC)` is a strict prefix of
+the new keyset index. Migration 1007 is the standing warning that prefix containment proves
+*reachability*, not *cost*, so it was measured rather than reasoned. Page one — the exact shape
+`read-cost-budgets.mjs` "mail-inbox-cached" asserts:
+
+| tenant | both indexes | keyset only |
+|---|---|---|
+| majority | 92 | **95** |
+| tiny | 89 | **92** |
+
+Three buffers, still an Index Scan (the budget's `forbid-seq-scan` assertion holds), against
+**49 MB** of index on an **89 MB** table and one more B-tree maintained on every row of a mirror
+that is rewritten on every inbox load. Dropped in 1022.
+
+## 4b. KB — the other read-then-inserts, and two notes that were wrong
+
+Migration `1040_t29_kb_membership_and_template_uniques.sql`.
+
+`KbMembersService.add` (`kb-members.service.ts:90-105`) checked for an existing grant on
+`(org_id, space_id, membership_id)` and, independently, on `(org_id, space_id, role)`, with no
+unique behind either — the same shape as the record links. On a space ACL a duplicated grant is
+worse than noise: the second row is invisible to whoever revokes the first. Both grains now have
+a partial unique, each restricted to its own column so a role grant and a membership grant still
+coexist in one space, and the service inserts and maps `23505` to 409 with the right message per
+constraint name.
+
+`KbPageTemplatesService.create` had no check at all, while `list()` orders by name and shows
+nothing else — two templates sharing a name were indistinguishable to the person picking one.
+`(org_id, name)` is now the per-org key it already read as. `list()` was also **completely
+unbounded** (no limit, no cursor); capped at 200.
+
+The de-duplicating DELETEs remove only rows identical on *every* meaningful column. A pair that
+disagrees — same member, two different `space_role`s — deliberately fails the CREATE UNIQUE
+INDEX rather than being resolved: silently keeping one of two conflicting grants is a permission
+change made by a migration. Measured first: 0 duplicates on all three tuples on the seeded
+database, so both DELETEs are no-ops there.
+
+Verified by inserting through the real constraints on `scratch_t29`, not only in a mock:
+
+```
+BITE-1 second identical member          -> ERROR 23505 uniq_kb_space_members_org_space_membership
+BITE-2 second same-name template        -> ERROR 23505 uniq_kb_page_templates_org_name
+CONTROL another org, same name          -> INSERT 0 1
+CONTROL role grant beside a membership  -> INSERT 0 1
+CONTROL a second member in that space   -> INSERT 0 1
+```
+
+**Two of the ticket's named gaps are not defects, and are left alone on purpose.**
+
+- `uniq_kb_pages_public_token` being a bare global unique is **correct**.
+  `KbPagesService.getPublicPage(token)` resolves by token alone on a `@Public()` route, so the
+  token *is* the tenant selector and must be globally unique and globally indexed; a composite
+  `(org_id, public_token)` would break the only lookup that uses it. And it is 24 random bytes
+  (`randomBytes(24)`, `kb-pages.service.ts:334-336`), not a tenant-supplied business key, so the
+  cross-tenant DoS backend/CLAUDE.md §3 guards against cannot occur.
+- `kb_article_restrictions` has **no writer** anywhere in `src/modules/` — only
+  `kb-access.service.ts`, `kb-candidate.service.ts` and `support-ai-triage-data.service.ts`, all
+  reads. A unique there would back no assumption and would be a guess at a natural key nothing
+  asserts.
+
+And one that is real but out of territory: `uniq_kb_chunks_article_revision` /
+`_page_revision` are live and undeclared in Drizzle, on `kb_article_chunks`
+(`db/schema/support/kb-chunks.ts`) — `schema/support/`, not `schema/kb/`. The companion claim
+about `idx_kb_page_templates_org` is stale in the other direction: that index does not exist
+live, and `uniq_kb_page_templates_org_name` is org-leading so none is owed.
+
+## 5. Calendar
+
+The S8 fixes hold: `jest src/modules/calendar` → **42 suites / 396 tests pass, exit 0** (was
+41/391 at S8; the delta is this pass's new spec).
+
+The backend half of open item (b) is closed. `calendar_events.timezone` drove occurrence
+expansion but stopped at the source: `calendar-native-event-source.ts` selected it and did not
+put it in `meta`, so `projectionToItem` had nothing to project and `CalendarEventItem` had no
+field. All three now carry it, `null` for aggregate sources with no authored zone. The client
+half — rendering it instead of labelling browser-local times with the browser's zone — is
+`hooks/api/**` and `event-detail-content.tsx`, ticket 28/25 territory.
+
+## 6. What I could not do, and why
+
+- **(a) the HR second calendar surface** — `frontend/features/hr/recruitment/interviews-page.tsx`.
+  Frontend, ticket 25.
+- **(b) timezone reaching the UI** — backend done here; `hooks/api/calendar.ts` is ticket 28.
+- **(c) "this and following"** — a series-split product feature, not a defect. Nothing in either
+  repo implements it; `event-series-scope-dialog.tsx:15` still offers `occurrence | series`.
+- **(d) source toggles in the query key** — `lib/query-keys/platform-hierarchy.ts`, ticket 28.
+- **Mail unread, incremental sync, idempotent send/receive, bounce/retry/DLQ** — each is a
+  platform feature rather than a defect in an existing path, and each is larger than the two
+  this pass fixed. They stay open with the S8 findings intact.
+
+## 7. Cross-territory findings
+
+1. **`src/scripts/read-cost-budgets.mjs:838-873`** — the `mail-inbox-cached` budget's SQL is
+   `ORDER BY date DESC` and its comment names `idx_mail_metadata_list on (org_id, user_id, folder,
+   date DESC)`. Both are now stale: the service orders by `date DESC, id DESC` and the index is
+   `idx_mail_metadata_list_keyset`. The budget still **passes** (Index Scan, no seq scan, 95/92
+   buffers) — it is the description that drifted. One-line fix, not mine to make.
+2. **`check:tenant-relationships` default target is misleading.** It reports **627** actionable
+   single-column tenant FKs, including `fk_kb_space_grants_space`, because it defaults to
+   `scratch_boot_a`, whose ledger is only partly replayed — the script's own TARGET CAVEAT.
+   Against a database at head it is **0**: `TENANT_RELATIONSHIP_DB_URL=…/scratch_perf_seed
+   check:tenant-relationships --db-only` → *Ledger rows on target 659 of 662 · Total single-col
+   FKs 214 · Actionable 0 · exit 0*. Anyone reading 627 as a release number is reading
+   `scratch_boot_a`.
+3. **Another agent's commit `f4c7bdf5` swallowed `migrations/meta/_journal.json`** with this
+   ticket's two new entries in it, while the two `.sql` files were still untracked — so between
+   that commit and this one, HEAD named two migrations with no file on disk
+   (`check:migration-discipline` rule 8). Committed here. This is the shared-index hazard the
+   brief describes, arriving from the other direction: not a pathspec that took too much, but a
+   file another agent had no reason to know was mid-edit.
+4. **A duplicate constraint I created and then removed.** The first draft of this pass added
+   `fk_kb_space_grants_org_space` before discovering 0965 had already added the identical
+   constraint under a different name. Another agent's bootstrap applied it to
+   `scratch_perf_seed` before I caught it. The migration was withdrawn (file, rollback and
+   journal entry all removed) and the duplicate dropped from both `scratch_perf_seed` and
+   `scratch_t29`; `kb_space_grants` now carries exactly `fk_kb_space_grants_org`,
+   `fk_kb_space_grants_granted_by` and `fk_kb_space_grants_space_id_org` on both.
+
+## 8. Gates — literal command, exit code, number
+
+| Command | Exit | Number |
+|---|---|---|
+| `pnpm typecheck` | **0** | 0 errors |
+| `jest --testPathPattern="src/modules/calendar"` | **0** | 42 suites / 396 tests pass |
+| `jest --testPathPattern="src/modules/mail\|kb-page-record-links\|calendar-item-timezone"` | **0** | 15 suites / 115 tests pass |
+| `jest --testPathPattern="src/modules/kb/wiki"` | **0** | 34 suites / 197 tests pass |
+| `check:migration-discipline` | **0** | 662 SQL files, 0 new violations |
+| `check:migration-rollback` | **0** | 662 scanned, all rollback checks pass |
+| `check:tenant-indexes` | **0** | 839 / 839 tenant tables lead with the tenant column |
+| `check:tenant-relationships --db-only` (→ `scratch_perf_seed`) | **0** | 214 single-col FKs, **0 actionable** |
+| `check:restrict-fks` | **0** | 345 schema files |
+| `check:unbounded-reads` | **0** | no violations |
+| `check:cache-invalidation` | **0** | — |
+| `check:record-access` | **0** | — |
+| `check:import-direction` | **0** | 219 files, 0 new |
+| `check:kebab-case` | **0** | 6,291 entries, 0 violations |
+| `madge --circular` | **0** | 5,507 files, **0 cycles** |
+
+**Red, and not mine** — each verified to be outside `mail/`, `kb/`, `calendar/` and
+`db/schema/{mail,kb,calendar}`:
+
+| Command | Exit | Where it fails |
+|---|---|---|
+| `check:spec-typecheck` | 2 | 1 error, `src/modules/gdpr/gdpr-erasure-chat-attachments.spec.ts:213` |
+| `check:tenant-isolation` | 1 | 1 uncovered service, `src/modules/organization/setup/org-setup-completed-consumer.service.ts` (arrived in `f4c7bdf5`) |
+| `check:file-sizes` | 1 | `src/modules/access/access-permission.resolver.ts` at 507 lines |
+| `check:db-call-count` | 1 | 1 unclassified + 8 stale verdicts, all in `access/`, `build/`, `cron/`, `finance/`, `hr/`, `notifications/` |
+
+**Not run:** `pnpm test:e2e` (including `test/kb-page-record-links.e2e-spec.ts`), `pnpm lint`,
+`check:openapi-*`, `check:contract-registry`.
+
+## 9. Files changed this pass (backend)
+
+**New** — `migrations/1021_t29_kb_page_links_record_unique.sql` ·
+`migrations/1022_t29_mail_metadata_search_and_keyset.sql` ·
+`migrations/rollback/1021_t29_kb_page_links_record_unique.down.sql` ·
+`migrations/rollback/1022_t29_mail_metadata_search_and_keyset.down.sql` ·
+`src/modules/mail/providers/mail-metadata-cursor.ts` ·
+`src/modules/mail/providers/mail-cursor-signing.ts` ·
+`src/modules/mail/mail-metadata-keyset-search.spec.ts` ·
+`src/modules/mail/mail-list-paging-regime.spec.ts` ·
+`src/modules/kb/wiki/kb-page-record-links-uniqueness.spec.ts` ·
+`src/modules/calendar/calendar-item-timezone.spec.ts` ·
+`migrations/1040_t29_kb_membership_and_template_uniques.sql` ·
+`migrations/rollback/1040_t29_kb_membership_and_template_uniques.down.sql` ·
+`src/modules/kb/wiki/kb-membership-uniqueness.spec.ts`
+
+**Modified** — `migrations/meta/_journal.json` · `src/db/schema/common/access.ts` ·
+`src/db/schema/kb/pages.ts` · `src/db/schema/mail/mail-metadata.ts` ·
+`src/modules/mail/mail.service.ts` · `src/modules/mail/mail-metadata.service.ts` ·
+`src/modules/mail/providers/mail-normalizers.ts` ·
+`src/modules/kb/wiki/kb-page-record-links.service.ts` ·
+`src/modules/calendar/calendar.types.ts` ·
+`src/modules/calendar/calendar-events-aggregate.service.ts` ·
+`src/modules/calendar/calendar-native-event-source.ts` · `src/db/schema/kb/spaces.ts` ·
+`src/db/schema/kb/page-collab.ts` · `src/modules/kb/wiki/kb-members.service.ts` ·
+`src/modules/kb/wiki/kb-page-templates.service.ts`
+
+Two commits in `streamlineos-backend`: **122334c2** (mail paging + search, kb_page_links,
+calendar timezone, the kb_space_grants declaration) and **e287fef6** (kb_space_members and
+kb_page_templates uniques).
