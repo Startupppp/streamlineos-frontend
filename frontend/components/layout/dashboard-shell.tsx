@@ -18,7 +18,6 @@ import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { AskOsProvider } from "@/components/assistant/ask-os-provider";
 import { CommandPaletteProvider } from "@/features/command-palette";
-import { ChatMobileBottomNav } from "@/features/chat/chat-mobile-bottom-nav";
 import { getChatMobileContentPaddingClassName } from "@/features/chat/chat-mobile-chrome-layout";
 import { MobileModuleBottomNav } from "./mobile/mobile-module-bottom-nav";
 import { MobileShellFab } from "./mobile/mobile-shell-fab";
@@ -27,6 +26,8 @@ import {
   shouldShowMobileModuleBottomNav,
 } from "./mobile/mobile-module-nav-items";
 import { isPortalChromelessPath } from "./sidebar/sidebar-nav-items";
+import { ShellOfflineBanner } from "./shell-offline-banner";
+import { useRouteFocus } from "@/hooks/common/use-route-focus";
 import { cn } from "@/lib/utils";
 
 const SuccessChecklist = dynamic(
@@ -41,6 +42,14 @@ const WelcomeToast = dynamic(
   () =>
     import("@/components/workspace-onboarding/welcome-toast").then(
       (m) => m.WelcomeToast,
+    ),
+  { ssr: false },
+);
+
+const ChatMobileBottomNav = dynamic(
+  () =>
+    import("@/features/chat/chat-mobile-bottom-nav").then(
+      (m) => m.ChatMobileBottomNav,
     ),
   { ssr: false },
 );
@@ -67,6 +76,8 @@ export function DashboardShell({
   const pathname = usePathname();
   const route = pathname ?? "";
   const isPortalRoute = isPortalChromelessPath(route);
+
+  useRouteFocus();
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] =
     useState(defaultCollapsed);
@@ -201,6 +212,8 @@ export function DashboardShell({
               mobileNavOpen={mobileMenuOpen}
               hideAdminChrome={isPortalRoute}
             />
+
+            <ShellOfflineBanner />
 
             <div className="flex min-h-0 flex-1 overflow-hidden">
               {!hideSidebar && (

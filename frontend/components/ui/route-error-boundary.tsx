@@ -1,10 +1,12 @@
 "use client";
 
+import { useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 interface RouteErrorBoundaryProps {
   error: Error & { digest?: string };
   reset: () => void;
+  onBeforeReset?: () => void;
   title?: string;
   fallbackMessage?: string;
   layout?: "centered" | "inline" | "fullscreen";
@@ -13,11 +15,17 @@ interface RouteErrorBoundaryProps {
 export function RouteErrorBoundary({
   error: _,
   reset,
+  onBeforeReset,
   title = "Something went wrong",
   fallbackMessage = "An unexpected error occurred. Please try again.",
   layout = "inline",
 }: RouteErrorBoundaryProps) {
   const displayMessage = fallbackMessage;
+
+  const handleRetry = useCallback(() => {
+    onBeforeReset?.();
+    reset();
+  }, [onBeforeReset, reset]);
 
   const content = (
     <div
@@ -32,7 +40,7 @@ export function RouteErrorBoundary({
       </div>
       <h2 className="text-xl font-bold text-foreground">{title}</h2>
       <p className="text-sm text-muted-foreground max-w-md">{displayMessage}</p>
-      <Button onClick={reset} variant="outline">
+      <Button onClick={handleRetry} variant="outline">
         <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
         Try Again
       </Button>

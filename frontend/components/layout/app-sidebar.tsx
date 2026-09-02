@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { Fragment, useMemo, useCallback, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -20,8 +21,15 @@ import {
   type ModuleAccent,
 } from "./sidebar/sidebar-nav-items";
 import { SidebarSection } from "./sidebar/sidebar-section";
-import { ProjectNavTree } from "@/features/build/sidebar/project-nav-tree";
 import { ProductSwitcherMenu } from "./header/product-switcher-menu";
+
+const ProjectNavTree = dynamic(
+  () =>
+    import("@/features/build/sidebar/project-nav-tree").then(
+      (m) => m.ProjectNavTree,
+    ),
+  { ssr: false },
+);
 import { useAccess, useCan } from "@/hooks/api/access";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
 

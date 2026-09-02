@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import dynamic from "next/dynamic";
 import { Check, ChevronsUpDown, Plus, Building2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import {
@@ -21,11 +22,23 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { useGetOrganizations, useSwitchOrg } from "@/hooks/common/auth-hooks";
 import { useAccess } from "@/hooks/api/access";
 import { CreateWorkspaceDialog } from "@/components/layout/header/create-workspace-dialog";
-import {
-  LeaveOrganizationDialog,
-  LeaveOrganizationMenuItem,
-} from "@/features/settings/organization/leave-organization-control";
-import { ArchivedOrgsRestore } from "@/features/settings/organization/archived-orgs-restore";
+import { LeaveOrganizationMenuItem } from "@/features/settings/organization/leave-organization-control";
+
+const LeaveOrganizationDialog = dynamic(
+  () =>
+    import("@/features/settings/organization/leave-organization-control").then(
+      (m) => m.LeaveOrganizationDialog,
+    ),
+  { ssr: false },
+);
+
+const ArchivedOrgsRestore = dynamic(
+  () =>
+    import("@/features/settings/organization/archived-orgs-restore").then(
+      (m) => m.ArchivedOrgsRestore,
+    ),
+  { ssr: false },
+);
 
 interface OrganizationSwitcherProps {
   variant?: "header" | "sidebar";
