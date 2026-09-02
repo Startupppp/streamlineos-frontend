@@ -397,12 +397,22 @@ Still failing, each owned:
 
 | Gate | State |
 |---|---|
-| `check:spec-typecheck` | 22 errors, all from an in-flight split of `roles.service.ts` / `support-kb.service.ts` — moved methods, callers not yet repointed |
-| `check:file-sizes` | `roles.service.ts` 506, `support-kb.service.ts` 508 — same split |
-| `check:over-300` | 395 files vs a 394 baseline — one file over, resolves with the split |
-| `check:audit-log-privileges` | under triage |
-| `check:alert-ack` | under triage |
+| `check:over-300` | 395 vs a 394 baseline. The single regression is `kb-rag.service.ts` (240 → 367 when public KB streaming landed); being split along retrieval / answering |
 | `check:tenant-relationships` | needs `scratch_boot_a`, which the bootstrap run held |
+
+`check:spec-typecheck` and `check:file-sizes` now pass: `roles.service.ts` (506) and `support-kb.service.ts` (508) were split by responsibility and every caller repointed.
+
+**Not run — prerequisites absent, so reported as not run rather than failing:**
+
+| Gate | Prerequisite |
+|---|---|
+| `check:audit-log-privileges` | `APP_DATABASE_URL` for the non-owner `streamline_app` role. The immutability migrations (`0840`, `0928`, `0930`) DO apply — a fresh bootstrap applied all 633. Their future-dated journal `when` places them above the watermark, not below it, so they are not skipped |
+| `check:alert-ack` | a real `ALERT_WEBHOOK_URL` plus a human confirming the drill nonce. No code change can substitute: a webhook that returns 200 into a dead channel is indistinguishable from a working one until an incident |
+| `check:vulnerabilities`, `check:licenses`, `check:migration-ledger`, `check:migration-rollback`, `check:tenant-isolation:run` | network or live database |
+
+Both of the first two had a blind spot that was fixed while they remain unrunnable here: the privileges gate never asserted *which* role it connected as, and the ack gate never exercised its undelivered branch.
+
+**The journal's 237 future-dated entries are deliberate and already gated.** `check:migration-discipline` rule 8 requires strictly increasing `when` and states the hazard: an entry at or below the applied watermark is skipped while `db:migrate` still prints success. The journal has zero inversions, so nothing is silently skipped. The live constraint is that a new migration must be stamped above 2027-02-19, which that gate enforces.
 
 **Frontend** 20 of 22 executed gates pass; `check:web-vitals-budget` and `check:route-bundle-budget` need a real production build and were not run.
 
