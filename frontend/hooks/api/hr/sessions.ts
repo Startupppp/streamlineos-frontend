@@ -36,7 +36,7 @@ export const useRevokeAllSessions = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["sessions", "revoke-all"],
-    mutationFn: () => apiClient.delete("/sessions"),
+    mutationFn: () => apiClient.delete<{ revokedCount: number }>("/sessions"),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.sessions.all }),
   });
 };

@@ -18,11 +18,13 @@ export function useModuleRoleGroups(moduleKey: string) {
   const canView = useCan(viewKey(moduleKey));
   return useInfiniteQuery<AuditCursorPage<ModuleRoleGroup>, Error>({
     queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
-    queryFn: ({ pageParam }) => {
+    queryFn: ({ pageParam, signal }) => {
       const params = new URLSearchParams({ limit: "100" });
       if (typeof pageParam === "string") params.set("cursor", pageParam);
       return apiClient.get<AuditCursorPage<ModuleRoleGroup>>(
         `/module-access/${moduleKey}/groups?${params.toString()}`,
+        undefined,
+        signal,
       );
     },
     initialPageParam: undefined as string | undefined,
@@ -124,7 +126,9 @@ export function useModuleGroupMembers(moduleKey: string, groupId: number | null)
     queryKey: queryKeys.moduleAccess.groupMembers(moduleKey, groupId ?? 0),
     queryFn: ({ signal }) =>
       apiClient.get<ModuleGroupMember[]>(
-        `/module-access/${moduleKey}/groups/${groupId}/members`, signal,
+        `/module-access/${moduleKey}/groups/${groupId}/members`,
+        undefined,
+        signal,
       ),
     enabled: canView && groupId !== null,
     staleTime: 2 * 60_000,

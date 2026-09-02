@@ -40,11 +40,13 @@ export function useModuleAuditLog(
   const canView = useCan(viewKey(moduleKey));
   return useInfiniteQuery<AuditCursorPage<AuditLogEntry>, Error>({
     queryKey: queryKeys.moduleAccess.auditLog(moduleKey, { limit }),
-    queryFn: ({ pageParam }) => {
+    queryFn: ({ pageParam, signal }) => {
       const params = new URLSearchParams({ limit: String(limit) });
       if (typeof pageParam === "string") params.set("cursor", pageParam);
       return apiClient.get<AuditCursorPage<AuditLogEntry>>(
         `/module-access/${moduleKey}/audit-log?${params.toString()}`,
+        undefined,
+        signal,
       );
     },
     initialPageParam: undefined as string | undefined,

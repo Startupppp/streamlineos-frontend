@@ -30,6 +30,13 @@ All prior violations resolved on 2026-08-30:
 | `/knowledge-base` | DELETED — canonical KB is at `/knowledge/wiki/**`. |
 | `(portal)/projects` and `(portal)/projects/[projectId]` | DELETED — external client portal moved to `/client-portal` and `/client-portal/[projectId]`. |
 
+Resolved on 2026-09-02 (S06 — backend API prefixes, not page routes):
+
+| API prefix | Resolution |
+|---|---|
+| `product-management/workspaces` | RENAMED to `build/workspaces` — §8 puts every Build resource under `/build`. Both frontend callers (`hooks/api/build/pm-workspaces.ts`, the `[pmWorkspaceId]` layout server fetch) and 6 e2e route literals updated; all 9 operations were `internal permissioned`, so no published contract broke. |
+| `whiteboards` (hub) | RENAMED to `build/whiteboards`. The project-scoped `build/:projectId/whiteboards` routes were already canonical; only the org-wide hub sat outside the prefix, where any middleware or rate-limit tier keyed on `/build` silently missed it. No frontend caller existed. |
+
 **Open question (blocked — do not change unilaterally):** Root `CLAUDE.md` §8 lists "people directory" as a universal surface but also places workforce at `/directory/workers` as governance. The current code gates `/directory/workers` on `directory:workers:view`. Widening access is the unsafe direction to guess; left as-is pending an explicit product decision.
 
 **Note:** `(authenticated)/portal` (internal, session JWT, `useCan("build:portal:view")`) and `(portal)/client-portal` (external, portal token, `portalApiClient`) are intentionally distinct surfaces — the hook collision was resolved by renaming to `useExternalPortalProjects`.
@@ -306,7 +313,7 @@ All prior violations resolved on 2026-08-30:
 - [ ] `/build/[projectId]/reports` · **Build** · hooks: `→ features/build/project` · §8: F ? States ?
 - [ ] `/build/[projectId]/risks` · **Build** · hooks: `→ features/build/project` · §8: L ? C ? E ? D ? F ? P ? States ?
 - [ ] `/build/[projectId]/settings` · **Build** · hooks: `→ features/build/project` · §8: E ? Perm ? States ?
-- [ ] `/build/[projectId]/sprints` · **Build** · hooks: `→ features/build/project` · §8: L ? C ? E ? D ? F ? P ? States ?
+- [x] `/build/[projectId]/sprints` · **Build** · hooks: `useSprints, useUpdateSprint, useUpdateTicket, useSprintTicketMover` · §8: L ✓ C ✓ E ✓ D ✓ F ? P ? States ✓ — S06: three `Promise.all` per-ticket fan-outs replaced by the bounded transactional `POST /build/:projectId/tickets/bulk` (chunked at the backend cap of 100); sprint completion now sends `sprintId: null` so "move to backlog" actually clears the sprint instead of serialising `undefined` to a no-op. 5 tests in `use-sprint-ticket-mover.test.ts`.
 - [ ] `/build/[projectId]/tickets/[ticketKey]` · **Build** · hooks: `→ features/build/project` · §8: E ? D ? Perm ? States ?
 - [ ] `/build/[projectId]/timeline` · **Build** · hooks: `→ features/build/project` · §8: F ? States ?
 - [ ] `/build/[projectId]/triage` · **Build** · hooks: `→ features/build/project` · §8: L ? States ?
@@ -863,14 +870,14 @@ All prior violations resolved on 2026-08-30:
 
 ## Settings (Global Administration)
 
-- [ ] `/settings` · **Settings** · hooks: `→ features/settings` · §8: States ?
+- [ ] `/settings` · **Settings** · hooks: `→ features/settings` · §8: States ✓ — S01 (2026-09-02): the sessions panel had loading/empty but no error branch, so a failed `GET /sessions` rendered "No active sessions found" — a false all-clear on a security surface. `ErrorState` + retry added; `revokedCount` typed at the hook instead of two `as` casts.
 - [ ] `/settings/users` · **Settings** · hooks: `→ features/settings/users` · §8: L ? C ? E ? D ? F ? P ? Perm ? States ?
 - [ ] `/settings/roles` · **Settings** · hooks: `→ features/settings/roles` · §8: L ? C ? E ? D ? Perm ? States ?
 - [ ] `/settings/roles/[roleId]` · **Settings** · hooks: `→ features/settings/roles` · §8: E ? D ? Perm ? States ?
 - [ ] `/settings/roles/audit` · **Settings** · hooks: `→ features/settings/roles` · §8: L ? F ? P ? Perm ? States ?
 - [ ] `/settings/roles/simulate` · **Settings** · hooks: `→ features/settings/roles` · §8: States ?
 - [ ] `/settings/modules` · **Settings** · hooks: `→ features/settings/modules` · §8: L ? E ? Perm ? States ?
-- [ ] `/settings/organization` · **Settings** · hooks: `→ features/settings/organization` · §8: E ? Perm ? States ?
+- [ ] `/settings/organization` · **Settings** · hooks: `→ features/settings/organization` · §8: E ✓ Perm ? States ? — S01 (2026-09-02): `mfaEnforced`, `allowedEmailDomains` and `ipAllowlist` were writable through both `PATCH /organization/settings` and `PATCH /organization/security` with different bounds and cache order; the security route is now the only writer, and the form's list bounds match the backend's 100-entry cap.
 - [ ] `/settings/organization/branches` · **Settings** · hooks: `→ features/settings/organization` · §8: L ? C ? E ? D ? F ? P ? Perm ? States ?
 - [ ] `/settings/organization/business-units` · **Settings** · hooks: `→ features/settings/organization` · §8: L ? C ? E ? D ? Perm ? States ?
 - [ ] `/settings/organization/chart` · **Settings** · hooks: `→ features/settings/organization` · §8: States ?
@@ -884,7 +891,7 @@ All prior violations resolved on 2026-08-30:
 - [ ] `/settings/api-tokens` · **Settings** · hooks: `→ features/settings/api-tokens` · §8: L ? C ? D ? Perm ? States ?
 - [ ] `/settings/webhooks` · **Settings** · hooks: `→ features/settings/webhooks` · §8: L ? C ? D ? Perm ? States ?
 - [ ] `/settings/audit-log` · **Settings** · hooks: `→ features/settings/audit-log` · §8: L ? F ? P ? Perm ? States ?
-- [ ] `/settings/delegations` · **Settings** · hooks: `→ features/settings/delegations` · §8: L ? C ? D ? Perm ? States ?
+- [ ] `/settings/delegations` · **Settings** · hooks: `→ features/settings/delegations` · §8: L ? C ✓ D ? Perm ? States ? — S01 (2026-09-02): neither side bounded the delegation window, so a delegation could be granted for a century — a permanent shadow role. Capped at 90 days in `delegation-policy.ts` and mirrored in the form schema.
 - [ ] `/settings/incoming-transfer` · **Settings** · hooks: `→ features/settings/incoming-transfer` · §8: States ?
 
 ---

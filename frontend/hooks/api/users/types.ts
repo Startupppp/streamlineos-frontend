@@ -43,6 +43,21 @@ export interface UserPreferences {
   updatedAt: string;
 }
 
+export type UpdateUserPreferencesInput = Partial<
+  Pick<
+    UserPreferences,
+    | "theme"
+    | "language"
+    | "timezone"
+    | "dateFormat"
+    | "timeFormat"
+    | "numberFormat"
+    | "weekStartDay"
+    | "notificationPreferences"
+    | "dashboardPreferences"
+  >
+>;
+
 export interface EmergencyContact {
   name: string;
   relation: string;

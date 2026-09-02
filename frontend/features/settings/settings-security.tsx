@@ -77,9 +77,13 @@ function SessionRow({ session: s, onRevoke, revokePending }: SessionRowProps) {
 }
 
 function SessionsSection() {
-  const { data: sessions, isLoading } = useSessions();
+  const { data: sessions, isLoading, isError, error, refetch } = useSessions();
   const revokeOne = useRevokeSession();
   const revokeAll = useRevokeAllSessions();
+
+  const handleRetrySessions = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const handleRevokeOne = useCallback((sessionId: string) => {
     revokeOne.mutate(sessionId, {
@@ -90,15 +94,10 @@ function SessionsSection() {
 
   const handleRevokeAll = useCallback(() => {
     revokeAll.mutate(undefined, {
-      onSuccess: (data) => {
-        const count =
-          data !== null &&
-          typeof data === "object" &&
-          "revokedCount" in data &&
-          typeof (data as Record<string, unknown>).revokedCount === "number"
-            ? (data as Record<string, unknown>).revokedCount as number
-            : 0;
-        toast.success(`Signed out ${count} other session${count !== 1 ? "s" : ""}`);
+      onSuccess: ({ revokedCount }) => {
+        toast.success(
+          `Signed out ${revokedCount} other session${revokedCount !== 1 ? "s" : ""}`,
+        );
       },
       onError: (err) => toast.error(getErrorMessage(err)),
     });
@@ -153,6 +152,13 @@ function SessionsSection() {
             <div key={i} className="h-14 rounded-md bg-muted/50 animate-pulse" />
           ))}
         </div>
+      ) : isError ? (
+        <ErrorState
+          compact
+          description={getErrorMessage(error)}
+          onRetry={handleRetrySessions}
+          className="mt-3"
+        />
       ) : !sessions?.length ? (
         <p className="text-xs text-muted-foreground text-center py-4">No active sessions found.</p>
       ) : (

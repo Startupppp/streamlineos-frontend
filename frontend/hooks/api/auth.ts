@@ -34,6 +34,7 @@ export function useUpdateMyProfile() {
       apiClient.patch<{ success: true }>("/me/profile", data),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.hr.employees() });
+      void qc.invalidateQueries({ queryKey: queryKeys.organization.members() });
     },
   });
 }

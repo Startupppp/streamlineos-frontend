@@ -17,12 +17,14 @@ export function useModuleMembersInfinite(
   const userId = options?.userId;
   return useInfiniteQuery<CursorPaginatedResult<ModuleMember>, Error>({
     queryKey: queryKeys.moduleAccess.members(moduleKey, { pageSize, userId }),
-    queryFn: ({ pageParam }) => {
+    queryFn: ({ pageParam, signal }) => {
       const params = new URLSearchParams({ pageSize: String(pageSize) });
       if (typeof pageParam === "number") params.set("cursor", String(pageParam));
       if (userId !== undefined) params.set("userId", userId);
       return apiClient.get<CursorPaginatedResult<ModuleMember>>(
         `/module-access/${moduleKey}/members?${params.toString()}`,
+        undefined,
+        signal,
       );
     },
     initialPageParam: undefined as number | undefined,
@@ -135,13 +137,15 @@ export function useModuleMemberCandidates(
       userId,
       excludeAssigned,
     }),
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const params = new URLSearchParams({ pageSize: String(pageSize) });
       if (search) params.set("search", search);
       if (userId) params.set("userId", userId);
       params.set("excludeAssigned", String(excludeAssigned));
       return apiClient.get<CursorPaginatedResult<ModuleMemberCandidate>>(
         `/module-access/${moduleKey}/member-candidates?${params.toString()}`,
+        undefined,
+        signal,
       );
     },
     enabled: canManage && (options?.enabled ?? true),
@@ -160,7 +164,9 @@ export function useModuleMemberGrants(
     queryKey: queryKeys.moduleAccess.memberGrants(moduleKey, membershipId ?? 0),
     queryFn: ({ signal }) =>
       apiClient.get<{ grants: MemberGrant[] }>(
-        `/module-access/${moduleKey}/members/${membershipId}/grants`, signal,
+        `/module-access/${moduleKey}/members/${membershipId}/grants`,
+        undefined,
+        signal,
       ),
     enabled: canManage && membershipId !== null && (options?.enabled ?? true),
     staleTime: 30_000,

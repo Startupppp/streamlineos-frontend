@@ -118,7 +118,6 @@ export const useUpdateOrgSettings = () => {
       directoryPublic?: boolean;
       primaryColor?: string | null;
       loginBgUrl?: string | null;
-      ipAllowlist?: string[];
       industry?: string | null;
       website?: string | null;
       legalName?: string | null;

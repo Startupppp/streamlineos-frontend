@@ -14,6 +14,8 @@ import {
   TABS_CONTENT_PAGE_BODY_CLASS,
 } from "@/components/ui/tabs";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useModuleMyPermissions } from "@/hooks/api/module-access";
 import { RolesTab } from "@/features/module-access/components/roles-tab";
 import { ModuleMembersTab } from "@/features/module-access/components/module-members-tab";
@@ -59,6 +61,10 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
   );
   const handleOpenCreateGroup = useCallback(() => setCreateGroupOpen(true), []);
   const handleOpenAddMember = useCallback(() => setAddMemberOpen(true), []);
+  const { refetch: refetchMyPermissions } = myPermissionsQuery;
+  const handleRetryPermissions = useCallback(() => {
+    void refetchMyPermissions();
+  }, [refetchMyPermissions]);
   const canViewOwnership = isModuleOwner;
   const visibleTab = tab === "ownership" && !canViewOwnership ? "roles" : tab;
 
@@ -115,6 +121,13 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
         }
       >
         <div className="flex h-full min-h-0 flex-1 flex-col">
+          {myPermissionsQuery.isError ? (
+            <ErrorState
+              description={getErrorMessage(myPermissionsQuery.error)}
+              onRetry={handleRetryPermissions}
+            />
+          ) : null}
+
           <TabsContent value="roles" className={TAB_PANEL_CLASS}>
             <RolesTab
               moduleKey={moduleKey}
