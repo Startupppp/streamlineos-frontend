@@ -608,6 +608,13 @@ async function collectSample(cdp) {
       })`,
     )) ?? "{}",
   );
+  /**
+   * `usedJSHeapSize` read without a collection counts uncollected garbage, so a
+   * heap that climbs across navigations proves nothing on its own. Asking the
+   * renderer to collect first makes the number a retention figure: what the
+   * page is still holding, not what it has not got round to freeing.
+   */
+  await cdp.send("HeapProfiler.collectGarbage").catch(() => {});
   const memory = JSON.parse(
     (await evaluate(
       cdp,
@@ -791,6 +798,7 @@ async function run() {
     await cdp.send("Page.enable");
     await cdp.send("Network.enable");
     await cdp.send("Runtime.enable");
+    await cdp.send("HeapProfiler.enable").catch(() => {});
     await cdp.send("Network.setCookie", { name: cookieName, value: cookieValue, url: baseUrl, httpOnly: true, path: "/" });
     await cdp.send("Page.addScriptToEvaluateOnNewDocument", { source: themeInitScript });
     await cdp.send("Page.addScriptToEvaluateOnNewDocument", { source: VITALS_SCRIPT });

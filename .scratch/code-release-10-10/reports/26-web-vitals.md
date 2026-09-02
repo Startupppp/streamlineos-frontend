@@ -1,6 +1,6 @@
 # Ticket 26 — Web Vitals budgets on a production build
 
-**5 of 7 boxes closed. 2 open.** Every number below came from a command I ran and read; the
+**6 of 7 boxes closed. 1 open** — the route-level JavaScript budget. Every number below came from a command I ran and read; the
 command and its exit code are named beside it.
 
 **The headline changed this session.** The previous pass recorded numbers for six routes that were
@@ -215,15 +215,34 @@ order:
 →  /build/inbox 351  →  /build/my-work 345 MB
 ```
 
-The heap climbs monotonically ~25–50 MB per route for the first seven routes and then plateaus
-around 350 MB. **Read as a retention signal, not a proven leak** — the first pass took the reading
-without forcing a collection, so part of that is uncollected garbage. The driver now calls
-`HeapProfiler.collectGarbage` before every heap read so future captures are retention figures; the
-post-GC re-measurement is in §6a.
+The heap appears to climb monotonically ~25–50 MB per route and then plateau around 350 MB. **That
+reading is an artifact and it would have been reported as a leak.** It was taken without forcing a
+collection, so it counts uncollected garbage, not retention.
 
-### 6a. Post-GC re-measurement
+### 6a. Post-GC re-measurement — there is no leak
 
-<!--MEMPROBE-->
+The driver now calls `HeapProfiler.collectGarbage` immediately before every heap read, so
+`usedJsHeapBytes` is what the page is still *holding*. Re-measured over the same 12 routes, same
+build, same session, `--repeat=3` (72 samples, `authorization` and `contentAssertion` both clean,
+`routeFailures: 0`):
+
+| route | desktop | mobile | | route | desktop | mobile |
+|---|---|---|---|---|---|---|
+| /dashboard | 16 MB | 16 MB | | /chat | 17 MB | 17 MB |
+| /mail | 14 | 14 | | /parties | 14 | 14 |
+| /inbox | 14 | 13 | | /crm/inbox | 14 | 14 |
+| /notifications | 14 | 14 | | /support/inbox | 15 | 15 |
+| /settings | 14 | 14 | | /build/inbox | 13 | 13 |
+| /calendar | 16 | 17 | | /build/my-work | 15 | 17 |
+
+**13–17 MB, flat, on every route and both profiles** — profile p75 **15.5 MB desktop / 15.7 MB
+mobile**, against 345–362 MB for the same routes without a collection. The app retains nothing
+across navigation; the 350 MB was garbage the collector had not been asked to take. Hydration was
+clean again on this pass (**0 mismatches of 72**) and mobile long tasks reproduced at **p75 309 ms**
+against the first pass's 275 ms.
+
+The lesson is worth keeping: a heap read without a forced GC is not a memory measurement, and this
+one would have shipped a leak report.
 
 ---
 
