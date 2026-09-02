@@ -1,384 +1,375 @@
-# 35 — Gate bite-proofs: classification and repairs
+# 35 — Gate bite-proofs
 
-Session S8. Measured 2026-09-02 on this machine (macOS, sibling-repo layout).
+Session S9. Measured 2026-09-02 on this machine (macOS, sibling-repo layout).
 BE = `streamlineos-backend`, FE = `streamlineos-frontend/frontend`.
 
-Every row below was produced by running the gate and its self-test and reading the output.
-Nothing here is inferred from the source alone.
+This report **replaces** the S8 report. S8's repairs are all present on disk and
+committed — I verified that first — but S8 classified gates by reading their
+self-tests. Reading cannot tell a self-test that asserts its detector's output
+from one that merely calls it. This session measured that instead.
 
 ---
 
-## 0. How far I got
+## 0. What S8 left, verified against artifacts
+
+S8's report claimed 5 vacuous self-tests rewritten, 6 INERT gates repaired, 4
+self-tests added and 2 new path resolvers. All of it is on disk and committed
+(`BE 626a9f20`, `FE 6d041ab5c` and earlier). Both `check-repo-paths.mjs` files
+exist. Nothing had regressed. **Zero ticket boxes were ticked**, which is what
+sent me here; the work was real, the proof standard was not.
+
+The gap: S8 asserted "BITE" for ~50 self-tests it did not mutation-test, and its
+own text says so. Three of those were not biting.
+
+---
+
+## 1. Method
+
+Three measurements, all mechanical, all run over every gate in both repos.
+
+**(a) Coverage probe.** Run each `--self-test` under `NODE_V8_COVERAGE` and count
+what fraction of the gate file's own named functions it executes. Catches a
+self-test that never reaches the detector.
+
+**(b) Mutation probe.** For every named function the self-test *does* execute,
+insert `return undefined` at the top of its body, re-run the self-test, and record
+whether it goes red. A **SURVIVOR** is a detector the self-test runs but whose
+output it never checks — the defect this ticket exists for, one level deeper than
+"asserts its own constants".
+
+**(c) Empty-corpus probe.** Neuter each gate's file walker so the scan sees zero
+files, then run the **gate**. Exit 0 means the gate reports OK having looked at
+nothing: its failure is indistinguishable from its success.
+
+Mutants are written to a dot-prefixed sibling file and deleted immediately; no
+gate source was left mutated.
+
+### Results
 
 | | Count |
 |---|---|
-| `check:*` gates enumerated (BE 61 · FE 24) | **85** |
-| Self-tests enumerated and classified | **74 of 74** (100%) |
-| Gates without any self-test at session start | 13 |
-| Gates without any self-test now | **7**, of which 5 are legitimately exempt (see §5) |
-| Self-tests found VACUOUS and rewritten | **5 of 5** |
-| Gates found INERT (could not measure) and repaired | **6 of 6** |
-| Gates found NOISY (findings all generated input) and repaired | **5 of 5** |
-| Gates additionally bite-proven end-to-end with a planted real defect | **3** |
-| P0/P1 defects found | **3** (§6) |
+| Gates measured (BE 65 · FE 24) | **89** |
+| Registered `check:*:self-test` scripts (BE 62 · FE 23) | **85** |
+| Self-tests exiting 0 today | **85 of 85** |
+| Detector mutants generated | **349** |
+| Mutants killed **before** this session | 341 |
+| Mutants killed **after** | **349 of 349** |
+| Gates reporting OK over an empty corpus, before | **7** |
+| after | **0** |
 
-Classification is complete. Repairs are complete for every gate in the three defect
-categories. What I did **not** do: re-audit the 50-odd self-tests already classified
-BITE-PROVEN beyond confirming they call a real detector against known-bad input and assert
-rejection — I read the fixture bodies but did not mutation-test each one individually.
+`check:spec-typecheck:self-test` and `check:set-null-column-lists:self-test` were
+excluded from the mechanical sweep (they run `tsc` / ts-node); both were run
+individually and pass.
 
 ---
 
-## 1. The three failure modes (vocabulary used below)
+## 2. The five defects found and fixed
 
-A gate can report something other than the truth about the codebase in three distinct ways.
-All three were present here.
+### 2.1 P0 — `check:db-call-count` could not see the N+1 it was standing on
 
-| Mode | Meaning | Symptom |
-|---|---|---|
-| **VACUOUS** | The self-test asserts its own constants, or re-implements the gate's rule inside the test. The real detector never executes. | Self-test green forever; detector can rot undetected. |
-| **INERT** | The gate cannot measure — a path it needs does not exist in this layout — so it exits early, crashes, or prints a green "SKIPPED" notice. | Real signal never appears. |
-| **NOISY** | The gate fires on generated/vendored input, so a real finding is buried in hundreds of lines about build chunks. | Real signal appears but is unreadable, and gets filtered away by hand. |
+Flagged by the orchestrator with a confirmed defect to validate against:
+`payroll/runs/inputs.service.ts:187`, roughly 4,000 serial round-trips. The gate
+reported `ACTIONABLE: 0`.
 
-`if (!available) return;` is the canonical INERT shape and belongs in the vacuous column
-even when the logic is sound, because the logic never runs.
+`detectLoopDbCalls` returned `[]` for that entire file. Two independent blind
+spots, isolated with fixtures before changing anything:
 
----
+```
+A  multi-line chained  await this.db \n .select(...)          -> []   MISSED
+B  indirect handle     await pullAttendanceInputs(this.db,..) -> []   MISSED
+C  single-line direct  await this.db.select(...)              -> 1    caught
+```
 
-## 2. Defects found and repaired
+- **A** — the body scan tested one line at a time. Every formatted Drizzle query
+  inside a loop was invisible. The patterns already separate their tokens with
+  `\s*`, so the fix is to run them over the body text accumulated so far: that
+  spans a newline and nothing else. Two adjacent statements still cannot bridge,
+  because `;` is not whitespace — asserted.
+- **B** — every pattern matched the handle as a *receiver* (`db.select(`), never
+  as an *argument*. A helper that receives the handle issues the query just as
+  surely. New pattern: `await <callee>(this.db|db|tx , …)`.
 
-### 2.1 VACUOUS self-tests (asserted constants or re-implemented the rule)
+**Result.** Detected files **41 → 147**. The known defect now reports at
+`loopLine 187 / callLine 188`, and a second multi-line one at `207/209` in the
+same file. Both fixture cases in the self-test are that real code verbatim, per
+the orchestrator's instruction.
 
-| Gate | What the self-test actually did | Rewritten to | Proof |
-|---|---|---|---|
-| `FE check:over-300` | Asserted `LIMIT === 300`, `BASELINE > 0`, and re-implemented `countLines` **inside the assertion**. `collectFiles` and the real `countLines` never ran. This is the exact defect the ticket names as precedent — only the BE twin had been fixed. | Writes a known-bad fixture tree (301-line file, exactly-300 boundary, spec/d.ts/js exclusions, `.next-buildmart/`, `node_modules/`, and an authored `next-intl/`) and runs the real `collectFiles` + `countLines`. | `check-over-300 self-tests: 26 passed` (was 5, none of which touched the scan) |
-| `BE check:vulnerabilities` | Built a mock advisory report and then re-filtered it inline with `Object.values(...).filter(a => a.severity === "critical")`. The gate's own threshold logic was never invoked. | Extracted `evaluateAudit(report)`; both the gate and the self-test go through it. 11 fixtures including two the old shape could not express: a report with **no** `metadata.vulnerabilities` and a report whose counts read zero **beside a listed critical advisory** — both now `INCONCLUSIVE`, exit 2, never OK. | `check-vulnerabilities self-tests: 11 passed` |
-| `BE check:outbox-consumers` | Filtered two hand-built arrays (`fakeEmitted.filter(...)`), then re-declared the inline-registration regex locally and tested *that copy*. The real emit/consumer scanners were never called. | Extracted `analyseSources(pathToSourceMap)`. 15 fixtures over a synthetic 3-file corpus: literal emission, const-resolved emission, `readonly eventType` consumer, inline `registry.register({eventType})`, bare `registry.register(this)`, an unresolvable identifier, and the two-pass const-map ordering case. | `check-outbox-consumers self-tests: 15 passed`; gate measures 24 emitted / 27 consumed types over 5,376 files |
-| `FE check:empty-states` | One positive fixture, no negative case, no vacuity floor, and the self-test **fell through into the real scan** so `--self-test` and the gate printed identical output — a self-test failure and a gate failure were indistinguishable. | 6 fixtures with three explicit negatives (canonical `EmptyState`, a centred spinner, empty-state wording with no structure), a proper exit, and a 500-file vacuity floor. | `check-no-handrolled-empty-states self-tests: 6 passed`; gate now reports `3764 files scanned` |
-| `BE check:licenses` (PARTIAL) | Calls the real `isDisallowed` but re-implements the map walk; the `pnpm licenses --json` extraction layer is untested. | **Not rewritten** — left classified PARTIAL. The detector half is genuinely proven; the extractor half needs a captured `pnpm licenses` fixture, which is a larger change than the remaining budget allowed. | — |
+The regression check now fires. **Eight files recorded `N+1-FIXED` in the
+baseline still contain loop DB calls** — the detector's blindness is why nobody
+noticed:
 
-### 2.2 INERT gates (could not measure anything on this machine)
+```
+/build/core/projects-webhooks-dispatch.service.ts   /kb/wiki/kb-import-export.service.ts
+/cron/cron-leave.service.ts                         /kb/wiki/kb-page-duplicate.service.ts
+/organization/onboarding/workspace-onboarding.service.ts
+/payroll/runs/inputs.service.ts                     /support/core/support-kb.service.ts
+/surveys/survey-builder.service.ts
+```
 
-Every one of these was caused by the same class of bug: a hardcoded relative path
-guessing the *other* repository's location, which is wrong on a sibling checkout.
-Repaired with two new marker-searching resolvers (§3).
+`ACTIONABLE` stays 0 because the 101 newly-visible files are UNCLASSIFIED, not
+triaged. **I did not add them to the baseline** — that is precisely the "baseline
+raised to turn a regression green" this ticket forbids. The gate is honestly red
+at exit 1.
+
+### 2.2 P1 — `check:hardcoded-secrets` reported a credential that was a header name
+
+```
+src/modules/calendar/calendar-webhook-secret.ts  [named-secret-assignment]
+```
+
+The only match is line 4: `export const CALENDAR_WEBHOOK_SECRET_HEADER =
+"x-calendar-webhook-secret";` — a header **name**. The identifier matched
+`SECRET`, and the entropy heuristic counted hyphens as a character class, so any
+lowercase kebab slug of 12+ characters cleared the bar. A false positive in a
+security gate is how a security gate gets allowlisted.
+
+Two rules, both asserted in both directions: a slot-naming identifier suffix
+(`_HEADER`, `_NAME`, `_LABEL`, `_PARAM`, … — suffix-anchored, so `SECRET_HEADER_VALUE`
+still bites) and a value that is entirely lowercase kebab/snake segments.
+
+Re-proven end to end, each probe planted as a real file in the tree and the gate run:
+
+```
+aws-secret       rc=1  [aws-secret-access-key, named-secret-assignment]
+anthropic-key    rc=1  [openai, anthropic]
+named-mixedcase  rc=1  [named-secret-assignment]
+url-credential   rc=1  [url-credential]
+header-name NEG  rc=0  (the false positive above)
+env-read    NEG  rc=0
+clean tree       rc=0
+```
+
+Self-test 34 → 39 assertions.
+
+### 2.3 P1 — `FE check:query-scope`'s self-test discarded its own failures
+
+The gate printed `✔ All 5 rules self-tested successfully`. Mutation testing killed
+only 4 of 7 detectors. Three distinct defects in one self-test:
+
+1. **The oracle was `result !== null`.** Every detector returns a violation string
+   or `null`. A detector returning `undefined` — or anything non-null — scored as
+   a *successful detection*. `checkQueryKeyHashFn` and `checkPrefetchDehydrate`
+   survived on this alone. (`checkNewQueryClient` and `checkHardcodedKeyBase` were
+   killed only because they also appear in the *exempt* fixtures, where the same
+   comparison runs the other way.)
+2. **Rule 4's failures were unreachable.** `selfFailures` was checked and
+   `process.exit(1)`-ed *before* the rule-4 block, then rule 4 pushed into the same
+   array — which was never read again. Every rule-4 result was discarded.
+3. **Rules 2 and 3 had no negative fixture**, so neither direction was pinned.
+
+Fixed: the oracle now requires a violation naming the file **and** containing the
+reason that fixture is supposed to be rejected for; rule-4 scoring moved before the
+exit; four negative fixtures added; and a closing assertion fails if any of the
+five rule functions has no known-bad fixture, so the count in the success line
+cannot drift from reality again. **4/7 → 7/7.**
+
+### 2.4 P1 — `check:module-lifecycle` exited 0 having verified nothing
+
+```
+SKIP — APP_DATABASE_URL is not set.
+Gates 1–4 require a non-owner connection to query pg_catalog as the app role.
+…
+rc=0
+```
+
+Gates 1–4 *are* the check; the schema-side table discovery above them is not.
+Its sibling `check:audit-log-privileges` exits 2 in exactly this situation.
+Now `INCONCLUSIVE` / exit 2, naming what was not verified, with
+`STREAMLINE_ALLOW_PARTIAL_GATES=1` for a labelled PARTIAL at exit 0 —
+the convention S8 established for the six cross-repo gates.
+
+```
+node check-module-lifecycle.mjs                              -> rc=2  INCONCLUSIVE
+STREAMLINE_ALLOW_PARTIAL_GATES=1 node check-module-lifecycle.mjs -> rc=0  PARTIAL
+```
+
+### 2.5 P1 — four gates reported OK over an empty corpus
+
+The empty-corpus probe (§1c) over all 89 gates. Seven passed; two were the
+already-fixed `check:query-scope` / `check:seo-metadata`; the dangerous pair:
 
 | Gate | Was | Now |
 |---|---|---|
-| `BE check:permission-keys` | exit 2, `ENOENT .../streamline/frontend/lib/rbac/...`. **And a second, latent defect underneath it**: `BACKEND_MODULES_DIR` was also computed as `<repo>/../backend/src/modules` — a directory that does not exist. Had only the frontend path been fixed, the gate would have walked an empty tree and reported **OK over zero controllers**. | Measures: **3,116 `@RequirePermission` usages, 627 unique keys, backend catalog 698, frontend union 696, 0 ghosts.** Vacuity floors on files (100), route refs (200) and union keys (100). |
-| `BE check:navigation-permissions` | exit 2, `Cannot read frontend navigation manifest dir` | Measures: **438 navigation gates, 197 unique keys, 627 keys enforced on a route** — OK. Vacuity floors on controllers, nav files (5) and parsed gates (50). |
-| `BE check:file-sizes` | exit 1, `cannot read exceptions doc at .../streamline/architecture-refactor/...` — the §7 registry lives in the FEROOT docs tree. The gate had **never measured** on this machine. | Measures. Reports 2 real violations (§6). |
-| `BE check:s05-artifact-contract` | exit 1 with a raw Node stack trace: `SELF-TEST FAIL: approval/evidence template exists` — same wrong docs root. | `S05 approval/evidence artifact contract passed.` — the first time this gate has passed here. |
-| `FE check:module-manifest` | printed `[NOTICE] backend/ is absent — rule-1 (registry agreement) is SKIPPED`, then `✔ Module manifest is consistent.` and **exit 0**. The rule the gate exists for never ran. | rule-1 runs; manifest agrees with the backend registry. Registry-entry floor of 5. |
-| `FE check:home-manifest` | printed `[NOTICE] backend/ is absent — controller comparison is SKIPPED` then `✔ Manifest file is present` and **exit 0**. The entire comparison was the gate. | Measures: **16 dashboard controller routes + 1 external route vs 17 manifest sections** — consistent. |
-
-All six now report `INCONCLUSIVE` and **exit 2** when the other repository genuinely cannot be
-reached, or `PARTIAL` (exit 0, explicitly labelled) only when an operator opts in with
-`STREAMLINE_ALLOW_PARTIAL_GATES=1` / `STREAMLINE_ALLOW_FRONTEND_ONLY=1`.
-
-Bite proof for the INCONCLUSIVE path (each run individually):
-
-```
-STREAMLINE_FRONTEND_ROOT=/nonexistent node src/scripts/check-permission-keys.mjs      → rc=2
-STREAMLINE_FRONTEND_ROOT=/nonexistent node src/scripts/check-navigation-permissions.mjs → rc=2
-STREAMLINE_WORKSPACE_ROOT=/nonexistent node src/scripts/check-file-sizes.mjs           → rc=2
-STREAMLINE_WORKSPACE_ROOT=/nonexistent node src/scripts/check-s05-artifact-contract.mjs → rc=2
-STREAMLINE_BACKEND_ROOT=/nonexistent  node scripts/check-module-manifest.mjs           → rc=2
-STREAMLINE_BACKEND_ROOT=/nonexistent  node scripts/check-home-manifest.mjs             → rc=2
-```
-
-And the PARTIAL path is labelled, not disguised:
-
-```
-PARTIAL — every @RequirePermission key resolves and exists in the backend catalog.
-The frontend PermissionKey union was NOT compared; this run proves nothing about useCan.
-```
-
-### 2.3 NOISY gates (findings were all generated build output)
-
-`frontend/.next-buildmart/` is 718 MB of Turbopack output under an alternate `distDir`.
-Eleven frontend scanners used a **name-exact** `new Set(["node_modules", ".next", ...])`
-exclusion, so `.next-buildmart` walked straight into the corpus of every one.
-
-| Gate | Was | Now |
-|---|---|---|
-| `FE check:formatters` | rc=1 on `.next-buildmart/dev/static/chunks/_18nw3r0._.js` | `✔ ... (5141 files scanned)` |
-| `FE check:query-scope` | rc=1 on `.next-buildmart/.../hooks_api_hr_recruitment_*.js` | `✔ No query-scope violations found.` |
-| `FE check:file-sizes` | rc=1, findings dominated by build chunks | rc=1 with **exactly one real finding** (§6) |
-| `FE check:dead-code` | rc=1 on `.scratch/mint-session.mjs` | Path-classified `OUT-OF-SCOPE`; now surfaces a real application finding (§6) |
-| `FE check:over-300`, `check:colors`, `check:effect-fetches`, `check:icon-labels`, `check:query-signal`, `check:command-catalog`, `check:seo-metadata` | latently exposed (only their extension filters kept them clean) | all migrated to the shared predicate |
-
-The exclusion is **anchored on the leading dot**, not on a `.next*` prefix — an authored
-`next-intl/` directory is still scanned, and this is asserted, not assumed:
-
-```
-assert("an authored directory merely starting with 'next-' is still scanned",
-       overLimit.some((f) => f.endsWith("/next-intl/authored.tsx")));
-assert("the Build module route folder is NOT mistaken for a build output dir",
-       isExcludedScanDir("build") === false);
-```
-
-I confirmed each of the five previously-red gates still reports its real findings after the
-change — two of them now report findings that were previously buried.
+| `BE check:log-secrets` | walker neutered → `rc=0`. A secrets-in-logs gate reporting clean without looking. | floor of 500 source files; `rc=2` INCONCLUSIVE below it. Measures 3527. |
+| `BE check:drop-column-safety` | walker, `collectDrops` and `collectAdds` all neutered → `rc=0`. The violation set is a cross-product, so an empty **either** side prints OK. | three floors — migrations (100), schema files (50), and drops parsed (≥1, because history demonstrably contains drops, so zero means the parser stopped matching). Measures 646 / 348 / 126. |
 
 ---
 
-## 3. What was built
+## 3. Detectors executed but never asserted (mutation survivors), all fixed
 
-Two new shared resolvers, both named `check-*.mjs` so they stay inside the ticket's territory:
+Each row is a function the self-test ran while proving nothing about its output.
 
-- **`BE/src/scripts/check-repo-paths.mjs`** — resolves the FRONTEND root (marker `lib/rbac/permissions`) and the WORKSPACE docs root (marker `architecture-refactor/final-refactor/issues`) by searching upward for the marker rather than guessing a depth. `STREAMLINE_FRONTEND_ROOT` / `STREAMLINE_WORKSPACE_ROOT` are authoritative: a wrong override resolves to `null` and fails loudly instead of silently falling back to the search. Exports `reportUnreachable()`. Self-test: 9 assertions including "a wrong override fails loudly instead of falling back".
-- **`FE/scripts/check-repo-paths.mjs`** — the `.mjs` twin of `test-utils/backend-repo.ts` (same MARKER, same search, same override semantics), plus the shared `isExcludedScanDir()` generated/vendor classifier and `runScanDirSelfTest()`. Self-test: 18 assertions.
-
-One trap found while building them: importing the helper into a gate made the helper's own
-`--self-test` branch fire and `process.exit(0)` **under** the importing gate, so
-`check:permission-keys:self-test` silently ran the helper's 9 assertions and reported success
-without running any of its own 22. Both helpers now guard on being the entry module.
-
----
-
-## 4. Full classification table
-
-`BITE` = constructs known-bad input and runs the real detector, asserting rejection for the
-right reason. `PARTIAL` = detector proven, an outer layer (IO/extraction) is not.
-Changes made this session are marked **→**.
-
-### 4.1 Backend (61 gates)
-
-Ordered by what the gate protects.
-
-| Gate | Self-test | Class | Note |
+| Gate | Survivor | Why it mattered | After |
 |---|---|---|---|
-| **Tenant isolation & authorization** ||||
-| `check:tenant-isolation` | yes | BITE | real `hasDbHandle`/`isTenantOwned`/`serviceClassName` + ISOLATION_PATTERNS vs good/bad service and spec sources |
-| `check:tenant-indexes` | yes | BITE | 7-table fixture; trailing-tenant index and no-index cases both asserted to fail |
-| `check:tenant-relationships` | yes | BITE | real `parseStaticViolations` |
-| `check:scope-application` | yes | BITE | 9 fixtures copied from the real defect site (`leaves.service.ts:211`); cache-key interpolation asserted *not* to count as application |
-| `check:record-access` | yes | BITE | real `parseSchema`/`parseFindFirst` |
-| `check:permission-keys` | yes | BITE **→** | was INERT; ghost/backend-only/unresolvable-constant fixtures + 7 new vacuity and reachability assertions |
-| `check:navigation-permissions` | yes | BITE **→** | was INERT; 35-line nav-manifest fixture, unknown + unenforced key cases |
-| `check:owner-authority` | yes | BITE | fabrication / gate / shortcut / elevation told apart |
-| `check:placement-bypass` | yes | BITE | real `findAnnotationSites`/`findContextExitSites`/`findCronBypassSites` |
-| `check:module-gate` | yes | BITE | real `parseRegistry`/`walkControllers`/`checkFile`, 12 cases |
-| `check:module-entitlement` | yes | BITE | real `checkEntitlement`, 6 cases incl. lowercase storedKey |
-| `check:route-classification` | yes | BITE | real `parseControllerHandlers` |
-| `check:audit-log-privileges` | yes | PARTIAL | real `evaluatePrivilegeRow` vs safe/unsafe/wrong-role rows. The SQL half needs `APP_DATABASE_URL`; absent, exits **2**, correctly INCONCLUSIVE not OK |
-| `check:log-secrets` | yes | BITE | real `findSecretLogLines`/`findRedactorGaps`/`findMissingRateLimitTiers` |
-| `check:hardcoded-secrets` | yes | BITE **→** | 17 → **34** assertions; six new credential classes (§6.1) |
-| **Migration integrity** ||||
-| `check:migration-chain` | yes | BITE | writes real journal + `.sql` fixtures on disk, 18 cases |
-| `check:migration-rollback` | yes | BITE | real fixture dirs incl. `writeDown`, 11 cases |
-| `check:migration-discipline` | yes | BITE | 28 assertions across 7 check shapes |
-| `check:migration-ledger` | yes | BITE | real `classify` |
-| `check:drop-column-safety` | yes | BITE | real `collectDrops`/`declaresColumn` |
-| `check:hr-table-freeze` | yes | BITE | real `extractTableNames`, 8 assertions. Corpus is `db/schema/hr/` only — it does **not** scan `src/scripts`, so the self-referencing-corpus trap does not apply to this gate (see §6.3) |
-| `check:module-lifecycle` | yes | BITE | real `checkColdMigration`/`checkRestore`/`checkRemoval` |
-| `check:restrict-fks` | yes | BITE | real `findRestrictFksInContent`, 11 cases |
-| `check:s05-artifact-contract` | no (gate is assertions) | BITE **→** | was INERT (crashed); now passes and reports INCONCLUSIVE/exit 2 when the docs root is unreachable |
-| **Reliability & data access** ||||
-| `check:outbox-consumers` | yes | BITE **→** | was VACUOUS |
-| `check:fire-and-forget` | yes | BITE | real `scanFile` against good/bad emit fixtures |
-| `check:idempotent-commands` | yes | BITE | real `parseHandlers` |
-| `check:unbounded-reads` | yes | BITE | real `isUnboundedSelect`/`hasOffsetUsage`/`checkForRegressions` |
-| `check:db-call-count` | yes | BITE | real `detectLoopDbCalls` + on-disk fixture, 8 cases |
-| `check:unjoined-table-refs` | yes | BITE | real `schemaImports`/`scanSource` |
-| `check:bulk-id-limits` | yes | BITE | real `scanContent`, 9 cases |
-| `check:cache-invalidation` | yes | BITE | real `checkMissingInvalidation`/`runScopeKeyCheck` |
-| `check:mock-surface` | yes | BITE | 363-line self-test, real `extractMockPairs`/`extractClassPublicMethods` |
-| `check:module-di` | yes | BITE | real `analyseModuleSource`/`checkNonInjectableType`/`checkImportType`, 15 assertions incl. the StorageModule defect verbatim |
-| `check:module-registration` | yes | BITE | real `importedModuleNames`/`declaredModuleNames`, 13 cases |
-| `check:import-direction` | yes | BITE | real `importedSpecifiers`/`isFeatureImport`, 11 cases |
-| `check:spec-typecheck` | yes | BITE | writes a real spec with a deliberate arity error and runs the real `tsc`; asserts the failure names the fixture |
-| **API contract** ||||
-| `check:openapi-coverage` | yes | BITE | real `findExposureViolations`/`findMissingResponseSchemas` + an `isVacuous` guard |
-| `check:openapi-path-params` | yes | BITE | real `findMissingPathParams` |
-| `check:bodyless-conflicts` | yes | BITE | real `findBodylessConflicts` |
-| `check:multipart-contracts` | yes | BITE | real `findUndeclaredMultipartHandlers` |
-| `check:contract-registry` | yes | BITE | real `findUnclassifiedOperations`/`findStaleEntries` (owned by ticket 34; not modified) |
-| `check:contract-breaking-change` | yes | BITE | real `findBreakingRemovals`/`findBreakingNarrowings` (ticket 34) |
-| `check:route-duplicates` | yes | BITE | real `findDuplicateOperationIds`/`findAmbiguousParamRoutes` |
-| `check:bounded-contracts` | yes | BITE | real `findCursorViolations`/`findSortViolations`/`findBulkIdViolations` |
-| `check:envelope-consistency` | yes | BITE | real `findMissingErrorRefs`/`findUnpaginatedCollections` |
-| `check:operation-ids` | yes | BITE | real `findDuplicates`, clean + duplicate + multi-method docs |
-| `check:compression` | yes | BITE | real `detectCompression`/`detectBinaryProducers`, positive and negative |
-| `check:route-budgets` | yes | BITE **→** | already reported INCONCLUSIVE/PARTIAL correctly in prose, but exited 0 in all three states, so a CI job reading only the exit code could not tell them apart. Added `STREAMLINE_STRICT_BUDGETS=1` / `--strict` → exit 2. Default behaviour unchanged. Currently **INCONCLUSIVE — 19 declared budgets, 19 unmeasured** |
-| **Structure & supply chain** ||||
-| `check:file-sizes` | yes | BITE **→** | was INERT; self-test now asserts the registry is reachable and parses |
-| `check:over-300` | yes | BITE | the ticket's cited precedent, already repaired before this session |
-| `check:kebab-case` | yes | BITE | real `classifyEntry`, 14 cases; additionally bite-proven end-to-end (§6.2) |
-| `check:vulnerabilities` | yes | BITE **→** | was VACUOUS |
-| `check:licenses` | yes | PARTIAL | real `isDisallowed`; the `pnpm licenses --json` extraction is untested |
-| `check:feature-flag-governance` | yes | BITE | real `checkSchema`, compliant + non-compliant |
-| `check:ai-charge` | yes | BITE | real `extractOptionsObject`/`findViolations`, 8 cases |
-| `check:retention-coverage` | yes | BITE | real `classify`/`policyTableName` |
-| `check:alert-system` | n/a | BITE | it *is* a self-test runner: executes `--self-test` on 14 alert scripts, `{"allPassed":true,"checkedScripts":14}` |
-| `check:alert-ack` | yes **→** | BITE | had a working `--self-test` (7 cases) that was **never registered in package.json**; now `check:alert-ack:self-test` |
-| `check:db-generate-guard` | n/a | BITE | the gate command already *is* `--self-test` |
-| `check:cycles` | n/a | exempt | third-party (`madge`) |
-| `check:repo-paths` | yes **→** | BITE | new this session, 9 assertions |
+| `BE verify-migration-chain` | `numericPrefix`, `isPendingPath` | Both checks asserted only "some failure containing (b)/(d)". Neutered, `numericPrefix` collapses every tag to one prefix — still a "(b)" — and `isPendingPath` makes every pending entry an orphan — still a "(d)". **The pending root was entirely unproven.** | negative fixtures for distinct prefixes and for both pending shapes (slashed tag, bare tag under `pending/`). 3/6 → 5/6 |
+| `BE check-unjoined-table-refs` | `isBoundToName`, `lineOf` | The fragment rule — a `.select` bound to a name or handed to a correlating combinator — had no fixture. Neutered, every fragment becomes a violation and the positive cases still pass. | fixtures for the assignment branch, the `exists(…)` branch, and two negatives. 8/10 → 10/10 |
+| `BE check-db-call-count` | `parenBalance`, `loopParensBalanced` | The arithmetic that stops the scanner walking past a one-line loop into an unrelated construct. **The assertion caught my own wrong expectation while I wrote it.** | 7 arithmetic cases + 2 loop cases. 7/9 → 9/9 |
+| `BE check-module-di` | `hasTopLevelBar` | Union splitting for injected types; a `|` nested in `Map<A\|B, C>` must not split. | 8 cases. 12/13 → 13/13 |
+| `BE check-bodyless-conflicts`, `check-multipart-contracts` | `extractHandlerName` | Findings asserted their *reason* but never *which handler* — attribution, i.e. "for the right reason". | 3 declaration shapes each + an attribution assertion. 4/5 → 5/5, 2/3 → 3/3 |
+| `BE check-kebab-case`, `check-over-300`, `check-file-sizes` | `resolvePath` | Module-level root resolution. Neutered, `SRC` is undefined and the gate dies — but the self-test uses fixture trees and never noticed. This is the exact INERT class S8 repaired elsewhere. | reachability assertions on `SRC` and `BACKEND_ROOT` |
+| `FE check-file-sizes` | `isExcludedDir`, `isCrmOrInventory` | The exclusion keeping 718 MB of `.next-buildmart` chunks out of the corpus was unproven *here*, and it is dot-anchored so an authored `next-intl/` must still be scanned. | 5 assertions incl. `!isExcludedDir("next-intl")` and `!isExcludedDir("build")`. 3/5 → 5/5 |
+| `FE check-seo-metadata` | `hasRobotsNoIndex`, `hasDynamicSegment` | The failure counts hold even if both return a constant. | 7 cases incl. a half-declared robots block. 9/12 → 11/12 |
+| `FE check-module-manifest` | `parseRegistryVersion` | Including the `null` case, which must make rule-1 inconclusive rather than silently agree. | 3 cases. 7/8 → 8/8 |
 
-### 4.2 Frontend (24 gates)
-
-| Gate | Self-test | Class | Note |
-|---|---|---|---|
-| `check:command-catalog` | yes | BITE | 399-line self-test, 25 fixtures, real `classifyBlock`/`resolveOperation`/`runMainScan`. This is the gate whose `*`-as-wildcard bug hid 36 mis-keyed mutation hooks — the repaired form is the best self-test in either repo |
-| `check:route-access-contract` | yes | BITE | real `isCheckable` + an explicit `vacuityFailure` path |
-| `check:query-scope` | yes | BITE (noise fixed **→**) | 5 rules self-tested; corpus previously included build output |
-| `check:query-signal` | yes | BITE | real `findSignalViolations`, 19 fixtures |
-| `check:module-manifest` | yes | BITE (was INERT **→**) | 11 cases already bite-proved `checkRegistryAgreement`; the rule simply never ran |
-| `check:home-manifest` | yes | BITE (was INERT **→**) | real `diffRoutes`, 15 cases; comparison never ran |
-| `check:contract-drift` | yes | BITE | delegates to `contract-drift/self-test.mjs`, 18 cases; has a `MIN_RESOLVED_FRACTION` vacuity floor |
-| `check:contract-vendor` | yes | BITE | already layout-aware; real `compareFiles` + `resolveBackendArtifact` incl. "no candidate returns null, never a path that is not there" |
-| `check:dead-code` | yes | BITE (noise fixed **→**) | 14 cases; added 3 asserting generated/scratch paths classify OUT-OF-SCOPE and an authored `next-`-prefixed dir does not. **Mutation-tested**: disabling the classifier makes the self-test fail with `(m0) a scratch path → expected OUT-OF-SCOPE, got DEAD` |
-| `check:file-sizes` | yes | BITE (noise fixed **→**) | 25 assertions incl. a real fixture registry |
-| `check:over-300` | yes | BITE **→** | was VACUOUS |
-| `check:formatters` | yes | BITE (noise fixed **→**) | real `isLocalFormatterLine`/`findFormatterLines` + a walk-reaches-the-tree assertion |
-| `check:empty-states` | yes | BITE **→** | was VACUOUS-ish (positive case only, fell through into the real scan) |
-| `check:colors` | **added →** | BITE | had **no** self-test. 21 assertions over a fixture tree |
-| `check:effect-fetches` | **added →** | BITE | had **no** self-test. 20 assertions: async-effect + apiClient, voided `useCallback`, and two negatives (`useQuery`, DOM-only effect) |
-| `check:routes` | **added →** | BITE | had **no** self-test *and no vacuity floor at all* — an empty `app/` would have printed `✔`. Now 7 assertions + a 100-route-directory floor (653 today) |
-| `check:icon-labels` | **added →** | BITE | had **no** self-test. 20 assertions incl. `aria-label` on a preceding prop line |
-| `check:seo-metadata` | yes | BITE | writes fixtures; "all three failure modes bite as designed" |
-| `check:web-vitals-budget` | yes | BITE | explicitly asserts "an unmeasured budget is not reported as met" |
-| `check:route-bundle-budget` | yes | BITE | real `findExceededBundles`/`findPendingBundles` |
-| `check:client-pages` | yes | BITE | writes a real fixture tree, runs real `countPages`; thin (2 assertions) but genuine |
-| `check:route-thinness` | yes | BITE | real `inspectRouteModule`, 9 fixtures |
-| `check:repo-paths` | yes **→** | BITE | new this session, 18 assertions |
-| `check:properties` | n/a | exempt | composite of 5 gates, each self-tested |
-| `check:cycles` | n/a | exempt | third-party (`madge`) |
+The only remaining survivor class is the harness artifact `selfTest` itself
+(neutering a self-test runner to a no-op naturally exits 0). It is uniform across
+gates and not a property of any detector.
 
 ---
 
-## 5. Gates still without a self-test (7) — and why that is correct for 5
+## 4. Findings I was not allowed to fix
 
-| Gate | Reason |
-|---|---|
-| `BE check:db-generate-guard` | its command already *is* `node scripts/guard-db-generate.mjs --self-test` |
-| `BE check:alert-system` | it is a self-test runner over 14 alert scripts |
-| `BE check:cycles`, `FE check:cycles` | third-party `madge` |
-| `FE check:properties` | composite of `check:routes` + `check:colors` + `check:effect-fetches` + `check:icon-labels` + `check:cycles`, all now self-tested |
-| `BE check:s05-artifact-contract` | the gate body is entirely assertions against repo artifacts; there is no separable detector. **Genuinely open** — a self-test would have to fixture the whole evidence bundle. |
-| `BE check:alert-ack` | **closed this session** — the `--self-test` existed but was unregistered |
+### 4.1 44 of 89 gates are never invoked by any CI workflow
 
----
+The largest finding of the ticket, and directly its through-line. Measured against
+every workflow file in both repos.
 
-## 6. Defects found
-
-### 6.1 P1 — `check:hardcoded-secrets` did not detect AI provider keys or AWS secret keys
-
-The gate's 17-assertion self-test was green and the gate reported
-`scanned 15546 files — 0 file(s) with a committed credential`. I planted a real credential
-file inside my own territory (`src/scripts/__gate-bite-probe.md`, deleted immediately after
-each run) and the gate **passed it**:
-
-```
-AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY   → rc=0   MISSED
-const apiKey = "sk-proj-4kQ2xR9vLmNp7Ts3Wz8Yb1Ac5De6Fg0Hi2Jk4Lm6No8Pq";  → rc=0   MISSED
-```
-
-`KEY_PATTERNS` covered the AWS access-key **id** (`AKIA…`) but not the secret half, and had
-no pattern at all for OpenAI or Anthropic keys — in a product that ships an AI gateway and
-whose CLAUDE.md §4 forbids exactly this. Six patterns added
-(`aws-secret-access-key`, `openai`, `anthropic`, `google-oauth-client-secret`, `sendgrid`,
-`stripe-restricted-live`) plus a name-anchored `named-secret-assignment` rule.
-
-Bite-proven end-to-end after the change, each probe planted as a real file and the gate run:
-
-```
-aws-secret      rc=1  [aws-secret-access-key]        openai       rc=1  [openai]
-anthropic       rc=1  [openai, anthropic]            gocspx       rc=1  [google-oauth-client-secret]
-sendgrid        rc=1  [sendgrid]                     named-secret rc=1  [named-secret-assignment]
-benign long string  rc=0    placeholder "password"  rc=0    process.env read  rc=0
-```
-
-The generic rule initially produced 20 findings, all in `*.spec.ts` / `test/` / `*.fixture.ts`
-where fake secrets are deliberate — that would have made the gate NOISY, the defect I was
-sent to remove. It is now path-classified: the generic rule is suppressed in test paths,
-while every provider-specific pattern still applies there (a real `sk-ant-` key in a spec is
-still a finding, and that is asserted). Self-test: **34 assertions**, up from 17.
-
-Also worth recording: adding the patterns made the gate flag **its own self-test fixtures**,
-because it scans `src/scripts/`. The pre-existing fixtures avoided this by string-splitting;
-mine now do too. I did **not** add the gate's own file to an allowlist — a gate that exempts
-itself from its own rule is the self-referencing-corpus trap.
-
-### 6.2 Gates additionally bite-proven end-to-end with a planted real defect
-
-Beyond fixture-level proof, three gates were proven against a real file in the real tree:
-
-| Gate | Planted defect | Result |
+| | Gates | Never in CI |
 |---|---|---|
-| `BE check:hardcoded-secrets` | 7 credential probes (above) | all rejected; 3 benign probes passed |
-| `BE check:kebab-case` | `src/scripts/Bad_Probe_Name.mjs` | `rc=1`, `file src/scripts/Bad_Probe_Name.mjs`; `rc=0` after removal |
-| `FE check:dead-code` | classifier disabled by mutation | self-test `rc=1` with the intended message; `rc=0` restored |
+| Backend | 65 | **30** |
+| Frontend | 24 | **14** |
 
-### 6.3 On the self-referencing-corpus trap
+Backend, uninvoked — includes everything I repaired this session bar one:
 
-I checked the reference-counting gates specifically. `check-hr-table-freeze.mjs` scans only
-`db/schema/hr/`, and `check-unjoined-table-refs.mjs` scans only `src/modules` + `src/common` —
-neither includes `src/scripts`, so neither can count its own baseline as a reference. The
-orchestrator's ticket-07 finding was about a scanner *outside* these gates whose corpus
-included the guard scripts; the 234-name `BASELINE` set inside `check-hr-table-freeze.mjs` is
-what made those tables look referenced to it. Nothing to fix inside my territory, but the
-general rule is worth keeping: **a reference scan must never include the guard scripts in its
-corpus**, and `check-hardcoded-secrets` is the one gate here that legitimately does — which is
-why its fixtures must stay string-split.
+```
+check:hardcoded-secrets   check:drop-column-safety  check:db-call-count
+check:unjoined-table-refs  check:module-di          check:file-sizes
+check:audit-log-privileges check:cache-invalidation check:mock-surface
+check:restrict-fks         check:multipart-contracts check:openapi-path-params
+check:contract-registry    check:contract-breaking-change check:route-duplicates
+check:bounded-contracts    check:envelope-consistency check:compression
+check:kebab-case           check:import-direction   check:module-registration
+check:retention-coverage   check:fire-and-forget    check:public-object-urls
+check:alert-ack            check:s05-artifact-contract check:db-generate-guard
+check:set-null-column-lists check:lifecycle-predicates check:evidence-seal
+```
 
----
+Frontend, uninvoked:
 
-## 7. Findings in other agents' territory (reported, not fixed)
+```
+check:colors check:effect-fetches check:routes check:formatters check:empty-states
+check:icon-labels check:query-signal check:web-vitals-budget check:route-access-contract
+check:home-manifest check:client-pages check:properties check:route-thinness check:file-sizes
+```
 
-Now visible because the gates measure for the first time, or because the noise was removed:
+36 of 62 backend self-tests and 13 of 23 frontend self-tests are likewise never
+run. Wiring them is a release-management decision — several are currently red on
+real findings — so I have reported rather than acted.
 
-| Gate | Finding | Owner |
-|---|---|---|
-| `BE check:file-sizes` | `src/modules/gdpr/gdpr-subject-erasure.service.ts` 619 lines · `src/modules/storage/storage.service.ts` 521 lines — over the 500 hard limit, not in the §7 registry. **This gate had never run here, so these have never been reported.** | backend |
-| `BE check:tenant-indexes` | `FAIL — 5 of 828 tenant tables have no leading tenant index` | schema |
-| `BE check:db-call-count` | `NEW /support/core/support-ticket-erasure.ts (1 call site)` | backend |
-| `BE check:over-300` | above baseline | backend |
-| `BE check:licenses` | rc=1, a dependency with a disallowed licence | supply chain |
-| `FE check:file-sizes` | `hooks/api/notifications-inbox.ts` 507 lines — the **only** real finding once build output was excluded | frontend |
-| `FE check:dead-code` | `features/build/analytics/project-charts.tsx:CHART_COLORS` — surfaced only after `.scratch` was path-classified | frontend |
-| `FE check:web-vitals-budget` | 6 budget violations | frontend |
-| non-`check:*` scripts | `alert-dispatch.mjs`, `collect-s7-evidence.mjs`, `production-ops-evidence.mjs`, `browser-driver-auth.mjs` all still hardcode `<repo>/../architecture-refactor` or `../frontend` and will be INERT here. They are outside this ticket's territory; the fix is to import `check-repo-paths.mjs`. | ops scripts |
+### 4.2 Five gate scripts exist on disk wired to no package script at all
 
-`BE check:audit-log-privileges` exits 2 for want of `APP_DATABASE_URL`. That is correct
-behaviour, not a defect — but it means the privilege boundary is **unproven on this machine**
-and must not be cited as evidence.
+They cannot be invoked even by hand through pnpm.
 
----
-
-## 8. Files changed
-
-**Backend** (`streamlineos-backend/src/scripts/`)
-`check-repo-paths.mjs` (new) · `check-permission-keys.mjs` · `check-navigation-permissions.mjs` ·
-`check-file-sizes.mjs` · `check-s05-artifact-contract.mjs` · `check-hardcoded-secrets.mjs` ·
-`check-vulnerabilities.mjs` · `check-outbox-consumers.mjs` · `check-route-budgets.mjs` ·
-`package.json` (added `check:repo-paths:self-test`, `check:alert-ack:self-test`)
-
-**Frontend** (`streamlineos-frontend/frontend/scripts/`)
-`check-repo-paths.mjs` (new) · `check-module-manifest.mjs` · `check-home-manifest.mjs` ·
-`check-over-300.mjs` · `check-file-sizes.mjs` · `check-dead-code.mjs` · `check-seo-metadata.mjs` ·
-`check-no-arbitrary-colors.mjs` · `check-no-effect-fetches.mjs` · `check-no-business-routes.mjs` ·
-`check-no-unlabeled-icon-buttons.mjs` · `check-no-local-formatters.mjs` ·
-`check-no-handrolled-empty-states.mjs` · `check-query-scope.mjs` · `check-query-signal.mjs` ·
-`check-command-catalog.mjs` ·
-`package.json` (added `check:colors:self-test`, `check:effect-fetches:self-test`,
-`check:routes:self-test`, `check:icon-labels:self-test`, `check:repo-paths:self-test`)
-
-No application source in either repository was modified.
-
----
-
-## 9. Ticket checkbox status
-
-| Checkbox | Status |
+| File | State today |
 |---|---|
-| Every gate has a self-test that constructs a known-bad fixture and confirms rejection | **Substantially closed.** 74/74 classified, all 5 vacuous ones rewritten, 4 gates given a self-test that had none. One genuinely open: `BE check:s05-artifact-contract` |
-| Gates whose self-test only asserts constants are rewritten to run the scan | **Closed.** 5 of 5 |
-| A gate that cannot measure reports INCONCLUSIVE/PARTIAL rather than OK | **Closed.** 6 INERT gates repaired; all 6 INCONCLUSIVE paths individually bite-proven at rc=2; `check:route-budgets` given a machine-readable strict mode |
-| Critical tests exercise transaction callbacks, authz deny, cross-tenant, retries | **Not this ticket's territory** — that is spec coverage, not gate scripts |
-| Zero silently skipped tests, vacuous mocks, baselines raised to turn a regression green | **No baseline was raised.** The `.next-buildmart` exclusion removes generated input from a source scan, and each of the five affected gates was re-verified to still report its real findings — two now report findings that were previously buried |
-| Text scans validated against a known defect | **Closed and it found one** — see §6.1 |
-| Coverage counts honest / path-filtered run not reported green | Partially addressed: the `PARTIAL` labelling in §2.2 is exactly this shape for cross-repo gates. Jest coverage filtering is another ticket's territory |
-| Quoted globs checked on this platform | **Closed.** No `check:*` gate in either repo uses a shell glob; all walk the tree with `readdirSync`. The macOS-specific failure was the opposite — a *too permissive* walk pulling in 718 MB of build output, now fixed and asserted |
+| `BE src/scripts/check-cache-key-shapes.mjs` | exit 0 — **and passes over an empty corpus** |
+| `BE src/scripts/check-hr-pagination-gate.mjs` | exit 0 |
+| `BE src/scripts/check-namespace-coverage.mjs` | exit 0 |
+| `BE src/scripts/check-replay-ledger.mjs` | exit 2 |
+| `FE scripts/check-import-direction.mjs` | **exit 1 — 222 cross-feature import violations, unseen** |
+
+### 4.3 Suppressed coverage on a money path, outside CRM
+
+`src/modules/quotes/quotes.service.spec.ts:339`
+
+```js
+describe("QuotesService — discount gating (create + update)", () => {
+  it.skip("create: sets approvalStatus=pending when discount exceeds maxDiscountPercent setting", () => {
+  });
+});
+```
+
+Empty body, no environment condition, and the logic it names is live at
+`quotes.service.ts:140` and `:244`. Same shape as the CRM case the ticket cites.
+
+The 6 `describe.skip` blocks in `crm-copilot.service.phase2.spec.ts` are present as
+described; CRM is excluded from this release, logged not fixed.
+
+The 9 `it.skip` in `src/degradation/**` are **not** this: each has an empty body and
+a message naming a specific missing infrastructure dependency (no S3/R2 endpoint,
+no Ably key, no provisioned physical replica, services opening their own
+transactions via `runInNewTenantTransaction`). They are honest placeholders.
+
+Frontend has **zero** skipped or `.only` tests.
+
+### 4.4 `check:lifecycle-predicates` self-test is red, and is not mine
+
+```
+FAIL: the three-way filter keeps the primary-read candidate set actionable
+      — a gate that flags hundreds gets switched off (found 77)
+```
+
+`git status` shows the file unmodified by me; it passed at the start of this
+session and broke while application source changed underneath it. Ticket 06.
+
+### 4.5 Other
+
+- `BE check:tenant-isolation` — 924/925 services carry a declared cross-tenant
+  negative test; fails on the one that does not.
+- 7 of 27 tree-scanning **specs** carry no non-empty floor, including
+  `test/security/operator-access.spec.ts` and
+  `test/security/appsec/secrets-cookies-and-keys.spec.ts`. Both resolve real paths
+  today, so neither is currently vacuous — but neither would notice if it stopped.
+- Neither repo defines a `coverageThreshold`. There is no coverage gate to be
+  dishonest about, and no coverage floor either.
+- FE `jest.config.cjs` ignores `<rootDir>/.next/` but not `.next-buildmart/`.
+- `BE check:audit-log-privileges` still exits 2 for want of `APP_DATABASE_URL`.
+  Correct behaviour — and it means the privilege boundary remains **unproven on
+  this machine** and must not be cited as evidence.
+
+---
+
+## 5. Commands run
+
+Backend, each gate then its self-test:
+
+```
+check-bodyless-conflicts   gate=0  self-test=0      check-module-di          gate=0  self-test=0
+check-db-call-count        gate=1  self-test=0      check-module-lifecycle   gate=2  self-test=0
+check-drop-column-safety   gate=0  self-test=0      check-multipart-contracts gate=0 self-test=0
+check-file-sizes           gate=1  self-test=0      check-over-300           gate=1  self-test=0
+check-hardcoded-secrets    gate=0  self-test=0      check-unjoined-table-refs gate=0 self-test=0
+check-kebab-case           gate=0  self-test=0      verify-migration-chain   gate=0  self-test=0
+check-log-secrets          gate=0  self-test=0
+```
+
+Frontend:
+
+```
+check-file-sizes  gate=1 self-test=0     check-query-scope   gate=0 self-test=0
+check-module-manifest gate=0 self-test=0 check-seo-metadata  gate=0 self-test=0
+```
+
+`gate=1` is a real finding, not a broken gate: `db-call-count` 101 unclassified +
+8 regressed; BE `file-sizes` / `over-300` and FE `file-sizes` are the pre-existing
+size findings S8 surfaced. `gate=2` is the new INCONCLUSIVE.
+
+Full sweeps, both repos: every registered `check:*:self-test` exits 0 except
+`check:lifecycle-predicates:self-test` (§4.4, not mine).
+
+Lint on every file changed: **0 errors** both repos (BE 6 pre-existing warnings,
+FE 3), via `npx eslint <changed files>`.
+
+---
+
+## 6. Files changed
+
+**Backend** `streamlineos-backend/src/scripts/` — commit `1b1eedf1`
+
+`check-bodyless-conflicts.mjs` · `check-db-call-count.mjs` ·
+`check-drop-column-safety.mjs` · `check-file-sizes.mjs` ·
+`check-hardcoded-secrets.mjs` · `check-kebab-case.mjs` · `check-log-secrets.mjs` ·
+`check-module-di.mjs` · `check-module-lifecycle.mjs` ·
+`check-multipart-contracts.mjs` · `check-over-300.mjs` ·
+`check-unjoined-table-refs.mjs` · `verify-migration-chain.mjs`
+
+**Frontend** `streamlineos-frontend/frontend/scripts/` — commit `6cd9fd364`
+
+`check-file-sizes.mjs` · `check-module-manifest.mjs` · `check-query-scope.mjs` ·
+`check-seo-metadata.mjs`
+
+No application source in either repository was modified. No baseline was raised.
+Files belonging to other agents that were dirty in the shared tree
+(`alert-retention-dead-man.mjs`, `check-retention-coverage.mjs`,
+`seed-scratch-e2e.mjs`, `check-public-object-urls.mjs`, `seed-perf-scratch.mjs`)
+were left unstaged.
