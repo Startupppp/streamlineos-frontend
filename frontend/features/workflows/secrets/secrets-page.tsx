@@ -261,7 +261,7 @@ export function SecretsManagerPage() {
     void refetch();
   }
 
-  const list = secrets ?? [];
+  const list = secrets?.data ?? [];
 
   return (
     <PageWrapper

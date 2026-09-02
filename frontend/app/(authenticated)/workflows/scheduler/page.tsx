@@ -173,7 +173,7 @@ export default function SchedulerPage() {
     void refetch();
   }
 
-  const list = schedules ?? [];
+  const list = schedules?.data ?? [];
   const activeCount = list.filter((s) => s.isEnabled).length;
 
   return (

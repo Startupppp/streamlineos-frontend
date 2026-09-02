@@ -4,7 +4,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import type { WorkflowSecret } from "./workflows-types";
+import type { WorkflowSecret, WorkflowCursorPage } from "./workflows-types";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface CreateSecretInput {
   name: string;
@@ -20,7 +21,8 @@ export function useGlobalSecrets() {
   const canManage = useCan("workflows:secrets:manage");
   return useQuery({
     queryKey: [...queryKeys.workflows.all, "global-secrets"] as const,
-    queryFn: ({ signal }) => apiClient.get<WorkflowSecret[]>("/workflows/secrets", undefined, signal),
+    queryFn: ({ signal }) =>
+      apiClient.get<WorkflowCursorPage<WorkflowSecret>>("/workflows/secrets", undefined, signal),
     staleTime: 30_000,
     enabled: canManage,
   });
@@ -29,7 +31,7 @@ export function useGlobalSecrets() {
 export function useCreateGlobalSecret() {
   const qc = useQueryClient();
   const canManage = useCan("workflows:secrets:manage");
-  return useMutation({
+  return useAuthorizedMutation("workflows:secrets:manage", {
     mutationKey: ["create", "global", "secret"],
     mutationFn: (input: CreateSecretInput) => {
       assertPermission(canManage);
@@ -43,7 +45,7 @@ export function useCreateGlobalSecret() {
 export function useDeleteGlobalSecret() {
   const qc = useQueryClient();
   const canManage = useCan("workflows:secrets:manage");
-  return useMutation({
+  return useAuthorizedMutation("workflows:secrets:manage", {
     mutationKey: ["delete", "global", "secret"],
     mutationFn: (secretId: string) => {
       assertPermission(canManage);

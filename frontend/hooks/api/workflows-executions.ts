@@ -8,7 +8,20 @@ import type {
   WorkflowExecution,
   WorkflowCursorPage,
   ExecutionListParams,
+  ExecutionStatus,
 } from "./workflows-types";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+// The runner picks up pending as well as waiting, so a queued run is still moving.
+const ACTIVE_EXECUTION_STATUSES: ReadonlySet<ExecutionStatus> = new Set<ExecutionStatus>([
+  "pending",
+  "running",
+  "waiting",
+]);
+
+export function isActiveExecution(status: ExecutionStatus): boolean {
+  return ACTIVE_EXECUTION_STATUSES.has(status);
+}
 
 function assertPermission(allowed: boolean): void {
   if (!allowed) throw new Error("You do not have permission for this workflow action.");
@@ -21,7 +34,7 @@ export function useWorkflowExecutions(workflowId: string, params?: ExecutionList
     queryFn: ({ signal }) =>
       apiClient.get<WorkflowCursorPage<WorkflowExecution>>(
         `/workflows/${workflowId}/executions`,
-        params as Record<string, unknown>,
+        params as Record<string, unknown>, signal,
       ),
     enabled: canView && workflowId.length > 0,
     staleTime: 30_000,
@@ -35,15 +48,13 @@ export function useAllExecutions(params?: ExecutionListParams) {
     queryFn: ({ signal }) =>
       apiClient.get<WorkflowCursorPage<WorkflowExecution>>(
         "/workflows/executions",
-        params as Record<string, unknown>,
+        params as Record<string, unknown>, signal,
       ),
     staleTime: 15_000,
     refetchInterval: (query) => {
       if (!query.state.data) return false;
-      const hasRunning = query.state.data.data.some(
-        (e) => e.status === "running" || e.status === "waiting",
-      );
-      return hasRunning ? 10_000 : false;
+      const hasActive = query.state.data.data.some((e) => isActiveExecution(e.status));
+      return hasActive ? 10_000 : false;
     },
     enabled: canView,
   });
@@ -52,7 +63,7 @@ export function useAllExecutions(params?: ExecutionListParams) {
 export function useTriggerWorkflow() {
   const qc = useQueryClient();
   const canExecute = useCan("workflows:executions:manage");
-  return useMutation({
+  return useAuthorizedMutation("workflows:executions:manage", {
     mutationKey: ["workflows", "trigger"],
     mutationFn: ({ id, data }: { id: string; data?: Record<string, unknown> }) => {
       assertPermission(canExecute);
@@ -68,7 +79,7 @@ export function useTriggerWorkflow() {
 export function useCancelExecution() {
   const qc = useQueryClient();
   const canManage = useCan("workflows:executions:manage");
-  return useMutation({
+  return useAuthorizedMutation("workflows:executions:manage", {
     mutationKey: ["workflows", "execution", "cancel"],
     mutationFn: ({ workflowId, executionId }: { workflowId: string; executionId: string }) => {
       assertPermission(canManage);

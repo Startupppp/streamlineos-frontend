@@ -4,7 +4,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import type { WorkflowSchedule } from "./workflows-types";
+import type { WorkflowSchedule, WorkflowCursorPage } from "./workflows-types";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface UpdateScheduleInput {
   cronExpression?: string;
@@ -20,7 +21,8 @@ export function useAllSchedules() {
   const canManage = useCan("workflows:schedules:manage");
   return useQuery({
     queryKey: [...queryKeys.workflows.all, "all-schedules"] as const,
-    queryFn: ({ signal }) => apiClient.get<WorkflowSchedule[]>("/workflows/schedules", undefined, signal),
+    queryFn: ({ signal }) =>
+      apiClient.get<WorkflowCursorPage<WorkflowSchedule>>("/workflows/schedules", undefined, signal),
     staleTime: 30_000,
     enabled: canManage,
   });
@@ -29,7 +31,7 @@ export function useAllSchedules() {
 export function useUpdateSchedule() {
   const qc = useQueryClient();
   const canManage = useCan("workflows:schedules:manage");
-  return useMutation({
+  return useAuthorizedMutation("workflows:schedules:manage", {
     mutationKey: ["update", "schedule"],
     mutationFn: ({
       workflowId,
@@ -50,7 +52,7 @@ export function useUpdateSchedule() {
 export function useDeleteSchedule() {
   const qc = useQueryClient();
   const canManage = useCan("workflows:schedules:manage");
-  return useMutation({
+  return useAuthorizedMutation("workflows:schedules:manage", {
     mutationKey: ["delete", "schedule"],
     mutationFn: ({ workflowId, scheduleId }: { workflowId: string; scheduleId: string }) => {
       assertPermission(canManage);
