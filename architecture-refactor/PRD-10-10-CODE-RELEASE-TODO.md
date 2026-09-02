@@ -49,8 +49,8 @@ A 100% module row means its module-specific checklist is closed. It does not ove
 
 Measured on 2026-09-02; each item states whether it passes or remains open:
 
-- Backend hard-size gate currently fails: 3,494 files scanned with 12 registered exceptions; `src/modules/rbac/roles.service.ts` is 506 lines and `src/modules/support/core/support-kb.service.ts` is 508 lines without approved exceptions.
-- Backend over-300 ratchet currently fails: 395/3,494 against the approved baseline of 394.
+- Backend hard-size gate passes: 3,483 files scanned, all within 500 lines with 12 registered exceptions. The former 506-line RBAC roles and 508-line Support KB implementations were split by cohesive responsibility and their callers repointed.
+- Backend over-300 ratchet currently fails: 395/3,483 against the approved baseline of 394; the single regression is `src/modules/ai/core/services/kb-rag.service.ts` at 367 lines after public KB streaming work.
 - Frontend over-300 ratchet passes: 518/5,032 against the baseline of 519; a direct current-tree audit found zero applicable frontend production files above 500 lines, but a fail-closed frontend hard-500 gate is still required by section 2.2.
 - Architecture-rule gates that did not exist before this round: `check:kebab-case` (6,049 entries, 0 violations), `check:import-direction` (208 `src/common` files, 0 new violations over a 9-entry named baseline) and `check:module-registration` (216 module classes, 215 reachable from `AppModule`, 0 unreachable). `check:over-300`'s self-test previously asserted only its own constants and never ran the scan; it now writes a known-bad fixture tree and is bite-proven twice.
 - Six `support/core` suites that had been red long enough to reproduce at a clean HEAD worktree are green: 33 suites / 286 tests. Repairing their doubles surfaced a live defect — `splitTicket` called `createTicket` without a `membershipId`, so **every split-ticket request returned 403** on a permission-gated route that looked healthy.
@@ -83,7 +83,7 @@ Not rerun in this reconciliation because they are expensive final-integration ga
 ## Current reproducible blockers
 
 - Clean-bootstrap and tenant-catalog parity are not current. The retained evidence covers a 634-entry journal, while the current chain and ledger contain 635 entries. Re-run two independent clean bootstraps plus an interrupted/resumed bootstrap at one release commit, compare exact catalogs and rerun tenant-relationship verification against a fully bootstrapped target; the configured `scratch_boot_a` was observed mid-bootstrap at 613/635 and is not release evidence.
-- Restore the file-size gates: split or rigorously justify the 506-line RBAC roles implementation and 508-line Support KB implementation, return the backend over-300 count from 395 to at most 394, and add the missing fail-closed frontend hard-500 gate without mechanically fragmenting cohesive modules.
+- Restore the over-300 ratchet by splitting `kb-rag.service.ts` along a real retrieval/answering seam or otherwise reducing it, return the backend count from 395 to at most 394, and add the missing fail-closed frontend hard-500 gate without mechanically fragmenting cohesive modules. The backend hard-500 gate already passes.
 - Add and execute cross-tenant negative tests for RBAC role seeding and Support KB engagement, restoring both static declaration coverage and executable tenant-isolation proof.
 - Remove the dependency-proven dead frontend barrel `features/build/inbox/index.ts`, then rerun the dead-code gate; do not treat retained contract/convention exports as dead without dependency evidence.
 - Reduce the 58 authenticated thick route modules through domain-owned feature seams; do not raise the ratchet or move implementation into alternate oversized feature files merely to thin `page.tsx`.
