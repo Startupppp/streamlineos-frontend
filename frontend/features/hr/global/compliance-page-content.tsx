@@ -75,12 +75,36 @@ export function CompliancePageContent() {
     setAuthSheetOpen(true);
   }, []);
 
+  function handleOpenNewReq() {
+    setEditingReq(undefined);
+    setReqSheetOpen(true);
+  }
+
+  function handleOpenNewAuth() {
+    setEditingAuth(undefined);
+    setAuthSheetOpen(true);
+  }
+
+  function handleDeleteRequirement() {
+    if (!deleteReqId) return;
+    deleteReq.mutate(deleteReqId, { onSuccess: () => setDeleteReqId(null) });
+  }
+
+  function handleDeleteAuth() {
+    if (!deleteAuthId) return;
+    deleteAuth.mutate(deleteAuthId, { onSuccess: () => setDeleteAuthId(null) });
+  }
+
+  function handleSeedPack() {
+    seedPack.mutate({ country: seedCountry }, { onSuccess: () => setSeedDialogOpen(false) });
+  }
+
   return (
     <PageWrapper
       title="Compliance"
       subtitle="Manage labor law requirements, work authorizations, and compliance calendars."
       actions={
-        <Button size="sm" onClick={() => { setEditingReq(undefined); setReqSheetOpen(true); }} className="gap-1.5 h-8">
+        <Button size="sm" onClick={handleOpenNewReq} className="gap-1.5 h-8">
           <PlusIcon size={14} />
           Add requirement
         </Button>
@@ -142,7 +166,7 @@ export function CompliancePageContent() {
                 <p className="text-sm font-medium text-foreground">No compliance requirements</p>
                 <p className="text-xs text-muted-foreground">Add a requirement manually or seed a country compliance pack.</p>
               </div>
-              <Button size="sm" onClick={() => { setEditingReq(undefined); setReqSheetOpen(true); }} className="mt-1 gap-1.5 h-8">
+              <Button size="sm" onClick={handleOpenNewReq} className="mt-1 gap-1.5 h-8">
                 <PlusIcon size={14} />
                 Add requirement
               </Button>
@@ -173,7 +197,7 @@ export function CompliancePageContent() {
 
         <TabsContent value="work-auth" className="mt-0">
           <div className="flex justify-end mb-4">
-            <Button size="sm" onClick={() => { setEditingAuth(undefined); setAuthSheetOpen(true); }} className="gap-1.5 h-8">
+            <Button size="sm" onClick={handleOpenNewAuth} className="gap-1.5 h-8">
               <PlusIcon size={14} />
               Add authorization
             </Button>
@@ -188,7 +212,7 @@ export function CompliancePageContent() {
                 <p className="text-sm font-medium text-foreground">No work authorizations on record</p>
                 <p className="text-xs text-muted-foreground">Track visa, work permit, and right-to-work documentation for employees.</p>
               </div>
-              <Button size="sm" onClick={() => { setEditingAuth(undefined); setAuthSheetOpen(true); }} className="mt-1 gap-1.5 h-8">
+              <Button size="sm" onClick={handleOpenNewAuth} className="mt-1 gap-1.5 h-8">
                 <PlusIcon size={14} />
                 Add authorization
               </Button>
@@ -237,7 +261,7 @@ export function CompliancePageContent() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
-              onClick={() => { if (deleteReqId) deleteReq.mutate(deleteReqId, { onSuccess: () => setDeleteReqId(null) }); }}
+              onClick={handleDeleteRequirement}
             >
               Delete
             </AlertDialogAction>
@@ -255,7 +279,7 @@ export function CompliancePageContent() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
-              onClick={() => { if (deleteAuthId) deleteAuth.mutate(deleteAuthId, { onSuccess: () => setDeleteAuthId(null) }); }}
+              onClick={handleDeleteAuth}
             >
               Delete
             </AlertDialogAction>
@@ -274,7 +298,7 @@ export function CompliancePageContent() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => seedPack.mutate({ country: seedCountry }, { onSuccess: () => setSeedDialogOpen(false) })}
+              onClick={handleSeedPack}
             >
               Seed
             </AlertDialogAction>

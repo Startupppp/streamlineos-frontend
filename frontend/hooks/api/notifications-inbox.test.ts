@@ -7,6 +7,8 @@ import {
   useMarkNotificationRead,
   useMarkAllNotificationsRead,
   useBulkMarkRead,
+  useBulkArchive,
+  useBulkDelete,
   useInfiniteNotifications,
   useNotifications,
   useArchiveNotification,
@@ -389,6 +391,107 @@ describe("bulk mark-read patches InfiniteData page by page", () => {
 
     const count = client.getQueryData<UnreadCount>(queryKeys.notifications.unreadCount());
     expect(count?.count).toBe(2);
+  });
+});
+
+describe("useBulkArchive — optimistic rollback", () => {
+  let client: QueryClient;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    client = makeClient();
+    withInjectedClient(client);
+  });
+
+  it("optimistically sets archivedAt on targeted notifications", async () => {
+    const flatKey = queryKeys.notifications.list({});
+    client.setQueryData<Notification[]>(flatKey, [makeNotif(300, false), makeNotif(301, true)]);
+    client.setQueryData<UnreadCount>(queryKeys.notifications.unreadCount(), { count: 1 });
+
+    const { result } = renderHook(() => useBulkArchive(), { wrapper: wrapper(client) });
+
+    await act(async () => {
+      await result.current.mutateAsync([300, 301]);
+    });
+
+    const after = client.getQueryData<Notification[]>(flatKey);
+    expect(after?.[0]?.archivedAt).not.toBeNull();
+    expect(after?.[1]?.archivedAt).not.toBeNull();
+  });
+
+  it("restores list and unread count on error", async () => {
+    const flatKey = queryKeys.notifications.list({});
+    client.setQueryData<Notification[]>(flatKey, [makeNotif(302, false), makeNotif(303, true)]);
+    client.setQueryData<UnreadCount>(queryKeys.notifications.unreadCount(), { count: 1 });
+
+    const { apiClient } = jest.requireMock("@/lib/api-client") as {
+      apiClient: { post: jest.Mock };
+    };
+    apiClient.post.mockRejectedValueOnce(new Error("Network error"));
+
+    const { result } = renderHook(() => useBulkArchive(), { wrapper: wrapper(client) });
+
+    await act(async () => {
+      result.current.mutate([302, 303]);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    const restored = client.getQueryData<Notification[]>(flatKey);
+    expect(restored?.[0]?.archivedAt).toBeNull();
+    expect(restored?.[1]?.archivedAt).toBeNull();
+    const restoredCount = client.getQueryData<UnreadCount>(queryKeys.notifications.unreadCount());
+    expect(restoredCount?.count).toBe(1);
+  });
+});
+
+describe("useBulkDelete — optimistic rollback", () => {
+  let client: QueryClient;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    client = makeClient();
+    withInjectedClient(client);
+  });
+
+  it("optimistically removes targeted notifications from the list", async () => {
+    const flatKey = queryKeys.notifications.list({});
+    client.setQueryData<Notification[]>(flatKey, [makeNotif(400, false), makeNotif(401, true), makeNotif(402, false)]);
+    client.setQueryData<UnreadCount>(queryKeys.notifications.unreadCount(), { count: 2 });
+
+    const { result } = renderHook(() => useBulkDelete(), { wrapper: wrapper(client) });
+
+    await act(async () => {
+      await result.current.mutateAsync([400, 401]);
+    });
+
+    const after = client.getQueryData<Notification[]>(flatKey);
+    expect(after).toHaveLength(1);
+    expect(after?.[0]?.id).toBe(402);
+  });
+
+  it("restores removed notifications and unread count on error", async () => {
+    const flatKey = queryKeys.notifications.list({});
+    client.setQueryData<Notification[]>(flatKey, [makeNotif(410, false), makeNotif(411, true)]);
+    client.setQueryData<UnreadCount>(queryKeys.notifications.unreadCount(), { count: 1 });
+
+    const { apiClient } = jest.requireMock("@/lib/api-client") as {
+      apiClient: { post: jest.Mock };
+    };
+    apiClient.post.mockRejectedValueOnce(new Error("Network error"));
+
+    const { result } = renderHook(() => useBulkDelete(), { wrapper: wrapper(client) });
+
+    await act(async () => {
+      result.current.mutate([410, 411]);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    const restored = client.getQueryData<Notification[]>(flatKey);
+    expect(restored).toHaveLength(2);
+    expect(restored?.[0]?.id).toBe(410);
+    expect(restored?.[1]?.id).toBe(411);
+    const restoredCount = client.getQueryData<UnreadCount>(queryKeys.notifications.unreadCount());
+    expect(restoredCount?.count).toBe(1);
   });
 });
 
