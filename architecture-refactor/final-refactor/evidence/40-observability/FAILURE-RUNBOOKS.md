@@ -433,6 +433,97 @@ node backend/src/scripts/alert-seam-latency.mjs
 
 ---
 
+## #retention-dead-man
+
+**What fires:** `retention-dead-man` (critical, platform-reliability) when any declared
+retention sweep has not recorded a successful run inside its own window, when a sweep ran
+but failed for one or more tenants, or when no heartbeat can be read at all.
+
+**Detection signal:** `alert-retention-dead-man.mjs` reads two Redis key families and
+treats them as two different faults.
+
+- **Staleness** — `cron:heartbeat:<jobKey>` is written by `CronLeaseService` only on a
+  successful run. A heartbeat older than that job's `maxAgeMs` (26h for the daily sweeps,
+  3h for the hourly GDPR export-artifact sweep) means the sweep is not running. Missing
+  entirely counts as stale, not as healthy.
+- **Partial failure** — `cron:last-error:<jobKey>` is written by `CronLeaseService` when a
+  sweep throws outright, and by `CronSweepFailureSinkService` when `forEachOrg` isolated a
+  failing tenant. The heartbeat is still written in the partial case, because the sweep
+  genuinely ran, so a staleness check alone would never see a tenant whose retention has
+  been failing every night for a month. Records carry `failedOrgIds` and expire after 7
+  days; one older than the job's window is ignored, because the sweep has succeeded since.
+- **Vacuity** — every heartbeat absent exits **2**, not 0. That is unproven, not healthy:
+  it is equally consistent with Redis being unreachable, the scheduler being disabled, and
+  nothing ever having run.
+
+Exit codes: `0` healthy · `1` one or more sweeps stale or failing · `2` cannot reach
+Redis, env not configured, or the vacuity guard fired.
+
+**Why this alert exists:** every retention drain in the backend was once reachable only as
+`POST /cron/<job>` behind `CRON_SECRET`, and no scheduler in either repository ever sent
+that request. Eleven correct, fully tested drains were dead. `CronRetentionSchedulerService`
+now runs them in process, and this alert is what proves they are still running — the
+declaration in `src/modules/cron/retention-schedule.ts` is the single source of truth for
+the scheduler, this alert and the README table, and `retention-schedule-parity.spec.ts`
+fails if any of the three drift.
+
+**First five minutes**
+
+```bash
+# 1. Which sweeps are stale, which are failing, and since when
+node backend/src/scripts/alert-retention-dead-man.mjs
+
+# 2. Exit 2 means unproven, not healthy — check Redis before believing anything above
+# (confirm UPSTASH_REDIS_REST_URL / _TOKEN are set for this environment)
+
+# 3. Is the in-process scheduler even enabled in this deployment?
+# RETENTION_SCHEDULER_ENABLED must not be "false"; RETENTION_SCHEDULER_TICK_MS is the
+# due-check interval (default 10 minutes)
+
+# 4. For a sweep reported as PARTIAL, read the failed tenant ids out of the record
+# the sink wrote — the alert prints them, capped at 50
+
+# 5. Drive the named sweep by hand and read its result body
+curl -s -X POST -H "Authorization: Bearer $CRON_SECRET" \
+  "$BACKEND_ORIGIN/cron/<jobKey>"
+```
+
+**Containment:** Nothing here deletes data on its own, and nothing needs stopping — a
+stale retention sweep means data is being *kept* past its policy, not lost. The exposure is
+regulatory (a retention promise not being met) and operational (unbounded table growth), so
+do not disable the scheduler to silence the alert. If one tenant is failing repeatedly,
+`forEachOrg` already isolates it: the other tenants keep draining while you investigate.
+
+The one sweep where staleness is a live privacy exposure is
+`gdpr-export-artifact-retention`. Its objects are complete JSON dumps of a single
+subject's personal data with a 72-hour expiry, so a sweep that has not run in a day means
+archives are downloadable past the window they were promised for. Treat that job's
+staleness as the highest priority of the set.
+
+**Recovery**
+
+1. **Stale because nothing is scheduled** — confirm `RETENTION_SCHEDULER_ENABLED` is not
+   `false` and that the process actually booted `CronRetentionSchedulerService`
+   (`[retention-scheduler] disabled` is logged at warn when it is off). Restarting the API
+   re-arms it; the first tick is jittered by up to 60s.
+2. **Stale because the lease is stuck** — `withLease` refuses a lease while a sweep is
+   draining, which is deliberate: the next tick resumes the work whole rather than running
+   two drains against the same rows. A lease that outlives its `leaseSeconds` expires on
+   its own; do not delete the key while a sweep may still be running.
+3. **Failing for specific tenants** — take a `failedOrgId` from the record and drive that
+   sweep by hand; the per-tenant error is logged with `orgId`, `correlationId` and
+   `cellId`. A `42501` there is a missing tenant GUC, not a retention bug.
+4. **Truncated rather than failed** — every drain is bounded by `MAX_BATCHES` and returns
+   `truncated: true` when it hit the cap with rows still eligible, recording the flag in
+   its `hr_audit_logs` `after` payload. That is not an alertable failure: the next tick
+   resumes. A tenant that reports `truncated` on every run has a backlog growing faster
+   than one tick can drain, and needs a one-off catch-up rather than a code change.
+
+**Verification:** `alert-retention-dead-man.mjs` exits 0, with a heartbeat inside its
+window for every job in `RETENTION_JOBS` and no unexpired `cron:last-error:` record.
+
+---
+
 ## #cell-recovery
 
 **What fires:** `cell-recovery` (critical, platform-reliability) when a cell fails its recovery/health assertion.
