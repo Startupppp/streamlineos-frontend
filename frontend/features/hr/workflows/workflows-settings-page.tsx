@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { toast } from "sonner";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -56,7 +57,7 @@ export function WorkflowsSettingsPage() {
   const [filterObjectType, setFilterObjectType] = useState<HrWorkflowObjectType | "all">("all");
   const [filterStatus, setFilterStatus] = useState<HrWorkflowStatus | "all">("all");
 
-  const { data, isLoading } = useHrWorkflowDefinitions({
+  const { data, isLoading, isError, error, refetch } = useHrWorkflowDefinitions({
     objectType: filterObjectType === "all" ? undefined : filterObjectType,
     status: filterStatus === "all" ? undefined : filterStatus,
   });
@@ -65,6 +66,10 @@ export function WorkflowsSettingsPage() {
   const archive = useArchiveWorkflow();
   const duplicate = useDuplicateWorkflow();
   const deleteWf = useDeleteWorkflow();
+
+  function handleRetry() {
+    void refetch();
+  }
 
   function handleOpenCreate() {
     setEditId(null);
@@ -158,7 +163,16 @@ export function WorkflowsSettingsPage() {
           </div>
         )}
 
-        {!isLoading && definitions.length === 0 && (filterObjectType !== "all" || filterStatus !== "all") && (
+        {!isLoading && isError && (
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load workflows"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
+        )}
+
+        {!isLoading && !isError && definitions.length === 0 && (filterObjectType !== "all" || filterStatus !== "all") && (
           <EmptyState
             illustrationPreset="documents"
             title="No workflows match these filters"
@@ -167,7 +181,7 @@ export function WorkflowsSettingsPage() {
           />
         )}
 
-        {!isLoading && definitions.length === 0 && filterObjectType === "all" && filterStatus === "all" && (
+        {!isLoading && !isError && definitions.length === 0 && filterObjectType === "all" && filterStatus === "all" && (
           <EmptyState
             illustrationPreset="documents"
             title="No workflows configured"
@@ -180,7 +194,7 @@ export function WorkflowsSettingsPage() {
           />
         )}
 
-        {!isLoading && definitions.length > 0 && (
+        {!isLoading && !isError && definitions.length > 0 && (
           <div className="space-y-2">
             {definitions.map((def, idx) => {
               const statusCfg = STATUS_BADGE[def.status];

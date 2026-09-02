@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -67,7 +68,7 @@ function KpiDeleteButton({ onClick }: { onClick: () => void }) {
 }
 
 export function KpiLibraryTab() {
-  const { data: kpis = [], isLoading } = useKpis();
+  const { data: kpis = [], isLoading, isError, error, refetch } = useKpis();
   const createKpi = useCreateKpi();
   const updateKpi = useUpdateKpi();
   const deleteKpi = useDeleteKpi();
@@ -84,6 +85,8 @@ export function KpiLibraryTab() {
     target: "",
     weight: "1",
   });
+
+  function handleRetry() { void refetch(); }
 
   function handleFormChange(field: keyof KpiFormState, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -150,6 +153,10 @@ export function KpiLibraryTab() {
         ))}
       </div>
     );
+  }
+
+  if (isError) {
+    return <ErrorState className="flex-1" title="Couldn't load KPIs" description={getErrorMessage(error)} onRetry={handleRetry} />;
   }
 
   return (

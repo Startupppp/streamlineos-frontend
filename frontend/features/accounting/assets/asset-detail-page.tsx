@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { EmptyState } from "@/components/ui/empty-state";
 import { EntityFormDialog } from "@/components/shared/entity-form-dialog";
 import { Money } from "@/features/accounting/shared";
 import { EditAssetSheet } from "@/features/accounting/assets/edit-asset-sheet";
@@ -158,13 +159,28 @@ export function AssetDetailPage({ assetId }: { assetId: number }) {
     );
   }
 
-  if (error || !asset) {
+  if (error) {
     return (
       <PageWrapper title="Asset" backHref="/accounting/assets">
         <ErrorState
-          title="Failed to load asset"
-          description={error ? getErrorMessage(error) : "Asset not found"}
+          className="flex-1"
+          title="Couldn't load this asset"
+          description={getErrorMessage(error)}
           onRetry={handleRetry}
+        />
+      </PageWrapper>
+    );
+  }
+
+  if (!asset) {
+    return (
+      <PageWrapper title="Asset" backHref="/accounting/assets">
+        <EmptyState
+          className="flex-1"
+          illustrationPreset="search"
+          title="Asset not found"
+          description="This asset no longer exists, or you do not have access to it."
+          action={{ label: "Back to fixed assets", href: "/accounting/assets" }}
         />
       </PageWrapper>
     );
@@ -284,7 +300,12 @@ export function AssetDetailPage({ assetId }: { assetId: number }) {
           <div>
             <h2 className="text-sm font-semibold text-foreground mb-3">Depreciation Schedule</h2>
             {asset.schedule.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No schedule generated yet. Activate the asset to start depreciation.</p>
+              <EmptyState
+                compact
+                illustrationPreset="calendar"
+                title="No depreciation schedule yet"
+                description="Activate the asset to generate its depreciation schedule."
+              />
             ) : (
               <DataTable
                 data={asset.schedule}

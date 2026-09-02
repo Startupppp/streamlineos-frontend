@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CheckCircle2, AlertCircle, AlertTriangle } from "lucide-react";
 import { ChevronRightIcon } from "@animateicons/react/lucide";
+import { ErrorState } from "@/components/shared/error-state";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { usePayoutValidation } from "@/hooks/api/payroll/payout-batches";
 
@@ -13,7 +15,7 @@ interface ValidationPanelProps {
 }
 
 export function ValidationPanel({ runId }: ValidationPanelProps) {
-  const { data, isLoading } = usePayoutValidation(runId);
+  const { data, isLoading, isError, error, refetch } = usePayoutValidation(runId);
 
   const blockers = data?.filter((item) => item.errors.length > 0) ?? [];
   const warnings = data?.filter((item) => item.warnings.length > 0 && item.errors.length === 0) ?? [];
@@ -22,6 +24,10 @@ export function ValidationPanel({ runId }: ValidationPanelProps) {
   const [openOverride, setOpenOverride] = useState<boolean | null>(null);
   const isExpanded = openOverride !== null ? openOverride : hasBlockers;
   const { iconRef: chevronIconRef, hoverHandlers: chevronHoverHandlers } = useAnimatedIcon();
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   function handleToggle() {
     setOpenOverride(!isExpanded);
@@ -33,6 +39,17 @@ export function ValidationPanel({ runId }: ValidationPanelProps) {
         <Skeleton className="h-5 w-36" />
         <Skeleton className="h-20 w-full rounded-lg" />
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        compact
+        title="Couldn't load bank validation"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
     );
   }
 

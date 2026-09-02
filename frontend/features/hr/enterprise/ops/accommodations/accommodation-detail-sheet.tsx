@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   Sheet,
   SheetContent,
@@ -9,10 +9,13 @@ import {
   SheetBody,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Lock } from "lucide-react";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -40,18 +43,53 @@ export function AccommodationDetailSheet({ id, open, onOpenChange }: Props) {
   const canSensitive = useCan("hr:sensitive:view");
   const [approvingNote, setApprovingNote] = useState("");
 
-  const { data: request, isLoading } = useAccommodation(id);
+  const { data: request, isLoading, isError, error, refetch } = useAccommodation(id);
   const { data: tasks } = useAccommodationTasks(id);
   const approve = useApproveAccommodation(id);
 
-  if (isLoading || !request) {
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  if (isLoading) {
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="w-full sm:max-w-lg">
-          <div className="animate-pulse space-y-3 mt-8">
-            <div className="h-4 bg-muted rounded w-1/2" />
-            <div className="h-4 bg-muted rounded w-3/4" />
-          </div>
+        <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-xl">
+          <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
+            <SheetTitle>Accommodation request</SheetTitle>
+          </SheetHeader>
+          <SheetBody className="space-y-3 px-6 py-5">
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-24 w-full" />
+          </SheetBody>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  if (isError || !request) {
+    return (
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-xl">
+          <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
+            <SheetTitle>Accommodation request</SheetTitle>
+          </SheetHeader>
+          <SheetBody className="px-6 py-5">
+            {isError ? (
+              <ErrorState
+                title="Couldn't load this request"
+                description={getErrorMessage(error)}
+                onRetry={handleRetry}
+              />
+            ) : (
+              <EmptyState
+                illustrationPreset="team"
+                title="Request not found"
+                description="This accommodation request no longer exists."
+              />
+            )}
+          </SheetBody>
         </SheetContent>
       </Sheet>
     );

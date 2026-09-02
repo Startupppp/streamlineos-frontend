@@ -5,6 +5,8 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -144,7 +146,7 @@ function ReviewIntervalsSection() {
 }
 
 function TrashRetentionSection() {
-  const { data: settings, isLoading } = useKbSettings();
+  const { data: settings, isLoading, isError, error, refetch } = useKbSettings();
   const updateSettings = useUpdateKbSettings();
   const [value, setValue] = useState<string>("");
   const [editing, setEditing] = useState(false);
@@ -154,6 +156,10 @@ function TrashRetentionSection() {
   function handleEdit() {
     setValue(String(currentValue));
     setEditing(true);
+  }
+
+  function handleRetry() {
+    void refetch();
   }
 
   function handleCancel() {
@@ -210,6 +216,14 @@ function TrashRetentionSection() {
         </div>
         {isLoading ? (
           <div className="w-20 animate-pulse rounded-md bg-muted shrink-0" />
+        ) : isError ? (
+          <ErrorState
+            compact
+            className="shrink-0"
+            title="Couldn't load retention"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
         ) : editing ? (
           <div className="flex items-center gap-2 shrink-0">
             <Input
@@ -292,9 +306,14 @@ function QuickLinksSection() {
 }
 
 function ArticleMigrationSection() {
-  const { data: preview, isLoading } = useArticleMigrationPreview();
+  const { data: preview, isLoading, isError, error, refetch } =
+    useArticleMigrationPreview();
   const runMigration = useRunArticleMigration();
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  function handleRetry() {
+    void refetch();
+  }
 
   function handleDryRun() {
     runMigration.mutate(
@@ -335,6 +354,13 @@ function ArticleMigrationSection() {
         <div className="px-4 py-3 space-y-3">
           {isLoading ? (
             <div className="h-16 animate-pulse rounded-md bg-muted" />
+          ) : isError ? (
+            <ErrorState
+              compact
+              title="Couldn't load migration preview"
+              description={getErrorMessage(error)}
+              onRetry={handleRetry}
+            />
           ) : preview ? (
             <StatCardGrid cols={4}>
               <StatCard label="Total articles" value={preview.total} />

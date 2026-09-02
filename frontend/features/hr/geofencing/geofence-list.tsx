@@ -1,9 +1,11 @@
 "use client";
 
+import { useCallback } from "react";
 import { motion } from "framer-motion";
 import { Edit2 } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
+import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Badge } from "@/components/ui/badge";
@@ -19,8 +21,12 @@ interface Props {
 }
 
 export function GeofenceList({ canManage, onEdit }: Props) {
-  const { data: fences, isLoading } = useGeofences();
+  const { data: fences, isLoading, isError, error, refetch } = useGeofences();
   const deleteFence = useDeleteGeofence();
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   function handleDelete(id: number) {
     deleteFence.mutate(id, {
@@ -36,6 +42,17 @@ export function GeofenceList({ canManage, onEdit }: Props) {
           <Skeleton key={i} className="h-36 rounded-2xl" />
         ))}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load geofences"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
     );
   }
 

@@ -43,6 +43,8 @@ import { AlertTriangle } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
@@ -93,9 +95,9 @@ export function LaborTabs() {
   const [agreementPage, setAgreementPage] = useState(1);
   const [casePage, setCasePage] = useState(1);
 
-  const { data: memberships, isLoading: membershipsLoading } = useUnionMemberships({ page: membershipPage, limit: 20 });
-  const { data: agreements, isLoading: agreementsLoading } = useCollectiveAgreements({ page: agreementPage, limit: 20 });
-  const { data: cases, isLoading: casesLoading } = useLaborCases({ page: casePage, limit: 20 });
+  const { data: memberships, isLoading: membershipsLoading, isError: membershipsIsError, error: membershipsError, refetch: refetchMemberships } = useUnionMemberships({ page: membershipPage, limit: 20 });
+  const { data: agreements, isLoading: agreementsLoading, isError: agreementsIsError, error: agreementsError, refetch: refetchAgreements } = useCollectiveAgreements({ page: agreementPage, limit: 20 });
+  const { data: cases, isLoading: casesLoading, isError: casesIsError, error: casesError, refetch: refetchCases } = useLaborCases({ page: casePage, limit: 20 });
   const { data: expiring } = useExpiringAgreements(30);
 
   const memberUserIds = useMemo(
@@ -136,6 +138,12 @@ export function LaborTabs() {
 
   function handleOpenSheet() {
     setSheetOpen(true);
+  }
+
+  function handleRetry() {
+    if (activeTab === "memberships") { void refetchMemberships(); return; }
+    if (activeTab === "agreements") { void refetchAgreements(); return; }
+    void refetchCases();
   }
 
   function handleCreateMembership(values: z.infer<typeof membershipSchema>) {
@@ -217,6 +225,9 @@ export function LaborTabs() {
   ];
 
   const isLoading = activeTab === "memberships" ? membershipsLoading : activeTab === "agreements" ? agreementsLoading : casesLoading;
+  const isError = activeTab === "memberships" ? membershipsIsError : activeTab === "agreements" ? agreementsIsError : casesIsError;
+  const activeError = activeTab === "memberships" ? membershipsError : activeTab === "agreements" ? agreementsError : casesError;
+  const errorTitle = activeTab === "memberships" ? "Couldn't load union memberships" : activeTab === "agreements" ? "Couldn't load collective agreements" : "Couldn't load labor cases";
 
   return (
     <div className="flex flex-1 min-h-0 flex-col">
@@ -240,6 +251,13 @@ export function LaborTabs() {
         <div className="flex flex-1 min-h-0 flex-col gap-3">
           {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}
         </div>
+      ) : isError ? (
+        <ErrorState
+          className="flex-1"
+          title={errorTitle}
+          description={getErrorMessage(activeError)}
+          onRetry={handleRetry}
+        />
       ) : activeTab === "memberships" ? (
         <>
           <div className="flex items-center justify-between mb-4">

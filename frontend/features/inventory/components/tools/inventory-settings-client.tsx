@@ -7,6 +7,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -49,7 +50,7 @@ function SettingsLoadingSkeleton() {
 
 export function InventorySettingsClient() {
   const canManage = useCan("inventory:settings:manage");
-  const { data: settings, isLoading } = useInventorySettings();
+  const { data: settings, isLoading, isError, error, refetch } = useInventorySettings();
   const updateMutation = useUpdateInventorySettings();
 
   const methods = useForm<SettingsFormValues>({
@@ -94,6 +95,10 @@ export function InventorySettingsClient() {
     reset();
   }
 
+  function handleRetry(): void {
+    void refetch();
+  }
+
   return (
     <PageWrapper title="Settings" subtitle="Configure stock policies, procurement rules, and system sequences.">
       <div className="flex flex-1 min-h-0 flex-col gap-4">
@@ -101,6 +106,12 @@ export function InventorySettingsClient() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {isLoading ? (
             <SettingsLoadingSkeleton />
+          ) : isError ? (
+            <ErrorState
+              title="Couldn't load inventory settings"
+              description={getErrorMessage(error)}
+              onRetry={handleRetry}
+            />
           ) : (
             <InventorySettingsForm />
           )}

@@ -7,6 +7,7 @@ import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle } from "@/compo
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared/error-state";
 import { usePayoutBatch, useImportBankReturn } from "@/hooks/api/payroll/payout-batches";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { formatMoney } from "@/features/payroll/shared";
@@ -134,7 +135,7 @@ function buildColumns(
 }
 
 export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailSheetProps) {
-  const { data, isLoading } = usePayoutBatch(batchId ?? 0);
+  const { data, isLoading, isError, error, refetch } = usePayoutBatch(batchId ?? 0);
   const { data: membersData } = useOrgMembers(1, 200);
   const importReturn = useImportBankReturn();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -214,6 +215,10 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
     reader.readAsText(file);
   }
 
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   const columns = useMemo(
     () => buildColumns(canManage, handleAction, resolveMemberName),
     [canManage, resolveMemberName],
@@ -279,6 +284,13 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
           <SheetBody className="px-6 py-4">
             {isLoading ? (
               <DataTableSkeleton rows={8} columns={canManage ? 7 : 6} />
+            ) : isError ? (
+              <ErrorState
+                compact
+                title="Couldn't load this batch"
+                description={getErrorMessage(error)}
+                onRetry={handleRetry}
+              />
             ) : (
               <DataTable
                 data={items}
@@ -292,7 +304,7 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
                 minWidth="640px"
               />
             )}
-            {hasMoreItems ? (
+            {!isError && hasMoreItems ? (
               <p className="pt-3 text-sm text-muted-foreground">
                 Showing the first {items.length} items in this batch. Download the batch file for
                 the complete list.

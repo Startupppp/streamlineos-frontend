@@ -17,6 +17,8 @@ import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { useCan } from "@/hooks/api/access";
@@ -117,13 +119,31 @@ export function SafetyPageContent() {
     setCursorIndex(0);
   }, []);
 
-  const { data, isLoading, isFetching } = useSafetyIncidents({
+  const { data, isLoading, isFetching, isError, error, refetch } = useSafetyIncidents({
     cursor: cursors[cursorIndex] ?? undefined,
     search: debouncedSearch.trim() || undefined,
     status: status || undefined,
     type: type || undefined,
     severity: severity || undefined,
   });
+
+  const filtersActive =
+    search.trim() !== "" || status !== "" || type !== "" || severity !== "";
+
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setStatus("");
+    setType("");
+    setSeverity("");
+    setCursors([null]);
+    setCursorIndex(0);
+  }, []);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  const handleOpenReport = useCallback(() => setShowReport(true), []);
 
   const columns: DataTableColumn<SafetyIncident>[] = [
     {
@@ -265,23 +285,42 @@ export function SafetyPageContent() {
 
         {activeTab === "incidents" && (
           <div className="flex min-h-0 flex-1 flex-col gap-2">
-            <DataTable
-              className="flex-1 min-h-0"
-              columns={columns}
-              data={data?.data ?? []}
-              isLoading={isLoading}
-              getRowKey={(row) => row.id}
-              emptyState={
-                <EmptyState
-                  className="border-0 bg-transparent min-h-[40vh]"
-                  illustration={<StateIllustration preset="alert" className="h-28 w-28" />}
-                  title="No safety incidents reported"
-                  description="Report workplace incidents, accidents, near-misses, and hazards here."
-                  action={{ label: "Report Incident", onClick: () => setShowReport(true) }}
-                />
-              }
-            />
-            {cursorIndex > 0 || data?.pagination.hasMore ? (
+            {isError ? (
+              <ErrorState
+                className="flex-1"
+                title="Couldn't load safety incidents"
+                description={getErrorMessage(error)}
+                onRetry={handleRetry}
+              />
+            ) : (
+              <DataTable
+                className="flex-1 min-h-0"
+                columns={columns}
+                data={data?.data ?? []}
+                isLoading={isLoading}
+                getRowKey={(row) => row.id}
+                emptyState={
+                  <EmptyState
+                    className="border-0 bg-transparent min-h-[40vh]"
+                    illustration={<StateIllustration preset="alert" className="h-28 w-28" />}
+                    title="No safety incidents reported"
+                    description={
+                      filtersActive
+                        ? undefined
+                        : "Report workplace incidents, accidents, near-misses, and hazards here."
+                    }
+                    filtersActive={filtersActive}
+                    onClearFilters={handleClearFilters}
+                    action={
+                      filtersActive
+                        ? undefined
+                        : { label: "Report Incident", onClick: handleOpenReport }
+                    }
+                  />
+                }
+              />
+            )}
+            {!isError && (cursorIndex > 0 || data?.pagination.hasMore) ? (
               <CursorPageControls
                 page={cursorIndex + 1}
                 hasNext={data?.pagination.hasMore ?? false}

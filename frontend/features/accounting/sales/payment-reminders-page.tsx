@@ -30,6 +30,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -186,6 +187,23 @@ function PoliciesTab({
     },
   ];
 
+  function handleRetry(): void {
+    void query.refetch();
+  }
+
+  if (query.isError) {
+    return (
+      <div className="flex flex-1 min-h-0 flex-col">
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load reminder policies"
+          description={getErrorMessage(query.error)}
+          onRetry={handleRetry}
+        />
+      </div>
+    );
+  }
+
   if (items.length === 0 && !query.isLoading) {
     return (
       <div className="flex flex-1 min-h-0 flex-col">
@@ -286,6 +304,23 @@ function LogTab() {
       ),
     },
   ];
+
+  function handleRetry(): void {
+    void query.refetch();
+  }
+
+  if (query.isError) {
+    return (
+      <div className="flex flex-1 min-h-0 flex-col">
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load the reminder log"
+          description={getErrorMessage(query.error)}
+          onRetry={handleRetry}
+        />
+      </div>
+    );
+  }
 
   if (items.length === 0 && !query.isLoading) {
     return (

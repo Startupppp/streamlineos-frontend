@@ -16,7 +16,9 @@ import {
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Money } from "@/features/accounting/shared";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { BankTxnStatusBadge } from "./bank-txn-status-badge";
@@ -155,6 +157,24 @@ export function BankAccountDetailClient({ bankAccountId }: Props) {
   const account = accountQuery.data;
   const txns = txnQuery.data?.data ?? [];
   const hasMore = txnQuery.data?.pagination.hasMore ?? false;
+  const isError = accountQuery.isError || txnQuery.isError;
+  const loadError = accountQuery.error ?? txnQuery.error;
+
+  const filtersActive =
+    statusFilter !== "ALL" || from !== "" || to !== "" || search.trim() !== "";
+
+  function handleRetry() {
+    void accountQuery.refetch();
+    void txnQuery.refetch();
+  }
+
+  function handleClearFilters() {
+    setStatusFilter("ALL");
+    setFrom("");
+    setTo("");
+    setSearch("");
+    resetCursor();
+  }
 
   function handleStatusChange(value: string) {
     if (isTxnStatus(value)) {
@@ -240,6 +260,13 @@ export function BankAccountDetailClient({ bankAccountId }: Props) {
             </div>
             <Skeleton className="h-64 w-full rounded-xl" />
           </div>
+        ) : isError ? (
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load this account"
+            description={getErrorMessage(loadError)}
+            onRetry={handleRetry}
+          />
         ) : (
           <>
             <DataTable
@@ -256,8 +283,18 @@ export function BankAccountDetailClient({ bankAccountId }: Props) {
               emptyState={
                 <EmptyState
                   title="No transactions"
-                  description="Import a bank statement to see transactions here."
-                  action={{ label: "Import Statement", href: `/accounting/banking/import?bankAccountId=${id}` }}
+                  description={
+                    filtersActive
+                      ? undefined
+                      : "Import a bank statement to see transactions here."
+                  }
+                  filtersActive={filtersActive}
+                  onClearFilters={handleClearFilters}
+                  action={
+                    filtersActive
+                      ? undefined
+                      : { label: "Import Statement", href: `/accounting/banking/import?bankAccountId=${id}` }
+                  }
                   compact
                 />
               }

@@ -16,8 +16,10 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { DataTable } from "@/components/ui/data-table";
 import { EmptyPayroll } from "@/components/illustrations";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { usePayrollComponents, useDeletePayrollComponent } from "@/hooks/api/payroll";
 import type { SalaryComponent, ComponentType } from "@/types/payroll/setup";
 import { buildComponentColumns } from "./component-columns";
@@ -69,7 +71,7 @@ export function ComponentsPageContent() {
     updateParams({ search: debouncedSearch });
   }, [debouncedSearch, searchParams, updateParams]);
 
-  const { data, isLoading } = usePayrollComponents({
+  const { data, isLoading, isError, error, refetch } = usePayrollComponents({
     search: debouncedSearch.trim() || undefined,
     type: (typeFilter as ComponentType) || undefined,
     active:
@@ -77,6 +79,18 @@ export function ComponentsPageContent() {
     page,
     pageSize: 20,
   });
+
+  const filtersActive =
+    searchInput.trim() !== "" || typeFilter !== "" || activeFilter !== "";
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  const handleClearFilters = useCallback(() => {
+    setSearchInput("");
+    updateParams({ search: "", type: "", active: "" });
+  }, [updateParams]);
 
   function handleSearchChange(value: string) {
     setSearchInput(value);
@@ -167,33 +181,48 @@ export function ComponentsPageContent() {
           ) : undefined
         }
       >
-        <DataTable
-          className="flex-1 min-h-0"
-          data={data?.items ?? []}
-          columns={columns}
-          getRowKey={(row) => row.id}
-          isLoading={isLoading}
-          minWidth="700px"
-          pagination={{
-            mode: "server",
-            page,
-            pageSize: 20,
-            total: data?.total ?? 0,
-            onPageChange: handlePageChange,
-          }}
-          emptyState={
-            <EmptyState
-              illustration={<EmptyPayroll />}
-              title="No components found"
-              description="Add salary components like basic pay, HRA, PF, or custom allowances"
-              action={
-                canManage
-                  ? { label: "Add Component", onClick: handleAddNew }
-                  : undefined
-              }
-            />
-          }
-        />
+        {isError ? (
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load components"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
+        ) : (
+          <DataTable
+            className="flex-1 min-h-0"
+            data={data?.items ?? []}
+            columns={columns}
+            getRowKey={(row) => row.id}
+            isLoading={isLoading}
+            minWidth="700px"
+            pagination={{
+              mode: "server",
+              page,
+              pageSize: 20,
+              total: data?.total ?? 0,
+              onPageChange: handlePageChange,
+            }}
+            emptyState={
+              <EmptyState
+                illustration={<EmptyPayroll />}
+                title="No components yet"
+                description={
+                  filtersActive
+                    ? undefined
+                    : "Add salary components like basic pay, HRA, PF, or custom allowances"
+                }
+                filtersActive={filtersActive}
+                onClearFilters={handleClearFilters}
+                action={
+                  canManage && !filtersActive
+                    ? { label: "Add Component", onClick: handleAddNew }
+                    : undefined
+                }
+              />
+            }
+          />
+        )}
       </PageWrapper>
 
       {canManage && (

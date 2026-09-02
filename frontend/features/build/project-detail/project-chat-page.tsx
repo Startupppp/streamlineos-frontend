@@ -2,12 +2,13 @@
 
 import { useCallback, useState } from "react";
 import { useSession } from "next-auth/react";
-import { MessageCircle } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEntityChannel } from "@/hooks/api/chat";
 import { isApiError } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { PmPageShell, PmPanel } from "@/features/build/shared/pm-chrome";
 import { ChatAblyProvider } from "@/features/chat/ably-provider";
 import { MessagePanel } from "@/features/chat/message-panel";
@@ -24,7 +25,10 @@ const noop = () => {};
 export function ProjectChatPage({ projectId }: ProjectChatPageProps) {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id ?? "";
-  const { data: channel, error, isLoading } = useEntityChannel("project", projectId);
+  const { data: channel, error, isLoading, refetch } = useEntityChannel(
+    "project",
+    projectId,
+  );
   const [showInfoPanel, setShowInfoPanel] = useState(false);
   const isChatMobile = useIsChatMobile();
 
@@ -36,6 +40,10 @@ export function ProjectChatPage({ projectId }: ProjectChatPageProps) {
     setShowInfoPanel(false);
   }, []);
 
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   const isNotFound = isApiError(error) && error.status === 404;
 
   if (isLoading) {
@@ -46,17 +54,12 @@ export function ProjectChatPage({ projectId }: ProjectChatPageProps) {
     return (
       <PageWrapper noInternalScroll>
         <PmPageShell>
-          <PmPanel
-            className="flex flex-1 min-h-0 flex-col items-center justify-center gap-3 p-10 text-center"
-            solid
-          >
-            <MessageCircle className="h-8 w-8 text-muted-foreground/40" />
-            <p className="text-sm font-medium text-foreground">No chat channel linked</p>
-            <p className="text-xs text-muted-foreground max-w-xs">
-              This project does not have an associated chat channel yet. Ask a project admin to
-              link one from the project settings.
-            </p>
-          </PmPanel>
+          <EmptyState
+            className="flex-1"
+            illustrationPreset="chat"
+            title="No chat channel linked"
+            description="This project does not have an associated chat channel yet. Ask a project admin to link one from the project settings."
+          />
         </PmPageShell>
       </PageWrapper>
     );
@@ -66,12 +69,12 @@ export function ProjectChatPage({ projectId }: ProjectChatPageProps) {
     return (
       <PageWrapper noInternalScroll>
         <PmPageShell>
-          <PmPanel
-            className="flex flex-1 min-h-0 flex-col items-center justify-center gap-3 p-8 text-center"
-            solid
-          >
-            <p className="text-sm text-muted-foreground">{getErrorMessage(error)}</p>
-          </PmPanel>
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load project chat"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
         </PmPageShell>
       </PageWrapper>
     );

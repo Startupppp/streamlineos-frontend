@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { IndianRupee, TrendingUp, Pencil } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { useProjectBudget, useUpdateProjectBudget, useProjectMembers } from "@/hooks/api/build";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { getUserDisplayName, getUserInitials, type NamedUser } from "@/lib/person-display";
@@ -68,7 +69,13 @@ interface ProjectBudgetPageProps {
 export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPageProps) {
   const projectId = Number(projectIdStr);
   const display = useOrgDisplay();
-  const { data: budget, isLoading } = useProjectBudget(projectId);
+  const {
+    data: budget,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useProjectBudget(projectId);
   const { data: members } = useProjectMembers(projectId);
   const { data: orgMembersData } = useOrgMembers(1, 200);
   const updateBudget = useUpdateProjectBudget(projectId);
@@ -97,6 +104,10 @@ export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPage
 
   const [editMode, setEditMode] = useState(false);
   const [newBudget, setNewBudget] = useState("");
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   function handleOpenEdit() {
     setNewBudget(String(budget?.plannedBudget ?? ""));
@@ -198,6 +209,24 @@ export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPage
         <PmPageShell>
           <StatCardGridSkeleton cols={3} className="mb-4" />
           <Skeleton className="h-20 rounded-xl border border-border bg-card" />
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper
+        title="Budget"
+        subtitle="Planned budget vs actual cost from billable timesheets"
+      >
+        <PmPageShell>
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load budget"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
         </PmPageShell>
       </PageWrapper>
     );

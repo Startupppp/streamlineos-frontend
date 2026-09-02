@@ -324,3 +324,71 @@ describe("WCAG AA contrast — chrome surfaces", () => {
     );
   });
 });
+
+const LIGHT_SURFACES = ["background", "card", "muted"] as const;
+const DARK_SURFACES = ["background", "card", "muted"] as const;
+
+describe("status ink by usage class — every surface a badge or icon can land on", () => {
+  describe("text class: -ink-strong is what renders words, so it owes 4.5:1", () => {
+    for (const tone of STATUS_TONES) {
+      it(`--status-${tone}-ink-strong clears 4.5:1 on its own surface and on background, card and muted`, () => {
+        const surfaces = [`status-${tone}-surface`, ...LIGHT_SURFACES];
+        for (const surface of surfaces) {
+          expect(
+            ratioOf(lightCss, `status-${tone}-ink-strong`, surface),
+          ).toBeGreaterThanOrEqual(WCAG_AA_NORMAL);
+        }
+      });
+    }
+  });
+
+  describe("non-text class: -ink draws icons, dots and rules, so it owes 3:1", () => {
+    for (const tone of STATUS_TONES) {
+      it(`--status-${tone}-ink clears 3:1 on its own surface and on background, card and muted`, () => {
+        const surfaces = [`status-${tone}-surface`, ...LIGHT_SURFACES];
+        for (const surface of surfaces) {
+          expect(
+            ratioOf(lightCss, `status-${tone}-ink`, surface),
+          ).toBeGreaterThanOrEqual(WCAG_NON_TEXT);
+        }
+      });
+    }
+  });
+
+  describe("dark mode carries both classes", () => {
+    for (const tone of STATUS_TONES) {
+      it(`--status-${tone}-ink-strong clears 4.5:1 on every dark surface`, () => {
+        for (const surface of DARK_SURFACES) {
+          expect(
+            ratioOf(darkCss, `status-${tone}-ink-strong`, surface),
+          ).toBeGreaterThanOrEqual(WCAG_AA_NORMAL);
+        }
+      });
+
+      it(`--status-${tone}-ink clears 3:1 on every dark surface`, () => {
+        for (const surface of DARK_SURFACES) {
+          expect(
+            ratioOf(darkCss, `status-${tone}-ink`, surface),
+          ).toBeGreaterThanOrEqual(WCAG_NON_TEXT);
+        }
+      });
+    }
+  });
+
+  it("BITE PROOF — amber-600, the value --status-warning-ink held, is below 3:1 on --muted", () => {
+    expect(contrastRatio("#d97706", "#f1f5f9")).toBeLessThan(WCAG_NON_TEXT);
+  });
+
+  it("BITE PROOF — -ink is not a text ink: four of the five tones fail AA on some light surface", () => {
+    const worstLightRatio = (tone: (typeof STATUS_TONES)[number]): number =>
+      Math.min(
+        ...[`status-${tone}-surface`, ...LIGHT_SURFACES].map((surface) =>
+          ratioOf(lightCss, `status-${tone}-ink`, surface),
+        ),
+      );
+    const belowText = STATUS_TONES.filter(
+      (tone) => worstLightRatio(tone) < WCAG_AA_NORMAL,
+    );
+    expect(belowText).toEqual(["success", "warning", "danger", "neutral"]);
+  });
+});

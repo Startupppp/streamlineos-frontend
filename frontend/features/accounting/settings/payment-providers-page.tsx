@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
+import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   usePaymentCatalog,
@@ -26,9 +27,16 @@ export function PaymentProvidersPage() {
 }
 
 function PaymentProvidersContent() {
-  const { data: catalog, isLoading: catalogLoading } = usePaymentCatalog();
-  const { data: providers, isLoading: providersLoading } = usePaymentProviders();
+  const catalogQuery = usePaymentCatalog();
+  const providersQuery = usePaymentProviders();
   const createProvider = useCreatePaymentProvider();
+
+  const catalog = catalogQuery.data;
+  const providers = providersQuery.data;
+  const catalogLoading = catalogQuery.isLoading;
+  const providersLoading = providersQuery.isLoading;
+  const isError = catalogQuery.isError || providersQuery.isError;
+  const loadError = catalogQuery.error ?? providersQuery.error;
 
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [environment, setEnvironment] = useState<PaymentEnvironment>("test");
@@ -49,6 +57,11 @@ function PaymentProvidersContent() {
   }
 
   const isLoading = catalogLoading || providersLoading;
+
+  function handleRetry() {
+    void catalogQuery.refetch();
+    void providersQuery.refetch();
+  }
 
   return (
     <PageWrapper
@@ -77,45 +90,54 @@ function PaymentProvidersContent() {
         </div>
       }
     >
-      <div className="flex-1 min-h-0 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_280px]">
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {isLoading
-              ? Array.from({ length: 12 }).map((_, index) => (
-                  <Skeleton key={index} className="h-28 rounded-xl border border-border bg-card" />
-                ))
-              : catalog?.map((entry) => (
-                  <ProviderCard
-                    key={entry.key}
-                    catalogEntry={entry}
-                    provider={providers?.find((provider) => provider.providerKey === entry.key)}
-                    selected={selectedKey === entry.key}
-                    onSelect={() => setSelectedKey(entry.key)}
-                    onConnect={() => handleConnect(entry.key)}
-                    isConnecting={createProvider.isPending}
-                  />
-                ))}
+      {isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load payment providers"
+          description={getErrorMessage(loadError)}
+          onRetry={handleRetry}
+        />
+      ) : (
+        <div className="flex-1 min-h-0 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_280px]">
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {isLoading
+                ? Array.from({ length: 12 }).map((_, index) => (
+                    <Skeleton key={index} className="h-28 rounded-xl border border-border bg-card" />
+                  ))
+                : catalog?.map((entry) => (
+                    <ProviderCard
+                      key={entry.key}
+                      catalogEntry={entry}
+                      provider={providers?.find((provider) => provider.providerKey === entry.key)}
+                      selected={selectedKey === entry.key}
+                      onSelect={() => setSelectedKey(entry.key)}
+                      onConnect={() => handleConnect(entry.key)}
+                      isConnecting={createProvider.isPending}
+                    />
+                  ))}
+            </div>
+
+            {selectedKey === "manual" ? (
+              <div className="rounded-xl border border-border bg-card p-4">
+                <ManualMethodsPanel />
+              </div>
+            ) : selectedProvider ? (
+              <ProviderDetail provider={selectedProvider} environment={environment} />
+            ) : (
+              <div className="rounded-xl border border-dashed border-border p-8 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Select a configured provider or connect a new provider to continue.
+                </p>
+              </div>
+            )}
           </div>
 
-          {selectedKey === "manual" ? (
-            <div className="rounded-xl border border-border bg-card p-4">
-              <ManualMethodsPanel />
-            </div>
-          ) : selectedProvider ? (
-            <ProviderDetail provider={selectedProvider} environment={environment} />
-          ) : (
-            <div className="rounded-xl border border-dashed border-border p-8 text-center">
-              <p className="text-sm text-muted-foreground">
-                Select a configured provider or connect a new provider to continue.
-              </p>
-            </div>
-          )}
+          <div className="space-y-4">
+            <ReadinessRail providerKey={selectedKey} />
+          </div>
         </div>
-
-        <div className="space-y-4">
-          <ReadinessRail providerKey={selectedKey} />
-        </div>
-      </div>
+      )}
     </PageWrapper>
   );
 }

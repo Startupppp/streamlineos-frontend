@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Pencil } from "lucide-react";
 import { LoadingState } from "@/components/shared/loading-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { useAgentSkills, useAgentAvailability } from "@/hooks/api/support/macros";
 import { AgentSkillsDialog } from "@/features/support/settings/agent-skills-dialog";
@@ -55,7 +58,13 @@ function AgentSkillsRow({ userId, label, skills, isAvailable, onEdit }: AgentSki
 }
 
 export function SupportAgentRoutingPage() {
-  const { data: membersResponse, isLoading: membersLoading } = useOrgMembers(1, 200);
+  const {
+    data: membersResponse,
+    isLoading: membersLoading,
+    isError: membersError,
+    error: membersErrorValue,
+    refetch: refetchMembers,
+  } = useOrgMembers(1, 200);
   const { data: agentSkills, isLoading: skillsLoading } = useAgentSkills();
   const { data: availability } = useAgentAvailability();
   const members = useMemo(() => membersResponse?.data ?? [], [membersResponse]);
@@ -83,6 +92,8 @@ export function SupportAgentRoutingPage() {
 
   const handleCloseEdit = useCallback(() => setEditTarget(null), []);
 
+  const handleRetry = useCallback(() => void refetchMembers(), [refetchMembers]);
+
   const isLoading = membersLoading || skillsLoading;
 
   return (
@@ -95,6 +106,21 @@ export function SupportAgentRoutingPage() {
           <CardContent className="space-y-2">
             {isLoading ? (
               <LoadingState variant="list" rows={12} />
+            ) : membersError ? (
+              <ErrorState
+                compact
+                title="Couldn't load agents"
+                description={getErrorMessage(membersErrorValue)}
+                onRetry={handleRetry}
+              />
+            ) : members.length === 0 ? (
+              <EmptyState
+                compact
+                illustrationPreset="team"
+                title="No agents yet"
+                description="Invite teammates to the organization to route tickets to them."
+                action={{ label: "Invite people", href: "/settings/users" }}
+              />
             ) : (
               members.map((m) => (
                 <AgentSkillsRow

@@ -1,8 +1,11 @@
 "use client";
 
+import { useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
+import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useBiometricLogs, type BiometricLog } from "@/hooks/api/hr/biometric";
 import { format } from "date-fns";
 
@@ -58,7 +61,22 @@ function getRowKey(log: BiometricLog) {
 }
 
 export function BiometricLogsList() {
-  const { data: logs, isLoading } = useBiometricLogs();
+  const { data: logs, isLoading, isError, error, refetch } = useBiometricLogs();
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load punch logs"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
+  }
 
   return (
     <DataTable

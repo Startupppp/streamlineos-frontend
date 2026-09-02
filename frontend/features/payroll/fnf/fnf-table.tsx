@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   Select,
   SelectContent,
@@ -15,6 +16,7 @@ import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useFnfSettlements } from "@/hooks/api/payroll/fnf";
 import { formatMoney } from "@/features/payroll/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 import { FnfStatusBadge } from "./fnf-status-badge";
 import { FnfDetailSheet } from "./fnf-detail-sheet";
@@ -80,12 +82,24 @@ export function FnfTable() {
   const statusFilter = searchParams.get("status") ?? SENTINEL;
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  const { data, isLoading } = useFnfSettlements();
+  const { data, isLoading, isError, error, refetch } = useFnfSettlements();
 
   const filtered =
     data && statusFilter !== SENTINEL
       ? data.filter((s) => s.status === statusFilter)
       : (data ?? []);
+
+  const filtersActive = statusFilter !== SENTINEL;
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  const handleClearFilters = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("status");
+    router.replace(`?${params.toString()}`);
+  }, [router, searchParams]);
 
   function handleStatusChange(value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -123,6 +137,14 @@ export function FnfTable() {
         </Select>
       </div>
 
+      {isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load settlements"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      ) : (
       <DataTable
         className="flex-1 min-h-0"
         data={filtered}
@@ -149,11 +171,18 @@ export function FnfTable() {
         emptyState={
           <EmptyState
             illustration={<EmptyExpensesIllustration />}
-            title="No settlements found"
-            description="Full & Final settlements will appear here once initiated"
+            title="No settlements yet"
+            description={
+              filtersActive
+                ? undefined
+                : "Full & Final settlements will appear here once initiated"
+            }
+            filtersActive={filtersActive}
+            onClearFilters={handleClearFilters}
           />
         }
       />
+      )}
 
       <FnfDetailSheet settlementId={selectedId} onClose={handleSheetClose} />
     </>

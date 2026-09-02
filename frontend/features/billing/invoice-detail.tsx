@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
   useInvoice,
@@ -64,17 +65,26 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
 
   if (isLoading) return <InvoiceDetailSkeleton />;
 
-  if (error || !invoice) {
+  if (error) {
     return (
       <PageWrapper title="Invoice" backHref="/billing/invoices">
         <ErrorState
-          title={error ? "Failed to load invoice" : "Invoice not found"}
-          description={
-            error
-              ? getErrorMessage(error)
-              : "The invoice you are looking for does not exist."
-          }
-          onRetry={error ? handleRetry : undefined}
+          title="Failed to load invoice"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      </PageWrapper>
+    );
+  }
+
+  if (!invoice) {
+    return (
+      <PageWrapper title="Invoice" backHref="/billing/invoices">
+        <EmptyState
+          illustrationPreset="document"
+          title="Invoice not found"
+          description="This invoice no longer exists, or it was never issued to your organization."
+          action={{ label: "Back to invoices", href: "/billing/invoices" }}
         />
       </PageWrapper>
     );

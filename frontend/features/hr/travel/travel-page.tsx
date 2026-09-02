@@ -10,6 +10,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { useMyTravelRequests, useCreateTravelRequest } from "@/hooks/api/hr";
@@ -39,9 +40,13 @@ function TravelLoading() {
 
 export function TravelPage() {
   const { staggerContainer } = useMotionVariants();
-  const { data: requests, isLoading } = useMyTravelRequests();
+  const { data: requests, isLoading, isError, error, refetch } = useMyTravelRequests();
   const createRequest = useCreateTravelRequest();
   const [sheetOpen, setSheetOpen] = useState(false);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const form = useForm<TravelFormValues>({
     resolver: zodResolver(travelSchema),
@@ -135,7 +140,14 @@ export function TravelPage() {
         </Button>
       }
     >
-      {!requests?.length ? (
+      {isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load travel requests"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      ) : !requests?.length ? (
         <EmptyState
           illustrationPreset="travel"
           title="No travel requests yet"

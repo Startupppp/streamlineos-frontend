@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
@@ -29,7 +30,7 @@ export function OvertimeList({ canManage }: Props) {
   const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
   const cursor = cursorHistory.at(-1);
   const page = cursorHistory.length;
-  const { data, isLoading, isFetching } = useOvertimeRequests({ cursor, pageSize: PAGE_SIZE });
+  const { data, isLoading, isFetching, isError, error, refetch } = useOvertimeRequests({ cursor, pageSize: PAGE_SIZE });
   const requests = data?.items;
   const approve = useApproveOvertime();
   const reject = useRejectOvertime();
@@ -61,6 +62,10 @@ export function OvertimeList({ canManage }: Props) {
       onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [reject]);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const handlePreviousPage = useCallback(() => {
     setCursorHistory((history) =>
@@ -155,6 +160,17 @@ export function OvertimeList({ canManage }: Props) {
 
     return cols;
   }, [canManage, approve.isPending, reject.isPending, memberById, handleApprove, handleReject]);
+
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load overtime requests"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">

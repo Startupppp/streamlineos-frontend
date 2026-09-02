@@ -4,6 +4,7 @@ import { useMemo, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { LoadingState } from "@/components/shared";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useBudgetRevisions } from "@/hooks/api/accounting/planning";
 import { useOrgMembers } from "@/hooks/api/organization";
 import {
@@ -56,7 +57,12 @@ export function RevisionsSheet({ budgetId, open, onOpenChange }: RevisionsSheetP
       {query.isLoading ? (
         <LoadingState variant="table" rows={12} />
       ) : revisions.length === 0 ? (
-        <p className="text-sm text-muted-foreground py-6 text-center">No revisions yet.</p>
+        <EmptyState
+          compact
+          illustrationPreset="activity"
+          title="No revisions yet"
+          description="Each time this budget is saved, a version is recorded here."
+        />
       ) : (
         <div className="space-y-2">
           {revisions.map((rev) => (

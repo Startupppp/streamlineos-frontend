@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   Sheet,
   SheetContent,
@@ -24,6 +24,8 @@ import {
 import { cn } from "@/lib/utils";
 import { FileText, StickyNote, Lock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -162,10 +164,14 @@ function DocumentsList({ caseId }: { caseId: number }) {
 }
 
 export function CaseDetailSheet({ caseId, open, onOpenChange }: Props) {
-  const { data: hrCase, isLoading } = useHrCase(caseId);
+  const { data: hrCase, isLoading, isError, error, refetch } = useHrCase(caseId);
   const startInvestigation = useStartInvestigation(caseId);
   const updateCase = useUpdateCase(caseId);
   const [activeTab, setActiveTab] = useState<"details" | "notes" | "documents">("details");
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   function handleStartInvestigation() {
     startInvestigation.mutate(undefined, {
@@ -187,7 +193,9 @@ export function CaseDetailSheet({ caseId, open, onOpenChange }: Props) {
         <SheetHeader className="shrink-0 px-5 pt-5 pb-4 border-b">
           {isLoading ? (
             <SheetTitle>Loading...</SheetTitle>
-          ) : hrCase ? (
+          ) : !hrCase ? (
+            <SheetTitle>Case</SheetTitle>
+          ) : (
             <>
               <div className="flex items-center gap-2 flex-wrap">
                 <SheetTitle className="text-base font-semibold font-mono">
@@ -208,8 +216,30 @@ export function CaseDetailSheet({ caseId, open, onOpenChange }: Props) {
                 {formatDistanceToNow(new Date(hrCase.createdAt), { addSuffix: true })}
               </p>
             </>
-          ) : null}
+          )}
         </SheetHeader>
+
+        {isError ? (
+          <div className="flex flex-1 min-h-0 flex-col px-5 py-4">
+            <ErrorState
+              className="flex-1"
+              title="Couldn't load case"
+              description={getErrorMessage(error)}
+              onRetry={handleRetry}
+            />
+          </div>
+        ) : null}
+
+        {!isLoading && !isError && !hrCase ? (
+          <div className="flex flex-1 min-h-0 flex-col px-5 py-4">
+            <EmptyState
+              className="flex-1"
+              illustrationPreset="ticket"
+              title="Case not found"
+              description="This case no longer exists or you no longer have access to it."
+            />
+          </div>
+        ) : null}
 
         {hrCase && (
           <Tabs

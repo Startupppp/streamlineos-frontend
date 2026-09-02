@@ -1,49 +1,49 @@
 "use client";
 
-import {
-  useQuery,
-  useQueryClient,
-  useInfiniteQuery,
-  keepPreviousData,
-  type InfiniteData,
-} from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { reauthorizeAblyClients } from "@/lib/ably";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
-import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import { useRealtimePollInterval } from "@/hooks/common/use-realtime-poll-interval";
 import type {
   Channel,
-  ChannelsPage,
-  PublicChannelsPage,
-  ChatNotificationPreference,
   Message,
   MessagesPage,
   OnlineUser,
   OrgUser,
-  CreateDMInput,
-  CreateGroupChannelInput,
-  CreatePublicChannelInput,
-  CreatePrivateChannelInput,
-  UpdateChannelInput,
-  SendMessageInput,
-  EditMessageInput,
-  AttachmentInput,
-  PinnedMessage,
   PublicChannel,
-  ThreadPage,
-  SearchMessagesResult,
-  SearchChannelResult,
-  SearchUserResult,
-  SavedMessagesPage,
 } from "@/types/chat";
-import { refreshRealtimeCapability } from "./chat-shared";
 
+interface ChannelPage<TChannel> {
+  channels: TChannel[];
+  nextCursor: string | null;
+}
 
-const selectChannels = (page: ChannelsPage): Channel[] => page.channels;
-const selectPublicChannels = (page: PublicChannelsPage): PublicChannel[] => page.channels;
+/**
+ * The route answers one keyset page of 50 and a `nextCursor`. Reading only the
+ * first page truncates the sidebar, the forward dialog and the channel
+ * combobox with nothing on screen to say a channel is missing, so the cursor is
+ * followed to exhaustion. A repeated cursor is a server fault, not a page.
+ */
+export async function drainChannelPages<TChannel>(
+  path: string,
+  signal: AbortSignal,
+): Promise<TChannel[]> {
+  const channels: TChannel[] = [];
+  const seenCursors = new Set<string>();
+  let cursor: string | null = null;
+  for (;;) {
+    const page: ChannelPage<TChannel> = await apiClient.get<ChannelPage<TChannel>>(
+      path,
+      cursor === null ? undefined : { cursor },
+      signal,
+    );
+    channels.push(...page.channels);
+    if (page.nextCursor === null || seenCursors.has(page.nextCursor)) return channels;
+    seenCursors.add(page.nextCursor);
+    cursor = page.nextCursor;
+  }
+}
 
 export function useChatChannels(enabled = true) {
   const { data: session } = useSession();
@@ -52,10 +52,7 @@ export function useChatChannels(enabled = true) {
   const chatEnabled = useModuleEnabled("chat");
   return useQuery({
     queryKey: queryKeys.chat.myChannels(),
-    // The route is keyset-paginated and answers { channels, nextCursor }; typing it
-    // as an array made every consumer read `.filter`/`[number]` off an object.
-    queryFn: ({ signal }) => apiClient.get<ChannelsPage>("/chat/channels", undefined, signal),
-    select: selectChannels,
+    queryFn: ({ signal }) => drainChannelPages<Channel>("/chat/channels", signal),
     staleTime: 300_000,
     refetchOnWindowFocus: true,
     enabled: !!orgId && enabled && chatEnabled && canRead,
@@ -66,8 +63,7 @@ export function useArchivedChannels(enabled = true) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: queryKeys.chat.archivedChannels(),
-    queryFn: ({ signal }) => apiClient.get<ChannelsPage>("/chat/channels/archived", undefined, signal),
-    select: selectChannels,
+    queryFn: ({ signal }) => drainChannelPages<Channel>("/chat/channels/archived", signal),
     staleTime: 2 * 60_000,
     enabled: enabled && canRead,
   });
@@ -78,8 +74,7 @@ export function usePublicChannels(enabled = true) {
   return useQuery({
     queryKey: queryKeys.chat.publicChannels(),
     queryFn: ({ signal }) =>
-      apiClient.get<PublicChannelsPage>("/chat/channels/public", undefined, signal),
-    select: selectPublicChannels,
+      drainChannelPages<PublicChannel>("/chat/channels/public", signal),
     staleTime: 2 * 60_000,
     enabled: enabled && canRead,
   });
@@ -116,13 +111,15 @@ export type PollPage = {
   hasMore: boolean;
 };
 
+const CHAT_POLL_FALLBACK_INTERVAL_MS = 30_000;
+
+/** `enabled` is the caller's realtime verdict: it polls only while the socket is down. */
 export function useChatPoll(
   channelId: number,
   since: string,
   enabled: boolean,
 ) {
   const canRead = useCan("chat:messages:read");
-  const pollInterval = useRealtimePollInterval(30_000);
   return useQuery({
     queryKey: queryKeys.chat.poll(channelId, since),
     queryFn: ({ signal }) =>
@@ -131,7 +128,7 @@ export function useChatPoll(
       }, signal),
     staleTime: 2 * 60_000,
     enabled: enabled && canRead && channelId > 0,
-    refetchInterval: enabled && canRead ? pollInterval : false,
+    refetchInterval: enabled && canRead ? CHAT_POLL_FALLBACK_INTERVAL_MS : false,
   });
 }
 

@@ -12,6 +12,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useFindExpert, useHrDepartments, type ExpertResult } from "@/hooks/api/hr";
 import { Search, X } from "lucide-react";
@@ -49,11 +51,15 @@ export function FindExpertPage() {
 
   const { data: departments } = useHrDepartments();
 
-  const { data: experts, isLoading } = useFindExpert({
+  const { data: experts, isLoading, isError, error, refetch } = useFindExpert({
     skill: activeParams.skill,
     department: activeParams.department || undefined,
     role: activeParams.role || undefined,
   });
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const handleQueryChange = useCallback((value: string) => {
     setQuery(value);
@@ -170,11 +176,25 @@ export function FindExpertPage() {
               <Skeleton key={i} className="h-28 w-full rounded-lg" />
             ))}
           </div>
+        ) : isError ? (
+          <ErrorState
+            className="flex-1"
+            title="Couldn't search for experts"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
         ) : !experts || experts.length === 0 ? (
           <EmptyState
             illustration={<EmptyPersonIllustration className="h-40 w-40" />}
             title={`No experts found for "${activeParams.skill}"`}
-            description="Try a different skill or a broader search term."
+            description={
+              hasActiveFilters
+                ? undefined
+                : "Try a different skill or a broader search term."
+            }
+            filtersActive={hasActiveFilters}
+            filteredTitle={`No experts found for "${activeParams.skill}" with these filters`}
+            onClearFilters={handleClearFilters}
           />
         ) : (
           <div className="space-y-4">

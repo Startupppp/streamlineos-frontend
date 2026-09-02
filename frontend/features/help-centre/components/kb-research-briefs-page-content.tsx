@@ -2,10 +2,12 @@
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { KbResearchBriefForm } from "@/features/help-centre/components/kb-research-brief-form";
 import { KbResearchBriefCard } from "@/features/help-centre/components/kb-research-brief-card";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useKbResearchBriefs } from "@/hooks/api/kb/research-briefs";
 
 function BriefListSkeleton() {
@@ -22,11 +24,16 @@ function BriefListSkeleton() {
 }
 
 export function KbResearchBriefsPageContent() {
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useKbResearchBriefs();
+  const { data, isLoading, isError, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useKbResearchBriefs();
   const allBriefs = data?.pages.flatMap((p) => p.items) ?? [];
 
   function handleLoadMore() {
     void fetchNextPage();
+  }
+
+  function handleRetry() {
+    void refetch();
   }
 
   return (
@@ -39,6 +46,13 @@ export function KbResearchBriefsPageContent() {
 
         {isLoading ? (
           <BriefListSkeleton />
+        ) : isError ? (
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load research briefs"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
         ) : allBriefs.length === 0 ? (
           <EmptyState
             compact

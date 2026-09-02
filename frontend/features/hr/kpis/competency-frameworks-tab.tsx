@@ -4,6 +4,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -89,7 +91,7 @@ function RemoveLevelButton({ onClick }: { onClick: () => void }) {
 }
 
 export function CompetencyFrameworksTab() {
-  const { data: frameworks = [], isLoading } = useCompetencyFrameworks();
+  const { data: frameworks = [], isLoading, isError, error, refetch } = useCompetencyFrameworks();
   const createFramework = useCreateCompetencyFramework();
   const createCompetency = useCreateCompetency();
 
@@ -109,6 +111,10 @@ export function CompetencyFrameworksTab() {
     description: "",
     weight: "1",
   });
+
+  function handleRetry() {
+    void refetch();
+  }
 
   function handleFrameworkFormChange(field: keyof FrameworkFormState, value: string) {
     setFrameworkForm((prev) => ({ ...prev, [field]: value }));
@@ -190,6 +196,17 @@ export function CompetencyFrameworksTab() {
           </div>
         ))}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load competency frameworks"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
     );
   }
 

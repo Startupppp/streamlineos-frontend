@@ -37,7 +37,7 @@ function apiConnectOrigin(): string {
   }
 }
 
-function buildContentSecurityPolicy(): string {
+export function buildContentSecurityPolicy(): string {
   const isDev = process.env.NODE_ENV === "development";
   const scriptSrc = [
     "'self'",

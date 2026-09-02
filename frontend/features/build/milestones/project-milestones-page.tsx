@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,7 +53,13 @@ interface ProjectMilestonesPageProps {
 
 export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilestonesPageProps) {
   const projectId = Number(projectIdStr);
-  const { data: milestones, isLoading } = useProjectMilestones(projectId);
+  const {
+    data: milestones,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useProjectMilestones(projectId);
   const deleteMilestone = useDeleteMilestone(projectId);
 
   const [createOpen, setCreateOpen] = useState(false);
@@ -67,6 +74,10 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
       const d = new Date(m.targetDate);
       return isPast(d) && !isToday(d) && m.status === "PENDING";
     }).length ?? 0;
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
   const handleCloseCreate = useCallback(() => setCreateOpen(false), []);
@@ -104,6 +115,24 @@ export function ProjectMilestonesPage({ projectId: projectIdStr }: ProjectMilest
               ))}
             </div>
           </div>
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper
+        title="Milestones"
+        subtitle="Key checkpoints and target dates for this project"
+      >
+        <PmPageShell>
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load milestones"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
         </PmPageShell>
       </PageWrapper>
     );

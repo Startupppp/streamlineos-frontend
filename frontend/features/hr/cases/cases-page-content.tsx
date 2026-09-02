@@ -27,6 +27,8 @@ import {
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { StateIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { getUserDisplayName, type NamedUser } from "@/lib/person-display";
@@ -94,7 +96,13 @@ export function CasesPageContent() {
   const [showWarning, setShowWarning] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>("cases");
 
-  const { data: casesData, isLoading: casesLoading } = useHrCases({
+  const {
+    data: casesData,
+    isLoading: casesLoading,
+    isError: casesIsError,
+    error: casesError,
+    refetch: refetchCases,
+  } = useHrCases({
     cursor: caseCursors[caseCursorIndex] ?? undefined,
     search: debouncedSearch.trim() || undefined,
     status: status || undefined,
@@ -102,9 +110,38 @@ export function CasesPageContent() {
     severity: severity || undefined,
   });
 
-  const { data: disciplinaryData, isLoading: discLoading } = useDisciplinaryActions({
+  const {
+    data: disciplinaryData,
+    isLoading: discLoading,
+    isError: discIsError,
+    error: discError,
+    refetch: refetchDisciplinary,
+  } = useDisciplinaryActions({
     cursor: discCursors[discCursorIndex] ?? undefined,
   });
+
+  const filtersActive =
+    search.trim() !== "" || status !== "" || category !== "" || severity !== "";
+
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setStatus("");
+    setCategory("");
+    setSeverity("");
+    setCaseCursors([null]);
+    setCaseCursorIndex(0);
+  }, []);
+
+  const handleRetryCases = useCallback(() => {
+    void refetchCases();
+  }, [refetchCases]);
+
+  const handleRetryDisciplinary = useCallback(() => {
+    void refetchDisciplinary();
+  }, [refetchDisciplinary]);
+
+  const handleOpenNewCase = useCallback(() => setShowNew(true), []);
+  const handleOpenIssueAction = useCallback(() => setShowWarning(true), []);
 
   const casesHasMore = casesData?.pagination.hasMore ?? false;
   const discHasMore = disciplinaryData?.pagination.hasMore ?? false;
@@ -278,24 +315,43 @@ export function CasesPageContent() {
 
         <TabsContent value="cases" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           <div className="flex flex-1 min-h-0 flex-col gap-2">
-            <DataTable
-              className="flex-1 min-h-0"
-              columns={caseColumns}
-              data={casesData?.data ?? []}
-              isLoading={casesLoading}
-              getRowKey={(row) => row.id}
-              onRowClick={(row) => setSelectedCaseId(row.id)}
-              emptyState={
-                <EmptyState
-                  className="border-0 bg-transparent min-h-[40vh]"
-                  illustration={<StateIllustration preset="ticket" className="h-28 w-28" />}
-                  title="No cases found"
-                  description="Report a grievance, harassment incident, or policy violation to open a case."
-                  action={canManage ? { label: "New Case", onClick: () => setShowNew(true) } : undefined}
-                />
-              }
-            />
-            {(caseCursorIndex > 0 || casesHasMore) ? (
+            {casesIsError ? (
+              <ErrorState
+                className="flex-1"
+                title="Couldn't load cases"
+                description={getErrorMessage(casesError)}
+                onRetry={handleRetryCases}
+              />
+            ) : (
+              <DataTable
+                className="flex-1 min-h-0"
+                columns={caseColumns}
+                data={casesData?.data ?? []}
+                isLoading={casesLoading}
+                getRowKey={(row) => row.id}
+                onRowClick={(row) => setSelectedCaseId(row.id)}
+                emptyState={
+                  <EmptyState
+                    className="border-0 bg-transparent min-h-[40vh]"
+                    illustration={<StateIllustration preset="ticket" className="h-28 w-28" />}
+                    title="No cases found"
+                    description={
+                      filtersActive
+                        ? undefined
+                        : "Report a grievance, harassment incident, or policy violation to open a case."
+                    }
+                    filtersActive={filtersActive}
+                    onClearFilters={handleClearFilters}
+                    action={
+                      canManage && !filtersActive
+                        ? { label: "New Case", onClick: handleOpenNewCase }
+                        : undefined
+                    }
+                  />
+                }
+              />
+            )}
+            {!casesIsError && (caseCursorIndex > 0 || casesHasMore) ? (
               <CursorPageControls
                 page={caseCursorIndex + 1}
                 hasNext={casesHasMore}
@@ -330,50 +386,59 @@ export function CasesPageContent() {
                 </AnimatedIconButton>
               </div>
             )}
-            <DataTable
-              className="flex-1 min-h-0"
-              columns={[
-                {
-                  key: "employee",
-                  header: "Employee",
-                  cell: (row) => <span className="text-sm">{getUserDisplayName(memberById.get(row.employeeId))}</span>,
-                },
-                {
-                  key: "actionType",
-                  header: "Action",
-                  cell: (row) => (
-                    <span className="text-sm capitalize">{row.actionType.replace(/_/g, " ")}</span>
-                  ),
-                },
-                {
-                  key: "effectiveDate",
-                  header: "Effective Date",
-                  cell: (row) => (
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(row.effectiveDate).toLocaleDateString()}
-                    </span>
-                  ),
-                },
-                {
-                  key: "issuedBy",
-                  header: "Issued By",
-                  cell: (row) => <span className="font-mono text-xs">{row.issuedBy}</span>,
-                },
-              ]}
-              data={disciplinaryData?.data ?? []}
-              isLoading={discLoading}
-              getRowKey={(row) => row.id}
-              emptyState={
-                <EmptyState
-                  className="border-0 bg-transparent min-h-[40vh]"
-                  illustration={<StateIllustration preset="security" className="h-28 w-28" />}
-                  title="No disciplinary actions"
-                  description="Formal disciplinary actions issued to employees will appear here."
-                  action={canManage ? { label: "Issue Action", onClick: () => setShowWarning(true) } : undefined}
-                />
-              }
-            />
-            {(discCursorIndex > 0 || discHasMore) ? (
+            {discIsError ? (
+              <ErrorState
+                className="flex-1"
+                title="Couldn't load disciplinary actions"
+                description={getErrorMessage(discError)}
+                onRetry={handleRetryDisciplinary}
+              />
+            ) : (
+              <DataTable
+                className="flex-1 min-h-0"
+                columns={[
+                  {
+                    key: "employee",
+                    header: "Employee",
+                    cell: (row) => <span className="text-sm">{getUserDisplayName(memberById.get(row.employeeId))}</span>,
+                  },
+                  {
+                    key: "actionType",
+                    header: "Action",
+                    cell: (row) => (
+                      <span className="text-sm capitalize">{row.actionType.replace(/_/g, " ")}</span>
+                    ),
+                  },
+                  {
+                    key: "effectiveDate",
+                    header: "Effective Date",
+                    cell: (row) => (
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(row.effectiveDate).toLocaleDateString()}
+                      </span>
+                    ),
+                  },
+                  {
+                    key: "issuedBy",
+                    header: "Issued By",
+                    cell: (row) => <span className="font-mono text-xs">{row.issuedBy}</span>,
+                  },
+                ]}
+                data={disciplinaryData?.data ?? []}
+                isLoading={discLoading}
+                getRowKey={(row) => row.id}
+                emptyState={
+                  <EmptyState
+                    className="border-0 bg-transparent min-h-[40vh]"
+                    illustration={<StateIllustration preset="security" className="h-28 w-28" />}
+                    title="No disciplinary actions"
+                    description="Formal disciplinary actions issued to employees will appear here."
+                    action={canManage ? { label: "Issue Action", onClick: handleOpenIssueAction } : undefined}
+                  />
+                }
+              />
+            )}
+            {!discIsError && (discCursorIndex > 0 || discHasMore) ? (
               <CursorPageControls
                 page={discCursorIndex + 1}
                 hasNext={discHasMore}

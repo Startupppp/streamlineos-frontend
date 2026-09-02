@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyInboxIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetBody } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
@@ -55,7 +56,13 @@ export function IntakePage({ projectId }: { projectId: number }) {
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState("pending");
 
-  const { data: intakeData, isLoading } = useIntakeRequests(projectId);
+  const {
+    data: intakeData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useIntakeRequests(projectId);
   const { data: members } = useProjectMembers(projectId);
   const { data: cycles } = useCycles(projectId);
   const { data: modules } = useModules(projectId);
@@ -150,6 +157,10 @@ export function IntakePage({ projectId }: { projectId: number }) {
     );
   }, [updateMutation, projectId]);
 
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   const handleCopyFormUrl = useCallback(() => {
     const formUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/intake/${projectId}`;
     navigator.clipboard.writeText(formUrl);
@@ -174,6 +185,21 @@ export function IntakePage({ projectId }: { projectId: number }) {
               <Skeleton key={i} className="h-20 w-full rounded-xl" />
             ))}
           </div>
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Intake" subtitle="Collect and triage incoming requests from your team or clients">
+        <PmPageShell>
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load intake requests"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
         </PmPageShell>
       </PageWrapper>
     );

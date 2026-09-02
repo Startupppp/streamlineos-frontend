@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
 import { useQueryClient } from "@tanstack/react-query";
@@ -86,9 +88,11 @@ export function BulkImportPage() {
   const [rows, setRows] = useState<ParsedRow[]>([]);
   const [fieldMap, setFieldMap] = useState<Record<string, string>>({});
   const [importing, setImporting] = useState(false);
+  const [isParsing, setIsParsing] = useState(false);
   const [importResult, setImportResult] = useState<{ created: number; skipped: number; errors: string[] } | null>(null);
 
   const handleFileSelect = useCallback(async (file: File) => {
+    setIsParsing(true);
     try {
       let parsedHeaders: string[] = [];
       let parsedRows: ParsedRow[] = [];
@@ -159,6 +163,8 @@ export function BulkImportPage() {
       setStep("map");
     } catch {
       toast.error("Failed to parse file. Please check the format.");
+    } finally {
+      setIsParsing(false);
     }
   }, []);
 
@@ -298,20 +304,28 @@ export function BulkImportPage() {
               <CardDescription>Supported formats: CSV, XLSX, XLS</CardDescription>
             </CardHeader>
             <CardContent>
-              <div
-                className="border-2 border-dashed rounded-lg p-10 text-center cursor-pointer hover:border-primary/60 transition-colors"
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                onClick={handleClickDropzone}
-              >
-                <svg className="h-10 w-10 mx-auto mb-3 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="17 8 12 3 7 8" />
-                  <line x1="12" y1="3" x2="12" y2="15" />
-                </svg>
-                <p className="font-medium text-sm">Drag & drop or click to upload</p>
-                <p className="text-xs text-muted-foreground mt-1">CSV, XLSX, or XLS — up to 500 rows</p>
-              </div>
+              {isParsing ? (
+                <div className="space-y-3" role="status" aria-label="Reading file">
+                  <Skeleton className="h-24 w-full rounded-lg" />
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+              ) : (
+                <div
+                  className="border-2 border-dashed rounded-lg p-10 text-center cursor-pointer hover:border-primary/60 transition-colors"
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  onClick={handleClickDropzone}
+                >
+                  <svg className="h-10 w-10 mx-auto mb-3 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                  <p className="font-medium text-sm">Drag & drop or click to upload</p>
+                  <p className="text-xs text-muted-foreground mt-1">CSV, XLSX, or XLS — up to 500 rows</p>
+                </div>
+              )}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -366,6 +380,16 @@ export function BulkImportPage() {
                   data={indexedPreviewRows}
                   columns={previewColumns}
                   getRowKey={(row) => row._idx}
+                  emptyState={
+                    <EmptyState
+                      className="border-0 bg-transparent"
+                      illustrationPreset="upload"
+                      title="Nothing to preview"
+                      description="The uploaded file contained no data rows. Go back and upload a file with at least one row."
+                      action={{ label: "Back to upload", onClick: handleGoToUpload }}
+                      compact
+                    />
+                  }
                 />
               </div>
               <div className="flex gap-2">
@@ -397,6 +421,23 @@ export function BulkImportPage() {
                   <p className="text-muted-foreground text-xs">Skipped (duplicates)</p>
                 </div>
               </div>
+              {importResult.errors.length > 0 && (
+                <div
+                  role="alert"
+                  className="mx-auto mt-6 max-w-md rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-left"
+                >
+                  <p className="text-sm font-medium text-destructive">
+                    {importResult.errors.length} row{importResult.errors.length === 1 ? "" : "s"} could not be imported
+                  </p>
+                  <ul className="mt-2 space-y-1">
+                    {importResult.errors.map((rowError) => (
+                      <li key={rowError} className="text-xs text-muted-foreground">
+                        {rowError}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <div className="flex gap-3 justify-center mt-6">
                 <Button onClick={handleViewCandidates}>View Candidates</Button>
                 <Button variant="outline" onClick={handleImportMore}>Import More</Button>

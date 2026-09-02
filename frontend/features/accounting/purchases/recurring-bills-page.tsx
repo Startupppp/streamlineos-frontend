@@ -37,6 +37,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useRecurringBills,
@@ -167,6 +168,16 @@ export function RecurringBillsPage() {
     }
   }
 
+  function handleRetry(): void {
+    void query.refetch();
+  }
+
+  function handleClearFilters(): void {
+    setIsActiveFilter("all");
+  }
+
+  const filtersActive = isActiveFilter !== "all";
+
   const columns: DataTableColumn<RecurringBillTemplate>[] = [
     {
       key: "name",
@@ -264,12 +275,25 @@ export function RecurringBillsPage() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col">
-        {items.length === 0 && !query.isLoading ? (
+        {query.isError ? (
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load recurring bills"
+            description={getErrorMessage(query.error)}
+            onRetry={handleRetry}
+          />
+        ) : items.length === 0 && !query.isLoading ? (
           <EmptyState
             illustrationPreset="tasks"
             title="No recurring bills"
-            description="Create a recurring bill template to automate vendor bill creation."
-            action={{ label: "New template", onClick: handleNewClick }}
+            description={
+              filtersActive
+                ? undefined
+                : "Create a recurring bill template to automate vendor bill creation."
+            }
+            filtersActive={filtersActive}
+            onClearFilters={handleClearFilters}
+            action={filtersActive ? undefined : { label: "New template", onClick: handleNewClick }}
           />
         ) : (
           <DataTable

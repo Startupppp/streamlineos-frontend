@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FileText } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
@@ -91,7 +93,7 @@ export function ContingentPageContent() {
   const [endContractId, setEndContractId] = useState<number | null>(null);
   const [convertContractId, setConvertContractId] = useState<number | null>(null);
 
-  const { data, isLoading } = useContracts();
+  const { data, isLoading, isError, error, refetch } = useContracts();
   const endContract = useEndContract();
   const convert = useConvertToEmployee();
 
@@ -99,6 +101,10 @@ export function ContingentPageContent() {
     setEditingContract(contract);
     setSheetOpen(true);
   }, []);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   return (
     <PageWrapper
@@ -113,6 +119,13 @@ export function ContingentPageContent() {
     >
       {isLoading ? (
         <div className="space-y-2">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}</div>
+      ) : isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load contracts"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
       ) : (data?.data ?? []).length === 0 ? (
         <EmptyState
           illustrationPreset="team"

@@ -11,6 +11,8 @@ import { AlertTriangle } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import {
   useEmergencyEvents,
@@ -34,7 +36,7 @@ export function EmergencyPageContent() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
 
-  const { data, isLoading, isFetching } = useEmergencyEvents({ cursor });
+  const { data, isLoading, isFetching, isError, error, refetch } = useEmergencyEvents({ cursor });
 
   const handlePreviousPage = useCallback(() => {
     setCursorHistory((history) => history.length > 1 ? history.slice(0, -1) : history);
@@ -44,6 +46,10 @@ export function EmergencyPageContent() {
     const nextCursor = data?.pagination.nextCursor;
     if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
   }, [data?.pagination.nextCursor]);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const columns: DataTableColumn<EmergencyEvent>[] = [
     {
@@ -103,34 +109,43 @@ export function EmergencyPageContent() {
           ) : null
         }
       >
-        <div className="flex min-h-0 flex-1 flex-col gap-3">
-          <DataTable
-            className="flex-1 min-h-0"
-            data={data?.data ?? []}
-            columns={columns}
-            getRowKey={(r) => r.id}
-            onRowClick={(r) => setSelectedId(r.id)}
-            isLoading={isLoading}
-            emptyState={
-              <EmptyState
-                className="border-0 bg-transparent min-h-[40vh]"
-                illustration={<StateIllustration preset="alert" className="h-28 w-28" />}
-                title="No emergency events"
-                description="Declare emergency events to coordinate employee safety responses."
-                action={canManage ? { label: "Declare Event", onClick: () => setShowCreate(true) } : undefined}
-              />
-            }
+        {isError ? (
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load emergency events"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
           />
-          {data && (page > 1 || data.pagination.hasMore) ? (
-            <CursorPageControls
-              page={page}
-              hasNext={data.pagination.hasMore}
-              disabled={isFetching}
-              onPrevious={handlePreviousPage}
-              onNext={handleNextPage}
+        ) : (
+          <div className="flex min-h-0 flex-1 flex-col gap-3">
+            <DataTable
+              className="flex-1 min-h-0"
+              data={data?.data ?? []}
+              columns={columns}
+              getRowKey={(r) => r.id}
+              onRowClick={(r) => setSelectedId(r.id)}
+              isLoading={isLoading}
+              emptyState={
+                <EmptyState
+                  className="border-0 bg-transparent min-h-[40vh]"
+                  illustration={<StateIllustration preset="alert" className="h-28 w-28" />}
+                  title="No emergency events"
+                  description="Declare emergency events to coordinate employee safety responses."
+                  action={canManage ? { label: "Declare Event", onClick: () => setShowCreate(true) } : undefined}
+                />
+              }
             />
-          ) : null}
-        </div>
+            {data && (page > 1 || data.pagination.hasMore) ? (
+              <CursorPageControls
+                page={page}
+                hasNext={data.pagination.hasMore}
+                disabled={isFetching}
+                onPrevious={handlePreviousPage}
+                onNext={handleNextPage}
+              />
+            ) : null}
+          </div>
+        )}
       </PageWrapper>
 
       <EmergencyEventSheet open={showCreate} onOpenChange={setShowCreate} />

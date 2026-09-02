@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { MonthPicker } from "@/features/payroll/shared/month-picker";
@@ -26,6 +27,7 @@ import {
 import { useCan } from "@/hooks/api/access";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { CreateBonusDialog } from "./create-bonus-dialog";
 import {
@@ -46,9 +48,24 @@ export function BonusesTab() {
   const type = searchParams.get("b_type") ?? "all";
   const status = searchParams.get("b_status") ?? "all";
 
-  const { data, isLoading } = useBonuses();
+  const { data, isLoading, isError, error, refetch } = useBonuses();
   const updateBonus = useUpdateBonus();
   const canManage = useCan("hr:bonuses:manage");
+
+  const filtersActive =
+    month !== getCurrentMonth() || type !== "all" || status !== "all";
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  const handleClearFilters = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("b_month");
+    params.delete("b_type");
+    params.delete("b_status");
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }, [router, searchParams]);
 
   function updateParam(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -242,21 +259,41 @@ export function BonusesTab() {
           </AnimatedIconButton>
         )}
       </div>
-      <DataTable
-        className="flex-1 min-h-0"
-        data={filtered}
-        columns={columns}
-        getRowKey={(row) => row.id}
-        isLoading={isLoading}
-        minWidth="700px"
-        emptyState={
-          <EmptyState
-            illustration={<EmptyReportIllustration />}
-            title="No bonuses found"
-            description="No bonuses match the current filters."
-          />
-        }
-      />
+      {isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load bonuses"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      ) : (
+        <DataTable
+          className="flex-1 min-h-0"
+          data={filtered}
+          columns={columns}
+          getRowKey={(row) => row.id}
+          isLoading={isLoading}
+          minWidth="700px"
+          emptyState={
+            <EmptyState
+              illustration={<EmptyReportIllustration />}
+              title="No bonuses yet"
+              description={
+                filtersActive
+                  ? undefined
+                  : "Award the first bonus to see it listed here."
+              }
+              filtersActive={filtersActive}
+              onClearFilters={handleClearFilters}
+              action={
+                canManage && !filtersActive
+                  ? { label: "Add Bonus", onClick: handleOpenCreate }
+                  : undefined
+              }
+            />
+          }
+        />
+      )}
       <CreateBonusDialog open={createOpen} onOpenChange={setCreateOpen} />
     </div>
   );

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useCallback, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ChevronDownIcon, ChevronUpIcon } from "@animateicons/react/lucide";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { Badge } from "@/components/ui/badge";
@@ -126,7 +127,11 @@ function RosterCard({ roster, canManage }: RosterCardProps) {
 }
 
 export function RostersGrid({ canManage }: Props) {
-  const { data: rosters, isLoading } = useRosters();
+  const { data: rosters, isLoading, isError, error, refetch } = useRosters();
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   if (isLoading) {
     return (
@@ -135,6 +140,17 @@ export function RostersGrid({ canManage }: Props) {
           <Skeleton key={i} className="h-20 rounded-2xl" />
         ))}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load rosters"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
     );
   }
 

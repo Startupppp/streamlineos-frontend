@@ -1,13 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DollarSign } from "lucide-react";
 import { SalaryProfileSheet } from "@/features/payroll/runs/salary-profile-sheet";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import {
   useWorkerProfile,
@@ -163,8 +165,18 @@ export function WorkerDetailPage({ workerId }: WorkerDetailPageProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const canView = useCan("payroll:salaries:view");
   const canUpdate = useCan("payroll:salaries:update");
-  const { data: profileData, isLoading } = useWorkerProfile(workerId);
+  const {
+    data: profileData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useWorkerProfile(workerId);
   const { data: historyData } = useWorkerProfileHistory(workerId);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const linkedUserId = profileData?.active?.userId ?? null;
   if (linkedUserId) {
@@ -205,6 +217,19 @@ export function WorkerDetailPage({ workerId }: WorkerDetailPageProps) {
           <Skeleton className="h-48 rounded-xl" />
           <Skeleton className="h-32 rounded-xl" />
         </div>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Salary Profile" backHref="/payroll/employees">
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load this salary profile"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
       </PageWrapper>
     );
   }

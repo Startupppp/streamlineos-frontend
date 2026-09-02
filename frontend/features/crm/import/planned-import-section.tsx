@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { FileUp, Upload } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { ErrorState } from "@/components/shared/error-state";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import {
@@ -179,6 +180,10 @@ export function PlannedImportSection() {
     setCommitted(null);
   }, []);
 
+  const handleRetrySubjectTypes = useCallback(() => {
+    void subjectTypes.refetch();
+  }, [subjectTypes]);
+
   const handleSubjectTypeChange = useCallback((value: string) => {
     setSubjectTypeId(value);
     setPreview(null);
@@ -318,7 +323,19 @@ export function PlannedImportSection() {
 
           <p className="text-micro text-muted-foreground">{plannedEntity(entity).hint}</p>
 
-          {needsSubjectType(entity) && subjectTypeList.length === 0 && !subjectTypes.isLoading ? (
+          {needsSubjectType(entity) && subjectTypes.isError ? (
+            <ErrorState
+              compact
+              title="Couldn't load subject types"
+              description={getErrorMessage(subjectTypes.error)}
+              onRetry={handleRetrySubjectTypes}
+            />
+          ) : null}
+
+          {needsSubjectType(entity) &&
+          !subjectTypes.isError &&
+          !subjectTypes.isLoading &&
+          subjectTypeList.length === 0 ? (
             <p role="alert" className={cn("text-label", statusToneClasses("warning").ink)}>
               Your organisation has not declared a subject type yet, so there is nothing to import
               these rows as.

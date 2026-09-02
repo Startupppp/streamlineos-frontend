@@ -26,6 +26,8 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PlusIcon, GlobeIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useComplianceRequirements,
   useDeleteComplianceRequirement,
@@ -58,12 +60,32 @@ export function CompliancePageContent() {
   const [seedCountry, setSeedCountry] = useState("IN");
   const [seedDialogOpen, setSeedDialogOpen] = useState(false);
 
-  const { data: reqData, isLoading: reqLoading } = useComplianceRequirements();
-  const { data: authData, isLoading: authLoading } = useWorkAuthorizations();
+  const {
+    data: reqData,
+    isLoading: reqLoading,
+    isError: reqIsError,
+    error: reqError,
+    refetch: refetchRequirements,
+  } = useComplianceRequirements();
+  const {
+    data: authData,
+    isLoading: authLoading,
+    isError: authIsError,
+    error: authError,
+    refetch: refetchWorkAuth,
+  } = useWorkAuthorizations();
   const deleteReq = useDeleteComplianceRequirement();
   const deleteAuth = useDeleteWorkAuth();
   const generateEvents = useGenerateComplianceEvents();
   const seedPack = useSeedCountryPack();
+
+  const handleRetryRequirements = useCallback(() => {
+    void refetchRequirements();
+  }, [refetchRequirements]);
+
+  const handleRetryWorkAuth = useCallback(() => {
+    void refetchWorkAuth();
+  }, [refetchWorkAuth]);
 
   const handleOpenEditReq = useCallback((req: ComplianceRequirement) => {
     setEditingReq(req);
@@ -159,6 +181,13 @@ export function CompliancePageContent() {
 
           {reqLoading ? (
             <div className="space-y-2">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}</div>
+          ) : reqIsError ? (
+            <ErrorState
+              className="flex-1"
+              title="Couldn't load compliance requirements"
+              description={getErrorMessage(reqError)}
+              onRetry={handleRetryRequirements}
+            />
           ) : (reqData?.data ?? []).length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
               <StateIllustration preset="security" className="h-28 w-28" />
@@ -205,6 +234,13 @@ export function CompliancePageContent() {
 
           {authLoading ? (
             <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}</div>
+          ) : authIsError ? (
+            <ErrorState
+              className="flex-1"
+              title="Couldn't load work authorizations"
+              description={getErrorMessage(authError)}
+              onRetry={handleRetryWorkAuth}
+            />
           ) : (authData?.data ?? []).length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
               <StateIllustration preset="security" className="h-28 w-28" />

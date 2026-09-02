@@ -8,6 +8,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { ModuleCard, ModuleCardSkeleton } from "@/features/build/modules/module-card";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetBody } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,7 +69,13 @@ interface ModulesPageProps {
 export function ModulesPage({ projectId }: ModulesPageProps) {
   const [createOpen, setCreateOpen] = useState(false);
 
-  const { data: modules, isLoading } = useModules(projectId);
+  const {
+    data: modules,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useModules(projectId);
   const createMutation = useCreateModule();
 
   const form = useForm<CreateModuleForm>({
@@ -110,6 +117,10 @@ export function ModulesPage({ projectId }: ModulesPageProps) {
   );
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const handleLeadChange = useCallback(
     (userId: string | null) => form.setValue("leadId", userId ?? undefined),
@@ -167,6 +178,24 @@ export function ModulesPage({ projectId }: ModulesPageProps) {
               ))}
             </div>
           </PmSection>
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper
+        title="Modules"
+        subtitle="Organize work into feature groups and track module progress"
+      >
+        <PmPageShell>
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load modules"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
         </PmPageShell>
       </PageWrapper>
     );

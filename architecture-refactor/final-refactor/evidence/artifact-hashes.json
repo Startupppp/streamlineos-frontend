@@ -1,21 +1,87 @@
 {
   "generatedAt": "2026-09-02",
+  "generatedBy": "code-release-10-10 ticket 04b (evidence-hygiene redactor)",
   "sourceDir": "architecture-refactor/final-refactor/evidence",
-  "note": "Connection strings in bootstrap logs are redacted to postgresql://user:***@host before hashing.",
+  "covers": "the 13-file SUPERSEDED former-head evidence set only. It says nothing about bootstrap-head-637/, which carries its own seal, nor about SUPERSEDED-FORMER-HEAD.md, REDACTION-AND-RESEAL-LEDGER.md, perf-budget-manifest.md, 40-observability/, 41-openapi/ or 42-production-ops/.",
+  "algorithm": "sha256 over the exact bytes on disk. NO transform of any kind is applied before hashing. This replaces the previous seal's note, which described a redaction-before-hashing step that was never actually performed.",
+  "recompute": "node -e 'const{createHash}=require(\"crypto\"),fs=require(\"fs\");const s=JSON.parse(fs.readFileSync(\"artifact-hashes.json\",\"utf8\"));let m=0,x=0;for(const[f,h]of Object.entries(s.hashes)){const a=createHash(\"sha256\").update(fs.readFileSync(f)).digest(\"hex\");a===h?m++:(x++,console.log(\"MISMATCH\",f))}console.log(`match=${m} mismatch=${x} of ${Object.keys(s.hashes).length}`)'",
+  "reseal": {
+    "reason": "TWO reasons, both recorded so this re-seal is not silent. (1) REDACTION: three files disclosed a real remote endpoint host, database role and two real remote database names inside password-redacted connection URIs; these were replaced with the placeholders <neon-host>, <db-role>, <db-control-plane> and <db-cell>. (2) POST-SEALING EDITS: s02-bootstrap-parity.md and s02-tenant-integrity.md had already stopped matching the previous seal before this ticket began, and the ticket-04 recorder then legitimately prepended a SUPERSEDED banner to each.",
+    "verificationOfPreviousSealBeforeReseal": {
+      "match": 11,
+      "mismatch": 2,
+      "missing": 0,
+      "of": 13,
+      "mismatched": [
+        "s02-bootstrap-parity.md",
+        "s02-tenant-integrity.md"
+      ],
+      "note": "The 11 .log files still matched the previous seal at the moment of re-sealing, so the chain of custody on every log body is unbroken from the original sealing up to the redaction."
+    },
+    "filesCarriedForwardUnchanged": [
+      "apply-0000-b2-v2.log",
+      "apply-0000-b2.log",
+      "apply-0000-c2.log",
+      "replay-boot-b-partial-v2.log",
+      "replay-boot-b-partial.log",
+      "replay-boot-b-resume-v2.log",
+      "replay-boot-b-resume.log",
+      "replay-scratch-boot-c-v2.log",
+      "replay-scratch-boot-c.log"
+    ],
+    "filesWhoseDigestMoved": [
+      "parity-boot-b-vs-c-v2.log",
+      "parity-boot-b-vs-c.log",
+      "s02-bootstrap-parity.md",
+      "s02-tenant-integrity.md"
+    ],
+    "auditLedger": {
+      "file": "REDACTION-AND-RESEAL-LEDGER.md",
+      "sha256": "65f31e2c0c56241a91842f9868087d506890c58a13854a64e08d652a40a9c3dc",
+      "contains": "the redaction convention, the exact lines changed, and every hash state (sealed / pre-banner / post-banner / post-redaction / current) for every affected file, plus the limits of what this re-seal fixes."
+    },
+    "supersededNotice": {
+      "file": "SUPERSEDED-FORMER-HEAD.md",
+      "sha256": "6f0601ba990cec5f2931e142da58f1a200be30f278d340e04c5047c7f5c31375"
+    },
+    "doesNotMakeThisEvidenceCurrent": "A verifying seal proves only that these bytes have not moved since 2026-09-02. This set still describes a 634-entry journal, measured with a parity comparator that keyed on object names rather than definitions, on a database estate that no longer exists in that state. Current-head evidence is bootstrap-head-637/."
+  },
+  "previousSeal": {
+    "replacedOn": "2026-09-02",
+    "sha256OfTheReplacedFile": "4cdbc40abc14bc48196e593d9e7a1a9a233226c8d6ea8d1208f3cce2a415f0ee",
+    "generatedAt": "2026-09-02",
+    "note": "Connection strings in bootstrap logs are redacted to postgresql://user:***@host before hashing.",
+    "fileCount": 13,
+    "hashes": {
+      "apply-0000-b2-v2.log": "eb68b97b5b42ba7404427d43d678ed4136478ae899b0e9de58b424798c8aa042",
+      "apply-0000-b2.log": "3339672e09bf095033628116e1f0abdfb131f715c4b8183ea6226f4756f15bb2",
+      "apply-0000-c2.log": "3372e417874d8368ab4aac6e81529fe7f1b1b320081d7f67ef67b33b5eb8894d",
+      "parity-boot-b-vs-c-v2.log": "3bbe1680dc30a3955229d2625fb9ee1eeac868dbbe05ad71bbc4e1217c53f20e",
+      "parity-boot-b-vs-c.log": "045b2f87d0b7d5550b66cd9283f8daebcf45678acb489607ef9cc06740482cb2",
+      "replay-boot-b-partial-v2.log": "292466e4b3a56498830ffd99690d3c433a6a46f15af4e61e09e06444f2b4fb65",
+      "replay-boot-b-partial.log": "cd53a1917df20a9e08b9a70f508c650a8571bc4481eb8762c00d8518d5cbc48d",
+      "replay-boot-b-resume-v2.log": "18ba985d6c8eec7205927a3601f1aeb7e6509da1d65faf8333f116853ad60555",
+      "replay-boot-b-resume.log": "7f80f7c26c86812349679d1cdec15a6158d700674f84ba712f1045d3afafcb6e",
+      "replay-scratch-boot-c-v2.log": "13735a381ab2329436248a549d189430af946dec906c0c3e8a6921422b7d456f",
+      "replay-scratch-boot-c.log": "3e569f17cfa951f58857814955d6d0159af988705f93b2ddd99aacae7bd7aa67",
+      "s02-bootstrap-parity.md": "a6e9b72647e856775232f2b0e4e1c45dcc0274489d2c11c7a99b50e9b05c1b4d",
+      "s02-tenant-integrity.md": "0403ee05d49c9434cce0b3a69ab347eff8b8e222f1fca6d70927ddd4548a68af"
+    }
+  },
   "fileCount": 13,
   "hashes": {
     "apply-0000-b2-v2.log": "eb68b97b5b42ba7404427d43d678ed4136478ae899b0e9de58b424798c8aa042",
     "apply-0000-b2.log": "3339672e09bf095033628116e1f0abdfb131f715c4b8183ea6226f4756f15bb2",
     "apply-0000-c2.log": "3372e417874d8368ab4aac6e81529fe7f1b1b320081d7f67ef67b33b5eb8894d",
-    "parity-boot-b-vs-c-v2.log": "3bbe1680dc30a3955229d2625fb9ee1eeac868dbbe05ad71bbc4e1217c53f20e",
-    "parity-boot-b-vs-c.log": "045b2f87d0b7d5550b66cd9283f8daebcf45678acb489607ef9cc06740482cb2",
+    "parity-boot-b-vs-c-v2.log": "a53c1bcdc302327887abb30f5bafaf16bd3d57d253f24c05a3c43317b39c87d1",
+    "parity-boot-b-vs-c.log": "5254020bdff3a444e8a1ba66601a3e380eb3abec503fc174b56ab972c127b738",
     "replay-boot-b-partial-v2.log": "292466e4b3a56498830ffd99690d3c433a6a46f15af4e61e09e06444f2b4fb65",
     "replay-boot-b-partial.log": "cd53a1917df20a9e08b9a70f508c650a8571bc4481eb8762c00d8518d5cbc48d",
     "replay-boot-b-resume-v2.log": "18ba985d6c8eec7205927a3601f1aeb7e6509da1d65faf8333f116853ad60555",
     "replay-boot-b-resume.log": "7f80f7c26c86812349679d1cdec15a6158d700674f84ba712f1045d3afafcb6e",
     "replay-scratch-boot-c-v2.log": "13735a381ab2329436248a549d189430af946dec906c0c3e8a6921422b7d456f",
     "replay-scratch-boot-c.log": "3e569f17cfa951f58857814955d6d0159af988705f93b2ddd99aacae7bd7aa67",
-    "s02-bootstrap-parity.md": "a6e9b72647e856775232f2b0e4e1c45dcc0274489d2c11c7a99b50e9b05c1b4d",
-    "s02-tenant-integrity.md": "0403ee05d49c9434cce0b3a69ab347eff8b8e222f1fca6d70927ddd4548a68af"
+    "s02-bootstrap-parity.md": "de6b8a6e26925440e4ab68f31916c639fbe9cdf49b71075ebef2dec562b55eb2",
+    "s02-tenant-integrity.md": "dcdf2a48c50431f0b9334d53b0145c8aabb0b561ded25bccddb091a970529520"
   }
 }

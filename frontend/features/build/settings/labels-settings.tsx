@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { LabelCreateForm } from "@/components/labels";
 import { DEFAULT_LABEL_COLOR, resolveLabelColor } from "@/components/labels/label-colors";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -167,7 +169,13 @@ export function LabelsSettings() {
   const [editName, setEditName] = useState("");
   const [editColor, setEditColor] = useState<string>(DEFAULT_LABEL_COLOR);
 
-  const { data: labels = [], isLoading } = useOrgLabels();
+  const {
+    data: labels = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useOrgLabels();
   const createLabel = useCreateLabel();
   const updateLabel = useUpdateLabel();
   const deleteLabel = useDeleteLabel();
@@ -235,6 +243,10 @@ export function LabelsSettings() {
     setShowForm(true);
   }, []);
 
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   if (isLoading) {
     return (
       <div>
@@ -248,10 +260,33 @@ export function LabelsSettings() {
     );
   }
 
+  if (isError) {
+    return (
+      <div>
+        <LabelsHeader showAdd={false} onAdd={handleShowForm} />
+        <ErrorState
+          compact
+          title="Couldn't load labels"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      </div>
+    );
+  }
+
   return (
     <div>
       <LabelsHeader showAdd={!showForm} onAdd={handleShowForm} />
       <div className="space-y-2">
+        {labels.length === 0 && !showForm ? (
+          <EmptyState
+            compact
+            illustrationPreset="tasks"
+            title="No labels yet"
+            description="Create a label to start organizing tickets across this organization."
+            action={{ label: "Add Label", onClick: handleShowForm }}
+          />
+        ) : null}
         <AnimatePresence initial={false} mode="popLayout">
           {labels.map((label, index) => {
             if (editingId === label.id) {

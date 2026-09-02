@@ -14,6 +14,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useCrmAutomationRules,
@@ -53,9 +55,28 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
   const [testResult, setTestResult] = useState<{ matched: boolean; nodes: Array<{ nodeId: string; type: string; result: string }> } | null>(null);
   const loadedRef = useRef(false);
 
-  const { data: rulesData, isLoading: rulesLoading } = useCrmAutomationRules();
-  const { data: eventsData, isLoading: eventsLoading } = useAutomationEvents();
-  const { data: actionsData, isLoading: actionsLoading } = useAutomationActions();
+  const {
+    data: rulesData,
+    isLoading: rulesLoading,
+    isError: rulesFailed,
+    error: rulesError,
+    refetch: refetchRules,
+    access: rulesAccess,
+  } = useCrmAutomationRules();
+  const {
+    data: eventsData,
+    isLoading: eventsLoading,
+    isError: eventsFailed,
+    error: eventsError,
+    refetch: refetchEvents,
+  } = useAutomationEvents();
+  const {
+    data: actionsData,
+    isLoading: actionsLoading,
+    isError: actionsFailed,
+    error: actionsError,
+    refetch: refetchActions,
+  } = useAutomationActions();
 
   const createRule = useCreateCrmAutomationRule();
   const updateRule = useUpdateCrmAutomationRule();
@@ -86,6 +107,15 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
       }
     }
   }, [isNew, rulesData, automationId]);
+
+  const handleRetryRules = useCallback(() => {
+    void refetchRules();
+  }, [refetchRules]);
+
+  const handleRetryRegistry = useCallback(() => {
+    void refetchEvents();
+    void refetchActions();
+  }, [refetchEvents, refetchActions]);
 
   const handleToggleTestPanel = useCallback(() => setTestPanelOpen((v) => !v), []);
   const handleToggleHistory = useCallback(() => setHistoryOpen((v) => !v), []);
@@ -190,6 +220,11 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
 
   const isPageLoading = !isNew && rulesLoading;
   const registryLoading = eventsLoading || actionsLoading;
+  const registryFailed = eventsFailed || actionsFailed;
+  const registryError = eventsError ?? actionsError;
+  const existingRule = isNew
+    ? undefined
+    : rulesData?.rules.find((rule) => rule.id === ruleId);
 
   if (isPageLoading) {
     return (
@@ -197,6 +232,34 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
         </div>
+      </PageWrapper>
+    );
+  }
+
+  if (!isNew && rulesFailed) {
+    return (
+      <PageWrapper title="Automation" backHref="/crm/settings/automations">
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load this automation"
+          description={getErrorMessage(rulesError)}
+          onRetry={handleRetryRules}
+        />
+      </PageWrapper>
+    );
+  }
+
+  if (!isNew && !existingRule) {
+    return (
+      <PageWrapper title="Automation" backHref="/crm/settings/automations">
+        <EmptyState
+          className="flex-1"
+          illustrationPreset="automations"
+          title="Automation not found"
+          description="This automation no longer exists, or it was removed by someone else."
+          action={{ label: "Back to automations", href: "/crm/settings/automations" }}
+          access={rulesAccess}
+        />
       </PageWrapper>
     );
   }
@@ -220,7 +283,7 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
         subtitle={!isNew ? (
           <span className="flex items-center gap-1.5">
             <Badge variant="outline" className="text-micro h-4 px-1.5">
-              v{(rulesData?.rules.find((r) => r.id === ruleId)?.version ?? 1)}{(rulesData?.rules.find((r) => r.id === ruleId)?.isDraft) ? " · draft" : ""}
+              v{existingRule?.version ?? 1}{existingRule?.isDraft ? " · draft" : ""}
             </Badge>
           </span>
         ) : undefined}
@@ -271,6 +334,13 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
                 <motion.div variants={itemVariants}>
                   {registryLoading ? (
                     <Skeleton className="h-20 w-full rounded-xl" />
+                  ) : registryFailed ? (
+                    <ErrorState
+                      compact
+                      title="Couldn't load triggers and actions"
+                      description={getErrorMessage(registryError)}
+                      onRetry={handleRetryRegistry}
+                    />
                   ) : (
                     <TriggerCard value={state.triggerEvent} events={events} onChange={handleTriggerChange} />
                   )}

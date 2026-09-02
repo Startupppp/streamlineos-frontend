@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { useMotionVariants } from "@/lib/motion-variants";
 import {
@@ -246,7 +247,13 @@ const TravelApprovalCard = memo(function TravelApprovalCard({
 
 export function TravelApprovalsPage() {
   const { staggerContainer } = useMotionVariants();
-  const { data: requests, isLoading } = usePendingTravelApprovals();
+  const {
+    data: requests,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = usePendingTravelApprovals();
   const { data: membersData } = useOrgMembers(1, 200);
   const managerApprove = useManagerApproveTravelRequest();
   const financeApprove = useFinanceApproveTravelRequest();
@@ -267,6 +274,10 @@ export function TravelApprovalsPage() {
     },
     [memberById],
   );
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const handleManagerApprove = useCallback(
     async (id: number) => {
@@ -323,7 +334,14 @@ export function TravelApprovalsPage() {
       subtitle="Review pending travel requests"
       badge={undefined}
     >
-      {isEmpty ? (
+      {isError ? (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load travel approvals"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      ) : isEmpty ? (
         <EmptyState
           illustrationPreset="travel"
           title="No pending approvals"

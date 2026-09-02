@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -8,6 +8,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -91,8 +92,12 @@ export function PayrollCommandCenterPage() {
   const canManage = useCan("payroll:runs:manage");
   const canViewPolicies = useCan("payroll:policies:view");
 
-  const { data, isLoading, error } = useCommandCenter(month);
+  const { data, isLoading, isError, error, refetch } = useCommandCenter(month);
   const createRunMutation = useCreateRun();
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   if (!canView) {
     return (
@@ -122,7 +127,7 @@ export function PayrollCommandCenterPage() {
   const header = data?.header;
   const excCount = header ? header.exceptionCounts.BLOCKER + header.exceptionCounts.WARNING : 0;
 
-  const isPreSetup = !isLoading && (error || !data);
+  const isPreSetup = !isLoading && !isError && !data;
 
   return (
     <PageWrapper
@@ -168,7 +173,16 @@ export function PayrollCommandCenterPage() {
         </div>
       )}
 
-      {!isLoading && isPreSetup && (
+      {!isLoading && isError && (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load the payroll command center"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      )}
+
+      {isPreSetup && (
         <EmptyState
           illustration={<EmptyPayroll />}
           title="Set up payroll in minutes"

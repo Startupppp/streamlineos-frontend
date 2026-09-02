@@ -6,9 +6,11 @@ import { ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { useCompCycles, type CompCycle } from "@/hooks/api/hr/enterprise-comp";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface Props {
   onSelect: (cycle: CompCycle) => void;
@@ -30,7 +32,7 @@ export function CompCycleList({ onSelect }: Props) {
   const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
   const page = cursorHistory.length;
   const cursor = cursorHistory.at(-1);
-  const { data, isLoading, isFetching } = useCompCycles({ cursor });
+  const { data, isLoading, isFetching, isError, error, refetch } = useCompCycles({ cursor });
   const cycles = data?.data ?? [];
 
   const handlePreviousPage = useCallback(() => {
@@ -42,11 +44,26 @@ export function CompCycleList({ onSelect }: Props) {
     if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
   }, [data?.pagination.nextCursor]);
 
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   if (isLoading) {
     return (
       <div className="space-y-3">
         {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load compensation cycles"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
     );
   }
 

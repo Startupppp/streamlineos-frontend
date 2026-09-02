@@ -13,6 +13,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   Select,
   SelectContent,
@@ -186,6 +187,12 @@ export function AccountingInvoicesPage() {
 
   const allItems = invoicesQuery.data?.items ?? [];
 
+  const filtersActive =
+    statusFilter !== "ALL" ||
+    search.trim() !== "" ||
+    dateFrom !== "" ||
+    dateTo !== "";
+
   const filteredItems = allItems.filter((inv) => {
     if (statusFilter !== "ALL" && !isInvoiceStatus(statusFilter)) {
       const displayFilter: string = statusFilter;
@@ -322,6 +329,18 @@ export function AccountingInvoicesPage() {
     setDateTo(value);
   }
 
+  function handleRetry(): void {
+    void invoicesQuery.refetch();
+  }
+
+  function handleClearFilters(): void {
+    setStatusFilter("ALL");
+    setSearch("");
+    setDateFrom("");
+    setDateTo("");
+    setPage(1);
+  }
+
   return (
     <PageWrapper
       title="Invoices & Receivables"
@@ -374,68 +393,89 @@ export function AccountingInvoicesPage() {
         </div>
 
         <TabsContent value="invoices" className="flex flex-1 min-h-0 flex-col gap-4 mt-0">
-          <StatCardGrid cols={4}>
-            <StatCard
-              label="Total Outstanding"
-              value={stats ? stats.totalOutstanding.toLocaleString(undefined, { style: "currency", currency: "INR", minimumFractionDigits: 0, maximumFractionDigits: 0 }) : "—"}
-              tone="blue"
-              isLoading={statsQuery.isLoading}
-            />
-            <StatCard
-              label="Outstanding Invoices"
-              value={stats ? stats.issued : "—"}
-              tone="red"
-              isLoading={statsQuery.isLoading}
-              hint="Issued & unpaid"
-            />
-            <StatCard
-              label="Paid This Month"
-              value={stats ? `$${stats.totalPaid.toLocaleString()}` : "—"}
-              tone="emerald"
-              isLoading={statsQuery.isLoading}
-            />
-            <StatCard
-              label="Drafts"
-              value={stats?.draft ?? "—"}
-              tone="default"
-              isLoading={statsQuery.isLoading}
-            />
-          </StatCardGrid>
-
-          {filteredItems.length === 0 && !invoicesQuery.isLoading ? (
-            <EmptyState
-              illustrationPreset="documents"
-              title="No invoices found"
-              description="Create your first invoice or adjust your filters."
-              action={{ label: "New Invoice", href: "/billing/invoices/new" }}
+          {invoicesQuery.isError ? (
+            <ErrorState
+              className="flex-1"
+              title="Couldn't load invoices"
+              description={getErrorMessage(invoicesQuery.error)}
+              onRetry={handleRetry}
             />
           ) : (
-            <DataTable
-              data={filteredItems}
-              columns={columns}
-              getRowKey={(row) => row.id}
-              isLoading={invoicesQuery.isLoading}
-              search={{
-                value: search,
-                onChange: handleSearchChange,
-                placeholder: "Search by #, customer…",
-              }}
-              pagination={{
-                mode: "server",
-                page,
-                pageSize: 20,
-                total: invoicesQuery.data?.total ?? 0,
-                onPageChange: handlePageChange,
-              }}
-              emptyState={
-                <EmptyState
-                  illustrationPreset="documents"
-                  title="No invoices found"
-                  compact
-                />
-              }
-              className="flex-1 min-h-0"
-            />
+            <>
+            <StatCardGrid cols={4}>
+              <StatCard
+                label="Total Outstanding"
+                value={stats ? stats.totalOutstanding.toLocaleString(undefined, { style: "currency", currency: "INR", minimumFractionDigits: 0, maximumFractionDigits: 0 }) : "—"}
+                tone="blue"
+                isLoading={statsQuery.isLoading}
+              />
+              <StatCard
+                label="Outstanding Invoices"
+                value={stats ? stats.issued : "—"}
+                tone="red"
+                isLoading={statsQuery.isLoading}
+                hint="Issued & unpaid"
+              />
+              <StatCard
+                label="Paid This Month"
+                value={stats ? `$${stats.totalPaid.toLocaleString()}` : "—"}
+                tone="emerald"
+                isLoading={statsQuery.isLoading}
+              />
+              <StatCard
+                label="Drafts"
+                value={stats?.draft ?? "—"}
+                tone="default"
+                isLoading={statsQuery.isLoading}
+              />
+            </StatCardGrid>
+
+            {filteredItems.length === 0 && !invoicesQuery.isLoading ? (
+              <EmptyState
+                illustrationPreset="documents"
+                title="No invoices yet"
+                description={
+                  filtersActive ? undefined : "Create your first invoice to start tracking receivables."
+                }
+                filtersActive={filtersActive}
+                onClearFilters={handleClearFilters}
+                action={
+                  filtersActive
+                    ? undefined
+                    : { label: "New Invoice", href: "/billing/invoices/new" }
+                }
+              />
+            ) : (
+              <DataTable
+                data={filteredItems}
+                columns={columns}
+                getRowKey={(row) => row.id}
+                isLoading={invoicesQuery.isLoading}
+                search={{
+                  value: search,
+                  onChange: handleSearchChange,
+                  placeholder: "Search by #, customer…",
+                }}
+                pagination={{
+                  mode: "server",
+                  page,
+                  pageSize: 20,
+                  total: invoicesQuery.data?.total ?? 0,
+                  onPageChange: handlePageChange,
+                }}
+                emptyState={
+                  <EmptyState
+                    illustrationPreset="documents"
+                    title="No invoices yet"
+                    filtersActive={filtersActive}
+                    onClearFilters={handleClearFilters}
+                    compact
+                  />
+                }
+                className="flex-1 min-h-0"
+              />
+            )}
+            </>
           )}
         </TabsContent>
 

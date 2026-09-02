@@ -8,6 +8,7 @@ import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   Select,
   SelectContent,
@@ -231,6 +232,17 @@ export function VendorCreditsPage() {
     setStatusFilter(value);
   }
 
+  function handleRetry(): void {
+    void query.refetch();
+  }
+
+  function handleClearFilters(): void {
+    setVendorFilter("all");
+    setStatusFilter("all");
+  }
+
+  const filtersActive = vendorFilter !== "all" || statusFilter !== "all";
+
   const handleOpenApply = useCallback((credit: VendorCreditSummary) => {
     setApplyTargetId(credit.id);
     setApplyTargetVendorId(credit.vendorId);
@@ -340,21 +352,36 @@ export function VendorCreditsPage() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col">
-        <DataTable
-          data={credits}
-          columns={columns}
-          getRowKey={(row) => row.id}
-          isLoading={query.isLoading}
-          className="flex-1 min-h-0"
-          emptyState={
-            <EmptyState
-              illustrationPreset="orders"
-              title="No vendor credits"
-              description="Record a debit note or credit memo received from a vendor."
-              action={{ label: "New credit", onClick: handleNewClick }}
-            />
-          }
-        />
+        {query.isError ? (
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load vendor credits"
+            description={getErrorMessage(query.error)}
+            onRetry={handleRetry}
+          />
+        ) : (
+          <DataTable
+            data={credits}
+            columns={columns}
+            getRowKey={(row) => row.id}
+            isLoading={query.isLoading}
+            className="flex-1 min-h-0"
+            emptyState={
+              <EmptyState
+                illustrationPreset="orders"
+                title="No vendor credits"
+                description={
+                  filtersActive
+                    ? undefined
+                    : "Record a debit note or credit memo received from a vendor."
+                }
+                filtersActive={filtersActive}
+                onClearFilters={handleClearFilters}
+                action={filtersActive ? undefined : { label: "New credit", onClick: handleNewClick }}
+              />
+            }
+          />
+        )}
       </div>
 
       <VendorCreditFormSheet open={createOpen} onOpenChange={handleCreateOpenChange} />

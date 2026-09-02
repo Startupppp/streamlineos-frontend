@@ -1348,7 +1348,10 @@ button.goal-everything-chip[aria-checked="true"]::before {
   --status-success-rule: var(--color-emerald-200, #a7f3d0);
 
   --status-warning-surface: var(--color-amber-50, #fffbeb);
-  --status-warning-ink: var(--color-amber-600, #d97706);
+  /* Not amber-600: it measures 2.91:1 on --muted, below the 3:1 SC 1.4.11 floor
+     an icon or rule drawn in it has to clear. Darkened to the first amber that
+     clears 3:1 on every light surface while staying distinct from -ink-strong. */
+  --status-warning-ink: #cb7006;
   --status-warning-ink-strong: var(--color-amber-700, #b45309);
   --status-warning-rule: var(--color-amber-200, #fde68a);
 

@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { isApiError } from "@/lib/api-client";
 import { registerQueryCacheClearer } from "@/lib/query-cache-control";
+import { readErrorReachesBoundary } from "@/lib/query-error-policy";
 import {
   LOADING_SCOPE,
   UNAUTHENTICATED_SCOPE,
@@ -41,10 +42,12 @@ export function createAppQueryClient(scope = "unscoped"): QueryClient {
         gcTime: 1000 * 60 * 10,
         refetchOnWindowFocus: false,
         retry: shouldRetryQuery,
+        throwOnError: readErrorReachesBoundary,
         queryKeyHashFn: scopedQueryKeyHashFn(scope),
       },
       mutations: {
         retry: 0,
+        throwOnError: false,
       },
     },
   });

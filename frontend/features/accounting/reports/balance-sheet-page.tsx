@@ -15,6 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useBalanceSheet } from "@/hooks/api/accounting";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { BalanceSheetRow } from "@/types/accounting";
@@ -117,8 +118,16 @@ export function BalanceSheetPage() {
   const query = useBalanceSheet(asOf);
   const report = query.data;
 
+  const hasRows = report
+    ? report.assets.length + report.liabilities.length + report.equity.length > 0
+    : false;
+
   function handleAsOfChange(value: string): void {
     setAsOf(value);
+  }
+
+  function handleClearFilters(): void {
+    setAsOf(todayIso());
   }
 
   function handleRetry(): void {
@@ -188,7 +197,30 @@ export function BalanceSheetPage() {
         </div>
       )}
 
-      {report && (
+      {report && !hasRows && (
+        <div className="flex flex-1 min-h-0 flex-col">
+          <EmptyState
+            className="flex-1"
+            illustrationPreset="report"
+            title="Nothing on the balance sheet yet"
+            description={
+              asOf === todayIso()
+                ? "Post journal entries or opening balances to see assets, liabilities and equity here."
+                : undefined
+            }
+            filtersActive={asOf !== todayIso()}
+            filteredTitle="No balances as of this date"
+            onClearFilters={handleClearFilters}
+            action={
+              asOf === todayIso()
+                ? { label: "Set opening balances", href: "/accounting/opening-balances" }
+                : undefined
+            }
+          />
+        </div>
+      )}
+
+      {report && hasRows && (
         <div className="flex flex-1 min-h-0 flex-col space-y-3">
           <BalanceSheetSummaryStrip
             totalAssets={report.totalAssets}
@@ -222,7 +254,7 @@ export function BalanceSheetPage() {
         </div>
       )}
 
-      {report && (
+      {report && hasRows && (
         <div className="rounded-lg border border-border px-4 py-3 mt-3 flex justify-between items-center bg-muted/40">
           <div className="font-medium">Assets — (Liabilities + Equity)</div>
           <div className="text-lg font-mono tabular-nums">

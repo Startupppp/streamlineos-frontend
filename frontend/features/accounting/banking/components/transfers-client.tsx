@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { EmptyTransferIllustration } from "@/components/illustrations";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Money } from "@/features/accounting/shared";
 import { useBankAccounts, useTransfers } from "@/hooks/api/accounting/banking";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
@@ -99,6 +101,10 @@ export function TransfersClient() {
     setDialogOpen(true);
   }
 
+  function handleRetry() {
+    void transfersQuery.refetch();
+  }
+
   return (
     <PageWrapper
       title="Transfers"
@@ -114,38 +120,49 @@ export function TransfersClient() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col">
-        <DataTable
-          className="flex-1 min-h-0"
-          data={transfers}
-          columns={columns}
-          getRowKey={(row) => row.id}
-          isLoading={transfersQuery.isLoading}
-          emptyState={
-            <EmptyState
-              illustration={<EmptyTransferIllustration className="w-32 h-32 opacity-80" />}
-              title="No transfers yet"
-              description="Record a fund movement between your bank accounts."
-              action={canManage ? { label: "New Transfer", onClick: handleDialogOpen } : undefined}
-            />
-          }
-        />
-        {(cursorIndex > 0 || hasMore) ? (
-          <CursorPageControls
-            page={cursorIndex + 1}
-            hasNext={hasMore}
-            onPrevious={() => setCursorIndex(Math.max(0, cursorIndex - 1))}
-            onNext={() => {
-              const next = transfersQuery.data?.pagination.nextCursor ?? null;
-              setCursors((prev) => {
-                const copy = prev.slice(0, cursorIndex + 1);
-                copy.push(next);
-                return copy;
-              });
-              setCursorIndex(cursorIndex + 1);
-            }}
-            className="mt-2"
+        {transfersQuery.isError ? (
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load transfers"
+            description={getErrorMessage(transfersQuery.error)}
+            onRetry={handleRetry}
           />
-        ) : null}
+        ) : (
+          <>
+            <DataTable
+              className="flex-1 min-h-0"
+              data={transfers}
+              columns={columns}
+              getRowKey={(row) => row.id}
+              isLoading={transfersQuery.isLoading}
+              emptyState={
+                <EmptyState
+                  illustration={<EmptyTransferIllustration className="w-32 h-32 opacity-80" />}
+                  title="No transfers yet"
+                  description="Record a fund movement between your bank accounts."
+                  action={canManage ? { label: "New Transfer", onClick: handleDialogOpen } : undefined}
+                />
+              }
+            />
+            {(cursorIndex > 0 || hasMore) ? (
+              <CursorPageControls
+                page={cursorIndex + 1}
+                hasNext={hasMore}
+                onPrevious={() => setCursorIndex(Math.max(0, cursorIndex - 1))}
+                onNext={() => {
+                  const next = transfersQuery.data?.pagination.nextCursor ?? null;
+                  setCursors((prev) => {
+                    const copy = prev.slice(0, cursorIndex + 1);
+                    copy.push(next);
+                    return copy;
+                  });
+                  setCursorIndex(cursorIndex + 1);
+                }}
+                className="mt-2"
+              />
+            ) : null}
+          </>
+        )}
       </div>
 
       {canManage && (

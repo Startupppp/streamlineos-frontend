@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
 import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { EmptyState } from "@/components/ui/empty-state";
 import { FinanceStatusBadge } from "@/features/accounting/shared";
 import { BudgetMatrix } from "@/features/accounting/planning/budget-matrix";
 import { BvaTab } from "@/features/accounting/planning/bva-tab";
@@ -176,7 +177,13 @@ export function BudgetDetailPage({ budgetId: budgetIdParam }: BudgetDetailPagePr
         </div>
       ) : !budget ? (
         <div className="flex flex-1 min-h-0 flex-col">
-          <ErrorState title="Budget not found" description={`No budget found for ID ${budgetId}.`} />
+          <EmptyState
+            className="flex-1"
+            illustrationPreset="search"
+            title="Budget not found"
+            description="This budget no longer exists, or you do not have access to it."
+            action={{ label: "Back to budgets", href: "/accounting/budgets" }}
+          />
         </div>
       ) : (
         <div className="flex flex-1 min-h-0 flex-col">

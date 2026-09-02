@@ -11,6 +11,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
@@ -39,7 +40,7 @@ export function DevicesTable({ canManage, onAdd, onEdit }: Props) {
   const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
   const page = cursorHistory.length;
   const cursor = cursorHistory.at(-1);
-  const { data, isLoading, isFetching } = useTimeDevices({ cursor });
+  const { data, isLoading, isFetching, isError, error, refetch } = useTimeDevices({ cursor });
   const deleteMut = useDeleteTimeDevice();
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
@@ -51,6 +52,10 @@ export function DevicesTable({ canManage, onAdd, onEdit }: Props) {
     const nextCursor = data?.pagination.nextCursor;
     if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
   }, [data?.pagination.nextCursor]);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   function handleDelete(device: TimeDevice) {
     setDeletingId(device.id);
@@ -65,6 +70,17 @@ export function DevicesTable({ canManage, onAdd, onEdit }: Props) {
       <div className="space-y-2">
         {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-lg" />)}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        className={CONTENT_FILL_PANEL}
+        title="Couldn't load devices"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
     );
   }
 

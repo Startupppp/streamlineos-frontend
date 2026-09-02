@@ -1,3 +1,4 @@
+import { StrictMode } from "react";
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ApiError } from "@/lib/api-envelope";
@@ -132,5 +133,38 @@ describe("AiActionsMenu — a state transition never issues a second paid call",
     view.unmount();
 
     expect(seen?.aborted).toBe(true);
+  });
+
+  it("charges once under StrictMode's double-invoked lifecycle", async () => {
+    const pending = deferred();
+    const run = jest.fn(() => pending.promise);
+    let seen: AbortSignal | undefined;
+    const action: AiAction = {
+      key: "summarize",
+      label: "summarize",
+      surface: "inline",
+      run: (signal?: AbortSignal) => {
+        seen = signal;
+        return run();
+      },
+      onInlineChange: jest.fn(),
+    };
+
+    render(
+      <StrictMode>
+        <AiActionsMenu actions={[action]} />
+      </StrictMode>,
+    );
+    await openAndRun("summarize");
+
+    expect(run).toHaveBeenCalledTimes(1);
+    expect(seen?.aborted).toBe(false);
+
+    await act(async () => {
+      pending.resolve({ text: "summary" });
+      await pending.promise;
+    });
+
+    expect(run).toHaveBeenCalledTimes(1);
   });
 });

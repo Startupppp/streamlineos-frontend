@@ -14,6 +14,8 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { buildTicketDetailUrl } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "lucide-react";
@@ -37,14 +39,34 @@ export function CycleDetailPage({
 
   const [displayOptions, setDisplayOptions] = useState<DisplayOptions>(DEFAULT_DISPLAY_OPTIONS);
 
-  const { data: projectData, isLoading: projectLoading } = useProject(projectId);
-  const { data: boardTickets, isLoading: ticketsLoading } = useProjectBoardTickets(projectId);
-  const { data: cycles, isLoading: cyclesLoading } = useCycles(projectId);
+  const {
+    data: projectData,
+    isLoading: projectLoading,
+    isError: projectFailed,
+    error: projectError,
+    refetch: refetchProject,
+  } = useProject(projectId);
+  const {
+    data: boardTickets,
+    isLoading: ticketsLoading,
+    isError: ticketsFailed,
+    error: ticketsError,
+    refetch: refetchTickets,
+  } = useProjectBoardTickets(projectId);
+  const {
+    data: cycles,
+    isLoading: cyclesLoading,
+    isError: cyclesFailed,
+    error: cyclesError,
+    refetch: refetchCycles,
+  } = useCycles(projectId);
   // The board this page renders reads column counts keyed only on projectId.
   // Warming it here keeps it off the far side of the loading guard.
   useTicketColumnCounts(projectId);
 
   const isLoading = projectLoading || cyclesLoading || ticketsLoading;
+  const isError = projectFailed || cyclesFailed || ticketsFailed;
+  const loadError = projectError ?? cyclesError ?? ticketsError;
 
   const cycle = useMemo(
     () => cycles?.find((c) => c.id === cycleId) ?? null,
@@ -128,6 +150,12 @@ export function CycleDetailPage({
     [router, projectId, projectData?.key, allTickets],
   );
 
+  const handleRetry = useCallback(() => {
+    void refetchProject();
+    void refetchCycles();
+    void refetchTickets();
+  }, [refetchProject, refetchCycles, refetchTickets]);
+
   const handleViewChange = useCallback(
     (v: ViewType) => {
       const p = new URLSearchParams(searchParams.toString());
@@ -141,6 +169,19 @@ export function CycleDetailPage({
     return (
       <PageWrapper title="Cycle" noInternalScroll>
         <KanbanBoardSkeleton />
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Cycle" backHref={`/build/${projectId}/cycles`}>
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load this cycle"
+          description={getErrorMessage(loadError)}
+          onRetry={handleRetry}
+        />
       </PageWrapper>
     );
   }

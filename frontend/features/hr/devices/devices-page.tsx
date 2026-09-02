@@ -10,10 +10,12 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { useCan } from "@/hooks/api/access";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { DevicesTable } from "@/features/hr/enterprise/comp/devices-table";
 import { DeviceSheet } from "@/features/hr/enterprise/comp/device-sheet";
 import {
@@ -131,9 +133,24 @@ function SyncLogsTable({
 }
 
 function FailedSyncsTab() {
-  const { data: failedSyncs, isLoading } = useFailedSyncs();
+  const { data: failedSyncs, isLoading, isError, error, refetch } = useFailedSyncs();
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   if (isLoading) return <SyncLogsSkeleton />;
+
+  if (isError) {
+    return (
+      <ErrorState
+        className={CONTENT_FILL_PANEL}
+        title="Couldn't load failed syncs"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
+  }
 
   return (
     <SyncLogsTable
@@ -149,7 +166,7 @@ function AllSyncLogsTab() {
   const [cursorHistory, setCursorHistory] = useState<Array<string | undefined>>([undefined]);
   const page = cursorHistory.length;
   const cursor = cursorHistory.at(-1);
-  const { data, isLoading, isFetching } = useDeviceSyncLogs({ cursor });
+  const { data, isLoading, isFetching, isError, error, refetch } = useDeviceSyncLogs({ cursor });
   const logs = data?.data ?? [];
 
   const handlePreviousPage = useCallback(() => {
@@ -161,7 +178,22 @@ function AllSyncLogsTab() {
     if (nextCursor) setCursorHistory((history) => [...history, nextCursor]);
   }, [data?.pagination.nextCursor]);
 
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   if (isLoading) return <SyncLogsSkeleton />;
+
+  if (isError) {
+    return (
+      <ErrorState
+        className={CONTENT_FILL_PANEL}
+        title="Couldn't load sync logs"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">

@@ -11,6 +11,7 @@ import {
 import { CreateSprintDialog } from "@/features/build/sprints/create-sprint-dialog";
 import { EmptySprintIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -30,7 +31,13 @@ interface ProjectSprintsPageProps {
 export function ProjectSprintsPage({ projectId: projectIdStr }: ProjectSprintsPageProps) {
   const projectId = parseInt(projectIdStr);
 
-  const { data: sprints, isLoading } = useSprints(projectId);
+  const {
+    data: sprints,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useSprints(projectId);
   const { data: project } = useProject(projectId);
   const { data: boardTickets } = useProjectBoardTickets(projectId);
 
@@ -41,6 +48,10 @@ export function ProjectSprintsPage({ projectId: projectIdStr }: ProjectSprintsPa
   const updateSprint = useUpdateSprint(projectId);
   const updateTicket = useUpdateTicket(projectId);
   const { moveTickets } = useSprintTicketMover(projectId);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const handleStartSprint = useCallback((sprintId: number) => {
     updateSprint.mutate(
@@ -143,6 +154,21 @@ export function ProjectSprintsPage({ projectId: projectIdStr }: ProjectSprintsPa
     return (
       <PageWrapper title="Sprints" actions={<CreateSprintDialog projectId={projectId} />}>
         <SprintsPageSkeleton />
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Sprints" subtitle="Plan and track time-boxed iterations">
+        <PmPageShell>
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load sprints"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
+        </PmPageShell>
       </PageWrapper>
     );
   }

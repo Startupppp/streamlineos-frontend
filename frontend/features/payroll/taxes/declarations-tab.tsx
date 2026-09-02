@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { DownloadIcon } from "@animateicons/react/lucide";
@@ -9,12 +9,14 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useTaxDeclarationsAdmin, useExportTaxReport } from "@/hooks/api/payroll/tax-admin";
 import { useCan } from "@/hooks/api/access";
 import type { TaxDeclarationAdmin, TaxDeclarationStatus } from "@/types/payroll/reports";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 import { DeclarationReviewSheet } from "./declaration-review-sheet";
 
@@ -69,10 +71,23 @@ export function DeclarationsTab() {
   const [selectedDeclaration, setSelectedDeclaration] = useState<TaxDeclarationAdmin | null>(null);
   const exportMutation = useExportTaxReport();
 
-  const { data, isLoading } = useTaxDeclarationsAdmin({
+  const { data, isLoading, isError, error, refetch } = useTaxDeclarationsAdmin({
     financialYear: fyParam !== "all" ? fyParam : undefined,
     status: statusParam !== "all" ? statusParam : undefined,
   });
+
+  const filtersActive = fyParam !== "all" || statusParam !== "all";
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
+  const handleClearFilters = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("fy");
+    params.delete("status");
+    router.push(`?${params.toString()}`, { scroll: false });
+  }, [router, searchParams]);
 
   function updateParam(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -177,6 +192,17 @@ export function DeclarationsTab() {
       ),
     },
   ];
+
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load declarations"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
+  }
 
   return (
     <>

@@ -22,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { EntityFormDialog } from "@/components/shared";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   useAccounts,
   useJournal,
@@ -280,20 +281,14 @@ export function AccountDetailPage({ accountId }: AccountDetailPageProps) {
             onRetry={handleRetry}
           />
         ) : !account || !Number.isInteger(accountId) ? (
-          <div className="flex flex-1 h-full flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-16 px-6 text-center">
-            <h3 className="text-sm font-semibold text-foreground">
-              Account not found
-            </h3>
-            <p className="mt-1 text-sm text-muted-foreground max-w-xs">
-              This account does not exist or you do not have access to it.
-            </p>
-            <Button variant="outline" size="sm" className="mt-4" asChild>
-              <Link href="/accounting/coa">
-                <ChevronLeft className="mr-1 h-4 w-4" />
-                Back to chart of accounts
-              </Link>
-            </Button>
-          </div>
+          <EmptyState
+            className="flex-1"
+            illustrationPreset="search"
+            title="Account not found"
+            description="This account does not exist or you do not have access to it."
+            action={{ label: "Back to chart of accounts", href: "/accounting/coa" }}
+            actionVariant="outline"
+          />
         ) : (
           <>
             <Card>
@@ -397,22 +392,17 @@ export function AccountDetailPage({ accountId }: AccountDetailPageProps) {
                     />
                   </div>
                 ) : journalEntries.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-10 px-6 text-center">
-                    <BookOpen className="w-8 text-muted-foreground/40 mb-2" />
-                    <p className="text-sm text-muted-foreground">
-                      No journal entries yet.
-                    </p>
-                    {canManageJournal && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mt-3"
-                        asChild
-                      >
-                        <Link href="/accounting/journal/new">New entry</Link>
-                      </Button>
-                    )}
-                  </div>
+                  <EmptyState
+                    compact
+                    illustrationPreset="documents"
+                    title="No journal entries yet"
+                    description="Entries appear once invoices, payments or manual journals post."
+                    action={
+                      canManageJournal
+                        ? { label: "New entry", href: "/accounting/journal/new" }
+                        : undefined
+                    }
+                  />
                 ) : (
                   <div className="px-0">
                     <DataTable

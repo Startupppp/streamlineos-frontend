@@ -511,6 +511,7 @@ async function run() {
   const byRoute = {};
   const bytesByRoute = {};
   const allSamples = [];
+  const hydrationFindings = [];
 
   try {
     await waitForDevTools(debugPort, 15_000);
@@ -527,7 +528,6 @@ async function run() {
 
     const bytes = attachByteRecorder(cdp, baseOrigin);
     const consoleLog = attachConsoleRecorder(cdp);
-    const hydrationFindings = [];
 
     for (const profile of ["desktop", "mobile"]) {
       await applyProfile(cdp, profile);

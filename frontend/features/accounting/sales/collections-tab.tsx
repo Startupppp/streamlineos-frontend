@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Label } from "@/components/ui/label";
@@ -204,6 +205,10 @@ export function CollectionsTab() {
   const agingBuckets = summary.data?.agingBuckets ?? [];
   const topRisk = summary.data?.topRiskCustomers ?? [];
 
+  function handleRetry(): void {
+    void summary.refetch();
+  }
+
   function handleOpenActivitySheet(customer: TopRiskCustomer, name: string): void {
     setActivitySheet({ open: true, clientId: customer.clientId, clientName: name });
     setActivityType("NOTE");
@@ -326,6 +331,19 @@ export function CollectionsTab() {
       className: "w-28",
     },
   ];
+
+  if (summary.isError) {
+    return (
+      <div className="flex flex-1 min-h-0 flex-col">
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load collections"
+          description={getErrorMessage(summary.error)}
+          onRetry={handleRetry}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-1 min-h-0 flex-col gap-4">

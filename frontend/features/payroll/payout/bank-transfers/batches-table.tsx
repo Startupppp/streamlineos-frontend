@@ -5,6 +5,7 @@ import { Download, FileText } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyTransferIllustration } from "@/components/illustrations";
 import { useBatchFileUrl, usePayoutBatches } from "@/hooks/api/payroll/payout-batches";
@@ -40,7 +41,13 @@ export function BatchesTable({
   canManage,
   onSelectBatch,
 }: BatchesTableProps) {
-  const { data: batches, isLoading } = usePayoutBatches(runId);
+  const {
+    data: batches,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = usePayoutBatches(runId);
   const { data: policyData } = usePayrollPolicyCurrent();
   const policyCurrency = policyData?.policy?.currency ?? "INR";
 
@@ -65,6 +72,10 @@ export function BatchesTable({
     setShowGenerateDialog(false);
     setGeneratedBatchId(null);
   }
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const handleDownloadBatchFile = useCallback(
     (batchId: number) => {
@@ -183,6 +194,17 @@ export function BatchesTable({
 
   if (isLoading) {
     return <Skeleton className="h-48 w-full rounded-xl" />;
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load payment batches"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
   }
 
   return (

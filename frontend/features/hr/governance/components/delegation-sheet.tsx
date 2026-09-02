@@ -40,6 +40,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { useCan } from "@/hooks/api/access";
 import { useOrgDelegations, useGrantProxy, useRevokeProxy, type ProxyAccess } from "../hooks/use-delegations";
 import { useOrgMembers } from "@/hooks/api/organization";
@@ -68,7 +69,7 @@ export function DelegationSheet() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [page, setPage] = useState(1);
 
-  const { data, isLoading } = useOrgDelegations({ page, limit: 20 });
+  const { data, isLoading, isError, error, refetch } = useOrgDelegations({ page, limit: 20 });
   const { data: membersData } = useOrgMembers(1, 200);
   const grantProxy = useGrantProxy();
   const revokeProxy = useRevokeProxy();
@@ -111,6 +112,10 @@ export function DelegationSheet() {
 
   function handleOpenSheet() {
     setSheetOpen(true);
+  }
+
+  function handleRetry() {
+    void refetch();
   }
 
   const columns: DataTableColumn<ProxyAccess>[] = [
@@ -166,6 +171,17 @@ export function DelegationSheet() {
       <div className="space-y-3">
         {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load delegations"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
     );
   }
 

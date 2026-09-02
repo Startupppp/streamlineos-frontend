@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent, TABS_CONTENT_PAGE_BODY_CLASS } from "@/components/ui/tabs";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { JOB_STATUS_BADGE, JOB_STATUS_LABEL, type JobStatus } from "@/features/inventory/lib";
 import {
@@ -107,7 +109,17 @@ export function ImportClient() {
 
   const previewMutation = useImportPreview();
   const createJobMutation = useCreateImportJob();
-  const { data: jobsData, isLoading: isJobsLoading } = useImportJobs();
+  const {
+    data: jobsData,
+    isLoading: isJobsLoading,
+    isError: isJobsError,
+    error: jobsError,
+    refetch: refetchJobs,
+  } = useImportJobs();
+
+  function handleRetryJobs(): void {
+    void refetchJobs();
+  }
 
   function handleTypeSelect(type: ImportType): void {
     setSelectedType(type);
@@ -209,6 +221,14 @@ export function ImportClient() {
 
               <div>
                 <p className="text-xs font-semibold text-foreground mb-2">Import History</p>
+                {isJobsError ? (
+                  <ErrorState
+                    compact
+                    title="Couldn't load import history"
+                    description={getErrorMessage(jobsError)}
+                    onRetry={handleRetryJobs}
+                  />
+                ) : (
                 <DataTable
                   data={jobsData?.items ?? []}
                   columns={IMPORT_HISTORY_COLUMNS}
@@ -217,6 +237,7 @@ export function ImportClient() {
                   className="flex-1 min-h-0"
                   emptyState={<div className="py-8 text-center text-sm text-muted-foreground">No import jobs yet.</div>}
                 />
+                )}
               </div>
             </>
           )}

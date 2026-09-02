@@ -8,7 +8,7 @@ import {
   withExpiredSessionCookies,
 } from "@/lib/auth-session-cookies";
 
-function buildCsp(nonce: string, apiUrl?: string): string {
+export function buildCsp(nonce: string, apiUrl?: string): string {
   const isDev = process.env.NODE_ENV === "development";
   const scriptSrc = [
     "'self'",

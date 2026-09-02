@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Money } from "@/features/accounting/shared";
 import { BvaExplainCell } from "@/features/accounting/planning/bva-explain-column";
 import { useBudgetVsActual } from "@/hooks/api/accounting/planning";
@@ -134,8 +135,15 @@ export function BvaTab({ budgetId }: BvaTabProps) {
   const rows = query.data?.rows ?? [];
   const totals = query.data?.totals;
 
+  const filtersActive = from !== "" || to !== "";
+
   function handleRetry(): void {
     void query.refetch();
+  }
+
+  function handleClearFilters(): void {
+    setFrom("");
+    setTo("");
   }
 
   const tableFooter = totals ? (
@@ -168,9 +176,19 @@ export function BvaTab({ budgetId }: BvaTabProps) {
           onRetry={handleRetry}
         />
       ) : rows.length === 0 && !query.isLoading ? (
-        <p className="text-sm text-muted-foreground py-8 text-center">
-          No budget vs actual data for this range.
-        </p>
+        <EmptyState
+          className="flex-1"
+          illustrationPreset="chart"
+          title="No budget vs actual data yet"
+          description={
+            filtersActive
+              ? undefined
+              : "Figures appear once journal entries post against this budget's accounts."
+          }
+          filtersActive={filtersActive}
+          filteredTitle="No budget vs actual data for this range"
+          onClearFilters={handleClearFilters}
+        />
       ) : (
         <DataTable
           data={rows}
