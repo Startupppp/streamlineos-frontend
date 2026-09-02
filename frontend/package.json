@@ -50,7 +50,9 @@
     "generate:home-manifest": "node scripts/generate-home-manifest.mjs",
     "check:client-pages": "node scripts/check-client-pages.mjs",
     "check:client-pages:self-test": "node scripts/check-client-pages.mjs --self-test",
-    "check:properties": "node scripts/check-no-business-routes.mjs && node scripts/check-no-arbitrary-colors.mjs && node scripts/check-no-effect-fetches.mjs && node scripts/check-no-unlabeled-icon-buttons.mjs && npx --yes madge@8 --circular --ts-config tsconfig.json --extensions ts,tsx --exclude \"node_modules|\\.next|feedbucket-widget\" ."
+    "check:properties": "node scripts/check-no-business-routes.mjs && node scripts/check-no-arbitrary-colors.mjs && node scripts/check-no-effect-fetches.mjs && node scripts/check-no-unlabeled-icon-buttons.mjs && npx --yes madge@8 --circular --ts-config tsconfig.json --extensions ts,tsx --exclude \"node_modules|\\.next|feedbucket-widget\" .",
+    "check:route-thinness": "node scripts/check-route-module-thinness.mjs",
+    "check:route-thinness:self-test": "node scripts/check-route-module-thinness.mjs --self-test"
   },
   "dependencies": {
     "@animateicons/react": "^0.3.4",

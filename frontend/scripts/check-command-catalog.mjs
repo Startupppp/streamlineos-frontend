@@ -1,96 +1,313 @@
 #!/usr/bin/env node
 /**
- * check-command-catalog — every mutation hook must be classified PERMISSIONED or SELF.
+ * check-command-catalog — every mutation hook is classified against the backend
+ * contract, and no command is unclassified.
  *
- * Classification rules (applied in order, first match wins):
- *   1. PERMISSIONED — hook body contains `useAuthorizedMutation(` with an explicit key
- *   2. SELF-ENDPOINT — hook body contains an apiClient call to a SELF_ENDPOINT_PREFIX
- *   3. SELF-EXPLICIT — hook function name is in EXPLICIT_SELF_HOOKS
- *   4. UNCLASSIFIED  — none of the above matched (baseline tracks current count)
+ * The classification is derived from `contracts/openapi.json`, not from a hand
+ * list: each hook's apiClient call is resolved to an operation and that
+ * operation's `x-exposure` / `x-permission` decides what the hook must do.
  *
- * The gate fails when:
- *   - unclassifiedCount > BASELINE.unclassified  (regression)
- *   - Any EXPLICIT_SELF_HOOKS entry is stale (hook no longer exists)
+ *   x-exposure: permissioned  -> the hook MUST call useAuthorizedMutation, and the
+ *                               key must be the contract key, or an entry in
+ *                               STRICTER_KEYS recording why a stricter key is used
+ *   x-exposure: universal     -> SELF; the subject is always @CurrentUser()
+ *   x-exposure: public        -> PUBLIC; no session required
+ *   x-exposure: in-service    -> must be named in IN_SERVICE_HOOKS with a reason
+ *   unresolvable endpoint     -> UNCLASSIFIED, which fails
  *
- * --self-test: exercises the classifier against known fixtures without touching the real codebase.
+ * --self-test exercises the classifier against fixtures, including the shapes the
+ * previous gate could not see: a path built from a module constant, an imperative
+ * GET/download used as a mutation, and a declared key that no longer matches.
  */
 
-import { readFileSync, readdirSync, statSync, existsSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join, dirname, relative, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(SCRIPT_DIR, "..");
 
-// ── Baseline ────────────────────────────────────────────────────────────────
-// Run `node scripts/check-command-catalog.mjs` to see the current count.
-// Lower this number after migrating hooks to useAuthorizedMutation or adding them
-// to EXPLICIT_SELF_HOOKS. Never raise it — that is a regression.
-const BASELINE = { unclassified: 677 };
+// Zero unclassified commands is the standard. Never raise this.
+const BASELINE = { unclassified: 0 };
+const SCAN_FLOOR = { minHooks: 900 };
 
-// ── Auto-SELF endpoint prefixes ──────────────────────────────────────────────
-// A mutation whose mutationFn body contains an apiClient call to any of these
-// paths is automatically classified as SELF — the authenticated user is always
-// the subject (no org-level side effects, no privilege required).
-const SELF_ENDPOINT_PREFIXES = [
-  '"/me/',       // all /me/* routes
-  "`/me/",       // template literals
-  '"/notifications/', // user manages their own notifications
-  "`/notifications/",
-  '"/auth/',     // auth flows (login, logout, refresh, MFA)
-  "`/auth/",
-];
+/**
+ * Hooks whose endpoint carries no permission because authorization happens
+ * inside the service (`x-exposure: in-service`). Each entry states why.
+ */
+const MODULE_ACCESS_REASON =
+  "module-access.controller.ts is @AuthorizedInService(\"assertModuleAccessPolicy\") — the caller's standing in the target module is resolved per request, so there is no single permission key to gate on.";
+const CHAT_ENTITY_REASON =
+  "chat-entities.controller.ts is @AuthorizedInService — channel membership is asserted first, then EntityReferenceService resolves the actor's own access to the linked record.";
 
-// ── Explicit SELF hooks ───────────────────────────────────────────────────────
-// Hook function names classified as SELF that do NOT call a SELF_ENDPOINT_PREFIX.
-// Entries here bypass the endpoint check. Add when a SELF hook uses a non-/me/ path
-// for architectural reasons (e.g. a shared path whose subject is always the caller).
-// NEVER add a hook that gates on a permission — use useAuthorizedMutation instead.
-const EXPLICIT_SELF_HOOKS = new Set([
-  // Notification inbox — user manages their own notification state
-  // (endpoint /notifications/* is already caught by SELF_ENDPOINT_PREFIXES)
-
-  // Backend marks these @Universal(): the subject is always @CurrentUser().
-  // POST /org/announcements/:id/read      — announcements.controller.ts
-  // POST /hr/enterprise/ops/emergency/events/:id/respond — emergency.controller.ts
-  // DELETE /sessions/:sessionId, DELETE /sessions — sessions.controller.ts
-  "useMarkHrAnnouncementRead",
-  "useRespondToEmergency",
-  "useRevokeSession",
-  "useRevokeAllSessions",
+const IN_SERVICE_HOOKS = new Map([
+  ["useSubmitEntityAction", CHAT_ENTITY_REASON],
+  ["useCreateTaskFromMessage", CHAT_ENTITY_REASON],
+  ["useCreateModuleRoleGroup", MODULE_ACCESS_REASON],
+  ["useRenameModuleRoleGroup", MODULE_ACCESS_REASON],
+  ["useDeleteModuleRoleGroup", MODULE_ACCESS_REASON],
+  ["useSetModuleGroupPermissions", MODULE_ACCESS_REASON],
+  ["useAddModuleGroupMember", MODULE_ACCESS_REASON],
+  ["useRemoveModuleGroupMember", MODULE_ACCESS_REASON],
+  ["useAddModuleMember", MODULE_ACCESS_REASON],
+  ["useUpdateModuleMember", MODULE_ACCESS_REASON],
+  ["useRemoveModuleMember", MODULE_ACCESS_REASON],
+  ["useSetModuleMemberGrants", MODULE_ACCESS_REASON],
+  ["useTransferModuleOwnership", MODULE_ACCESS_REASON],
+  ["useCancelModuleOwnershipTransfer", MODULE_ACCESS_REASON],
+  [
+    "useCreateOrganization",
+    "organization.controller.ts:150 is @AuthorizedInService — any authenticated user may create an organisation; plan limits are enforced in OrgProfileService.createOrganization.",
+  ],
+  [
+    "useRestoreOrg",
+    "organization.controller.ts:372 is @AuthorizedInService — OrgLifecycleService.restoreOrg requires an ACTIVE isOwner membership of the target org and returns 404 on a miss.",
+  ],
 ]);
 
-// ── Skip patterns ─────────────────────────────────────────────────────────────
+/**
+ * Hooks that deliberately declare a STRICTER key than the contract requires.
+ * Loosening these to the contract key would widen the UI past the product rule,
+ * so the difference is recorded rather than "fixed". The value is the contract
+ * key, so the entry goes stale the moment the backend gate changes.
+ */
+const STRICTER_KEYS = new Map([
+  ["useUpsertWorkLog", "hr:attendance:view"],
+  ["useCreateContract", "hr:contracts:manage"],
+  ["useUpdateContract", "hr:contracts:manage"],
+  ["useEndContract", "hr:contracts:manage"],
+  ["useConvertToEmployee", "hr:contracts:manage"],
+  ["useRevertLeave", "hr:leaves:approve"],
+  ["useUpdateLeaveType", "hr:leaves:create"],
+  ["useUpdatePerformanceReview", "hr:performance:view"],
+  ["useUpdateGoal", "hr:performance:view"],
+  ["usePreviewPolicy", "payroll:policies:view"],
+  ["useCreateRun", "payroll:runs:create"],
+  ["useUpdateFxRates", "payroll:policies:manage"],
+]);
+
+/**
+ * Hooks whose request never goes through apiClient, so the scanner cannot read
+ * an endpoint from the call. Each entry names the endpoint and its exposure,
+ * checked against the contract by hand.
+ */
+const OFF_CLIENT_HOOKS = new Map([
+  ["useAcceptInvitation", "PUBLIC — portalApiClient POST /portal/auth/accept-invitation with authenticated:false"],
+  ["useSubmitChangeRequest", "PUBLIC — portalApiClient, unauthenticated portal surface"],
+  ["useRequestSignOtp", "PUBLIC — publicPost /public/sign/{token}/request-otp"],
+  ["useAuthenticateSignSession", "PUBLIC — publicPost /public/sign/{token}"],
+  ["useAcceptSignConsent", "PUBLIC — publicPost /public/sign/{token}"],
+  ["useSetSignFieldValue", "PUBLIC — publicPost /public/sign/{token}"],
+  ["useAdoptSignSignature", "PUBLIC — publicPost /public/sign/{token}"],
+  ["useCompleteSignSession", "PUBLIC — publicPost /public/sign/{token}"],
+  ["useDeclineSignSession", "PUBLIC — publicPost /public/sign/{token}"],
+  [
+    "useExportResponses",
+    "PERMISSIONED surveys:responses:export — issues POST /surveys/{surveyId}/export through authedFetch to stream a blob; gated by useCan at the call site in the analytics panel.",
+  ],
+  [
+    "useImportExpenses",
+    "PERMISSIONED hr:expenses:manage — the request lives in the module-local importExpensesRequest helper (POST /hr/expenses/import); the hook carries the key.",
+  ],
+  [
+    "useUploadFile",
+    "IN-SERVICE — the request lives in the module-local uploadFileRequest helper (POST /storage/upload), which is in-service: the upload is authorized by the feature that consumes the returned key.",
+  ],
+  [
+    "useSetPresenceStatus",
+    "BROKEN — calls PUT /chat/presence/status, which no backend route serves (chat-presence.controller.ts declares only POST presence/heartbeat and GET presence/online), so every status change from ChatPresenceMenu 404s. Handed to S08.",
+  ],
+  [
+    "useDeleteInvoice",
+    "BROKEN — calls DELETE /invoices/{id}; the invoice controller declares no @Delete, so the delete action in invoice-detail.tsx and invoices-client.tsx 404s. Handed to S05.",
+  ],
+  [
+    "useSupportKbAttachmentDownloadUrl",
+    "BROKEN — calls GET /support/kb/articles/{articleId}/attachments/{attachmentId}, which no backend route serves (support-kb.controller.ts declares only GET list, POST and DELETE). Handed to S10; recorded here so the gate is not silently green on it.",
+  ],
+]);
+
 const SKIP_DIRS = new Set(["node_modules", ".next", "feedbucket-widget", ".git"]);
 const SCAN_DIRS = ["hooks/api", "features"];
 const TEST_FILE_RE = /\.test\.|\.spec\.|__tests__/;
 
-// ── Scan floor (sanity check) ─────────────────────────────────────────────────
-const SCAN_FLOOR = { minHooks: 50 };
+// Methods that reach the API. `get`/`download` appear inside mutations for
+// imperative reads (exports, signed-URL fetches) and are classified too.
+// `useMutation<T, E, V>({...})` is the dominant form in this repo (382 of 463
+// call sites). A scanner matching only `useMutation(` sees none of them.
+const MUTATION_CALL_RE = /\buse(?:Authorized)?Mutation\s*[<(]/;
+
+const METHOD_OF = {
+  post: "POST",
+  put: "PUT",
+  patch: "PATCH",
+  delete: "DELETE",
+  upload: "POST",
+  get: "GET",
+  download: "GET",
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Core classifier
+// Contract index
 // ─────────────────────────────────────────────────────────────────────────────
+
+function loadContract() {
+  const spec = JSON.parse(readFileSync(join(ROOT, "contracts/openapi.json"), "utf8"));
+  const index = new Map();
+  for (const [path, ops] of Object.entries(spec.paths ?? {})) {
+    const segments = path.split("/").filter(Boolean).map((s) => (s.startsWith("{") ? "*" : s));
+    for (const [method, op] of Object.entries(ops)) {
+      if (typeof op !== "object" || op === null) continue;
+      const key = method.toUpperCase();
+      if (!index.has(key)) index.set(key, []);
+      index.get(key).push({ path, segments, op });
+    }
+  }
+  return index;
+}
+
+function resolveOperation(index, method, literal) {
+  const segments = literal.split("?")[0].split("/").filter(Boolean);
+  const matches = (index.get(method) ?? []).filter(
+    (c) =>
+      c.segments.length === segments.length &&
+      c.segments.every((cs, i) => cs === "*" || segments[i] === "*" || cs === segments[i]),
+  );
+  if (matches.length === 0) return null;
+  matches.sort(
+    (a, b) => b.segments.filter((s) => s !== "*").length - a.segments.filter((s) => s !== "*").length,
+  );
+  return matches[0].op;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Source parsing
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Blank out comments, keeping every offset, so an apostrophe in prose
+ * ("the person's own task list") cannot put the argument parser into string mode.
+ */
+function stripComments(src) {
+  const out = src.split("");
+  let inStr = null;
+  let esc = false;
+  for (let i = 0; i < src.length; i++) {
+    const c = src[i];
+    if (esc) { esc = false; continue; }
+    if (inStr) {
+      if (c === "\\") esc = true;
+      else if (c === inStr) inStr = null;
+      continue;
+    }
+    if (c === '"' || c === "'" || c === "`") { inStr = c; continue; }
+    if (c === "/" && src[i + 1] === "/") {
+      while (i < src.length && src[i] !== "\n") { out[i] = " "; i++; }
+      continue;
+    }
+    if (c === "/" && src[i + 1] === "*") {
+      while (i < src.length && !(src[i] === "*" && src[i + 1] === "/")) {
+        if (src[i] !== "\n") out[i] = " ";
+        i++;
+      }
+      out[i] = " ";
+      out[i + 1] = " ";
+      i++;
+      continue;
+    }
+  }
+  return out.join("");
+}
+
+function splitCallArgs(src, open) {
+  let depth = 0;
+  let inStr = null;
+  let esc = false;
+  let cur = open + 1;
+  const args = [];
+  for (let i = open; i < src.length; i++) {
+    const c = src[i];
+    if (esc) { esc = false; continue; }
+    if (inStr) {
+      if (c === "\\") esc = true;
+      else if (c === inStr) inStr = null;
+      continue;
+    }
+    if (c === '"' || c === "'" || c === "`") { inStr = c; continue; }
+    if ("([{".includes(c)) depth++;
+    else if (")]}".includes(c)) {
+      depth--;
+      if (depth === 0) { args.push(src.slice(cur, i)); return args; }
+    } else if (c === "," && depth === 1) { args.push(src.slice(cur, i)); cur = i + 1; }
+  }
+  return null;
+}
+
+function moduleConstants(src) {
+  const consts = new Map();
+  for (const m of src.matchAll(/^const\s+([A-Z_][A-Z0-9_]*)\s*=\s*"(\/[^"]*)"\s*;/gm))
+    consts.set(m[1], m[2]);
+  return consts;
+}
+
+function normalizePath(arg, consts) {
+  let a = arg.trim();
+  if (consts.has(a)) a = JSON.stringify(consts.get(a));
+  let s = null;
+  if (a.startsWith("`")) {
+    s = a
+      .slice(1, a.lastIndexOf("`"))
+      .replace(/\$\{\s*([A-Za-z_$][\w$]*)\s*\}/g, (whole, name) =>
+        consts.has(name) ? consts.get(name) : whole,
+      )
+      .replace(/\$\{[^}]*\}/g, "*");
+  } else if (/^["']/.test(a)) {
+    const q = a[0];
+    const endQ = a.indexOf(q, 1);
+    s = a.slice(1, endQ);
+    if (a.slice(endQ + 1).trim().startsWith("+")) s += "*";
+  }
+  if (s === null || !s.startsWith("/")) return null;
+  return s.replace(/\/+$/, "") || "/";
+}
+
+/** The permission key declared by useAuthorizedMutation, past any type arguments. */
+function readAuthorizedKey(body) {
+  const m = /\buseAuthorizedMutation/.exec(body);
+  if (!m) return null;
+  let i = m.index + m[0].length;
+  while (/\s/.test(body[i] ?? "")) i++;
+  if (body[i] === "<") {
+    let angle = 0;
+    for (; i < body.length; i++) {
+      if (body[i] === "<") angle++;
+      else if (body[i] === ">") {
+        angle--;
+        if (angle === 0) { i++; break; }
+      }
+    }
+  }
+  while (/\s/.test(body[i] ?? "")) i++;
+  if (body[i] !== "(") return null;
+  const args = splitCallArgs(body, i);
+  if (!args || !args.length) return null;
+  const first = args[0].trim();
+  const q = /^["'`]([^"'`]+)["'`]$/.exec(first);
+  return q ? q[1] : null;
+}
 
 function extractMutationBlocks(src, filePath) {
   const results = [];
-  // Both hook declaration styles must be visible. A scanner that only knows
-  // `export function` silently omits every arrow-declared hook — such a hook is
-  // then neither PERMISSIONED, SELF nor UNCLASSIFIED, so the count reads clean
-  // while the command is ungoverned.
-  // The annotation on `const useX: () => UseMutationResult<T> = () => {` itself
-  // contains `=>`, so the type segment has to admit it while still stopping at
-  // the real assignment.
-  const EXPORT_RE =
-    /^[ \t]*export\s+(?:(?:async\s+)?function\s+(use\w+)\s*\(|const\s+(use\w+)\s*(?::(?:[^=]|=>)*?)?=\s*(?:async\s*)?(?:\([^)]*\)|\w+)\s*=>)/gm;
+  const EXPORT_RE = /^[ \t]*export\s+(?:const|(?:async\s+)?function)\s+(use\w+)\s*[=(]/gm;
   let match;
   while ((match = EXPORT_RE.exec(src)) !== null) {
-    const name = match[1] ?? match[2];
-    const start = match.index;
-    // Find the opening { of this function
-    const openBrace = src.indexOf("{", start + match[0].length);
+    const name = match[1];
+    const openBrace = src.indexOf("{", match.index + match[0].length);
     if (openBrace === -1) continue;
-    // Walk forward counting braces to find the function body end
+    // An arrow one-liner (`export const useX = () => useY(...)`) has no block of
+    // its own; without this guard the next declaration's body would be read as its.
+    const nextExport = src.indexOf("\nexport ", match.index + match[0].length);
+    if (nextExport !== -1 && openBrace > nextExport) continue;
     let depth = 0;
     let end = openBrace;
     for (let i = openBrace; i < src.length; i++) {
@@ -101,41 +318,74 @@ function extractMutationBlocks(src, filePath) {
       }
     }
     const body = src.slice(openBrace, end + 1);
-    const hasMutation = body.includes("useMutation(") || body.includes("useAuthorizedMutation(");
-    if (!hasMutation) continue;
-    results.push({ name, body, file: filePath });
+    if (!MUTATION_CALL_RE.test(body)) continue;
+    results.push({ name, body, file: filePath, line: src.slice(0, match.index).split("\n").length });
   }
   return results;
 }
 
-function classifyBlock(block) {
+function classifyBlock(block, index, consts) {
   const { name, body } = block;
+  const declaredKey = readAuthorizedKey(body);
 
-  // Rule 1: PERMISSIONED — uses useAuthorizedMutation
-  if (body.includes("useAuthorizedMutation(")) {
-    const keyMatch = body.match(/useAuthorizedMutation\(\s*["'`]([^"'`]+)["'`]/);
-    const key = keyMatch ? keyMatch[1] : "unknown";
-    return { kind: "PERMISSIONED", key };
+  const exposures = new Set();
+  const permissions = new Set();
+  let sawCall = false;
+  const CALL_RE = /apiClient\.(\w+)\s*(?:<[\s\S]*?>)?\s*\(/g;
+  let cm;
+  while ((cm = CALL_RE.exec(body)) !== null) {
+    const method = METHOD_OF[cm[1]];
+    if (!method) continue;
+    sawCall = true;
+    const args = splitCallArgs(body, cm.index + cm[0].length - 1);
+    const literal = args && args.length ? normalizePath(args[0], consts) : null;
+    if (!literal) { exposures.add("UNRESOLVED"); continue; }
+    const op = resolveOperation(index, method, literal);
+    if (!op) { exposures.add("UNRESOLVED"); continue; }
+    exposures.add(op["x-exposure"] ?? "UNKNOWN");
+    if (op["x-permission"]) permissions.add(op["x-permission"]);
   }
 
-  // Rule 2: SELF via endpoint prefix
-  for (const prefix of SELF_ENDPOINT_PREFIXES) {
-    if (body.includes(prefix)) {
-      return { kind: "SELF", reason: `endpoint matches self-prefix ${prefix.trim()}` };
-    }
+  if (!sawCall || exposures.has("UNRESOLVED") || exposures.has("UNKNOWN")) {
+    if (OFF_CLIENT_HOOKS.has(name)) return { kind: "OFF-CLIENT", reason: OFF_CLIENT_HOOKS.get(name) };
+    return {
+      kind: "UNCLASSIFIED",
+      reason: sawCall
+        ? "endpoint could not be resolved against contracts/openapi.json"
+        : "no apiClient call found in the hook body",
+    };
   }
 
-  // Rule 3: SELF via explicit hook name
-  if (EXPLICIT_SELF_HOOKS.has(name)) {
-    return { kind: "SELF", reason: "listed in EXPLICIT_SELF_HOOKS" };
+  if (exposures.has("permissioned")) {
+    if (permissions.size !== 1)
+      return {
+        kind: "UNCLASSIFIED",
+        reason: `resolves to ${permissions.size} different permissions (${[...permissions].join(", ")}); split the hook or gate it explicitly`,
+      };
+    const contractKey = [...permissions][0];
+    if (!declaredKey)
+      return { kind: "UNCLASSIFIED", reason: `permissioned endpoint requires useAuthorizedMutation("${contractKey}")` };
+    if (declaredKey === contractKey) return { kind: "PERMISSIONED", key: declaredKey };
+    if (STRICTER_KEYS.get(name) === contractKey)
+      return { kind: "PERMISSIONED", key: declaredKey, stricterThan: contractKey };
+    return {
+      kind: "WRONG-KEY",
+      reason: `declares "${declaredKey}" but the contract requires "${contractKey}"`,
+    };
   }
 
-  // Rule 4: UNCLASSIFIED
-  return { kind: "UNCLASSIFIED" };
+  if (exposures.has("in-service")) {
+    if (IN_SERVICE_HOOKS.has(name)) return { kind: "IN-SERVICE", reason: IN_SERVICE_HOOKS.get(name) };
+    return { kind: "UNCLASSIFIED", reason: "in-service endpoint must be named in IN_SERVICE_HOOKS with a reason" };
+  }
+
+  if (exposures.has("universal")) return { kind: "SELF", reason: "contract exposure: universal" };
+  if (exposures.has("public")) return { kind: "PUBLIC", reason: "contract exposure: public" };
+  return { kind: "UNCLASSIFIED", reason: `unrecognised exposure ${[...exposures].join(", ")}` };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// File walker
+// Walker
 // ─────────────────────────────────────────────────────────────────────────────
 
 function walkDir(dir, cb) {
@@ -155,9 +405,10 @@ function collectBlocks(rootDir, scanDirs) {
     walkDir(join(rootDir, rel), (filePath) => {
       const relPath = relative(rootDir, filePath).replace(/\\/g, "/");
       if (TEST_FILE_RE.test(relPath)) return;
-      const src = readFileSync(filePath, "utf8");
-      if (!src.includes("useMutation(") && !src.includes("useAuthorizedMutation(")) return;
-      blocks.push(...extractMutationBlocks(src, relPath));
+      const src = stripComments(readFileSync(filePath, "utf8"));
+      if (!MUTATION_CALL_RE.test(src)) return;
+      const consts = moduleConstants(src);
+      for (const b of extractMutationBlocks(src, relPath)) blocks.push({ ...b, consts });
     });
   }
   return blocks;
@@ -173,112 +424,155 @@ function assert(cond, msg) {
 
 function runSelfTest() {
   console.log("Running self-test for check-command-catalog...\n");
+  const index = loadContract();
 
-  const goodAuthorized = `
-    export function useCreateFoo() {
-      return useAuthorizedMutation("foo:create", { mutationFn: (d) => apiClient.post("/foo", d) });
-    }
-  `;
-  const goodSelfMe = `
-    export function useUpdateProfile() {
-      return useMutation({ mutationFn: (d) => apiClient.patch("/me/profile", d) });
-    }
-  `;
-  const goodSelfNotif = `
-    export function useMarkRead() {
-      return useMutation({ mutationFn: (id) => apiClient.patch(\`/notifications/\${id}/read\`) });
-    }
-  `;
-  const badUnclassified = `
-    export function usePatchInvoice() {
-      return useMutation({ mutationFn: (d) => apiClient.patch("/accounting/invoices", d) });
-    }
-  `;
-  const badMixedWithGood = `
-    export function useDoSomethingBad() {
-      return useMutation({ mutationFn: (d) => apiClient.delete("/hr/records/" + d.id) });
-    }
-    export function useDoSomethingGood() {
-      return useAuthorizedMutation("hr:employees:delete", {
-        mutationFn: (id) => apiClient.delete("/hr/employees/" + id)
-      });
-    }
-  `;
-
-  function classify(src, name) {
-    const blocks = extractMutationBlocks(src, "test.ts");
-    const block = blocks.find(b => b.name === name);
+  function classify(rawSrc, name) {
+    const src = stripComments(rawSrc);
+    const consts = moduleConstants(src);
+    const block = extractMutationBlocks(src, "test.ts").find((b) => b.name === name);
     if (!block) return null;
-    return classifyBlock(block);
+    return classifyBlock(block, index, consts);
   }
 
-  // (a) useAuthorizedMutation → PERMISSIONED
-  const r1 = classify(goodAuthorized, "useCreateFoo");
-  assert(r1?.kind === "PERMISSIONED", `(a) useAuthorizedMutation → expected PERMISSIONED, got ${r1?.kind}`);
-  assert(r1?.key === "foo:create", `(a) key → expected foo:create, got ${r1?.key}`);
-  console.log("  (a) useAuthorizedMutation hook                          → PERMISSIONED");
+  const cases = [
+    {
+      label: "(a) permissioned endpoint carrying the contract key",
+      src: `export function useCreateTaxCode() {
+        return useAuthorizedMutation("accounting:taxes:manage", { mutationFn: (d) => apiClient.post("/accounting/tax-codes", d) });
+      }`,
+      name: "useCreateTaxCode",
+      expect: "PERMISSIONED",
+    },
+    {
+      label: "(b) permissioned endpoint left on a raw useMutation",
+      src: `export function useCreateTaxCode() {
+        return useMutation({ mutationFn: (d) => apiClient.post("/accounting/tax-codes", d) });
+      }`,
+      name: "useCreateTaxCode",
+      expect: "UNCLASSIFIED",
+    },
+    {
+      label: "(c) a declared key that no longer matches the contract",
+      src: `export function useCreateTaxCode() {
+        return useAuthorizedMutation("accounting:taxes:view", { mutationFn: (d) => apiClient.post("/accounting/tax-codes", d) });
+      }`,
+      name: "useCreateTaxCode",
+      expect: "WRONG-KEY",
+    },
+    {
+      label: "(d) a path built from a module constant is still resolved",
+      src: `const BASE = "/crm/issues";
+      export function useCreateIssue() {
+        return useAuthorizedMutation("crm:issues:manage", { mutationFn: (d) => apiClient.post(\`\${BASE}\`, d) });
+      }`,
+      name: "useCreateIssue",
+      expect: "PERMISSIONED",
+    },
+    {
+      label: "(e) an imperative download used as a mutation is classified, not skipped",
+      src: `export function useExportPayrollReport() {
+        return useAuthorizedMutation("payroll:reports:view", { mutationFn: () => apiClient.download("/payroll/reports/journal", { format: "csv" }) });
+      }`,
+      name: "useExportPayrollReport",
+      expect: "PERMISSIONED",
+    },
+    {
+      label: "(f) a universal endpoint needs no permission",
+      src: `export function useRevokeSession() {
+        return useMutation({ mutationFn: (id) => apiClient.delete(\`/sessions/\${id}\`) });
+      }`,
+      name: "useRevokeSession",
+      expect: "SELF",
+    },
+    {
+      label: "(g) an endpoint absent from the contract fails closed",
+      src: `export function useDoSomething() {
+        return useMutation({ mutationFn: (d) => apiClient.post("/no/such/route/anywhere", d) });
+      }`,
+      name: "useDoSomething",
+      expect: "UNCLASSIFIED",
+    },
+    {
+      label: "(h) an unresolvable dynamic path fails closed",
+      src: `export function useDynamic(path) {
+        return useMutation({ mutationFn: (d) => apiClient.post(path, d) });
+      }`,
+      name: "useDynamic",
+      expect: "UNCLASSIFIED",
+    },
+    {
+      label: "(i2) the generic form useMutation<T, E, V>({...}) is seen — 382 call sites the old gate could not",
+      src: `export function useCreateTaxCode() {
+        return useMutation<TaxCode, Error, CreateTaxCodeInput>({ mutationFn: (d) => apiClient.post("/accounting/tax-codes", d) });
+      }`,
+      name: "useCreateTaxCode",
+      expect: "UNCLASSIFIED",
+    },
+    {
+      label: "(i3) the generic form on useAuthorizedMutation keeps its key",
+      src: `export function useCreateTaxCode() {
+        return useAuthorizedMutation<TaxCode, Error, CreateTaxCodeInput>("accounting:taxes:manage", { mutationFn: (d) => apiClient.post("/accounting/tax-codes", d) });
+      }`,
+      name: "useCreateTaxCode",
+      expect: "PERMISSIONED",
+    },
+    {
+      label: "(i4) an arrow one-liner does not borrow the next declaration's body",
+      src: `export const useBulkSuspend = () => useBulkLifecycle("/users/bulk-suspend");
 
-  // (b) /me/ endpoint → SELF
-  const r2 = classify(goodSelfMe, "useUpdateProfile");
-  assert(r2?.kind === "SELF", `(b) /me/ endpoint → expected SELF, got ${r2?.kind}`);
-  console.log("  (b) useMutation with /me/ endpoint                      → SELF");
+export const useOther = () => {
+  return useAuthorizedMutation("settings:organization:manage", { mutationFn: (d) => apiClient.post("/users/bulk-update", d) });
+};`,
+      name: "useBulkSuspend",
+      expectNull: true,
+    },
+    {
+      label: "(i5) an apostrophe in a comment does not hide the declared key",
+      src: `export function useCompleteActivityTask() {
+        return useAuthorizedMutation("crm:activities:manage", {
+          mutationFn: (id) => apiClient.post(\`/crm/activities/\${id}/complete\`, {}),
+          onSuccess: () => {
+            // The same row appears on a timeline and in the person's own task list.
+            invalidate();
+          },
+        });
+      }`,
+      name: "useCompleteActivityTask",
+      expect: "PERMISSIONED",
+    },
+    {
+      label: "(i) an `export const` hook is seen, not only `export function`",
+      src: `export const useCreateTaxCode = () => {
+        return useMutation({ mutationFn: (d) => apiClient.post("/accounting/tax-codes", d) });
+      };`,
+      name: "useCreateTaxCode",
+      expect: "UNCLASSIFIED",
+    },
+  ];
 
-  // (c) /notifications/ endpoint → SELF
-  const r3 = classify(goodSelfNotif, "useMarkRead");
-  assert(r3?.kind === "SELF", `(c) /notifications/ endpoint → expected SELF, got ${r3?.kind}`);
-  console.log("  (c) useMutation with /notifications/ endpoint           → SELF");
+  for (const c of cases) {
+    const result = classify(c.src, c.name);
+    if (c.expectNull) {
+      assert(result === null, `${c.label}: expected no block, got ${result?.kind}`);
+      console.log(`  ${c.label} → not extracted`);
+      continue;
+    }
+    assert(result !== null, `${c.label}: hook was not extracted at all`);
+    assert(
+      result.kind === c.expect,
+      `${c.label}: expected ${c.expect}, got ${result.kind}${result.reason ? ` (${result.reason})` : ""}`,
+    );
+    console.log(`  ${c.label} → ${result.kind}`);
+  }
 
-  // (d) raw useMutation with non-self endpoint → UNCLASSIFIED
-  const r4 = classify(badUnclassified, "usePatchInvoice");
-  assert(r4?.kind === "UNCLASSIFIED", `(d) unclassified → expected UNCLASSIFIED, got ${r4?.kind}`);
-  console.log("  (d) useMutation with non-self endpoint                  → UNCLASSIFIED (detected)");
+  const missing = classify(
+    `export function useCreateTaxCode() { return useMutation({ mutationFn: (d) => apiClient.post("/accounting/tax-codes", d) }); }`,
+    "useNonExistent",
+  );
+  assert(missing === null, "(j) an unknown hook name must return null so the scan is not vacuous");
+  console.log("  (j) unknown hook name returns null (scan is not vacuous)");
 
-  // (e) UNCLASSIFIED hook in a mixed file is still caught
-  const blocks5 = extractMutationBlocks(badMixedWithGood, "test.ts");
-  const bad5 = blocks5.find(b => b.name === "useDoSomethingBad");
-  const good5 = blocks5.find(b => b.name === "useDoSomethingGood");
-  assert(classifyBlock(bad5).kind === "UNCLASSIFIED",
-    `(e) mixed file bad hook → expected UNCLASSIFIED, got ${classifyBlock(bad5).kind}`);
-  assert(classifyBlock(good5).kind === "PERMISSIONED",
-    `(e) mixed file good hook → expected PERMISSIONED, got ${classifyBlock(good5).kind}`);
-  console.log("  (e) mixed file — bad hook detected, good hook passed    → correct");
-
-  // (f) Self-test proves a false negative would fail: extract with wrong name returns null
-  const r6 = classify(goodAuthorized, "useNonExistent");
-  assert(r6 === null, `(f) unknown hook name should return null`);
-  console.log("  (f) unknown hook name returns null (scan is not vacuous) → correct");
-
-  // (g) The shape this scanner used to be blind to. An arrow-declared hook was
-  // invisible entirely — neither PERMISSIONED, SELF nor UNCLASSIFIED — so an
-  // ungoverned command read as a clean count. Four real hooks were hidden this way.
-  const arrowUnclassified = `
-    export const useArrowDeclaredCommand = () => {
-      const qc = useQueryClient();
-      return useMutation({ mutationFn: (id) => apiClient.delete("/widgets/" + id) });
-    };
-  `;
-  const arrowAuthorized = `
-    export const useCreateAnnouncement = () => {
-      return useAuthorizedMutation("settings:manage", {
-        mutationFn: (b) => apiClient.post("/dashboard/announcements", b),
-      });
-    };
-  `;
-  const arrowTyped = `
-    export const useThing: () => UseMutationResult<Foo> = () => {
-      return useMutation({ mutationFn: () => apiClient.post("/thing") });
-    };
-  `;
-  const r7 = classify(arrowUnclassified, "useArrowDeclaredCommand");
-  assert(r7?.kind === "UNCLASSIFIED", `(g) arrow hook → expected UNCLASSIFIED, got ${r7?.kind}`);
-  const r8 = classify(arrowAuthorized, "useCreateAnnouncement");
-  assert(r8?.kind === "PERMISSIONED", `(g) arrow authorized → expected PERMISSIONED, got ${r8?.kind}`);
-  assert(r8?.key === "settings:manage", `(g) arrow key → got ${r8?.key}`);
-  const r9 = classify(arrowTyped, "useThing");
-  assert(r9?.kind === "UNCLASSIFIED", `(g) type-annotated arrow hook must still be seen, got ${r9?.kind}`);
-  console.log("  (g) arrow-declared hooks (const use… = () =>)          → seen, not skipped");
-
-  console.log("\n✔ All command-catalog fixtures passed — check-command-catalog is live.\n");
+  console.log(`\n✔ ${cases.length + 1} command-catalog fixtures passed — check-command-catalog is live.\n`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -286,93 +580,64 @@ function runSelfTest() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function runMainScan() {
-  console.log("Building mutation hook graph (scanning hooks/api + features)...\n");
-
+  console.log("Classifying mutation hooks against contracts/openapi.json...\n");
+  const index = loadContract();
   const blocks = collectBlocks(ROOT, SCAN_DIRS);
 
   if (blocks.length < SCAN_FLOOR.minHooks) {
     console.error(
       `FAIL: scan floor not met — found only ${blocks.length} mutation hooks ` +
-      `(expected ≥${SCAN_FLOOR.minHooks}). The scanner is broken or the wrong directory was scanned.`
+        `(expected ≥${SCAN_FLOOR.minHooks}). The scanner is broken or the wrong directory was scanned.`,
     );
     process.exit(1);
   }
 
-  const classified = { PERMISSIONED: [], SELF: [], UNCLASSIFIED: [] };
-  const staleExplicit = new Set(EXPLICIT_SELF_HOOKS);
+  const byKind = new Map();
+  const problems = [];
+  const seenStricter = new Set();
+  const seenInService = new Set();
+  const seenOffClient = new Set();
 
   for (const block of blocks) {
-    const result = classifyBlock(block);
-    if (result.kind === "SELF" && result.reason === "listed in EXPLICIT_SELF_HOOKS") {
-      staleExplicit.delete(block.name);
-    }
-    classified[result.kind].push({ ...block, classification: result });
+    const result = classifyBlock(block, index, block.consts);
+    byKind.set(result.kind, (byKind.get(result.kind) ?? 0) + 1);
+    if (result.stricterThan) seenStricter.add(block.name);
+    if (result.kind === "IN-SERVICE") seenInService.add(block.name);
+    if (result.kind === "OFF-CLIENT") seenOffClient.add(block.name);
+    if (result.kind === "UNCLASSIFIED" || result.kind === "WRONG-KEY")
+      problems.push(`  [${result.kind}] ${block.file}:${block.line} ${block.name} — ${result.reason}`);
   }
 
-  const permissionedCount = classified.PERMISSIONED.length;
-  const selfCount = classified.SELF.length;
-  const unclassifiedCount = classified.UNCLASSIFIED.length;
-  const total = blocks.length;
-
-  console.log(`=== Mutation Hook Classification ===`);
-  console.log(`Total hooks scanned:  ${total}`);
-  console.log(`PERMISSIONED:         ${permissionedCount}`);
-  console.log(`SELF:                 ${selfCount}`);
-  console.log(`UNCLASSIFIED:         ${unclassifiedCount}`);
+  console.log("=== Mutation hook classification ===");
+  console.log(`Total hooks scanned:  ${blocks.length}`);
+  for (const [kind, count] of [...byKind.entries()].sort((a, b) => b[1] - a[1]))
+    console.log(`${kind.padEnd(21)} ${count}`);
   console.log();
 
-  if (unclassifiedCount > 0 && unclassifiedCount <= BASELINE.unclassified) {
-    console.log(`=== Unclassified (pending migration to useAuthorizedMutation) ===`);
-    const byFile = new Map();
-    for (const b of classified.UNCLASSIFIED) {
-      const list = byFile.get(b.file) ?? [];
-      list.push(b.name);
-      byFile.set(b.file, list);
-    }
-    let shown = 0;
-    for (const [file, names] of byFile) {
-      if (shown >= 30) { console.log(`  ... and ${byFile.size - shown} more files`); break; }
-      console.log(`  ${file}: ${names.slice(0, 5).join(", ")}${names.length > 5 ? ` (+${names.length - 5})` : ""}`);
-      shown++;
-    }
-    console.log();
-  } else if (unclassifiedCount > 0) {
-    console.log(`=== Newly Unclassified (REGRESSION — these need classification) ===`);
-    for (const b of classified.UNCLASSIFIED) {
-      console.log(`  ${b.file}: ${b.name}`);
-    }
-    console.log();
-  }
+  const stale = [
+    ...[...STRICTER_KEYS.keys()].filter((k) => !seenStricter.has(k)).map((k) => `STRICTER_KEYS: ${k}`),
+    ...[...IN_SERVICE_HOOKS.keys()].filter((k) => !seenInService.has(k)).map((k) => `IN_SERVICE_HOOKS: ${k}`),
+    ...[...OFF_CLIENT_HOOKS.keys()].filter((k) => !seenOffClient.has(k)).map((k) => `OFF_CLIENT_HOOKS: ${k}`),
+  ];
 
-  console.log(`=== Baseline: unclassified=${BASELINE.unclassified} ===`);
-  console.log(`=== Current:  unclassified=${unclassifiedCount} ===`);
-
-  if (staleExplicit.size > 0) {
+  if (problems.length > BASELINE.unclassified) {
     console.error(
-      `\nFAIL: ${staleExplicit.size} stale EXPLICIT_SELF_HOOKS entr${staleExplicit.size === 1 ? "y" : "ies"} ` +
-      `(hook no longer exists — remove from EXPLICIT_SELF_HOOKS):`
+      `FAIL: ${problems.length} command(s) unclassified or mis-keyed (baseline ${BASELINE.unclassified}):`,
     );
-    for (const name of staleExplicit) console.error(`  ${name}`);
+    for (const p of problems) console.error(p);
     process.exit(1);
   }
 
-  if (unclassifiedCount > BASELINE.unclassified) {
+  if (stale.length > 0) {
     console.error(
-      `\nFAIL: ${unclassifiedCount - BASELINE.unclassified} new unclassified mutation hook(s). ` +
-      `Either migrate them to useAuthorizedMutation or add them to EXPLICIT_SELF_HOOKS.`
+      `FAIL: ${stale.length} stale exception entr(y|ies) — the hook no longer exists or no longer needs the exception:`,
     );
+    for (const s of stale) console.error(`  ${s}`);
     process.exit(1);
   }
 
-  console.log("\nPASS: no new unclassified mutation hooks.");
+  console.log("PASS: zero unclassified commands; every permissioned mutation carries its contract key.");
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Entry point
-// ─────────────────────────────────────────────────────────────────────────────
-
-if (process.argv.includes("--self-test")) {
-  runSelfTest();
-} else {
-  runMainScan();
-}
+if (process.argv.includes("--self-test")) runSelfTest();
+else runMainScan();

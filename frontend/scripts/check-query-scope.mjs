@@ -82,6 +82,21 @@ function checkInlineQueryKey(content, relPath) {
   return `${relPath}  (inline queryKey array — use queryKeys factory instead)`;
 }
 
+// A local key factory may live beside its feature, but it must compose the shared
+// prefix rather than repeat the literal — otherwise a change to `queryKeyBase`
+// applies to half the cache and silently splits every affected key space.
+const HARDCODED_BASE_RE = /\[\s*"streamlineos"\s*[,\]]/;
+const BASE_LITERAL_ALLOWLIST = new Set(["lib/query-scope.ts"]);
+
+function checkHardcodedKeyBase(content, relPath) {
+  const norm = normRel(relPath);
+  if (isTestFile(relPath)) return null;
+  if (norm.startsWith("lib/query-keys/") || norm === "lib/query-keys.ts") return null;
+  if (BASE_LITERAL_ALLOWLIST.has(norm)) return null;
+  if (!HARDCODED_BASE_RE.test(content)) return null;
+  return `${relPath}  (hardcoded "streamlineos" key prefix — spread queryKeyBase instead)`;
+}
+
 function checkPrefetchDehydrate(content, relPath) {
   const norm = normRel(relPath);
   if (!norm.startsWith("lib/prefetch/")) return null;
@@ -146,7 +161,34 @@ function runSelfTest() {
     },
   ];
 
+  fixtures.push(
+    {
+      description: "rule 5 — a local key factory hardcoding the \"streamlineos\" prefix",
+      relPath: "hooks/api/hr/cases.ts",
+      content: 'const caseKeys = { all: ["streamlineos", "hr", "cases"] as const };',
+      detect: checkHardcodedKeyBase,
+    },
+    {
+      description: "rule 5 — the prefix alone, with no trailing segment",
+      relPath: "hooks/api/hr/other.ts",
+      content: 'const root = ["streamlineos"] as const;',
+      detect: checkHardcodedKeyBase,
+    },
+  );
+
   const exemptFixtures = [
+    {
+      description: "rule 5 — a factory that spreads queryKeyBase is not flagged",
+      relPath: "hooks/api/hr/cases.ts",
+      content: 'const caseKeys = { all: [...queryKeyBase, "hr", "cases"] as const };',
+      detect: checkHardcodedKeyBase,
+    },
+    {
+      description: "rule 5 — the registry itself may hold the literal",
+      relPath: "lib/query-keys/base.ts",
+      content: 'export const queryKeyBase = ["streamlineos"] as const;',
+      detect: checkHardcodedKeyBase,
+    },
     {
       description: "test harness under test-utils/ may construct a QueryClient",
       relPath: "test-utils/render.tsx",
@@ -233,7 +275,7 @@ function runSelfTest() {
     }
   }
 
-  console.log("\n✔ All 4 rules self-tested successfully — check-query-scope is live.");
+  console.log("\n✔ All 5 rules self-tested successfully — check-query-scope is live.");
   process.exit(0);
 }
 
@@ -245,6 +287,7 @@ const violations1 = [];
 const violations2 = [];
 const violations3 = [];
 const violations4 = [];
+const violations5 = [];
 
 for (const file of walkFiles(ROOT)) {
   const content = readFileSync(file, "utf8");
@@ -261,9 +304,12 @@ for (const file of walkFiles(ROOT)) {
 
   const v4 = checkInlineQueryKey(content, rel);
   if (v4) violations4.push(`  ${v4}`);
+
+  const v5 = checkHardcodedKeyBase(content, rel);
+  if (v5) violations5.push(`  ${v5}`);
 }
 
-const allViolations = [...violations1, ...violations2, ...violations3, ...violations4];
+const allViolations = [...violations1, ...violations2, ...violations3, ...violations4, ...violations5];
 
 if (allViolations.length === 0) {
   console.log("✔  No query-scope violations found.");
@@ -280,6 +326,10 @@ if (allViolations.length === 0) {
   if (violations3.length > 0) {
     console.error(`✖  ${violations3.length} prefetch file(s) calling dehydrate() without createServerQueryClient:`);
     for (const v of violations3) console.error(v);
+  }
+  if (violations5.length > 0) {
+    console.error(`✖  ${violations5.length} hardcoded "streamlineos" key prefix(es) — spread queryKeyBase:`);
+    for (const v of violations5) console.error(v);
   }
   if (violations4.length > 0) {
     console.error(`✖  ${violations4.length} inline queryKey array(s) — use queryKeys factory:`);
