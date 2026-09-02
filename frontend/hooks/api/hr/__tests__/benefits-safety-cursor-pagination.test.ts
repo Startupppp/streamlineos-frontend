@@ -73,7 +73,7 @@ describe.each([
   it("forwards the opaque cursor and never sends a page parameter", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     const options = captureOptions(invoke);
-    void options.queryFn();
+    void options.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       endpoint,

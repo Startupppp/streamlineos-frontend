@@ -94,6 +94,7 @@ describe("RunsPageContent server-prefetch seam", () => {
     expect(apiClient.get).not.toHaveBeenCalledWith(
       "/payroll/runs",
       expect.anything(),
+      expect.anything(),
     );
   });
 
@@ -109,6 +110,7 @@ describe("RunsPageContent server-prefetch seam", () => {
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/payroll/runs",
+      expect.anything(),
       expect.anything(),
     );
   });

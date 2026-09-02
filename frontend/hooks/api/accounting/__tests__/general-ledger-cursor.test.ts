@@ -62,44 +62,48 @@ describe("useGeneralLedger — cursor pagination contract", () => {
   it("sends no cursor param on page 1", () => {
     const apiClient = stubLedger();
     const opts = captureGeneralLedgerOptions({ ...RANGE, limit: 50 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/accounting/general-ledger",
       expect.not.objectContaining({ cursor: expect.anything() }),
+      undefined,
     );
   });
 
   it("sends cursor on page 2", () => {
     const apiClient = stubLedger();
     const opts = captureGeneralLedgerOptions({ ...RANGE, cursor: "eyJpZCI6OTl9", limit: 50 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/accounting/general-ledger",
       expect.objectContaining({ cursor: "eyJpZCI6OTl9" }),
+      undefined,
     );
   });
 
   it("never sends page or pageSize — the ledger contract is cursor-only", () => {
     const apiClient = stubLedger();
     const opts = captureGeneralLedgerOptions({ ...RANGE, limit: 50 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/accounting/general-ledger",
       expect.not.objectContaining({ page: expect.anything() }),
+      undefined,
     );
     expect(apiClient.get).toHaveBeenCalledWith(
       "/accounting/general-ledger",
       expect.not.objectContaining({ pageSize: expect.anything() }),
+      undefined,
     );
   });
 
   it("BITES: a dropped cursor would fail this assertion", () => {
     const apiClient = stubLedger();
     const opts = captureGeneralLedgerOptions({ ...RANGE, cursor: "cursor-token", limit: 50 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     const sent = (apiClient.get as jest.Mock).mock.calls.at(-1)?.[1] as Record<string, unknown>;
     expect(sent.cursor).toBe("cursor-token");

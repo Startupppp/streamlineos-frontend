@@ -163,6 +163,7 @@ describe("DocumentsPage server-prefetch seam", () => {
     expect(apiClient.get).not.toHaveBeenCalledWith(
       "/hr/documents",
       expect.anything(),
+      expect.anything(),
     );
   });
 
@@ -177,6 +178,7 @@ describe("DocumentsPage server-prefetch seam", () => {
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/documents",
+      expect.anything(),
       expect.anything(),
     );
   });

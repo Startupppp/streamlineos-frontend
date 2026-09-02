@@ -73,7 +73,7 @@ describe("useVendorCredits — cursor pagination contract", () => {
     });
 
     const opts = captureVendorCreditsOptions({ limit: 20 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/accounting/vendor-credits",
@@ -89,7 +89,7 @@ describe("useVendorCredits — cursor pagination contract", () => {
     });
 
     const opts = captureVendorCreditsOptions({ cursor: "eyJpZCI6MTB9", limit: 20 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/accounting/vendor-credits",
@@ -105,7 +105,7 @@ describe("useVendorCredits — cursor pagination contract", () => {
     });
 
     const opts = captureVendorCreditsOptions({ limit: 20 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/accounting/vendor-credits",
@@ -121,7 +121,7 @@ describe("useVendorCredits — cursor pagination contract", () => {
     });
 
     const opts = captureVendorCreditsOptions({ limit: 20 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).not.toHaveBeenCalledWith(
       "/accounting/vendor-credits",
@@ -144,7 +144,7 @@ describe("useBudgets — cursor pagination contract", () => {
     });
 
     const opts = captureBudgetsOptions({ limit: 20 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/accounting/budgets",
@@ -160,7 +160,7 @@ describe("useBudgets — cursor pagination contract", () => {
     });
 
     const opts = captureBudgetsOptions({ cursor: "eyJpZCI6NX0", limit: 20 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/accounting/budgets",
@@ -176,7 +176,7 @@ describe("useBudgets — cursor pagination contract", () => {
     });
 
     const opts = captureBudgetsOptions({ limit: 20 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/accounting/budgets",
@@ -199,7 +199,7 @@ describe("useBankAccounts — cursor pagination contract", () => {
     });
 
     const opts = captureBankAccountsOptions({ limit: 20 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/finance/bank-accounts",
@@ -215,7 +215,7 @@ describe("useBankAccounts — cursor pagination contract", () => {
     });
 
     const opts = captureBankAccountsOptions({ cursor: "eyJpZCI6Mn0", limit: 20 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/finance/bank-accounts",
@@ -231,7 +231,7 @@ describe("useBankAccounts — cursor pagination contract", () => {
     });
 
     const opts = captureBankAccountsOptions({ limit: 20 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/finance/bank-accounts",

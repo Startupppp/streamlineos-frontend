@@ -12,10 +12,19 @@ const DENIED: AccessResponse = {
   mfa: { enforced: false, satisfied: true },
 };
 
-export const getServerAccess = cache(async (): Promise<AccessResponse> => {
+export type ServerAccessResult =
+  | { ok: true; access: AccessResponse }
+  | { ok: false };
+
+export const getServerAccessResult = cache(async (): Promise<ServerAccessResult> => {
   try {
-    return await serverGet<AccessResponse>("/me/access");
+    return { ok: true, access: await serverGet<AccessResponse>("/me/access") };
   } catch {
-    return DENIED;
+    return { ok: false };
   }
 });
+
+export async function getServerAccess(): Promise<AccessResponse> {
+  const result = await getServerAccessResult();
+  return result.ok ? result.access : DENIED;
+}

@@ -86,6 +86,8 @@ describe("useCan — server prefetch seam", () => {
     expect(screen.getByTestId("can-result").textContent).toBe("true");
     expect(apiClient.get).not.toHaveBeenCalledWith(
       expect.stringContaining("/me/access"),
+      undefined,
+      expect.anything(),
     );
   });
 
@@ -101,6 +103,8 @@ describe("useCan — server prefetch seam", () => {
 
     expect(apiClient.get).toHaveBeenCalledWith(
       expect.stringContaining("/me/access"),
+      undefined,
+      expect.anything(),
     );
   });
 });

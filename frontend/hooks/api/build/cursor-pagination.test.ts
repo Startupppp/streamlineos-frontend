@@ -64,11 +64,12 @@ describe("usePortfolios — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], pagination: { limit: 20, nextCursor: null, hasMore: false } });
 
     const opts = capturePortfolioOptions({ limit: 20 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/build/portfolios",
       expect.not.objectContaining({ cursor: expect.anything() }),
+      undefined,
     );
   });
 
@@ -77,11 +78,12 @@ describe("usePortfolios — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], pagination: { limit: 20, nextCursor: null, hasMore: false } });
 
     const opts = capturePortfolioOptions({ cursor: "eyJpZCI6NDJ9", limit: 20 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/build/portfolios",
       expect.objectContaining({ cursor: "eyJpZCI6NDJ9" }),
+      undefined,
     );
   });
 
@@ -90,11 +92,12 @@ describe("usePortfolios — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], pagination: { limit: 20, nextCursor: "abc", hasMore: true } });
 
     const opts = capturePortfolioOptions({ cursor: "abc", limit: 20 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/build/portfolios",
       expect.not.objectContaining({ page: expect.anything() }),
+      undefined,
     );
   });
 });
@@ -110,11 +113,12 @@ describe("useManagedProducts — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], pagination: { limit: 20, nextCursor: null, hasMore: false } });
 
     const opts = captureManagedProductsOptions({ limit: 20 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/build/managed-products",
       expect.not.objectContaining({ cursor: expect.anything() }),
+      undefined,
     );
   });
 
@@ -123,11 +127,12 @@ describe("useManagedProducts — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], pagination: { limit: 20, nextCursor: null, hasMore: false } });
 
     const opts = captureManagedProductsOptions({ cursor: "eyJpZCI6NX0", limit: 20 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/build/managed-products",
       expect.objectContaining({ cursor: "eyJpZCI6NX0" }),
+      undefined,
     );
   });
 
@@ -136,11 +141,12 @@ describe("useManagedProducts — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], pagination: { limit: 20, nextCursor: "xyz", hasMore: true } });
 
     const opts = captureManagedProductsOptions({ cursor: "xyz", limit: 20 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/build/managed-products",
       expect.not.objectContaining({ page: expect.anything() }),
+      undefined,
     );
   });
 });

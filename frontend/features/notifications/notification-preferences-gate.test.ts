@@ -52,7 +52,7 @@ describe("notification preference hooks are platform core (no permission gate)",
     await waitFor(() => {
       expect(result.current.fetchStatus).not.toBe("idle");
     });
-    expect(mockGet).toHaveBeenCalledWith("/notification-preferences");
+    expect(mockGet).toHaveBeenCalledWith("/notification-preferences", undefined, expect.any(AbortSignal));
   });
 
   it("useSuppressions fires for any authenticated member without a permission check", async () => {
@@ -64,6 +64,8 @@ describe("notification preference hooks are platform core (no permission gate)",
     });
     expect(mockGet).toHaveBeenCalledWith(
       "/notification-preferences/suppressions",
+      undefined,
+      expect.any(AbortSignal),
     );
   });
 

@@ -50,7 +50,7 @@ describe("useUserApiTokens pagination", () => {
     expect(mockedGet).toHaveBeenCalledWith("/me/api-tokens", {
       cursor: "current-cursor",
       limit: "50",
-    });
+    }, expect.any(AbortSignal));
     expect(result.current.data).toEqual(response);
   });
 });

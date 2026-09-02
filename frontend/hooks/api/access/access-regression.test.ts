@@ -112,7 +112,7 @@ describe("RBAC administration query gates", () => {
     useOrgModules();
 
     const options = query.mock.calls[0][0];
-    await expect(options.queryFn()).resolves.toEqual(modules);
+    await expect(options.queryFn({ signal: undefined })).resolves.toEqual(modules);
     expect(normalizeOrgModulesResponse(modules)).toBe(modules);
     expect(options.select({ success: true, data: modules })).toEqual(modules);
   });

@@ -123,7 +123,7 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     expect(call).not.toHaveProperty("assigneeId");
   });
 
-  it("uses paging=cursor and orderBy=rank for the board endpoint", () => {
+  it("uses orderBy=rank and the board page size for the board endpoint", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
 
@@ -132,7 +132,7 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/build/1/tickets",
-      expect.objectContaining({ paging: "cursor", orderBy: "rank", limit: 100 }),
+      expect.objectContaining({ orderBy: "rank", orderDir: "asc", limit: 100 }),
     );
   });
 });

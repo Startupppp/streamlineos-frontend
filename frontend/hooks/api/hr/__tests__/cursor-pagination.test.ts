@@ -53,7 +53,7 @@ describe("useHrCases — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureHrCasesOptions({ limit: 20 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/cases",
@@ -66,7 +66,7 @@ describe("useHrCases — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureHrCasesOptions({ cursor: "eyJpZCI6MjB9", limit: 20 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/cases",
@@ -79,7 +79,7 @@ describe("useHrCases — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue({ ...cursorResponse, pagination: { ...cursorResponse.pagination, hasMore: true, nextCursor: "abc" } });
 
     const opts = captureHrCasesOptions({ limit: 20 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/cases",
@@ -92,7 +92,7 @@ describe("useHrCases — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureHrCasesOptions({ cursor: "eyJpZCI6MjB9", limit: 20 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/cases",
@@ -112,7 +112,7 @@ describe("useDisciplinaryActions — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureDisciplinaryOptions({ limit: 20 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/cases/disciplinary",
@@ -125,7 +125,7 @@ describe("useDisciplinaryActions — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureDisciplinaryOptions({ cursor: "eyJpZCI6NX0", limit: 20 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/cases/disciplinary",
@@ -138,7 +138,7 @@ describe("useDisciplinaryActions — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureDisciplinaryOptions({ limit: 20 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/cases/disciplinary",
@@ -151,7 +151,7 @@ describe("useDisciplinaryActions — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureDisciplinaryOptions({ cursor: "eyJpZCI6NX0", limit: 20 });
-    void opts.queryFn();
+    void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/cases/disciplinary",

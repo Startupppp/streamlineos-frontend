@@ -41,7 +41,7 @@ describe("role list URL state", () => {
     const { result } = renderHook(() => useRoleListState());
 
     expect(result.current.query).toEqual({
-      page: 3,
+      cursor: undefined,
       limit: 50,
       search: "Finance",
     });

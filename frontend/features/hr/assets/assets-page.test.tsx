@@ -155,6 +155,7 @@ describe("AssetsPage server-prefetch seam", () => {
     expect(apiClient.get).not.toHaveBeenCalledWith(
       "/hr/assets",
       expect.anything(),
+      expect.anything(),
     );
   });
 
@@ -170,6 +171,7 @@ describe("AssetsPage server-prefetch seam", () => {
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/assets",
+      expect.anything(),
       expect.anything(),
     );
   });

@@ -69,7 +69,7 @@ describe("useWorkflows — permission gate", () => {
     const { useWorkflows } = await import("../workflows-definitions");
     renderHook(() => useWorkflows(), { wrapper: makeWrapper(client) });
 
-    await waitFor(() => expect(apiClient.get).toHaveBeenCalledWith("/workflows", undefined));
+    await waitFor(() => expect(apiClient.get).toHaveBeenCalledWith("/workflows", undefined, expect.any(AbortSignal)));
   });
 
   it("org owner always fires the call regardless of explicit grants", async () => {
@@ -77,7 +77,7 @@ describe("useWorkflows — permission gate", () => {
     const { useWorkflows } = await import("../workflows-definitions");
     renderHook(() => useWorkflows(), { wrapper: makeWrapper(client) });
 
-    await waitFor(() => expect(apiClient.get).toHaveBeenCalledWith("/workflows", undefined));
+    await waitFor(() => expect(apiClient.get).toHaveBeenCalledWith("/workflows", undefined, expect.any(AbortSignal)));
   });
 });
 
@@ -115,7 +115,7 @@ describe("useGlobalSecrets — permission gate", () => {
     const { useGlobalSecrets } = await import("../workflows-secrets");
     renderHook(() => useGlobalSecrets(), { wrapper: makeWrapper(client) });
 
-    await waitFor(() => expect(apiClient.get).toHaveBeenCalledWith("/workflows/secrets"));
+    await waitFor(() => expect(apiClient.get).toHaveBeenCalledWith("/workflows/secrets", undefined, expect.any(AbortSignal)));
   });
 });
 
@@ -134,7 +134,7 @@ describe("useGlobalVariables — permission gate", () => {
     const { useGlobalVariables } = await import("../workflows-variables");
     renderHook(() => useGlobalVariables(), { wrapper: makeWrapper(client) });
 
-    await waitFor(() => expect(apiClient.get).toHaveBeenCalledWith("/workflows/variables"));
+    await waitFor(() => expect(apiClient.get).toHaveBeenCalledWith("/workflows/variables", undefined, expect.any(AbortSignal)));
   });
 });
 
@@ -154,7 +154,7 @@ describe("usePendingApprovals — permission gate", () => {
     renderHook(() => usePendingApprovals(), { wrapper: makeWrapper(client) });
 
     await waitFor(() =>
-      expect(apiClient.get).toHaveBeenCalledWith("/workflows/approvals/pending"),
+      expect(apiClient.get).toHaveBeenCalledWith("/workflows/approvals/pending", undefined, expect.any(AbortSignal)),
     );
   });
 });
@@ -174,7 +174,7 @@ describe("useAllSchedules — permission gate", () => {
     const { useAllSchedules } = await import("../workflows-schedules");
     renderHook(() => useAllSchedules(), { wrapper: makeWrapper(client) });
 
-    await waitFor(() => expect(apiClient.get).toHaveBeenCalledWith("/workflows/schedules"));
+    await waitFor(() => expect(apiClient.get).toHaveBeenCalledWith("/workflows/schedules", undefined, expect.any(AbortSignal)));
   });
 });
 
@@ -193,7 +193,7 @@ describe("useWorkflowAnalytics — permission gate", () => {
     const { useWorkflowAnalytics } = await import("../workflows-analytics");
     renderHook(() => useWorkflowAnalytics(), { wrapper: makeWrapper(client) });
 
-    await waitFor(() => expect(apiClient.get).toHaveBeenCalledWith("/workflows/analytics"));
+    await waitFor(() => expect(apiClient.get).toHaveBeenCalledWith("/workflows/analytics", undefined, expect.any(AbortSignal)));
   });
 });
 
@@ -212,7 +212,7 @@ describe("useWorkflowTemplates — permission gate", () => {
     const { useWorkflowTemplates } = await import("../workflows-analytics");
     renderHook(() => useWorkflowTemplates(), { wrapper: makeWrapper(client) });
 
-    await waitFor(() => expect(apiClient.get).toHaveBeenCalledWith("/workflows/templates"));
+    await waitFor(() => expect(apiClient.get).toHaveBeenCalledWith("/workflows/templates", undefined, expect.any(AbortSignal)));
   });
 });
 
@@ -232,7 +232,7 @@ describe("cursor pagination contract", () => {
     });
 
     await waitFor(() =>
-      expect(apiClient.get).toHaveBeenCalledWith("/workflows", { cursor: "prev_cursor", limit: 20 }),
+      expect(apiClient.get).toHaveBeenCalledWith("/workflows", { cursor: "prev_cursor", limit: 20 }, expect.any(AbortSignal)),
     );
   });
 

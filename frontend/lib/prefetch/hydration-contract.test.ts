@@ -129,7 +129,7 @@ describe("the shipped prefetch factories honour that contract", () => {
     const app = createAppQueryClient(authenticatedScope(ORG, USER));
     hydrate(app, state);
 
-    expect(app.getQueryData(queryKeys.roles.list({ page: 1, limit: 20 }))).toEqual(page);
+    expect(app.getQueryData(queryKeys.roles.list({ limit: 20 }))).toEqual(page);
   });
 
   it("returns an empty scoped snapshot when the server access read fails", async () => {
