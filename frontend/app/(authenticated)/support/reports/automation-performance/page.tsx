@@ -1,5 +1,7 @@
+import { requirePermission } from "@/lib/rbac/require-permission";
 import { AutomationPerformancePage } from "@/features/support/reports/automation-performance-page";
 
-export default function Page() {
+export default async function Page() {
+  await requirePermission("support:reports:view");
   return <AutomationPerformancePage />;
 }

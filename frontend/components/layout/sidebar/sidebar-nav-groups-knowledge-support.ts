@@ -7,7 +7,8 @@ export const KNOWLEDGE_SUPPORT_NAV_GROUPS: NavGroup[] = [
     product: "helpdesk",
     module: "helpdesk",
     requiredPermission: [
-      "build:tickets:view",
+      "support:tickets:view",
+      "dashboard:support:view",
       "support:kb:view",
       "support:portal:tickets:view",
     ],
@@ -16,13 +17,13 @@ export const KNOWLEDGE_SUPPORT_NAV_GROUPS: NavGroup[] = [
         label: "All Tickets",
         icon: LifeBuoy,
         href: "/support",
-        requiredPermission: "build:tickets:view",
+        requiredPermission: "dashboard:support:view",
         children: [
           {
             label: "Support Inbox",
             icon: Inbox,
             href: "/support/inbox",
-            requiredPermission: "build:tickets:view",
+            requiredPermission: "support:tickets:view",
           },
         ],
       },

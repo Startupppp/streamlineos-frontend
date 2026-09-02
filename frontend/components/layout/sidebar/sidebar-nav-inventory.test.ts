@@ -15,11 +15,14 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 // not hr:employees:view, which would show it to people the page then denies).
 // Moved 2026-08-25 by the CRM import/export route ("Import & export",
 // /crm/import, gated on party:parties:view because export is ungated by design).
-// Moved 2026-08-24 by the CRM autonomy review route ("What the system did",
-// /crm/autonomy, gated on crm:autonomy:view). The digest exists so a route or
-// its permission cannot change without somebody saying why.
+// Moved 2026-09-02: the Support group and its /support + /support/inbox routes
+// were gated on build:tickets:view, a Build key on Support routes, so the links
+// tracked Build access instead of Support access. Repointed to
+// dashboard:support:view and support:tickets:view to match what those pages read.
+// The digest exists so a route or its permission cannot change without somebody
+// saying why.
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "687edf720c46826da38a43bc25d19f2677832fcb3d274d3f2be489b448b2d66a";
+  "34dfd289d338da34e1dea1e283cd7e0e44b66464c1b5bb205709ac17a7cfd744";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {
