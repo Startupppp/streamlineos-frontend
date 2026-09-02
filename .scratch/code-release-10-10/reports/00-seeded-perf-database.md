@@ -1,8 +1,51 @@
 # 00 — A production-shaped seeded scratch database
 
-**Status:** delivered. `scratch_perf_seed` exists on this machine, is at journal head (649/649),
-holds ~1.7 GB across 88 non-empty tables and 8 organizations on a deliberately skewed split, and
-is readable as the non-owner `streamline_app` role with row-level security active.
+**Status:** delivered, and **REBUILT 2026-09-02 at backend commit `77484370`** — see §0. The
+database now at `scratch_perf_seed` is at journal head (**665/665**), holds **1,720 MB across 90
+non-empty tables** and 8 organizations on the same skewed split, carries the application's
+UPPER_SNAKE ticket-status vocabulary, and is readable as the non-owner `streamline_app` role with
+row-level security active.
+
+---
+
+## 0. The 2026-09-02 rebuild — read this before using the numbers below
+
+The database that carried this name until 2026-09-02 23:38 was built before backend `3d157c15` and
+never re-seeded, so it still held **title-case ticket statuses** (`Todo`, `In Progress`) where the
+application and the seeder write `TODO` / `IN_PROGRESS` / `IN_REVIEW` / `DONE`. Anything filtering
+the real status vocabulary matched zero rows on it and looked vacuous when it was not; that produced
+two contradictory measurements of one budget and nearly shipped a wrong index.
+
+It was rebuilt from zero by the §2 procedure, verified against §6, and swapped in:
+
+```
+ALTER DATABASE scratch_perf_seed     RENAME TO scratch_perf_seed_stale_20260902;
+ALTER DATABASE scratch_perf_seed_new RENAME TO scratch_perf_seed;
+```
+
+**The stale database still exists as `scratch_perf_seed_stale_20260902`** (1,702 MB, readable) —
+it is cited evidence in reports 22c and `perf-index-and-seed-rebuild`. Delete it when those close.
+**`scratch_t07c` (1,703 MB) is a copy of the stale one and was NOT rebuilt** — it is another
+ticket's evidence and carries the same title-case vocabulary.
+
+What changed against the shape recorded below:
+
+| | 2026-09-02 (this report, as first written) | after the rebuild |
+|---|---|---|
+| journal | 649/649 | **665/665** |
+| size | 1,699 MB | **1,720 MB** |
+| non-empty tables | 88 | **90** |
+| ticket statuses | `Todo / In Progress / In Review / Done` | **`TODO / IN_PROGRESS / IN_REVIEW / DONE`** |
+| `lead_party_map` / `contact_party_map` | **0 / 0 rows** | **8,896 / 8,896** |
+| `business_parties.owner_user_id` | NULL on all 22,240 | **17,792 set** |
+| organizations, tenant split, every other row count | — | **unchanged** |
+| `run-read-cost-budgets.mjs` at the reference tenant | 56 PASS / 14 FAIL / 10 EXCL | **70 PASS / 0 FAIL / 0 EXCL / 0 SKIP, exit 0** |
+
+The two new tables are layer 3's new `seedPartySeam` section: `business_parties` is the canonical
+side of the CRM read path (`crm-party-reads.ts`, imported by 20 services) and the seed wrote only
+the `leads` / `contacts` mirrors, so every Party-side read matched nothing. `migrations/1041` (the
+attendance membership index) is the one migration applied after the seed load; re-running
+`db-bootstrap.mjs` reported `1 OK / 664 SKIP`.
 
 This report is infrastructure, not a ticket. It exists because tickets **07**, **12**, **20**,
 **21**, **22** and **23** were all reporting BLOCKED on the same sentence: *no seeded database
@@ -163,8 +206,13 @@ reports a shape the database does not have, and every measurement downstream inh
 
 ## 6. The resulting shape
 
-8 organizations · 88 non-empty tables · 1,699 MB (487 MB of which is the HNSW index) ·
-`VACUUM ANALYZE` run over all 41 tables layer 3 touches, and again by the corpus seeder.
+8 organizations · **90 non-empty tables · 1,720 MB** (487 MB of which is the HNSW index) ·
+`VACUUM ANALYZE` run over all 41 tables layer 3 touches, again by the corpus seeder, and once more
+over the whole database at the end of the rebuild.
+
+*(As first written this section read 88 tables and 1,699 MB, at journal 649. The rebuild of
+2026-09-02 — §0 — added `lead_party_map` and `contact_party_map` and brought the schema to 665.
+Every per-tenant row count below was re-measured after the rebuild and is unchanged.)*
 
 Four are the perf tenants; four (`perf_kb_*`) belong to the AI retrieval corpus.
 
@@ -181,6 +229,8 @@ contacts                        8000       800        80        16      8896    
 leads                           8000       800        80        16      8896     89.93%      1.08%
 deals                           6000       600        60        12      6672     89.93%      1.08%
 business_parties               20000      2000       200        40     22240     89.93%      1.08%
+lead_party_map                  8000       800        80        16      8896     89.93%      1.08%
+contact_party_map               8000       800        80        16      8896     89.93%      1.08%
 inv_stock_transactions        150000     15000      1500       300    166800     89.93%      1.08%
 inv_stock_levels               12000      1200       120        24     13344     89.93%      1.08%
 inv_product_variants           12000      1200       120        24     13344     89.93%      1.08%
@@ -324,7 +374,14 @@ real measurements, not missing data — see §8.
      genuinely too-small table rather than a plan defect. → ticket 22 should either seed it or
      drop the assertion.
 
-3. **The budget catalog's ticket-status vocabulary does not match the schema.**
+3. **RESOLVED BY THE 2026-09-02 REBUILD — the budget catalog was right and the database was
+   wrong.** The finding as originally written is kept below because it is what the evidence said at
+   the time; the correction is that `read-cost-budgets.mjs`'s UPPER_SNAKE predicate matches the
+   application and the seeder, and it was this database that was stale. The rebuilt one writes
+   `TODO` / `IN_PROGRESS` / `IN_REVIEW` / `DONE` and the predicate is no longer vacuous. Original
+   text:
+
+   **The budget catalog's ticket-status vocabulary does not match the schema.**
    `read-cost-budgets.mjs:1053` filters `t.status IN ('TODO', 'IN_PROGRESS', 'IN_REVIEW')`.
    `build.tickets.status` is a composite FK to
    `build.project_statuses(org_id, project_id, name)`, and every row the application writes is
