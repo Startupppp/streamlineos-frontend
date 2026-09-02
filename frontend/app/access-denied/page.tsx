@@ -29,7 +29,10 @@ export default async function AccessDeniedPage({ searchParams }: AccessDeniedPag
   return (
     <AppThemeProvider>
       <AppThemeScript nonce={nonce} />
-    <div className="min-h-dvh w-full flex items-center justify-center p-6 bg-gradient-to-br from-gradient-neutral-wash-from via-background to-gradient-info-wash-to">
+    <main
+      aria-labelledby="access-denied-heading"
+      className="min-h-dvh w-full flex items-center justify-center p-6 bg-gradient-to-br from-gradient-neutral-wash-from via-background to-gradient-info-wash-to"
+    >
       <Card className="max-w-md w-full border-border shadow-accent">
         <CardContent className="p-8 sm:p-10 text-center space-y-6">
           <div className="mx-auto h-14 w-14 rounded-2xl bg-status-danger-surface ring-1 ring-status-danger-rule flex items-center justify-center">
@@ -37,7 +40,10 @@ export default async function AccessDeniedPage({ searchParams }: AccessDeniedPag
           </div>
 
           <div className="space-y-2">
-            <h1 className="font-display text-2xl font-extrabold tracking-[-0.02em] text-foreground">
+            <h1
+              id="access-denied-heading"
+              className="font-display text-2xl font-extrabold tracking-[-0.02em] text-foreground"
+            >
               You don&apos;t have access to this screen
             </h1>
             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -89,7 +95,7 @@ export default async function AccessDeniedPage({ searchParams }: AccessDeniedPag
           </div>
         </CardContent>
       </Card>
-    </div>
+    </main>
     </AppThemeProvider>
   );
 }

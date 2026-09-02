@@ -8,6 +8,8 @@ import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
 import { useQualityInspections, useQualityHolds, useRecalls } from "@/hooks/api/inventory/quality";
@@ -27,6 +29,20 @@ function QualityHubInner() {
 
   const openRecalls = (recallsQuery.data?.items ?? []).filter((r) => r.status !== "CLOSED").length;
   const recentInspections = recentQuery.data?.items ?? [];
+
+  const summaryQueries = [pendingQuery, inProgressQuery, holdsQuery, recallsQuery];
+  const failedSummary = summaryQueries.find((query) => query.isError);
+
+  function handleRetrySummary(): void {
+    void pendingQuery.refetch();
+    void inProgressQuery.refetch();
+    void holdsQuery.refetch();
+    void recallsQuery.refetch();
+  }
+
+  function handleRetryRecent(): void {
+    void recentQuery.refetch();
+  }
 
   function handleViewInspections(): void {
     router.push("/inventory/quality/inspections");
@@ -81,40 +97,49 @@ function QualityHubInner() {
       subtitle="Overview of inspections, holds, and recalls"
     >
       <div className="flex flex-1 min-h-0 flex-col gap-6">
-        <StatCardGrid cols={4}>
-          <StatCard
-            label="Pending Inspections"
-            value={pendingQuery.data?.total ?? 0}
-            icon={ClipboardCheck}
-            tone="blue"
-            href="/inventory/quality/inspections?status=PENDING"
-            isLoading={pendingQuery.isLoading}
+        {failedSummary ? (
+          <ErrorState
+            compact
+            title="Couldn't load quality totals"
+            description={getErrorMessage(failedSummary.error)}
+            onRetry={handleRetrySummary}
           />
-          <StatCard
-            label="In Progress"
-            value={inProgressQuery.data?.total ?? 0}
-            icon={Package}
-            tone="amber"
-            href="/inventory/quality/inspections?status=IN_PROGRESS"
-            isLoading={inProgressQuery.isLoading}
-          />
-          <StatCard
-            label="Active Holds"
-            value={holdsQuery.data?.total ?? 0}
-            icon={ShieldAlert}
-            tone="red"
-            href="/inventory/quality/holds?status=ACTIVE"
-            isLoading={holdsQuery.isLoading}
-          />
-          <StatCard
-            label="Open Recalls"
-            value={openRecalls}
-            icon={AlertTriangle}
-            tone="amber"
-            href="/inventory/quality/recalls"
-            isLoading={recallsQuery.isLoading}
-          />
-        </StatCardGrid>
+        ) : (
+          <StatCardGrid cols={4}>
+            <StatCard
+              label="Pending Inspections"
+              value={pendingQuery.data?.total ?? 0}
+              icon={ClipboardCheck}
+              tone="blue"
+              href="/inventory/quality/inspections?status=PENDING"
+              isLoading={pendingQuery.isLoading}
+            />
+            <StatCard
+              label="In Progress"
+              value={inProgressQuery.data?.total ?? 0}
+              icon={Package}
+              tone="amber"
+              href="/inventory/quality/inspections?status=IN_PROGRESS"
+              isLoading={inProgressQuery.isLoading}
+            />
+            <StatCard
+              label="Active Holds"
+              value={holdsQuery.data?.total ?? 0}
+              icon={ShieldAlert}
+              tone="red"
+              href="/inventory/quality/holds?status=ACTIVE"
+              isLoading={holdsQuery.isLoading}
+            />
+            <StatCard
+              label="Open Recalls"
+              value={openRecalls}
+              icon={AlertTriangle}
+              tone="amber"
+              href="/inventory/quality/recalls"
+              isLoading={recallsQuery.isLoading}
+            />
+          </StatCardGrid>
+        )}
 
         <div className="flex gap-2 flex-wrap">
           <Button size="sm" variant="outline" onClick={handleViewInspections}>
@@ -129,21 +154,30 @@ function QualityHubInner() {
         </div>
 
         <PageSection title="Recent Inspections">
-          <DataTable
-            data={recentInspections}
-            columns={columns}
-            getRowKey={(r) => r.id}
-            isLoading={recentQuery.isLoading}
-            emptyState={
-              <InventoryEmptyState
-                illustration={<EmptyOrdersIllustration />}
-                title="No inspections yet"
-                description="Quality inspections will appear here once created."
-                className="border-0 bg-transparent min-h-[20dvh]"
-              />
-            }
-            minWidth="480px"
-          />
+          {recentQuery.isError ? (
+            <ErrorState
+              compact
+              title="Couldn't load recent inspections"
+              description={getErrorMessage(recentQuery.error)}
+              onRetry={handleRetryRecent}
+            />
+          ) : (
+            <DataTable
+              data={recentInspections}
+              columns={columns}
+              getRowKey={(r) => r.id}
+              isLoading={recentQuery.isLoading}
+              emptyState={
+                <InventoryEmptyState
+                  illustration={<EmptyOrdersIllustration />}
+                  title="No inspections yet"
+                  description="Quality inspections will appear here once created."
+                  className="border-0 bg-transparent min-h-[20dvh]"
+                />
+              }
+              minWidth="480px"
+            />
+          )}
         </PageSection>
       </div>
     </PageWrapper>

@@ -4,6 +4,9 @@ import { useMemo, useState, useCallback } from "react";
 import { useChatChannels, useChatChannel } from "@/hooks/api/chat";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Combobox } from "@/components/ui/combobox";
+import { ListTruncationNotice } from "@/components/ui/list-truncation-notice";
+
+const MAX_CHANNEL_OPTIONS = 50;
 
 interface ChatChannelComboboxProps {
   value: string;
@@ -28,7 +31,7 @@ export function ChatChannelCombobox({
     /^\d+$/.test(debouncedSearch.trim()) ? Number(debouncedSearch.trim()) : 0;
   const { data: lookedUpChannel } = useChatChannel(numericLookup);
 
-  const options = useMemo(() => {
+  const { options, truncated } = useMemo(() => {
     const q = debouncedSearch.trim().toLowerCase();
     const seen = new Set<number>();
     const merged = [];
@@ -57,11 +60,14 @@ export function ChatChannelCombobox({
       seen.add(channel.id);
     }
 
-    return merged.slice(0, 50).map((channel) => ({
-      value: String(channel.id),
-      label: channel.name,
-      sublabel: channel.type.replace("_", " "),
-    }));
+    return {
+      options: merged.slice(0, MAX_CHANNEL_OPTIONS).map((channel) => ({
+        value: String(channel.id),
+        label: channel.name,
+        sublabel: channel.type.replace("_", " "),
+      })),
+      truncated: merged.length > MAX_CHANNEL_OPTIONS,
+    };
   }, [channels, debouncedSearch, lookedUpChannel]);
 
   const handleSearchChange = useCallback((q: string) => {
@@ -79,6 +85,14 @@ export function ChatChannelCombobox({
       disabled={disabled}
       className={className}
       onSearchChange={handleSearchChange}
+      footer={
+        truncated ? (
+          <ListTruncationNotice
+            shown={MAX_CHANNEL_OPTIONS}
+            hint="Search by name or # to reach the rest."
+          />
+        ) : null
+      }
     />
   );
 }

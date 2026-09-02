@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { DataTable } from "@/components/ui/data-table";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 import { useCan } from "@/hooks/api/access";
@@ -139,7 +140,15 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
 
   if (query.isLoading) return <LoadingState variant="form" />;
   if (query.error) return <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />;
-  if (!so) return <ErrorState title="Not found" description={`Sales order #${soId} not found`} />;
+  if (!so)
+    return (
+      <InventoryEmptyState
+        illustrationPreset="orders"
+        title="Sales order not found"
+        description={`Sales order #${soId} was deleted, or the link is out of date.`}
+        action={{ label: "Back to sales orders", href: "/inventory/sales-orders" }}
+      />
+    );
 
   const status: SoStatus = so.status;
   const isMutating =
@@ -287,6 +296,14 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
           data={so.lines}
           columns={lineColumns}
           getRowKey={(row) => row.id}
+          emptyState={
+            <InventoryEmptyState
+              compact
+              illustrationPreset="inventory"
+              title="No lines on this order"
+              description="Nothing has been ordered yet. Edit the order to add products."
+            />
+          }
           minWidth="700px"
         />
 

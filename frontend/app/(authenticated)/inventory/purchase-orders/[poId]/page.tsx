@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 import {
@@ -252,7 +253,15 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
 
   if (query.isLoading) return <LoadingState variant="form" />;
   if (query.error) return <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />;
-  if (!query.data) return <ErrorState title="Not found" description={`PO #${poId}`} />;
+  if (!query.data)
+    return (
+      <InventoryEmptyState
+        illustrationPreset="orders"
+        title="Purchase order not found"
+        description={`PO #${poId} was deleted, or the link is out of date.`}
+        action={{ label: "Back to purchase orders", href: "/inventory/purchase-orders" }}
+      />
+    );
 
   const po = query.data;
   const status = po.status;
@@ -382,6 +391,14 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
           data={po.lines}
           columns={PO_LINE_COLUMNS}
           getRowKey={(row) => row.id}
+          emptyState={
+            <InventoryEmptyState
+              compact
+              illustrationPreset="inventory"
+              title="No lines on this purchase order"
+              description="Nothing has been ordered yet. Edit the PO to add products."
+            />
+          }
           minWidth="520px"
         />
 

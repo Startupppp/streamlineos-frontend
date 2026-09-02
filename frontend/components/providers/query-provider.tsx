@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { isApiError } from "@/lib/api-client";
+import { isContractViolation } from "@/lib/api-envelope";
 import { registerQueryCacheClearer } from "@/lib/query-cache-control";
 import { readErrorReachesBoundary } from "@/lib/query-error-policy";
 import {
@@ -21,10 +22,13 @@ const MAX_QUERY_RETRIES = 1;
 /**
  * A 4xx is a verdict, not a blip — retrying a 403/404/409 just doubles the
  * request volume (and the Neon CPU bill) without ever changing the answer.
- * 408 and 429 are the exceptions: both explicitly invite a retry.
+ * 408 and 429 are the exceptions: both explicitly invite a retry. A response
+ * that failed its contract is the same kind of verdict: the same endpoint will
+ * return the same malformed body, so a retry only delays the error state.
  */
 function shouldRetryQuery(failureCount: number, error: unknown): boolean {
   if (failureCount >= MAX_QUERY_RETRIES) return false;
+  if (isContractViolation(error)) return false;
   if (isApiError(error)) {
     const status = error.status;
     if (status !== undefined && status >= 400 && status < 500) {

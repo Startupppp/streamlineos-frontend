@@ -16,6 +16,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { useAccounts } from "@/hooks/api/accounting";
 import { usePostOpeningBalances } from "@/hooks/api/accounting/core";
 
@@ -84,6 +86,10 @@ export function OpeningBalancesEditor({ onSuccess }: OpeningBalancesEditorProps)
 
   function handleDateChange(value: string): void {
     setAsOfDate(value);
+  }
+
+  function handleAccountsRetry(): void {
+    void accountsQuery.refetch();
   }
 
   function handleSubmit(): void {
@@ -201,6 +207,27 @@ export function OpeningBalancesEditor({ onSuccess }: OpeningBalancesEditorProps)
       <span className="w-10" />
     </div>
   );
+
+  if (accountsQuery.isError) {
+    return (
+      <ErrorState
+        title="Couldn't load your accounts"
+        description={getErrorMessage(accountsQuery.error)}
+        onRetry={handleAccountsRetry}
+      />
+    );
+  }
+
+  if (!accountsQuery.isLoading && accounts.length === 0) {
+    return (
+      <EmptyState
+        illustrationPreset="report"
+        title="No accounts to open"
+        description="Opening balances are posted against your chart of accounts. Set one up first, then come back."
+        action={{ label: "Set up chart of accounts", href: "/accounting/coa" }}
+      />
+    );
+  }
 
   return (
     <div className="space-y-4">

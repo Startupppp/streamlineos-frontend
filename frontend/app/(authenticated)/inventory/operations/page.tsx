@@ -5,6 +5,8 @@ import { ArrowUpFromLine, ListChecks, Package, Truck, RotateCcw } from "lucide-r
 import { PackageOpenIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { usePurchaseOrders } from "@/hooks/api/inventory";
 import { useSalesOrders } from "@/hooks/api/inventory/sales-orders";
 import {
@@ -91,6 +93,25 @@ export default function OperationsHubPage() {
   const returnsTotal =
     (vendorDrafts.data?.total ?? 0) + (customerDrafts.data?.total ?? 0);
 
+  const countQueries = [
+    poToReceive,
+    soReserved,
+    soPicked,
+    soPacked,
+    vendorDrafts,
+    customerDrafts,
+  ];
+  const failed = countQueries.find((query) => query.isError);
+
+  function handleRetryCounts(): void {
+    void poToReceive.refetch();
+    void soReserved.refetch();
+    void soPicked.refetch();
+    void soPacked.refetch();
+    void vendorDrafts.refetch();
+    void customerDrafts.refetch();
+  }
+
   return (
     <PageWrapper
       title="Operations"
@@ -98,36 +119,45 @@ export default function OperationsHubPage() {
       variant="default"
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
-        <StatCardGrid cols={4}>
-          <StatCard
-            label="POs to Receive"
-            value={poToReceive.data?.total ?? 0}
-            tone="amber"
-            href="/inventory/operations/receipts"
-            isLoading={poToReceive.isLoading}
+        {failed ? (
+          <ErrorState
+            compact
+            title="Couldn't load today's workload"
+            description={getErrorMessage(failed.error)}
+            onRetry={handleRetryCounts}
           />
-          <StatCard
-            label="SOs to Fulfil"
-            value={soToFulfilTotal}
-            tone="blue"
-            href="/inventory/operations/picking"
-            isLoading={soReserved.isLoading || soPicked.isLoading}
-          />
-          <StatCard
-            label="Orders to Ship"
-            value={soToShipTotal}
-            tone="emerald"
-            href="/inventory/operations/shipping"
-            isLoading={soPacked.isLoading}
-          />
-          <StatCard
-            label="Open Returns"
-            value={returnsTotal}
-            tone="red"
-            href="/inventory/operations/returns"
-            isLoading={vendorDrafts.isLoading || customerDrafts.isLoading}
-          />
-        </StatCardGrid>
+        ) : (
+          <StatCardGrid cols={4}>
+            <StatCard
+              label="POs to Receive"
+              value={poToReceive.data?.total ?? 0}
+              tone="amber"
+              href="/inventory/operations/receipts"
+              isLoading={poToReceive.isLoading}
+            />
+            <StatCard
+              label="SOs to Fulfil"
+              value={soToFulfilTotal}
+              tone="blue"
+              href="/inventory/operations/picking"
+              isLoading={soReserved.isLoading || soPicked.isLoading}
+            />
+            <StatCard
+              label="Orders to Ship"
+              value={soToShipTotal}
+              tone="emerald"
+              href="/inventory/operations/shipping"
+              isLoading={soPacked.isLoading}
+            />
+            <StatCard
+              label="Open Returns"
+              value={returnsTotal}
+              tone="red"
+              href="/inventory/operations/returns"
+              isLoading={vendorDrafts.isLoading || customerDrafts.isLoading}
+            />
+          </StatCardGrid>
+        )}
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           <ReceiptsCard />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useId } from "react";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 interface RouteErrorBoundaryProps {
@@ -21,6 +21,9 @@ export function RouteErrorBoundary({
   layout = "inline",
 }: RouteErrorBoundaryProps) {
   const displayMessage = fallbackMessage;
+  const headingId = useId();
+  const isWholePage = layout === "fullscreen";
+  const Heading = isWholePage ? "h1" : "h2";
 
   const handleRetry = useCallback(() => {
     onBeforeReset?.();
@@ -38,7 +41,9 @@ export function RouteErrorBoundary({
           aria-hidden="true"
         />
       </div>
-      <h2 className="text-xl font-bold text-foreground">{title}</h2>
+      <Heading id={headingId} className="text-xl font-bold text-foreground">
+        {title}
+      </Heading>
       <p className="text-sm text-muted-foreground max-w-md">{displayMessage}</p>
       <Button onClick={handleRetry} variant="outline">
         <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
@@ -47,11 +52,20 @@ export function RouteErrorBoundary({
     </div>
   );
 
-  if (layout === "fullscreen")
+  /**
+   * Fullscreen means this boundary replaced the shell, so it is the page: it
+   * owns the `main` landmark the shell would have supplied and the only `h1`.
+   * Without them a failed layout read leaves the reader with no landmark to
+   * navigate to and no page heading at all.
+   */
+  if (isWholePage)
     return (
-      <div className="min-h-dvh w-full noir-mesh flex items-center justify-center p-4">
+      <main
+        aria-labelledby={headingId}
+        className="min-h-dvh w-full noir-mesh flex items-center justify-center p-4"
+      >
         <div className="max-w-md">{content}</div>
-      </div>
+      </main>
     );
 
   if (layout === "centered")

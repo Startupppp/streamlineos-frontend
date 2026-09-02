@@ -14,6 +14,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { useWorkflowAnalytics } from "@/hooks/api/workflows";
@@ -59,6 +60,8 @@ export default function WorkflowAnalyticsPage() {
       : 0;
 
   const maxCount = data ? Math.max(...(data.executionTrend?.map((t) => t.count) ?? [0]), 1) : 1;
+  const hasTrend = Boolean(data?.executionTrend && data.executionTrend.length > 0);
+  const hasNoWorkflows = Boolean(data && data.totalWorkflows === 0);
 
   return (
     <PageWrapper
@@ -73,6 +76,14 @@ export default function WorkflowAnalyticsPage() {
           description="Something went wrong while fetching workflow analytics."
           onRetry={handleRetry}
           className={CONTENT_FILL_PANEL}
+        />
+      ) : hasNoWorkflows ? (
+        <EmptyState
+          className="flex-1"
+          illustrationPreset="automations"
+          title="No workflows to measure"
+          description="Build your first workflow and its runs, success rate and durations will be charted here."
+          action={{ label: "Go to workflows", href: "/workflows" }}
         />
       ) : (
         <div className="flex flex-1 min-h-0 flex-col gap-6">
@@ -91,28 +102,28 @@ export default function WorkflowAnalyticsPage() {
             <StatCard label="Pending Approvals" value={data.pendingApprovals} icon={AlertCircle} tone="amber" />
           </StatCardGrid>
 
-          {data.executionTrend && data.executionTrend.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25, ease: "easeOut", delay: 0.36 }}
-            >
-              <Card className="bg-card rounded-xl border border-border shadow-sm">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-semibold">Execution Trend</CardTitle>
-                  <div className="flex items-center gap-4 text-dense text-muted-foreground mt-1">
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-3 h-1.5 rounded-full bg-primary inline-block" />
-                      Total
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-3 h-1.5 rounded-full bg-status-success-fill inline-block" />
-                      Successful
-                    </span>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-2.5">
-                  {data.executionTrend.map((item) => (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, ease: "easeOut", delay: 0.36 }}
+          >
+            <Card className="bg-card rounded-xl border border-border shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold">Execution Trend</CardTitle>
+                <div className="flex items-center gap-4 text-dense text-muted-foreground mt-1">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-3 h-1.5 rounded-full bg-primary inline-block" />
+                    Total
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-3 h-1.5 rounded-full bg-status-success-fill inline-block" />
+                    Successful
+                  </span>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-2.5">
+                {hasTrend ? (
+                  data.executionTrend.map((item) => (
                     <div key={item.date} className="flex items-center gap-3">
                       <span className="text-dense text-muted-foreground tabular-nums w-20 shrink-0">
                         {format(new Date(item.date), "MMM d")}
@@ -122,11 +133,18 @@ export default function WorkflowAnalyticsPage() {
                         {item.count}
                       </span>
                     </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
+                  ))
+                ) : (
+                  <EmptyState
+                    compact
+                    illustrationPreset="chart"
+                    title="No runs in this window"
+                    description="Nothing has executed recently, so there is no trend to plot yet."
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
 
           <p className="text-dense text-muted-foreground text-center">
             Analytics data refreshes every hour

@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateSalesOrder, useProductVariants, useWarehouses } from "@/hooks/api/inventory";
 import { OrderLineTable } from "@/features/inventory/components/order-line-table";
@@ -133,6 +134,30 @@ export default function NewSalesOrderPage() {
   if (isLoading) return <LoadingState variant="form" />;
   if (variantsQuery.error) return <ErrorState description={getErrorMessage(variantsQuery.error)} onRetry={handleVariantsRetry} />;
   if (warehousesQuery.error) return <ErrorState description={getErrorMessage(warehousesQuery.error)} onRetry={handleWarehousesRetry} />;
+
+  if (warehouses.length === 0)
+    return (
+      <PageWrapper title="New Sales Order" backHref="/inventory/sales-orders">
+        <InventoryEmptyState
+          illustrationPreset="inventory"
+          title="No active warehouses"
+          description="Stock is shipped from a warehouse, so you need an active one before an order can be raised."
+          action={{ label: "Set up a warehouse", href: "/inventory/warehouses" }}
+        />
+      </PageWrapper>
+    );
+
+  if (orderLineVariants.length === 0)
+    return (
+      <PageWrapper title="New Sales Order" backHref="/inventory/sales-orders">
+        <InventoryEmptyState
+          illustrationPreset="inventory"
+          title="Nothing to sell yet"
+          description="A sales order needs at least one product line, and your catalogue is empty."
+          action={{ label: "Add a product", href: "/inventory/products/new" }}
+        />
+      </PageWrapper>
+    );
 
   const summaryFooter = (
     <div className="flex justify-end mt-2">

@@ -1,9 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Store } from "lucide-react";
 import { toast } from "sonner";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useVendors, useProductVariants, useCreatePurchaseOrder } from "@/hooks/api/inventory";
 import { OrderLineTable } from "@/features/inventory/components/order-line-table";
@@ -131,7 +130,29 @@ export default function NewPurchaseOrderPage() {
   if (vendorsQuery.error) return <ErrorState description={getErrorMessage(vendorsQuery.error)} onRetry={handleVendorsRetry} />;
   if (variantsQuery.error) return <ErrorState description={getErrorMessage(variantsQuery.error)} onRetry={handleVariantsRetry} />;
 
-  const hasNoVendors = vendors.length === 0;
+  if (vendors.length === 0)
+    return (
+      <PageWrapper title="New purchase order" backHref="/inventory/purchase-orders">
+        <InventoryEmptyState
+          illustrationPreset="companies"
+          title="No vendors yet"
+          description="A purchase order is raised against a supplier, so you need at least one vendor before you can create one."
+          action={{ label: "Add a vendor", href: "/inventory/vendors" }}
+        />
+      </PageWrapper>
+    );
+
+  if (orderLineVariants.length === 0)
+    return (
+      <PageWrapper title="New purchase order" backHref="/inventory/purchase-orders">
+        <InventoryEmptyState
+          illustrationPreset="inventory"
+          title="Nothing to order yet"
+          description="A purchase order needs at least one product line, and your catalogue is empty."
+          action={{ label: "Add a product", href: "/inventory/products/new" }}
+        />
+      </PageWrapper>
+    );
 
   const totalsFooter = (
     <div className="flex justify-end mt-2">
@@ -159,21 +180,6 @@ export default function NewPurchaseOrderPage() {
       backHref="/inventory/purchase-orders"
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
-        {hasNoVendors && (
-          <div className="flex items-start gap-3 rounded-lg border border-status-warning-rule bg-status-warning-surface px-4 py-3 text-sm text-status-warning-ink">
-            <Store className="mt-0.5 h-4 w-4 shrink-0 text-status-warning-ink" />
-            <div>
-              <p className="font-medium">No vendors found</p>
-              <p className="text-status-warning-ink">
-                You need at least one vendor to create a purchase order.{" "}
-                <Link href="/inventory/vendors/new" className="underline underline-offset-2 font-medium">
-                  Create a vendor
-                </Link>{" "}
-                first.
-              </p>
-            </div>
-          </div>
-        )}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <Card className="p-4">
@@ -275,7 +281,6 @@ export default function NewPurchaseOrderPage() {
                 isPending={createMutation.isPending}
                 loadingText="Creating…"
                 className="w-full sm:w-auto"
-                disabled={hasNoVendors}
               >
                 Create PO
               </LoadingButton>

@@ -33,6 +33,8 @@
     "check:dead-code:self-test": "node scripts/check-dead-code.mjs --self-test",
     "check:seo-metadata": "node scripts/check-seo-metadata.mjs",
     "check:seo-metadata:self-test": "node scripts/check-seo-metadata.mjs --self-test",
+    "browser:journeys": "node scripts/browser-journeys.mjs",
+    "browser:journeys:self-test": "node scripts/browser-journeys.mjs --self-test",
     "check:web-vitals-budget": "node scripts/check-web-vitals-budget.mjs",
     "check:web-vitals-budget:self-test": "node scripts/check-web-vitals-budget.mjs --self-test",
     "check:route-bundle-budget": "node scripts/check-route-bundle-budget.mjs",

@@ -7,13 +7,18 @@ import {
   classifySource,
 } from "@/test-utils/surface-state-analysis";
 
+/**
+ * A ratchet, not a target. Every number here was measured; lowering one is a
+ * deliberate edit and raising one fails review. Loading and permission gates
+ * are at zero, so any surface that loses one now fails immediately.
+ */
 const BASELINE = {
   minimumSurfaces: 540,
-  missingLoading: 2,
-  missingEmpty: 56,
-  missingError: 78,
-  missingPermissionDenied: 1,
-  filterEmptyConflation: 101,
+  missingLoading: 0,
+  missingEmpty: 10,
+  missingError: 5,
+  missingPermissionDenied: 0,
+  filterEmptyConflation: 56,
 } as const;
 
 const surfaces = analyzeAuthenticatedSurfaces();

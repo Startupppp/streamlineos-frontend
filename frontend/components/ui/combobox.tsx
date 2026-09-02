@@ -35,6 +35,7 @@ interface ComboboxProps {
   disabled?: boolean;
   className?: string;
   onSearchChange?: (search: string) => void;
+  footer?: React.ReactNode;
 }
 
 export function Combobox({
@@ -47,6 +48,7 @@ export function Combobox({
   disabled = false,
   className,
   onSearchChange,
+  footer,
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -150,6 +152,7 @@ export function Combobox({
                 </CommandItem>
               ))}
             </CommandGroup>
+            {footer}
           </CommandList>
         </Command>
       </PopoverContent>

@@ -8,6 +8,7 @@ import { CheckCircle2, FileText, Image as ImageIcon } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -106,6 +107,14 @@ export function PortalTicketDetailPage({ portalTicketId }: PortalTicketDetailPag
           {ticket.description && (
             <div className="bg-muted/30 rounded-lg p-3 text-sm whitespace-pre-wrap">{ticket.description}</div>
           )}
+          {ticket.messages.length === 0 ? (
+            <EmptyState
+              compact
+              illustrationPreset="ticket"
+              title="No replies yet"
+              description="Our support team will answer here. Add anything else we should know below."
+            />
+          ) : null}
           {ticket.messages.map((msg) => {
             const isMine = msg.authorId === currentUserId;
             return (

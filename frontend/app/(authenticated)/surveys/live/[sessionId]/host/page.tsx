@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { RequireModule } from "@/components/auth/require-module";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -31,8 +32,11 @@ export default function LiveSessionHostPage() {
   const params = useParams<{ sessionId: string }>();
   const sessionId = Number(params.sessionId);
 
-  const { data: session, isLoading } = useLiveSession(sessionId);
-  const { data: results } = useLiveSessionResults(sessionId);
+  const sessionQuery = useLiveSession(sessionId);
+  const resultsQuery = useLiveSessionResults(sessionId);
+  const session = sessionQuery.data;
+  const results = resultsQuery.data;
+  const isLoading = sessionQuery.isLoading;
   const start = useStartLiveSession();
   const next = useNextQuestion();
   const reveal = useRevealResults();
@@ -46,6 +50,14 @@ export default function LiveSessionHostPage() {
     }
   }
 
+  function handleSessionRetry() {
+    void sessionQuery.refetch();
+  }
+
+  function handleResultsRetry() {
+    void resultsQuery.refetch();
+  }
+
   async function handleCopyLink() {
     if (!session) return;
     await navigator.clipboard.writeText(joinUrlFor(session.sessionCode));
@@ -57,7 +69,14 @@ export default function LiveSessionHostPage() {
       <RequireModule module="surveys">
         <PageWrapper title="Live session" backHref={`/surveys/${session?.surveyId ?? ""}`}>
           <div className="flex flex-1 min-h-0 flex-col">
-            {isLoading || !session ? (
+            {sessionQuery.isError ? (
+              <ErrorState
+                className="flex-1"
+                title="Couldn't load this live session"
+                description={getErrorMessage(sessionQuery.error)}
+                onRetry={handleSessionRetry}
+              />
+            ) : isLoading || !session ? (
               <Skeleton className="h-64 w-full" />
             ) : (
               <div className="flex flex-col gap-3">
@@ -71,7 +90,7 @@ export default function LiveSessionHostPage() {
                       Copy join link
                     </AnimatedIconButton>
                     <div className="ml-auto text-sm text-muted-foreground">
-                      {results?.participantCount ?? 0} joined
+                      {resultsQuery.isError ? "—" : results?.participantCount ?? 0} joined
                     </div>
                   </CardContent>
                 </Card>
@@ -99,7 +118,16 @@ export default function LiveSessionHostPage() {
                       )}
                     </div>
 
-                    {results && <LiveResultBars results={results} />}
+                    {resultsQuery.isError ? (
+                      <ErrorState
+                        compact
+                        title="Couldn't load live results"
+                        description={getErrorMessage(resultsQuery.error)}
+                        onRetry={handleResultsRetry}
+                      />
+                    ) : results ? (
+                      <LiveResultBars results={results} />
+                    ) : null}
                   </CardContent>
                 </Card>
               </div>
