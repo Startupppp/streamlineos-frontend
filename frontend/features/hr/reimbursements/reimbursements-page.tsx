@@ -166,7 +166,7 @@ export function ReimbursementsPage() {
       { file, folder: "receipts" },
       {
         onSuccess: (result) => {
-          setReceiptUrl(result.url);
+          setReceiptUrl(result.key);
           setReceiptFileName(file.name);
         },
         onError: (err) => toast.error(getErrorMessage(err)),

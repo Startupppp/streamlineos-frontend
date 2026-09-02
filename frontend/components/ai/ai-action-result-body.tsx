@@ -6,7 +6,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AiDraftCard } from "./ai-draft-card";
 import { AiQuotaEmptyState } from "./ai-quota-empty-state";
 import { AiPermissionDenied } from "./ai-permission-denied";
+import {
+  AiCancelledNotice,
+  AiOfflineNotice,
+  AiQueuedNotice,
+  AiUnavailableNotice,
+} from "./ai-state-notices";
 import { AiFieldPopoverFooter } from "./ai-field-popover-layout";
+import type { AiFailureState } from "./ai-error-state";
 import type { Citation } from "./ai-citation-chips";
 import type { AiUsageMeta } from "./ai-usage-chip";
 
@@ -20,15 +27,16 @@ export interface AiActionResult {
 export type AiActionResultState =
   | { status: "loading" }
   | { status: "ready"; result: AiActionResult; aiUsage?: AiUsageMeta | null }
-  | { status: "quota" }
-  | { status: "denied"; reason: string }
-  | { status: "error"; message: string };
+  | AiFailureState;
+
+export type AiActionResultStatus = AiActionResultState["status"];
 
 interface AiActionResultBodyProps {
   state: AiActionResultState;
   onApply?: () => void;
   applyLabel?: string;
   onRetry?: () => void;
+  onCancel?: () => void;
   compact?: boolean;
   contentOnly?: boolean;
 }
@@ -38,25 +46,78 @@ export function AiActionResultBody({
   onApply,
   applyLabel = "Apply",
   onRetry,
+  onCancel,
   compact = false,
   contentOnly = false,
 }: AiActionResultBodyProps) {
+  const noticeVariant = compact ? "compact" : "fill";
+
   if (state.status === "loading") {
     return (
       <div className="space-y-2">
         <Skeleton className={compact ? "h-3 w-3/4" : "h-4 w-3/4"} />
         <Skeleton className={compact ? "h-3 w-full" : "h-4 w-full"} />
         <Skeleton className={compact ? "h-3 w-5/6" : "h-4 w-5/6"} />
+        {onCancel && !contentOnly ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onCancel}
+            className="h-7 text-xs text-muted-foreground"
+          >
+            Stop
+          </Button>
+        ) : null}
       </div>
     );
   }
 
   if (state.status === "quota") {
-    return <AiQuotaEmptyState variant={compact ? "compact" : "fill"} />;
+    return <AiQuotaEmptyState variant={noticeVariant} />;
   }
 
   if (state.status === "denied") {
     return <AiPermissionDenied reason={state.reason} />;
+  }
+
+  if (state.status === "queued") {
+    return (
+      <AiQueuedNotice
+        message={state.message}
+        variant={noticeVariant}
+        onRetry={contentOnly ? undefined : onRetry}
+      />
+    );
+  }
+
+  if (state.status === "unavailable") {
+    return (
+      <AiUnavailableNotice
+        message={state.message}
+        variant={noticeVariant}
+        onRetry={contentOnly ? undefined : onRetry}
+      />
+    );
+  }
+
+  if (state.status === "offline") {
+    return (
+      <AiOfflineNotice
+        message={state.message}
+        variant={noticeVariant}
+        onRetry={contentOnly ? undefined : onRetry}
+      />
+    );
+  }
+
+  if (state.status === "cancelled") {
+    return (
+      <AiCancelledNotice
+        variant={noticeVariant}
+        onRetry={contentOnly ? undefined : onRetry}
+      />
+    );
   }
 
   if (state.status === "error") {
@@ -80,7 +141,7 @@ export function AiActionResultBody({
     <AiDraftCard
       citations={state.result.citations}
       confidence={state.result.confidence}
-      usage={state.aiUsage}
+      usage={state.aiUsage ?? state.result.aiUsage}
       onAccept={contentOnly ? undefined : onApply}
       acceptLabel={applyLabel}
       hideFooter={contentOnly}
@@ -98,15 +159,41 @@ interface AiActionResultFooterProps {
   onApply?: () => void;
   applyLabel?: string;
   onRetry?: () => void;
+  onCancel?: () => void;
 }
+
+const FOOTER_RETRY_STATUSES = new Set<AiActionResultStatus>([
+  "error",
+  "queued",
+  "unavailable",
+  "offline",
+  "cancelled",
+]);
 
 export function AiActionResultFooter({
   state,
   onApply,
   applyLabel = "Apply",
   onRetry,
+  onCancel,
 }: AiActionResultFooterProps) {
-  if (state.status === "error" && onRetry) {
+  if (state.status === "loading" && onCancel) {
+    return (
+      <AiFieldPopoverFooter>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onCancel}
+          className="h-8 w-full text-xs"
+        >
+          Stop
+        </Button>
+      </AiFieldPopoverFooter>
+    );
+  }
+
+  if (FOOTER_RETRY_STATUSES.has(state.status) && onRetry) {
     return (
       <AiFieldPopoverFooter>
         <Button

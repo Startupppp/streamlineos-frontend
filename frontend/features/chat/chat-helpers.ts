@@ -7,6 +7,7 @@ import {
   getInitials as _getInitials,
   formatFileSize as _formatFileSize,
 } from "@/lib/format-utils";
+import { isStorageObjectKey } from "@/lib/utils";
 
 export type ChatOrgUser = {
   id: string;
@@ -97,7 +98,8 @@ export function isImageMime(mime: string) {
 
 export function resolveFileUrl(url: string, mime?: string): string {
   if (!url) return "";
-  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/")) return url;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  if (url.startsWith("/") && !isStorageObjectKey(url)) return url;
   const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "";
   if (mime && !mime.startsWith("image/")) {
     return `${apiBase}/storage/download?key=${encodeURIComponent(url)}&attachment=1`;

@@ -4,7 +4,6 @@ import { toast } from 'sonner';
 import { apiClient } from '@/lib/api-client';
 
 export interface UploadedKbMedia {
-  url: string;
   key: string;
   size: number;
   mimeType: string;

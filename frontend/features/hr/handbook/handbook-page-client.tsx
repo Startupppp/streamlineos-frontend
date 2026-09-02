@@ -138,7 +138,7 @@ export function HandbookPageClient() {
       }
       try {
         const result = await uploadFile.mutateAsync({ file: selectedFile, folder: "handbook" });
-        resolvedDocumentUrl = result.url;
+        resolvedDocumentUrl = result.key;
       } catch (e) {
         toast.error(getErrorMessage(e));
         return;

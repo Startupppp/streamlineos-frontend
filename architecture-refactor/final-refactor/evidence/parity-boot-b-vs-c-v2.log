@@ -1,6 +1,6 @@
 ◇ injected env (53) from .env // tip: ⌘ enable debugging { debug: true }
-control plane : postgresql://neondb_owner:***@ep-orange-mode-azxn5hbr.c-3.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
-cell          : postgresql://neondb_owner:***@ep-orange-mode-azxn5hbr.c-3.ap-southeast-1.aws.neon.tech/cell2?sslmode=require&channel_binding=require
+control plane : postgresql://<db-role>:***@<neon-host>/<db-control-plane>?sslmode=require&channel_binding=require
+cell          : postgresql://<db-role>:***@<neon-host>/<db-cell>?sslmode=require&channel_binding=require
 journal hashes: 634
 
 FAIL  tables           control=  1027 cell=   982  missing=46 extra=1
@@ -295,8 +295,8 @@ FAIL  migrationHashes  journal=   634 cell=   375 missing=263 extra-in-cell=4 co
 RESULT: SCHEMAS DIFFER cell=cell-2 differences=6025 migrations=375/634 control-orphans=20
 
 Bootstrap parity comparison
-  A: postgresql://neondb_owner:***@ep-orange-mode-azxn5hbr.c-3.ap-southeast-1.aws.neon.tech/scratch_boot_b?sslmode=require
-  B: postgresql://neondb_owner:***@ep-orange-mode-azxn5hbr.c-3.ap-southeast-1.aws.neon.tech/scratch_boot_c?sslmode=require
+  A: postgresql://<db-role>:***@<neon-host>/scratch_boot_b?sslmode=require
+  B: postgresql://<db-role>:***@<neon-host>/scratch_boot_c?sslmode=require
   A replay rows: 634
   B replay rows: 634
 

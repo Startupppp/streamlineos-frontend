@@ -35,7 +35,7 @@ interface LeaveRequestFormFieldsProps {
   leaveStartBounds: { fromDate: Date; fromYear: number; toYear: number };
   leaveEndBounds: { fromDate?: Date; fromYear?: number; toYear?: number };
   onStartDateChange: (value: string) => void;
-  onAttachmentUpload: (url: string) => void;
+  onAttachmentUpload: (key: string) => void;
   requestedDays: number;
   balancePreview: { available: number; after: number; typeName: string } | null;
   leaveDayLimitError: string | null;

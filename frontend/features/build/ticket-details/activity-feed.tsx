@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -32,6 +32,8 @@ import {
 import { CommentItem } from "./comment-item";
 import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";
 import { queryKeys } from "@/lib/query-keys";
+
+const COMMENT_RENDER_PAGE_SIZE = 20;
 
 interface ActivityFeedProps {
   ticketId: number;
@@ -285,6 +287,29 @@ export function ActivityFeed({
     return { repliesMap: built, sortedTopLevel };
   }, [comments]);
 
+  // Comments ride the ticket payload with no cursor. Page them newest-first,
+  // but never hide the thread a deep link points at.
+  const [visibleCount, setVisibleCount] = useState(COMMENT_RENDER_PAGE_SIZE);
+  const handleShowOlderComments = useCallback(
+    () => setVisibleCount((count) => count + COMMENT_RENDER_PAGE_SIZE),
+    [],
+  );
+
+  const visibleTopLevel = useMemo(() => {
+    let count = visibleCount;
+    if (highlightCommentId) {
+      const index = sortedTopLevel.findIndex(
+        (comment) =>
+          comment.id === highlightCommentId ||
+          (repliesMap[comment.id] ?? []).some(
+            (reply) => reply.id === highlightCommentId,
+          ),
+      );
+      if (index >= count) count = index + 1;
+    }
+    return sortedTopLevel.slice(0, count);
+  }, [sortedTopLevel, repliesMap, visibleCount, highlightCommentId]);
+
   return (
     <div className="w-full space-y-4">
       <div className="flex w-full flex-1 min-w-0 flex-col gap-2">
@@ -341,7 +366,7 @@ export function ActivityFeed({
 
       {sortedTopLevel.length > 0 && (
         <div className="space-y-3">
-          {sortedTopLevel.map((comment) => (
+          {visibleTopLevel.map((comment) => (
             <div
               key={comment.id}
               ref={(el) => {
@@ -418,6 +443,18 @@ export function ActivityFeed({
               )}
             </div>
           ))}
+          {sortedTopLevel.length > visibleTopLevel.length && (
+            <button
+              type="button"
+              onClick={handleShowOlderComments}
+              className="mx-auto block rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+            >
+              Show older comments
+              <span className="ml-1 tabular-nums opacity-70">
+                ({visibleTopLevel.length} of {sortedTopLevel.length})
+              </span>
+            </button>
+          )}
         </div>
       )}
 

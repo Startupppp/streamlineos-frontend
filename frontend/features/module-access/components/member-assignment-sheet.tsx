@@ -21,6 +21,7 @@ import {
   useRemoveModuleGroupMember,
   type ModuleGroupMember,
 } from "@/hooks/api/module-access";
+import { resolveImageUrl } from "@/lib/utils";
 
 interface MemberAssignmentSheetProps {
   open: boolean;
@@ -59,7 +60,7 @@ function MemberRow({
   return (
     <div className="flex items-center gap-3 px-4 py-3 border-b border-border/60 last:border-0">
       <Avatar className="h-7 w-7 shrink-0">
-        <AvatarImage src={member.avatarUrl ?? undefined} />
+        <AvatarImage src={resolveImageUrl(member.avatarUrl)} />
         <AvatarFallback className="text-micro">
           {getUserInitials(member.displayName)}
         </AvatarFallback>

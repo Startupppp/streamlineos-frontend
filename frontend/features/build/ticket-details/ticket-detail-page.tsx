@@ -80,12 +80,10 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
   );
   const ticketId = byKeyTicket?.id ?? null;
 
-  // The right panel and the relations block are keyed on projectId alone, but
-  // they mount behind the ticket-loading guard, so they used to wait two
-  // round-trips for data they could have asked for immediately. Warming them
-  // here adds no request — it only moves each one onto the first wave.
-  // On mobile the sidebar lives in a drawer that may never open, so the three
-  // sidebar lists stay disabled there (projectId 0 is the hooks' own gate).
+  // Warmed here, not left behind the ticket guard: the right panel and the
+  // relations block are keyed on projectId alone, so waiting two round-trips
+  // for them is a pure waterfall. Mobile keeps the drawer lists off (the
+  // hooks' own `!!projectId` gate) because that drawer may never open.
   const sidebarWarmProjectId = isMobile ? 0 : projectId;
   useEpics(sidebarWarmProjectId);
   useModules(sidebarWarmProjectId);

@@ -50,7 +50,7 @@ export async function uploadEditorMedia(
     const path = findPlaceholderPath(editor, placeholderId);
     if (!path) return;
     editor.tf.setNodes<TElement>(
-      { type: mediaType, url: result.url, name: result.name, size: result.size },
+      { type: mediaType, url: result.key, name: result.name, size: result.size },
       { at: path },
     );
     editor.tf.unsetNodes(["placeholderId", "mediaType"], { at: path });

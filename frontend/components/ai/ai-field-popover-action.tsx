@@ -27,7 +27,7 @@ interface AiFieldPopoverActionProps {
   popoverTitle?: string;
   disabledReason?: string;
   disabled?: boolean;
-  run: () => Promise<AiActionResult>;
+  run: (signal?: AbortSignal) => Promise<AiActionResult>;
   onApply?: () => void;
   applyLabel?: string;
   align?: "start" | "end" | "center";
@@ -93,6 +93,7 @@ export function AiFieldPopoverAction({
             onApply={onApply ? handleApply : undefined}
             applyLabel={applyLabel}
             onRetry={popover.retry}
+            onCancel={popover.cancel}
           />
         </AiFieldPopoverLayout>
       </ResponsivePopoverContent>

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useMailAccounts } from "@/hooks/api/mail";
+import { useMailAccounts, useMailAction } from "@/hooks/api/mail";
 import { useFinalizeIntegrationConnection } from "@/hooks/api/integrations";
 import { useCan } from "@/hooks/api/access";
 import { MailListPane } from "./mail-list-pane";
@@ -29,6 +29,8 @@ export function MailShell() {
   const finalize = useFinalizeIntegrationConnection();
   const finalizeRef = useRef(false);
   const canAi = useCan("mail:ai:use");
+  const canManageMail = useCan("mail:messages:manage");
+  const mailAction = useMailAction();
 
   const [accountsSheetOpen, setAccountsSheetOpen] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState<number | "all">(
@@ -101,10 +103,29 @@ export function MailShell() {
     setSelectedMessage(null);
   }, []);
 
-  const handleSelectMessage = useCallback((message: MailMessageSummary) => {
-    setSelectedMessage(message);
-    setShowMobileList(false);
-  }, []);
+  const mailActionMutate = mailAction.mutate;
+  const handleSelectMessage = useCallback(
+    (message: MailMessageSummary) => {
+      setShowMobileList(false);
+      if (message.isRead || !canManageMail) {
+        setSelectedMessage(message);
+        return;
+      }
+      setSelectedMessage({ ...message, isRead: true });
+      mailActionMutate(
+        {
+          messageId: message.id,
+          body: {
+            accountId: message.accountId,
+            action: "markRead",
+            ...(message.threadId && { threadId: message.threadId }),
+          },
+        },
+        { onError: () => setSelectedMessage(message) },
+      );
+    },
+    [canManageMail, mailActionMutate],
+  );
 
   const handleBackToList = useCallback(() => {
     setShowMobileList(true);

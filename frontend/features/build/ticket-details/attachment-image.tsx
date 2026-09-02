@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { queryKeys } from "@/lib/query-keys";
 import { getSignedFileUrl } from "@/hooks/common/use-file-url";
+import { resolveImageUrl } from "@/lib/utils";
 
 interface AttachmentImageProps {
   fileUrl: string;
@@ -28,7 +29,7 @@ export function AttachmentImage({ fileUrl, fileName }: AttachmentImageProps) {
 
   return (
     <Image
-      src={imageSrc ?? fileUrl}
+      src={imageSrc ?? resolveImageUrl(fileUrl) ?? fileUrl}
       alt={fileName}
       fill
       unoptimized

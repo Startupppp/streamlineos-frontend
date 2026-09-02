@@ -1,8 +1,14 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { apiClient, authedFetch, buildUrl } from "@/lib/api-client";
+import {
+  ApiError,
+  apiClient,
+  authedFetch,
+  buildUrl,
+  getApiErrorCode,
+} from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -109,9 +115,22 @@ export function useAiConversationMessages(conversationId: number | null, enabled
   });
 }
 
+export type AskAiStreamOutcome =
+  | { status: "completed"; text: string }
+  | { status: "cancelled"; text: string }
+  | { status: "busy" };
+
+function isAbortError(error: unknown): boolean {
+  return (
+    (error instanceof DOMException || error instanceof Error) &&
+    error.name === "AbortError"
+  );
+}
+
 export function useAskAI() {
   const [isStreaming, setIsStreaming] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+  const inFlightRef = useRef(false);
 
   const sendMessage = useCallback(
     async (
@@ -119,10 +138,14 @@ export function useAskAI() {
       onToken: (token: string) => void,
       conversationId?: number,
       persona?: string,
-    ): Promise<void> => {
+    ): Promise<AskAiStreamOutcome> => {
+      if (inFlightRef.current) return { status: "busy" };
+
       const controller = new AbortController();
       abortRef.current = controller;
+      inFlightRef.current = true;
       setIsStreaming(true);
+      let received = "";
 
       try {
         const res = await authedFetch(
@@ -142,12 +165,18 @@ export function useAskAI() {
 
         if (!res.ok) {
           let message = `${res.status} ${res.statusText}`;
+          let code: string | undefined;
           try {
-            const body = (await res.json()) as { message?: string; error?: string };
+            const body = (await res.json()) as {
+              message?: string;
+              error?: string;
+              code?: string;
+            };
             message = body.message ?? body.error ?? message;
+            code = body.code;
           } catch {
           }
-          throw new Error(message);
+          throw new ApiError(message, res.status, code);
         }
 
         const reader = res.body?.getReader();
@@ -157,9 +186,17 @@ export function useAskAI() {
         for (;;) {
           const { done, value } = await reader.read();
           if (done) break;
-          onToken(decoder.decode(value, { stream: true }));
+          const token = decoder.decode(value, { stream: true });
+          received += token;
+          onToken(token);
         }
+        return { status: "completed", text: received };
+      } catch (error) {
+        if (isAbortError(error) || getApiErrorCode(error) === "ABORTED")
+          return { status: "cancelled", text: received };
+        throw error;
       } finally {
+        inFlightRef.current = false;
         setIsStreaming(false);
         abortRef.current = null;
       }
@@ -169,6 +206,12 @@ export function useAskAI() {
 
   const stop = useCallback(() => {
     abortRef.current?.abort();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+    };
   }, []);
 
   return { sendMessage, stop, isStreaming };

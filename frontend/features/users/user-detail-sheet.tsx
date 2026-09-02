@@ -37,6 +37,7 @@ import {
   Globe,
 } from "lucide-react";
 import { useEmploymentFacts } from "@/hooks/api/directory/employment";
+import { resolveImageUrl } from "@/lib/utils";
 
 interface UserDetailSheetProps {
   userId: string | null;
@@ -155,7 +156,7 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
                   <div className="space-y-4">
                     <div className="flex items-start gap-3">
                       <Avatar className="h-14 w-14 shrink-0">
-                        <AvatarImage src={user.image ?? undefined} alt={user.name ?? user.email} />
+                        <AvatarImage src={resolveImageUrl(user.image)} alt={user.name ?? user.email} />
                         <AvatarFallback className="text-sm font-semibold">
                           {getInitials(user.name, user.email)}
                         </AvatarFallback>

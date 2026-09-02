@@ -1,8 +1,31 @@
+> # ⛔ SUPERSEDED — FORMER HEAD (634-entry journal). NOT current-head proof.
+>
+> This document describes a **634-entry** migration journal on a database estate that no longer
+> exists in that state. The chain has since reached **637** (proven) and **639** (unproven).
+> Its parity numbers were produced by a comparator that keyed on object **names**, not definitions,
+> and so could not see a same-name/different-column index, a changed constraint or policy body, a
+> rewritten function, or RLS enabled-versus-FORCED. Its tenant gates had measured blind spots.
+>
+> Current-head evidence: [`bootstrap-head-637/README.md`](bootstrap-head-637/README.md)
+> Why this is superseded, in full: [`SUPERSEDED-FORMER-HEAD.md`](SUPERSEDED-FORMER-HEAD.md)
+>
+> *(Banner added 2026-09-02 by the ticket-04 recorder. Nothing below it was altered. This file's
+> hash already failed to match `artifact-hashes.json` before the banner was added — see the hash
+> ledger in `SUPERSEDED-FORMER-HEAD.md`.)*
+>
+> *(Amended 2026-09-02 by the ticket-04b redactor. **Two lines below this banner were changed** —
+> the `Connection host:` line and the one `COLD_DATABASE_URL=` example — to replace real
+> infrastructure identifiers with the placeholders `<neon-host>`, `<db-role>`,
+> `<db-control-plane>` and `<db-cell>`. No measurement, count, command flag or result was altered.
+> `artifact-hashes.json` has been re-sealed over the redacted bytes, so the mismatch noted above is
+> now closed; the sealed, pre-banner, post-banner and post-redaction hashes are all preserved in
+> [`REDACTION-AND-RESEAL-LEDGER.md`](REDACTION-AND-RESEAL-LEDGER.md).)*
+
 # S02 — Bootstrap Parity Evidence
 
 Generated: 2026-09-02 (v3 — third bootstrap investigated, defect found and fixed, parity re-proven)
 Session: cold-replay into `scratch_boot_b` (interrupted+resumed), `scratch_boot_c` (clean), and `scratch_boot_a` (third clean, with chain repair)
-Connection host: `ep-orange-mode-azxn5hbr.c-3.ap-southeast-1.aws.neon.tech` (direct, non-pooler)
+Connection host: `<neon-host>` (direct, non-pooler)
 
 ---
 
@@ -69,7 +92,7 @@ Artifact: `apply-0000-b2-v2.log`, `apply-0000-c2.log`
 ## 3. Clean Bootstrap — scratch_boot_c
 
 ```bash
-COLD_DATABASE_URL='postgresql://neondb_owner:***@ep-orange-mode-azxn5hbr.c-3.ap-southeast-1.aws.neon.tech/scratch_boot_c?sslmode=require' \
+COLD_DATABASE_URL='postgresql://<db-role>:***@<neon-host>/scratch_boot_c?sslmode=require' \
   node --max-old-space-size=8192 src/scripts/replay-chain-cold.mjs \
   > /tmp/replay-boot-c.log 2>&1
 # exit: 0

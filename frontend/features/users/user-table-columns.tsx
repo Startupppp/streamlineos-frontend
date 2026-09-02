@@ -13,6 +13,7 @@ import { UserActionsMenu } from "./user-actions-menu";
 import { formatRoleLabel } from "./user-invite-roles";
 import { UserStatusBadge } from "./user-status-badge";
 import type { EmploymentFacts } from "@/hooks/api/directory/employment";
+import { resolveImageUrl } from "@/lib/utils";
 
 interface UserActionCellProps {
   user: User;
@@ -42,7 +43,7 @@ export function getUserTableColumns(
     return (
       <div className="flex items-center gap-2">
         <Avatar className="h-6 w-6 shrink-0">
-          <AvatarImage src={user.image ?? undefined} alt={displayName} />
+          <AvatarImage src={resolveImageUrl(user.image)} alt={displayName} />
           <AvatarFallback className="text-micro font-semibold">
             {getUserInitials(user)}
           </AvatarFallback>

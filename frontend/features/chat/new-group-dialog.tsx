@@ -125,8 +125,8 @@ export function NewGroupDialog({
       const formData = new FormData();
       formData.append("file", file);
       formData.append("folder", "chat-avatars");
-      const data = await apiClient.upload<{ url?: string }>("/storage/upload", formData);
-      if (data.url) setAvatarUrl(data.url);
+      const data = await apiClient.upload<{ key: string }>("/storage/upload", formData);
+      if (data.key) setAvatarUrl(data.key);
       else toast.error("Upload failed");
     } catch (error) {
       toast.error(getErrorMessage(error));

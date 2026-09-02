@@ -46,7 +46,9 @@
     "maxPageChunkBytes": 204800,
     "maxCssBytes": 65536,
     "maxImageBytes": 524288,
-    "maxThirdPartyBytes": 102400
+    "maxThirdPartyBytes": 102400,
+    "maxFontBytes": 131072,
+    "maxServerPayloadBytes": 40960
   },
   "budgets": {
     "/mail": {
@@ -55,14 +57,19 @@
       "maxCssBytes": 65536,
       "maxImageBytes": 0,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 506151,
-      "measuredPageChunkBytes": 56989,
+      "measuredFirstLoadJsBytes": 506022,
+      "measuredPageChunkBytes": 56757,
       "lazyLoadedModules": [
         "mail-compose-sheet",
         "mail-ai-compose-toolbar",
         "mail-inbox-summary-sheet"
       ],
-      "note": "Mail shell — first-load budget is higher because DOMPurify (isomorphic-dompurify) is a non-trivial dependency; compose sheet, AI toolbar and inbox summary sheet are lazy-loaded via next/dynamic. PASSES: 507kB < 614kB ceiling"
+      "note": "Mail shell — first-load budget is higher because DOMPurify (isomorphic-dompurify) is a non-trivial dependency; compose sheet, AI toolbar and inbox summary sheet are lazy-loaded via next/dynamic. PASSES: 507kB < 614kB ceiling",
+      "measuredCssBytes": 58197,
+      "measuredImageBytes": 5744,
+      "measuredFontBytes": 55206,
+      "measuredThirdPartyBytes": 0,
+      "measuredServerPayloadBytes": 19167
     },
     "/inbox": {
       "maxFirstLoadJsBytes": 524288,
@@ -70,12 +77,17 @@
       "maxCssBytes": 65536,
       "maxImageBytes": 0,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 460873,
-      "measuredPageChunkBytes": 19458,
+      "measuredFirstLoadJsBytes": 460925,
+      "measuredPageChunkBytes": 19386,
       "lazyLoadedModules": [
         "notification-detail-drawer"
       ],
-      "note": "Home inbox — lightweight notification-style inbox; no external mail provider calls. PASSES: 461kB < 512kB ceiling. NotificationDetailDrawer is lazy (next/dynamic ssr:false); chunk is preloaded after mount to avoid INP spike on first interaction. Dashboard baseline is 489kB (40 shared chunks)."
+      "note": "Home inbox — lightweight notification-style inbox; no external mail provider calls. PASSES: 461kB < 512kB ceiling. NotificationDetailDrawer is lazy (next/dynamic ssr:false); chunk is preloaded after mount to avoid INP spike on first interaction. Dashboard baseline is 489kB (40 shared chunks).",
+      "measuredCssBytes": 58197,
+      "measuredImageBytes": 5744,
+      "measuredFontBytes": 55206,
+      "measuredThirdPartyBytes": 13074,
+      "measuredServerPayloadBytes": 20181
     },
     "/build/inbox": {
       "maxFirstLoadJsBytes": 614400,
@@ -83,13 +95,18 @@
       "maxCssBytes": 65536,
       "maxImageBytes": 0,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 463034,
-      "measuredPageChunkBytes": 21619,
+      "measuredFirstLoadJsBytes": 463033,
+      "measuredPageChunkBytes": 21494,
       "lazyLoadedModules": [
         "inbox-ticket-preview"
       ],
       "_routeNote": "Route is /build/inbox not /build/[projectId]/inbox — corrected from original declaration",
-      "note": "Build module approval inbox. PASSES: 463kB < 614kB ceiling. InboxTicketPreview (ticket detail components) is lazy (next/dynamic ssr:false)."
+      "note": "Build module approval inbox. PASSES: 463kB < 614kB ceiling. InboxTicketPreview (ticket detail components) is lazy (next/dynamic ssr:false).",
+      "measuredCssBytes": 58197,
+      "measuredImageBytes": 2872,
+      "measuredFontBytes": 55206,
+      "measuredThirdPartyBytes": 2946,
+      "measuredServerPayloadBytes": 10316
     },
     "/crm/inbox": {
       "maxFirstLoadJsBytes": 614400,
@@ -97,10 +114,15 @@
       "maxCssBytes": 65536,
       "maxImageBytes": 0,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 486563,
-      "measuredPageChunkBytes": 41273,
+      "measuredFirstLoadJsBytes": 486548,
+      "measuredPageChunkBytes": 41136,
       "lazyLoadedModules": [],
-      "note": "CRM inbox — deals and contact conversations. PASSES: 487kB < 614kB ceiling"
+      "note": "CRM inbox — deals and contact conversations. PASSES: 487kB < 614kB ceiling",
+      "measuredCssBytes": 58197,
+      "measuredImageBytes": 2872,
+      "measuredFontBytes": 55206,
+      "measuredThirdPartyBytes": 2946,
+      "measuredServerPayloadBytes": 11451
     },
     "/support/inbox": {
       "maxFirstLoadJsBytes": 614400,
@@ -108,10 +130,38 @@
       "maxCssBytes": 65536,
       "maxImageBytes": 0,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 541805,
-      "measuredPageChunkBytes": 88768,
+      "measuredFirstLoadJsBytes": 541594,
+      "measuredPageChunkBytes": 88456,
       "lazyLoadedModules": [],
-      "note": "Support ticket inbox. PASSES: 542kB < 614kB ceiling"
+      "note": "Support ticket inbox. PASSES: 542kB < 614kB ceiling",
+      "measuredCssBytes": 58197,
+      "measuredImageBytes": 2872,
+      "measuredFontBytes": 55206,
+      "measuredThirdPartyBytes": 2946,
+      "measuredServerPayloadBytes": 12792
+    },
+    "/dashboard": {
+      "maxFirstLoadJsBytes": 524288,
+      "maxPageChunkBytes": 204800,
+      "maxCssBytes": 65536,
+      "maxImageBytes": 16384,
+      "maxFontBytes": 131072,
+      "maxThirdPartyBytes": 102400,
+      "maxServerPayloadBytes": 40960,
+      "measuredFirstLoadJsBytes": 488551,
+      "measuredPageChunkBytes": 0,
+      "lazyLoadedModules": [
+        "clock-in-widget",
+        "guided-tour-overlay",
+        "executive-kpi-widget",
+        "hr-widgets"
+      ],
+      "note": "Home dashboard — the shared-chunk baseline every other route's measuredPageChunkBytes is taken against, so its page-only additive is 0 by definition.",
+      "measuredCssBytes": 58197,
+      "measuredImageBytes": 5744,
+      "measuredFontBytes": 55206,
+      "measuredThirdPartyBytes": 27169,
+      "measuredServerPayloadBytes": 11107
     }
   }
 }

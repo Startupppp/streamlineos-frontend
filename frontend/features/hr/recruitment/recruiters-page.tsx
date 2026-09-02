@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ErrorState } from "@/components/shared/error-state";
+import { resolveImageUrl } from "@/lib/utils";
 
 const ACTION_LABELS: Record<string, string> = {
   CALL_MADE: "Call Made",
@@ -126,7 +127,7 @@ function RecruiterCard({
       <CardHeader className="pb-3">
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={recruiter.image ?? undefined} />
+            <AvatarImage src={resolveImageUrl(recruiter.image)} />
             <AvatarFallback className="text-xs">{initials(recruiter.name, recruiter.email)}</AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">

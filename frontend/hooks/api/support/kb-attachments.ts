@@ -16,7 +16,6 @@ export interface KbAttachment {
 }
 
 interface StorageUploadResult {
-  url: string;
   key: string;
   size: number;
   mimeType: string;
@@ -63,7 +62,6 @@ export function useUploadSupportKbAttachment(articleId: number) {
         {
           fileName: file.name,
           fileKey: uploaded.key,
-          fileUrl: uploaded.url,
           fileSize: uploaded.size,
           mimeType: uploaded.mimeType,
         },

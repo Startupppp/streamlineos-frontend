@@ -29,7 +29,7 @@ import {
 } from "@/hooks/api";
 import { queryKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { classifyAiError, type AiFailureState } from "@/components/ai";
 import { useHydrated } from "@/hooks/common/use-hydrated";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { type PersonaId } from "@/features/ai-summaries/components/persona-chip-strip";
@@ -52,7 +52,7 @@ export function GlobalAskOs() {
   const { open, setOpen, toggle } = useAskOs();
   const queryClient = useQueryClient();
   const [input, setInput] = useState("");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [failure, setFailure] = useState<AiFailureState | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [atBottom, setAtBottom] = useState(true);
   const [view, setView] = useState<"chat" | "conversations">("chat");
@@ -68,7 +68,8 @@ export function GlobalAskOs() {
   const previousScrollHeightRef = useRef(0);
   const loadingOlderRef = useRef(false);
   const isNearBottomRef = useRef(true);
-  const assistantBufferRef = useRef("");
+  const sendingRef = useRef(false);
+  const lastSentRef = useRef<string | null>(null);
   const temporaryIdRef = useRef(0);
   const { sendMessage, stop, isStreaming } = useAskAI();
   const createConversation = useCreateAiConversation();
@@ -182,11 +183,12 @@ export function GlobalAskOs() {
   const send = useCallback(
     async (override?: string) => {
       const text = (override ?? input).trim();
-      if (!text || isStreaming) return;
+      if (!text || isStreaming || sendingRef.current) return;
+      sendingRef.current = true;
+      lastSentRef.current = text;
       setInput("");
-      setErrorMessage(null);
+      setFailure(null);
       isNearBottomRef.current = true;
-      assistantBufferRef.current = "";
       let conversationId = activeConversationId;
       if (conversationId === null) {
         try {
@@ -196,7 +198,8 @@ export function GlobalAskOs() {
           conversationId = conversation.id;
           setActiveConversationId(conversation.id);
         } catch (error) {
-          setErrorMessage(getErrorMessage(error));
+          sendingRef.current = false;
+          setFailure(classifyAiError(error));
           return;
         }
       }
@@ -208,10 +211,9 @@ export function GlobalAskOs() {
       ];
       setDraft({ user: text, assistant: "" });
       try {
-        await sendMessage(
+        const outcome = await sendMessage(
           context,
           (token) => {
-            assistantBufferRef.current += token;
             setDraft((previous) =>
               previous
                 ? { ...previous, assistant: previous.assistant + token }
@@ -221,6 +223,15 @@ export function GlobalAskOs() {
           conversationId,
           selectedPersona ?? undefined,
         );
+        if (outcome.status === "busy") {
+          setDraft(null);
+          return;
+        }
+        if (outcome.status === "cancelled" && outcome.text.length === 0) {
+          setDraft(null);
+          setFailure({ status: "cancelled" });
+          return;
+        }
         const userMessage: AskAiHistoryMessage = {
           id: (temporaryIdRef.current -= 1),
           role: "user",
@@ -230,7 +241,7 @@ export function GlobalAskOs() {
         const assistantMessage: AskAiHistoryMessage = {
           id: (temporaryIdRef.current -= 1),
           role: "assistant",
-          content: assistantBufferRef.current,
+          content: outcome.text,
           createdAt: new Date().toISOString(),
         };
         queryClient.setQueryData<InfiniteData<AskAiHistoryPage>>(
@@ -268,8 +279,10 @@ export function GlobalAskOs() {
         });
         setDraft(null);
       } catch (error) {
-        setErrorMessage(getErrorMessage(error));
+        setFailure(classifyAiError(error));
         setDraft(null);
+      } finally {
+        sendingRef.current = false;
       }
     },
     [
@@ -283,6 +296,10 @@ export function GlobalAskOs() {
       sendMessage,
     ],
   );
+  const handleRetrySend = useCallback(() => {
+    const last = lastSentRef.current;
+    if (last) void send(last);
+  }, [send]);
   function handleScroll() {
     const element = scrollRef.current;
     if (!element) return;
@@ -421,7 +438,8 @@ export function GlobalAskOs() {
                     <AskOsChatView
                       atBottom={atBottom}
                       draft={draft}
-                      errorMessage={errorMessage}
+                      failure={failure}
+                      onRetry={handleRetrySend}
                       hasNextPage={hasNextPage}
                       isFetchingNextPage={isFetchingNextPage}
                       isLoading={isLoading}

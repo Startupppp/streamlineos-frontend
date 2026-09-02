@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, type Key, type ReactNode } from "react";
+import { useMemo, type Key, type ReactNode } from "react";
 import { List, type RowComponentProps } from "react-window";
 import type { OrgUser } from "@/types/chat";
 
@@ -55,8 +55,6 @@ export function ChatUserVirtualList({
     (): ChatUserRowData => ({ users, renderUser }),
     [users, renderUser],
   );
-  const stableRowKey = useCallback(getRowKey, []);
-
   return (
     <List<ChatUserRowData>
       aria-label={ariaLabel}
@@ -64,7 +62,7 @@ export function ChatUserVirtualList({
       rowCount={users.length}
       rowHeight={rowHeight}
       rowProps={rowProps}
-      rowKey={stableRowKey}
+      rowKey={getRowKey}
       defaultHeight={listHeight}
       overscanCount={OVERSCAN_COUNT}
       style={{ height: listHeight }}

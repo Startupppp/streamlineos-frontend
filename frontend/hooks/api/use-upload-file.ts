@@ -4,7 +4,6 @@ import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
 interface UploadResult {
-  url: string;
   key: string;
   size: number;
   mimeType: string;
@@ -25,7 +24,6 @@ async function uploadFileRequest({
 
   const data = await apiClient.upload<UploadResult>("/storage/upload", formData);
   return {
-    url: data.url,
     key: data.key,
     size: file.size,
     mimeType: file.type,

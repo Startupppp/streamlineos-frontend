@@ -14,6 +14,7 @@ import {
   type ModuleAccent,
 } from "./sidebar-nav-items";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useNavIntentPrefetch } from "@/components/layout/nav-intent-prefetch";
 
 function hoistSingletonParentRoutes(routes: NavRoute[]): NavRoute[] {
   if (routes.length !== 1) return routes;
@@ -148,12 +149,21 @@ function CollapsedItem({ route, pathname, pendingLeaves, onNavigate, accent }: I
   const isActive = isNavRouteActive(route, pathname);
   const count = computeBadge(route, pendingLeaves);
   const hasBadge = count > 0;
+  const prefetchOnIntent = useNavIntentPrefetch();
+  const handleIntent = useCallback(
+    () => prefetchOnIntent(route.href),
+    [prefetchOnIntent, route.href],
+  );
 
   return (
     <Tooltip delayDuration={0}>
       <TooltipTrigger asChild>
         <Link
           href={route.href}
+          prefetch={false}
+          onMouseEnter={handleIntent}
+          onFocus={handleIntent}
+          onTouchStart={handleIntent}
           onClick={onNavigate}
           aria-current={isActive ? "page" : undefined}
           className={cn("nav-item group relative justify-center w-8 h-8 mx-auto flex", isActive && "active")}
@@ -207,11 +217,20 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate, accen
   const count = computeBadge(route, pendingLeaves);
   const hasBadge = count > 0;
   const paddingLeft = depth === 0 ? "0.625rem" : `${0.625 + depth * 0.75}rem`;
+  const prefetchOnIntent = useNavIntentPrefetch();
+  const handleIntent = useCallback(
+    () => prefetchOnIntent(route.href),
+    [prefetchOnIntent, route.href],
+  );
 
   return (
     <div>
       <Link
         href={route.href}
+        prefetch={false}
+        onMouseEnter={handleIntent}
+        onFocus={handleIntent}
+        onTouchStart={handleIntent}
         onClick={onNavigate}
         aria-current={isActive ? "page" : undefined}
         className={cn(

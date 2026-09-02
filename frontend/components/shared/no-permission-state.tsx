@@ -35,7 +35,7 @@ export function NoPermissionState({
       >
         <ShieldAlert className={cn("text-destructive", compact ? "w-5" : "w-7")} />
       </div>
-      <h3 className={cn("font-semibold mb-1", compact ? "text-sm" : "text-base")}>{title}</h3>
+      <h2 className={cn("font-semibold mb-1", compact ? "text-sm" : "text-base")}>{title}</h2>
       <p
         className={cn(
           "text-muted-foreground max-w-sm mb-2",

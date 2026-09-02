@@ -40,8 +40,7 @@ import {
   type AiActionResultState,
 } from "./ai-action-result-body";
 import type { AiInlineSession } from "./ai-inline-preview";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { isApiError } from "@/lib/api-client";
+import { classifyAiError } from "./ai-error-state";
 import { cn } from "@/lib/utils";
 
 export type { AiActionResult } from "./ai-action-result-body";
@@ -52,7 +51,7 @@ export interface AiAction {
   key: string;
   label: string;
   description?: string;
-  run: () => Promise<AiActionResult>;
+  run: (signal?: AbortSignal) => Promise<AiActionResult>;
   onApply?: (text: string) => void;
   applyLabel?: string;
   surface?: AiResultSurface;
@@ -78,14 +77,6 @@ function resolveSurface(
   return action.surface ?? defaultSurface ?? "popover";
 }
 
-function toInlineStatus(state: AiActionResultState): AiInlineSession["status"] {
-  if (state.status === "loading") return "loading";
-  if (state.status === "ready") return "ready";
-  if (state.status === "quota") return "quota";
-  if (state.status === "denied") return "denied";
-  return "error";
-}
-
 function buildInlineSession(
   action: AiAction,
   state: AiActionResultState,
@@ -93,17 +84,16 @@ function buildInlineSession(
     apply: () => void;
     reject: () => void;
     retry: () => void;
+    cancel: () => void;
   },
 ): AiInlineSession {
   return {
     actionKey: action.key,
-    status: toInlineStatus(state),
-    result: state.status === "ready" ? state.result : undefined,
-    errorMessage: state.status === "error" ? state.message : undefined,
-    deniedReason: state.status === "denied" ? state.reason : undefined,
+    state,
     apply: handlers.apply,
     reject: handlers.reject,
     retry: handlers.retry,
+    cancel: handlers.cancel,
   };
 }
 
@@ -128,6 +118,9 @@ export function AiActionsMenu({
   const activeRef = React.useRef<AiAction | null>(null);
   const stateRef = React.useRef<AiActionResultState>({ status: "loading" });
   const inlineActionRef = React.useRef<AiAction | null>(null);
+  const runSeqRef = React.useRef(0);
+  const inFlightRef = React.useRef(false);
+  const controllerRef = React.useRef<AbortController | null>(null);
 
   React.useEffect(() => {
     activeRef.current = active;
@@ -136,6 +129,20 @@ export function AiActionsMenu({
   React.useEffect(() => {
     stateRef.current = state;
   }, [state]);
+
+  /**
+   * Abort orphans the in-flight settle by bumping the sequence: a `run` that
+   * ignores its signal still resolves, and without the bump that stale answer
+   * would land on the surface the user already stopped.
+   */
+  const discardInFlight = React.useCallback(() => {
+    if (!inFlightRef.current) return false;
+    runSeqRef.current += 1;
+    controllerRef.current?.abort();
+    controllerRef.current = null;
+    inFlightRef.current = false;
+    return true;
+  }, []);
 
   const pushInlineSession = React.useCallback(
     (action: AiAction, nextState: AiActionResultState) => {
@@ -152,88 +159,90 @@ export function AiActionsMenu({
           inlineActionRef.current = null;
         },
         reject: () => {
+          discardInFlight();
           action.onInlineChange?.(null);
           inlineActionRef.current = null;
         },
         retry: () => {
           void runActionRef.current(action);
         },
+        cancel: () => {
+          cancelRunRef.current();
+        },
       };
-
-      if (nextState.status === "loading") {
-        action.onInlineChange(buildInlineSession(action, nextState, handlers));
-        return;
-      }
 
       action.onInlineChange(buildInlineSession(action, nextState, handlers));
     },
-    [],
+    [discardInFlight],
   );
 
   const runActionRef = React.useRef<(action: AiAction) => Promise<void>>(
     async () => {},
   );
+  const cancelRunRef = React.useRef<() => void>(() => {});
 
   const runAction = React.useCallback(
     async (action: AiAction) => {
+      if (inFlightRef.current) return;
+
       const surface = resolveSurface(action, defaultSurface);
 
-      if (surface === "inline") {
-        if (!action.onInlineChange) {
-          if (process.env.NODE_ENV === "development") {
-            console.error(
-              `AiActionsMenu: inline action "${action.key}" missing onInlineChange`,
-            );
-          }
-          return;
+      if (surface === "inline" && !action.onInlineChange) {
+        if (process.env.NODE_ENV === "development") {
+          console.error(
+            `AiActionsMenu: inline action "${action.key}" missing onInlineChange`,
+          );
         }
+        return;
+      }
+
+      const stamp = ++runSeqRef.current;
+      const controller = new AbortController();
+      controllerRef.current = controller;
+      inFlightRef.current = true;
+
+      setActive(action);
+      setState({ status: "loading" });
+      if (surface === "inline") {
         inlineActionRef.current = action;
-        setActive(action);
-        setState({ status: "loading" });
         pushInlineSession(action, { status: "loading" });
       } else if (surface === "popover") {
-        setActive(action);
-        setState({ status: "loading" });
         setPopoverOpen(true);
       } else {
-        setActive(action);
-        setState({ status: "loading" });
         setOverlayOpen(true);
       }
 
+      let nextState: AiActionResultState;
       try {
-        const result = await action.run();
-        const nextState: AiActionResultState = {
-          status: "ready",
-          result,
-          aiUsage: result.aiUsage,
-        };
-        setState(nextState);
-        if (surface === "inline") {
-          pushInlineSession(action, nextState);
-        }
+        const result = await action.run(controller.signal);
+        nextState = { status: "ready", result, aiUsage: result.aiUsage };
       } catch (error) {
-        let nextState: AiActionResultState;
-        if (isApiError(error) && error.status === 402) {
-          nextState = { status: "quota" };
-        } else if (isApiError(error) && error.status === 403) {
-          nextState = { status: "denied", reason: getErrorMessage(error) };
-        } else {
-          nextState = { status: "error", message: getErrorMessage(error) };
-        }
-        setState(nextState);
-        if (surface === "inline") {
-          pushInlineSession(action, nextState);
-        }
+        nextState = classifyAiError(error);
       }
+
+      if (runSeqRef.current !== stamp) return;
+      inFlightRef.current = false;
+      controllerRef.current = null;
+      setState(nextState);
+      if (surface === "inline") pushInlineSession(action, nextState);
     },
     [defaultSurface, pushInlineSession],
   );
 
   runActionRef.current = runAction;
 
+  const cancelRun = React.useCallback(() => {
+    if (!discardInFlight()) return;
+    setState({ status: "cancelled" });
+    const action = inlineActionRef.current;
+    if (action) pushInlineSession(action, { status: "cancelled" });
+  }, [discardInFlight, pushInlineSession]);
+
+  cancelRunRef.current = cancelRun;
+
   React.useEffect(() => {
     return () => {
+      controllerRef.current?.abort();
       inlineActionRef.current?.onInlineChange?.(null);
     };
   }, []);
@@ -250,21 +259,29 @@ export function AiActionsMenu({
     setPopoverOpen(false);
   }, [active, state]);
 
-  const handleOverlayOpenChange = React.useCallback((open: boolean) => {
-    setOverlayOpen(open);
-    if (!open) {
-      setActive(null);
-      setState({ status: "loading" });
-    }
-  }, []);
+  const handleOverlayOpenChange = React.useCallback(
+    (open: boolean) => {
+      setOverlayOpen(open);
+      if (!open) {
+        discardInFlight();
+        setActive(null);
+        setState({ status: "loading" });
+      }
+    },
+    [discardInFlight],
+  );
 
-  const handlePopoverOpenChange = React.useCallback((open: boolean) => {
-    setPopoverOpen(open);
-    if (!open) {
-      setActive(null);
-      setState({ status: "loading" });
-    }
-  }, []);
+  const handlePopoverOpenChange = React.useCallback(
+    (open: boolean) => {
+      setPopoverOpen(open);
+      if (!open) {
+        discardInFlight();
+        setActive(null);
+        setState({ status: "loading" });
+      }
+    },
+    [discardInFlight],
+  );
 
   if (actions.length === 0) return null;
 
@@ -276,6 +293,7 @@ export function AiActionsMenu({
       onApply={active?.onApply ? handleApply : undefined}
       applyLabel={active?.applyLabel ?? "Apply"}
       onRetry={handleRetry}
+      onCancel={cancelRun}
     />
   );
 

@@ -148,14 +148,14 @@ export function EmptyState({
         </div>
       ) : null}
 
-      <h3
+      <h2
         className={cn(
           "font-semibold text-foreground",
           compact ? "text-label leading-tight" : "text-sm"
         )}
       >
         {filtersActive ? filteredTitle ?? FILTERED_EMPTY_TITLE : title}
-      </h3>
+      </h2>
 
       {description && (
         <p

@@ -27,7 +27,9 @@ const MEASURED_PAIRS = [
   ["measuredPageChunkBytes", "maxPageChunkBytes"],
   ["measuredCssBytes", "maxCssBytes"],
   ["measuredImageBytes", "maxImageBytes"],
+  ["measuredFontBytes", "maxFontBytes"],
   ["measuredThirdPartyBytes", "maxThirdPartyBytes"],
+  ["measuredServerPayloadBytes", "maxServerPayloadBytes"],
 ];
 
 const REQUIRED_MEASURE = "measuredFirstLoadJsBytes";
@@ -89,6 +91,18 @@ function selfTest() {
   });
   if (clean.length !== 0) fail("within-budget-passes", `expected 0, got ${clean.length}`);
   else pass("within-budget-passes — measured ≤ ceiling produces no violation");
+
+  const nonJs = findExceededBundles({
+    defaults: { maxFontBytes: 100, maxServerPayloadBytes: 100 },
+    budgets: {
+      "/fonts-over": { measuredFontBytes: 101 },
+      "/payload-over": { measuredServerPayloadBytes: 101 },
+      "/both-under": { measuredFontBytes: 100, measuredServerPayloadBytes: 100 },
+    },
+  });
+  if (nonJs.length !== 2)
+    fail("font-and-payload-detected", `expected 2 breaches (font, server payload), got ${nonJs.length}`);
+  else pass("font-and-payload-detected — font bytes and server payload bytes are governed, not just JS");
 
   const pending = findPendingBundles({
     budgets: {

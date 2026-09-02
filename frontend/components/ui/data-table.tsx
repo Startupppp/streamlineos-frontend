@@ -35,6 +35,19 @@ import type { DataTableColumn, DataTableProps, ClientPagination, ServerPaginatio
 
 export type { DataTableColumn, DataTableProps };
 
+function readSortKey(row: unknown, key: string): string | number | boolean | null {
+  if (row === null || typeof row !== "object") return null;
+  const value: unknown = Reflect.get(row, key);
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
+    return value;
+  }
+  return null;
+}
+
 function SortIndicator({ sorted }: { sorted: "asc" | "desc" | false }) {
   if (sorted === "asc")
     return <ArrowUp className="h-3 w-3 text-primary" />;
@@ -129,6 +142,9 @@ export function DataTable<T>({
       defs.push({
         id: col.key,
         header: col.header,
+        accessorFn: col.sortable
+          ? (row: T) => sortValueFn?.(row) ?? readSortKey(row, col.key)
+          : undefined,
         cell: ({ row }) => col.cell(row.original),
         enableSorting: col.sortable ?? false,
         sortingFn: sortValueFn
@@ -267,6 +283,10 @@ export function DataTable<T>({
                     {hg.headers.map((header) => {
                       const canSort = header.column.getCanSort();
                       const sorted = header.column.getIsSorted();
+                      const headerLabel =
+                        typeof header.column.columnDef.header === "string"
+                          ? header.column.columnDef.header
+                          : undefined;
                       return (
                         <TableHead
                           key={header.id}
@@ -278,9 +298,12 @@ export function DataTable<T>({
                           {header.isPlaceholder ? null : canSort ? (
                             <button
                               type="button"
+                              aria-label={
+                                headerLabel ? `Sort by ${headerLabel}` : undefined
+                              }
                               onClick={header.column.getToggleSortingHandler()}
                               className={cn(
-                                "flex items-center gap-1 transition-colors hover:text-primary",
+                                "flex items-center gap-1 rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                                 sorted && "text-primary",
                               )}
                             >
@@ -366,6 +389,10 @@ export function DataTable<T>({
                     {hg.headers.map((header) => {
                       const canSort = header.column.getCanSort();
                       const sorted = header.column.getIsSorted();
+                      const headerLabel =
+                        typeof header.column.columnDef.header === "string"
+                          ? header.column.columnDef.header
+                          : undefined;
                       return (
                         <TableHead
                           key={header.id}
@@ -384,9 +411,12 @@ export function DataTable<T>({
                           {header.isPlaceholder ? null : canSort ? (
                             <button
                               type="button"
+                              aria-label={
+                                headerLabel ? `Sort by ${headerLabel}` : undefined
+                              }
                               onClick={header.column.getToggleSortingHandler()}
                               className={cn(
-                                "flex items-center gap-1 transition-colors hover:text-primary",
+                                "flex items-center gap-1 rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                                 sorted && "text-primary",
                               )}
                             >

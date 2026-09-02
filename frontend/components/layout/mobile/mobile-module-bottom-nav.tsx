@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { EllipsisIcon } from "@animateicons/react/lucide";
@@ -17,6 +17,7 @@ import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useNavIntentPrefetch } from "@/components/layout/nav-intent-prefetch";
 
 function ModuleNavLink({
   route,
@@ -82,6 +83,47 @@ function MoreTab({
   );
 }
 
+function OverflowNavLink({
+  href,
+  label,
+  icon: Icon,
+  isActive,
+  onNavigate,
+}: {
+  href: string;
+  label: string;
+  icon: NavRoute["icon"];
+  isActive: boolean;
+  onNavigate: () => void;
+}) {
+  const prefetchOnIntent = useNavIntentPrefetch();
+  const handleIntent = useCallback(
+    () => prefetchOnIntent(href),
+    [prefetchOnIntent, href],
+  );
+
+  return (
+    <Link
+      href={href}
+      prefetch={false}
+      onTouchStart={handleIntent}
+      onMouseEnter={handleIntent}
+      onFocus={handleIntent}
+      onClick={onNavigate}
+      className={cn(
+        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
+        isActive
+          ? "bg-primary/10 text-primary"
+          : "text-foreground hover:bg-muted",
+      )}
+      aria-current={isActive ? "page" : undefined}
+    >
+      <Icon className="size-4 shrink-0" />
+      {label}
+    </Link>
+  );
+}
+
 function MoreDrawer({
   open,
   onOpenChange,
@@ -121,21 +163,14 @@ function MoreDrawer({
                   allOverflowRoutes,
                 );
                 return (
-                  <Link
+                  <OverflowNavLink
                     key={route.href}
                     href={route.href}
-                    onClick={handleClose}
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
-                      isActive
-                        ? "bg-primary/10 text-primary"
-                        : "text-foreground hover:bg-muted",
-                    )}
-                    aria-current={isActive ? "page" : undefined}
-                  >
-                    <Icon className="size-4 shrink-0" />
-                    {route.label}
-                  </Link>
+                    label={route.label}
+                    icon={Icon}
+                    isActive={isActive}
+                    onNavigate={handleClose}
+                  />
                 );
               })}
             </div>

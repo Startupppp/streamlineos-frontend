@@ -7,7 +7,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
-import { cn } from "@/lib/utils";
+import { cn, resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -126,7 +126,7 @@ export function ReviewTable({ list, canReview, onOpenReview, pagination }: Revie
         <div className="flex items-center gap-2.5">
           <Avatar className="w-8 shrink-0">
             {emp.userImage && (
-              <AvatarImage src={emp.userImage} alt={emp.userName ?? "Employee"} />
+              <AvatarImage src={resolveImageUrl(emp.userImage)} alt={emp.userName ?? "Employee"} />
             )}
             <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">
               {getInitials(emp.userName)}

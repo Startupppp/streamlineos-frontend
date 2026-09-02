@@ -1,112 +1,112 @@
 # Ticket 10 — Embedding through the gateway with credit · session S3 · 2026-09-02
 
-**Outcome:** 4 of 6 boxes closed. Boxes 1 and 2 are blocked on 7 call sites in 5 files **outside S3's
-territory** — reported, not edited. Ticket 09's residual gap (embedding takes no concurrency slot)
-is closed, and two further defects in the same method were found and fixed. No git run.
+**Outcome: all 6 boxes closed.** With the extended territory, the 7 direct-provider embedding call
+sites are migrated, the missing cost ceilings exist, and `EmbeddingsService` no longer leaves the
+gateway. No git run.
 
-## `pnpm -s check:ai-charge`
+## `pnpm -s check:ai-charge` — green, and that green still does not mean what it looks like
 
-`113 invocations scanned — all declare charge explicitly (1 allowlisted)`, exit 0.
-`check:ai-charge:self-test` → `8 passed (113 invocations scanned)`, exit 0.
-**Note:** the gate's regex only matches `invokeStructured*` / `invokeText*`. It does not see
-`embedQueryWithCredit`, and it cannot see a direct `EmbeddingsService` call at all — which is why
-the whole embedding surface below was invisible to it.
+`113 invocations scanned — all declare charge explicitly (1 allowlisted)`, exit 0. Self-test
+`8 passed`. **The number did not move, because the gate cannot see embedding at all.** Its regex is
+`\.(invokeStructured(?:WithImage)?(?:WithUsage)?|invokeText(?:WithUsage)?)\s*\(` — I ran it against a
+string containing both `embedQueryWithCredit` and `embedBatchWithCredit` and it returns `null`.
+**6 credited embedding call sites sit outside its coverage** (`kb-indexing:113`, `kb-search:36`,
+`kb-attachment-indexing:27`, `support-ai-triage-data:119`, `support-ai-embeddings.helper:36`,
+`kb-rag-retrieval:132`). Route the regex fix to ticket 35 — adding `embed(Query|Batch)WithCredit` to
+the alternation makes it 119 and gives the embedding surface the same charge-declared guarantee.
 
-## Fixed — `AiGatewayService.embedQueryWithCredit` (3 defects)
+## Part 1 — the seven call sites
 
-1. **P2, handed over from ticket 09 — no concurrency slot.** It was the only paid provider call the
-   per-org cap did not cover. Now `acquire()` → `try { … } finally { release() }` around the whole
-   method, returning `concurrency_exceeded` when the cap is hit. The slot is taken *outside* the
-   credit reservation, so the ticket-09 leak shape (reserve throwing between acquire and try) cannot
-   reappear — there is no code between them.
-2. **P2 — a settlement failure refunded a paid embedding and failed the caller.** The old body wrapped
-   provider call *and* `ledger.settle` in one `try`; a throwing settle hit the catch, released the
-   reservation (full refund for work already paid to the provider) and returned `provider_unavailable`
-   even though the vector existed. Settlement now logs and continues, matching `AiGatewayCreditHelper`.
-3. **P3 — charged embeddings reported 0 credits.** Usage was tracked inside `EmbeddingsService` with no
-   `creditsMilli`, so `ai_usage_logs.creditsMilli` was 0 while the wallet was really debited. That
-   column drives the org-facing usage API (`ai-credits-usage.service.ts` → `milliToCredits`). The
-   gateway now calls a new non-tracking `EmbeddingsService.embedQueryRaw` and writes its own usage row
-   with the settled milli-credits, latency, correlation id and outcome.
+`kb-search.service.ts` (×3), `kb-indexing.service.ts`, `kb-attachment-indexing.service.ts`,
+`support-ai-embeddings.helper.ts`, `support-ai-triage-data.service.ts` now inject `AiGatewayService`.
 
-Extracted to `ai-gateway-embed.helper.ts` (the established `*-credit.helper` / `*-runner.helper`
-pattern) so `ai-gateway.service.ts` stays at 261 lines.
+**`kb-indexing.service.ts` — the serious one.** The per-chunk loop is gone. `embedWithResumption` now
+partitions chunks into cached and pending, makes **one** `embedBatchWithCredit` call for all pending
+chunks (one reservation, one concurrency slot, provider-side batches of 64), then writes checkpoints in
+**one** batched multi-row upsert. That removes both violations: the unbounded paid fanout (§12.3) and
+the per-row DB write inside a growing loop (§5.1) — `saveCheckpoint` was one `runInNewTenantTransaction`
+per chunk. `KbIngestionCheckpointService.saveCheckpoints` replaces it; the old single-row method had no
+callers left and was deleted.
+
+**One deliberate behaviour change, flagged.** Resumption is now all-or-nothing within an embedding pass:
+a provider failure mid-document previously kept checkpoints for chunks already embedded, so a retry paid
+for fewer. It now writes nothing and refunds the whole reservation. I judged that the better trade — the
+failed attempt costs the org zero and leaves no partial state, `chunkText` caps a document at 400 chunks
+so a full retry is bounded at ~450 milli, and cross-attempt resumption (embed succeeded, a later stage
+failed) still works and is covered by R2/R2b. R1 was rewritten to assert the new invariant rather than
+deleted.
+
+## Part 2 — the missing ceilings
+
+`kb.search` 0.05 · `kb.indexing` 1 · `support.embedding` 0.05 · `support.kb-search` 0.05. Sized against
+the real worst case: 400 chunks × ~375 tokens = 150k tokens ≈ **450 milli**, comfortably inside the
+1-credit `kb.indexing` ceiling, so a normal document never takes an overage. Query embeds land on the
+10-milli floor, so 50 milli gives 5× headroom instead of over-reserving a full credit per search.
+Fractional entries are new here, so `getReserveEstimateMilli` now `Math.round`s — `0.07 * 1000` is
+`70.00000000000001`, which would reach an integer ledger column.
+
+## Part 3 — unrepresentable, not merely absent
+
+`EmbeddingsService` is out of `AiGatewayModule.exports`, and I went further: the three un-metered
+wrappers (`embedQuery`, `embedBatch`, `embedQueryDeduped`) had no production callers left and are
+deleted, along with the now-unused `AiUsageService` dependency and the dedupe map. The class is 52 lines
+exposing `embedQueryRaw`, `embedBatchRaw`, `isConfigured`, `toVectorLiteral`. A test pins that exact
+public surface, so re-adding an un-metered entry point fails a test rather than merely passing review.
 
 ## Proofs (each command run, each number read)
 
-- **Regression** — `nice -n 10 npx jest src/modules/ai --maxWorkers=2` → **41 suites passed, 338 passed /
-  21 skipped** (was 328 before; +10 new tests. The 21 skips are the known out-of-scope CRM `describe.skip`).
-- **Bite proof A** — removed the acquire/release wrapper, source otherwise untouched: **3 failed / 7 passed**
-  (the three concurrency assertions flipped; the seven credit assertions correctly stayed green). Restored, SHA-256 verified.
-- **Bite proof B** — moved `reserve()` after the provider call and made settle rethrow: **4 failed / 6 passed**
-  (reserve-before-provider, no-provider-on-short-wallet, release-on-provider-failure, settle-failure-is-not-a-refund
-  all flipped; the three concurrency assertions correctly stayed green). Restored, SHA-256 verified.
-- **Token metering, box 3** — new test: a 1,000-token embedding settles **10** milli, a 10,000-token embedding
-  settles **30** milli, against a **1,000** milli `AI_FEATURE_COSTS` ceiling. `AI_FEATURE_COSTS` has exactly one
-  consumer (`getReserveEstimateMilli`) and all 4 of its call sites are `ledger.reserve`.
-- **Ledger, boxes 4 + 5** — `nice -n 10 npx jest src/modules/billing/core/ai-credits --maxWorkers=2` →
-  **5 suites / 42 passed**, covering under-run refund, overage debit, idempotent settle, idempotent release,
-  `ConflictException` on releasing a SETTLED reservation, and the expiry sweep.
-- **Box 6** — 0 permission/role-table writes under `src/modules/ai`; 0 imports of `modules/ai` from
-  `modules/rbac`, `modules/auth`, `common/auth`. Every non-`@Public` AI route carries `@RequirePermission`
-  (12 controllers). `ToolAccessService` reads `AccessService.resolveUserPermissions`, never the model.
-- **Frontend half of box 1** — no provider SDK in `package.json` (`openai`, `ai`, `@ai-sdk/*`, `@langchain/*`,
-  `@google/generative-ai`, `@anthropic-ai/*` all absent); 0 grep hits for `api.openai` / `generativelanguage` /
-  `openrouter` in `.ts`/`.tsx` outside marketing copy.
-- **Typecheck** — `tsc --noEmit -p tsconfig.json`, exit 2, **5 errors, 0 under `src/modules/ai/`**.
-- **Lint** — `npx eslint` on all 5 changed files → 0 errors, 0 warnings.
-- **`pnpm -s check:file-sizes`** — 2 offenders, neither mine (`gdpr-subject-erasure.service.ts` 619,
-  `storage.service.ts` 521). Spec files are exempt; my 592-line spec is not flagged.
+- `nice -n 10 npx jest src/modules/ai --maxWorkers=2` → **49 suites passed, 416 passed / 21 skipped**.
+- `nice -n 10 npx jest src/modules/kb src/modules/support --maxWorkers=2` → **122 suites passed, 848 passed, 0 failed**.
+- `nice -n 10 npx jest src/modules/billing/core/ai-credits --maxWorkers=2` → **5 suites / 42 passed**.
+- **Bite C — batching.** Reverted `embedWithResumption` to one gateway call per chunk: `2 failed, 15 passed`
+  across the checkpoint + s10 suites. `R1b: the gateway is called once, not once per chunk` and `R3` flipped;
+  the s10 attachment test correctly stayed green (different service, not neutered). Restored, SHA-256 verified.
+- **Bite D — credit reservation.** Removed the reservation from `runBatch`: `4 failed, 35 passed`. Named
+  failures: `reserves ONCE for the whole batch, not once per text` · `settles on the summed actual tokens of
+  the batch, not the per-call floor` · `never calls the provider when the wallet is short` · `releases the
+  reservation when the provider throws mid-batch`. Restored, SHA-256 verified.
+- Earlier bites still hold: removing the single-embed concurrency wrapper → 3 failed / 7 passed; moving
+  `reserve()` after the provider call → 4 failed / 6 passed.
+- **Typecheck** — `tsc --noEmit -p tsconfig.json`: **4 errors, all in `src/modules/goals/goals-deleted-read-exclusion.spec.ts`**, zero under `ai/`, `kb/` or `support/`.
+- **Lint** — `npx eslint` on all 16 changed source files → exit 0, no output.
+- **`pnpm -s check:file-sizes`** — 2 offenders, neither mine (`gdpr-subject-erasure.service.ts` 630, `storage.service.ts` 520).
 
 ## Files changed
 
-- `streamlineos-backend/src/modules/ai/core/gateway/ai-gateway-embed.helper.ts` **(new, 145 lines)**
-- `streamlineos-backend/src/modules/ai/core/gateway/ai-gateway.service.ts`
-- `streamlineos-backend/src/modules/ai/core/providers/embeddings.service.ts` (+`embedQueryRaw`)
-- `streamlineos-backend/src/modules/ai/core/services/kb-rag-retrieval.service.ts` (maps the new `concurrency_exceeded` kind)
-- `streamlineos-backend/src/modules/ai/core/gateway/ai-gateway.service.spec.ts` (+10 tests, +1 factory)
-- `streamlineos-frontend/.scratch/code-release-10-10/issues/10-embedding-through-gateway-with-credit.md`
+**Gateway (`modules/ai/`)** — `gateway/ai-gateway-embed.helper.ts` (single + batch paths share reserve/settle/release),
+`gateway/ai-gateway.service.ts` (+`embedBatchWithCredit`), `gateway/ai-gateway.types.ts` (+`EmbedBatch*`),
+`gateway/ai-gateway.module.ts` (export removed), `billing/ai-cost-catalog.ts` (4 ceilings + rounding),
+`providers/embeddings.service.ts` (reduced to raw primitives), `services/kb-rag-retrieval.service.ts`,
+`gateway/ai-gateway.service.spec.ts` (+8 batch tests), `providers/embeddings.service.spec.ts` (rewritten, 7 tests).
 
-I touched nothing that looks like streaming. `kb-rag.service.ts` and `chat-assistant.service.ts` were
-read but **not** edited — ticket 11's lane is visibly mid-flight in `kb-rag.service.ts` (a breaker,
-`appOverheadStart` and `ttftMs` appeared there during my session).
+**KB (`modules/kb/retrieval/`)** — `kb-indexing.service.ts`, `kb-attachment-indexing.service.ts`,
+`kb-search.service.ts`, `kb-ingestion-checkpoint.service.ts`, plus 12 specs re-shaped to the gateway mock
+(`kb-checkpoint-resumption.spec.ts` rewritten to batch semantics, +2 tests; `kb-s10-fixes.spec.ts` retargeted).
 
-## For the orchestrator — needs an owner outside S3
+**Support (`modules/support/core/`)** — `support-ai-embeddings.helper.ts`, `support-ai-triage-data.service.ts`,
+`support-ai-triage-analysis.service.ts`, `support-ai.service.spec.ts`, `support-ai-tenant-isolation.spec.ts`,
+`support-ai-triage-charge.spec.ts`.
 
-**P1 · 7 direct-provider embedding call sites, no credit, no slot, no cap.** These are the reason boxes 1
-and 2 cannot be ticked. All are outside `backend/src/modules/ai/**`; SESSIONS.md assigns
-`modules/kb/retrieval/**` and `modules/support/core/**` to nobody.
+**Ticket** — `.scratch/code-release-10-10/issues/10-embedding-through-gateway-with-credit.md`.
 
-| File | Line | Feature string | Shape |
-|---|---|---|---|
-| `kb/retrieval/kb-search.service.ts` | 143, 251, 298 | `kb.search` | one embed per authenticated search |
-| `kb/retrieval/kb-indexing.service.ts` | 107 | `kb.indexing` | **one embed per chunk, in a loop, unbounded** |
-| `kb/retrieval/kb-attachment-indexing.service.ts` | 32 | `kb.indexing` | `embedBatch` per 64-chunk batch |
-| `support/core/support-ai-embeddings.helper.ts` | 36 | `support.embedding` | one embed per triage/dedupe run |
-| `support/core/support-ai-triage-data.service.ts` | 119 | `support.kb-search` | one embed per KB search for a ticket |
+I touched nothing streaming-shaped: `kb-rag.service.ts` and `chat-assistant.service.ts` were read but never
+edited, and ticket 11's work is visibly live in both.
 
-The migration is mechanical — swap the injected `EmbeddingsService` for `AiGatewayService` and call
-`embedQueryWithCredit({ text, orgId, feature, charge: true })`, which now does reservation, settlement,
-usage metering and the concurrency slot. Two things must land with it:
+## For the orchestrator
 
-1. **`AI_FEATURE_COSTS` has no entry for `kb.search`, `kb.indexing`, `support.embedding` or
-   `support.kb-search`.** They would fall to the 1-credit default — 1,000 milli reserved *per chunk* for
-   indexing. Add per-feature ceilings (`ai-cost-catalog.ts` is in S3's territory; say the word and I will).
-2. **`EmbeddingsService` should stop being exported from `AiGatewayModule`** once the last direct caller is
-   gone, and `embedQuery` / `embedBatch` / `embedQueryDeduped` deleted, so the unsafe state becomes
-   unrepresentable rather than merely discouraged. `embedQueryDeduped` is *already* dead (only spec mocks
-   reference it) — knip proof needed before deletion.
-
-**P2 · denial-of-wallet on `POST /public/kb/ask` and `/public/kb/stream-ask`.** The rate limit
-(`ai:public-kb-ask`, 10/min) is keyed by **client IP** in `RateLimitGuard`, while the *spender* is the
-`org` in the request body. Nothing bounds per-org spend from anonymous traffic; distributed callers can
-drain a named tenant's wallet. Credit reservation now makes the drain visible and caps it at the org's
-balance, and `hasPublishedPublicArticles` still short-circuits orgs with no eligible content — but an org
-*with* content has no per-org ceiling. The fix needs a new tier constant in
-`src/common/ratelimit/rate-limit.service.ts` (outside S3) plus a product decision on the number, so I
-did not pick one.
-
-**Not mine, seen in transit.** Backend `tsc` ended at 5 errors, all in `src/modules/organization/core/org-purge.service.ts`
-and `src/modules/support/core/support-ticket-erasure.ts` — S4's GDPR erasure lane. Fifteen minutes earlier
-the same run showed 3 different errors in `src/common/auth/jwt-keyring.service.ts` and a cron spec, and
-before that the 15 `UploadResult` errors ticket 09 reported. The set is churning; none of it is AI.
+- **Two files I had to touch that were not in the extended list**, both forced by part 3 and both mechanical:
+  `support-ai-triage-analysis.service.ts` injected `EmbeddingsService` purely for `isConfigured()` probes, so it
+  would not have booted once the export was removed (3 lines: dependency dropped, probes routed to
+  `aiGateway.isEmbeddingConfigured()`); and `support-ai-triage-charge.spec.ts`, which constructs that service
+  positionally and needed the dropped argument removed.
+- **P2 denial-of-wallet left open as instructed.** `ai:public-kb-ask` is keyed by client IP while the spender is
+  the `org` in the body. Reservation now bounds the drain at the org's balance and makes it visible in
+  `ai_usage_logs`; the per-org ceiling needs a tier constant in `common/ratelimit/` and a product number.
+- **Pre-existing, not mine, worth a ticket:** `chunkText` (`kb-chunk-utils.ts`) silently truncates at
+  `maxChunks = 400`. A document longer than ~600k characters is indexed in part with no error and no signal —
+  the brief's "never solve growing work with silent truncation" rule, in the retrieval path. I did not change it;
+  it is load-bearing for the ceiling arithmetic above, so raising the cap means revisiting `kb.indexing`.
+- **Not mine, seen in transit:** `tsc` ended on 4 errors in `src/modules/goals/goals-deleted-read-exclusion.spec.ts`.
+  Over this session the red set moved through `UploadResult` (storage/kb-wiki/payroll), `jwt-keyring`, `org-purge` +
+  `support-ticket-erasure`, `hrHeadcountNamespace`, and a `kb-page-comments` `.limit()` — all other lanes, all
+  transient. None ever landed under `ai/`.

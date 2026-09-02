@@ -21,6 +21,7 @@ import {
   ConfirmRemoveDialog,
 } from "@/features/module-access/components/member-dialogs";
 import { MemberGrantsSheet } from "@/features/module-access/components/member-grants-sheet";
+import { resolveImageUrl } from "@/lib/utils";
 
 const PAGE_SIZE = 20;
 
@@ -68,7 +69,7 @@ function MemberRow({ member, canManage, onEdit, onRemove, onManageGrants, isRemo
   return (
     <div className="flex items-center gap-3 px-4 py-3 border-b border-border/60 last:border-0">
       <Avatar className="h-8 w-8 shrink-0">
-        <AvatarImage src={member.avatarUrl ?? undefined} />
+        <AvatarImage src={resolveImageUrl(member.avatarUrl)} />
         <AvatarFallback className="text-micro">
           {getUserInitials(displayName)}
         </AvatarFallback>

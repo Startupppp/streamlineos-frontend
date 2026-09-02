@@ -11,6 +11,15 @@ jest.mock("lucide-react", () => {
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/hr",
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+    back: jest.fn(),
+    forward: jest.fn(),
+    refresh: jest.fn(),
+  }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 jest.mock("next/link", () => ({

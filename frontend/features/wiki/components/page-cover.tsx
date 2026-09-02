@@ -116,7 +116,7 @@ export default function PageCover({
     setUploading(true);
     try {
       const result = await uploadKbMedia(file);
-      onCoverChange(result.url);
+      onCoverChange(result.key);
       setPickerOpen(false);
     } catch (error) {
       toast.error("Failed to upload cover", { description: getErrorMessage(error) });

@@ -31,6 +31,7 @@ import {
   SettingsField,
   SettingsFieldGrid,
 } from "./org-settings-chrome";
+import { resolveImageUrl } from "@/lib/utils";
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 
@@ -159,7 +160,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
     setter(true);
     try {
       const result = await uploadMutation.mutateAsync({ file, folder: `org-${field}s` });
-      form.setValue(field, result.url, { shouldDirty: true });
+      form.setValue(field, result.key, { shouldDirty: true });
       toast.success(`${field === "logo" ? "Logo" : "Favicon"} uploaded`);
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -210,14 +211,14 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
         <SettingsFieldGrid cols={2}>
           <SettingsField label="Logo">
             {org.logo ? (
-              <Image src={org.logo} alt="Org logo" width={160} height={32} className="h-8 w-auto rounded border border-border object-contain" />
+              <Image src={resolveImageUrl(org.logo) ?? org.logo} alt="Org logo" width={160} height={32} className="h-8 w-auto rounded border border-border object-contain" />
             ) : (
               <p className="text-sm text-muted-foreground">Not set</p>
             )}
           </SettingsField>
           <SettingsField label="Favicon">
             {org.favicon ? (
-              <Image src={org.favicon} alt="Favicon" width={24} height={24} className="h-6 w-6 rounded border border-border object-contain" />
+              <Image src={resolveImageUrl(org.favicon) ?? org.favicon} alt="Favicon" width={24} height={24} className="h-6 w-6 rounded border border-border object-contain" />
             ) : (
               <p className="text-sm text-muted-foreground">Not set</p>
             )}
@@ -252,7 +253,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
                       <UploadButton uploading={logoUploading} onClick={handleClickLogoInput} />
                       <input ref={logoInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/svg+xml" className="hidden" onChange={handleLogoUpload} />
                     </div>
-                    {logoVal && <Image src={logoVal} alt="Logo preview" width={160} height={32} className="h-8 w-auto rounded border border-border mt-1 object-contain" />}
+                    {logoVal && <Image src={resolveImageUrl(logoVal) ?? logoVal} alt="Logo preview" width={160} height={32} className="h-8 w-auto rounded border border-border mt-1 object-contain" />}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -270,7 +271,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
                       <UploadButton uploading={faviconUploading} onClick={handleClickFaviconInput} />
                       <input ref={faviconInputRef} type="file" accept="image/x-icon,image/vnd.microsoft.icon,image/png,image/jpeg" className="hidden" onChange={handleFaviconUpload} />
                     </div>
-                    {faviconVal && <Image src={faviconVal} alt="Favicon preview" width={24} height={24} className="h-6 w-6 rounded border border-border mt-1 object-contain" />}
+                    {faviconVal && <Image src={resolveImageUrl(faviconVal) ?? faviconVal} alt="Favicon preview" width={24} height={24} className="h-6 w-6 rounded border border-border mt-1 object-contain" />}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -355,7 +356,7 @@ function EmailBrandingPreview({
         <div className="max-w-sm mx-auto bg-card rounded-md overflow-hidden shadow-sm border border-border">
           <div className="px-4 py-3" style={{ backgroundColor: primaryColor }}>
             {logo ? (
-              <Image src={logo} alt="Logo" width={160} height={28} className="h-7 w-auto object-contain brightness-0 invert" />
+              <Image src={resolveImageUrl(logo) ?? logo} alt="Logo" width={160} height={28} className="h-7 w-auto object-contain brightness-0 invert" />
             ) : (
               <div className="h-7 w-20 rounded bg-white/30" />
             )}

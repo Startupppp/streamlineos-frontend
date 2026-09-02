@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { NotificationListSkeleton } from "@/features/notifications/notification-list-skeleton";
 import dynamic from "next/dynamic";
 
@@ -34,6 +35,7 @@ import { Inbox } from "lucide-react";
 import type { Notification } from "@/types/notifications";
 import type {
   InboxKind,
+  InboxSourceStatus,
   MailInboxItem,
   BuildApprovalInboxItem,
 } from "@/types/inbox";
@@ -52,6 +54,25 @@ const VIEW_KINDS: Record<InboxView, InboxKind[] | undefined> = {
   MAIL: ["mail"],
   APPROVALS: ["build_approval"],
 };
+
+const PERMISSION_REASON_PREFIX = "no permission: ";
+
+function deniedPermissionFor(
+  view: InboxView,
+  sources: InboxSourceStatus[],
+): string | null {
+  const kinds = VIEW_KINDS[view];
+  if (!kinds) return null;
+  const relevant = sources.filter((source) => kinds.includes(source.kind));
+  if (relevant.length === 0) return null;
+  const refused = relevant.filter(
+    (source) =>
+      !source.included && source.reason?.startsWith(PERMISSION_REASON_PREFIX),
+  );
+  if (refused.length !== relevant.length) return null;
+  const first = refused[0];
+  return first?.reason?.slice(PERMISSION_REASON_PREFIX.length) ?? null;
+}
 
 const VIEWS: Array<{ key: InboxView; label: string }> = [
   { key: "ALL", label: "All" },
@@ -93,6 +114,10 @@ export function InboxShell() {
   }, []);
 
   const items = data?.pages.flatMap((p) => p.items) ?? [];
+  const deniedPermission = deniedPermissionFor(
+    view,
+    data?.pages[0]?.sources ?? [],
+  );
 
   const handleNotificationClick = useCallback(
     (n: { id: number; isRead: boolean; link: string | null }) => {
@@ -244,6 +269,12 @@ export function InboxShell() {
             title="Couldn't load inbox"
             description={getErrorMessage(error)}
             onRetry={() => void refetch()}
+          />
+        ) : deniedPermission ? (
+          <NoPermissionState
+            className="flex-1"
+            permission={deniedPermission}
+            description="This inbox view is not available to your role. Other views still work."
           />
         ) : items.length === 0 ? (
           <EmptyState

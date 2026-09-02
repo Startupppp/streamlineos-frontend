@@ -4,7 +4,6 @@ import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import Papa from "papaparse";
 import { toast } from "sonner";
 import { CloudUploadIcon } from "@animateicons/react/lucide";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -49,6 +48,11 @@ export function CreateBulkSendDialog({ open, onOpenChange }: { open: boolean; on
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
+    void parseUploadedCsv(file);
+  }
+
+  async function parseUploadedCsv(file: File) {
+    const { default: Papa } = await import("papaparse");
     Papa.parse<Record<string, unknown>>(file, {
       header: true,
       skipEmptyLines: true,

@@ -190,8 +190,6 @@ export function WhiteboardPage({ projectId, initialBoardId }: WhiteboardPageProp
     return boards.find((b) => b.id === chosenBoardId) ?? boards[0];
   }, [boards, chosenBoardId]);
 
-  // A deep link already names the board, so the detail read does not have to
-  // wait for the board list to come back before it can start.
   const {
     data: detail,
     isLoading: detailLoading,

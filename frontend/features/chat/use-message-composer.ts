@@ -51,8 +51,8 @@ export function useMessageComposer({
         if (file.size > 10 * 1024 * 1024) { toast.error(`${file.name} is too large (max 10MB)`); continue; }
         const formData = new FormData(); formData.append("file", file); formData.append("folder", "chat");
         try {
-          const result = await apiClient.upload<{ url: string; key: string; size?: number; mimeType?: string }>("/storage/upload", formData);
-          setPendingAttachments((prev) => [...prev, { fileName: file.name, fileUrl: result.url, fileKey: result.key, fileSize: result.size ?? file.size, mimeType: result.mimeType ?? file.type }]);
+          const result = await apiClient.upload<{ key: string; size?: number; mimeType?: string }>("/storage/upload", formData);
+          setPendingAttachments((prev) => [...prev, { fileName: file.name, fileUrl: result.key, fileKey: result.key, fileSize: result.size ?? file.size, mimeType: result.mimeType ?? file.type }]);
         } catch (error) { toast.error(`Failed: ${getErrorMessage(error) || file.name}`); }
       }
     } catch (error) { toast.error(getErrorMessage(error)); }

@@ -120,12 +120,12 @@ describe("DataTable — empty state is announced and distinguishes its two meani
       action: { label: "New invoice", onClick: () => {} },
     };
     const dataEmpty = render(<EmptyState {...props} />);
-    const dataHeading = dataEmpty.container.querySelector("h3")?.textContent;
+    const dataHeading = dataEmpty.container.querySelector("h2")?.textContent;
     dataEmpty.unmount();
     const filterEmpty = render(
       <EmptyState {...props} filtersActive onClearFilters={() => {}} />,
     );
-    const filterHeading = filterEmpty.container.querySelector("h3")?.textContent;
+    const filterHeading = filterEmpty.container.querySelector("h2")?.textContent;
     expect(dataHeading).not.toEqual(filterHeading);
   });
 

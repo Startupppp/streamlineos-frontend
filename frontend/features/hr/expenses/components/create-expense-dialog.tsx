@@ -152,7 +152,7 @@ export function CreateExpenseDialog({
     async (file: File): Promise<string | null> => {
       try {
         const result = await uploadFileMutation.mutateAsync({ file, folder: "receipts" });
-        return result.url;
+        return result.key;
       } catch (error) {
         toast.error(getErrorMessage(error));
         return null;

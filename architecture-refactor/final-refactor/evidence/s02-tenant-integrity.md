@@ -1,3 +1,24 @@
+> # ⛔ SUPERSEDED — FORMER HEAD (634-entry journal). NOT current-head proof.
+>
+> This document describes a **634-entry** migration journal on a database estate that no longer
+> exists in that state. The chain has since reached **637** (proven) and **639** (unproven).
+> Its parity numbers were produced by a comparator that keyed on object **names**, not definitions,
+> and so could not see a same-name/different-column index, a changed constraint or policy body, a
+> rewritten function, or RLS enabled-versus-FORCED. Its tenant gates had measured blind spots.
+>
+> Current-head evidence: [`bootstrap-head-637/README.md`](bootstrap-head-637/README.md)
+> Why this is superseded, in full: [`SUPERSEDED-FORMER-HEAD.md`](SUPERSEDED-FORMER-HEAD.md)
+>
+> *(Banner added 2026-09-02 by the ticket-04 recorder. Nothing below it was altered. This file's
+> hash already failed to match `artifact-hashes.json` before the banner was added — see the hash
+> ledger in `SUPERSEDED-FORMER-HEAD.md`.)*
+>
+> *(Amended 2026-09-02 by the ticket-04b redactor. **This file needed no redaction** — it contains
+> no connection URI and no endpoint host — and its body is byte-identical to the moment the banner
+> above was added. `artifact-hashes.json` has since been re-sealed over those bytes, so the
+> mismatch noted above is now closed; the sealed, pre-banner and post-banner hashes are all
+> preserved in [`REDACTION-AND-RESEAL-LEDGER.md`](REDACTION-AND-RESEAL-LEDGER.md).)*
+
 # S02 — tenant relationship integrity, schema/catalog reconciliation
 
 Catalog measurements are taken from `scratch_boot_a` unless stated. The chain was subsequently

@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getUserInitials } from "@/lib/person-display";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { resolveImageUrl } from "@/lib/utils";
 
 export function SkeletonRows() {
   return (
@@ -50,7 +51,7 @@ export function AvatarInitials({
 }) {
   return (
     <Avatar className="h-6 w-6 shrink-0">
-      <AvatarImage src={image ?? undefined} />
+      <AvatarImage src={resolveImageUrl(image)} />
       <AvatarFallback className="text-micro">
         {getUserInitials({ name })}
       </AvatarFallback>

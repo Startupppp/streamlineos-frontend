@@ -87,7 +87,7 @@ function PendingAttachmentItem({ att, idx, onRemove }: PendingAttachmentItemProp
     <div className="relative group flex items-center gap-2.5 bg-background border border-border rounded-xl px-3 py-2 shadow-sm">
       {att.mimeType.startsWith("image/") ? (
         <Image
-          src={att.fileUrl}
+          src={resolveImageUrl(att.fileUrl) ?? att.fileUrl}
           alt={att.fileName}
           width={44}
           height={44}

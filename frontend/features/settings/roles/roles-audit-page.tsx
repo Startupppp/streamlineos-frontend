@@ -12,6 +12,7 @@ import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { useAuditLogs } from "@/hooks/api/audit-log";
 import type { AuditLogRow as AuditLogEntry } from "@/hooks/api/audit-log";
 import { getInitials } from "@/lib/format-utils";
+import { resolveImageUrl } from "@/lib/utils";
 
 const RBAC_ACTIONS = [
   "role.changed",
@@ -92,7 +93,7 @@ const columns: DataTableColumn<AuditLogEntry>[] = [
       return (
         <div className="flex items-center gap-2 min-w-0">
           <Avatar className="h-6 w-6 shrink-0">
-            <AvatarImage src={log.userImage ?? undefined} />
+            <AvatarImage src={resolveImageUrl(log.userImage)} />
             <AvatarFallback className="text-micro">
               {getInitials(displayName)}
             </AvatarFallback>

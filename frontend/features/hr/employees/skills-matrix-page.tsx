@@ -15,6 +15,7 @@ import { getInitials } from "@/lib/format-utils";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { LayoutGrid, Table2 } from "lucide-react";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { resolveImageUrl } from "@/lib/utils";
 
 const LEVEL_COLORS: Record<number, string> = {
   1: "bg-muted text-muted-foreground",
@@ -164,7 +165,7 @@ export function SkillsMatrixPage() {
                       <td className="sticky left-0 z-10 bg-card border-b border-r border-border px-3 py-2">
                         <div className="flex items-center gap-2">
                           <Avatar className="h-6 w-6 shrink-0">
-                            <AvatarImage src={employeeRecord.image ?? undefined} />
+                            <AvatarImage src={resolveImageUrl(employeeRecord.image)} />
                             <AvatarFallback className="text-micro">{getInitials(employeeRecord.name)}</AvatarFallback>
                           </Avatar>
                           <TruncatedText text={employeeRecord.name ?? ""} className="font-medium max-w-[110px]" />

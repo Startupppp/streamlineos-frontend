@@ -36,6 +36,7 @@ import {
 import { getInitials } from "@/lib/format-utils";
 import type { DataScope } from "@/types/access";
 import { MODULE_LABELS } from "@/components/rbac/permission-matrix-types";
+import { resolveImageUrl } from "@/lib/utils";
 
 const SCOPE_BADGE_VARIANT: Record<DataScope, "default" | "secondary" | "outline"> = {
   all: "default",
@@ -126,7 +127,7 @@ function SimulateContent() {
                 {selectedEmployee ? (
                   <span className="flex items-center gap-2 min-w-0">
                     <Avatar className="h-5 w-5 shrink-0">
-                      <AvatarImage src={selectedEmployee.image ?? undefined} />
+                      <AvatarImage src={resolveImageUrl(selectedEmployee.image)} />
                       <AvatarFallback className="text-micro">
                         {getInitials(selectedEmployee.name ?? selectedEmployee.email)}
                       </AvatarFallback>
@@ -216,7 +217,7 @@ function EmployeeCommandItem({ employee, onSelect }: EmployeeCommandItemProps) {
   return (
     <CommandItem onSelect={handleSelect} className="flex items-center gap-2 cursor-pointer">
       <Avatar className="h-6 w-6 shrink-0">
-        <AvatarImage src={employee.image ?? undefined} />
+        <AvatarImage src={resolveImageUrl(employee.image)} />
         <AvatarFallback className="text-micro">
           {getInitials(employee.name ?? employee.email)}
         </AvatarFallback>

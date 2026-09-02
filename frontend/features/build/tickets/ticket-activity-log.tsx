@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { memo } from "react";
+import { memo, useCallback, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import {
   Activity,
@@ -93,8 +93,16 @@ const ActivityItem = memo(function ActivityItem({ entry }: ActivityItemProps) {
   );
 });
 
+const ACTIVITY_RENDER_PAGE_SIZE = 25;
+
 export function TicketActivityLog({ projectId, ticketId }: TicketActivityLogProps) {
   const { data, isLoading, isError } = useTicketActivity(projectId, ticketId);
+  // The endpoint returns the whole audit trail with no cursor.
+  const [visibleCount, setVisibleCount] = useState(ACTIVITY_RENDER_PAGE_SIZE);
+  const handleShowOlder = useCallback(
+    () => setVisibleCount((count) => count + ACTIVITY_RENDER_PAGE_SIZE),
+    [],
+  );
 
   return (
     <div className="space-y-3">
@@ -117,11 +125,25 @@ export function TicketActivityLog({ projectId, ticketId }: TicketActivityLogProp
           compact
         />
       ) : (
-        <ul className="space-y-3">
-          {data.map((entry) => (
-            <ActivityItem key={entry.id} entry={entry} />
-          ))}
-        </ul>
+        <>
+          <ul className="space-y-3">
+            {data.slice(0, visibleCount).map((entry) => (
+              <ActivityItem key={entry.id} entry={entry} />
+            ))}
+          </ul>
+          {data.length > visibleCount && (
+            <button
+              type="button"
+              onClick={handleShowOlder}
+              className="mx-auto block rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+            >
+              Show older activity
+              <span className="ml-1 tabular-nums opacity-70">
+                ({visibleCount} of {data.length})
+              </span>
+            </button>
+          )}
+        </>
       )}
     </div>
   );

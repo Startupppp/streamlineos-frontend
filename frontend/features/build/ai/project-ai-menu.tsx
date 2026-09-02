@@ -18,8 +18,7 @@ import {
   type AiActionResultState,
 } from "@/components/ai";
 import { useProjectAiSummary } from "@/hooks/api/build/ai";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { isApiError } from "@/lib/api-client";
+import { classifyAiError } from "@/components/ai";
 import type { ProjectSummaryResult } from "@/types/projects/ai";
 
 interface ProjectAiMenuProps {
@@ -44,6 +43,7 @@ export function ProjectAiMenu({ projectId }: ProjectAiMenuProps) {
   const [state, setState] = useState<AiActionResultState>({ status: "loading" });
 
   const runSummary = useCallback(async () => {
+    if (summaryMutation.isPending) return;
     setSheetOpen(true);
     setState({ status: "loading" });
     try {
@@ -51,13 +51,7 @@ export function ProjectAiMenu({ projectId }: ProjectAiMenuProps) {
       const result = formatSummary(data);
       setState({ status: "ready", result, aiUsage: result.aiUsage });
     } catch (error) {
-      if (isApiError(error) && error.status === 402) {
-        setState({ status: "quota" });
-      } else if (isApiError(error) && error.status === 403) {
-        setState({ status: "denied", reason: getErrorMessage(error) });
-      } else {
-        setState({ status: "error", message: getErrorMessage(error) });
-      }
+      setState(classifyAiError(error));
     }
   }, [summaryMutation]);
 

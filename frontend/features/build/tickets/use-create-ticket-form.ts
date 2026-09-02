@@ -219,10 +219,10 @@ export function useCreateTicketForm({
               const formData = new FormData();
               formData.append("file", file);
               formData.append("folder", "tickets");
-              const result = await apiClient.upload<{ url: string }>("/storage/upload", formData);
+              const result = await apiClient.upload<{ key: string }>("/storage/upload", formData);
               await addAttachmentMutation.mutateAsync({
                 ticketId: data.id,
-                fileUrl: result.url,
+                fileUrl: result.key,
                 fileName: file.name,
                 fileSize: file.size,
                 mimeType: file.type,

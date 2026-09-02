@@ -32,6 +32,7 @@ import {
   type TicketStatus,
 } from "@/hooks/api/hr/helpdesk";
 import { getUserInitials } from "@/lib/person-display";
+import { resolveImageUrl } from "@/lib/utils";
 
 const STATUS_LABELS: Record<TicketStatus, string> = {
   TODO: "Open",
@@ -150,7 +151,7 @@ export function TicketDetailSheet({ ticketId, isAdmin, onClose }: Props) {
                   {ticket.comments.map((c) => (
                     <div key={c.id} className="flex gap-3">
                       <Avatar className="w-7 shrink-0">
-                        {c.authorImage && <AvatarImage src={c.authorImage} />}
+                        {c.authorImage && <AvatarImage src={resolveImageUrl(c.authorImage)} />}
                         <AvatarFallback className="text-micro">
                           {getUserInitials({ name: c.authorName })}
                         </AvatarFallback>

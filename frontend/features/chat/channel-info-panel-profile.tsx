@@ -88,16 +88,16 @@ export function ChannelInfoPanelProfile({
         const formData = new FormData();
         formData.append("file", file);
         formData.append("folder", "chat-avatars");
-        const data = await apiClient.upload<{ url?: string }>("/storage/upload", formData);
-        if (!data.url) {
+        const data = await apiClient.upload<{ key: string }>("/storage/upload", formData);
+        if (!data.key) {
           toast.error("Upload failed");
           return;
         }
         if (saveImmediately && channel) {
-          await updateChannel.mutateAsync({ channelId: channel.id, avatarUrl: data.url });
+          await updateChannel.mutateAsync({ channelId: channel.id, avatarUrl: data.key });
           toast.success("Channel photo updated");
         } else {
-          setEditAvatar(data.url);
+          setEditAvatar(data.key);
         }
       } catch (error) {
         toast.error(getErrorMessage(error));

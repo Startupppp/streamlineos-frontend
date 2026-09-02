@@ -24,6 +24,7 @@ import type {
   FeedbucketNetworkEntry,
 } from "@/types/feedbucket";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { resolveImageUrl } from "@/lib/utils";
 
 const STATUS_LABELS: Record<FeedbucketSubmissionStatus, string> = {
   open: "Open",
@@ -212,7 +213,7 @@ export function FeedbucketSubmissionDetail({ submissionId }: FeedbucketSubmissio
       {submission.screenshotUrl && (
         <div className="rounded-xl border border-border overflow-hidden bg-muted/20">
           <img
-            src={submission.screenshotUrl}
+            src={resolveImageUrl(submission.screenshotUrl) ?? submission.screenshotUrl}
             alt="Feedback screenshot"
             className="w-full object-contain max-h-[480px]"
           />
@@ -223,7 +224,7 @@ export function FeedbucketSubmissionDetail({ submissionId }: FeedbucketSubmissio
         <div className="rounded-xl border border-border overflow-hidden bg-muted/20">
           <video
             controls
-            src={submission.recordingUrl}
+            src={resolveImageUrl(submission.recordingUrl) ?? submission.recordingUrl}
             className="w-full max-h-[480px]"
             aria-label="Screen recording"
           />

@@ -2,8 +2,13 @@
 
 import { useState, useRef, type ChangeEvent, type FormEvent } from "react";
 import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { AiActionsMenu, type AiAction, type AiActionResult } from "@/components/ai";
+import {
+  AiActionsMenu,
+  classifyAiError,
+  type AiAction,
+  type AiActionResult,
+  type AiFailureState,
+} from "@/components/ai";
 import {
   Sheet,
   SheetContent,
@@ -14,10 +19,15 @@ import {
 import { AiDraftCard } from "@/components/ai/ai-draft-card";
 import { AiQuotaEmptyState } from "@/components/ai/ai-quota-empty-state";
 import { AiPermissionDenied } from "@/components/ai/ai-permission-denied";
+import {
+  AiCancelledNotice,
+  AiOfflineNotice,
+  AiQueuedNotice,
+  AiUnavailableNotice,
+} from "@/components/ai/ai-state-notices";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { isApiError } from "@/lib/api-client";
 import {
   useKbArticleSummarize,
   useKbArticleAsk,
@@ -37,9 +47,7 @@ type AskPanelState =
   | { status: "input" }
   | { status: "loading" }
   | { status: "ready"; text: string; aiUsage?: AiUsageMeta | null }
-  | { status: "quota" }
-  | { status: "denied"; reason: string }
-  | { status: "error"; message: string };
+  | AiFailureState;
 
 export function KbArticleAiActions({ articleId, onApplyImprovement }: KbArticleAiActionsProps) {
   const canGenerate = useCan("kb:ai:generate");
@@ -48,6 +56,8 @@ export function KbArticleAiActions({ articleId, onApplyImprovement }: KbArticleA
   const [question, setQuestion] = useState("");
   const [lastQuestion, setLastQuestion] = useState("");
   const invokeRef = useRef(0);
+  const askInFlightRef = useRef(false);
+  const askAbortRef = useRef<AbortController | null>(null);
 
   const summarize = useKbArticleSummarize(articleId);
   const askMutation = useKbArticleAsk(articleId);
@@ -55,19 +65,35 @@ export function KbArticleAiActions({ articleId, onApplyImprovement }: KbArticleA
   const suggestRelated = useKbArticleSuggestRelated(articleId);
 
   async function runAsk(q: string) {
+    if (askInFlightRef.current) return;
+    askInFlightRef.current = true;
     const stamp = ++invokeRef.current;
+    const controller = new AbortController();
+    askAbortRef.current = controller;
     setLastQuestion(q);
     setAskState({ status: "loading" });
     try {
-      const res = await askMutation.mutateAsync(q);
+      const res = await askMutation.mutateAsync({ question: q, signal: controller.signal });
       if (invokeRef.current !== stamp) return;
       setAskState({ status: "ready", text: res.text, aiUsage: res.aiUsage });
     } catch (err) {
       if (invokeRef.current !== stamp) return;
-      if (isApiError(err) && err.status === 402) { setAskState({ status: "quota" }); return; }
-      if (isApiError(err) && err.status === 403) { setAskState({ status: "denied", reason: getErrorMessage(err) }); return; }
-      setAskState({ status: "error", message: getErrorMessage(err) });
+      setAskState(classifyAiError(err));
+    } finally {
+      if (invokeRef.current === stamp) {
+        askInFlightRef.current = false;
+        askAbortRef.current = null;
+      }
     }
+  }
+
+  function handleAskCancel() {
+    if (!askInFlightRef.current) return;
+    invokeRef.current += 1;
+    askAbortRef.current?.abort();
+    askAbortRef.current = null;
+    askInFlightRef.current = false;
+    setAskState({ status: "cancelled" });
   }
 
   function handleAskSubmit(e: FormEvent<HTMLFormElement>) {
@@ -83,7 +109,14 @@ export function KbArticleAiActions({ articleId, onApplyImprovement }: KbArticleA
 
   function handleAskOpenChange(open: boolean) {
     setAskOpen(open);
-    if (!open) { setAskState({ status: "input" }); setQuestion(""); }
+    if (!open) {
+      invokeRef.current += 1;
+      askAbortRef.current?.abort();
+      askAbortRef.current = null;
+      askInFlightRef.current = false;
+      setAskState({ status: "input" });
+      setQuestion("");
+    }
   }
 
   function handleQuestionChange(e: ChangeEvent<HTMLInputElement>) {
@@ -100,8 +133,8 @@ export function KbArticleAiActions({ articleId, onApplyImprovement }: KbArticleA
       key: "summarize",
       label: "Summarize this article",
       description: "Concise bullet-point summary",
-      run: async (): Promise<AiActionResult> => {
-        const res = await summarize.mutateAsync();
+      run: async (signal): Promise<AiActionResult> => {
+        const res = await summarize.mutateAsync({ signal });
         return { text: res.text, aiUsage: res.aiUsage };
       },
     },
@@ -120,8 +153,8 @@ export function KbArticleAiActions({ articleId, onApplyImprovement }: KbArticleA
       key: "improve",
       label: "Improve writing",
       description: "Get a rewritten draft — you apply it",
-      run: async (): Promise<AiActionResult> => {
-        const res = await improve.mutateAsync();
+      run: async (signal): Promise<AiActionResult> => {
+        const res = await improve.mutateAsync({ signal });
         return { text: res.text, aiUsage: res.aiUsage };
       },
       onApply: onApplyImprovement ? handleApplyImprovement : undefined,
@@ -131,8 +164,8 @@ export function KbArticleAiActions({ articleId, onApplyImprovement }: KbArticleA
       key: "suggest-related",
       label: "Suggest related topics",
       description: "Topics that complement this article",
-      run: async (): Promise<AiActionResult> => {
-        const res = await suggestRelated.mutateAsync();
+      run: async (signal): Promise<AiActionResult> => {
+        const res = await suggestRelated.mutateAsync({ signal });
         return { text: res.text, aiUsage: res.aiUsage };
       },
     },
@@ -179,12 +212,37 @@ export function KbArticleAiActions({ articleId, onApplyImprovement }: KbArticleA
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-4 w-full" />
                 <Skeleton className="h-4 w-5/6" />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleAskCancel}
+                  className="h-7 text-xs text-muted-foreground"
+                >
+                  Stop
+                </Button>
               </div>
             )}
 
             {askState.status === "quota" && <AiQuotaEmptyState variant="fill" />}
 
             {askState.status === "denied" && <AiPermissionDenied reason={askState.reason} />}
+
+            {askState.status === "queued" && (
+              <AiQueuedNotice message={askState.message} onRetry={handleAskRetry} />
+            )}
+
+            {askState.status === "unavailable" && (
+              <AiUnavailableNotice message={askState.message} onRetry={handleAskRetry} />
+            )}
+
+            {askState.status === "offline" && (
+              <AiOfflineNotice message={askState.message} onRetry={handleAskRetry} />
+            )}
+
+            {askState.status === "cancelled" && (
+              <AiCancelledNotice onRetry={handleAskRetry} />
+            )}
 
             {askState.status === "error" && (
               <div className="flex flex-col items-start gap-3 py-4">

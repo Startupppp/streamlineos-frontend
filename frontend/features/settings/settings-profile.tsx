@@ -88,15 +88,14 @@ export function SettingsProfile() {
       formData.append("file", file);
       formData.append("folder", "avatars");
 
-      const { url, key } = await apiClient.upload<{ url?: string; key?: string }>(
+      const { key } = await apiClient.upload<{ key: string }>(
         "/storage/upload",
         formData,
       );
-      const imageValue = url || key;
 
       await new Promise<void>((resolve, reject) => {
         updateProfile.mutate(
-          { image: imageValue },
+          { image: key },
           {
             onSuccess: async () => {
               await updateSession({});

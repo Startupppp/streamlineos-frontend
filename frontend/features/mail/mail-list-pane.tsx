@@ -17,7 +17,12 @@ import { toast } from "sonner";
 import { groupMailMessages } from "./mail-group-messages";
 import { MailVirtualList } from "./mail-virtual-list";
 import type { MailListAction } from "./mail-message-row";
-import type { MailFolder, MailMessageSummary, MailAccount } from "@/types/mail";
+import type {
+  MailFolder,
+  MailMessageSummary,
+  MailAccount,
+  MailListResponse,
+} from "@/types/mail";
 
 const FOLDER_NAV: {
   key: MailFolder;
@@ -71,7 +76,12 @@ export function MailListPane({
     () => data?.pages.flatMap((p) => p.messages) ?? [],
     [data],
   );
-  const accountErrors = data?.pages[0]?.accountErrors ?? [];
+  const accountErrors = useMemo(() => {
+    const byAccount = new Map<number, MailListResponse["accountErrors"][number]>();
+    for (const page of data?.pages ?? [])
+      for (const failure of page.accountErrors) byAccount.set(failure.accountId, failure);
+    return [...byAccount.values()];
+  }, [data]);
   const groups = useMemo(
     () =>
       activeFolder === "inbox" && !debouncedSearch

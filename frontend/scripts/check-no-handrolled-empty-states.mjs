@@ -76,21 +76,68 @@ function findHandrolledBlocks(content) {
   return blocks;
 }
 
-(function selfTest() {
-  const fixture = [
-    'export function FixtureEmpty() {',
-    '  return (',
+const MIN_FILES = 500;
+
+function runSelfTest(exitWhenDone) {
+  let passed = 0;
+  const failures = [];
+  const assert = (label, condition) => {
+    if (condition) passed++;
+    else failures.push(label);
+  };
+
+  const handrolled = [
+    "export function FixtureEmpty() {",
+    "  return (",
     '    <div className="flex flex-col items-center justify-center text-center">',
     '      <p className="text-sm font-medium">No items found</p>',
-    '    </div>',
-    '  );',
-    '}',
+    "    </div>",
+    "  );",
+    "}",
   ].join("\n");
-  if (findHandrolledBlocks(fixture).length === 0) {
-    console.error("✖  Self-test FAILED: checker did not detect the hand-rolled block in the fixture.");
+  const mutedVariant = [
+    "export function FixtureEmpty2() {",
+    '  return <p className="text-center text-muted-foreground text-sm">Nothing here yet</p>;',
+    "}",
+  ].join("\n");
+  const canonical = [
+    'import { EmptyState } from "@/components/ui/empty-state";',
+    "export function Good() {",
+    '  return <EmptyState title="No items found" description="Create one to get started." />;',
+    "}",
+  ].join("\n");
+  const centredButNotEmpty = [
+    "export function Spinner() {",
+    '  return <div className="flex flex-col items-center justify-center text-center"><Loader2 /></div>;',
+    "}",
+  ].join("\n");
+  const emptyWordNoStructure = 'const label = "No results";\n';
+
+  assert("a hand-rolled centred empty block is rejected", findHandrolledBlocks(handrolled).length > 0);
+  assert("the finding names the structural line", findHandrolledBlocks(handrolled)[0] === 3);
+  assert("the muted-foreground variant is also rejected", findHandrolledBlocks(mutedVariant).length > 0);
+  assert("a canonical EmptyState usage is NOT a finding", findHandrolledBlocks(canonical).length === 0);
+  assert(
+    "a centred container with no empty-state wording is NOT a finding",
+    findHandrolledBlocks(centredButNotEmpty).length === 0,
+  );
+  assert(
+    "empty-state wording with no centred structure is NOT a finding",
+    findHandrolledBlocks(emptyWordNoStructure).length === 0,
+  );
+
+  if (failures.length > 0) {
+    for (const f of failures) console.error("\u2716  self-test FAILED: " + f);
+    console.error(`check-no-handrolled-empty-states self-tests: ${failures.length} failed, ${passed} passed`);
     process.exit(1);
   }
-})();
+  if (exitWhenDone) {
+    console.log(`check-no-handrolled-empty-states self-tests: ${passed} passed`);
+    process.exit(0);
+  }
+}
+
+runSelfTest(process.argv.includes("--self-test"));
 
 function* walkFiles(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -103,8 +150,10 @@ function* walkFiles(dir) {
 
 const violations = [];
 const seenExceptionFiles = new Set();
+let scannedFiles = 0;
 
 for (const file of walkFiles(ROOT)) {
+  scannedFiles++;
   const rel = relative(ROOT, file).replace(/\\/g, "/");
   if (rel === CANONICAL_EMPTY_STATE) continue;
 
@@ -120,6 +169,13 @@ for (const file of walkFiles(ROOT)) {
   }
 }
 
+if (scannedFiles < MIN_FILES) {
+  console.error(
+    "\u2716  Only " + scannedFiles + " files scanned (floor " + MIN_FILES + ") — the walk is broken, so a clean result would prove nothing.",
+  );
+  process.exit(1);
+}
+
 const staleExceptions = EXCEPTIONS.filter((e) => !seenExceptionFiles.has(e.file));
 if (staleExceptions.length > 0) {
   console.error(
@@ -130,7 +186,7 @@ if (staleExceptions.length > 0) {
 }
 
 if (violations.length === 0) {
-  console.log("✔  No hand-rolled empty states found outside EmptyState.");
+  console.log("✔  No hand-rolled empty states found outside EmptyState (" + scannedFiles + " files scanned).");
   process.exit(0);
 } else {
   console.error(

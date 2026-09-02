@@ -16,6 +16,7 @@ import type {
   FeedbucketSubmissionType,
   FeedbucketSubmissionStatus,
 } from "@/types/feedbucket";
+import { resolveImageUrl } from "@/lib/utils";
 
 const TYPE_LABELS: Record<FeedbucketSubmissionType, string> = {
   bug: "Bug",
@@ -71,7 +72,7 @@ const SUBMISSION_COLUMNS: DataTableColumn<FeedbucketSubmission>[] = [
     cell: (row) =>
       row.screenshotUrl ? (
         <img
-          src={row.screenshotUrl}
+          src={resolveImageUrl(row.screenshotUrl) ?? row.screenshotUrl}
           alt="Screenshot"
           loading="lazy"
           decoding="async"

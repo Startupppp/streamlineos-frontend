@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { getInitials } from "@/lib/format-utils";
 import type { OrgMember } from "@/types/organization";
 import type { AssignableDepartment } from "@/hooks/api/roles";
+import { resolveImageUrl } from "@/lib/utils";
 
 export interface AssignableUserItemProps {
   member: OrgMember;
@@ -35,7 +36,7 @@ export function AssignableUserItem({
       aria-label={`Assign ${member.name ?? member.email}`}
     >
       <Avatar className="h-6 w-6">
-        <AvatarImage src={member.image ?? undefined} alt={member.name ?? ""} />
+        <AvatarImage src={resolveImageUrl(member.image)} alt={member.name ?? ""} />
         <AvatarFallback className="text-micro">
           {getInitials(member.name ?? member.email)}
         </AvatarFallback>
@@ -124,7 +125,7 @@ export function MemberRow({
       className="flex items-center gap-3 rounded-md border border-border/50 px-3 py-2"
     >
       <Avatar className="w-8">
-        <AvatarImage src={image ?? undefined} alt={name ?? ""} />
+        <AvatarImage src={resolveImageUrl(image)} alt={name ?? ""} />
         <AvatarFallback className="text-micro">
           {getInitials(name ?? subtitle ?? "?")}
         </AvatarFallback>

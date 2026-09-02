@@ -3,23 +3,37 @@
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isStorageObjectKey, storageKeyFromUrl } from "@/lib/utils";
 
 function isLocalUrl(url: string): boolean {
   if (!url) return false;
-  if (url.startsWith("/uploads/") || url.startsWith("/")) return true;
+  if (isStorageObjectKey(url)) return false;
+  if (url.startsWith("/")) return true;
   if (url.includes("/uploads/")) return true;
   if (url.includes("dicebear.com") || url.includes("avataaars")) return true;
   return false;
+}
+
+/**
+ * `/storage/download` validates `url` as a URL, so an object key has to travel
+ * in `key`. Sending a key as `url` is a 400, not a lookup miss.
+ */
+function storageReferenceParams(reference: string): { url: string } | { key: string } {
+  return /^https?:\/\//i.test(reference) ? { url: reference } : { key: reference };
 }
 
 export async function getSignedFileUrl(fileUrl: string): Promise<string> {
   if (!fileUrl) {
     throw new Error("No file URL provided");
   }
-  if (isLocalUrl(fileUrl)) {
-    return fileUrl;
+  const reference = storageKeyFromUrl(fileUrl);
+  if (isLocalUrl(reference)) {
+    return reference;
   }
-  const data = await apiClient.get<{ url: string }>("/storage/download", { url: fileUrl });
+  const data = await apiClient.get<{ url: string }>(
+    "/storage/download",
+    storageReferenceParams(reference),
+  );
   return data.url;
 }
 
@@ -68,12 +82,16 @@ export async function viewFile(fileUrl: string): Promise<void> {
 
 export async function downloadFile(fileUrl: string, fileName?: string): Promise<void> {
   try {
-    const downloadFileName = fileName || extractFileName(fileUrl);
+    const reference = storageKeyFromUrl(fileUrl);
+    const downloadFileName = fileName || extractFileName(reference);
     let blob: Blob;
-    if (!isLocalUrl(fileUrl)) {
-      blob = await apiClient.download("/storage/download", { url: fileUrl, attachment: 1 });
+    if (!isLocalUrl(reference)) {
+      blob = await apiClient.download("/storage/download", {
+        ...storageReferenceParams(reference),
+        attachment: 1,
+      });
     } else {
-      const url = await getSignedFileUrl(fileUrl);
+      const url = await getSignedFileUrl(reference);
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error("Failed to download file");

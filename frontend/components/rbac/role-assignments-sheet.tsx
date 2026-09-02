@@ -43,6 +43,7 @@ import {
   MemberRow,
   DepartmentRow,
 } from "./role-assignment-items";
+import { resolveImageUrl } from "@/lib/utils";
 
 const ORG_MEMBERS_PAGE_SIZE = 20;
 
@@ -441,7 +442,7 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
                     >
                       <Avatar className="w-8">
                         <AvatarImage
-                          src={user.image ?? undefined}
+                          src={resolveImageUrl(user.image)}
                           alt={user.name ?? ""}
                         />
                         <AvatarFallback className="text-micro">
