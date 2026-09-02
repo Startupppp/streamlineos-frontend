@@ -40,6 +40,10 @@ Constitution files to obey: `streamlineos-frontend/CLAUDE.md` (shared),
    lost, but authorship and history were wrong.
    Passing the pathspec to `git commit` itself commits those paths from the working tree and
    ignores the rest of the index entirely. Do that. And never `git add -A` / `git add .`.
+   For a NEW file, `git commit -- <path>` alone fails ("did not match any files"): run
+   `git add -- <your paths>` first and then still pass the pathspec to `git commit`, which
+   keeps the commit limited to your paths regardless of what else is staged. Verify with
+   `git show --stat HEAD` that the file count is yours before moving on.
 3. **Never `git stash`, `reset`, `checkout`, `pull`, `rebase`, `push`, `branch` or `merge`.**
    `git add <explicit paths>` and `git commit` are the only git verbs you may use.
    A stash takes every agent's uncommitted work and the loss is silent.
@@ -51,6 +55,22 @@ Constitution files to obey: `streamlineos-frontend/CLAUDE.md` (shared),
 6. **Scratch databases only.** `psql` against a database whose name starts with `scratch_`.
    Never touch `DATABASE_URL` (it is a shared remote Neon instance), never touch any
    `cornerstone_*` database, and never print a connection string.
+   **A production-shaped seeded database already exists — use it before concluding "no
+   database is provisioned".** `scratch_perf_seed`: local Postgres, head 649/649, 1,695 MB,
+   88 non-empty tables, 8 organizations, four application tenants at 89.93 / 9.0 / 0.90 /
+   0.18 percent, plus a working non-owner `streamline_app` role (`rolbypassrls=false`) with
+   RLS live. Rebuild commands, org ids and row shape are in
+   `reports/00-seeded-perf-database.md`. Make your own `scratch_<ticket>` copy if you intend
+   to write to it. Do NOT use `scratch_boot_b/c/d` — they are cited bootstrap-parity evidence
+   and destroying them destroys the evidence bundle.
+   **Benchmark as `streamline_app` with the tenant GUC set, never as the owner** — the owner
+   has BYPASSRLS, so its plans omit the RLS predicate that costs the most. Measure in
+   **buffers, not milliseconds**; wall clock lies on a warm cache. `VACUUM ANALYZE` after any
+   table rewrite. And measure across MULTIPLE tenants in the skew: the same query picks
+   different indexes per tenant here — the 0.18% tenant used an org-leading index for 6
+   buffers while the 89.9% tenant declined it and walked an org-less index for 1,237. On a
+   single-tenant seed only one of those plans is reachable and the org-leading index reads
+   as redundant.
 7. **Verify against artifacts, not reports.** A delegated fix can land inert and a report can
    narrate a tick that was never written. Count what is on disk.
 8. **Never delete code or schema from text search alone.** Dead-code claims need a module
