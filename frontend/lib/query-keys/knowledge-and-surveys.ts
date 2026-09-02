@@ -66,7 +66,9 @@ export const knowledgeAndSurveysQueryKeys = {
         ? ([...base, "kb", "knowledgeGaps"] as const)
         : ([...base, "kb", "knowledgeGaps", range] as const),
     contentGaps: (params?: Record<string, unknown>) =>
-      [...base, "kb", "content-gaps", params] as const,
+      params === undefined
+        ? ([...base, "kb", "content-gaps"] as const)
+        : ([...base, "kb", "content-gaps", params] as const),
     researchBriefs: () => [...base, "kb", "research-briefs"] as const,
     researchBrief: (researchBriefId: number) =>
       [...base, "kb", "research-brief", researchBriefId] as const,
@@ -77,13 +79,19 @@ export const knowledgeAndSurveysQueryKeys = {
   roadmap: {
     all: [...base, "roadmap"] as const,
     items: (params?: Record<string, unknown>) =>
-      [...base, "roadmap", "items", params] as const,
+      params === undefined
+        ? ([...base, "roadmap", "items"] as const)
+        : ([...base, "roadmap", "items", params] as const),
     item: (roadmapItemId: number) =>
       [...base, "roadmap", "item", roadmapItemId] as const,
     feedback: (params?: Record<string, unknown>) =>
-      [...base, "roadmap", "feedback", params] as const,
+      params === undefined
+        ? ([...base, "roadmap", "feedback"] as const)
+        : ([...base, "roadmap", "feedback", params] as const),
     changelog: (params?: Record<string, unknown>) =>
-      [...base, "roadmap", "changelog", params] as const,
+      params === undefined
+        ? ([...base, "roadmap", "changelog"] as const)
+        : ([...base, "roadmap", "changelog", params] as const),
     publicBoard: (orgId: string) =>
       [...base, "roadmap", "publicBoard", orgId] as const,
   },
@@ -91,7 +99,9 @@ export const knowledgeAndSurveysQueryKeys = {
   automations: {
     all: [...base, "automations"] as const,
     list: (params?: Record<string, unknown>) =>
-      [...base, "automations", "list", params] as const,
+      params === undefined
+        ? ([...base, "automations", "list"] as const)
+        : ([...base, "automations", "list", params] as const),
     detail: (automationId: number) =>
       [...base, "automations", "detail", automationId] as const,
     runs: (ruleId: number) => [...base, "automations", "runs", ruleId] as const,
@@ -105,7 +115,9 @@ export const knowledgeAndSurveysQueryKeys = {
   surveys: {
     all: [...base, "surveys"] as const,
     list: (params?: Record<string, unknown>) =>
-      [...base, "surveys", "list", params] as const,
+      params === undefined
+        ? ([...base, "surveys", "list"] as const)
+        : ([...base, "surveys", "list", params] as const),
     detail: (surveyId: number) =>
       [...base, "surveys", "detail", surveyId] as const,
     templates: () => [...base, "surveys", "templates"] as const,
@@ -116,11 +128,15 @@ export const knowledgeAndSurveysQueryKeys = {
     collectors: (surveyId: number) =>
       [...base, "surveys", "collectors", surveyId] as const,
     participants: (surveyId: number, params?: Record<string, unknown>) =>
-      [...base, "surveys", "participants", surveyId, params] as const,
+      params === undefined
+        ? ([...base, "surveys", "participants", surveyId] as const)
+        : ([...base, "surveys", "participants", surveyId, params] as const),
     publicSurvey: (token: string) =>
       [...base, "surveys", "publicSurvey", token] as const,
     assessmentAttempts: (surveyId: number, params?: Record<string, unknown>) =>
-      [...base, "surveys", "assessmentAttempts", surveyId, params] as const,
+      params === undefined
+        ? ([...base, "surveys", "assessmentAttempts", surveyId] as const)
+        : ([...base, "surveys", "assessmentAttempts", surveyId, params] as const),
     certificates: (surveyId: number) =>
       [...base, "surveys", "certificates", surveyId] as const,
     liveSession: (sessionId: number) =>
@@ -132,7 +148,9 @@ export const knowledgeAndSurveysQueryKeys = {
     analyticsQuestions: (surveyId: number) =>
       [...base, "surveys", "analyticsQuestions", surveyId] as const,
     responses: (surveyId: number, params?: Record<string, unknown>) =>
-      [...base, "surveys", "responses", surveyId, params] as const,
+      params === undefined
+        ? ([...base, "surveys", "responses", surveyId] as const)
+        : ([...base, "surveys", "responses", surveyId, params] as const),
     response: (surveyId: number, sessionId: number) =>
       [...base, "surveys", "response", surveyId, sessionId] as const,
     automations: (surveyId: number) =>

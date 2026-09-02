@@ -8,6 +8,7 @@ import { KbAlertCircleIcon } from "@/features/wiki/lib/kb-icons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 import { KbPageNotFound } from "./kb-page-not-found";
 import { uploadKbMedia } from "@/features/wiki/lib/upload-kb-media";
 import {
@@ -74,6 +75,8 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const visitedRef = useRef<number | null>(null);
   const titleRef = useRef<HTMLTextAreaElement>(null);
+  const contentRevisionRef = useRef<number | undefined>(undefined);
+  const conflictRef = useRef(false);
 
   const localTitle =
     titleDraft?.pageId === pageId ? titleDraft.value : (page?.title ?? "");
@@ -84,6 +87,16 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
     el.style.height = "auto";
     el.style.height = `${el.scrollHeight}px`;
   }, [localTitle]);
+
+  useEffect(() => {
+    conflictRef.current = false;
+    contentRevisionRef.current = undefined;
+  }, [pageId]);
+
+  useEffect(() => {
+    if (page?.contentRevision !== undefined)
+      contentRevisionRef.current = page.contentRevision;
+  }, [page?.contentRevision]);
 
   useEffect(() => {
     if (visitedRef.current === pageId) return;
@@ -108,6 +121,11 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
     [router, onNavigateToPage]
   );
 
+  const handleReload = useCallback(() => {
+    conflictRef.current = false;
+    void refetch();
+  }, [refetch]);
+
   const handleUploadFile = useCallback(
     (file: File) => uploadKbMedia(file, pageId),
     [pageId]
@@ -118,19 +136,38 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
     content?: unknown;
     contentText?: string;
   }) {
+    if (conflictRef.current) {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      return;
+    }
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     setSaveState("pending");
+    const revisionSnapshot = contentRevisionRef.current;
     saveTimerRef.current = setTimeout(() => {
       setSaveState("saving");
+      const payload = revisionSnapshot !== undefined
+        ? { pageId, ...patch, expectedContentRevision: revisionSnapshot }
+        : { pageId, ...patch };
       updatePage.mutate(
-        { pageId, ...patch },
+        payload,
         {
-          onSuccess: () => setSaveState("saved"),
+          onSuccess: (data) => {
+            contentRevisionRef.current = data.contentRevision;
+            setSaveState("saved");
+          },
           onError: (error) => {
             setSaveState("idle");
-            toast.error("Failed to save page", {
-              description: getErrorMessage(error),
-            });
+            if (isApiError(error) && error.status === 409) {
+              conflictRef.current = true;
+              toast.error("Page edited by someone else", {
+                description: "Your unsaved changes were not applied. Reload to see the latest version.",
+                action: { label: "Reload", onClick: handleReload },
+              });
+            } else {
+              toast.error("Failed to save page", {
+                description: getErrorMessage(error),
+              });
+            }
           },
         }
       );

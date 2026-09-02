@@ -9,6 +9,7 @@ import type {
   KbResearchBriefListItem,
   CreateResearchBriefInput,
 } from "@/types/kb";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface BriefListResponse {
   items: KbResearchBriefListItem[];
@@ -19,10 +20,10 @@ export function useKbResearchBriefs(limit = 20) {
   const canViewPages = useCan("kb:pages:view");
   return useInfiniteQuery({
     queryKey: queryKeys.kb.researchBriefs(),
-    queryFn: ({ pageParam }) => {
+    queryFn: ({ pageParam, signal }) => {
       const params: Record<string, unknown> = { limit };
       if (pageParam) params.cursor = pageParam;
-      return apiClient.get<BriefListResponse>("/kb/research-briefs", params);
+      return apiClient.get<BriefListResponse>("/kb/research-briefs", params, signal);
     },
     initialPageParam: undefined as number | undefined,
     getNextPageParam: (last) => last.nextCursor ?? undefined,
@@ -48,7 +49,7 @@ export function useKbResearchBrief(briefId: number | undefined) {
 
 export function useCreateResearchBrief() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "research-briefs", "create"],
     mutationFn: (input: CreateResearchBriefInput) =>
       apiClient.post<{ briefId: number; jobId: number }>("/kb/research-briefs", input),
@@ -58,7 +59,7 @@ export function useCreateResearchBrief() {
 
 export function useRateResearchBrief() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "research-briefs", "rate"],
     mutationFn: ({ briefId, rating }: { briefId: number; rating: "helpful" | "not_helpful" }) =>
       apiClient.post<{ success: boolean }>(`/kb/research-briefs/${briefId}/rate`, { rating }),

@@ -24,6 +24,7 @@ import {
   useKbArticleImprove,
   useKbArticleSuggestRelated,
 } from "@/hooks/api/kb/article-ai";
+import { useCan } from "@/hooks/api/access";
 
 interface KbArticleAiActionsProps {
   articleId: number;
@@ -41,6 +42,7 @@ type AskPanelState =
   | { status: "error"; message: string };
 
 export function KbArticleAiActions({ articleId, onApplyImprovement }: KbArticleAiActionsProps) {
+  const canGenerate = useCan("kb:ai:generate");
   const [askOpen, setAskOpen] = useState(false);
   const [askState, setAskState] = useState<AskPanelState>({ status: "input" });
   const [question, setQuestion] = useState("");
@@ -131,6 +133,8 @@ export function KbArticleAiActions({ articleId, onApplyImprovement }: KbArticleA
       },
     },
   ];
+
+  if (!canGenerate) return null;
 
   return (
     <>

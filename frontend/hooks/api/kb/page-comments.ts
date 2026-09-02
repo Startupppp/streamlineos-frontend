@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type KbPageComment = {
   id: number;
@@ -24,18 +25,18 @@ export type CreateKbPageCommentInput = {
 };
 
 export function useKbPageComments(pageId: number) {
-  const canUpdatePages = useCan("kb:pages:update");
+  const canViewPages = useCan("kb:pages:view");
   return useQuery({
     queryKey: queryKeys.kb.pageComments(pageId),
     queryFn: ({ signal }) => apiClient.get<KbPageComment[]>(`/kb/pages/${pageId}/comments`, undefined, signal),
     staleTime: 30_000,
-    enabled: canUpdatePages && pageId > 0,
+    enabled: canViewPages && pageId > 0,
   });
 }
 
 export function useCreateKbPageComment() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pageComments", "create"],
     mutationFn: ({ pageId, ...data }: CreateKbPageCommentInput & { pageId: number }) =>
       apiClient.post<KbPageComment>(`/kb/pages/${pageId}/comments`, data),
@@ -47,7 +48,7 @@ export function useCreateKbPageComment() {
 
 export function useUpdateKbPageComment() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pageComments", "update"],
     mutationFn: ({ commentId, content }: { commentId: number; pageId: number; content: string }) =>
       apiClient.patch<KbPageComment>(`/kb/page-comments/${commentId}`, { content }),
@@ -59,7 +60,7 @@ export function useUpdateKbPageComment() {
 
 export function useDeleteKbPageComment() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pageComments", "delete"],
     mutationFn: ({ commentId }: { commentId: number; pageId: number }) =>
       apiClient.delete<void>(`/kb/page-comments/${commentId}`),
@@ -71,7 +72,7 @@ export function useDeleteKbPageComment() {
 
 export function useResolveKbPageComment() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pageComments", "resolve"],
     mutationFn: ({ commentId }: { commentId: number; pageId: number }) =>
       apiClient.post<KbPageComment>(`/kb/page-comments/${commentId}/resolve`),

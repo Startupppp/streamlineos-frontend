@@ -8,6 +8,7 @@ import {
   KbXIcon,
 } from "@/features/wiki/lib/kb-icons";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
@@ -55,7 +56,7 @@ function CommentRow({ comment, replies, pageId, onReply }: CommentRowProps) {
       { commentId: comment.id, pageId, content: editText },
       {
         onSuccess: () => setEditing(false),
-        onError: () => toast.error("Failed to update comment"),
+        onError: (error) => toast.error(getErrorMessage(error)),
       }
     );
   }
@@ -63,14 +64,14 @@ function CommentRow({ comment, replies, pageId, onReply }: CommentRowProps) {
   function handleDelete() {
     deleteComment.mutate(
       { commentId: comment.id, pageId },
-      { onError: () => toast.error("Failed to delete comment") }
+      { onError: (error) => toast.error(getErrorMessage(error)) }
     );
   }
 
   function handleResolve() {
     resolveComment.mutate(
       { commentId: comment.id, pageId },
-      { onError: () => toast.error("Failed to resolve comment") }
+      { onError: (error) => toast.error(getErrorMessage(error)) }
     );
   }
 
@@ -200,7 +201,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
           setNewContent("");
           setReplyingTo(null);
         },
-        onError: () => toast.error("Failed to post comment"),
+        onError: (error) => toast.error(getErrorMessage(error)),
       }
     );
   }

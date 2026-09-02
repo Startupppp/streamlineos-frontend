@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { KbAskCitation } from "@/types/kb";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface KbChatHistoryMessage {
   id: number;
@@ -37,10 +38,10 @@ export function useKbConversations(enabled: boolean) {
   const canViewPages = useCan("kb:pages:view");
   return useInfiniteQuery({
     queryKey: queryKeys.kb.chatConversations(),
-    queryFn: ({ pageParam }) => {
+    queryFn: ({ pageParam, signal }) => {
       const params: Record<string, unknown> = { limit: HISTORY_PAGE_SIZE };
       if (pageParam) params.cursor = pageParam;
-      return apiClient.get<KbConversationListPage>("/kb/ask/conversations", params);
+      return apiClient.get<KbConversationListPage>("/kb/ask/conversations", params, signal);
     },
     initialPageParam: undefined as number | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
@@ -51,7 +52,7 @@ export function useKbConversations(enabled: boolean) {
 
 export function useRenameKbConversation() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "chatConversations", "rename"],
     mutationFn: ({ id, title }: { id: number; title: string }) =>
       apiClient.patch<KbConversation>(`/kb/ask/conversations/${id}`, { title }),
@@ -63,7 +64,7 @@ export function useRenameKbConversation() {
 
 export function useDeleteKbConversation() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "chatConversations", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/kb/ask/conversations/${id}`),
@@ -77,12 +78,13 @@ export function useKbConversationMessages(conversationId: number | null, enabled
   const canViewPages = useCan("kb:pages:view");
   return useInfiniteQuery({
     queryKey: queryKeys.kb.chatConversationMessages(conversationId ?? 0),
-    queryFn: ({ pageParam }) => {
+    queryFn: ({ pageParam, signal }) => {
       const params: Record<string, unknown> = { limit: HISTORY_PAGE_SIZE };
       if (pageParam) params.cursor = pageParam;
       return apiClient.get<KbChatHistoryPage>(
         `/kb/ask/conversations/${conversationId}/messages`,
         params,
+        signal,
       );
     },
     initialPageParam: undefined as number | undefined,

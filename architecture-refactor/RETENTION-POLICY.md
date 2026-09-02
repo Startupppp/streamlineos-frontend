@@ -119,6 +119,13 @@ Note on low current row counts: this is a dev/staging instance. `timesheets`, `h
 - Route: `GET`/`POST /cron/helpdesk-retention-sweep`, `CRON_SECRET` + `CronLeaseService` lease `helpdesk-retention-sweep` (1800 seconds).
 - Immutable obligation: ticket comments and assignee history that are referenced by an active HR legal hold are excluded from deletion.
 
+### kb_page_versions — KEEP-FOREVER
+- Decision: KEEP-FOREVER, taken 2026-09-02 during S10. Page revision history is the audit trail for wiki content: who changed what and when, and the only way to restore a page after a bad edit or a vandalised paste. `kb_article_versions` has always been insert-only, so a rolling window on the page side made the two halves of Knowledge disagree about whether history is trustworthy, and PRD §10.16 requires immutable revisions.
+- **Corrected an undocumented silent deletion.** `kb-page-edit.util.ts` previously hard-deleted the oldest `kb_page_versions` row once a page reached `MAX_VERSIONS = 100`, so the 101st edit destroyed revision 1 with no audit entry and no operator visibility. This table had no entry in this document at all, so the behaviour was policy by accident. The delete is removed; the table is now insert-only.
+- No worker. Growth is bounded by design, not by deletion: `snapshotIfNeeded` already throttles on `VERSION_WINDOW_MS`, so a page accrues at most one version per window regardless of edit frequency — continuous typing produces one row, not one per keystroke. That throttle is now load-bearing and must not be removed without revisiting this decision.
+- Because history is unbounded, `listVersions` is keyset-paged rather than capped; a bare `LIMIT` here would silently truncate growing work.
+- Immutable obligation: `kb_page_versions` carries no `deleted_at`. Physical deletion is operator-triggered only, and org-level erasure removes them through the page's own cascade under the GDPR path, not through a retention sweep.
+
 ### performance_reviews — KEEP-FOREVER
 - Decision: KEEP-FOREVER. Performance reviews are employment records used in succession planning, compensation decisions, and dispute resolution. They are referenced by `review_cycles`, feed into `goals` and `key_results`, and constitute evidence of HR decision-making under employment law in most jurisdictions (typically 7 years). Scheduling automated deletion without a per-org statutory-retention rule risks destroying legally required evidence.
 - No worker. Any deletion is operator-triggered following legal advice and is restricted to orgs with an approved statutory-retention policy.
@@ -126,8 +133,9 @@ Note on low current row counts: this is a dev/staging instance. `timesheets`, `h
 
 ### mail_message_metadata — RETAIN-BOUNDED
 - Decision: 365-day (1-year) retention from `synced_at`. Mail metadata is synced from provider mailboxes as a cache for the platform's mail UI. The authoritative record remains at the provider; this table is a re-syncable projection, not the system of record.
-- Worker: `CronMailRetentionService` (`cron-mail-retention.service.ts`). Uses `forEachOrg`, batch 500. Physical DELETE (no `deleted_at` — records are a re-syncable projection). No legal-hold interaction — the authoritative records remain at the provider.
+- Worker: `CronMailRetentionService` (`cron-mail-retention.service.ts`). Uses `forEachOrg`, batch 500. Physical DELETE (no `deleted_at` — records are a re-syncable projection). No legal-hold interaction — the authoritative records remain at the provider. Writes audit record to `hr_audit_logs` when rows are deleted.
 - Route: `GET`/`POST /cron/mail-metadata-retention-sweep`, `CRON_SECRET` + lease `mail-metadata-retention-sweep` (1800 seconds).
+- No child FK dependents: `pg_constraint` query against the live catalog returns 0 rows for `mail_message_metadata` as parent — DELETE is safe with no cascade required.
 
 ### announcements — RETAIN-BOUNDED
 - Decision: Two sweep phases.

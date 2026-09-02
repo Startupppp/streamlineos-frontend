@@ -1,9 +1,10 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type KbPage = {
   id: number;
@@ -15,6 +16,7 @@ export type KbPage = {
   coverImage: string | null;
   content: Record<string, unknown> | Record<string, unknown>[] | null;
   contentText: string | null;
+  contentRevision: number;
   sortOrder: number;
   isLocked: boolean;
   createdById: string | null;
@@ -101,6 +103,7 @@ export type UpdateKbPageInput = {
   status?: "draft" | "in_review" | "published" | "archived";
   contentType?: string;
   ownerUserId?: string | null;
+  expectedContentRevision?: number;
 };
 
 export type MoveKbPageInput = {
@@ -188,11 +191,30 @@ export function useKbPageBacklinks(pageId: number) {
   });
 }
 
+type CursorPage<T> = {
+  data: T[];
+  pagination: {
+    limit: number;
+    nextCursor: string | null;
+    hasMore: boolean;
+  };
+};
+
 export function useKbPageVersions(pageId: number) {
   const canView = useCan("kb:pages:view");
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: queryKeys.kb.pageVersions(pageId),
-    queryFn: ({ signal }) => apiClient.get<KbPageVersion[]>(`/kb/pages/${pageId}/versions`, undefined, signal),
+    queryFn: ({ pageParam, signal }) => {
+      const params: Record<string, unknown> = {};
+      if (pageParam) params.cursor = pageParam;
+      return apiClient.get<CursorPage<KbPageVersion>>(
+        `/kb/pages/${pageId}/versions`,
+        params,
+        signal,
+      );
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     staleTime: 60_000,
     enabled: canView && Number.isFinite(pageId) && pageId > 0,
   });
@@ -215,7 +237,7 @@ export function useKbPageVersion(pageId: number, versionNumber: number) {
 
 export function useCreateKbPage() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:create", {
     mutationKey: ["kb", "pages", "create"],
     mutationFn: (input: CreateKbPageInput) => apiClient.post<KbPage>("/kb/pages", input),
     onSuccess: (_, variables) => {
@@ -231,7 +253,7 @@ export function useCreateKbPage() {
 
 export function useUpdateKbPage() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pages", "update"],
     mutationFn: ({ pageId, ...data }: UpdateKbPageInput & { pageId: number }) =>
       apiClient.patch<KbPage>(`/kb/pages/${pageId}`, data),
@@ -245,7 +267,7 @@ export function useUpdateKbPage() {
 
 export function useDeleteKbPage() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:delete", {
     mutationKey: ["kb", "pages", "delete"],
     mutationFn: (pageId: number) =>
       apiClient.delete<{ deletedCount: number }>(`/kb/pages/${pageId}`),
@@ -259,7 +281,7 @@ export function useDeleteKbPage() {
 
 export function useRestoreKbPage() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pages", "restore"],
     mutationFn: (pageId: number) => apiClient.post<KbPage>(`/kb/pages/${pageId}/restore`),
     onSuccess: () => {
@@ -272,7 +294,7 @@ export function useRestoreKbPage() {
 
 export function useHardDeleteKbPage() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:purge", {
     mutationKey: ["kb", "pages", "hardDelete"],
     mutationFn: (pageId: number) => apiClient.delete<void>(`/kb/pages/${pageId}/permanent`),
     onSuccess: () => {
@@ -283,7 +305,7 @@ export function useHardDeleteKbPage() {
 
 export function useEmptyKbTrash() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:purge", {
     mutationKey: ["kb", "pages", "emptyTrash"],
     mutationFn: () => apiClient.delete<{ purgedCount: number }>("/kb/pages/trash/empty"),
     onSuccess: () => {
@@ -295,7 +317,7 @@ export function useEmptyKbTrash() {
 
 export function useDuplicateKbPage() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:create", {
     mutationKey: ["kb", "pages", "duplicate"],
     mutationFn: (pageId: number) => apiClient.post<KbPage>(`/kb/pages/${pageId}/duplicate`),
     onSuccess: () => {
@@ -307,7 +329,7 @@ export function useDuplicateKbPage() {
 
 export function useMoveKbPage() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pages", "move"],
     mutationFn: ({ pageId, ...data }: MoveKbPageInput & { pageId: number }) =>
       apiClient.post<KbPage>(`/kb/pages/${pageId}/move`, data),
@@ -320,7 +342,7 @@ export function useMoveKbPage() {
 
 export function useLockKbPage() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:manage", {
     mutationKey: ["kb", "pages", "lock"],
     mutationFn: ({ pageId, isLocked }: { pageId: number; isLocked: boolean }) =>
       apiClient.patch<KbPage>(`/kb/pages/${pageId}/lock`, { isLocked }),
@@ -332,7 +354,7 @@ export function useLockKbPage() {
 
 export function useToggleFavoriteKbPage() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "pages", "toggleFavorite"],
     mutationFn: ({ pageId, isFavorite }: { pageId: number; isFavorite: boolean }) =>
       isFavorite
@@ -358,7 +380,7 @@ export function useToggleFavoriteKbPage() {
 }
 
 export function useRecordKbPageVisit() {
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "pages", "visit"],
     mutationFn: (pageId: number) =>
       apiClient.post<{ success: boolean }>(`/kb/pages/${pageId}/visit`),
@@ -367,7 +389,7 @@ export function useRecordKbPageVisit() {
 
 export function useSetKbPageVisibility() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pages", "visibility"],
     mutationFn: ({ pageId, visibility }: { pageId: number; visibility: "private" | "org" | "public" }) =>
       apiClient.patch<KbPageDetail>(`/kb/pages/${pageId}/visibility`, { visibility }),
@@ -380,7 +402,7 @@ export function useSetKbPageVisibility() {
 
 export function useRestoreKbPageVersion() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pages", "restoreVersion"],
     mutationFn: ({ pageId, versionNumber }: { pageId: number; versionNumber: number }) =>
       apiClient.post<KbPage>(`/kb/pages/${pageId}/versions/${versionNumber}/restore`),
@@ -393,7 +415,7 @@ export function useRestoreKbPageVersion() {
 
 export function usePublishKbPage() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pages", "publish"],
     mutationFn: (pageId: number) => apiClient.post<KbPageDetail>(`/kb/pages/${pageId}/publish`, {}),
     onSuccess: (_, pageId) => {
@@ -405,7 +427,7 @@ export function usePublishKbPage() {
 
 export function useArchiveKbPage() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pages", "archive"],
     mutationFn: (pageId: number) => apiClient.post<KbPageDetail>(`/kb/pages/${pageId}/archive`, {}),
     onSuccess: (_, pageId) => {
@@ -417,7 +439,7 @@ export function useArchiveKbPage() {
 
 export function useUnarchiveKbPage() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "pages", "unarchive"],
     mutationFn: (pageId: number) => apiClient.post<KbPageDetail>(`/kb/pages/${pageId}/unarchive`, {}),
     onSuccess: (_, pageId) => {
@@ -429,7 +451,7 @@ export function useUnarchiveKbPage() {
 
 export function useVerifyKbPage() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:manage", {
     mutationKey: ["kb", "pages", "verify"],
     mutationFn: ({ pageId, intervalDays }: { pageId: number; intervalDays?: number }) =>
       apiClient.post<KbPageDetail>(`/kb/pages/${pageId}/verify`, { intervalDays }),
@@ -442,7 +464,7 @@ export function useVerifyKbPage() {
 
 export function useMarkStaleKbPage() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:manage", {
     mutationKey: ["kb", "pages", "markStale"],
     mutationFn: (pageId: number) => apiClient.post<KbPageDetail>(`/kb/pages/${pageId}/mark-stale`, {}),
     onSuccess: (_, pageId) => {

@@ -33,6 +33,7 @@ import {
   useKbPageImprove,
   useKbPageSuggestRelated,
 } from "@/hooks/api/kb/page-ai";
+import { useCan } from "@/hooks/api/access";
 import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 
 interface KbPageAiActionsProps {
@@ -66,6 +67,7 @@ const ACTION_DESCRIPTIONS: Record<ActiveAction, string> = {
 };
 
 export function KbPageAiActions({ pageId, onApplyImprovement }: KbPageAiActionsProps) {
+  const canGenerate = useCan("kb:ai:generate");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState<ActiveAction>("summarize");
   const [panelState, setPanelState] = useState<PanelState>({ status: "idle" });
@@ -159,6 +161,8 @@ export function KbPageAiActions({ pageId, onApplyImprovement }: KbPageAiActionsP
   }
 
   const sheetTitle = active === "ask" ? "Ask about this page" : ACTION_LABELS[active];
+
+  if (!canGenerate) return null;
 
   return (
     <>
