@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 
 import { ListTruncationNotice } from "@/components/ui/list-truncation-notice";
 import { LoadingState } from "@/components/shared/loading-state";
+import { DataTable } from "@/components/ui/data-table";
 import { RouteErrorBoundary } from "@/components/ui/route-error-boundary";
 import { createAppQueryClient } from "@/components/providers/query-provider";
 import { ApiError } from "@/lib/api-client";
@@ -111,5 +112,49 @@ describe("a route error that replaced the whole shell", () => {
     expect(screen.queryByRole("main")).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { level: 1 })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 2 })).toBeInTheDocument();
+  });
+});
+
+describe("the data table, which is the loading state for most list pages", () => {
+  interface Row {
+    id: string;
+    name: string;
+  }
+
+  function renderTable(): void {
+    render(
+      <DataTable<Row>
+        data={[]}
+        columns={[{ key: "name", header: "Name", cell: (row) => row.name }]}
+        getRowKey={(row) => row.id}
+        isLoading
+      />,
+    );
+  }
+
+  it("announces loading while the connection is up", () => {
+    mockUseOnlineStatus.mockReturnValue(true);
+    renderTable();
+    expect(screen.getByRole("status")).toHaveTextContent(/loading results/i);
+    expect(screen.getByRole("status").parentElement).toHaveAttribute("aria-busy", "true");
+  });
+
+  it("says it is paused, not loading, once the browser goes offline", () => {
+    mockUseOnlineStatus.mockReturnValue(false);
+    renderTable();
+    expect(screen.getByRole("status")).toHaveTextContent(/paused/i);
+    expect(screen.getByText(/you are offline/i)).toBeInTheDocument();
+  });
+
+  it("stops claiming to be busy while the query is paused", () => {
+    mockUseOnlineStatus.mockReturnValue(false);
+    renderTable();
+    expect(screen.getByRole("status").parentElement).toHaveAttribute("aria-busy", "false");
+  });
+
+  it("BITE PROOF — an online table skeleton must not carry the offline copy", () => {
+    mockUseOnlineStatus.mockReturnValue(true);
+    renderTable();
+    expect(screen.queryByText(/you are offline/i)).not.toBeInTheDocument();
   });
 });

@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 
-const PAUSED_LABEL = "Paused — waiting for a connection";
-const PAUSED_MESSAGE =
+export const PAUSED_LABEL = "Paused — waiting for a connection";
+export const PAUSED_MESSAGE =
   "You are offline. This will load as soon as the connection returns.";
 
 interface LoadingStateProps {

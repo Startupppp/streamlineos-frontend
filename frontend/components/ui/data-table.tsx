@@ -11,9 +11,12 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { DataTablePagination } from "@/components/shared/data-table-pagination";
+import { PAUSED_LABEL, PAUSED_MESSAGE } from "@/components/shared/loading-state";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { DataTableHeader } from "@/components/ui/data-table-header";
 import { SearchInput } from "@/components/ui/search-input";
 import {
@@ -64,6 +67,7 @@ export function DataTable<T>({
   sortState,
   mobileCard,
 }: DataTableProps<T>) {
+  const isOnline = useOnlineStatus();
   const [sorting, setSorting] = useState<SortingState>([]);
   const externalSorting: SortingState = sortState?.field
     ? [{ id: sortState.field, desc: sortState.direction === "desc" }]
@@ -257,13 +261,19 @@ export function DataTable<T>({
       <div className="flex-1 min-h-0 overflow-auto overscroll-x-contain flex flex-col [-webkit-overflow-scrolling:touch]">
         {isLoading ? (
           <div
-            aria-busy="true"
+            aria-busy={isOnline}
             style={minWidth && minWidth !== "auto" ? { minWidth } : undefined}
             className={cn((!minWidth || minWidth === "content") && "min-w-max")}
           >
             <span role="status" className="sr-only">
-              Loading results…
+              {isOnline ? "Loading results…" : PAUSED_LABEL}
             </span>
+            {!isOnline && (
+              <p className="flex items-center gap-2 px-2 py-3 text-sm text-muted-foreground">
+                <WifiOff className="h-4 w-4 shrink-0" aria-hidden="true" />
+                {PAUSED_MESSAGE}
+              </p>
+            )}
             <Table containerClassName="overflow-visible">
               <DataTableHeader table={table} announceSort={false} rowIndex={1} />
               <TableBody>
