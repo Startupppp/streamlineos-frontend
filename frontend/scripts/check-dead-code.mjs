@@ -31,6 +31,20 @@ const CRM_INVENTORY_RE =
 
 const SCRIPTS_RE = /^scripts\//;
 
+/**
+ * The data-layer boundary surface. A TYPE exported from a live module here is
+ * the shape of a validated API response — the `z.infer` of a contract, or a
+ * fragment nested inside one. Consumers reach it through a hook's inferred
+ * return type and never import it by name, so a module-graph tool reports every
+ * one of them unused. That is a property of type erasure, not evidence of dead
+ * code, and it was previously answered with one hand-written KEEP per type.
+ *
+ * The rule is deliberately limited to types. A VALUE exported here and imported
+ * by nobody is a contract nothing parses with — an unvalidated boundary — and
+ * must still fail the gate.
+ */
+const DATA_LAYER_CONTRACT_RE = /^hooks\/api\//;
+
 const TEST_INFRA_RE = /^test-utils\//;
 
 const PRE_IMPLEMENTATION_CONTRACTS = new Set([
@@ -43,34 +57,12 @@ const BASELINE = { deadFiles: 0, deadExports: 0 };
 
 const SCAN_FLOOR = { knipTotal: 5, graphFiles: 100, graphEdges: 300 };
 
+/**
+ * Hand-written verdicts are now the exception. Every data-layer type that used
+ * to need one is answered structurally by DATA_LAYER_CONTRACT_RE above; what is
+ * left is the handful outside `hooks/api/`.
+ */
 const EXPORT_VERDICTS = new Map([
-  ["hooks/api/workflows.ts:TriggerType", { verdict: "KEEP", reason: "re-exported contract type used by Workflow.triggerType and consumed through live workflow query data" }],
-  ["hooks/api/workflows.ts:ApprovalStatus", { verdict: "KEEP", reason: "re-exported contract type used by WorkflowApproval.status and consumed through live approval query data" }],
-  ["hooks/api/workflows.ts:WorkflowSortField", { verdict: "KEEP", reason: "re-exported contract type used by live useWorkflows parameter contract" }],
-  ["hooks/api/workflows.ts:SortDirection", { verdict: "KEEP", reason: "re-exported contract type used by live workflow and execution list parameter contracts" }],
-  ["hooks/api/workflows.ts:WorkflowVersion", { verdict: "KEEP", reason: "re-exported response type used by the live publish-workflow API call" }],
-  ["hooks/api/workflows.ts:WorkflowCursorPage", { verdict: "KEEP", reason: "re-exported response wrapper used by live workflow and execution list API calls" }],
-  ["hooks/api/workflows.ts:WorkflowListParams", { verdict: "KEEP", reason: "re-exported parameter type used by live useWorkflows calls on the workflow list page" }],
-  ["hooks/api/workflows.ts:ExecutionListParams", { verdict: "KEEP", reason: "re-exported parameter type used by live execution list hooks and page calls" }],
-
-  ["hooks/api/hr/recruitment/interviews.ts:SlaReportStage", { verdict: "KEEP", reason: "nested in live HrSlaReport response consumed by the SLA report page" }],
-  ["hooks/api/hr/recruitment/interviews.ts:SlaReportMonth", { verdict: "KEEP", reason: "nested in live HrSlaReport response consumed by the SLA report page and chart" }],
-  ["hooks/api/hr/recruitment/interviews.ts:SlaReportStageSummary", { verdict: "KEEP", reason: "nested in live HrSlaReport response used by the SLA report page" }],
-  ["hooks/api/hr/recruitment/interviews.ts:BusyBlock", { verdict: "KEEP", reason: "nested in live InterviewerAvailabilityResponse returned by useInterviewerAvailability" }],
-
-  ["hooks/api/roles.ts:RoleTemplate", { verdict: "KEEP", reason: "return type of useRoleTemplates hook; feature consumers infer the type from hook return; no explicit import required" }],
-
-  ["hooks/api/module-access/index.ts:ModuleRolePermission", { verdict: "KEEP", reason: "part of ModuleRoleGroup.permissions; consumers infer via hook return type, no explicit import needed" }],
-  ["hooks/api/module-access/index.ts:ModuleMemberCandidate", { verdict: "KEEP", reason: "return type of useModuleMemberCandidates; inferred structurally, no explicit import needed" }],
-  ["hooks/api/module-access/index.ts:ModuleOwnership", { verdict: "KEEP", reason: "return type of useModuleOwnership; inferred structurally" }],
-  ["hooks/api/module-access/index.ts:MemberGrant", { verdict: "KEEP", reason: "return element type of useModuleMemberGrants; inferred structurally" }],
-  ["hooks/api/module-access/index.ts:Pagination", { verdict: "KEEP", reason: "internal pagination shape within PaginatedResult; used in hook return types inferred by consumers" }],
-  ["hooks/api/module-access/index.ts:PaginatedResult", { verdict: "KEEP", reason: "wrapper type for paginated hook responses; inferred by consumers through hook return types" }],
-  ["hooks/api/module-access/index.ts:CursorPaginatedResult", { verdict: "KEEP", reason: "cursor-pagination wrapper type; inferred by consumers through hook return types" }],
-  ["hooks/api/module-access/index.ts:AuditCursorPage", { verdict: "KEEP", reason: "audit log cursor page type; inferred by consumers through useModuleAuditLog return type" }],
-  ["hooks/api/module-access/index.ts:ModuleMyPermissions", { verdict: "KEEP", reason: "return type of useModuleMyPermissions; inferred structurally by feature consumers" }],
-
-  ["hooks/api/module-access/types.ts:PaginatedResult", { verdict: "KEEP", reason: "source definition re-exported through barrel; used structurally inside module-access hooks" }],
 
   ["lib/command-catalog.ts:NotificationCommandName", { verdict: "KEEP", reason: "keyof typeof NOTIFICATION_COMMANDS — available for consumers that need a typed command-name union without importing the full catalog" }],
   ["lib/command-catalog.ts:ChatCommandName", { verdict: "KEEP", reason: "keyof typeof CHAT_COMMANDS — available for consumers that need a typed command-name union without importing the full catalog" }],
@@ -212,7 +204,7 @@ function classifyFile(relPath, knipDeadSet, importerMap, root) {
   return { cls: "DEAD", reason: "no live importers found in module graph" };
 }
 
-function classifyExport(filePath, name, verdicts = EXPORT_VERDICTS) {
+function classifyExport(filePath, name, verdicts = EXPORT_VERDICTS, kind = "export", knipDeadSet = new Set()) {
   if (CONTRACT_BARRELS.has(filePath)) {
     return { cls: "RETAINED-BY-CONTRACT", reason: "named intentional barrel" };
   }
@@ -224,6 +216,16 @@ function classifyExport(filePath, name, verdicts = EXPORT_VERDICTS) {
   }
   if (CRM_INVENTORY_RE.test(filePath)) {
     return { cls: "EXCLUDED", reason: "CRM/Inventory excluded from PRD scope; not counted in dead-code baseline" };
+  }
+  if (
+    kind === "type" &&
+    DATA_LAYER_CONTRACT_RE.test(filePath) &&
+    !knipDeadSet.has(filePath)
+  ) {
+    return {
+      cls: "RETAINED-BY-CONTRACT",
+      reason: "type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name",
+    };
   }
   const key = `${filePath}:${name}`;
   if (verdicts.has(key)) {
@@ -289,9 +291,28 @@ function runSelfTest() {
   assert(r7.cls === "DEFERRED",
     `(j) DEFERRED verdict → expected DEFERRED, got ${r7.cls}`);
 
-  const r8 = classifyExport("hooks/api/roles.ts", "RoleTemplate");
+  const r8 = classifyExport("lib/command-catalog.ts", "CommandDomain");
   assert(r8.cls === "KEEP",
     `(k) KEEP verdict → expected KEEP, got ${r8.cls}`);
+
+  const r8a = classifyExport("hooks/api/payroll/runs-schema.ts", "PayrollRunListItem", EXPORT_VERDICTS, "type");
+  assert(r8a.cls === "RETAINED-BY-CONTRACT",
+    `(o) a data-layer TYPE in a live module → expected RETAINED-BY-CONTRACT, got ${r8a.cls}`);
+
+  const r8b = classifyExport("hooks/api/payroll/runs-schema.ts", "payrollRunListItemContract", EXPORT_VERDICTS, "export");
+  assert(r8b.cls === "UNCLASSIFIED",
+    `(p) BITE: a data-layer VALUE nothing imports is an unvalidated boundary → expected UNCLASSIFIED, got ${r8b.cls}`);
+
+  const r8c = classifyExport(
+    "hooks/api/ghost-schema.ts", "GhostRow", EXPORT_VERDICTS, "type",
+    new Set(["hooks/api/ghost-schema.ts"]),
+  );
+  assert(r8c.cls === "UNCLASSIFIED",
+    `(q) BITE: a type in a module NO live file imports is not retained → expected UNCLASSIFIED, got ${r8c.cls}`);
+
+  const r8d = classifyExport("types/payroll/ess.ts", "EssSalaryComponent", EXPORT_VERDICTS, "type");
+  assert(r8d.cls === "UNCLASSIFIED",
+    `(r) the rule does NOT extend past hooks/api → expected UNCLASSIFIED, got ${r8d.cls}`);
 
   const fakeVerdicts = new Map([["hooks/api/ghost.ts:useGhost", { verdict: "WIRE", reason: "test" }]]);
   const stale = checkStaleVerdicts(fakeVerdicts, new Set());
@@ -343,7 +364,7 @@ function runSelfTest() {
     rmSync(fixtureDir, { recursive: true, force: true });
   }
 
-  console.log("PASS: self-test (14 assertions)\n");
+  console.log("PASS: self-test (18 assertions)\n");
   console.log("  (a) file with no live importers                       → DEAD");
   console.log("  (b) file reachable via side-effect import             → RETAINED-BY-CONTRACT");
   console.log("  (c) file reachable via re-export from live barrel     → RETAINED-BY-CONTRACT");
@@ -358,6 +379,10 @@ function runSelfTest() {
   console.log("  (l) EXPORT_VERDICTS entry not in knip output          → stale (gate bites)");
   console.log("  (m) test-utils file                                   → RETAINED-BY-CONVENTION");
   console.log("  (n) test-utils export                                 → RETAINED-BY-CONVENTION");
+  console.log("  (o) data-layer TYPE in a live module                  → RETAINED-BY-CONTRACT");
+  console.log("  (p) data-layer VALUE nothing imports                  → UNCLASSIFIED (gate bites)");
+  console.log("  (q) TYPE in a module no live file imports             → UNCLASSIFIED (gate bites)");
+  console.log("  (r) a TYPE outside hooks/api                          → UNCLASSIFIED (rule is scoped)");
 }
 
 async function runMain() {
@@ -436,7 +461,7 @@ async function runMain() {
   const processedVerdictKeys = new Set();
 
   for (const ex of deadExportItems) {
-    const r = classifyExport(ex.file, ex.name);
+    const r = classifyExport(ex.file, ex.name, EXPORT_VERDICTS, ex.kind, knipDeadSet);
     if (r.cls === "WIRE" || r.cls === "DEFERRED" || r.cls === "KEEP") {
       processedVerdictKeys.add(`${ex.file}:${ex.name}`);
     }
