@@ -1,22 +1,22 @@
 # StreamlineOS code-release remaining-work PRD
 
 Status: active — single authoritative backlog
-Last reconciled: 2026-09-02 against committed head `679fb60f0` and the visible working tree
+Last reconciled: 2026-09-02 against committed head `0bf058f6a` and the visible working tree
 Scope: all platform domains except CRM and Inventory
 
 This file contains only remaining acceptance work. Completed checklist items and the temporary session documents were removed after current-source reconciliation; their evidence remains in Git history. A missing checkbox must never be interpreted as waived work: every removed checkbox was either previously evidenced or freshly re-verified below.
 
 ## Current completion
 
-- Immediate acceptance criteria proven: **153 of 281 (54.4%)**.
-- Immediate acceptance criteria still open: **128 of 281 (45.6%)**.
+- Pre-amendment immediate baseline proven: **153 of 281 (54.4%)**.
+- Pre-amendment immediate baseline open: **128 of 281 (45.6%)**.
 - Additive repository-hygiene amendment: **14 new immediate criteria**, all initially open; no earlier criterion is superseded or waived.
 - Additive schema/code-key minimization amendment: **8 new immediate criteria**, all initially open; no required tenant, authorization, integrity, cache or contract key may be removed as “cleanup.”
 - Additive cyclic-dependency amendment: **1 new immediate criterion**, initially open; it strengthens the existing zero-cycle architecture requirement without replacing it.
 - Additive file-cohesion and size-policy amendment: **6 new immediate criteria**, all initially open; 500 lines is the repository-wide authored-file default, with rare evidence-backed exceptions where splitting would damage locality or create shallow modules.
 - Additive handler-design amendment: **3 new immediate criteria**, all initially open; named handlers own event/transport orchestration while reusable business rules remain domain functions rather than meaningless `handle*` wrappers.
 - Reconciliation note: three migration criteria were evidenced at the 634-entry chain, but the current chain has 635 entries, so current-head bootstrap/catalog parity is open again.
-- Reconciled immediate total: **153 proven and 160 open of 313 (48.9% proven)**.
+- Reconciled immediate total: **166 proven and 147 open of 313 (53.0% proven)**. Thirteen additive/current criteria are explicitly checked at the audited tree; all remain subject to final one-commit rerun.
 - Deferred production/compliance criteria still open: **34**.
 - Code-level 10/10 is **not yet reached**. Module checklists are substantially ahead of cross-cutting integration, performance, privacy and final-release proof.
 
@@ -45,9 +45,9 @@ This file contains only remaining acceptance work. Completed checklist items and
 
 A 100% module row means its module-specific checklist is closed. It does not override open cross-cutting gates below.
 
-## Fresh verification snapshot
+## Current verification snapshot
 
-Verified green on 2026-09-02:
+Measured on 2026-09-02; each item states whether it passes or remains open:
 
 - Backend hard-size gate currently fails: 3,494 files scanned with 12 registered exceptions; `src/modules/rbac/roles.service.ts` is 506 lines and `src/modules/support/core/support-kb.service.ts` is 508 lines without approved exceptions.
 - Backend over-300 ratchet currently fails: 395/3,494 against the approved baseline of 394.
@@ -55,27 +55,27 @@ Verified green on 2026-09-02:
 - Architecture-rule gates that did not exist before this round: `check:kebab-case` (6,049 entries, 0 violations), `check:import-direction` (208 `src/common` files, 0 new violations over a 9-entry named baseline) and `check:module-registration` (216 module classes, 215 reachable from `AppModule`, 0 unreachable). `check:over-300`'s self-test previously asserted only its own constants and never ran the scan; it now writes a known-bad fixture tree and is bite-proven twice.
 - Six `support/core` suites that had been red long enough to reproduce at a clean HEAD worktree are green: 33 suites / 286 tests. Repairing their doubles surfaced a live defect — `splitTicket` called `createTicket` without a `membershipId`, so **every split-ticket request returned 403** on a permission-gated route that looked healthy.
 - Seeded disposable E2E harness: **6/6** (was 2/6), plus a cross-module GDPR privacy artifact at **2/2** run through the real HTTP stack. The harness now refuses a database whose name lacks `scratch`, and can enable a module — without which every plan-gated permission resolved `NO_MODULE` and a correct grant was indistinguishable from a denial.
-- Cross-tenant isolation coverage: **920/920 declared, `check:tenant-isolation` EXIT=0**. The six previously-uncovered services are covered; three of them were uncovered only because the gate is path-keyed and this round's file splits moved the code out from under its spec.
+- Cross-tenant isolation declaration coverage currently fails: **921/923 declared**. `src/modules/rbac/role-seed.service.ts` and `src/modules/support/core/support-kb-engagement.service.ts` lack cross-tenant negative tests; the executable isolation suite remains mandatory because the declaration gate is static.
 - Import direction: **zero** `src/common/** -> src/modules/**` imports in production code. All nine baseline entries were relocated to neutral seams and `check:import-direction` now enforces an empty baseline, so the debt cannot reappear.
 - Static dependency-cycle scans at current working tree: backend processed 5,330 files and frontend processed 5,044 files, both reporting zero circular dependencies. The additive cycle criterion remains open until the gates are fail-closed and bite-proven against known compile-time, barrel and NestJS DI cycle fixtures.
-- Unbounded reads, contract registry (3,619 operations, 100 published, 0 unclassified), `validate:env`, vulnerabilities, licences and SBOM.
+- Unbounded-read gate passes across 2,186 service files with zero actionable offsets, unbounded reads or unordered paging. Database-call classification passes with 37 classified loop-internal candidates and zero actionable call sites.
+- Contract registry passes with 3,625 classified operations (101 published) and 24 events; 12 removed-operation records remain intentionally retained for deprecation/breaking-change enforcement.
 - Migration discipline, chain and ledger: 635/635 applied, zero pending/orphan/duplicate/unreachable entries. Current-head cold-bootstrap/catalog parity remains open below.
-- Tenant relationships: zero actionable in-scope single-column tenant FKs; CRM/Inventory reported separately.
+- Tenant relationships had zero actionable findings at the fully bootstrapped 634-entry evidence database. Current-head 635-entry proof is open because the configured target was observed mid-bootstrap.
 - Tenant indexes: 745/745.
 - RLS verification and retention coverage.
-- Permission catalog: 3,115 usages, 627 unique keys, all valid in both catalogs.
-- Route classification: 3,596 handlers, zero undeclared.
-- OpenAPI coverage: 3,607/3,607 operations; 1,370/1,370 mutating request schemas.
-- Unbounded-read and pagination gate: zero actionable offsets, zero actionable unbounded reads and zero unordered paging violations across 2,182 scanned service files.
-- Fail-closed contract registry: all 3,619 operations and 24 events classified. Twelve deliberately retained removed-operation records remain governed by the breaking-change/deprecation gate.
+- Permission catalog: 3,116 usages, 627 unique used keys, all valid in backend and frontend catalogs.
+- Route classification: 3,602 handlers, zero undeclared.
+- OpenAPI coverage: 3,613/3,613 operations have exposure, response and 4xx schemas; 1,371/1,371 mutating operations have request schemas.
 - Bounded contracts, bulk-id limits, cache invalidation, idempotent commands, fire-and-forget notification checks and outbox consumers.
 - Frontend client routes: 256/600, 48 below the ceiling.
-- Query cancellation/scope and command catalog: 1,053 query functions with zero signal violations; 1,506 mutations with zero unclassified commands.
+- Command catalog: 1,504 mutation hooks with zero unclassified commands and 70 gated-read hooks with zero invalid permission contracts. The previously missing Chat status, invoice-void and Support KB attachment-download operations are reconciled with backend routes.
+- Frontend dead-code analysis has zero unclassified findings and one dependency-proven dead file, `features/build/inbox/index.ts`, still to remove. Route bundles pass for all five measured routes; Web Vitals still breach six mobile/desktop budgets.
 - Payroll database integration: 1 suite / 14 tests passed against the current database, closing the former unapplied-`0933` blocker.
 - Historical clean-bootstrap parity at the **634-entry chain**: two independent clean bootstraps (`scratch_boot_c`, `scratch_boot_d`) and an interrupted-then-resumed bootstrap (`scratch_boot_b`) reached 634 replay entries with zero failures and identical catalogs across tables, columns, constraints, indexes, policies, functions, triggers, extensions, enums and RLS state. Evidence: [s02-bootstrap-parity.md](final-refactor/evidence/s02-bootstrap-parity.md) and [s02-tenant-integrity.md](final-refactor/evidence/s02-tenant-integrity.md). This evidence proves the former head only and does not close the current 635-entry gate.
 - Journal integrity, three times in one session: `0956`, `0983`/`0984` and `0989` each arrived from another lane with no `_journal.json` entry. `db:migrate` skips an unjournalled file and reports success, so each would have sat in the tree looking applied while being absent from every database. `check:migration-discipline` and `verify-migration-chain` catch this, which is how all three were found.
 - Row-level security on four tenant tables that shipped without any policy — `git_webhook_seen_deliveries`, `calendar_provider_sync_queue`, `file_quarantine_records`, `multipart_upload_intents`. Each carried `org_id` and granted `streamline_app` full DML with no policy, so every row was readable org-wide. The exposure was invisible until those migrations were applied, because an unapplied table cannot fail a scan.
-- Drizzle declarations reconciled with the catalog: static and `pg_catalog` modes of `check:tenant-relationships` both report **0 actionable**, and `db:generate` now fails closed while the snapshot chain is 169 migrations stale, with a self-test proving it permits generation once current.
+- Historical 634-entry evidence reconciled Drizzle declarations with the catalog at zero actionable tenant relationships. Current-head reconciliation remains open until the 635-entry bootstraps finish; `db:generate` must continue to fail closed while snapshots are stale.
 - Zero Drizzle-declared columns absent from the database. `db.select()` renders every declared column, so ~65 HR, hiring, payroll and performance tables were returning `42703` on any full-table read; 69 nullable actor columns were added and the failure no longer reproduces.
 
 Not rerun in this reconciliation because they are expensive final-integration gates: full backend/frontend builds, full typechecks, full Jest suites and complete disposable E2E. They remain open below.
@@ -84,11 +84,10 @@ Not rerun in this reconciliation because they are expensive final-integration ga
 
 - Clean-bootstrap and tenant-catalog parity are not current. The retained evidence covers a 634-entry journal, while the current chain and ledger contain 635 entries. Re-run two independent clean bootstraps plus an interrupted/resumed bootstrap at one release commit, compare exact catalogs and rerun tenant-relationship verification against a fully bootstrapped target; the configured `scratch_boot_a` was observed mid-bootstrap at 613/635 and is not release evidence.
 - Restore the file-size gates: split or rigorously justify the 506-line RBAC roles implementation and 508-line Support KB implementation, return the backend over-300 count from 395 to at most 394, and add the missing fail-closed frontend hard-500 gate without mechanically fragmenting cohesive modules.
-- Eliminate 36 actionable N+1 files / 42 loop-internal database call sites reported by `check:db-call-count`.
-- Classify or remove six frontend exports reported by the dead-code gate: `parseApiResponse`, `ApiResponse` and four Chat realtime payload types.
-- Repair or remove three live frontend controls whose backend operation does not exist: Chat presence status, invoice deletion and Support KB attachment download.
-- Reduce the 114 authenticated thick route modules through domain-owned feature seams; do not raise the ratchet.
-- Refresh and pass route-performance evidence. The committed bundle manifest still reports `/inbox` at 558,680 bytes against 524,288. Current Web Vitals evidence has six breaches: mobile INP/FCP/TTFB and desktop LCP/FCP/TTFB.
+- Add and execute cross-tenant negative tests for RBAC role seeding and Support KB engagement, restoring both static declaration coverage and executable tenant-isolation proof.
+- Remove the dependency-proven dead frontend barrel `features/build/inbox/index.ts`, then rerun the dead-code gate; do not treat retained contract/convention exports as dead without dependency evidence.
+- Reduce the 58 authenticated thick route modules through domain-owned feature seams; do not raise the ratchet or move implementation into alternate oversized feature files merely to thin `page.tsx`.
+- Refresh and pass production-build/reference-device Web Vitals evidence. Route bundles currently pass, while six Web Vitals budgets still breach: mobile INP/FCP/TTFB and desktop LCP/FCP/TTFB.
 - Decide and implement Calendar provider drift conflict behavior: local wins, provider wins or user-visible conflict resolution.
 - Finish AI gateway consistency: reserve/check credit before public KB embedding, route embedding through the gateway interface, stream non-chat AI surfaces and measure realistic-corpus retrieval latency.
 - Finish GDPR erasure across its remaining sinks: Chat/AI message content, search/vector indexes and derived projections, plus full cryptographic session revocation through `SessionsService` (the membership cache and permission version are already busted). **Database PII is now covered:** `GdprSubjectErasureService` anonymises the subject across `organization_people`, `hr_employee_sensitive_fields`, `hr_dependents` and — only once no other org membership remains — the global `users` row, whose email becomes a hashed `erased-<hash>@erased.invalid` tombstone so the NOT NULL UNIQUE constraint still holds. It is idempotent, legal-hold-blocking, audited, tenant-scoped in SQL, and drains on a keyset cursor rather than capping; it first shipped with two bare `.limit(50)` calls that would have reported a partially erased subject as fully erased.
@@ -97,7 +96,7 @@ Not rerun in this reconciliation because they are expensive final-integration ga
 - Make retention execution self-monitoring: schedule or prove the external scheduler, add a dead-man signal and emit durable failure events. Decide retention for `notification_outbox` and `outbox_events`.
 - Make Chat attachment storage private and backfill existing public attachment URLs to tenant-scoped object keys; current provider-response validation, tenant-fair delivery scheduling and offline Notification UI are already implemented.
 - Run dependency proof for the remaining dead backend exports/types before deletion; do not delete schema or side-effect imports from text search alone.
-- Complete the repository-wide hygiene contract in section 2.1: remove unused imports, variables, parameters, functions, constants, types, exports, files and dependencies, and replace unsafe forced typing with validated narrowing. The current six unclassified frontend exports are known examples, not the cleanup boundary.
+- Complete the repository-wide hygiene contract in section 2.1: remove unused imports, variables, parameters, functions, constants, types, exports, files and dependencies, and replace unsafe forced typing with validated narrowing. The current dead Build inbox barrel is one known example, not the cleanup boundary.
 
 ## Product constraints
 
@@ -177,7 +176,7 @@ These decisions are final for this release and remove implementation alternative
 
 - [ ] Use named, typed handler functions for non-trivial UI events and form actions instead of embedding business logic, multi-step mutations or long anonymous closures in JSX. Names express the user intent (`handleSubmit`, `handleMemberRemove`, `handleRetrySync`), and handlers delegate validation/state-independent rules to domain-owned functions.
 - [ ] Keep NestJS controller handlers, queue/event consumers, cron entry points and server actions thin: validate and authorize at the correct seam, construct the command/query context, invoke one cohesive implementation and map its typed result/error. Do not duplicate business rules, database orchestration or response shaping across handlers.
-- [ ] Do not create handler wrappers mechanically. A trivial stable prop callback may remain inline; use `useCallback` only when referential identity affects memoization, subscription or effect correctness, and verify dependencies. Pure transformations, validators and reusable rules remain explicitly named domain functions rather than being mislabeled as handlers.
+- [ ] Use named event handlers only; JSX event props must not contain inline arrow/function expressions. Do not create meaningless handler-to-handler chains: the named handler performs event orchestration and delegates reusable rules to explicitly named domain functions. Use `useCallback` only when referential identity affects memoization, subscription or effect correctness, and verify every dependency.
 
 ### 3. TypeScript, Zod and cross-layer contracts
 
@@ -388,9 +387,9 @@ These decisions are final for this release and remove implementation alternative
 - [ ] Verify AI frontend states for credit exhaustion, queueing, streaming, cancellation, retry, partial output, citation loading, provider failure and permission revocation without duplicate requests.
 - [ ] Emit tenant-safe metrics for queue time, application overhead, provider latency, time-to-first-token, tokens, credits/cost, cache hit, cancellation, retry and failure without logging prompts or sensitive content.
 
-## Verification run — 2026-09-02
+## Historical verification run — 2026-09-02
 
-Gates executed at one working tree. Numbers are from real runs, not estimates.
+Retained as an audit trail from the pre-`0bf058f6a` working tree; it is not current-head release evidence and does not override the current snapshot or blockers above. Gates were executed at one working tree and the recorded numbers are real runs, not estimates.
 
 **Backend** 50 of 56 executed gates pass. `check:vulnerabilities`, `check:licenses`, `check:migration-ledger`, `check:migration-rollback`, `check:tenant-isolation:run` and the `:emit`/`:baseline` variants were not executed in this run and are reported as not run, never as passing.
 
