@@ -18,7 +18,14 @@ on:
       - main
 
 jobs:
-  # Build health only. Nothing here may gate anything in `gates`.
+  # 2026-09-02 (ticket 36) — `Type Check` and `Build` used to sit in this job
+  # BELOW `Lint`, which is the same masking defect 35b fixed for `gates` and 35
+  # fixed for `tests`, one costume further down. Lint is red, so neither the
+  # frontend type check nor the frontend build had ever executed in CI: both
+  # reported `-`. They are now their own jobs, each with no `needs:`.
+  #
+  # This job is therefore Lint and nothing else. Its id is left as `frontend`,
+  # unrenamed, so any branch-protection rule naming that check still resolves.
   frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -47,11 +54,79 @@ jobs:
       - name: Lint
         run: pnpm run lint
 
+  # No `needs:`. Measured at head through the release mutex: `pnpm run
+  # type-check` (tsc --noEmit) exit 0, 0 errors. It needs no environment.
+  type-check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
       - name: Type Check
         run: pnpm run type-check
 
+  # No `needs:`. The env block is NOT decoration: `next build` runs with
+  # NODE_ENV=production, and `frontend/lib/env.ts` parses process.env at import
+  # from `app/layout.tsx` and THROWS in production when it fails. Measured with
+  # the schema in isolation under a scrubbed environment:
+  #   - NODE_ENV=production, neither variable set -> FAILS on NEXTAUTH_SECRET
+  #     and NEXT_PUBLIC_API_URL, "would THROW at build". That is the state this
+  #     step was in, which the Lint mask had been hiding.
+  #   - the secret alone (the shape the deleted frontend/.github copies used)
+  #     -> still FAILS on NEXT_PUBLIC_API_URL.
+  #   - both, as below -> PASSES.
+  # The secret is a build-only placeholder, never a real credential; it is 50
+  # characters because lib/env.ts requires >= 44 in production.
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
       - name: Build
         run: pnpm run build
+        env:
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'ci-build-only-placeholder-not-a-real-secret-abc123' }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'http://localhost:1500' }}
 
   # The unit suite, in its OWN job for exactly the reason `gates` is in its own
   # job. 2026-09-02 (ticket 35): `Run Tests` sat below `Lint` inside `frontend`,
