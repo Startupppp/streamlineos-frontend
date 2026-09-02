@@ -396,6 +396,39 @@ These decisions are final for this release and remove implementation alternative
 - [ ] Verify AI frontend states for credit exhaustion, queueing, streaming, cancellation, retry, partial output, citation loading, provider failure and permission revocation without duplicate requests.
 - [ ] Emit tenant-safe metrics for queue time, application overhead, provider latency, time-to-first-token, tokens, credits/cost, cache hit, cancellation, retry and failure without logging prompts or sensitive content.
 
+## Frontend verification run — 2026-09-02 (head `05bdb700c`)
+
+**Frontend suite 246/246 suites, 2307/2307 tests. `tsc --noEmit` clean. 25 of 27 frontend gates pass.** Lint and e2e were not requested and are reported as not run, never as passing.
+
+Correction to the historical entry below: `check:web-vitals-budget` and `check:route-bundle-budget` **do** run here — they read `.browser-driver-results.json`, not a fresh build. `check:route-bundle-budget` passes (5 routes, 5 measured, 0 pending). `check:web-vitals-budget` **fails** against a real `serverMode: "production"` capture of `/mail`, `/inbox`, `/dashboard` taken 2026-09-01 at 5 repetitions:
+
+| Profile | Metric | Measured | Budget |
+|---|---|---|---|
+| mobile | INP p75 | 392 ms | 200 ms |
+| mobile | FCP p75 | 2188 ms | 1800 ms |
+| mobile | TTFB p95 | 2641 ms | 600 ms |
+| desktop | LCP p75 | 2578 ms | 1500 ms |
+| desktop | FCP p75 | 2432 ms | 1200 ms |
+| desktop | TTFB p95 | 2946 ms | 400 ms |
+
+Measured over localhost, so TTFB carries local variance, but these are the project's own budgets measured the project's own way and they are breached. This is the standing evidence for §12.2's Core Web Vitals item, which stays open.
+
+### Route thinning dropped the gate on 16 server pages
+
+Converting pages to thin server components removes the client `useCan` gate without replacing it. Each of the 16 now carries the permission the backend enforces on the data it reads, taken from the OpenAPI `x-permission` of the route the page's hooks call — verified present verbatim in both the frontend and backend catalogs.
+
+`build/inbox` takes `requireSession()` rather than a permission key: it renders the caller's own notifications, which are platform-core self-service under §8, and `build/layout.tsx` already enforces `enforceRouteAccess("/build")`.
+
+### Defects found this run
+
+| Severity | Defect | State |
+|---|---|---|
+| P2 | The Support nav group and its `/support` and `/support/inbox` routes were gated on `build:tickets:view` — a Build key on Support routes. The links tracked Build access, not Support access: a support agent saw no Support inbox link, and a Build user saw links the server refuses. | Fixed — repointed to `dashboard:support:view` and `support:tickets:view` |
+| P2 | The `CUSTOMER_SUPPORT` role template grants 7 of the 22 `support:*` keys. It omits `support:tickets:view`, `support:tickets:create`, `support:tickets:reply`, `support:reports:view`, `support:settings:manage`, `support:knowledge-gaps:view`, `support:queues:manage`, `support:tags:manage`, `support:channels:manage` and the `support:csat:*` / `support:ai:*` pairs. Neither catalog implements `manage` ⇒ `view`, so the granted `support:tickets:manage` does not admit the inbox. A seeded support agent is refused the module's core surface by the backend as well as the page. | Open — granting keys to a role expands access and is a product decision |
+| P3 | 11 authenticated server pages carry neither a page gate nor a module layout gate: `sign/*` (7) and one each under `surveys`, `dashboard`, `inbox` and `chat/invite/[token]`. All inherit `requireSession()` from `(authenticated)/layout.tsx`, and the backend still enforces per-route permissions, so this is a defence-in-depth gap rather than a data leak. `dashboard`, `inbox` and the token-authorized chat invite are session-only by design under §8; `sign` and `surveys` are gated modules and are not. | Open |
+
+`page-level-gates.test.ts` covers only `build`, `settings`, `billing`, `support` and `timesheets`, which is why the `sign` and `surveys` gaps sit outside it. Its `GATE_PATTERN` also accepts `requireSession`, so it cannot distinguish a session gate from a permission gate; its third case asserts `toBeGreaterThanOrEqual(0)` per module and only the `totalClient <= 65` ceiling bites.
+
 ## Historical verification run — 2026-09-02
 
 Retained as an audit trail from the pre-`0bf058f6a` working tree; it is not current-head release evidence and does not override the current snapshot or blockers above. Gates were executed at one working tree and the recorded numbers are real runs, not estimates.
