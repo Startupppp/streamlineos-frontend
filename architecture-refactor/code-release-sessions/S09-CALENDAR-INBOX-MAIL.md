@@ -10,7 +10,7 @@ Master coverage: sections 10.13 and 10.14 plus owned parts of sections 3–8, 11
 
 - [ ] Verify Calendar source/event/attendee/recurrence/exception/reminder/sync models, RRULE use, timezone/DST, bounded expansion, privacy and tenant-safe relations.
 - [ ] Prove free/busy/conflict/reminder/export range bounds, indexed plans, replacement/deduplication and provider-sync retry/order/tombstone/drift guarantees.
-- [ ] Consolidate member list/search behind `directory:people:view` and test missing, granted and revoked access.
+- [x] Consolidate member list/search behind `directory:people:view` and test missing, granted and revoked access. — the premise of two backend paths was wrong; both were frontend hooks on the same `GET /org/members`, and `useCalendarMemberSearch` had NO gate at all while its sibling did. One `useCalendarMemberLookup` ANDs `useCan("directory:people:view")` into `enabled`; key confirmed verbatim at `rbac/permissions/directory.ts:5`. e2e bite proof builds a real app and a `holds`-forced-true app: 403 vs 200.
 - [ ] Verify one provider-neutral bounded Inbox/Mail contract for accounts, conversations, messages, participants, labels, sync cursors, attachments, send/reply/read/search/archive and unread counts.
 - [ ] Prove ownership/delegation, sanitization, unsafe-link/content handling, idempotent delivery/sync, bounce/retry/DLQ and exact list/thread/count invalidation.
 - [ ] Verify accessible responsive infinite/range UI, optimistic rollback, offline/reconnect and revocation states; remove legacy Inbox hooks only after caller proof.

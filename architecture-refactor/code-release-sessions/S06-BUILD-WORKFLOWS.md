@@ -10,7 +10,7 @@ Master coverage: sections 10.8 and 10.9 plus owned parts of sections 2–8, 11 a
 
 - [ ] Preserve distinct project and product entities; verify workspace/project/product/ticket/board/sprint/roadmap/OKR/feedback/QA relations and record scope.
 - [ ] Verify canonical `/build` APIs, strict bounded contracts, stable ordering/cursors, activity/event idempotency and indexed board/backlog/search plans.
-- [ ] Replace per-row custom-state reorder with one bounded transactional version-checked command and complete optimistic rollback; remove local Build query-key factories.
+- [x] Replace per-row custom-state reorder with one bounded transactional version-checked command and complete optimistic rollback; remove local Build query-key factories. — one `PUT /build/:projectId/custom-states` carrying ordered items, bounded `.max(50)`, all updates in a single `db.transaction`, conflict check before the transaction opens so a 409 cannot leave a partial write; omitting `expectedOrder` makes a retry idempotent. Rollback restores the complete prior order, not only conflicting rows. Four local key factories removed (`stateKeys` plus customers/roster/teams/workspace-members) — zero references remain repo-wide. 6 frontend + 6 backend tests.
 - [ ] Verify private-resource membership, watchers/assignees, module roles, DataScope, cross-tenant denial and revoked/suspended membership behavior.
 - [ ] Verify Workflow immutable versions, state transitions, secret references, triggers/schedules, leases, cancellation, retry/DLQ, approval authority and bounded histories.
 - [ ] Inventory owned files and remove dependency-proven duplicates/deferred hooks while keeping deep module boundaries.

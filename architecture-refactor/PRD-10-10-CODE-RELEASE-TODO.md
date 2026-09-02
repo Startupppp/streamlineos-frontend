@@ -275,7 +275,7 @@ This section durably incorporates every candidate from the temporary visual arch
 - [ ] Re-run file-size ratchets and split every unjustified mixed-responsibility file over 500 lines without cosmetic fragmentation.
 - [ ] Prove zero circular imports, forbidden new `forwardRef`, barrel self-imports and erased Nest injection tokens.
 - [ ] Prove every active Nest module is registered and every frontend route has one canonical owner; remove obsolete routes rather than preserving hidden duplicates.
-- [ ] Prove no dead or duplicated endpoint, schema, type, validator, hook, query key, worker, page or UI element using dependency graphs plus build/typecheck evidence; remove every deferred capability outside the approved release scope instead of retaining speculative flags, and make the final capability report contain zero DEFERRED entries as well as zero DEAD/WIRE/UNCLASSIFIED entries.
+- [x] Prove no dead or duplicated endpoint, schema, type, validator, hook, query key, worker, page or UI element using dependency graphs plus build/typecheck evidence; remove every deferred capability outside the approved release scope instead of retaining speculative flags, and make the final capability report contain zero DEFERRED entries as well as zero DEAD/WIRE/UNCLASSIFIED entries. — the capability report is now **0 DEFERRED / 0 DEAD / 0 WIRE / 0 UNCLASSIFIED** (was 22 DEFERRED and 2 DEAD files). All 22 exports were removed under the four-part evidence standard: zero symbol references, zero barrel re-exports, knip confirmation, and no dynamic import — text search alone was not accepted for any of them. Also removed: 8 orphaned types, 2 orphaned helpers and 2 dead schema files. **The gate itself was diffed rather than trusted**, since editing a gate to pass it is the obvious failure mode: only the verdict entries for exports that no longer exist were removed, and `BASELINE`/`SCAN_FLOOR` are byte-identical. **One breakage this caused, found and fixed:** `hr-core-query-access-matrix.test.ts` still asserted a row for the deleted `useAttendanceHeatmap`. The backend `/me/attendance/heatmap` endpoint still exists and is legitimate self-service under CLAUDE.md §8; only the unconsumed frontend hook went, so the stale matrix row was removed (80/80 pass). Worth recording that this endpoint now has **no frontend consumer** — a candidate the next backend dead-code audit should examine on its own evidence.
 - [ ] Keep authenticated `app/**/page.tsx` and `layout.tsx` files as thin route modules for metadata, parameters, server authorization and composition; move state, forms, queries and mutations behind feature-owned interfaces and gate route-file size/import direction without changing landing visuals or animations.
 
 ### 3. TypeScript, Zod and cross-layer contracts
@@ -505,8 +505,8 @@ Mandatory folder/file evidence for **every** module below:
 - [ ] Authorization/security: test billing owner/admin/member access, provider signature verification, replay/forgery, tenant ownership, entitlement gates and sensitive redaction.
 - [ ] Queries/cache/workers: verify local entitlement resolution, seat/proration concurrency, usage aggregation, webhook dedupe, retries/DLQ and invalidation without provider calls per request.
 - [ ] Frontend/TanStack/tests: verify the two canonical Settings billing pages, plan/seat/usage/invoice states, mutation invalidation and deterministic outage/replay/proration E2E.
-- [ ] Keep provider-specific identifiers, verification fields, route names and SDK behavior behind the Billing adapter seam; frontend callers consume provider-neutral checkout-session/confirmation contracts, Razorpay is the first adapter and a Stripe-ready contract test requires no Billing caller change.
-- [ ] Route every non-universal subscription/payment mutation through the exact billing/payment permission interface; billing remains non-delegable and tests cover owner/admin/member denial plus revocation during checkout confirmation.
+- [x] Keep provider-specific identifiers, verification fields, route names and SDK behavior behind the Billing adapter seam; frontend callers consume provider-neutral checkout-session/confirmation contracts, Razorpay is the first adapter and a Stripe-ready contract test requires no Billing caller change. — eleven leaks crossed the seam: three provider-named routes (`GET|POST|PATCH /billing/razorpay`), `razorpay_order_id/payment_id/signature` in the verify schema, `razorpayKeyId` in the subscription response, and a `handleRazorpayWebhook` alias. Callers now use `/billing` + `/billing/checkout` with `{ orderId, paymentId, signature }` and `publicKeyId`; DB column names keep their provider spelling because a column is internal, not a contract. `billing-provider-contract.spec.ts` drives a `FakeProviderAdapter("stripe")` through the same caller path and asserts the neutral schema **rejects** the `razorpay_*` names, so it fails if a caller regains a provider dependency. **Two defects the agent report missed, both found by checking rather than trusting:** the frontend was left calling all three deleted routes (`hooks/api/subscription.ts`), so subscription reads and checkout confirmation were dead end-to-end — typecheck cannot see it because the routes are string literals; and removing the webhook alias broke 30 tests in `billing-webhook.spec.ts`, the spec proving a signature is verified *before* any side effect or ledger write. The live webhook path was never broken (the controller already called the neutral `handlePaymentProviderWebhook`), so the alias was genuinely dead and the spec was repointed with every security assertion intact.
+- [x] Route every non-universal subscription/payment mutation through the exact billing/payment permission interface; billing remains non-delegable and tests cover owner/admin/member denial plus revocation during checkout confirmation. — every billing and payments mutation inventoried with its key, and all 20+ keys confirmed **verbatim** against `rbac/permissions/{billing,payments}.ts` rather than assumed. `billing-permission-fence.e2e-spec.ts`: 69 tests covering owner-allowed, grant-holder-allowed and member-denied (403) across 7 billing and 13 payment mutations, plus revocation *during* checkout confirmation. Non-delegability was already enforced and is unchanged — `assertPermissionsGrantable` refuses the whole `billing:` namespace even for an org owner. Bite proof: neutering `AccessService.holds` to `() => true` turns the 403 into a 200, so the denial is not vacuous. Billing suites: 40 files / 496 tests pass.
 
 #### 10.11 Accounting and finance
 
@@ -676,7 +676,23 @@ Recorded explicitly so no unchecked box above is mistaken for an oversight.
   teaching the double the new dependency, never by removing it from the service.
   Backend typecheck sits at its **10-error baseline, all pre-existing test
   doubles, zero production code**.
-- **22 bulk-`ids` request bodies still lack an upper bound**, not 32 — the
+- **Bulk-`ids` bounding is closed, and closing it exposed a blind gate.**
+  `check:bulk-id-limits` reported zero violations across 292 `*.schemas.ts`
+  files — true, and misleading, because it only ever looked at that one filename
+  pattern. A scan of every non-spec source found three more it could not see,
+  one of them a real defect: `POST /chat/huddles/:id/invite` accepted an
+  unbounded `userIds` array declared **inline in the controller**, alongside a
+  hand-written `{ userIds: string[] }` — an unbounded body plus two CLAUDE.md §6
+  violations. Moved to `huddle.schemas.ts`, typed via `z.infer`, bounded at
+  `HUDDLE_MESH_MAX_PARTICIPANTS` (10) since a longer list can never be admitted.
+  The gate now scans all 3,174 sources and its self-test carries a fixture in the
+  controller-inline shape it used to miss. Two allowlist entries record why an
+  outbox payload and a Gmail response shape must NOT be capped: a cap there
+  truncates legitimate work rather than limiting attacker-controlled work.
+  This is the second instance of the same lesson already recorded above — a gate
+  can be blind to the syntax, or the file, it audits.
+
+- ~~**22 bulk-`ids` request bodies still lack an upper bound**~~, not 32 — the
   earlier figure was carried forward without measurement. A parse of every
   `src/**/*.schemas.ts`, excluding CRM/Inventory, finds 31 id-arrays already
   bounded with `.max()` and 22 unbounded, in build (5), calendar (2), leads (3),
@@ -735,24 +751,67 @@ Recorded explicitly so no unchecked box above is mistaken for an oversight.
   including a genuine production race in the KB ingestion consumer where the
   per-org concurrency counter was incremented AFTER the first `await`, so all 20
   concurrent calls read `current = 0` and the limit never limited anything.
-  The remaining 51 were reported as pre-existing. That classification is only
-  partly supportable, and the split matters:
-  - **10 are in modules this programme never touched** -- `common/pagination`,
-    `common/slo`, `build/entity`, `delegations/dto`, `finance/banking`,
-    `organization/setup`, `party`, `payroll/lib`, `payroll/runs/lib`, and
-    `test/security/upload-controls`. Pre-existing is well evidenced here.
-  - **41 are in specs or module directories this programme edited.** Their
-    provenance is NOT established, and several of the stated reasons are "mock
-    arity mismatch after service split" -- this programme performed the splits.
-  Settling the 41 requires running the suite at the pre-programme commit
-  `d054dab9`, which needs a checkout this session was not authorised to perform.
-  Until then, **do not read the suite as green and do not assume the 41 are
-  harmless.** The cross-reference above is a proxy (does a failing spec live in
-  a directory this work modified), not proof.
+  **The "pre-existing" classification has now been disproved by repair, which is
+  a better method than the archaeology it replaces.** Settling provenance was
+  said to require a checkout of `d054dab9`; fixing the suites needed no checkout
+  at all, and the causes were legible from the failures themselves. Two of the
+  ten "modules this programme never touched" were caused by this programme:
+  - `common/slo` failed because `payroll-posting-intent.consumer.ts` -- the queue
+    consumer **AR-07 added** -- had no SLO objective, so a durable financial
+    posting queue shipped with no alert coverage.
+  - `common/pagination` failed because three payroll keyset comparisons
+    interpolated raw values into a Drizzle `sql` template instead of binding
+    through `sql.param`.
+  The remainder are dominated by two shapes, both consequences of this
+  programme's own work: the `.offset()` to `.limit(n + 1)` cursor migration left
+  doubles whose terminal resolving step was `.offset()`, so `await chain` yielded
+  the chain object rather than rows; and service splits changed constructor
+  arity, which **typecheck is the only gate that sees**.
+  Repaired so far and verified by independent re-run, not from agent report:
+  payroll + workflows + finance/banking at **147 suites / 1,199 tests green**,
+  plus `common/pagination`, `common/slo` and `billing` (40 suites / 496 tests).
+  Build, organization, support, AI, outbox and upload-controls are in progress.
   Two traps to carry forward: piping a jest run into `tail` and reading `$?`
   returns tail's status and hides the failure -- that produced a false "exit 0"
   in this session -- and a path-filtered run that looks green proves nothing
   about the other 1,500 suites.
+
+- **The frontend jest suite was RED and nobody had measured it: 23 failing
+  suites, 79 failing tests of 2,072.** No prior reconciliation recorded frontend
+  test state at all, so this was invisible rather than accepted. The dominant
+  cause is the signal-propagation lane: forwarding
+  `QueryFunctionContext.signal` changed every read from
+  `apiClient.get(url, params)` to `apiClient.get(url, params, signal)`, and 23
+  suites still assert the two-argument call. **That PRD item is checked complete
+  and reports "0 violations across 399 files" -- which was true of the gate it
+  ran, and false of the suite it broke.** A gate proving the source is right is
+  not evidence the tests still pass. Repair is in progress; the standing rule for
+  it is that a precise `toHaveBeenCalledWith(url, params)` may gain an explicit
+  signal argument but must never be relaxed to `toHaveBeenCalled()` or blanket
+  `expect.anything()`, which would delete the contract rather than update it.
+
+- **`check-contract-breaking-change` had a bypass built into its own
+  remediation, and it is now closed.** The gate detects a removal by finding a
+  registry entry with no matching operation in `openapi.json` -- but
+  `generate-api-contract-registry` rebuilt `operations` solely from current
+  OpenAPI paths, silently dropping removed entries. The full loop was: delete a
+  published route, watch the gate fail, run `pnpm registry:generate` exactly as
+  the failure message instructs, and both the entry and the finding disappear.
+  The generator now retains entries whose operation is gone, and the checker no
+  longer advises deleting them. Proved load-bearing by flipping a tombstone back
+  to `published` and re-running a full regeneration cycle: the gate still exits 1.
+  Related finding, **not yet resolved**: the generator maps every
+  `x-exposure: permissioned` route to `published`, so all 3,539 ordinary app
+  routes count as customer contracts and the deprecation rule fires on routine
+  internal refactoring. The classification really means "exposed over HTTP", not
+  "committed customer contract". Deciding the real published set is outstanding.
+
+- **Spec-inclusive typecheck is now 0 errors**, closing the 10-error baseline
+  recorded above. Every fix taught a double what the source already does; none
+  removed a dependency, weakened an assertion or excluded a file. Notably, four
+  of the ten were caused by this programme adding `sha256`/`url` to
+  `UploadResult` and new constructor dependencies to KB, storage and workflow
+  services -- further evidence against the "pre-existing" reading.
 
 - **Read budgets need a reproducible seed.** An earlier run measured against a
   shared development database; that is not reproducible evidence and was
