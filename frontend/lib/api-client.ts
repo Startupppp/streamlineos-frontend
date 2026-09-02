@@ -200,7 +200,19 @@ export async function authedFetch(
   }
 }
 
-export function buildUrl(path: string, params?: object): string {
+type NoAbortSignal = {
+  readonly aborted?: never;
+  readonly addEventListener?: never;
+  readonly throwIfAborted?: never;
+};
+
+// The union keeps fresh object literals, interfaces and Record shapes assignable
+// while making `apiClient.get(url, signal)` — signal in the params slot — a compile error.
+export type QueryParams =
+  | ({ readonly [key: string]: unknown } & NoAbortSignal)
+  | (object & NoAbortSignal);
+
+export function buildUrl(path: string, params?: QueryParams): string {
   const url = `${BACKEND_API_URL}${path}`;
   if (!params || Object.keys(params).length === 0) return url;
   const entries: Array<[string, unknown]> = Object.entries(params);
@@ -221,7 +233,7 @@ export {
 
 async function get<T>(
   url: string,
-  params?: object,
+  params?: QueryParams,
   signal?: AbortSignal,
 ): Promise<T> {
   const res = await authedFetch(
@@ -322,7 +334,7 @@ async function upload<T>(url: string, formData: FormData): Promise<T> {
 
 async function download(
   url: string,
-  params?: object,
+  params?: QueryParams,
 ): Promise<Blob> {
   const res = await authedFetch(buildUrl(url, params), { method: "GET" }, url);
   if (!res.ok) {
