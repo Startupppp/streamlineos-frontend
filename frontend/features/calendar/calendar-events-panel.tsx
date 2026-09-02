@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback, type Key } from "react";
+import { useMemo, type Key } from "react";
 import { format, isWithinInterval } from "date-fns";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -165,9 +165,6 @@ export function CalendarEventsPanel({
     [rows, onSelectEvent],
   );
 
-  const stableRowKey = useCallback(getPanelRowKey, []);
-  const stableRowHeight = useCallback(getPanelRowHeight, []);
-
   if (filteredEvents.length === 0) {
     return (
       <EmptyState
@@ -188,9 +185,9 @@ export function CalendarEventsPanel({
       <List<PanelRowData>
         rowComponent={PanelVirtualRow}
         rowCount={rows.length}
-        rowHeight={stableRowHeight}
+        rowHeight={getPanelRowHeight}
         rowProps={rowProps}
-        rowKey={stableRowKey}
+        rowKey={getPanelRowKey}
         defaultHeight={DEFAULT_LIST_HEIGHT}
         overscanCount={OVERSCAN_COUNT}
         style={{ height: "100%" }}

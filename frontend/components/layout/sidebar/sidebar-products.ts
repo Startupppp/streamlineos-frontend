@@ -25,8 +25,8 @@ export const PRODUCT_KEY_EXCEPTIONS = new Set<ProductKey>(["administration"]);
 function resolveProductHref(key: ProductKey): string {
   const exception = PRODUCT_HREF_EXCEPTIONS[key];
   if (exception !== undefined) return exception;
-  const module = moduleByProductKey(key);
-  return module?.route ?? `/${key}`;
+  const manifestModule = moduleByProductKey(key);
+  return manifestModule?.route ?? `/${key}`;
 }
 
 // Verify at module load time that the manifest productKey set and the

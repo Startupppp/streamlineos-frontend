@@ -22,34 +22,34 @@ function classDefaults(lines) {
     /^export\s+(abstract\s+)?class\s/.test(line),
   );
   const end = classIndex === -1 ? lines.length : classIndex;
-  let module = null;
+  let moduleKey = null;
   let permission = null;
   let universal = false;
   for (let i = 0; i < end; i++) {
     const moduleMatch = /@RequireModule\(\s*["']([^"']+)["']/.exec(lines[i]);
-    if (moduleMatch) module = moduleMatch[1];
+    if (moduleMatch) moduleKey = moduleMatch[1];
     const permissionMatch = /@RequirePermission\(\s*["']([^"']+)["']/.exec(lines[i]);
     if (permissionMatch) permission = permissionMatch[1];
     if (/@Universal\(\)/.test(lines[i])) universal = true;
   }
-  return { module, permission, universal };
+  return { module: moduleKey, permission, universal };
 }
 
 function handlerAccess(lines, startIndex, defaults) {
   let permission = null;
-  let module = null;
+  let moduleKey = null;
   let universal = false;
   for (let i = startIndex + 1; i < lines.length; i++) {
     if (!/^\s*@/.test(lines[i])) break;
     const permissionMatch = /@RequirePermission\(\s*["']([^"']+)["']/.exec(lines[i]);
     if (permissionMatch) permission = permissionMatch[1];
     const moduleMatch = /@RequireModule\(\s*["']([^"']+)["']/.exec(lines[i]);
-    if (moduleMatch) module = moduleMatch[1];
+    if (moduleMatch) moduleKey = moduleMatch[1];
     if (/@Universal\(\)/.test(lines[i])) universal = true;
   }
   return {
     universal: universal || defaults.universal,
-    module: module ?? defaults.module,
+    module: moduleKey ?? defaults.module,
     permission: permission ?? defaults.permission,
   };
 }

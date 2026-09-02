@@ -47,7 +47,8 @@ jest.mock("@/components/illustrations", () => ({
 }));
 
 jest.mock("@/components/ui/tabs", () => {
-  const { createContext, useContext, createElement } = require("react") as typeof import("react");
+  const { createContext, useContext, createElement } =
+    jest.requireActual<typeof import("react")>("react");
   type OnChange = (value: string) => void;
   const Ctx = createContext<OnChange>(() => {});
   return {

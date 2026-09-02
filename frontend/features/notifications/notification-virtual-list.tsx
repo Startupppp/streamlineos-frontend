@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useMemo, type Key } from "react";
+import { memo, useMemo, type Key } from "react";
 import { List, type RowComponentProps } from "react-window";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { NotificationCard } from "./notification-card";
@@ -184,16 +184,13 @@ export const NotificationVirtualList = memo(function NotificationVirtualList({
     [items, selectedIds, isApprovalSection, approvingId, rejectingId, archivingId, pinningId, deletingId, hasNextPage, isFetchingNextPage, onSelect, onClick, onArchive, onPin, onDelete, onApprove, onReject, onLoadMore],
   );
 
-  const stableRowKey = useCallback(getRowKey, []);
-  const stableRowHeight = useCallback(getRowHeight, []);
-
   return (
     <List<NotificationVirtualRowData>
       rowComponent={NotificationVirtualRow}
       rowCount={rowCount}
-      rowHeight={stableRowHeight}
+      rowHeight={getRowHeight}
       rowProps={rowProps}
-      rowKey={stableRowKey}
+      rowKey={getRowKey}
       defaultHeight={DEFAULT_LIST_HEIGHT}
       overscanCount={OVERSCAN_COUNT}
       style={{ height: "100%" }}

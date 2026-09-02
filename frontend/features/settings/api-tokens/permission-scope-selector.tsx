@@ -141,7 +141,7 @@ export function PermissionScopeSelector({
           </div>
         ) : groups.length === 0 ? (
           <p className="p-3 text-sm text-muted-foreground">
-            No permissions match "{search}".
+            No permissions match &quot;{search}&quot;.
           </p>
         ) : (
           <div className="min-w-0 w-full divide-y divide-border">

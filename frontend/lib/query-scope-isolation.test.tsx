@@ -12,6 +12,7 @@ jest.mock("@/lib/query-cache-control", () => ({
   registerQueryCacheClearer: jest.fn(() => jest.fn()),
 }));
 
+import { useEffect } from "react";
 import { render } from "@testing-library/react";
 import { useQueryClient, QueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
@@ -31,7 +32,10 @@ function requireCapturedClient(): QueryClient {
 }
 
 function ClientCapture() {
-  capturedClient = useQueryClient();
+  const client = useQueryClient();
+  useEffect(() => {
+    capturedClient = client;
+  }, [client]);
   return null;
 }
 

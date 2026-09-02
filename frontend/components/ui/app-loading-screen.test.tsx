@@ -22,7 +22,7 @@ jest.mock("next/image", () => ({
 }));
 
 jest.mock("framer-motion", () => {
-  const React = require("react") as typeof import("react");
+  const React = jest.requireActual<typeof import("react")>("react");
 
   function MotionDiv({
     children,
