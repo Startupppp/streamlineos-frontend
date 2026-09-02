@@ -83,3 +83,279 @@ Log-message fixes referred to me by ticket 31 (message text only, no behaviour c
 ## Database used
 
 `scratch_boot_c` only. Bootstrapped cold from empty: `RESULT: REACHED_HEAD 637/637`, 943 public tables. Seeded with 4 `kb_sources` rows to exercise the backfill. The shared remote `DATABASE_URL` was never connected to.
+
+
+---
+
+# Second pass — 2026-09-02 (session 2)
+
+The first pass left two boxes open. Both are addressed below; one closes, one is
+**PARTIAL** and cannot close from code.
+
+## Box 1 — bounded async transforms: CLOSED
+
+### The previous note was wrong on a load-bearing fact
+
+It said "there is no transcoding path in the repo." There is:
+`MediaCompressionService.transcodeVideo` shells out to ffmpeg/libx264, and it is
+reached from `feedbucket-public.controller.ts` for widget **screen recordings up
+to 100 MB** on a `@Public()`, unauthenticated endpoint.
+
+Worse, it was not bounded in the way the first pass believed. `withDeadline`
+races a promise against a timer; when the timer wins the promise is abandoned
+and **ffmpeg keeps encoding at full tilt with nobody left to notice**. An
+abandoned transcode is not a bounded transcode.
+
+### What changed
+
+**Bounds (`src/common/media/media-compression.service.ts`)**
+- `transcodeToMp4` holds the command handle and `SIGKILL`s it on a 60 s deadline.
+- `-threads 2`, so one transcode cannot take every core.
+- Inputs over 64 MB are refused for transcode and stored as-is.
+- `sharp(buffer, { limitInputPixels: 50_000_000 })` in both this file and
+  `kb-media.service.ts`: the byte cap bounds what arrives, this bounds what the
+  decoder may allocate from it.
+
+**Off the request thread (`src/modules/storage/media-transform.runner.ts`, new)**
+
+Three bounds make it a job runner rather than a leak — concurrency 2, queue
+depth 32 with submission **refused** past it, and a 60 s per-job deadline with a
+`compensate` hook and `drain()` on shutdown. It is in-process on purpose: there
+is no queue broker in this repo and inventing a durable one here would stand a
+second, unwatched execution substrate beside the outbox. The consequence is
+stated in the file rather than hidden — a restart loses queued transforms, which
+is why every job's failure path deletes the **object before the row**, leaving
+the recoverable direction (a row the storage sweep already reconciles) rather
+than a reachable half-written object.
+
+**The key/extension problem the first pass called blocking**
+
+It said deferring compression "needs the object key to be chosen before the
+compressor decides the output format". True, and separable:
+`MediaCompressionService.planOutput` decides the output format from the header
+bytes without encoding anything, so `StorageService.planUpload` settles the key
+on the request thread and `StorageService.compressToKey` encodes later. When a
+transform declines or fails, the measured type is written onto the quarantine row
+by `recordMeasuredObject` — every read serves the type the object store holds,
+not the one the key spells, so the key's extension is decorative in that case.
+`getMimeType(key)` is only a fallback for an object with no stored Content-Type.
+
+Three call sites now defer: `/storage/upload`, `/onboarding/documents`, and the
+feedbucket widget submit (both screenshot and recording).
+
+### P0/P1 found in this pass
+
+**P1 — every image upload minted a permanent orphan.** `deriveThumbnail` wrote
+`${key}-thumb.webp` on every image upload. Grepped both repos: **nothing reads
+it**, and it is named in no database column — so GDPR erasure
+(`gdpr-storage-purge.service.ts`, which deletes the keys in its manifest) and HR
+retention could never delete it. Only a whole-org prefix purge would. A
+write-only preview that survives erasure of its own parent is a defect, not a
+feature; it is deleted, along with the now-unused `generateThumbnail`. Box 6's
+"no orphan" claim was not true while it existed.
+
+**P1 — unauthenticated CPU amplification.** See the transcode note above.
+
+**Dead code removed.** `StorageService.uploadCompressed` had no callers left
+after the feedbucket change.
+
+## Box 2 — no permanent public URL: PARTIAL
+
+### What I could prove, and did
+
+**No code path mints one — now a gate, not an assertion.**
+`pnpm check:public-object-urls` (+ `:self-test`), registered in `package.json`,
+follows the repo's existing gate idiom. Two rules: any source file referencing a
+public object-storage base (`NEXT_PUBLIC_R2_PUBLIC_URL`, `R2_KB_PUBLIC_URL`,
+`publicUrl`, `kbPublicUrl`) must be on `MINT_ALLOWLIST` with a written reason;
+and no upload-result type may declare a `url` member.
+
+Real run: **3,526 files, 9 references, all 9 declared, 0 upload-result `url`
+fields, exit 0.** The five declared files and why they are not mints are in the
+allowlist, including `email/branding.ts` (a static operator-configured brand
+asset an email client cannot fetch with a signed URL) and
+`storage.service.ts::getFileKeyFromUrl` (strips the base, never appends).
+
+It bites. A temporary file in `src/modules/storage/` minting `` `${base}/${key}` ``
+plus a `ThingUploadResult { url }` failed it with both findings named
+(exit 1); deleting the file returned exit 0. Its comment-and-string stripper
+deliberately **keeps** the interior of `${…}` in a template literal — blanking a
+whole template literal is precisely what would make this gate blind to the only
+shape it exists to catch, and the first version of the gate had that bug (its
+self-test caught it).
+
+**Authorization is re-checked at mint time.** `assertKeyReadable` runs on the
+same request as `getFileUrl`/`getFileStream` on both `/storage/download` and
+`/storage/image`, in the order foreign-org key → owner resolution → quarantine.
+`/storage/download` caps `expiresIn` at 86,400 s; the e-sign and vault paths use
+900 s. Verified unchanged from the first pass.
+
+### The backfill had a defect, and it was the exact one this box is about
+
+The script's docstring claimed it "refuses to apply as a role that RLS would
+filter, because a policy the role does not bypass turns 'nothing to do' and
+'cannot see it' into the same output". **The code did not do that.** It counted
+first (`countMatches`) and checked RLS afterwards, so under a non-`BYPASSRLS`
+role an RLS table's count came back 0, `matches === 0` dropped the finding before
+the warning could print, and the run exited **0**.
+
+Reproduced on a purpose-built scratch database:
+
+| role | `public.chat_attachments.file_url` | exit |
+|---|---|---|
+| owner (bypasses RLS) | `2 row(s) hold a public URL` | 0 |
+| app role (RLS active) | **line absent entirely** | 0 |
+
+An operator running as the app role would have concluded those two leaked rows
+did not exist. Fixed: `row_security_active()` decides per table, such a column is
+listed as UNVERIFIABLE and **never counted**, and the process exits **2**.
+
+Two more corrections to the same script:
+- **Schemas are discovered** from `pg_namespace` instead of the hard-coded
+  `public/build/build_events`. A `reporting` schema added to the fixture was
+  found only after this change — the hard-coded list would have missed it
+  silently, which is the same class of bug as the RLS one.
+- **A table with no single-column primary key is rewritten**, by re-reading the
+  first page of still-matching rows and updating by `ctid` with the old value
+  re-asserted in the `WHERE`. It was previously reported `SKIPPED` and left
+  leaked.
+- The summary now prints
+  `ROWS HOLDING A PUBLIC URL: n across m column(s); ROWS REWRITTEN: r; UNVERIFIABLE COLUMNS: u`.
+
+### Proof, on a local scratch database only
+
+`scratch_t33_backfill`, created and dropped in this session. The shared remote
+`DATABASE_URL` was never connected to and no connection string or credential
+appears in this report. Fixture: 12 rows across 4 schemas — 9 leaked URLs, 1
+external customer URL, 1 value that is already a key, 1 RLS-enabled table, 1
+table with no primary key, 1 with a composite primary key.
+
+| run | result | exit |
+|---|---|---|
+| owner, dry run | `ROWS HOLDING A PUBLIC URL: 9 across 7 column(s); UNVERIFIABLE COLUMNS: 0` | 0 |
+| app role, dry run | `7 across 6 column(s); UNVERIFIABLE COLUMNS: 3` + the remedy named | **2** |
+| owner, `--apply` | `ROWS REWRITTEN: 9` | 0 |
+| owner, `--apply` again | `ROWS HOLDING A PUBLIC URL: 0` | 0 |
+
+Row-level verification after apply: `%20` decoded to a space; the external
+customer URL untouched; the already-a-key row untouched; the no-PK and
+composite-PK rows rewritten; `chat_attachments.file_url` came out **equal to
+`file_key`**, which means an owner-role run of the catalog script subsumes
+`backfill-chat-attachment-file-url.mjs` — that second script is only needed when
+running as the app role.
+
+### What remains, precisely
+
+1. **Operator, database.** Run `node scripts/backfill-public-object-urls.mjs`
+   as the **database owner** against the real database — dry run first (it prints
+   the exact remaining number, and exits 2 if anything was unreadable), then
+   `--apply`. Not doable here: the only database with production rows is the
+   shared remote `DATABASE_URL`.
+2. **Operator, object-storage console — THIS IS WHAT KEEPS THE BOX OPEN.** In
+   the **Cloudflare R2 console, remove public access from the bucket named by
+   `R2_BUCKET_NAME`, and from the KB bucket `R2_KB_BUCKET_NAME`** (disable the
+   `r2.dev` public development URL / remove the public bucket policy). Rewriting
+   a database column does not invalidate a URL somebody already copied; every
+   object already at a public address stays fetchable until that policy changes.
+   **No code change substitutes for this**, which is why the box is marked
+   PARTIAL rather than closed.
+
+## Ticket 31's referral, re-audited
+
+The first pass reported all eight sites fixed. One was still live:
+`media-compression.service.ts` logged ``Video transcode for "${fileName}"
+produced no size saving`` — the tenant filename in the **message string**, where
+the key-based redactor cannot reach it. `pnpm check:log-secrets` passes at 3,526
+files because it reads structured fields and cannot see inside an interpolated
+message.
+
+Moved to a structured field, and pinned so it cannot come back:
+`storage-log-redaction.spec.ts` now source-scans nine files (the three AV
+scanners, media compression, the storage upload and onboarding controllers, the
+transform runner, the multipart service, the storage sweep) for a logger message
+template interpolating `fileName|filename|originalname|storageKey|fileKey|objectKey`,
+with a bite test and a false-positive test (`${String(err)}` is a diagnostic
+about the failure, not about the tenant's file, and stays). 14 tests pass.
+Bite proven against the real file: reinstating the transcode line turned the scan
+red, restoring it green.
+
+## A regression I caused and fixed
+
+`sharp.concurrency(2)` at module load in `media-compression.service.ts` broke
+`kb-media.service.spec.ts` at **import** time — that spec stubs
+`jest.mock("sharp", () => ({ __esModule: true, default: jest.fn() }))`, the stub
+has no `concurrency`, and `kb-media.service.ts` reaches this file through
+`StorageService`. (`sharp` 0.35.3 does expose `concurrency` as a function in
+plain Node; the failure was the mock, not the version.) The call is removed
+rather than guarded: a top-level call into a native binding makes every importer
+depend on that binding being real. How many transforms may decode at once is
+`MediaTransformRunner`'s ceiling instead, which bounds ffmpeg and sharp together
+and is testable without a native binding.
+
+## Gates and suites — every one run and read
+
+| Gate | Command | Result |
+|---|---|---|
+| Backend types | `heavy.sh 2 -- pnpm -C .../streamlineos-backend typecheck` | **exit 0, 0 errors** at the point the storage work landed. A later run showed **1 error**, `src/common/tenant/tenant-context.interceptor.ts(89,53): Cannot find name 'TENANT_REQUEST_DEADLINE_MS'` — a file I never opened, modified by another session mid-edit. Not mine. |
+| Spec types | `heavy.sh 2 -- env NODE_OPTIONS=--max-old-space-size=8192 pnpm -s check:spec-typecheck` | **before: 5 errors** (2 `modules/storage`, 2 feedbucket specs I had broken by adding a constructor arg, 1 gdpr). **after: 3 errors, all `modules/payroll/filings/__tests__`, none mine.** 0 under `modules/storage`, `common/media`, `common/security`, `modules/feedbucket`. (The coordinator's "23 errors, 18 under storage" was a mid-edit snapshot I never observed.) |
+| Suites | `heavy.sh 2 -- jest --runInBand --testPathPattern="storage\|feedbucket\|media-compression\|kb-media\|cron-hr-retention\|gdpr"` | **exit 0 — 48 suites / 538 passed, 2 skipped, 0 failures** |
+| kb-media (ticket 29's) | `heavy.sh 2 -- jest --runInBand --testPathPattern="kb-media"` | **exit 0 — 27/27**, loads again |
+| Multipart contracts | `pnpm -s check:multipart-contracts` | exit 0, 546 controller files, OK |
+| Multipart self-test | `pnpm -s check:multipart-contracts:self-test` | exit 0, SELF-TEST PASSED (8 checks) |
+| Public object URLs (new) | `pnpm -s check:public-object-urls` | exit 0, 3,526 files, 9 declared references, 0 `url` fields |
+| Public object URLs self-test (new) | `pnpm -s check:public-object-urls:self-test` | exit 0, 14/14 |
+| Log secrets | `pnpm -s check:log-secrets` | exit 0, OK |
+| Route classification | `pnpm -s check:route-classification` | exit 0, ALL ROUTES CLASSIFIED |
+| Fire-and-forget | `pnpm -s check:fire-and-forget` | exit 0, 1,831 files, 0 violations |
+| Module DI | `pnpm -s check:module-di` | exit 0, 216 modules, 0 violations |
+| Module registration | `pnpm -s check:module-registration` | exit 0 |
+| Kebab case | `pnpm -s check:kebab-case` | exit 0, 6,237 entries |
+| Import cycles | `pnpm -s check:cycles` | exit 0, 5,458 files, no circular dependency |
+| File sizes | `pnpm -s check:file-sizes` | `storage.service.ts` 520 → **509** (still over 500, pre-existing). `feedbucket-public.controller.ts` 495 → 560 under my first edit; extracted `feedbucket-media-transforms.ts` and it is back to **499**. `storage.controller.ts` 460 → **437**. |
+
+## Files changed this pass
+
+New:
+- `src/modules/storage/media-transform.runner.ts`
+- `src/modules/storage/media-transform.runner.spec.ts`
+- `src/modules/feedbucket/feedbucket-media-transforms.ts`
+- `src/scripts/check-public-object-urls.mjs`
+
+Storage seam:
+- `src/modules/storage/storage.service.ts` (`planUpload` + `compressToKey` replace `compressAndPreGenerateKey`; `uploadCompressed` deleted)
+- `src/modules/storage/storage.controller.ts` (deferred transform, thumbnail removed, `retractUpload`)
+- `src/modules/storage/storage-onboarding.controller.ts`
+- `src/modules/storage/storage.module.ts`
+- specs: `storage-av-gate`, `storage-prd9-gaps`, `storage-tenant-private`, `storage.controller`, `storage-onboarding.controller`, `storage-image-delivery`, `storage-image-cross-tenant`, `storage-log-redaction`
+
+Upload/attachment seams in other modules, touched only where they call storage:
+- `src/modules/feedbucket/feedbucket-public.controller.ts` — screenshot and recording planned, transcode deferred
+- `src/modules/feedbucket/tests/feedbucket-auto-link-deferred.spec.ts`, `tests/feedbucket-public-ai-assist.spec.ts` — constructor arity I changed
+- `src/modules/kb/wiki/kb-media.service.ts` — `limitInputPixels` on the sharp decode (+ its spec's assertion)
+- `src/common/media/media-compression.service.ts` — `planOutput`, ffmpeg kill/threads/input cap, log message fix
+- `src/degradation/object-storage.spec.ts`
+
+Scripts:
+- `scripts/backfill-public-object-urls.mjs`
+- `package.json` (two `check:public-object-urls*` entries)
+
+## Still open, in other territories
+
+- **`feedbucket-public.controller.ts` interpolates the raw screenshot KEY into an
+  `<img src="…">`** in the ticket HTML it generates. The key is not a URL, so the
+  image is broken. Fixing it needs a decision about which read path generated
+  ticket content should use — there is no public one. Reported, not changed.
+- **`chat.schemas.ts` still requires both `fileUrl` and `fileKey`** on a message
+  attachment and they now carry the same value. `fileUrl` should go (chat's
+  territory).
+- **`/onboarding/documents` returns `{ url }` holding a key.** Same field-name
+  confusion 33b removed from `/storage/upload`; renaming it needs the matching
+  frontend change. The new gate does not catch it because the return type is
+  inline rather than a named `*UploadResult`.
+- **`BE/openapi.json` still advertises `x-authorized-in-service: resolveFileOwner`**
+  for `/storage/download` and `/storage/image`; the controller declares
+  `assertKeyReadable`. Regenerating needs a Nest boot against the shared remote
+  database.
+- `src/common/tenant/tenant-context.interceptor.ts` and
+  `src/modules/payroll/filings/__tests__/filings-list-pagination.spec.ts` are red
+  in the shared tree from other sessions' in-flight edits.
