@@ -885,3 +885,302 @@ half — rendering it instead of labelling browser-local times with the browser'
 Two commits in `streamlineos-backend`: **122334c2** (mail paging + search, kb_page_links,
 calendar timezone, the kb_space_grants declaration) and **e287fef6** (kb_space_members and
 kb_page_templates uniques).
+
+---
+
+# S11 pass — closing what is closable, and naming the rest as requirements
+
+The three open boxes were re-verified against current source rather than against the S10
+notes, because ticket 28 landed in between and because two of this session's assigned
+defects turned out to be already fixed. One box closes. Two do not, and this pass says
+exactly what they are waiting on rather than restating "PARTIAL".
+
+## 1. What ticket 28 delivered, verified — three notes are now stale
+
+Three of the four calendar remainders and one mail remainder were carried as blocked on
+ticket 28. Checked at head:
+
+| Carried as blocked | State now | Evidence |
+|---|---|---|
+| Calendar (b) timezone never reaches the client | **DONE** | `hooks/api/calendar.ts:103` declares `timezone?: string \| null`; `features/calendar/event-detail-content.tsx:73-74` passes it to `formatEventDate`/`formatEventTimeRange`, which take an explicit `timeZone` (`lib/date-utils.ts:126-139`) and probe the zone first (`:101`) so an unknown IANA name degrades instead of throwing `RangeError`. Covered by `lib/date-utils.event-timezone.test.ts`. |
+| Calendar (d) source toggles absent from the query key | **DONE** | `lib/query-keys/platform-hierarchy.ts:6-9` — `events(start, end, sources?)` appends the enabled-source set as an optional tail, consumed at `hooks/api/calendar.ts:195`, pinned by `hooks/api/calendar-source-key.test.ts`. |
+| Mail — idempotent send mints a fresh UUID per HTTP call | **DONE** | `lib/api-client.ts:172-178` now mints a key only as a last resort and points at `hooks/common/use-idempotent-operation.ts`, which holds ONE key for the life of a retried operation. `hooks/api/mail.ts:95,109` use it for `/mail/send` and `/mail/reply` and call `operation.settle()` on success. |
+| Mail — no hook invalidates the unread count | **NOT A DEFECT** (per the orchestrator's finding, re-checked here) | `/notifications/unread-count` is notifications-only and mail writes no notification row, so invalidating it from mail could not change its answer. `queryKeys.inbox.count()` exists (`lib/query-keys/platform-core.ts:144`) but `/me/inbox/unified/count` has no client hook at all — there is nothing to invalidate. Recorded, not re-reported as open. |
+
+**Calendar (a) is NOT resolved, and the kickoff brief for this pass assumed it was.**
+`frontend/features/hr/recruitment/interviews-page.tsx:249` still renders `BigCalendarWrapper`
+(month/week toggle, prev/next, `eventPropGetter`) as a second full calendar surface at
+`/hr/recruitment/interviews`. Last touched by `e33873d6c` (the route-thinning commit), which
+did not address it. It violates root CLAUDE.md §8 ("Never module-specific calendar pages")
+and §9 (feature → feature import), and it is redundant: `hr-interviews` is already a
+registered aggregate source (`backend/src/modules/hr/hr-calendar-sources.ts`), so `/calendar`
+already shows these events. The fix is to replace the calendar view with a list plus a link
+to `/calendar`. **Not done here — `features/hr/**` is HR/ticket-25 territory, and the change
+rewrites the primary view of an HR recruitment page, not a calendar file.**
+
+## 2. Knowledge — attachments now have a row, which is what the box was waiting on
+
+`KbMediaService.upload` uploaded to R2 and returned a key with **zero database writes**. The
+only tenancy the object carried was the `kb-media/<org_id>/` prefix inside its own key — a
+naming convention, not a constraint. The box asks that attachments "carry tenant-composite
+integrity"; there was no row to give integrity to, which is why S10 could not close it.
+
+**Decision: creating the row is in scope, and only the row.** The object's *storage lifecycle*
+(garbage collection, retention, erasure) is ticket 33's subject, and it could not be built at
+all while nothing in the database knew an object existed. Creating the row is the smaller half
+and it is the half that unblocks the other.
+
+### `kb_page_attachments` (migration `1042_t29_kb_page_attachments`)
+
+Shaped as the deliberate twin of `kb_article_attachments` (`schema/support/kb-attachments.ts`),
+which is the wiki side's missing counterpart:
+
+- `uniq_kb_page_attachments_org_id` — the `(org_id, id)` tenant anchor every other kb table
+  carries, so a future child can take a composite FK.
+- `fk_kb_page_attachments_org_page` — **composite** `(org_id, page_id) → kb_pages(org_id, id)`,
+  `ON DELETE CASCADE`. A single-column `page_id` FK would let a row in org A name a page in
+  org B and still satisfy the constraint.
+- `page_id` is **nullable on purpose**: `/kb/media` accepts an upload with no page (a cover
+  image chosen before the page is saved — `features/wiki/components/page-cover.tsx`), and a
+  composite FK with a NULL member is unenforced under MATCH SIMPLE. That is the intended
+  "not attached to a page" state, not a hole.
+- `uniq_kb_page_attachments_org_file_key` — the storage key *is* the object's identity, and the
+  multipart POST is at-least-once from the caller's point of view. Per-org, not global, so one
+  tenant's key value cannot block another's (BE/CLAUDE.md §3).
+- `deleted_at` + a partial `(org_id, page_id, created_at) WHERE deleted_at IS NULL` index.
+
+The FK is inline in `CREATE TABLE` rather than a later `ADD CONSTRAINT … NOT VALID` →
+`VALIDATE`: the table is empty at creation, so there is no validation pass to take ACCESS
+EXCLUSIVE on `kb_pages` for.
+
+### The unchecked `pageId` was a real hole, and it is now 404
+
+`KbMediaController.upload` took `pageId` from the multipart body and passed it straight
+through. Nothing checked it belonged to the caller's org. Today that is invisible (the
+indexer re-checks org+page and silently returns 0 chunks), but with a composite FK it would
+have become a `23503` **after** the bytes were already in the bucket. `assertPageInOrg` now
+resolves the page against the caller's org with `deleted_at IS NULL` **before** the upload
+and throws `NotFoundException` — 404, never 403, because a 403 on another org's id confirms
+the page exists.
+
+### Verified against a real catalog, not against Drizzle
+
+Migration applied to `scratch_t29` (local, non-shared) and probed directly:
+
+| Property | Result |
+|---|---|
+| org A row → org A page | inserts |
+| org A row → **org B's page** | **rejected `23503`** — the composite FK bites |
+| `page_id` NULL (cover image, no page) | inserts |
+| duplicate `(org_id, file_key)` | **rejected `23505`** |
+| org B reusing org A's `file_key` **value** | inserts — no cross-tenant DoS |
+| hard `DELETE` of the page (`emptyTrash` / `purgeExpired`) | ledger row cascades away |
+
+Test rows were removed afterwards; `scratch_t29` is back to 0 `kb_pages` / 0
+`kb_page_attachments`.
+
+### What the row still does not buy — for ticket 33
+
+The cascade removes the ledger row but **not the R2 object**. Those objects are orphaned today
+as well (there is no row at all), so this is not a regression — but a purge sweep now finally
+has something to read, and the two hard-delete call sites are named:
+`kb-page-tree.service.ts::emptyTrash` and `::purgeExpired`. Doing it properly means reading
+`file_key` for the subtree **before** the delete and handing it to `StorageService.deleteFile`.
+That is upload-lifecycle work and it is left to ticket 33.
+
+## 3. Inbox/mail — which of the four are in scope, decided
+
+Ordering and search were the two genuine defects and S10 fixed both. The remaining four were
+re-verified as unbuilt, and they are **not four requirements — they are two**:
+
+**(A) Exact unread requires a complete mirror, and a complete mirror requires delta sync.**
+`mail_message_metadata.is_read` exists and the keyset index
+`(org_id, user_membership_id, folder, date DESC, id DESC)` already covers the count's
+predicate, so `count(*) … WHERE is_read = false` is an index range scan away. It is not built
+because **the answer would be wrong**: the mirror holds only what has already been listed, so
+on a fresh account it would report "3 unread" for a mailbox with 400 and present it as
+authoritative. `unified-inbox.service.ts:395-413` sidesteps this by fanning out to the provider
+for 100 messages and counting in JS, self-declared inexact — and that file is in
+`modules/notifications`, not `modules/mail`.
+The prerequisite is incremental sync, which is also unbuilt in a specific way:
+`MailSyncCheckpointService.loadPosition` still has **zero production callers** and
+`clearPositions` has none anywhere, so `mail_sync_checkpoints` is a **write-only table** —
+`mail.service.ts:284` upserts a row on every provider page fetch and nothing ever reads it.
+Worse, what it stores is the token of the *last page scrolled to*, not a delta position, so
+even wiring `loadPosition` up would resume mid-scroll rather than sync forward. Gmail needs
+`historyId` and Outlook needs a `deltaLink`; neither provider wrapper requests one
+(`providers/gmail-mail.provider.ts`, `outlook-mail.provider.ts`).
+**NEW REQUIREMENT.** Cost: a delta-token column and semantics on `mail_sync_checkpoints`, a
+`listChanges`/`delta` method on both providers, a background sync worker (there is none — the
+mirror is populated only as a side effect of a user scrolling), and only then an unread
+endpoint. The checkpoint write is not removed here because deleting it would also delete
+`mail-sync-checkpoint-isolation.spec.ts`'s subject, which is 4 of `check:tenant-isolation`'s
+924 declarations.
+
+**(B) Idempotent receive and bounce/retry/DLQ are the same missing thing: there is no
+inbound mail path at all.** Confirmed by scan — zero `webhook`, zero inbound, zero
+bounce/DLQ references anywhere under `src/modules/mail/`. Mail is outbound-and-poll only.
+A bounce arrives as an inbound DSN, so bounce handling cannot precede receiving; and
+"idempotent receive" has nothing to be idempotent about until something receives.
+**NEW REQUIREMENT.** Cost: a provider trigger or webhook receiver (the calendar module's
+`CalendarProviderWebhookController` is the pattern, including the `@Public()` + shared-secret
+shape and the `.strict()` body schema), a dedupe key that includes `account_id` — note
+`mail_message_metadata`'s own unique `(account_id, message_id)` omits `org_id` — and only then
+a DSN classifier feeding the existing `notification-delivery-worker` retry/dead-letter
+machinery, which has never been applied to mail.
+
+Neither is a defect and neither is a small fix; both are platform features that need a
+provider-integration design first. Recording them as requirements is the honest close.
+
+## 4. Calendar — "this and following" is a product decision, and here is what has to be decided
+
+Re-verified: nothing in either repo implements it. The frontend vocabulary is exactly
+`"occurrence" | "series"` (`features/calendar/event-series-scope-dialog.tsx:15`) and the
+backend has only `upsertOccurrenceException` and `cancelOccurrence`
+(`calendar-recurrence.service.ts:32,80`) plus whole-series update. There is no series split
+anywhere.
+
+What "this and following" mechanically requires is a **series split**, and every question below
+changes the schema or the wire contract, so none of them can be guessed:
+
+1. **Does the split mint a new event row?** The standard answer (RFC 5545 / Google / Outlook)
+   is yes: stamp `UNTIL = <split point − 1>` onto the original RRULE and create a second event
+   carrying the remaining rule plus the edits. That means a new `calendar_events` row and a
+   link between the two halves — a `series_parent_id` or equivalent — which is a migration.
+2. **What happens to existing exceptions and cancellations after the split point?** They belong
+   to the new half. Nothing currently re-parents `calendar_occurrence_exceptions`, and leaving
+   them on the old half silently resurrects cancelled occurrences.
+3. **What happens to attendees and their RSVPs after the split point?** Copy them (RSVPs reset,
+   or carried?), or re-invite? This is a notification decision as much as a data one.
+4. **What happens to the provider copy?** `calendar-provider-sync-sweep.service.ts` pushes one
+   local event to one `externalEventId`. A split produces two local events where the provider
+   has one series; whether the sweep truncates-and-creates or issues a provider-native
+   "this and following" edit is a per-provider capability question.
+5. **What is the reminder behaviour across the boundary?** `calendar-reminder-sweep.service.ts`
+   reads per-event; two events means two sweeps, and a reminder already sent for an occurrence
+   that moved to the new half must not fire twice.
+
+Until (1) and (2) are answered there is nothing to build against. **BLOCKED on a product
+decision**, not on territory and not on infrastructure.
+
+## 4b. Knowledge queries/workers — an article's chunk ACL went stale and the article vanished
+
+`modules/kb/retrieval/**` was held by ticket 10 during S8 and is in territory now, so the four
+items S8 left open there were re-audited. One is a live defect and is fixed.
+
+`indexArticle` read the stored content hash and, on a match, **returned unconditionally**
+(`kb-indexing.service.ts:202`). So an article whose ACL moved without its text — a restriction
+added or removed — kept the **old `acl_revision`** on every one of its chunks. The candidate
+gate joins `acl_revision` with `=` (`kb-candidate.service.ts:95,161`, pinned by
+`kb-acl-revision-gate.spec.ts:79-94`), so those chunks matched **nothing**: the article dropped
+out of RAG retrieval entirely, not partially, until somebody happened to edit its body. It
+fails *closed*, so this lost recall rather than disclosing anything — but it lost it silently,
+and `syncAclRevisionForSpace` only repairs space-level changes, never an article-level
+restriction change.
+
+`indexPage` has had the correct branch all along (`:288-324`). The article path is now its twin:
+on an unchanged hash with a moved `acl_revision` or `content_revision`, the two columns are
+updated in place and nothing is re-embedded — so this costs no AI credit.
+
+The three-times-repeated `article_body` predicate is factored into one `articleBodyChunks`
+helper. That is also what keeps the file under the gate: the branch took it from 480 to 513
+lines, and `check:file-sizes` fails at 500. It is 498 now.
+
+Proof: new `kb-article-acl-only-reindex.spec.ts` → **5 pass**, including a BITE pinning that the
+revision written is the article's live one and not the stale stored one, one asserting that
+nothing at all is written when neither text nor revision moved, and one asserting a genuinely
+changed body still takes the full re-embed path rather than the ACL shortcut. Reverting the
+branch to `return;` turns **3 red**.
+
+**Still open in that box (3), all in `kb/retrieval/**`:** `kb.content.delete` is dead code —
+`KbIngestionDeleteConsumer` implements a full four-way durable purge and nothing emits the
+event, so purging depends entirely on in-request `tx.delete` calls that are not outbox-backed;
+KB space soft-delete purges nothing (`kb-spaces.service.ts::remove` sets `deletedAt` and busts
+the access cache, and neither de-indexes nor purges the space's pages and articles); and the
+search plan is split-brain — `kb-search.service.ts` correctly goes through
+`app.search_kb_article_ids` over `idx_kb_articles_fts`, while `kb-article-query.service.ts:67-71`
+is a leading-wildcard `ilike` on title+excerpt, so `GET /kb/articles?search=` and the search
+endpoint return different results for the same term.
+
+## 5. Gates — literal command, exit code, number
+
+| Gate | Command | Result |
+|---|---|---|
+| Backend typecheck (baseline, before any edit) | `heavy.sh 2 -- pnpm -C streamlineos-backend typecheck` | **exit 0** |
+| Backend typecheck (after the attachment row) | `heavy.sh 2 -- pnpm -C streamlineos-backend typecheck` | **exit 0** |
+| Backend typecheck (final) | `heavy.sh 2 -- pnpm -C streamlineos-backend typecheck` | **exit 2 — 1 error, NOT MINE**: `src/modules/hr/governance/legal-holds/legal-hold-check.helper.ts(42,3) TS2322`. That file is **uncommitted, mid-edit by another agent** (`git status` shows it ` M`); it was clean at my baseline and appeared during this pass. Zero errors in `kb`, `mail`, `calendar`, `db/schema/kb` or `migrations`. |
+| Spec typecheck (after the attachment row) | `pnpm -s check:spec-typecheck` | **exit 0** — "spec-inclusive typecheck passed" |
+| Spec typecheck (final) | `pnpm -s check:spec-typecheck` | **exit 1 — same single HR error, NOT MINE** |
+| kb-media suite | `heavy.sh 2 -- jest --runInBand --testPathPattern="kb-media"` | **exit 0 — 34/34** (was 27) |
+| kb-media BITE probe | same, with `assertPageInOrg` removed | **3 red** |
+| Whole kb module (after the attachment row) | `heavy.sh 2 -- jest --runInBand --testPathPattern="src/modules/kb"` | **exit 0 — 88 suites / 566 tests** |
+| article ACL spec | `heavy.sh 2 -- jest --runInBand --testPathPattern="kb-article-acl-only-reindex"` | **exit 0 — 5/5** |
+| article ACL BITE probe | same, with the branch reverted to `return;` | **3 red** |
+| Whole kb module (after the ACL fix) | `heavy.sh 2 -- jest --runInBand --testPathPattern="src/modules/kb"` | **exit 0 — 89 suites / 571 tests** |
+| mail + calendar modules | `heavy.sh 2 -- jest --runInBand --testPathPattern="src/modules/(mail\|calendar)"` | **exit 0 — 54 suites / 494 tests** |
+| migration discipline | `pnpm -s check:migration-discipline` | **exit 0** |
+| migration rollback | `pnpm -s check:migration-rollback` | **exit 0** |
+| tenant indexes | `pnpm -s check:tenant-indexes` | **exit 0** |
+| restrict FKs | `pnpm -s check:restrict-fks` | **exit 0** — 346 schema files |
+| lifecycle predicates | `pnpm -s check:lifecycle-predicates` | **exit 0** — 75/335 ratchets held |
+| module DI | `pnpm -s check:module-di` | **exit 0** — 217 modules, 0 violations |
+| file sizes | `pnpm -s check:file-sizes` | **exit 0** — 3567 files, all under 500 |
+| kebab-case | `pnpm -s check:kebab-case` | **exit 0** — 6312 entries |
+| unjoined table refs | `pnpm -s check:unjoined-table-refs` | **exit 0** — 5396 queries |
+| dead code | `pnpm -s check:dead-code` | **exit 0** |
+| type assertions | `pnpm -s check:type-assertions` | **exit 0** |
+| transaction callbacks | `pnpm -s check:transaction-callbacks` | **exit 0** |
+| cache invalidation | `pnpm -s check:cache-invalidation` | **exit 0** |
+| contract registry / breaking change / openapi coverage / multipart / route classification / authz deny | `pnpm -s check:<each>` | **all exit 0** |
+| Journal integrity | 666 entries, `idx` unique, `when` strictly increasing | verified before and after the append |
+
+**Red, and NOT mine — pre-existing, both name the same file:**
+`pnpm -s check:db-call-count` **exit 1** ("UNDETECTED /hr/time/leave-approver.service.ts") and
+`pnpm -s check:unbounded-reads` **exit 1** (1 unclassified path, `/hr/time/leave-approver.service.ts:65`).
+HR territory, another agent's in-flight work.
+
+**Not run:** `pnpm test:e2e`, backend `pnpm lint`, frontend `pnpm lint`, frontend `type-check`
+(no frontend file was changed this pass), `check:migration-chain` and `check:migration-ledger`
+(they read `DATABASE_URL`, which is the shared remote Neon instance and is off-limits),
+`check:tenant-relationships` (its default target `scratch_boot_a` is half-replayed and its
+count is not quotable).
+
+**Database used:** `scratch_t29` — local, the S10 pass's own copy. Migration `1042` was applied
+to it directly to probe the constraints. It is not at journal head (its `drizzle.__drizzle_migrations`
+is empty; it was built by schema load, not replay), which is why it was used only for
+constraint behaviour and **not** for any buffer measurement. No measurement was taken this
+pass, so no database needed to be at head.
+
+## 6. Cross-territory findings — reported, not fixed
+
+- **`frontend/features/hr/recruitment/interviews-page.tsx:249`** — the second full calendar
+  surface, still present. HR / ticket 25. Detailed in §1.
+- **`kb-page-tree.service.ts::emptyTrash` and `::purgeExpired`** hard-delete `kb_pages` and now
+  cascade the new attachment rows away without deleting the R2 objects. Ticket 33
+  (upload lifecycle) — see §2.
+- **`mail_sync_checkpoints` is a write-only table.** `mail.service.ts:284` upserts on every
+  provider page fetch; `loadPosition` has zero production callers and `clearPositions` has none
+  at all. Not removed here because it is 4 of `check:tenant-isolation`'s 924 declarations.
+- Carried forward from S10, still true: `src/scripts/read-cost-budgets.mjs`'s `mail-inbox-cached`
+  entry still names the dropped `idx_mail_metadata_list` in its comment;
+  `uniq_kb_chunks_article_revision` / `_page_revision` are live and undeclared in Drizzle
+  (`schema/support/kb-chunks.ts`); `idx_mail_metadata_thread` is maintained on every mirror
+  write and no thread read touches the database.
+
+## 7. Files changed this pass (backend only — no frontend file was changed)
+
+**New** — `src/db/schema/kb/attachments.ts` ·
+`migrations/1042_t29_kb_page_attachments.sql` ·
+`migrations/rollback/1042_t29_kb_page_attachments.down.sql` ·
+`src/modules/kb/retrieval/kb-article-acl-only-reindex.spec.ts`
+
+**Modified** — `src/db/schema/kb/index.ts` · `migrations/meta/_journal.json` ·
+`src/modules/kb/wiki/kb-media.service.ts` · `src/modules/kb/wiki/kb-media.service.spec.ts` ·
+`src/modules/kb/retrieval/kb-indexing.service.ts`
+
+Two commits in `streamlineos-backend`: **07757b42** (the attachment row) and **204b152f** (the
+article ACL reindex). The migration was first authored as `1041`
+and renumbered to `1042` mid-pass — another agent appended `1041_t22c_…` to the journal in the
+same window, and discipline rule 8 forbids two files sharing a numeric prefix. `idx` and `when`
+were corrected with it; the final journal is 666 entries, `idx` unique, `when` strictly
+increasing.
