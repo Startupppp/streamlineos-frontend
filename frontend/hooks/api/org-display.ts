@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { DEFAULT_MONEY_DISPLAY, type MoneyDisplay } from "@/lib/format-utils";
+import { orgDisplayContract } from "@/hooks/api/org-display-schema";
 
 /**
  * The currency this organisation's money renders in.
@@ -19,7 +20,8 @@ import { DEFAULT_MONEY_DISPLAY, type MoneyDisplay } from "@/lib/format-utils";
 export function useOrgDisplay(): MoneyDisplay {
   const { data } = useQuery<MoneyDisplay, Error>({
     queryKey: queryKeys.organization.display(),
-    queryFn: ({ signal }) => apiClient.get<MoneyDisplay>("/me/org-display", undefined, signal),
+    queryFn: ({ signal }) =>
+      apiClient.get("/me/org-display", undefined, signal, orgDisplayContract),
     staleTime: 30 * 60_000,
   });
 

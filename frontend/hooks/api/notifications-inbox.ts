@@ -29,6 +29,8 @@ import {
   restoreListSnapshots,
   snapshotAndRemoveFromLists,
   snapshotAndRemoveFromListsMulti,
+  snapshotAndPatchUnified,
+  snapshotAndRemoveFromUnified,
   findInLists,
 } from "./notifications-inbox-cache";
 
@@ -160,11 +162,16 @@ export const useMarkNotificationRead = () => {
         listKey,
         (n) => (n.id === id ? { ...n, isRead: true } : n),
       );
+      const previousUnified = snapshotAndPatchUnified(
+        queryClient,
+        queryKeys.inbox.all,
+        (item) => (item.id === id ? { ...item, isRead: true } : item),
+      );
       if (wasUnread)
         queryClient.setQueryData<UnreadCount>(unreadKey, (old) =>
           old ? { count: Math.max(0, old.count - 1) } : old,
         );
-      return { previousLists, previousCount };
+      return { previousLists: [...previousLists, ...previousUnified], previousCount };
     },
     onError: (_err, _id, context) => {
       if (!context) return;
@@ -192,8 +199,13 @@ export const useMarkAllNotificationsRead = () => {
         listKey,
         (n) => ({ ...n, isRead: true }),
       );
+      const previousUnified = snapshotAndPatchUnified(
+        queryClient,
+        queryKeys.inbox.all,
+        (item) => ({ ...item, isRead: true }),
+      );
       queryClient.setQueryData<UnreadCount>(unreadKey, { count: 0 });
-      return { previousLists, previousCount };
+      return { previousLists: [...previousLists, ...previousUnified], previousCount };
     },
     onError: (_err, _vars, context) => {
       if (!context) return;
@@ -223,11 +235,16 @@ export const useArchiveNotification = () => {
         listKey,
         (n) => (n.id === id ? { ...n, archivedAt: new Date().toISOString() } : n),
       );
+      const previousUnified = snapshotAndRemoveFromUnified(
+        queryClient,
+        queryKeys.inbox.all,
+        new Set([id]),
+      );
       if (wasUnread)
         queryClient.setQueryData<UnreadCount>(unreadKey, (old) =>
           old ? { count: Math.max(0, old.count - 1) } : old,
         );
-      return { previousLists, previousCount };
+      return { previousLists: [...previousLists, ...previousUnified], previousCount };
     },
     onError: (_err, _id, context) => {
       if (!context) return;
@@ -381,11 +398,16 @@ export const useBulkMarkRead = () => {
         listKey,
         (n) => (idSet.has(n.id) ? { ...n, isRead: true } : n),
       );
+      const previousUnified = snapshotAndPatchUnified(
+        queryClient,
+        queryKeys.inbox.all,
+        (item) => (idSet.has(item.id) ? { ...item, isRead: true } : item),
+      );
       if (unreadIds.size > 0)
         queryClient.setQueryData<UnreadCount>(unreadKey, (old) =>
           old ? { count: Math.max(0, old.count - unreadIds.size) } : old,
         );
-      return { previousLists, previousCount };
+      return { previousLists: [...previousLists, ...previousUnified], previousCount };
     },
     onError: (_err, _ids, context) => {
       if (!context) return;
@@ -429,11 +451,16 @@ export const useBulkArchive = () => {
         listKey,
         (n) => (idSet.has(n.id) ? { ...n, archivedAt } : n),
       );
+      const previousUnified = snapshotAndRemoveFromUnified(
+        queryClient,
+        queryKeys.inbox.all,
+        idSet,
+      );
       if (unreadIds.size > 0)
         queryClient.setQueryData<UnreadCount>(unreadKey, (old) =>
           old ? { count: Math.max(0, old.count - unreadIds.size) } : old,
         );
-      return { previousLists, previousCount };
+      return { previousLists: [...previousLists, ...previousUnified], previousCount };
     },
     onError: (_err, _ids, context) => {
       if (!context) return;

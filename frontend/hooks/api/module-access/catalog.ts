@@ -6,6 +6,10 @@ import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { AuditCursorPage, AuditLogEntry, ModuleMyPermissions, ModulePermission } from "./types";
 import { viewKey } from "./types";
+import {
+  moduleCatalogContract,
+  moduleMyPermissionsContract,
+} from "./module-access-schema";
 
 export function useModuleAccessCatalog(
   moduleKey: string,
@@ -15,7 +19,12 @@ export function useModuleAccessCatalog(
   return useQuery<ModulePermission[], Error>({
     queryKey: queryKeys.moduleAccess.catalog(moduleKey),
     queryFn: ({ signal }) =>
-      apiClient.get<ModulePermission[]>(`/module-access/${moduleKey}/catalog`, undefined, signal),
+      apiClient.get(
+        `/module-access/${moduleKey}/catalog`,
+        undefined,
+        signal,
+        moduleCatalogContract,
+      ),
     enabled: canView && (options?.enabled ?? true),
     staleTime: 5 * 60_000,
   });
@@ -26,7 +35,12 @@ export function useModuleMyPermissions(moduleKey: string) {
   return useQuery<ModuleMyPermissions, Error>({
     queryKey: queryKeys.moduleAccess.myPermissions(moduleKey),
     queryFn: ({ signal }) =>
-      apiClient.get<ModuleMyPermissions>(`/module-access/${moduleKey}/me/permissions`, undefined, signal),
+      apiClient.get(
+        `/module-access/${moduleKey}/me/permissions`,
+        undefined,
+        signal,
+        moduleMyPermissionsContract,
+      ),
     enabled: canView,
     staleTime: 30_000,
   });

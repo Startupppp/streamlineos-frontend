@@ -1,6 +1,7 @@
 import { Component, type ReactNode } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { createAppQueryClient } from "@/components/providers/query-provider";
 import { ApiError } from "@/lib/api-envelope";
 import { queryKeys } from "@/lib/query-keys";
@@ -86,7 +87,9 @@ function clientWithoutPolicy(): QueryClient {
 function renderUnderBoundary(ui: ReactNode, client: QueryClient) {
   return render(
     <QueryClientProvider client={client}>
-      <RouteErrorBoundaryProbe>{ui}</RouteErrorBoundaryProbe>
+      <TooltipProvider>
+        <RouteErrorBoundaryProbe>{ui}</RouteErrorBoundaryProbe>
+      </TooltipProvider>
     </QueryClientProvider>,
   );
 }

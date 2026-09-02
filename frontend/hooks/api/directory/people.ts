@@ -5,10 +5,14 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import {
+  organizationPersonContract,
+  peoplePageContract,
+  type OrganizationPerson,
+  type PeoplePage,
+} from "@/hooks/api/directory/people-schema";
 import type {
   CreatePersonInput,
-  OrganizationPerson,
-  PeoplePage,
   UpdatePersonInput,
 } from "@/types/directory/people";
 
@@ -36,7 +40,12 @@ export function usePerson(
   return useQuery({
     queryKey: queryKeys.directory.person(organizationPersonId),
     queryFn: ({ signal }) =>
-      apiClient.get<OrganizationPerson>(`/directory/people/${organizationPersonId}`, undefined, signal),
+      apiClient.get(
+        `/directory/people/${organizationPersonId}`,
+        undefined,
+        signal,
+        organizationPersonContract,
+      ),
     staleTime: 60_000,
     enabled: canView && !!organizationPersonId && (options?.enabled ?? true),
   });
@@ -56,7 +65,12 @@ export function usePeople(params: UsePeopleParams = {}) {
       });
       if (cursor) searchParams.set("cursor", cursor);
       if (search) searchParams.set("search", search);
-      return apiClient.get<PeoplePage>(`/directory/people?${searchParams.toString()}`, undefined, signal);
+      return apiClient.get(
+        `/directory/people?${searchParams.toString()}`,
+        undefined,
+        signal,
+        peoplePageContract,
+      );
     },
     staleTime: 60_000,
     enabled: canView,
@@ -68,7 +82,7 @@ export function useCreatePerson() {
   return useAuthorizedMutation("directory:people:create", {
     mutationKey: ["directory", "people", "create"],
     mutationFn: (input: CreatePersonInput) =>
-      apiClient.post<OrganizationPerson>("/directory/people", input),
+      apiClient.post("/directory/people", input, undefined, organizationPersonContract),
     onSuccess: (created) => {
       qc.setQueryData(
         queryKeys.directory.person(created.organizationPersonId),
@@ -87,9 +101,11 @@ export function useUpdatePerson() {
       organizationPersonId,
       ...input
     }: UpdatePersonInput & { organizationPersonId: string }) =>
-      apiClient.patch<OrganizationPerson>(
+      apiClient.patch(
         `/directory/people/${organizationPersonId}`,
         input,
+        undefined,
+        organizationPersonContract,
       ),
     onSuccess: (updated, variables) => {
       qc.setQueryData<OrganizationPerson>(

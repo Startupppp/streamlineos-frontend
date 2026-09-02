@@ -3,107 +3,40 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import {
+  aiCreditsUsageContract,
+  aiCreditsWalletContract,
+  aiCreditTransactionsPageContract,
+  type AiCreditPack,
+  type AiCreditsUsage,
+  type AiCreditsWallet,
+  type AiCreditTransactionsPage,
+} from "@/hooks/api/ai-credits-schema";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-export interface AiCreditPack {
-  id: number;
-  name: string;
-  credits: number;
-  bonusCredits: number;
-  priceInPaise: number;
-  isActive: boolean;
-}
-
-export interface AiCreditTransaction {
-  id: number;
-  type: "PURCHASE" | "USAGE" | "REFUND" | "PLAN_GRANT" | "EXPIRY";
-  amount: number;
-  balanceAfter: number;
-  feature: string | null;
-  model: string | null;
-  promptTokens: number | null;
-  completionTokens: number | null;
-  totalTokens: number | null;
-  costUsd: number | null;
-  createdAt: string;
-}
-
-export interface AiCreditsUsageTotals {
-  requests: number;
-  promptTokens: number;
-  completionTokens: number;
-  totalTokens: number;
-  credits: number;
-  costUsd: number;
-}
-
-export interface AiCreditsUsageByFeature {
-  feature: string;
-  requests: number;
-  totalTokens: number;
-  credits: number;
-  costUsd: number;
-}
-
-export interface AiCreditsUsageByModel {
-  model: string;
-  requests: number;
-  promptTokens: number;
-  completionTokens: number;
-  totalTokens: number;
-  credits: number;
-  costUsd: number;
-}
-
-export interface AiCreditsUsageDaily {
-  date: string;
-  requests: number;
-  totalTokens: number;
-  credits: number;
-}
-
-export interface AiCreditsUsage {
-  totals: AiCreditsUsageTotals;
-  byFeature: AiCreditsUsageByFeature[];
-  byModel: AiCreditsUsageByModel[];
-  daily: AiCreditsUsageDaily[];
-}
-
-export interface AiCreditsWallet {
-  wallet: {
-    id: number;
-    orgId: string;
-    balance: number;
-    lifetimeGranted: number;
-    lifetimeConsumed: number;
-    autoTopUpEnabled: boolean;
-    autoTopUpPackId: number | null;
-    autoTopUpThreshold: number | null;
-  };
-  recentTransactions: AiCreditTransaction[];
-  packs: AiCreditPack[];
-}
+export type {
+  AiCreditPack,
+  AiCreditTransaction,
+  AiCreditTransactionsPage,
+  AiCreditsUsage,
+  AiCreditsUsageByFeature,
+  AiCreditsUsageByModel,
+  AiCreditsUsageDaily,
+  AiCreditsWallet,
+} from "@/hooks/api/ai-credits-schema";
 
 export function useAiCreditsWallet() {
   const canView = useCan("billing:ai-credits:view");
   return useQuery<AiCreditsWallet>({
     queryKey: queryKeys.billing.aiCredits(),
-    queryFn: ({ signal }) => apiClient.get<AiCreditsWallet>("/billing/ai-credits", undefined, signal),
+    queryFn: ({ signal }) =>
+      apiClient.get("/billing/ai-credits", undefined, signal, aiCreditsWalletContract),
     staleTime: 300_000,
     enabled: canView,
   });
-}
-
-export interface AiCreditTransactionsPage {
-  data: AiCreditTransaction[];
-  pagination: {
-    limit: number;
-    nextCursor: string | null;
-    hasMore: boolean;
-  };
 }
 
 export function useAiCreditTransactions(params: { cursor?: string; limit: number }) {
@@ -111,10 +44,15 @@ export function useAiCreditTransactions(params: { cursor?: string; limit: number
   return useQuery<AiCreditTransactionsPage>({
     queryKey: queryKeys.billing.aiCreditTransactions(params),
     queryFn: ({ signal }) =>
-      apiClient.get<AiCreditTransactionsPage>("/billing/ai-credits/transactions", {
-        ...(params.cursor ? { cursor: params.cursor } : {}),
-        limit: String(params.limit),
-      }, signal),
+      apiClient.get(
+        "/billing/ai-credits/transactions",
+        {
+          ...(params.cursor ? { cursor: params.cursor } : {}),
+          limit: String(params.limit),
+        },
+        signal,
+        aiCreditTransactionsPageContract,
+      ),
     staleTime: 30 * 1000,
     placeholderData: keepPreviousData,
     enabled: canView,
@@ -176,9 +114,12 @@ export function useAiCreditsUsage(days: AiCreditsUsageDays) {
   return useQuery<AiCreditsUsage>({
     queryKey: queryKeys.billing.aiCreditsUsage(days),
     queryFn: ({ signal }) =>
-      apiClient.get<AiCreditsUsage>("/billing/ai-credits/usage", {
-        days: String(days),
-      }, signal),
+      apiClient.get(
+        "/billing/ai-credits/usage",
+        { days: String(days) },
+        signal,
+        aiCreditsUsageContract,
+      ),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,

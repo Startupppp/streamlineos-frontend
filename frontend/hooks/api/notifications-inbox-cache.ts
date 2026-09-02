@@ -1,5 +1,10 @@
 import { type QueryClient, type InfiniteData, type QueryKey } from "@tanstack/react-query";
 import type { Notification } from "@/types/notifications";
+import type {
+  NotificationInboxItem,
+  UnifiedInboxItem,
+  UnifiedInboxResponse,
+} from "@/types/inbox";
 
 export function isInfiniteData<T>(data: unknown): data is InfiniteData<T> {
   if (typeof data !== "object" || data === null) return false;
@@ -98,4 +103,49 @@ export function findInLists(
     }
   }
   return undefined;
+}
+
+/**
+ * `/me/inbox/unified` renders the same notifications as `/notifications`, so an
+ * action taken from one has to move on both. Patching only the notification
+ * lists made archive optimistic on one route and a wait-for-refetch on the
+ * other, for the identical click.
+ *
+ * Only `kind: "notification"` items are touched — mail, broadcasts and build
+ * approvals share the feed but not these mutations.
+ */
+function patchUnifiedPages(
+  queryClient: QueryClient,
+  inboxKey: QueryKey,
+  transform: (items: UnifiedInboxItem[]) => UnifiedInboxItem[],
+): NotifListSnapshot[] {
+  const snapshots = queryClient.getQueriesData<unknown>({ queryKey: inboxKey });
+  for (const [key, data] of snapshots) {
+    if (!isInfiniteData<UnifiedInboxResponse>(data)) continue;
+    queryClient.setQueryData<InfiniteData<UnifiedInboxResponse>>(key, {
+      ...data,
+      pages: data.pages.map((page) => ({ ...page, items: transform(page.items) })),
+    });
+  }
+  return snapshots;
+}
+
+export function snapshotAndPatchUnified(
+  queryClient: QueryClient,
+  inboxKey: QueryKey,
+  patcher: (item: NotificationInboxItem) => UnifiedInboxItem,
+): NotifListSnapshot[] {
+  return patchUnifiedPages(queryClient, inboxKey, (items) =>
+    items.map((item) => (item.kind === "notification" ? patcher(item) : item)),
+  );
+}
+
+export function snapshotAndRemoveFromUnified(
+  queryClient: QueryClient,
+  inboxKey: QueryKey,
+  ids: ReadonlySet<number>,
+): NotifListSnapshot[] {
+  return patchUnifiedPages(queryClient, inboxKey, (items) =>
+    items.filter((item) => item.kind !== "notification" || !ids.has(item.id)),
+  );
 }

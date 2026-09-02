@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { useCan } from "@/hooks/api/access";
 import type {
   MailAccount,
@@ -88,13 +89,16 @@ export function useMailMessage(accountId: number | undefined, messageId: string 
   });
 }
 
+/** The idempotency key belongs to the send, not the HTTP call — see `useIdempotentOperation`. */
 export function useSendMail() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("mail:messages:send", {
     mutationKey: ["mail", "send"],
     mutationFn: (body: SendMailBody) =>
-      apiClient.post<{ messageId: string }>("/mail/send", body),
+      apiClient.post<{ messageId: string }>("/mail/send", body, operation.configFor(body)),
     onSuccess: () => {
+      operation.settle();
       void qc.invalidateQueries({ queryKey: queryKeys.mail.all });
     },
   });
@@ -102,11 +106,13 @@ export function useSendMail() {
 
 export function useReplyMail() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("mail:messages:send", {
     mutationKey: ["mail", "reply"],
     mutationFn: (body: ReplyMailBody) =>
-      apiClient.post<{ messageId: string }>("/mail/reply", body),
+      apiClient.post<{ messageId: string }>("/mail/reply", body, operation.configFor(body)),
     onSuccess: () => {
+      operation.settle();
       void qc.invalidateQueries({ queryKey: queryKeys.mail.all });
     },
   });

@@ -7,16 +7,14 @@ export interface EssToggles {
   emailPayslips: boolean;
 }
 
-export interface EssPayslip {
-  publicationId: number;
-  month: string;
-  net: string | null;
-  publishedAt: string | null;
-  downloadHref: string;
-  workerType?: string | null;
-  invoiceNumber?: string | null;
-  paymentAdvice?: string | null;
-}
+/**
+ * `EssPayslip` and `EssBankDetails` are `z.infer`red from the contracts that
+ * validate them at the fetch seam (`hooks/api/payroll/ess-schema.ts`).
+ */
+export type {
+  EssBankDetails,
+  EssPayslip,
+} from "@/hooks/api/payroll/ess-schema";
 
 export interface EssCapabilities {
   mode: "employee_self_service";
@@ -256,18 +254,6 @@ export interface EssLoan {
   status: LoanStatus;
   balance: string;
   createdAt: string;
-}
-
-export interface EssBankDetails {
-  hasBank: boolean;
-  masked: {
-    accountNumber: string;
-    bankName: string | null;
-    branch: string | null;
-    ifsc: string | null;
-    accountHolder: string | null;
-    bankCountry?: string;
-  } | null;
 }
 
 export interface EssFnfSettlement {

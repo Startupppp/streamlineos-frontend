@@ -2,7 +2,10 @@ import "server-only";
 
 import { cache } from "react";
 import { serverGet } from "@/lib/server-fetch";
-import type { AccessResponse } from "@/types/access";
+import {
+  accessResponseContract,
+  type AccessResponse,
+} from "@/hooks/api/access-schema";
 
 const DENIED: AccessResponse = {
   scopes: {},
@@ -18,7 +21,7 @@ export type ServerAccessResult =
 
 export const getServerAccessResult = cache(async (): Promise<ServerAccessResult> => {
   try {
-    return { ok: true, access: await serverGet<AccessResponse>("/me/access") };
+    return { ok: true, access: await serverGet("/me/access", accessResponseContract) };
   } catch {
     return { ok: false };
   }

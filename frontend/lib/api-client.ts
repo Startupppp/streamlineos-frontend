@@ -1,6 +1,11 @@
 import { clearRegisteredQueryCache } from "@/lib/query-cache-control";
-import { ApiError, parseApiResponse } from "@/lib/api-envelope";
+import {
+  ApiError,
+  parseApiResponse,
+  type ResponseContract,
+} from "@/lib/api-envelope";
 import { newCorrelationId, noteCorrelationId } from "./observability";
+import { IDEMPOTENCY_HEADER, newIdempotencyKey } from "@/lib/idempotency-key";
 
 if (!process.env.NEXT_PUBLIC_API_URL)
   throw new Error("NEXT_PUBLIC_API_URL is not set");
@@ -8,11 +13,33 @@ if (!process.env.NEXT_PUBLIC_API_URL)
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
 const REQUEST_TIMEOUT_MS = 30_000;
 
+/**
+ * `AbortSignal.any` is Chrome 116 / Safari 17.4 / Firefox 124. Falling back to
+ * the timeout alone dropped the caller's signal, which made every cancel in the
+ * app a silent no-op on an older browser — the request ran to completion after
+ * the user pressed Stop, and on an AI surface it kept spending credits. Linking
+ * by hand keeps both sources, and forwarding `reason` preserves the
+ * `TimeoutError` that the catch below branches on.
+ */
+function linkAbortSignals(sources: readonly AbortSignal[]): AbortSignal {
+  const controller = new AbortController();
+  for (const source of sources) {
+    if (source.aborted) {
+      controller.abort(source.reason);
+      return controller.signal;
+    }
+    source.addEventListener("abort", () => controller.abort(source.reason), {
+      once: true,
+    });
+  }
+  return controller.signal;
+}
+
 function makeRequestSignal(external?: AbortSignal): AbortSignal {
   const timeout = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
   if (!external) return timeout;
   if (typeof AbortSignal.any === "function") return AbortSignal.any([timeout, external]);
-  return timeout;
+  return linkAbortSignals([timeout, external]);
 }
 
 const PUBLIC_AUTH_PATHS = new Set([
@@ -120,24 +147,19 @@ function requestHost(url: string): string {
 
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
-function newIdempotencyKey(): string {
-  const c = globalThis.crypto;
-  if (c && typeof c.randomUUID === "function") return c.randomUUID();
-  const bytes = new Uint8Array(16);
-  if (c && typeof c.getRandomValues === "function") c.getRandomValues(bytes);
-  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
-}
-
 export async function authedFetch(
   url: string,
   init: RequestInit,
   path: string,
   signal?: AbortSignal,
 ): Promise<Response> {
+  // `init.signal` is destructured out rather than left to be shadowed by the
+  // `signal:` written after the spread below — a caller that passed one had it
+  // silently overwritten, which is what made `useAskAI`'s stop() a no-op.
+  const { signal: initSignal, ...requestInit } = init;
   const headers = new Headers(init.headers);
   const isPublic = isPublicPath(path);
-  const combinedSignal = makeRequestSignal(signal);
+  const combinedSignal = makeRequestSignal(signal ?? initSignal ?? undefined);
 
   // One id per request, sent to the API and remembered here, so a browser error
   // report and the server-side logs for the same call can be joined up.
@@ -148,8 +170,11 @@ export async function authedFetch(
   }
 
   if (!isPublic && MUTATING_METHODS.has((init.method ?? "GET").toUpperCase())) {
-    if (!headers.has("Idempotency-Key"))
-      headers.set("Idempotency-Key", newIdempotencyKey());
+    // Last resort only: an @Idempotent route 400s without the header, and the
+    // error reads like a body validation failure. A caller that can be retried
+    // supplies its own key — see hooks/common/use-idempotent-operation.ts.
+    if (!headers.has(IDEMPOTENCY_HEADER))
+      headers.set(IDEMPOTENCY_HEADER, newIdempotencyKey());
   }
 
   if (!isPublic) {
@@ -158,14 +183,14 @@ export async function authedFetch(
   }
 
   try {
-    let res = await fetch(url, { ...init, headers, credentials: "omit", signal: combinedSignal });
+    let res = await fetch(url, { ...requestInit, headers, credentials: "omit", signal: combinedSignal });
 
     if (!isPublic && res.status === 401) {
       cachedToken = null;
       const token = await getBackendToken();
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);
-        res = await fetch(url, { ...init, headers, credentials: "omit", signal: combinedSignal });
+        res = await fetch(url, { ...requestInit, headers, credentials: "omit", signal: combinedSignal });
       }
       if (
         res.status === 401 &&
@@ -230,10 +255,16 @@ export {
   getApiErrorCode,
 } from "@/lib/api-envelope";
 
+/**
+ * Pass `contract` and the response body is validated at runtime, so a backend
+ * rename fails the read instead of arriving as an undefined field. Omit it and
+ * the body is cast unchecked — see `assertUnchecked` in `lib/api-envelope.ts`.
+ */
 async function get<T>(
   url: string,
   params?: QueryParams,
   signal?: AbortSignal,
+  contract?: ResponseContract<T>,
 ): Promise<T> {
   const res = await authedFetch(
     buildUrl(url, params),
@@ -241,7 +272,7 @@ async function get<T>(
     url,
     signal,
   );
-  return parseApiResponse<T>(res);
+  return parseApiResponse<T>(res, contract, url);
 }
 
 export interface RequestConfig {
@@ -253,6 +284,7 @@ async function post<T>(
   url: string,
   data?: unknown,
   config?: RequestConfig,
+  contract?: ResponseContract<T>,
 ): Promise<T> {
   const res = await authedFetch(
     buildUrl(url),
@@ -267,7 +299,7 @@ async function post<T>(
     url,
     config?.signal,
   );
-  return parseApiResponse<T>(res);
+  return parseApiResponse<T>(res, contract, url);
 }
 
 function toRequestConfig(config?: AbortSignal | RequestConfig): RequestConfig {
@@ -280,6 +312,7 @@ async function mutate<T>(
   url: string,
   data?: unknown,
   config?: AbortSignal | RequestConfig,
+  contract?: ResponseContract<T>,
 ): Promise<T> {
   const resolved = toRequestConfig(config);
   const res = await authedFetch(
@@ -295,40 +328,47 @@ async function mutate<T>(
     url,
     resolved.signal,
   );
-  return parseApiResponse<T>(res);
+  return parseApiResponse<T>(res, contract, url);
 }
 
 async function put<T>(
   url: string,
   data?: unknown,
   config?: AbortSignal | RequestConfig,
+  contract?: ResponseContract<T>,
 ): Promise<T> {
-  return mutate<T>("PUT", url, data, config);
+  return mutate<T>("PUT", url, data, config, contract);
 }
 
 async function patch<T>(
   url: string,
   data?: unknown,
   config?: AbortSignal | RequestConfig,
+  contract?: ResponseContract<T>,
 ): Promise<T> {
-  return mutate<T>("PATCH", url, data, config);
+  return mutate<T>("PATCH", url, data, config, contract);
 }
 
 async function del<T>(
   url: string,
   data?: unknown,
   config?: AbortSignal | RequestConfig,
+  contract?: ResponseContract<T>,
 ): Promise<T> {
-  return mutate<T>("DELETE", url, data, config);
+  return mutate<T>("DELETE", url, data, config, contract);
 }
 
-async function upload<T>(url: string, formData: FormData): Promise<T> {
+async function upload<T>(
+  url: string,
+  formData: FormData,
+  contract?: ResponseContract<T>,
+): Promise<T> {
   const res = await authedFetch(
     buildUrl(url),
     { method: "POST", body: formData },
     url,
   );
-  return parseApiResponse<T>(res);
+  return parseApiResponse<T>(res, contract, url);
 }
 
 async function download(

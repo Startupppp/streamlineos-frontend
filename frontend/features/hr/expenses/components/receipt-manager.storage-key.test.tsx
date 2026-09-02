@@ -1,6 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { ReceiptManager } from "./receipt-manager";
+import { MEDIA_IMAGE_ROUTE } from "@/lib/utils";
 
 jest.mock("next/image", () => ({
   __esModule: true,
@@ -31,7 +32,13 @@ jest.mock("@/components/ui/animated-icon-button", () => ({
 
 const ORG = "3f2a9c14-5b7e-4d81-9a02-6c8e1f4b7d33";
 const RECEIPT_KEY = `${ORG}/receipts/9b1c2d3e-4f50-4a61-8b72-0c9d8e7f6a5b-lunch.png`;
-const API = process.env.NEXT_PUBLIC_API_URL ?? "";
+/**
+ * The authorized image route is the app's own `/api/media/image`, not the
+ * backend's `/storage/image`. A browser cannot put an `Authorization` header on
+ * an `<img src>`, so the proxy attaches the session's backend JWT server-side
+ * and re-checks authorization per request; pointing the tag straight at the
+ * backend would 401. This spec asserted the upstream URL and was stale.
+ */
 
 function noop() {}
 
@@ -50,7 +57,7 @@ describe("ReceiptManager — a storage key never reaches an image src raw", () =
     const img = screen.getByAltText("lunch.png");
     expect(img).toHaveAttribute(
       "src",
-      `${API}/storage/image?key=${encodeURIComponent(RECEIPT_KEY)}`,
+      `${MEDIA_IMAGE_ROUTE}?key=${encodeURIComponent(RECEIPT_KEY)}`,
     );
     expect(img.getAttribute("src")).not.toBe(RECEIPT_KEY);
   });

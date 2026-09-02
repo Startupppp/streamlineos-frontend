@@ -105,6 +105,7 @@ describe("useCan — server prefetch seam", () => {
       expect.stringContaining("/me/access"),
       undefined,
       expect.anything(),
+      expect.objectContaining({ safeParse: expect.any(Function) }),
     );
   });
 });

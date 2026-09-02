@@ -1,6 +1,6 @@
 import "server-only";
 import { BACKEND_URL } from "@/lib/backend-url";
-import { parseApiResponse } from "@/lib/api-envelope";
+import { parseApiResponse, type ResponseContract } from "@/lib/api-envelope";
 
 const TIMEOUT_MS = 8_000;
 export const PUBLIC_REVALIDATE_SECS = 60;
@@ -58,6 +58,7 @@ export interface PublicKbArticle {
 export async function publicGet<T>(
   path: string,
   params?: Record<string, string | number | undefined>,
+  contract?: ResponseContract<T>,
 ): Promise<T | null> {
   const url = new URL(`${BACKEND_URL}${path}`);
   if (params) {
@@ -70,12 +71,13 @@ export async function publicGet<T>(
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
   if (res.status === 404) return null;
-  return parseApiResponse<T>(res);
+  return parseApiResponse<T>(res, contract, path);
 }
 
 export async function publicGetNoStore<T>(
   path: string,
   params?: Record<string, string | number | undefined>,
+  contract?: ResponseContract<T>,
 ): Promise<T | null> {
   const url = new URL(`${BACKEND_URL}${path}`);
   if (params) {
@@ -88,7 +90,7 @@ export async function publicGetNoStore<T>(
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
   if (res.status === 404) return null;
-  return parseApiResponse<T>(res);
+  return parseApiResponse<T>(res, contract, path);
 }
 
 export interface PublicApplicationStatus {

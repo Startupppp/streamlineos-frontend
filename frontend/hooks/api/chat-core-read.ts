@@ -4,6 +4,7 @@ import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { reportError } from "@/lib/observability/error-reporter";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import type {
   Channel,
@@ -21,10 +22,20 @@ interface ChannelPage<TChannel> {
 
 /**
  * The route answers one keyset page of 50 and a `nextCursor`. Reading only the
- * first page truncates the sidebar, the forward dialog and the channel
- * combobox with nothing on screen to say a channel is missing, so the cursor is
- * followed to exhaustion. A repeated cursor is a server fault, not a page.
+ * first page truncated the sidebar, the forward dialog and the channel combobox
+ * with nothing on screen to say a channel was missing — so the cursor is
+ * followed. But following it to exhaustion made every mount pay for the whole
+ * channel set, which grows with the tenant.
+ *
+ * So: a real ceiling. It is not silent — hitting it is reported with the path
+ * and the row count, because a cap nobody can see is the truncation this was
+ * written to avoid. The screen affordance ("showing the first N, search for
+ * more") needs the three consumers in `components/ui/` and `features/chat/`,
+ * which this session does not own. A repeated cursor is a server fault, not a
+ * page.
  */
+export const MAX_CHANNEL_PAGES = 20;
+
 export async function drainChannelPages<TChannel>(
   path: string,
   signal: AbortSignal,
@@ -32,17 +43,24 @@ export async function drainChannelPages<TChannel>(
   const channels: TChannel[] = [];
   const seenCursors = new Set<string>();
   let cursor: string | null = null;
-  for (;;) {
-    const page: ChannelPage<TChannel> = await apiClient.get<ChannelPage<TChannel>>(
+  for (let page = 0; page < MAX_CHANNEL_PAGES; page += 1) {
+    const result: ChannelPage<TChannel> = await apiClient.get<ChannelPage<TChannel>>(
       path,
       cursor === null ? undefined : { cursor },
       signal,
     );
-    channels.push(...page.channels);
-    if (page.nextCursor === null || seenCursors.has(page.nextCursor)) return channels;
-    seenCursors.add(page.nextCursor);
-    cursor = page.nextCursor;
+    channels.push(...result.channels);
+    if (result.nextCursor === null || seenCursors.has(result.nextCursor))
+      return channels;
+    seenCursors.add(result.nextCursor);
+    cursor = result.nextCursor;
   }
+  reportError(new Error(`Channel drain hit its ${MAX_CHANNEL_PAGES}-page ceiling`), {
+    path,
+    pages: MAX_CHANNEL_PAGES,
+    loaded: channels.length,
+  });
+  return channels;
 }
 
 export function useChatChannels(enabled = true) {

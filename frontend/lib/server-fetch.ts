@@ -2,7 +2,11 @@ import "server-only";
 
 import { cache } from "react";
 import { BACKEND_URL } from "@/lib/backend-url";
-import { ApiError, parseApiResponse } from "@/lib/api-envelope";
+import {
+  ApiError,
+  parseApiResponse,
+  type ResponseContract,
+} from "@/lib/api-envelope";
 import { getServerAuth } from "@/lib/get-server-auth";
 
 const TIMEOUT_MS = 8_000;
@@ -11,6 +15,7 @@ async function requestWithToken<T>(
   token: string,
   path: string,
   init: RequestInit = {},
+  contract?: ResponseContract<T>,
 ): Promise<T> {
   const headers = new Headers(init.headers);
   headers.set("Authorization", `Bearer ${token}`);
@@ -24,12 +29,18 @@ async function requestWithToken<T>(
     cache: "no-store",
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
-  return parseApiResponse<T>(res);
+  return parseApiResponse<T>(res, contract, path);
 }
 
-const serverFetch = cache(async <T>(token: string, path: string): Promise<T> => {
-  return requestWithToken<T>(token, path, { method: "GET" });
-});
+const serverFetch = cache(
+  async <T>(
+    token: string,
+    path: string,
+    contract?: ResponseContract<T>,
+  ): Promise<T> => {
+    return requestWithToken<T>(token, path, { method: "GET" }, contract);
+  },
+);
 
 async function getServerToken(): Promise<string> {
   const session = await getServerAuth();
@@ -38,6 +49,9 @@ async function getServerToken(): Promise<string> {
   return token;
 }
 
-export async function serverGet<T>(path: string): Promise<T> {
-  return serverFetch<T>(await getServerToken(), path);
+export async function serverGet<T>(
+  path: string,
+  contract?: ResponseContract<T>,
+): Promise<T> {
+  return serverFetch<T>(await getServerToken(), path, contract);
 }

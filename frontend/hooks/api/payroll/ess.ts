@@ -5,9 +5,12 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import {
+  essBankDetailsContract,
+  essPayslipsContract,
+} from "@/hooks/api/payroll/ess-schema";
 import type {
   EssOverview,
-  EssPayslip,
   EssSalaryStructure,
   EssReimbursement,
   EssLoan,
@@ -126,7 +129,8 @@ export function useEssPayslips() {
   const canSelf = useCan("self:payslips");
   return useQuery({
     queryKey: queryKeys.payroll.essPayslips(),
-    queryFn: ({ signal }) => apiClient.get<EssPayslip[]>("/payroll/me/payslips", undefined, signal),
+    queryFn: ({ signal }) =>
+      apiClient.get("/payroll/me/payslips", undefined, signal, essPayslipsContract),
     staleTime: 300_000,
     enabled: canSelf,
   });
@@ -176,7 +180,8 @@ export function useEssBank() {
   const canSelf = useCan("self:payroll");
   return useQuery({
     queryKey: queryKeys.payroll.essBank(),
-    queryFn: ({ signal }) => apiClient.get<EssBankDetails>("/payroll/me/bank", undefined, signal),
+    queryFn: ({ signal }) =>
+      apiClient.get("/payroll/me/bank", undefined, signal, essBankDetailsContract),
     staleTime: 300_000,
     enabled: canSelf,
   });
