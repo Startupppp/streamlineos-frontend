@@ -5,6 +5,7 @@
 **Blocked by:** 36.
 
 **Status:** 5 of 6 closed — box 1 PARTIAL with a counted residue. Report: `reports/38-handler-responsibility.md`
+Routed findings 1-3 (outbox orphan + both gates) ADDRESSED — see `reports/38b-outbox-and-fire-and-forget.md`.
 
 - [ ] Non-trivial UI events and form actions use named, typed handlers whose names express user intent. No inline arrow or function expression appears in a JSX event prop.
       PARTIAL: measured first — 1,469 inline arrows in JSX event props repo-wide across 3,223 `.tsx` files, 818 in my territory, of which 138 are non-trivial and 61 risky (a mutation, a sequence, validation, or something that can fail). 23 of the 61 risky ones are now named handlers, including one 9-line cursor-paginator closure duplicated across 8 files. 38 risky closures remain, named and counted in report §6. Five of those are two cross-feature duplications (event-subscription toggle ×3, Enter/Space activation ×2) that cannot be deduped without a shared home in `lib/` or `components/` — both held by other agents. The other 33 are two-statement row actions and numeric-coercion `field.onChange` wrappers with no mutation, network call or validation rule in them.
@@ -33,6 +34,35 @@
 pending ticket 30. It is green now — 0 violations across 3,806 files.
 
 ## Routed out of this ticket
+
+> **Items 1-3 were routed to a follow-up agent and are now ADDRESSED.**
+> Report: `reports/38b-outbox-and-fire-and-forget.md`. Backend commit on `main`.
+> - **1 — ADDRESSED.** `BuildTicketStatusChangedConsumerService` is now a provider in
+>   `projects.module.ts`. The event was verified live before anything was touched
+>   (`notification-events-build.catalog.ts:25` and `cross-cell-events.spec.ts:28` both reference it),
+>   so registering it — not deleting it — was the fix. Unregistered it dead-lettered every ticket
+>   status change: `OutboxPublisherService.deliver()` throws with no consumer.
+>   `check:outbox-consumers` now resolves the Nest module graph from `AppModule` instead of
+>   string-matching a `readonly eventType` literal. Bite-proved: exit 1 unregistered, exit 0
+>   re-registered. Re-run over every emitted type: **26 emitted / 29 registered / 0 orphans**.
+>   It was blind to exactly one orphan — the first registration-aware run flagged six more, all of
+>   which proved to be false positives from `imports: BUILD_MODULES` array-const module lists that
+>   the new parser did not yet resolve. Verified by hand against the module files before fixing.
+> - **2 — ADDRESSED.** The `setImmediate` in `org-setup.service.ts` is gone. The four post-setup
+>   steps now ride the transactional outbox (`organization.setup.completed`, emitted inside the
+>   setup transaction) and are performed by `OrgSetupCompletedConsumerService`, which rethrows on
+>   failure so the event retries and finally dead-letters instead of being logged and dropped.
+>   Two further `void withIdentity(...)` floating promises removed in the same pass. Covered by
+>   `org-setup-durability.spec.ts`, mutation-proved to fail (2 of 10) if the work is put back on a
+>   fire-and-forget path.
+> - **3 — ADDRESSED.** `check:fire-and-forget` no longer prints findings and exits 0. Tier 1 (banned
+>   dispatch/checkpoint shapes) stays at zero tolerance; tier 2 ratchets **every** floating promise
+>   and swallowed rejection across all of `src` — corpus widened from 1,839 files / 2 method names
+>   to 3,574 files / every shape. Ratchet pinned at the **measured** 283 (200 floating + 83
+>   swallowed, dated in the source beside the constant). `registerAfterCommit` (54) is inventoried,
+>   not gated, because CLAUDE.md §4 sanctions it. Bite-proved: +1 floating promise → exit 1.
+> - Items 4-6 remain open and unrouted.
+
 
 1. **`build.ticket.status_changed` has a producer and no live consumer.**
    `src/modules/build/core/build-ticket-status-changed-consumer.service.ts` is not a provider in
