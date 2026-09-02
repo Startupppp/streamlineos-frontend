@@ -1,10 +1,190 @@
 # S4 / ticket 19 — module release matrix: auth/identity/organization, RBAC, Settings
 
-> **Pass 2 (this section) supersedes the pass-1 verdicts below it.** The tree moved
+> **Pass 3 (the first section) supersedes pass 2 where it restates it; pass 2 supersedes the
+> pass-1 verdicts below it.** The tree moved
 > between the two passes: `RoleGrantReconcilerService` landed, the `access-permission.resolver`
 > `.limit(500)` was replaced by a keyset drain, migration `0997` added the missing permission-path
 > index, and `@Idempotent` reached the RBAC controllers. Pass 1's §1 inventory is still the best
 > file-by-file record and is kept; its §0 and §3–§5 verdicts are stale and are restated here.
+
+---
+
+# Pass 3 — supersedes P2 where it restates it
+
+> Pass 3 resumed a pass that an infrastructure watchdog killed mid-edit; the predecessor's
+> uncommitted work was on disk and was read before anything was rewritten. Its last written
+> intent — "rewire the settings side to delegate the git aliases" — was already done in the
+> working tree; what was missing was the deny coverage, the rung that makes the new keys
+> reachable, the frontend key that has to follow the backend one, and every gate.
+
+## P3.0 — What the move actually is, and why an alias controller rather than a deletion
+
+Six of the fifteen module-owned routes at the global `/settings` path are moved:
+
+| was | is now | gate was | gate is |
+|---|---|---|---|
+| `GET /settings/ai-usage` | `GET /ai/usage` | `settings:manage` | `ai:usage:view` |
+| `GET /settings/integrations/git` | `GET /integrations/git/connections` | `settings:manage` | `integrations:git:view` |
+| `POST /settings/integrations/git` | `POST /integrations/git/connections` | `settings:manage` | `integrations:git:manage` |
+| `PATCH /settings/integrations/git/:id` | `PATCH /integrations/git/connections/:id` | `settings:manage` | `integrations:git:manage` |
+| `DELETE /settings/integrations/git/:id` | `DELETE /integrations/git/connections/:id` | `settings:manage` | `integrations:git:manage` |
+| `POST /settings/users/:userId/role` | delegates to `OrgMembershipService` | `settings:rbac:manage` | unchanged |
+
+Root CLAUDE.md §8 says "when a page moves to its canonical route, delete the old route files — no
+legacy redirects". That rule is about **frontend pages**; these are API paths with a shipped
+browser client, and deleting them in the same release that moves them breaks the running app
+between the two deploys. They therefore live for exactly one release on
+`SettingsDeprecatedRoutesController`, every handler carrying the one shared
+`SETTINGS_ALIAS_SUNSET` (`2027-03-31`) and a `Link` to where it went, which
+`DeprecationInterceptor` turns into `Deprecation`/`Sunset`/`Link` response headers and
+`recordRouteClassification` stamps onto the operation. Keeping them in **one file** is the
+design: that file is exactly the debt, and `settings-route-gates.spec.ts` asserts nothing on the
+primary `SettingsController` is deprecated, so the list cannot quietly grow.
+
+`POST /settings/users/:userId/role` is not an alias of a move; it was a **second implementation**
+of `PATCH /organization/members/:memberId`, and the weaker one — no `FOR UPDATE` on the member
+row, no last-structural-admin check, no module-ownership check, no audit entry, no
+role-changed notification — reachable through a *different* key. A caller holding
+`settings:rbac:manage` could demote the last org admin through a route the organization module
+already refuses. It now calls `OrgMembershipService.updateMemberRole`. `SettingsService` lost
+`PlanLimitsService` and `AccessService` with it.
+
+## P3.1 — The rung, which is what makes any of this reach a person
+
+Minting `integrations:git:view|manage` alone would have made the page *less* reachable, not more:
+`ROLE_DEFAULT_PERMISSIONS` gives `OWNER` and `ORG_ADMIN` `ALL_PERMISSION_NAMES`, and nobody else
+would hold the new pair. `MODULE_ADMIN_EXTRA_KEYS.build` now carries it.
+
+That entry is the sanctioned shape, not a widening. `/build/settings/integrations` is Build's own
+page and `git_connections.project_id` points at a Build project, but the keys sit in the
+`integrations` namespace, so `moduleScopedPermissions("build")` cannot find them — the same
+situation `settings:record-layouts:manage` is in for CRM, with the same remedy and the same
+comment beside it. The pair reaches repository connections and nothing else in `integrations`:
+`integrations:connections:*` is deliberately NOT included, because that pair is in
+`EMPLOYEE_SELF_SERVICE` and governs a person connecting their *own* external accounts.
+`RoleGrantReconcilerService` reads `buildModuleAdminPermissionKeys` at boot, so organisations that
+already exist converge with **no migration** — the mechanism box 7 proves on a database.
+
+`ai:usage:view` gets no rung on purpose: org-wide AI spend is financial data, and
+`AiUsageService` keeps the structural org-admin check *beside* the key rather than instead of it.
+
+Module gating checked before minting: `moduleOf("integrations:git:view")` is `integrations` and
+`moduleOf("ai:usage:view")` is `ai`; neither is in `planGatedModuleIds()`
+(`hr,crm,build,accounting,inventory,support,feedbucket,surveys,payroll,sign,timesheets`), so
+`isCoreModule` short-circuits `moduleAvailability` and no organisation gets a 402 it did not get
+before.
+
+## P3.2 — New defect: one table, four modules, one route that constrained neither end
+
+`custom_field_definitions` is shared. Support scopes every read and write to `ticket`, HR to
+`employee`, Build to its own constant. `/settings/custom-fields` scoped **neither**: the create
+payload was CRM-only by enum, but `updateCustomField` and `deleteCustomField` took a bare
+`fieldId` and keyed on `(id, org_id)` alone. A holder of `settings:custom-fields:manage` could
+therefore rename or drop a Support ticket field or an HR employee field — same tenant, wrong
+module, which no cross-tenant test can see and no RLS predicate can catch.
+
+`CRM_CUSTOM_FIELD_ENTITY_TYPES` is now exported from the schemas file, feeds both the create enum
+and the list filter, and is the third clause of every predicate in the service. A foreign row is a
+**404**, never a 403: a 403 would confirm the id exists, which is the disclosure the containment
+exists to prevent. `GET /settings/custom-fields` also moved from a `manage` gate to
+`settings:custom-fields:view`, so there is a read rung at all, with all three writes still on
+`manage`.
+
+Bite-proof: the four `OWNED_ENTITY_TYPES` clauses stripped → **2 failed / 6** in
+`settings-custom-fields-tenant-isolation.spec.ts`; restored, re-run green.
+
+## P3.3 — Deny tests, because `check:authz-deny` counts them and a decorator is not a guard
+
+The five new canonical handlers and five aliases arrived with no deny test, which pushed
+`check:authz-deny` to **2457, four above its 2453 ratchet**. Fourteen handlers now have one, and
+they are not metadata assertions: `settings-route-gates.spec.ts` builds a real `PermissionGuard`
+over a real `Reflector`, feeds it the actual handler function and controller class, and resolves
+`scopeFor` against a held-key set — so the `ForbiddenException` is the guard's own, and the
+matching allow case proves the gate is a gate and not a wall. It also pins that a holder of only
+`settings:custom-fields:view` can list and cannot write.
+
+Result: `check:authz-deny` → **exit 0, uncovered 2443** (10 below the ratchet, which the gate
+invites its owner to bank). Bite-proof: `scopeFor` forced to `"all"` → **17 failed / 41**.
+
+## P3.4 — Gates run in pass 3. Every number was executed and read.
+
+| command | exit | number |
+|---|---|---|
+| `pnpm -C …backend typecheck` | 0 | 0 errors |
+| `pnpm -C …backend check:spec-typecheck` | 0 | passed |
+| `pnpm -s check:authz-deny` | 0 | uncovered 2443 (ratchet 2453) |
+| `pnpm -s check:permission-keys` | 0 | backend 702 keys / frontend union 700 |
+| `pnpm -s check:navigation-permissions` | 0 | every nav gate names an enforced key |
+| `pnpm -s check:route-classification` | 0 | 0 undeclared |
+| `pnpm -s check:idempotent-commands` | 0 | every in-scope mutating handler carries `@Idempotent` |
+| `pnpm -s check:module-di` | 0 | 217 modules · 1712 classes · 0 violations |
+| `pnpm -s check:file-sizes` | 0 | 3565 files, all within 500 |
+| `pnpm -s check:unbounded-reads` | 0 | offset 0 · unbounded 0 |
+| `pnpm -s check:mock-surface` | 0 | 3893 doubles · 0 defects |
+| `pnpm -s check:scope-application` | 0 | 142/142 resolutions reach a predicate |
+| `pnpm -s check:cache-invalidation` | 0 | 0 blockers |
+| `pnpm -s check:openapi-coverage` | 0 | 3613 operations, 100% stamped |
+| `pnpm -s check:operation-ids` | 0 | 3613 ops, no duplicates |
+| `pnpm -s check:contract-registry` | 0 | 3625 operations classified |
+| `pnpm -s check:envelope-consistency` | 0 | 0 violations |
+| `pnpm -s check:openapi-path-params` | 0 | 3613 checked |
+| `pnpm -s check:contract-breaking-change` | 0 | 0 breaking |
+| `pnpm -C …backend check:cycles` | 0 | 5516 files, no cycle |
+| `jest src/modules/{settings,ai/usage,integrations/git,rbac}` | 0 | 41 suites / **255 passed**, 1 skipped |
+| `jest src/modules/access` | 0 | 40 suites / **398 passed** |
+| `pnpm -C …frontend type-check` | 0 | 0 errors |
+| `jest lib/rbac/permissions sidebar-permission-navigation hooks/api/access features/settings` | 0 | 17 suites / **120 passed** |
+| `pnpm -s check:route-access-contract` (frontend) | 0 | 203 nav keys, all enforced |
+| `pnpm -s check:query-scope` (frontend) | 0 | 5249 files, 0 violations |
+| `pnpm -s check:contract-drift` (frontend) | 0 | 0 drift |
+| `pnpm -s check:tenant-isolation` | 1 → **0** | red mid-pass on another agent's file; closed by `deff6b6f` before hand-off — see P3.6 |
+
+Not run, and not claimed: `pnpm openapi:check`, `pnpm check:tenant-isolation:run`, the seeded e2e
+suite, frontend `pnpm lint` (it lints build output and reports ~2,375 inflated errors; another
+agent owns that fix), and any database measurement — pass 3 changed no schema and no query plan.
+
+## P3.5 — Files changed in pass 3
+
+Backend, `27e901ec` — 31 files:
+`src/modules/settings/{settings.controller,settings.service,settings.module,settings.helpers,settings-custom-fields.service}.ts`,
+`src/modules/settings/{settings-deprecated-routes.controller,settings-route-deprecation}.ts` (new),
+`src/modules/settings/{settings-route-gates,settings-custom-fields-tenant-isolation,settings-member-role-authority}.spec.ts`,
+`src/modules/settings/dto/settings.schemas{,.spec}.ts`,
+`src/modules/ai/usage/**` (new module + the `ai-usage.query` rename out of settings),
+`src/modules/integrations/git/**` (new controller/service/helpers/dto + isolation spec),
+`src/modules/rbac/permissions/{ai,catalog,index,shared}.ts`,
+`src/modules/rbac/seed-system-roles.ts`, `src/modules/rbac/__tests__/seed-system-roles.spec.ts`.
+
+Frontend, `4768441bc` — 4 files: `lib/rbac/permissions/{settings,permission-key-business,permission-key-extended}.ts`,
+`hooks/api/git-integration.ts`.
+
+## P3.6 — Handoffs from pass 3
+
+1. **~~`check:tenant-isolation` is red on another agent's file~~ — closed during pass 3.** It
+   read exit 1 / `MISSING src/modules/organization/setup/org-setup-completed-consumer.service.ts`
+   (from `f4c7bdf5`, before this pass started). `deff6b6f` landed the suite while pass 3 was
+   running and the gate now reads exit 0. Left here so the sequence is legible, not as open work.
+2. **`openapi.json` is stale for five paths.** Regeneration boots the app and would sweep every
+   agent's in-flight routes into one 7 MB artifact diff across two repos — a release-time step for
+   the orchestrator, not a per-agent one. Two things unblock behind it: `pnpm openapi:check`, and
+   the one-line nav flip in (3).
+3. **One line waiting on (2).** `components/layout/sidebar/sidebar-nav-groups-work-management.ts`
+   gates `/build/settings/integrations` on `settings:manage`. It should read `integrations:git:view`
+   so a `BUILD_MODULE_ADMIN` sees the item, but `check:route-access-contract` reads the vendored
+   `frontend/contracts/openapi.json` and fails on a nav key no *generated* operation carries.
+   Measured both ways: flipped → exit 1; reverted → exit 0. Land the flip with the regeneration.
+4. **`hooks/api/crm/custom-fields.ts` reads a capped page now.** `{ fields }` became
+   `{ fields, pagination }` (default 50, cap 100) and the projection now returns `name`/`sortOrder`,
+   which is what the hook's own type already declared — that half is a drift repair. An org with
+   more than 50 CRM custom fields sees 50 until the hook follows the cursor. `hooks/api/**`
+   response contracts belong to another agent.
+5. **The nine routes still at `/settings/*`.** Custom fields (4) is now mechanical: the route is
+   provably CRM-only in both directions, so mint `crm:custom-fields:view|manage` and move it under
+   `/crm/settings/*`. Automations (6) genuinely spans CRM, HR, Support and Accounting and needs a
+   product decision on ownership before a key can be named.
+6. **`backend/CLAUDE.md` §5 still says a template key addition "must ship a backfill migration
+   too".** Unchanged from pass 2, and following it still produces a dead migration. Replacement
+   wording is in P2.0.
 
 ---
 
