@@ -15,8 +15,9 @@ This file contains only remaining acceptance work. Completed checklist items and
 - Additive cyclic-dependency amendment: **1 new immediate criterion**, initially open; it strengthens the existing zero-cycle architecture requirement without replacing it.
 - Additive file-cohesion and size-policy amendment: **6 new immediate criteria**, all initially open; 500 lines is the repository-wide authored-file default, with rare evidence-backed exceptions where splitting would damage locality or create shallow modules.
 - Additive handler-design amendment: **3 new immediate criteria**, all initially open; named handlers own event/transport orchestration while reusable business rules remain domain functions rather than meaningless `handle*` wrappers.
+- Additive operability/upload/contract-proof amendment: **5 new immediate criteria**, all initially open; deployed monitoring evidence remains deferred, but the code must expose safe telemetry, health, file-lifecycle, published-contract and bite-proven verification interfaces before release.
 - Reconciliation note: three migration criteria were evidenced at the 634-entry chain, but the current chain has 635 entries, so current-head bootstrap/catalog parity is open again.
-- Reconciled immediate total: **166 proven and 147 open of 313 (53.0% proven)**. Thirteen additive/current criteria are explicitly checked at the audited tree; all remain subject to final one-commit rerun.
+- Reconciled immediate total: **166 proven and 152 open of 318 (52.2% proven)**. Thirteen additive/current criteria are explicitly checked at the audited tree; all remain subject to final one-commit rerun.
 - Deferred production/compliance criteria still open: **34**.
 - Code-level 10/10 is **not yet reached**. Module checklists are substantially ahead of cross-cutting integration, performance, privacy and final-release proof.
 
@@ -280,6 +281,14 @@ These decisions are final for this release and remove implementation alternative
 - [ ] Prove frontend types and runtime parsing cannot silently accept a backend contract change.
 - [x] Enforce canonical query-key factories for authenticated data: zero ad-hoc array keys or local key factories, no redundant tenant argument where the scoped Query hash already owns tenant/user identity, and exact invalidation tests for every mutation.
       Evidence: `check:query-scope` + `query-scope-isolation.test.tsx` pass 2026-09-02.
+
+### 9. Operability, upload lifecycle and verification integrity
+
+- [ ] Emit structured, redacted and tenant-safe logs, metrics and distributed trace context across HTTP requests, database/cache/provider adapters, outbox publication, queue/event consumers, cron jobs and AI streams. Correlate one user intent through asynchronous work without logging secrets, tokens, prompts, file contents or sensitive bind values; classify expected domain failures separately from actionable faults.
+- [ ] Expose shallow liveness and dependency-aware readiness interfaces, plus graceful shutdown, connection draining and worker lease handoff in code. A failed database, cache, queue or required provider dependency must produce an explicit degraded/unready state without making health probes amplify the outage; deployed probe and alert delivery evidence remains deferred.
+- [ ] Enforce one tenant-private upload interface for attachments and documents: validate declared size and magic-byte MIME, sanitize names, use organization-scoped object keys, idempotent multipart completion, malware quarantine, authorization recheck before short-lived download URLs and asynchronous compression/preview/transcoding with bounded jobs. Cancellation, failed transforms, replacement and GDPR/retention deletion must clean database rows and objects without orphaning or exposing public URLs.
+- [ ] Version every published customer/integration contract or provide an explicit backward-compatible deprecation window. Reconcile REST/OpenAPI, webhooks, realtime events, exports and SDK-facing schemas with consumer evidence, idempotency/replay rules and removed-operation records; coordinated internal frontend/backend contracts may break only in the same release commit.
+- [ ] Make every architecture/release gate bite-proven with a known-bad fixture or mutation that fails for the intended reason. Critical tests must exercise transaction callbacks, authorization deny/cross-tenant paths, retries and failure branches; zero silently skipped/quarantined tests, vacuous mocks, swallowed promise failures or baselines raised merely to turn a regression green.
 
 ### 10. Module release matrix
 
