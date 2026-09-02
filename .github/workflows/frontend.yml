@@ -50,11 +50,45 @@ jobs:
       - name: Type Check
         run: pnpm run type-check
 
-      - name: Run Tests
-        run: pnpm test --runInBand
-
       - name: Build
         run: pnpm run build
+
+  # The unit suite, in its OWN job for exactly the reason `gates` is in its own
+  # job. 2026-09-02 (ticket 35): `Run Tests` sat below `Lint` inside `frontend`,
+  # and `Lint` is red, so the suite had never executed in CI either — the same
+  # masking defect 35b found for the gates, one step lower down. A suite whose
+  # result is "-" is not a passing suite.
+  #
+  # Unfiltered on purpose. `jest --testPathPattern=<x>` reports green while every
+  # suite outside the filter is red, which is the false pass this job exists to
+  # make impossible.
+  tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Tests
+        run: pnpm test --runInBand
 
   # Every static gate in the frontend package. Hermetic: no database, no
   # network, no sibling checkout. A step marked `continue-on-error` names the
@@ -87,6 +121,14 @@ jobs:
 
       - name: Repo path resolvers still resolve
         run: pnpm run check:repo-paths:self-test
+
+      # Root CLAUDE.md §9 says both repos are at zero circular dependencies and
+      # that madge proves it. The BACKEND workflow has run `check:cycles` since
+      # 35b; the frontend never has, so the claim was unenforced on the half with
+      # 5,243 files. Measured here before wiring: rc=0, "No circular dependency
+      # found!", 5,243 files processed in 13.5s. Blocking because it is green.
+      - name: Import graph is acyclic
+        run: pnpm run check:cycles
 
       - name: Query keys and caches stay tenant-scoped
         run: pnpm run check:query-scope:self-test && pnpm run check:query-scope
@@ -145,14 +187,24 @@ jobs:
       # 2026-09-02. Delete the continue-on-error when the named number is zero.
       # ---------------------------------------------------------------------
 
-      # Measured rc=1: 520 files exceed 300 lines, 1 above the baseline of 519
-      # (hooks/api/notifications-inbox.test.ts 663, features/renderer/record-form.tsx 301,
-      # features/settings/organization/org-profile-section.tsx 301). Ticket 37.
+      # BLOCKING as of 2026-09-02. Re-measured after ticket 37's splits: rc=0,
+      # 519 of 5228 production files exceed 300 lines against a baseline of 519 —
+      # at the ratchet with no headroom, which is what a ratchet is for. The
+      # workflow's own rule is to delete continue-on-error when the number is no
+      # longer above the line, so it is deleted.
       - name: Files over 300 lines do not increase
-        continue-on-error: true
         run: pnpm run check:over-300:self-test && pnpm run check:over-300
 
-      # Measured rc=1: 1 file over 500 lines (hooks/api/notifications-inbox.ts, 507).
+      # Measured rc=1: 3 files over 500 lines — features/hr/cases/cases-page-content.tsx
+      # 501, hooks/api/notifications-inbox.ts 534, hooks/api/notifications-inbox.test.ts
+      # 663. The third is newly visible: ticket 35 stopped this gate excluding
+      # *.test.ts(x), because check-over-300 scanned them and this one did not, so
+      # a 663-line test file inflated the 300-line ratchet while being exempt from
+      # the 500-line ceiling. Measured both directions before choosing — exempting
+      # tests from over-300 instead would have dropped 519 to 509 with no file
+      # getting shorter, which is a ratchet moved to make a number smaller.
+      # Aligning by tightening costs exactly one new row. §7 lists its exceptions
+      # and tests are not among them. All three are other tickets' files.
       - name: Files over 500 lines
         continue-on-error: true
         run: pnpm run check:file-sizes:self-test && pnpm run check:file-sizes

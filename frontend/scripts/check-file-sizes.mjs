@@ -7,8 +7,19 @@
  *   node_modules/, .next/, feedbucket-widget/, public/, scripts/, contracts/,
  *   .git/, coverage/, dist/, out/ — build output, package dirs, generated
  *   artifacts, and gate scripts themselves.
- *   *.d.ts, *.spec.ts, *.spec.tsx, *.test.ts, *.test.tsx — tests and
- *   declaration files (§7 exceptions by default).
+ *   *.d.ts — declaration files (a §7 exception by name).
+ *
+ * TEST FILES ARE SCANNED, as of 2026-09-02 (ticket 35). They were excluded here
+ * while check-over-300.mjs scanned them, so a 664-line test file inflated the
+ * 300-line ratchet and was exempt from the 500-line ceiling — one policy, two
+ * corpora. §7 names its exceptions and tests are not among them, so the two are
+ * aligned by TIGHTENING this gate rather than by loosening the other:
+ *   measured, exempting *.test.* from check-over-300 instead — 519 -> 509, ten
+ *   files leaving the count with no file getting shorter, which is a ratchet
+ *   moved to make a number smaller and is exactly what this release forbids;
+ *   measured, scanning *.test.* here — 2 -> 3 files over 500, the one addition
+ *   being hooks/api/notifications-inbox.test.ts at 664 lines.
+ * Revealing one row of debt is the honest direction; hiding ten is not.
  *
  * CRM and Inventory files (out of PRD scope) are tallied separately and do
  * not affect the gate's pass/fail decision.
@@ -62,11 +73,7 @@ function collectFiles(dir, files = []) {
       const ext = extname(entry);
       if (
         (ext === ".ts" || ext === ".tsx" || ext === ".js" || ext === ".mjs") &&
-        !entry.endsWith(".d.ts") &&
-        !entry.endsWith(".spec.ts") &&
-        !entry.endsWith(".spec.tsx") &&
-        !entry.endsWith(".test.ts") &&
-        !entry.endsWith(".test.tsx")
+        !entry.endsWith(".d.ts")
       ) {
         files.push(full);
       }
@@ -320,6 +327,19 @@ function runSelfTests() {
     assert("over-limit no exception: reason=violations", noExcRes.reason === "violations");
     assert("over-limit no exception: names the file", noExcRes.violations.some((v) => v.path.includes("big.tsx")));
     assert("over-limit no exception: reports 501 lines", noExcRes.violations.some((v) => v.lines === 501));
+
+    // Pins the 2026-09-02 alignment with check-over-300: a test file is subject
+    // to the 500-line ceiling, a declaration file is not. Without this the
+    // exclusion could drift back and the two gates would silently disagree again.
+    const testDir = join(tmpRoot, "tests");
+    writeLines(join(testDir, "hooks", "big.test.ts"), 664);
+    writeLines(join(testDir, "hooks", "big.test.tsx"), 501);
+    writeLines(join(testDir, "types", "big.d.ts"), 900);
+    writeFileSync(join(testDir, "exc.md"), makeRegistry([]));
+    const testRes = runCheck(testDir, join(testDir, "exc.md"), { minFiles: 1 });
+    assert("a *.test.ts over 500 is a violation", testRes.violations.some((v) => v.path.includes("big.test.ts")));
+    assert("a *.test.tsx over 500 is a violation", testRes.violations.some((v) => v.path.includes("big.test.tsx")));
+    assert("a *.d.ts over 500 is still exempt", !testRes.violations.some((v) => v.path.includes("big.d.ts")));
 
     const missingDir = join(tmpRoot, "missing");
     writeLines(join(missingDir, "app", "feat", "big.tsx"), 510);

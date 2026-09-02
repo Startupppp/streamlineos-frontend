@@ -9,6 +9,20 @@
  * Uses a ratchet baseline — the gate fails if violation counts INCREASE beyond
  * the baseline. Lower the baseline after fixing violations and commit the change.
  *
+ * TEST FILES ARE NOT SCANNED, as of 2026-09-02 (ticket 35). The walker excluded
+ * *.spec.ts(x), of which this package has ZERO, and scanned *.test.ts(x), of
+ * which it has 303 — so the intended exemption had never applied to anything.
+ * 28 of the 222 cross-feature "violations" came from the
+ * features/__tests__/*-a11y.test.tsx module sweep, a harness that imports every
+ * feature on purpose; check-query-scope already carries this exemption for that
+ * same harness. Both rules govern the PRODUCTION module graph — a test importing
+ * a feature is not the inversion they forbid — so narrowing the corpus makes the
+ * measurement match the rule.
+ *
+ * The 16 that left the count were NOT banked as headroom: BASELINE_CROSS_FEATURE
+ * was lowered from 210 to the new measured 194 in the same change. Excluding a
+ * corpus and keeping the old baseline is how a ratchet is laundered.
+ *
  * Flags:
  *   --self-test   Run internal assertions against synthetic violations and exit.
  */
@@ -20,7 +34,9 @@ import { fileURLToPath } from "node:url";
 const REAL_ROOT = fileURLToPath(new URL("..", import.meta.url));
 
 const BASELINE_SHARED_IMPORTS_FEATURE = 19;
-const BASELINE_CROSS_FEATURE = 210;
+// 194, re-measured 2026-09-02 immediately after test files left the corpus
+// (222 with them, 194 without). NOT 210 — see the header.
+const BASELINE_CROSS_FEATURE = 194;
 
 const EXCLUDED_DIRS = new Set(["node_modules", ".next", "feedbucket-widget", ".git"]);
 
@@ -33,7 +49,7 @@ function* walkTs(dir) {
     } else {
       const ext = extname(entry.name);
       if ((ext === ".ts" || ext === ".tsx") && !entry.name.endsWith(".d.ts")) {
-        if (!entry.name.endsWith(".spec.ts") && !entry.name.endsWith(".spec.tsx")) {
+        if (!/\.(spec|test)\.tsx?$/.test(entry.name)) {
           yield full;
         }
       }
@@ -137,9 +153,26 @@ function runSelfTest() {
       'import { Widget } from "@/features/auth/widget";\nexport function Page() { return null; }\n',
     );
 
+    // A test file importing across features is the a11y module sweep, not an
+    // architectural inversion. Pins the 2026-09-02 corpus narrowing.
+    writeFileSync(
+      join(feat2Dir, "page.test.tsx"),
+      'import { Widget } from "@/features/auth/widget";\nit("renders", () => {});\n',
+    );
+    writeFileSync(
+      join(sharedDir, "shell.test.tsx"),
+      'import { Widget } from "@/features/auth/widget";\nit("renders", () => {});\n',
+    );
+
     const violations = scanViolations(synthDir);
     const sharedVio = violations.filter((v) => v.rule === "shared-imports-feature");
     const crossVio = violations.filter((v) => v.rule === "cross-feature-import");
+
+    if (violations.some((v) => v.file.includes(".test."))) {
+      console.error("SELF-TEST FAIL: a *.test.tsx file was scanned; test files are outside both rules.");
+      process.exitCode = 1;
+      return;
+    }
 
     if (sharedVio.length !== 1) {
       console.error(`SELF-TEST FAIL: expected 1 shared-imports-feature violation, got ${sharedVio.length}`);
