@@ -50,6 +50,23 @@ const BROWSER_CANDIDATES = [
 
 const MIN_AUTHORIZED_NAV_LINKS = 3;
 const OFF_ROUTE_RETRIES = 3;
+const CDP_SEND_TIMEOUT_MS = 60_000;
+
+/**
+ * `lib/theme/app-themes.ts` defaults `DEFAULT_APP_THEME_MODE` to "light", and
+ * `components/theme/app-theme-provider.tsx` consults the OS only when the viewer
+ * has explicitly stored "system". Emulating `prefers-color-scheme: dark` alone
+ * therefore measures the light theme while the log claims dark. The viewer's
+ * choice lives in localStorage, so that is where the driver has to put it.
+ */
+const APP_THEME_MODE_STORAGE_KEY = "streamlineos-app-theme-mode";
+const APP_THEME_MODES = ["light", "dark", "system"];
+
+export function buildThemeInitScript(mode, storageKey = APP_THEME_MODE_STORAGE_KEY) {
+  if (!APP_THEME_MODES.includes(mode))
+    throw new Error(`unknown theme mode "${mode}" — expected one of ${APP_THEME_MODES.join(", ")}`);
+  return `try { localStorage.setItem(${JSON.stringify(storageKey)}, ${JSON.stringify(mode)}); } catch {}`;
+}
 
 const MOBILE_PROFILE = {
   width: 390,
@@ -215,6 +232,22 @@ export function classifyResource({ type, url, baseOrigin, firstPartyOrigins = []
   return { kind, thirdParty };
 }
 
+/**
+ * "First load" and "everything the tab pulled in the next second and a bit" are
+ * not the same budget. Once the authorized shell renders, Next prefetches the
+ * RSC payload and chunks for every in-view nav link, and the route's own
+ * `next/dynamic` boundaries resolve — so a window that runs 1.2s past the load
+ * event charges one route for other routes' chunks. Splitting on the load event
+ * keeps `measuredScriptBytes` the route's own cost and records the speculative
+ * tail beside it instead of inside it.
+ */
+export function splitByLoadPhase(entries) {
+  return {
+    firstLoad: entries.filter((e) => e.afterLoad !== true),
+    afterLoad: entries.filter((e) => e.afterLoad === true),
+  };
+}
+
 export function summariseBytes(entries) {
   const totals = { scriptBytes: 0, stylesheetBytes: 0, imageBytes: 0, fontBytes: 0, documentBytes: 0, otherBytes: 0, thirdPartyBytes: 0, totalBytes: 0 };
   for (const { kind, thirdParty, bytes } of entries) {
@@ -228,13 +261,15 @@ export function summariseBytes(entries) {
 /**
  * A budget nobody can trace to a URL cannot be argued with. Images and
  * third-party bytes are the two lines most often disputed, so their requests
- * are listed rather than only totalled.
+ * are listed rather than only totalled — and scripts are listed too, because
+ * `measuredScriptBytes` is the budget that actually breaches on this app and a
+ * total with no chunk names behind it cannot be acted on by anyone.
  */
-export function itemiseBytes(entries, kinds) {
+export function itemiseBytes(entries, kinds, limit = 20) {
   return entries
     .filter((e) => kinds.includes(e.kind) || e.thirdParty)
     .sort((a, b) => b.bytes - a.bytes)
-    .slice(0, 20)
+    .slice(0, limit)
     .map(({ kind, thirdParty, bytes, url }) => ({ kind, thirdParty, bytes, url }));
 }
 
@@ -265,6 +300,8 @@ export function mergeBytesIntoManifest(manifest, bytesByRoute) {
       measuredFontBytes: totals.fontBytes,
       measuredThirdPartyBytes: totals.thirdPartyBytes,
       measuredServerPayloadBytes: totals.documentBytes,
+      measuredPostLoadScriptBytes: totals.postLoadTotals?.scriptBytes ?? null,
+      measuredPostLoadTotalBytes: totals.postLoadTotals?.totalBytes ?? null,
     };
     touched.push(route);
   }
@@ -331,6 +368,24 @@ function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
+/**
+ * A CDP request has no deadline of its own, and `Runtime.evaluate` with
+ * `awaitPromise` resolves only when the page's promise does. A renderer that
+ * never settles therefore parks the driver forever: this run's predecessor sat
+ * on `/build/inbox` for 2h31m at 0% CPU, having produced 10 of 24 route/profile
+ * pairs, and the only evidence of the stall was a log that stopped. A capture
+ * that hangs is worse than one that fails, because it looks like it is working.
+ */
+export function withDeadline(promise, ms, label) {
+  let timer = null;
+  const deadline = new Promise((_res, rej) => {
+    timer = setTimeout(() => rej(new Error(`${label} did not answer within ${ms}ms`)), ms);
+  });
+  return Promise.race([promise, deadline]).finally(() => {
+    if (timer !== null) clearTimeout(timer);
+  });
+}
+
 function findBrowser(explicit) {
   if (explicit) return existsSync(explicit) ? explicit : null;
   for (const p of BROWSER_CANDIDATES) if (existsSync(p)) return p;
@@ -375,9 +430,13 @@ async function cdpSession(wsUrl) {
   };
   const send = (method, params = {}) => {
     const id = ++msgId;
-    return new Promise((res, rej) => {
+    const answered = new Promise((res, rej) => {
       pending.set(id, (m) => (m.error ? rej(new Error(`${method}: ${m.error.message}`)) : res(m.result)));
       ws.send(JSON.stringify({ id, method, params }));
+    });
+    return withDeadline(answered, CDP_SEND_TIMEOUT_MS, `CDP ${method}`).catch((err) => {
+      pending.delete(id);
+      throw err;
     });
   };
   const on = (event, listener) => {
@@ -605,6 +664,7 @@ function attachConsoleRecorder(cdp) {
 function attachByteRecorder(cdp, baseOrigin, firstPartyOrigins) {
   const byRequest = new Map();
   let entries = [];
+  let loaded = false;
   cdp.on("Network.responseReceived", ({ requestId, type, response }) => {
     const url = response?.url ?? "";
     byRequest.set(requestId, { ...classifyResource({ type, url, baseOrigin, firstPartyOrigins }), url: url.slice(0, 200) });
@@ -612,15 +672,36 @@ function attachByteRecorder(cdp, baseOrigin, firstPartyOrigins) {
   cdp.on("Network.loadingFinished", ({ requestId, encodedDataLength }) => {
     const meta = byRequest.get(requestId);
     if (!meta) return;
-    entries.push({ ...meta, bytes: encodedDataLength ?? 0 });
+    entries.push({ ...meta, bytes: encodedDataLength ?? 0, afterLoad: loaded });
+  });
+  cdp.on("Page.loadEventFired", () => {
+    loaded = true;
   });
   return {
     reset() {
       byRequest.clear();
       entries = [];
+      loaded = false;
     },
     totals() {
-      return { ...summariseBytes(entries), notableResources: itemiseBytes(entries, ["image", "font"]) };
+      const { firstLoad, afterLoad } = splitByLoadPhase(entries);
+      const firstLoadTotals = summariseBytes(firstLoad);
+      return {
+        ...firstLoadTotals,
+        windowTotals: summariseBytes(entries),
+        postLoadTotals: summariseBytes(afterLoad),
+        notableResources: itemiseBytes(firstLoad, ["image", "font"]),
+        largestScripts: itemiseBytes(
+          firstLoad.filter((e) => e.kind === "script"),
+          ["script"],
+          25,
+        ),
+        largestPostLoadScripts: itemiseBytes(
+          afterLoad.filter((e) => e.kind === "script"),
+          ["script"],
+          15,
+        ),
+      };
     },
   };
 }
@@ -636,6 +717,8 @@ async function run() {
   const debugPort = Number(flag("debug-port", "9224"));
   const cookieFile = flag("cookie-file", "");
   const cookieName = flag("cookie-name", "authjs.session-token");
+  const themeMode = flag("theme", "light");
+  const themeInitScript = buildThemeInitScript(themeMode);
   const browserPath = findBrowser(flag("browser", ""));
 
   if (!browserPath) throw new Error(`no browser found — pass --browser=<path>. Tried: ${BROWSER_CANDIDATES.join(", ")}`);
@@ -696,6 +779,7 @@ async function run() {
   const intentByRoute = {};
   const allSamples = [];
   const hydrationFindings = [];
+  const routeFailures = [];
 
   try {
     await waitForDevTools(debugPort, 15_000);
@@ -708,7 +792,11 @@ async function run() {
     await cdp.send("Network.enable");
     await cdp.send("Runtime.enable");
     await cdp.send("Network.setCookie", { name: cookieName, value: cookieValue, url: baseUrl, httpOnly: true, path: "/" });
+    await cdp.send("Page.addScriptToEvaluateOnNewDocument", { source: themeInitScript });
     await cdp.send("Page.addScriptToEvaluateOnNewDocument", { source: VITALS_SCRIPT });
+    await cdp.send("Emulation.setEmulatedMedia", {
+      features: [{ name: "prefers-color-scheme", value: themeMode === "dark" ? "dark" : "light" }],
+    });
 
     const bytes = attachByteRecorder(cdp, baseOrigin, firstPartyOrigins);
     const consoleLog = attachConsoleRecorder(cdp);
@@ -718,68 +806,73 @@ async function run() {
       const profileSamples = [];
 
       for (const route of routes) {
-        const url = `${baseUrl}${route}`;
+        try {
+          const url = `${baseUrl}${route}`;
 
-        // Cold-cache pass: the route bundle budgets are first-load figures.
-        if (profile === "desktop") {
-          await cdp.send("Network.setCacheDisabled", { cacheDisabled: true });
-          await cdp.send("Network.setCookie", { name: cookieName, value: cookieValue, url: baseUrl, httpOnly: true, path: "/" });
-          bytes.reset();
-          await navigate(cdp, url, timeoutMs);
-          await sleep(1200);
-          const landed = await evaluate(cdp, "location.pathname");
-          if (landed === route) bytesByRoute[route] = bytes.totals();
-          else log(`[bytes] ${route} DISCARDED — landed on ${String(landed)}; byte totals for another page are not this route's`);
-          await cdp.send("Network.setCacheDisabled", { cacheDisabled: false });
-        }
-
-        // Discarded warm-up so the first measured navigation is not paying for
-        // a cold Next.js route module or a cold connection pool.
-        await navigate(cdp, url, timeoutMs);
-        await sleep(800);
-
-        const routeSamples = [];
-        for (let i = 0; i < repeat; i++) {
-          let sample = null;
-          let probeInteraction = null;
-          // The app calls signOut() on a refused /me/access, so a navigation can
-          // land on /signin through no fault of the route. Restore the session
-          // and re-measure rather than record the sign-in page as this route —
-          // bounded, and every remaining off-route sample still fails the run.
-          for (let attempt = 1; attempt <= OFF_ROUTE_RETRIES; attempt++) {
-            consoleLog.reset();
+          // Cold-cache pass: the route bundle budgets are first-load figures.
+          if (profile === "desktop") {
+            await cdp.send("Network.setCacheDisabled", { cacheDisabled: true });
             await cdp.send("Network.setCookie", { name: cookieName, value: cookieValue, url: baseUrl, httpOnly: true, path: "/" });
+            bytes.reset();
             await navigate(cdp, url, timeoutMs);
-            await sleep(900);
-            probeInteraction = await interact(cdp);
-            sample = await collectSample(cdp);
-            sample.requestedRoute = route;
-            sample.attempts = attempt;
-            if (findOffRouteSamples([sample]).length === 0) break;
+            await sleep(1200);
+            const landed = await evaluate(cdp, "location.pathname");
+            if (landed === route) bytesByRoute[route] = bytes.totals();
+            else log(`[bytes] ${route} DISCARDED — landed on ${String(landed)}; byte totals for another page are not this route's`);
+            await cdp.send("Network.setCacheDisabled", { cacheDisabled: false });
           }
-          sample.interaction = probeInteraction;
-          const mismatches = consoleLog.hydrationMismatches();
-          if (mismatches.length > 0) hydrationFindings.push({ route, profile, sample: i, messages: mismatches.slice(0, 3) });
-          routeSamples.push(sample);
-          profileSamples.push(sample);
-          allSamples.push(sample);
-          log(
-            `[${profile}] ${route} ${i + 1}/${repeat} ttfb=${sample.ttfbMs?.toFixed(0) ?? "n/a"} fcp=${sample.fcpMs?.toFixed(0) ?? "n/a"} ` +
-              `lcp=${sample.lcpMs?.toFixed(0) ?? "n/a"} inp=${sample.inpMs?.toFixed(0) ?? "n/a"} cls=${sample.cls?.toFixed(3) ?? "n/a"} ` +
-              `words=${sample.content?.words ?? "?"} loader=${sample.content?.brandedLoader ?? "?"}`,
-          );
-          await sleep(300);
-        }
-        const intent = await measureIntentToFeedback(cdp, route);
-        intentByRoute[route] ??= {};
-        intentByRoute[route][profile] = intent;
-        log(`[${profile}] ${route} intent->first paint change ${intent.measured ? `${Math.round(intent.ms)}ms via ${intent.href}` : `not measured (${intent.reason ?? "no link"})`}`);
 
-        byRoute[route] ??= {};
-        byRoute[route][profile] = buildProfileSummary(routeSamples);
-        byRoute[route][`${profile}Content`] = routeSamples.at(-1)?.content ?? null;
-        const worstShift = routeSamples.flatMap((s) => s.shifts).sort((a, b) => b.value - a.value).slice(0, 5);
-        if (worstShift.length > 0) byRoute[route][`${profile}LayoutShifts`] = worstShift;
+          // Discarded warm-up so the first measured navigation is not paying for
+          // a cold Next.js route module or a cold connection pool.
+          await navigate(cdp, url, timeoutMs);
+          await sleep(800);
+
+          const routeSamples = [];
+          for (let i = 0; i < repeat; i++) {
+            let sample = null;
+            let probeInteraction = null;
+            // The app calls signOut() on a refused /me/access, so a navigation can
+            // land on /signin through no fault of the route. Restore the session
+            // and re-measure rather than record the sign-in page as this route —
+            // bounded, and every remaining off-route sample still fails the run.
+            for (let attempt = 1; attempt <= OFF_ROUTE_RETRIES; attempt++) {
+              consoleLog.reset();
+              await cdp.send("Network.setCookie", { name: cookieName, value: cookieValue, url: baseUrl, httpOnly: true, path: "/" });
+              await navigate(cdp, url, timeoutMs);
+              await sleep(900);
+              probeInteraction = await interact(cdp);
+              sample = await collectSample(cdp);
+              sample.requestedRoute = route;
+              sample.attempts = attempt;
+              if (findOffRouteSamples([sample]).length === 0) break;
+            }
+            sample.interaction = probeInteraction;
+            const mismatches = consoleLog.hydrationMismatches();
+            if (mismatches.length > 0) hydrationFindings.push({ route, profile, sample: i, messages: mismatches.slice(0, 3) });
+            routeSamples.push(sample);
+            profileSamples.push(sample);
+            allSamples.push(sample);
+            log(
+              `[${profile}] ${route} ${i + 1}/${repeat} ttfb=${sample.ttfbMs?.toFixed(0) ?? "n/a"} fcp=${sample.fcpMs?.toFixed(0) ?? "n/a"} ` +
+                `lcp=${sample.lcpMs?.toFixed(0) ?? "n/a"} inp=${sample.inpMs?.toFixed(0) ?? "n/a"} cls=${sample.cls?.toFixed(3) ?? "n/a"} ` +
+                `words=${sample.content?.words ?? "?"} loader=${sample.content?.brandedLoader ?? "?"}`,
+            );
+            await sleep(300);
+          }
+          const intent = await measureIntentToFeedback(cdp, route);
+          intentByRoute[route] ??= {};
+          intentByRoute[route][profile] = intent;
+          log(`[${profile}] ${route} intent->first paint change ${intent.measured ? `${Math.round(intent.ms)}ms via ${intent.href}` : `not measured (${intent.reason ?? "no link"})`}`);
+
+          byRoute[route] ??= {};
+          byRoute[route][profile] = buildProfileSummary(routeSamples);
+          byRoute[route][`${profile}Content`] = routeSamples.at(-1)?.content ?? null;
+          const worstShift = routeSamples.flatMap((s) => s.shifts).sort((a, b) => b.value - a.value).slice(0, 5);
+          if (worstShift.length > 0) byRoute[route][`${profile}LayoutShifts`] = worstShift;
+        } catch (err) {
+          routeFailures.push({ route, profile, error: String(err?.message ?? err) });
+          log(`[${profile}] ${route} ABORTED — ${String(err?.message ?? err)}`);
+        }
       }
       byProfile[profile] = buildProfileSummary(profileSamples);
 
@@ -849,6 +942,14 @@ async function run() {
           ? "every measured sample rendered an authorized shell"
           : "capture is NOT evidence for these budgets: the shell rendered without authorized navigation",
     },
+    routeFailures: {
+      count: routeFailures.length,
+      failures: routeFailures,
+      verdict:
+        routeFailures.length === 0
+          ? "every requested route/profile pair completed"
+          : "these route/profile pairs produced no measurement and are absent from byRoute",
+    },
     hydration: {
       navigationsInspected: allSamples.length,
       mismatchesFound: hydrationFindings.length,
@@ -867,6 +968,13 @@ async function run() {
       desktop: "1440x900, no CPU or network throttling",
       mobile: `${MOBILE_PROFILE.width}x${MOBILE_PROFILE.height}@${MOBILE_PROFILE.deviceScaleFactor}x, 4x CPU, 1.6 Mbps down / 750 Kbps up, 150ms RTT`,
       authMethod: "minted NextAuth session cookie, set once via CDP and reused for every navigation",
+      themeMode,
+      themeNote:
+        `The app reads its theme from localStorage["${APP_THEME_MODE_STORAGE_KEY}"] and falls back to ` +
+        `DEFAULT_APP_THEME_MODE ("light"), consulting prefers-color-scheme only when the stored value is ` +
+        `"system". This run wrote "${themeMode}" into that key before every document, so the emulated media ` +
+        `feature and the rendered theme agree; emulating prefers-color-scheme alone would have measured light ` +
+        `while claiming dark.`,
       firstPartyOrigins: [baseOrigin, ...firstPartyOrigins],
       cache: "vitals navigations run with the HTTP cache enabled after one discarded warm-up; firstLoadBytesByRoute is a separate cache-disabled pass",
       serverModeDerivation: "the build id in the served HTML is compared against .next/BUILD_ID; it is not asserted by this driver",
@@ -943,6 +1051,20 @@ async function selfTest() {
   check("percentile of an empty series is null, not zero", percentile([], 75), null);
 
   check(
+    "a CDP request that never answers is turned into an error rather than an unbounded wait",
+    await withDeadline(new Promise(() => {}), 20, "CDP Runtime.evaluate").then(
+      () => "resolved",
+      (err) => err.message,
+    ),
+    "CDP Runtime.evaluate did not answer within 20ms",
+  );
+  check(
+    "a request that answers inside its deadline is untouched",
+    await withDeadline(Promise.resolve("value"), 1000, "CDP Page.navigate"),
+    "value",
+  );
+
+  check(
     "a dev server is detected even when its build id happens to match",
     resolveServerMode({ buildIdOnDisk: "abc", html: '<script src="/_next/static/chunks/react-refresh.js"></script>abc' }),
     "development",
@@ -1008,13 +1130,71 @@ async function selfTest() {
     ],
   );
 
+  check(
+    "the largest scripts are itemised too, so a measuredScriptBytes breach names its chunks",
+    itemiseBytes(
+      [
+        { kind: "script", thirdParty: false, bytes: 900, url: "/a.js" },
+        { kind: "script", thirdParty: false, bytes: 100, url: "/b.js" },
+        { kind: "image", thirdParty: false, bytes: 300, url: "/c.png" },
+      ].filter((e) => e.kind === "script"),
+      ["script"],
+      25,
+    ).map((e) => e.url),
+    ["/a.js", "/b.js"],
+  );
+  check("itemiseBytes honours its limit", itemiseBytes([
+    { kind: "script", thirdParty: false, bytes: 3, url: "/a.js" },
+    { kind: "script", thirdParty: false, bytes: 2, url: "/b.js" },
+    { kind: "script", thirdParty: false, bytes: 1, url: "/c.js" },
+  ], ["script"], 2).length, 2);
+
+  check(
+    "a theme choice is written to the key the app actually reads, not left to prefers-color-scheme",
+    buildThemeInitScript("dark"),
+    'try { localStorage.setItem("streamlineos-app-theme-mode", "dark"); } catch {}',
+  );
+  check(
+    "an unknown theme mode is refused rather than silently measured as light",
+    (() => {
+      try {
+        buildThemeInitScript("midnight");
+        return "accepted";
+      } catch {
+        return "refused";
+      }
+    })(),
+    "refused",
+  );
+
+  check(
+    "the load event splits a route's own first load from what the shell prefetched afterwards",
+    splitByLoadPhase([
+      { url: "/a.js", afterLoad: false },
+      { url: "/b.js", afterLoad: true },
+      { url: "/c.js" },
+    ]),
+    { firstLoad: [{ url: "/a.js", afterLoad: false }, { url: "/c.js" }], afterLoad: [{ url: "/b.js", afterLoad: true }] },
+  );
+  check(
+    "post-load bytes are summed separately rather than charged to the route's first load",
+    summariseBytes(
+      splitByLoadPhase([
+        { kind: "script", thirdParty: false, bytes: 100, afterLoad: false },
+        { kind: "script", thirdParty: false, bytes: 900, afterLoad: true },
+      ]).firstLoad,
+    ).scriptBytes,
+    100,
+  );
+
   const merged = mergeBytesIntoManifest(
     { budgets: { "/mail": { maxCssBytes: 1, measuredFirstLoadJsBytes: 99 }, "/absent-from-capture": { maxCssBytes: 2 } } },
     {
-      "/mail": { stylesheetBytes: 10, imageBytes: 20, fontBytes: 30, thirdPartyBytes: 40, documentBytes: 50, scriptBytes: 60, totalBytes: 210 },
+      "/mail": { stylesheetBytes: 10, imageBytes: 20, fontBytes: 30, thirdPartyBytes: 40, documentBytes: 50, scriptBytes: 60, totalBytes: 210, postLoadTotals: { scriptBytes: 7, totalBytes: 11 } },
       "/not-in-manifest": { stylesheetBytes: 1, imageBytes: 1, fontBytes: 1, thirdPartyBytes: 1, documentBytes: 1, scriptBytes: 1, totalBytes: 7 },
     },
   );
+  check("the speculative tail is recorded beside the first load, never inside it", merged.manifest.budgets["/mail"].measuredPostLoadScriptBytes, 7);
   check("only routes present in both the manifest and the capture are written", merged.touched, ["/mail"]);
   check("a measured JS figure owned by another script is not overwritten", merged.manifest.budgets["/mail"].measuredFirstLoadJsBytes, 99);
   check("an unmeasured route keeps its entry untouched", merged.manifest.budgets["/absent-from-capture"], { maxCssBytes: 2 });

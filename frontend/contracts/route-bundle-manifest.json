@@ -16,7 +16,7 @@
       }
     },
     "network": {
-      "mobile": "~1.6 Mbps down, 750 Kbps up, 150ms RTT \u2014 close to Fast 3G+ (frontend/scripts/measure-web-vitals.mjs MOBILE_PROFILE: 1,600,000/8 bytes/s down, 750,000/8 bytes/s up, 150ms latency)",
+      "mobile": "~1.6 Mbps down, 750 Kbps up, 150ms RTT — close to Fast 3G+ (frontend/scripts/measure-web-vitals.mjs MOBILE_PROFILE: 1,600,000/8 bytes/s down, 750,000/8 bytes/s up, 150ms latency)",
       "desktop": "No throttling"
     },
     "cpu": {
@@ -39,7 +39,7 @@
         "ttfb_p95_ms": 400
       }
     },
-    "notes": "Measured by frontend/scripts/measure-web-vitals.mjs, which drives a headless Chrome over the DevTools Protocol against `next build && next start`; the earlier claim that these came from Lighthouse 12 in CI was not true of anything in this repository. Field data (CrUX) is the source of truth for production; lab data here is the gating proxy. The 100ms responsiveness rule (CLAUDE.md section 12.2) is enforced by INP <= 200ms and measured directly as perceivedResponsiveness in the capture. measuredFirstLoadJsBytes is gzip(9) summed over the unique chunks in each route's page_client-reference-manifest.js from a production build, and measuredPageChunkBytes is the additive over the /dashboard baseline \u2014 both produced by scripts/measure-route-bundles.mjs. measuredScriptBytes, measuredCssBytes, measuredImageBytes, measuredFontBytes, measuredThirdPartyBytes, measuredServerPayloadBytes and measuredTotalBytes are over-the-wire encoded bytes from a cold-cache navigation, produced by measure-web-vitals.mjs. measuredScriptBytes is roughly twice measuredFirstLoadJsBytes on this app because hydration fetches chunks the client-reference manifest does not list."
+    "notes": "Measured by frontend/scripts/measure-web-vitals.mjs, which drives a headless Chrome over the DevTools Protocol against `next build && next start`; the earlier claim that these came from Lighthouse 12 in CI was not true of anything in this repository. Field data (CrUX) is the source of truth for production; lab data here is the gating proxy. The 100ms responsiveness rule (CLAUDE.md section 12.2) is enforced by INP <= 200ms and measured directly as perceivedResponsiveness in the capture. measuredFirstLoadJsBytes is gzip(9) summed over the unique chunks in each route's page_client-reference-manifest.js from a production build, and measuredPageChunkBytes is the additive over the /dashboard baseline — both produced by scripts/measure-route-bundles.mjs. measuredScriptBytes, measuredCssBytes, measuredImageBytes, measuredFontBytes, measuredThirdPartyBytes, measuredServerPayloadBytes and measuredTotalBytes are over-the-wire encoded bytes from a cold-cache navigation, produced by measure-web-vitals.mjs. measuredScriptBytes is roughly twice measuredFirstLoadJsBytes on this app because hydration fetches chunks the client-reference manifest does not list."
   },
   "defaults": {
     "maxFirstLoadJsBytes": 524288,
@@ -66,16 +66,18 @@
         "mail-ai-compose-toolbar",
         "mail-inbox-summary-sheet"
       ],
-      "note": "Mail shell \u2014 first-load budget is higher because DOMPurify (isomorphic-dompurify) is a non-trivial dependency; compose sheet, AI toolbar and inbox summary sheet are lazy-loaded via next/dynamic. PASSES: 507kB < 614kB ceiling",
-      "measuredCssBytes": 58189,
+      "note": "Mail shell — first-load budget is higher because DOMPurify (isomorphic-dompurify) is a non-trivial dependency; compose sheet, AI toolbar and inbox summary sheet are lazy-loaded via next/dynamic. PASSES: 507kB < 614kB ceiling",
+      "measuredCssBytes": 58244,
       "measuredImageBytes": 2907,
       "measuredFontBytes": 55206,
       "measuredThirdPartyBytes": 0,
-      "measuredServerPayloadBytes": 10560,
+      "measuredServerPayloadBytes": 19466,
       "imageBudgetNote": "The shell paints one brand mark (public/logo.svg, 2,872 B over the wire) and a cold-cache load requests it twice, once for the loading screen and once for the header. The previous declaration of 0 asserted the route ships no image at all, which measurement contradicts; 8 kB is the honest ceiling for one brand mark and it still fails if a route starts shipping photography.",
-      "measuredScriptBytes": 662358,
-      "measuredTotalBytes": 794425,
-      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit \u2014 it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client."
+      "measuredScriptBytes": 665207,
+      "measuredTotalBytes": 803328,
+      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit — it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client.",
+      "measuredPostLoadScriptBytes": 165223,
+      "measuredPostLoadTotalBytes": 187629
     },
     "/inbox": {
       "maxFirstLoadJsBytes": 524288,
@@ -88,16 +90,18 @@
       "lazyLoadedModules": [
         "notification-detail-drawer"
       ],
-      "note": "Home inbox \u2014 lightweight notification-style inbox; no external mail provider calls. PASSES: 461kB < 512kB ceiling. NotificationDetailDrawer is lazy (next/dynamic ssr:false); chunk is preloaded after mount to avoid INP spike on first interaction. Dashboard baseline is 489kB (40 shared chunks).",
-      "measuredCssBytes": 58189,
+      "note": "Home inbox — lightweight notification-style inbox; no external mail provider calls. PASSES: 461kB < 512kB ceiling. NotificationDetailDrawer is lazy (next/dynamic ssr:false); chunk is preloaded after mount to avoid INP spike on first interaction. Dashboard baseline is 489kB (40 shared chunks).",
+      "measuredCssBytes": 58244,
       "measuredImageBytes": 2907,
       "measuredFontBytes": 55206,
       "measuredThirdPartyBytes": 0,
-      "measuredServerPayloadBytes": 10588,
+      "measuredServerPayloadBytes": 20493,
       "imageBudgetNote": "The shell paints one brand mark (public/logo.svg, 2,872 B over the wire) and a cold-cache load requests it twice, once for the loading screen and once for the header. The previous declaration of 0 asserted the route ships no image at all, which measurement contradicts; 8 kB is the honest ceiling for one brand mark and it still fails if a route starts shipping photography.",
-      "measuredScriptBytes": 608245,
-      "measuredTotalBytes": 749102,
-      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit \u2014 it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client."
+      "measuredScriptBytes": 610108,
+      "measuredTotalBytes": 752426,
+      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit — it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client.",
+      "measuredPostLoadScriptBytes": 194172,
+      "measuredPostLoadTotalBytes": 216578
     },
     "/build/inbox": {
       "maxFirstLoadJsBytes": 614400,
@@ -110,15 +114,19 @@
       "lazyLoadedModules": [
         "inbox-ticket-preview"
       ],
-      "_routeNote": "Route is /build/inbox not /build/[projectId]/inbox \u2014 corrected from original declaration",
+      "_routeNote": "Route is /build/inbox not /build/[projectId]/inbox — corrected from original declaration",
       "note": "Build module approval inbox. PASSES: 463kB < 614kB ceiling. InboxTicketPreview (ticket detail components) is lazy (next/dynamic ssr:false).",
-      "measuredCssBytes": null,
-      "measuredImageBytes": null,
-      "measuredFontBytes": null,
-      "measuredThirdPartyBytes": null,
-      "measuredServerPayloadBytes": null,
+      "measuredCssBytes": 58244,
+      "measuredImageBytes": 6208,
+      "measuredFontBytes": 55206,
+      "measuredThirdPartyBytes": 0,
+      "measuredServerPayloadBytes": 20283,
       "imageBudgetNote": "The shell paints one brand mark (public/logo.svg, 2,872 B over the wire) and a cold-cache load requests it twice, once for the loading screen and once for the header. The previous declaration of 0 asserted the route ships no image at all, which measurement contradicts; 8 kB is the honest ceiling for one brand mark and it still fails if a route starts shipping photography.",
-      "byteCaptureNote": "No cold-cache byte pass in the 2026-09-02 capture: the navigation landed on /signin because the app signs itself out on a refused /me/access, and the driver discards byte totals for a page it did not ask for rather than recording another page's bytes as this route's."
+      "byteCaptureNote": "No cold-cache byte pass in the 2026-09-02 capture: the navigation landed on /signin because the app signs itself out on a refused /me/access, and the driver discards byte totals for a page it did not ask for rather than recording another page's bytes as this route's.",
+      "measuredScriptBytes": 612193,
+      "measuredTotalBytes": 755781,
+      "measuredPostLoadScriptBytes": 187331,
+      "measuredPostLoadTotalBytes": 225703
     },
     "/crm/inbox": {
       "maxFirstLoadJsBytes": 614400,
@@ -129,16 +137,18 @@
       "measuredFirstLoadJsBytes": 438011,
       "measuredPageChunkBytes": 41148,
       "lazyLoadedModules": [],
-      "note": "CRM inbox \u2014 deals and contact conversations. PASSES: 487kB < 614kB ceiling",
-      "measuredCssBytes": 58189,
+      "note": "CRM inbox — deals and contact conversations. PASSES: 487kB < 614kB ceiling",
+      "measuredCssBytes": 58244,
       "measuredImageBytes": 2907,
       "measuredFontBytes": 55206,
       "measuredThirdPartyBytes": 0,
-      "measuredServerPayloadBytes": 11062,
+      "measuredServerPayloadBytes": 22312,
       "imageBudgetNote": "The shell paints one brand mark (public/logo.svg, 2,872 B over the wire) and a cold-cache load requests it twice, once for the loading screen and once for the header. The previous declaration of 0 asserted the route ships no image at all, which measurement contradicts; 8 kB is the honest ceiling for one brand mark and it still fails if a route starts shipping photography.",
-      "measuredScriptBytes": 635618,
-      "measuredTotalBytes": 768187,
-      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit \u2014 it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client."
+      "measuredScriptBytes": 639947,
+      "measuredTotalBytes": 782276,
+      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit — it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client.",
+      "measuredPostLoadScriptBytes": 181957,
+      "measuredPostLoadTotalBytes": 212569
     },
     "/support/inbox": {
       "maxFirstLoadJsBytes": 614400,
@@ -150,15 +160,17 @@
       "measuredPageChunkBytes": 140649,
       "lazyLoadedModules": [],
       "note": "Support ticket inbox. PASSES: 542kB < 614kB ceiling",
-      "measuredCssBytes": 58189,
+      "measuredCssBytes": 58244,
       "measuredImageBytes": 2907,
       "measuredFontBytes": 55206,
       "measuredThirdPartyBytes": 0,
-      "measuredServerPayloadBytes": 12521,
+      "measuredServerPayloadBytes": 22818,
       "imageBudgetNote": "The shell paints one brand mark (public/logo.svg, 2,872 B over the wire) and a cold-cache load requests it twice, once for the loading screen and once for the header. The previous declaration of 0 asserted the route ships no image at all, which measurement contradicts; 8 kB is the honest ceiling for one brand mark and it still fails if a route starts shipping photography.",
-      "measuredScriptBytes": 593915,
-      "measuredTotalBytes": 732324,
-      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit \u2014 it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client."
+      "measuredScriptBytes": 758783,
+      "measuredTotalBytes": 901740,
+      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit — it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client.",
+      "measuredPostLoadScriptBytes": 156493,
+      "measuredPostLoadTotalBytes": 186019
     },
     "/dashboard": {
       "maxFirstLoadJsBytes": 524288,
@@ -176,130 +188,149 @@
         "executive-kpi-widget",
         "hr-widgets"
       ],
-      "note": "Home dashboard \u2014 the shared-chunk baseline every other route's measuredPageChunkBytes is taken against, so its page-only additive is 0 by definition.",
-      "measuredCssBytes": 58189,
+      "note": "Home dashboard — the shared-chunk baseline every other route's measuredPageChunkBytes is taken against, so its page-only additive is 0 by definition.",
+      "measuredCssBytes": 58244,
       "measuredImageBytes": 2907,
       "measuredFontBytes": 55206,
       "measuredThirdPartyBytes": 0,
-      "measuredServerPayloadBytes": 10685,
-      "measuredScriptBytes": 640260,
-      "measuredTotalBytes": 781214,
-      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit \u2014 it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client."
+      "measuredServerPayloadBytes": 20798,
+      "measuredScriptBytes": 641789,
+      "measuredTotalBytes": 781242,
+      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit — it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client.",
+      "measuredPostLoadScriptBytes": 319347,
+      "measuredPostLoadTotalBytes": 360072
     },
     "/chat": {
       "lazyLoadedModules": [],
-      "note": "Chat home \u2014 realtime surface; the widest client-state route in the shell. Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
+      "note": "Chat home — realtime surface; the widest client-state route in the shell. Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
       "measuredFirstLoadJsBytes": 625601,
       "measuredPageChunkBytes": 224885,
-      "measuredScriptBytes": 846197,
-      "measuredTotalBytes": 987397,
-      "measuredCssBytes": 58189,
+      "measuredScriptBytes": 850044,
+      "measuredTotalBytes": 989423,
+      "measuredCssBytes": 58244,
       "measuredImageBytes": 2907,
       "measuredFontBytes": 55206,
       "measuredThirdPartyBytes": 0,
-      "measuredServerPayloadBytes": 10931,
-      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit \u2014 it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client. Page-chunk and first-load breaches are this route's own: 224,885 B of page-only chunks over a 204,800 B ceiling and 52 first-load chunks. features/chat is ticket 29's territory for calendar/inbox/kb and unowned for chat itself; the realtime client it pulls in is ticket 28's. Not fixable from ticket 26."
+      "measuredServerPayloadBytes": 19521,
+      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit — it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client. Page-chunk and first-load breaches are this route's own: 224,885 B of page-only chunks over a 204,800 B ceiling and 52 first-load chunks. features/chat is ticket 29's territory for calendar/inbox/kb and unowned for chat itself; the realtime client it pulls in is ticket 28's. Not fixable from ticket 26.",
+      "measuredPostLoadScriptBytes": 105035,
+      "measuredPostLoadTotalBytes": 136526
     },
     "/calendar": {
       "lazyLoadedModules": [],
-      "note": "Unified calendar \u2014 one route serves every module's event sources. Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
+      "note": "Unified calendar — one route serves every module's event sources. Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
       "measuredFirstLoadJsBytes": 515959,
       "measuredPageChunkBytes": 115243,
-      "byteCaptureNote": "No cold-cache byte pass in the 2026-09-02 capture: the navigation landed on /signin because the app signs itself out on a refused /me/access, and the driver discards byte totals for a page it did not ask for rather than recording another page's bytes as this route's."
+      "byteCaptureNote": "No cold-cache byte pass in the 2026-09-02 capture: the navigation landed on /signin because the app signs itself out on a refused /me/access, and the driver discards byte totals for a page it did not ask for rather than recording another page's bytes as this route's.",
+      "measuredScriptBytes": 728786,
+      "measuredTotalBytes": 883526,
+      "measuredCssBytes": 58244,
+      "measuredImageBytes": 14480,
+      "measuredFontBytes": 55206,
+      "measuredThirdPartyBytes": 0,
+      "measuredServerPayloadBytes": 21705,
+      "measuredPostLoadScriptBytes": 193859,
+      "measuredPostLoadTotalBytes": 216538
     },
     "/notifications": {
       "lazyLoadedModules": [],
       "note": "Notification centre. Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
       "measuredFirstLoadJsBytes": 425340,
       "measuredPageChunkBytes": 24624,
-      "measuredScriptBytes": 622509,
-      "measuredTotalBytes": 754732,
-      "measuredCssBytes": 58189,
+      "measuredScriptBytes": 623968,
+      "measuredTotalBytes": 766914,
+      "measuredCssBytes": 58244,
       "measuredImageBytes": 2907,
       "measuredFontBytes": 55206,
       "measuredThirdPartyBytes": 0,
-      "measuredServerPayloadBytes": 10716,
-      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit \u2014 it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client."
+      "measuredServerPayloadBytes": 21883,
+      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit — it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client.",
+      "measuredPostLoadScriptBytes": 183975,
+      "measuredPostLoadTotalBytes": 235058
     },
     "/settings": {
       "lazyLoadedModules": [],
       "note": "Global administration landing. Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
       "measuredFirstLoadJsBytes": 437551,
       "measuredPageChunkBytes": 44561,
-      "byteCaptureNote": "No cold-cache byte pass in the 2026-09-02 capture: the navigation landed on /signin because the app signs itself out on a refused /me/access, and the driver discards byte totals for a page it did not ask for rather than recording another page's bytes as this route's."
+      "byteCaptureNote": "No cold-cache byte pass in the 2026-09-02 capture: the navigation landed on /signin because the app signs itself out on a refused /me/access, and the driver discards byte totals for a page it did not ask for rather than recording another page's bytes as this route's.",
+      "measuredScriptBytes": 654878,
+      "measuredTotalBytes": 807933,
+      "measuredCssBytes": 60192,
+      "measuredImageBytes": 7305,
+      "measuredFontBytes": 55206,
+      "measuredThirdPartyBytes": 0,
+      "measuredServerPayloadBytes": 22760,
+      "measuredPostLoadScriptBytes": 155256,
+      "measuredPostLoadTotalBytes": 177662
     },
     "/build/my-work": {
       "lazyLoadedModules": [],
-      "note": "Build my-work \u2014 one of the heaviest first-load routes in the build (3.02 MB uncompressed). Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
+      "note": "Build my-work — one of the heaviest first-load routes in the build (3.02 MB uncompressed). Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
       "measuredFirstLoadJsBytes": 592731,
       "measuredPageChunkBytes": 192015,
-      "measuredScriptBytes": 591484,
-      "measuredTotalBytes": 723661,
-      "measuredCssBytes": 58189,
+      "measuredScriptBytes": 817721,
+      "measuredTotalBytes": 963374,
+      "measuredCssBytes": 58244,
       "measuredImageBytes": 2907,
       "measuredFontBytes": 55206,
       "measuredThirdPartyBytes": 0,
-      "measuredServerPayloadBytes": 10670,
-      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit \u2014 it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client. First-load breach is this route's own composition (192,015 B page-only over the /dashboard baseline). Owner: the Build module; ticket 25 thinned the route module but the feature tree behind it is unchanged."
+      "measuredServerPayloadBytes": 23097,
+      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit — it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client. First-load breach is this route's own composition (192,015 B page-only over the /dashboard baseline). Owner: the Build module; ticket 25 thinned the route module but the feature tree behind it is unchanged.",
+      "measuredPostLoadScriptBytes": 127014,
+      "measuredPostLoadTotalBytes": 163367
     },
     "/crm/leads": {
       "lazyLoadedModules": [],
-      "note": "CRM leads \u2014 one of the heaviest first-load routes in the build (3.00 MB uncompressed). Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
+      "note": "CRM leads — one of the heaviest first-load routes in the build (3.00 MB uncompressed). Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
       "measuredFirstLoadJsBytes": 583886,
       "measuredPageChunkBytes": 179297,
-      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit \u2014 it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client. First-load breach is this route's own composition (179,297 B page-only over the /dashboard baseline). Owner: the CRM module.",
-      "byteCaptureNote": "No cold-cache byte pass in the 2026-09-02 capture: the navigation landed on /signin because the app signs itself out on a refused /me/access, and the driver discards byte totals for a page it did not ask for rather than recording another page's bytes as this route's."
+      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit — it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client. First-load breach is this route's own composition (179,297 B page-only over the /dashboard baseline). Owner: the CRM module.",
+      "byteCaptureNote": "No cold-cache byte pass in the 2026-09-02 capture: the navigation landed on /signin because the app signs itself out on a refused /me/access, and the driver discards byte totals for a page it did not ask for rather than recording another page's bytes as this route's.",
+      "measuredScriptBytes": 807617,
+      "measuredTotalBytes": 951954,
+      "measuredCssBytes": 58244,
+      "measuredImageBytes": 2907,
+      "measuredFontBytes": 55206,
+      "measuredThirdPartyBytes": 0,
+      "measuredServerPayloadBytes": 25682,
+      "measuredPostLoadScriptBytes": 121640,
+      "measuredPostLoadTotalBytes": 157993
+    },
+    "/parties": {
+      "lazyLoadedModules": [],
+      "note": "Business parties (CRM contacts, customers, vendors) — the route lives at /parties, not /crm/parties. Added by ticket 26's second pass to widen coverage from 12 routes to 13; it inherits every default ceiling rather than being handed one shaped around its current size.",
+      "measuredScriptBytes": 656265,
+      "measuredTotalBytes": 807602,
+      "measuredCssBytes": 58244,
+      "measuredImageBytes": 7305,
+      "measuredFontBytes": 55206,
+      "measuredThirdPartyBytes": 0,
+      "measuredServerPayloadBytes": 23085,
+      "measuredPostLoadScriptBytes": 187331,
+      "measuredPostLoadTotalBytes": 232132
     }
   },
   "budgetExceptions": [
     {
-      "profile": "mobile",
-      "metric": "ttfb_p95_ms",
-      "owner": "backend repository (streamlineos-backend) \u2014 auth session-data seam",
-      "reason": "Authenticated TTFB is a backend round trip, not a page cost. GET /auth/session-data/:userId measures 588-756 ms against the Neon instance in ap-southeast-1, and lib/auth-session.ts issues it twice on a non-2xx. The same production server returns the public landing page in 5-18 ms TTFB, so no part of this number is bundle, route composition or render.",
-      "recordedBy": "ticket 26",
-      "recordedOn": "2026-09-02"
-    },
-    {
       "profile": "desktop",
       "metric": "ttfb_p95_ms",
-      "owner": "backend repository (streamlineos-backend) \u2014 auth session-data seam",
-      "reason": "Same cause as the mobile TTFB exception; the desktop profile applies no network emulation, so its TTFB is the server render alone and still breaches 400 ms by a factor of three.",
+      "owner": "streamlineos-backend — GET /me/access, plus ticket 28 for the frontend seam that issues it",
+      "reason": "Authenticated TTFB is one backend round trip per server render, not a page cost. lib/rbac/get-server-access.ts issues GET /me/access on every authenticated render (React cache() dedupes within a render, never across them); measured on this machine against the same backend, p50 503 ms / max 1004 ms, with POST /auth/session-exchange at p50 563 ms and GET /auth/session-data at p50 100 ms. The same production server returns the public landing in 9-13 ms TTFB, so no part of this number is bundle, route composition or render. Desktop applies no network emulation, so its TTFB is the server render alone.",
+      "evidence": "192-sample authenticated production capture, build id qlh_3k7hMskrlYGND5MMp, 12 routes x 2 profiles x 8 repetitions, 0 unauthorized and 0 off-route samples",
       "recordedBy": "ticket 26",
       "recordedOn": "2026-09-02"
     },
     {
       "profile": "mobile",
-      "metric": "fcp_p75_ms",
-      "owner": "backend repository (streamlineos-backend) \u2014 auth session-data seam",
-      "reason": "FCP cannot precede TTFB. With TTFB at 1.4-2.5 s of server time the 1,800 ms FCP budget is already spent before the first byte; it is not separately actionable until the TTFB exception is closed.",
-      "recordedBy": "ticket 26",
-      "recordedOn": "2026-09-02"
-    },
-    {
-      "profile": "desktop",
-      "metric": "fcp_p75_ms",
-      "owner": "backend repository (streamlineos-backend) \u2014 auth session-data seam",
-      "reason": "Same dependency as the mobile FCP exception.",
-      "recordedBy": "ticket 26",
-      "recordedOn": "2026-09-02"
-    },
-    {
-      "profile": "desktop",
-      "metric": "lcp_p75_ms",
-      "owner": "backend repository (streamlineos-backend) \u2014 auth session-data seam",
-      "reason": "LCP cannot precede FCP, which cannot precede TTFB.",
-      "recordedBy": "ticket 26",
-      "recordedOn": "2026-09-02"
-    },
-    {
-      "profile": "mobile",
-      "metric": "inp_p75_ms",
-      "owner": "unassigned \u2014 no measurement exists yet",
-      "reason": "INP was NOT measured in the 2026-09-02 capture and this entry claims nothing about it. The driver's interaction probe found no eligible control because the shell never rendered one: /me/access is refused on this machine, so the app paints its access-failure state instead of the product. An unmeasured budget is not a met budget and check-web-vitals-budget still reports it as not measured.",
+      "metric": "ttfb_p95_ms",
+      "owner": "streamlineos-backend — GET /me/access, plus ticket 28 for the frontend seam that issues it",
+      "reason": "Same cause as the desktop TTFB exception. The mobile profile adds 150 ms of emulated RTT, which accounts for roughly a sixth of the 932 ms p95 and not for the breach.",
+      "evidence": "same capture; unthrottled server-side Node fetch to first byte over the same 12 routes measured p50 500-602 ms, p95 569-1218 ms, all HTTP 200",
       "recordedBy": "ticket 26",
       "recordedOn": "2026-09-02"
     }
   ],
-  "budgetExceptionsNote": "An exception records who owns a breach and why. It is annotation only: check-web-vitals-budget.mjs prints it next to the failure and still exits non-zero, and its self-test asserts that an exception never reduces the failure count. Nothing here makes a red budget green."
+  "budgetExceptionsNote": "An exception records who owns a breach and why. It is annotation only: check-web-vitals-budget.mjs prints it next to the failure and still exits non-zero, and its self-test asserts that an exception never reduces the failure count. Nothing here makes a red budget green.",
+  "notes": "Vitals figures come from frontend/scripts/measure-web-vitals.mjs driving Chrome over CDP against a production `next build` + `next start`, with a minted NextAuth session cookie; nothing here runs Lighthouse and no CI job produces these numbers. Byte figures are a separate cache-disabled first-load pass: measuredFirstLoadJsBytes is gzip over the route's client-reference manifest, measuredScriptBytes and measuredTotalBytes are what the browser actually downloaded before the load event, and measuredPostLoadScriptBytes is the shell's speculative tail recorded beside the route rather than charged to it."
 }
