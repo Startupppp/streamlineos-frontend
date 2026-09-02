@@ -180,8 +180,14 @@ export const MailVirtualList = memo(function MailVirtualList({
     [items, selectedMessageId, activeFolder, canAi, onSelect, onAction, onAiBrief, isFetchingNextPage, onLoadMore],
   );
 
-  const stableRowKey = useCallback(getRowKey, []);
-  const stableRowHeight = useCallback(getRowHeight, []);
+  const stableRowKey = useCallback(
+    (index: number, data: MailVirtualRowData) => getRowKey(index, data),
+    [],
+  );
+  const stableRowHeight = useCallback(
+    (index: number, data: MailVirtualRowData) => getRowHeight(index, data),
+    [],
+  );
 
   return (
     <List<MailVirtualRowData>

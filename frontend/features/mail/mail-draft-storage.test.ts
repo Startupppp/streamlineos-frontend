@@ -4,7 +4,7 @@ import {
   readMailDraft,
   writeMailDraft,
 } from "./mail-draft-storage";
-import type { MailComposeMode } from "./mail-compose-sheet";
+import type { MailComposeMode } from "./mail-compose-schema";
 
 const COMPOSE: MailComposeMode = { type: "compose" };
 const REPLY: MailComposeMode = {

@@ -16,11 +16,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useSendMail, useReplyMail } from "@/hooks/api/mail";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { mailComposeSchema, mailReplySchema } from "./mail-compose-schema";
-import type { MailComposeValues, MailReplyValues } from "./mail-compose-schema";
+import type {
+  MailComposeMode,
+  MailComposeValues,
+  MailReplyValues,
+} from "./mail-compose-schema";
 import { MailAiComposeToolbar } from "./mail-ai-compose-toolbar";
 import { MailComposeHeaderFields } from "./mail-compose-header-fields";
-import { useMailConnectivity } from "./use-mail-connectivity";
 import {
   clearMailDraft,
   mailDraftKey,
@@ -37,17 +41,7 @@ const TiptapEditor = dynamic(
   },
 );
 
-export type MailComposeMode =
-  | { type: "compose" }
-  | {
-      type: "reply";
-      messageId: string;
-      threadId?: string;
-      toEmail: string;
-      subject: string;
-      accountId: number;
-      prefillBody?: string;
-    };
+export type { MailComposeMode };
 
 interface MailComposeSheetProps {
   open: boolean;
@@ -94,7 +88,7 @@ export function MailComposeSheet({
 
   const sendMail = useSendMail();
   const replyMail = useReplyMail();
-  const { isOnline } = useMailConnectivity();
+  const isOnline = useOnlineStatus();
   const draftKey = mailDraftKey(mode);
 
   const [showCc, setShowCc] = useState(false);
@@ -104,14 +98,18 @@ export function MailComposeSheet({
     isReply && mode.type === "reply" && mode.prefillBody ? mode.prefillBody : "",
   );
 
-  const prevModeRef = useRef(mode);
+  const wasOpenRef = useRef(false);
+  const prevDraftKeyRef = useRef(draftKey);
   useEffect(() => {
-    const prev = prevModeRef.current;
-    prevModeRef.current = mode;
+    const wasOpen = wasOpenRef.current;
+    const prevDraftKey = prevDraftKeyRef.current;
+    wasOpenRef.current = open;
+    prevDraftKeyRef.current = draftKey;
 
     if (!open) return;
+    if (wasOpen && prevDraftKey === draftKey) return;
 
-    const saved = readMailDraft(mailDraftKey(mode));
+    const saved = readMailDraft(draftKey);
 
     if (mode.type === "reply") {
       const body = saved?.bodyHtml ?? mode.prefillBody ?? "";
@@ -125,20 +123,21 @@ export function MailComposeSheet({
       });
       setBodyHtmlForEditor(body);
       setBodyContentKey((k) => k + 1);
-    } else if (mode.type === "compose" && (prev.type === "reply" || !open)) {
-      const body = saved?.bodyHtml ?? "";
-      composeForm.reset({
-        accountId: defaultAccountId,
-        to: [],
-        cc: [],
-        bcc: [],
-        subject: saved?.subject ?? "",
-        bodyHtml: body,
-      });
-      setBodyHtmlForEditor(body);
-      setBodyContentKey((k) => k + 1);
+      return;
     }
-  }, [open, mode, replyForm, composeForm, defaultAccountId]);
+
+    const body = saved?.bodyHtml ?? "";
+    composeForm.reset({
+      accountId: defaultAccountId,
+      to: [],
+      cc: [],
+      bcc: [],
+      subject: saved?.subject ?? "",
+      bodyHtml: body,
+    });
+    setBodyHtmlForEditor(body);
+    setBodyContentKey((k) => k + 1);
+  }, [open, draftKey, mode, replyForm, composeForm, defaultAccountId]);
 
   const handleAiInsert = useCallback(
     (subject: string, body: string) => {

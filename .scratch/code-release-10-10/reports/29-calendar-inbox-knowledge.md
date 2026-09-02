@@ -357,3 +357,191 @@ modified in the shared tree by another agent, inside my nominal territory. I sta
 
 No `migrations/**`, `db/schema/**`, `modules/ai/**`, `modules/storage/**`, `common/telemetry/**`,
 frontend `lib/**` or frontend `hooks/api/**` file was touched.
+
+---
+
+# S9 · Ticket 29 — Inbox/mail frontend, closed
+
+Scope of this pass: **frontend only**, `features/inbox/**`, `features/mail/**` and the one shared
+hook they both needed. No backend file, no `hooks/api/**`, no `lib/**`, no `app/**`, and nothing
+under `features/{chat,notifications,directory,hr,build,calendar}` was touched. The four Inbox/mail
+**backend** sub-criteria ticket 29 found unimplemented are untouched and still open.
+
+## Headline: the compose draft was saved on Escape and could never be restored
+
+`MailComposeSheet` had never been mounted in a test — ticket 29 proved the draft feature only
+through `mail-draft-storage.ts` unit tests. Mounting it showed the storage layer was fine and the
+component was not. The restore branch read:
+
+```
+} else if (mode.type === "compose" && (prev.type === "reply" || !open)) {
+```
+
+`!open` is unreachable — the effect returns three lines above on `if (!open) return;`. And `prev`
+is the *previous mode*, which on every ordinary reopen is `{type: "compose"}`, not a reply. So the
+only path that ever restored a compose draft was a reply→compose transition. Escape saved the body
+to `localStorage` and the next open showed an empty editor: the data-loss path the S8 pass believed
+it had closed was still open, one layer up from the code its tests covered.
+
+The effect now keys on a **closed→open transition** or a change of `mailDraftKey(mode)`, which also
+stops a re-rendered `mode` object from resetting a reply mid-typing. Proof:
+`features/mail/mail-compose-sheet.test.tsx` → **6 pass**. Restoring the original effect verbatim
+turns **2 red**; a narrower mutation (`wasOpen ||` instead of `wasOpen &&`) also turns **2 red**.
+The file was restored from backup and re-verified by `shasum -a 256` after each bite run.
+
+## Thread hydration seeds the detail cache, and the seed is born stale
+
+`features/mail/mail-thread-seed.ts` (new) converts a `MailMessageSummary` into a
+`MailMessageDetail` and writes it to `queryKeys.mail.thread(accountId, threadId)`, or to
+`queryKeys.mail.message(accountId, id)` when the row carries no thread. `mail-shell.tsx` calls it
+from the open handler.
+
+The correctness risk here is the opposite of the speed win: a seeded cache that never refreshes is
+a stale-data bug. The seed is written with `{ updatedAt: 0 }`, so `dataUpdatedAt` is `0` and the
+entry is already past `useMailThread`'s `staleTime: 2 * 60_000` — `refetchOnMount` fires the real
+request on the first render. It also refuses to overwrite a thread the cache already holds, so a
+re-open of a fully hydrated thread is not downgraded to a one-message stub.
+
+`MailReadingPane` derives `isHydrating` from `isFetching` plus a message with neither `bodyHtml`
+nor `bodyText`, and `MailThreadMessage` renders a body skeleton for that case instead of a
+premature "No content". Opening a message is now subject-and-sender-first with a body placeholder,
+not a full-pane skeleton.
+
+Proof: `mail-thread-seed.test.tsx` → **6 pass**, including a BITE case that seeds through a plain
+`setQueryData` (no `updatedAt`) and asserts the api client is **never called** and the body stays
+empty — the exact stale-data failure. `mail-thread-hydration.test.tsx` → **5 pass**: MailShell
+writes the key on click, `dataUpdatedAt === 0`, and the pane shows skeleton / "No content" /
+real body in the three matching states.
+
+## The offline hook moved by deletion, not duplication
+
+The brief's remainder said to move `features/mail/use-mail-connectivity.ts` to a shared location.
+`hooks/common/use-online-status.ts` already existed and already answered the same question for the
+shell's global offline banner and for notifications — so adding a second connectivity hook beside
+it would have been the duplication the remainder warned against. Instead:
+
+- `features/mail/use-mail-connectivity.ts` is **deleted**.
+- `hooks/common/use-online-status.ts` keeps its single `useOnlineStatus(): boolean` export but is
+  rewritten onto `useSyncExternalStore` over the window `online`/`offline` events. This removes
+  that file's pre-existing `react-hooks/set-state-in-effect` warning, and makes the first render
+  read `navigator.onLine` instead of optimistically returning `true` and correcting in an effect.
+  `components/__tests__/authenticated-surface-states.contract.test.ts` asserts the file registers
+  both listeners; it still does, and that suite plus `shell-offline-banner`,
+  `notifications-offline-indicator` and `shell-a11y` were re-run — **4 suites / 43 pass**.
+- `features/mail/mail-compose-sheet.tsx` and `features/inbox/**` both import the shared hook. No
+  feature→feature import; net one fewer file.
+
+`features/inbox/use-inbox-actions.ts` (new) holds every inbox mutation handler behind a
+connectivity guard. Explicit actions (archive, unarchive, delete, pin/unpin, snooze, approve,
+reject, the drawer's Mark read) refuse while offline and say why; the **passive** mark-read that
+fires when a notification is opened is skipped silently, because toasting on every click while
+offline is noise, not information. `isOnline` also reaches `InboxVirtualList`: with TanStack's
+default `networkMode: "online"` an offline `fetchNextPage` is *paused*, so `isFetchingNextPage`
+stays false and "Load more" looks clickable and does nothing — it is now disabled and labelled.
+Extracting the handlers also took `inbox-shell.tsx` from 325 lines to 294.
+
+Proof: `features/inbox/inbox-offline.test.tsx` → **6 pass**, including an online baseline (the
+guard is not a blanket block) and a reconnect case (the action works again with no remount).
+
+## Sanitization: proven on the render path, not only in isolation
+
+`mail-html-viewer.test.tsx` mounts the viewer directly and `mail-html-render-boundary.test.ts` is a
+source scan for `dangerouslySetInnerHTML`. Together they show the sanitizer works and is the only
+raw renderer — but neither shows a thread body actually reaching it. New
+`features/mail/mail-body-sanitization.test.tsx` renders `MailReadingPane` over a thread whose
+`bodyHtml` carries `<script>`, an `onerror` handler, a `javascript:` href, an `<iframe>` and a
+remote tracking pixel, and asserts against the real DOM: no script tag, no global set, no iframe,
+no `javascript:`, the pixel's `src` moved to `data-blocked-src` with the "1 remote image blocked"
+banner, and the legitimate link hardened with `target="_blank" rel="noopener noreferrer"`.
+**5 pass**, including a BITE case that parses the same payload with a bare `innerHTML` to prove it
+is genuinely hostile.
+
+One incidental finding, benign: DOMPurify strips a `javascript:` href entirely, leaving
+`<a>Click here</a>` — and the viewer's `/<a(\s)/gi` link-hardening regex therefore skips it, since
+there is no attribute whitespace. Correct behaviour (a hrefless anchor needs no `rel`), but worth
+recording so nobody "fixes" the regex into matching hrefless anchors.
+
+## Optimistic read/label rollback — audited, already satisfied on both sides
+
+Read-only audit, no change needed. `useMailAction` (`hooks/api/mail.ts`) snapshots every
+`mail.messages` and `inbox.unified` infinite page in `onMutate` and restores all of them in
+`onError`. Every optimistic notification mutation in `hooks/api/notifications-inbox.ts` —
+mark-read, mark-all-read, archive, unarchive, delete, pin, unpin, snooze, and the three bulk
+variants — carries an `onError` that restores both the list snapshots and the unread count. There
+is no unrollbacked optimistic update left in either feature.
+
+## Defects and debt fixed alongside
+
+1. **A circular import, introduced by the S8 pass.** `mail-draft-storage.ts` imported
+   `MailComposeMode` back from `mail-compose-sheet.tsx`, which imports the storage functions —
+   `madge --circular` reported **1** cycle, against a repo that root §9 says stands at zero. Fixed
+   per §9 rule (1): the type moved to the neutral `mail-compose-schema.ts` (the sheet re-exports it
+   so no call site changed meaning). `madge --circular` → **0**.
+2. **`features/inbox` and `features/mail` were carrying 12 lint errors.** Six
+   `streamline/no-raw-visual-values` (`text-[13px]` → `text-label`, `text-[11px]` → `text-dense`,
+   `text-[9px]` → `text-micro` — the first two are exact token matches), four
+   `react-hooks/use-memo` (`useCallback(getRowKey, [])` in both virtual lists), and two unused type
+   imports. Territory lint is now **0 errors**; the one remaining warning
+   (`mail-shell.tsx:83 set-state-in-effect`) is pre-existing and untouched.
+3. Three inline arrows in JSX event props in `inbox-shell.tsx` replaced with named handlers
+   (`handleRetry`, `handleLoadMore`, and an extracted `InboxViewTab`), per the repo's handler rule.
+
+## Gates (each run and read)
+
+| Gate | Result |
+|---|---|
+| `pnpm type-check` | **exit 0**, 0 errors |
+| `jest --runInBand --testPathPattern="inbox\|mail"` | **exit 0 — 18 suites / 133 tests pass** (was 13 / 105) |
+| `jest --runInBand --testPathPattern="features/(mail\|inbox)"` | **exit 0 — 14 suites / 82 tests pass** (ticket 29 left this at 9 / 54) |
+| `jest` over the changed hook's consumers (`shell-offline-banner`, `notifications-offline-indicator`, `shell-a11y`, `authenticated-surface-states`) | **exit 0 — 4 suites / 43 pass** |
+| `check:icon-labels` | **exit 0** — 3796 files, none unlabelled |
+| `check:query-scope` | **exit 0** — 5206 files, no violations |
+| `check:command-catalog` | **exit 0** — PASS, 66 gated / 4 off-contract |
+| `check:empty-states` | **exit 1 — NOT MINE.** Single offender `features/workflows/builder/workflow-builder-canvas.tsx:118`; that file is unmodified in the working tree, so the failure predates this pass. Zero offenders in `features/inbox` or `features/mail`. |
+| `check:over-300` | **exit 0** — 519 of 5192, baseline 519, unchanged |
+| `madge --circular` | **exit 0 — no circular dependency** (was 1 before this pass) |
+| `eslint features/mail features/inbox hooks/common/use-online-status.ts` | **0 errors, 1 pre-existing warning** (was 12 errors / 4 warnings) |
+
+Bite proofs, each run and read: compose restore **2 red** on reverting the effect (twice, two
+different mutations) · thread seed BITE asserts the no-`updatedAt` seed never refetches · inbox
+offline BITE is the online baseline · sanitization BITE parses the payload raw. Every temporarily
+mutated file was restored and re-verified by `shasum -a 256`.
+
+## Cross-territory findings — reported, not fixed
+
+1. **The unified inbox gets no optimistic patch from notification mutations.**
+   `hooks/api/notifications-inbox.ts` patches only `queryKeys.notifications.lists()` in `onMutate`;
+   `queryKeys.inbox.unified(...)` is merely *invalidated* in `onSettled` (via `invalidateInbox`).
+   `useMailAction` does patch both. So archiving a notification from `/inbox` shows a pending row
+   until the refetch lands, where archiving the same notification from `/notifications` is instant.
+   The rollback is correct either way — this is a consistency gap, not a correctness one. Fix
+   belongs in `hooks/api/**` — **ticket 28's territory**.
+2. **`hooks/common/use-online-status.ts` now has two shapes of consumer.** The shell banner and
+   `features/notifications/inbox/notifications-inbox-page.tsx` consume it for display; mail and
+   inbox now consume it to gate writes. The export signature is unchanged and all four consumer
+   suites pass, but whoever owns `features/notifications` should know the implementation moved from
+   an effect to `useSyncExternalStore`.
+3. Still true from S7/S8 and untouched here: **mail send is idempotent on paper only** —
+   `@Idempotent("mail.send")` is on the route but `lib/api-client.ts:150-153` mints a fresh UUID per
+   HTTP call, so the Retry action added to the failed-send toast issues a genuinely new send rather
+   than a replay. `lib/**` — **ticket 28's territory**. This is the one place where the retry
+   affordance this box ships is weaker than it looks.
+
+## Files changed this pass
+
+**Frontend, new** — `features/mail/mail-thread-seed.ts` · `features/mail/mail-thread-seed.test.tsx` ·
+`features/mail/mail-thread-hydration.test.tsx` · `features/mail/mail-compose-sheet.test.tsx` ·
+`features/mail/mail-body-sanitization.test.tsx` · `features/inbox/use-inbox-actions.ts` ·
+`features/inbox/inbox-offline.test.tsx`
+
+**Frontend, modified** — `hooks/common/use-online-status.ts` · `features/mail/mail-shell.tsx` ·
+`features/mail/mail-reading-pane.tsx` · `features/mail/mail-thread-message.tsx` ·
+`features/mail/mail-compose-sheet.tsx` · `features/mail/mail-compose-schema.ts` ·
+`features/mail/mail-draft-storage.ts` · `features/mail/mail-draft-storage.test.ts` ·
+`features/mail/mail-virtual-list.tsx` · `features/mail/mail-open-marks-read.test.tsx` ·
+`features/inbox/inbox-shell.tsx` · `features/inbox/inbox-virtual-list.tsx` ·
+`features/inbox/inbox-item-card.tsx` · `features/inbox/inbox-virtual-list.test.tsx`
+
+**Frontend, deleted** — `features/mail/use-mail-connectivity.ts`
+
+**Ticket** — `.scratch/code-release-10-10/issues/29-module-matrix-calendar-inbox-knowledge.md`

@@ -23,3 +23,15 @@ export const mailReplySchema = z.object({
 });
 
 export type MailReplyValues = z.infer<typeof mailReplySchema>;
+
+export type MailComposeMode =
+  | { type: "compose" }
+  | {
+      type: "reply";
+      messageId: string;
+      threadId?: string;
+      toEmail: string;
+      subject: string;
+      accountId: number;
+      prefillBody?: string;
+    };

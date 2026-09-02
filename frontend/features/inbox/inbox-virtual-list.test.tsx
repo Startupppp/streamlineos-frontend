@@ -40,6 +40,7 @@ const noopItem = (_item: unknown) => undefined;
 const baseProps = {
   hasNextPage: false,
   isFetchingNextPage: false,
+  isOnline: true,
   onNotificationClick: noop as Parameters<typeof InboxVirtualList>[0]["onNotificationClick"],
   onMailClick: noopItem as Parameters<typeof InboxVirtualList>[0]["onMailClick"],
   onApprovalClick: noopItem as Parameters<typeof InboxVirtualList>[0]["onApprovalClick"],

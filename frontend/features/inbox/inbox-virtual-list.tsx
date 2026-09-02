@@ -15,6 +15,7 @@ interface InboxVirtualRowData {
   items: UnifiedInboxItem[];
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
+  isOnline: boolean;
   onNotificationClick: InboxItemCardProps["onNotificationClick"];
   onMailClick: InboxItemCardProps["onMailClick"];
   onApprovalClick: InboxItemCardProps["onApprovalClick"];
@@ -49,6 +50,7 @@ function InboxVirtualRow({
   items,
   hasNextPage,
   isFetchingNextPage,
+  isOnline,
   onNotificationClick,
   onMailClick,
   onApprovalClick,
@@ -69,9 +71,13 @@ function InboxVirtualRow({
           variant="outline"
           size="sm"
           onClick={onLoadMore}
-          disabled={isFetchingNextPage}
+          disabled={isFetchingNextPage || !isOnline}
         >
-          {isFetchingNextPage ? "Loading…" : "Load more"}
+          {!isOnline
+            ? "Offline — reconnect to load more"
+            : isFetchingNextPage
+              ? "Loading…"
+              : "Load more"}
         </Button>
       </div>
     );
@@ -104,6 +110,7 @@ export interface InboxVirtualListProps {
   items: UnifiedInboxItem[];
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
+  isOnline: boolean;
   onNotificationClick: InboxItemCardProps["onNotificationClick"];
   onMailClick: InboxItemCardProps["onMailClick"];
   onApprovalClick: InboxItemCardProps["onApprovalClick"];
@@ -122,6 +129,7 @@ export const InboxVirtualList = memo(function InboxVirtualList({
   items,
   hasNextPage,
   isFetchingNextPage,
+  isOnline,
   onNotificationClick,
   onMailClick,
   onApprovalClick,
@@ -142,6 +150,7 @@ export const InboxVirtualList = memo(function InboxVirtualList({
       items,
       hasNextPage,
       isFetchingNextPage,
+      isOnline,
       onNotificationClick,
       onMailClick,
       onApprovalClick,
@@ -159,6 +168,7 @@ export const InboxVirtualList = memo(function InboxVirtualList({
       items,
       hasNextPage,
       isFetchingNextPage,
+      isOnline,
       onNotificationClick,
       onMailClick,
       onApprovalClick,
@@ -174,8 +184,14 @@ export const InboxVirtualList = memo(function InboxVirtualList({
     ],
   );
 
-  const stableRowKey = useCallback(getRowKey, []);
-  const stableRowHeight = useCallback(getRowHeight, []);
+  const stableRowKey = useCallback(
+    (index: number, data: InboxVirtualRowData) => getRowKey(index, data),
+    [],
+  );
+  const stableRowHeight = useCallback(
+    (index: number, data: InboxVirtualRowData) => getRowHeight(index, data),
+    [],
+  );
 
   return (
     <List<InboxVirtualRowData>

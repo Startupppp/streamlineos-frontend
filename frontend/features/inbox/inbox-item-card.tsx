@@ -9,8 +9,6 @@ import { NotificationCard } from "@/features/notifications/notification-card";
 import { formatRelativeTime } from "@/features/notifications/format-relative-time";
 import type {
   UnifiedInboxItem,
-  NotificationInboxItem,
-  BroadcastInboxItem,
   MailInboxItem,
   BuildApprovalInboxItem,
 } from "@/types/inbox";
@@ -44,11 +42,11 @@ function MailItemCard({ item, onClick }: MailItemCardProps) {
             <TruncatedText
               text={senderLabel}
               className={cn(
-                "text-[13px] min-w-0",
+                "text-label min-w-0",
                 item.isRead ? "font-medium text-foreground/80" : "font-semibold text-foreground",
               )}
             />
-            <span className="text-[11px] tabular-nums text-muted-foreground shrink-0">
+            <span className="text-dense tabular-nums text-muted-foreground shrink-0">
               {formatRelativeTime(item.timestamp)}
             </span>
           </div>
@@ -67,7 +65,7 @@ function MailItemCard({ item, onClick }: MailItemCardProps) {
           {item.snippet && (
             <TruncatedText
               text={item.snippet}
-              className="text-[11px] text-muted-foreground mt-0.5 min-w-0"
+              className="text-dense text-muted-foreground mt-0.5 min-w-0"
             />
           )}
         </div>
@@ -101,18 +99,18 @@ function ApprovalItemCard({ item, onClick }: ApprovalItemCardProps) {
           <div className="flex items-baseline justify-between gap-2 min-w-0">
             <TruncatedText
               text={item.subject}
-              className="text-[13px] font-medium text-foreground min-w-0"
+              className="text-label font-medium text-foreground min-w-0"
             />
-            <span className="text-[11px] tabular-nums text-muted-foreground shrink-0">
+            <span className="text-dense tabular-nums text-muted-foreground shrink-0">
               {formatRelativeTime(item.timestamp)}
             </span>
           </div>
           <div className="flex items-center gap-2 mt-0.5">
-            <Badge variant="outline" className="h-4 px-1.5 py-0 text-[9px]">
+            <Badge variant="outline" className="h-4 px-1.5 py-0 text-micro">
               {item.status}
             </Badge>
             {item.dueAt && (
-              <span className="text-[11px] text-muted-foreground tabular-nums">
+              <span className="text-dense text-muted-foreground tabular-nums">
                 Due {formatRelativeTime(item.dueAt)}
               </span>
             )}

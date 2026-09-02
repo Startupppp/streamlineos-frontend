@@ -1,6 +1,6 @@
 "use client";
 
-import type { MailComposeMode } from "./mail-compose-sheet";
+import type { MailComposeMode } from "./mail-compose-schema";
 
 const DRAFT_PREFIX = "mail:draft";
 

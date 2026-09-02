@@ -1,4 +1,5 @@
 import { render, screen, fireEvent, act } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { MailShell } from "./mail-shell";
 import type { MailMessageSummary } from "@/types/mail";
@@ -72,10 +73,15 @@ jest.mock("@/hooks/api/mail", () => ({
 }));
 
 function openTheMessage() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
   render(
-    <TooltipProvider>
-      <MailShell />
-    </TooltipProvider>,
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <MailShell />
+      </TooltipProvider>
+    </QueryClientProvider>,
   );
   const row = screen.getByText("Quarterly plan");
   fireEvent.click(row);

@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -18,13 +19,15 @@ import {
 } from "./mail-inbox-summary-sheet";
 import { MailEmptyPane } from "./mail-empty-pane";
 import { MailHeader, MAIL_ACCOUNT_SENTINEL } from "./mail-header";
+import { seedMailDetailFromSummary } from "./mail-thread-seed";
 import type { MailMessageSummary } from "@/types/mail";
-import type { MailComposeMode } from "./mail-compose-sheet";
+import type { MailComposeMode } from "./mail-compose-schema";
 import type { MailReplyParams } from "./mail-reading-ai-actions";
 
 export function MailShell() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
   const { data: accounts = [], isLoading: accountsLoading } = useMailAccounts();
   const finalize = useFinalizeIntegrationConnection();
   const finalizeRef = useRef(false);
@@ -107,6 +110,7 @@ export function MailShell() {
   const handleSelectMessage = useCallback(
     (message: MailMessageSummary) => {
       setShowMobileList(false);
+      seedMailDetailFromSummary(queryClient, message);
       if (message.isRead || !canManageMail) {
         setSelectedMessage(message);
         return;
@@ -124,7 +128,7 @@ export function MailShell() {
         { onError: () => setSelectedMessage(message) },
       );
     },
-    [canManageMail, mailActionMutate],
+    [canManageMail, mailActionMutate, queryClient],
   );
 
   const handleBackToList = useCallback(() => {

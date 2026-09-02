@@ -46,6 +46,7 @@ export function MailReadingPane({
   const {
     data: threadMessages,
     isLoading: threadLoading,
+    isFetching: threadFetching,
     isError: threadError,
     error: threadErr,
     refetch: retryThread,
@@ -54,6 +55,7 @@ export function MailReadingPane({
   const {
     data: singleMessage,
     isLoading: singleLoading,
+    isFetching: singleFetching,
     isError: singleError,
     error: singleErr,
     refetch: retrySingle,
@@ -65,6 +67,7 @@ export function MailReadingPane({
   const canAi = useCan("mail:ai:use");
 
   const isLoading = threadId ? threadLoading : singleLoading;
+  const isFetching = threadId ? threadFetching : singleFetching;
   const isError = threadId ? threadError : singleError;
   const errorVal = threadId ? threadErr : singleErr;
   const retry = threadId ? retryThread : retrySingle;
@@ -76,6 +79,11 @@ export function MailReadingPane({
   }, [threadId, threadMessages, singleMessage]);
 
   const latestMessage = messages[messages.length - 1];
+
+  const isHydrating =
+    isFetching &&
+    messages.length > 0 &&
+    messages.every((m) => m.bodyHtml === null && m.bodyText === null);
 
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => {
     if (latestMessage) return new Set([latestMessage.id]);
@@ -284,6 +292,7 @@ export function MailReadingPane({
               expandedIds.has(msg.id) || index === messages.length - 1
             }
             isLatest={index === messages.length - 1}
+            isHydrating={isHydrating}
             onToggle={handleToggleExpand}
           />
         ))}

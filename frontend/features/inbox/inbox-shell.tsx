@@ -1,8 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -17,19 +16,9 @@ const NotificationDetailDrawer = dynamic(
     })),
   { ssr: false },
 );
-import {
-  useMarkNotificationRead,
-  useArchiveNotification,
-  useUnarchiveNotification,
-  useDeleteNotification,
-  useApproveNotification,
-  useRejectNotification,
-  usePinNotification,
-  useUnpinNotification,
-  useSnoozeNotification,
-} from "@/hooks/api/notifications";
 import { useUnifiedInbox } from "@/hooks/api/inbox";
 import { InboxVirtualList } from "./inbox-virtual-list";
+import { useInboxActions } from "./use-inbox-actions";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Inbox } from "lucide-react";
 import type { Notification } from "@/types/notifications";
@@ -81,6 +70,32 @@ const VIEWS: Array<{ key: InboxView; label: string }> = [
   { key: "APPROVALS", label: "Approvals" },
 ];
 
+interface InboxViewTabProps {
+  view: InboxView;
+  label: string;
+  isActive: boolean;
+  onSelect: (view: InboxView) => void;
+}
+
+function InboxViewTab({ view, label, isActive, onSelect }: InboxViewTabProps) {
+  const handleClick = useCallback(() => onSelect(view), [onSelect, view]);
+  return (
+    <button
+      type="button"
+      aria-pressed={isActive}
+      onClick={handleClick}
+      className={cn(
+        "shrink-0 rounded-full px-3 py-1 text-label font-medium transition-colors",
+        isActive
+          ? "bg-primary text-primary-foreground"
+          : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground",
+      )}
+    >
+      {label}
+    </button>
+  );
+}
+
 export function InboxShell() {
   const router = useRouter();
   const [view, setView] = useState<InboxView>("ALL");
@@ -99,21 +114,31 @@ export function InboxShell() {
     refetch,
   } = useUnifiedInbox({ kinds: VIEW_KINDS[view], limit: 25 });
 
-  const markRead = useMarkNotificationRead();
-  const archive = useArchiveNotification();
-  const unarchive = useUnarchiveNotification();
-  const del = useDeleteNotification();
-  const pin = usePinNotification();
-  const unpin = useUnpinNotification();
-  const snooze = useSnoozeNotification();
-  const approve = useApproveNotification();
-  const reject = useRejectNotification();
+  const {
+    isOnline,
+    markReadOnOpen,
+    handleMarkRead,
+    handleArchive,
+    handleUnarchive,
+    handlePin,
+    handleSnooze,
+    handleDelete,
+    handleApprove,
+    handleReject,
+    approvingId,
+    rejectingId,
+    archivingId,
+    deletingId,
+  } = useInboxActions();
 
   useEffect(() => {
     void import("@/features/notifications/notification-detail-drawer");
   }, []);
 
-  const items = data?.pages.flatMap((p) => p.items) ?? [];
+  const items = useMemo(
+    () => data?.pages.flatMap((p) => p.items) ?? [],
+    [data],
+  );
   const deniedPermission = deniedPermissionFor(
     view,
     data?.pages[0]?.sources ?? [],
@@ -121,7 +146,7 @@ export function InboxShell() {
 
   const handleNotificationClick = useCallback(
     (n: { id: number; isRead: boolean; link: string | null }) => {
-      if (!n.isRead) markRead.mutate(n.id);
+      if (!n.isRead) markReadOnOpen(n.id);
       if (n.link) {
         router.push(n.link);
         return;
@@ -157,7 +182,7 @@ export function InboxShell() {
         setDrawerOpen(true);
       }
     },
-    [items, markRead, router],
+    [items, markReadOnOpen, router],
   );
 
   const handleMailClick = useCallback(
@@ -178,61 +203,11 @@ export function InboxShell() {
     (link: string) => router.push(link),
     [router],
   );
-  const handleMarkRead = useCallback(
-    (id: number) => markRead.mutate(id),
-    [markRead],
-  );
-  const handleArchive = useCallback(
-    (id: number) =>
-      archive.mutate(id, {
-        onError: (err) => toast.error(getErrorMessage(err)),
-      }),
-    [archive],
-  );
-  const handleUnarchive = useCallback(
-    (id: number) =>
-      unarchive.mutate(id, {
-        onError: (err) => toast.error(getErrorMessage(err)),
-      }),
-    [unarchive],
-  );
-  const handlePin = useCallback(
-    (id: number, pinned: boolean) =>
-      pinned
-        ? pin.mutate(id, { onError: (err) => toast.error(getErrorMessage(err)) })
-        : unpin.mutate(id, { onError: (err) => toast.error(getErrorMessage(err)) }),
-    [pin, unpin],
-  );
-  const handleSnooze = useCallback(
-    (id: number, snoozedUntil: string) =>
-      snooze.mutate(
-        { id, snoozedUntil },
-        { onError: (err) => toast.error(getErrorMessage(err)) },
-      ),
-    [snooze],
-  );
-  const handleDelete = useCallback(
-    (id: number) =>
-      del.mutate(id, {
-        onError: (err) => toast.error(getErrorMessage(err)),
-      }),
-    [del],
-  );
-  const handleApprove = useCallback(
-    (id: number) =>
-      approve.mutate(id, {
-        onSuccess: () => toast.success("Approved"),
-        onError: (err) => toast.error(getErrorMessage(err)),
-      }),
-    [approve],
-  );
-  const handleReject = useCallback(
-    (id: number) =>
-      reject.mutate(id, {
-        onSuccess: () => toast.success("Rejected"),
-        onError: (err) => toast.error(getErrorMessage(err)),
-      }),
-    [reject],
+
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
+  const handleLoadMore = useCallback(
+    () => void fetchNextPage(),
+    [fetchNextPage],
   );
 
   return (
@@ -242,20 +217,13 @@ export function InboxShell() {
       filters={
         <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
           {VIEWS.map((v) => (
-            <button
+            <InboxViewTab
               key={v.key}
-              type="button"
-              aria-pressed={view === v.key}
-              onClick={() => setView(v.key)}
-              className={cn(
-                "shrink-0 rounded-full px-3 py-1 text-[13px] font-medium transition-colors",
-                view === v.key
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground",
-              )}
-            >
-              {v.label}
-            </button>
+              view={v.key}
+              label={v.label}
+              isActive={view === v.key}
+              onSelect={setView}
+            />
           ))}
         </div>
       }
@@ -268,7 +236,7 @@ export function InboxShell() {
             className="flex-1"
             title="Couldn't load inbox"
             description={getErrorMessage(error)}
-            onRetry={() => void refetch()}
+            onRetry={handleRetry}
           />
         ) : deniedPermission ? (
           <NoPermissionState
@@ -291,6 +259,7 @@ export function InboxShell() {
               items={items}
               hasNextPage={hasNextPage ?? false}
               isFetchingNextPage={isFetchingNextPage}
+              isOnline={isOnline}
               onNotificationClick={handleNotificationClick}
               onMailClick={handleMailClick}
               onApprovalClick={handleApprovalClick}
@@ -298,11 +267,11 @@ export function InboxShell() {
               onDelete={handleDelete}
               onApprove={handleApprove}
               onReject={handleReject}
-              approvingId={approve.isPending ? approve.variables : undefined}
-              rejectingId={reject.isPending ? reject.variables : undefined}
-              archivingId={archive.isPending ? archive.variables : undefined}
-              deletingId={del.isPending ? del.variables : undefined}
-              onLoadMore={() => void fetchNextPage()}
+              approvingId={approvingId}
+              rejectingId={rejectingId}
+              archivingId={archivingId}
+              deletingId={deletingId}
+              onLoadMore={handleLoadMore}
             />
           </div>
         )}
