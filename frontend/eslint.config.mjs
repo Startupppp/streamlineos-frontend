@@ -101,8 +101,23 @@ const eslintConfig = defineConfig([
       "streamline/no-unlabelled-icon-button": "error",
     },
   },
+  /**
+   * Generated output only — nothing here is authored, so nothing here is fixable.
+   *
+   * `.next-buildmart/**` is an alternate Next `distDir` (718 MB of minified
+   * chunks under `dev/`, .gitignore:24). `.next/**` is name-exact, so eslint was
+   * the one frontend scanner still walking it; every other one excludes it via
+   * `isExcludedScanDir` in `scripts/check-repo-paths.mjs`. `coverage/**` is the
+   * istanbul report `jest --coverage` writes (.gitignore:16).
+   *
+   * `build/**` is root-anchored (the pattern contains a slash), so it ignores a
+   * root `build/` output directory and NOT the Build module's `features/build`,
+   * `hooks/api/build` or `app/(authenticated)/build`.
+   */
   globalIgnores([
     ".next/**",
+    ".next-buildmart/**",
+    "coverage/**",
     "out/**",
     "build/**",
     "public/**",
