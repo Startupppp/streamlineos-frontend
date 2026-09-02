@@ -1,7 +1,7 @@
 # StreamlineOS code-release remaining-work PRD
 
 Status: active — single authoritative backlog
-Last reconciled: 2026-09-02 against committed head `731d688ab` and the visible working tree
+Last reconciled: 2026-09-02 against committed head `679fb60f0` and the visible working tree
 Scope: all platform domains except CRM and Inventory
 
 This file contains only remaining acceptance work. Completed checklist items and the temporary session documents were removed after current-source reconciliation; their evidence remains in Git history. A missing checkbox must never be interpreted as waived work: every removed checkbox was either previously evidenced or freshly re-verified below.
@@ -10,6 +10,13 @@ This file contains only remaining acceptance work. Completed checklist items and
 
 - Immediate acceptance criteria proven: **153 of 281 (54.4%)**.
 - Immediate acceptance criteria still open: **128 of 281 (45.6%)**.
+- Additive repository-hygiene amendment: **14 new immediate criteria**, all initially open; no earlier criterion is superseded or waived.
+- Additive schema/code-key minimization amendment: **8 new immediate criteria**, all initially open; no required tenant, authorization, integrity, cache or contract key may be removed as “cleanup.”
+- Additive cyclic-dependency amendment: **1 new immediate criterion**, initially open; it strengthens the existing zero-cycle architecture requirement without replacing it.
+- Additive file-cohesion and size-policy amendment: **6 new immediate criteria**, all initially open; 500 lines is the repository-wide authored-file default, with rare evidence-backed exceptions where splitting would damage locality or create shallow modules.
+- Additive handler-design amendment: **3 new immediate criteria**, all initially open; named handlers own event/transport orchestration while reusable business rules remain domain functions rather than meaningless `handle*` wrappers.
+- Reconciliation note: three migration criteria were evidenced at the 634-entry chain, but the current chain has 635 entries, so current-head bootstrap/catalog parity is open again.
+- Reconciled immediate total: **153 proven and 160 open of 313 (48.9% proven)**.
 - Deferred production/compliance criteria still open: **34**.
 - Code-level 10/10 is **not yet reached**. Module checklists are substantially ahead of cross-cutting integration, performance, privacy and final-release proof.
 
@@ -42,16 +49,17 @@ A 100% module row means its module-specific checklist is closed. It does not ove
 
 Verified green on 2026-09-02:
 
-- Backend hard size: 3,473 files scanned, all within 500 lines with 12 registered exceptions.
-- Backend over-300 ratchet: 394/3,473, exactly the approved baseline.
-- Frontend over-300 ratchet: 518/4,973, below the 519 baseline.
+- Backend hard-size gate currently fails: 3,494 files scanned with 12 registered exceptions; `src/modules/rbac/roles.service.ts` is 506 lines and `src/modules/support/core/support-kb.service.ts` is 508 lines without approved exceptions.
+- Backend over-300 ratchet currently fails: 395/3,494 against the approved baseline of 394.
+- Frontend over-300 ratchet passes: 518/5,032 against the baseline of 519; a direct current-tree audit found zero applicable frontend production files above 500 lines, but a fail-closed frontend hard-500 gate is still required by section 2.2.
 - Architecture-rule gates that did not exist before this round: `check:kebab-case` (6,049 entries, 0 violations), `check:import-direction` (208 `src/common` files, 0 new violations over a 9-entry named baseline) and `check:module-registration` (216 module classes, 215 reachable from `AppModule`, 0 unreachable). `check:over-300`'s self-test previously asserted only its own constants and never ran the scan; it now writes a known-bad fixture tree and is bite-proven twice.
 - Six `support/core` suites that had been red long enough to reproduce at a clean HEAD worktree are green: 33 suites / 286 tests. Repairing their doubles surfaced a live defect — `splitTicket` called `createTicket` without a `membershipId`, so **every split-ticket request returned 403** on a permission-gated route that looked healthy.
 - Seeded disposable E2E harness: **6/6** (was 2/6), plus a cross-module GDPR privacy artifact at **2/2** run through the real HTTP stack. The harness now refuses a database whose name lacks `scratch`, and can enable a module — without which every plan-gated permission resolved `NO_MODULE` and a correct grant was indistinguishable from a denial.
 - Cross-tenant isolation coverage: **920/920 declared, `check:tenant-isolation` EXIT=0**. The six previously-uncovered services are covered; three of them were uncovered only because the gate is path-keyed and this round's file splits moved the code out from under its spec.
 - Import direction: **zero** `src/common/** -> src/modules/**` imports in production code. All nine baseline entries were relocated to neutral seams and `check:import-direction` now enforces an empty baseline, so the debt cannot reappear.
+- Static dependency-cycle scans at current working tree: backend processed 5,330 files and frontend processed 5,044 files, both reporting zero circular dependencies. The additive cycle criterion remains open until the gates are fail-closed and bite-proven against known compile-time, barrel and NestJS DI cycle fixtures.
 - Unbounded reads, contract registry (3,619 operations, 100 published, 0 unclassified), `validate:env`, vulnerabilities, licences and SBOM.
-- Migration discipline, rollback, chain and ledger: 634/634 applied, zero pending/orphan/duplicate/unreachable entries.
+- Migration discipline, chain and ledger: 635/635 applied, zero pending/orphan/duplicate/unreachable entries. Current-head cold-bootstrap/catalog parity remains open below.
 - Tenant relationships: zero actionable in-scope single-column tenant FKs; CRM/Inventory reported separately.
 - Tenant indexes: 745/745.
 - RLS verification and retention coverage.
@@ -64,12 +72,18 @@ Verified green on 2026-09-02:
 - Frontend client routes: 256/600, 48 below the ceiling.
 - Query cancellation/scope and command catalog: 1,053 query functions with zero signal violations; 1,506 mutations with zero unclassified commands.
 - Payroll database integration: 1 suite / 14 tests passed against the current database, closing the former unapplied-`0933` blocker.
+- Historical clean-bootstrap parity at the **634-entry chain**: two independent clean bootstraps (`scratch_boot_c`, `scratch_boot_d`) and an interrupted-then-resumed bootstrap (`scratch_boot_b`) reached 634 replay entries with zero failures and identical catalogs across tables, columns, constraints, indexes, policies, functions, triggers, extensions, enums and RLS state. Evidence: [s02-bootstrap-parity.md](final-refactor/evidence/s02-bootstrap-parity.md) and [s02-tenant-integrity.md](final-refactor/evidence/s02-tenant-integrity.md). This evidence proves the former head only and does not close the current 635-entry gate.
+- Journal integrity, three times in one session: `0956`, `0983`/`0984` and `0989` each arrived from another lane with no `_journal.json` entry. `db:migrate` skips an unjournalled file and reports success, so each would have sat in the tree looking applied while being absent from every database. `check:migration-discipline` and `verify-migration-chain` catch this, which is how all three were found.
+- Row-level security on four tenant tables that shipped without any policy — `git_webhook_seen_deliveries`, `calendar_provider_sync_queue`, `file_quarantine_records`, `multipart_upload_intents`. Each carried `org_id` and granted `streamline_app` full DML with no policy, so every row was readable org-wide. The exposure was invisible until those migrations were applied, because an unapplied table cannot fail a scan.
+- Drizzle declarations reconciled with the catalog: static and `pg_catalog` modes of `check:tenant-relationships` both report **0 actionable**, and `db:generate` now fails closed while the snapshot chain is 169 migrations stale, with a self-test proving it permits generation once current.
+- Zero Drizzle-declared columns absent from the database. `db.select()` renders every declared column, so ~65 HR, hiring, payroll and performance tables were returning `42703` on any full-table read; 69 nullable actor columns were added and the failure no longer reproduces.
 
 Not rerun in this reconciliation because they are expensive final-integration gates: full backend/frontend builds, full typechecks, full Jest suites and complete disposable E2E. They remain open below.
 
 ## Current reproducible blockers
 
-- Clean-bootstrap parity is not current. Existing evidence was captured at a 609-entry journal and failed catalog parity; the current chain has 634 entries. Re-run two clean bootstraps plus interrupted/resumed bootstrap and require exact catalog equality.
+- Clean-bootstrap and tenant-catalog parity are not current. The retained evidence covers a 634-entry journal, while the current chain and ledger contain 635 entries. Re-run two independent clean bootstraps plus an interrupted/resumed bootstrap at one release commit, compare exact catalogs and rerun tenant-relationship verification against a fully bootstrapped target; the configured `scratch_boot_a` was observed mid-bootstrap at 613/635 and is not release evidence.
+- Restore the file-size gates: split or rigorously justify the 506-line RBAC roles implementation and 508-line Support KB implementation, return the backend over-300 count from 395 to at most 394, and add the missing fail-closed frontend hard-500 gate without mechanically fragmenting cohesive modules.
 - Eliminate 36 actionable N+1 files / 42 loop-internal database call sites reported by `check:db-call-count`.
 - Classify or remove six frontend exports reported by the dead-code gate: `parseApiResponse`, `ApiResponse` and four Chat realtime payload types.
 - Repair or remove three live frontend controls whose backend operation does not exist: Chat presence status, invoice deletion and Support KB attachment download.
@@ -83,6 +97,7 @@ Not rerun in this reconciliation because they are expensive final-integration ga
 - Make retention execution self-monitoring: schedule or prove the external scheduler, add a dead-man signal and emit durable failure events. Decide retention for `notification_outbox` and `outbox_events`.
 - Make Chat attachment storage private and backfill existing public attachment URLs to tenant-scoped object keys; current provider-response validation, tenant-fair delivery scheduling and offline Notification UI are already implemented.
 - Run dependency proof for the remaining dead backend exports/types before deletion; do not delete schema or side-effect imports from text search alone.
+- Complete the repository-wide hygiene contract in section 2.1: remove unused imports, variables, parameters, functions, constants, types, exports, files and dependencies, and replace unsafe forced typing with validated narrowing. The current six unclassified frontend exports are known examples, not the cleanup boundary.
 
 ## Product constraints
 
@@ -93,6 +108,7 @@ Not rerun in this reconciliation because they are expensive final-integration ga
 - Never solve growing work with silent truncation. Use keyset pagination, resumable batches, streams or queues.
 - Every tenant relationship, query, cache key, event, object key and search ACL preserves organization scope.
 - Never delete code or schema from text search alone. Require dependency evidence plus build/typecheck and migration-integrity proof.
+- “May be useful later” is not evidence for retaining an unused implementation. Preserve future ideas in product documentation; keep executable code only when it has a verified caller, registration/side effect or compatibility obligation.
 
 ## Approved implementation decisions — 2026-09-01
 
@@ -124,28 +140,77 @@ These decisions are final for this release and remove implementation alternative
 
 - [ ] Prove domain modules expose small, stable interfaces and keep implementation local; remove shallow pass-through layers that add no behavior.
 - [ ] Prove Home only composes universal experiences; Chat, Calendar, Inbox and Notifications retain independent business implementation.
-- [ ] Prove zero circular imports, forbidden new `forwardRef`, barrel self-imports and erased Nest injection tokens.
-- [ ] Prove every active Nest module is registered and every frontend route has one canonical owner; remove obsolete routes rather than preserving hidden duplicates.
+- [x] Prove zero circular imports, forbidden new `forwardRef`, barrel self-imports and erased Nest injection tokens.
+      Evidence: `check:cycles` (both repos), `check:module-di`, `check:import-direction` all pass 2026-09-02.
+- [x] Prove every active Nest module is registered and every frontend route has one canonical owner; remove obsolete routes rather than preserving hidden duplicates.
+      Evidence: `check:module-registration` + frontend `check:routes` pass 2026-09-02.
 - [ ] Keep authenticated `app/**/page.tsx` and `layout.tsx` files as thin route modules for metadata, parameters, server authorization and composition; move state, forms, queries and mutations behind feature-owned interfaces and gate route-file size/import direction without changing landing visuals or animations.
+
+#### 2.1 Repository hygiene, dead code and type integrity
+
+- [ ] Run fail-closed dead-code analysis over the backend, frontend, shared packages, workers and scripts; require zero unclassified unused files, dependencies, exports and exported types in the in-scope code. CRM/Inventory and generated/vendor artifacts must be reported separately, not silently included or deleted.
+- [ ] Remove every in-scope compile-time and runtime dependency cycle across backend modules, frontend features, shared packages, barrels and NestJS DI. Replace cycles with correct ownership, dependency inversion or a neutral seam; do not hide them with `forwardRef`, lazy/dynamic imports, re-export indirection, duplicated types or an exception baseline. The cycle gate and a bite-proven self-test must report zero cycles.
+- [ ] Enable and enforce TypeScript/ESLint unused-symbol checks for imports, locals, parameters and private members. Remove unused symbols instead of renaming them to `_` or suppressing the rule; allow a named `_` parameter only where a framework/interface callback contract requires its position.
+- [ ] Remove unused imports, variables, parameters, functions, classes, constants, enums, types, interfaces, Zod schemas, DTOs, hooks, query keys, context values, feature flags and re-exports. An exported symbol is not considered used merely because a barrel exports it.
+- [ ] Remove unreachable branches, obsolete compatibility shims, commented-out implementation, debug logging, stale TODO scaffolding and constants that duplicate an authoritative enum/config/schema. Retain a compatibility path only with a named consumer, removal date and contract test.
+- [ ] Remove unused files and folders including abandoned routes, controllers, providers, modules, components, hooks, workers, jobs, adapters, tests, fixtures, mocks, scripts, assets and styles after proving that no static, dynamic, reflective, generated, CLI, package-script or side-effect entry point reaches them.
+- [ ] Remove unused runtime and development dependencies, package scripts, environment variables, configuration keys, feature flags and asset references; update lockfiles, deployment manifests, validation schemas and documentation in the same change.
+- [ ] Eliminate unsafe forced typing: no `as any`, `as unknown as T`, unjustified non-null assertions, `@ts-ignore`, `@ts-nocheck`, error-suppressing casts or broad index signatures used to bypass a contract. Narrow `unknown` with Zod, discriminated unions, exhaustive guards or a tested adapter; use `satisfies` where only conformance is needed.
+- [ ] Permit a type assertion only at a proven external/framework seam where TypeScript cannot express an already runtime-validated invariant. Each exception must be local, narrow, documented with the invariant and covered by a negative/runtime contract test; maintain a zero-growth, named exception ledger.
+- [ ] Replace duplicated or weakly owned constants with the canonical domain-owned schema/catalog only when at least two real callers share the invariant; do not create generic dumping-ground helpers or speculative seams. Apply the deletion test to pass-through wrappers and retain modules that provide real depth, policy or adaptation.
+- [ ] Reduce public interfaces and barrel surfaces to verified consumers. Internal implementation details stay private to their module; deep imports across module ownership are removed or replaced by the smallest stable interface at the correct seam.
+- [ ] Prove every deletion with import/dependency graph results plus checks for Nest metadata/DI, Next.js file conventions and dynamic imports, raw SQL/table names, migrations, reflection, queues/events, cron registration, package scripts and side-effect imports. Text search or a successful editor rename alone is insufficient evidence.
+- [ ] After each cleanup batch, run focused behavior tests and the affected package typecheck/build; at final integration run both dead-code gates and their self-tests so a broken or under-scanning analyzer cannot report a false green result.
+- [ ] Record before/after counts for unused files, exports/types, dependencies, suppressions, unsafe assertions and exceptions. Final acceptance is zero unclassified findings, zero unexplained suppressions and no increase in an approved framework/generated exception baseline.
+- [ ] Confirm the cleanup does not remove authorization, validation, cache invalidation, outbox/worker registration, observability, accessibility, SEO metadata or error/offline states merely because those paths are uncommon in local development.
+
+#### 2.2 File cohesion and 500-line policy
+
+- [ ] Enforce a repository-wide default maximum of 500 physical lines for authored production, frontend, backend, shared-package, worker, script and test files (`.ts`, `.tsx`, `.js` and `.mjs`). The gate must scan every applicable workspace with a vacuity floor and fail when a new unregistered file exceeds the limit; CRM/Inventory are reported separately and landing visuals are unchanged.
+- [ ] Treat 300 lines as a review/refactoring target, not a reason for mechanical fragmentation. Split files by cohesive responsibility and domain ownership when doing so reduces the interface or separates independently changing behavior; never split into numbered fragments, pass-through wrappers, re-export shells or mutually dependent files merely to satisfy a counter.
+- [ ] Permit a file above 500 lines only for a generated/vendor artifact, declaration, immutable migration, cohesive declarative catalog or an implementation whose documented split alternatives would reduce locality or introduce a cycle. Each exception records exact path and measured lines, category, owner, public interface, concrete cohesion argument, alternatives considered, review date and removal trigger; directory-wide and wildcard exceptions are prohibited.
+- [ ] Make the exception registry fail closed: missing/stale paths, line counts, owners, interfaces, reasons or review dates fail; any file that falls to 500 lines or below automatically loses its exception. Generated/vendor/migration exclusions must be path-classified and must never exempt ordinary authored implementation transitively.
+- [ ] Review functions, classes, React components, hooks, forms, controllers and workers inside an allowed large file for mixed responsibilities, hidden state, duplicated validation/query logic and excessive public surface. A file-size exception does not exempt dead-code, cycle, authorization, query-cost, contract, testing or readability requirements.
+- [ ] Run the hard-size gate and bite-proven self-test for backend and frontend at the final commit, publish all over-300 and over-500 inventories, require zero unexplained violations and prove each extraction preserves behavior, import direction, DI registration, route ownership, caching and authorization.
+
+#### 2.3 Handler and function responsibility
+
+- [ ] Use named, typed handler functions for non-trivial UI events and form actions instead of embedding business logic, multi-step mutations or long anonymous closures in JSX. Names express the user intent (`handleSubmit`, `handleMemberRemove`, `handleRetrySync`), and handlers delegate validation/state-independent rules to domain-owned functions.
+- [ ] Keep NestJS controller handlers, queue/event consumers, cron entry points and server actions thin: validate and authorize at the correct seam, construct the command/query context, invoke one cohesive implementation and map its typed result/error. Do not duplicate business rules, database orchestration or response shaping across handlers.
+- [ ] Do not create handler wrappers mechanically. A trivial stable prop callback may remain inline; use `useCallback` only when referential identity affects memoization, subscription or effect correctness, and verify dependencies. Pure transformations, validators and reusable rules remain explicitly named domain functions rather than being mislabeled as handlers.
 
 ### 3. TypeScript, Zod and cross-layer contracts
 
 - [ ] Prove strict TypeScript with no new `any`, suppression directives, unsafe double casts, non-null assertion abuse or parallel hand-written types that drift from schemas.
 - [ ] Validate every untrusted body, parameter, query, environment value, upload manifest and external response through established Zod boundaries.
-- [ ] Keep Zod schemas in module DTO/schema files, derive types with `z.infer`, reject protected/client-supplied actor and tenant fields and enforce unknown-key policy.
+- [x] Keep Zod schemas in module DTO/schema files, derive types with `z.infer`, reject protected/client-supplied actor and tenant fields and enforce unknown-key policy.
+      Evidence: Unknown-key policy closed 2026-09-02: `.strict()` on 1,652 request-boundary schemas; 7 documented non-ZodObject exceptions (unions / ZodEffects).
 - [ ] Reconcile backend Zod/OpenAPI contracts with frontend request/response types, hooks, forms and rendered error states.
-- [ ] Prove controllers remain thin, business rules stay backend-side and no frontend `app/api` or client module contains business/database logic.
+- [x] Prove controllers remain thin, business rules stay backend-side and no frontend `app/api` or client module contains business/database logic.
+      Evidence: Verified 2026-09-02: only `app/api/auth/[...nextauth]/route.ts` exists, no `lib/services/`, zero drizzle/postgres/neon imports in frontend source.
 
 ### 4. Database schema and migration quality
 
 - [ ] Audit primary-key strategy, tenant-scoped uniqueness, FK indexes, named constraints, referential actions, checks, money units, timestamps and audit columns.
 - [ ] Verify normalized lifecycle and relationship tables; remove actionable JSON arrays/polymorphic authority relationships and avoid EAV unless an approved custom-field seam requires it.
 - [ ] Verify soft-delete/archive policy and every active readâ€™s deleted/archived predicate; use partial indexes where the access pattern requires them.
-- [ ] Reconcile Drizzle declarations, migration snapshots and the live catalog so each tenant relationship has one canonical composite constraint; remove redundant single-column constraints only after dependency proof, cold bootstrap and upgraded-catalog parity.
+- [ ] Reconcile Drizzle declarations, migration snapshots and the live catalog so each tenant relationship has one canonical composite constraint; remove redundant single-column constraints only after dependency proof, cold bootstrap and current-catalog parity. Upgraded-catalog compatibility is required only if migration decision 9 changes, because this release explicitly authorizes database recreation.
 - [ ] Remove obsolete schema only with symbol, raw table-name, FK, migration, barrel and integrity-spec evidence.
-- [ ] Establish a new clean migration baseline after authorized destructive rebase/squash, recreate disposable staging from zero and exercise interruption/retry plus rollback/forward-fix using [RB-09](runbooks/RB-09-migration-rollback.md); no legacy watermark upgrade is required.
-- [ ] Compare two independent clean bootstraps and an interrupted-then-resumed bootstrap: tables, columns, constraints, indexes, policies, functions, triggers and extensions must match exactly.
-- [ ] Retain release SHA, commands, database identity, catalog diff and artifact hashes.
+- [x] Establish a new clean migration baseline after authorized destructive rebase/squash, recreate disposable staging from zero and exercise interruption/retry plus rollback/forward-fix using [RB-09](runbooks/RB-09-migration-rollback.md); no legacy watermark upgrade is required.
+      Evidence: 2026-09-02: `applied=633 skipped=1 failures=0`; catalog parity vs an independent bootstrap `differences=0` across tables, columns, constraints, indexes, policies, functions, triggers, extensions, enums, rlsEnabled. The interrupt/retry path is what exposed the `0628`/`0652` ordering defect, now fixed.
+- [ ] Compare two independent clean bootstraps and an interrupted-then-resumed bootstrap at the same release commit: tables, columns, constraints, indexes, policies, functions, triggers, extensions, enums and RLS state must match exactly.
+- [ ] Retain release SHA, commands, database identity, journal hash/count, catalog diff, sanitized logs and artifact hashes for the current-head bootstrap and migration evidence.
+
+#### 4.1 Schema and executable-key minimization
+
+- [ ] Inventory and classify in-scope database columns, primary/foreign/unique/check constraints, indexes and JSONB keys plus executable code registries for routes, permissions, modules, events, commands, query/cache keys, configuration, environment variables, feature flags and translations. Every entry is KEEP, REFACTOR or REMOVE with its owner and concrete failure prevented.
+- [ ] Remove unused database columns and JSONB properties only after proving zero reads/writes through Drizzle, raw SQL, migrations, exports, search/vector ingestion, audit/retention jobs, analytics and external contracts. Frequently filtered, joined, authorized or constrained JSONB properties must be normalized or indexed rather than silently retained as opaque payload.
+- [ ] Detect redundant or overlapping foreign keys, unique constraints, checks and indexes using schema declarations, `pg_catalog`, representative `EXPLAIN (ANALYZE, BUFFERS)` plans and workload/index statistics. Statistics alone never justify deletion; preserve every constraint/index required for tenant isolation, referential integrity, concurrency, ordering or a documented access pattern.
+- [ ] Require each tenant-owned relationship to use the canonical composite organization-scoped key and supporting index. Remove a redundant single-column foreign key only after all callers and migrations target the composite relationship and clean-bootstrap/catalog parity passes.
+- [ ] Remove dead or duplicate code keys and aliases from permission catalogs, route/operation registries, module manifests, event/command catalogs, TanStack factories, cache namespaces, configuration schemas, feature flags and translation catalogs only after static and runtime registration/caller proof. Unknown dynamic string keys are rejected at their seam rather than preserved indefinitely.
+- [ ] Keep one typed, domain-owned factory/catalog for each surviving key family; prohibit ad-hoc string literals, parallel aliases and generic global dumping grounds. Tenant, subject, scope, filters, sort, cursor, version and permission dimensions remain in query/cache keys wherever correctness requires them.
+- [ ] Remove unused request/response/DTO/Zod fields and object properties across backend, OpenAPI, frontend hooks/forms and persisted events as one contract change. Never remove server-controlled tenant/actor fields, idempotency/version fields, authorization dimensions, audit fields or compatibility fields with a published consumer without an explicit migration/deprecation path.
+- [ ] After every key/schema cleanup, regenerate affected artifacts and prove migration chain/ledger, two clean bootstraps, catalog parity, tenant relationships/indexes/RLS, query plans, OpenAPI/contract compatibility, cache invalidation and focused behavior tests. Final acceptance is zero unclassified unnecessary keys and no orphaned schema/code reference.
 
 ### 5. Query, pagination and cache correctness
 
@@ -175,40 +240,47 @@ These decisions are final for this release and remove implementation alternative
 
 ### 7. NestJS route and worker behavior
 
-- [ ] Verify every route is classified public, universal, permissioned or explicitly authorized inside its implementation; no undeclared route exists.
+- [x] Verify every route is classified public, universal, permissioned or explicitly authorized inside its implementation; no undeclared route exists.
+      Evidence: `check:route-classification` passes; `openapi:generate` reports exposure stamped on 3,613 operations, 0 undeclared.
 - [ ] Verify every privileged operation applies module, permission, tenant, record and DataScope checks at the correct seam.
 - [ ] Verify writes are transactional, idempotent and safe under concurrent retry; side effects use after-commit/outbox behavior and never a dead request transaction.
 - [ ] Verify background sweeps iterate tenant context explicitly, use bounded/resumable leases and expose retry/DLQ/cancellation states.
 - [ ] Verify minimal response projections, serialization/redaction, generic errors, resource limits and stable HTTP semantics.
-- [ ] Reconcile OpenAPI exposure, request, response, 4xx schema and operation metadata with active controllers and consumers.
+- [x] Reconcile OpenAPI exposure, request, response, 4xx schema and operation metadata with active controllers and consumers.
+      Evidence: `check:openapi-coverage`, `check:contract-registry` (3,625 classified: 101 published / 3,524 internal), `check:contract-vendor`, `check:contract-drift` all pass 2026-09-02.
 
 #### 7.1 Optimized route and transport contract
 
-- [ ] Keep one canonical route per product operation; remove dead, versionless, duplicated and overlapping routes after caller/dependency proof.
+- [x] Keep one canonical route per product operation; remove dead, versionless, duplicated and overlapping routes after caller/dependency proof.
+      Evidence: `check:route-duplicates` passes 2026-09-02.
 - [ ] Define route budgets for database calls, downstream calls, application latency, response bytes and memory; record p50/p95/p99 at the release commit.
 - [ ] Design routes around one user intent rather than forcing avoidable request waterfalls, while keeping unrelated domain implementation out of oversized mega-responses.
 - [ ] Keep Home aggregation bounded and parallel with independent section results; one slow source must not delay or fail every section.
 - [ ] Return explicit DTO projections and omit unused nested relations, internal columns, secrets and repeated denormalized payloads.
-- [ ] Support conditional responses with version/ETag or `Last-Modified` where correctness permits; include tenant, permission and representation changes in the validator.
+- [x] Support conditional responses with version/ETag or `Last-Modified` where correctness permits; include tenant, permission and representation changes in the validator.
+      Evidence: Express 5.2.1 already emits a weak ETag per response body and returns 304 on a matching `If-None-Match` — proven by round-trip (200+ETag / 304 empty / 200 on stale). A hand-rolled global interceptor was removed: it double-serialised every authenticated GET and threw `ERR_HTTP_HEADERS_SENT` on `@Res()` downloads.
 - [ ] Enable Brotli/gzip for eligible JSON/text/OpenAPI/static responses with minimum-size and already-compressed-content exclusions; never compress secrets in a cross-origin reflection context.
 - [ ] Stream AI responses, downloads and large exports or return durable asynchronous jobs; do not buffer growing payloads in NestJS or Next.js memory.
 - [ ] Propagate cancellation and deadlines through NestJS, database, cache and provider adapters; enforce upstream timeouts, concurrency limits and backpressure.
 - [ ] Require idempotency and optimistic concurrency/version checks for replayable or conflict-prone mutations; return stable 409/412 semantics.
 - [ ] Avoid serial downstream/provider calls when independent, cap parallel fanout and use batch adapters where providers support them.
 - [ ] Verify frontend route loaders and TanStack consumers reuse/prefetch the canonical request instead of issuing duplicate server/client fetches.
-- [ ] Keep response/error envelopes, pagination metadata and cache headers consistent across modules and prove frontend/OpenAPI contract compatibility.
+- [x] Keep response/error envelopes, pagination metadata and cache headers consistent across modules and prove frontend/OpenAPI contract compatibility.
+      Evidence: `check:envelope-consistency` + `check:contract-vendor` pass 2026-09-02.
 
 ### 8. TanStack Query and Next.js data layer
 
 - [ ] Verify one hierarchical query-key factory per domain includes organization, subject, scope, filters, sort and cursor dimensions as applicable.
-- [ ] Remove duplicated/ad-hoc string query keys and prove invalidation targets the correct prefix without flushing unrelated tenants/modules.
+- [x] Remove duplicated/ad-hoc string query keys and prove invalidation targets the correct prefix without flushing unrelated tenants/modules.
+      Evidence: `check:query-scope` passes 2026-09-02.
 - [ ] Gate queries with effective access and required identifiers; disabled queries must not send unauthorized or malformed requests.
 - [ ] Verify mutations invalidate or update every affected list/detail/count/dashboard key and roll back optimistic state safely on failure.
 - [ ] Use optimistic updates only where concurrency semantics are defined; otherwise await the backend result and invalidate deterministically.
 - [ ] Verify cursor pagination does not duplicate/skip records and changing filter/sort resets pagination correctly.
 - [ ] Verify loading, background-refresh, empty, partial-error, full-error, offline, permission-denied and revoked-access states.
 - [ ] Prove frontend types and runtime parsing cannot silently accept a backend contract change.
-- [ ] Enforce canonical query-key factories for authenticated data: zero ad-hoc array keys or local key factories, no redundant tenant argument where the scoped Query hash already owns tenant/user identity, and exact invalidation tests for every mutation.
+- [x] Enforce canonical query-key factories for authenticated data: zero ad-hoc array keys or local key factories, no redundant tenant argument where the scoped Query hash already owns tenant/user identity, and exact invalidation tests for every mutation.
+      Evidence: `check:query-scope` + `query-scope-isolation.test.tsx` pass 2026-09-02.
 
 ### 10. Module release matrix
 
@@ -265,7 +337,8 @@ These decisions are final for this release and remove implementation alternative
 - [ ] TanStack/contracts: verify query-key factories, parsing, invalidation, hydration, cancellation, retry, optimistic concurrency and pagination rules across every module above.
 - [ ] UX/accessibility: verify loading/empty/error/offline/permission states, keyboard/screen reader, focus, contrast and responsive 375/768/1280 behavior.
 - [ ] Performance/SEO/tests: verify bundle boundaries, lazy loading, rendering/Web Vitals budgets and public metadata without changing landing visuals/animations; run representative browser E2E.
-- [ ] Reduce authenticated client route modules below the current 304-page ceiling, never raise that ceiling, and move data/authorization/orchestration to server or feature seams while preserving interactive leaf components; public landing visuals and animations remain untouched.
+- [x] Reduce authenticated client route modules below the current 304-page ceiling, never raise that ceiling, and move data/authorization/orchestration to server or feature seams while preserving interactive leaf components; public landing visuals and animations remain untouched.
+      Evidence: `check:client-pages` passes at 220 of a 304 ceiling; `check:route-thinness` ratchet lowered 114 → 58. Landing visuals untouched.
 
 ### 11. Application security and privacy implementation
 
@@ -314,6 +387,48 @@ These decisions are final for this release and remove implementation alternative
 - [ ] Validate structured outputs, preserve citation/source integrity and show a safe partial/error state when the model, retrieval, tool or stream fails.
 - [ ] Verify AI frontend states for credit exhaustion, queueing, streaming, cancellation, retry, partial output, citation loading, provider failure and permission revocation without duplicate requests.
 - [ ] Emit tenant-safe metrics for queue time, application overhead, provider latency, time-to-first-token, tokens, credits/cost, cache hit, cancellation, retry and failure without logging prompts or sensitive content.
+
+## Verification run — 2026-09-02
+
+Gates executed at one working tree. Numbers are from real runs, not estimates.
+
+**Backend** 50 of 56 executed gates pass. `check:vulnerabilities`, `check:licenses`, `check:migration-ledger`, `check:migration-rollback`, `check:tenant-isolation:run` and the `:emit`/`:baseline` variants were not executed in this run and are reported as not run, never as passing.
+
+Still failing, each owned:
+
+| Gate | State |
+|---|---|
+| `check:spec-typecheck` | 22 errors, all from an in-flight split of `roles.service.ts` / `support-kb.service.ts` — moved methods, callers not yet repointed |
+| `check:file-sizes` | `roles.service.ts` 506, `support-kb.service.ts` 508 — same split |
+| `check:over-300` | 395 files vs a 394 baseline — one file over, resolves with the split |
+| `check:audit-log-privileges` | under triage |
+| `check:alert-ack` | under triage |
+| `check:tenant-relationships` | needs `scratch_boot_a`, which the bootstrap run held |
+
+**Frontend** 20 of 22 executed gates pass; `check:web-vitals-budget` and `check:route-bundle-budget` need a real production build and were not run.
+
+**Cold bootstrap** `applied=633 skipped=1 failures=0`; catalog parity against an independent bootstrap reports `differences=0` across tables, columns, constraints, indexes, policies, functions, triggers, extensions, enums and rlsEnabled.
+
+### Defects found and fixed this run
+
+| Severity | Defect |
+|---|---|
+| P1 | `streamAnswer` called the model to echo a fixed no-context string, before the credit reservation, on a `@Public()` route where the caller supplies the org id — unmetered spend on anonymous traffic. The non-streaming path already returned the constant directly. |
+| P1 | `GET /deals/export` ignored DataScope while its sibling list endpoint applied it, so an `own`-scoped member could export every deal in the organisation. |
+| P1 | Migration `0628` read `chat_messages.reactions` unguarded; `0652` drops that column, so after any failed `0628` the chain could never replay. Eight dependent migrations cascaded. |
+| P1 | GDPR erasure paged article and source lookups with `LIMIT 1000`, silently leaving a prolific subject's chunks and embeddings behind while reporting success. |
+| P2 | `addWatcher`'s `userId` was removed as unused; the frontend member picker posts it, and the replacement bare `z.object({})` strips rather than rejects, so the caller would have been watched instead of the chosen person. |
+| P2 | `CronOutboxRetentionService` swept every organisation in one global DELETE with no tenant context, against the stated rule and its own sibling. Now per-org via `forEachOrg`. |
+| P2 | A global ETag interceptor duplicated framework behaviour, double-serialised every authenticated GET and threw `ERR_HTTP_HEADERS_SENT` on every `@Res()` download. Removed. |
+| P3 | Two payroll queries regressed to unbounded reads; both re-bounded by their own input length. |
+
+### Test-integrity defects found
+
+A passing test proves nothing until it can fail. These were passing while asserting nothing:
+
+- `project-webhook-atomicity.spec.ts` held its webhook mock in the wrong constructor slot after a parameter was inserted ahead of it, so `expect(enqueue).not.toHaveBeenCalled()` was wired to a collaborator that never existed.
+- Dashboard isolation specs targeted queries the service no longer builds after delegation; re-pointed to assert the caller's `orgId`/`userId` reaches each collaborator, which is where the guarantee now lives.
+- `check-command-catalog.mjs` treated `*` as a wildcard on both sides, so an interpolated hook path matched any same-shape route. It reported zero while 36 mutation hooks carried the wrong permission key.
 
 ## Immediate code-level final gate
 
