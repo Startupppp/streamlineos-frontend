@@ -19,6 +19,7 @@ import type {
   TimesheetException,
   TimesheetExceptionRecord,
 } from "@/features/timesheets/types";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const exceptionsListPrefix = queryKeys.timesheets
   .exceptions(undefined)
@@ -44,12 +45,12 @@ export function useTimesheetExceptions(
   };
   return useInfiniteQuery<CursorPage<TimesheetException>>({
     queryKey: queryKeys.timesheets.exceptions(filters),
-    queryFn: ({ pageParam }) => {
+    queryFn: ({ pageParam , signal }) => {
       const params: Record<string, unknown> = { ...filters };
       if (typeof pageParam === "string") params.cursor = pageParam;
       return apiClient.get<CursorPage<TimesheetException>>(
         "/timesheets/exceptions",
-        params,
+        params, signal,
       );
     },
     initialPageParam: undefined as string | undefined,
@@ -71,7 +72,7 @@ export function useExceptionsSummary(enabled = true) {
 
 export function useResolveException() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:exceptions:manage", {
     mutationKey: ["timesheets", "exceptions", "resolve"],
     mutationFn: ({ exceptionId, reason }: { exceptionId: number; reason: string }) =>
       apiClient.post<TimesheetExceptionRecord>(
@@ -88,7 +89,7 @@ export function useResolveException() {
 
 export function useDismissException() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:exceptions:manage", {
     mutationKey: ["timesheets", "exceptions", "dismiss"],
     mutationFn: ({ exceptionId, reason }: { exceptionId: number; reason: string }) =>
       apiClient.post<TimesheetExceptionRecord>(
@@ -105,7 +106,7 @@ export function useDismissException() {
 
 export function useRunExceptionDetection() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:exceptions:manage", {
     mutationKey: ["timesheets", "exceptions", "run-detection"],
     mutationFn: () =>
       apiClient.post<RunDetectionResult>("/timesheets/exceptions/run-detection"),

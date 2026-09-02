@@ -18,6 +18,7 @@ import type {
   UpdateAssetInput,
   UpdateCategoryInput,
 } from "@/types/accounting/assets";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface ListCategoriesParams {
   cursor?: string;
@@ -62,7 +63,7 @@ export function useAssetCategories(params: ListCategoriesParams = {}) {
   return useQuery<CursorPage<AssetCategory>, Error>({
     queryKey: assetKeys.categories(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<AssetCategory>>("/accounting/assets/categories", toQuery(params)),
+      apiClient.get<CursorPage<AssetCategory>>("/accounting/assets/categories", toQuery(params), signal),
     staleTime: 120_000,
     enabled: can,
   });
@@ -70,7 +71,7 @@ export function useAssetCategories(params: ListCategoriesParams = {}) {
 
 export function useCreateAssetCategory() {
   const queryClient = useQueryClient();
-  return useMutation<AssetCategory, Error, CreateCategoryInput>({
+  return useAuthorizedMutation<AssetCategory, Error, CreateCategoryInput>("accounting:assets:manage", {
     mutationKey: ["accounting", "assets", "categories", "create"],
     mutationFn: (data) => apiClient.post<AssetCategory>("/accounting/assets/categories", data),
     onSuccess: () => {
@@ -81,7 +82,7 @@ export function useCreateAssetCategory() {
 
 export function useUpdateAssetCategory(id: number) {
   const queryClient = useQueryClient();
-  return useMutation<AssetCategory, Error, UpdateCategoryInput>({
+  return useAuthorizedMutation<AssetCategory, Error, UpdateCategoryInput>("accounting:assets:manage", {
     mutationKey: ["accounting", "assets", "categories", id, "update"],
     mutationFn: (data) =>
       apiClient.patch<AssetCategory>(`/accounting/assets/categories/${id}`, data),
@@ -96,7 +97,7 @@ export function useAssets(params: ListAssetsParams = {}) {
   return useQuery<CursorPage<AssetListItem>, Error>({
     queryKey: assetKeys.assets(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<AssetListItem>>("/accounting/assets", toQuery(params)),
+      apiClient.get<CursorPage<AssetListItem>>("/accounting/assets", toQuery(params), signal),
     staleTime: 60_000,
     enabled: can,
   });
@@ -104,7 +105,7 @@ export function useAssets(params: ListAssetsParams = {}) {
 
 export function useCreateAsset() {
   const queryClient = useQueryClient();
-  return useMutation<AssetListItem, Error, CreateAssetInput>({
+  return useAuthorizedMutation<AssetListItem, Error, CreateAssetInput>("accounting:assets:create", {
     mutationKey: ["accounting", "assets", "create"],
     mutationFn: (data) => apiClient.post<AssetListItem>("/accounting/assets", data),
     onSuccess: () => {
@@ -125,7 +126,7 @@ export function useAsset(assetId: number) {
 
 export function useUpdateAsset(assetId: number) {
   const queryClient = useQueryClient();
-  return useMutation<AssetDetail, Error, UpdateAssetInput>({
+  return useAuthorizedMutation<AssetDetail, Error, UpdateAssetInput>("accounting:assets:update", {
     mutationKey: ["accounting", "assets", assetId, "update"],
     mutationFn: (data) => apiClient.patch<AssetDetail>(`/accounting/assets/${assetId}`, data),
     onSuccess: () => {
@@ -137,7 +138,7 @@ export function useUpdateAsset(assetId: number) {
 
 export function useActivateAsset(assetId: number) {
   const queryClient = useQueryClient();
-  return useMutation<AssetDetail, Error, void>({
+  return useAuthorizedMutation<AssetDetail, Error, void>("accounting:assets:update", {
     mutationKey: ["accounting", "assets", assetId, "activate"],
     mutationFn: () => apiClient.post<AssetDetail>(`/accounting/assets/${assetId}/activate`, {}),
     onSuccess: () => {
@@ -149,7 +150,7 @@ export function useActivateAsset(assetId: number) {
 
 export function useDisposeAsset(assetId: number) {
   const queryClient = useQueryClient();
-  return useMutation<AssetDetail, Error, DisposeAssetInput>({
+  return useAuthorizedMutation<AssetDetail, Error, DisposeAssetInput>("accounting:assets:manage", {
     mutationKey: ["accounting", "assets", assetId, "dispose"],
     mutationFn: (data) => apiClient.post<AssetDetail>(`/accounting/assets/${assetId}/dispose`, data),
     onSuccess: () => {
@@ -164,7 +165,7 @@ export function useDepreciationRuns(params: ListRunsParams = {}) {
   return useQuery<CursorPage<DepreciationRun>, Error>({
     queryKey: assetKeys.runs(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<DepreciationRun>>("/accounting/assets/depreciation/runs", toQuery(params)),
+      apiClient.get<CursorPage<DepreciationRun>>("/accounting/assets/depreciation/runs", toQuery(params), signal),
     staleTime: 60_000,
     enabled: can,
   });
@@ -172,7 +173,7 @@ export function useDepreciationRuns(params: ListRunsParams = {}) {
 
 export function useCreateDepreciationRun() {
   const queryClient = useQueryClient();
-  return useMutation<DepreciationRun, Error, CreateRunInput>({
+  return useAuthorizedMutation<DepreciationRun, Error, CreateRunInput>("accounting:assets:manage", {
     mutationKey: ["accounting", "assets", "depreciation-runs", "create"],
     mutationFn: (data) =>
       apiClient.post<DepreciationRun>("/accounting/assets/depreciation/runs", data),
@@ -185,7 +186,7 @@ export function useCreateDepreciationRun() {
 
 export function useReverseDepreciationRun(runId: number) {
   const queryClient = useQueryClient();
-  return useMutation<DepreciationRun, Error, void>({
+  return useAuthorizedMutation<DepreciationRun, Error, void>("accounting:assets:manage", {
     mutationKey: ["accounting", "assets", "depreciation-runs", runId, "reverse"],
     mutationFn: () =>
       apiClient.post<DepreciationRun>(`/accounting/assets/depreciation/runs/${runId}/reverse`, {}),

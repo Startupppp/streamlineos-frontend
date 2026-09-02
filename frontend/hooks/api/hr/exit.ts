@@ -75,13 +75,13 @@ export function useResignations(params?: ResignationListParams) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: exitKeys.list(params),
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const search = new URLSearchParams();
       if (params?.page) search.set("page", String(params.page));
       if (params?.limit) search.set("limit", String(params.limit));
       if (params?.status) search.set("status", params.status);
       const qs = search.toString();
-      return apiClient.get<PaginatedResignations>(`/hr/exit${qs ? `?${qs}` : ""}`);
+      return apiClient.get<PaginatedResignations>(`/hr/exit${qs ? `?${qs}` : ""}`, undefined, signal);
     },
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,

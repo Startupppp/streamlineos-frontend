@@ -26,6 +26,7 @@ import type {
   DistributeLeadsInput,
   DistributeResult,
 } from "@/types/leads";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useLeads(filters?: LeadFilters, options?: { enabled?: boolean }) {
   return useQuery({
@@ -96,7 +97,7 @@ export function useLeadAnalyticsSummary(filters?: {
 
 export function useCreateLead() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:leads:create", {
     mutationKey: ["leads", "create"] as const,
     mutationFn: (input: CreateLeadInput) =>
       apiClient.post<Lead>("/leads", input),
@@ -108,7 +109,7 @@ export function useCreateLead() {
 
 export function useUpdateLead() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:leads:update", {
     mutationKey: ["leads", "update"] as const,
     mutationFn: ({ id, ...data }: UpdateLeadInput) =>
       apiClient.patch<Lead>(`/leads/${id}`, data),
@@ -139,7 +140,7 @@ export function useUpdateLead() {
 
 export function useUpdateLeadStatus() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:leads:update", {
     mutationKey: ["leads", "updateStatus"] as const,
     mutationFn: (input: UpdateLeadStatusInput) =>
       apiClient.patch<Lead>(`/leads/${input.leadId}/status`, input),
@@ -180,7 +181,7 @@ export function useUpdateLeadStatus() {
 
 export function useLogLeadActivity() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:leads:update", {
     mutationKey: ["leads", "activity", "log"] as const,
     mutationFn: (input: LogActivityInput) =>
       apiClient.post<LeadActivity>(`/leads/${input.leadId}/activities`, input),
@@ -194,7 +195,7 @@ export function useLogLeadActivity() {
 
 export function useBulkUpdateLeads() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:leads:update", {
     mutationKey: ["leads", "bulkUpdate"] as const,
     mutationFn: (input: BulkUpdateLeadsInput) =>
       apiClient.patch<{ updated: number }>("/leads/bulk", input),
@@ -206,7 +207,7 @@ export function useBulkUpdateLeads() {
 
 export function useBulkDeleteLeads() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:leads:delete", {
     mutationKey: ["leads", "bulkDelete"] as const,
     mutationFn: (input: BulkDeleteLeadsInput) =>
       apiClient.delete<{ deleted: number }>("/leads/bulk", input),
@@ -218,7 +219,7 @@ export function useBulkDeleteLeads() {
 
 export function useDistributeLeads() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:leads:assign", {
     mutationKey: ["leads", "distribute"] as const,
     mutationFn: (input: DistributeLeadsInput) =>
       apiClient.post<DistributeResult>("/leads/distribute", input),
@@ -230,7 +231,7 @@ export function useDistributeLeads() {
 
 export function useSelfAssignLead() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:leads:update", {
     mutationKey: ["leads", "selfAssign"] as const,
     mutationFn: (leadId: number) =>
       apiClient.patch<Lead>(`/leads/${leadId}/self-assign`, {}),
@@ -242,7 +243,7 @@ export function useSelfAssignLead() {
 
 export function useAssignLead() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:leads:assign", {
     mutationKey: ["leads", "assign"] as const,
     mutationFn: (input: AssignLeadInput) =>
       apiClient.patch<Lead>(`/leads/${input.leadId}/assign`, { assignedToId: input.assignedToId }),

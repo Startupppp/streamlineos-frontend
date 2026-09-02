@@ -11,6 +11,7 @@ import type {
   CreateGrantInput,
   UpdateGrantInput,
 } from "@/types/portal-access/grants";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function usePortalMemberships(params?: { cursor?: string; limit?: number; status?: string }) {
   const canView = useCan("build:portal:view");
@@ -34,7 +35,7 @@ export function useProjectClientGrants(params?: { cursor?: string; limit?: numbe
 
 export function useCreateGrant() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:clientvisibility:manage", {
     mutationKey: ["portalAccess", "grants", "create"],
     mutationFn: (data: CreateGrantInput) =>
       apiClient.post<ProjectClientGrant>("/portal-access/grants", data),
@@ -46,7 +47,7 @@ export function useCreateGrant() {
 
 export function useUpdateGrant(projectClientGrantId: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:clientvisibility:manage", {
     mutationKey: ["portalAccess", "grants", projectClientGrantId, "update"],
     mutationFn: (data: UpdateGrantInput) =>
       apiClient.patch<ProjectClientGrant>(
@@ -62,7 +63,7 @@ export function useUpdateGrant(projectClientGrantId: string) {
 
 export function useRevokeGrant(projectClientGrantId: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:clientvisibility:manage", {
     mutationKey: ["portalAccess", "grants", projectClientGrantId, "revoke"],
     mutationFn: () =>
       apiClient.post<ProjectClientGrant>(

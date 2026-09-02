@@ -92,7 +92,7 @@ export function useSurveyResponse(surveyId: number, sessionId: number | undefine
     queryKey: queryKeys.surveys.response(surveyId, sessionId ?? -1),
     queryFn: ({ signal }) =>
       apiClient.get<{ session: SurveyResponseSession; answers: SurveyResponseAnswer[] }>(
-        `/surveys/${surveyId}/responses/${sessionId}`, signal,
+        `/surveys/${surveyId}/responses/${sessionId}`, undefined, signal,
       ),
     enabled: typeof sessionId === "number",
     staleTime: 15_000,

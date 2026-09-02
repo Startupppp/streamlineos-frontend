@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import type { CursorPage } from "@/hooks/api/accounting";
 import { coreKeys, toQuery } from "./core-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface RecurringJournalLine {
   accountId: number;
@@ -59,7 +60,7 @@ export function useRecurringJournals(params: RecurringJournalParams = {}) {
     queryFn: ({ signal }) =>
       apiClient.get<CursorPage<RecurringJournal>>(
         "/accounting/recurring-journals",
-        toQuery(params),
+        toQuery(params), signal,
       ),
     staleTime: 60_000,
     enabled: can,
@@ -68,7 +69,7 @@ export function useRecurringJournals(params: RecurringJournalParams = {}) {
 
 export function useCreateRecurringJournal() {
   const queryClient = useQueryClient();
-  return useMutation<RecurringJournal, Error, CreateRecurringJournalInput>({
+  return useAuthorizedMutation<RecurringJournal, Error, CreateRecurringJournalInput>("accounting:recurring:manage", {
     mutationKey: [...coreKeys.all, "create-recurring-journal"],
     mutationFn: (body) =>
       apiClient.post<RecurringJournal>("/accounting/recurring-journals", body),
@@ -80,7 +81,7 @@ export function useCreateRecurringJournal() {
 
 export function useUpdateRecurringJournal(templateId: number) {
   const queryClient = useQueryClient();
-  return useMutation<RecurringJournal, Error, UpdateRecurringJournalInput>({
+  return useAuthorizedMutation<RecurringJournal, Error, UpdateRecurringJournalInput>("accounting:recurring:manage", {
     mutationKey: [...coreKeys.all, "update-recurring-journal", templateId],
     mutationFn: (body) =>
       apiClient.patch<RecurringJournal>(`/accounting/recurring-journals/${templateId}`, body),
@@ -92,7 +93,7 @@ export function useUpdateRecurringJournal(templateId: number) {
 
 export function useDeleteRecurringJournal(templateId: number) {
   const queryClient = useQueryClient();
-  return useMutation<void, Error, void>({
+  return useAuthorizedMutation<void, Error, void>("accounting:recurring:manage", {
     mutationKey: [...coreKeys.all, "delete-recurring-journal", templateId],
     mutationFn: () =>
       apiClient.delete<void>(`/accounting/recurring-journals/${templateId}`),
@@ -104,7 +105,7 @@ export function useDeleteRecurringJournal(templateId: number) {
 
 export function useRunRecurringJournalNow(templateId: number) {
   const queryClient = useQueryClient();
-  return useMutation<{ created: boolean; entryId?: number }, Error, void>({
+  return useAuthorizedMutation<{ created: boolean; entryId?: number }, Error, void>("accounting:recurring:manage", {
     mutationKey: [...coreKeys.all, "run-recurring-now", templateId],
     mutationFn: () =>
       apiClient.post<{ created: boolean; entryId?: number }>(

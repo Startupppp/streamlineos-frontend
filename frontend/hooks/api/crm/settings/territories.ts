@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface TerritoryCriteria {
   countries?: string[];
@@ -67,7 +68,7 @@ export function useTerritories() {
 
 export function useCreateTerritory() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:territories:manage", {
     mutationKey: ["crm-settings", "territories", "create"],
     mutationFn: (input: CreateTerritoryInput) =>
       apiClient.post<Territory>("/crm/territories", input),
@@ -79,7 +80,7 @@ export function useCreateTerritory() {
 
 export function useUpdateTerritory() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:territories:manage", {
     mutationKey: ["crm-settings", "territories", "update"],
     mutationFn: ({ id, ...data }: UpdateTerritoryInput) =>
       apiClient.patch<Territory>(`/crm/territories/${id}`, data),
@@ -91,7 +92,7 @@ export function useUpdateTerritory() {
 
 export function useDeleteTerritory() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:territories:manage", {
     mutationKey: ["crm-settings", "territories", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/crm/territories/${id}`),
@@ -102,7 +103,7 @@ export function useDeleteTerritory() {
 }
 
 export function usePreviewTerritory() {
-  return useMutation({
+  return useAuthorizedMutation("crm:territories:manage", {
     mutationKey: ["crm-settings", "territories", "preview"],
     mutationFn: (sampleLead: {
       city?: string;

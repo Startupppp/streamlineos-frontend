@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface EmailTemplate {
   id: number;
@@ -39,7 +40,7 @@ export function useEmailTemplates(params?: { limit?: number; offset?: number }) 
 
 export function useCreateEmailTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:email-templates:manage", {
     mutationKey: ["crm-settings", "email-templates", "create"],
     mutationFn: (input: CreateEmailTemplateInput) =>
       apiClient.post<EmailTemplate>("/crm/email-templates", input),
@@ -51,7 +52,7 @@ export function useCreateEmailTemplate() {
 
 export function useUpdateEmailTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:email-templates:manage", {
     mutationKey: ["crm-settings", "email-templates", "update"],
     mutationFn: ({ id, ...data }: UpdateEmailTemplateInput) =>
       apiClient.patch<EmailTemplate>(`/crm/email-templates/${id}`, data),
@@ -63,7 +64,7 @@ export function useUpdateEmailTemplate() {
 
 export function useDeleteEmailTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:email-templates:manage", {
     mutationKey: ["crm-settings", "email-templates", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/crm/email-templates/${id}`),

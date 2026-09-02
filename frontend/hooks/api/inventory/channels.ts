@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { SyncStatus } from "@/features/inventory/lib";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type ChannelType = "INTERNAL" | "SHOPIFY" | "WOOCOMMERCE" | "MARKETPLACE" | "B2B" | "THREE_PL";
 type ChannelStatus = "ACTIVE" | "PAUSED";
@@ -109,7 +110,7 @@ export function useChannelPublications(channelId: number, statusFilter?: Publica
 
 export function useCreateChannel() {
   const qc = useQueryClient();
-  return useMutation<Channel, Error, CreateChannelInput>({
+  return useAuthorizedMutation<Channel, Error, CreateChannelInput>("inventory:channels:manage", {
     mutationKey: ["inventory", "channel", "create"],
     mutationFn: (data) => apiClient.post<Channel>("/inventory/channels", data),
     onSuccess: () => {
@@ -120,7 +121,7 @@ export function useCreateChannel() {
 
 export function useUpdateChannel() {
   const qc = useQueryClient();
-  return useMutation<Channel, Error, UpdateChannelInput>({
+  return useAuthorizedMutation<Channel, Error, UpdateChannelInput>("inventory:channels:manage", {
     mutationKey: ["inventory", "channel", "update"],
     mutationFn: ({ channelId, ...data }) =>
       apiClient.patch<Channel>(`/inventory/channels/${channelId}`, data),
@@ -133,7 +134,7 @@ export function useUpdateChannel() {
 
 export function useSyncChannelStock() {
   const qc = useQueryClient();
-  return useMutation<unknown, Error, number>({
+  return useAuthorizedMutation<unknown, Error, number>("inventory:channels:manage", {
     mutationKey: ["inventory", "channel", "sync-stock"],
     mutationFn: (channelId) =>
       apiClient.post<unknown>(`/inventory/channels/${channelId}/sync-stock`, {}),
@@ -146,7 +147,7 @@ export function useSyncChannelStock() {
 
 export function useRetryChannelPublications() {
   const qc = useQueryClient();
-  return useMutation<unknown, Error, number>({
+  return useAuthorizedMutation<unknown, Error, number>("inventory:channels:manage", {
     mutationKey: ["inventory", "channel", "publications", "retry"],
     mutationFn: (channelId) =>
       apiClient.post<unknown>(`/inventory/channels/${channelId}/publications/retry`, {}),
@@ -168,7 +169,7 @@ export function useThreePlConnections() {
 
 export function useCreateThreePlConnection() {
   const qc = useQueryClient();
-  return useMutation<ThreePlConnection, Error, CreateThreePlInput>({
+  return useAuthorizedMutation<ThreePlConnection, Error, CreateThreePlInput>("inventory:3pl:manage", {
     mutationKey: ["inventory", "3pl", "connection", "create"],
     mutationFn: (data) =>
       apiClient.post<ThreePlConnection>("/inventory/3pl/connections", data),
@@ -180,7 +181,7 @@ export function useCreateThreePlConnection() {
 
 export function useUpdateThreePlConnection() {
   const qc = useQueryClient();
-  return useMutation<ThreePlConnection, Error, UpdateThreePlInput>({
+  return useAuthorizedMutation<ThreePlConnection, Error, UpdateThreePlInput>("inventory:3pl:manage", {
     mutationKey: ["inventory", "3pl", "connection", "update"],
     mutationFn: ({ connectionId, ...data }) =>
       apiClient.patch<ThreePlConnection>(`/inventory/3pl/connections/${connectionId}`, data),
@@ -192,7 +193,7 @@ export function useUpdateThreePlConnection() {
 
 export function useSyncThreePlConnection() {
   const qc = useQueryClient();
-  return useMutation<unknown, Error, number>({
+  return useAuthorizedMutation<unknown, Error, number>("inventory:3pl:manage", {
     mutationKey: ["inventory", "3pl", "connection", "sync"],
     mutationFn: (connectionId) =>
       apiClient.post<unknown>(`/inventory/3pl/connections/${connectionId}/sync`, {}),

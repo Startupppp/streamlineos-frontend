@@ -5,12 +5,14 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { CursorPage } from "@/hooks/api/accounting";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { queryKeyBase } from "@/lib/query-keys/base";
 
 const apRunKeys = {
   paymentRuns: (params?: object) =>
-    ["streamlineos", "accounting", "ap", "payment-runs", params] as const,
+    [...queryKeyBase, "accounting", "ap", "payment-runs", params] as const,
   paymentRun: (id: number) =>
-    ["streamlineos", "accounting", "ap", "payment-runs", id] as const,
+    [...queryKeyBase, "accounting", "ap", "payment-runs", id] as const,
 };
 
 export type PaymentRunStatus = "DRAFT" | "APPROVED" | "COMPLETED" | "CANCELLED";
@@ -99,7 +101,7 @@ export function usePaymentRuns(params: ListPaymentRunsParams = {}) {
     queryFn: ({ signal }) =>
       apiClient.get<CursorPage<PaymentRunSummary>>(
         "/accounting/payment-runs",
-        toQuery(params),
+        toQuery(params), signal,
       ),
     staleTime: 30_000,
     enabled: can,
@@ -118,63 +120,63 @@ export function usePaymentRun(runId: number) {
 
 export function useCreatePaymentRun() {
   const queryClient = useQueryClient();
-  return useMutation<PaymentRunSummary, Error, CreatePaymentRunInput>({
+  return useAuthorizedMutation<PaymentRunSummary, Error, CreatePaymentRunInput>("accounting:payment-runs:manage", {
     mutationKey: ["create-payment-run"],
     mutationFn: (body) =>
       apiClient.post<PaymentRunSummary>("/accounting/payment-runs", body),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: apRunKeys.paymentRuns(), exact: false });
+      void queryClient.invalidateQueries({ queryKey: apRunKeys.paymentRuns(), exact: false });
     },
   });
 }
 
 export function useApprovePaymentRun(runId: number) {
   const queryClient = useQueryClient();
-  return useMutation<PaymentRunSummary, Error, void>({
+  return useAuthorizedMutation<PaymentRunSummary, Error, void>("accounting:payment-runs:approve", {
     mutationKey: ["approve-payment-run", runId],
     mutationFn: () =>
       apiClient.post<PaymentRunSummary>(`/accounting/payment-runs/${runId}/approve`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: apRunKeys.paymentRun(runId) });
-      queryClient.invalidateQueries({ queryKey: apRunKeys.paymentRuns(), exact: false });
+      void queryClient.invalidateQueries({ queryKey: apRunKeys.paymentRun(runId) });
+      void queryClient.invalidateQueries({ queryKey: apRunKeys.paymentRuns(), exact: false });
     },
   });
 }
 
 export function useExecutePaymentRun(runId: number) {
   const queryClient = useQueryClient();
-  return useMutation<{ id: number; status: string }, Error, void>({
+  return useAuthorizedMutation<{ id: number; status: string }, Error, void>("accounting:payment-runs:manage", {
     mutationKey: ["execute-payment-run", runId],
     mutationFn: () =>
       apiClient.post<{ id: number; status: string }>(
         `/accounting/payment-runs/${runId}/execute`,
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: apRunKeys.paymentRun(runId) });
-      queryClient.invalidateQueries({ queryKey: apRunKeys.paymentRuns(), exact: false });
-      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+      void queryClient.invalidateQueries({ queryKey: apRunKeys.paymentRun(runId) });
+      void queryClient.invalidateQueries({ queryKey: apRunKeys.paymentRuns(), exact: false });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
     },
   });
 }
 
 export function useCancelPaymentRun(runId: number) {
   const queryClient = useQueryClient();
-  return useMutation<{ id: number; status: string }, Error, void>({
+  return useAuthorizedMutation<{ id: number; status: string }, Error, void>("accounting:payment-runs:manage", {
     mutationKey: ["cancel-payment-run", runId],
     mutationFn: () =>
       apiClient.post<{ id: number; status: string }>(
         `/accounting/payment-runs/${runId}/cancel`,
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: apRunKeys.paymentRun(runId) });
-      queryClient.invalidateQueries({ queryKey: apRunKeys.paymentRuns(), exact: false });
+      void queryClient.invalidateQueries({ queryKey: apRunKeys.paymentRun(runId) });
+      void queryClient.invalidateQueries({ queryKey: apRunKeys.paymentRuns(), exact: false });
     },
   });
 }
 
 export function useUpdatePaymentRunItem(runId: number, itemId: number) {
   const queryClient = useQueryClient();
-  return useMutation<{ id: number; updated: boolean }, Error, UpdatePaymentRunItemInput>({
+  return useAuthorizedMutation<{ id: number; updated: boolean }, Error, UpdatePaymentRunItemInput>("accounting:payment-runs:manage", {
     mutationKey: ["update-payment-run-item", runId, itemId],
     mutationFn: (body) =>
       apiClient.patch<{ id: number; updated: boolean }>(
@@ -182,19 +184,19 @@ export function useUpdatePaymentRunItem(runId: number, itemId: number) {
         body,
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: apRunKeys.paymentRun(runId) });
+      void queryClient.invalidateQueries({ queryKey: apRunKeys.paymentRun(runId) });
     },
   });
 }
 
 export function useCreateVendorPaymentAllocation() {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, CreateVendorPaymentAllocationInput>({
+  return useAuthorizedMutation<{ success: boolean }, Error, CreateVendorPaymentAllocationInput>("accounting:payables:manage", {
     mutationKey: ["create-vendor-payment-allocation"],
     mutationFn: (body) =>
       apiClient.post<{ success: boolean }>("/accounting/vendor-payments/allocations", body),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
     },
   });
 }

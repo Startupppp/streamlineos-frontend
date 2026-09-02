@@ -88,7 +88,7 @@ export function useAllOffers(params?: AllOffersParams) {
 
   return useQuery({
     queryKey: [...queryKeys.hr.all, "allOffers", queryParams] as const,
-    queryFn: (): Promise<{
+    queryFn: ({ signal }): Promise<{
       items: OfferListItem[];
       total: number;
       pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
@@ -96,6 +96,7 @@ export function useAllOffers(params?: AllOffersParams) {
       return apiClient.get(
         "/hr/recruitment/offers",
         queryParams,
+        signal,
       );
     },
     staleTime: 60_000,

@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface CommentDraftAssignee {
   id: string;
@@ -47,7 +48,7 @@ export function useMyCommentDrafts() {
 
 export function useUpsertCommentDraft() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:view", {
     mutationKey: ["projects", "comment-drafts", "upsert"],
     mutationFn: ({ ticketId, body }: { ticketId: number; body: string }) =>
       apiClient.put<CommentDraft>(`/build/comment-drafts/tickets/${ticketId}`, { body }),
@@ -59,7 +60,7 @@ export function useUpsertCommentDraft() {
 
 export function useDeleteCommentDraft() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:view", {
     mutationKey: ["projects", "comment-drafts", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ deleted: boolean }>(`/build/comment-drafts/${id}`),
@@ -71,7 +72,7 @@ export function useDeleteCommentDraft() {
 
 export function useDeleteCommentDraftByTicket() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:view", {
     mutationKey: ["projects", "comment-drafts", "delete-by-ticket"],
     mutationFn: (ticketId: number) =>
       apiClient.delete<{ deleted: boolean }>(`/build/comment-drafts/tickets/${ticketId}`),
@@ -83,7 +84,7 @@ export function useDeleteCommentDraftByTicket() {
 
 export function useDeleteAllCommentDrafts() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:view", {
     mutationKey: ["projects", "comment-drafts", "delete-all"],
     mutationFn: () =>
       apiClient.delete<{ deleted: boolean }>("/build/comment-drafts/mine"),

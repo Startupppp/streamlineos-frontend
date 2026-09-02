@@ -23,10 +23,10 @@ export function useAuditEvents(query: AuditQuery = {}, enabled = true) {
   };
   return useInfiniteQuery<CursorPage<AuditEvent>>({
     queryKey: queryKeys.timesheets.audit(filters),
-    queryFn: ({ pageParam }) => {
+    queryFn: ({ pageParam , signal }) => {
       const params: Record<string, unknown> = { ...filters };
       if (typeof pageParam === "string") params.cursor = pageParam;
-      return apiClient.get<CursorPage<AuditEvent>>("/timesheets/audit", params);
+      return apiClient.get<CursorPage<AuditEvent>>("/timesheets/audit", params, signal);
     },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,

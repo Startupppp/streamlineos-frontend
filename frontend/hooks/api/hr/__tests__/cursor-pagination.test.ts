@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { useHrCases, useDisciplinaryActions } from "../cases";
 
+const forwardedSignal = new AbortController().signal;
+
 jest.mock("@tanstack/react-query", () => ({
   ...jest.requireActual("@tanstack/react-query"),
   useQuery: jest.fn((options: unknown) => options),
@@ -53,11 +55,12 @@ describe("useHrCases — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureHrCasesOptions({ limit: 20 });
-    void opts.queryFn({});
+    void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/cases",
       expect.not.objectContaining({ cursor: expect.anything() }),
+      forwardedSignal,
     );
   });
 
@@ -66,11 +69,12 @@ describe("useHrCases — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureHrCasesOptions({ cursor: "eyJpZCI6MjB9", limit: 20 });
-    void opts.queryFn({});
+    void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/cases",
       expect.objectContaining({ cursor: "eyJpZCI6MjB9" }),
+      forwardedSignal,
     );
   });
 
@@ -79,11 +83,12 @@ describe("useHrCases — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue({ ...cursorResponse, pagination: { ...cursorResponse.pagination, hasMore: true, nextCursor: "abc" } });
 
     const opts = captureHrCasesOptions({ limit: 20 });
-    void opts.queryFn({});
+    void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/cases",
       expect.not.objectContaining({ page: expect.anything() }),
+      forwardedSignal,
     );
   });
 
@@ -92,11 +97,12 @@ describe("useHrCases — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureHrCasesOptions({ cursor: "eyJpZCI6MjB9", limit: 20 });
-    void opts.queryFn({});
+    void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/cases",
       expect.objectContaining({ cursor: "eyJpZCI6MjB9" }),
+      forwardedSignal,
     );
   });
 });
@@ -112,11 +118,12 @@ describe("useDisciplinaryActions — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureDisciplinaryOptions({ limit: 20 });
-    void opts.queryFn({});
+    void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/cases/disciplinary",
       expect.not.objectContaining({ cursor: expect.anything() }),
+      forwardedSignal,
     );
   });
 
@@ -125,11 +132,12 @@ describe("useDisciplinaryActions — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureDisciplinaryOptions({ cursor: "eyJpZCI6NX0", limit: 20 });
-    void opts.queryFn({});
+    void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/cases/disciplinary",
       expect.objectContaining({ cursor: "eyJpZCI6NX0" }),
+      forwardedSignal,
     );
   });
 
@@ -138,11 +146,12 @@ describe("useDisciplinaryActions — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureDisciplinaryOptions({ limit: 20 });
-    void opts.queryFn({});
+    void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/cases/disciplinary",
       expect.not.objectContaining({ page: expect.anything() }),
+      forwardedSignal,
     );
   });
 
@@ -151,11 +160,12 @@ describe("useDisciplinaryActions — cursor pagination contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
     const opts = captureDisciplinaryOptions({ cursor: "eyJpZCI6NX0", limit: 20 });
-    void opts.queryFn({});
+    void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/hr/cases/disciplinary",
       expect.objectContaining({ cursor: "eyJpZCI6NX0" }),
+      forwardedSignal,
     );
   });
 });

@@ -11,8 +11,9 @@ import type {
   CreateHrWebhookInput,
   UpdateHrWebhookInput,
 } from "@/types/hr/webhooks";
+import { queryKeyBase } from "@/lib/query-keys/base";
 
-const BASE = ["streamlineos", "hr", "webhooks"] as const;
+const BASE = [...queryKeyBase, "hr", "webhooks"] as const;
 
 export const hrWebhookKeys = {
   all: BASE,

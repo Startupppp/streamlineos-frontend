@@ -4,10 +4,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import type { Release, CreateReleaseInput, UpdateReleaseInput } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { queryKeyBase } from "@/lib/query-keys/base";
 export type { Release } from "@/types/projects";
 
 function releaseKey(projectId: number) {
-  return ["streamlineos", "projects", projectId, "releases"] as const;
+  return [...queryKeyBase, "projects", projectId, "releases"] as const;
 }
 
 export function useReleases(projectId: number) {
@@ -22,7 +24,7 @@ export function useReleases(projectId: number) {
 
 export function useCreateRelease(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "releases", "create"],
     mutationFn: (data: CreateReleaseInput) =>
       apiClient.post<Release>(`/build/${projectId}/releases`, data),
@@ -32,7 +34,7 @@ export function useCreateRelease(projectId: number) {
 
 export function useUpdateRelease(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:timesheets:manage", {
     mutationKey: ["projects", projectId, "releases", "update"],
     mutationFn: ({ releaseId, ...data }: UpdateReleaseInput) =>
       apiClient.patch<Release>(`/build/${projectId}/releases/${releaseId}`, data),
@@ -42,7 +44,7 @@ export function useUpdateRelease(projectId: number) {
 
 export function useDeleteRelease(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "releases", "delete"],
     mutationFn: (releaseId: number) =>
       apiClient.delete(`/build/${projectId}/releases/${releaseId}`),

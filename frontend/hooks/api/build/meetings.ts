@@ -17,6 +17,7 @@ import type {
   UpsertStandupInput,
   AddAttendeeInput,
 } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface MeetingFilters {
   status?: string;
@@ -60,7 +61,7 @@ export function useMeeting(projectId: number, meetingId: number) {
 
 export function useCreateMeeting(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", "create"],
     mutationFn: (data: CreateMeetingInput) =>
       apiClient.post<Meeting>(`/build/${projectId}/meetings`, data),
@@ -72,7 +73,7 @@ export function useCreateMeeting(projectId: number) {
 
 export function useUpdateMeeting(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:timesheets:manage", {
     mutationKey: ["projects", projectId, "meetings", "update"],
     mutationFn: ({ id, ...data }: UpdateMeetingInput) =>
       apiClient.patch<Meeting>(`/build/${projectId}/meetings/${id}`, data),
@@ -85,7 +86,7 @@ export function useUpdateMeeting(projectId: number) {
 
 export function useDeleteMeeting(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/build/${projectId}/meetings/${id}`),
@@ -97,7 +98,7 @@ export function useDeleteMeeting(projectId: number) {
 
 export function useAddAttendee(projectId: number, meetingId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", meetingId, "attendees", "add"],
     mutationFn: (data: AddAttendeeInput) =>
       apiClient.post<MeetingAttendee>(`/build/${projectId}/meetings/${meetingId}/attendees`, data),
@@ -109,7 +110,7 @@ export function useAddAttendee(projectId: number, meetingId: number) {
 
 export function useRemoveAttendee(projectId: number, meetingId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", meetingId, "attendees", "remove"],
     mutationFn: (userId: string) =>
       apiClient.delete<{ success: boolean }>(`/build/${projectId}/meetings/${meetingId}/attendees/${userId}`),
@@ -121,7 +122,7 @@ export function useRemoveAttendee(projectId: number, meetingId: number) {
 
 export function useUpsertStandup(projectId: number, meetingId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", meetingId, "standup"],
     mutationFn: (data: UpsertStandupInput) =>
       apiClient.put<StandupEntry>(`/build/${projectId}/meetings/${meetingId}/standup`, data),
@@ -133,7 +134,7 @@ export function useUpsertStandup(projectId: number, meetingId: number) {
 
 export function useCreateActionItem(projectId: number, meetingId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", meetingId, "action-items", "create"],
     mutationFn: (data: CreateActionItemInput) =>
       apiClient.post<ActionItem>(`/build/${projectId}/meetings/${meetingId}/action-items`, data),
@@ -145,7 +146,7 @@ export function useCreateActionItem(projectId: number, meetingId: number) {
 
 export function useUpdateActionItem(projectId: number, meetingId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", meetingId, "action-items", "update"],
     mutationFn: ({ id, ...data }: UpdateActionItemInput) =>
       apiClient.patch<ActionItem>(`/build/${projectId}/meetings/${meetingId}/action-items/${id}`, data),
@@ -157,7 +158,7 @@ export function useUpdateActionItem(projectId: number, meetingId: number) {
 
 export function useDeleteActionItem(projectId: number, meetingId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", meetingId, "action-items", "delete"],
     mutationFn: (itemId: number) =>
       apiClient.delete<{ success: boolean }>(`/build/${projectId}/meetings/${meetingId}/action-items/${itemId}`),
@@ -169,7 +170,7 @@ export function useDeleteActionItem(projectId: number, meetingId: number) {
 
 export function useConvertActionItemToTask(projectId: number, meetingId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", meetingId, "action-items", "convert"],
     mutationFn: (itemId: number) =>
       apiClient.post<ActionItem>(

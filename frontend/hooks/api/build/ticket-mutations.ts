@@ -13,6 +13,7 @@ import type {
   ProjectWithDetails,
   ProjectMember,
 } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface UpdateTicketResponse {
   updated: boolean;
@@ -78,7 +79,7 @@ export function useCreateTicket(
   options?: Omit<UseMutationOptions<Ticket, Error, CreateTicketInput>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
-  return useMutation<Ticket, Error, CreateTicketInput>({
+  return useAuthorizedMutation<Ticket, Error, CreateTicketInput>("build:tickets:create", {
     ...options,
     mutationKey: ["projects", "tickets", "create"],
     mutationFn: ({ projectId, ...data }) =>
@@ -111,7 +112,7 @@ export function useUpdateTicket(
   >
 ) {
   const queryClient = useQueryClient();
-  return useMutation<UpdateTicketResponse, Error, UpdateTicketInput, UpdateTicketContext>({
+  return useAuthorizedMutation<UpdateTicketResponse, Error, UpdateTicketInput, UpdateTicketContext>("build:timesheets:manage", {
     ...options,
     mutationKey: ["projects", "tickets", "update"],
     mutationFn: ({ ticketId, ...data }) =>
@@ -290,7 +291,7 @@ export interface BulkUpdateTicketsInput {
 
 export function useBulkUpdateTickets(projectId: number) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: ["projects", "tickets", "bulk-update"],
     mutationFn: (data: BulkUpdateTicketsInput) =>
       apiClient.post<{ updated: number; ticketIds: number[] }>(

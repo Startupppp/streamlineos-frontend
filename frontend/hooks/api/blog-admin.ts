@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { BlogCategory, BlogPostStatus } from "@/types/blog";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface AdminBlogPost {
   id: string;
@@ -84,7 +85,7 @@ export type UpdateBlogPostInput = Partial<CreateBlogPostInput>;
 
 export function useCreateBlogPost() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("blog:posts:manage", {
     mutationKey: ["blog", "admin", "posts", "create"],
     mutationFn: (data: CreateBlogPostInput) =>
       apiClient.post<AdminBlogPost>("/blog/admin/posts", data),
@@ -96,7 +97,7 @@ export function useCreateBlogPost() {
 
 export function useUpdateBlogPost() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("blog:posts:manage", {
     mutationKey: ["blog", "admin", "posts", "update"],
     mutationFn: ({ postId, ...data }: { postId: string } & UpdateBlogPostInput) =>
       apiClient.patch<AdminBlogPost>(`/blog/admin/posts/${postId}`, data),
@@ -109,7 +110,7 @@ export function useUpdateBlogPost() {
 
 export function useDeleteBlogPost() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("blog:posts:manage", {
     mutationKey: ["blog", "admin", "posts", "delete"],
     mutationFn: (postId: string) => apiClient.delete(`/blog/admin/posts/${postId}`),
     onSuccess: () => {
@@ -148,7 +149,7 @@ export type UpdateBlogCategoryInput = Partial<CreateBlogCategoryInput>;
 
 export function useCreateBlogCategory() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("blog:categories:manage", {
     mutationKey: ["blog", "admin", "categories", "create"],
     mutationFn: (data: CreateBlogCategoryInput) =>
       apiClient.post<AdminBlogCategory>("/blog/admin/categories", data),
@@ -160,7 +161,7 @@ export function useCreateBlogCategory() {
 
 export function useUpdateBlogCategory() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("blog:categories:manage", {
     mutationKey: ["blog", "admin", "categories", "update"],
     mutationFn: ({ categoryId, ...data }: { categoryId: string } & UpdateBlogCategoryInput) =>
       apiClient.patch<AdminBlogCategory>(`/blog/admin/categories/${categoryId}`, data),
@@ -172,7 +173,7 @@ export function useUpdateBlogCategory() {
 
 export function useDeleteBlogCategory() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("blog:categories:manage", {
     mutationKey: ["blog", "admin", "categories", "delete"],
     mutationFn: (categoryId: string) =>
       apiClient.delete(`/blog/admin/categories/${categoryId}`),

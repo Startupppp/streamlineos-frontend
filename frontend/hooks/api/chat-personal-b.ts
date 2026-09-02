@@ -171,7 +171,9 @@ export function useChannelInviteLink(channelId: number, enabled: boolean) {
     queryKey: queryKeys.chat.inviteLink(channelId),
     queryFn: ({ signal }) =>
       apiClient.post<{ token: string }>(
-        `/chat/channels/${channelId}/invite-link`, signal,
+        `/chat/channels/${channelId}/invite-link`,
+        undefined,
+        { signal },
       ),
     enabled: canManage && enabled && channelId > 0,
     staleTime: 60_000,

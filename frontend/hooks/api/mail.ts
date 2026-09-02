@@ -23,6 +23,7 @@ import type {
 } from "@/types/mail";
 import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 import type { UnifiedInboxItem, UnifiedInboxResponse } from "@/types/inbox";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useMailAccounts() {
   const can = useCan("mail:inbox:view");
@@ -44,14 +45,14 @@ export function useMailMessages(params: MailMessagesParams) {
 
   return useInfiniteQuery({
     queryKey: queryKeys.mail.messages(queryParams),
-    queryFn: ({ pageParam }) => {
+    queryFn: ({ pageParam , signal }) => {
       const searchParams = new URLSearchParams();
       if (params.folder) searchParams.set("folder", params.folder);
       if (params.accountId !== undefined) searchParams.set("accountId", String(params.accountId));
       if (params.q) searchParams.set("q", params.q);
       if (params.limit) searchParams.set("limit", String(params.limit));
       if (pageParam) searchParams.set("cursor", String(pageParam));
-      return apiClient.get<MailListResponse>(`/mail/messages?${searchParams.toString()}`);
+      return apiClient.get<MailListResponse>(`/mail/messages?${searchParams.toString()}`, undefined, signal);
     },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
@@ -67,7 +68,7 @@ export function useMailThread(accountId: number | undefined, threadId: string | 
     queryKey: queryKeys.mail.thread(accountId ?? 0, threadId ?? ""),
     queryFn: ({ signal }) =>
       apiClient.get<MailMessageDetail[]>(
-        `/mail/threads/${threadId}?accountId=${accountId}`, signal,
+        `/mail/threads/${threadId}?accountId=${accountId}`, undefined, signal,
       ),
     enabled: can && accountId !== undefined && threadId !== undefined && threadId !== "",
     staleTime: 2 * 60_000,
@@ -80,7 +81,7 @@ export function useMailMessage(accountId: number | undefined, messageId: string 
     queryKey: queryKeys.mail.message(accountId ?? 0, messageId ?? ""),
     queryFn: ({ signal }) =>
       apiClient.get<MailMessageDetail>(
-        `/mail/messages/${messageId}?accountId=${accountId}`, signal,
+        `/mail/messages/${messageId}?accountId=${accountId}`, undefined, signal,
       ),
     enabled: can && accountId !== undefined && messageId !== undefined && messageId !== "",
     staleTime: 2 * 60_000,
@@ -89,7 +90,7 @@ export function useMailMessage(accountId: number | undefined, messageId: string 
 
 export function useSendMail() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("mail:messages:send", {
     mutationKey: ["mail", "send"],
     mutationFn: (body: SendMailBody) =>
       apiClient.post<{ messageId: string }>("/mail/send", body),
@@ -101,7 +102,7 @@ export function useSendMail() {
 
 export function useReplyMail() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("mail:messages:send", {
     mutationKey: ["mail", "reply"],
     mutationFn: (body: ReplyMailBody) =>
       apiClient.post<{ messageId: string }>("/mail/reply", body),
@@ -136,7 +137,7 @@ interface MailAiDraftResult {
 }
 
 export function useMailInboxSummary() {
-  return useMutation({
+  return useAuthorizedMutation("mail:ai:use", {
     mutationKey: ["mail", "ai", "inbox-summary"],
     mutationFn: (params: { accountId?: number | "all" }) =>
       apiClient.post<MailInboxSummaryResult>("/mail/ai/inbox-summary", params),
@@ -144,7 +145,7 @@ export function useMailInboxSummary() {
 }
 
 export function useMailThreadSummary() {
-  return useMutation({
+  return useAuthorizedMutation("mail:ai:use", {
     mutationKey: ["mail", "ai", "thread-summary"],
     mutationFn: (params: { accountId: number; threadId: string }) =>
       apiClient.post<MailThreadSummaryResult>("/mail/ai/thread-summary", params),
@@ -152,7 +153,7 @@ export function useMailThreadSummary() {
 }
 
 export function useMailAiDraft() {
-  return useMutation({
+  return useAuthorizedMutation("mail:ai:use", {
     mutationKey: ["mail", "ai", "draft"],
     mutationFn: (params: {
       mode: "compose" | "reply";
@@ -165,7 +166,7 @@ export function useMailAiDraft() {
 
 export function useMailAction() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("mail:messages:manage", {
     mutationKey: ["mail", "action"],
     mutationFn: ({ messageId, body }: { messageId: string; body: MailActionBody }) =>
       apiClient.post<{ success: boolean }>(`/mail/messages/${messageId}/actions`, body),

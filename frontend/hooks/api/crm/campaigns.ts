@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import type { CrmCampaign, CampaignRoi, CampaignAttribution } from "@/types/crm/campaigns";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface CampaignListParams {
   page?: number;
@@ -42,7 +43,7 @@ export function useCampaigns(params?: CampaignListParams) {
 
 export function useCreateCampaign() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:campaigns:manage", {
     mutationKey: ["crmCampaigns", "create"] as const,
     mutationFn: (input: CreateCampaignInput) =>
       apiClient.post<CrmCampaign>("/crm/campaigns", input),
@@ -54,7 +55,7 @@ export function useCreateCampaign() {
 
 export function useUpdateCampaign() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:campaigns:manage", {
     mutationKey: ["crmCampaigns", "update"] as const,
     mutationFn: ({ id, ...data }: UpdateCampaignInput) =>
       apiClient.patch<CrmCampaign>(`/crm/campaigns/${id}`, data),

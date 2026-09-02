@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface ProxyAccess {
   id: number;
@@ -29,16 +30,25 @@ export interface DelegationsListResponse {
 
 const DELEGATIONS_KEY = ["hr", "governance", "delegations"] as const;
 
-export function useOrgDelegations(params?: { scope?: string; active?: boolean; page?: number; limit?: number }) {
+export function useOrgDelegations(params?: {
+  scope?: string;
+  active?: boolean;
+  page?: number;
+  limit?: number;
+}) {
   return useQuery<DelegationsListResponse>({
     queryKey: [...queryKeys.hr.hrDelegationsAll, "org", params],
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
       if (params?.scope) p["scope"] = params.scope;
       if (params?.active !== undefined) p["active"] = params.active;
       if (params?.page) p["page"] = params.page;
       if (params?.limit) p["limit"] = params.limit;
-      return apiClient.get<DelegationsListResponse>("/hr/governance/delegations", p);
+      return apiClient.get<DelegationsListResponse>(
+        "/hr/governance/delegations",
+        p,
+        signal,
+      );
     },
     staleTime: 30_000,
   });
@@ -46,9 +56,21 @@ export function useOrgDelegations(params?: { scope?: string; active?: boolean; p
 
 export function useGrantProxy() {
   const qc = useQueryClient();
-  return useMutation<ProxyAccess, Error, { proxyUserId: string; scope: string; startsAt: string; endsAt: string; reason?: string; disallowSensitive?: boolean }>({
+  return useAuthorizedMutation<
+    ProxyAccess,
+    Error,
+    {
+      proxyUserId: string;
+      scope: string;
+      startsAt: string;
+      endsAt: string;
+      reason?: string;
+      disallowSensitive?: boolean;
+    }
+  >("hr:workflows:view", {
     mutationKey: [...DELEGATIONS_KEY, "grant"],
-    mutationFn: (payload) => apiClient.post<ProxyAccess>("/hr/governance/delegations", payload),
+    mutationFn: (payload) =>
+      apiClient.post<ProxyAccess>("/hr/governance/delegations", payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: DELEGATIONS_KEY });
       toast.success("Proxy access granted");
@@ -59,9 +81,10 @@ export function useGrantProxy() {
 
 export function useRevokeProxy() {
   const qc = useQueryClient();
-  return useMutation<void, Error, number>({
+  return useAuthorizedMutation<void, Error, number>("hr:workflows:view", {
     mutationKey: [...DELEGATIONS_KEY, "revoke"],
-    mutationFn: (proxyId) => apiClient.delete<void>(`/hr/governance/delegations/${proxyId}`),
+    mutationFn: (proxyId) =>
+      apiClient.delete<void>(`/hr/governance/delegations/${proxyId}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: DELEGATIONS_KEY });
       toast.success("Proxy access revoked");

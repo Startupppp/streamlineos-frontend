@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface ExplainFactor {
   label: string;
@@ -18,7 +19,7 @@ export interface InsightNarration {
 }
 
 export function useExplainInsight() {
-  return useMutation<InsightNarration, Error, number>({
+  return useAuthorizedMutation<InsightNarration, Error, number>("inventory:reports:read", {
     mutationKey: ["inventory", "ai", "insight", "explain"],
     mutationFn: (insightId: number) =>
       apiClient.post<InsightNarration>(`/inventory/ai/insights/${insightId}/explain`),
@@ -73,7 +74,7 @@ export interface SupplierDelayBriefing {
 }
 
 export function useReorderProposal() {
-  return useMutation<ReorderProposalResponse, Error, { variantId: string; warehouseId?: string }>({
+  return useAuthorizedMutation<ReorderProposalResponse, Error, { variantId: string; warehouseId?: string }>("inventory:ai:propose", {
     mutationKey: ["inventory", "ai", "reorder-proposal"],
     mutationFn: (body) =>
       apiClient.post<ReorderProposalResponse>("/inventory/ai/reorder-proposal", body),
@@ -82,7 +83,7 @@ export function useReorderProposal() {
 
 export function useConfirmReorderProposal() {
   const qc = useQueryClient();
-  return useMutation<unknown, Error, { proposalId: string; token: string }>({
+  return useAuthorizedMutation<unknown, Error, { proposalId: string; token: string }>("inventory:ai:propose", {
     mutationKey: ["inventory", "ai", "reorder-proposal", "confirm"],
     mutationFn: (body) =>
       apiClient.post<unknown>("/inventory/ai/reorder-proposal/confirm", body),

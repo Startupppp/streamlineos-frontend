@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { TransferStatus } from "@/features/inventory/lib";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type { TransferStatus };
 
@@ -227,7 +228,7 @@ export function useTransfer(transferId: number) {
     queryKey: queryKeys.inventory.transfer(transferId),
     queryFn: async ({ signal }) => {
       const res = await apiClient.get<RawTransferDetail | null>(
-        `/inventory/stock/transfers/${transferId}`, signal,
+        `/inventory/stock/transfers/${transferId}`, undefined, signal,
       );
       return res ? toTransferDetail(res) : null;
     },
@@ -238,7 +239,7 @@ export function useTransfer(transferId: number) {
 
 export function useCreateTransfer() {
   const qc = useQueryClient();
-  return useMutation<CreatedTransfer, Error, CreateTransferInput>({
+  return useAuthorizedMutation<CreatedTransfer, Error, CreateTransferInput>("inventory:stock:transfer", {
     mutationKey: ["inventory", "transfer", "create"],
     mutationFn: (data) =>
       apiClient.post<CreatedTransfer>("/inventory/stock/transfers", {
@@ -261,7 +262,7 @@ export function useCreateTransfer() {
 
 export function useCompleteTransfer() {
   const qc = useQueryClient();
-  return useMutation<void, Error, CompleteTransferInput>({
+  return useAuthorizedMutation<void, Error, CompleteTransferInput>("inventory:stock:transfer", {
     mutationKey: ["inventory", "transfer", "complete"],
     mutationFn: ({ transferId, lines }) =>
       apiClient.post<void>(`/inventory/stock/transfers/${transferId}/complete`, { lines }),
@@ -276,7 +277,7 @@ export function useCompleteTransfer() {
 
 export function useDispatchTransfer() {
   const qc = useQueryClient();
-  return useMutation<void, Error, { transferId: number }>({
+  return useAuthorizedMutation<void, Error, { transferId: number }>("inventory:stock:transfer", {
     mutationKey: ["inventory", "transfer", "dispatch"],
     mutationFn: ({ transferId }) =>
       apiClient.post<void>(`/inventory/stock/transfers/${transferId}/dispatch`, {}),
@@ -290,7 +291,7 @@ export function useDispatchTransfer() {
 
 export function useReserveTransfer() {
   const qc = useQueryClient();
-  return useMutation<void, Error, number>({
+  return useAuthorizedMutation<void, Error, number>("inventory:stock:transfer", {
     mutationKey: ["inventory", "transfer", "reserve"],
     mutationFn: (transferId) =>
       apiClient.post<void>(
@@ -307,7 +308,7 @@ export function useReserveTransfer() {
 
 export function useCancelTransfer() {
   const qc = useQueryClient();
-  return useMutation<void, Error, number>({
+  return useAuthorizedMutation<void, Error, number>("inventory:stock:transfer", {
     mutationKey: ["inventory", "transfer", "cancel"],
     mutationFn: (transferId) =>
       apiClient.post<void>(`/inventory/stock/transfers/${transferId}/cancel`, {}),

@@ -17,8 +17,10 @@ import type {
   CreateRecurringTemplateInput,
   UpdateRecurringTemplateInput,
 } from "@/types/accounting/ar";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { queryKeyBase } from "@/lib/query-keys/base";
 
-const base = ["streamlineos", "accounting"] as const;
+const base = [...queryKeyBase, "accounting"] as const;
 
 const arKeys = {
   creditNotes: {
@@ -60,7 +62,7 @@ export function useCreditNotes(params: ListCreditNotesParams = {}) {
     queryFn: ({ signal }) =>
       apiClient.get<CursorPage<CreditNote>>(
         "/accounting/credit-notes",
-        toQuery(params),
+        toQuery(params), signal,
       ),
     staleTime: 30_000,
     enabled: can,
@@ -82,7 +84,7 @@ export function useRecurringTemplates(
     queryFn: ({ signal }) =>
       apiClient.get<CursorPage<RecurringInvoiceTemplate>>(
         "/accounting/recurring-invoices",
-        toQuery(params),
+        toQuery(params), signal,
       ),
     staleTime: 60_000,
     enabled: can,
@@ -105,7 +107,7 @@ export function useArPayments(params: ArPaymentsParams = {}) {
     queryFn: ({ signal }) =>
       apiClient.get<CursorPage<ArPayment>>(
         "/accounting/ar-payments",
-        toQuery(params),
+        toQuery(params), signal,
       ),
     staleTime: 30_000,
     enabled: can,
@@ -114,11 +116,11 @@ export function useArPayments(params: ArPaymentsParams = {}) {
 
 export function useVoidInvoice() {
   const queryClient = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     { id: number; status: string },
     Error,
     { invoiceId: number }
-  >({
+  >("accounting:manage", {
     mutationKey: ["void-invoice"],
     mutationFn: ({ invoiceId }) =>
       apiClient.post<{ id: number; status: string }>(
@@ -132,11 +134,11 @@ export function useVoidInvoice() {
 
 export function useRecordPaymentWithAllocations() {
   const queryClient = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     { id: number },
     Error,
     { invoiceId: number } & RecordPaymentInput
-  >({
+  >("accounting:create", {
     mutationKey: ["record-payment-ar"],
     mutationFn: ({ invoiceId, ...body }) =>
       apiClient.post<{ id: number }>(`/invoices/${invoiceId}/payments`, body),
@@ -148,7 +150,7 @@ export function useRecordPaymentWithAllocations() {
 
 export function useCreateCreditNote() {
   const queryClient = useQueryClient();
-  return useMutation<CreditNote, Error, CreateCreditNoteInput>({
+  return useAuthorizedMutation<CreditNote, Error, CreateCreditNoteInput>("accounting:credit-notes:create", {
     mutationKey: ["create-credit-note"],
     mutationFn: (body) =>
       apiClient.post<CreditNote>("/accounting/credit-notes", body),
@@ -163,11 +165,11 @@ export function useCreateCreditNote() {
 
 export function usePostCreditNote() {
   const queryClient = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     { id: number; status: string; needsApproval?: boolean },
     Error,
     { creditNoteId: number }
-  >({
+  >("accounting:credit-notes:manage", {
     mutationKey: ["post-credit-note"],
     mutationFn: ({ creditNoteId }) =>
       apiClient.post<{ id: number; status: string; needsApproval?: boolean }>(
@@ -187,11 +189,11 @@ export function usePostCreditNote() {
 
 export function useApplyCreditNote() {
   const queryClient = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     { id: number; invoiceId: number; appliedAmount: number },
     Error,
     { creditNoteId: number } & ApplyCreditNoteInput
-  >({
+  >("accounting:credit-notes:manage", {
     mutationKey: ["apply-credit-note"],
     mutationFn: ({ creditNoteId, ...body }) =>
       apiClient.post<{ id: number; invoiceId: number; appliedAmount: number }>(
@@ -210,11 +212,11 @@ export function useApplyCreditNote() {
 
 export function useCreateRecurringTemplate() {
   const queryClient = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     RecurringInvoiceTemplate,
     Error,
     CreateRecurringTemplateInput
-  >({
+  >("accounting:recurring:manage", {
     mutationKey: ["create-recurring-template"],
     mutationFn: (body) =>
       apiClient.post<RecurringInvoiceTemplate>(
@@ -232,11 +234,11 @@ export function useCreateRecurringTemplate() {
 
 export function useUpdateRecurringTemplate() {
   const queryClient = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     RecurringInvoiceTemplate,
     Error,
     { templateId: number } & UpdateRecurringTemplateInput
-  >({
+  >("accounting:recurring:manage", {
     mutationKey: ["update-recurring-template"],
     mutationFn: ({ templateId, ...body }) =>
       apiClient.patch<RecurringInvoiceTemplate>(
@@ -257,11 +259,11 @@ export function useUpdateRecurringTemplate() {
 
 export function useDeleteRecurringTemplate() {
   const queryClient = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     { id: number; deleted: boolean },
     Error,
     { templateId: number }
-  >({
+  >("accounting:recurring:manage", {
     mutationKey: ["delete-recurring-template"],
     mutationFn: ({ templateId }) =>
       apiClient.delete<{ id: number; deleted: boolean }>(
@@ -281,7 +283,7 @@ export function useDeleteRecurringTemplate() {
 
 export function useRunRecurringTemplate() {
   const queryClient = useQueryClient();
-  return useMutation<{ invoiceId: number }, Error, { templateId: number }>({
+  return useAuthorizedMutation<{ invoiceId: number }, Error, { templateId: number }>("accounting:recurring:manage", {
     mutationKey: ["run-recurring-template"],
     mutationFn: ({ templateId }) =>
       apiClient.post<{ invoiceId: number }>(

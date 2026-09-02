@@ -48,11 +48,11 @@ export function useProbationList(params: ProbationListParams = {}) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<ProbationListResponse>({
     queryKey: probationKeys.list(params),
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const searchParams = new URLSearchParams();
       searchParams.set("limit", String(params.limit ?? 20));
       if (params.cursor) searchParams.set("cursor", params.cursor);
-      return apiClient.get<ProbationListResponse>(`/hr/probation?${searchParams.toString()}`);
+      return apiClient.get<ProbationListResponse>(`/hr/probation?${searchParams.toString()}`, undefined, signal);
     },
     staleTime: 60_000,
     enabled: hrEnabled && canProbation,

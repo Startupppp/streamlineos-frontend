@@ -5,16 +5,18 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { CursorPage } from "@/hooks/api/accounting";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { queryKeyBase } from "@/lib/query-keys/base";
 
 const apVendorKeys = {
   vendorCredits: (params?: object) =>
-    ["streamlineos", "accounting", "ap", "vendor-credits", params] as const,
+    [...queryKeyBase, "accounting", "ap", "vendor-credits", params] as const,
   vendorCredit: (id: number) =>
-    ["streamlineos", "accounting", "ap", "vendor-credits", id] as const,
+    [...queryKeyBase, "accounting", "ap", "vendor-credits", id] as const,
   recurringBills: (params?: object) =>
-    ["streamlineos", "accounting", "ap", "recurring-bills", params] as const,
+    [...queryKeyBase, "accounting", "ap", "recurring-bills", params] as const,
   recurringBill: (id: number) =>
-    ["streamlineos", "accounting", "ap", "recurring-bills", id] as const,
+    [...queryKeyBase, "accounting", "ap", "recurring-bills", id] as const,
 };
 
 export type VendorCreditStatus = "DRAFT" | "POSTED" | "APPLIED" | "VOID";
@@ -156,7 +158,7 @@ export function useVendorCredits(params: ListVendorCreditsParams = {}) {
     queryFn: ({ signal }) =>
       apiClient.get<CursorPage<VendorCreditSummary>>(
         "/accounting/vendor-credits",
-        toQuery(params),
+        toQuery(params), signal,
       ),
     staleTime: 30_000,
     enabled: can,
@@ -176,7 +178,7 @@ export function useVendorCredit(creditId: number) {
 
 export function useCreateVendorCredit() {
   const queryClient = useQueryClient();
-  return useMutation<VendorCreditSummary, Error, CreateVendorCreditInput>({
+  return useAuthorizedMutation<VendorCreditSummary, Error, CreateVendorCreditInput>("accounting:vendor-credits:create", {
     mutationKey: ["create-vendor-credit"],
     mutationFn: (body) =>
       apiClient.post<VendorCreditSummary>("/accounting/vendor-credits", body),
@@ -188,7 +190,7 @@ export function useCreateVendorCredit() {
 
 export function usePostVendorCredit(creditId: number) {
   const queryClient = useQueryClient();
-  return useMutation<{ id: number; status: string }, Error, void>({
+  return useAuthorizedMutation<{ id: number; status: string }, Error, void>("accounting:vendor-credits:manage", {
     mutationKey: ["post-vendor-credit", creditId],
     mutationFn: () =>
       apiClient.post<{ id: number; status: string }>(
@@ -203,11 +205,11 @@ export function usePostVendorCredit(creditId: number) {
 
 export function useApplyVendorCredit(creditId: number) {
   const queryClient = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     { id: number; billId: number; appliedAmount: number },
     Error,
     ApplyVendorCreditInput
-  >({
+  >("accounting:vendor-credits:manage", {
     mutationKey: ["apply-vendor-credit", creditId],
     mutationFn: (body) =>
       apiClient.post<{ id: number; billId: number; appliedAmount: number }>(
@@ -228,7 +230,7 @@ export function useRecurringBills(params: ListRecurringBillsParams = {}) {
     queryFn: ({ signal }) =>
       apiClient.get<CursorPage<RecurringBillTemplate>>(
         "/accounting/recurring-bills",
-        toQuery(params),
+        toQuery(params), signal,
       ),
     staleTime: 60_000,
     enabled: can,
@@ -237,7 +239,7 @@ export function useRecurringBills(params: ListRecurringBillsParams = {}) {
 
 export function useCreateRecurringBill() {
   const queryClient = useQueryClient();
-  return useMutation<RecurringBillTemplate, Error, CreateRecurringBillInput>({
+  return useAuthorizedMutation<RecurringBillTemplate, Error, CreateRecurringBillInput>("accounting:recurring:manage", {
     mutationKey: ["create-recurring-bill"],
     mutationFn: (body) =>
       apiClient.post<RecurringBillTemplate>("/accounting/recurring-bills", body),
@@ -249,7 +251,7 @@ export function useCreateRecurringBill() {
 
 export function useUpdateRecurringBill(templateId: number) {
   const queryClient = useQueryClient();
-  return useMutation<RecurringBillTemplate, Error, UpdateRecurringBillInput>({
+  return useAuthorizedMutation<RecurringBillTemplate, Error, UpdateRecurringBillInput>("accounting:recurring:manage", {
     mutationKey: ["update-recurring-bill", templateId],
     mutationFn: (body) =>
       apiClient.patch<RecurringBillTemplate>(
@@ -265,7 +267,7 @@ export function useUpdateRecurringBill(templateId: number) {
 
 export function useDeleteRecurringBill(templateId: number) {
   const queryClient = useQueryClient();
-  return useMutation<{ id: number; deleted: boolean }, Error, void>({
+  return useAuthorizedMutation<{ id: number; deleted: boolean }, Error, void>("accounting:recurring:manage", {
     mutationKey: ["delete-recurring-bill", templateId],
     mutationFn: () =>
       apiClient.delete<{ id: number; deleted: boolean }>(
@@ -280,7 +282,7 @@ export function useDeleteRecurringBill(templateId: number) {
 
 export function useRunRecurringBillNow(templateId: number) {
   const queryClient = useQueryClient();
-  return useMutation<{ billId: number }, Error, void>({
+  return useAuthorizedMutation<{ billId: number }, Error, void>("accounting:recurring:manage", {
     mutationKey: ["run-recurring-bill-now", templateId],
     mutationFn: () =>
       apiClient.post<{ billId: number }>(

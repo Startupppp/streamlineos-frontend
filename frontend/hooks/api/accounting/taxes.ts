@@ -14,6 +14,7 @@ import type {
   TaxPaymentInput,
   CreateTaxAdjustmentInput,
 } from "@/types/accounting/taxes";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface ListResponse<T> {
   items: T[];
@@ -61,7 +62,7 @@ export function useListTaxCodes(params: ListTaxCodesParams = {}) {
   return useQuery<CursorPage<TaxCode>, Error>({
     queryKey: taxKeys.codes(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<TaxCode>>("/accounting/tax-codes", toQuery(params)),
+      apiClient.get<CursorPage<TaxCode>>("/accounting/tax-codes", toQuery(params), signal),
     staleTime: 60_000,
     enabled: can,
   });
@@ -80,7 +81,7 @@ export interface CreateTaxCodeInput {
 
 export function useCreateTaxCode() {
   const queryClient = useQueryClient();
-  return useMutation<TaxCode, Error, CreateTaxCodeInput>({
+  return useAuthorizedMutation<TaxCode, Error, CreateTaxCodeInput>("accounting:taxes:manage", {
     mutationKey: ["accounting", "tax-codes", "create"],
     mutationFn: (data) => apiClient.post<TaxCode>("/accounting/tax-codes", data),
     onSuccess: () => {
@@ -93,7 +94,7 @@ export type UpdateTaxCodeInput = Partial<CreateTaxCodeInput>;
 
 export function useUpdateTaxCode(id: number) {
   const queryClient = useQueryClient();
-  return useMutation<TaxCode, Error, UpdateTaxCodeInput>({
+  return useAuthorizedMutation<TaxCode, Error, UpdateTaxCodeInput>("accounting:taxes:manage", {
     mutationKey: ["accounting", "tax-codes", "update", id],
     mutationFn: (data) => apiClient.patch<TaxCode>(`/accounting/tax-codes/${id}`, data),
     onSuccess: () => {
@@ -104,7 +105,7 @@ export function useUpdateTaxCode(id: number) {
 
 export function useSeedDefaultTaxCodes() {
   const queryClient = useQueryClient();
-  return useMutation<{ seeded: number }, Error, void>({
+  return useAuthorizedMutation<{ seeded: number }, Error, void>("accounting:taxes:manage", {
     mutationKey: ["accounting", "tax-codes", "seed-defaults"],
     mutationFn: () =>
       apiClient.post<{ seeded: number }>("/accounting/tax-codes/seed-defaults"),
@@ -140,7 +141,7 @@ export function useTaxReportOutput(params: TaxReportParams = {}) {
     queryFn: ({ signal }) =>
       apiClient.get<CursorPage<TaxReportLine>>(
         "/accounting/taxes/reports/output",
-        toQuery(params),
+        toQuery(params), signal,
       ),
     enabled: can && !!params.from && !!params.to,
     staleTime: 30_000,
@@ -154,7 +155,7 @@ export function useTaxReportInput(params: TaxReportParams = {}) {
     queryFn: ({ signal }) =>
       apiClient.get<CursorPage<TaxReportLine>>(
         "/accounting/taxes/reports/input",
-        toQuery(params),
+        toQuery(params), signal,
       ),
     enabled: can && !!params.from && !!params.to,
     staleTime: 30_000,
@@ -190,7 +191,7 @@ export function useTaxPayments(params: ListTaxPaymentsParams = {}) {
     queryFn: ({ signal }) =>
       apiClient.get<ListResponse<TaxPayment>>(
         "/accounting/taxes/payments",
-        toQuery(params),
+        toQuery(params), signal,
       ),
     staleTime: 30_000,
     enabled: can,
@@ -199,7 +200,7 @@ export function useTaxPayments(params: ListTaxPaymentsParams = {}) {
 
 export function useCreateTaxPayment() {
   const queryClient = useQueryClient();
-  return useMutation<TaxPayment, Error, TaxPaymentInput>({
+  return useAuthorizedMutation<TaxPayment, Error, TaxPaymentInput>("accounting:taxes:pay", {
     mutationKey: ["accounting", "taxes", "payments", "create"],
     mutationFn: (data) => apiClient.post<TaxPayment>("/accounting/taxes/payments", data),
     onSuccess: () => {
@@ -210,7 +211,7 @@ export function useCreateTaxPayment() {
 
 export function useDeleteTaxPayment() {
   const queryClient = useQueryClient();
-  return useMutation<void, Error, number>({
+  return useAuthorizedMutation<void, Error, number>("accounting:taxes:pay", {
     mutationKey: ["accounting", "taxes", "payments", "delete"],
     mutationFn: (paymentId) =>
       apiClient.delete<void>(`/accounting/taxes/payments/${paymentId}`),
@@ -222,7 +223,7 @@ export function useDeleteTaxPayment() {
 
 export function useCreateTaxAdjustment() {
   const queryClient = useQueryClient();
-  return useMutation<{ journalEntryId: number; entryNumber: string }, Error, CreateTaxAdjustmentInput>({
+  return useAuthorizedMutation<{ journalEntryId: number; entryNumber: string }, Error, CreateTaxAdjustmentInput>("accounting:taxes:manage", {
     mutationKey: ["accounting", "taxes", "adjustments", "create"],
     mutationFn: (data) =>
       apiClient.post<{ journalEntryId: number; entryNumber: string }>(

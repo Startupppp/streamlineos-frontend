@@ -3,6 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { queryKeyBase } from "@/lib/query-keys/base";
 
 export interface TicketLabel {
   id: number;
@@ -11,7 +13,7 @@ export interface TicketLabel {
   color: string;
 }
 
-const LABELS_KEY = ["streamlineos", "projects", "labels"] as const;
+const LABELS_KEY = [...queryKeyBase, "projects", "labels"] as const;
 
 export function useOrgLabels() {
   const canView = useCan("build:view");
@@ -25,7 +27,7 @@ export function useOrgLabels() {
 
 export function useCreateLabel() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "labels", "create"],
     mutationFn: (data: { name: string; color: string }) =>
       apiClient.post<TicketLabel>("/build/labels", data),
@@ -35,7 +37,7 @@ export function useCreateLabel() {
 
 export function useUpdateLabel() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "labels", "update"],
     mutationFn: ({ id, ...data }: { id: number; name?: string; color?: string }) =>
       apiClient.patch<TicketLabel>(`/build/labels/${id}`, data),
@@ -45,7 +47,7 @@ export function useUpdateLabel() {
 
 export function useDeleteLabel() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "labels", "delete"],
     mutationFn: (id: number) => apiClient.delete(`/build/labels/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: LABELS_KEY }),

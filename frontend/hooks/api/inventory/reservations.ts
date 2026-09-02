@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { StockReservation, StockReservationStatus } from "@/types/inventory";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface ReservationsFilters {
   sourceType?: string;
@@ -56,7 +57,7 @@ export function useReservations(filters?: ReservationsFilters) {
 
 export function useReleaseReservation() {
   const qc = useQueryClient();
-  return useMutation<void, Error, number>({
+  return useAuthorizedMutation<void, Error, number>("inventory:stock:reserve", {
     mutationKey: ["inventory", "stock", "release-reservation"],
     mutationFn: (reservationId) =>
       apiClient.post<void>("/inventory/stock/release-reservation", { reservationId }),
@@ -69,7 +70,7 @@ export function useReleaseReservation() {
 
 export function useOpeningStock() {
   const qc = useQueryClient();
-  return useMutation<unknown, Error, OpeningStockInput>({
+  return useAuthorizedMutation<unknown, Error, OpeningStockInput>("inventory:stock:adjust", {
     mutationKey: ["inventory", "stock", "opening"],
     mutationFn: (data) =>
       apiClient.post<unknown>("/inventory/stock/opening", data, {

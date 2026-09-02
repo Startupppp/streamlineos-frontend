@@ -5,6 +5,7 @@ import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface ProjectWorkspaceMember {
   id: string;
@@ -55,7 +56,7 @@ export function useProjectWorkspaceMembers(
 
 export function useAddProjectWorkspaceMember() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:members:manage", {
     mutationKey: [...queryKeys.projects.workspaceMembers.all, "add"],
     mutationFn: (body: { userId: string; role?: "member" | "admin" }) =>
       apiClient.post<unknown>("/build/members", body),
@@ -67,7 +68,7 @@ export function useAddProjectWorkspaceMember() {
 
 export function useRemoveProjectWorkspaceMember() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: [...queryKeys.projects.workspaceMembers.all, "remove"],
     mutationFn: (userId: string) =>
       apiClient.delete<unknown>(`/build/members/${userId}`),

@@ -12,6 +12,7 @@ import type {
   ReceiveGoodsInput,
   GoodsReceiptNote,
 } from "@/types/inventory";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface PaginatedResponse<T> {
   items: T[];
@@ -59,7 +60,7 @@ export function usePurchaseOrders(filters?: PurchaseOrderFilters) {
         ...(filters?.status ? { status: filters.status } : {}),
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(filters?.pageSize ? { limit: String(filters.pageSize) } : {}),
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     enabled: canView,
   });
@@ -72,7 +73,7 @@ export function useVendorPurchaseOrders(vendorId: number) {
     queryFn: ({ signal }) =>
       apiClient.get<PaginatedResponse<PurchaseOrderSummary>>("/inventory/purchase-orders", {
         vendorId: String(vendorId),
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     enabled: canView && vendorId > 0,
   });
@@ -90,7 +91,7 @@ export function usePurchaseOrder(poId: number) {
 
 export function useCreatePurchaseOrder() {
   const qc = useQueryClient();
-  return useMutation<PurchaseOrderSummary, Error, CreatePurchaseOrderInput>({
+  return useAuthorizedMutation<PurchaseOrderSummary, Error, CreatePurchaseOrderInput>("inventory:purchase-orders:create", {
     mutationKey: ["inventory", "purchase-orders", "create"],
     mutationFn: (data) => {
       const body: CreatePoWire = {
@@ -118,7 +119,7 @@ export function useCreatePurchaseOrder() {
 
 export function useSendPurchaseOrder(poId?: number) {
   const qc = useQueryClient();
-  return useMutation<PurchaseOrderSummary, Error, SendPurchaseOrderInput | undefined>({
+  return useAuthorizedMutation<PurchaseOrderSummary, Error, SendPurchaseOrderInput | undefined>("inventory:purchase-orders:approve", {
     mutationKey: ["inventory", "purchase-orders", "send", poId],
     mutationFn: (vars) => {
       const id = poId ?? vars?.poId;
@@ -134,7 +135,7 @@ export function useSendPurchaseOrder(poId?: number) {
 
 export function useReceiveGoods(poId: number) {
   const qc = useQueryClient();
-  return useMutation<GoodsReceiptNote, Error, ReceiveGoodsInput>({
+  return useAuthorizedMutation<GoodsReceiptNote, Error, ReceiveGoodsInput>("inventory:purchase-orders:receive", {
     mutationKey: ["inventory", "purchase-orders", "receive", poId],
     mutationFn: (data) =>
       apiClient.post<GoodsReceiptNote>(`/inventory/purchase-orders/${poId}/receive`, data),
@@ -152,7 +153,7 @@ interface CancelPurchaseOrderInput {
 
 export function useApprovePurchaseOrder(poId: number) {
   const qc = useQueryClient();
-  return useMutation<PurchaseOrderSummary, Error, void>({
+  return useAuthorizedMutation<PurchaseOrderSummary, Error, void>("inventory:purchase-orders:approve", {
     mutationKey: ["inventory", "purchase-orders", "approve", poId],
     mutationFn: () =>
       apiClient.post<PurchaseOrderSummary>(
@@ -169,7 +170,7 @@ export function useApprovePurchaseOrder(poId: number) {
 
 export function useClosePurchaseOrder(poId: number) {
   const qc = useQueryClient();
-  return useMutation<void, Error, void>({
+  return useAuthorizedMutation<void, Error, void>("inventory:purchase-orders:approve", {
     mutationKey: ["inventory", "purchase-orders", "close", poId],
     mutationFn: () =>
       apiClient.post<void>(
@@ -186,7 +187,7 @@ export function useClosePurchaseOrder(poId: number) {
 
 export function useCancelPurchaseOrder(poId: number) {
   const qc = useQueryClient();
-  return useMutation<void, Error, CancelPurchaseOrderInput | undefined>({
+  return useAuthorizedMutation<void, Error, CancelPurchaseOrderInput | undefined>("inventory:purchase-orders:approve", {
     mutationKey: ["inventory", "purchase-orders", "cancel", poId],
     mutationFn: (vars) =>
       apiClient.post<void>(
@@ -222,7 +223,7 @@ export interface UpdatePurchaseOrderInput {
 
 export function useUpdatePurchaseOrder(poId: number) {
   const qc = useQueryClient();
-  return useMutation<PurchaseOrderSummary, Error, UpdatePurchaseOrderInput>({
+  return useAuthorizedMutation<PurchaseOrderSummary, Error, UpdatePurchaseOrderInput>("inventory:purchase-orders:update", {
     mutationKey: ["inventory", "purchase-orders", "update", poId],
     mutationFn: ({ lines, ...rest }) =>
       apiClient.patch<PurchaseOrderSummary>(`/inventory/purchase-orders/${poId}`, {

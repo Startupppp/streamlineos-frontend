@@ -9,6 +9,7 @@ import type {
   CreateCalendarEventInput,
   UpdateCalendarEventInput,
 } from "@/types/payroll/reports";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function usePayrollCalendar(params: { from: string; to: string }) {
   const canView = useCan("payroll:runs:view");
@@ -22,7 +23,7 @@ export function usePayrollCalendar(params: { from: string; to: string }) {
 
 export function useGenerateCalendarMonth() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:settings:manage", {
     mutationKey: ["payroll", "calendar", "generate"],
     mutationFn: ({ month }: { month: string }) =>
       apiClient.post<{ ok: boolean }>(`/payroll/calendar/generate?month=${encodeURIComponent(month)}`),
@@ -34,7 +35,7 @@ export function useGenerateCalendarMonth() {
 
 export function useCreateCalendarEvent() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:settings:manage", {
     mutationKey: ["payroll", "calendar", "create"],
     mutationFn: (data: CreateCalendarEventInput) =>
       apiClient.post<PayrollCalendarEvent>("/payroll/calendar", data),
@@ -46,7 +47,7 @@ export function useCreateCalendarEvent() {
 
 export function useUpdateCalendarEvent() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:settings:manage", {
     mutationKey: ["payroll", "calendar", "update"],
     mutationFn: ({ eventId, ...data }: { eventId: number } & UpdateCalendarEventInput) =>
       apiClient.patch<PayrollCalendarEvent>(`/payroll/calendar/${eventId}`, data),
@@ -58,7 +59,7 @@ export function useUpdateCalendarEvent() {
 
 export function useDeleteCalendarEvent() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:settings:manage", {
     mutationKey: ["payroll", "calendar", "delete"],
     mutationFn: ({ eventId }: { eventId: number }) =>
       apiClient.delete<void>(`/payroll/calendar/${eventId}`),

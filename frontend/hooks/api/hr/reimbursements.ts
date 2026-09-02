@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface Reimbursement {
   id: number;
@@ -37,7 +38,7 @@ export function useReimbursements() {
 
 export function useCreateReimbursement() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:payroll:view", {
     mutationKey: ["hr", "reimbursements", "create"],
     mutationFn: (data: { category: string; amount: number; description?: string; receiptUrl?: string }) =>
       apiClient.post<Reimbursement>("/hr/reimbursements", data),
@@ -47,7 +48,7 @@ export function useCreateReimbursement() {
 
 export function useProcessReimbursement() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:payroll:view", {
     mutationKey: ["hr", "reimbursements", "process"],
     mutationFn: ({ id, ...data }: { id: number; status: string; rejectionReason?: string }) =>
       apiClient.patch<{ success: boolean }>(`/hr/reimbursements/${id}`, data),

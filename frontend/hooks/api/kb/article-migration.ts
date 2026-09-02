@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type ArticleMigrationPreview = {
   total: number;
@@ -33,7 +34,7 @@ export function useArticleMigrationPreview() {
 
 export function useRunArticleMigration() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:settings:manage", {
     mutationKey: ["kb", "article-migration", "run"],
     mutationFn: (body: { dryRun?: boolean }) =>
       apiClient.post<MigrationResult>("/kb/article-migration/run", body),

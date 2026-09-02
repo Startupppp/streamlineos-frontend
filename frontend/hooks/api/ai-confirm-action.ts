@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface ConfirmActionResult {
   ok: boolean;
@@ -8,7 +9,7 @@ export interface ConfirmActionResult {
 }
 
 export function useConfirmAction() {
-  return useMutation({
+  return useAuthorizedMutation("ai:chat:use", {
     mutationKey: ["aiChat", "confirmAction"],
     mutationFn: (token: string) =>
       apiClient.post<ConfirmActionResult>("/chat/confirm", { token }),

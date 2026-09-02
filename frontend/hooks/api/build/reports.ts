@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface VelocitySprint {
   sprintId: number;
@@ -125,7 +126,7 @@ export function useLeadTimeReport(projectId: number) {
 
 export function useCaptureSnapshot(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "reports", "snapshot"],
     mutationFn: () =>
       apiClient.post<CaptureSnapshotResult>(`/build/${projectId}/reports/snapshot`),

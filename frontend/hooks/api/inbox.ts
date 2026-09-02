@@ -28,13 +28,13 @@ export function useUnifiedInbox(
       infinite: true,
     }),
     initialPageParam: undefined as string | undefined,
-    queryFn: ({ pageParam }) => {
+    queryFn: ({ pageParam , signal }) => {
       const query: Record<string, string> = { limit: String(limit) };
       if (pageParam) query["cursor"] = String(pageParam);
       if (params?.kinds && params.kinds.length > 0)
         query["kinds"] = params.kinds.join(",");
       if (params?.unreadOnly) query["unreadOnly"] = "true";
-      return apiClient.get<UnifiedInboxResponse>("/me/inbox/unified", query);
+      return apiClient.get<UnifiedInboxResponse>("/me/inbox/unified", query, signal);
     },
     getNextPageParam: (lastPage) => lastPage.hasMore ? (lastPage.nextCursor ?? undefined) : undefined,
     staleTime: 30_000,

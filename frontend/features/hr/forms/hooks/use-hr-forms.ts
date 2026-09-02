@@ -9,6 +9,7 @@ import type {
   HrFormListResponse,
   UpdateHrFormPayload,
 } from "../lib/types";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const FORMS_KEY = ["hr", "forms"] as const;
 
@@ -19,13 +20,13 @@ function formKeys(params?: Record<string, unknown>) {
 export function useHrForms(params?: { status?: string; audience?: string; cursor?: string; limit?: number }) {
   return useQuery<HrFormListResponse>({
     queryKey: formKeys(params),
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
       if (params?.status) p["status"] = params.status;
       if (params?.audience) p["audience"] = params.audience;
       if (params?.cursor) p["cursor"] = params.cursor;
       if (params?.limit) p["limit"] = params.limit;
-      return apiClient.get<HrFormListResponse>("/hr/forms", p);
+      return apiClient.get<HrFormListResponse>("/hr/forms", p, signal);
     },
     staleTime: 30_000,
   });
@@ -42,7 +43,7 @@ export function useHrForm(formId: number | undefined) {
 
 export function useCreateHrForm() {
   const qc = useQueryClient();
-  return useMutation<HrForm, Error, CreateHrFormPayload>({
+  return useAuthorizedMutation<HrForm, Error, CreateHrFormPayload>("hr:forms:manage", {
     mutationKey: ["hr", "forms", "create"],
     mutationFn: (payload) => apiClient.post<HrForm>("/hr/forms", payload),
     onSuccess: () => qc.invalidateQueries({ queryKey: FORMS_KEY }),
@@ -51,7 +52,7 @@ export function useCreateHrForm() {
 
 export function useUpdateHrForm(formId: number) {
   const qc = useQueryClient();
-  return useMutation<HrForm, Error, UpdateHrFormPayload>({
+  return useAuthorizedMutation<HrForm, Error, UpdateHrFormPayload>("hr:forms:manage", {
     mutationKey: ["hr", "forms", "update", formId],
     mutationFn: (payload) =>
       apiClient.patch<HrForm>(`/hr/forms/${formId}`, payload),
@@ -64,7 +65,7 @@ export function useUpdateHrForm(formId: number) {
 
 export function useActivateHrForm() {
   const qc = useQueryClient();
-  return useMutation<HrForm, Error, number>({
+  return useAuthorizedMutation<HrForm, Error, number>("hr:forms:manage", {
     mutationKey: ["hr", "forms", "activate"],
     mutationFn: (formId) =>
       apiClient.post<HrForm>(`/hr/forms/${formId}/activate`),
@@ -74,7 +75,7 @@ export function useActivateHrForm() {
 
 export function useArchiveHrForm() {
   const qc = useQueryClient();
-  return useMutation<HrForm, Error, number>({
+  return useAuthorizedMutation<HrForm, Error, number>("hr:forms:manage", {
     mutationKey: ["hr", "forms", "archive"],
     mutationFn: (formId) =>
       apiClient.post<HrForm>(`/hr/forms/${formId}/archive`),
@@ -84,7 +85,7 @@ export function useArchiveHrForm() {
 
 export function useDeleteHrForm() {
   const qc = useQueryClient();
-  return useMutation<void, Error, number>({
+  return useAuthorizedMutation<void, Error, number>("hr:forms:manage", {
     mutationKey: ["hr", "forms", "delete"],
     mutationFn: (formId) => apiClient.delete<void>(`/hr/forms/${formId}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: FORMS_KEY }),

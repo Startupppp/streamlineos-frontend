@@ -12,6 +12,7 @@ import type {
   GetBatchResult,
   EmployeeBankDetails,
   BatchFormat,
+  BatchFileResult,
 } from "@/types/payroll";
 
 export function usePayoutValidation(runId: number) {
@@ -20,7 +21,7 @@ export function usePayoutValidation(runId: number) {
     queryKey: queryKeys.payroll.bankValidation(runId),
     queryFn: ({ signal }) =>
       apiClient.get<ValidationItem[]>(
-        `/payroll/runs/${runId}/payout/validation`, signal,
+        `/payroll/runs/${runId}/payout/validation`, undefined, signal,
       ),
     staleTime: 30_000,
     enabled: canManage && runId > 0,
@@ -79,6 +80,14 @@ export function useCreatePayoutBatch() {
       });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatches() });
     },
+  });
+}
+
+export function useBatchFileUrl() {
+  return useAuthorizedMutation<BatchFileResult, Error, number>("payroll:bank:manage", {
+    mutationKey: ["payroll", "batch-file"],
+    mutationFn: (batchId) =>
+      apiClient.get<BatchFileResult>(`/payroll/payout/batches/${batchId}/file`),
   });
 }
 
@@ -229,7 +238,7 @@ export function useEmployeeBankDetails(
     queryKey: queryKeys.payroll.employeeBank(employeeUserId),
     queryFn: ({ signal }) =>
       apiClient.get<EmployeeBankDetails>(
-        `/payroll/employees/${employeeUserId}/bank`, signal,
+        `/payroll/employees/${employeeUserId}/bank`, undefined, signal,
       ),
     staleTime: 0,
     enabled: enabled && !!employeeUserId && canView,

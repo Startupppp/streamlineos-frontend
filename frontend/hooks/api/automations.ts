@@ -4,6 +4,7 @@ import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tansta
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 function assertPermission(allowed: boolean): void {
   if (!allowed) throw new Error("You do not have permission to manage automations.");
@@ -140,12 +141,12 @@ export function useAutomations(params?: AutomationListParams) {
   const canView = useCan("settings:automations:view");
   return useQuery({
     queryKey: [...queryKeys.automations.all, "list", params] as const,
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const search = new URLSearchParams();
       if (params?.cursor) search.set("cursor", params.cursor);
       if (params?.limit) search.set("limit", String(params.limit));
       const qs = search.toString();
-      return apiClient.get<PaginatedAutomations>(`/settings/automations${qs ? `?${qs}` : ""}`);
+      return apiClient.get<PaginatedAutomations>(`/settings/automations${qs ? `?${qs}` : ""}`, undefined, signal);
     },
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -168,7 +169,7 @@ export function useAutomationRuns(ruleId: number) {
 export function useCreateAutomation() {
   const qc = useQueryClient();
   const canManage = useCan("settings:automations:manage");
-  return useMutation({
+  return useAuthorizedMutation("settings:automations:manage", {
     mutationKey: ["automations", "create"],
     mutationFn: (input: CreateAutomationInput) => {
       assertPermission(canManage);
@@ -181,7 +182,7 @@ export function useCreateAutomation() {
 export function useUpdateAutomation() {
   const qc = useQueryClient();
   const canManage = useCan("settings:automations:manage");
-  return useMutation({
+  return useAuthorizedMutation("settings:automations:manage", {
     mutationKey: ["automations", "update"],
     mutationFn: ({ id, ...input }: UpdateAutomationInput & { id: number }) => {
       assertPermission(canManage);
@@ -194,7 +195,7 @@ export function useUpdateAutomation() {
 export function useToggleAutomation() {
   const qc = useQueryClient();
   const canManage = useCan("settings:automations:manage");
-  return useMutation({
+  return useAuthorizedMutation("settings:automations:manage", {
     mutationKey: ["automations", "toggle"],
     mutationFn: ({ id, isEnabled }: { id: number; isEnabled: boolean }) => {
       assertPermission(canManage);
@@ -207,7 +208,7 @@ export function useToggleAutomation() {
 export function useDeleteAutomation() {
   const qc = useQueryClient();
   const canManage = useCan("settings:automations:manage");
-  return useMutation({
+  return useAuthorizedMutation("settings:automations:manage", {
     mutationKey: ["automations", "delete"],
     mutationFn: (id: number) => {
       assertPermission(canManage);
@@ -220,7 +221,7 @@ export function useDeleteAutomation() {
 export function useTestAutomation() {
   const qc = useQueryClient();
   const canManage = useCan("settings:automations:manage");
-  return useMutation({
+  return useAuthorizedMutation("settings:automations:manage", {
     mutationKey: ["automations", "test"],
     mutationFn: ({ id, payload }: { id: number; payload: Record<string, unknown> }) => {
       assertPermission(canManage);

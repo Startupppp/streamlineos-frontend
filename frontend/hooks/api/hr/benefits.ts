@@ -82,7 +82,7 @@ export function useBenefitPlans(query: BenefitPlansQuery = {}) {
     queryFn: ({ signal }) =>
       apiClient.get<BenefitsCursorPage<BenefitPlan>>(
         "/hr/benefits/plans",
-        query as Record<string, unknown>,
+        query as Record<string, unknown>, signal,
       ),
     staleTime: 2 * 60_000,
     enabled: canView && hrEnabled,
@@ -189,7 +189,7 @@ export function useInsuranceClaims(query: InsuranceClaimsQuery = {}) {
     queryFn: ({ signal }) =>
       apiClient.get<BenefitsCursorPage<InsuranceClaim>>(
         "/hr/benefits/claims",
-        query as Record<string, unknown>,
+        query as Record<string, unknown>, signal,
       ),
     staleTime: 60_000,
     enabled: canView && hrEnabled,

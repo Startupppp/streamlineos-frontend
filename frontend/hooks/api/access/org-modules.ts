@@ -7,6 +7,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { useAccess, useCan } from "@/hooks/api/access";
 import { ORG_MODULE_NAME, normalizeOrgModuleKey } from "@/lib/module-vocabulary";
 import type { AccessResponse } from "@/types/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface OrgModule {
   moduleKey: string;
@@ -93,12 +94,12 @@ export function useOrgModules() {
 
 export function useToggleOrgModule() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     void,
     Error,
     { moduleKey: string; enabled: boolean },
     { previousModules?: OrgModule[]; previousAccess: [readonly unknown[], AccessResponse | undefined][] }
-  >({
+  >("settings:manage", {
     mutationKey: ["toggle", "org", "module"],
     mutationFn: ({ moduleKey, enabled }) =>
       apiClient.patch<void>(`/access/org-modules/${moduleKey}`, { enabled }),

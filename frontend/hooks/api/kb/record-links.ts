@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type KbPageRecordLink = {
   id: number;
@@ -30,7 +31,7 @@ export function useKbPageRecordLinks(pageId: number) {
 
 export function useAddKbPageRecordLink() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "record-links", "add"],
     mutationFn: (params: { pageId: number } & CreateKbPageRecordLinkInput) =>
       apiClient.post<KbPageRecordLink>(`/kb/pages/${params.pageId}/record-links`, {
@@ -46,7 +47,7 @@ export function useAddKbPageRecordLink() {
 
 export function useRemoveKbPageRecordLink() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:update", {
     mutationKey: ["kb", "record-links", "remove"],
     mutationFn: (params: { linkId: number; pageId: number }) =>
       apiClient.delete(`/kb/record-links/${params.linkId}`),

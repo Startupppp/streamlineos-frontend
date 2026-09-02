@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { queryKeyBase } from "@/lib/query-keys/base";
 
 export type ProvisioningAction = "grant" | "revoke" | "review";
 export type ProvisioningStatus = "pending" | "completed" | "verified" | "failed";
@@ -50,10 +51,10 @@ interface PaginatedResult<T> {
 const BASE = "/hr/enterprise/ops/identity";
 
 const identityKeys = {
-  all: ["streamlineos", "hr-identity"] as const,
-  provisioning: (p: Record<string, unknown>) => ["streamlineos", "hr-identity", "provisioning", p] as const,
-  templates: ["streamlineos", "hr-identity", "templates"] as const,
-  exitVerification: (userId: string) => ["streamlineos", "hr-identity", "exit-verification", userId] as const,
+  all: [...queryKeyBase, "hr-identity"] as const,
+  provisioning: (p: Record<string, unknown>) => [...queryKeyBase, "hr-identity", "provisioning", p] as const,
+  templates: [...queryKeyBase, "hr-identity", "templates"] as const,
+  exitVerification: (userId: string) => [...queryKeyBase, "hr-identity", "exit-verification", userId] as const,
 };
 
 export function useAccessProvisioning(params: {
@@ -64,7 +65,7 @@ export function useAccessProvisioning(params: {
 } = {}) {
   return useQuery({
     queryKey: identityKeys.provisioning(params as Record<string, unknown>),
-    queryFn: ({ signal }) => apiClient.get<PaginatedResult<AccessProvisioningRecord>>(`${BASE}/provisioning`, params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get<PaginatedResult<AccessProvisioningRecord>>(`${BASE}/provisioning`, params as Record<string, unknown>, signal),
     staleTime: 30_000,
   });
 }

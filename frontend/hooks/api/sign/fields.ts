@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SignField, SignFieldType } from "@/types/sign";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface CreateSignFieldInput {
   documentId: number;
@@ -29,7 +30,7 @@ function invalidateEnvelope(qc: ReturnType<typeof useQueryClient>, envelopeId: n
 
 export function useAddSignField(envelopeId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("sign:envelope:create", {
     mutationKey: ["signFields", "add", envelopeId],
     mutationFn: (input: CreateSignFieldInput) => apiClient.post<SignField>(`/sign/envelopes/${envelopeId}/fields`, input),
     onSuccess: () => invalidateEnvelope(qc, envelopeId),
@@ -38,7 +39,7 @@ export function useAddSignField(envelopeId: number) {
 
 export function useUpdateSignField(envelopeId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("sign:envelope:create", {
     mutationKey: ["signFields", "update", envelopeId],
     mutationFn: ({ id, input }: { id: number; input: Partial<Omit<CreateSignFieldInput, "documentId" | "recipientId">> }) =>
       apiClient.patch<SignField>(`/sign/fields/${id}`, input),
@@ -48,7 +49,7 @@ export function useUpdateSignField(envelopeId: number) {
 
 export function useDeleteSignField(envelopeId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("sign:envelope:create", {
     mutationKey: ["signFields", "delete", envelopeId],
     mutationFn: (id: number) => apiClient.delete<{ success: true }>(`/sign/fields/${id}`),
     onSuccess: () => invalidateEnvelope(qc, envelopeId),

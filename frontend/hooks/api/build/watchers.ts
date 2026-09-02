@@ -6,6 +6,7 @@ import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { TicketWatcher } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useWatchers(
   projectId: number,
@@ -27,7 +28,7 @@ export function useWatchers(
 
 export function useToggleWatch(projectId: number) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: ["projects", "watchers", "toggle"],
     mutationFn: ({
       ticketId,
@@ -56,7 +57,7 @@ export function useToggleWatch(projectId: number) {
 
 export function useAddWatcher(projectId: number) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: ["projects", "watchers", "add"],
     mutationFn: ({
       ticketId,

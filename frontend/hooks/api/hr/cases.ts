@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
+import { queryKeyBase } from "@/lib/query-keys/base";
 
 export type CaseCategory =
   | "grievance" | "disciplinary" | "harassment" | "ethics"
@@ -83,22 +84,22 @@ export interface ListCasesParams {
 }
 
 const caseKeys = {
-  all: ["streamlineos", "hr", "cases"] as const,
-  list: (params: ListCasesParams) => ["streamlineos", "hr", "cases", "list", params] as const,
-  detail: (id: number) => ["streamlineos", "hr", "cases", "detail", id] as const,
-  notes: (id: number) => ["streamlineos", "hr", "cases", "notes", id] as const,
-  documents: (id: number) => ["streamlineos", "hr", "cases", "documents", id] as const,
-  stats: ["streamlineos", "hr", "cases", "stats"] as const,
-  disciplinary: ["streamlineos", "hr", "disciplinary"] as const,
-  disciplinaryMine: ["streamlineos", "hr", "disciplinary", "mine"] as const,
-  disciplinaryList: (params: Record<string, unknown>) => ["streamlineos", "hr", "disciplinary", "list", params] as const,
+  all: [...queryKeyBase, "hr", "cases"] as const,
+  list: (params: ListCasesParams) => [...queryKeyBase, "hr", "cases", "list", params] as const,
+  detail: (id: number) => [...queryKeyBase, "hr", "cases", "detail", id] as const,
+  notes: (id: number) => [...queryKeyBase, "hr", "cases", "notes", id] as const,
+  documents: (id: number) => [...queryKeyBase, "hr", "cases", "documents", id] as const,
+  stats: [...queryKeyBase, "hr", "cases", "stats"] as const,
+  disciplinary: [...queryKeyBase, "hr", "disciplinary"] as const,
+  disciplinaryMine: [...queryKeyBase, "hr", "disciplinary", "mine"] as const,
+  disciplinaryList: (params: Record<string, unknown>) => [...queryKeyBase, "hr", "disciplinary", "list", params] as const,
 };
 
 export function useHrCases(params: ListCasesParams = {}) {
   const canCases = useCan("hr:cases:view");
   return useQuery({
     queryKey: caseKeys.list(params),
-    queryFn: ({ signal }) => apiClient.get<CursorResult<HrCase>>("/hr/cases", params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get<CursorResult<HrCase>>("/hr/cases", params as Record<string, unknown>, signal),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
     enabled: canCases,
@@ -220,7 +221,7 @@ export function useCaseDocuments(caseId: number) {
 export function useDisciplinaryActions(params: { employeeId?: string; cursor?: string; limit?: number; actionType?: string } = {}) {
   return useQuery({
     queryKey: caseKeys.disciplinaryList(params),
-    queryFn: ({ signal }) => apiClient.get<CursorResult<DisciplinaryAction>>("/hr/cases/disciplinary", params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get<CursorResult<DisciplinaryAction>>("/hr/cases/disciplinary", params as Record<string, unknown>, signal),
     staleTime: 30_000,
   });
 }

@@ -6,6 +6,7 @@ import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { AuditResponse } from "./types";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export const useUserAuditLog = (
   userId: string,
@@ -29,7 +30,7 @@ export const useUserAuditLog = (
 };
 
 export const useExportUsers = () => {
-  return useMutation<void, Error, void>({
+  return useAuthorizedMutation<void, Error, void>("settings:organization:manage", {
     mutationKey: ["export", "users"],
     mutationFn: async () => {
       const csv = await apiClient.get<string>("/users/export");

@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface KbSource {
   id: number;
@@ -33,7 +34,7 @@ export function useKbSources() {
 
 export function useUploadKbSource() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:create", {
     mutationKey: ["kb", "sources", "upload"],
     mutationFn: (file: File) => {
       const fd = new FormData();
@@ -46,7 +47,7 @@ export function useUploadKbSource() {
 
 export function useCreateKbSourceNote() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:create", {
     mutationKey: ["create", "kb", "source", "note"],
     mutationFn: (input: { title: string; text: string }) =>
       apiClient.post<KbSource>("/kb/sources/note", input),
@@ -56,7 +57,7 @@ export function useCreateKbSourceNote() {
 
 export function useDeleteKbSource() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:pages:delete", {
     mutationKey: ["delete", "kb", "source"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/kb/sources/${id}`),

@@ -6,6 +6,7 @@ import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { TicketLabel, CreateLabelInput } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface AddCommentInput {
   ticketId: number;
@@ -90,7 +91,7 @@ export function useCreateOrgLabel(
   options?: Omit<UseMutationOptions<TicketLabel, Error, CreateLabelInput>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
-  return useMutation<TicketLabel, Error, CreateLabelInput>({
+  return useAuthorizedMutation<TicketLabel, Error, CreateLabelInput>("build:manage", {
     ...options,
     mutationKey: ["projects", "labels", "create"],
     mutationFn: (data) =>
@@ -179,7 +180,7 @@ export function useTicketRelations(ticketId: number, projectId: number) {
 
 export function useAddTicketRelation(ticketId: number, projectId: number) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: ["projects", "tickets", "relations", "add"],
     mutationFn: (data: { relatedTicketId: number; relationType: WorkItemRelationType }) =>
       apiClient.post<{ id: number }>(`/build/${projectId}/tickets/${ticketId}/relations`, data),
@@ -193,7 +194,7 @@ export function useAddTicketRelation(ticketId: number, projectId: number) {
 
 export function useRemoveTicketRelation(ticketId: number, projectId: number) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: ["projects", "tickets", "relations", "remove"],
     mutationFn: (relatedId: number) =>
       apiClient.delete<{ success: boolean }>(

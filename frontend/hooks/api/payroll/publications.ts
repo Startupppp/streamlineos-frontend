@@ -6,6 +6,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { PayslipPublication, PublishResult } from "@/types/payroll";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useRunPublications(runId: number) {
   const canView = useCan("payroll:payslips:view");
@@ -20,7 +21,7 @@ export function useRunPublications(runId: number) {
 
 export function usePublishPayslips() {
   const qc = useQueryClient();
-  return useMutation<PublishResult, Error, { runId: number; userIds?: string[] }>({
+  return useAuthorizedMutation<PublishResult, Error, { runId: number; userIds?: string[] }>("payroll:payslips:manage", {
     mutationKey: ["payroll", "publish-payslips"],
     mutationFn: ({ runId, userIds }) =>
       apiClient.post<PublishResult>(`/payroll/runs/${runId}/payslips/publish`, {

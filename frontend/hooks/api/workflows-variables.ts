@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { WorkflowVariable } from "./workflows-types";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 function assertPermission(allowed: boolean): void {
   if (!allowed) throw new Error("You do not have permission for this workflow action.");
@@ -23,7 +24,7 @@ export function useGlobalVariables() {
 export function useDeleteGlobalVariable() {
   const qc = useQueryClient();
   const canManage = useCan("workflows:variables:manage");
-  return useMutation({
+  return useAuthorizedMutation("workflows:variables:manage", {
     mutationKey: ["delete", "global", "variable"],
     mutationFn: (variableId: string) => {
       assertPermission(canManage);

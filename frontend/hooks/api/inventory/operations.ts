@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface GrnLine {
   id: number;
@@ -62,7 +63,7 @@ export function useGoodsReceipts(filters?: GrnFilters) {
         ...(filters?.dateTo !== undefined ? { dateTo: filters.dateTo } : {}),
         ...(filters?.page !== undefined ? { page: String(filters.page) } : {}),
         ...(filters?.pageSize !== undefined ? { pageSize: String(filters.pageSize) } : {}),
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     enabled: canView,
   });
@@ -85,7 +86,7 @@ interface ReverseGrnInput {
 
 export function useReverseGrn() {
   const qc = useQueryClient();
-  return useMutation<void, Error, ReverseGrnInput>({
+  return useAuthorizedMutation<void, Error, ReverseGrnInput>("inventory:purchase-orders:receive", {
     mutationKey: ["inventory", "goodsReceipts", "reverse"],
     mutationFn: ({ grnId, reason }) =>
       apiClient.post<void>(
@@ -148,7 +149,7 @@ export function useVendorReturns(filters?: VendorReturnFilters) {
         ...(filters?.status !== undefined ? { status: filters.status } : {}),
         ...(filters?.page !== undefined ? { page: String(filters.page) } : {}),
         ...(filters?.pageSize !== undefined ? { pageSize: String(filters.pageSize) } : {}),
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     enabled: canView,
   });
@@ -156,7 +157,7 @@ export function useVendorReturns(filters?: VendorReturnFilters) {
 
 export function useCreateVendorReturn() {
   const qc = useQueryClient();
-  return useMutation<VendorReturnSummary, Error, CreateVendorReturnInput>({
+  return useAuthorizedMutation<VendorReturnSummary, Error, CreateVendorReturnInput>("inventory:vendor-returns:manage", {
     mutationKey: ["inventory", "vendorReturns", "create"],
     mutationFn: (data) =>
       apiClient.post<VendorReturnSummary>("/inventory/vendor-returns", data),
@@ -173,7 +174,7 @@ interface PostVendorReturnInput {
 
 export function usePostVendorReturn() {
   const qc = useQueryClient();
-  return useMutation<void, Error, PostVendorReturnInput>({
+  return useAuthorizedMutation<void, Error, PostVendorReturnInput>("inventory:vendor-returns:manage", {
     mutationKey: ["inventory", "vendorReturns", "post"],
     mutationFn: ({ returnId, reason }) =>
       apiClient.post<void>(
@@ -195,7 +196,7 @@ interface CancelVendorReturnInput {
 
 export function useCancelVendorReturn() {
   const qc = useQueryClient();
-  return useMutation<void, Error, CancelVendorReturnInput>({
+  return useAuthorizedMutation<void, Error, CancelVendorReturnInput>("inventory:vendor-returns:manage", {
     mutationKey: ["inventory", "vendorReturns", "cancel"],
     mutationFn: ({ returnId }) =>
       apiClient.post<void>(`/inventory/vendor-returns/${returnId}/cancel`, {}),
@@ -253,7 +254,7 @@ export function useCustomerReturns(filters?: CustomerReturnFilters) {
         ...(filters?.status !== undefined ? { status: filters.status } : {}),
         ...(filters?.page !== undefined ? { page: String(filters.page) } : {}),
         ...(filters?.pageSize !== undefined ? { pageSize: String(filters.pageSize) } : {}),
-      }),
+      }, signal),
     staleTime: 2 * 60_000,
     enabled: canView,
   });
@@ -261,7 +262,7 @@ export function useCustomerReturns(filters?: CustomerReturnFilters) {
 
 export function useCreateCustomerReturn() {
   const qc = useQueryClient();
-  return useMutation<CustomerReturnSummary, Error, CreateCustomerReturnInput>({
+  return useAuthorizedMutation<CustomerReturnSummary, Error, CreateCustomerReturnInput>("inventory:customer-returns:manage", {
     mutationKey: ["inventory", "customerReturns", "create"],
     mutationFn: (data) =>
       apiClient.post<CustomerReturnSummary>("/inventory/customer-returns", data),
@@ -278,7 +279,7 @@ interface PostCustomerReturnInput {
 
 export function usePostCustomerReturn() {
   const qc = useQueryClient();
-  return useMutation<void, Error, PostCustomerReturnInput>({
+  return useAuthorizedMutation<void, Error, PostCustomerReturnInput>("inventory:customer-returns:manage", {
     mutationKey: ["inventory", "customerReturns", "post"],
     mutationFn: ({ returnId, reason }) =>
       apiClient.post<void>(
@@ -300,7 +301,7 @@ interface CancelCustomerReturnInput {
 
 export function useCancelCustomerReturn() {
   const qc = useQueryClient();
-  return useMutation<void, Error, CancelCustomerReturnInput>({
+  return useAuthorizedMutation<void, Error, CancelCustomerReturnInput>("inventory:customer-returns:manage", {
     mutationKey: ["inventory", "customerReturns", "cancel"],
     mutationFn: ({ returnId }) =>
       apiClient.post<void>(`/inventory/customer-returns/${returnId}/cancel`, {}),

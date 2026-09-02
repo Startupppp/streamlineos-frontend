@@ -140,7 +140,8 @@ describe("billing hook gates — fire when permission granted", () => {
     renderHook(() => useValidateCoupon("abc", "STARTER"), { wrapper: makeWrapper(client) });
     expect(mockedGet).toHaveBeenCalledWith(
       expect.stringContaining("/billing/coupons/validate"),
-      expect.anything(),
+      undefined,
+      expect.any(AbortSignal),
     );
   });
 

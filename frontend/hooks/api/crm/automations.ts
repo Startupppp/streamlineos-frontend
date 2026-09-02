@@ -10,6 +10,7 @@ import type {
   CrmAutomationRule,
   AutomationRun,
 } from "@/types/crm";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface AutomationRunsResponse {
   runs: AutomationRun[];
@@ -75,7 +76,7 @@ export function useCrmAutomationRules() {
 
 export function useCreateCrmAutomationRule() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:automations:manage", {
     mutationKey: ["crmAutomations", "create"] as const,
     mutationFn: (input: CreateRuleInput) =>
       apiClient.post<CrmAutomationRule>("/crm/automations", input),
@@ -87,7 +88,7 @@ export function useCreateCrmAutomationRule() {
 
 export function useUpdateCrmAutomationRule() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:automations:manage", {
     mutationKey: ["crmAutomations", "update"] as const,
     mutationFn: ({ id, ...data }: UpdateRuleInput) =>
       apiClient.patch<CrmAutomationRule>(`/crm/automations/${id}`, data),
@@ -99,7 +100,7 @@ export function useUpdateCrmAutomationRule() {
 
 export function useDeleteCrmAutomationRule() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:automations:manage", {
     mutationKey: ["crmAutomations", "delete"] as const,
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/crm/automations/${id}`),
@@ -111,7 +112,7 @@ export function useDeleteCrmAutomationRule() {
 
 export function useEnableCrmAutomationRule() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:automations:manage", {
     mutationKey: ["crmAutomations", "enable"] as const,
     mutationFn: (ruleId: number) =>
       apiClient.patch<CrmAutomationRule>(
@@ -126,7 +127,7 @@ export function useEnableCrmAutomationRule() {
 
 export function useDisableCrmAutomationRule() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:automations:manage", {
     mutationKey: ["crmAutomations", "disable"] as const,
     mutationFn: (ruleId: number) =>
       apiClient.patch<CrmAutomationRule>(
@@ -140,7 +141,7 @@ export function useDisableCrmAutomationRule() {
 }
 
 export function useTestCrmAutomationRule() {
-  return useMutation({
+  return useAuthorizedMutation("crm:automations:manage", {
     mutationKey: ["crmAutomations", "test"] as const,
     mutationFn: ({ id, payload }: TestRuleInput) =>
       apiClient.post<TestRuleResult>(`/crm/automations/${id}/test`, {

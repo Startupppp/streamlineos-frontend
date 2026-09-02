@@ -11,6 +11,7 @@ import type {
   DecideApprovalInput,
   UpdateApprovalInput,
 } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface ApprovalFilters {
   status?: string;
@@ -48,7 +49,7 @@ export function useProjectApprovals(projectId: number, filters?: ApprovalFilters
 
 export function useCreateApproval(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:approvals:request", {
     mutationKey: ["projects", projectId, "approvals", "create"],
     mutationFn: (data: CreateApprovalInput) =>
       apiClient.post<Approval>(`/build/${projectId}/approvals`, data),
@@ -61,7 +62,7 @@ export function useCreateApproval(projectId: number) {
 
 export function useDecideApproval(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:approvals:decide", {
     mutationKey: ["projects", projectId, "approvals", "decide"],
     mutationFn: ({ id, ...data }: DecideApprovalInput & { id: number }) =>
       apiClient.patch<Approval>(`/build/${projectId}/approvals/${id}/decide`, data),
@@ -75,7 +76,7 @@ export function useDecideApproval(projectId: number) {
 
 export function useUpdateApproval(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:timesheets:manage", {
     mutationKey: ["projects", projectId, "approvals", "update"],
     mutationFn: ({ id, ...data }: UpdateApprovalInput & { id: number }) =>
       apiClient.patch<Approval>(`/build/${projectId}/approvals/${id}`, data),
@@ -89,7 +90,7 @@ export function useUpdateApproval(projectId: number) {
 
 export function useDeleteApproval(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:approvals:manage", {
     mutationKey: ["projects", projectId, "approvals", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/build/${projectId}/approvals/${id}`),

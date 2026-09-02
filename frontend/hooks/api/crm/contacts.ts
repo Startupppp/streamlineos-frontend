@@ -15,6 +15,7 @@ import type {
   MergeContactsInput,
   DuplicateContactPair,
 } from "@/types/crm";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useContacts(filters?: ContactFilters) {
   return useGatedQuery("crm:contacts:view", {
@@ -36,7 +37,7 @@ export function useContactDetail(id: number) {
 
 export function useCreateContact() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:contacts:manage", {
     mutationKey: ["contacts", "create"] as const,
     mutationFn: (input: CreateContactInput) =>
       apiClient.post<Contact>("/contacts", input),
@@ -48,7 +49,7 @@ export function useCreateContact() {
 
 export function useUpdateContact() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:contacts:manage", {
     mutationKey: ["contacts", "update"] as const,
     mutationFn: (input: UpdateContactInput) =>
       apiClient.patch<Contact>(`/contacts/${input.id}`, input),
@@ -63,7 +64,7 @@ export function useUpdateContact() {
 
 export function useDeleteContact() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:contacts:manage", {
     mutationKey: ["contacts", "delete"] as const,
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/contacts/${id}`),
@@ -85,7 +86,7 @@ export function useContactRoles(contactId: number, params?: { entityType?: strin
 
 export function useAddContactRole() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:contacts:manage", {
     mutationKey: ["contactRoles", "add"] as const,
     mutationFn: ({ contactId, input }: { contactId: number; input: ContactRoleCreateInput }) =>
       apiClient.post<ContactRole>(`/contacts/${contactId}/roles`, input),
@@ -97,7 +98,7 @@ export function useAddContactRole() {
 
 export function useRemoveContactRole() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:contacts:manage", {
     mutationKey: ["contactRoles", "remove"] as const,
     mutationFn: ({ contactId, roleId }: { contactId: number; roleId: string }) =>
       apiClient.delete<{ success: boolean }>(`/contacts/${contactId}/roles/${roleId}`),
@@ -118,7 +119,7 @@ export function useContactDuplicates(params?: { page?: number; limit?: number })
 
 export function useMergeContacts() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:contacts:merge", {
     mutationKey: ["contacts", "merge"] as const,
     mutationFn: (input: MergeContactsInput) =>
       apiClient.post<{ success: boolean; primaryId: number; mergedId: number }>("/contacts/merge", input),
@@ -130,7 +131,7 @@ export function useMergeContacts() {
 }
 
 export function useExportContacts() {
-  return useMutation({
+  return useAuthorizedMutation("crm:contacts:view", {
     mutationKey: ["contacts", "export"] as const,
     mutationFn: () => apiClient.download("/contacts/export"),
   });

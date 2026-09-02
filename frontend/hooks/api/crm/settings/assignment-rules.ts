@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type AssignmentType =
   | "assign_user"
@@ -92,7 +93,7 @@ export function useAssignmentRules() {
 
 export function useCreateAssignmentRule() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:assignment-rules:manage", {
     mutationKey: ["crm-settings", "assignment-rules", "create"],
     mutationFn: (input: CreateAssignmentRuleInput) =>
       apiClient.post<AssignmentRule>("/crm/assignment-rules", input),
@@ -104,7 +105,7 @@ export function useCreateAssignmentRule() {
 
 export function useUpdateAssignmentRule() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:assignment-rules:manage", {
     mutationKey: ["crm-settings", "assignment-rules", "update"],
     mutationFn: ({ id, ...data }: UpdateAssignmentRuleInput) =>
       apiClient.patch<AssignmentRule>(`/crm/assignment-rules/${id}`, data),
@@ -116,7 +117,7 @@ export function useUpdateAssignmentRule() {
 
 export function useDeleteAssignmentRule() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:assignment-rules:manage", {
     mutationKey: ["crm-settings", "assignment-rules", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/crm/assignment-rules/${id}`),
@@ -128,7 +129,7 @@ export function useDeleteAssignmentRule() {
 
 export function useReorderAssignmentRules() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:assignment-rules:manage", {
     mutationKey: ["crm-settings", "assignment-rules", "reorder"],
     mutationFn: (input: ReorderAssignmentRulesInput) =>
       apiClient.patch<{ success: boolean }>("/crm/assignment-rules/reorder", input),
@@ -139,7 +140,7 @@ export function useReorderAssignmentRules() {
 }
 
 export function usePreviewAssignmentRule() {
-  return useMutation({
+  return useAuthorizedMutation("crm:assignment-rules:manage", {
     mutationKey: ["crm-settings", "assignment-rules", "preview"],
     mutationFn: (sampleLead: {
       source?: string;

@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import type { CrmInboxCounts, CrmInboxResponse } from "@/types/crm";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useInbox() {
   return useGatedQuery("crm:leads:view", {
@@ -26,7 +27,7 @@ export function useInboxCounts() {
 
 export function useSnoozeCrmTask() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:tasks:update", {
     mutationKey: ["crm-inbox", "snooze"] as const,
     mutationFn: ({ taskId, until }: { taskId: number; until: string }) =>
       apiClient.post<{ success: boolean }>(`/crm/inbox/tasks/${taskId}/snooze`, { until }),
@@ -60,7 +61,7 @@ export function useSnoozeCrmTask() {
 
 export function useCompleteCrmTask() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:tasks:update", {
     mutationKey: ["crm-inbox", "complete"] as const,
     mutationFn: ({ taskId }: { taskId: number }) =>
       apiClient.post<{ success: boolean }>(`/crm/inbox/tasks/${taskId}/complete`, {}),

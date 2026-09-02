@@ -19,6 +19,7 @@ import type {
 } from "@/types/notifications";
 import { useNotificationInboxInvalidation } from "./notifications-shared";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export const useNotificationProviders = (
   options?: Omit<UseQueryOptions<NotificationProvider[], Error>, "queryKey" | "queryFn">,
@@ -36,7 +37,7 @@ export const useNotificationProviders = (
 
 export const useCreateNotificationProvider = () => {
   const queryClient = useQueryClient();
-  return useMutation<NotificationProvider, Error, CreateProviderInput>({
+  return useAuthorizedMutation<NotificationProvider, Error, CreateProviderInput>("notifications:providers:manage", {
     mutationKey: ["notifications", "providers", "create"],
     mutationFn: (dto) => apiClient.post<NotificationProvider>("/notifications/admin/providers", dto),
     onSuccess: () => {
@@ -47,7 +48,7 @@ export const useCreateNotificationProvider = () => {
 
 export const useUpdateNotificationProvider = () => {
   const queryClient = useQueryClient();
-  return useMutation<NotificationProvider, Error, { id: number } & UpdateProviderInput>({
+  return useAuthorizedMutation<NotificationProvider, Error, { id: number } & UpdateProviderInput>("notifications:providers:manage", {
     mutationKey: ["notifications", "providers", "update"],
     mutationFn: ({ id, ...dto }) =>
       apiClient.patch<NotificationProvider>(`/notifications/admin/providers/${id}`, dto),
@@ -59,7 +60,7 @@ export const useUpdateNotificationProvider = () => {
 
 export const useDeleteNotificationProvider = () => {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, number>({
+  return useAuthorizedMutation<{ success: boolean }, Error, number>("notifications:providers:manage", {
     mutationKey: ["notifications", "providers", "delete"],
     mutationFn: (id) => apiClient.delete<{ success: boolean }>(`/notifications/admin/providers/${id}`),
     onSuccess: () => {
@@ -70,7 +71,7 @@ export const useDeleteNotificationProvider = () => {
 
 export const useTestNotificationProvider = () => {
   const queryClient = useQueryClient();
-  return useMutation<TestProviderResult, Error, { id: number } & TestProviderInput>({
+  return useAuthorizedMutation<TestProviderResult, Error, { id: number } & TestProviderInput>("notifications:providers:manage", {
     mutationKey: ["notifications", "providers", "test"],
     mutationFn: ({ id, ...dto }) =>
       apiClient.post<TestProviderResult>(`/notifications/admin/providers/${id}/test`, dto),
@@ -96,11 +97,11 @@ export const useNotificationEventCatalog = (
 
 export const useUpdateNotificationEventPolicy = () => {
   const queryClient = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     NotificationEventDefinition,
     Error,
     { eventKey: string } & UpdateEventPolicyInput
-  >({
+  >("notifications:events:manage", {
     mutationKey: ["notifications", "events", "update"],
     mutationFn: ({ eventKey, ...dto }) =>
       apiClient.patch<NotificationEventDefinition>(
@@ -115,7 +116,7 @@ export const useUpdateNotificationEventPolicy = () => {
 
 export const useEmitNotificationEvent = () => {
   const { invalidateInbox } = useNotificationInboxInvalidation();
-  return useMutation<DispatchResult, Error, EmitTestEventInput>({
+  return useAuthorizedMutation<DispatchResult, Error, EmitTestEventInput>("notifications:events:manage", {
     mutationKey: ["notifications", "events", "emit"],
     mutationFn: (dto) => apiClient.post<DispatchResult>("/notifications/admin/events/emit", dto),
     onSuccess: invalidateInbox,
@@ -138,7 +139,7 @@ export const useNotificationPolicies = (
 
 export const useUpsertNotificationPolicy = () => {
   const queryClient = useQueryClient();
-  return useMutation<NotificationPolicyDefault, Error, UpsertPolicyInput>({
+  return useAuthorizedMutation<NotificationPolicyDefault, Error, UpsertPolicyInput>("notifications:policy:manage", {
     mutationKey: ["notifications", "policy", "upsert"],
     mutationFn: (dto) => apiClient.put<NotificationPolicyDefault>("/notifications/admin/policy", dto),
     onSuccess: () => {

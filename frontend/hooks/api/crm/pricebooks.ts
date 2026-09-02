@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import type { Pricebook, PricebookEntry, QuoteSettings, QuoteTemplate } from "@/types/crm/pricebooks";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function usePricebooks() {
   return useGatedQuery("crm:pricebooks:manage", {
@@ -33,7 +34,7 @@ export interface CreatePricebookInput {
 
 export function useCreatePricebook() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:pricebooks:manage", {
     mutationKey: ["crm", "pricebooks", "create"],
     mutationFn: (input: CreatePricebookInput) =>
       apiClient.post<Pricebook>("/crm/pricebooks", input),
@@ -45,7 +46,7 @@ export function useCreatePricebook() {
 
 export function useUpdatePricebook() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:pricebooks:manage", {
     mutationKey: ["crm", "pricebooks", "update"],
     mutationFn: ({
       id,
@@ -60,7 +61,7 @@ export function useUpdatePricebook() {
 
 export function useDeletePricebook() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:pricebooks:manage", {
     mutationKey: ["crm", "pricebooks", "delete"],
     mutationFn: (id: string) => apiClient.delete<{ success: boolean }>(`/crm/pricebooks/${id}`),
     onSuccess: () => {
@@ -71,7 +72,7 @@ export function useDeletePricebook() {
 
 export function useUpsertPricebookEntry() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:pricebooks:manage", {
     mutationKey: ["crm", "pricebooks", "entries", "upsert"],
     mutationFn: ({
       pricebookId,
@@ -86,7 +87,7 @@ export function useUpsertPricebookEntry() {
 
 export function useDeletePricebookEntry() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:pricebooks:manage", {
     mutationKey: ["crm", "pricebooks", "entries", "delete"],
     mutationFn: ({ pricebookId, entryId }: { pricebookId: string; entryId: string }) =>
       apiClient.delete<{ success: boolean }>(
@@ -108,7 +109,7 @@ export function useQuoteSettings() {
 
 export function useUpdateQuoteSettings() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:pricebooks:manage", {
     mutationKey: ["crm", "quote-settings", "update"],
     mutationFn: (data: Partial<QuoteSettings>) =>
       apiClient.patch<QuoteSettings>("/crm/quote-settings", data),
@@ -128,7 +129,7 @@ export function useQuoteTemplates() {
 
 export function useCreateQuoteTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:pricebooks:manage", {
     mutationKey: ["crm", "quote-templates", "create"],
     mutationFn: (input: {
       name: string;
@@ -144,7 +145,7 @@ export function useCreateQuoteTemplate() {
 
 export function useUpdateQuoteTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:pricebooks:manage", {
     mutationKey: ["crm", "quote-templates", "update"],
     mutationFn: ({
       id,
@@ -164,7 +165,7 @@ export function useUpdateQuoteTemplate() {
 
 export function useDeleteQuoteTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:pricebooks:manage", {
     mutationKey: ["crm", "quote-templates", "delete"],
     mutationFn: (id: string) =>
       apiClient.delete<{ success: boolean }>(`/crm/quote-templates/${id}`),

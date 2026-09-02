@@ -102,7 +102,7 @@ export function useHrAttendanceHistory(page: number, limit: number) {
       } catch (error) {
         if ((error as { status?: number }).status !== 404) throw error;
         const legacyData = await apiClient.get<AttendanceLog[]>(
-          "/me/attendance/logs",
+          "/me/attendance/logs", undefined, signal,
         );
         const offset = (page - 1) * limit;
         return {
@@ -383,7 +383,7 @@ export function useCreateRegularization(
   >,
 ) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("self:attendance", {
     mutationKey: ["hr", "regularization", "create"],
     mutationFn: (data: CreateRegularizationInput) =>
       apiClient.post<AttendanceRegularization>(

@@ -8,6 +8,7 @@ import {
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { Permission } from "@/lib/rbac/permissions";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface UserApiToken {
   id: string;
@@ -61,7 +62,7 @@ export function useGrantableUserApiTokenPermissions() {
 
 export function useCreateUserApiToken() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:api-tokens:write", {
     mutationKey: ["create", "user", "api", "token"],
     mutationFn: (input: CreateUserApiTokenInput) =>
       apiClient.post<CreateUserApiTokenResponse>("/me/api-tokens", input),
@@ -73,7 +74,7 @@ export function useCreateUserApiToken() {
 
 export function useRevokeUserApiToken() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:api-tokens:write", {
     mutationKey: ["revoke", "user", "api", "token"],
     mutationFn: (tokenId: string) =>
       apiClient.delete<void>(`/me/api-tokens/${tokenId}`),

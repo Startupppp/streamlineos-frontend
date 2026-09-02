@@ -13,6 +13,7 @@ import type {
   ClientOpportunity,
   OnboardingItem,
 } from "@/types/crm";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useClientAccounts(filters?: ClientAccountFilters) {
   return useGatedQuery("crm:clients:read", {
@@ -73,7 +74,7 @@ export function useClientOnboardingItems(clientId: number) {
 
 export function useToggleOnboardingItem() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:clients:update", {
     mutationKey: ["clientOnboarding", "items", "toggle"] as const,
     mutationFn: ({ id, completed }: { id: number; completed: boolean; clientId: number }) =>
       apiClient.patch<OnboardingItem>(`/clients/onboarding/items/${id}`, {

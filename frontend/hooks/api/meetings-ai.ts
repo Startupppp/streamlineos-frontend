@@ -2,6 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface MeetingPrepInput {
   eventId: string;
@@ -77,7 +78,7 @@ export interface ConfirmSendResult {
 }
 
 export function useMeetingPrep() {
-  return useMutation({
+  return useAuthorizedMutation("calendar:ai:use", {
     mutationKey: ["ai", "meetings", "prep"],
     mutationFn: (input: MeetingPrepInput) =>
       apiClient.post<MeetingPrepResult>("/ai/meetings/prep", input),
@@ -85,7 +86,7 @@ export function useMeetingPrep() {
 }
 
 export function useMeetingFollowUp() {
-  return useMutation({
+  return useAuthorizedMutation("calendar:ai:use", {
     mutationKey: ["ai", "meetings", "follow-up"],
     mutationFn: (input: MeetingFollowUpInput) =>
       apiClient.post<MeetingFollowUpResult>("/ai/meetings/follow-up", input),
@@ -93,7 +94,7 @@ export function useMeetingFollowUp() {
 }
 
 export function useProposeMeetingSend() {
-  return useMutation({
+  return useAuthorizedMutation("calendar:ai:use", {
     mutationKey: ["ai", "meetings", "follow-up", "propose-send"],
     mutationFn: (input: ProposeSendInput) =>
       apiClient.post<ProposeSendResult>("/ai/meetings/follow-up/propose-send", input),
@@ -101,7 +102,7 @@ export function useProposeMeetingSend() {
 }
 
 export function useConfirmMeetingSend() {
-  return useMutation({
+  return useAuthorizedMutation("calendar:ai:use", {
     mutationKey: ["ai", "meetings", "follow-up", "confirm-send"],
     mutationFn: (input: ConfirmSendInput) =>
       apiClient.post<ConfirmSendResult>("/ai/meetings/follow-up/confirm-send", input),

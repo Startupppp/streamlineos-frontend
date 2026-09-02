@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { InspectionStatus, QualityHoldStatus, RecallStatus } from "@/features/inventory/lib";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface InspectionFilters {
   [key: string]: unknown;
@@ -147,11 +148,11 @@ export function useQualityInspection(inspectionId: number) {
 
 export function useCreateInspection() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     Inspection,
     Error,
     { source?: string; lines: { variantId: number; lotId?: number; serialId?: number; qty: number }[] }
-  >({
+  >("inventory:quality:inspect", {
     mutationKey: ["inventory", "quality", "inspection", "create"],
     mutationFn: (data) =>
       apiClient.post<Inspection>("/inventory/quality/inspections", data),
@@ -163,7 +164,7 @@ export function useCreateInspection() {
 
 export function useStartInspection() {
   const qc = useQueryClient();
-  return useMutation<Inspection, Error, number>({
+  return useAuthorizedMutation<Inspection, Error, number>("inventory:quality:inspect", {
     mutationKey: ["inventory", "quality", "inspection", "start"],
     mutationFn: (inspectionId) =>
       apiClient.post<Inspection>(`/inventory/quality/inspections/${inspectionId}/start`),
@@ -176,7 +177,7 @@ export function useStartInspection() {
 
 export function usePassInspection() {
   const qc = useQueryClient();
-  return useMutation<Inspection, Error, number>({
+  return useAuthorizedMutation<Inspection, Error, number>("inventory:quality:release", {
     mutationKey: ["inventory", "quality", "inspection", "pass"],
     mutationFn: (inspectionId) =>
       apiClient.post<Inspection>(
@@ -195,14 +196,14 @@ export function usePassInspection() {
 
 export function useFailInspection() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     Inspection,
     Error,
     {
       inspectionId: number;
       lines: { lineId: number; disposition: "RELEASE_TO_AVAILABLE" | "QUARANTINE" | "RETURN_TO_VENDOR" | "SCRAP" }[];
     }
-  >({
+  >("inventory:quality:inspect", {
     mutationKey: ["inventory", "quality", "inspection", "fail"],
     mutationFn: ({ inspectionId, lines }) =>
       apiClient.post<Inspection>(`/inventory/quality/inspections/${inspectionId}/fail`, { lines }),
@@ -217,11 +218,11 @@ export function useFailInspection() {
 
 export function useDisposeInspection() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     Inspection,
     Error,
     { inspectionId: number; lineId?: number }
-  >({
+  >("inventory:quality:inspect", {
     mutationKey: ["inventory", "quality", "inspection", "dispose"],
     mutationFn: ({ inspectionId, lineId }) =>
       apiClient.post<Inspection>(
@@ -240,7 +241,7 @@ export function useDisposeInspection() {
 
 export function useCancelInspection() {
   const qc = useQueryClient();
-  return useMutation<Inspection, Error, number>({
+  return useAuthorizedMutation<Inspection, Error, number>("inventory:quality:inspect", {
     mutationKey: ["inventory", "quality", "inspection", "cancel"],
     mutationFn: (inspectionId) =>
       apiClient.post<Inspection>(`/inventory/quality/inspections/${inspectionId}/cancel`),
@@ -285,11 +286,11 @@ export function useQualityHold(holdId: number) {
 
 export function useCreateQualityHold() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     QualityHold,
     Error,
     { productVariantId: number; locationId: number; lotId?: number; serialId?: number; quantity: number; reason: string }
-  >({
+  >("inventory:quality:inspect", {
     mutationKey: ["inventory", "quality", "hold", "create"],
     mutationFn: ({ quantity, ...rest }) =>
       apiClient.post<QualityHold>(
@@ -307,7 +308,7 @@ export function useCreateQualityHold() {
 
 export function useReleaseQualityHold() {
   const qc = useQueryClient();
-  return useMutation<QualityHold, Error, number>({
+  return useAuthorizedMutation<QualityHold, Error, number>("inventory:quality:release", {
     mutationKey: ["inventory", "quality", "hold", "release"],
     mutationFn: (holdId) =>
       apiClient.post<QualityHold>(
@@ -356,11 +357,11 @@ export function useRecall(recallId: number) {
 
 export function useCreateRecall() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     Recall,
     Error,
     { title: string; reason: string; lotIds?: number[]; serialIds?: number[]; severity?: string }
-  >({
+  >("inventory:quality:recall", {
     mutationKey: ["inventory", "quality", "recall", "create"],
     mutationFn: (data) =>
       apiClient.post<Recall>("/inventory/quality/recalls", data),
@@ -374,11 +375,11 @@ export function useCreateRecall() {
 
 export function useUpdateRecall() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     Recall,
     Error,
     { recallId: number; status?: RecallStatus; notes?: string }
-  >({
+  >("inventory:quality:recall", {
     mutationKey: ["inventory", "quality", "recall", "update"],
     mutationFn: ({ recallId, ...data }) =>
       apiClient.patch<Recall>(`/inventory/quality/recalls/${recallId}`, data),

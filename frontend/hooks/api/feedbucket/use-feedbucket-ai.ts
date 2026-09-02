@@ -4,10 +4,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { FeedbucketAiAnalysis, FeedbucketAiTicketType } from "@/types/feedbucket";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useAnalyzeFeedbucketSubmission() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("feedbucket:submissions:ai", {
     mutationKey: ["feedbucket", "submissions", "ai-analyze"],
     mutationFn: ({ submissionId, force }: { submissionId: number; force?: boolean }) =>
       apiClient.post<FeedbucketAiAnalysis>(
@@ -22,7 +23,7 @@ export function useAnalyzeFeedbucketSubmission() {
 
 export function useCreateTicketFromFeedbucketAi() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("feedbucket:submissions:manage", {
     mutationKey: ["feedbucket", "submissions", "ai-create-ticket"],
     mutationFn: (submissionId: number) =>
       apiClient.post<{ ticketId: number; ticketType: FeedbucketAiTicketType }>(

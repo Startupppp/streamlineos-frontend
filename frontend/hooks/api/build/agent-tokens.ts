@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { AgentToken, CreateAgentTokenResponse } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type { AgentToken, CreateAgentTokenResponse } from "@/types/projects";
 
@@ -20,7 +21,7 @@ export function useAgentTokens() {
 
 export function useCreateAgentToken() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:api-tokens:write", {
     mutationKey: ["projects", "agent-tokens", "create"],
     mutationFn: (data: { name: string; expiresInDays?: number }) =>
       apiClient.post<CreateAgentTokenResponse>("/agent-tokens", data),
@@ -32,7 +33,7 @@ export function useCreateAgentToken() {
 
 export function useRevokeAgentToken() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:api-tokens:write", {
     mutationKey: ["projects", "agent-tokens", "revoke"],
     mutationFn: (tokenId: string) =>
       apiClient.delete<{ success: boolean }>(`/agent-tokens/${tokenId}`),

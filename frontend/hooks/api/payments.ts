@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type PaymentEnvironment = "test" | "live";
 
@@ -77,7 +78,7 @@ export function usePaymentProviders() {
 
 export function useCreatePaymentProvider() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payments:providers:manage", {
     mutationKey: ["create", "payment", "provider"],
     mutationFn: (providerKey: string) =>
       apiClient.post<PaymentProvider>("/payments/providers", { providerKey }),
@@ -94,7 +95,7 @@ export type SaveCredentialsPayload = {
 
 export function useSavePaymentCredentials(providerKey: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payments:credentials:manage", {
     mutationKey: ["save", "payment", "credentials"],
     mutationFn: (payload: SaveCredentialsPayload) =>
       apiClient.post<{ credential: PaymentProviderCredentialPublic; warning: { code: string; message: string } | null }>(
@@ -110,7 +111,7 @@ export function useSavePaymentCredentials(providerKey: string) {
 
 export function useDisconnectPaymentCredentials(providerKey: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payments:credentials:manage", {
     mutationKey: ["disconnect", "payment", "credentials"],
     mutationFn: (environment: PaymentEnvironment) =>
       apiClient.post(`/payments/providers/${providerKey}/disconnect`, { environment }),
@@ -148,7 +149,7 @@ export function useTestTransactions(providerKey: string, enabled = true) {
 
 export function useCreateTestTransaction(providerKey: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payments:test:run", {
     mutationKey: ["create", "test", "transaction"],
     mutationFn: (payload: { amount: string; currency: string }) =>
       apiClient.post<PaymentTestTransaction>(`/payments/providers/${providerKey}/test-transactions`, payload),
@@ -158,7 +159,7 @@ export function useCreateTestTransaction(providerKey: string) {
 
 export function useVerifyTestTransaction(providerKey: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payments:test:run", {
     mutationKey: ["verify", "test", "transaction"],
     mutationFn: ({ id, providerPaymentId, signature }: { id: number; providerPaymentId: string; signature: string }) =>
       apiClient.patch<PaymentTestTransaction>(`/payments/providers/${providerKey}/test-transactions/${id}/verify`, {
@@ -185,7 +186,7 @@ export type PaymentWebhookEndpoint = {
 
 export function useGenerateWebhook(providerKey: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payments:webhooks:manage", {
     mutationKey: ["generate", "webhook"],
     mutationFn: (environment: PaymentEnvironment) =>
       apiClient.post<PaymentWebhookEndpoint>(`/payments/providers/${providerKey}/webhooks/generate`, { environment }),
@@ -218,7 +219,7 @@ export function useWebhookEvents(providerKey: string, enabled = true) {
 
 export function useRetryWebhookEvent(providerKey: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payments:webhooks:manage", {
     mutationKey: ["retry", "webhook", "event"],
     mutationFn: (eventId: number) =>
       apiClient.post(`/payments/providers/${providerKey}/webhooks/events/${eventId}/retry`, {}),
@@ -245,7 +246,7 @@ export function usePaymentReadiness(providerKey: string, enabled = true) {
 
 export function useActivateLivePayments(providerKey: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payments:live:activate", {
     mutationKey: ["activate", "live", "payments"],
     mutationFn: () => apiClient.post<PaymentProvider>(`/payments/providers/${providerKey}/activate-live`, {}),
     onSuccess: () => {
@@ -319,7 +320,7 @@ export function useManualMethods() {
 
 export function useSaveManualMethod() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payments:manual-methods:manage", {
     mutationKey: ["save", "manual", "method"],
     mutationFn: (payload: SaveManualMethodPayload) =>
       apiClient.post<PaymentManualMethod>("/payments/manual-methods", payload),
@@ -329,7 +330,7 @@ export function useSaveManualMethod() {
 
 export function useDisableManualMethod() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payments:manual-methods:manage", {
     mutationKey: ["disable", "manual", "method"],
     mutationFn: (id: number) => apiClient.post(`/payments/manual-methods/${id}/disable`, {}),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.payments.all, "manual-methods"] }),

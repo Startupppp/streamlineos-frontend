@@ -7,6 +7,7 @@ import type {
   HrCustomFieldDefinition,
   UpdateCustomFieldPayload,
 } from "@/features/hr/forms/lib/types";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 function cfDefsKey(entityType: string) {
   return ["hr", "custom-fields", "definitions", entityType] as const;
@@ -27,7 +28,7 @@ export function useHrCustomFields(
 
 export function useCreateCustomField(entityType: string) {
   const qc = useQueryClient();
-  return useMutation<HrCustomFieldDefinition, Error, CreateCustomFieldPayload>({
+  return useAuthorizedMutation<HrCustomFieldDefinition, Error, CreateCustomFieldPayload>("hr:custom-fields:manage", {
     mutationKey: ["hr", "custom-fields", "create"],
     mutationFn: (payload) =>
       apiClient.post<HrCustomFieldDefinition>("/hr/custom-fields/definitions", payload),
@@ -37,7 +38,7 @@ export function useCreateCustomField(entityType: string) {
 
 export function useUpdateCustomField(entityType: string) {
   const qc = useQueryClient();
-  return useMutation<HrCustomFieldDefinition, Error, { id: number; payload: UpdateCustomFieldPayload }>({
+  return useAuthorizedMutation<HrCustomFieldDefinition, Error, { id: number; payload: UpdateCustomFieldPayload }>("hr:custom-fields:manage", {
     mutationKey: ["hr", "custom-fields", "update"],
     mutationFn: ({ id, payload }) =>
       apiClient.patch<HrCustomFieldDefinition>(`/hr/custom-fields/definitions/${id}`, payload),
@@ -47,7 +48,7 @@ export function useUpdateCustomField(entityType: string) {
 
 export function useDeleteCustomField(entityType: string) {
   const qc = useQueryClient();
-  return useMutation<void, Error, number>({
+  return useAuthorizedMutation<void, Error, number>("hr:custom-fields:manage", {
     mutationKey: ["hr", "custom-fields", "delete"],
     mutationFn: (id) =>
       apiClient.delete<void>(`/hr/custom-fields/definitions/${id}`),

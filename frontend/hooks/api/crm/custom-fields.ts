@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface CustomFieldDefinition {
   id: number;
@@ -55,7 +56,7 @@ export function useCustomFields(entityType: "lead" | "deal" | "contact") {
 
 export function useCreateCustomField() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:custom-fields:manage", {
     mutationKey: ["settings", "customFields", "create"],
     mutationFn: (input: CreateCustomFieldInput) =>
       apiClient.post<{ field: CustomFieldDefinition }>("/settings/custom-fields", input),
@@ -67,7 +68,7 @@ export function useCreateCustomField() {
 
 export function useUpdateCustomField() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:custom-fields:manage", {
     mutationKey: ["settings", "customFields", "update"],
     mutationFn: ({ id, ...data }: UpdateCustomFieldInput) =>
       apiClient.patch<{ field: CustomFieldDefinition }>(`/settings/custom-fields/${id}`, data),
@@ -79,7 +80,7 @@ export function useUpdateCustomField() {
 
 export function useDeleteCustomField() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:custom-fields:manage", {
     mutationKey: ["settings", "customFields", "delete"],
     mutationFn: ({ id }: { id: number; entityType: "lead" | "deal" | "contact" }) =>
       apiClient.delete<{ success: boolean }>(`/settings/custom-fields/${id}`),

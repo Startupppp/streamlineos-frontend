@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface ScoringRule {
   id: number;
@@ -40,7 +41,7 @@ export function useScoringRules() {
 
 export function useCreateScoringRule() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:scoring-rules:manage", {
     mutationKey: ["crm-settings", "scoring-rules", "create"],
     mutationFn: (input: CreateScoringRuleInput) =>
       apiClient.post<ScoringRule>("/crm/scoring-rules", input),
@@ -52,7 +53,7 @@ export function useCreateScoringRule() {
 
 export function useUpdateScoringRule() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:scoring-rules:manage", {
     mutationKey: ["crm-settings", "scoring-rules", "update"],
     mutationFn: ({ id, ...data }: UpdateScoringRuleInput) =>
       apiClient.patch<ScoringRule>(`/crm/scoring-rules/${id}`, data),
@@ -64,7 +65,7 @@ export function useUpdateScoringRule() {
 
 export function useDeleteScoringRule() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:scoring-rules:manage", {
     mutationKey: ["crm-settings", "scoring-rules", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/crm/scoring-rules/${id}`),

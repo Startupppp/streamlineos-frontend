@@ -230,7 +230,7 @@ export function useSlowMovingReport(params?: SlowMovingParams) {
         ...(params?.days !== undefined ? { days: String(params.days) } : {}),
         ...(params?.page !== undefined ? { page: String(params.page) } : {}),
         ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
-      });
+      }, signal);
       return data;
     },
     staleTime: 5 * 60_000,
@@ -249,7 +249,7 @@ export function useExpiryReport(params?: ExpiryReportParams) {
         ...(params?.status !== undefined ? { status: params.status } : {}),
         ...(params?.page !== undefined ? { page: String(params.page) } : {}),
         ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
-      });
+      }, signal);
       return data;
     },
     staleTime: 5 * 60_000,

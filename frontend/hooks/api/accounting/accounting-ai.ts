@@ -2,6 +2,7 @@
 
 import { apiClient } from "@/lib/api-client";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { queryKeyBase } from "@/lib/query-keys/base";
 
 export interface VarianceExplainBody {
   periodLabel: string;
@@ -78,7 +79,7 @@ export interface ExtractDocumentResult {
 
 export function useExplainVariance() {
   return useAuthorizedMutation("accounting:ai:use", {
-    mutationKey: ["streamlineos", "accounting", "ai", "variance-explain"] as const,
+    mutationKey: [...queryKeyBase, "accounting", "ai", "variance-explain"] as const,
     mutationFn: (body: VarianceExplainBody) =>
       apiClient.post<VarianceExplainResult>("/finance/ai/variance-explain", body),
   });
@@ -86,7 +87,7 @@ export function useExplainVariance() {
 
 export function useExplainReconciliation() {
   return useAuthorizedMutation("accounting:ai:use", {
-    mutationKey: ["streamlineos", "accounting", "ai", "reconciliation-explain"] as const,
+    mutationKey: [...queryKeyBase, "accounting", "ai", "reconciliation-explain"] as const,
     mutationFn: (body: ReconciliationExplainBody) =>
       apiClient.post<ReconciliationExplainResult>("/finance/ai/reconciliation-explain", body),
   });
@@ -94,7 +95,7 @@ export function useExplainReconciliation() {
 
 export function useExtractDocument() {
   return useAuthorizedMutation("accounting:ai:use", {
-    mutationKey: ["streamlineos", "accounting", "ai", "extract-document"] as const,
+    mutationKey: [...queryKeyBase, "accounting", "ai", "extract-document"] as const,
     mutationFn: (body: ExtractDocumentBody) =>
       apiClient.post<ExtractDocumentResult>("/finance/ai/extract-document", body),
   });

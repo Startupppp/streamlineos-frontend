@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { WorkflowApproval } from "./workflows-types";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface ApprovalActionInput {
   action: "approve" | "reject";
@@ -30,7 +31,7 @@ export function usePendingApprovals() {
 export function useHandleApproval() {
   const qc = useQueryClient();
   const canManage = useCan("workflows:approvals:manage");
-  return useMutation({
+  return useAuthorizedMutation("workflows:approvals:manage", {
     mutationKey: ["handle", "approval"],
     mutationFn: ({ approvalId, ...input }: ApprovalActionInput & { approvalId: string }) => {
       assertPermission(canManage);

@@ -10,6 +10,7 @@ import type {
   UpdateUserMembershipPayload,
   UserMembership,
 } from "./types";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export const useUserLoginHistory = (
   userId: string,
@@ -50,11 +51,11 @@ export const useUserMembership = (
 
 export const useUpdateUserMembership = () => {
   const queryClient = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     { success: boolean },
     Error,
     { userId: string; data: UpdateUserMembershipPayload }
-  >({
+  >("settings:organization:manage", {
     mutationKey: ["users", "update-membership"],
     mutationFn: ({ userId, data }) =>
       apiClient.patch<{ success: boolean }>(`/users/${userId}/membership`, data),

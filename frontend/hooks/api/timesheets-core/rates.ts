@@ -7,6 +7,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import type { CreateRateInput, RatesResponse, TimesheetRate } from "@/features/timesheets/types";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useRates(enabled = true) {
   const canView = useCan("timesheets:rates:view");
@@ -20,7 +21,7 @@ export function useRates(enabled = true) {
 
 export function useCreateRate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:rates:manage", {
     mutationKey: ["timesheets", "rates", "create"],
     mutationFn: (data: CreateRateInput) => apiClient.post<TimesheetRate>("/timesheets/rates", data),
     onSuccess: () => {
@@ -33,7 +34,7 @@ export function useCreateRate() {
 
 export function useUpdateRate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:rates:manage", {
     mutationKey: ["timesheets", "rates", "update"],
     mutationFn: ({ rateId, data }: { rateId: number; data: Partial<CreateRateInput> }) =>
       apiClient.patch<TimesheetRate>(`/timesheets/rates/${rateId}`, data),
@@ -47,7 +48,7 @@ export function useUpdateRate() {
 
 export function useDeleteRate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:rates:manage", {
     mutationKey: ["timesheets", "rates", "delete"],
     mutationFn: (rateId: number) =>
       apiClient.delete<{ success: boolean }>(`/timesheets/rates/${rateId}`),

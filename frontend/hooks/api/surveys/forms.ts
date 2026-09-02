@@ -3,6 +3,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type SurveyMode = "survey" | "assessment" | "live_session" | "lead_qualification" | "custom";
 export type SurveyStatus = "draft" | "testing" | "published" | "paused" | "closed" | "archived";
@@ -107,7 +108,7 @@ export function useSurveyTemplates() {
 
 export function useCreateSurvey() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("surveys:create", {
     mutationKey: ["surveys", "create"] as const,
     mutationFn: (input: CreateSurveyInput) => apiClient.post<SurveyForm>("/surveys", input),
     onSuccess: () => invalidateSurveyLists(qc),
@@ -116,7 +117,7 @@ export function useCreateSurvey() {
 
 export function usePatchSurvey(surveyId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("surveys:update", {
     mutationKey: ["surveys", "patch", surveyId] as const,
     mutationFn: (input: PatchSurveyInput) => apiClient.patch<SurveyForm>(`/surveys/${surveyId}`, input),
     onSuccess: () => {
@@ -156,7 +157,7 @@ export function useArchiveSurvey() {
 
 export function useDuplicateSurvey() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("surveys:create", {
     mutationKey: ["surveys", "duplicate"] as const,
     mutationFn: (surveyId: number) => apiClient.post<SurveyForm>(`/surveys/${surveyId}/duplicate`),
     onSuccess: () => invalidateSurveyLists(qc),

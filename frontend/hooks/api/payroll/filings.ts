@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { downloadBlob } from "@/lib/download-blob";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type FilingType = "PF_ECR" | "ESI" | "PT" | "TDS_24Q" | "FORM16" | "LWF";
 
@@ -80,7 +81,7 @@ export function useFilingCapabilities() {
 
 export function usePrepareFilingExport() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:tax:manage", {
     mutationKey: ["payroll", "filings", "export"],
     mutationFn: (body: {
       filingType: FilingType;
@@ -97,7 +98,7 @@ export function usePrepareFilingExport() {
 
 export function useAttachAcknowledgement() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:tax:manage", {
     mutationKey: ["payroll", "filings", "acknowledgement"],
     mutationFn: ({
       filingId,

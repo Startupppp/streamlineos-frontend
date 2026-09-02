@@ -12,6 +12,7 @@ import type {
   ApprovalStatus,
   ExchangeRate,
 } from "@/types/accounting/taxes";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const settingsKeys = {
   all: [...queryKeys.accounting.all, "settings"] as const,
@@ -49,7 +50,7 @@ export function useApprovalPolicies(params: ListApprovalPoliciesParams = {}) {
     queryFn: ({ signal }) =>
       apiClient.get<CursorPage<ApprovalPolicy>>(
         "/accounting/approval-policies",
-        toQuery(params),
+        toQuery(params), signal,
       ),
     staleTime: 60_000,
     enabled: can,
@@ -66,7 +67,7 @@ interface CreateApprovalPolicyInput {
 
 export function useCreateApprovalPolicy() {
   const queryClient = useQueryClient();
-  return useMutation<ApprovalPolicy, Error, CreateApprovalPolicyInput>({
+  return useAuthorizedMutation<ApprovalPolicy, Error, CreateApprovalPolicyInput>("accounting:settings:manage", {
     mutationKey: ["accounting", "approval-policies", "create"],
     mutationFn: (data) =>
       apiClient.post<ApprovalPolicy>("/accounting/approval-policies", data),
@@ -80,7 +81,7 @@ type UpdateApprovalPolicyInput = Partial<CreateApprovalPolicyInput>;
 
 export function useUpdateApprovalPolicy(id: number) {
   const queryClient = useQueryClient();
-  return useMutation<ApprovalPolicy, Error, UpdateApprovalPolicyInput>({
+  return useAuthorizedMutation<ApprovalPolicy, Error, UpdateApprovalPolicyInput>("accounting:settings:manage", {
     mutationKey: ["accounting", "approval-policies", "update", id],
     mutationFn: (data) =>
       apiClient.patch<ApprovalPolicy>(`/accounting/approval-policies/${id}`, data),
@@ -92,7 +93,7 @@ export function useUpdateApprovalPolicy(id: number) {
 
 export function useDeleteApprovalPolicy() {
   const queryClient = useQueryClient();
-  return useMutation<void, Error, number>({
+  return useAuthorizedMutation<void, Error, number>("accounting:settings:manage", {
     mutationKey: ["accounting", "approval-policies", "delete"],
     mutationFn: (id) =>
       apiClient.delete<void>(`/accounting/approval-policies/${id}`),
@@ -116,7 +117,7 @@ export function useApprovals(params: ListApprovalsParams = {}) {
     queryFn: ({ signal }) =>
       apiClient.get<CursorPage<ApprovalRequest>>(
         "/accounting/approvals",
-        toQuery(params),
+        toQuery(params), signal,
       ),
     staleTime: 30_000,
     enabled: can,
@@ -145,7 +146,7 @@ interface ApprovalDecisionInput {
 
 export function useApproveRequest(requestId: number) {
   const queryClient = useQueryClient();
-  return useMutation<ApprovalRequest, Error, ApprovalDecisionInput>({
+  return useAuthorizedMutation<ApprovalRequest, Error, ApprovalDecisionInput>("accounting:approvals:decide", {
     mutationKey: ["accounting", "approvals", "approve", requestId],
     mutationFn: (data) =>
       apiClient.post<ApprovalRequest>(
@@ -160,7 +161,7 @@ export function useApproveRequest(requestId: number) {
 
 export function useRejectRequest(requestId: number) {
   const queryClient = useQueryClient();
-  return useMutation<ApprovalRequest, Error, ApprovalDecisionInput>({
+  return useAuthorizedMutation<ApprovalRequest, Error, ApprovalDecisionInput>("accounting:approvals:decide", {
     mutationKey: ["accounting", "approvals", "reject", requestId],
     mutationFn: (data) =>
       apiClient.post<ApprovalRequest>(
@@ -185,7 +186,7 @@ export function useExchangeRates(params: ListExchangeRatesParams = {}) {
     queryFn: ({ signal }) =>
       apiClient.get<CursorPage<ExchangeRate>>(
         "/accounting/exchange-rates",
-        toQuery(params),
+        toQuery(params), signal,
       ),
     staleTime: 120_000,
     enabled: can,
@@ -201,7 +202,7 @@ interface UpsertExchangeRateInput {
 
 export function useUpsertExchangeRate() {
   const queryClient = useQueryClient();
-  return useMutation<ExchangeRate, Error, UpsertExchangeRateInput>({
+  return useAuthorizedMutation<ExchangeRate, Error, UpsertExchangeRateInput>("accounting:settings:manage", {
     mutationKey: ["accounting", "exchange-rates", "upsert"],
     mutationFn: (data) => apiClient.post<ExchangeRate>("/accounting/exchange-rates", data),
     onSuccess: () => {

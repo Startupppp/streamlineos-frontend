@@ -3,9 +3,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { queryKeyBase } from "@/lib/query-keys/base";
 
 const dimensionKeys = {
-  all: ["streamlineos", "accounting", "core", "dimensions"] as const,
+  all: [...queryKeyBase, "accounting", "core", "dimensions"] as const,
   list: () => [...dimensionKeys.all, "list"] as const,
   values: (dimensionId: number) => [...dimensionKeys.all, "values", dimensionId] as const,
 };
@@ -64,7 +66,7 @@ export function useDimensions() {
 
 export function useCreateDimension() {
   const queryClient = useQueryClient();
-  return useMutation<AccountingDimension, Error, CreateDimensionInput>({
+  return useAuthorizedMutation<AccountingDimension, Error, CreateDimensionInput>("accounting:dimensions:manage", {
     mutationKey: [...dimensionKeys.all, "create"],
     mutationFn: (body) =>
       apiClient.post<AccountingDimension>("/accounting/dimensions", body),
@@ -76,7 +78,7 @@ export function useCreateDimension() {
 
 export function useUpdateDimension(dimensionId: number) {
   const queryClient = useQueryClient();
-  return useMutation<AccountingDimension, Error, UpdateDimensionInput>({
+  return useAuthorizedMutation<AccountingDimension, Error, UpdateDimensionInput>("accounting:dimensions:manage", {
     mutationKey: [...dimensionKeys.all, "update", dimensionId],
     mutationFn: (body) =>
       apiClient.patch<AccountingDimension>(`/accounting/dimensions/${dimensionId}`, body),
@@ -92,7 +94,7 @@ export function useDimensionValues(dimensionId: number, enabled = true) {
     queryKey: dimensionKeys.values(dimensionId),
     queryFn: ({ signal }) =>
       apiClient.get<{ items: AccountingDimensionValue[] }>(
-        `/accounting/dimensions/${dimensionId}/values`, signal,
+        `/accounting/dimensions/${dimensionId}/values`, undefined, signal,
       ),
     staleTime: 60_000,
     enabled: can && enabled && dimensionId > 0,
@@ -101,7 +103,7 @@ export function useDimensionValues(dimensionId: number, enabled = true) {
 
 export function useCreateDimensionValue(dimensionId: number) {
   const queryClient = useQueryClient();
-  return useMutation<AccountingDimensionValue, Error, CreateDimensionValueInput>({
+  return useAuthorizedMutation<AccountingDimensionValue, Error, CreateDimensionValueInput>("accounting:dimensions:manage", {
     mutationKey: [...dimensionKeys.all, "create-value", dimensionId],
     mutationFn: (body) =>
       apiClient.post<AccountingDimensionValue>(
@@ -117,7 +119,7 @@ export function useCreateDimensionValue(dimensionId: number) {
 
 export function useUpdateDimensionValue(dimensionId: number, valueId: number) {
   const queryClient = useQueryClient();
-  return useMutation<AccountingDimensionValue, Error, UpdateDimensionValueInput>({
+  return useAuthorizedMutation<AccountingDimensionValue, Error, UpdateDimensionValueInput>("accounting:dimensions:manage", {
     mutationKey: [...dimensionKeys.all, "update-value", dimensionId, valueId],
     mutationFn: (body) =>
       apiClient.patch<AccountingDimensionValue>(

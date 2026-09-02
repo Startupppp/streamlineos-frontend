@@ -12,6 +12,7 @@ import type {
   UpdateTeamInput,
 } from "@/types/projects";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface TeamProject {
   id: number;
@@ -48,7 +49,7 @@ export function useProjectTeam(teamId: number) {
 
 export function useCreateProjectTeam() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:teams:create", {
     mutationKey: [...queryKeys.projects.teams.all, "create"],
     mutationFn: (data: CreateTeamInput) =>
       apiClient.post<ProjectTeamDetail>("/build/teams", data),
@@ -60,7 +61,7 @@ export function useCreateProjectTeam() {
 
 export function useUpdateProjectTeam() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: [...queryKeys.projects.teams.all, "update"],
     mutationFn: ({ id, ...data }: UpdateTeamInput & { id: number }) =>
       apiClient.patch<ProjectTeamDetail>(`/build/teams/${id}`, data),
@@ -73,7 +74,7 @@ export function useUpdateProjectTeam() {
 
 export function useDeleteProjectTeam() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: [...queryKeys.projects.teams.all, "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<void>(`/build/teams/${id}`),
@@ -85,7 +86,7 @@ export function useDeleteProjectTeam() {
 
 export function useAddProjectTeamMember(teamId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:teams:manage", {
     mutationKey: [...queryKeys.projects.teams.members(teamId), "add"],
     mutationFn: (data: AddTeamMemberInput) =>
       apiClient.post<void>(`/build/teams/${teamId}/members`, data),
@@ -99,7 +100,7 @@ export function useAddProjectTeamMember(teamId: number) {
 
 export function useRemoveProjectTeamMember(teamId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: [...queryKeys.projects.teams.members(teamId), "remove"],
     mutationFn: (memberId: string) =>
       apiClient.delete<void>(`/build/teams/${teamId}/members/${memberId}`),
@@ -113,7 +114,7 @@ export function useRemoveProjectTeamMember(teamId: number) {
 
 export function useUpdateProjectTeamMemberRole(teamId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:approvals:decide", {
     mutationKey: [...queryKeys.projects.teams.members(teamId), "updateRole"],
     mutationFn: ({ memberUserId, role }: { memberUserId: string; role: "member" | "lead" }) =>
       apiClient.patch<void>(`/build/teams/${teamId}/members/${memberUserId}`, { role }),
@@ -143,7 +144,7 @@ export function useTeamProjects(
 
 export function useAddTeamProject(teamId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:teams:manage", {
     mutationKey: [...queryKeys.projects.teams.teamProjects(teamId), "add"],
     mutationFn: (projectId: number) =>
       apiClient.post<void>(`/build/teams/${teamId}/projects`, { projectId }),
@@ -155,7 +156,7 @@ export function useAddTeamProject(teamId: number) {
 
 export function useRemoveTeamProject(teamId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: [...queryKeys.projects.teams.teamProjects(teamId), "remove"],
     mutationFn: (projectId: number) =>
       apiClient.delete<void>(`/build/teams/${teamId}/projects/${projectId}`),

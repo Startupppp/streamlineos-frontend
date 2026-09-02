@@ -4,6 +4,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface WebhookEndpoint {
   id: number;
@@ -99,7 +100,7 @@ export function useWebhookLogs(
 
 export function useCreateWebhook() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:webhooks:manage", {
     mutationKey: ["webhooks", "create"] as const,
     mutationFn: (data: CreateWebhookInput) =>
       apiClient.post<WebhookEndpoint & WebhookSecretReveal>("/webhooks", data),
@@ -109,7 +110,7 @@ export function useCreateWebhook() {
 
 export function useRotateWebhookSecret() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:webhooks:manage", {
     mutationKey: ["webhooks", "rotate-secret"] as const,
     mutationFn: (id: number) =>
       apiClient.post<{ id: number } & WebhookSecretReveal>(
@@ -122,7 +123,7 @@ export function useRotateWebhookSecret() {
 
 export function useToggleWebhook() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:webhooks:manage", {
     mutationKey: ["webhooks", "toggle"] as const,
     mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) =>
       apiClient.patch(`/webhooks/${id}`, { isActive }),
@@ -132,7 +133,7 @@ export function useToggleWebhook() {
 
 export function useDeleteWebhook() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:webhooks:manage", {
     mutationKey: ["webhooks", "delete"] as const,
     mutationFn: (id: number) => apiClient.delete(`/webhooks/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.webhooks.all }),
@@ -141,7 +142,7 @@ export function useDeleteWebhook() {
 
 export function useRetryDelivery(endpointId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:webhooks:manage", {
     mutationKey: ["webhooks", "retry", endpointId] as const,
     mutationFn: (logId: number) =>
       apiClient.post<{ success: boolean }>(

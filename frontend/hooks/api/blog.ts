@@ -21,14 +21,14 @@ export function useInfiniteBlogFeed(
 ) {
   return useInfiniteQuery<FeedResponse, Error>({
     queryKey: queryKeys.blog.feed(params),
-    queryFn: ({ pageParam }) => {
+    queryFn: ({ pageParam , signal }) => {
       const query: Record<string, unknown> = {};
       if (pageParam) query.cursor = pageParam;
       if (params.category) query.category = params.category;
       if (params.tag) query.tag = params.tag;
       if (params.search) query.search = params.search;
       if (params.limit) query.limit = params.limit;
-      return apiClient.get<FeedResponse>("/blog/feed", query);
+      return apiClient.get<FeedResponse>("/blog/feed", query, signal);
     },
     initialPageParam: null as string | null,
     getNextPageParam: (last) => (last.hasMore ? last.nextCursor : undefined),

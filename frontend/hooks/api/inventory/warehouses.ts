@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { WarehouseStockResult } from "@/types/inventory";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type LocationType =
   | "ZONE"
@@ -134,7 +135,7 @@ export function useLocations(warehouseId: number) {
 
 export function useCreateWarehouse() {
   const qc = useQueryClient();
-  return useMutation<Warehouse, Error, CreateWarehouseInput>({
+  return useAuthorizedMutation<Warehouse, Error, CreateWarehouseInput>("inventory:warehouses:manage", {
     mutationKey: ["inventory", "warehouses", "create"],
     mutationFn: (data) => apiClient.post<Warehouse>("/inventory/warehouses", data),
     onSuccess: () => {
@@ -145,7 +146,7 @@ export function useCreateWarehouse() {
 
 export function useCreateLocation() {
   const qc = useQueryClient();
-  return useMutation<WarehouseLocation, Error, CreateLocationInput>({
+  return useAuthorizedMutation<WarehouseLocation, Error, CreateLocationInput>("inventory:warehouses:manage", {
     mutationKey: ["inventory", "locations", "create"],
     mutationFn: ({ warehouseId, ...data }) =>
       apiClient.post<WarehouseLocation>(`/inventory/warehouses/${warehouseId}/locations`, data),
@@ -160,12 +161,12 @@ export function useCreateLocation() {
 
 export function useSetDefaultWarehouse() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     Warehouse,
     Error,
     { warehouseId: number },
     { previous: Warehouse[] | undefined }
-  >({
+  >("inventory:warehouses:manage", {
     mutationKey: ["inventory", "warehouse", "set-default"],
     mutationFn: ({ warehouseId }) =>
       apiClient.patch<Warehouse>(`/inventory/warehouses/${warehouseId}`, { isDefault: true }),

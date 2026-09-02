@@ -17,6 +17,7 @@ import type {
   TimesheetExportDto,
 } from "@/features/timesheets/payroll/types";
 import type { AckExportInput } from "@/features/timesheets/payroll/ack-export-schema";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface SummaryParams {
   start: string;
@@ -56,7 +57,7 @@ export function useTimesheetPayrollSettings() {
 
 export function useUpdateTimesheetPayrollSettings() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:payroll:export", {
     mutationKey: ["timesheets", "payroll", "updateSettings"],
     mutationFn: (data: Partial<PayrollSettings>) =>
       apiClient.patch<PayrollSettings>("/timesheets/payroll/settings", data),
@@ -70,7 +71,7 @@ export function useUpdateTimesheetPayrollSettings() {
 
 export function useCreateTimesheetPayrollExport() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:payroll:export", {
     mutationKey: ["timesheets", "payroll", "createExport"],
     mutationFn: (data: CreateExportBody) =>
       apiClient.post<CreateExportResponse>("/timesheets/payroll/export", data),
@@ -85,10 +86,10 @@ export function useTimesheetPayrollExports(limit = 20) {
   const canView = useCan("timesheets:payroll:view");
   return useInfiniteQuery<ExportHistoryResponse>({
     queryKey: queryKeys.timesheets.payroll.exports(),
-    queryFn: ({ pageParam }) => {
+    queryFn: ({ pageParam , signal }) => {
       const params: Record<string, unknown> = { limit };
       if (typeof pageParam === "string") params.cursor = pageParam;
-      return apiClient.get<ExportHistoryResponse>("/timesheets/payroll/exports", params);
+      return apiClient.get<ExportHistoryResponse>("/timesheets/payroll/exports", params, signal);
     },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
@@ -99,7 +100,7 @@ export function useTimesheetPayrollExports(limit = 20) {
 
 export function useAckPayrollExport() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:payroll:export", {
     mutationKey: ["timesheets", "payroll", "ackExport"],
     mutationFn: ({ exportId, data }: { exportId: number; data: AckExportInput }) =>
       apiClient.patch<AckExportResponse>(`/timesheets/payroll/exports/${exportId}/ack`, data),

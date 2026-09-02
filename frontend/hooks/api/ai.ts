@@ -10,10 +10,11 @@ import type {
   CandidateScoreResult, ReviewDraftResult, AttritionRiskResult,
   InterviewKitResult, InterviewNotesSummaryResult,
 } from "@/lib/ai/schemas";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useAIScoreLead() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["a", "i", "score", "lead"],
     mutationFn: (leadId: number) =>
       apiClient.post<LeadScoreResult>("/ai/score-lead", { leadId }),
@@ -26,7 +27,7 @@ export function useAIScoreLead() {
 
 export function useAIBatchScoreLeads() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["a", "i", "batch", "score", "leads"],
     mutationFn: (leadIds: number[]) =>
       apiClient.post<{ results: Record<number, LeadScoreResult>; scored: number }>(
@@ -53,7 +54,7 @@ interface GenerateEmailInput {
 }
 
 export function useGenerateEmail() {
-  return useMutation({
+  return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["generate", "email"],
     mutationFn: (input: GenerateEmailInput) =>
       apiClient.post<GeneratedEmail>("/ai/generate-email", input),
@@ -62,7 +63,7 @@ export function useGenerateEmail() {
 
 export function usePredictDeal() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["predict", "deal"],
     mutationFn: (dealId: number) =>
       apiClient.post<DealPredictionResult>("/ai/predict-deal", { dealId }),
@@ -74,7 +75,7 @@ export function usePredictDeal() {
 }
 
 export function useNextBestAction() {
-  return useMutation({
+  return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["next", "best", "action"],
     mutationFn: (leadId: number) =>
       apiClient.post<NextActionResult>("/ai/next-action", { leadId }),
@@ -82,7 +83,7 @@ export function useNextBestAction() {
 }
 
 export function useEnrichLead() {
-  return useMutation({
+  return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["enrich", "lead"],
     mutationFn: (input: { name: string; company?: string; email?: string; designation?: string; city?: string }) =>
       apiClient.post<LeadEnrichmentResult>("/ai/enrich-lead", input),
@@ -91,7 +92,7 @@ export function useEnrichLead() {
 
 export function useAIScoreCandidate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["a", "i", "score", "candidate"],
     mutationFn: (input: { candidateId: number; jobId?: number }) =>
       apiClient.post<CandidateScoreResult>("/ai/score-candidate", input),
@@ -102,7 +103,7 @@ export function useAIScoreCandidate() {
 }
 
 export function useAIGenerateReview() {
-  return useMutation({
+  return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["a", "i", "generate", "review"],
     mutationFn: (input: { userId: string; periodStart: string; periodEnd: string }) =>
       apiClient.post<ReviewDraftResult>("/ai/generate-review", input),
@@ -110,7 +111,7 @@ export function useAIGenerateReview() {
 }
 
 export function useAIAttritionRisk() {
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["a", "i", "attrition", "risk"],
     mutationFn: (userId: string) =>
       apiClient.post<AttritionRiskResult>("/ai/attrition-risk", { userId }),
@@ -138,7 +139,7 @@ export interface NLSearchResult {
 }
 
 export function useNLSearch() {
-  return useMutation({
+  return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["n", "l", "search"],
     mutationFn: (query: string) =>
       apiClient.post<NLSearchResult>("/ai/nl-search", { query }),
@@ -155,7 +156,7 @@ interface GenerateJdInput {
 }
 
 export function useGenerateJobDescription() {
-  return useMutation({
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["generate", "job", "description"],
     mutationFn: (input: GenerateJdInput) =>
       apiClient.post<{ description: string }>("/ai/generate-jd", input),
@@ -181,7 +182,7 @@ export function useOrgFeatureFlags() {
 
 export function useUpdateFeatureFlag() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:manage", {
     mutationKey: ["update", "feature", "flag"],
     mutationFn: (data: { flag: keyof OrgFeatureFlags; enabled: boolean }) =>
       apiClient.patch<{ success: boolean; flag: string; enabled: boolean }>(
@@ -235,7 +236,7 @@ export function useAiUsage() {
 }
 
 export function useAIInterviewKit() {
-  return useMutation({
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["ai", "hr", "interview-kit"],
     mutationFn: (jobPostingId: number) =>
       apiClient.post<InterviewKitResult>("/ai/hr/interview-kit", { jobPostingId }),
@@ -243,7 +244,7 @@ export function useAIInterviewKit() {
 }
 
 export function useAIInterviewNotesSummary() {
-  return useMutation({
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["ai", "hr", "interview-notes-summary"],
     mutationFn: (input: { candidateId: number; jobPostingId?: number }) =>
       apiClient.post<InterviewNotesSummaryResult>("/ai/hr/interview-notes-summary", input),
@@ -252,7 +253,7 @@ export function useAIInterviewNotesSummary() {
 
 export function useAcceptCandidateScore() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["ai", "hr", "accept-candidate-score"],
     mutationFn: (input: { candidateId: number; aiScore: number }) =>
       apiClient.post<{ accepted: boolean }>("/ai/hr/accept-candidate-score", input),

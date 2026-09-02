@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SignAuditEvent, SignEnvelope, SignEnvelopeFull } from "@/types/sign";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface CreateSignEnvelopeInput {
   title: string;
@@ -51,7 +52,7 @@ export function useSignEnvelope(id: number | undefined) {
 
 export function useCreateSignEnvelope() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("sign:envelope:create", {
     mutationKey: ["signEnvelopes", "create"],
     mutationFn: (input: CreateSignEnvelopeInput) => apiClient.post<SignEnvelope>("/sign/envelopes", input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.signEnvelopes.all }),
@@ -60,7 +61,7 @@ export function useCreateSignEnvelope() {
 
 export function useUpdateSignEnvelope(id: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("sign:envelope:create", {
     mutationKey: ["signEnvelopes", "update", id],
     mutationFn: (input: Partial<CreateSignEnvelopeInput>) => apiClient.patch<SignEnvelope>(`/sign/envelopes/${id}`, input),
     onSuccess: () => invalidateEnvelope(qc, id),
@@ -69,7 +70,7 @@ export function useUpdateSignEnvelope(id: number) {
 
 export function useDeleteSignEnvelope() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("sign:envelope:create", {
     mutationKey: ["signEnvelopes", "delete"],
     mutationFn: (id: number) => apiClient.delete<{ success: true }>(`/sign/envelopes/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.signEnvelopes.all }),
@@ -77,7 +78,7 @@ export function useDeleteSignEnvelope() {
 }
 
 export function useValidateSignEnvelope(id: number) {
-  return useMutation({
+  return useAuthorizedMutation("sign:envelope:create", {
     mutationKey: ["signEnvelopes", "validate", id],
     mutationFn: () => apiClient.post<EnvelopeValidationResult>(`/sign/envelopes/${id}/validate`),
   });
@@ -85,7 +86,7 @@ export function useValidateSignEnvelope(id: number) {
 
 export function useSendSignEnvelope(id: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("sign:envelope:send", {
     mutationKey: ["signEnvelopes", "send", id],
     mutationFn: () => apiClient.post<SignEnvelope>(`/sign/envelopes/${id}/send`),
     onSuccess: () => invalidateEnvelope(qc, id),
@@ -94,7 +95,7 @@ export function useSendSignEnvelope(id: number) {
 
 export function useVoidSignEnvelope(id: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("sign:envelope:void", {
     mutationKey: ["signEnvelopes", "void", id],
     mutationFn: (reason: string) => apiClient.post<SignEnvelope>(`/sign/envelopes/${id}/void`, { reason }),
     onSuccess: () => invalidateEnvelope(qc, id),
@@ -103,7 +104,7 @@ export function useVoidSignEnvelope(id: number) {
 
 export function useResendSignEnvelope(id: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("sign:envelope:send", {
     mutationKey: ["signEnvelopes", "resend", id],
     mutationFn: () => apiClient.post<{ resentCount: number }>(`/sign/envelopes/${id}/resend`),
     onSuccess: () => invalidateEnvelope(qc, id),
@@ -112,7 +113,7 @@ export function useResendSignEnvelope(id: number) {
 
 export function useSendSignEnvelopeReminder(id: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("sign:envelope:send", {
     mutationKey: ["signEnvelopes", "send-reminder", id],
     mutationFn: () => apiClient.post<{ remindedCount: number }>(`/sign/envelopes/${id}/send-reminder`),
     onSuccess: () => invalidateEnvelope(qc, id),
@@ -129,7 +130,7 @@ export function useSignEnvelopeAudit(id: number | undefined) {
 }
 
 export function useDownloadSignEnvelopeFinalPdf(id: number) {
-  return useMutation({
+  return useAuthorizedMutation("sign:certificate:download", {
     mutationKey: ["signEnvelopes", "final-pdf", id],
     mutationFn: () => apiClient.get<{ url: string }>(`/sign/envelopes/${id}/final-pdf`),
   });

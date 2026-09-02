@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface SupportTicketDraft {
   id: number;
@@ -16,7 +17,7 @@ export interface SupportTicketDraft {
 
 export function useSnoozeTicket() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:manage", {
     mutationKey: ["snooze", "ticket"],
     mutationFn: ({ ticketId, snoozedUntil }: { ticketId: number; snoozedUntil: Date }) =>
       apiClient.post<{ success: boolean; snoozedUntil: string }>(`/support/${ticketId}/snooze`, {
@@ -31,7 +32,7 @@ export function useSnoozeTicket() {
 
 export function useUnsnoozeTicket() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:manage", {
     mutationKey: ["unsnooze", "ticket"],
     mutationFn: (ticketId: number) =>
       apiClient.delete<{ success: boolean }>(`/support/${ticketId}/snooze`),
@@ -44,7 +45,7 @@ export function useUnsnoozeTicket() {
 
 export function useSplitTicket() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:manage", {
     mutationKey: ["split", "ticket"],
     mutationFn: ({
       ticketId,
@@ -73,7 +74,7 @@ export function useTicketDraft(ticketId: number) {
 
 export function useUpsertTicketDraft() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:reply", {
     mutationKey: ["supportTicketDraft", "upsert"],
     mutationFn: ({
       ticketId,
@@ -91,7 +92,7 @@ export function useUpsertTicketDraft() {
 
 export function useDeleteTicketDraft() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:reply", {
     mutationKey: ["supportTicketDraft", "delete"],
     mutationFn: (ticketId: number) =>
       apiClient.delete<{ success: boolean }>(`/support/${ticketId}/draft`),

@@ -7,6 +7,7 @@ import type {
   HrFormSubmissionListResponse,
   HrFormSubmissionStatus,
 } from "../lib/types";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 function submissionsKey(formId: number, params?: Record<string, unknown>) {
   return params
@@ -20,12 +21,12 @@ export function useHrFormSubmissions(
 ) {
   return useQuery<HrFormSubmissionListResponse>({
     queryKey: submissionsKey(formId, params),
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
       if (params?.cursor) p["cursor"] = params.cursor;
       if (params?.limit) p["limit"] = params.limit;
       if (params?.status) p["status"] = params.status;
-      return apiClient.get<HrFormSubmissionListResponse>(`/hr/forms/${formId}/submissions`, p);
+      return apiClient.get<HrFormSubmissionListResponse>(`/hr/forms/${formId}/submissions`, p, signal);
     },
     staleTime: 15_000,
   });
@@ -33,11 +34,11 @@ export function useHrFormSubmissions(
 
 export function useUpdateSubmissionStatus(formId: number) {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     HrFormSubmission,
     Error,
     { submissionId: number; status: HrFormSubmissionStatus }
-  >({
+  >("hr:forms:manage", {
     mutationKey: ["hr", "forms", "submission", "status"],
     mutationFn: ({ submissionId, status }) =>
       apiClient.patch<HrFormSubmission>(`/hr/forms/submissions/${submissionId}/status`, { status }),

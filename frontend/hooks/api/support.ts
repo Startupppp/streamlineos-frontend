@@ -11,6 +11,7 @@ import type {
   SupportTicketPriority,
   SupportMessageAttachment,
 } from "@/types/support";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface SupportTicketsResponse {
   items: SupportTicket[];
@@ -102,7 +103,7 @@ export const useSupportTicket = (
 
 export const useCreateSupportTicket = () => {
   const queryClient = useQueryClient();
-  return useMutation<SupportTicket, Error, CreateTicketInput>({
+  return useAuthorizedMutation<SupportTicket, Error, CreateTicketInput>("support:tickets:create", {
     mutationKey: ["create", "support", "ticket"],
     mutationFn: (data) => apiClient.post<SupportTicket>("/support", data),
     onSuccess: () => {
@@ -113,7 +114,7 @@ export const useCreateSupportTicket = () => {
 
 export const useUpdateSupportTicket = () => {
   const queryClient = useQueryClient();
-  return useMutation<UpdateTicketResult, Error, UpdateTicketInput>({
+  return useAuthorizedMutation<UpdateTicketResult, Error, UpdateTicketInput>("support:settings:manage", {
     mutationKey: ["update", "support", "ticket"],
     mutationFn: ({ id, ...data }) =>
       apiClient.patch<UpdateTicketResult>(`/support/${id}`, data),
@@ -126,7 +127,7 @@ export const useUpdateSupportTicket = () => {
 
 export const useAddSupportMessage = () => {
   const queryClient = useQueryClient();
-  return useMutation<SupportMessage, Error, AddMessageInput>({
+  return useAuthorizedMutation<SupportMessage, Error, AddMessageInput>("support:tickets:reply", {
     mutationKey: ["add", "support", "message"],
     mutationFn: ({ ticketId, ...data }) =>
       apiClient.post<SupportMessage>(`/support/${ticketId}/messages`, data),

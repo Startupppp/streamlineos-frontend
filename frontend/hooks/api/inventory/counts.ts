@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { CycleCountStatus } from "@/features/inventory/lib/inventory-status";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface CycleCountLine {
   id: number;
@@ -131,7 +132,7 @@ export function useCycleCount(id: number) {
 
 export function useCreateCycleCount() {
   const qc = useQueryClient();
-  return useMutation<CycleCount, Error, CreateCycleCountInput>({
+  return useAuthorizedMutation<CycleCount, Error, CreateCycleCountInput>("inventory:stock:reconcile", {
     mutationKey: ["inventory", "cycleCounts", "create"],
     mutationFn: (data) =>
       apiClient.post<CycleCount>("/inventory/cycle-counts", data, {
@@ -145,7 +146,7 @@ export function useCreateCycleCount() {
 
 export function useStartCycleCount() {
   const qc = useQueryClient();
-  return useMutation<CycleCount, Error, number>({
+  return useAuthorizedMutation<CycleCount, Error, number>("inventory:stock:reconcile", {
     mutationKey: ["inventory", "cycleCounts", "start"],
     mutationFn: (countId) =>
       apiClient.post<CycleCount>(`/inventory/cycle-counts/${countId}/start`),
@@ -158,7 +159,7 @@ export function useStartCycleCount() {
 
 export function useUpdateCycleCountLines() {
   const qc = useQueryClient();
-  return useMutation<CycleCount, Error, { countId: number } & UpdateLinesPayload>({
+  return useAuthorizedMutation<CycleCount, Error, { countId: number } & UpdateLinesPayload>("inventory:stock:reconcile", {
     mutationKey: ["inventory", "cycleCounts", "updateLines"],
     mutationFn: ({ countId, lines }) =>
       apiClient.patch<CycleCount>(`/inventory/cycle-counts/${countId}/lines`, { lines }),
@@ -170,7 +171,7 @@ export function useUpdateCycleCountLines() {
 
 export function useReviewCycleCount() {
   const qc = useQueryClient();
-  return useMutation<CycleCount, Error, number>({
+  return useAuthorizedMutation<CycleCount, Error, number>("inventory:stock:reconcile", {
     mutationKey: ["inventory", "cycleCounts", "review"],
     mutationFn: (countId) =>
       apiClient.post<CycleCount>(`/inventory/cycle-counts/${countId}/review`),
@@ -183,7 +184,7 @@ export function useReviewCycleCount() {
 
 export function usePostCycleCount() {
   const qc = useQueryClient();
-  return useMutation<CycleCount, Error, number>({
+  return useAuthorizedMutation<CycleCount, Error, number>("inventory:stock:reconcile", {
     mutationKey: ["inventory", "cycleCounts", "post"],
     mutationFn: (countId) =>
       apiClient.post<CycleCount>(`/inventory/cycle-counts/${countId}/post`, undefined, {
@@ -200,7 +201,7 @@ export function usePostCycleCount() {
 
 export function useCancelCycleCount() {
   const qc = useQueryClient();
-  return useMutation<CycleCount, Error, number>({
+  return useAuthorizedMutation<CycleCount, Error, number>("inventory:stock:reconcile", {
     mutationKey: ["inventory", "cycleCounts", "cancel"],
     mutationFn: (countId) =>
       apiClient.post<CycleCount>(`/inventory/cycle-counts/${countId}/cancel`),
@@ -234,7 +235,7 @@ export function usePhysicalAudit(id: number) {
 
 export function useCreatePhysicalAudit() {
   const qc = useQueryClient();
-  return useMutation<PhysicalAudit, Error, CreatePhysicalAuditInput>({
+  return useAuthorizedMutation<PhysicalAudit, Error, CreatePhysicalAuditInput>("inventory:stock:reconcile", {
     mutationKey: ["inventory", "physicalAudits", "create"],
     mutationFn: (data) =>
       apiClient.post<PhysicalAudit>("/inventory/physical-audits", data, {
@@ -248,7 +249,7 @@ export function useCreatePhysicalAudit() {
 
 export function useStartPhysicalAudit() {
   const qc = useQueryClient();
-  return useMutation<PhysicalAudit, Error, number>({
+  return useAuthorizedMutation<PhysicalAudit, Error, number>("inventory:stock:reconcile", {
     mutationKey: ["inventory", "physicalAudits", "start"],
     mutationFn: (auditId) =>
       apiClient.post<PhysicalAudit>(`/inventory/physical-audits/${auditId}/start`),
@@ -261,7 +262,7 @@ export function useStartPhysicalAudit() {
 
 export function useUpdatePhysicalAuditLines() {
   const qc = useQueryClient();
-  return useMutation<PhysicalAudit, Error, { auditId: number } & UpdateLinesPayload>({
+  return useAuthorizedMutation<PhysicalAudit, Error, { auditId: number } & UpdateLinesPayload>("inventory:stock:reconcile", {
     mutationKey: ["inventory", "physicalAudits", "updateLines"],
     mutationFn: ({ auditId, lines }) =>
       apiClient.patch<PhysicalAudit>(`/inventory/physical-audits/${auditId}/lines`, { lines }),
@@ -273,7 +274,7 @@ export function useUpdatePhysicalAuditLines() {
 
 export function useReviewPhysicalAudit() {
   const qc = useQueryClient();
-  return useMutation<PhysicalAudit, Error, number>({
+  return useAuthorizedMutation<PhysicalAudit, Error, number>("inventory:stock:reconcile", {
     mutationKey: ["inventory", "physicalAudits", "review"],
     mutationFn: (auditId) =>
       apiClient.post<PhysicalAudit>(`/inventory/physical-audits/${auditId}/review`),
@@ -286,7 +287,7 @@ export function useReviewPhysicalAudit() {
 
 export function usePostPhysicalAudit() {
   const qc = useQueryClient();
-  return useMutation<PhysicalAudit, Error, number>({
+  return useAuthorizedMutation<PhysicalAudit, Error, number>("inventory:stock:reconcile", {
     mutationKey: ["inventory", "physicalAudits", "post"],
     mutationFn: (auditId) =>
       apiClient.post<PhysicalAudit>(`/inventory/physical-audits/${auditId}/post`, undefined, {
@@ -303,7 +304,7 @@ export function usePostPhysicalAudit() {
 
 export function useCancelPhysicalAudit() {
   const qc = useQueryClient();
-  return useMutation<PhysicalAudit, Error, number>({
+  return useAuthorizedMutation<PhysicalAudit, Error, number>("inventory:stock:reconcile", {
     mutationKey: ["inventory", "physicalAudits", "cancel"],
     mutationFn: (auditId) =>
       apiClient.post<PhysicalAudit>(`/inventory/physical-audits/${auditId}/cancel`),

@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { LayoutAdjustment } from "@/lib/renderer/layout-adjustment";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 /**
  * Where a tenant's arrangement of a record type lives.
@@ -62,7 +63,7 @@ export function useLayoutAdjustment(layoutKey: string) {
     queryKey: queryKeys.recordLayouts.adjustment(orgId, layoutKey),
     queryFn: ({ signal }) =>
       apiClient.get<LayoutAdjustment | null>(
-        `/renderer/layouts/${encodeURIComponent(layoutKey)}`, signal,
+        `/renderer/layouts/${encodeURIComponent(layoutKey)}`, undefined, signal,
       ),
     // An arrangement changes when an administrator edits it, which is rare, and
     // every record surface in the product reads it.
@@ -99,7 +100,7 @@ export function useSaveLayoutAdjustment(layoutKey: string) {
   const queryClient = useQueryClient();
   const orgId = useLayoutTenant();
 
-  return useMutation({
+  return useAuthorizedMutation("settings:record-layouts:manage", {
     mutationKey: ["recordLayouts", "save", layoutKey] as const,
     mutationFn: (input: LayoutAdjustmentInput) =>
       apiClient.put<LayoutAdjustment>(
@@ -120,7 +121,7 @@ export function useResetLayoutAdjustment(layoutKey: string) {
   const queryClient = useQueryClient();
   const orgId = useLayoutTenant();
 
-  return useMutation({
+  return useAuthorizedMutation("settings:record-layouts:manage", {
     mutationKey: ["recordLayouts", "reset", layoutKey] as const,
     mutationFn: () =>
       apiClient.delete<null>(`/renderer/layouts/${encodeURIComponent(layoutKey)}`),
@@ -142,7 +143,7 @@ export function useLayoutUsage(layoutKey: string, options?: { enabled?: boolean 
     queryKey: queryKeys.recordLayouts.usage(orgId, layoutKey),
     queryFn: ({ signal }) =>
       apiClient.get<LayoutUsage>(
-        `/renderer/layouts/${encodeURIComponent(layoutKey)}/usage`, signal,
+        `/renderer/layouts/${encodeURIComponent(layoutKey)}/usage`, undefined, signal,
       ),
     staleTime: 10 * 60_000,
     enabled: !!orgId && !!layoutKey && canAdjust && (options?.enabled ?? true),

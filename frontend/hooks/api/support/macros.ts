@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tansta
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SupportTicketStatus } from "@/types/support";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type TicketPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 type RoutingConditionOp = "eq" | "neq" | "contains";
@@ -162,7 +163,7 @@ export function useSupportMacros(params?: MacrosParams) {
 
 export function useCreateMacro() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:macros:manage", {
     mutationKey: ["create", "macro"],
     mutationFn: (input: CreateMacroInput) =>
       apiClient.post<SupportMacro>("/support/macros", input),
@@ -172,7 +173,7 @@ export function useCreateMacro() {
 
 export function useUpdateMacro() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:macros:manage", {
     mutationKey: ["update", "macro"],
     mutationFn: ({ id, ...input }: UpdateMacroInput & { id: number }) =>
       apiClient.patch<SupportMacro>(`/support/macros/${id}`, input),
@@ -182,7 +183,7 @@ export function useUpdateMacro() {
 
 export function useDeleteMacro() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:reply", {
     mutationKey: ["delete", "macro"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/support/macros/${id}`),
@@ -199,7 +200,7 @@ export function useMacroUsage() {
 }
 
 export function usePreviewMacro() {
-  return useMutation({
+  return useAuthorizedMutation("support:macros:view", {
     mutationKey: ["supportMacros", "preview"],
     mutationFn: ({ macroId, ticketId }: PreviewMacroInput) =>
       apiClient.post<PreviewMacroResult>(`/support/macros/${macroId}/preview`, { ticketId }),
@@ -208,7 +209,7 @@ export function usePreviewMacro() {
 
 export function useApplyMacro() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:reply", {
     mutationKey: ["supportMacros", "apply"],
     mutationFn: ({ macroId, ticketId }: ApplyMacroInput) =>
       apiClient.post<ApplyMacroResult>(`/support/macros/${macroId}/apply`, { ticketId }),
@@ -229,7 +230,7 @@ export function useRoutingRules() {
 
 export function useCreateRoutingRule() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:macros:manage", {
     mutationKey: ["create", "routing", "rule"],
     mutationFn: (input: CreateRoutingRuleInput) =>
       apiClient.post<SupportRoutingRule>("/support/routing-rules", input),
@@ -239,7 +240,7 @@ export function useCreateRoutingRule() {
 
 export function useUpdateRoutingRule() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:macros:manage", {
     mutationKey: ["update", "routing", "rule"],
     mutationFn: ({ id, ...input }: UpdateRoutingRuleInput & { id: number }) =>
       apiClient.patch<SupportRoutingRule>(`/support/routing-rules/${id}`, input),
@@ -249,7 +250,7 @@ export function useUpdateRoutingRule() {
 
 export function useDeleteRoutingRule() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:reply", {
     mutationKey: ["delete", "routing", "rule"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/support/routing-rules/${id}`),
@@ -267,7 +268,7 @@ export function useAgentSkills() {
 
 export function useSetAgentSkills() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:reply", {
     mutationKey: ["supportAgentSkills", "set"],
     mutationFn: ({ userId, skills }: { userId: string; skills: string[] }) =>
       apiClient.put<{ success: boolean; skills: string[] }>(`/support/agent-skills/${userId}`, { skills }),
@@ -285,7 +286,7 @@ export function useAgentAvailability() {
 
 export function useSetMyAvailability() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:reply", {
     mutationKey: ["supportAgentAvailability", "setMine"],
     mutationFn: (isAvailable: boolean) =>
       apiClient.put<SupportAgentAvailability>("/support/agent-availability/me", { isAvailable }),
@@ -303,7 +304,7 @@ export function useVipClients() {
 
 export function useAddVipClient() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:macros:manage", {
     mutationKey: ["supportVipClients", "add"],
     mutationFn: (clientId: number) =>
       apiClient.post<{ success: boolean }>("/support/vip-clients", { clientId }),
@@ -313,7 +314,7 @@ export function useAddVipClient() {
 
 export function useRemoveVipClient() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:reply", {
     mutationKey: ["supportVipClients", "remove"],
     mutationFn: (clientId: number) =>
       apiClient.delete<{ success: boolean }>(`/support/vip-clients/${clientId}`),

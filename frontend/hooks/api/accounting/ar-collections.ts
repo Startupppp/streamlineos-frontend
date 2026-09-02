@@ -16,8 +16,10 @@ import type {
   CreateCollectionActivityInput,
   UpdateInvoiceCollectionInput,
 } from "@/types/accounting/ar";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { queryKeyBase } from "@/lib/query-keys/base";
 
-const base = ["streamlineos", "accounting"] as const;
+const base = [...queryKeyBase, "accounting"] as const;
 
 const arCollectionsKeys = {
   reminders: {
@@ -60,7 +62,7 @@ export function useReminderPolicies(params: ListReminderPoliciesParams = {}) {
     queryFn: ({ signal }) =>
       apiClient.get<ListResponse<ReminderPolicy>>(
         "/accounting/reminders/policies",
-        toQuery(params),
+        toQuery(params), signal,
       ),
     staleTime: 60_000,
     enabled: can,
@@ -80,7 +82,7 @@ export function useReminderLog(params: ListReminderLogParams = {}) {
     queryFn: ({ signal }) =>
       apiClient.get<ListResponse<ReminderLogEntry>>(
         "/accounting/reminders/log",
-        toQuery(params),
+        toQuery(params), signal,
       ),
     staleTime: 30_000,
     enabled: can,
@@ -100,7 +102,7 @@ export function useCollectionsSummary() {
 
 export function useCreateReminderPolicy() {
   const queryClient = useQueryClient();
-  return useMutation<ReminderPolicy, Error, CreateReminderPolicyInput>({
+  return useAuthorizedMutation<ReminderPolicy, Error, CreateReminderPolicyInput>("accounting:reminders:manage", {
     mutationKey: ["create-reminder-policy"],
     mutationFn: (body) =>
       apiClient.post<ReminderPolicy>("/accounting/reminders/policies", body),
@@ -112,11 +114,11 @@ export function useCreateReminderPolicy() {
 
 export function useUpdateReminderPolicy() {
   const queryClient = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     ReminderPolicy,
     Error,
     { policyId: number } & UpdateReminderPolicyInput
-  >({
+  >("accounting:reminders:manage", {
     mutationKey: ["update-reminder-policy"],
     mutationFn: ({ policyId, ...body }) =>
       apiClient.patch<ReminderPolicy>(
@@ -131,7 +133,7 @@ export function useUpdateReminderPolicy() {
 
 export function useDeleteReminderPolicy() {
   const queryClient = useQueryClient();
-  return useMutation<{ id: number; deleted: boolean }, Error, { policyId: number }>({
+  return useAuthorizedMutation<{ id: number; deleted: boolean }, Error, { policyId: number }>("accounting:reminders:manage", {
     mutationKey: ["delete-reminder-policy"],
     mutationFn: ({ policyId }) =>
       apiClient.delete<{ id: number; deleted: boolean }>(
@@ -145,7 +147,7 @@ export function useDeleteReminderPolicy() {
 
 export function useCreateCollectionActivity() {
   const queryClient = useQueryClient();
-  return useMutation<CollectionActivity, Error, CreateCollectionActivityInput>({
+  return useAuthorizedMutation<CollectionActivity, Error, CreateCollectionActivityInput>("accounting:collections:manage", {
     mutationKey: ["create-collection-activity"],
     mutationFn: (body) =>
       apiClient.post<CollectionActivity>("/accounting/collections/activities", body),
@@ -169,12 +171,12 @@ interface InvoiceCollectionContext {
 
 export function useUpdateInvoiceCollection() {
   const queryClient = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     { id: number; updated: boolean },
     Error,
     { invoiceId: number } & UpdateInvoiceCollectionInput,
     InvoiceCollectionContext
-  >({
+  >("accounting:collections:manage", {
     mutationKey: ["update-invoice-collection"],
     mutationFn: ({ invoiceId, ...body }) =>
       apiClient.patch<{ id: number; updated: boolean }>(

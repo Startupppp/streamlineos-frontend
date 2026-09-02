@@ -12,8 +12,9 @@ import type {
   CreateHrAutomationInput,
   UpdateHrAutomationInput,
 } from "@/types/hr/automations";
+import { queryKeyBase } from "@/lib/query-keys/base";
 
-const BASE = ["streamlineos", "hr", "automations"] as const;
+const BASE = [...queryKeyBase, "hr", "automations"] as const;
 
 export const hrAutomationKeys = {
   all: BASE,
@@ -28,7 +29,7 @@ export function useHrAutomations(params?: { search?: string; triggerEvent?: stri
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: hrAutomationKeys.list(params),
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const search = new URLSearchParams();
       if (params?.search) search.set("search", params.search);
       if (params?.triggerEvent) search.set("triggerEvent", params.triggerEvent);
@@ -36,7 +37,7 @@ export function useHrAutomations(params?: { search?: string; triggerEvent?: stri
       if (params?.page) search.set("page", String(params.page));
       if (params?.limit) search.set("limit", String(params.limit));
       const qs = search.toString();
-      return apiClient.get<HrAutomationRule[]>(`/hr/automations${qs ? `?${qs}` : ""}`);
+      return apiClient.get<HrAutomationRule[]>(`/hr/automations${qs ? `?${qs}` : ""}`, undefined, signal);
     },
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -65,13 +66,13 @@ export function useHrAutomationRuns(ruleId?: number, params?: { page?: number; l
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: hrAutomationKeys.runs(ruleId, params),
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const path = ruleId ? `/hr/automations/${ruleId}/runs` : "/hr/automations/runs";
       const search = new URLSearchParams();
       if (params?.page) search.set("page", String(params.page));
       if (params?.limit) search.set("limit", String(params.limit));
       const qs = search.toString();
-      return apiClient.get<PaginatedHrAutomationRuns>(`${path}${qs ? `?${qs}` : ""}`);
+      return apiClient.get<PaginatedHrAutomationRuns>(`${path}${qs ? `?${qs}` : ""}`, undefined, signal);
     },
     staleTime: 15_000,
     placeholderData: keepPreviousData,

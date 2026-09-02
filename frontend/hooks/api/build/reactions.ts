@@ -3,10 +3,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useAddReaction(projectId: number, ticketId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: ["projects", projectId, "tickets", ticketId, "reactions", "add"],
     mutationFn: ({ commentId, emoji }: { commentId: number; emoji: string }) =>
       apiClient.post<{ success: boolean }>(
@@ -20,7 +21,7 @@ export function useAddReaction(projectId: number, ticketId: number) {
 
 export function useRemoveReaction(projectId: number, ticketId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: ["projects", projectId, "tickets", ticketId, "reactions", "remove"],
     mutationFn: ({ commentId, emoji }: { commentId: number; emoji: string }) =>
       apiClient.delete<{ success: boolean }>(

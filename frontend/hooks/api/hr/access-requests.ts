@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { queryKeyBase } from "@/lib/query-keys/base";
 
 export interface AccessRequest {
   id: string;
@@ -29,7 +30,7 @@ export interface PatchAccessRequestInput {
   grantedBy?: string;
 }
 
-const AR_KEY = ["streamlineos", "hr", "access-requests"] as const;
+const AR_KEY = [...queryKeyBase, "hr", "access-requests"] as const;
 
 export function useAccessRequests(employeeId?: string) {
   return useQuery<AccessRequest[]>({

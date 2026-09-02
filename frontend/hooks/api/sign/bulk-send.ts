@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SignBulkSendJob } from "@/types/sign";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface CreateBulkSendJobInput {
   templateId: number;
@@ -20,7 +21,7 @@ export interface BulkSendJobResult {
 
 export function useCreateBulkSendJob() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("sign:bulk_send:run", {
     mutationKey: ["signBulkSend", "create"],
     mutationFn: (input: CreateBulkSendJobInput) => apiClient.post<BulkSendJobResult>("/sign/bulk-send/jobs", input),
     onSuccess: (data) => {
@@ -40,7 +41,7 @@ export function useBulkSendJobs() {
 
 export function useCancelBulkSendJob() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("sign:bulk_send:run", {
     mutationKey: ["signBulkSend", "cancel"],
     mutationFn: (id: number) => apiClient.post<SignBulkSendJob>(`/sign/bulk-send/jobs/${id}/cancel`),
     onSuccess: (data) => {

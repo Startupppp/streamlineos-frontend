@@ -13,6 +13,7 @@ import type {
   TimesheetEntry,
   UpdateEntryInput,
 } from "@/features/timesheets/types";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 function toParams(query: EntriesQuery): Record<string, unknown> {
   return {
@@ -33,7 +34,7 @@ export function useTimesheetEntries(query: EntriesQuery = {}, enabled = true) {
   const params = toParams(query);
   return useQuery({
     queryKey: queryKeys.timesheets.entries(params),
-    queryFn: ({ signal }) => apiClient.get<CursorPage<TimesheetEntry>>("/timesheets/entries", params),
+    queryFn: ({ signal }) => apiClient.get<CursorPage<TimesheetEntry>>("/timesheets/entries", params, signal),
     staleTime: 30_000,
     placeholderData: (prev) => prev,
     enabled: enabled && canView,
@@ -42,7 +43,7 @@ export function useTimesheetEntries(query: EntriesQuery = {}, enabled = true) {
 
 export function useCreateTimesheetEntry() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:entries:create", {
     mutationKey: ["timesheets", "entries", "create"],
     mutationFn: (data: CreateEntryInput) =>
       apiClient.post<TimesheetEntry>("/timesheets/entries", data),
@@ -57,7 +58,7 @@ export function useCreateTimesheetEntry() {
 
 export function useUpdateTimesheetEntry() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:entries:update", {
     mutationKey: ["timesheets", "entries", "update"],
     mutationFn: ({ entryId, data }: { entryId: number; data: UpdateEntryInput }) =>
       apiClient.patch<TimesheetEntry>(`/timesheets/entries/${entryId}`, data),
@@ -107,7 +108,7 @@ export function useUpdateTimesheetEntry() {
 
 export function useVoidTimesheetEntry() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:entries:void", {
     mutationKey: ["timesheets", "entries", "void"],
     mutationFn: ({ entryId, reason }: { entryId: number; reason: string }) =>
       apiClient.post<{ success: boolean }>(`/timesheets/entries/${entryId}/void`, { reason }),

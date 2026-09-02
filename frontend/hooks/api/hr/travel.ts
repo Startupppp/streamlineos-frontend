@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface TravelRequest {
   id: number;
@@ -39,7 +40,7 @@ export function usePendingTravelApprovals() {
 
 export function useCreateTravelRequest() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:travel:create", {
     mutationKey: ["hr", "travel", "create"],
     mutationFn: (data: Omit<TravelRequest, "id" | "orgId" | "userId" | "status" | "createdAt">) =>
       apiClient.post<TravelRequest>("/hr/travel", data),
@@ -49,7 +50,7 @@ export function useCreateTravelRequest() {
 
 export function useManagerApproveTravelRequest() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:travel:manage", {
     mutationKey: ["hr", "travel", "manager-approve"],
     mutationFn: (id: number) => apiClient.patch<TravelRequest>(`/hr/travel/${id}/manager-approve`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.travelAll }),
@@ -58,7 +59,7 @@ export function useManagerApproveTravelRequest() {
 
 export function useFinanceApproveTravelRequest() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:travel:manage", {
     mutationKey: ["hr", "travel", "finance-approve"],
     mutationFn: (id: number) => apiClient.patch<TravelRequest>(`/hr/travel/${id}/finance-approve`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.travelAll }),
@@ -67,7 +68,7 @@ export function useFinanceApproveTravelRequest() {
 
 export function useRejectTravelRequest() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:travel:manage", {
     mutationKey: ["hr", "travel", "reject"],
     mutationFn: ({ id, reason }: { id: number; reason: string }) =>
       apiClient.patch<TravelRequest>(`/hr/travel/${id}/reject`, { reason }),

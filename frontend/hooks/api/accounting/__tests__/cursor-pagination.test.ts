@@ -5,6 +5,8 @@ import { useBudgets } from "../planning";
 import { useBankAccounts } from "../banking";
 import { useGeneralLedger } from "../core-gl";
 
+const forwardedSignal = new AbortController().signal;
+
 jest.mock("@tanstack/react-query", () => ({
   ...jest.requireActual("@tanstack/react-query"),
   useQuery: jest.fn((options: unknown) => options),
@@ -73,11 +75,12 @@ describe("useVendorCredits — cursor pagination contract", () => {
     });
 
     const opts = captureVendorCreditsOptions({ limit: 20 });
-    void opts.queryFn({});
+    void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/accounting/vendor-credits",
       expect.not.objectContaining({ cursor: expect.anything() }),
+      forwardedSignal,
     );
   });
 
@@ -89,11 +92,12 @@ describe("useVendorCredits — cursor pagination contract", () => {
     });
 
     const opts = captureVendorCreditsOptions({ cursor: "eyJpZCI6MTB9", limit: 20 });
-    void opts.queryFn({});
+    void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/accounting/vendor-credits",
       expect.objectContaining({ cursor: "eyJpZCI6MTB9" }),
+      forwardedSignal,
     );
   });
 
@@ -105,11 +109,12 @@ describe("useVendorCredits — cursor pagination contract", () => {
     });
 
     const opts = captureVendorCreditsOptions({ limit: 20 });
-    void opts.queryFn({});
+    void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/accounting/vendor-credits",
       expect.not.objectContaining({ page: expect.anything() }),
+      forwardedSignal,
     );
   });
 
@@ -121,11 +126,12 @@ describe("useVendorCredits — cursor pagination contract", () => {
     });
 
     const opts = captureVendorCreditsOptions({ limit: 20 });
-    void opts.queryFn({});
+    void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).not.toHaveBeenCalledWith(
       "/accounting/vendor-credits",
       expect.objectContaining({ cursor: expect.anything() }),
+      forwardedSignal,
     );
   });
 });
@@ -144,11 +150,12 @@ describe("useBudgets — cursor pagination contract", () => {
     });
 
     const opts = captureBudgetsOptions({ limit: 20 });
-    void opts.queryFn({});
+    void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/accounting/budgets",
       expect.not.objectContaining({ cursor: expect.anything() }),
+      forwardedSignal,
     );
   });
 
@@ -160,11 +167,12 @@ describe("useBudgets — cursor pagination contract", () => {
     });
 
     const opts = captureBudgetsOptions({ cursor: "eyJpZCI6NX0", limit: 20 });
-    void opts.queryFn({});
+    void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/accounting/budgets",
       expect.objectContaining({ cursor: "eyJpZCI6NX0" }),
+      forwardedSignal,
     );
   });
 
@@ -176,11 +184,12 @@ describe("useBudgets — cursor pagination contract", () => {
     });
 
     const opts = captureBudgetsOptions({ limit: 20 });
-    void opts.queryFn({});
+    void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/accounting/budgets",
       expect.not.objectContaining({ page: expect.anything() }),
+      forwardedSignal,
     );
   });
 });
@@ -199,11 +208,12 @@ describe("useBankAccounts — cursor pagination contract", () => {
     });
 
     const opts = captureBankAccountsOptions({ limit: 20 });
-    void opts.queryFn({});
+    void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/finance/bank-accounts",
       expect.not.objectContaining({ cursor: expect.anything() }),
+      forwardedSignal,
     );
   });
 
@@ -215,11 +225,12 @@ describe("useBankAccounts — cursor pagination contract", () => {
     });
 
     const opts = captureBankAccountsOptions({ cursor: "eyJpZCI6Mn0", limit: 20 });
-    void opts.queryFn({});
+    void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/finance/bank-accounts",
       expect.objectContaining({ cursor: "eyJpZCI6Mn0" }),
+      forwardedSignal,
     );
   });
 
@@ -231,11 +242,12 @@ describe("useBankAccounts — cursor pagination contract", () => {
     });
 
     const opts = captureBankAccountsOptions({ limit: 20 });
-    void opts.queryFn({});
+    void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/finance/bank-accounts",
       expect.not.objectContaining({ page: expect.anything() }),
+      forwardedSignal,
     );
   });
 });

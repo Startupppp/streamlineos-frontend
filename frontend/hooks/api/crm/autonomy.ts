@@ -14,6 +14,7 @@ import type {
   Scoreboard,
   SwitchesResponse,
 } from "@/types/crm/autonomy";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 function toParams(filters: DecisionFilters, limit: number, cursor?: string): string {
   const params = new URLSearchParams({ limit: String(limit) });
@@ -64,7 +65,7 @@ export function useAutonomyDecisions(filters: DecisionFilters = {}, limit = 25) 
 export function useReverseDecision() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:autonomy:reverse", {
     mutationKey: ["crm", "autonomy", "decisions", "reverse"],
     mutationFn: ({
       decisionId,
@@ -103,7 +104,7 @@ export function useAutonomySwitches() {
 export function useSetAutonomySwitch() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:autonomy:manage", {
     mutationKey: ["crm", "autonomy", "switches", "set"],
     mutationFn: (input: { kind: string; enabled: boolean; reason?: string }) =>
       apiClient.patch<SwitchesResponse>("/crm/autonomy/switches", input),
@@ -134,7 +135,7 @@ export function useAutonomyReviewQueue() {
 export function useMarkReviewed() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:autonomy:view", {
     mutationKey: ["crm", "autonomy", "review-queue", "mark-reviewed"],
     mutationFn: (shadowScoreId: string) =>
       apiClient.post<{ reviewed: boolean }>(
@@ -158,7 +159,7 @@ export function useAutonomySettings() {
 export function useUpdateAutonomySettings() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:autonomy:manage", {
     mutationKey: ["crm", "autonomy", "settings", "update"],
     mutationFn: (patch: Partial<AutonomySettings>) =>
       apiClient.patch<AutonomySettings>("/crm/autonomy/settings", patch),
@@ -187,7 +188,7 @@ export function useLiveHolds() {
 export function useCancelHold() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:autonomy:reverse", {
     mutationKey: ["crm", "autonomy", "holds", "cancel"],
     mutationFn: ({ holdId, reason }: { holdId: string; reason?: string }) =>
       apiClient.post<{ cancelled: boolean }>(`/crm/autonomy/holds/${holdId}/cancel`, {

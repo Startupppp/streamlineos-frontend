@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface UpdateCommentInput {
   commentId: number;
@@ -19,7 +20,7 @@ interface DeleteCommentInput {
 
 export function useUpdateComment() {
   const queryClient = useQueryClient();
-  return useMutation<{ id: number; content: string; updatedAt: string }, Error, UpdateCommentInput>({
+  return useAuthorizedMutation<{ id: number; content: string; updatedAt: string }, Error, UpdateCommentInput>("build:tickets:update", {
     mutationKey: ["projects", "tickets", "comments", "update"],
     mutationFn: ({ commentId, ticketId, projectId, content }) =>
       apiClient.patch<{ id: number; content: string; updatedAt: string }>(
@@ -39,7 +40,7 @@ export function useUpdateComment() {
 
 export function useDeleteComment() {
   const queryClient = useQueryClient();
-  return useMutation<void, Error, DeleteCommentInput>({
+  return useAuthorizedMutation<void, Error, DeleteCommentInput>("build:tickets:update", {
     mutationKey: ["projects", "tickets", "comments", "delete"],
     mutationFn: ({ commentId, ticketId, projectId }) =>
       apiClient.delete<void>(

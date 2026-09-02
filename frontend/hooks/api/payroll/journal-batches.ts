@@ -12,6 +12,7 @@ import type {
   CreateJournalBatchInput,
   PeriodReconciliationReport,
 } from "@/types/payroll/journal-batches";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useJournalBatches(params?: { periodKey?: string; page?: number; limit?: number }) {
   const canView = useCan("payroll:accounting:view");
@@ -53,7 +54,7 @@ function useInvalidateBatches() {
 
 export function useCreateJournalBatch() {
   const invalidate = useInvalidateBatches();
-  return useMutation({
+  return useAuthorizedMutation("payroll:accounting:manage", {
     mutationKey: ["payroll", "journal-batches", "create"],
     mutationFn: (input: CreateJournalBatchInput) =>
       apiClient.post<JournalBatchDetail>("/payroll/accounting/journal-batches", input),
@@ -63,7 +64,7 @@ export function useCreateJournalBatch() {
 
 export function usePostJournalBatch() {
   const invalidate = useInvalidateBatches();
-  return useMutation({
+  return useAuthorizedMutation("payroll:accounting:manage", {
     mutationKey: ["payroll", "journal-batches", "post"],
     mutationFn: (batchId: number) =>
       apiClient.post<JournalBatch>(`/payroll/accounting/journal-batches/${batchId}/post`),
@@ -73,7 +74,7 @@ export function usePostJournalBatch() {
 
 export function useReverseJournalBatch() {
   const invalidate = useInvalidateBatches();
-  return useMutation({
+  return useAuthorizedMutation("payroll:accounting:manage", {
     mutationKey: ["payroll", "journal-batches", "reverse"],
     mutationFn: ({ batchId, reason }: { batchId: number; reason: string }) =>
       apiClient.post<JournalBatch>(`/payroll/accounting/journal-batches/${batchId}/reverse`, {
@@ -85,7 +86,7 @@ export function useReverseJournalBatch() {
 
 export function useReconcileJournalBatch() {
   const invalidate = useInvalidateBatches();
-  return useMutation({
+  return useAuthorizedMutation("payroll:accounting:manage", {
     mutationKey: ["payroll", "journal-batches", "reconcile"],
     mutationFn: ({
       batchId,

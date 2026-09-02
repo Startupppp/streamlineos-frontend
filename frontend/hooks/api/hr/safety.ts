@@ -67,7 +67,7 @@ export type ListIncidentsParams = {
 export function useSafetyIncidents(params: ListIncidentsParams = {}) {
   return useQuery({
     queryKey: queryKeys.hrSafety.incidents(params),
-    queryFn: ({ signal }) => apiClient.get<CursorPage<SafetyIncident>>("/hr/safety/incidents", params),
+    queryFn: ({ signal }) => apiClient.get<CursorPage<SafetyIncident>>("/hr/safety/incidents", params, signal),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
   });

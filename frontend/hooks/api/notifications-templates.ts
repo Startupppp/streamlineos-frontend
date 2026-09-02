@@ -13,6 +13,7 @@ import type {
 } from "@/types/notifications";
 import { toStringParams } from "./notifications-shared";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export const useNotificationTemplates = (
   params?: Record<string, unknown>,
@@ -35,7 +36,7 @@ export const useNotificationTemplates = (
 
 export const useCreateNotificationTemplate = () => {
   const queryClient = useQueryClient();
-  return useMutation<NotificationTemplate, Error, CreateTemplateInput>({
+  return useAuthorizedMutation<NotificationTemplate, Error, CreateTemplateInput>("notifications:templates:manage", {
     mutationKey: ["notifications", "templates", "create"],
     mutationFn: (dto) => apiClient.post<NotificationTemplate>("/notification-templates", dto),
     onSuccess: () => {
@@ -46,7 +47,7 @@ export const useCreateNotificationTemplate = () => {
 
 export const useUpdateNotificationTemplate = () => {
   const queryClient = useQueryClient();
-  return useMutation<NotificationTemplate, Error, { id: number } & UpdateTemplateInput>({
+  return useAuthorizedMutation<NotificationTemplate, Error, { id: number } & UpdateTemplateInput>("notifications:templates:manage", {
     mutationKey: ["notifications", "templates", "update"],
     mutationFn: ({ id, ...dto }) =>
       apiClient.patch<NotificationTemplate>(`/notification-templates/${id}`, dto),
@@ -59,7 +60,7 @@ export const useUpdateNotificationTemplate = () => {
 
 export const useSetTemplateApproval = () => {
   const queryClient = useQueryClient();
-  return useMutation<NotificationTemplate, Error, { id: number } & SetTemplateApprovalInput>({
+  return useAuthorizedMutation<NotificationTemplate, Error, { id: number } & SetTemplateApprovalInput>("notifications:templates:manage", {
     mutationKey: ["notifications", "templates", "approval"],
     mutationFn: ({ id, ...dto }) =>
       apiClient.patch<NotificationTemplate>(`/notification-templates/${id}/approval`, dto),
@@ -72,7 +73,7 @@ export const useSetTemplateApproval = () => {
 
 export const useDeleteNotificationTemplate = () => {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, number>({
+  return useAuthorizedMutation<{ success: boolean }, Error, number>("notifications:templates:manage", {
     mutationKey: ["notifications", "templates", "delete"],
     mutationFn: (id) => apiClient.delete<{ success: boolean }>(`/notification-templates/${id}`),
     onSuccess: () => {
@@ -82,7 +83,7 @@ export const useDeleteNotificationTemplate = () => {
 };
 
 export const usePreviewTemplate = () => {
-  return useMutation<TemplatePreviewResult, Error, { id: number; variables: Record<string, string> }>({
+  return useAuthorizedMutation<TemplatePreviewResult, Error, { id: number; variables: Record<string, string> }>("notifications:templates:view", {
     mutationKey: ["notifications", "templates", "preview"],
     mutationFn: ({ id, variables }) =>
       apiClient.post<TemplatePreviewResult>(`/notification-templates/${id}/preview`, { variables }),

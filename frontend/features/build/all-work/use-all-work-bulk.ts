@@ -7,6 +7,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { AllWorkTicket } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 type BulkPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 
@@ -52,7 +53,7 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
     return map;
   }, [selectedTickets]);
 
-  const crossProjectBulkMutation = useMutation({
+  const crossProjectBulkMutation = useAuthorizedMutation("build:tickets:update", {
     mutationKey: ["projects", "all-work", "bulk-update"],
     mutationFn: async (payload: {
       ticketsByProject: Map<number, number[]>;

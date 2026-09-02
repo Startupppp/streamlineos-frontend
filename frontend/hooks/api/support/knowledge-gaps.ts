@@ -8,9 +8,11 @@ import type {
   DetectGapsResponse,
   DraftGapResponse,
 } from "@/features/support/lib/knowledge-gap.types";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { queryKeyBase } from "@/lib/query-keys/base";
 
 export const knowledgeGapsKeys = {
-  all: ["streamlineos", "support", "knowledge-gaps"] as const,
+  all: [...queryKeyBase, "support", "knowledge-gaps"] as const,
   list: (cursor?: number) =>
     [...knowledgeGapsKeys.all, "list", cursor ?? null] as const,
 };
@@ -28,7 +30,7 @@ export function useKnowledgeGaps(cursor?: number) {
 
 export function useDetectGaps() {
   const queryClient = useQueryClient();
-  return useMutation<DetectGapsResponse, Error>({
+  return useAuthorizedMutation<DetectGapsResponse, Error>("support:knowledge-gaps:manage", {
     mutationKey: ["support", "knowledge-gaps", "detect"],
     mutationFn: () =>
       apiClient.post<DetectGapsResponse>("/support/knowledge-gaps/detect"),
@@ -40,7 +42,7 @@ export function useDetectGaps() {
 
 export function useDraftGap() {
   const queryClient = useQueryClient();
-  return useMutation<DraftGapResponse, Error, { gapId: number }>({
+  return useAuthorizedMutation<DraftGapResponse, Error, { gapId: number }>("support:knowledge-gaps:manage", {
     mutationKey: ["support", "knowledge-gaps", "draft"],
     mutationFn: ({ gapId }) =>
       apiClient.post<DraftGapResponse>(
@@ -54,7 +56,7 @@ export function useDraftGap() {
 
 export function useDismissGap() {
   const queryClient = useQueryClient();
-  return useMutation<KnowledgeGap, Error, { gapId: number }>({
+  return useAuthorizedMutation<KnowledgeGap, Error, { gapId: number }>("support:knowledge-gaps:manage", {
     mutationKey: ["support", "knowledge-gaps", "dismiss"],
     mutationFn: ({ gapId }) =>
       apiClient.patch<KnowledgeGap>(`/support/knowledge-gaps/${gapId}`, {

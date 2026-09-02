@@ -12,9 +12,10 @@ import type {
   WeeklyUpdateResult,
   ChangeImpactResult,
 } from "@/types/projects/ai";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useProjectAiSummary(pid: number) {
-  return useMutation({
+  return useAuthorizedMutation("build:ai:use", {
     mutationKey: ["projects", pid, "ai", "summary"],
     mutationFn: () =>
       apiClient.post<ProjectSummaryResult>(`/ai/projects/${pid}/summary`),
@@ -22,7 +23,7 @@ export function useProjectAiSummary(pid: number) {
 }
 
 export function useProjectAiRisks(pid: number) {
-  return useMutation({
+  return useAuthorizedMutation("build:ai:use", {
     mutationKey: ["projects", pid, "ai", "risks"],
     mutationFn: () =>
       apiClient.post<ProjectRisksResult>(`/ai/projects/${pid}/risks`),
@@ -30,7 +31,7 @@ export function useProjectAiRisks(pid: number) {
 }
 
 export function useDraftClientUpdate(pid: number) {
-  return useMutation({
+  return useAuthorizedMutation("build:ai:use", {
     mutationKey: ["projects", pid, "ai", "client-update"],
     mutationFn: () =>
       apiClient.post<ClientUpdateResult>(`/ai/projects/${pid}/client-update`),
@@ -38,7 +39,7 @@ export function useDraftClientUpdate(pid: number) {
 }
 
 export function usePlanFromPrompt(pid: number) {
-  return useMutation({
+  return useAuthorizedMutation("build:ai:use", {
     mutationKey: ["projects", pid, "ai", "plan"],
     mutationFn: (input: { prompt: string }) =>
       apiClient.post<PlanResult>(`/ai/projects/${pid}/plan`, input),
@@ -46,7 +47,7 @@ export function usePlanFromPrompt(pid: number) {
 }
 
 export function useExtractTasks(pid: number) {
-  return useMutation({
+  return useAuthorizedMutation("build:ai:use", {
     mutationKey: ["projects", pid, "ai", "extract-tasks"],
     mutationFn: (input: { text: string }) =>
       apiClient.post<ExtractTasksResult>(`/ai/projects/${pid}/extract-tasks`, input),
@@ -54,7 +55,7 @@ export function useExtractTasks(pid: number) {
 }
 
 export function useAskProjectAi(pid: number) {
-  return useMutation({
+  return useAuthorizedMutation("build:ai:use", {
     mutationKey: ["projects", pid, "ai", "ask"],
     mutationFn: (input: { question: string }) =>
       apiClient.post<AskResult>(`/ai/projects/${pid}/ask`, input),
@@ -62,7 +63,7 @@ export function useAskProjectAi(pid: number) {
 }
 
 export function useWeeklyUpdate(pid: number) {
-  return useMutation({
+  return useAuthorizedMutation("build:ai:use", {
     mutationKey: ["projects", pid, "ai", "weekly-update"],
     mutationFn: (input?: { startDate?: string; endDate?: string }) =>
       apiClient.post<WeeklyUpdateResult>(`/ai/projects/${pid}/weekly-update`, input ?? {}),
@@ -70,7 +71,7 @@ export function useWeeklyUpdate(pid: number) {
 }
 
 export function useChangeImpact(pid: number) {
-  return useMutation({
+  return useAuthorizedMutation("build:ai:use", {
     mutationKey: ["projects", pid, "ai", "change-impact"],
     mutationFn: () =>
       apiClient.post<ChangeImpactResult>(`/ai/projects/${pid}/change-impact`),

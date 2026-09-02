@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { PackageStatus, ShipmentStatus, LoadStatus } from "@/features/inventory/lib";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface PackageLine {
   id: number;
@@ -133,11 +134,11 @@ export function usePackageDetail(packageId: number) {
 
 export function useCreatePackage() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     Package,
     Error,
     { shipmentId?: number; lines?: { variantId: number; lotId?: number; serialId?: number; qty: number }[] }
-  >({
+  >("inventory:packages:manage", {
     mutationKey: ["inventory", "package", "create"],
     mutationFn: (data) => apiClient.post<Package>("/inventory/packages", data),
     onSuccess: () => {
@@ -148,11 +149,11 @@ export function useCreatePackage() {
 
 export function useUpdatePackageLines() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     Package,
     Error,
     { packageId: number; lines: { variantId: number; lotId?: number; serialId?: number; qty: number }[] }
-  >({
+  >("inventory:packages:manage", {
     mutationKey: ["inventory", "package", "lines", "update"],
     mutationFn: ({ packageId, lines }) =>
       apiClient.patch<Package>(`/inventory/packages/${packageId}/lines`, { lines }),
@@ -165,7 +166,7 @@ export function useUpdatePackageLines() {
 
 export function useClosePackage() {
   const qc = useQueryClient();
-  return useMutation<Package, Error, number>({
+  return useAuthorizedMutation<Package, Error, number>("inventory:packages:manage", {
     mutationKey: ["inventory", "package", "close"],
     mutationFn: (packageId) =>
       apiClient.post<Package>(`/inventory/packages/${packageId}/close`, {}),
@@ -178,7 +179,7 @@ export function useClosePackage() {
 
 export function useReopenPackage() {
   const qc = useQueryClient();
-  return useMutation<Package, Error, number>({
+  return useAuthorizedMutation<Package, Error, number>("inventory:packages:manage", {
     mutationKey: ["inventory", "package", "reopen"],
     mutationFn: (packageId) =>
       apiClient.post<Package>(`/inventory/packages/${packageId}/reopen`, {}),
@@ -229,11 +230,11 @@ export function useShipment(shipmentId: number) {
 
 export function useCreateShipment() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     Shipment,
     Error,
     { soId?: number; warehouseId?: number; carrierId?: number; trackingNumber?: string; notes?: string }
-  >({
+  >("inventory:shipments:manage", {
     mutationKey: ["inventory", "shipment", "create"],
     mutationFn: (data) => apiClient.post<Shipment>("/inventory/shipments", data),
     onSuccess: () => {
@@ -245,11 +246,11 @@ export function useCreateShipment() {
 
 export function useUpdateShipment() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     Shipment,
     Error,
     { shipmentId: number; carrierId?: number; trackingNumber?: string; notes?: string }
-  >({
+  >("inventory:shipments:manage", {
     mutationKey: ["inventory", "shipment", "update"],
     mutationFn: ({ shipmentId, ...data }) =>
       apiClient.patch<Shipment>(`/inventory/shipments/${shipmentId}`, data),
@@ -262,7 +263,7 @@ export function useUpdateShipment() {
 
 export function useShipShipment() {
   const qc = useQueryClient();
-  return useMutation<Shipment, Error, number>({
+  return useAuthorizedMutation<Shipment, Error, number>("inventory:shipments:manage", {
     mutationKey: ["inventory", "shipment", "ship"],
     mutationFn: (shipmentId) =>
       apiClient.post<Shipment>(`/inventory/shipments/${shipmentId}/ship`, {}),
@@ -276,7 +277,7 @@ export function useShipShipment() {
 
 export function useCancelShipment() {
   const qc = useQueryClient();
-  return useMutation<Shipment, Error, number>({
+  return useAuthorizedMutation<Shipment, Error, number>("inventory:shipments:manage", {
     mutationKey: ["inventory", "shipment", "cancel"],
     mutationFn: (shipmentId) =>
       apiClient.post<Shipment>(`/inventory/shipments/${shipmentId}/cancel`, {}),
@@ -319,11 +320,11 @@ export function useLoad(loadId: number) {
 
 export function useCreateLoad() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     Load,
     Error,
     { name?: string; members: { type: "SHIPMENT" | "TRANSFER"; referenceId: number }[] }
-  >({
+  >("inventory:loads:manage", {
     mutationKey: ["inventory", "load", "create"],
     mutationFn: (data) => apiClient.post<Load>("/inventory/loads", data),
     onSuccess: () => {
@@ -334,7 +335,7 @@ export function useCreateLoad() {
 
 export function useDispatchLoad() {
   const qc = useQueryClient();
-  return useMutation<Load, Error, number>({
+  return useAuthorizedMutation<Load, Error, number>("inventory:loads:manage", {
     mutationKey: ["inventory", "load", "dispatch"],
     mutationFn: (loadId) =>
       apiClient.post<Load>(`/inventory/loads/${loadId}/dispatch`, {}),
@@ -347,7 +348,7 @@ export function useDispatchLoad() {
 
 export function useCloseLoad() {
   const qc = useQueryClient();
-  return useMutation<Load, Error, number>({
+  return useAuthorizedMutation<Load, Error, number>("inventory:loads:manage", {
     mutationKey: ["inventory", "load", "close"],
     mutationFn: (loadId) =>
       apiClient.post<Load>(`/inventory/loads/${loadId}/close`, {}),
@@ -360,7 +361,7 @@ export function useCloseLoad() {
 
 export function useCancelLoad() {
   const qc = useQueryClient();
-  return useMutation<Load, Error, number>({
+  return useAuthorizedMutation<Load, Error, number>("inventory:loads:manage", {
     mutationKey: ["inventory", "load", "cancel"],
     mutationFn: (loadId) =>
       apiClient.post<Load>(`/inventory/loads/${loadId}/cancel`, {}),
@@ -383,11 +384,11 @@ export function useCarriers() {
 
 export function useCreateCarrier() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     Carrier,
     Error,
     { name: string; code: string; trackingUrlTemplate?: string; isActive?: boolean }
-  >({
+  >("inventory:shipments:manage", {
     mutationKey: ["inventory", "carrier", "create"],
     mutationFn: (data) => apiClient.post<Carrier>("/inventory/carriers", data),
     onSuccess: () => {
@@ -398,11 +399,11 @@ export function useCreateCarrier() {
 
 export function useUpdateCarrier() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     Carrier,
     Error,
     { carrierId: number; name?: string; code?: string; trackingUrlTemplate?: string; isActive?: boolean }
-  >({
+  >("inventory:shipments:manage", {
     mutationKey: ["inventory", "carrier", "update"],
     mutationFn: ({ carrierId, ...data }) =>
       apiClient.patch<Carrier>(`/inventory/carriers/${carrierId}`, data),

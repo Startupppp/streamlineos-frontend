@@ -10,6 +10,7 @@ import type {
   CreateManagedProductInput,
   UpdateManagedProductInput,
 } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface ListManagedProductsParams {
   cursor?: string;
@@ -48,7 +49,7 @@ export function useManagedProduct(managedProductId: number) {
 
 export function useCreateManagedProduct() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:managed-products:create", {
     mutationKey: ["projects", "managed-products", "create"],
     mutationFn: (data: CreateManagedProductInput) =>
       apiClient.post<ManagedProduct>("/build/managed-products", data),
@@ -60,7 +61,7 @@ export function useCreateManagedProduct() {
 
 export function useUpdateManagedProduct() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "managed-products", "update"],
     mutationFn: ({
       managedProductId,
@@ -81,7 +82,7 @@ export function useUpdateManagedProduct() {
 
 export function useDeleteManagedProduct() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "managed-products", "delete"],
     mutationFn: (managedProductId: number) =>
       apiClient.delete<void>(`/build/managed-products/${managedProductId}`),

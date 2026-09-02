@@ -252,10 +252,10 @@ export function useEngagementCommunities() {
   return useInfiniteQuery({
     queryKey: KEYS.communities,
     initialPageParam: null as string | null,
-    queryFn: ({ pageParam }) => {
+    queryFn: ({ pageParam , signal }) => {
       const params = new URLSearchParams({ limit: "30" });
       if (pageParam) params.set("cursor", pageParam);
-      return apiClient.get<CommunityPage>(`/hr/engagement/communities?${params}`);
+      return apiClient.get<CommunityPage>(`/hr/engagement/communities?${params}`, undefined, signal);
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 2 * 60_000,

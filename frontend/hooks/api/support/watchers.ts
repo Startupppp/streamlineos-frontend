@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface SupportTicketWatcher {
   id: number;
@@ -24,7 +25,7 @@ export function useSupportWatchers(ticketId: number) {
 
 export function useFollowTicket() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:view", {
     mutationKey: ["follow", "ticket"],
     mutationFn: (ticketId: number) => apiClient.post<{ success: boolean }>(`/support/${ticketId}/follow`, {}),
     onSuccess: (_, ticketId) =>
@@ -34,7 +35,7 @@ export function useFollowTicket() {
 
 export function useUnfollowTicket() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:view", {
     mutationKey: ["unfollow", "ticket"],
     mutationFn: (ticketId: number) => apiClient.delete<{ success: boolean }>(`/support/${ticketId}/follow`),
     onSuccess: (_, ticketId) =>

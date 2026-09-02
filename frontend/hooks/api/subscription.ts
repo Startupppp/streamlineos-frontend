@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type SubscriptionPlan = "STARTER" | "PROFESSIONAL" | "ENTERPRISE";
 type SubscriptionStatus = "TRIAL" | "ACTIVE" | "PAST_DUE" | "CANCELLED" | "EXPIRED";
@@ -83,7 +84,7 @@ export function useSubscription() {
 }
 
 export function useCreateSubscriptionOrder() {
-  return useMutation<CreateOrderResponse, Error, { plan: SubscriptionPlan; billingCycle?: BillingCycle; couponId?: number }>({
+  return useAuthorizedMutation<CreateOrderResponse, Error, { plan: SubscriptionPlan; billingCycle?: BillingCycle; couponId?: number }>("billing:subscription:manage", {
     mutationKey: ["billing", "checkout", "create-order"],
     mutationFn: (data) => apiClient.post<CreateOrderResponse>("/billing/checkout", data),
   });
@@ -91,7 +92,7 @@ export function useCreateSubscriptionOrder() {
 
 export function useVerifySubscription() {
   const queryClient = useQueryClient();
-  return useMutation<VerifySubscriptionResponse, Error, VerifySubscriptionInput>({
+  return useAuthorizedMutation<VerifySubscriptionResponse, Error, VerifySubscriptionInput>("billing:subscription:manage", {
     mutationKey: ["billing", "checkout", "confirm"],
     mutationFn: (data) => apiClient.patch<VerifySubscriptionResponse>("/billing/checkout", data),
     onSuccess: () => {
@@ -142,7 +143,7 @@ export function useValidateCoupon(code: string, plan: SubscriptionPlan | null) {
     queryKey: queryKeys.billing.coupon(code, plan),
     queryFn: ({ signal }) =>
       apiClient.get<CouponValidationResult>(
-        `/billing/coupons/validate?code=${encodeURIComponent(code)}&plan=${plan ?? ""}`, signal,
+        `/billing/coupons/validate?code=${encodeURIComponent(code)}&plan=${plan ?? ""}`, undefined, signal,
       ),
     enabled: canManage && code.trim().length >= 3 && plan !== null,
     staleTime: 30_000,
@@ -188,7 +189,7 @@ export function useBillingProfile() {
 
 export function useUpdateBillingProfile() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("billing:profile:update", {
     mutationKey: ["billing", "profile", "update"],
     mutationFn: (data: Partial<BillingProfile>) =>
       apiClient.patch<BillingProfile>("/billing/profile", data),

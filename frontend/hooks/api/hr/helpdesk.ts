@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { queryKeyBase } from "@/lib/query-keys/base";
 
 export interface CursorPage<T> {
   data: T[];
@@ -120,11 +121,11 @@ export interface HelpdeskListParams {
 }
 
 const keys = {
-  all: ["streamlineos", "hr", "helpdesk"] as const,
-  list: (params?: HelpdeskListParams) => ["streamlineos", "hr", "helpdesk", "list", params] as const,
-  detail: (id: number) => ["streamlineos", "hr", "helpdesk", "detail", id] as const,
-  routing: () => ["streamlineos", "hr", "helpdesk", "routing"] as const,
-  suggest: (q: string) => ["streamlineos", "hr", "helpdesk", "suggest", q] as const,
+  all: [...queryKeyBase, "hr", "helpdesk"] as const,
+  list: (params?: HelpdeskListParams) => [...queryKeyBase, "hr", "helpdesk", "list", params] as const,
+  detail: (id: number) => [...queryKeyBase, "hr", "helpdesk", "detail", id] as const,
+  routing: () => [...queryKeyBase, "hr", "helpdesk", "routing"] as const,
+  suggest: (q: string) => [...queryKeyBase, "hr", "helpdesk", "suggest", q] as const,
 };
 
 export function useHelpdeskTickets(params?: HelpdeskListParams) {

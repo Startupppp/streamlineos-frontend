@@ -30,7 +30,7 @@ export function useAllWork(
   return useQuery<CursorPaginatedResponse<AllWorkTicket>>({
     queryKey: queryKeys.projects.allWork(filters ? { ...filters } : undefined),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPaginatedResponse<AllWorkTicket>>("/build/all-work", filters ? { ...filters } : undefined),
+      apiClient.get<CursorPaginatedResponse<AllWorkTicket>>("/build/all-work", filters ? { ...filters } : undefined, signal),
     staleTime: 30_000,
     placeholderData: (prev) => prev,
     ...restOptions,
@@ -58,7 +58,7 @@ export function useInfiniteAllWork(
       apiClient.get<CursorPaginatedResponse<AllWorkTicket>>("/build/all-work", {
         ...filters,
         ...(pageParam ? { cursor: pageParam } : {}),
-      }),
+      }, signal),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 30_000,

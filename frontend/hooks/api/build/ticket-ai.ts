@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import type { TicketHandoffResult } from "@/types/projects/ai";
 import type { TicketPriority } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface TicketSummaryResult {
   summary: string;
@@ -56,7 +57,7 @@ export interface TicketSuggestFieldsResult {
 }
 
 export function useTicketAiSummarize(projectId: number, ticketId: number) {
-  return useMutation({
+  return useAuthorizedMutation("build:ai:use", {
     mutationKey: ["projects", projectId, "tickets", ticketId, "ai", "summarize"],
     mutationFn: () =>
       apiClient.post<TicketSummaryResult>(
@@ -66,7 +67,7 @@ export function useTicketAiSummarize(projectId: number, ticketId: number) {
 }
 
 export function useTicketAiSummarizeComments(projectId: number, ticketId: number) {
-  return useMutation({
+  return useAuthorizedMutation("build:ai:use", {
     mutationKey: ["projects", projectId, "tickets", ticketId, "ai", "summarize-comments"],
     mutationFn: () =>
       apiClient.post<TicketCommentsSummaryResult>(
@@ -76,7 +77,7 @@ export function useTicketAiSummarizeComments(projectId: number, ticketId: number
 }
 
 export function useTicketAiImproveDescription(projectId: number, ticketId: number) {
-  return useMutation({
+  return useAuthorizedMutation("build:ai:use", {
     mutationKey: ["projects", projectId, "tickets", ticketId, "ai", "improve-description"],
     mutationFn: (input?: { draft?: string }) =>
       apiClient.post<TicketImproveDescriptionResult>(
@@ -87,7 +88,7 @@ export function useTicketAiImproveDescription(projectId: number, ticketId: numbe
 }
 
 export function useTicketAiSuggestSubtasks(projectId: number, ticketId: number) {
-  return useMutation({
+  return useAuthorizedMutation("build:ai:use", {
     mutationKey: ["projects", projectId, "tickets", ticketId, "ai", "suggest-subtasks"],
     mutationFn: () =>
       apiClient.post<TicketSuggestSubtasksResult>(
@@ -97,7 +98,7 @@ export function useTicketAiSuggestSubtasks(projectId: number, ticketId: number) 
 }
 
 export function useTicketAiGenerateChecklist(projectId: number, ticketId: number) {
-  return useMutation({
+  return useAuthorizedMutation("build:ai:use", {
     mutationKey: ["projects", projectId, "tickets", ticketId, "ai", "generate-checklist"],
     mutationFn: () =>
       apiClient.post<TicketGenerateChecklistResult>(
@@ -107,7 +108,7 @@ export function useTicketAiGenerateChecklist(projectId: number, ticketId: number
 }
 
 export function useTicketHandoff(projectId: number, ticketId: number) {
-  return useMutation({
+  return useAuthorizedMutation("build:ai:use", {
     mutationKey: ["projects", projectId, "tickets", ticketId, "ai", "handoff"],
     mutationFn: () =>
       apiClient.post<TicketHandoffResult>(`/ai/tickets/${projectId}/${ticketId}/handoff`),
@@ -115,7 +116,7 @@ export function useTicketHandoff(projectId: number, ticketId: number) {
 }
 
 export function useTicketDraftSuggestTitle(projectId: number) {
-  return useMutation({
+  return useAuthorizedMutation("build:ai:use", {
     mutationKey: ["projects", projectId, "tickets", "draft", "ai", "suggest-title"],
     mutationFn: (input: TicketDraftInput) =>
       apiClient.post<TicketSuggestTitleResult>(
@@ -126,7 +127,7 @@ export function useTicketDraftSuggestTitle(projectId: number) {
 }
 
 export function useTicketDraftImproveDescription(projectId: number) {
-  return useMutation({
+  return useAuthorizedMutation("build:ai:use", {
     mutationKey: ["projects", projectId, "tickets", "draft", "ai", "improve-description"],
     mutationFn: (input: TicketDraftInput) =>
       apiClient.post<TicketImproveDescriptionResult>(
@@ -137,7 +138,7 @@ export function useTicketDraftImproveDescription(projectId: number) {
 }
 
 export function useTicketDraftSuggestFields(projectId: number) {
-  return useMutation({
+  return useAuthorizedMutation("build:ai:use", {
     mutationKey: ["projects", projectId, "tickets", "draft", "ai", "suggest-fields"],
     mutationFn: (input: TicketDraftInput) =>
       apiClient.post<TicketSuggestFieldsResult>(

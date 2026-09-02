@@ -39,7 +39,7 @@ export function usePayrollTemplates(params?: TemplateListParams) {
     queryFn: ({ signal }) =>
       apiClient.get<PaginatedResult<TemplateRow>>(
         "/payroll/templates",
-        params as Record<string, unknown> | undefined,
+        params as Record<string, unknown> | undefined, signal,
       ),
     staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,

@@ -14,6 +14,7 @@ import type {
   IssueTransitionStage,
   UpdateIssueInput,
 } from "@/types/crm/issues";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 /**
  * Issues, tasks and complaints.
@@ -52,12 +53,12 @@ export function useIssues(params: UseIssuesParams) {
 
   return useGatedQuery("crm:issues:view", {
     queryKey: queryKeys.crm.issues({ recordType, limit, cursor, ...filters }),
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const search = new URLSearchParams({ recordType, limit: String(limit) });
       if (cursor) search.set("cursor", cursor);
       for (const [key, value] of Object.entries(filters))
         if (value !== undefined && value !== "") search.set(key, String(value));
-      return apiClient.get<IssuePage>(`${BASE}?${search.toString()}`);
+      return apiClient.get<IssuePage>(`${BASE}?${search.toString()}`, undefined, signal);
     },
     staleTime: 30_000,
   });
@@ -90,7 +91,7 @@ function useInvalidateIssues() {
 export function useCreateIssue() {
   const invalidate = useInvalidateIssues();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:issues:manage", {
     mutationKey: ["crm", "issues", "create"],
     mutationFn: (input: CreateIssueInput) =>
       apiClient.post<IssueDetailResponse>(BASE, input),
@@ -101,7 +102,7 @@ export function useCreateIssue() {
 export function useUpdateIssue() {
   const invalidate = useInvalidateIssues();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:issues:manage", {
     mutationKey: ["crm", "issues", "update"],
     mutationFn: ({ issueRecordId, ...patch }: UpdateIssueInput & { issueRecordId: string }) =>
       apiClient.patch<IssueDetailResponse>(`${BASE}/${issueRecordId}`, patch),
@@ -119,7 +120,7 @@ export function useUpdateIssue() {
 export function useTransitionIssue() {
   const invalidate = useInvalidateIssues();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:issues:manage", {
     mutationKey: ["crm", "issues", "transition"],
     mutationFn: ({
       issueRecordId,
@@ -137,7 +138,7 @@ export function useTransitionIssue() {
 export function useEscalateIssue() {
   const invalidate = useInvalidateIssues();
 
-  return useMutation({
+  return useAuthorizedMutation("crm:issues:escalate", {
     mutationKey: ["crm", "issues", "escalate"],
     mutationFn: ({ issueRecordId, reason }: { issueRecordId: string; reason: string }) =>
       apiClient.post<IssueDetailResponse>(`${BASE}/${issueRecordId}/escalate`, { reason }),

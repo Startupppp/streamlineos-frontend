@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tansta
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 type StockoutRisk = "HIGH" | "MEDIUM" | "LOW";
 
@@ -153,7 +154,7 @@ export function useReplenishmentRules(params?: ReplenishmentRuleParams) {
 
 export function useCreateReplenishmentRule() {
   const qc = useQueryClient();
-  return useMutation<ReplenishmentRule, Error, CreateReplenishmentRuleInput>({
+  return useAuthorizedMutation<ReplenishmentRule, Error, CreateReplenishmentRuleInput>("inventory:replenishment:manage", {
     mutationKey: ["inventory", "replenishment", "rule", "create"],
     mutationFn: (data) =>
       apiClient.post<ReplenishmentRule>("/inventory/replenishment/rules", data),
@@ -165,11 +166,11 @@ export function useCreateReplenishmentRule() {
 
 export function useUpdateReplenishmentRule() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     ReplenishmentRule,
     Error,
     { ruleId: number; data: Partial<CreateReplenishmentRuleInput> }
-  >({
+  >("inventory:replenishment:manage", {
     mutationKey: ["inventory", "replenishment", "rule", "update"],
     mutationFn: ({ ruleId, data }) =>
       apiClient.patch<ReplenishmentRule>(`/inventory/replenishment/rules/${ruleId}`, data),
@@ -181,7 +182,7 @@ export function useUpdateReplenishmentRule() {
 
 export function useDeactivateReplenishmentRule() {
   const qc = useQueryClient();
-  return useMutation<void, Error, number>({
+  return useAuthorizedMutation<void, Error, number>("inventory:replenishment:manage", {
     mutationKey: ["inventory", "replenishment", "rule", "deactivate"],
     mutationFn: (ruleId) =>
       apiClient.delete<void>(`/inventory/replenishment/rules/${ruleId}`),
@@ -228,7 +229,7 @@ export function useReplenishmentSuggestions(params?: ReplenishmentSuggestionsPar
 
 export function useGeneratePO() {
   const qc = useQueryClient();
-  return useMutation<GeneratePOResult, Error, GeneratePOInput>({
+  return useAuthorizedMutation<GeneratePOResult, Error, GeneratePOInput>("inventory:purchase-orders:create", {
     mutationKey: ["inventory", "replenishment", "generate-po"],
     mutationFn: (input) =>
       apiClient.post<GeneratePOResult>("/inventory/replenishment/suggestions/generate-po", input),

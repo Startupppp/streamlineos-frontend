@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SurveyQuestionType } from "@/features/surveys/shared/question-type-meta";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface SurveyBuilderChoice {
   id: number;
@@ -106,7 +107,7 @@ export function useSurveyBuilder(surveyId: number | undefined) {
 
 export function useCreateSection(surveyId: number) {
   const invalidate = useInvalidateBuilder(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:update", {
     mutationKey: ["surveys", "sections", "create", surveyId] as const,
     mutationFn: (input: CreateSectionInput) => apiClient.post<SurveyBuilderSection>(`/surveys/${surveyId}/sections`, input),
     onSuccess: invalidate,
@@ -115,7 +116,7 @@ export function useCreateSection(surveyId: number) {
 
 export function usePatchSection(surveyId: number) {
   const invalidate = useInvalidateBuilder(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:update", {
     mutationKey: ["surveys", "sections", "patch", surveyId] as const,
     mutationFn: ({ sectionId, input }: { sectionId: number; input: PatchSectionInput }) =>
       apiClient.patch<SurveyBuilderSection>(`/surveys/${surveyId}/sections/${sectionId}`, input),
@@ -125,7 +126,7 @@ export function usePatchSection(surveyId: number) {
 
 export function useDeleteSection(surveyId: number) {
   const invalidate = useInvalidateBuilder(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:update", {
     mutationKey: ["surveys", "sections", "delete", surveyId] as const,
     mutationFn: (sectionId: number) => apiClient.delete<{ success: boolean }>(`/surveys/${surveyId}/sections/${sectionId}`),
     onSuccess: invalidate,
@@ -134,7 +135,7 @@ export function useDeleteSection(surveyId: number) {
 
 export function useCreateQuestion(surveyId: number) {
   const invalidate = useInvalidateBuilder(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:update", {
     mutationKey: ["surveys", "questions", "create", surveyId] as const,
     mutationFn: (input: CreateQuestionInput) => apiClient.post<SurveyBuilderQuestion>(`/surveys/${surveyId}/questions`, input),
     onSuccess: invalidate,
@@ -143,7 +144,7 @@ export function useCreateQuestion(surveyId: number) {
 
 export function usePatchQuestion(surveyId: number) {
   const invalidate = useInvalidateBuilder(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:update", {
     mutationKey: ["surveys", "questions", "patch", surveyId] as const,
     mutationFn: ({ questionId, input }: { questionId: number; input: PatchQuestionInput }) =>
       apiClient.patch<SurveyBuilderQuestion>(`/surveys/${surveyId}/questions/${questionId}`, input),
@@ -153,7 +154,7 @@ export function usePatchQuestion(surveyId: number) {
 
 export function useDeleteQuestion(surveyId: number) {
   const invalidate = useInvalidateBuilder(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:update", {
     mutationKey: ["surveys", "questions", "delete", surveyId] as const,
     mutationFn: (questionId: number) => apiClient.delete<{ success: boolean }>(`/surveys/${surveyId}/questions/${questionId}`),
     onSuccess: invalidate,
@@ -162,7 +163,7 @@ export function useDeleteQuestion(surveyId: number) {
 
 export function useDuplicateQuestion(surveyId: number) {
   const invalidate = useInvalidateBuilder(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:update", {
     mutationKey: ["surveys", "questions", "duplicate", surveyId] as const,
     mutationFn: (questionId: number) =>
       apiClient.post<SurveyBuilderQuestion>(`/surveys/${surveyId}/questions/${questionId}/duplicate`),
@@ -172,7 +173,7 @@ export function useDuplicateQuestion(surveyId: number) {
 
 export function useReorderBuilder(surveyId: number) {
   const invalidate = useInvalidateBuilder(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:update", {
     mutationKey: ["surveys", "reorder", surveyId] as const,
     mutationFn: (input: ReorderInput) => apiClient.patch<{ success: boolean }>(`/surveys/${surveyId}/reorder`, input),
     onSuccess: invalidate,

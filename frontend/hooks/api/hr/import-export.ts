@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAccess, useCan, useModuleEnabled } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type HrImportEntity =
   | "employees"
@@ -153,7 +154,7 @@ export function useHrImportJob(jobId: string | null) {
 
 export function useCreateImportJob() {
   const qc = useQueryClient();
-  return useMutation<CreateImportJobResult, Error, CreateImportJobPayload>({
+  return useAuthorizedMutation<CreateImportJobResult, Error, CreateImportJobPayload>("hr:import:manage", {
     mutationKey: ["hr", "import", "jobs", "create"],
     mutationFn: (body) =>
       apiClient.post<CreateImportJobResult>("/hr/import/jobs", body),
@@ -165,7 +166,7 @@ export function useCreateImportJob() {
 
 export function useCommitImportJob() {
   const qc = useQueryClient();
-  return useMutation<HrImportJob, Error, { jobId: string }>({
+  return useAuthorizedMutation<HrImportJob, Error, { jobId: string }>("hr:import:manage", {
     mutationKey: ["hr", "import", "jobs", "commit"],
     mutationFn: ({ jobId }) =>
       apiClient.post<HrImportJob>(`/hr/import/jobs/${jobId}/commit`, {}),
@@ -178,7 +179,7 @@ export function useCommitImportJob() {
 
 export function useRollbackImportJob() {
   const qc = useQueryClient();
-  return useMutation<HrImportJob, Error, { jobId: string }>({
+  return useAuthorizedMutation<HrImportJob, Error, { jobId: string }>("hr:import:manage", {
     mutationKey: ["hr", "import", "jobs", "rollback"],
     mutationFn: ({ jobId }) =>
       apiClient.post<HrImportJob>(`/hr/import/jobs/${jobId}/rollback`, {}),
@@ -192,11 +193,11 @@ export function useRollbackImportJob() {
 export function useCreateHrEmployeeExportJob() {
   const canExport = useCan("hr:export:manage");
   const hrEnabled = useModuleEnabled("hr");
-  return useMutation<
+  return useAuthorizedMutation<
     HrEmployeeExportJob,
     Error,
     CreateHrEmployeeExportJobInput
-  >({
+  >("hr:export:manage", {
     mutationKey: ["hr", "employee-export", "create"],
     mutationFn: ({ filters, idempotencyKey }) => {
       if (!hrEnabled || !canExport)
@@ -241,7 +242,7 @@ export function useHrEmployeeExportJob(exportJobId: string | null) {
 export function useDownloadHrEmployeeExportJob() {
   const canExport = useCan("hr:export:manage");
   const hrEnabled = useModuleEnabled("hr");
-  return useMutation<Blob, Error, string>({
+  return useAuthorizedMutation<Blob, Error, string>("hr:export:manage", {
     mutationKey: ["hr", "employee-export", "download"],
     mutationFn: (exportJobId) => {
       if (!hrEnabled || !canExport)

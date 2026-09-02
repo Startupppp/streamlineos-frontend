@@ -51,7 +51,7 @@ export function useRejectDeclaration() {
 }
 
 export function useExportTaxReport() {
-  return useAuthorizedMutation("payroll:tax:manage", {
+  return useAuthorizedMutation("payroll:reports:export", {
     mutationKey: ["payroll", "tax-declarations", "export"],
     mutationFn: async ({ financialYear }: { financialYear: string }) => {
       const blob = await apiClient.download("/payroll/tax/export", {

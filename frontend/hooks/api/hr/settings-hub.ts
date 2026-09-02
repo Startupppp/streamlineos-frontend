@@ -49,12 +49,12 @@ export interface VersionsResponse {
 export function useEffectiveRules(params: { employeeId: string; date: string } | null) {
   return useQuery({
     queryKey: queryKeys.hr.settingsHubRules(params),
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const qs = new URLSearchParams({
         employeeId: params!.employeeId,
         date: params!.date,
       });
-      return apiClient.get<EffectiveRuleItem[]>(`/hr/settings-hub/effective-rules?${qs}`);
+      return apiClient.get<EffectiveRuleItem[]>(`/hr/settings-hub/effective-rules?${qs}`, undefined, signal);
     },
     staleTime: 30_000,
     enabled: !!params?.employeeId && !!params?.date,

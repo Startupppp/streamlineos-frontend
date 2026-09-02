@@ -26,7 +26,7 @@ export function useTickets(
   return useQuery<CursorPageResponse<Ticket>>({
     queryKey: queryKeys.projects.tickets({ projectId, ...filters }),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPageResponse<Ticket>>(`/build/${projectId}/tickets`, filters ? { ...filters } : undefined),
+      apiClient.get<CursorPageResponse<Ticket>>(`/build/${projectId}/tickets`, filters ? { ...filters } : undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 30_000,
     placeholderData: (prev) => prev,
@@ -62,7 +62,7 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
 
   const query = useInfiniteQuery<CursorPageResponse<Ticket>>({
     queryKey: queryKeys.projects.tickets({ projectId, view: "board", ...filters }),
-    queryFn: ({ pageParam }) => {
+    queryFn: ({ pageParam , signal }) => {
       const params: Record<string, unknown> = {
         limit: BOARD_PAGE_SIZE,
         orderBy: "rank",
@@ -78,7 +78,7 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
       if (filters?.cycle) params.cycleId = filters.cycle;
       if (filters?.sprint) params.sprintIds = filters.sprint;
       if (filters?.module) params.moduleIds = filters.module;
-      return apiClient.get<CursorPageResponse<Ticket>>(`/build/${projectId}/tickets`, params);
+      return apiClient.get<CursorPageResponse<Ticket>>(`/build/${projectId}/tickets`, params, signal);
     },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
@@ -136,7 +136,7 @@ export function useTicketByKey(
     queryKey: queryKeys.projects.ticketByKey(projectId, ticketNumber ?? 0),
     queryFn: async ({ signal }) => {
       const ticket = await apiClient.get<Ticket | null>(
-        `/build/${projectId}/tickets/key/${ticketNumber}`, signal,
+        `/build/${projectId}/tickets/key/${ticketNumber}`, undefined, signal,
       );
       if (ticket) {
         queryClient.setQueryData(queryKeys.projects.ticket(ticket.id), ticket);
@@ -173,7 +173,7 @@ export function useTicketColumnCounts(projectId: number) {
   return useQuery<Record<string, number>>({
     queryKey: queryKeys.projects.columnCounts(projectId),
     queryFn: ({ signal }) =>
-      apiClient.get<Record<string, number>>(`/build/${projectId}/tickets/column-counts`),
+      apiClient.get<Record<string, number>>(`/build/${projectId}/tickets/column-counts`, undefined, signal),
     enabled: canView && projectId > 0,
     staleTime: 30_000,
   });

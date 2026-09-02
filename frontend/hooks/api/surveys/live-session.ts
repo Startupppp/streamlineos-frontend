@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type LiveSessionStatus = "draft" | "waiting" | "active" | "paused" | "ended";
 
@@ -46,7 +47,7 @@ const LIVE_POLL_INTERVAL = 2_000;
 
 export function useCreateLiveSession(surveyId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("surveys:live:host", {
     mutationKey: ["surveys", "live", "create", surveyId] as const,
     mutationFn: () => apiClient.post<SurveyLiveSession>(`/surveys/${surveyId}/live-sessions`, {}),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.surveys.all }),

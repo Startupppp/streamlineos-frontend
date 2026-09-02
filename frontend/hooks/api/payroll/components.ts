@@ -48,7 +48,7 @@ export function usePayrollComponents(params?: ComponentListParams) {
     queryFn: ({ signal }) =>
       apiClient.get<PaginatedResult<SalaryComponent>>(
         "/payroll/components",
-        params as Record<string, unknown> | undefined,
+        params as Record<string, unknown> | undefined, signal,
       ),
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,

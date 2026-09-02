@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SnapshotWithDiff, SaveSnapshotPayload, AiSummarySnapshot } from "@/features/ai-summaries/types";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useLatestSnapshot(entityType: string, entityId: string) {
   return useQuery({
@@ -15,7 +16,7 @@ export function useLatestSnapshot(entityType: string, entityId: string) {
 }
 
 export function useSaveSnapshot(entityType: string, entityId: string) {
-  return useMutation({
+  return useAuthorizedMutation("ai:summaries:create", {
     mutationKey: ["ai", "summaries", entityType, entityId, "save"],
     mutationFn: (payload: SaveSnapshotPayload) =>
       apiClient.post<AiSummarySnapshot>(

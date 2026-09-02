@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { queryKeyBase } from "@/lib/query-keys/base";
 
 export interface TimeDevice {
   id: number;
@@ -101,15 +102,15 @@ export interface CursorPaginatedResponse<T> {
   pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
-const DEVICES_KEY = ["streamlineos", "hr", "enterprise", "comp", "devices"] as const;
-const SYNC_LOGS_KEY = ["streamlineos", "hr", "enterprise", "comp", "syncLogs"] as const;
+const DEVICES_KEY = [...queryKeyBase, "hr", "enterprise", "comp", "devices"] as const;
+const SYNC_LOGS_KEY = [...queryKeyBase, "hr", "enterprise", "comp", "syncLogs"] as const;
 
 export function useTimeDevices(params?: Record<string, unknown>) {
   const canManage = useCan("hr:biometric:manage");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.hrDevicesAll, params],
-    queryFn: ({ signal }) => apiClient.get<CursorPaginatedResponse<TimeDevice>>("/hr/enterprise/comp/devices", { params }),
+    queryFn: ({ signal }) => apiClient.get<CursorPaginatedResponse<TimeDevice>>("/hr/enterprise/comp/devices", { params }, signal),
     staleTime: 2 * 60_000,
     enabled: canManage && hrEnabled,
   });
@@ -149,7 +150,7 @@ export function useDeviceSyncLogs(params?: Record<string, unknown>) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.hrEnterpriseSyncLogsAll, params],
-    queryFn: ({ signal }) => apiClient.get<CursorPaginatedResponse<DeviceSyncLog>>("/hr/enterprise/comp/devices/sync-logs", { params }),
+    queryFn: ({ signal }) => apiClient.get<CursorPaginatedResponse<DeviceSyncLog>>("/hr/enterprise/comp/devices/sync-logs", { params }, signal),
     staleTime: 30_000,
     enabled: canManage && hrEnabled,
   });
@@ -166,16 +167,16 @@ export function useFailedSyncs() {
   });
 }
 
-const COMP_CYCLES_KEY = ["streamlineos", "hr", "enterprise", "comp", "cycles"] as const;
-const COMP_RECS_KEY = ["streamlineos", "hr", "enterprise", "comp", "recommendations"] as const;
-const COMP_BUDGET_KEY = ["streamlineos", "hr", "enterprise", "comp", "budgetPools"] as const;
+const COMP_CYCLES_KEY = [...queryKeyBase, "hr", "enterprise", "comp", "cycles"] as const;
+const COMP_RECS_KEY = [...queryKeyBase, "hr", "enterprise", "comp", "recommendations"] as const;
+const COMP_BUDGET_KEY = [...queryKeyBase, "hr", "enterprise", "comp", "budgetPools"] as const;
 
 export function useCompCycles(params?: Record<string, unknown>) {
   const canManage = useCan("hr:compensation:manage");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.hrEnterpriseCompCyclesAll, params],
-    queryFn: ({ signal }) => apiClient.get<CursorPaginatedResponse<CompCycle>>("/hr/enterprise/comp/planning/cycles", { params }),
+    queryFn: ({ signal }) => apiClient.get<CursorPaginatedResponse<CompCycle>>("/hr/enterprise/comp/planning/cycles", { params }, signal),
     staleTime: 2 * 60_000,
     enabled: canManage && hrEnabled,
   });
@@ -207,7 +208,7 @@ export function useCompRecommendations(cycleId?: number, params?: Record<string,
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.hrEnterpriseCompRecsAll, cycleId, params],
-    queryFn: ({ signal }) => apiClient.get<CursorPaginatedResponse<CompRecommendation>>("/hr/enterprise/comp/planning/recommendations", { params: { ...params, ...(cycleId ? { cycleId } : {}) } }),
+    queryFn: ({ signal }) => apiClient.get<CursorPaginatedResponse<CompRecommendation>>("/hr/enterprise/comp/planning/recommendations", { params: { ...params, ...(cycleId ? { cycleId } : {}) } }, signal),
     staleTime: 60_000,
     enabled: !!cycleId && canManage && hrEnabled,
   });
@@ -234,14 +235,14 @@ export function useBudgetPools(cycleId: number) {
   });
 }
 
-const EQUITY_GRANTS_KEY = ["streamlineos", "hr", "enterprise", "comp", "equityGrants"] as const;
+const EQUITY_GRANTS_KEY = [...queryKeyBase, "hr", "enterprise", "comp", "equityGrants"] as const;
 
 export function useEquityGrants(params?: Record<string, unknown>) {
   const canView = useCan("hr:equity:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.hrEnterpriseEquityGrantsAll, params],
-    queryFn: ({ signal }) => apiClient.get<CursorPaginatedResponse<EquityGrant>>("/hr/enterprise/comp/equity/grants", { params }),
+    queryFn: ({ signal }) => apiClient.get<CursorPaginatedResponse<EquityGrant>>("/hr/enterprise/comp/equity/grants", { params }, signal),
     staleTime: 5 * 60_000,
     enabled: canView && hrEnabled,
   });
@@ -278,14 +279,14 @@ export function useRecordExercise() {
   });
 }
 
-const COSTING_KEY = ["streamlineos", "hr", "enterprise", "comp", "costing"] as const;
+const COSTING_KEY = [...queryKeyBase, "hr", "enterprise", "comp", "costing"] as const;
 
 export function useWorkforceCostSummary() {
   const canRead = useCan("hr:analytics:read");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.hrEnterpriseCostingAll, "summary"],
-    queryFn: ({ signal }) => apiClient.get<Record<string, unknown>>("/hr/enterprise/comp/costing/summary"),
+    queryFn: ({ signal }) => apiClient.get<Record<string, unknown>>("/hr/enterprise/comp/costing/summary", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canRead && hrEnabled,
   });
@@ -296,7 +297,7 @@ export function useCostByDepartment(periodKey: string) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.hrEnterpriseCostingAll, "byDepartment", periodKey],
-    queryFn: ({ signal }) => apiClient.get<Record<string, unknown>[]>("/hr/enterprise/comp/costing/by-department", { params: { periodKey } }),
+    queryFn: ({ signal }) => apiClient.get<Record<string, unknown>[]>("/hr/enterprise/comp/costing/by-department", { params: { periodKey } }, signal),
     staleTime: 5 * 60_000,
     enabled: !!periodKey && canRead && hrEnabled,
   });
@@ -307,7 +308,7 @@ export function useCostByLocation() {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [...queryKeys.hr.hrEnterpriseCostingAll, "byLocation"],
-    queryFn: ({ signal }) => apiClient.get<Record<string, unknown>[]>("/hr/enterprise/comp/costing/by-location"),
+    queryFn: ({ signal }) => apiClient.get<Record<string, unknown>[]>("/hr/enterprise/comp/costing/by-location", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canRead && hrEnabled,
   });

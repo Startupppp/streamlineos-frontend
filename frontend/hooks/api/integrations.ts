@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type IntegrationToolkit = "googlecalendar" | "outlook" | "gmail";
 export type IntegrationConnectionStatus = "active" | "needs_reauth" | "disabled";
@@ -27,7 +28,7 @@ export function useIntegrationConnections(options?: { enabled?: boolean }) {
 }
 
 export function useInitiateIntegrationConnection() {
-  return useMutation({
+  return useAuthorizedMutation("integrations:connections:manage", {
     mutationKey: ["integrations", "connections", "initiate"],
     mutationFn: ({ toolkit, returnPath }: { toolkit: IntegrationToolkit; returnPath?: string }) =>
       apiClient.post<{ redirectUrl: string }>("/integrations/connections/initiate", {
@@ -39,7 +40,7 @@ export function useInitiateIntegrationConnection() {
 
 export function useFinalizeIntegrationConnection() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("integrations:connections:manage", {
     mutationKey: ["integrations", "connections", "finalize"],
     mutationFn: (connectedAccountId: string) =>
       apiClient.post<IntegrationConnection>("/integrations/connections/finalize", { connectedAccountId }),
@@ -56,7 +57,7 @@ export function useFinalizeIntegrationConnection() {
 
 export function useDisconnectIntegration() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("integrations:connections:manage", {
     mutationKey: ["integrations", "connections", "disconnect"],
     mutationFn: (connectionId: number) =>
       apiClient.delete<{ deleted: boolean }>(`/integrations/connections/${connectionId}`),
@@ -73,7 +74,7 @@ export function useDisconnectIntegration() {
 
 export function useSetPrimaryIntegration() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("integrations:connections:manage", {
     mutationKey: ["integrations", "connections", "set-primary"],
     mutationFn: (connectionId: number) =>
       apiClient.patch<IntegrationConnection>(`/integrations/connections/${connectionId}/primary`, {}),

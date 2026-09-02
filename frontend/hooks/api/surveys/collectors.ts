@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type CollectorType =
   | "public_link"
@@ -57,7 +58,7 @@ export function useCollectors(surveyId: number) {
 
 export function useCreateCollector(surveyId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("surveys:participants:manage", {
     mutationKey: ["surveys", "collectors", "create", surveyId] as const,
     mutationFn: (input: CreateCollectorInput) => apiClient.post<SurveyCollector>(`/surveys/${surveyId}/collectors`, input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.surveys.collectors(surveyId) }),
@@ -66,7 +67,7 @@ export function useCreateCollector(surveyId: number) {
 
 export function usePatchCollector(surveyId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("surveys:participants:manage", {
     mutationKey: ["surveys", "collectors", "patch", surveyId] as const,
     mutationFn: ({ collectorId, input }: { collectorId: number; input: PatchCollectorInput }) =>
       apiClient.patch<SurveyCollector>(`/surveys/${surveyId}/collectors/${collectorId}`, input),

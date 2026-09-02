@@ -6,6 +6,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { AdjustmentDetail } from "@/types/inventory";
 import type { AdjustmentStatus } from "@/features/inventory/lib";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type AdjustmentReason =
   | "PURCHASE"
@@ -116,7 +117,7 @@ export function useAdjustmentDetail(adjustmentId: number) {
 
 export function useCreateAdjustment() {
   const qc = useQueryClient();
-  return useMutation<AdjustmentDetail, Error, CreateAdjustmentInput>({
+  return useAuthorizedMutation<AdjustmentDetail, Error, CreateAdjustmentInput>("inventory:stock:adjust", {
     mutationKey: ["inventory", "adjustment", "create"],
     mutationFn: (data) =>
       apiClient.post<AdjustmentDetail>("/inventory/stock/adjustments", {
@@ -141,7 +142,7 @@ export function useCreateAdjustment() {
 
 export function useApproveAdjustment() {
   const qc = useQueryClient();
-  return useMutation<AdjustmentDetail, Error, number>({
+  return useAuthorizedMutation<AdjustmentDetail, Error, number>("inventory:adjustments:approve", {
     mutationKey: ["inventory", "adjustment", "approve"],
     mutationFn: (adjustmentId) =>
       apiClient.post<AdjustmentDetail>(`/inventory/stock/adjustments/${adjustmentId}/approve`, {}),
@@ -153,7 +154,7 @@ export function useApproveAdjustment() {
 
 export function usePostAdjustment() {
   const qc = useQueryClient();
-  return useMutation<AdjustmentDetail, Error, number>({
+  return useAuthorizedMutation<AdjustmentDetail, Error, number>("inventory:adjustments:post", {
     mutationKey: ["inventory", "adjustment", "post"],
     mutationFn: (adjustmentId) =>
       apiClient.post<AdjustmentDetail>(
@@ -171,7 +172,7 @@ export function usePostAdjustment() {
 
 export function useCancelAdjustment() {
   const qc = useQueryClient();
-  return useMutation<AdjustmentDetail, Error, number>({
+  return useAuthorizedMutation<AdjustmentDetail, Error, number>("inventory:stock:adjust", {
     mutationKey: ["inventory", "adjustment", "cancel"],
     mutationFn: (adjustmentId) =>
       apiClient.post<AdjustmentDetail>(`/inventory/stock/adjustments/${adjustmentId}/cancel`, {}),

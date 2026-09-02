@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface AssignedInterview {
   id: number;
@@ -42,7 +43,7 @@ export function useAssignedInterviews(page: number) {
 
 export function useSubmitAssignedInterviewScorecard(interviewId: number) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("self:recruitment", {
     mutationKey: [...recruitmentKey, interviewId, "scorecard"],
     mutationFn: (body: {
       ratings: Record<string, number>;

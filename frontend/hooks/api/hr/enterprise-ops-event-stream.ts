@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { queryKeyBase } from "@/lib/query-keys/base";
 
 export interface HrEvent {
   id: string;
@@ -41,16 +42,16 @@ export interface ListEventsParams {
 const BASE = "/hr/enterprise/ops/event-stream";
 
 const streamKeys = {
-  all: ["streamlineos", "hr-event-stream"] as const,
-  list: (p: ListEventsParams) => ["streamlineos", "hr-event-stream", "list", p] as const,
-  dictionary: ["streamlineos", "hr-event-stream", "dictionary"] as const,
-  metrics: ["streamlineos", "hr-event-stream", "metrics"] as const,
+  all: [...queryKeyBase, "hr-event-stream"] as const,
+  list: (p: ListEventsParams) => [...queryKeyBase, "hr-event-stream", "list", p] as const,
+  dictionary: [...queryKeyBase, "hr-event-stream", "dictionary"] as const,
+  metrics: [...queryKeyBase, "hr-event-stream", "metrics"] as const,
 };
 
 export function useHrEvents(params: ListEventsParams = {}) {
   return useQuery({
     queryKey: streamKeys.list(params),
-    queryFn: ({ signal }) => apiClient.get<PaginatedResult<HrEvent>>(`${BASE}/events`, params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get<PaginatedResult<HrEvent>>(`${BASE}/events`, params as Record<string, unknown>, signal),
     staleTime: 30_000,
   });
 }

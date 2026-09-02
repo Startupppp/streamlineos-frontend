@@ -12,6 +12,7 @@ import type {
 } from "@/types/notifications";
 import { toStringParams } from "./notifications-shared";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export const useBroadcasts = (
   params?: Record<string, unknown>,
@@ -34,7 +35,7 @@ export const useBroadcasts = (
 
 export const useCreateBroadcast = () => {
   const queryClient = useQueryClient();
-  return useMutation<Broadcast, Error, CreateBroadcastInput>({
+  return useAuthorizedMutation<Broadcast, Error, CreateBroadcastInput>("notifications:broadcasts:manage", {
     mutationKey: ["notifications", "broadcasts", "create"],
     mutationFn: (dto) => apiClient.post<Broadcast>("/broadcasts", dto),
     onSuccess: () => {
@@ -45,7 +46,7 @@ export const useCreateBroadcast = () => {
 
 export const useUpdateBroadcast = () => {
   const queryClient = useQueryClient();
-  return useMutation<Broadcast, Error, { id: number } & UpdateBroadcastInput>({
+  return useAuthorizedMutation<Broadcast, Error, { id: number } & UpdateBroadcastInput>("notifications:broadcasts:manage", {
     mutationKey: ["notifications", "broadcasts", "update"],
     mutationFn: ({ id, ...dto }) => apiClient.patch<Broadcast>(`/broadcasts/${id}`, dto),
     onSuccess: (_, vars) => {
@@ -57,7 +58,7 @@ export const useUpdateBroadcast = () => {
 
 export const usePublishBroadcast = () => {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, number>({
+  return useAuthorizedMutation<{ success: boolean }, Error, number>("notifications:broadcasts:manage", {
     mutationKey: ["notifications", "broadcasts", "publish"],
     mutationFn: (id) => apiClient.post<{ success: boolean }>(`/broadcasts/${id}/publish`),
     onSuccess: () => {
@@ -68,7 +69,7 @@ export const usePublishBroadcast = () => {
 
 export const useCancelBroadcast = () => {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, number>({
+  return useAuthorizedMutation<{ success: boolean }, Error, number>("notifications:broadcasts:manage", {
     mutationKey: ["notifications", "broadcasts", "cancel"],
     mutationFn: (id) => apiClient.post<{ success: boolean }>(`/broadcasts/${id}/cancel`),
     onSuccess: () => {
@@ -79,7 +80,7 @@ export const useCancelBroadcast = () => {
 
 export const useDeleteBroadcast = () => {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, number>({
+  return useAuthorizedMutation<{ success: boolean }, Error, number>("notifications:broadcasts:manage", {
     mutationKey: ["notifications", "broadcasts", "delete"],
     mutationFn: (id) => apiClient.delete<{ success: boolean }>(`/broadcasts/${id}`),
     onSuccess: () => {

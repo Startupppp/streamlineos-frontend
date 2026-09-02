@@ -15,6 +15,7 @@ import type {
   PublicFeedbackPost,
   PublicChangelogEntry,
 } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 export type {
   ChangelogType,
   RoadmapItem,
@@ -141,7 +142,7 @@ export function useRoadmapItems(filters: RoadmapItemFilters = {}) {
   const canView = useCan("build:roadmap:view");
   return useQuery({
     queryKey: queryKeys.roadmap.items(params),
-    queryFn: ({ signal }) => apiClient.get<CursorPaginated<RoadmapItem>>("/build/roadmap", params),
+    queryFn: ({ signal }) => apiClient.get<CursorPaginated<RoadmapItem>>("/build/roadmap", params, signal),
     enabled: canView,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -150,7 +151,7 @@ export function useRoadmapItems(filters: RoadmapItemFilters = {}) {
 
 export function useCreateRoadmapItem() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "roadmap", "create"],
     mutationFn: (input: CreateRoadmapItemInput) =>
       apiClient.post<RoadmapItem>("/build/roadmap", input),
@@ -160,7 +161,7 @@ export function useCreateRoadmapItem() {
 
 export function useUpdateRoadmapItem() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "roadmap", "update"],
     mutationFn: ({ id, ...input }: UpdateRoadmapItemInput & { id: number }) =>
       apiClient.patch<RoadmapItem>(`/build/roadmap/${id}`, input),
@@ -170,7 +171,7 @@ export function useUpdateRoadmapItem() {
 
 export function useDeleteRoadmapItem() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "roadmap", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/build/roadmap/${id}`),
@@ -183,7 +184,7 @@ export function useFeedbackPosts(filters: FeedbackPostFilters = {}) {
   const canView = useCan("build:roadmap:view");
   return useQuery({
     queryKey: queryKeys.roadmap.feedback(params),
-    queryFn: ({ signal }) => apiClient.get<CursorPaginated<FeedbackPost>>("/build/feedback", params),
+    queryFn: ({ signal }) => apiClient.get<CursorPaginated<FeedbackPost>>("/build/feedback", params, signal),
     enabled: canView,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -192,7 +193,7 @@ export function useFeedbackPosts(filters: FeedbackPostFilters = {}) {
 
 export function useUpdateFeedbackPost() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "feedback", "update"],
     mutationFn: ({ id, ...input }: UpdateFeedbackPostInput & { id: number }) =>
       apiClient.patch<FeedbackPost>(`/build/feedback/${id}`, input),
@@ -202,7 +203,7 @@ export function useUpdateFeedbackPost() {
 
 export function useMergeFeedbackPost() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "feedback", "merge"],
     mutationFn: ({ id, targetPostId }: { id: number; targetPostId: number }) =>
       apiClient.post<FeedbackPost>(`/build/feedback/${id}/merge`, { targetPostId }),
@@ -212,7 +213,7 @@ export function useMergeFeedbackPost() {
 
 export function useDeleteFeedbackPost() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "feedback", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/build/feedback/${id}`),
@@ -225,7 +226,7 @@ export function useChangelog(filters: ChangelogFilters = {}) {
   const canView = useCan("build:roadmap:view");
   return useQuery({
     queryKey: queryKeys.roadmap.changelog(params),
-    queryFn: ({ signal }) => apiClient.get<CursorPaginated<ChangelogEntry>>("/build/changelog", params),
+    queryFn: ({ signal }) => apiClient.get<CursorPaginated<ChangelogEntry>>("/build/changelog", params, signal),
     enabled: canView,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -234,7 +235,7 @@ export function useChangelog(filters: ChangelogFilters = {}) {
 
 export function useCreateChangelogEntry() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:roadmap:manage", {
     mutationKey: ["projects", "changelog", "create"],
     mutationFn: (input: CreateChangelogEntryInput) =>
       apiClient.post<ChangelogEntry>("/build/changelog", input),
@@ -244,7 +245,7 @@ export function useCreateChangelogEntry() {
 
 export function useUpdateChangelogEntry() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "changelog", "update"],
     mutationFn: ({ id, ...input }: UpdateChangelogEntryInput & { id: number }) =>
       apiClient.patch<ChangelogEntry>(`/build/changelog/${id}`, input),
@@ -254,7 +255,7 @@ export function useUpdateChangelogEntry() {
 
 export function useDeleteChangelogEntry() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "changelog", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/build/changelog/${id}`),

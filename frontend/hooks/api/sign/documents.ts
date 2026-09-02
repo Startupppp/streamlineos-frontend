@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SignDocument } from "@/types/sign";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useSignDocumentPreview(documentId: number | undefined) {
   return useQuery({
@@ -16,7 +17,7 @@ export function useSignDocumentPreview(documentId: number | undefined) {
 
 export function useUploadSignDocument(envelopeId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("sign:documents:upload", {
     mutationKey: ["signDocuments", "upload", envelopeId],
     mutationFn: async (file: File) => {
       const formData = new FormData();
@@ -32,7 +33,7 @@ export function useUploadSignDocument(envelopeId: number) {
 
 export function useDeleteSignDocument(envelopeId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("sign:documents:upload", {
     mutationKey: ["signDocuments", "delete", envelopeId],
     mutationFn: (documentId: number) => apiClient.delete<{ success: true }>(`/sign/documents/${documentId}`),
     onSuccess: () => {

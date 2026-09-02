@@ -42,10 +42,10 @@ export function useAiConversations(enabled: boolean) {
   const canAi = useCan("ai:chat:use");
   return useInfiniteQuery({
     queryKey: queryKeys.aiChat.conversations(),
-    queryFn: ({ pageParam }) => {
+    queryFn: ({ pageParam , signal }) => {
       const params: Record<string, unknown> = { limit: HISTORY_PAGE_SIZE };
       if (pageParam) params.cursor = pageParam;
-      return apiClient.get<AiConversationListPage>("/chat/conversations", params);
+      return apiClient.get<AiConversationListPage>("/chat/conversations", params, signal);
     },
     initialPageParam: undefined as number | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
@@ -94,12 +94,12 @@ export function useAiConversationMessages(conversationId: number | null, enabled
   const canAi = useCan("ai:chat:use");
   return useInfiniteQuery({
     queryKey: queryKeys.aiChat.conversationMessages(conversationId ?? 0),
-    queryFn: ({ pageParam }) => {
+    queryFn: ({ pageParam , signal }) => {
       const params: Record<string, unknown> = { limit: HISTORY_PAGE_SIZE };
       if (pageParam) params.cursor = pageParam;
       return apiClient.get<AskAiHistoryPage>(
         `/chat/conversations/${conversationId}/messages`,
-        params,
+        params, signal,
       );
     },
     initialPageParam: undefined as number | undefined,

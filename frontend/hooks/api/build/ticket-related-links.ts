@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseMutationOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface TicketRelatedLink {
   id: number;
@@ -25,7 +26,7 @@ export function useAddRelatedLink(
   options?: UseMutationOptions<TicketRelatedLink, unknown, AddLinkVars>,
 ) {
   const queryClient = useQueryClient();
-  return useMutation<TicketRelatedLink, unknown, AddLinkVars>({
+  return useAuthorizedMutation<TicketRelatedLink, unknown, AddLinkVars>("build:tickets:update", {
     mutationKey: ["projects", "tickets", "related-links", "add"],
     mutationFn: ({ projectId, ticketId, url, label }) =>
       apiClient.post<TicketRelatedLink>(`/build/${projectId}/tickets/${ticketId}/related-links`, { url, label }),

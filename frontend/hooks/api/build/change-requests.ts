@@ -9,6 +9,7 @@ import type {
   CreateChangeRequestInput,
   UpdateChangeRequestInput,
 } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface CrFilters {
   status?: string;
@@ -33,7 +34,7 @@ export function useChangeRequests(projectId: number, filters?: CrFilters) {
 
 export function useCreateChangeRequest(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:changerequests:create", {
     mutationKey: ["projects", projectId, "change-requests", "create"],
     mutationFn: (data: CreateChangeRequestInput) =>
       apiClient.post<ChangeRequest>(`/build/${projectId}/change-requests`, data),
@@ -45,7 +46,7 @@ export function useCreateChangeRequest(projectId: number) {
 
 export function useUpdateChangeRequest(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:timesheets:manage", {
     mutationKey: ["projects", projectId, "change-requests", "update"],
     mutationFn: ({ id, ...data }: UpdateChangeRequestInput & { id: number }) =>
       apiClient.patch<ChangeRequest>(`/build/${projectId}/change-requests/${id}`, data),
@@ -60,7 +61,7 @@ export function useUpdateChangeRequest(projectId: number) {
 
 export function useDeleteChangeRequest(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:changerequests:manage", {
     mutationKey: ["projects", projectId, "change-requests", "delete"],
     mutationFn: (crId: number) =>
       apiClient.delete<{ success: boolean }>(

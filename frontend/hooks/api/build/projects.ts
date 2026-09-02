@@ -22,6 +22,7 @@ import type {
   AddProjectMemberInput,
 } from "@/types/projects";
 import type { OrgMember } from "@/types/organization";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 type WorkspaceUser = {
   id: string;
@@ -123,7 +124,7 @@ export function useProjects(
     queryFn: ({ signal }) =>
       apiClient.get<PaginatedResponse<ProjectListItem>>(
         "/build",
-        filters ? { ...filters } : undefined,
+        filters ? { ...filters } : undefined, signal,
       ),
     staleTime: 30_000,
     ...options,
@@ -155,7 +156,7 @@ export function useCreateProject(
   >,
 ) {
   const queryClient = useQueryClient();
-  return useMutation<Project, Error, CreateProjectInput>({
+  return useAuthorizedMutation<Project, Error, CreateProjectInput>("build:create", {
     mutationKey: ["projects", "create"],
     mutationFn: (data: CreateProjectInput) =>
       apiClient.post<Project>("/build", data),
@@ -227,12 +228,12 @@ export function useUpdateProject(
   >,
 ) {
   const queryClient = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     ProjectWithDetails,
     Error,
     UpdateProjectInput,
     UpdateProjectContext
-  >({
+  >("build:update", {
     ...options,
     mutationKey: ["projects", "update"],
     mutationFn: ({ projectId, ...data }: UpdateProjectInput) =>
@@ -366,7 +367,7 @@ export function useAddProjectMember(
   >,
 ) {
   const queryClient = useQueryClient();
-  return useMutation<ProjectMember, Error, AddProjectMemberInput>({
+  return useAuthorizedMutation<ProjectMember, Error, AddProjectMemberInput>("build:manage", {
     mutationKey: ["projects", "members", "add"],
     mutationFn: ({ projectId, ...data }: AddProjectMemberInput) =>
       apiClient.post<ProjectMember>(`/build/${projectId}/members`, data),
@@ -427,7 +428,7 @@ export function useProjectLabels(
     queryFn: ({ signal }) =>
       projectId
         ? apiClient.get<TicketLabel[]>(`/build/${projectId}/labels`, undefined, signal)
-        : apiClient.get<TicketLabel[]>("/build/labels"),
+        : apiClient.get<TicketLabel[]>("/build/labels", undefined, signal),
     staleTime: 60_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),

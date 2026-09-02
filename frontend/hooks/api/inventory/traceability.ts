@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { LotStatus, SerialStatus } from "@/features/inventory/lib";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface LotListItem {
   id: number;
@@ -171,7 +172,7 @@ export function useLot(id: number) {
 
 export function useUpdateLotStatus() {
   const qc = useQueryClient();
-  return useMutation<void, Error, { lotId: number; status: "ACTIVE" | "BLOCKED" }>({
+  return useAuthorizedMutation<void, Error, { lotId: number; status: "ACTIVE" | "BLOCKED" }>("inventory:stock:adjust", {
     mutationKey: ["inventory", "lot", "update-status"],
     mutationFn: ({ lotId, status }) =>
       apiClient.patch<void>(`/inventory/lots/${lotId}/status`, { status }),

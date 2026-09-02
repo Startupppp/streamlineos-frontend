@@ -13,6 +13,7 @@ import type {
   PmWorkspaceMembersPage,
   AddPmWorkspaceMemberInput,
 } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const BASE = "/build/workspaces";
 
@@ -41,7 +42,7 @@ export function usePmWorkspaces(params?: ListPmWorkspacesParams) {
 
 export function useCreatePmWorkspace() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:workspaces:create", {
     mutationKey: ["projects", "pm-workspaces", "create"],
     mutationFn: (data: CreatePmWorkspaceInput) =>
       apiClient.post<PmWorkspace>(BASE, data),
@@ -53,7 +54,7 @@ export function useCreatePmWorkspace() {
 
 export function useUpdatePmWorkspace() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "pm-workspaces", "update"],
     mutationFn: ({
       pmWorkspaceId,
@@ -71,7 +72,7 @@ export function useUpdatePmWorkspace() {
 
 export function useDeletePmWorkspace() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "pm-workspaces", "delete"],
     mutationFn: (pmWorkspaceId: string) =>
       apiClient.delete<void>(`${BASE}/${pmWorkspaceId}`),
@@ -112,7 +113,7 @@ export function usePmWorkspaceMembers(
 
 export function useAddPmWorkspaceMember(pmWorkspaceId: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:workspaces:members:manage", {
     mutationKey: ["projects", "pm-workspaces", "members", "add"],
     mutationFn: (data: AddPmWorkspaceMemberInput) =>
       apiClient.post<PmWorkspaceMember>(`${BASE}/${pmWorkspaceId}/members`, data),
@@ -126,7 +127,7 @@ export function useAddPmWorkspaceMember(pmWorkspaceId: string) {
 
 export function useRemovePmWorkspaceMember(pmWorkspaceId: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: ["projects", "pm-workspaces", "members", "remove"],
     mutationFn: (pmWorkspaceMembershipId: string) =>
       apiClient.delete<{ success: true }>(

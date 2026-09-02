@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { queryKeyBase } from "@/lib/query-keys/base";
 
 export interface CalibrationEntry {
   id: number;
@@ -27,9 +28,9 @@ export interface NineBoxEntry {
 }
 
 const keys = {
-  all: ["streamlineos", "hr", "calibration"] as const,
-  entries: (cycleId: number) => ["streamlineos", "hr", "calibration", "entries", cycleId] as const,
-  nineBox: (cycleId: number) => ["streamlineos", "hr", "calibration", "nine-box", cycleId] as const,
+  all: [...queryKeyBase, "hr", "calibration"] as const,
+  entries: (cycleId: number) => [...queryKeyBase, "hr", "calibration", "entries", cycleId] as const,
+  nineBox: (cycleId: number) => [...queryKeyBase, "hr", "calibration", "nine-box", cycleId] as const,
 };
 
 export function useCalibrationEntries(cycleId: number) {

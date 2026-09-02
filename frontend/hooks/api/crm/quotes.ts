@@ -11,6 +11,7 @@ import type {
   CreateQuoteInput,
   UpdateQuoteInput,
 } from "@/types/crm/quotes";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface QuoteListResponse {
   quotes: QuoteListItem[];
@@ -29,14 +30,14 @@ export interface QuotesParams {
 export function useQuotes(params?: QuotesParams) {
   return useGatedQuery("crm:quotes:read", {
     queryKey: queryKeys.crmQuotes.list(params as Record<string, unknown>),
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const p: Record<string, string | number> = {};
       if (params?.status !== undefined) p.status = params.status;
       if (params?.dealId !== undefined) p.dealId = params.dealId;
       if (params?.search !== undefined) p.search = params.search;
       if (params?.cursor !== undefined) p.cursor = params.cursor;
       if (params?.pageSize !== undefined) p.pageSize = params.pageSize;
-      return apiClient.get<QuoteListResponse>("/quotes", p);
+      return apiClient.get<QuoteListResponse>("/quotes", p, signal);
     },
     staleTime: 2 * 60_000,
     placeholderData: keepPreviousData,
@@ -76,7 +77,7 @@ function invalidateQuoteCaches(
 
 export function useCreateQuote() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:quotes:create", {
     mutationKey: ["quotes", "create"],
     mutationFn: (input: CreateQuoteInput) => apiClient.post<Quote>("/quotes", input),
     onSuccess: (_, vars) => invalidateQuoteCaches(qc, { dealId: vars.dealId }),
@@ -85,7 +86,7 @@ export function useCreateQuote() {
 
 export function useUpdateQuote() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:quotes:update", {
     mutationKey: ["quotes", "update"],
     mutationFn: ({ id, ...input }: UpdateQuoteInput & { dealId?: number }) =>
       apiClient.patch<Quote>(`/quotes/${id}`, input),
@@ -95,7 +96,7 @@ export function useUpdateQuote() {
 
 export function useUpdateQuoteStatus() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:quotes:update", {
     mutationKey: ["quotes", "updateStatus"],
     mutationFn: ({
       id,
@@ -113,7 +114,7 @@ export function useUpdateQuoteStatus() {
 
 export function useDeleteQuote() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:quotes:delete", {
     mutationKey: ["quotes", "delete"],
     mutationFn: ({ id }: { id: number; dealId?: number }) =>
       apiClient.delete<{ success: boolean }>(`/quotes/${id}`),
@@ -127,7 +128,7 @@ export function downloadQuotesCsv(status?: QuoteStatus): Promise<Blob> {
 
 export function useApproveQuote() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:quotes:approve", {
     mutationKey: ["quotes", "approve"],
     mutationFn: ({ id }: { id: number; dealId?: number }) =>
       apiClient.post<Quote>(`/quotes/${id}/approve`),
@@ -137,7 +138,7 @@ export function useApproveQuote() {
 
 export function useRejectQuote() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:quotes:approve", {
     mutationKey: ["quotes", "reject"],
     mutationFn: ({ id, reason }: { id: number; reason?: string; dealId?: number }) =>
       apiClient.post<Quote>(`/quotes/${id}/reject`, { reason }),
@@ -147,7 +148,7 @@ export function useRejectQuote() {
 
 export function useConvertQuoteToInvoice() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:quotes:create", {
     mutationKey: ["quotes", "convert-to-invoice"],
     mutationFn: ({ id }: { id: number; dealId?: number }) =>
       apiClient.post<{ invoice: { id: number; invoiceNumber: string }; quoteId: number }>(
@@ -159,7 +160,7 @@ export function useConvertQuoteToInvoice() {
 
 export function useMarkQuoteSigned() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:quotes:update", {
     mutationKey: ["quotes", "mark-signed"],
     mutationFn: ({ id, documentRef }: { id: number; documentRef?: string; dealId?: number }) =>
       apiClient.post<Quote>(`/quotes/${id}/mark-signed`, { documentRef }),

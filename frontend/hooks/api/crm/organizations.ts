@@ -17,6 +17,7 @@ import type {
   RelatedLead,
   MergeOrgsInput,
 } from "@/types/crm";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useCrmOrganizations(filters?: CrmOrganizationFilters) {
   return useGatedQuery<PaginatedCrmOrganizations>("crm:organizations:view", {
@@ -59,7 +60,7 @@ export function useCrmOrganizationDetail(id: number) {
 
 export function useCreateCrmOrganization() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:organizations:manage", {
     mutationKey: ["crmOrganizations", "create"] as const,
     mutationFn: (input: CreateCrmOrganizationInput) =>
       apiClient.post<CrmOrganization>("/crm/organizations", input),
@@ -71,7 +72,7 @@ export function useCreateCrmOrganization() {
 
 export function useUpdateCrmOrganization() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:organizations:manage", {
     mutationKey: ["crmOrganizations", "update"] as const,
     mutationFn: ({ id, ...input }: UpdateCrmOrganizationInput & { id: number }) =>
       apiClient.patch<CrmOrganization>(`/crm/organizations/${id}`, input),
@@ -84,7 +85,7 @@ export function useUpdateCrmOrganization() {
 
 export function useDeleteCrmOrganization() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:organizations:manage", {
     mutationKey: ["crmOrganizations", "delete"] as const,
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/crm/organizations/${id}`),
@@ -138,7 +139,7 @@ export function useCrmPeopleSlugs() {
   const canView = useCan("crm:contacts:view");
   return useQuery({
     queryKey: queryKeys.crm.peopleSlugs(),
-    queryFn: ({ signal }) => apiClient.get<Record<string, string>>("/crm/people-slugs"),
+    queryFn: ({ signal }) => apiClient.get<Record<string, string>>("/crm/people-slugs", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canView,
   });
@@ -154,7 +155,7 @@ export interface MergeOrgsResult {
 
 export function useMergeCrmOrganizations() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:organizations:merge", {
     mutationKey: ["crmOrganizations", "merge"] as const,
     mutationFn: (input: MergeOrgsInput) =>
       apiClient.post<MergeOrgsResult>("/crm/organizations/merge", input),

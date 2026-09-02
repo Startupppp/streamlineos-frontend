@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { JobStatus } from "@/features/inventory/lib";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 type ReservationStrategy = "MANUAL" | "AUTO_ON_CONFIRM" | "FEFO" | "FIFO";
 type ExpiryPolicy = "BLOCK" | "WARN" | "ALLOW";
@@ -93,7 +94,7 @@ export function useInventorySettings() {
 
 export function useUpdateInventorySettings() {
   const qc = useQueryClient();
-  return useMutation<InventorySettings, Error, Partial<InventorySettings>>({
+  return useAuthorizedMutation<InventorySettings, Error, Partial<InventorySettings>>("inventory:settings:manage", {
     mutationKey: ["inventory", "settings", "update"],
     mutationFn: (data) => apiClient.patch<InventorySettings>("/inventory/settings", data),
     onSuccess: () => {
@@ -114,11 +115,11 @@ export function useNumberSequences() {
 
 export function useUpdateNumberSequence() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     NumberSequence,
     Error,
     { sequenceId: number; data: { prefix?: string; padding?: number; nextNumber?: number } }
-  >({
+  >("inventory:settings:manage", {
     mutationKey: ["inventory", "settings", "numberSequence", "update"],
     mutationFn: ({ sequenceId, data }) =>
       apiClient.patch<NumberSequence>(
@@ -143,7 +144,7 @@ export function useSettingsHealth() {
 
 export function useExpireStaleReservations() {
   const qc = useQueryClient();
-  return useMutation<void, Error, void>({
+  return useAuthorizedMutation<void, Error, void>("inventory:settings:manage", {
     mutationKey: ["inventory", "settings", "expire-reservations"],
     mutationFn: () =>
       apiClient.post<void>(
@@ -170,7 +171,7 @@ export function useBarcodeLookup(code: string) {
 }
 
 export function useImportPreview() {
-  return useMutation<ImportPreviewResult, Error, FormData>({
+  return useAuthorizedMutation<ImportPreviewResult, Error, FormData>("inventory:import", {
     mutationKey: ["inventory", "import", "preview"],
     mutationFn: (formData) =>
       apiClient.upload<ImportPreviewResult>("/inventory/import/preview", formData),
@@ -179,7 +180,7 @@ export function useImportPreview() {
 
 export function useCreateImportJob() {
   const qc = useQueryClient();
-  return useMutation<ImportJobDetail, Error, { importType: string; rows?: Record<string, unknown>[] }>({
+  return useAuthorizedMutation<ImportJobDetail, Error, { importType: string; rows?: Record<string, unknown>[] }>("inventory:import", {
     mutationKey: ["inventory", "import", "job", "create"],
     mutationFn: (data) => apiClient.post<ImportJobDetail>("/inventory/import/jobs", data),
     onSuccess: () => {
@@ -237,7 +238,7 @@ interface CreateExportJobInput {
 
 export function useCreateExportJob() {
   const qc = useQueryClient();
-  return useMutation<ExportJob, Error, CreateExportJobInput>({
+  return useAuthorizedMutation<ExportJob, Error, CreateExportJobInput>("inventory:export", {
     mutationKey: ["inventory", "export", "job", "create"],
     mutationFn: (data) => apiClient.post<ExportJob>("/inventory/export/jobs", data),
     onSuccess: () => {
@@ -247,7 +248,7 @@ export function useCreateExportJob() {
 }
 
 export function useDownloadExportJob() {
-  return useMutation<Blob, Error, number>({
+  return useAuthorizedMutation<Blob, Error, number>("inventory:export", {
     mutationKey: ["inventory", "export", "job", "download"],
     mutationFn: (jobId) => apiClient.download(`/inventory/export/jobs/${jobId}/download`),
   });

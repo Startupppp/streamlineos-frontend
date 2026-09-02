@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SignOrgSettings, SignWatermarkPolicy } from "@/types/sign";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useSignSettings() {
   return useQuery({
@@ -15,7 +16,7 @@ export function useSignSettings() {
 
 export function useUpdateSignSettings() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("sign:admin:manage", {
     mutationKey: ["signAdmin", "settings", "update"],
     mutationFn: (input: Partial<SignOrgSettings>) => apiClient.patch<SignOrgSettings>("/sign/admin/settings", input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.signAdmin.settings() }),
@@ -46,7 +47,7 @@ export interface WatermarkPolicyInput {
 
 export function useCreateWatermarkPolicy() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("sign:admin:manage", {
     mutationKey: ["signAdmin", "watermark", "create"],
     mutationFn: (input: WatermarkPolicyInput) => apiClient.post<SignWatermarkPolicy>("/sign/admin/watermark-policies", input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.signAdmin.watermarkPolicies() }),
@@ -55,7 +56,7 @@ export function useCreateWatermarkPolicy() {
 
 export function useUpdateWatermarkPolicy() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("sign:admin:manage", {
     mutationKey: ["signAdmin", "watermark", "update"],
     mutationFn: ({ id, input }: { id: number; input: Partial<WatermarkPolicyInput> }) =>
       apiClient.patch<SignWatermarkPolicy>(`/sign/admin/watermark-policies/${id}`, input),
@@ -65,7 +66,7 @@ export function useUpdateWatermarkPolicy() {
 
 export function useDeleteWatermarkPolicy() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("sign:admin:manage", {
     mutationKey: ["signAdmin", "watermark", "delete"],
     mutationFn: (id: number) => apiClient.delete<{ success: true }>(`/sign/admin/watermark-policies/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.signAdmin.watermarkPolicies() }),

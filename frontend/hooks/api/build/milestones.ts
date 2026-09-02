@@ -5,6 +5,8 @@ import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { ProjectMilestone, ProjectBudget } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { queryKeyBase } from "@/lib/query-keys/base";
 export type { ProjectMilestone, ProjectBudget } from "@/types/projects";
 
 interface CreateMilestoneInput {
@@ -22,7 +24,7 @@ interface UpdateMilestoneInput {
 }
 
 function milestoneKey(projectId: number) {
-  return ["streamlineos", "projects", projectId, "milestones"] as const;
+  return [...queryKeyBase, "projects", projectId, "milestones"] as const;
 }
 
 export function useProjectMilestones(projectId: number) {
@@ -37,7 +39,7 @@ export function useProjectMilestones(projectId: number) {
 
 export function useCreateMilestone(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:workspace:manage", {
     mutationKey: ["projects", "milestones", "create"],
     mutationFn: (input: CreateMilestoneInput) =>
       apiClient.post<ProjectMilestone>(`/build/${projectId}/milestones`, input),
@@ -47,7 +49,7 @@ export function useCreateMilestone(projectId: number) {
 
 export function useUpdateMilestone(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:timesheets:manage", {
     mutationKey: ["projects", "milestones", "update"],
     mutationFn: ({ id, ...input }: UpdateMilestoneInput & { id: number }) =>
       apiClient.patch<ProjectMilestone>(`/build/${projectId}/milestones/${id}`, input),
@@ -57,7 +59,7 @@ export function useUpdateMilestone(projectId: number) {
 
 export function useDeleteMilestone(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:workspace:manage", {
     mutationKey: ["projects", "milestones", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/build/${projectId}/milestones/${id}`),
@@ -77,7 +79,7 @@ export function useProjectBudget(projectId: number) {
 
 export function useUpdateProjectBudget(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "budget", "update"],
     mutationFn: (budget: number) =>
       apiClient.patch<{ id: number; budget: string }>(`/build/${projectId}/budget`, { budget }),

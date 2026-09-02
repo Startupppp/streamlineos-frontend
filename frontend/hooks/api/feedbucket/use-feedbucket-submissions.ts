@@ -9,6 +9,7 @@ import type {
   ListFeedbucketSubmissionsQuery,
   UpdateFeedbucketSubmissionInput,
 } from "@/types/feedbucket";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useFeedbucketSubmissions(params?: ListFeedbucketSubmissionsQuery) {
   return useQuery({
@@ -34,7 +35,7 @@ export function useFeedbucketSubmission(submissionId: number) {
 
 export function useUpdateFeedbucketSubmission() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("feedbucket:submissions:update", {
     mutationKey: ["feedbucket", "submissions", "update"],
     mutationFn: ({
       submissionId,
@@ -56,7 +57,7 @@ export function useUpdateFeedbucketSubmission() {
 
 export function useConvertFeedbucketToTicket() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("feedbucket:submissions:manage", {
     mutationKey: ["feedbucket", "submissions", "convert-to-ticket"],
     mutationFn: (submissionId: number) =>
       apiClient.post<{ ticketId: number }>(

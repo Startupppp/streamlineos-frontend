@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type ExternalEntityType = "project" | "invoice" | "calendar_event" | "chat_channel";
 
@@ -28,7 +29,7 @@ export function useSupportTicketExternalLinks(ticketId: number) {
 
 export function useAddExternalLink() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:manage", {
     mutationKey: ["add", "external", "link"],
     mutationFn: ({
       ticketId,
@@ -50,7 +51,7 @@ export function useAddExternalLink() {
 
 export function useRemoveExternalLink() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:manage", {
     mutationKey: ["remove", "external", "link"],
     mutationFn: ({ ticketId, linkId }: { ticketId: number; linkId: number }) =>
       apiClient.delete<{ success: boolean }>(`/support/${ticketId}/external-links/${linkId}`),

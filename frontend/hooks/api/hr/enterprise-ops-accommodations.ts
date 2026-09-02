@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { queryKeyBase } from "@/lib/query-keys/base";
 
 export type AccommodationType = "equipment" | "schedule" | "workspace" | "medical_restriction" | "other";
 export type AccommodationStatus = "requested" | "under_review" | "approved" | "denied" | "implemented";
@@ -53,16 +54,16 @@ export interface ListAccommodationsParams {
 const BASE = "/hr/enterprise/ops/accommodations";
 
 const accKeys = {
-  all: ["streamlineos", "hr-accommodations"] as const,
-  list: (p: ListAccommodationsParams) => ["streamlineos", "hr-accommodations", "list", p] as const,
-  detail: (id: string) => ["streamlineos", "hr-accommodations", "detail", id] as const,
-  tasks: (id: string) => ["streamlineos", "hr-accommodations", "tasks", id] as const,
+  all: [...queryKeyBase, "hr-accommodations"] as const,
+  list: (p: ListAccommodationsParams) => [...queryKeyBase, "hr-accommodations", "list", p] as const,
+  detail: (id: string) => [...queryKeyBase, "hr-accommodations", "detail", id] as const,
+  tasks: (id: string) => [...queryKeyBase, "hr-accommodations", "tasks", id] as const,
 };
 
 export function useAccommodations(params: ListAccommodationsParams = {}) {
   return useQuery({
     queryKey: accKeys.list(params),
-    queryFn: ({ signal }) => apiClient.get<PaginatedResult<AccommodationRequest>>(BASE, params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get<PaginatedResult<AccommodationRequest>>(BASE, params as Record<string, unknown>, signal),
     staleTime: 30_000,
   });
 }

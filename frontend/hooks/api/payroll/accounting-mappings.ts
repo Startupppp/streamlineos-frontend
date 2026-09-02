@@ -9,6 +9,7 @@ import type {
   CreateAccountingMappingInput,
   UpdateAccountingMappingInput,
 } from "@/types/payroll/reports";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useAccountingMappings() {
   const canManage = useCan("payroll:settings:manage");
@@ -22,7 +23,7 @@ export function useAccountingMappings() {
 
 export function useCreateAccountingMapping() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:settings:manage", {
     mutationKey: ["payroll", "accounting-mappings", "create"],
     mutationFn: (data: CreateAccountingMappingInput) =>
       apiClient.post<AccountingMapping>("/payroll/accounting-mappings", data),
@@ -34,7 +35,7 @@ export function useCreateAccountingMapping() {
 
 export function useUpdateAccountingMapping() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:settings:manage", {
     mutationKey: ["payroll", "accounting-mappings", "update"],
     mutationFn: ({ id, ...data }: { id: number } & UpdateAccountingMappingInput) =>
       apiClient.patch<AccountingMapping>(`/payroll/accounting-mappings/${id}`, data),
@@ -46,7 +47,7 @@ export function useUpdateAccountingMapping() {
 
 export function useDeleteAccountingMapping() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:settings:manage", {
     mutationKey: ["payroll", "accounting-mappings", "delete"],
     mutationFn: ({ id }: { id: number }) =>
       apiClient.delete<void>(`/payroll/accounting-mappings/${id}`),

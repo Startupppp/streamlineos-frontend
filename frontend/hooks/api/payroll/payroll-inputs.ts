@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type HrPayrollInputStatus = "open" | "building" | "built" | "locked";
 
@@ -105,7 +106,7 @@ export function usePayrollInputPeriods(params?: { cursor?: string; limit?: numbe
 
 export function useCreatePayrollInputPeriod() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:payroll:generate", {
     mutationKey: ["hr-payroll-inputs", "periods", "create"],
     mutationFn: (data: { periodKey: string; cutoffDate?: string }) =>
       apiClient.post<PayrollInputPeriod>("/hr/payroll-inputs/periods", data),
@@ -119,7 +120,7 @@ export function useCreatePayrollInputPeriod() {
 
 export function useBuildPayrollInputPeriod() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:payroll:generate", {
     mutationKey: ["hr-payroll-inputs", "periods", "build"],
     mutationFn: (periodId: number) =>
       apiClient.post<PayrollInputPeriod>(`/hr/payroll-inputs/periods/${periodId}/build`),
@@ -134,7 +135,7 @@ export function useBuildPayrollInputPeriod() {
 
 export function useLockPayrollInputPeriod() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:payroll:lock", {
     mutationKey: ["hr-payroll-inputs", "periods", "lock"],
     mutationFn: (periodId: number) =>
       apiClient.post<PayrollInputPeriod>(`/hr/payroll-inputs/periods/${periodId}/lock`),
@@ -149,7 +150,7 @@ export function useLockPayrollInputPeriod() {
 
 export function useUnlockPayrollInputPeriod() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:payroll:reopen", {
     mutationKey: ["hr-payroll-inputs", "periods", "unlock"],
     mutationFn: (periodId: number) =>
       apiClient.post<PayrollInputPeriod>(`/hr/payroll-inputs/periods/${periodId}/unlock`),
@@ -201,7 +202,7 @@ export function usePayrollAdjustments(periodId: number, params?: { cursor?: stri
 
 export function useCreatePayrollAdjustment() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:payroll:generate", {
     mutationKey: ["hr-payroll-inputs", "adjustments", "create"],
     mutationFn: (data: {
       periodId?: number;
@@ -226,7 +227,7 @@ export function useCreatePayrollAdjustment() {
 
 export function useApprovePayrollAdjustment() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:payroll:approve", {
     mutationKey: ["hr-payroll-inputs", "adjustments", "approve"],
     mutationFn: (adjustmentId: number) =>
       apiClient.patch<PayrollAdjustment>(`/hr/payroll-inputs/adjustments/${adjustmentId}/approve`),

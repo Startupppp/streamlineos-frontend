@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 
 export type TaskEntityType = "LEAD" | "DEAL" | "CONTACT" | "PROJECT";
@@ -85,7 +86,7 @@ export function useTasks(filters?: TasksFilters) {
 
 export function useCreateTask() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("tasks:write", {
     mutationKey: ["tasks", "create"],
     mutationFn: (input: CreateTaskInput) => apiClient.post<Task>("/tasks", input),
     onSuccess: () => {
@@ -96,7 +97,7 @@ export function useCreateTask() {
 
 export function useUpdateTask() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("tasks:write", {
     mutationKey: ["tasks", "update"],
     mutationFn: ({ taskId, input }: { taskId: number; input: UpdateTaskInput }) =>
       apiClient.patch<Task>(`/tasks/${taskId}`, input),
@@ -108,7 +109,7 @@ export function useUpdateTask() {
 
 export function useDeleteTask() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("tasks:write", {
     mutationKey: ["tasks", "delete"],
     mutationFn: (taskId: number) =>
       apiClient.delete<{ success: boolean }>(`/tasks/${taskId}`),
@@ -120,7 +121,7 @@ export function useDeleteTask() {
 
 export function useCompleteTask() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("tasks:write", {
     mutationKey: ["tasks", "complete"],
     mutationFn: ({ taskId, completedAt }: { taskId: number; completedAt?: string }) =>
       apiClient.post<Task>(`/tasks/${taskId}/complete`, { completedAt }),

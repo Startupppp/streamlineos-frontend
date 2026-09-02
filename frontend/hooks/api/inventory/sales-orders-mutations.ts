@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SalesOrderStatus, UpdateSalesOrderInput } from "./sales-orders-types";
 import { todayIso } from "./sales-orders-types";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface CreateSalesOrderLineInput {
   productVariantId: number;
@@ -98,7 +99,7 @@ interface CancelSalesOrderInput {
 
 export function useCreateSalesOrder() {
   const qc = useQueryClient();
-  return useMutation<CreatedSalesOrder, Error, CreateSalesOrderInput>({
+  return useAuthorizedMutation<CreatedSalesOrder, Error, CreateSalesOrderInput>("inventory:sales-orders:create", {
     mutationKey: ["inventory", "salesOrders", "create"],
     mutationFn: (data) =>
       apiClient.post<CreatedSalesOrder>("/inventory/sales-orders", {
@@ -125,7 +126,7 @@ export function useCreateSalesOrder() {
 
 export function useConfirmSalesOrder() {
   const qc = useQueryClient();
-  return useMutation<void, Error, ConfirmSalesOrderInput>({
+  return useAuthorizedMutation<void, Error, ConfirmSalesOrderInput>("inventory:sales-orders:confirm", {
     mutationKey: ["inventory", "salesOrders", "confirm"],
     mutationFn: ({ soId }) =>
       apiClient.post<void>(`/inventory/sales-orders/${soId}/confirm`, {}),
@@ -138,7 +139,7 @@ export function useConfirmSalesOrder() {
 
 export function useShipSalesOrder() {
   const qc = useQueryClient();
-  return useMutation<void, Error, ShipSalesOrderInput>({
+  return useAuthorizedMutation<void, Error, ShipSalesOrderInput>("inventory:sales-orders:ship", {
     mutationKey: ["inventory", "salesOrders", "ship"],
     mutationFn: ({ soId, shipDate, carrierId, trackingNumber, notes }) =>
       apiClient.post<void>(
@@ -161,7 +162,7 @@ export function useShipSalesOrder() {
 
 export function useInvoiceSalesOrder() {
   const qc = useQueryClient();
-  return useMutation<CreatedInvoice, Error, InvoiceSalesOrderInput>({
+  return useAuthorizedMutation<CreatedInvoice, Error, InvoiceSalesOrderInput>("inventory:sales-orders:invoice", {
     mutationKey: ["inventory", "salesOrders", "invoice"],
     mutationFn: ({ soId }) =>
       apiClient.post<CreatedInvoice>(`/inventory/sales-orders/${soId}/invoice`, {}),
@@ -174,7 +175,7 @@ export function useInvoiceSalesOrder() {
 
 export function useReserveSalesOrder() {
   const qc = useQueryClient();
-  return useMutation<ReserveSalesOrderResult, Error, ReserveSalesOrderInput>({
+  return useAuthorizedMutation<ReserveSalesOrderResult, Error, ReserveSalesOrderInput>("inventory:stock:reserve", {
     mutationKey: ["inventory", "salesOrders", "reserve"],
     mutationFn: ({ soId, warehouseId, allocations }) =>
       apiClient.post<ReserveSalesOrderResult>(
@@ -195,7 +196,7 @@ export function useReserveSalesOrder() {
 
 export function usePickSalesOrder() {
   const qc = useQueryClient();
-  return useMutation<void, Error, PickSalesOrderInput>({
+  return useAuthorizedMutation<void, Error, PickSalesOrderInput>("inventory:sales-orders:ship", {
     mutationKey: ["inventory", "salesOrders", "pick"],
     mutationFn: ({ soId, lines }) =>
       apiClient.post<void>(`/inventory/sales-orders/${soId}/pick`, { lines }),
@@ -208,7 +209,7 @@ export function usePickSalesOrder() {
 
 export function usePackSalesOrder() {
   const qc = useQueryClient();
-  return useMutation<void, Error, PackSalesOrderInput>({
+  return useAuthorizedMutation<void, Error, PackSalesOrderInput>("inventory:sales-orders:ship", {
     mutationKey: ["inventory", "salesOrders", "pack"],
     mutationFn: ({ soId, weight, dimensionsL, dimensionsW, dimensionsH }) =>
       apiClient.post<void>(`/inventory/sales-orders/${soId}/pack`, {
@@ -226,7 +227,7 @@ export function usePackSalesOrder() {
 
 export function useCancelSalesOrder() {
   const qc = useQueryClient();
-  return useMutation<void, Error, CancelSalesOrderInput>({
+  return useAuthorizedMutation<void, Error, CancelSalesOrderInput>("inventory:sales-orders:update", {
     mutationKey: ["inventory", "salesOrders", "cancel"],
     mutationFn: ({ soId, reason }) =>
       apiClient.post<void>(
@@ -244,7 +245,7 @@ export function useCancelSalesOrder() {
 
 export function useUpdateSalesOrder() {
   const qc = useQueryClient();
-  return useMutation<void, Error, UpdateSalesOrderInput>({
+  return useAuthorizedMutation<void, Error, UpdateSalesOrderInput>("inventory:sales-orders:update", {
     mutationKey: ["inventory", "salesOrders", "update"],
     mutationFn: ({ soId, lines, ...rest }) =>
       apiClient.patch<void>(`/inventory/sales-orders/${soId}`, {

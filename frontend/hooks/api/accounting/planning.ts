@@ -21,6 +21,7 @@ import type {
   UpdateScenarioInput,
   BudgetWorkflowInput,
 } from "@/types/accounting/planning";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface ListResponse<T> {
   items: T[];
@@ -79,7 +80,7 @@ export function useBudgets(params: ListBudgetsParams = {}) {
   return useQuery<CursorPage<BudgetSummary>, Error>({
     queryKey: planningKeys.budgets(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<BudgetSummary>>("/accounting/budgets", toQuery(params)),
+      apiClient.get<CursorPage<BudgetSummary>>("/accounting/budgets", toQuery(params), signal),
     staleTime: 60_000,
     enabled: can,
   });
@@ -87,7 +88,7 @@ export function useBudgets(params: ListBudgetsParams = {}) {
 
 export function useCreateBudget() {
   const queryClient = useQueryClient();
-  return useMutation<BudgetSummary, Error, CreateBudgetInput>({
+  return useAuthorizedMutation<BudgetSummary, Error, CreateBudgetInput>("accounting:budgets:create", {
     mutationKey: ["accounting", "planning", "budgets", "create"],
     mutationFn: (data) => apiClient.post<BudgetSummary>("/accounting/budgets", data),
     onSuccess: () => {
@@ -108,7 +109,7 @@ export function useBudget(id: number) {
 
 export function useReplaceBudgetLines(id: number) {
   const queryClient = useQueryClient();
-  return useMutation<BudgetDetail, Error, ReplaceBudgetLinesInput>({
+  return useAuthorizedMutation<BudgetDetail, Error, ReplaceBudgetLinesInput>("accounting:budgets:update", {
     mutationKey: ["accounting", "planning", "budgets", id, "lines"],
     mutationFn: (data) => apiClient.put<BudgetDetail>(`/accounting/budgets/${id}/lines`, data),
     onSuccess: () => {
@@ -120,7 +121,7 @@ export function useReplaceBudgetLines(id: number) {
 
 export function useSubmitBudget(id: number) {
   const queryClient = useQueryClient();
-  return useMutation<BudgetDetail, Error, BudgetWorkflowInput>({
+  return useAuthorizedMutation<BudgetDetail, Error, BudgetWorkflowInput>("accounting:budgets:update", {
     mutationKey: ["accounting", "planning", "budgets", id, "submit"],
     mutationFn: (data) => apiClient.post<BudgetDetail>(`/accounting/budgets/${id}/submit`, data),
     onSuccess: () => {
@@ -131,7 +132,7 @@ export function useSubmitBudget(id: number) {
 
 export function useApproveBudget(id: number) {
   const queryClient = useQueryClient();
-  return useMutation<BudgetDetail, Error, BudgetWorkflowInput>({
+  return useAuthorizedMutation<BudgetDetail, Error, BudgetWorkflowInput>("accounting:budgets:approve", {
     mutationKey: ["accounting", "planning", "budgets", id, "approve"],
     mutationFn: (data) => apiClient.post<BudgetDetail>(`/accounting/budgets/${id}/approve`, data),
     onSuccess: () => {
@@ -152,7 +153,7 @@ export function useBudgetRevisions(id: number) {
 
 export function useDuplicateBudget(id: number) {
   const queryClient = useQueryClient();
-  return useMutation<BudgetSummary, Error, DuplicateBudgetInput>({
+  return useAuthorizedMutation<BudgetSummary, Error, DuplicateBudgetInput>("accounting:budgets:create", {
     mutationKey: ["accounting", "planning", "budgets", id, "duplicate"],
     mutationFn: (data) => apiClient.post<BudgetSummary>(`/accounting/budgets/${id}/duplicate`, data),
     onSuccess: () => {
@@ -200,7 +201,7 @@ export function useScenarios() {
   const can = useCan("accounting:forecast:read");
   return useQuery<ListResponse<Scenario>, Error>({
     queryKey: planningKeys.scenarios(),
-    queryFn: ({ signal }) => apiClient.get<ListResponse<Scenario>>("/accounting/scenarios"),
+    queryFn: ({ signal }) => apiClient.get<ListResponse<Scenario>>("/accounting/scenarios", undefined, signal),
     staleTime: 60_000,
     enabled: can,
   });
@@ -208,7 +209,7 @@ export function useScenarios() {
 
 export function useCreateScenario() {
   const queryClient = useQueryClient();
-  return useMutation<Scenario, Error, CreateScenarioInput>({
+  return useAuthorizedMutation<Scenario, Error, CreateScenarioInput>("accounting:forecast:manage", {
     mutationKey: ["accounting", "planning", "scenarios", "create"],
     mutationFn: (data) => apiClient.post<Scenario>("/accounting/scenarios", data),
     onSuccess: () => {
@@ -219,7 +220,7 @@ export function useCreateScenario() {
 
 export function useUpdateScenario(id: number) {
   const queryClient = useQueryClient();
-  return useMutation<Scenario, Error, UpdateScenarioInput>({
+  return useAuthorizedMutation<Scenario, Error, UpdateScenarioInput>("accounting:forecast:manage", {
     mutationKey: ["accounting", "planning", "scenarios", id, "update"],
     mutationFn: (data) => apiClient.patch<Scenario>(`/accounting/scenarios/${id}`, data),
     onSuccess: () => {
@@ -231,7 +232,7 @@ export function useUpdateScenario(id: number) {
 
 export function useDeleteScenario(id: number) {
   const queryClient = useQueryClient();
-  return useMutation<void, Error, void>({
+  return useAuthorizedMutation<void, Error, void>("accounting:forecast:manage", {
     mutationKey: ["accounting", "planning", "scenarios", id, "delete"],
     mutationFn: () => apiClient.delete<void>(`/accounting/scenarios/${id}`),
     onSuccess: () => {
@@ -242,7 +243,7 @@ export function useDeleteScenario(id: number) {
 
 export function useSeedDefaultScenarios() {
   const queryClient = useQueryClient();
-  return useMutation<{ seeded: number }, Error, void>({
+  return useAuthorizedMutation<{ seeded: number }, Error, void>("accounting:forecast:manage", {
     mutationKey: ["accounting", "planning", "scenarios", "seed"],
     mutationFn: () => apiClient.post<{ seeded: number }>("/accounting/scenarios/seed-defaults", {}),
     onSuccess: () => {

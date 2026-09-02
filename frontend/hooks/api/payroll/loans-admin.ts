@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type LoanStatus = "PENDING" | "APPROVED" | "ACTIVE" | "REPAID" | "REJECTED";
 
@@ -47,7 +48,7 @@ interface UpdateLoanStatusInput {
 
 export function useUpdateLoanStatus() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:payroll:view", {
     mutationKey: ["hr", "loans", "update-status"],
     mutationFn: ({ loanId, status }: UpdateLoanStatusInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/loans/${loanId}`, { status }),

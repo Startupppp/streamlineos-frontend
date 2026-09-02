@@ -12,6 +12,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import type { CursorPage, PeriodStatus, TimesheetPeriod } from "@/features/timesheets/types";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface ApprovalsQuery {
   status?: PeriodStatus;
@@ -32,10 +33,10 @@ export function useApprovals(query: ApprovalsQuery = {}, enabled = true) {
   };
   return useInfiniteQuery<CursorPage<TimesheetPeriod>>({
     queryKey: queryKeys.timesheets.approvals(filters),
-    queryFn: ({ pageParam }) => {
+    queryFn: ({ pageParam , signal }) => {
       const params: Record<string, unknown> = { ...filters };
       if (typeof pageParam === "string") params.cursor = pageParam;
-      return apiClient.get<CursorPage<TimesheetPeriod>>("/timesheets/approvals", params);
+      return apiClient.get<CursorPage<TimesheetPeriod>>("/timesheets/approvals", params, signal);
     },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
@@ -61,7 +62,7 @@ function patchPeriodAcrossPages(
 
 export function useApprovePeriod() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:approvals:manage", {
     mutationKey: ["timesheets", "approvals", "approve"],
     mutationFn: (periodId: number) =>
       apiClient.post<TimesheetPeriod>(`/timesheets/approvals/${periodId}/approve`),
@@ -97,7 +98,7 @@ export function useApprovePeriod() {
 
 export function useRejectPeriod() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:approvals:manage", {
     mutationKey: ["timesheets", "approvals", "reject"],
     mutationFn: ({ periodId, reason }: { periodId: number; reason: string }) =>
       apiClient.post<TimesheetPeriod>(`/timesheets/approvals/${periodId}/reject`, { reason }),
@@ -134,7 +135,7 @@ export function useRejectPeriod() {
 
 export function useBulkApprove() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:approvals:manage", {
     mutationKey: ["timesheets", "approvals", "bulk-approve"],
     mutationFn: (periodIds: number[]) =>
       apiClient.post<{ approved: number }>("/timesheets/approvals/bulk-approve", { periodIds }),
@@ -149,7 +150,7 @@ export function useBulkApprove() {
 
 export function useBulkReject() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:approvals:manage", {
     mutationKey: ["timesheets", "approvals", "bulk-reject"],
     mutationFn: ({ periodIds, reason }: { periodIds: number[]; reason: string }) =>
       apiClient.post<{ rejected: number }>("/timesheets/approvals/bulk-reject", { periodIds, reason }),

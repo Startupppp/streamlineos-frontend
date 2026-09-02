@@ -18,6 +18,7 @@ import type {
   UpdatePolicyInput,
 } from "@/types/accounting/expenses";
 import type { ExpenseWithRelations, ExpenseStats, ExpenseCategoryRecord } from "@/types/hr/expenses";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const expenseKeys = {
   all: [...queryKeys.accounting.all, "expenses"] as const,
@@ -78,7 +79,7 @@ export function useReceiptInbox(params: ReceiptInboxParams = {}) {
   return useQuery<ListResponse<FinReceiptInboxItem>, Error>({
     queryKey: expenseKeys.receipts(params),
     queryFn: ({ signal }) =>
-      apiClient.get<ListResponse<FinReceiptInboxItem>>("/accounting/expenses/receipts", toQuery(params)),
+      apiClient.get<ListResponse<FinReceiptInboxItem>>("/accounting/expenses/receipts", toQuery(params), signal),
     staleTime: 30_000,
     enabled: can,
   });
@@ -86,7 +87,7 @@ export function useReceiptInbox(params: ReceiptInboxParams = {}) {
 
 export function usePatchReceiptMetadata(expenseId: number) {
   const qc = useQueryClient();
-  return useMutation<{ success: boolean }, Error, PatchReceiptInput>({
+  return useAuthorizedMutation<{ success: boolean }, Error, PatchReceiptInput>("accounting:reimbursements:manage", {
     mutationKey: ["accounting", "expenses", "receipts", "patch", expenseId],
     mutationFn: (data) =>
       apiClient.patch<{ success: boolean }>(`/accounting/expenses/receipts/${expenseId}`, data),
@@ -108,7 +109,7 @@ export function useReimbursementBatches(params: BatchListParams = {}) {
   return useQuery<ListResponse<FinReimbursementBatch>, Error>({
     queryKey: expenseKeys.batches(params),
     queryFn: ({ signal }) =>
-      apiClient.get<ListResponse<FinReimbursementBatch>>("/accounting/reimbursements", toQuery(params)),
+      apiClient.get<ListResponse<FinReimbursementBatch>>("/accounting/reimbursements", toQuery(params), signal),
     staleTime: 30_000,
     enabled: can,
   });
@@ -127,7 +128,7 @@ export function useReimbursementBatch(batchId: number) {
 
 export function useCreateReimbursementBatch() {
   const qc = useQueryClient();
-  return useMutation<FinReimbursementBatch, Error, CreateBatchInput>({
+  return useAuthorizedMutation<FinReimbursementBatch, Error, CreateBatchInput>("accounting:reimbursements:manage", {
     mutationKey: ["accounting", "expenses", "batches", "create"],
     mutationFn: (data) =>
       apiClient.post<FinReimbursementBatch>("/accounting/reimbursements", data),
@@ -141,7 +142,7 @@ export function useCreateReimbursementBatch() {
 
 export function useApproveBatch(batchId: number) {
   const qc = useQueryClient();
-  return useMutation<{ success: boolean }, Error, void>({
+  return useAuthorizedMutation<{ success: boolean }, Error, void>("accounting:reimbursements:approve", {
     mutationKey: ["accounting", "expenses", "batches", "approve", batchId],
     mutationFn: () =>
       apiClient.post<{ success: boolean }>(`/accounting/reimbursements/${batchId}/approve`),
@@ -154,7 +155,7 @@ export function useApproveBatch(batchId: number) {
 
 export function usePayBatch(batchId: number) {
   const qc = useQueryClient();
-  return useMutation<{ success: boolean; entryId?: number }, Error, PayBatchInput>({
+  return useAuthorizedMutation<{ success: boolean; entryId?: number }, Error, PayBatchInput>("accounting:reimbursements:manage", {
     mutationKey: ["accounting", "expenses", "batches", "pay", batchId],
     mutationFn: (data) =>
       apiClient.post<{ success: boolean; entryId?: number }>(`/accounting/reimbursements/${batchId}/pay`, data),
@@ -195,7 +196,7 @@ export function useExpensePolicies() {
 
 export function useCreateExpensePolicy() {
   const qc = useQueryClient();
-  return useMutation<FinExpensePolicy, Error, CreatePolicyInput>({
+  return useAuthorizedMutation<FinExpensePolicy, Error, CreatePolicyInput>("accounting:reimbursements:manage", {
     mutationKey: ["accounting", "expenses", "policies", "create"],
     mutationFn: (data) => apiClient.post<FinExpensePolicy>("/accounting/expenses/policies", data),
     onSuccess: () => {
@@ -206,7 +207,7 @@ export function useCreateExpensePolicy() {
 
 export function useUpdateExpensePolicy(policyId: number) {
   const qc = useQueryClient();
-  return useMutation<{ success: boolean }, Error, UpdatePolicyInput>({
+  return useAuthorizedMutation<{ success: boolean }, Error, UpdatePolicyInput>("accounting:reimbursements:manage", {
     mutationKey: ["accounting", "expenses", "policies", "update", policyId],
     mutationFn: (data) =>
       apiClient.patch<{ success: boolean }>(`/accounting/expenses/policies/${policyId}`, data),
@@ -218,7 +219,7 @@ export function useUpdateExpensePolicy(policyId: number) {
 
 export function useDeleteExpensePolicy(policyId: number) {
   const qc = useQueryClient();
-  return useMutation<{ success: boolean }, Error, void>({
+  return useAuthorizedMutation<{ success: boolean }, Error, void>("accounting:reimbursements:manage", {
     mutationKey: ["accounting", "expenses", "policies", "delete", policyId],
     mutationFn: () =>
       apiClient.delete<{ success: boolean }>(`/accounting/expenses/policies/${policyId}`),
@@ -240,7 +241,7 @@ export function useFinBankAccounts() {
 
 export function useApproveExpense(expenseId: number) {
   const qc = useQueryClient();
-  return useMutation<{ success: boolean }, Error, void>({
+  return useAuthorizedMutation<{ success: boolean }, Error, void>("hr:expenses:approve", {
     mutationKey: ["hr", "expenses", "approve", expenseId],
     mutationFn: () =>
       apiClient.post<{ success: boolean }>(`/hr/expenses/${expenseId}/approve`),
@@ -252,7 +253,7 @@ export function useApproveExpense(expenseId: number) {
 
 export function useRejectExpense(expenseId: number) {
   const qc = useQueryClient();
-  return useMutation<{ success: boolean }, Error, { rejectionReason: string }>({
+  return useAuthorizedMutation<{ success: boolean }, Error, { rejectionReason: string }>("hr:expenses:approve", {
     mutationKey: ["hr", "expenses", "reject", expenseId],
     mutationFn: (data) =>
       apiClient.post<{ success: boolean }>(`/hr/expenses/${expenseId}/reject`, data),

@@ -8,6 +8,7 @@ import type {
   TicketCustomFieldValue,
   CustomFieldType,
 } from "@/types/projects/tasks";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 function customFieldKeys(projectId: number) {
   return ["projects", projectId, "custom-fields"] as const;
@@ -30,7 +31,7 @@ export function useProjectCustomFields(projectId: number) {
 
 export function useCreateProjectCustomField(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "custom-fields", "create"],
     mutationFn: (data: {
       name: string;
@@ -49,7 +50,7 @@ export function useCreateProjectCustomField(projectId: number) {
 
 export function useDeleteProjectCustomField(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "custom-fields", "delete"],
     mutationFn: (fieldId: number) =>
       apiClient.delete(`/build/${projectId}/custom-fields/${fieldId}`),
@@ -64,7 +65,7 @@ export function useTicketCustomFieldValues(projectId: number, ticketId: number) 
     queryKey: ticketCustomFieldValueKeys(projectId, ticketId),
     queryFn: ({ signal }) =>
       apiClient.get<TicketCustomFieldValue[]>(
-        `/build/${projectId}/tickets/${ticketId}/custom-field-values`, signal,
+        `/build/${projectId}/tickets/${ticketId}/custom-field-values`, undefined, signal,
       ),
     enabled: canView && !!projectId && !!ticketId,
     staleTime: 30_000,
@@ -76,7 +77,7 @@ export function useUpsertTicketCustomFieldValues(
   ticketId: number,
 ) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: [
       "projects",
       projectId,

@@ -1,14 +1,15 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { invalidatePersonAccountAccess } from "./cache";
 import type { BulkActionResult, BulkUpdatePayload } from "./types";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 function useBulkLifecycleMutation(endpoint: string, mutationKey: string) {
   const queryClient = useQueryClient();
-  return useMutation<BulkActionResult, Error, { userIds: string[]; reason?: string }>({
+  return useAuthorizedMutation<BulkActionResult, Error, { userIds: string[]; reason?: string }>("settings:organization:manage", {
     mutationKey: ["bulk", mutationKey],
     mutationFn: (payload) => apiClient.post<BulkActionResult>(endpoint, payload),
     onSuccess: () => {
@@ -30,7 +31,7 @@ export const useBulkRestore = () =>
 
 export const useBulkUpdateUsers = () => {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean; updated: number }, Error, BulkUpdatePayload>({
+  return useAuthorizedMutation<{ success: boolean; updated: number }, Error, BulkUpdatePayload>("settings:organization:manage", {
     mutationKey: ["bulk", "update", "users"],
     mutationFn: (payload) =>
       apiClient.post<{ success: boolean; updated: number }>("/users/bulk-update", payload),
@@ -41,7 +42,7 @@ export const useBulkUpdateUsers = () => {
 };
 
 export const useSendSigninLink = () => {
-  return useMutation<{ success: boolean; email: string }, Error, string>({
+  return useAuthorizedMutation<{ success: boolean; email: string }, Error, string>("settings:organization:manage", {
     mutationKey: ["send", "signin", "link"],
     mutationFn: (userId) =>
       apiClient.post<{ success: boolean; email: string }>(
@@ -53,11 +54,11 @@ export const useSendSigninLink = () => {
 
 export const useUpdateUserRole = () => {
   const queryClient = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     { success: boolean; userId: string; role: string },
     Error,
     { userId: string; role: string }
-  >({
+  >("settings:rbac:manage", {
     mutationKey: ["users", "update-role"],
     mutationFn: ({ userId, role }) =>
       apiClient.post<{ success: boolean; userId: string; role: string }>(

@@ -4,7 +4,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import type { Invoice, InvoiceItem, InvoiceStats, InvoiceStatus, Payment, PaymentMethod } from "@/types/invoice";
+import type { Invoice, InvoiceItem, InvoiceStats, InvoiceStatus, PatchableInvoiceStatus, Payment, PaymentMethod } from "@/types/invoice";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface InvoicesResponse {
   items: Invoice[];
@@ -48,7 +49,7 @@ interface CreateInvoiceInput {
 
 interface UpdateInvoiceInput extends Partial<Omit<CreateInvoiceInput, "status">> {
   id: number;
-  status?: InvoiceStatus;
+  status?: PatchableInvoiceStatus;
 }
 
 export const useInvoices = (
@@ -104,7 +105,7 @@ export const useInvoiceStats = (
 
 export const useCreateInvoice = () => {
   const queryClient = useQueryClient();
-  return useMutation<Invoice, Error, CreateInvoiceInput>({
+  return useAuthorizedMutation<Invoice, Error, CreateInvoiceInput>("accounting:create", {
     mutationKey: ["create", "invoice"],
     mutationFn: (data) => apiClient.post<Invoice>("/invoices", data),
     onSuccess: () => {
@@ -115,14 +116,29 @@ export const useCreateInvoice = () => {
 
 export const useUpdateInvoice = () => {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, UpdateInvoiceInput>({
+  return useAuthorizedMutation<{ success: boolean }, Error, UpdateInvoiceInput>("accounting:update", {
     mutationKey: ["update", "invoice"],
     mutationFn: ({ id, ...data }) =>
       apiClient.patch<{ success: boolean }>(`/invoices/${id}`, data),
     onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.invoice.detail(vars.id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.invoice.stats() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.invoice.detail(vars.id) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.invoice.stats() });
+    },
+  });
+};
+
+export const useVoidInvoice = () => {
+  const queryClient = useQueryClient();
+  return useAuthorizedMutation<{ success: boolean }, Error, number>("accounting:manage", {
+    mutationKey: ["void", "invoice"],
+    mutationFn: (id) =>
+      apiClient.post<{ success: boolean }>(`/invoices/${id}/void`),
+    onSuccess: (_, id) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.invoice.detail(id) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.invoice.stats() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
     },
   });
 };
@@ -150,7 +166,7 @@ interface RecordPaymentInput {
 
 export const useRecordPayment = () => {
   const queryClient = useQueryClient();
-  return useMutation<Payment, Error, RecordPaymentInput>({
+  return useAuthorizedMutation<Payment, Error, RecordPaymentInput>("accounting:create", {
     mutationKey: ["record", "payment"],
     mutationFn: ({ invoiceId, ...data }) =>
       apiClient.post<Payment>(`/invoices/${invoiceId}/payments`, data),

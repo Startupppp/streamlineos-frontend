@@ -9,6 +9,7 @@ import type {
   CreateRiskInput, UpdateRiskInput,
   CreateDecisionInput, UpdateDecisionInput,
 } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface ListFilters {
   status?: string;
@@ -32,7 +33,7 @@ export function useProjectRisks(projectId: number, filters?: ListFilters) {
 
 export function useCreateRisk(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:risks:manage", {
     mutationKey: ["projects", projectId, "risks", "create"],
     mutationFn: (data: CreateRiskInput) =>
       apiClient.post<Risk>(`/build/${projectId}/risks`, data),
@@ -44,7 +45,7 @@ export function useCreateRisk(projectId: number) {
 
 export function useUpdateRisk(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:timesheets:manage", {
     mutationKey: ["projects", projectId, "risks", "update"],
     mutationFn: ({ id, ...data }: UpdateRiskInput & { id: number }) =>
       apiClient.patch<Risk>(`/build/${projectId}/risks/${id}`, data),
@@ -57,7 +58,7 @@ export function useUpdateRisk(projectId: number) {
 
 export function useDeleteRisk(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:risks:manage", {
     mutationKey: ["projects", projectId, "risks", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/build/${projectId}/risks/${id}`),
@@ -85,7 +86,7 @@ export function useProjectDecisions(projectId: number, filters?: ListFilters) {
 
 export function useCreateDecision(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:decisions:manage", {
     mutationKey: ["projects", projectId, "decisions", "create"],
     mutationFn: (data: CreateDecisionInput) =>
       apiClient.post<Decision>(`/build/${projectId}/decisions`, data),
@@ -97,7 +98,7 @@ export function useCreateDecision(projectId: number) {
 
 export function useUpdateDecision(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:timesheets:manage", {
     mutationKey: ["projects", projectId, "decisions", "update"],
     mutationFn: ({ id, ...data }: UpdateDecisionInput & { id: number }) =>
       apiClient.patch<Decision>(`/build/${projectId}/decisions/${id}`, data),
@@ -110,7 +111,7 @@ export function useUpdateDecision(projectId: number) {
 
 export function useDeleteDecision(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:decisions:manage", {
     mutationKey: ["projects", projectId, "decisions", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/build/${projectId}/decisions/${id}`),

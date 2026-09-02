@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type WhiteboardVisibility = "project" | "private" | "public";
 export type WhiteboardShareRole = "viewer" | "editor";
@@ -98,7 +99,7 @@ export function useWhiteboard(projectId: number, whiteboardId: number | null) {
 
 export function useCreateWhiteboard(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:whiteboards:manage", {
     mutationKey: ["projects", "whiteboards", "create"],
     mutationFn: (name: string) =>
       apiClient.post<WhiteboardDetail>(`/build/${projectId}/whiteboards`, { name }),
@@ -108,7 +109,7 @@ export function useCreateWhiteboard(projectId: number) {
 
 export function useUpdateWhiteboard(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:timesheets:manage", {
     mutationKey: ["projects", "whiteboards", "update"],
     mutationFn: ({ id, ...input }: UpdateWhiteboardInput) =>
       apiClient.patch<WhiteboardDetail>(`/build/${projectId}/whiteboards/${id}`, input),
@@ -121,7 +122,7 @@ export function useUpdateWhiteboard(projectId: number) {
 
 export function useDeleteWhiteboard(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:whiteboards:manage", {
     mutationKey: ["projects", "whiteboards", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/build/${projectId}/whiteboards/${id}`),
@@ -131,7 +132,7 @@ export function useDeleteWhiteboard(projectId: number) {
 
 export function useUpdateWhiteboardSharing(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:whiteboards:manage", {
     mutationKey: ["projects", "whiteboards", "sharing"],
     mutationFn: ({ id, ...input }: UpdateWhiteboardSharingInput) =>
       apiClient.patch<WhiteboardSharing>(
@@ -147,7 +148,7 @@ export function useUpdateWhiteboardSharing(projectId: number) {
 
 export function useRotateWhiteboardShareToken(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:whiteboards:manage", {
     mutationKey: ["projects", "whiteboards", "rotate-token"],
     mutationFn: (id: number) =>
       apiClient.post<WhiteboardSharing>(
@@ -162,7 +163,7 @@ export function useRotateWhiteboardShareToken(projectId: number) {
 
 export function useSetWhiteboardShares(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:whiteboards:manage", {
     mutationKey: ["projects", "whiteboards", "set-shares"],
     mutationFn: ({ id, shares }: SetWhiteboardSharesInput) =>
       apiClient.put<WhiteboardShareEntry[]>(
@@ -177,7 +178,7 @@ export function useSetWhiteboardShares(projectId: number) {
 
 export function useRemoveWhiteboardShare(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:whiteboards:manage", {
     mutationKey: ["projects", "whiteboards", "remove-share"],
     mutationFn: ({ id, userId }: { id: number; userId: string }) =>
       apiClient.delete<{ success: boolean }>(

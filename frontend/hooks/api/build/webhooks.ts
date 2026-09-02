@@ -5,6 +5,7 @@ import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { ProjectWebhook, WebhookDelivery } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 export type { ProjectWebhook, WebhookDelivery } from "@/types/projects";
 
 export function useWebhooks(projectId: number) {
@@ -29,7 +30,7 @@ export function useWebhookDeliveries(projectId: number, webhookId: number, enabl
 
 export function useCreateWebhook(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "webhooks", "create"],
     mutationFn: (data: { url: string; events: string[]; secret?: string }) =>
       apiClient.post<ProjectWebhook>(`/build/${projectId}/webhooks`, data),
@@ -39,7 +40,7 @@ export function useCreateWebhook(projectId: number) {
 
 export function useDeleteWebhook(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "webhooks", "delete"],
     mutationFn: (webhookId: number) =>
       apiClient.delete(`/build/${projectId}/webhooks/${webhookId}`),
@@ -49,7 +50,7 @@ export function useDeleteWebhook(projectId: number) {
 
 export function useSendTestWebhook(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "webhooks", "test"],
     mutationFn: (webhookId: number) =>
       apiClient.post<{ success: boolean; responseCode: number | null }>(

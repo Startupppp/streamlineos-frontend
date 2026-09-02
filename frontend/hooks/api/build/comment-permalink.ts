@@ -39,7 +39,7 @@ export function commentPermalinkQueryOptions(
     queryKey: queryKeys.projects.commentPermalinkWithComment(projectId, ticketId, commentId),
     queryFn: ({ signal }) =>
       apiClient.get<CommentPermalinkData>(
-        `/build/${projectId}/tickets/${ticketId}/comments/${commentId}`, signal,
+        `/build/${projectId}/tickets/${ticketId}/comments/${commentId}`, undefined, signal,
       ),
     staleTime: 60_000,
     retry: false,

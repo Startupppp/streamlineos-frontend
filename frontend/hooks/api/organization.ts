@@ -6,6 +6,7 @@ import { apiClient, setAutoSignOutSuppressed } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { OrgSettings, OrgMember } from "@/types/organization";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface MembersResponse {
   data: OrgMember[];
@@ -90,7 +91,7 @@ export const useOrgMembersByIds = (
 
 export const useRemoveOrgMember = () => {
   const queryClient = useQueryClient();
-  return useMutation<void, Error, string>({
+  return useAuthorizedMutation<void, Error, string>("settings:manage", {
     mutationKey: ["organization", "remove-member"],
     mutationFn: (userId) => apiClient.delete<void>(`/organization/members/${userId}`),
     onSuccess: () => {
@@ -105,7 +106,7 @@ export const useRemoveOrgMember = () => {
 
 export const useUpdateOrgSettings = () => {
   const queryClient = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     { success: boolean },
     Error,
     {
@@ -140,7 +141,7 @@ export const useUpdateOrgSettings = () => {
       companySize?: string | null;
       country?: string | null;
     }
-  >({
+  >("settings:manage", {
     mutationKey: ["organization", "settings", "update"],
     mutationFn: (data) =>
       apiClient.patch<{ success: boolean }>("/organization/settings", data),
@@ -164,7 +165,7 @@ export interface UpdateOrgSecurityInput {
 
 export const useUpdateOrgSecurity = () => {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, UpdateOrgSecurityInput>({
+  return useAuthorizedMutation<{ success: boolean }, Error, UpdateOrgSecurityInput>("settings:manage", {
     mutationKey: ["organization", "security", "update"],
     mutationFn: (data) =>
       apiClient.patch<{ success: boolean }>("/organization/security", data),
@@ -200,11 +201,11 @@ export const useArchivedOrganizations = (
 };
 
 export const useArchiveOrg = () => {
-  return useMutation<
+  return useAuthorizedMutation<
     { success: boolean; nextOrgId: string | null },
     Error,
     void
-  >({
+  >("settings:manage", {
     mutationKey: ["archive", "org"],
     mutationFn: () =>
       apiClient.post<{ success: boolean; nextOrgId: string | null }>(
@@ -291,11 +292,11 @@ export const useLeaveOrg = () => {
 };
 
 export const useDeleteOrg = () => {
-  return useMutation<
+  return useAuthorizedMutation<
     { success: true; nextOrgId: string | null },
     Error,
     { confirmation: string }
-  >({
+  >("settings:manage", {
     mutationKey: ["organization", "delete"],
     mutationFn: (data) =>
       apiClient.delete<{ success: true; nextOrgId: string | null }>(

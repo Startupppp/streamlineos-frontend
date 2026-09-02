@@ -1,5 +1,6 @@
-export const coreKeys = {
-  all: ["streamlineos", "accounting", "core"] as const,
+
+import { queryKeyBase } from "@/lib/query-keys/base";export const coreKeys = {
+  all: [...queryKeyBase, "accounting", "core"] as const,
   coaTree: () => [...coreKeys.all, "coa-tree"] as const,
   coaTemplates: () => [...coreKeys.all, "coa-templates"] as const,
   setupStatus: () => [...coreKeys.all, "setup-status"] as const,

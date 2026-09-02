@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type KbPageTemplate = {
   id: number;
@@ -35,7 +36,7 @@ export function useKbPageTemplates() {
 
 export function useCreateKbPageTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:templates:manage", {
     mutationKey: ["kb", "pageTemplates", "create"],
     mutationFn: (input: CreateKbPageTemplateInput) =>
       apiClient.post<KbPageTemplate>("/kb/page-templates", input),
@@ -47,7 +48,7 @@ export function useCreateKbPageTemplate() {
 
 export function useDeleteKbPageTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:templates:manage", {
     mutationKey: ["kb", "pageTemplates", "delete"],
     mutationFn: (templateId: number) =>
       apiClient.delete<void>(`/kb/page-templates/${templateId}`),

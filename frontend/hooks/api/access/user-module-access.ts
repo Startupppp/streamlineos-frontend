@@ -3,6 +3,8 @@
 import { useCan } from "@/hooks/api/access";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { queryKeyBase } from "@/lib/query-keys/base";
 
 export interface UserModuleAccess {
   moduleKey: string;
@@ -11,7 +13,7 @@ export interface UserModuleAccess {
 }
 
 const userModuleAccessKey = (userId: string) =>
-  ["streamlineos", "access", "user-module-access", userId] as const;
+  [...queryKeyBase, "access", "user-module-access", userId] as const;
 
 export function useUserModuleAccess(userId: string, enabled = true) {
   const canViewEmployees = useCan("settings:view");
@@ -26,7 +28,7 @@ export function useUserModuleAccess(userId: string, enabled = true) {
 
 export function useSetUserModuleAccess(userId: string) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["access", "user-module-access", "set", userId],
     mutationFn: (variables: { moduleKey: string; enabled: boolean }) =>
       apiClient.patch<UserModuleAccess[]>(

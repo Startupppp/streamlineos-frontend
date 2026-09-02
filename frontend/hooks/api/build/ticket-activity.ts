@@ -37,7 +37,7 @@ export function useTicketActivity(projectId: number, ticketId: number) {
     queryKey: queryKeys.ticketActivity.list(ticketId),
     queryFn: ({ signal }) =>
       apiClient.get<TicketActivityEntry[]>(
-        `/build/${projectId}/tickets/${ticketId}/activity`, signal,
+        `/build/${projectId}/tickets/${ticketId}/activity`, undefined, signal,
       ),
     enabled: canView && !!projectId && !!ticketId,
     staleTime: 30_000,

@@ -24,6 +24,7 @@ import type {
   VendorLedger,
   VendorOutstanding,
 } from "@/types/accounting";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface ListResponse<T> {
   items: T[];
@@ -73,7 +74,7 @@ export function useAccounts(params: ListAccountsParams = {}) {
   return useQuery<CursorResponse<Account>, Error>({
     queryKey: queryKeys.accounting.accounts(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorResponse<Account>>("/accounting/accounts", toQuery(params)),
+      apiClient.get<CursorResponse<Account>>("/accounting/accounts", toQuery(params), signal),
     staleTime: 60_000,
   });
 }
@@ -87,7 +88,7 @@ interface CreateAccountInput {
 
 export function useCreateAccount() {
   const queryClient = useQueryClient();
-  return useMutation<Account, Error, CreateAccountInput>({
+  return useAuthorizedMutation<Account, Error, CreateAccountInput>("accounting:accounts:create", {
     mutationKey: ["create", "account"],
     mutationFn: (data) => apiClient.post<Account>("/accounting/accounts", data),
     onSuccess: () => {
@@ -104,7 +105,7 @@ interface UpdateAccountInput {
 
 export function useUpdateAccount(accountId: number) {
   const queryClient = useQueryClient();
-  return useMutation<Account, Error, UpdateAccountInput>({
+  return useAuthorizedMutation<Account, Error, UpdateAccountInput>("accounting:accounts:update", {
     mutationKey: ["update", "account"],
     mutationFn: (data) => apiClient.patch<Account>(`/accounting/accounts/${accountId}`, data),
     onSuccess: () => {
@@ -127,7 +128,7 @@ export function useJournal(params: ListJournalParams = {}) {
   return useQuery<CursorResponse<JournalEntry>, Error>({
     queryKey: queryKeys.accounting.journal(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorResponse<JournalEntry>>("/accounting/journal", toQuery(params)),
+      apiClient.get<CursorResponse<JournalEntry>>("/accounting/journal", toQuery(params), signal),
     staleTime: 30_000,
     enabled: can,
   });
@@ -150,7 +151,7 @@ interface ReverseJournalEntryResult {
 
 export function useReverseJournalEntry(entryId: number) {
   const queryClient = useQueryClient();
-  return useMutation<ReverseJournalEntryResult, Error, void>({
+  return useAuthorizedMutation<ReverseJournalEntryResult, Error, void>("accounting:journal:manage", {
     mutationKey: ["reverse", "journal", "entry"],
     mutationFn: () =>
       apiClient.post<ReverseJournalEntryResult>(`/accounting/journal/${entryId}/reverse`),
@@ -183,7 +184,7 @@ interface CreateJournalEntryResult {
 
 export function useCreateJournalEntry() {
   const queryClient = useQueryClient();
-  return useMutation<CreateJournalEntryResult, Error, CreateJournalEntryInput>({
+  return useAuthorizedMutation<CreateJournalEntryResult, Error, CreateJournalEntryInput>("accounting:journal:manage", {
     mutationKey: ["create", "journal", "entry"],
     mutationFn: (input) => apiClient.post<CreateJournalEntryResult>("/accounting/journal", input),
     onSuccess: () => {
@@ -200,7 +201,7 @@ interface PostJournalEntryResult {
 
 export function usePostJournalEntry(entryId: number) {
   const queryClient = useQueryClient();
-  return useMutation<PostJournalEntryResult, Error, void>({
+  return useAuthorizedMutation<PostJournalEntryResult, Error, void>("accounting:journal:manage", {
     mutationKey: ["post", "journal", "entry"],
     mutationFn: () => apiClient.post<PostJournalEntryResult>(`/accounting/journal/${entryId}/post`),
     onSuccess: () => {
@@ -279,7 +280,7 @@ export function useCustomersOutstanding(params: ListCustomersOutstandingParams =
   return useQuery<CursorPage<CustomerOutstanding>, Error>({
     queryKey: queryKeys.accounting.customersOutstanding(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<CustomerOutstanding>>("/accounting/customers", toQuery(params)),
+      apiClient.get<CursorPage<CustomerOutstanding>>("/accounting/customers", toQuery(params), signal),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   });
@@ -339,7 +340,7 @@ export function usePurchaseBills(params: ListPurchaseBillsParams = {}) {
   return useQuery<CursorResponse<PurchaseBillSummary>, Error>({
     queryKey: queryKeys.accounting.purchaseBills(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorResponse<PurchaseBillSummary>>("/accounting/purchase-bills", toQuery(params)),
+      apiClient.get<CursorResponse<PurchaseBillSummary>>("/accounting/purchase-bills", toQuery(params), signal),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   });
@@ -386,7 +387,7 @@ interface PurchaseBillCreateResult {
 
 export function useCreatePurchaseBill() {
   const queryClient = useQueryClient();
-  return useMutation<PurchaseBillCreateResult, Error, CreatePurchaseBillInput>({
+  return useAuthorizedMutation<PurchaseBillCreateResult, Error, CreatePurchaseBillInput>("accounting:journal:manage", {
     mutationKey: ["create", "purchase", "bill"],
     mutationFn: (input) => apiClient.post<PurchaseBillCreateResult>("/accounting/purchase-bills", input),
     onSuccess: () => {
@@ -397,7 +398,7 @@ export function useCreatePurchaseBill() {
 
 export function usePostPurchaseBill(billId: number) {
   const queryClient = useQueryClient();
-  return useMutation<{ id: number; status: PurchaseBillStatus }, Error, void>({
+  return useAuthorizedMutation<{ id: number; status: PurchaseBillStatus }, Error, void>("accounting:journal:manage", {
     mutationKey: ["post", "purchase", "bill"],
     mutationFn: () =>
       apiClient.patch<{ id: number; status: PurchaseBillStatus }>(`/accounting/purchase-bills/${billId}`, { status: "POSTED" }),
@@ -428,7 +429,7 @@ export function useVendorsOutstanding(params: ListVendorsOutstandingParams = {})
   return useQuery<CursorPage<VendorOutstanding>, Error>({
     queryKey: queryKeys.accounting.vendorsOutstanding(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<VendorOutstanding>>("/accounting/vendors", toQuery(params)),
+      apiClient.get<CursorPage<VendorOutstanding>>("/accounting/vendors", toQuery(params), signal),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   });
@@ -476,7 +477,7 @@ interface VendorPaymentResult {
 
 export function useRecordVendorPayment(billId: number) {
   const queryClient = useQueryClient();
-  return useMutation<VendorPaymentResult, Error, RecordVendorPaymentInput>({
+  return useAuthorizedMutation<VendorPaymentResult, Error, RecordVendorPaymentInput>("accounting:journal:manage", {
     mutationKey: ["record", "vendor", "payment"],
     mutationFn: (input) =>
       apiClient.post<VendorPaymentResult>(`/accounting/purchase-bills/${billId}/payments`, input),

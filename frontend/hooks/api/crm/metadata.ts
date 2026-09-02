@@ -16,6 +16,7 @@ import type {
   CrmBlueprint,
   CrmBlueprintTransition,
 } from "@/types/crm/metadata";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const CRM_METADATA_STALE_TIME = 5 * 60_000;
 
@@ -113,7 +114,7 @@ export function useCrmOptions(type: CrmOptionType) {
 
 export function useCreatePipeline() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "pipelines", "create"] as const,
     mutationFn: (input: Omit<CrmPipelineWithStages, "id" | "stages">) =>
       apiClient.post<CrmPipelineWithStages>("/crm/pipelines", input),
@@ -125,7 +126,7 @@ export function useCreatePipeline() {
 
 export function useUpdatePipeline() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "pipelines", "update"] as const,
     mutationFn: ({ id, ...data }: { id: string } & Partial<Omit<CrmPipelineWithStages, "stages">>) =>
       apiClient.patch<CrmPipelineWithStages>(`/crm/pipelines/${id}`, data),
@@ -137,7 +138,7 @@ export function useUpdatePipeline() {
 
 export function useCreateStage() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "stages", "create"] as const,
     mutationFn: ({
       pipelineId,
@@ -152,7 +153,7 @@ export function useCreateStage() {
 
 export function useUpdateStage() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "stages", "update"] as const,
     mutationFn: ({ id, ...data }: { id: string } & Partial<Omit<CrmPipelineStage, "id">>) =>
       apiClient.patch<CrmPipelineStage>(`/crm/stages/${id}`, data),
@@ -164,7 +165,7 @@ export function useUpdateStage() {
 
 export function useDeleteStage() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "stages", "delete"] as const,
     mutationFn: (id: string) =>
       apiClient.delete<{ success: boolean }>(`/crm/stages/${id}`),
@@ -176,7 +177,7 @@ export function useDeleteStage() {
 
 export function useReorderStages() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "stages", "reorder"] as const,
     mutationFn: ({
       pipelineId,
@@ -197,7 +198,7 @@ export function useReorderStages() {
 
 export function useCreateOption() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "options", "create"] as const,
     mutationFn: ({
       type,
@@ -212,7 +213,7 @@ export function useCreateOption() {
 
 export function useUpdateOption() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "options", "update"] as const,
     mutationFn: ({
       type,
@@ -228,7 +229,7 @@ export function useUpdateOption() {
 
 export function useDeleteOption() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "options", "delete"] as const,
     mutationFn: ({ type, id }: { type: CrmOptionType; id: string }) =>
       apiClient.delete<{ success: boolean }>(`/crm/options/${type}/${id}`),
@@ -249,7 +250,7 @@ export function useValidationRules(params?: Record<string, unknown>) {
 
 export function useCreateValidationRule() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "validationRules", "create"] as const,
     mutationFn: (input: Omit<CrmValidationRule, "id">) =>
       apiClient.post<CrmValidationRule>("/crm/validation-rules", input),
@@ -261,7 +262,7 @@ export function useCreateValidationRule() {
 
 export function useUpdateValidationRule() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "validationRules", "update"] as const,
     mutationFn: ({ id, ...data }: { id: string } & Partial<Omit<CrmValidationRule, "id">>) =>
       apiClient.patch<CrmValidationRule>(`/crm/validation-rules/${id}`, data),
@@ -273,7 +274,7 @@ export function useUpdateValidationRule() {
 
 export function useDeleteValidationRule() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "validationRules", "delete"] as const,
     mutationFn: (id: string) =>
       apiClient.delete<{ success: boolean }>(`/crm/validation-rules/${id}`),
@@ -284,7 +285,7 @@ export function useDeleteValidationRule() {
 }
 
 export function useTestValidationRules() {
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:view", {
     mutationKey: ["crmMetadata", "validationRules", "test"] as const,
     mutationFn: (input: {
       entityType: CrmValidationRule["entityType"];
@@ -306,7 +307,7 @@ export function useBlueprints(params?: Record<string, unknown>) {
 
 export function useCreateBlueprint() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "blueprints", "create"] as const,
     mutationFn: (input: Omit<CrmBlueprint, "id" | "createdAt" | "updatedAt">) =>
       apiClient.post<CrmBlueprint>("/crm/blueprints", input),
@@ -318,7 +319,7 @@ export function useCreateBlueprint() {
 
 export function useUpdateBlueprint() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "blueprints", "update"] as const,
     mutationFn: ({
       id,
@@ -353,7 +354,7 @@ export function useBlueprintTransitions(blueprintId: string | null) {
 
 export function useCreateBlueprintTransition(blueprintId: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "blueprints", blueprintId, "transitions", "create"] as const,
     mutationFn: (input: CreateTransitionInput) =>
       apiClient.post<CrmBlueprintTransition>(`/crm/blueprints/${blueprintId}/transitions`, input),
@@ -365,7 +366,7 @@ export function useCreateBlueprintTransition(blueprintId: string) {
 
 export function useUpdateBlueprintTransition(blueprintId: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "blueprints", blueprintId, "transitions", "update"] as const,
     mutationFn: ({ id, ...data }: { id: string } & UpdateTransitionInput) =>
       apiClient.patch<CrmBlueprintTransition>(
@@ -380,7 +381,7 @@ export function useUpdateBlueprintTransition(blueprintId: string) {
 
 export function useDeleteBlueprintTransition(blueprintId: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:manage", {
     mutationKey: ["crmMetadata", "blueprints", blueprintId, "transitions", "delete"] as const,
     mutationFn: (id: string) =>
       apiClient.delete<{ success: boolean }>(
@@ -393,7 +394,7 @@ export function useDeleteBlueprintTransition(blueprintId: string) {
 }
 
 export function useTestTransition(blueprintId: string) {
-  return useMutation({
+  return useAuthorizedMutation("crm:settings:view", {
     mutationKey: ["crmMetadata", "blueprints", blueprintId, "test"] as const,
     mutationFn: (input: {
       fromStageKey: string;

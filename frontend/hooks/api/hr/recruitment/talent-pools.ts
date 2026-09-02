@@ -73,12 +73,12 @@ export function useDeleteTalentPool() {
 export function usePoolMembers(poolId: number, params?: PoolMembersParams) {
   return useQuery({
     queryKey: [...queryKeys.hr.hrTalentPoolMembersAll(poolId), params] as const,
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const search = new URLSearchParams();
       if (params?.cursor) search.set("cursor", params.cursor);
       if (params?.limit) search.set("limit", String(params.limit));
       const qs = search.toString();
-      return apiClient.get<PaginatedPoolMembers>(`/hr/recruitment/talent-pools/${poolId}/members${qs ? `?${qs}` : ""}`);
+      return apiClient.get<PaginatedPoolMembers>(`/hr/recruitment/talent-pools/${poolId}/members${qs ? `?${qs}` : ""}`, undefined, signal);
     },
     staleTime: 60_000,
     enabled: !!poolId,

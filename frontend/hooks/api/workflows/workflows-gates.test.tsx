@@ -96,7 +96,7 @@ describe("useAllExecutions — permission gate", () => {
     const { useAllExecutions } = await import("../workflows-executions");
     renderHook(() => useAllExecutions(), { wrapper: makeWrapper(client) });
 
-    await waitFor(() => expect(apiClient.get).toHaveBeenCalledWith("/workflows/executions", undefined));
+    await waitFor(() => expect(apiClient.get).toHaveBeenCalledWith("/workflows/executions", undefined, expect.any(AbortSignal)));
   });
 });
 

@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface LeadSourceStat {
   source: string;
@@ -58,7 +59,7 @@ interface MergeLeadInput {
 
 export function useMergeLead() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:leads:assign", {
     mutationKey: ["leads", "merge"] as const,
     mutationFn: ({ keepLeadId, mergeLeadId }: MergeLeadInput) =>
       apiClient.post<{ merged: boolean; winner: DuplicateLeadEntry }>("/leads/merge", {

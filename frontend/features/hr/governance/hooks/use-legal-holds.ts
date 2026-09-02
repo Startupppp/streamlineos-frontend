@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface LegalHold {
   id: number;
@@ -43,13 +44,13 @@ const HOLDS_KEY = ["hr", "governance", "legal-holds"] as const;
 export function useLegalHolds(params?: { status?: string; subjectUserId?: string; page?: number; limit?: number }) {
   return useQuery<LegalHoldsListResponse>({
     queryKey: [...queryKeys.hr.hrLegalHoldsBase, params],
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
       if (params?.status) p["status"] = params.status;
       if (params?.subjectUserId) p["subjectUserId"] = params.subjectUserId;
       if (params?.page) p["page"] = params.page;
       if (params?.limit) p["limit"] = params.limit;
-      return apiClient.get<LegalHoldsListResponse>("/hr/governance/legal-holds", p);
+      return apiClient.get<LegalHoldsListResponse>("/hr/governance/legal-holds", p, signal);
     },
     staleTime: 30_000,
   });
@@ -66,7 +67,7 @@ export function useHoldItems(holdId: number | undefined) {
 
 export function useCreateLegalHold() {
   const qc = useQueryClient();
-  return useMutation<LegalHold, Error, { subjectUserId: string; reason: string; restrictedExport?: boolean }>({
+  return useAuthorizedMutation<LegalHold, Error, { subjectUserId: string; reason: string; restrictedExport?: boolean }>("hr:legalhold:manage", {
     mutationKey: ["hr", "governance", "legal-holds", "create"],
     mutationFn: (payload) => apiClient.post<LegalHold>("/hr/governance/legal-holds", payload),
     onSuccess: () => {
@@ -79,7 +80,7 @@ export function useCreateLegalHold() {
 
 export function useReleaseLegalHold() {
   const qc = useQueryClient();
-  return useMutation<LegalHold, Error, number>({
+  return useAuthorizedMutation<LegalHold, Error, number>("hr:legalhold:manage", {
     mutationKey: ["hr", "governance", "legal-holds", "release"],
     mutationFn: (holdId) => apiClient.post<LegalHold>(`/hr/governance/legal-holds/${holdId}/release`),
     onSuccess: () => {
@@ -92,7 +93,7 @@ export function useReleaseLegalHold() {
 
 export function useDeleteLegalHold() {
   const qc = useQueryClient();
-  return useMutation<void, Error, number>({
+  return useAuthorizedMutation<void, Error, number>("hr:legalhold:manage", {
     mutationKey: ["hr", "governance", "legal-holds", "delete"],
     mutationFn: (holdId) => apiClient.delete<void>(`/hr/governance/legal-holds/${holdId}`),
     onSuccess: () => {
@@ -105,7 +106,7 @@ export function useDeleteLegalHold() {
 
 export function useAttachHoldItem() {
   const qc = useQueryClient();
-  return useMutation<HoldItem, Error, { holdId: number; itemType: string; itemRef: string; locked?: boolean }>({
+  return useAuthorizedMutation<HoldItem, Error, { holdId: number; itemType: string; itemRef: string; locked?: boolean }>("hr:legalhold:manage", {
     mutationKey: ["hr", "governance", "legal-holds", "attach-item"],
     mutationFn: ({ holdId, ...payload }) =>
       apiClient.post<HoldItem>(`/hr/governance/legal-holds/${holdId}/items`, payload),
@@ -119,7 +120,7 @@ export function useAttachHoldItem() {
 
 export function useDetachHoldItem() {
   const qc = useQueryClient();
-  return useMutation<void, Error, { holdId: number; itemId: number }>({
+  return useAuthorizedMutation<void, Error, { holdId: number; itemId: number }>("hr:legalhold:manage", {
     mutationKey: ["hr", "governance", "legal-holds", "detach-item"],
     mutationFn: ({ holdId, itemId }) =>
       apiClient.delete<void>(`/hr/governance/legal-holds/${holdId}/items/${itemId}`),

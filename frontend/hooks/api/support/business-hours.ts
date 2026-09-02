@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type BusinessHoursDay = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 
@@ -54,7 +55,7 @@ export function useBusinessHoursList() {
 
 export function useCreateBusinessHours() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:settings:manage", {
     mutationKey: ["supportBusinessHours", "create"],
     mutationFn: (input: CreateBusinessHoursInput) =>
       apiClient.post<BusinessHours>("/support/business-hours", input),
@@ -64,7 +65,7 @@ export function useCreateBusinessHours() {
 
 export function useUpdateBusinessHours() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:settings:manage", {
     mutationKey: ["supportBusinessHours", "update"],
     mutationFn: ({ id, ...input }: UpdateBusinessHoursInput & { id: number }) =>
       apiClient.patch<BusinessHours>(`/support/business-hours/${id}`, input),
@@ -74,7 +75,7 @@ export function useUpdateBusinessHours() {
 
 export function useDeleteBusinessHours() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:reply", {
     mutationKey: ["supportBusinessHours", "delete"],
     mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/support/business-hours/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportBusinessHours.all }),

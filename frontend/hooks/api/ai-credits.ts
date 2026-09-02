@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface AiCreditPack {
   id: number;
@@ -122,7 +123,7 @@ export function useAiCreditTransactions(params: { cursor?: string; limit: number
 
 export function useConfigureAutoTopUp() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("billing:ai-credits:purchase", {
     mutationKey: ["billing", "ai-credits", "auto-topup"],
     mutationFn: (data: {
       enabled: boolean;
@@ -153,7 +154,7 @@ export interface PurchaseAiPackResult {
 
 export function usePurchaseAiCredits() {
   const qc = useQueryClient();
-  return useMutation<PurchaseAiPackOrder | PurchaseAiPackResult, Error, { packId: number }>({
+  return useAuthorizedMutation<PurchaseAiPackOrder | PurchaseAiPackResult, Error, { packId: number }>("billing:ai-credits:purchase", {
     mutationKey: ["billing", "ai-credits", "purchase"],
     mutationFn: (data) =>
       apiClient.post<PurchaseAiPackOrder | PurchaseAiPackResult>("/billing/ai-credits/purchase", data),
@@ -186,11 +187,11 @@ export function useAiCreditsUsage(days: AiCreditsUsageDays) {
 
 export function useVerifyAiCreditPurchase() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     PurchaseAiPackResult,
     Error,
     { packId: number; orderId: string; paymentId: string; signature: string }
-  >({
+  >("billing:ai-credits:purchase", {
     mutationKey: ["billing", "ai-credits", "verify"],
     mutationFn: (data) =>
       apiClient.post<PurchaseAiPackResult>("/billing/ai-credits/purchase", data),

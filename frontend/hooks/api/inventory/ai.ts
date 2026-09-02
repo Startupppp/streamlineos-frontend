@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { AiInsight } from "./reports";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface InsightsParams {
   status?: "NEW" | "ACKNOWLEDGED" | "DISMISSED";
@@ -42,7 +43,7 @@ export function useInventoryInsights(params?: InsightsParams) {
 
 export function useGenerateInsights() {
   const qc = useQueryClient();
-  return useMutation<unknown, Error, void>({
+  return useAuthorizedMutation<unknown, Error, void>("inventory:ai:manage", {
     mutationKey: ["inventory", "ai", "insights", "generate"],
     mutationFn: () => apiClient.post("/inventory/ai/insights/generate"),
     onSuccess: () => {
@@ -54,7 +55,7 @@ export function useGenerateInsights() {
 
 export function useUpdateInsight() {
   const qc = useQueryClient();
-  return useMutation<AiInsight, Error, { insightId: number; data: UpdateInsightInput }>({
+  return useAuthorizedMutation<AiInsight, Error, { insightId: number; data: UpdateInsightInput }>("inventory:ai:manage", {
     mutationKey: ["inventory", "ai", "insight", "update"],
     mutationFn: ({ insightId, data }) =>
       apiClient.patch<AiInsight>(`/inventory/ai/insights/${insightId}`, data),

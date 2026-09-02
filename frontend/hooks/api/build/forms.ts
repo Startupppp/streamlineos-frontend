@@ -14,6 +14,7 @@ import type {
   UpdateSubmissionInput,
   FormType,
 } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface FormFilters {
   type?: FormType;
@@ -49,7 +50,7 @@ export function useForm(projectId: number, formId: number) {
 
 export function useCreateForm(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:forms:manage", {
     mutationKey: ["projects", projectId, "forms", "create"],
     mutationFn: (data: CreateFormInput) =>
       apiClient.post<ProjectForm>(`/build/${projectId}/forms`, data),
@@ -61,7 +62,7 @@ export function useCreateForm(projectId: number) {
 
 export function useUpdateForm(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:timesheets:manage", {
     mutationKey: ["projects", projectId, "forms", "update"],
     mutationFn: ({ id, ...data }: UpdateFormInput & { id: number }) =>
       apiClient.patch<ProjectForm>(`/build/${projectId}/forms/${id}`, data),
@@ -74,7 +75,7 @@ export function useUpdateForm(projectId: number) {
 
 export function useDeleteForm(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:forms:manage", {
     mutationKey: ["projects", projectId, "forms", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/build/${projectId}/forms/${id}`),
@@ -97,7 +98,7 @@ export function useFormSubmissions(projectId: number, formId: number) {
 
 export function useSubmitForm(projectId: number, formId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:forms:view", {
     mutationKey: ["projects", projectId, "forms", formId, "submit"],
     mutationFn: (data: SubmitFormInput) =>
       apiClient.post<SubmitFormResponse>(
@@ -114,7 +115,7 @@ export function useSubmitForm(projectId: number, formId: number) {
 
 export function useUpdateSubmission(projectId: number, formId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:forms:manage", {
     mutationKey: ["projects", projectId, "forms", formId, "submission", "update"],
     mutationFn: ({ submissionId, ...data }: UpdateSubmissionInput & { submissionId: number }) =>
       apiClient.patch<FormSubmission>(

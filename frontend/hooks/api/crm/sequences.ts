@@ -10,6 +10,7 @@ import type {
   CrmSequenceEnrollment,
   SequenceStepType,
 } from "@/types/crm";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface SequencesResponse {
   sequences: CrmSequence[];
@@ -33,7 +34,7 @@ export function useCrmSequences() {
 
 export function useCreateCrmSequence() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:sequences:manage", {
     mutationKey: ["crm", "sequences", "create"],
     mutationFn: (input: {
       name: string;
@@ -57,7 +58,7 @@ type UpdateSequenceInput = Pick<
 
 export function useUpdateCrmSequence() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:sequences:manage", {
     mutationKey: ["crm", "sequences", "update"],
     mutationFn: ({ id, ...data }: { id: string } & Partial<UpdateSequenceInput>) =>
       apiClient.patch<CrmSequence>(`/crm/sequences/${id}`, data),
@@ -69,7 +70,7 @@ export function useUpdateCrmSequence() {
 
 export function useDeleteCrmSequence() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:sequences:manage", {
     mutationKey: ["crm", "sequences", "delete"],
     mutationFn: (id: string) => apiClient.delete<{ success: boolean }>(`/crm/sequences/${id}`),
     onSuccess: () => {
@@ -89,7 +90,7 @@ export function useCrmSequenceSteps(sequenceId: string) {
 
 export function useCreateCrmSequenceStep(sequenceId: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:sequences:manage", {
     mutationKey: ["crm", "sequences", "steps", "create", sequenceId],
     mutationFn: (input: { stepType: SequenceStepType; waitHours?: number }) =>
       apiClient.post<CrmSequenceStep>(`/crm/sequences/${sequenceId}/steps`, input),
@@ -101,7 +102,7 @@ export function useCreateCrmSequenceStep(sequenceId: string) {
 
 export function useDeleteCrmSequenceStep(sequenceId: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:sequences:manage", {
     mutationKey: ["crm", "sequences", "steps", "delete", sequenceId],
     mutationFn: (stepId: string) =>
       apiClient.delete<{ success: boolean }>(`/crm/sequences/${sequenceId}/steps/${stepId}`),
@@ -123,7 +124,7 @@ export function useCrmSequenceEnrollments(sequenceId: string, page: number) {
 
 export function useStopEnrollment(sequenceId: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:sequences:manage", {
     mutationKey: ["crm", "sequences", "stop-enrollment", sequenceId],
     mutationFn: (enrollmentId: string) =>
       apiClient.patch<CrmSequenceEnrollment>(

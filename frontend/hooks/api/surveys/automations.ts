@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type AutomationEventType =
   | "survey.published"
@@ -49,7 +50,7 @@ function useInvalidateAutomations(surveyId: number) {
 
 export function useCreateAutomation(surveyId: number) {
   const invalidate = useInvalidateAutomations(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:automations:manage", {
     mutationKey: ["surveys", "automations", "create", surveyId] as const,
     mutationFn: (input: CreateAutomationInput) => apiClient.post<AutomationRule>(`/surveys/${surveyId}/automations`, input),
     onSuccess: invalidate,
@@ -58,7 +59,7 @@ export function useCreateAutomation(surveyId: number) {
 
 export function useDeleteAutomation(surveyId: number) {
   const invalidate = useInvalidateAutomations(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:automations:manage", {
     mutationKey: ["surveys", "automations", "delete", surveyId] as const,
     mutationFn: (automationId: string) => apiClient.delete(`/surveys/${surveyId}/automations/${automationId}`),
     onSuccess: invalidate,

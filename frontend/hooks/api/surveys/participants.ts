@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type ParticipantStatus =
   | "invited"
@@ -62,7 +63,7 @@ function useInvalidateParticipants(surveyId: number) {
 
 export function useImportParticipants(surveyId: number) {
   const invalidate = useInvalidateParticipants(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:participants:manage", {
     mutationKey: ["surveys", "participants", "import", surveyId] as const,
     mutationFn: (input: { collectorId?: number; participants: ParticipantImportRow[] }) =>
       apiClient.post<Array<{ id: number; accessToken: string | null }>>(`/surveys/${surveyId}/participants/import`, input),
@@ -72,7 +73,7 @@ export function useImportParticipants(surveyId: number) {
 
 export function useInviteParticipants(surveyId: number) {
   const invalidate = useInvalidateParticipants(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:participants:manage", {
     mutationKey: ["surveys", "participants", "invite", surveyId] as const,
     mutationFn: (participantIds: number[]) =>
       apiClient.post<{ success: boolean; count: number }>(`/surveys/${surveyId}/participants/invite`, { participantIds }),
@@ -82,7 +83,7 @@ export function useInviteParticipants(surveyId: number) {
 
 export function useRemindParticipants(surveyId: number) {
   const invalidate = useInvalidateParticipants(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:participants:manage", {
     mutationKey: ["surveys", "participants", "remind", surveyId] as const,
     mutationFn: (participantIds: number[]) =>
       apiClient.post<{ success: boolean; remindable: number }>(`/surveys/${surveyId}/participants/remind`, { participantIds }),

@@ -1,7 +1,7 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface ImportVariables {
   file: File;
@@ -37,7 +37,7 @@ async function importExpensesRequest({
 }
 
 export function useImportExpenses() {
-  return useMutation({
+  return useAuthorizedMutation("hr:expenses:manage", {
     mutationKey: ["import", "expenses"],
     mutationFn: importExpensesRequest,
   });

@@ -14,6 +14,7 @@ import type {
   UpdateSequenceInput,
   UpdateSettingsInput,
 } from "@/types/accounting/fin-settings";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const finSettingsKeys = {
   all: [...queryKeys.accounting.all, "fin-settings"] as const,
@@ -36,7 +37,7 @@ export function useAccountingSettings() {
 
 export function useUpdateAccountingSettings() {
   const queryClient = useQueryClient();
-  return useMutation<AccountingSettings, Error, UpdateSettingsInput>({
+  return useAuthorizedMutation<AccountingSettings, Error, UpdateSettingsInput>("accounting:settings:manage", {
     mutationKey: ["accounting", "settings", "update"],
     mutationFn: (data) =>
       apiClient.patch<AccountingSettings>("/accounting/settings", data),
@@ -68,7 +69,7 @@ export function useNumberSequences() {
 
 export function useUpdateNumberSequence(entityType: string) {
   const queryClient = useQueryClient();
-  return useMutation<NumberSequence, Error, UpdateSequenceInput>({
+  return useAuthorizedMutation<NumberSequence, Error, UpdateSequenceInput>("accounting:settings:manage", {
     mutationKey: ["accounting", "settings", "sequences", entityType, "update"],
     mutationFn: (data) =>
       apiClient.patch<NumberSequence>(
@@ -94,7 +95,7 @@ export function useSystemAccounts() {
 
 export function useUpsertSystemAccount(purpose: string) {
   const queryClient = useQueryClient();
-  return useMutation<SystemAccountMapping, Error, { accountId: number }>({
+  return useAuthorizedMutation<SystemAccountMapping, Error, { accountId: number }>("accounting:settings:manage", {
     mutationKey: ["accounting", "settings", "system-accounts", purpose, "upsert"],
     mutationFn: (data) =>
       apiClient.put<SystemAccountMapping>(
@@ -109,7 +110,7 @@ export function useUpsertSystemAccount(purpose: string) {
 
 export function useUpdatePaymentTerms() {
   const queryClient = useQueryClient();
-  return useMutation<{ terms: PaymentTerm[] }, Error, UpdatePaymentTermsInput>({
+  return useAuthorizedMutation<{ terms: PaymentTerm[] }, Error, UpdatePaymentTermsInput>("accounting:settings:manage", {
     mutationKey: ["accounting", "settings", "payment-terms", "update"],
     mutationFn: (data) =>
       apiClient.patch<{ terms: PaymentTerm[] }>("/accounting/settings/payment-terms", data),

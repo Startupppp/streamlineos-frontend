@@ -7,6 +7,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import type { CreateBudgetInput, TimesheetBudget } from "@/features/timesheets/types";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useBudgets(enabled = true) {
   const canView = useCan("timesheets:budgets:view");
@@ -20,7 +21,7 @@ export function useBudgets(enabled = true) {
 
 export function useCreateBudget() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:budgets:manage", {
     mutationKey: ["timesheets", "budgets", "create"],
     mutationFn: (data: CreateBudgetInput) =>
       apiClient.post<TimesheetBudget>("/timesheets/budgets", data),
@@ -34,7 +35,7 @@ export function useCreateBudget() {
 
 export function useUpdateBudget() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:budgets:manage", {
     mutationKey: ["timesheets", "budgets", "update"],
     mutationFn: ({ budgetId, data }: { budgetId: number; data: Partial<CreateBudgetInput> }) =>
       apiClient.patch<TimesheetBudget>(`/timesheets/budgets/${budgetId}`, data),
@@ -48,7 +49,7 @@ export function useUpdateBudget() {
 
 export function useDeleteBudget() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:budgets:manage", {
     mutationKey: ["timesheets", "budgets", "delete"],
     mutationFn: (budgetId: number) =>
       apiClient.delete<{ success: boolean }>(`/timesheets/budgets/${budgetId}`),

@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { RunEmployee, RunEmployeeDetail, VarianceData } from "@/types/payroll/runs";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface RunEmployeesPage {
   data: RunEmployee[];
@@ -58,7 +59,7 @@ export function useRunVariance(runId: number) {
 
 export function useAddAdjustment(runId: number, runEmployeeId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:runs:manage", {
     mutationKey: ["payroll", "run-employees", runId, runEmployeeId, "adjustment"],
     mutationFn: (body: AdjustmentBody) =>
       apiClient.post<{ ok: boolean }>(`/payroll/runs/${runId}/employees/${runEmployeeId}/adjustments`, body),
@@ -70,7 +71,7 @@ export function useAddAdjustment(runId: number, runEmployeeId: number) {
 
 export function useSetEmployeeHold(runId: number, runEmployeeId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("payroll:runs:manage", {
     mutationKey: ["payroll", "run-employees", runId, runEmployeeId, "hold"],
     mutationFn: (body: { hold: boolean; reason?: string }) =>
       apiClient.post<{ ok: boolean }>(`/payroll/runs/${runId}/employees/${runEmployeeId}/hold`, body),

@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface KbArticleComment {
   id: number;
@@ -29,7 +30,7 @@ export function useSupportKbComments(articleId: number) {
 
 export function useAddSupportKbComment(articleId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:kb:manage", {
     mutationKey: ["supportKbComments", "add"],
     mutationFn: (body: string) =>
       apiClient.post<KbArticleComment>(
@@ -43,7 +44,7 @@ export function useAddSupportKbComment(articleId: number) {
 
 export function useDeleteSupportKbComment(articleId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:kb:manage", {
     mutationKey: ["supportKbComments", "delete"],
     mutationFn: (commentId: number) =>
       apiClient.delete<{ success: boolean }>(

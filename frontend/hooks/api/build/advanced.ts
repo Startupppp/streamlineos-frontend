@@ -21,6 +21,7 @@ import type {
   CreateIntakeRequestInput,
   UpdateIntakeRequestInput,
 } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useEpics(
   projectId: number,
@@ -53,7 +54,7 @@ export function useCycles(
 
 export function useCreateCycle(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:workspace:manage", {
     mutationKey: ["projects", "cycles", "create"],
     mutationFn: ({ projectId, ...data }: CreateCycleInput) =>
       apiClient.post<Cycle>(`/build/${projectId}/cycles`, data),
@@ -82,7 +83,7 @@ export function useModules(
 
 export function useCreateModule(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:workspace:manage", {
     mutationKey: ["projects", "modules", "create"],
     mutationFn: ({ projectId, ...data }: CreateModuleInput) =>
       apiClient.post<Module>(`/build/${projectId}/modules`, data),
@@ -111,7 +112,7 @@ export function useViews(
 
 export function useCreateView(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:workspace:manage", {
     mutationKey: ["projects", "views", "create"],
     mutationFn: ({ projectId, ...data }: CreateViewInput) =>
       apiClient.post<ProjectView>(`/build/${projectId}/views`, data),
@@ -126,7 +127,7 @@ export function useCreateView(options?: Parameters<typeof useMutation>[0]) {
 
 export function useUpdateView(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:timesheets:manage", {
     mutationKey: ["projects", "views", "update"],
     mutationFn: ({ id, projectId, ...data }: UpdateViewInput & { projectId: number }) =>
       apiClient.patch<ProjectView>(`/build/${projectId}/views/${id}`, data),
@@ -141,7 +142,7 @@ export function useUpdateView(options?: Parameters<typeof useMutation>[0]) {
 
 export function useDeleteView(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:workspace:manage", {
     mutationKey: ["projects", "views", "delete"],
     mutationFn: ({ id, projectId }: { id: number; projectId: number }) =>
       apiClient.delete<{ success: boolean }>(`/build/${projectId}/views/${id}`),
@@ -169,7 +170,7 @@ export function useWorkspaceViews(
 
 export function useCreateWorkspaceView(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:workspace:manage", {
     mutationKey: ["projects", "workspace-views", "create"],
     mutationFn: (data: CreateWorkspaceViewInput) =>
       apiClient.post<ProjectView>("/build/views", data),
@@ -184,7 +185,7 @@ export function useCreateWorkspaceView(options?: Parameters<typeof useMutation>[
 
 export function useUpdateWorkspaceView(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "workspace-views", "update"],
     mutationFn: ({ id, ...data }: UpdateWorkspaceViewInput) =>
       apiClient.patch<ProjectView>(`/build/views/${id}`, data),
@@ -199,7 +200,7 @@ export function useUpdateWorkspaceView(options?: Parameters<typeof useMutation>[
 
 export function useDeleteWorkspaceView(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "workspace-views", "delete"],
     mutationFn: ({ id }: { id: number }) =>
       apiClient.delete<{ success: boolean }>(`/build/views/${id}`),
@@ -242,7 +243,7 @@ export function useIntakeRequests(
 
 export function useCreateIntakeRequest(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:workspace:manage", {
     mutationKey: ["projects", "intake", "create"],
     mutationFn: ({ projectId, ...data }: CreateIntakeRequestInput) =>
       apiClient.post<IntakeRequest>(`/build/${projectId}/intake`, data),
@@ -257,7 +258,7 @@ export function useCreateIntakeRequest(options?: Parameters<typeof useMutation>[
 
 export function useUpdateIntakeRequest(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:timesheets:manage", {
     mutationKey: ["projects", "intake", "update"],
     mutationFn: ({ id, projectId, ...data }: UpdateIntakeRequestInput & { projectId: number }) =>
       apiClient.patch<{ success: boolean }>(

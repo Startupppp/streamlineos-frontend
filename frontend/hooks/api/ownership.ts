@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAccess, useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface OrgTransferRecord {
   id: string;
@@ -45,11 +46,11 @@ interface InitiateOrgTransferResult {
 
 export function useInitiateOrgTransfer() {
   const queryClient = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     InitiateOrgTransferResult,
     Error,
     { toMembershipId: number; expiresInHours?: number; reason?: string }
-  >({
+  >("ownership:org:transfer", {
     mutationKey: ["ownership", "org", "transfer", "initiate"],
     mutationFn: (body) =>
       apiClient.post<InitiateOrgTransferResult>(
@@ -98,7 +99,7 @@ export function useIncomingOrgTransfers() {
 
 export function useCancelOrgTransfer() {
   const queryClient = useQueryClient();
-  return useMutation<{ success: true }, Error, string>({
+  return useAuthorizedMutation<{ success: true }, Error, string>("ownership:modules:manage", {
     mutationKey: ["ownership", "org", "transfer", "cancel"],
     mutationFn: (transferId) =>
       apiClient.delete<{ success: true }>(`/ownership/transfers/${transferId}`),
@@ -114,7 +115,7 @@ export function useAcceptTransfer() {
   const queryClient = useQueryClient();
   const { update } = useSession();
 
-  return useMutation<{ success: true }, Error, string>({
+  return useAuthorizedMutation<{ success: true }, Error, string>("ownership:transfer:respond", {
     mutationKey: ["ownership", "transfer", "accept"],
     mutationFn: (transferId) =>
       apiClient.post<{ success: true }>(
@@ -134,11 +135,11 @@ export function useAcceptTransfer() {
 
 export function useDeclineTransfer() {
   const queryClient = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     { success: true },
     Error,
     { transferId: string; reason?: string }
-  >({
+  >("ownership:transfer:respond", {
     mutationKey: ["ownership", "transfer", "decline"],
     mutationFn: ({ transferId, reason }) =>
       apiClient.post<{ success: true }>(

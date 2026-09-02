@@ -12,6 +12,7 @@ import type {
   UpdateIncidentInput,
   AddIncidentUpdateInput,
 } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 type IncidentFilters = {
   status?: string;
@@ -45,7 +46,7 @@ export function useIncident(projectId?: number, incidentId?: number) {
 
 export function useCreateIncident() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:incidents:manage", {
     mutationKey: ["projects", "incidents", "create"],
     mutationFn: ({ projectId, ...data }: CreateIncidentInput & { projectId: number }) =>
       apiClient.post<Incident>(`/build/${projectId}/incidents`, data),
@@ -57,7 +58,7 @@ export function useCreateIncident() {
 
 export function useUpdateIncident() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:timesheets:manage", {
     mutationKey: ["projects", "incidents", "update"],
     mutationFn: ({
       projectId,
@@ -76,7 +77,7 @@ export function useUpdateIncident() {
 
 export function useDeleteIncident() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:incidents:manage", {
     mutationKey: ["projects", "incidents", "delete"],
     mutationFn: ({ projectId, id }: { projectId: number; id: number }) =>
       apiClient.delete<unknown>(`/build/${projectId}/incidents/${id}`),
@@ -88,7 +89,7 @@ export function useDeleteIncident() {
 
 export function useAddIncidentUpdate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:incidents:manage", {
     mutationKey: ["projects", "incidents", "addUpdate"],
     mutationFn: ({
       projectId,

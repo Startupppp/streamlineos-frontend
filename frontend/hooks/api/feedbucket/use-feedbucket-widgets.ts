@@ -8,6 +8,7 @@ import type {
   CreateFeedbucketWidgetInput,
   UpdateFeedbucketWidgetInput,
 } from "@/types/feedbucket";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useFeedbucketWidgets() {
   return useQuery({
@@ -19,7 +20,7 @@ export function useFeedbucketWidgets() {
 
 export function useCreateFeedbucketWidget() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("feedbucket:widgets:create", {
     mutationKey: ["feedbucket", "widgets", "create"],
     mutationFn: (input: CreateFeedbucketWidgetInput) =>
       apiClient.post<FeedbucketWidget>("/feedbucket/widgets", input),
@@ -31,7 +32,7 @@ export function useCreateFeedbucketWidget() {
 
 export function useUpdateFeedbucketWidget() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("feedbucket:widgets:update", {
     mutationKey: ["feedbucket", "widgets", "update"],
     mutationFn: ({ widgetId, input }: { widgetId: number; input: UpdateFeedbucketWidgetInput }) =>
       apiClient.patch<FeedbucketWidget>(`/feedbucket/widgets/${widgetId}`, input),
@@ -44,7 +45,7 @@ export function useUpdateFeedbucketWidget() {
 
 export function useRotateFeedbucketWidgetKey() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("feedbucket:widgets:manage", {
     mutationKey: ["feedbucket", "widgets", "rotate-key"],
     mutationFn: (widgetId: number) =>
       apiClient.post<FeedbucketWidget>(`/feedbucket/widgets/${widgetId}/rotate-key`),

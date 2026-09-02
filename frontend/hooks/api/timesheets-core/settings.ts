@@ -10,6 +10,7 @@ import type {
   UpdateTimesheetSettingsInput,
 } from "@/features/timesheets/types";
 import { useCan } from "../access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useTimesheetSettings(enabled = true) {
   const canView = useCan("timesheets:settings:view");
@@ -23,7 +24,7 @@ export function useTimesheetSettings(enabled = true) {
 
 export function useUpdateTimesheetSettings() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:settings:manage", {
     mutationKey: ["timesheets", "settings", "update"],
     mutationFn: (data: UpdateTimesheetSettingsInput) =>
       apiClient.patch<TimesheetSettings>("/timesheets/settings", data),

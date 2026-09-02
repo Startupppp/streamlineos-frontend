@@ -248,7 +248,7 @@ export function useHrEmployeeProjects(userId: string) {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "employeeProjects", userId] as const,
     queryFn: ({ signal }) =>
-      apiClient.get<Record<string, unknown>[]>("/hr/employees/projects", { userId }),
+      apiClient.get<Record<string, unknown>[]>("/hr/employees/projects", { userId }, signal),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && !!userId && canView,
   });
@@ -260,7 +260,7 @@ export function useHrEmployeeTickets(userId: string) {
   return useQuery({
     queryKey: [...queryKeys.hr.all, "employeeTickets", userId] as const,
     queryFn: ({ signal }) =>
-      apiClient.get<{ data: Record<string, unknown>[] }>("/hr/employees/tickets", { userId }),
+      apiClient.get<{ data: Record<string, unknown>[] }>("/hr/employees/tickets", { userId }, signal),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && !!userId && canView,
   });

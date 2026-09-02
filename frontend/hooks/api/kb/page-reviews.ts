@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type KbReviewType = "approval" | "freshness";
 export type KbReviewStatus = "pending" | "approved" | "rejected";
@@ -53,7 +54,7 @@ export function useKbPageReviews(params?: KbPageReviewsParams) {
 
 export function useApprovePageReview() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:reviews:manage", {
     mutationKey: ["kb", "pageReviews", "approve"],
     mutationFn: ({ reviewId, ...body }: ApproveReviewInput & { reviewId: number }) =>
       apiClient.post<KbPageReview>(`/kb/page-reviews/${reviewId}/approve`, body),
@@ -66,7 +67,7 @@ export function useApprovePageReview() {
 
 export function useRejectPageReview() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:reviews:manage", {
     mutationKey: ["kb", "pageReviews", "reject"],
     mutationFn: ({ reviewId, ...body }: RejectReviewInput & { reviewId: number }) =>
       apiClient.post<KbPageReview>(`/kb/page-reviews/${reviewId}/reject`, body),

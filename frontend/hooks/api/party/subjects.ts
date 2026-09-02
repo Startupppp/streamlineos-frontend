@@ -15,6 +15,7 @@ import type {
   SubjectsPage,
   UpdateSubjectInput,
 } from "@/types/party/subjects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface UseSubjectsParams {
   subjectTypeId?: string;
@@ -28,7 +29,12 @@ export function useSubjectTypes(options?: { enabled?: boolean }) {
 
   return useQuery({
     queryKey: queryKeys.party.subjectTypes,
-    queryFn: ({ signal }) => apiClient.get<{ data: SubjectType[] }>("/party/subject-types", undefined, signal),
+    queryFn: ({ signal }) =>
+      apiClient.get<{ data: SubjectType[] }>(
+        "/party/subject-types",
+        undefined,
+        signal,
+      ),
     // A declaration changes when an administrator edits it, which is rare.
     staleTime: 30 * 60_000,
     enabled: canView && (options?.enabled ?? true),
@@ -40,13 +46,22 @@ export function useSubjects(params: UseSubjectsParams = {}) {
   const { subjectTypeId, search, cursor, limit = 20 } = params;
 
   return useQuery({
-    queryKey: queryKeys.party.subjects({ subjectTypeId, search, cursor, limit }),
-    queryFn: () => {
+    queryKey: queryKeys.party.subjects({
+      subjectTypeId,
+      search,
+      cursor,
+      limit,
+    }),
+    queryFn: ({ signal }) => {
       const searchParams = new URLSearchParams({ limit: String(limit) });
       if (subjectTypeId) searchParams.set("subjectTypeId", subjectTypeId);
       if (search) searchParams.set("search", search);
       if (cursor) searchParams.set("cursor", cursor);
-      return apiClient.get<SubjectsPage>(`/party/subjects?${searchParams.toString()}`);
+      return apiClient.get<SubjectsPage>(
+        `/party/subjects?${searchParams.toString()}`,
+        undefined,
+        signal,
+      );
     },
     staleTime: 60_000,
     enabled: canView && !!subjectTypeId,
@@ -58,7 +73,12 @@ export function useSubject(subjectId: string | null) {
 
   return useQuery({
     queryKey: queryKeys.party.subject(subjectId ?? ""),
-    queryFn: ({ signal }) => apiClient.get<SubjectWithParties>(`/party/subjects/${subjectId}`, undefined, signal),
+    queryFn: ({ signal }) =>
+      apiClient.get<SubjectWithParties>(
+        `/party/subjects/${subjectId}`,
+        undefined,
+        signal,
+      ),
     staleTime: 60_000,
     enabled: canView && !!subjectId,
   });
@@ -71,7 +91,11 @@ export function usePartySubjects(partyId: string | null) {
   return useQuery({
     queryKey: queryKeys.party.partySubjects(partyId ?? ""),
     queryFn: ({ signal }) =>
-      apiClient.get<{ data: PartySubjectLink[] }>(`/party/parties/${partyId}/subjects`, undefined, signal),
+      apiClient.get<{ data: PartySubjectLink[] }>(
+        `/party/parties/${partyId}/subjects`,
+        undefined,
+        signal,
+      ),
     staleTime: 60_000,
     enabled: canView && !!partyId,
   });
@@ -79,7 +103,7 @@ export function usePartySubjects(partyId: string | null) {
 
 export function useCreateSubjectType() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("party:subject-types:manage", {
     mutationKey: ["party", "subject-types", "create"],
     mutationFn: (input: CreateSubjectTypeInput) =>
       apiClient.post<SubjectType>("/party/subject-types", input),
@@ -91,10 +115,16 @@ export function useCreateSubjectType() {
 
 export function useUpdateSubjectType() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("party:subject-types:manage", {
     mutationKey: ["party", "subject-types", "update"],
-    mutationFn: ({ subjectTypeId, ...input }: CreateSubjectTypeInput & { subjectTypeId: string }) =>
-      apiClient.patch<SubjectType>(`/party/subject-types/${subjectTypeId}`, input),
+    mutationFn: ({
+      subjectTypeId,
+      ...input
+    }: CreateSubjectTypeInput & { subjectTypeId: string }) =>
+      apiClient.patch<SubjectType>(
+        `/party/subject-types/${subjectTypeId}`,
+        input,
+      ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.party.subjectTypes });
       // Every rendered surface for this type is derived from the declaration,
@@ -106,7 +136,7 @@ export function useUpdateSubjectType() {
 
 export function useDeleteSubjectType() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("party:subject-types:manage", {
     mutationKey: ["party", "subject-types", "delete"],
     mutationFn: (subjectTypeId: string) =>
       apiClient.delete(`/party/subject-types/${subjectTypeId}`),
@@ -118,7 +148,7 @@ export function useDeleteSubjectType() {
 
 export function useCreateSubject() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("party:subjects:manage", {
     mutationKey: ["party", "subjects", "create"],
     mutationFn: (input: CreateSubjectInput) =>
       apiClient.post<Subject>("/party/subjects", input),
@@ -130,12 +160,17 @@ export function useCreateSubject() {
 
 export function useUpdateSubject() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("party:subjects:manage", {
     mutationKey: ["party", "subjects", "update"],
-    mutationFn: ({ subjectId, ...input }: UpdateSubjectInput & { subjectId: string }) =>
+    mutationFn: ({
+      subjectId,
+      ...input
+    }: UpdateSubjectInput & { subjectId: string }) =>
       apiClient.patch<Subject>(`/party/subjects/${subjectId}`, input),
     onSuccess: (_, variables) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.party.subject(variables.subjectId) });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.party.subject(variables.subjectId),
+      });
       void qc.invalidateQueries({ queryKey: queryKeys.party.subjects() });
     },
   });
@@ -143,26 +178,39 @@ export function useUpdateSubject() {
 
 export function useLinkParty() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("party:subjects:manage", {
     mutationKey: ["party", "subjects", "link"],
-    mutationFn: ({ subjectId, ...input }: LinkPartyInput & { subjectId: string }) =>
+    mutationFn: ({
+      subjectId,
+      ...input
+    }: LinkPartyInput & { subjectId: string }) =>
       apiClient.post(`/party/subjects/${subjectId}/parties`, input),
     onSuccess: (_, variables) => {
       // Both ends of the link are cached separately, so both are invalidated.
-      void qc.invalidateQueries({ queryKey: queryKeys.party.subject(variables.subjectId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.party.partySubjects(variables.partyId) });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.party.subject(variables.subjectId),
+      });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.party.partySubjects(variables.partyId),
+      });
     },
   });
 }
 
 export function useUnlinkParty() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("party:subjects:manage", {
     mutationKey: ["party", "subjects", "unlink"],
-    mutationFn: ({ subjectPartyLinkId }: { subjectPartyLinkId: string; subjectId: string }) =>
-      apiClient.delete(`/party/subject-links/${subjectPartyLinkId}`),
+    mutationFn: ({
+      subjectPartyLinkId,
+    }: {
+      subjectPartyLinkId: string;
+      subjectId: string;
+    }) => apiClient.delete(`/party/subject-links/${subjectPartyLinkId}`),
     onSuccess: (_, variables) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.party.subject(variables.subjectId) });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.party.subject(variables.subjectId),
+      });
       void qc.invalidateQueries({ queryKey: queryKeys.party.all });
     },
   });

@@ -11,6 +11,7 @@ import type {
   ChangeRequest,
   CreateChangeRequestInput,
 } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function usePortalProjects() {
   const canView = useCan("build:portal:view");
@@ -46,7 +47,7 @@ export function usePortalChangeRequests(projectId: number) {
 
 export function useSubmitPortalChangeRequest(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:changerequests:create", {
     mutationKey: ["projects", "portal", projectId, "change-requests", "submit"],
     mutationFn: (data: CreateChangeRequestInput) =>
       apiClient.post<ChangeRequest>(
@@ -74,7 +75,7 @@ export function useClientVisibility(projectId: number) {
 
 export function useUpdateTicketVisibility(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:clientvisibility:manage", {
     mutationKey: ["projects", projectId, "client-visibility", "tickets"],
     mutationFn: ({ id, clientVisible }: { id: number; clientVisible: boolean }) =>
       apiClient.patch<{ success: boolean }>(
@@ -106,7 +107,7 @@ export function useUpdateTicketVisibility(projectId: number) {
 
 export function useUpdateMilestoneVisibility(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:clientvisibility:manage", {
     mutationKey: ["projects", projectId, "client-visibility", "milestones"],
     mutationFn: ({ id, clientVisible }: { id: number; clientVisible: boolean }) =>
       apiClient.patch<{ success: boolean }>(

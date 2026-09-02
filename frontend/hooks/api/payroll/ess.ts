@@ -46,7 +46,7 @@ export function useOrgPayCompression(enabled = true) {
     queryKey: queryKeys.payroll.orgPayCompression(),
     queryFn: ({ signal }) =>
       apiClient.get<PayCompressionStats & { scope: "organization" }>(
-        "/payroll/analytics/pay-compression", signal,
+        "/payroll/analytics/pay-compression", undefined, signal,
       ),
     staleTime: 60_000,
     enabled: enabled && canView,

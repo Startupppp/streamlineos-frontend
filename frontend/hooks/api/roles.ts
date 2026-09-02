@@ -13,6 +13,7 @@ import type {
   SetRolePermissionsInput,
   UnassignRoleMemberInput,
 } from "@/types/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface PaginatedRolesParams {
   cursor?: string;
@@ -97,7 +98,7 @@ export const useRole = (
 
 export const useDeleteRole = () => {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, number>({
+  return useAuthorizedMutation<{ success: boolean }, Error, number>("settings:rbac:manage", {
     mutationKey: ["roles", "delete"],
     mutationFn: (id) =>
       apiClient.delete<{ success: boolean }>(`/roles/${id}`),
@@ -109,7 +110,7 @@ export const useDeleteRole = () => {
 
 export const useUpdateRole = (roleId: number) => {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, { name: string }>({
+  return useAuthorizedMutation<{ success: boolean }, Error, { name: string }>("settings:rbac:manage", {
     mutationKey: ["roles", "update", roleId],
     mutationFn: ({ name }) =>
       apiClient.patch<{ success: boolean }>(`/roles/${roleId}`, { name }),
@@ -124,7 +125,7 @@ export const useUpdateRole = (roleId: number) => {
 
 export function useMaterializeRoleTemplate() {
   const queryClient = useQueryClient();
-  return useMutation<Role, Error, { templateId: string }>({
+  return useAuthorizedMutation<Role, Error, { templateId: string }>("settings:rbac:manage", {
     mutationKey: ["roles", "materialize-template"],
     mutationFn: (data) => apiClient.post<Role>("/roles/templates", data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.roles.all }),
@@ -141,7 +142,7 @@ export interface RoleTemplate {
 
 export function useSeedDefaultRoles() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:rbac:manage", {
     mutationKey: ["roles", "seed-defaults"],
     mutationFn: () =>
       apiClient.post<{ created: string[]; skipped: string[] }>("/roles/seed-defaults"),
@@ -172,7 +173,7 @@ export const useRolePermissionGrants = (
 
 export const useSetRolePermissions = () => {
   const queryClient = useQueryClient();
-  return useMutation<{ success: true; version: number }, Error, SetRolePermissionsInput>({
+  return useAuthorizedMutation<{ success: true; version: number }, Error, SetRolePermissionsInput>("settings:rbac:manage", {
     mutationKey: ["roles", "set-permissions"],
     mutationFn: ({ roleId, version, items }) =>
       apiClient.put<{ success: true; version: number }>(`/roles/${roleId}/permissions`, { version, items }),
@@ -209,7 +210,7 @@ export const useRoleMembers = (
 
 export const useAssignRoleMember = () => {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, AssignRoleMemberInput>({
+  return useAuthorizedMutation<{ success: boolean }, Error, AssignRoleMemberInput>("settings:rbac:manage", {
     mutationKey: ["roles", "assign-member"],
     mutationFn: ({ roleId, ...body }) =>
       apiClient.post<{ success: boolean }>(`/roles/${roleId}/members`, body),
@@ -225,7 +226,7 @@ export const useAssignRoleMember = () => {
 
 export const useUnassignRoleMember = () => {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, UnassignRoleMemberInput>({
+  return useAuthorizedMutation<{ success: boolean }, Error, UnassignRoleMemberInput>("settings:rbac:manage", {
     mutationKey: ["roles", "unassign-member"],
     mutationFn: ({ roleId, ...body }) =>
       apiClient.delete<{ success: boolean }>(`/roles/${roleId}/members`, body),

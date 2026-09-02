@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type AiSuggestionStatus = "pending" | "accepted" | "rejected";
 export type AiSuggestionFeedback = "helpful" | "not_helpful";
@@ -174,7 +175,7 @@ export function useTicketAiSuggestions(ticketId: number) {
 
 export function useAnalyzeTicket(ticketId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:view", {
     mutationKey: ["supportAiSuggestions", "analyze", ticketId],
     mutationFn: () => apiClient.post<AiSuggestion[]>(`/support/${ticketId}/ai/analyze`),
     onSuccess: () => invalidateSuggestions(qc, ticketId),
@@ -183,7 +184,7 @@ export function useAnalyzeTicket(ticketId: number) {
 
 export function useFindDuplicates(ticketId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:view", {
     mutationKey: ["supportAiSuggestions", "find-duplicates", ticketId],
     mutationFn: () => apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/find-duplicates`),
     onSuccess: () => invalidateSuggestions(qc, ticketId),
@@ -192,7 +193,7 @@ export function useFindDuplicates(ticketId: number) {
 
 export function useSuggestKbArticles(ticketId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:view", {
     mutationKey: ["supportAiSuggestions", "suggest-kb-articles", ticketId],
     mutationFn: () => apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/suggest-kb-articles`),
     onSuccess: () => invalidateSuggestions(qc, ticketId),
@@ -201,7 +202,7 @@ export function useSuggestKbArticles(ticketId: number) {
 
 export function useSuggestReply(ticketId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:reply", {
     mutationKey: ["supportAiSuggestions", "suggest-reply", ticketId],
     mutationFn: () => apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/suggest-reply`),
     onSuccess: () => invalidateSuggestions(qc, ticketId),
@@ -210,7 +211,7 @@ export function useSuggestReply(ticketId: number) {
 
 export function useSuggestMacro(ticketId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:reply", {
     mutationKey: ["supportAiSuggestions", "suggest-macro", ticketId],
     mutationFn: () => apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/suggest-macro`),
     onSuccess: () => invalidateSuggestions(qc, ticketId),
@@ -219,7 +220,7 @@ export function useSuggestMacro(ticketId: number) {
 
 export function useGenerateHandoffSummary(ticketId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:view", {
     mutationKey: ["supportAiSuggestions", "handoff-summary", ticketId],
     mutationFn: () => apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/handoff-summary`),
     onSuccess: () => invalidateSuggestions(qc, ticketId),
@@ -228,7 +229,7 @@ export function useGenerateHandoffSummary(ticketId: number) {
 
 export function useFindRootCauseCluster(ticketId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:view", {
     mutationKey: ["supportAiSuggestions", "root-cause-cluster", ticketId],
     mutationFn: () => apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/root-cause-cluster`),
     onSuccess: () => invalidateSuggestions(qc, ticketId),
@@ -236,7 +237,7 @@ export function useFindRootCauseCluster(ticketId: number) {
 }
 
 export function useTranslateMessage(ticketId: number) {
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:view", {
     mutationKey: ["supportAi", "translate", ticketId],
     mutationFn: ({ messageId, targetLanguage }: { messageId: number; targetLanguage: string }) =>
       apiClient.post<TranslateMessageResult | null>(`/support/${ticketId}/ai/translate`, {
@@ -248,7 +249,7 @@ export function useTranslateMessage(ticketId: number) {
 
 export function useResolveAiSuggestion(ticketId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:reply", {
     mutationKey: ["supportAiSuggestions", "resolve", ticketId],
     mutationFn: ({ suggestionId, status, feedback }: ResolveAiSuggestionInput) =>
       apiClient.post<AiSuggestion>(`/support/ai-suggestions/${suggestionId}/resolve`, { status, feedback }),
@@ -297,7 +298,7 @@ export interface SupportAiReportResult {
 }
 
 export function useImproveReply(ticketId: number) {
-  return useMutation({
+  return useAuthorizedMutation("support:ai:invoke", {
     mutationKey: ["supportAi", "improve-reply", ticketId],
     mutationFn: (input: ImproveReplyInput) =>
       apiClient.post<ImproveReplyResult>(`/support/ai/improve-reply`, { ticketId, ...input }),
@@ -305,7 +306,7 @@ export function useImproveReply(ticketId: number) {
 }
 
 export function useTranslateDraft(ticketId: number) {
-  return useMutation({
+  return useAuthorizedMutation("support:ai:invoke", {
     mutationKey: ["supportAi", "translate-draft", ticketId],
     mutationFn: (input: TranslateDraftInput) =>
       apiClient.post<TranslateDraftResult>(`/support/ai/translate-draft`, { ticketId, ...input }),

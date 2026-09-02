@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useBenefitPlans, useInsuranceClaims } from "../benefits";
 import { useSafetyIncidents } from "../safety";
 
+const forwardedSignal = new AbortController().signal;
+
 jest.mock("@tanstack/react-query", () => ({
   useQuery: jest.fn((options: unknown) => options),
   useQueryClient: jest.fn(() => ({ invalidateQueries: jest.fn() })),
@@ -73,15 +75,17 @@ describe.each([
   it("forwards the opaque cursor and never sends a page parameter", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     const options = captureOptions(invoke);
-    void options.queryFn({});
+    void options.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       endpoint,
       expect.objectContaining({ cursor }),
+      forwardedSignal,
     );
     expect(apiClient.get).toHaveBeenCalledWith(
       endpoint,
       expect.not.objectContaining({ page: expect.anything() }),
+      forwardedSignal,
     );
   });
 });

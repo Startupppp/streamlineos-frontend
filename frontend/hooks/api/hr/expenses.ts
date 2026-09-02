@@ -14,6 +14,7 @@ import type {
   ExpenseCategoryRecord,
   ExpenseStats,
 } from "@/types/hr/expenses";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface ExpensePageFilters {
   page?: number;
@@ -70,7 +71,7 @@ export function useExpensePageData(
 
 export function useCreateExpense() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("self:expenses", {
     mutationKey: ["hr", "expenses", "create"],
     mutationFn: (data: CreateExpenseInput) =>
       apiClient.post<Expense>("/me/expenses", data),
@@ -81,7 +82,7 @@ export function useCreateExpense() {
 
 export function useUpdateExpenseStatus() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:expenses:approve", {
     mutationKey: ["hr", "expenses", "update-status"],
     mutationFn: ({ expenseId, ...data }: UpdateExpenseStatusInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/expenses/${expenseId}`, data),
@@ -145,11 +146,11 @@ export interface CreateExpenseExportJobInput {
 }
 
 export function useCreateExpenseExportJob() {
-  return useMutation<
+  return useAuthorizedMutation<
     ExpenseExportJob,
     Error,
     { input: CreateExpenseExportJobInput; idempotencyKey: string }
-  >({
+  >("hr:expenses:read", {
     mutationKey: ["hr", "expenses", "export", "jobs", "create"],
     mutationFn: ({ input, idempotencyKey }) =>
       apiClient.post<ExpenseExportJob>("/hr/expenses/export/jobs", input, {
@@ -175,7 +176,7 @@ export function useExpenseExportJob(jobId: string | null) {
 
 export function useDownloadExpenseExportJob() {
   const canRead = useCan("hr:expenses:read");
-  return useMutation<Blob, Error, string>({
+  return useAuthorizedMutation<Blob, Error, string>("hr:expenses:read", {
     mutationKey: ["hr", "expenses", "export", "jobs", "download"],
     mutationFn: (jobId) => {
       if (!canRead)

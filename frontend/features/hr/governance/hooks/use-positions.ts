@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface Position {
   id: number;
@@ -63,13 +64,13 @@ const SCENARIOS_KEY = ["hr", "governance", "scenarios"] as const;
 export function usePositions(params?: { status?: string; departmentId?: number; page?: number; limit?: number }) {
   return useQuery<PositionsListResponse>({
     queryKey: [...queryKeys.hr.hrPositionsAll, params],
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
       if (params?.status) p["status"] = params.status;
       if (params?.departmentId) p["departmentId"] = params.departmentId;
       if (params?.page) p["page"] = params.page;
       if (params?.limit) p["limit"] = params.limit;
-      return apiClient.get<PositionsListResponse>("/hr/governance/positions", p);
+      return apiClient.get<PositionsListResponse>("/hr/governance/positions", p, signal);
     },
     staleTime: 30_000,
   });
@@ -78,12 +79,12 @@ export function usePositions(params?: { status?: string; departmentId?: number; 
 export function useReorgScenarios(params?: { status?: string; page?: number; limit?: number }) {
   return useQuery<ScenariosListResponse>({
     queryKey: [...queryKeys.hr.hrScenariosAll, params],
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
       if (params?.status) p["status"] = params.status;
       if (params?.page) p["page"] = params.page;
       if (params?.limit) p["limit"] = params.limit;
-      return apiClient.get<ScenariosListResponse>("/hr/governance/scenarios", p);
+      return apiClient.get<ScenariosListResponse>("/hr/governance/scenarios", p, signal);
     },
     staleTime: 30_000,
   });
@@ -100,7 +101,7 @@ export function useSimulateScenario(scenarioId: number | undefined) {
 
 export function useDeletePosition() {
   const qc = useQueryClient();
-  return useMutation<void, Error, number>({
+  return useAuthorizedMutation<void, Error, number>("hr:positions:manage", {
     mutationKey: [...POSITIONS_KEY, "delete"],
     mutationFn: (positionId) => apiClient.delete<void>(`/hr/governance/positions/${positionId}`),
     onSuccess: () => {
@@ -113,7 +114,7 @@ export function useDeletePosition() {
 
 export function useDeleteReorgScenario() {
   const qc = useQueryClient();
-  return useMutation<void, Error, number>({
+  return useAuthorizedMutation<void, Error, number>("hr:positions:manage", {
     mutationKey: [...SCENARIOS_KEY, "delete"],
     mutationFn: (scenarioId) => apiClient.delete<void>(`/hr/governance/scenarios/${scenarioId}`),
     onSuccess: () => {

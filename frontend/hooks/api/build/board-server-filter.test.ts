@@ -4,6 +4,8 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { useProjectBoardTickets } from "./ticket-queries";
 
+const forwardedSignal = new AbortController().signal;
+
 jest.mock("@tanstack/react-query", () => ({
   useInfiniteQuery: jest.fn((options: unknown) => options),
   useMemo: jest.requireActual("react").useMemo,
@@ -50,11 +52,12 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
 
     const opts = captureQueryOptions(42, { status: "OPEN,IN_PROGRESS" });
-    void opts.queryFn({ pageParam: undefined });
+    void opts.queryFn({ pageParam: undefined, signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/build/42/tickets",
       expect.objectContaining({ status: "OPEN,IN_PROGRESS" }),
+      forwardedSignal,
     );
   });
 
@@ -63,11 +66,12 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
 
     const opts = captureQueryOptions(7, { q: "login bug" });
-    void opts.queryFn({ pageParam: undefined });
+    void opts.queryFn({ pageParam: undefined, signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/build/7/tickets",
       expect.objectContaining({ search: "login bug" }),
+      forwardedSignal,
     );
   });
 
@@ -76,11 +80,12 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
 
     const opts = captureQueryOptions(7, { assigneeId: "user-1,user-2" });
-    void opts.queryFn({ pageParam: undefined });
+    void opts.queryFn({ pageParam: undefined, signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/build/7/tickets",
       expect.objectContaining({ assigneeId: "user-1,user-2" }),
+      forwardedSignal,
     );
   });
 
@@ -89,11 +94,12 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
 
     const opts = captureQueryOptions(5, { sprint: "3,4" });
-    void opts.queryFn({ pageParam: undefined });
+    void opts.queryFn({ pageParam: undefined, signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/build/5/tickets",
       expect.objectContaining({ sprintIds: "3,4" }),
+      forwardedSignal,
     );
   });
 
@@ -102,11 +108,12 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
 
     const opts = captureQueryOptions(5, { module: "10,11" });
-    void opts.queryFn({ pageParam: undefined });
+    void opts.queryFn({ pageParam: undefined, signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/build/5/tickets",
       expect.objectContaining({ moduleIds: "10,11" }),
+      forwardedSignal,
     );
   });
 
@@ -115,7 +122,7 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
 
     const opts = captureQueryOptions(3);
-    void opts.queryFn({ pageParam: undefined });
+    void opts.queryFn({ pageParam: undefined, signal: forwardedSignal });
 
     const call = (apiClient.get as jest.Mock).mock.calls[0]?.[1] as Record<string, unknown>;
     expect(call).not.toHaveProperty("status");
@@ -128,11 +135,12 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
 
     const opts = captureQueryOptions(1);
-    void opts.queryFn({ pageParam: undefined });
+    void opts.queryFn({ pageParam: undefined, signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/build/1/tickets",
       expect.objectContaining({ orderBy: "rank", orderDir: "asc", limit: 100 }),
+      forwardedSignal,
     );
   });
 });

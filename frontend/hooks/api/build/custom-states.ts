@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface CustomState {
   id: number;
@@ -57,7 +58,7 @@ export function useCustomStates(projectId: number) {
 
 export function useCreateCustomState(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "custom-states", "create"],
     mutationFn: (data: {
       name: string;
@@ -73,7 +74,7 @@ export function useCreateCustomState(projectId: number) {
 
 export function useUpdateCustomState(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:timesheets:manage", {
     mutationKey: ["projects", projectId, "custom-states", "update"],
     mutationFn: ({ stateId, ...data }: StateUpdateInput) =>
       apiClient.patch<CustomState>(
@@ -111,7 +112,7 @@ export function useReorderCustomStates(projectId: number) {
   const qc = useQueryClient();
   const snapshotRef = useRef<CustomState[] | undefined>(undefined);
 
-  return useMutation<BulkReorderResult, Error, ReorderItem[], ReorderContext>({
+  return useAuthorizedMutation<BulkReorderResult, Error, ReorderItem[], ReorderContext>("build:manage", {
     mutationKey: ["projects", projectId, "custom-states", "reorder"],
     mutationFn: (items) => {
       if (items.length > MAX_BULK_REORDER)
@@ -152,7 +153,7 @@ export function useReorderCustomStates(projectId: number) {
 
 export function useDeleteCustomState(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "custom-states", "delete"],
     mutationFn: (stateId: number) =>
       apiClient.delete(`/build/${projectId}/custom-states/${stateId}`),

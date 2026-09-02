@@ -104,9 +104,7 @@ describe("WorkersPage server-prefetch seam", () => {
     );
 
     expect(screen.getByText("Alice Nguyen")).toBeInTheDocument();
-    expect(apiClient.get).not.toHaveBeenCalledWith(
-      expect.stringContaining("/directory/workers"),
-    );
+    expect(apiClient.get).not.toHaveBeenCalled();
   });
 
   it("fetches from the API when HydrationBoundary carries no cache", () => {
@@ -121,6 +119,8 @@ describe("WorkersPage server-prefetch seam", () => {
 
     expect(apiClient.get).toHaveBeenCalledWith(
       expect.stringContaining("/directory/workers"),
+      undefined,
+      expect.any(AbortSignal),
     );
   });
 });

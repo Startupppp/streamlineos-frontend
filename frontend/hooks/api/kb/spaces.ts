@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { KbSpace, CreateSpaceInput, UpdateSpaceInput } from "@/types/kb";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useKbSpaces() {
   const canView = useCan("kb:spaces:view");
@@ -28,7 +29,7 @@ export function useKbSpace(spaceId: number) {
 
 export function useCreateKbSpace() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:spaces:manage", {
     mutationKey: ["kb", "spaces", "create"],
     mutationFn: (input: CreateSpaceInput) =>
       apiClient.post<KbSpace>("/kb/spaces", input),
@@ -40,7 +41,7 @@ export function useCreateKbSpace() {
 
 export function useUpdateKbSpace() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:spaces:manage", {
     mutationKey: ["kb", "spaces", "update"],
     mutationFn: ({ spaceId, ...data }: UpdateSpaceInput) =>
       apiClient.patch<KbSpace>(`/kb/spaces/${spaceId}`, data),
@@ -53,7 +54,7 @@ export function useUpdateKbSpace() {
 
 export function useDeleteKbSpace() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("kb:spaces:manage", {
     mutationKey: ["kb", "spaces", "delete"],
     mutationFn: (spaceId: number) =>
       apiClient.delete<{ success: boolean }>(`/kb/spaces/${spaceId}`),

@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type CrmActivityType = "CALL" | "EMAIL" | "MEETING" | "CUSTOM";
 export type CrmActivityEntityType = "LEAD" | "DEAL" | "CONTACT";
@@ -75,7 +76,7 @@ export function useCrmActivities(filters?: CrmActivitiesFilters) {
 
 export function useLogCrmActivity() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("tasks:write", {
     mutationKey: ["crm-activities", "create"] as const,
     mutationFn: (input: LogCrmActivityInput) =>
       apiClient.post<CrmActivity>("/tasks", input),
@@ -88,7 +89,7 @@ export function useLogCrmActivity() {
 
 export function useCompleteCrmActivity() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("tasks:write", {
     mutationKey: ["crm-activities", "complete"] as const,
     mutationFn: (activityId: number) =>
       apiClient.post<CrmActivity>(`/tasks/${activityId}/complete`, {}),

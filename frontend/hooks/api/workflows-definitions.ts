@@ -10,6 +10,7 @@ import type {
   WorkflowCursorPage,
   WorkflowListParams,
 } from "./workflows-types";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface CreateWorkflowInput {
   name: string;
@@ -56,7 +57,7 @@ export function useWorkflow(workflowId: string) {
 export function useCreateWorkflow() {
   const qc = useQueryClient();
   const canCreate = useCan("workflows:workflows:create");
-  return useMutation({
+  return useAuthorizedMutation("workflows:workflows:create", {
     mutationKey: ["workflows", "create"],
     mutationFn: (input: CreateWorkflowInput) => {
       assertPermission(canCreate);
@@ -69,7 +70,7 @@ export function useCreateWorkflow() {
 export function useUpdateWorkflow() {
   const qc = useQueryClient();
   const canUpdate = useCan("workflows:workflows:update");
-  return useMutation({
+  return useAuthorizedMutation("workflows:workflows:update", {
     mutationKey: ["workflows", "update"],
     mutationFn: ({ id, ...input }: UpdateWorkflowInput & { id: string }) => {
       assertPermission(canUpdate);
@@ -82,7 +83,7 @@ export function useUpdateWorkflow() {
 export function useDeleteWorkflow() {
   const qc = useQueryClient();
   const canDelete = useCan("workflows:workflows:delete");
-  return useMutation({
+  return useAuthorizedMutation("workflows:workflows:delete", {
     mutationKey: ["workflows", "delete"],
     mutationFn: (id: string) => {
       assertPermission(canDelete);
@@ -95,7 +96,7 @@ export function useDeleteWorkflow() {
 export function usePublishWorkflow() {
   const qc = useQueryClient();
   const canPublish = useCan("workflows:workflows:publish");
-  return useMutation({
+  return useAuthorizedMutation("workflows:workflows:publish", {
     mutationKey: ["workflows", "publish"],
     mutationFn: ({ id, ...input }: PublishWorkflowInput & { id: string }) => {
       assertPermission(canPublish);
@@ -108,7 +109,7 @@ export function usePublishWorkflow() {
 export function useDuplicateWorkflow() {
   const qc = useQueryClient();
   const canCreate = useCan("workflows:workflows:create");
-  return useMutation({
+  return useAuthorizedMutation("workflows:workflows:create", {
     mutationKey: ["workflows", "duplicate"],
     mutationFn: (id: string) => {
       assertPermission(canCreate);

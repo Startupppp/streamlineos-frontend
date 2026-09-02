@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type LogicConditionOp =
   | "answer_equals"
@@ -52,7 +53,7 @@ function useInvalidateBuilder(surveyId: number) {
 
 export function useCreateLogicRule(surveyId: number) {
   const invalidate = useInvalidateBuilder(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:update", {
     mutationKey: ["surveys", "logic", "create", surveyId] as const,
     mutationFn: (input: CreateLogicRuleInput) => apiClient.post(`/surveys/${surveyId}/logic`, input),
     onSuccess: invalidate,
@@ -61,7 +62,7 @@ export function useCreateLogicRule(surveyId: number) {
 
 export function useDeleteLogicRule(surveyId: number) {
   const invalidate = useInvalidateBuilder(surveyId);
-  return useMutation({
+  return useAuthorizedMutation("surveys:update", {
     mutationKey: ["surveys", "logic", "delete", surveyId] as const,
     mutationFn: (ruleId: number) => apiClient.delete(`/surveys/${surveyId}/logic/${ruleId}`),
     onSuccess: invalidate,

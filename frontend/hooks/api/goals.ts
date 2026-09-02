@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type GoalLevel = "company" | "team" | "individual";
 export type GoalStatus = "not_started" | "on_track" | "at_risk" | "off_track" | "completed";
@@ -179,7 +180,7 @@ export function useGoalStats() {
 
 export function useCreateGoal() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:goals:manage", {
     mutationKey: ["create", "goal"],
     mutationFn: (input: CreateGoalInput) => apiClient.post<GoalListItem>("/goals", input),
     onSuccess: () => {
@@ -190,7 +191,7 @@ export function useCreateGoal() {
 
 export function useUpdateGoal() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:goals:manage", {
     mutationKey: ["update", "goal"],
     mutationFn: ({ id, ...input }: UpdateGoalInput & { id: number }) =>
       apiClient.patch<GoalListItem>(`/goals/${id}`, input),
@@ -203,7 +204,7 @@ export function useUpdateGoal() {
 
 export function useDeleteGoal() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:goals:manage", {
     mutationKey: ["delete", "goal"],
     mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/goals/${id}`),
     onSuccess: () => {
@@ -214,7 +215,7 @@ export function useDeleteGoal() {
 
 export function useCheckIn(goalId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:goals:manage", {
     mutationKey: ["check", "in"],
     mutationFn: (input: CheckInInput) =>
       apiClient.post<GoalListItem>(`/goals/${goalId}/check-in`, input),
@@ -228,7 +229,7 @@ export function useCheckIn(goalId: number) {
 
 export function useAddGoalLink(goalId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:goals:manage", {
     mutationKey: ["add", "goal", "link"],
     mutationFn: (input: AddGoalLinkInput) =>
       apiClient.post<GoalLink>(`/goals/${goalId}/links`, input),
@@ -241,7 +242,7 @@ export function useAddGoalLink(goalId: number) {
 
 export function useRemoveGoalLink(goalId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:goals:manage", {
     mutationKey: ["remove", "goal", "link"],
     mutationFn: (linkId: number) =>
       apiClient.delete<{ success: boolean }>(`/goals/${goalId}/links?linkId=${linkId}`),

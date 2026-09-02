@@ -12,6 +12,7 @@ import type {
   TimelineAnchor,
   TimelinePage,
 } from "@/types/crm/activities";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 /** The anchor as the API takes it — exactly one identifier. */
 function anchorParams(anchor: TimelineAnchor): Record<string, string> {
@@ -91,7 +92,7 @@ export function useActivityParticipants(activityId: string | null) {
     queryKey: queryKeys.crm.activityParticipants(activityId ?? ""),
     queryFn: ({ signal }) =>
       apiClient.get<{ data: ActivityParticipant[] }>(
-        `/crm/activities/${activityId}/participants`, signal,
+        `/crm/activities/${activityId}/participants`, undefined, signal,
       ),
     staleTime: 60_000,
     enabled: !!activityId,
@@ -100,7 +101,7 @@ export function useActivityParticipants(activityId: string | null) {
 
 export function useLogActivity() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:activities:manage", {
     mutationKey: ["crm", "activities", "create"],
     mutationFn: (input: CreateActivityInput) => apiClient.post("/crm/activities", input),
     onSuccess: () => {
@@ -111,7 +112,7 @@ export function useLogActivity() {
 
 export function useCompleteActivityTask() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:activities:manage", {
     mutationKey: ["crm", "activities", "complete"],
     mutationFn: (activityId: string) =>
       apiClient.post(`/crm/activities/${activityId}/complete`, {}),

@@ -4,7 +4,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import type { PeriodStatus } from "@/features/accounting/shared";
 import { useCan } from "@/hooks/api/access";
+import { queryKeys } from "@/lib/query-keys";
 import { coreKeys } from "./core-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface AccountingPeriod {
   id: number;
@@ -74,12 +76,13 @@ export function usePeriods() {
 
 export function useGeneratePeriods() {
   const queryClient = useQueryClient();
-  return useMutation<{ created: number; total: number }, Error, { year: number }>({
+  return useAuthorizedMutation<{ created: number; total: number }, Error, { year: number }>("accounting:periods:manage", {
     mutationKey: [...coreKeys.all, "generate-periods"],
     mutationFn: (body) =>
       apiClient.post<{ created: number; total: number }>("/accounting/periods", body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
     },
   });
 }
@@ -97,36 +100,39 @@ export function usePeriodChecklist(periodId: number, enabled: boolean) {
 
 export function useClosePeriod(periodId: number) {
   const queryClient = useQueryClient();
-  return useMutation<AccountingPeriod, Error, void>({
+  return useAuthorizedMutation<AccountingPeriod, Error, void>("accounting:periods:manage", {
     mutationKey: [...coreKeys.all, "close-period", periodId],
     mutationFn: () =>
       apiClient.post<AccountingPeriod>(`/accounting/periods/${periodId}/close`),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
     },
   });
 }
 
 export function useLockPeriod(periodId: number) {
   const queryClient = useQueryClient();
-  return useMutation<AccountingPeriod, Error, void>({
+  return useAuthorizedMutation<AccountingPeriod, Error, void>("accounting:periods:manage", {
     mutationKey: [...coreKeys.all, "lock-period", periodId],
     mutationFn: () =>
       apiClient.post<AccountingPeriod>(`/accounting/periods/${periodId}/lock`),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
     },
   });
 }
 
 export function useReopenPeriod(periodId: number) {
   const queryClient = useQueryClient();
-  return useMutation<AccountingPeriod, Error, void>({
+  return useAuthorizedMutation<AccountingPeriod, Error, void>("accounting:periods:reopen", {
     mutationKey: [...coreKeys.all, "reopen-period", periodId],
     mutationFn: () =>
       apiClient.post<AccountingPeriod>(`/accounting/periods/${periodId}/reopen`),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
     },
   });
 }
@@ -143,12 +149,13 @@ export function useOpeningBalance() {
 
 export function usePostOpeningBalances() {
   const queryClient = useQueryClient();
-  return useMutation<{ reimported: boolean }, Error, PostOpeningBalancesInput>({
+  return useAuthorizedMutation<{ reimported: boolean }, Error, PostOpeningBalancesInput>("accounting:journal:create", {
     mutationKey: [...coreKeys.all, "post-opening-balances"],
     mutationFn: (body) =>
       apiClient.post<{ reimported: boolean }>("/accounting/opening-balances", body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
     },
   });
 }

@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 
 interface ProjectTemplateTicket {
@@ -67,7 +68,7 @@ export function useProjectTemplates() {
 
 export function useCreateProjectTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "templates", "create"],
     mutationFn: (input: CreateProjectTemplateInput) =>
       apiClient.post<ProjectTemplate>("/build/templates", input),
@@ -77,7 +78,7 @@ export function useCreateProjectTemplate() {
 
 export function useDeleteProjectTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "templates", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/build/templates/${id}`),
@@ -87,7 +88,7 @@ export function useDeleteProjectTemplate() {
 
 export function useApplyProjectTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "templates", "apply"],
     mutationFn: ({ templateId, input }: { templateId: number; input: ApplyProjectTemplateInput }) =>
       apiClient.post<{ projectId: number; key: string; ticketsCreated: number }>(

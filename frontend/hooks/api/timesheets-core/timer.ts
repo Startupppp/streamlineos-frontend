@@ -12,6 +12,7 @@ import type {
   TimerSession,
   TimesheetEntry,
 } from "@/features/timesheets/types";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useActiveTimer() {
   const canView = useCan("timesheets:entries:view");
@@ -27,7 +28,7 @@ export function useActiveTimer() {
 
 export function useStartTimer() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:entries:create", {
     mutationKey: ["timesheets", "timer", "start"],
     mutationFn: (data: StartTimerInput) =>
       apiClient.post<TimerSession>("/timesheets/timer/start", data),
@@ -61,7 +62,7 @@ export function useResumeTimer() {
 
 export function useDiscardTimer() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:entries:create", {
     mutationKey: ["timesheets", "timer", "discard"],
     mutationFn: (timerId: number) =>
       apiClient.post<{ success: boolean }>(`/timesheets/timer/${timerId}/discard`),
@@ -75,7 +76,7 @@ export function useDiscardTimer() {
 
 export function useConvertTimer() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:entries:create", {
     mutationKey: ["timesheets", "timer", "convert"],
     mutationFn: ({ timerId, data }: { timerId: number; data: ConvertTimerInput }) =>
       apiClient.post<TimesheetEntry>(`/timesheets/timer/${timerId}/convert`, data),

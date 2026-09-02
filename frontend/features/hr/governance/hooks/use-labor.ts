@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface UnionMembership {
   id: number;
@@ -51,13 +52,13 @@ const LABOR_KEY = ["hr", "governance", "labor"] as const;
 export function useUnionMemberships(params?: { unionName?: string; status?: string; page?: number; limit?: number }) {
   return useQuery<LaborListResponse<UnionMembership>>({
     queryKey: [...queryKeys.hr.hrLaborMembershipsAll, params],
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
       if (params?.unionName) p["unionName"] = params.unionName;
       if (params?.status) p["status"] = params.status;
       if (params?.page) p["page"] = params.page;
       if (params?.limit) p["limit"] = params.limit;
-      return apiClient.get<LaborListResponse<UnionMembership>>("/hr/governance/labor/memberships", p);
+      return apiClient.get<LaborListResponse<UnionMembership>>("/hr/governance/labor/memberships", p, signal);
     },
     staleTime: 30_000,
   });
@@ -66,13 +67,13 @@ export function useUnionMemberships(params?: { unionName?: string; status?: stri
 export function useCollectiveAgreements(params?: { status?: string; unionName?: string; page?: number; limit?: number }) {
   return useQuery<LaborListResponse<CollectiveAgreement>>({
     queryKey: [...queryKeys.hr.hrLaborAgreementsAll, params],
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
       if (params?.status) p["status"] = params.status;
       if (params?.unionName) p["unionName"] = params.unionName;
       if (params?.page) p["page"] = params.page;
       if (params?.limit) p["limit"] = params.limit;
-      return apiClient.get<LaborListResponse<CollectiveAgreement>>("/hr/governance/labor/agreements", p);
+      return apiClient.get<LaborListResponse<CollectiveAgreement>>("/hr/governance/labor/agreements", p, signal);
     },
     staleTime: 30_000,
   });
@@ -90,13 +91,13 @@ export function useExpiringAgreements(days = 30) {
 export function useLaborCases(params?: { status?: string; unionName?: string; page?: number; limit?: number }) {
   return useQuery<LaborListResponse<LaborCase>>({
     queryKey: [...queryKeys.hr.hrLaborCasesAll, params],
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
       if (params?.status) p["status"] = params.status;
       if (params?.unionName) p["unionName"] = params.unionName;
       if (params?.page) p["page"] = params.page;
       if (params?.limit) p["limit"] = params.limit;
-      return apiClient.get<LaborListResponse<LaborCase>>("/hr/governance/labor/cases", p);
+      return apiClient.get<LaborListResponse<LaborCase>>("/hr/governance/labor/cases", p, signal);
     },
     staleTime: 30_000,
   });
@@ -104,7 +105,7 @@ export function useLaborCases(params?: { status?: string; unionName?: string; pa
 
 export function useCreateUnionMembership() {
   const qc = useQueryClient();
-  return useMutation<UnionMembership, Error, { userId: string; unionName: string; memberSince: string; status: string }>({
+  return useAuthorizedMutation<UnionMembership, Error, { userId: string; unionName: string; memberSince: string; status: string }>("hr:labor:manage", {
     mutationKey: [...LABOR_KEY, "memberships", "create"],
     mutationFn: (payload) => apiClient.post<UnionMembership>("/hr/governance/labor/memberships", payload),
     onSuccess: () => {
@@ -117,7 +118,7 @@ export function useCreateUnionMembership() {
 
 export function useDeleteUnionMembership() {
   const qc = useQueryClient();
-  return useMutation<void, Error, number>({
+  return useAuthorizedMutation<void, Error, number>("hr:labor:manage", {
     mutationKey: [...LABOR_KEY, "memberships", "delete"],
     mutationFn: (membershipId) => apiClient.delete<void>(`/hr/governance/labor/memberships/${membershipId}`),
     onSuccess: () => {
@@ -130,7 +131,7 @@ export function useDeleteUnionMembership() {
 
 export function useCreateCollectiveAgreement() {
   const qc = useQueryClient();
-  return useMutation<CollectiveAgreement, Error, { unionName: string; title: string; effectiveFrom: string; status: string; expiresAt?: string; documentUrl?: string }>({
+  return useAuthorizedMutation<CollectiveAgreement, Error, { unionName: string; title: string; effectiveFrom: string; status: string; expiresAt?: string; documentUrl?: string }>("hr:labor:manage", {
     mutationKey: [...LABOR_KEY, "agreements", "create"],
     mutationFn: (payload) => apiClient.post<CollectiveAgreement>("/hr/governance/labor/agreements", payload),
     onSuccess: () => {
@@ -143,7 +144,7 @@ export function useCreateCollectiveAgreement() {
 
 export function useDeleteCollectiveAgreement() {
   const qc = useQueryClient();
-  return useMutation<void, Error, number>({
+  return useAuthorizedMutation<void, Error, number>("hr:labor:manage", {
     mutationKey: [...LABOR_KEY, "agreements", "delete"],
     mutationFn: (agreementId) => apiClient.delete<void>(`/hr/governance/labor/agreements/${agreementId}`),
     onSuccess: () => {
@@ -156,7 +157,7 @@ export function useDeleteCollectiveAgreement() {
 
 export function useCreateLaborCase() {
   const qc = useQueryClient();
-  return useMutation<LaborCase, Error, { unionName: string; subject: string; description: string; status?: string }>({
+  return useAuthorizedMutation<LaborCase, Error, { unionName: string; subject: string; description: string; status?: string }>("hr:labor:manage", {
     mutationKey: [...LABOR_KEY, "cases", "create"],
     mutationFn: (payload) => apiClient.post<LaborCase>("/hr/governance/labor/cases", payload),
     onSuccess: () => {
@@ -169,7 +170,7 @@ export function useCreateLaborCase() {
 
 export function useDeleteLaborCase() {
   const qc = useQueryClient();
-  return useMutation<void, Error, number>({
+  return useAuthorizedMutation<void, Error, number>("hr:labor:manage", {
     mutationKey: [...LABOR_KEY, "cases", "delete"],
     mutationFn: (caseId) => apiClient.delete<void>(`/hr/governance/labor/cases/${caseId}`),
     onSuccess: () => {

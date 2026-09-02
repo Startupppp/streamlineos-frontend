@@ -11,6 +11,7 @@ import type {
   CreatePortfolioInput,
   UpdatePortfolioInput,
 } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface ListFilters {
   cursor?: string;
@@ -43,7 +44,7 @@ export function usePortfolio(id: number) {
 
 export function useCreatePortfolio() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:portfolios:manage", {
     mutationKey: ["projects", "portfolios", "create"],
     mutationFn: (data: CreatePortfolioInput) =>
       apiClient.post<Portfolio>("/build/portfolios", data),
@@ -55,7 +56,7 @@ export function useCreatePortfolio() {
 
 export function useUpdatePortfolio() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "portfolios", "update"],
     mutationFn: ({ id, ...data }: UpdatePortfolioInput & { id: number }) =>
       apiClient.patch<Portfolio>(`/build/portfolios/${id}`, data),
@@ -68,7 +69,7 @@ export function useUpdatePortfolio() {
 
 export function useDeletePortfolio() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "portfolios", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/build/portfolios/${id}`),
@@ -80,7 +81,7 @@ export function useDeletePortfolio() {
 
 export function useLinkPortfolioProject(portfolioId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:portfolios:manage", {
     mutationKey: ["projects", "portfolios", portfolioId, "link"],
     mutationFn: (projectId: number) =>
       apiClient.post<{ success: boolean }>(`/build/portfolios/${portfolioId}/projects`, { projectId }),
@@ -92,7 +93,7 @@ export function useLinkPortfolioProject(portfolioId: number) {
 
 export function useUnlinkPortfolioProject(portfolioId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: ["projects", "portfolios", portfolioId, "unlink"],
     mutationFn: (projectId: number) =>
       apiClient.delete<{ success: boolean }>(`/build/portfolios/${portfolioId}/projects/${projectId}`),

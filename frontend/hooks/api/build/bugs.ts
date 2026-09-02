@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { Bug, CreateBugInput, UpdateBugInput } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 type BugFilters = {
   status?: string;
@@ -32,7 +33,7 @@ export function useBugs(projectId?: number, filters?: BugFilters) {
 
 export function useCreateBug() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:bugs:create", {
     mutationKey: ["projects", "bugs", "create"],
     mutationFn: ({ projectId, ...data }: CreateBugInput & { projectId: number }) =>
       apiClient.post<Bug>(`/build/${projectId}/bugs`, data),
@@ -44,7 +45,7 @@ export function useCreateBug() {
 
 export function useUpdateBug() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:timesheets:manage", {
     mutationKey: ["projects", "bugs", "update"],
     mutationFn: ({
       projectId,
@@ -61,7 +62,7 @@ export function useUpdateBug() {
 
 export function useDeleteBug() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:bugs:delete", {
     mutationKey: ["projects", "bugs", "delete"],
     mutationFn: ({ projectId, id }: { projectId: number; id: number }) =>
       apiClient.delete<unknown>(`/build/${projectId}/bugs/${id}`),

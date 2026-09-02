@@ -22,6 +22,7 @@ import type {
   OrgUnitDependencyPreview,
   OrgUnitKind,
 } from "@/types/org-hierarchy";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface CursorResponse<T> {
   data: T[];
@@ -134,14 +135,14 @@ export function useBusinessUnits(query?: ListQuery) {
         limit: String(query?.limit ?? 100),
         ...(query?.search ? { search: query.search } : {}),
         ...(query?.status ? { status: query.status } : {}),
-      }),
+      }, signal),
     staleTime: 60_000,
   });
 }
 
 export function useCreateBusinessUnit() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["create", "business", "unit"],
     mutationFn: (data: { name: string; code: string; description?: string }) =>
       apiClient.post<OrgBusinessUnit>("/org-hierarchy/business-units", data),
@@ -151,7 +152,7 @@ export function useCreateBusinessUnit() {
 
 export function useUpdateBusinessUnit() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["update", "business", "unit"],
     mutationFn: ({ id, ...data }: { id: string; name?: string; code?: string; description?: string; status?: string }) =>
       apiClient.patch<OrgBusinessUnit>(`/org-hierarchy/business-units/${id}`, data),
@@ -174,7 +175,7 @@ export function useOrgBranches(
         limit: String(query?.limit ?? 100),
         ...(query?.search ? { search: query.search } : {}),
         ...(query?.status ? { status: query.status } : {}),
-      }),
+      }, signal),
     staleTime: 60_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),
@@ -183,7 +184,7 @@ export function useOrgBranches(
 
 export function useCreateOrgBranch() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["create", "org", "branch"],
     mutationFn: (data: Record<string, unknown>) =>
       apiClient.post<OrgBranch>("/org-hierarchy/branches", data),
@@ -193,7 +194,7 @@ export function useCreateOrgBranch() {
 
 export function useUpdateOrgBranch() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["update", "org", "branch"],
     mutationFn: ({ branchId, ...data }: { branchId: string } & Record<string, unknown>) =>
       apiClient.patch<OrgBranch>(`/org-hierarchy/branches/${branchId}`, data),
@@ -216,7 +217,7 @@ export function useOrgDepartments(
         limit: String(query?.limit ?? 100),
         ...(query?.search ? { search: query.search } : {}),
         ...(query?.status ? { status: query.status } : {}),
-      }),
+      }, signal),
     staleTime: 60_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),
@@ -225,7 +226,7 @@ export function useOrgDepartments(
 
 export function useCreateOrgDepartment() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["create", "org", "department"],
     mutationFn: (data: { name: string; code: string; branchId?: string; headUserId?: string; description?: string }) =>
       apiClient.post<OrgDepartment>("/org-hierarchy/departments", data),
@@ -235,7 +236,7 @@ export function useCreateOrgDepartment() {
 
 export function useUpdateOrgDepartment() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["update", "org", "department"],
     mutationFn: ({ departmentId, ...data }: { departmentId: string } & Record<string, unknown>) =>
       apiClient.patch<OrgDepartment>(`/org-hierarchy/departments/${departmentId}`, data),
@@ -255,7 +256,7 @@ export function useOrgTeams(query?: ListQuery) {
         limit: String(query?.limit ?? 100),
         ...(query?.search ? { search: query.search } : {}),
         ...(query?.status ? { status: query.status } : {}),
-      }),
+      }, signal),
     staleTime: 60_000,
     enabled: canView,
   });
@@ -263,7 +264,7 @@ export function useOrgTeams(query?: ListQuery) {
 
 export function useCreateOrgTeam() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["create", "org", "team"],
     mutationFn: (data: { name: string; code: string; departmentId: string; leadUserId?: string; description?: string; capacity?: number }) =>
       apiClient.post<OrgTeam>("/org-hierarchy/teams", data),
@@ -274,7 +275,7 @@ export function useCreateOrgTeam() {
 
 export function useUpdateOrgTeam() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["update", "org", "team"],
     mutationFn: ({ teamId, ...data }: { teamId: string } & Record<string, unknown>) =>
       apiClient.patch<OrgTeam>(`/org-hierarchy/teams/${teamId}`, data),
@@ -294,14 +295,14 @@ export function useOrgLocations(query?: ListQuery) {
         limit: String(query?.limit ?? 100),
         ...(query?.search ? { search: query.search } : {}),
         ...(query?.status ? { status: query.status } : {}),
-      }),
+      }, signal),
     staleTime: 60_000,
   });
 }
 
 export function useCreateOrgLocation() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["create", "org", "location"],
     mutationFn: (data: { name: string; type?: string; address?: string; latitude?: number; longitude?: number }) =>
       apiClient.post<OrgLocation>("/org-hierarchy/locations", data),
@@ -311,7 +312,7 @@ export function useCreateOrgLocation() {
 
 export function useUpdateOrgLocation() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["update", "org", "location"],
     mutationFn: ({ id, ...data }: { id: string } & Record<string, unknown>) =>
       apiClient.patch<OrgLocation>(`/org-hierarchy/locations/${id}`, data),
@@ -332,7 +333,7 @@ export function useOrgCostCenters(query?: ListQuery) {
           limit: String(query?.limit ?? 100),
           ...(query?.search ? { search: query.search } : {}),
           ...(query?.status ? { status: query.status } : {}),
-        },
+        }, signal,
       ),
     staleTime: 60_000,
   });
@@ -340,7 +341,7 @@ export function useOrgCostCenters(query?: ListQuery) {
 
 export function useCreateOrgCostCenter() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["create", "org", "cost", "center"],
     mutationFn: (data: { code: string; name: string; description?: string }) =>
       apiClient.post<OrgCostCenter>("/org-hierarchy/cost-centers", data),
@@ -350,7 +351,7 @@ export function useCreateOrgCostCenter() {
 
 export function useUpdateOrgCostCenter() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:organization:manage", {
     mutationKey: ["update", "org", "cost", "center"],
     mutationFn: ({ id, ...data }: { id: string } & Record<string, unknown>) =>
       apiClient.patch<OrgCostCenter>(`/org-hierarchy/cost-centers/${id}`, data),

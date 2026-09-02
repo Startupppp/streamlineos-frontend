@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type GitProvider = "github" | "gitlab" | "bitbucket";
 
@@ -57,7 +58,7 @@ export function useGitConnections() {
 
 export function useCreateGitConnection() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:manage", {
     mutationKey: ["create", "git", "connection"],
     mutationFn: (input: CreateGitConnectionInput) =>
       apiClient.post<CreatedGitConnection>("/settings/integrations/git", input),
@@ -67,7 +68,7 @@ export function useCreateGitConnection() {
 
 export function useUpdateGitConnection() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:manage", {
     mutationKey: ["update", "git", "connection"],
     mutationFn: ({ id, ...input }: UpdateGitConnectionInput) =>
       apiClient.patch<GitConnection>(`/settings/integrations/git/${id}`, input),
@@ -77,7 +78,7 @@ export function useUpdateGitConnection() {
 
 export function useDeleteGitConnection() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:manage", {
     mutationKey: ["delete", "git", "connection"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/settings/integrations/git/${id}`),
@@ -104,7 +105,7 @@ export function useTicketGitLinks(projectId: number, ticketId: number) {
     queryKey: queryKeys.gitIntegration.ticketLinks(ticketId),
     queryFn: ({ signal }) =>
       apiClient.get<TicketGitLink[]>(
-        `/build/${projectId}/tickets/${ticketId}/git-links`, signal,
+        `/build/${projectId}/tickets/${ticketId}/git-links`, undefined, signal,
       ),
     enabled: !!projectId && !!ticketId,
     staleTime: 30_000,

@@ -41,7 +41,7 @@ export function useApproveStage() {
     ApproveStageResult,
     Error,
     { runId: number; approvalId: number; comment?: string }
-  >("payroll:runs:manage", {
+  >("payroll:runs:approve", {
     mutationKey: ["payroll", "approve-stage"],
     mutationFn: ({ runId, approvalId, comment }) =>
       apiClient.post<ApproveStageResult>(
@@ -62,7 +62,7 @@ export function useRejectStage() {
     ApproveStageResult,
     Error,
     { runId: number; approvalId: number; comment: string }
-  >("payroll:runs:manage", {
+  >("payroll:runs:approve", {
     mutationKey: ["payroll", "reject-stage"],
     mutationFn: ({ runId, approvalId, comment }) =>
       apiClient.post<ApproveStageResult>(

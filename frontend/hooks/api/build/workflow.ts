@@ -10,6 +10,7 @@ import type {
   UpdateTransitionInput,
   UpdateWipInput,
 } from "@/types/projects/workflow";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 function assertPermission(allowed: boolean): void {
   if (!allowed) throw new Error("You do not have permission to manage project workflows.");
@@ -33,7 +34,7 @@ export function useWorkflowTransitions(projectId: number) {
 export function useCreateTransition(projectId: number) {
   const qc = useQueryClient();
   const canManage = useCan("build:workflow:manage");
-  return useMutation({
+  return useAuthorizedMutation("build:workflow:manage", {
     mutationKey: ["projects", projectId, "workflow", "transitions", "create"],
     mutationFn: (data: CreateTransitionInput) => {
       assertPermission(canManage);
@@ -48,7 +49,7 @@ export function useCreateTransition(projectId: number) {
 export function useUpdateTransition(projectId: number) {
   const qc = useQueryClient();
   const canManage = useCan("build:workflow:manage");
-  return useMutation({
+  return useAuthorizedMutation("build:workflow:manage", {
     mutationKey: ["projects", projectId, "workflow", "transitions", "update"],
     mutationFn: ({ id, ...data }: UpdateTransitionInput & { id: number }) => {
       assertPermission(canManage);
@@ -66,7 +67,7 @@ export function useUpdateTransition(projectId: number) {
 export function useDeleteTransition(projectId: number) {
   const qc = useQueryClient();
   const canManage = useCan("build:workflow:manage");
-  return useMutation({
+  return useAuthorizedMutation("build:workflow:manage", {
     mutationKey: ["projects", projectId, "workflow", "transitions", "delete"],
     mutationFn: (id: number) => {
       assertPermission(canManage);
@@ -81,7 +82,7 @@ export function useDeleteTransition(projectId: number) {
 export function useUpdateStatusWip(projectId: number) {
   const qc = useQueryClient();
   const canManage = useCan("build:workflow:manage");
-  return useMutation({
+  return useAuthorizedMutation("build:workflow:manage", {
     mutationKey: ["projects", projectId, "workflow", "wip", "update"],
     mutationFn: ({ statusId, ...data }: UpdateWipInput & { statusId: number }) => {
       assertPermission(canManage);

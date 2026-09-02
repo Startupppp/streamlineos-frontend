@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type TicketLinkRelation = "duplicate" | "related" | "split";
 
@@ -28,7 +29,7 @@ export function useSupportTicketLinks(ticketId: number) {
 
 export function useAddTicketLink() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:manage", {
     mutationKey: ["add", "ticket", "link"],
     mutationFn: ({
       ticketId,
@@ -47,7 +48,7 @@ export function useAddTicketLink() {
 
 export function useMergeTicket() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:manage", {
     mutationKey: ["merge", "ticket"],
     mutationFn: ({ ticketId, intoTicketId }: { ticketId: number; intoTicketId: number }) =>
       apiClient.post<{ success: boolean; mergedIntoTicketId: number }>(`/support/${ticketId}/merge`, {

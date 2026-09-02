@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SupportTicketStatus, SupportTicketPriority, SupportMessageAttachment } from "@/types/support";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type PortalTicketCategory =
   | "general"
@@ -63,7 +64,7 @@ export function usePortalTickets() {
 
 export function useCreatePortalTicket() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:portal:tickets:create", {
     mutationKey: ["supportPortalTickets", "create"],
     mutationFn: (input: CreatePortalTicketInput) =>
       apiClient.post<PortalTicket>("/support/portal/tickets", input),
@@ -84,7 +85,7 @@ export function usePortalTicket(ticketId: number) {
 
 export function useReplyToPortalTicket(ticketId: number) {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:portal:tickets:reply", {
     mutationKey: ["supportPortalTickets", "reply", ticketId],
     mutationFn: (input: ReplyPortalTicketInput) =>
       apiClient.post<PortalMessage>(`/support/portal/tickets/${ticketId}/messages`, input),

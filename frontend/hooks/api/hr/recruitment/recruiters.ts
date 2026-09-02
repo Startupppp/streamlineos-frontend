@@ -46,11 +46,11 @@ export function useRecruiters() {
 export function useRecruiterActivity(params?: { recruiterId?: string; limit?: number }) {
   return useQuery({
     queryKey: queryKeys.hr.recruiterActivity(params),
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const sp = new URLSearchParams();
       if (params?.recruiterId) sp.set("recruiterId", params.recruiterId);
       if (params?.limit) sp.set("limit", String(params.limit));
-      return apiClient.get<RecruiterActivityEntry[]>(`/hr/recruitment/recruiters/activity?${sp.toString()}`);
+      return apiClient.get<RecruiterActivityEntry[]>(`/hr/recruitment/recruiters/activity?${sp.toString()}`, undefined, signal);
     },
     staleTime: 60_000,
   });

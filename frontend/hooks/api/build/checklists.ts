@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import type { Checklist, ChecklistItem } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 function checklistKeys(projectId: number, ticketId: number) {
   return ["projects", projectId, "tickets", ticketId, "checklists"] as const;
@@ -15,7 +16,7 @@ export function useChecklists(projectId: number, ticketId: number) {
     queryKey: checklistKeys(projectId, ticketId),
     queryFn: ({ signal }) =>
       apiClient.get<Checklist[]>(
-        `/build/${projectId}/tickets/${ticketId}/checklists`, signal,
+        `/build/${projectId}/tickets/${ticketId}/checklists`, undefined, signal,
       ),
     enabled: canView && !!projectId && !!ticketId,
     staleTime: 30_000,
@@ -24,7 +25,7 @@ export function useChecklists(projectId: number, ticketId: number) {
 
 export function useCreateChecklist(projectId: number, ticketId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: [
       "projects",
       projectId,
@@ -45,7 +46,7 @@ export function useCreateChecklist(projectId: number, ticketId: number) {
 
 export function useUpdateChecklist(projectId: number, ticketId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: [
       "projects",
       projectId,
@@ -72,7 +73,7 @@ export function useUpdateChecklist(projectId: number, ticketId: number) {
 
 export function useDeleteChecklist(projectId: number, ticketId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: [
       "projects",
       projectId,
@@ -92,7 +93,7 @@ export function useDeleteChecklist(projectId: number, ticketId: number) {
 
 export function useCreateChecklistItem(projectId: number, ticketId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: [
       "projects",
       projectId,
@@ -121,7 +122,7 @@ export function useCreateChecklistItem(projectId: number, ticketId: number) {
 
 export function useUpdateChecklistItem(projectId: number, ticketId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: [
       "projects",
       projectId,
@@ -152,7 +153,7 @@ export function useUpdateChecklistItem(projectId: number, ticketId: number) {
 
 export function useDeleteChecklistItem(projectId: number, ticketId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: [
       "projects",
       projectId,

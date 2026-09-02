@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type OnboardingFlowSession = {
   id: number;
@@ -80,7 +81,7 @@ function invalidateChecklist(queryClient: ReturnType<typeof useQueryClient>, mod
 
 export function useCompleteChecklistItem() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("onboarding:module-checklists:manage", {
     mutationKey: ["onboarding", "module-checklists", "complete-item"],
     mutationFn: ({ moduleKey, itemKey }: { moduleKey: string; itemKey: string }) =>
       apiClient.post(`/onboarding/module-checklists/${moduleKey}/items/${itemKey}/complete`, {}),
@@ -90,7 +91,7 @@ export function useCompleteChecklistItem() {
 
 export function useDismissModuleChecklist() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("onboarding:module-checklists:manage", {
     mutationKey: ["onboarding", "module-checklists", "dismiss"],
     mutationFn: (moduleKey: string) =>
       apiClient.post(`/onboarding/module-checklists/${moduleKey}/dismiss`, {}),
@@ -125,7 +126,7 @@ export function useGuidedTours(enabled = true) {
 
 export function useSaveTourProgress() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("onboarding:tours:view", {
     mutationKey: ["onboarding", "tours", "save-progress"],
     mutationFn: ({ tourKey, currentStep }: { tourKey: string; currentStep: number }) =>
       apiClient.post<GuidedTourProgress>(`/onboarding/tours/${tourKey}/progress`, { currentStep }),
@@ -137,7 +138,7 @@ export function useSaveTourProgress() {
 
 export function useDismissTour() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("onboarding:tours:view", {
     mutationKey: ["onboarding", "tours", "dismiss"],
     mutationFn: (tourKey: string) =>
       apiClient.post<GuidedTourProgress>(`/onboarding/tours/${tourKey}/dismiss`, {}),

@@ -17,6 +17,7 @@ import type {
   CreateProductVariantInput,
   CreateUomInput,
 } from "@/types/inventory";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface ProductFilters {
   [key: string]: unknown;
@@ -120,7 +121,7 @@ export function useUom() {
 
 export function useCreateProduct() {
   const qc = useQueryClient();
-  return useMutation<InventoryProduct, Error, CreateProductInput>({
+  return useAuthorizedMutation<InventoryProduct, Error, CreateProductInput>("inventory:products:create", {
     mutationKey: ["inventory", "product", "create"],
     mutationFn: (data) =>
       apiClient.post<InventoryProduct>("/inventory/products", serializeProductWrite(data)),
@@ -132,7 +133,7 @@ export function useCreateProduct() {
 
 export function useUpdateProduct(id?: number) {
   const qc = useQueryClient();
-  return useMutation<InventoryProduct, Error, UpdateProductPayload>({
+  return useAuthorizedMutation<InventoryProduct, Error, UpdateProductPayload>("inventory:products:update", {
     mutationKey: ["inventory", "product", "update"],
     mutationFn: ({ productId, ...data }) => {
       const resolvedId = id ?? productId;
@@ -154,7 +155,7 @@ export function useUpdateProduct(id?: number) {
 
 export function useDeleteProduct() {
   const qc = useQueryClient();
-  return useMutation<void, Error, number>({
+  return useAuthorizedMutation<void, Error, number>("inventory:products:delete", {
     mutationKey: ["inventory", "product", "delete"],
     mutationFn: (productId) =>
       apiClient.delete<void>(`/inventory/products/${productId}`),
@@ -166,7 +167,7 @@ export function useDeleteProduct() {
 
 export function useArchiveProduct() {
   const qc = useQueryClient();
-  return useMutation<InventoryProduct, Error, number>({
+  return useAuthorizedMutation<InventoryProduct, Error, number>("inventory:products:update", {
     mutationKey: ["inventory", "product", "archive"],
     mutationFn: (productId) =>
       apiClient.post<InventoryProduct>(`/inventory/products/${productId}/archive`, {}),
@@ -179,7 +180,7 @@ export function useArchiveProduct() {
 
 export function useRestoreProduct() {
   const qc = useQueryClient();
-  return useMutation<InventoryProduct, Error, number>({
+  return useAuthorizedMutation<InventoryProduct, Error, number>("inventory:products:update", {
     mutationKey: ["inventory", "product", "restore"],
     mutationFn: (productId) =>
       apiClient.post<InventoryProduct>(`/inventory/products/${productId}/restore`, {}),
@@ -205,7 +206,7 @@ export function useProductVariants(filters?: ProductVariantFilters) {
 
 export function useCreateProductVariant(productId: number) {
   const qc = useQueryClient();
-  return useMutation<InventoryProductVariant, Error, CreateProductVariantInput>({
+  return useAuthorizedMutation<InventoryProductVariant, Error, CreateProductVariantInput>("inventory:products:update", {
     mutationKey: ["inventory", "product", productId, "variant", "create"],
     mutationFn: (data) =>
       apiClient.post<InventoryProductVariant>(
@@ -221,7 +222,7 @@ export function useCreateProductVariant(productId: number) {
 
 export function useCreateCategory() {
   const qc = useQueryClient();
-  return useMutation<InventoryCategory, Error, CreateCategoryInput>({
+  return useAuthorizedMutation<InventoryCategory, Error, CreateCategoryInput>("inventory:products:create", {
     mutationKey: ["inventory", "category", "create"],
     mutationFn: (data) =>
       apiClient.post<InventoryCategory>("/inventory/products/categories", data),
@@ -233,7 +234,7 @@ export function useCreateCategory() {
 
 export function useCreateUom() {
   const qc = useQueryClient();
-  return useMutation<InventoryUom, Error, CreateUomInput>({
+  return useAuthorizedMutation<InventoryUom, Error, CreateUomInput>("inventory:products:create", {
     mutationKey: ["inventory", "uom", "create"],
     mutationFn: (data) =>
       apiClient.post<InventoryUom>("/inventory/products/uom", data),
@@ -245,11 +246,11 @@ export function useCreateUom() {
 
 export function useUpdateCategory() {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     unknown,
     Error,
     { categoryId: number; data: { name?: string; parentCategoryId?: number | null; description?: string | null; isActive?: boolean } }
-  >({
+  >("inventory:products:update", {
     mutationKey: ["inventory", "category", "update"],
     mutationFn: ({ categoryId, data }) =>
       apiClient.patch(`/inventory/products/categories/${categoryId}`, data),
@@ -261,11 +262,11 @@ export function useUpdateCategory() {
 
 export function useUpdateProductVariant(productId: number) {
   const qc = useQueryClient();
-  return useMutation<
+  return useAuthorizedMutation<
     unknown,
     Error,
     { variantId: number; data: { name?: string; sku?: string; barcode?: string; costPrice?: string; sellingPrice?: string; isActive?: boolean } }
-  >({
+  >("inventory:products:update", {
     mutationKey: ["inventory", "product", productId, "variant", "update"],
     mutationFn: ({ variantId, data }) =>
       apiClient.patch(`/inventory/products/${productId}/variants/${variantId}`, data),

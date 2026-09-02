@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface KbAttachment {
   id: number;
@@ -33,7 +34,7 @@ export function useSupportKbAttachments(articleId: number) {
     queryKey: queryKeys.kbAttachments.list(articleId),
     queryFn: ({ signal }) =>
       apiClient.get<KbAttachment[]>(
-        `/support/kb/articles/${articleId}/attachments`, signal,
+        `/support/kb/articles/${articleId}/attachments`, undefined, signal,
       ),
     enabled: Number.isFinite(articleId) && articleId > 0,
     staleTime: 30_000,
@@ -42,7 +43,7 @@ export function useSupportKbAttachments(articleId: number) {
 
 export function useUploadSupportKbAttachment(articleId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:kb:manage", {
     mutationKey: ["supportKbAttachments", "upload"],
     mutationFn: async (file: File) => {
       const formData = new FormData();
@@ -72,7 +73,7 @@ export function useUploadSupportKbAttachment(articleId: number) {
 
 export function useDeleteSupportKbAttachment(articleId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:kb:manage", {
     mutationKey: ["supportKbAttachments", "delete"],
     mutationFn: (attachmentId: number) =>
       apiClient.delete<{ success: boolean }>(

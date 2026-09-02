@@ -3,6 +3,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface CsatSourceReport {
   totalRequests: number;
@@ -67,7 +68,7 @@ export function usePublicCsatSurvey(token: string) {
 }
 
 export function useSubmitCsatResponse(token: string) {
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:manage", {
     mutationKey: ["supportCsat", "respond", token] as const,
     mutationFn: (input: SubmitCsatResponseInput) =>
       apiClient.post<SubmitCsatResponseResult>(`/support/csat/${token}`, input),

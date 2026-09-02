@@ -24,9 +24,10 @@ import { apiClient } from "@/lib/api-client";
 import type { LeadEnrichmentResult } from "@/lib/ai/schemas";
 import type { Contact } from "@/types/crm";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useEnrichContact() {
-  return useMutation({
+  return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["contacts", "enrich"] as const,
     mutationFn: (input: {
       name: string;

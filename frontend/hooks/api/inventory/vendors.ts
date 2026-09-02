@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { InventoryVendor, CreateVendorInput, UpdateVendorInput, VendorPerformance } from "@/types/inventory";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 type VendorFilters = {
   search?: string;
@@ -53,7 +54,7 @@ export function useVendor(vendorId: number) {
 
 export function useCreateVendor() {
   const qc = useQueryClient();
-  return useMutation<InventoryVendor, Error, CreateVendorInput>({
+  return useAuthorizedMutation<InventoryVendor, Error, CreateVendorInput>("inventory:vendors:manage", {
     mutationKey: ["inventory", "vendors", "create"],
     mutationFn: (data) => apiClient.post<InventoryVendor>("/inventory/vendors", data),
     onSuccess: () => {
@@ -64,7 +65,7 @@ export function useCreateVendor() {
 
 export function useUpdateVendor(vendorId?: number) {
   const qc = useQueryClient();
-  return useMutation<InventoryVendor, Error, UpdateVendorPayload>({
+  return useAuthorizedMutation<InventoryVendor, Error, UpdateVendorPayload>("inventory:vendors:manage", {
     mutationKey: ["inventory", "vendors", "update", vendorId],
     mutationFn: ({ id, ...data }) => {
       const targetId = vendorId ?? id;
@@ -90,7 +91,7 @@ export function useVendorPerformance(vendorId: number) {
 
 export function useToggleVendorActive(vendorId?: number) {
   const qc = useQueryClient();
-  return useMutation<InventoryVendor, Error, { id: number; isActive: boolean }>({
+  return useAuthorizedMutation<InventoryVendor, Error, { id: number; isActive: boolean }>("inventory:vendors:manage", {
     mutationKey: ["inventory", "vendors", "toggle-active", vendorId],
     mutationFn: ({ id, isActive }) =>
       apiClient.patch<InventoryVendor>(`/inventory/vendors/${id}`, { isActive }),

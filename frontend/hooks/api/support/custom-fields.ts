@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type CustomFieldType = "text" | "number" | "select" | "checkbox" | "date";
 
@@ -60,7 +61,7 @@ export function usePortalActiveCustomFields() {
 
 export function useCreateCustomField() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:settings:manage", {
     mutationKey: ["supportCustomFields", "create"] as const,
     mutationFn: (input: CreateCustomFieldInput) =>
       apiClient.post<SupportCustomField>("/support/custom-fields", input),
@@ -70,7 +71,7 @@ export function useCreateCustomField() {
 
 export function useUpdateCustomField() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:settings:manage", {
     mutationKey: ["supportCustomFields", "update"] as const,
     mutationFn: ({ id, input }: { id: number; input: UpdateCustomFieldInput }) =>
       apiClient.patch<SupportCustomField>(`/support/custom-fields/${id}`, input),
@@ -80,7 +81,7 @@ export function useUpdateCustomField() {
 
 export function useDeleteCustomField() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:tickets:reply", {
     mutationKey: ["supportCustomFields", "delete"] as const,
     mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/support/custom-fields/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportCustomFields.all }),

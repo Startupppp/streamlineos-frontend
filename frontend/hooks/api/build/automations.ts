@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import type { ProjectAutomation } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 export type { ProjectAutomation } from "@/types/projects";
 
 export const TRIGGER_EVENTS = [
@@ -38,7 +39,7 @@ export function useAutomations(projectId: number) {
 
 export function useCreateAutomation(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "automations", "create"],
     mutationFn: (data: Omit<ProjectAutomation, "id" | "projectId" | "createdAt">) =>
       apiClient.post<ProjectAutomation>(`/build/${projectId}/automations`, data),
@@ -48,7 +49,7 @@ export function useCreateAutomation(projectId: number) {
 
 export function useUpdateAutomation(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:timesheets:manage", {
     mutationKey: ["projects", projectId, "automations", "update"],
     mutationFn: ({ id, ...data }: Partial<ProjectAutomation> & { id: number }) =>
       apiClient.patch<ProjectAutomation>(`/build/${projectId}/automations/${id}`, data),
@@ -58,7 +59,7 @@ export function useUpdateAutomation(projectId: number) {
 
 export function useDeleteAutomation(projectId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "automations", "delete"],
     mutationFn: (id: number) => apiClient.delete(`/build/${projectId}/automations/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: automationKeys(projectId) }),

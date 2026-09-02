@@ -9,6 +9,7 @@ import type {
   CreateProgramInput,
   UpdateProgramInput,
 } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface ListFilters {
   status?: string;
@@ -32,7 +33,7 @@ export function usePrograms(filters?: ListFilters) {
 
 export function useCreateProgram() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:programs:manage", {
     mutationKey: ["projects", "programs", "create"],
     mutationFn: (data: CreateProgramInput) =>
       apiClient.post<Program>("/build/programs", data),
@@ -44,7 +45,7 @@ export function useCreateProgram() {
 
 export function useUpdateProgram() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "programs", "update"],
     mutationFn: ({ id, ...data }: UpdateProgramInput & { id: number }) =>
       apiClient.patch<Program>(`/build/programs/${id}`, data),
@@ -59,7 +60,7 @@ export function useUpdateProgram() {
 
 export function useDeleteProgram() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "programs", "delete"],
     mutationFn: (id: number) => apiClient.delete<void>(`/build/programs/${id}`),
     onSuccess: () => {

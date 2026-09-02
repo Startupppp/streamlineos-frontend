@@ -173,7 +173,7 @@ export function DelegationsPage() {
           "/access/delegations",
           receivedState,
           receivedCursors.at(-1),
-        ), signal,
+        ), undefined, signal,
       ),
     staleTime: 60_000,
   });
@@ -195,7 +195,7 @@ export function DelegationsPage() {
           "/access/delegations/given",
           grantedState,
           grantedCursors.at(-1),
-        ), signal,
+        ), undefined, signal,
       ),
     staleTime: 60_000,
   });

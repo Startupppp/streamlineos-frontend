@@ -16,6 +16,7 @@ import type {
   UpdateTestRunInput,
   UpdateTestResultInput,
 } from "@/types/projects";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 type TestCaseFilters = {
   q?: string;
@@ -57,7 +58,7 @@ export function useTestCases(projectId?: number, filters?: TestCaseFilters) {
 
 export function useCreateTestCase() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:qa:manage", {
     mutationKey: ["projects", "qa", "cases", "create"],
     mutationFn: ({ projectId, ...data }: CreateTestCaseInput & { projectId: number }) =>
       apiClient.post<TestCase>(`/build/${projectId}/test-cases`, data),
@@ -69,7 +70,7 @@ export function useCreateTestCase() {
 
 export function useUpdateTestCase() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:timesheets:manage", {
     mutationKey: ["projects", "qa", "cases", "update"],
     mutationFn: ({
       projectId,
@@ -85,7 +86,7 @@ export function useUpdateTestCase() {
 
 export function useDeleteTestCase() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:qa:manage", {
     mutationKey: ["projects", "qa", "cases", "delete"],
     mutationFn: ({ projectId, id }: { projectId: number; id: number }) =>
       apiClient.delete<unknown>(`/build/${projectId}/test-cases/${id}`),
@@ -120,7 +121,7 @@ export function useTestRunDetail(projectId?: number, runId?: number) {
 
 export function useCreateTestRun() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:qa:manage", {
     mutationKey: ["projects", "qa", "runs", "create"],
     mutationFn: ({ projectId, ...data }: CreateTestRunInput & { projectId: number }) =>
       apiClient.post<TestRun>(`/build/${projectId}/test-runs`, data),
@@ -132,7 +133,7 @@ export function useCreateTestRun() {
 
 export function useUpdateTestRun() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:timesheets:manage", {
     mutationKey: ["projects", "qa", "runs", "update"],
     mutationFn: ({
       projectId,
@@ -149,7 +150,7 @@ export function useUpdateTestRun() {
 
 export function useDeleteTestRun() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:qa:manage", {
     mutationKey: ["projects", "qa", "runs", "delete"],
     mutationFn: ({ projectId, id }: { projectId: number; id: number }) =>
       apiClient.delete<unknown>(`/build/${projectId}/test-runs/${id}`),
@@ -161,7 +162,7 @@ export function useDeleteTestRun() {
 
 export function useUpdateTestResult() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:qa:execute", {
     mutationKey: ["projects", "qa", "results", "update"],
     mutationFn: ({
       projectId,
@@ -181,7 +182,7 @@ export function useUpdateTestResult() {
 
 export function useCreateBugFromResult() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("build:bugs:create", {
     mutationKey: ["projects", "qa", "results", "bug"],
     mutationFn: ({
       projectId,

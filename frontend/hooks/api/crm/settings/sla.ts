@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface SlaPolicy {
   id: number;
@@ -75,7 +76,7 @@ export function useSlaBreachedLeads(params?: { limit?: number }) {
 
 export function useCreateSlaPolicy() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:sla:manage", {
     mutationKey: ["crm-settings", "sla-policies", "create"],
     mutationFn: (input: CreateSlaPolicyInput) =>
       apiClient.post<SlaPolicy>("/crm/sla/policies", input),
@@ -87,7 +88,7 @@ export function useCreateSlaPolicy() {
 
 export function useUpdateSlaPolicy() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:sla:manage", {
     mutationKey: ["crm-settings", "sla-policies", "update"],
     mutationFn: ({ id, ...data }: UpdateSlaPolicyInput) =>
       apiClient.patch<SlaPolicy>(`/crm/sla/policies/${id}`, data),
@@ -99,7 +100,7 @@ export function useUpdateSlaPolicy() {
 
 export function useDeleteSlaPolicy() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:sla:manage", {
     mutationKey: ["crm-settings", "sla-policies", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/crm/sla/policies/${id}`),

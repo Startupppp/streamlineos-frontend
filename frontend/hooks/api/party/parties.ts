@@ -10,6 +10,7 @@ import type {
   CreatePartyInput,
   UpdatePartyInput,
 } from "@/types/party/parties";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface UsePartiesParams {
   page?: number;
@@ -30,7 +31,7 @@ export function useParties(params: UsePartiesParams = {}) {
 
   return useQuery({
     queryKey: queryKeys.party.parties(queryParams),
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const searchParams = new URLSearchParams({
         page: String(page),
         limit: String(limit),
@@ -38,7 +39,7 @@ export function useParties(params: UsePartiesParams = {}) {
       if (partyType) searchParams.set("partyType", partyType);
       if (role) searchParams.set("role", role);
       if (search) searchParams.set("search", search);
-      return apiClient.get<PartiesPage>(`/party/parties?${searchParams.toString()}`);
+      return apiClient.get<PartiesPage>(`/party/parties?${searchParams.toString()}`, undefined, signal);
     },
     staleTime: 60_000,
     enabled: canView,
@@ -58,7 +59,7 @@ export function useParty(partyId: string | null) {
 
 export function useCreateParty() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("party:parties:create", {
     mutationKey: ["party", "parties", "create"],
     mutationFn: (input: CreatePartyInput) =>
       apiClient.post<BusinessParty>("/party/parties", input),
@@ -70,7 +71,7 @@ export function useCreateParty() {
 
 export function useUpdateParty() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("party:parties:update", {
     mutationKey: ["party", "parties", "update"],
     mutationFn: ({ partyId, ...input }: UpdatePartyInput & { partyId: string }) =>
       apiClient.patch<BusinessParty>(`/party/parties/${partyId}`, input),
@@ -85,7 +86,7 @@ export function useUpdateParty() {
 
 export function useDeleteParty() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("party:parties:delete", {
     mutationKey: ["party", "parties", "delete"],
     mutationFn: (partyId: string) =>
       apiClient.delete(`/party/parties/${partyId}`),

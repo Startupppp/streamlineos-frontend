@@ -50,13 +50,13 @@ export function usePeople(params: UsePeopleParams = {}) {
 
   return useQuery({
     queryKey: queryKeys.directory.people(queryParams),
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const searchParams = new URLSearchParams({
         limit: String(limit),
       });
       if (cursor) searchParams.set("cursor", cursor);
       if (search) searchParams.set("search", search);
-      return apiClient.get<PeoplePage>(`/directory/people?${searchParams.toString()}`);
+      return apiClient.get<PeoplePage>(`/directory/people?${searchParams.toString()}`, undefined, signal);
     },
     staleTime: 60_000,
     enabled: canView,

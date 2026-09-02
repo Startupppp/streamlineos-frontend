@@ -11,6 +11,7 @@ import type {
   BillingUninvoiced,
   InvoiceDraftInput,
 } from "@/features/timesheets/types";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface UninvoicedQuery {
   startDate?: string;
@@ -32,7 +33,7 @@ export function useBillingUninvoiced(query: UninvoicedQuery = {}, enabled = true
 
 
 export function useBillingExport() {
-  return useMutation({
+  return useAuthorizedMutation("timesheets:billing:export", {
     mutationKey: ["timesheets", "billing", "export"],
     mutationFn: (data: BillingExportInput) =>
       apiClient.post<{ exportId: number; entryCount: number; totalHours: number; totalAmount: number }>(
@@ -45,7 +46,7 @@ export function useBillingExport() {
 
 export function useCreateInvoiceDraft() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("timesheets:billing:invoice", {
     mutationKey: ["timesheets", "billing", "invoice-draft"],
     mutationFn: (data: InvoiceDraftInput) =>
       apiClient.post<{ exportId: number; entryCount: number; amount: number }>(

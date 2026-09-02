@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { queryKeyBase } from "@/lib/query-keys/base";
 
 export type EmergencyEventType = "office_closure" | "disaster" | "safety_check" | "other";
 export type EmergencyEventStatus = "active" | "resolved";
@@ -41,16 +42,16 @@ interface PaginatedResult<T> {
 const BASE = "/hr/enterprise/ops/emergency";
 
 const emergencyKeys = {
-  all: ["streamlineos", "hr-emergency"] as const,
-  list: (p: Record<string, unknown>) => ["streamlineos", "hr-emergency", "list", p] as const,
-  detail: (id: string) => ["streamlineos", "hr-emergency", "detail", id] as const,
-  status: (id: string) => ["streamlineos", "hr-emergency", "status", id] as const,
+  all: [...queryKeyBase, "hr-emergency"] as const,
+  list: (p: Record<string, unknown>) => [...queryKeyBase, "hr-emergency", "list", p] as const,
+  detail: (id: string) => [...queryKeyBase, "hr-emergency", "detail", id] as const,
+  status: (id: string) => [...queryKeyBase, "hr-emergency", "status", id] as const,
 };
 
 export function useEmergencyEvents(params: { cursor?: string; status?: EmergencyEventStatus } = {}) {
   return useQuery({
     queryKey: emergencyKeys.list(params as Record<string, unknown>),
-    queryFn: ({ signal }) => apiClient.get<PaginatedResult<EmergencyEvent>>(`${BASE}/events`, params as Record<string, unknown>),
+    queryFn: ({ signal }) => apiClient.get<PaginatedResult<EmergencyEvent>>(`${BASE}/events`, params as Record<string, unknown>, signal),
     staleTime: 30_000,
   });
 }

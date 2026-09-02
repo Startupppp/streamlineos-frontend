@@ -70,7 +70,7 @@ export function useSoAtp(soId: number) {
     queryKey: [...queryKeys.inventory.salesOrder(soId), "atp"] as const,
     queryFn: async ({ signal }) => {
       const raw = await apiClient.get<RawAtpEntry[]>(
-        `/inventory/sales-orders/${soId}/atp`, signal,
+        `/inventory/sales-orders/${soId}/atp`, undefined, signal,
       );
       return raw.map(mapAtp);
     },

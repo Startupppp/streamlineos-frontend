@@ -3,6 +3,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { queryKeyBase } from "@/lib/query-keys/base";
 
 export type AnomalySeverity = "info" | "warning" | "critical";
 
@@ -39,7 +41,7 @@ export interface CategorizeSuggestResult {
 }
 
 const insightKeys = {
-  all: ["streamlineos", "accounting", "insights"] as const,
+  all: [...queryKeyBase, "accounting", "insights"] as const,
   anomalies: (params: Record<string, string>) =>
     [...insightKeys.all, "anomalies", params] as const,
   digest: () => [...insightKeys.all, "digest"] as const,
@@ -75,7 +77,7 @@ export function useInsightsDigest() {
 }
 
 export function useCategorizeSuggest() {
-  return useMutation<CategorizeSuggestResult, Error, CategorizeSuggestInput>({
+  return useAuthorizedMutation<CategorizeSuggestResult, Error, CategorizeSuggestInput>("accounting:reimbursements:read", {
     mutationKey: ["categorize", "suggest"],
     mutationFn: (input) =>
       apiClient.post<CategorizeSuggestResult>("/accounting/expenses/categorize-suggest", input),

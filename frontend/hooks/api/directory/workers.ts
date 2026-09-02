@@ -31,7 +31,7 @@ export function useWorkers(params: UseWorkersParams = {}) {
 
   return useQuery({
     queryKey: queryKeys.directory.workers(queryParams),
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const searchParams = new URLSearchParams({
         limit: String(limit),
       });
@@ -39,7 +39,7 @@ export function useWorkers(params: UseWorkersParams = {}) {
       if (status) searchParams.set("status", status);
       if (search) searchParams.set("search", search);
       if (organizationPersonId) searchParams.set("organizationPersonId", organizationPersonId);
-      return apiClient.get<WorkersPage>(`/directory/workers?${searchParams.toString()}`);
+      return apiClient.get<WorkersPage>(`/directory/workers?${searchParams.toString()}`, undefined, signal);
     },
     staleTime: 60_000,
     enabled: canView,

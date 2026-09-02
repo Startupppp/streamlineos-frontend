@@ -5,6 +5,12 @@ import { apiClient } from "@/lib/api-client";
 import { useDeleteOrg } from "./organization";
 import { useBulkDeleteLeads } from "./leads";
 
+jest.mock("@/hooks/api/access", () => ({
+  useAccess: jest.fn(() => ({ data: { scopes: {}, modules: {}, isOrgOwner: false }, refetch: jest.fn() })),
+  useCan: jest.fn().mockReturnValue(true),
+  useModuleEnabled: jest.fn().mockReturnValue(true),
+}));
+
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
     delete: jest.fn(),

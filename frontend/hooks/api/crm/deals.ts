@@ -27,6 +27,7 @@ import type {
   OverrideForecastInput,
 } from "@/types/crm";
 import type { DealStageTransition } from "@/types/crm/stage-transitions";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type {
   DealActivity,
@@ -92,7 +93,7 @@ export function useDealDetail(id: number) {
 
 export function useCreateDeal() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:deals:create", {
     mutationKey: ["deals", "create"] as const,
     mutationFn: (input: CreateDealInput) => apiClient.post<Deal>("/deals", input),
     onSuccess: () => {
@@ -105,7 +106,7 @@ export function useCreateDeal() {
 
 export function useUpdateDeal() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:deals:update", {
     mutationKey: ["deals", "update"] as const,
     mutationFn: ({ id, ...data }: UpdateDealInput) =>
       apiClient.patch<Deal>(`/deals/${id}`, data),
@@ -121,7 +122,7 @@ export function useUpdateDeal() {
 
 export function useUpdateDealStage() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:deals:update", {
     mutationKey: ["deals", "updateStage"] as const,
     mutationFn: ({ id, stage, lostReason, version }: UpdateDealStageInput) =>
       apiClient.patch<Deal | { approvalPending: true; approvalId: number }>(`/deals/${id}`, { stage, lostReason, version }),
@@ -153,7 +154,7 @@ export function useUpdateDealStage() {
 
 export function useDeleteDeal() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:deals:delete", {
     mutationKey: ["deals", "delete"] as const,
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/deals/${id}`),
@@ -167,7 +168,7 @@ export function useDeleteDeal() {
 
 export function useCloneDeal() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:deals:create", {
     mutationKey: ["deals", "clone"] as const,
     mutationFn: (id: number) =>
       apiClient.post<Deal>(`/deals/${id}/clone`, {}),
@@ -182,7 +183,7 @@ export function useCloneDeal() {
 
 export function useLogDealActivity() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:deals:update", {
     mutationKey: ["dealActivities", "create"] as const,
     mutationFn: ({ dealId, ...data }: LogDealActivityInput) =>
       apiClient.post<DealActivity>(`/deals/${dealId}/activities`, data),
@@ -204,7 +205,7 @@ export function useDealMeetings(dealId: number) {
 
 export function useCreateDealMeeting(dealId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:deals:update", {
     mutationKey: ["deals", "meetings", "create"] as const,
     mutationFn: (input: CreateDealMeetingInput) =>
       apiClient.post<DealMeeting>(`/deals/${dealId}/meetings`, input),
@@ -216,7 +217,7 @@ export function useCreateDealMeeting(dealId: number) {
 
 export function useDeleteDealMeeting(dealId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:deals:update", {
     mutationKey: ["deals", "meetings", "delete"] as const,
     mutationFn: (meetingId: number) =>
       apiClient.delete<{ success: boolean }>(`/deals/${dealId}/meetings/${meetingId}`),
@@ -253,7 +254,7 @@ export function useDealAging() {
 
 export function useResolveDealApproval() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:deals:update", {
     mutationKey: ["deals", "approvals", "resolve"] as const,
     mutationFn: (input: { approvalId: number; action: "approve" | "reject"; rejectionReason?: string }) =>
       apiClient.post("/deals/approvals", input),
@@ -274,7 +275,7 @@ export function useForecastSnapshots(params?: { period?: string; limit?: number 
 
 export function useCaptureForecastSnapshot() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:deals:forecast", {
     mutationKey: ["deals", "forecast", "captureSnapshot"] as const,
     mutationFn: (input: CaptureForecastSnapshotInput) =>
       apiClient.post<ForecastSnapshot>("/deals/forecast/snapshot", input),
@@ -295,7 +296,7 @@ export function useDealCompetitors(dealId: number) {
 
 export function useAddDealCompetitor(dealId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:deals:update", {
     mutationKey: ["deals", "competitors", "create", dealId] as const,
     mutationFn: (input: CreateDealCompetitorInput) =>
       apiClient.post<DealCompetitor>(`/deals/${dealId}/competitors`, input),
@@ -307,7 +308,7 @@ export function useAddDealCompetitor(dealId: number) {
 
 export function useDeleteDealCompetitor(dealId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:deals:update", {
     mutationKey: ["deals", "competitors", "delete", dealId] as const,
     mutationFn: (competitorId: string) =>
       apiClient.delete<{ success: boolean }>(`/deals/${dealId}/competitors/${competitorId}`),
@@ -328,7 +329,7 @@ export function useDealHealth(dealId: number) {
 
 export function usePatchNextStep(dealId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:deals:update", {
     mutationKey: ["deals", "patchNextStep"] as const,
     mutationFn: (input: PatchNextStepInput) =>
       apiClient.patch<Deal>(`/deals/${dealId}`, { nextStep: input.nextStep }),
@@ -349,7 +350,7 @@ export function useStakeholders(dealId: number) {
 
 export function useCreateStakeholder(dealId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:deals:update", {
     mutationKey: ["deals", "stakeholders", "create", dealId] as const,
     mutationFn: (input: CreateStakeholderInput) =>
       apiClient.post<DealStakeholder>(`/deals/${dealId}/stakeholders`, input),
@@ -364,7 +365,7 @@ export function useCreateStakeholder(dealId: number) {
 
 export function useDeleteStakeholder(dealId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:deals:update", {
     mutationKey: ["deals", "stakeholders", "delete", dealId] as const,
     mutationFn: (stakeholderId: string) =>
       apiClient.delete<{ deleted: boolean }>(`/deals/${dealId}/stakeholders/${stakeholderId}`),
@@ -389,7 +390,7 @@ export function useDeleteStakeholder(dealId: number) {
 
 export function useOverrideForecast() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("crm:deals:manage", {
     mutationKey: ["deals", "forecast", "override"] as const,
     mutationFn: ({ snapshotId, ...data }: OverrideForecastInput & { snapshotId: string }) =>
       apiClient.patch<ForecastSnapshot>(`/deals/forecast/${snapshotId}/override`, data),

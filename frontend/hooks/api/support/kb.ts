@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type KbArticleStatus = "draft" | "published" | "archived";
 export type KbArticleVisibility = "public" | "internal";
@@ -153,7 +154,7 @@ export function useSupportKbCategories(options?: { enabled?: boolean }) {
 
 export function useCreateSupportKbCategory() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:kb:manage", {
     mutationKey: ["supportKb", "categories", "create"],
     mutationFn: (input: CreateKbCategoryInput) =>
       apiClient.post<KbCategory>("/support/kb/categories", input),
@@ -163,7 +164,7 @@ export function useCreateSupportKbCategory() {
 
 export function useUpdateSupportKbCategory() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:kb:manage", {
     mutationKey: ["supportKb", "categories", "update"],
     mutationFn: ({ id, ...input }: UpdateKbCategoryInput & { id: number }) =>
       apiClient.patch<KbCategory>(`/support/kb/categories/${id}`, input),
@@ -173,7 +174,7 @@ export function useUpdateSupportKbCategory() {
 
 export function useDeleteSupportKbCategory() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:kb:manage", {
     mutationKey: ["supportKb", "categories", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/support/kb/categories/${id}`),
@@ -215,7 +216,7 @@ export function useSupportKbArticleFeedback(id: number) {
 
 export function useCreateSupportKbArticle() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:kb:manage", {
     mutationKey: ["supportKb", "articles", "create"],
     mutationFn: (input: CreateKbArticleInput) =>
       apiClient.post<KbArticleListItem>("/support/kb/articles", input),
@@ -225,7 +226,7 @@ export function useCreateSupportKbArticle() {
 
 export function useUpdateSupportKbArticle() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:kb:manage", {
     mutationKey: ["supportKb", "articles", "update"],
     mutationFn: ({ id, ...input }: UpdateKbArticleInput & { id: number }) =>
       apiClient.patch<KbArticleListItem>(`/support/kb/articles/${id}`, input),
@@ -238,7 +239,7 @@ export function useUpdateSupportKbArticle() {
 
 export function useDeleteSupportKbArticle() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("support:kb:manage", {
     mutationKey: ["supportKb", "articles", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/support/kb/articles/${id}`),
