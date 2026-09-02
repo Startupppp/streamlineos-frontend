@@ -129,3 +129,186 @@ Edited: `ai-stream-abort.ts` (+ spec) · `streaming/index.ts` · `ai-gateway.ser
 - `@langchain/openai` cannot carry a per-call `AbortSignal` into an embedding request
   (`embeddings.js:126` hardcodes `requestOptions = {}`). Stopping that HTTP request needs the `openai` SDK as a
   direct dependency — a dependency decision, not a code fix.
+
+---
+
+# Session S5 (2026-09-02) — the last open box: which surfaces owe streaming, and the two numbers
+
+## What the box asked, and what it got
+
+> *Non-chat AI surfaces stream rather than buffering; first visible streamed state lands within the target and
+> application overhead before provider dispatch stays inside its budget.*
+
+**Still PARTIAL.** Six more surfaces stream, the excluded set is now excluded *with a stated reason* rather than
+merely uncounted, and both numbers are measured against targets that did not exist in the repo before this
+session. What keeps it open is not a missing mechanism: it is ~33 buffered text surfaces, 26 of them in other
+agents' modules, and a frontend that still has exactly one stream client.
+
+## Re-verification of the S4 finding (it had drifted)
+
+S4 recorded "119 paid gateway call sites, 69 `invokeStructured*`, 43 the rest". Re-counted at S5 head:
+
+| kind | count | source |
+|---|---|---|
+| `invokeStructured*` (incl. 2 `WithImage`) | 70 | `grep -rno '\.invokeStructured[A-Za-z]*(' src --include='*.ts'` minus specs and the gateway's own definitions |
+| `invokeText*` | 43 | same shape |
+| `streamTextWithUsage` | 9 (was 3) | same shape |
+| `embed{Query,Batch}WithCredit` | 6 | same shape |
+| **total** | **128** | corroborated by `check:ai-charge`: "128 invocations scanned" |
+
+So S4's 119/69 was one structured call short and predates this session's six conversions. The 43 text sites is
+unchanged — conversions add a streaming sibling beside the buffered route rather than replacing it, because the
+buffered route is the fallback for a client that cannot stream.
+
+## The judgement: which of the text surfaces owe streaming
+
+One line decides it: **stream where the output is prose a client can append; do not stream where the output is
+only valid when complete.**
+
+**The 70 `invokeStructured*` sites are excluded on the second half of that line, and this is the reason.** They
+return an object validated by a Zod schema. A half-parsed object is not renderable partial state — there is
+nothing a user can read in `{"score": 7, "reas` — and streaming one would have to emit before validation, which
+is precisely the `.strict()` boundary the release depends on (brief §9). The cost is real and the benefit is
+zero. That is an exclusion, not an omission.
+
+**17 of the 43 text sites are in `src/modules/ai/**`.** Ten now stream:
+
+| surface | route | why it owes streaming |
+|---|---|---|
+| blog improve-writing / suggest-title / summarize | `POST /ai/blog/posts/:postId/*/stream` | (landed S4) |
+| KB public ask | `POST /public/kb/stream-ask` | (landed earlier) |
+| CRM account summary | `POST /ai/account-summary/stream` | 6-section executive brief, 1024 tokens, a human is waiting |
+| CRM meeting prep | `POST /ai/meeting-prep/stream` | 7-section pre-meeting brief, 1024 tokens |
+| CRM meeting follow-up | `POST /ai/crm/meeting-follow-up/stream` | drafted email a human reads and edits |
+| CRM report narrator | `POST /ai/report-narrator/stream` | 2-3 paragraph narrative over a report |
+| survey response summary | `POST /ai/surveys/:surveyId/summarize-responses/stream` | narrative under 600 words |
+| HR job description | `POST /ai/generate-jd/stream` | plain-text JD, explicitly "no markdown", 1024 tokens |
+
+Seven are named and left buffered, each with its reason:
+
+- `hr-copilot-tools.ts` ×3 — LangChain tools inside the chat agent loop. The **model** consumes their output;
+  no human waits on the intermediate text, and the turn that contains them already streams.
+- `ticket-insights-ai.improveDescription`, `ticket-triage-ai.improveDescriptionDraft` — the output is an HTML
+  fragment handed to a TipTap/ProseMirror editor. A partial fragment is unbalanced markup: same class as a
+  half-parsed object.
+- `crm-copilot-lead.duplicateSuggestionsForLead` — the prose is one field beside a `duplicates[]` array. The
+  payload is a record; streaming it would mean streaming one field of a JSON body.
+- `executive-brief.generate` — persists a snapshot with citations that `GET /ai/executive-brief` reads back.
+  The route's product is the stored record; streaming would need a second post-stream persistence path, which
+  is exactly the duplicate mechanism this release is removing.
+
+**26 text sites are outside this territory** (17 modules: `timesheets` 5, `kb/help-centre` 5, `kb/wiki` 4,
+`inventory/ai` 2, and 10 modules with 1 each). The three largest are all long-form prose a human waits on and
+are the obvious next batch; each is now a prompt extraction plus ~10 lines of controller, because the helper
+they need already exists and is proven.
+
+## One mechanism, not two — and a gate that enforces it
+
+Every new route is:
+
+```ts
+return respondWithAiTextStream(req, res, { feature, orgId, route }, (signal) =>
+  this.svc.streamX(orgId, body, userId, signal));
+```
+
+and every new service method is `resolve…Prompt()` (shared with the buffered sibling, so a tuned prompt cannot
+make the two disagree) followed by `gateway.streamTextWithUsage`. No new streaming primitive was written.
+
+`ai-stream-route-contract.spec.ts` grew two tests so this cannot quietly stop being true:
+- every `@Post("…stream…")` in an AI controller must sit in a file that uses `respondWithAiTextStream` or
+  `pipeAiTextStream` (10 stream routes found);
+- no AI controller may call `.pipeTextStreamToResponse(` itself — that is the seam whose dropped promise
+  produced a truncated 200 in S4.
+
+## The two numbers
+
+`common/observability/seam-budgets.ts` has nine seams and no AI entry, **deliberately** —
+`ai-metric-alert-parity.spec.ts` asserts the AI span is never bucketed into a seam budget, because averaging a
+third party's latency into a database seam makes every seam alert meaningless. So the targets are declared in
+the module that owns them, in the same shape and with the same 25% alert headroom:
+`src/modules/ai/core/telemetry/ai-stream-budgets.ts`.
+
+| key | budget (p95) | threshold | derivation |
+|---|---|---|---|
+| `ai.stream.first-byte.app` | 150 ms | 112 ms | a streamed answer is a browser-visible read, so it is held to `route.cached.read`'s bar; provider latency is excluded, not hidden inside it |
+| `ai.stream.dispatch.overhead` | 50 ms | 37 ms | one `cache.roundtrip` (2 ms, breaker) + one `db.roundtrip.simple` (20 ms, reservation) + in-process work, capped at ⅓ of the first-byte budget so dispatch alone can never make the visible target unattainable — the derivation `runtime.eventloop.delay` uses |
+
+**Method and result — first visible streamed state.** `ai-stream-surface.integration.spec.ts` boots a real Nest
+app, exposes a controller that goes through `respondWithAiTextStream`, and hands it a provider stub that writes
+its first chunk with no delay. The client is `fetch` + `response.body.getReader()`; the window is
+`process.hrtime.bigint()` at request start to the first `read()` resolving. **n=30, p50 0.530 ms, p95
+2.512 ms** against a 150 ms budget. A separate test proves the response is genuinely streamed rather than
+buffered: first byte arrives at under half the time the last byte does, over a 400 ms producer.
+
+**Method and result — application overhead before provider dispatch.**
+`ai-stream-dispatch-overhead.spec.ts` drives the real `AiGatewayStreamHelper` — real breaker, real redaction of
+a realistic 5 KB prompt, real concurrency limiter, real reservation ordering — with only `streamText` stubbed,
+and times request start → the moment `streamText` is invoked. **n=50, p50 0.052 ms, p95 0.074 ms in-process.**
+A stub makes two I/O legs free, so they are added back from their own declared seam budgets rather than
+pretended away: **0.074 + 22 = 22.1 ms against a 50 ms budget.** An anti-vacuous test asserts the measured
+window really brackets the gateway (the reservation is recorded before dispatch, in that order).
+
+**NOT MEASURED: end-to-end time-to-first-token including the provider.** There is no provider credential in this
+environment. Rather than guess, both numbers exclude provider latency and say so. The provider's own share is
+recorded per call at runtime — `ai.ttft_ms` on the `ai.gateway.call` span, `ttftMs` on the settled
+`ai_usage_logs` row — so the missing half is observable in production without another code change.
+
+## Cancellation stops the spend — proven over a socket, with a bite
+
+The frontend equivalent of this bug (ticket 13: a controller signal overwritten by a timeout-only signal) has a
+backend twin, and a mocked controller spec cannot see either, because it never builds a socket.
+`ai-stream-surface.integration.spec.ts` hangs a real client up mid-stream and asserts on what the **provider
+stub** observed, not on what the test handed the route:
+
+- `aborted: true` — the signal the producer received fired;
+- `settled: false`, `released: true` — the producer stopped rather than running to completion;
+- anti-vacuous control: a healthy request records `aborted: false`, `settled: true`, so the abort assertion is
+  not free.
+
+**Bite proof.** Replacing `produce(abort.signal)` with `produce(new AbortController().signal)` in
+`ai-text-stream-route.ts` → **1 failed, 3 passed**, the failure being "a real client hang-up aborts the provider
+call" (expected `true`, received `false`). Restored; SHA-256 `fb33a99207a379397a0b12550c6467f46ab53ffee8e3f34978049267c99fce25`
+and an empty `git diff` on that file.
+
+## Incidental fix in this territory
+
+`hr-recruitment-ai.generateJd` invoked the paid gateway with `actor: { orgId: "system", userId: null }` and
+`charge: true`, so **every job-description generation reserved and settled against a fake organisation** — the
+caller's org was never billed and the usage row was untenanted. The controller already had `@CurrentUser()`.
+Both the buffered route and the new streaming one now take the real `orgId`/`userId`. Same class as the blog
+tenancy finding recorded above.
+
+## Gates (S5)
+
+| Gate | Result |
+|---|---|
+| `jest --runInBand --testPathPattern="modules/ai"` | exit 0 — 58 suites passed / 1 skipped, **527 passed / 21 skipped** |
+| `pnpm typecheck` (8 GB heap, `heavy.sh 2`) | exit 2, 195 errors, **0 under `src/modules/ai/`** |
+| `pnpm check:spec-typecheck` | exit 2, 205 errors, **0 under `src/modules/ai/`** |
+| `npx eslint` on 14 changed/added files | 0 errors, 0 warnings |
+| `check:ai-charge` | exit 0 — 128 invocations, all declare `charge` |
+| `check:route-classification` | exit 0 — UNDECLARED 0 |
+| `check:cycles` (madge) | exit 0 — no circular dependency |
+| 18 further `check:*` gates | exit 0 (listed in the ticket's S5 footer) |
+| `check:over-300` | exit 1 — **pre-existing**, 400/394 at S5 start; no S5 file crossed 300 |
+| `check:route-budgets` | exit 1 — **another territory**, `GET /notifications*` |
+
+The 195/205 typecheck errors are a single cascade: another agent is mid-edit in
+`src/db/schema/payroll/policies.ts`, where `payrollPolicies` and `payrollPolicyVersions` now fail TS7022
+circular inference, which collapses the Drizzle query-builder types and turns ~200 callbacks repo-wide into
+implicit `any`. Rule 4 applies — none of it is under `src/modules/ai/`.
+
+## Handover
+
+- **Ticket 13 (frontend).** Nine `/stream` routes now exist with no client. `hooks/api/chat-ai-assistant.ts` is
+  still the only stream reader and is hard-wired to `/chat`. Until a generic `useAiTextStream` exists, every one
+  of these surfaces still buffers *from the user's seat*, which is why the box is not ticked.
+- **Whoever owns `kb/`, `timesheets/`, `inventory/`, `payroll/`, `support/`, `e-sign/`, `chat/`, `cron/`,
+  `leads/`, `mail/`, `automation/`, `workflows/`, `hr/recruitment/`, `accounting/`, `feedbucket/`.** 26 buffered
+  `invokeText*` surfaces. The 14 in `kb/wiki`, `kb/help-centre` and `timesheets` are long-form prose a human
+  waits on and should stream; the pattern is `resolve…Prompt()` + `streamTextWithUsage` +
+  `respondWithAiTextStream`, three files' worth of precedent in `crm-brief.service.ts`,
+  `crm-ai.controller.ts` and `survey-ai.controller.ts`.
+- **`common/observability/`.** `AI_STREAM_BUDGETS` deliberately lives in the AI module because the parity spec
+  bars an AI seam. If a future alert wants to read AI budgets from one table, that table has to grow a
+  non-seam section rather than absorb the AI keys.

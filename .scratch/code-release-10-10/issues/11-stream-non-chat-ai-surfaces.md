@@ -4,24 +4,87 @@
 
 **Blocked by:** 09.
 
-**Status:** 6 of 7 boxes closed · session S4 (2026-09-02)
+**Status:** 6 of 7 boxes closed · session S5 (2026-09-02)
 
 - [ ] Non-chat AI surfaces stream rather than buffering; first visible streamed state lands within the target and application overhead before provider dispatch stays inside its budget.
-  PARTIAL — NOT CLOSED. S4 audit of current source (`grep -rn "streamText(\|pipeTextStreamToResponse" src --include="*.ts"` → 5 non-spec hits):
-  streaming today = `POST /chat`, `POST /public/kb/stream-ask`, and **new** `POST /ai/blog/posts/:postId/{improve-writing,suggest-title,summarize}/stream`.
-  Buffering = the other ~65 endpoints across 11 AI controllers. Of the 119 paid gateway call sites, 69 are
-  `invokeStructured*` (Zod-validated JSON — a half-parsed object is not renderable partial state) and 43 are
-  `invokeText*` (streamable). What landed: `AiGatewayService.streamTextWithUsage` — the real streaming sibling of
-  `invokeText` (breaker · concurrency slot · atomic reserve before the paid call · token-metered settle after ·
-  abort release), plus `respondWithAiTextStream`, so converting one more surface is now a prompt-builder extraction
-  and ~10 lines of controller. TTFT and app overhead land on the settled usage row through `AiCallMetrics`
-  (`ai-gateway-stream.helper.spec.ts` → "records ttft and application overhead onto the settled usage row").
-  What did not: the remaining ~40 `invokeText` surfaces. **Correction to the S3 note** — the blocker was never
-  `@NoTenantTransaction()`: every AI controller already carries it at class level, so streaming needs no transaction
-  refactor. The real blocker is a frontend stream client (only `hooks/api/chat-ai-assistant.ts` exists, hard-wired
-  to `/chat`) — ticket 13's territory. There is also **no declared TTFT target or app-overhead budget in the repo**:
-  `common/observability/seam-budgets.ts` has 9 seams, none of them AI, so "inside its budget" has no number to
-  check against. That is a product decision, not a code gap.
+  PARTIAL — NOT CLOSED. **S5 converted six more surfaces and measured both numbers; the box stays open because
+  ~33 buffered text surfaces remain, 26 of them outside this territory, and no frontend consumes any of the new
+  routes.**
+
+  **Streaming today (11 routes, one mechanism).** `POST /chat` · `POST /public/kb/stream-ask` ·
+  `POST /ai/blog/posts/:postId/{improve-writing,suggest-title,summarize}/stream` · **new in S5**
+  `POST /ai/account-summary/stream` · `POST /ai/meeting-prep/stream` · `POST /ai/report-narrator/stream` ·
+  `POST /ai/crm/meeting-follow-up/stream` · `POST /ai/surveys/:surveyId/summarize-responses/stream` ·
+  `POST /ai/generate-jd/stream`. Every one goes through `respondWithAiTextStream` →
+  `AiGatewayService.streamTextWithUsage`; no second mechanism was added, and
+  `ai-stream-route-contract.spec.ts` now fails if a `/stream` route appears in an AI controller that does not
+  use the shared helper, or if any controller calls `pipeTextStreamToResponse` itself.
+
+  **Why the 70 `invokeStructured*` call sites are excluded, stated rather than left unexamined.** They return a
+  Zod-validated object. A half-parsed JSON object is not renderable partial state — there is nothing a user can
+  read in `{"score": 7, "reas` — and emitting it would have to bypass the `.strict()` boundary validation this
+  release depends on (§9 of the brief), turning a schema violation into a silently-truncated object. Streaming
+  them would cost the validation and buy the user nothing. They are excluded on that ground, not because nobody
+  looked. Current census (`grep -rno '\.invokeStructured[A-Za-z]*(' src --include='*.ts'` minus specs and the
+  gateway's own definitions): **70 structured · 43 text · 9 streaming · 6 embedding = 128**, matching
+  `check:ai-charge` ("128 invocations scanned").
+
+  **Of the 43 text sites, 17 are in this territory.** Ten now have a streaming sibling (blog ×3, CRM
+  account-summary, CRM meeting-prep, CRM meeting-follow-up, CRM report-narrator, survey summarize-responses,
+  HR generate-jd, KB public-ask). The other seven are named with a reason, applying one line: **stream where the
+  output is prose a client can append; do not stream where the output is only valid when complete.**
+  · `hr-copilot-tools.ts` ×3 — LangChain tools inside the chat agent loop; the model consumes their output, no
+  human waits on them, and the turn they belong to already streams.
+  · `ticket-insights-ai.improveDescription` and `ticket-triage-ai.improveDescriptionDraft` — the output is an
+  HTML fragment fed to a TipTap/ProseMirror editor; a partial fragment is unbalanced markup, the same class of
+  "only valid when complete" as a half-parsed object.
+  · `crm-copilot-lead.duplicateSuggestionsForLead` — the prose is one field beside a `duplicates[]` array; the
+  surface's payload is a record, not an answer.
+  · `executive-brief.generate` — writes a snapshot with citations that `GET /ai/executive-brief` reads back; the
+  route's product is the stored record, and streaming it would need a second post-stream persistence path.
+  The remaining 26 text sites live in 17 other modules (`timesheets`, `kb/wiki`, `kb/help-centre`,
+  `kb/retrieval`, `inventory/ai`, `payroll/insights`, `support/core`, `e-sign`, `chat`, `cron`, `leads`,
+  `mail`, `automation`, `workflows`, `hr/recruitment`, `accounting/ai`, `feedbucket`) — **another territory**.
+  `kb/wiki` (4), `kb/help-centre` (5) and `timesheets` (5) are the largest and are all long-form prose that a
+  human waits on; they are the obvious next batch and each is now a ~10-line controller change plus a prompt
+  extraction, because the helper they need already exists.
+
+  **Both numbers are now measured, against targets that did not exist before.**
+  `common/observability/seam-budgets.ts` still carries no AI seam — deliberately, and
+  `ai-metric-alert-parity.spec.ts` asserts the AI span is never bucketed into one — so the targets are declared
+  in the module that owns them: `src/modules/ai/core/telemetry/ai-stream-budgets.ts`, same shape and same 25%
+  alert headroom as the seam table.
+  · `ai.stream.first-byte.app` — **budget 150 ms p95, threshold 112 ms**, derived from `route.cached.read`: a
+  streamed answer is a browser-visible read and is held to the same bar. **Measured: n=30 over a real socket,
+  p50 0.530 ms, p95 2.512 ms** (`ai-stream-surface.integration.spec.ts` boots Nest, drives
+  `respondWithAiTextStream` and times `fetch` start → first byte off `response.body.getReader()`).
+  · `ai.stream.dispatch.overhead` — **budget 50 ms p95, threshold 37 ms**, derived as one `cache.roundtrip`
+  (2 ms, breaker) + one `db.roundtrip.simple` (20 ms, credit reservation) + in-process work, capped at one third
+  of the first-byte budget. **Measured: n=50 through the real `AiGatewayStreamHelper` with only the provider
+  stubbed, p50 0.052 ms, p95 0.074 ms in-process**, plus the declared 22 ms I/O allowance for the two legs a
+  stub makes free = **22.1 ms against 50 ms** (`ai-stream-dispatch-overhead.spec.ts`).
+  · **NOT MEASURED: end-to-end time to first token including the provider.** There is no provider credential in
+  this environment, so provider latency is excluded from both numbers rather than guessed at. What is measured
+  is the application's whole share of each; the provider's share is recorded per call at runtime as
+  `ai.ttft_ms` on the `ai.gateway.call` span and as `ttftMs` on the settled `ai_usage_logs` row.
+
+  **Cancellation stops the spend, proven over a real socket with a bite.**
+  `ai-stream-surface.integration.spec.ts` → 4 passed: a real client hang-up mid-stream aborts the signal the
+  provider stub received, the stub records `released` and never records `settled`, and an anti-vacuous control
+  asserts a healthy request never aborts and does settle. Bite proof: replacing `produce(abort.signal)` with
+  `produce(new AbortController().signal)` in `ai-text-stream-route.ts` → **1 failed, 3 passed**
+  ("a real client hang-up aborts the provider call" — expected true, received false); restored, SHA-256
+  `fb33a992…` and an empty `git diff` on that file.
+
+  **Two things that still block the box, neither of them code in this territory.**
+  1. **No frontend consumes any `/stream` route.** `hooks/api/chat-ai-assistant.ts` is still the only stream
+     client in the frontend and is hard-wired to `/chat`; a surface whose only client calls the buffered sibling
+     still buffers *for the user*. Ticket 13's territory.
+  2. **The 26 text surfaces in 17 other modules.** Each needs an edit outside `src/modules/ai/**`.
+
+  Incidental fix inside this territory: `hr-recruitment-ai.generateJd` reserved and settled against
+  `actor: { orgId: "system", userId: null }`, so every JD generation was billed to a fake organisation. Both the
+  buffered route and the new streaming one now take the caller's real `orgId`/`userId` from `@CurrentUser()`.
 
 - [x] Client aborts propagate through the gateway, database, cache and provider adapters. Spending stops on cancellation.
   P1 FOUND AND FIXED — the S3 claim that "signal reaches the provider adapter" was **false in production**, and its
@@ -116,3 +179,25 @@ Gates run, output read:
 
 Handed to ticket 10 (its files, actively being edited): `ai-gateway.service.ts` mints `randomUUID()` at
 7 entry points (lines 75, 89, 140, 153, 166, 195, 246) — see the ticket-31 handover in the S3 report.
+
+---
+
+## Session S5 evidence footer (2026-09-02)
+
+Gates run, output read:
+
+| Gate | Result |
+|---|---|
+| `jest --runInBand --testPathPattern="modules/ai"` | exit 0 — **58 suites passed / 1 skipped, 527 passed / 21 skipped** |
+| `pnpm typecheck` (8 GB heap, via `heavy.sh 2`) | exit 2, **195 errors, 0 under `src/modules/ai/`** — cascade from another agent's in-flight `src/db/schema/payroll/policies.ts` (TS7022 circular inference) |
+| `pnpm check:spec-typecheck` | exit 2, **205 errors, 0 under `src/modules/ai/`** — same cascade |
+| `npx eslint` on the 14 changed/added files | **0 errors, 0 warnings** |
+| `pnpm -s check:route-classification` | exit 0 — ALL ROUTES CLASSIFIED, UNDECLARED 0 |
+| `pnpm -s check:ai-charge` | exit 0 — 128 invocations scanned, all declare `charge` |
+| `pnpm -s check:route-duplicates` | exit 0 |
+| `pnpm -s check:openapi-coverage` · `check:openapi-path-params` · `check:operation-ids` | exit 0 (3613 operations) |
+| `pnpm -s check:file-sizes` | exit 0 — 3559 files, all within 500 |
+| `pnpm -s check:cycles` (madge) | exit 0 — no circular dependency, 5505 files |
+| `check:permission-keys` · `module-gate` · `idempotent-commands` · `mock-surface` · `bounded-contracts` · `compression` · `cache-key-shapes` · `namespace-coverage` · `import-direction` · `kebab-case` · `log-secrets` · `envelope-consistency` · `contract-registry` · `module-di` · `fire-and-forget` · `bodyless-conflicts` | all exit 0 |
+| `pnpm -s check:over-300` | exit 1 — **pre-existing**: 400 files / baseline 394 when S5 started, 402 now; no file changed by S5 crossed 300 (`crm-ai.controller.ts` 321→393 and `hr-recruitment-ai.service.ts` 325→342 were already over) |
+| `pnpm -s check:route-budgets` | exit 1 — **another territory**: `GET /notifications` and `GET /notifications/unread-count` |
