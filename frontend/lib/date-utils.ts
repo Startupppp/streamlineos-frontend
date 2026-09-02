@@ -73,3 +73,68 @@ export function formatRelativeTime(
 
   return formatShortDate(then);
 }
+
+const EVENT_DATE_PARTS: Intl.DateTimeFormatOptions = {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+};
+
+const EVENT_TIME_PARTS: Intl.DateTimeFormatOptions = {
+  hour: "numeric",
+  minute: "2-digit",
+};
+
+export function readerTimeZone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
+/**
+ * An IANA zone the browser does not know makes `Intl.DateTimeFormat` throw a
+ * `RangeError`, which would take the whole detail panel down. The backend
+ * contract only promises a string, so an unknown zone degrades to the reader's
+ * rather than crashing the render.
+ */
+function resolveTimeZone(zone: string | null | undefined, fallback: string): string {
+  if (!zone) return fallback;
+  try {
+    new Intl.DateTimeFormat("en-IN", { timeZone: zone });
+    return zone;
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * A calendar event's start and end are absolute instants; the zone it was
+ * authored in is a separate fact. Rendering the instant in the reader's zone
+ * and labelling it with the reader's zone is right about the moment and silent
+ * about the intent — a 09:00 Asia/Kolkata standup reads as 03:30 Europe/London
+ * with nothing saying it was not scheduled at 03:30. When the authored zone is
+ * known and differs, the authored reading leads and the reader's follows.
+ */
+export function formatEventTimeRange(
+  start: string | Date,
+  end: string | Date,
+  timezone?: string | null,
+): string {
+  const from = start instanceof Date ? start : new Date(start);
+  const to = end instanceof Date ? end : new Date(end);
+  if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) return "";
+  const reader = readerTimeZone();
+  const zone = resolveTimeZone(timezone, reader);
+  const date = new Intl.DateTimeFormat("en-IN", { ...EVENT_DATE_PARTS, timeZone: zone }).format(from);
+  const fromTime = new Intl.DateTimeFormat("en-IN", { ...EVENT_TIME_PARTS, timeZone: zone }).format(from);
+  const toTime = new Intl.DateTimeFormat("en-IN", { ...EVENT_TIME_PARTS, timeZone: zone }).format(to);
+  const authored = `${date}, ${fromTime} – ${toTime} · ${zone}`;
+  if (zone === reader) return authored;
+  const readerTime = new Intl.DateTimeFormat("en-IN", { ...EVENT_TIME_PARTS, timeZone: reader }).format(from);
+  return `${authored} (${readerTime} ${reader})`;
+}
+
+export function formatEventDate(value: string | Date, timezone?: string | null): string {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const zone = resolveTimeZone(timezone, readerTimeZone());
+  return new Intl.DateTimeFormat("en-IN", { ...EVENT_DATE_PARTS, timeZone: zone }).format(date);
+}

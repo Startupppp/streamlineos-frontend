@@ -3,8 +3,10 @@ import { queryKeyBase as base } from "./base";
 export const platformHierarchyQueryKeys = {
   calendar: {
     all: [...base, "calendar"] as const,
-    events: (start: string, end: string) =>
-      [...base, "calendar", "events", start, end] as const,
+    events: (start: string, end: string, sources?: readonly string[]) =>
+      sources === undefined
+        ? ([...base, "calendar", "events", start, end] as const)
+        : ([...base, "calendar", "events", start, end, sources] as const),
     attendees: (eventId: number) =>
       [...base, "calendar", "attendees", eventId] as const,
     orgMembers: () => [...base, "calendar", "orgMembers"] as const,

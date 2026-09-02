@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback } from "react";
-import { format } from "date-fns";
 import Link from "next/link";
 import { CalendarIcon, HelpCircle, Tag, Ticket, Video } from "lucide-react";
 import { CheckIcon, MapPinIcon, UsersIcon, XIcon } from "@animateicons/react/lucide";
@@ -14,6 +13,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useEventAttendees, type CalendarListItem } from "@/hooks/api/calendar";
 import { resolveImageUrl } from "@/lib/utils";
+import { formatEventDate, formatEventTimeRange } from "@/lib/date-utils";
 import { EVENT_COLORS } from "./calendar-event-constants";
 import { EventSyncStatus } from "./event-sync-status";
 
@@ -70,8 +70,8 @@ export function EventDetailContent({
               <CalendarIcon className="h-3.5 w-3.5 shrink-0" />
               <span>
                 {event.allDay
-                  ? format(new Date(event.start), "PPP")
-                  : `${format(new Date(event.start), "PPp")} – ${format(new Date(event.end), "p")} · ${Intl.DateTimeFormat().resolvedOptions().timeZone}`}
+                  ? formatEventDate(event.start, event.timezone)
+                  : formatEventTimeRange(event.start, event.end, event.timezone)}
               </span>
             </div>
             {event.location ? (

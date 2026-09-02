@@ -290,7 +290,7 @@ export function useMailAction() {
     },
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.mail.all });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.inbox.all, "unified"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.inbox.all });
     },
   });
 }
