@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -87,6 +87,10 @@ export function InboxShell() {
   const snooze = useSnoozeNotification();
   const approve = useApproveNotification();
   const reject = useRejectNotification();
+
+  useEffect(() => {
+    void import("@/features/notifications/notification-detail-drawer");
+  }, []);
 
   const items = data?.pages.flatMap((p) => p.items) ?? [];
 

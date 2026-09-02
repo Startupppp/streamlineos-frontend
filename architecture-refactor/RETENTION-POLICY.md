@@ -145,8 +145,22 @@ Note on low current row counts: this is a dev/staging instance. `timesheets`, `h
 - Worker: `CronAnnouncementsRetentionService` (`cron-announcements-retention.service.ts`). Uses `forEachOrg`, batch 200 per phase. Writes audit record to `hr_audit_logs`.
 - Route: `GET`/`POST /cron/announcements-retention-sweep`, `CRON_SECRET` + lease `announcements-retention-sweep` (1800 seconds).
 
-### notification_outbox — PENDING-DECISION
-- No automated retention worker is wired. Pending and in-flight notification intents must be preserved; processed and dead-state deletion requires an approved policy and replay/dependency review.
+### notification_outbox — RETAIN-BOUNDED
+- Decision: 30-day retention for terminal states (PROCESSED, DEAD). PENDING and IN_FLIGHT rows are never touched by this worker — they are actively being worked and must not be deleted.
+- Replay safety: any PROCESSED or DEAD row older than 30 days has either been successfully delivered or has exhausted retries. The `alert-dead-outbox.mjs` fires within 24 hours on any new DEAD row, so operator intervention happens well before the 30-day window.
+- Worker: `CronNotificationOutboxRetentionService` (`cron-notification-outbox-retention.service.ts`). Uses `forEachOrg` (RLS live on `notification_outbox`). Batch 500, `for(;;)` bounded per org up to 50 batches, reports `truncated: true` if cap is hit.
+- Route: `GET`/`POST /cron/notification-outbox-retention-sweep`, `CRON_SECRET` + `CronLeaseService` lease `notification-outbox-retention-sweep` (1800 seconds).
+
+### outbox_events — RETAIN-BOUNDED
+- Decision: 30-day retention for terminal states (DELIVERED, DEAD, SUPPRESSED). PENDING and IN_FLIGHT rows are never touched — they are actively being relayed or pending relay.
+- Replay safety: `alert-dead-outbox.mjs` fires within 24 hours on any DEAD row. 30 days is generous for post-mortem replay needs. The corresponding `inbox_records` rows (where `processed_at IS NOT NULL AND processed_at < cutoff`) are also swept in the same run.
+- Worker: `CronOutboxRetentionService` (`cron-outbox-retention.service.ts`). Global sweep using the owner role (no tenant GUC needed — outbox operations follow their own execution path per RETENTION-SCHEDULING-AUDIT.md). Batch 1000, batched loop up to 50 batches, reports `truncated: true` if cap is hit.
+- Route: `GET`/`POST /cron/outbox-events-retention-sweep`, `CRON_SECRET` + `CronLeaseService` lease `outbox-events-retention-sweep` (1800 seconds).
+
+### Dead-man heartbeat signal
+- `CronLeaseService.withLease` writes `cron:heartbeat:<jobKey>` (ISO timestamp, 7-day TTL) to Redis after every successful sweep completion. On failure, writes `cron:last-error:<jobKey>` (JSON `{error, ts}`, 7-day TTL).
+- **Observing staleness**: read `cron:heartbeat:<sweep-key>` from Redis. If the key is absent (TTL expired) or older than 2 × expected run interval, the sweep has not run recently. Alert on absence or age > threshold.
+- **Pending**: `src/scripts/alert-retention-dead-man.mjs` reads `REDIS_URL`, accepts `--sweep=<jobKey>` and `--max-age-hours=N`, and fires if the heartbeat is missing or stale. Register in `alert-dispatch.mjs` as `"retention-dead-man"` (`owner: "platform-reliability"`) and add to `check-alert-system.mjs`. Add `## retention-dead-man` section to FAILURE-RUNBOOKS.md.
 
 ### audit_logs — KEEP-FOREVER
 - Measured: 11 rows, 208 KB.

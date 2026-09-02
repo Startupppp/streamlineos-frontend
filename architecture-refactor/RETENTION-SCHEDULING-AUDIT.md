@@ -15,16 +15,21 @@ This repository audit supports the [single completion PRD](PRD-10-10-TODO.md), [
 | KB chat history retention | `GET`/`POST /cron/kb-chat-history-purge` | `CRON_SECRET`, `CronLeaseService`, 600-second lease, bounded purge batches | Route and dependency wiring are source-tested; deployment cadence and execution are unverified |
 | KB chunk retention | `GET`/`POST /cron/kb-chunk-retention-sweep` | `CRON_SECRET`, `CronLeaseService`, 600-second lease, bounded prune batches | Route and dependency wiring are source-tested; deployment cadence and execution are unverified |
 | Build webhook retention | `GET`/`POST /cron/build-retention-prune` | `CRON_SECRET`, `CronLeaseService`, 120-second lease, bounded prune batches | Route and dependency wiring are source-tested; deployment cadence and execution are unverified |
+| Outbox events retention | `GET`/`POST /cron/outbox-events-retention-sweep` | `CRON_SECRET`, `CronLeaseService`, 1,800-second lease, `CronOutboxRetentionService`, terminal rows (DELIVERED/DEAD/SUPPRESSED) older than 30 days, batch 1,000 | Route and dependency wiring are source-tested; deployment cadence and execution are unverified |
+| Notification outbox retention | `GET`/`POST /cron/notification-outbox-retention-sweep` | `CRON_SECRET`, `CronLeaseService`, 1,800-second lease, `CronNotificationOutboxRetentionService`, terminal rows (PROCESSED/DEAD) older than 30 days, batch 500, `forEachOrg` | Route and dependency wiring are source-tested; deployment cadence and execution are unverified |
 
 The repository test is [s05-retention-scheduling-contract.spec.ts](../backend/src/modules/cron/__tests__/s05-retention-scheduling-contract.spec.ts). It checks route authentication, leases, service calls, and `CronModule` registration.
 
 ## S05 assessment
 
-Repository coverage is present for the seven retention routes above, including authentication, distributed leases, bounded or resumable worker contracts where implemented, and selected audit outcomes. The repository does not contain enough evidence to close the S05 retention item:
+Repository coverage is present for the nine retention routes above, including authentication, distributed leases, bounded or resumable worker contracts where implemented, and selected audit outcomes.
 
-- deployment cadence and successful execution are not represented by repository tests;
-- notification retention does not expose a durable per-run audit record in the worker result contract;
-- deployed retry, alerting, object/search/vector/cache/analytics downstream deletion, and PITR aging remain unverified;
-- immutable payroll, financial, and audit retention remains an exclusion/retention decision, not deletion evidence.
+**Additions since 2026-09-01 audit:**
+- `outbox_events` and `notification_outbox` decisions closed from PENDING-DECISION to RETAIN-BOUNDED; sweeps implemented and contract-tested.
+- `CronLeaseService.withLease` now writes `cron:heartbeat:<jobKey>` (ISO timestamp, 7-day TTL) to Redis after every successful sweep and `cron:last-error:<jobKey>` (JSON, 7-day TTL) on failure. Dead-man signal contract is asserted by `cron-dead-man-signal.spec.ts`.
 
-The S05 checklist and release gates must remain open for these items. This audit adds no deployment evidence, approval record, or operator/GDPR implementation.
+**Still open (S05 checklist and release gates must remain open):**
+- Scheduler is external (HTTP routes, not in-process `@Cron`). The dead-man signal is in Redis; the alert script that reads it (`src/scripts/alert-retention-dead-man.mjs`) has not yet been created — it must read `REDIS_URL`, accept `--sweep=<key>` and `--max-age-hours=N`, fire if the heartbeat is missing or stale, and be registered in `alert-dispatch.mjs` and `check-alert-system.mjs`.
+- Deployment cadence and successful execution are not represented by repository tests.
+- Deployed retry, alerting, object/search/vector/cache/analytics downstream deletion, and PITR aging remain unverified.
+- Immutable payroll, financial, and audit retention remains an exclusion/retention decision, not deletion evidence.

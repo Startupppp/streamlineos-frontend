@@ -4,8 +4,16 @@
   "description": "Route-level bundle size budgets for authenticated Next.js pages. Budgets cover the First Load JS (shared chunks + page chunk) for each route segment. Values are in bytes. Measured values are filled by the post-build bundle analyzer and compared against the declared ceiling by the orchestrator. A null measured value means the route has not been profiled yet.",
   "referenceProfile": {
     "viewport": {
-      "mobile": { "width": 390, "height": 844, "deviceScaleFactor": 3 },
-      "desktop": { "width": 1440, "height": 900, "deviceScaleFactor": 1 }
+      "mobile": {
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 3
+      },
+      "desktop": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      }
     },
     "network": {
       "mobile": "~1.6 Mbps down, 750 Kbps up, 150ms RTT — close to Fast 3G+ (browser-driver.mjs hardcoded: 1,600,000/8 bytes/s down, 750,000/8 bytes/s up, 150ms latency)",
@@ -47,10 +55,14 @@
       "maxCssBytes": 65536,
       "maxImageBytes": 0,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 591215,
-      "measuredPageChunkBytes": 46747,
-      "lazyLoadedModules": ["mail-compose-sheet", "mail-ai-compose-toolbar", "mail-inbox-summary-sheet"],
-      "note": "Mail shell — first-load budget is higher because DOMPurify (isomorphic-dompurify) is a non-trivial dependency; compose sheet, AI toolbar and inbox summary sheet are lazy-loaded via next/dynamic. PASSES: 591kB < 614kB ceiling"
+      "measuredFirstLoadJsBytes": 506151,
+      "measuredPageChunkBytes": 56989,
+      "lazyLoadedModules": [
+        "mail-compose-sheet",
+        "mail-ai-compose-toolbar",
+        "mail-inbox-summary-sheet"
+      ],
+      "note": "Mail shell — first-load budget is higher because DOMPurify (isomorphic-dompurify) is a non-trivial dependency; compose sheet, AI toolbar and inbox summary sheet are lazy-loaded via next/dynamic. PASSES: 507kB < 614kB ceiling"
     },
     "/inbox": {
       "maxFirstLoadJsBytes": 524288,
@@ -58,10 +70,12 @@
       "maxCssBytes": 65536,
       "maxImageBytes": 0,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 558680,
-      "measuredPageChunkBytes": 13519,
-      "lazyLoadedModules": ["notification-detail-drawer"],
-      "note": "Home inbox — lightweight notification-style inbox; no external mail provider calls. BREACH: 546kB > 512kB ceiling by 34392 bytes — NotificationDetailDrawer is now lazy (next/dynamic ssr:false). Remaining breach is entirely in shared layout chunks (dashboard baseline is 583kB, already above this ceiling); no inbox-specific optimization can close the gap without reducing the global DashboardShell bundle."
+      "measuredFirstLoadJsBytes": 460873,
+      "measuredPageChunkBytes": 19458,
+      "lazyLoadedModules": [
+        "notification-detail-drawer"
+      ],
+      "note": "Home inbox — lightweight notification-style inbox; no external mail provider calls. PASSES: 461kB < 512kB ceiling. NotificationDetailDrawer is lazy (next/dynamic ssr:false); chunk is preloaded after mount to avoid INP spike on first interaction. Dashboard baseline is 489kB (40 shared chunks)."
     },
     "/build/inbox": {
       "maxFirstLoadJsBytes": 614400,
@@ -69,11 +83,13 @@
       "maxCssBytes": 65536,
       "maxImageBytes": 0,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 559188,
-      "measuredPageChunkBytes": 14027,
-      "lazyLoadedModules": ["inbox-ticket-preview"],
+      "measuredFirstLoadJsBytes": 463034,
+      "measuredPageChunkBytes": 21619,
+      "lazyLoadedModules": [
+        "inbox-ticket-preview"
+      ],
       "_routeNote": "Route is /build/inbox not /build/[projectId]/inbox — corrected from original declaration",
-      "note": "Build module approval inbox. PASSES: 546kB < 614kB ceiling. InboxTicketPreview (ticket detail components) is now lazy (next/dynamic ssr:false); saved 98064 bytes vs prior measure."
+      "note": "Build module approval inbox. PASSES: 463kB < 614kB ceiling. InboxTicketPreview (ticket detail components) is lazy (next/dynamic ssr:false)."
     },
     "/crm/inbox": {
       "maxFirstLoadJsBytes": 614400,
@@ -81,10 +97,10 @@
       "maxCssBytes": 65536,
       "maxImageBytes": 0,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 576567,
-      "measuredPageChunkBytes": 28224,
+      "measuredFirstLoadJsBytes": 486563,
+      "measuredPageChunkBytes": 41273,
       "lazyLoadedModules": [],
-      "note": "CRM inbox — deals and contact conversations. PASSES: 563kB < 614kB ceiling"
+      "note": "CRM inbox — deals and contact conversations. PASSES: 487kB < 614kB ceiling"
     },
     "/support/inbox": {
       "maxFirstLoadJsBytes": 614400,
@@ -92,10 +108,10 @@
       "maxCssBytes": 65536,
       "maxImageBytes": 0,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 605291,
-      "measuredPageChunkBytes": 56948,
+      "measuredFirstLoadJsBytes": 541805,
+      "measuredPageChunkBytes": 88768,
       "lazyLoadedModules": [],
-      "note": "Support ticket inbox. PASSES: 591kB < 614kB ceiling"
+      "note": "Support ticket inbox. PASSES: 542kB < 614kB ceiling"
     }
   }
 }
