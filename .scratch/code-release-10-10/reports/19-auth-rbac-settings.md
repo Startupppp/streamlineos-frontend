@@ -1,5 +1,420 @@
 # S4 / ticket 19 — module release matrix: auth/identity/organization, RBAC, Settings
 
+> **Pass 2 (this section) supersedes the pass-1 verdicts below it.** The tree moved
+> between the two passes: `RoleGrantReconcilerService` landed, the `access-permission.resolver`
+> `.limit(500)` was replaced by a keyset drain, migration `0997` added the missing permission-path
+> index, and `@Idempotent` reached the RBAC controllers. Pass 1's §1 inventory is still the best
+> file-by-file record and is kept; its §0 and §3–§5 verdicts are stale and are restated here.
+
+---
+
+## P2.0 — Does box 7 need a backfill migration, or does the reconciler already satisfy it?
+
+**Answer: it does not need one, and a migration structurally cannot do the job.** Measured, not
+reasoned — on a local scratch database built from the migration chain
+(`scratch_t19_rbac`, schema restored from a head DB, 943 tables, `modules_catalog` copied).
+
+The script seeds one organisation the way the product seeds one — `permissions` filled with the
+**previous** release's catalog (692 of 698 keys, the six `0990` targets withheld), `seedSystemRolesForOrg`
+run against it, and a `CUSTOMER_SUPPORT` role materialised the way `RoleSeedService` does
+(`is_system = false`, `version = 1`). Then it applies `0990` verbatim, then boots
+`PermissionCatalogSyncService.onModuleInit()`.
+
+```
+catalog at previous release: 692 keys (full catalog 698)
+seeded: roles=45 grants=1443
+CUSTOMER_SUPPORT (is_system=false, version=1) holds 34 of the template's 40 keys
+  of the six keys 0990 targets it holds: 0
+
+--- migration 0990 applied ---
+grants inserted by 0990: 0
+rows matching its predicate (is_system=true AND slug='CUSTOMER_SUPPORT'): 0
+rows matching the shape that actually exists (is_system=false): 1
+
+--- boot: PermissionCatalogSyncService.onModuleInit() ---
+catalog after sync: 698 keys
+grants inserted by the reconciler: 18
+  on CUSTOMER_SUPPORT, of the six keys 0990 targeted: 6 / 6
+  CUSTOMER_SUPPORT total grants now: 40 (template declares 40)
+  SUPPORT_MODULE_MEMBER (version=2, administered): 5 -> 5 grants (must not change)
+
+second boot inserted: 0 grants (must be 0)
+```
+
+Read that in order:
+
+1. **`0990` grants zero rows and always will.** Its predicate names a `ROLE_TEMPLATES` slug with
+   `is_system = true`; the product only ever creates that slug with `is_system = false`. Zero rows
+   match, so both statements — the grant and the `access_versions` bump that re-uses the same
+   predicate — are no-ops. This is the trap the brief warns about, confirmed by counting rows rather
+   than by reading SQL.
+2. **The reconciler delivers all six**, plus 12 more to `SUPPORT_MODULE_ADMIN` and
+   `SUPPORT_MODULE_OWNER`, and converges `CUSTOMER_SUPPORT` on the whole 40-key template.
+3. **It refuses to touch an administered role.** `SUPPORT_MODULE_MEMBER` was moved to `version = 2`
+   before the boot and came back unchanged, so an owner's deliberate narrowing is never resurrected —
+   the invariant `seed-system-roles.spec.ts` protects.
+4. **It is idempotent.** A second boot inserts nothing.
+
+**Why a migration cannot replace it, restated precisely.** `role_permission_grants.permission_key`
+has a foreign key to `permissions.name`, and `permissions` is filled by
+`PermissionCatalogSyncService` at boot — after `db:migrate`. A backfill for a key introduced in the
+same release therefore finds no catalog row, its mandatory `EXISTS` guard skips the key, and nothing
+re-runs. That is why `PermissionCatalogSyncService.onModuleInit` calls the reconciler itself rather
+than the reconciler owning a lifecycle hook: the ordering is the mechanism.
+
+**What landed for this box**
+
+- `backfill-slugs-exist.spec.ts` was red on `0990` and is now green **without suppressing it.**
+  `0990` is recorded in a new, separate `SUPERSEDED_BY_RECONCILER` list — never appended to
+  `KNOWN_INERT_BACKFILLS`, whose "must not grow" contract is intact at 9 entries — and the list
+  carries a proof obligation: a new test asserts every permission key the superseded migration named
+  is one the reconciler actually grants for the slug it named. Bite-proved: deleting
+  `support:tickets:view` from the `CUSTOMER_SUPPORT` template turns it red (1 failed / 7 passed),
+  file restored, sha verified. A third test pins that the reconciler still reads `ROLE_TEMPLATES`,
+  because supersession is only true while it does.
+- `buildDesiredGrants(catalog)` was extracted from the service as a pure exported function so the
+  spec asserts against the real computation rather than against a comment.
+
+**Constitution amendment needed — not applied, `backend/CLAUDE.md` is not my file to rewrite.**
+§5 still says: *"Any change that adds a permission key to a template must ship a backfill migration
+too, or it is inert everywhere that already exists — see `0436` for the shape."* That instruction now
+produces a dead migration every time it is followed. It should read: a template or seeded-rung
+widening is delivered by `RoleGrantReconcilerService` at the next boot for every role still at
+`version = 1`; a migration is the wrong mechanism and cannot work for a key new in the same release.
+
+---
+
+## P2.1 — P0 found while proving the above: organisation creation is broken at head
+
+`seedSystemRolesForOrg` raises `23503` and rolls back the whole organisation.
+
+```
+insert or update on table "roles" violates foreign key constraint "fk_roles_module"
+Key (module_key)=(feedbucket) is not present in table "modules_catalog".
+```
+
+Chain of causes, each verified:
+
+- `600b9b7c` (30 Aug, *"register feedbucket and settings, which controllers already required"*) added
+  `feedbucket` to `MODULE_REGISTRY` as `planGated: true, ladder: "delegable"`. That puts it in both
+  `MODULE_CATALOG` and `ACCESS_MANAGED_MODULES`, hence in `MODULE_ADMIN_MODULES` — 14 modules.
+- `seedSystemRolesForOrg` therefore mints `FEEDBUCKET_MODULE_ADMIN` with `module_key = 'feedbucket'`.
+- Migration `0634` gave `roles.module_key` a foreign key to `modules_catalog`. `NOT VALID` skips
+  existing rows, **not** new inserts.
+- No migration ever inserts `feedbucket` into `modules_catalog`. `0337`, `0372`, `0440`, `0441`,
+  `0443`, `0463` insert 19 module keys between them and none deletes any; `feedbucket` is not among
+  them, and it is absent from `modules_catalog` in every head database checked.
+- `OrgProfileService.createOrganization` calls the seeder **inside** the creation transaction
+  (`org-profile.service.ts:366`), so the failure is not partial — the organisation is never created.
+
+Nothing catches it: `administering-module-exists.spec.ts` checks the registry against itself, and
+every spec that exercises the seeder mocks the database.
+
+**New gate, and it is deliberately RED:** `src/modules/rbac/__tests__/seeded-role-modules-are-catalogued.spec.ts`
+asserts every module in `MODULE_ADMIN_MODULES` has a `modules_catalog` row created by some migration.
+It reports exactly one offender, `feedbucket`. It is left red rather than pinned because the offender
+is fixable, and pinning it would be the same mistake `KNOWN_INERT_BACKFILLS` exists to record.
+
+**The fix is one statement and it is a migration, so it is not mine to land** — `migrations/` is
+ticket 03's, and they added `1001`/`1002` while this ran. Ready to paste, numbered by whoever owns
+the journal:
+
+```sql
+SET lock_timeout = '5s';
+--> statement-breakpoint
+INSERT INTO "modules_catalog"
+  ("module_key", "name", "description", "is_core", "is_paid_only", "sort_order", "status")
+VALUES ('feedbucket', 'Feedbucket', 'Embeddable feedback widget and its submissions',
+        false, false, 13, 'ACTIVE')
+ON CONFLICT ("module_key") DO NOTHING;
+```
+
+The alternative fix — dropping `ladder: "delegable"` from the registry entry, since feedbucket has
+`route: null` and `productKey: null` and arguably needs no admin rung — lives in `src/common/`, also
+outside this ticket. Either closes the gate; somebody has to choose.
+
+---
+
+## P2.2 — Box: role, grant and module-access CRUD (strict Zod · stable OpenAPI · idempotent · owner protection)
+
+| Sub-criterion | Verdict | Evidence |
+|---|---|---|
+| Strict Zod | PASS in territory, **one gap outside it** | `rbac.schemas.ts`, `principal-groups.schemas.ts`, `organization.schemas.ts`, `org-hierarchy.schemas.ts` are strict at every object. `settings.schemas.ts` was 12 strict of 32 objects and is now **32 of 32** — the nine `actions[].config` objects, the nine discriminated-union members, `automationConditionSchema` and the two `options[]` element objects were all stripping silently. Three new tests pin it. **Gap, not mine:** `module-access.schemas.ts:38`, the `items[]` element of `setModuleRolePermissionsSchema`, is the one non-strict object left on this surface — a typo'd key inside a role-permission write is stripped and returns 200 |
+| Stable OpenAPI | PASS by artifact, freshness **not run** | The pass-1 "no document is built" claim is stale: `openapi.json` is committed (7 MB, 3613 operations) and six gates read it — `check:openapi-coverage` (3613/3613 exposure-stamped, 3613/3613 error-shaped, 1371/1371 mutating ops with a body schema), `check:operation-ids` (0 duplicates across 2676 paths), `check:openapi-path-params` (3613 checked), `check:contract-registry` (3625 classified; all 101 published ops carry a version, consumer, **idempotency/replay rule** and parameter baseline), `check:contract-breaking-change` (0 breaking), `check:envelope-consistency` (0). All exit 0. `openapi:check` — the regenerate-and-diff freshness gate — is **not run**: it boots the Nest application, and boot now runs `PermissionCatalogSyncService.onModuleInit`, which would write grants into the shared Neon database. My changes cannot drift the document anyway: `x-exposure` records the exposure *class*, not the permission key, and `@Idempotent` is not stamped |
+| Idempotent mutations | PASS for role and grant CRUD; **4 named gaps in module-access** | Pass 1's "zero `@Idempotent` in rbac" is stale — `rbac.rolePermission.assign`, `rbac.roles.seedDefaults`, `rbac.role.materializeTemplate`, `rbac.role.addMember`, `rbac.principalGroup.create|addMember|assignRole` all carry it, as do four settings creates. Added here: `settings.userRole.update` (`POST /settings/users/:userId/role`) and `organization.workspaceOnboarding.generate` — the bulk org-structure generator, the most replay-dangerous mutation in the module. Every other mutation on these controllers is a `PATCH`/`PUT`/`DELETE` on a specific id, idempotent by end state. **Not mine:** `module-access.controller.ts` `createGroup` is a true replayable create with no fence; `grantAdminStanding`, `addGroupMember`, `addMember` are end-state idempotent. Adding the decorator is safe from the browser — `frontend/lib/api-client.ts:151` sets an `Idempotency-Key` on every non-public mutating request and reuses it across the 401 retry |
+| Owner/descendant protection | PASS | `check:owner-authority` exit 0 — "nothing fabricates ownership and every owner gate reads the catalog", 12 named SKIPs. `assertTargetNotOwner`, `assertNotLastStructuralAdmin`, `assertPermissionsGrantable` (refuses the whole `billing:` namespace on every path), `isImmutableSystemRole`, `assertOwnerOnly`. Pinned by `role-structural-lockout`, `suspended-member-authority`, `assert-role-assignment`, `prd-s6-10-2-invariants` |
+
+**Also fixed on this surface** (found while auditing, both in territory):
+
+- `GET|POST|DELETE /settings/api-keys*` create and revoke **organisation-wide** API keys but were
+  declared `@RequirePermission("settings:api-tokens:read|write")` — keys that
+  `ROLE_DEFAULT_PERMISSIONS` grants to **`MEMBER`**, because they were minted for the *personal*
+  token surface (`features/settings/api-tokens/personal-api-tokens-page.tsx`,
+  `hooks/api/user-api-tokens.ts`). Only the in-service `isStructuralOrgAdminContext` check stood
+  between every member and an org API key; delete that check as redundant — the obvious next
+  cleanup, since "the permission already gates it" — and the hole opens. Re-gated on
+  `settings:manage`, which is exactly the authority the service enforces. No consumer breaks:
+  grep finds no frontend caller of `/settings/api-keys` at all.
+- `revokeApiKey` issued its `UPDATE` keyed on `id` alone. Now `and(eq(id), eq(orgId))`, per §4's
+  "re-assert the predicate on the mutation, not only on the preceding read".
+
+---
+
+## P2.3 — Box: effective-permission resolution batched and cached; scope bounded; indexes cover every path
+
+**Both pass-1 failures are repaired — by another territory, verified here.**
+
+| Sub-criterion | Verdict | Evidence |
+|---|---|---|
+| Batched and cached | PASS | Four reads in one `Promise.all`, owner and org-admin short-circuit, result under the version-keyed `accessPerms`. `access-resolution-cost.spec.ts` measures pooled-connection borrows cold vs warm |
+| Scope expansion bounded | **now PASS** | The unordered `.limit(500)` at `access-permission.resolver.ts:283` is gone; `drainRolePermissionGrants` is a keyset drain ordered by `id`, and the comment records the 564-key arithmetic that motivated it |
+| Permission-path index | **now PASS** | `idx_role_permission_grants_org_key (org_id, permission_key)` created by migration `0997`; confirmed present in `pg_indexes` on a head database. `check:tenant-indexes` — 745/745 |
+| Residual, **not mine** | `access-permission.resolver.ts:230` still reads `user_permission_grants` for one membership under an unordered `.limit(500)`. The unique key is `(org_id, membership_id, permission_key)`, so a person can hold up to 698 rows — the identical defect at a later trigger, and the reason this box is marked PARTIAL rather than closed. Four sibling caps (role assignments, group members, module ownerships, group-role assignments) are bounded by real-world cardinality and are lower risk |
+
+---
+
+## P2.4 — Box: global Settings holds organisation configuration and access governance ONLY
+
+**Frontend: PASS.** 23 pages under `app/(authenticated)/settings/**`, every one organisation
+configuration (`organization/*` and its 8 hierarchy screens, `modules`, `billing`, `billing/ai-credits`,
+`incoming-transfer`) or access governance (`roles/*`, `users`, `delegations`, `audit-log`,
+`api-tokens`, `webhooks`). Custom fields, automations, integrations and import/export appear **only**
+in module trees — 58 module `settings` pages across 15 modules. Workforce is at `/directory/workers`,
+payroll administration under `/payroll/*`; neither is reachable from `/settings/*`.
+
+**Backend: FAIL. 15 of `SettingsController`'s 23 routes are module-owned surfaces at a global path,
+and every one of them 403s for the module administrator who owns the screen.** Each row below is the
+route, the module that actually consumes it (traced to the calling hook and the page that renders it),
+and who holds its gate — evaluated against the live catalog, not assumed:
+
+| Global route (count) | Real owner, by consumer | Gate | Who holds it |
+|---|---|---|---|
+| `/settings/custom-fields[…]` (4) | **CRM only** — `hooks/api/crm/custom-fields.ts` → `/crm/settings/custom-fields`. Its own `createCustomFieldSchema.entityType` is `z.enum(["lead","deal","contact"])`, so the "global" engine only accepts CRM entities. HR and Support built their own | `settings:custom-fields:manage` | ORG_ADMIN, OWNER. **No seeded rung, no template** |
+| `/settings/automations[…]` (6) | CRM + HR + Support + Accounting, all via `hooks/api/automations.ts`. The `workflows` module exists and is where this belongs | `settings:automations:view` / `:manage` | ORG_ADMIN, OWNER. **No seeded rung, no template** |
+| `/settings/integrations/git[…]` (4) | **Build** — `hooks/api/git-integration.ts` → `/build/settings/integrations` | `settings:manage` | ORG_ADMIN, OWNER |
+| `/settings/ai-usage` (1) | **CRM** — `hooks/api/ai.ts` → `/crm/settings/ai`. Operational reporting, not configuration | `settings:manage` + in-service org-admin check | ORG_ADMIN, OWNER |
+
+> A `CRM_MODULE_ADMIN` cannot open CRM's own custom-fields or automations screen. A `BUILD_MODULE_ADMIN`
+> cannot open Build's own git integrations. Module administration currently requires organisation-settings
+> authority, which is precisely the standing the six-standing constitution says it should not require.
+
+The 8 legitimately global routes: `provenance`, `permissions`, `api-keys` ×3, `feature-flags` ×2,
+`users/:userId/role`.
+
+Two further defects on the same surface, named for whoever lands the move:
+
+- `GET /settings/custom-fields` is gated on a **`manage`** key, so there is no view-only rung at all —
+  and `listCustomFields` is a bare `.select()` (SELECT \*) with **no `limit` and no cursor**, against
+  CLAUDE.md §3's hard cap of 100.
+- `POST /settings/users/:userId/role` duplicates `PATCH /organization/members/:memberId`. Two
+  implementations of "change a member's org role" in two modules; pass 1 found the identical
+  session-cache bug in both, which is what a duplicate costs.
+
+**Status: PARTIAL, and the blocker is now smaller than it was.** The right fix is to move these
+routes under their owning modules with module-namespaced keys — that spans six module controllers and
+the frontend PermissionKey union, both outside this ticket. The cheap interim (widen
+`MODULE_ADMIN_EXTRA_KEYS`) **no longer needs a backfill migration**: P2.0 proves the reconciler
+converges every pristine rung at the next boot, so that half of the blocker is gone. What remains is a
+genuine product decision with a sharp edge: **`settings:custom-fields:manage` and
+`settings:automations:*` are not module-scoped.** Granting `settings:custom-fields:manage` to
+`CRM_MODULE_ADMIN` would let them manage HR's and Support's field definitions too — the service filters
+by `entityType`, never by the caller's module. Widening the rung trades a 403 for a cross-module
+privilege. Move the routes, or mint module-namespaced keys; do not widen the global one.
+
+---
+
+## P2.5 — Coordinator hand-ins, both closed
+
+**`check:tenant-isolation`: 924 / 926 with 2 MISSING (FAIL) → 926 / 926, 0 MISSING (exit 0, PASS).**
+Of the two, `role-grant-reconciler.service.ts` was mine; `cron-gdpr-export-retention.service.ts` was
+closed by another agent during this session.
+
+`src/modules/rbac/role-grant-reconciler-tenant-isolation.spec.ts` — a real cross-tenant negative test,
+not a class name dropped into an unrelated file. There is no controller here and so no 404-vs-403
+question: the reconciler is a `forEachOrg` sweep, and the boundary it can breach is a *write* landing
+under the wrong `org_id`. The assertion sits where `orgId` reaches the query — the two keyset drains
+and the insert — and the fake db evaluates the real predicates.
+
+The trap row is the point. `role_permission_grants.role_id` is an integer unique only per
+organisation, so organisation B legitimately holds a grant naming role id 1 while organisation A's own
+role *is* id 1. Both bite proofs were run, and the file restored with its sha verified:
+
+```
+as landed                                                        4 passed / 4
+eq(rolePermissionGrants.orgId) stripped from drainHeldGrantKeys  2 failed / 4
+   — A reads B's row as its own, skips the insert, loses a permission silently
+eq(roles.orgId) stripped from drainCandidateRoles                3 failed / 4
+   — A's sweep reconciles B's role and stamps A's orgId on the rows it writes
+```
+
+Getting there needed two extensions to the shared doubles, both additive:
+
+- `src/test/sql-predicate.ts` could not evaluate `inArray`. Drizzle renders it as a bare parameter
+  array — no parentheses, no separators — and the parser only handled the `in (…)` form, so every
+  predicate in the reconciler threw. Both shapes are now handled; the empty case still throws.
+- `src/test/fake-select-db.ts` gained a persisting `InsertBuilder` (`values` / `onConflictDoNothing` /
+  `onConflictDoUpdate` / `returning`, with property→column encoding and serial `id` assignment)
+  **behind an opt-in `{ persistInserts: true }`**, so a spec about what a write does can select the
+  row back. Default behaviour is byte-identical; all 9 existing consumers re-run green (9 suites / 58
+  tests).
+
+**`check:spec-typecheck`:** `permission-catalog-sync.service.spec.ts(72,21)` "Expected 2 arguments,
+but got 1" is fixed — the spec now constructs the real `RoleGrantReconcilerService` with the same fake
+db rather than inventing a stub, and `sync()` never calls it. The gate still exits 2 on **4 errors,
+none in this territory**: `src/common/tenant/tenant-context.interceptor.ts(89,53)` (`TENANT_REQUEST_DEADLINE_MS`
+undefined — an in-flight edit in `src/common/`, and it is a real error in `src/`, not a spec) and
+three arity errors in `payroll/filings/__tests__/filings-list-pagination.spec.ts`.
+
+---
+
+## P2.6 — Product decision resurfaced, with a recommendation
+
+The pass-1 note — *"CUSTOMER_SUPPORT grants only 7 of 22 support keys and omits `support:tickets:view`"* —
+is **stale**. Measured against the live catalog:
+
+```
+support keys in catalog                 25
+SUPPORT_MODULE_ADMIN / _OWNER           25
+SUPPORT_MODULE_MEMBER                    9   (view/read only)
+CUSTOMER_SUPPORT template               11 of its 40 keys are support:*
+```
+
+`CUSTOMER_SUPPORT` now carries `tickets:view|create|reply|manage`. It still omits
+`support:tickets:internal_note`, so a templated agent can answer a customer but cannot leave a note
+for a colleague.
+
+**The live defect is one rung down, and it is the one a real support agent gets.**
+`SUPPORT_MODULE_MEMBER` — what `seedSystemRolesForOrg` hands a member of the support module in a new
+organisation — is built by `buildModuleMemberPermissionKeys`, which filters the namespace to keys
+ending `:view`/`:read`. It holds `support:tickets:view` and **not** `create`, `reply` or
+`internal_note`:
+
+```
+support:access:view, support:kb:view, support:macros:view, support:tickets:view,
+support:reports:view, support:csat:view, support:ai:view, support:portal:tickets:view,
+support:knowledge-gaps:view
+```
+
+A seeded support agent can read the inbox and cannot answer it.
+
+**Recommendation — two changes, and they are independent:**
+
+1. **Give the support member rung its verbs.** Add `support:tickets:create`, `support:tickets:reply`
+   and `support:tickets:internal_note` to `MODULE_MEMBER_EXTRA_KEYS.support` in `seed-system-roles.ts`.
+   This is now a one-file change: the reconciler backfills every existing organisation whose
+   `SUPPORT_MODULE_MEMBER` is still pristine at the next boot, and an organisation that deliberately
+   narrowed the rung keeps its narrowing. Held back here only because it widens what a member can do,
+   which is a product call and not an auditor's.
+2. **Decide `manage ⇒ view` once, globally.** It is still absent from resolution: `impliedViewKey`
+   (`module-access/module-role-permissions.ts:63`) is applied only by `normalizeModulePermissionItems`
+   on the module-access *write* path, and `computeUserPermissions` applies only
+   `deriveAccessViewImplication`, whose map covers `<module>:access:manage → :view` and nothing else.
+   Recommend implementing the general rule in `computeUserPermissions` using the existing
+   `impliedViewKey` (it derives the sibling read key from the **last** segment, so it is arity-safe per
+   §5). "Can manage but 403s on the list" is not a state anyone intends, and it recurs. Caveat: it must
+   add only the `:view` sibling — `<module>:access:manage` is deliberately view-only, and an implication
+   that added anything else would break that. Note this does **not** rescue the support agent, who
+   holds no support `manage` key at all; recommendation 1 is still required.
+
+---
+
+## P2.7 — Gates run in pass 2. Every number below was executed and read.
+
+| Command | Exit | Result |
+|---|---|---|
+| `pnpm check:permission-keys` | 0 | 3116 `@RequirePermission` usages, 627 unique keys; backend catalog 698, frontend union 696; all resolve |
+| `pnpm check:scope-application` | 0 | 140 scope resolutions, 140 applied |
+| `pnpm check:module-entitlement` | 0 | PASS |
+| `pnpm check:owner-authority` | 0 | nothing fabricates ownership; 12 named SKIPs |
+| `pnpm check:module-gate` | 0 | PASSED |
+| `pnpm check:openapi-coverage` | 0 | 3613 ops; 3613/3613 exposure-stamped, 4xx-shaped and response-schemad; 1371/1371 mutating ops have a body schema |
+| `pnpm check:idempotent-commands` | 0 | every in-scope mutating handler carries `@Idempotent`; 11 named exclusions |
+| `pnpm check:route-classification` | 0 | 0 undeclared |
+| `pnpm check:tenant-isolation` | 0 | **926 / 926** (was 924 / 926, FAIL) |
+| `pnpm check:cache-invalidation` | 0 | 0 blockers |
+| `pnpm check:operation-ids` | 0 | 3613 ops / 2676 paths, 0 duplicates |
+| `pnpm check:contract-registry` | 0 | 3625 classified; 101 published ops carry a replay rule |
+| `pnpm check:contract-breaking-change` | 0 | 0 breaking changes |
+| `pnpm check:route-duplicates` | 0 | 0 findings |
+| `pnpm check:envelope-consistency` | 0 | 0 violations |
+| `pnpm check:openapi-path-params` | 0 | 3613 checked |
+| `pnpm check:unbounded-reads` | 0 | no gate violations |
+| `pnpm check:migration-rollback` | 0 | 646 scanned |
+| `pnpm typecheck` | **0** | 0 errors, 0 output lines (exit code read, not grepped) |
+| `eslint` on the 12 changed files | 0 | 0 errors, 0 warnings |
+| `jest --testPathPattern="src/modules/(rbac\|settings\|auth\|organization)"` | 1 | **105 suites passed / 106 run, 647 tests passed / 652.** The single failure is `seeded-role-modules-are-catalogued.spec.ts`, the deliberately red P2.1 gate |
+| `jest --testPathPattern="role-grant-reconciler-tenant-isolation"` | 0 | 4 / 4 |
+| `jest --testPathPattern="backfill-slugs-exist"` | 0 | 8 / 8 (was 1 failed / 5) |
+| `jest --testPathPattern="settings.schemas.spec"` | 0 | 14 / 14 (was 11) |
+| the 9 `makeFakeDb` consumers | 0 | 9 suites / 58 tests |
+| scratch-DB reconciler proof | 0 | numbers in P2.0, against `scratch_t19_rbac` only |
+| `pnpm check:spec-typecheck` | 2 | 4 errors, **none in this territory** (P2.5) |
+| `pnpm check:migration-discipline` | 1 | 2 `no-journal` violations, **not mine** — `1001_s08_payroll_financial_immutability.sql` and `1002_s08_payroll_read_path_indexes.sql`, both untracked and landed by another agent mid-session |
+| `pnpm openapi:check` | — | **not run.** Boots the app, and boot now writes grants; it would reach the shared Neon database |
+| `pnpm check:navigation-permissions` | — | **not run.** Still assumes the Windows repo layout (`REPO_ROOT/frontend`) |
+| `pnpm check:tenant-isolation:run` | — | **not run** |
+
+---
+
+## P2.8 — Files changed in pass 2
+
+| File | Change |
+|---|---|
+| `src/modules/rbac/role-grant-reconciler.service.ts` | extracted `buildDesiredGrants(catalog)` as a pure exported function; the method delegates to it |
+| `src/modules/rbac/role-grant-reconciler-tenant-isolation.spec.ts` | **new** — cross-tenant negative test, 4 cases, both bite proofs run |
+| `src/modules/rbac/__tests__/backfill-slugs-exist.spec.ts` | `SUPERSEDED_BY_RECONCILER` list + two proof tests; `KNOWN_INERT_BACKFILLS` untouched |
+| `src/modules/rbac/__tests__/seeded-role-modules-are-catalogued.spec.ts` | **new** — the deliberately red `feedbucket` gate |
+| `src/modules/rbac/permission-catalog-sync.service.spec.ts` | constructor arity; builds the real reconciler with the same fake db |
+| `src/modules/settings/dto/settings.schemas.ts` | 20 nested objects made `.strict()` — 32 of 32 |
+| `src/modules/settings/dto/settings.schemas.spec.ts` | 3 tests pinning nested strictness |
+| `src/modules/settings/settings.controller.ts` | `@Idempotent("settings.userRole.update")`; the three org API-key routes re-gated on `settings:manage` |
+| `src/modules/settings/settings.service.ts` | `revokeApiKey` re-asserts `org_id` on the `UPDATE` |
+| `src/modules/organization/onboarding/workspace-onboarding.controller.ts` | `@Idempotent("organization.workspaceOnboarding.generate")` |
+| `src/test/sql-predicate.ts` | parse `inArray`'s bare parameter-array form |
+| `src/test/fake-select-db.ts` | opt-in persisting `InsertBuilder` |
+
+No migration was added. No file under `migrations/`, `src/db/schema/`, `src/common/` (other than
+`src/test/`), `src/modules/access/`, `src/modules/module-access/` or the frontend was touched.
+`src/modules/rbac/role-seed.service.ts` (ticket 14's) was read only.
+
+---
+
+## P2.9 — Handoffs
+
+**P0 — migrations owner (ticket 03).** `feedbucket` has no `modules_catalog` row, so organisation
+creation raises `23503` and rolls back. One `INSERT`, written out in P2.1.
+`seeded-role-modules-are-catalogued.spec.ts` stays red until it lands.
+
+**P0 — whoever owns `backend/CLAUDE.md`.** §5's "must ship a backfill migration too" now produces a
+dead migration every time it is followed. Replacement wording in P2.0.
+
+**P1 — the `modules/access` owner.** `access-permission.resolver.ts:230` reads `user_permission_grants`
+under an unordered `.limit(500)` against a per-membership key space of up to 698. Same defect as the
+one just repaired two functions away, later trigger.
+
+**P1 — product + the six module owners.** 15 of `SettingsController`'s 23 routes are module surfaces
+at a global path and 403 for their own module admins (P2.4). The migration half of the blocker is
+gone; the remaining one is that the `settings:*` keys are not module-scoped, so widening a rung leaks
+across modules.
+
+**P1 — `src/common/` owner.** `src/common/tenant/tenant-context.interceptor.ts(89,53)` references an
+undefined `TENANT_REQUEST_DEADLINE_MS`. This is an error in `src/`, not a spec; it appeared mid-session
+and is red in `check:spec-typecheck`.
+
+**P2 — the `module-access` owner.** `module-access.schemas.ts:38` `items[]` is the last non-strict
+object on the role/grant/module-access write surface. `module-access.controller.ts::createGroup` is a
+replayable create with no `@Idempotent`.
+
+**P2 — product.** `SUPPORT_MODULE_MEMBER` can read the inbox and not answer it; and `manage ⇒ view`
+is still not implemented anywhere on the resolution path. Recommendations in P2.6.
+
+**P2 — repo hygiene.** `check:navigation-permissions` still cannot run on this machine's layout.
+
+---
+---
+
+# Pass 1 (superseded where P2 restates it — inventory below is still current)
+
 Scope: `BE/src/modules/{auth,rbac,organization,settings}/**` plus the FE `features/settings/**` and
 `hooks/api/access.ts` consumers. `BE/migrations/**`, `BE/src/db/schema/**`, `BE/src/common/**`,
 `BE/src/modules/access/**`, `BE/src/modules/module-access/**` and `FE/app/**` were **read** for the
