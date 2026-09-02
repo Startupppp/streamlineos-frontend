@@ -255,6 +255,7 @@ export function TimesheetPayrollPageClient() {
                 selection={visibleSelectedUserIds}
                 onSelectionChange={handleSelectionChange}
                 onRowClick={handleRowClick}
+                onClearFilters={handleClearFilters}
               />
             )}
           </TabsContent>
