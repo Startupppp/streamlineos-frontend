@@ -58,7 +58,7 @@ export function useGitConnections() {
 
 export function useCreateGitConnection() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("settings:manage", {
+  return useAuthorizedMutation("integrations:git:manage", {
     mutationKey: ["create", "git", "connection"],
     mutationFn: (input: CreateGitConnectionInput) =>
       apiClient.post<CreatedGitConnection>("/settings/integrations/git", input),
@@ -68,7 +68,7 @@ export function useCreateGitConnection() {
 
 export function useUpdateGitConnection() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("settings:manage", {
+  return useAuthorizedMutation("integrations:git:manage", {
     mutationKey: ["update", "git", "connection"],
     mutationFn: ({ id, ...input }: UpdateGitConnectionInput) =>
       apiClient.patch<GitConnection>(`/settings/integrations/git/${id}`, input),
@@ -78,7 +78,7 @@ export function useUpdateGitConnection() {
 
 export function useDeleteGitConnection() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("settings:manage", {
+  return useAuthorizedMutation("integrations:git:manage", {
     mutationKey: ["delete", "git", "connection"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/settings/integrations/git/${id}`),

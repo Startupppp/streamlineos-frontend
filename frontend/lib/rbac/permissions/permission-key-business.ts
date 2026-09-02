@@ -79,6 +79,8 @@ export type BusinessPermissionKey =
   | "payroll:policies:view"
   | "integrations:connections:view"
   | "integrations:connections:manage"
+  | "integrations:git:view"
+  | "integrations:git:manage"
   | "calendar:ai:use"
   | "build:qa:view"
   | "build:qa:manage"
