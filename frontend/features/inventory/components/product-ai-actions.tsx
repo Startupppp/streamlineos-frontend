@@ -57,10 +57,10 @@ export function ProductAiActions({ product }: ProductAiActionsProps) {
         key: "stock-risk",
         label: "Explain stock risk",
         description: "AI narrates deterministic stock health evidence",
-        run: async () => {
+        run: async (signal?: AbortSignal) => {
           const insights = await apiClient.get<{
             items: AiInsight[];
-          }>("/inventory/ai/insights", { type: "LOW_STOCK", limit: "20" });
+          }>("/inventory/ai/insights", { type: "LOW_STOCK", limit: "20" }, signal);
 
           const variantSku = firstVariant.sku;
           const matching = insights.items.find(
@@ -79,6 +79,8 @@ export function ProductAiActions({ product }: ProductAiActionsProps) {
 
           const narration = await apiClient.post<InsightNarration>(
             `/inventory/ai/insights/${matching.id}/explain`,
+            undefined,
+            { signal },
           );
 
           return { text: narrationToText(narration) };
@@ -89,7 +91,7 @@ export function ProductAiActions({ product }: ProductAiActionsProps) {
         key: "reorder-proposal",
         label: "Reorder proposal",
         description: "Draft PO based on deterministic reorder evidence",
-        run: async () => {
+        run: async (signal?: AbortSignal) => {
           const response = await apiClient.post<{
             evidence: {
               currentOnHand: number;
@@ -102,9 +104,11 @@ export function ProductAiActions({ product }: ProductAiActionsProps) {
             };
             explanation: InsightNarration;
             proposal: { proposalId: string; expiresAt: string };
-          }>("/inventory/ai/reorder-proposal", {
-            variantId: String(firstVariant.id),
-          });
+          }>(
+            "/inventory/ai/reorder-proposal",
+            { variantId: String(firstVariant.id) },
+            { signal },
+          );
 
           const ev = response.evidence;
           const evidenceText = [

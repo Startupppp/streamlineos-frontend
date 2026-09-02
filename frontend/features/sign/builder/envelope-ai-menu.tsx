@@ -2,7 +2,6 @@
 
 import { AiActionsMenu, type AiAction, type AiActionResult } from "@/components/ai";
 import { useCan } from "@/hooks/api/access";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { useSummarizeEnvelope } from "@/hooks/api/sign/ai";
 
 const DISCLAIMER =
@@ -23,13 +22,9 @@ export function EnvelopeAiMenu({ envelopeId }: { envelopeId: number }) {
       key: "summarize",
       label: "Summarize this document",
       description: "Plain-language summary of key terms, obligations, and conditions",
-      run: async (): Promise<AiActionResult> => {
-        try {
-          const result = await summarize.mutateAsync();
-          return { text: buildSummaryText(result.summary) };
-        } catch (err) {
-          throw new Error(getErrorMessage(err));
-        }
+      run: async (signal?: AbortSignal): Promise<AiActionResult> => {
+        const result = await summarize.mutateAsync({ signal });
+        return { text: buildSummaryText(result.summary) };
       },
     },
   ];

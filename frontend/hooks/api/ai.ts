@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAccess } from "@/hooks/api/access";
@@ -11,6 +11,7 @@ import type {
   InterviewKitResult, InterviewNotesSummaryResult,
 } from "@/lib/ai/schemas";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { AiAbortInput } from "@/hooks/api/ai-abort";
 
 export function useAIScoreLead() {
   const qc = useQueryClient();
@@ -65,9 +66,9 @@ export function usePredictDeal() {
   const qc = useQueryClient();
   return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["predict", "deal"],
-    mutationFn: (dealId: number) =>
-      apiClient.post<DealPredictionResult>("/ai/predict-deal", { dealId }),
-    onSuccess: (_, dealId) => {
+    mutationFn: ({ dealId, signal }: { dealId: number } & AiAbortInput) =>
+      apiClient.post<DealPredictionResult>("/ai/predict-deal", { dealId }, { signal }),
+    onSuccess: (_, { dealId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.deals.detail(dealId) });
       qc.invalidateQueries({ queryKey: queryKeys.deals.all });
     },
@@ -77,8 +78,8 @@ export function usePredictDeal() {
 export function useNextBestAction() {
   return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["next", "best", "action"],
-    mutationFn: (leadId: number) =>
-      apiClient.post<NextActionResult>("/ai/next-action", { leadId }),
+    mutationFn: ({ leadId, signal }: { leadId: number } & AiAbortInput) =>
+      apiClient.post<NextActionResult>("/ai/next-action", { leadId }, { signal }),
   });
 }
 
@@ -94,8 +95,11 @@ export function useAIScoreCandidate() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["a", "i", "score", "candidate"],
-    mutationFn: (input: { candidateId: number; jobId?: number }) =>
-      apiClient.post<CandidateScoreResult>("/ai/score-candidate", input),
+    mutationFn: ({
+      signal,
+      ...input
+    }: { candidateId: number; jobId?: number } & AiAbortInput) =>
+      apiClient.post<CandidateScoreResult>("/ai/score-candidate", input, { signal }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
     },
@@ -238,16 +242,27 @@ export function useAiUsage() {
 export function useAIInterviewKit() {
   return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["ai", "hr", "interview-kit"],
-    mutationFn: (jobPostingId: number) =>
-      apiClient.post<InterviewKitResult>("/ai/hr/interview-kit", { jobPostingId }),
+    mutationFn: ({ jobPostingId, signal }: { jobPostingId: number } & AiAbortInput) =>
+      apiClient.post<InterviewKitResult>(
+        "/ai/hr/interview-kit",
+        { jobPostingId },
+        { signal },
+      ),
   });
 }
 
 export function useAIInterviewNotesSummary() {
   return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["ai", "hr", "interview-notes-summary"],
-    mutationFn: (input: { candidateId: number; jobPostingId?: number }) =>
-      apiClient.post<InterviewNotesSummaryResult>("/ai/hr/interview-notes-summary", input),
+    mutationFn: ({
+      signal,
+      ...input
+    }: { candidateId: number; jobPostingId?: number } & AiAbortInput) =>
+      apiClient.post<InterviewNotesSummaryResult>(
+        "/ai/hr/interview-notes-summary",
+        input,
+        { signal },
+      ),
   });
 }
 

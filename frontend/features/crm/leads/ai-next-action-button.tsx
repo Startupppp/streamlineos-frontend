@@ -39,7 +39,7 @@ export function AINextActionButton({
       );
       return;
     }
-    actionMutation.mutate(leadId, {
+    actionMutation.mutate({ leadId }, {
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [featureEnabled, requiredPlan, actionMutation, leadId]);

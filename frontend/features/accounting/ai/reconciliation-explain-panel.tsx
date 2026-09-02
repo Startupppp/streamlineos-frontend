@@ -2,8 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { AiDraftCard, AiGeneratedLabel } from "@/components/ai";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { AiDraftCard, AiGeneratedLabel, AiFailureBody } from "@/components/ai";
 import { useExplainReconciliation } from "@/hooks/api/accounting/accounting-ai";
 import type { AiNarrationFactor } from "@/hooks/api/accounting/accounting-ai";
 
@@ -55,7 +54,7 @@ export function ReconciliationExplainPanel({ matchId, className }: Reconciliatio
       )}
 
       {mutation.error && (
-        <p className="text-xs text-destructive">{getErrorMessage(mutation.error)}</p>
+        <AiFailureBody error={mutation.error} onRetry={handleExplain} />
       )}
 
       {mutation.data && (

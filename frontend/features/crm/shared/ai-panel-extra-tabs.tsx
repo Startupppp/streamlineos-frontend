@@ -67,10 +67,13 @@ export function NextActionsTab({ chatEnabled }: { chatEnabled: boolean }) {
   const { mutate: getActions, isPending } = useNextBestActionsAcrossPipeline();
 
   const handleGetActions = useCallback(() => {
-    getActions(3, {
-      onSuccess: (data) => setResult(data as { actions: NbaAction[] }),
-      onError: (err) => toast.error(getErrorMessage(err)),
-    });
+    getActions(
+      { limit: 3 },
+      {
+        onSuccess: (data) => setResult(data as { actions: NbaAction[] }),
+        onError: (err) => toast.error(getErrorMessage(err)),
+      },
+    );
   }, [getActions]);
 
   if (!chatEnabled) return <AiDisabledBanner href="/crm/settings/ai" />;

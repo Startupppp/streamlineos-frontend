@@ -7,7 +7,7 @@ export type AiFailureState =
   | { status: "queued"; message: string }
   | { status: "unavailable"; message: string }
   | { status: "offline"; message: string }
-  | { status: "cancelled" }
+  | { status: "cancelled"; text?: string }
   | { status: "error"; message: string };
 
 export type AiFailureStatus = AiFailureState["status"];

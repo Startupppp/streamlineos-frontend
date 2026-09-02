@@ -232,6 +232,7 @@ export function GlobalAskOs() {
           setFailure({ status: "cancelled" });
           return;
         }
+        if (outcome.status === "cancelled") setFailure({ status: "cancelled" });
         const userMessage: AskAiHistoryMessage = {
           id: (temporaryIdRef.current -= 1),
           role: "user",

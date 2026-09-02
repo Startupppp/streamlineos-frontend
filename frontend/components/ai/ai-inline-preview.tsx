@@ -12,6 +12,7 @@ import {
   AiQueuedNotice,
   AiUnavailableNotice,
 } from "./ai-state-notices";
+import { AiCancelledOutput, AiStreamingOutput } from "./ai-partial-output";
 import { AiUsageChip } from "./ai-usage-chip";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { AiActionResultState } from "./ai-action-result-body";
@@ -52,7 +53,12 @@ export function AiInlinePreview({
       )}
     >
       {state.status === "loading" && (
-        <div className="space-y-1.5">
+        <div className="space-y-1.5" role="status" aria-live="polite" aria-busy>
+          {state.attempt !== undefined && state.attempt > 1 && (
+            <p className="text-dense text-muted-foreground">
+              Retrying — attempt {state.attempt}
+            </p>
+          )}
           <Skeleton className="h-3 w-3/4" />
           <Skeleton className="h-3 w-full" />
           <Skeleton className="h-3 w-2/3" />
@@ -66,6 +72,10 @@ export function AiInlinePreview({
             Stop
           </Button>
         </div>
+      )}
+
+      {state.status === "streaming" && (
+        <AiStreamingOutput text={state.text} onCancel={session.cancel} variant="compact" />
       )}
 
       {state.status === "quota" && <AiQuotaEmptyState variant="compact" />}
@@ -84,9 +94,16 @@ export function AiInlinePreview({
         <AiOfflineNotice message={state.message} variant="compact" onRetry={session.retry} />
       )}
 
-      {state.status === "cancelled" && (
-        <AiCancelledNotice variant="compact" onRetry={session.retry} />
-      )}
+      {state.status === "cancelled" &&
+        (state.text ? (
+          <AiCancelledOutput
+            text={state.text}
+            onRetry={session.retry}
+            variant="compact"
+          />
+        ) : (
+          <AiCancelledNotice variant="compact" onRetry={session.retry} />
+        ))}
 
       {state.status === "error" && (
         <div className="flex flex-col items-start gap-2">

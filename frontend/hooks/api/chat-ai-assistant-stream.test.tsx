@@ -78,23 +78,37 @@ function controllableStream(signal: AbortSignal) {
   };
 }
 
+let lastSignal: AbortSignal | null = null;
+let lastStream: ReturnType<typeof controllableStream> | null = null;
+
+/**
+ * The signal lives in `authedFetch`'s FOURTH argument, not in `init`. A signal
+ * placed in `init` is silently overwritten by the request timeout inside
+ * `authedFetch`, so a mock that read `init.signal` would pass while the real
+ * client cancelled nothing.
+ */
+function streamingResponse(...args: unknown[]) {
+  const signal = args[3];
+  if (!(signal instanceof AbortSignal))
+    throw new Error("authedFetch was given no AbortSignal in its signal slot");
+  lastSignal = signal;
+  lastStream = controllableStream(signal);
+  return Promise.resolve({
+    ok: true,
+    status: 200,
+    body: { getReader: () => lastStream?.reader },
+  });
+}
+
 describe("useAskAI — the one streaming AI client", () => {
   beforeEach(() => {
     authedFetch.mockReset();
+    lastSignal = null;
+    lastStream = null;
   });
 
   it("refuses a second send while a stream is already in flight", async () => {
-    let stream: ReturnType<typeof controllableStream> | null = null;
-    authedFetch.mockImplementation(
-      (_url: string, init: RequestInit) => {
-        stream = controllableStream(init.signal as AbortSignal);
-        return Promise.resolve({
-          ok: true,
-          status: 200,
-          body: { getReader: () => stream?.reader },
-        });
-      },
-    );
+    authedFetch.mockImplementation(streamingResponse);
 
     const { result } = renderHook(() => useAskAI());
 
@@ -116,21 +130,13 @@ describe("useAskAI — the one streaming AI client", () => {
     expect(authedFetch).toHaveBeenCalledTimes(1);
 
     await act(async () => {
-      stream?.finish();
+      lastStream?.finish();
       await first;
     });
   });
 
   it("keeps the partial output when the user stops the stream", async () => {
-    let stream: ReturnType<typeof controllableStream> | null = null;
-    authedFetch.mockImplementation((_url: string, init: RequestInit) => {
-      stream = controllableStream(init.signal as AbortSignal);
-      return Promise.resolve({
-        ok: true,
-        status: 200,
-        body: { getReader: () => stream?.reader },
-      });
-    });
+    authedFetch.mockImplementation(streamingResponse);
 
     const tokens: string[] = [];
     const { result } = renderHook(() => useAskAI());
@@ -145,8 +151,8 @@ describe("useAskAI — the one streaming AI client", () => {
     });
 
     await act(async () => {
-      stream?.push("half an ");
-      stream?.push("answer");
+      lastStream?.push("half an ");
+      lastStream?.push("answer");
       await Promise.resolve();
       await Promise.resolve();
     });
@@ -164,17 +170,7 @@ describe("useAskAI — the one streaming AI client", () => {
   });
 
   it("stops spending when the component unmounts mid-stream", async () => {
-    let seen: AbortSignal | null = null;
-    let stream: ReturnType<typeof controllableStream> | null = null;
-    authedFetch.mockImplementation((_url: string, init: RequestInit) => {
-      seen = init.signal as AbortSignal;
-      stream = controllableStream(seen);
-      return Promise.resolve({
-        ok: true,
-        status: 200,
-        body: { getReader: () => stream?.reader },
-      });
-    });
+    authedFetch.mockImplementation(streamingResponse);
 
     const { result, unmount } = renderHook(() => useAskAI());
     let outcome: Promise<AskAiStreamOutcome> | null = null;
@@ -185,7 +181,7 @@ describe("useAskAI — the one streaming AI client", () => {
 
     unmount();
 
-    await waitFor(() => expect(seen?.aborted).toBe(true));
+    await waitFor(() => expect(lastSignal?.aborted).toBe(true));
     await expect(outcome).resolves.toEqual({ status: "cancelled", text: "" });
   });
 

@@ -54,8 +54,8 @@ export function TicketAiGenerateChecklistAction({
   const [isCreating, setIsCreating] = useState(false);
 
   const popover = useAiPopoverAction({
-    run: useCallback(async (): Promise<AiActionResult> => {
-      const data = await generateMutation.mutateAsync(undefined);
+    run: useCallback(async (signal?: AbortSignal): Promise<AiActionResult> => {
+      const data = await generateMutation.mutateAsync({ signal });
       setSelected(new Set(data.items.map((_, index) => index)));
       if (data.items.length === 0) {
         return { text: "No checklist items suggested at this time." };

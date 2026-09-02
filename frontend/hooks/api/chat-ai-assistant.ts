@@ -158,9 +158,9 @@ export function useAskAI() {
               ...(conversationId !== undefined && { conversationId }),
               ...(persona !== undefined && { persona }),
             }),
-            signal: controller.signal,
           },
           "/chat",
+          controller.signal,
         );
 
         if (!res.ok) {
@@ -184,6 +184,8 @@ export function useAskAI() {
 
         const decoder = new TextDecoder();
         for (;;) {
+          if (controller.signal.aborted)
+            return { status: "cancelled", text: received };
           const { done, value } = await reader.read();
           if (done) break;
           const token = decoder.decode(value, { stream: true });

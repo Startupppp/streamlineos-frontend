@@ -7,7 +7,10 @@ import { classifyAiError } from "./ai-error-state";
 
 interface UseAiInlineActionOptions {
   actionKey: string;
-  run: (signal?: AbortSignal) => Promise<AiActionResult>;
+  run: (
+    signal?: AbortSignal,
+    onToken?: (chunk: string) => void,
+  ) => Promise<AiActionResult>;
   onApply: (text: string) => void;
   onSessionChange: (session: AiInlineSession | null) => void;
 }
@@ -26,6 +29,8 @@ export function useAiInlineAction({
   const runSeqRef = useRef(0);
   const inFlightRef = useRef(false);
   const controllerRef = useRef<AbortController | null>(null);
+  const attemptRef = useRef(1);
+  const streamedRef = useRef("");
 
   runRef.current = run;
   onApplyRef.current = onApply;
@@ -41,7 +46,9 @@ export function useAiInlineAction({
     return true;
   }, []);
 
-  const executeRef = useRef<() => Promise<void>>(async () => {});
+  const executeRef = useRef<(isRetry?: boolean) => Promise<void>>(
+    async () => {},
+  );
   const cancelRef = useRef<() => void>(() => {});
 
   const pushSession = useCallback(
@@ -61,7 +68,7 @@ export function useAiInlineAction({
           onSessionChangeRef.current(null);
         },
         retry: () => {
-          void executeRef.current();
+          void executeRef.current(true);
         },
         cancel: () => {
           cancelRef.current();
@@ -72,20 +79,28 @@ export function useAiInlineAction({
     [actionKey, discardInFlight],
   );
 
-  const execute = useCallback(async () => {
+  const execute = useCallback(async (isRetry = false) => {
     if (inFlightRef.current) return;
 
     const stamp = ++runSeqRef.current;
     const controller = new AbortController();
     controllerRef.current = controller;
     inFlightRef.current = true;
+    attemptRef.current = isRetry ? attemptRef.current + 1 : 1;
+    streamedRef.current = "";
     setIsPending(true);
     readyResultRef.current = null;
-    pushSession({ status: "loading" });
+    pushSession({ status: "loading", attempt: attemptRef.current });
+
+    function handleToken(chunk: string) {
+      if (runSeqRef.current !== stamp) return;
+      streamedRef.current += chunk;
+      pushSession({ status: "streaming", text: streamedRef.current });
+    }
 
     let nextState: AiActionResultState;
     try {
-      const result = await runRef.current(controller.signal);
+      const result = await runRef.current(controller.signal, handleToken);
       nextState = { status: "ready", result, aiUsage: result.aiUsage };
       if (runSeqRef.current === stamp) readyResultRef.current = result;
     } catch (error) {
@@ -104,7 +119,7 @@ export function useAiInlineAction({
   const cancel = useCallback(() => {
     if (!discardInFlight()) return;
     readyResultRef.current = null;
-    pushSession({ status: "cancelled" });
+    pushSession({ status: "cancelled", text: streamedRef.current || undefined });
   }, [discardInFlight, pushSession]);
 
   cancelRef.current = cancel;
@@ -116,5 +131,7 @@ export function useAiInlineAction({
     };
   }, []);
 
-  return { run: execute, cancel, isPending };
+  const start = useCallback(() => execute(false), [execute]);
+
+  return { run: start, cancel, isPending };
 }

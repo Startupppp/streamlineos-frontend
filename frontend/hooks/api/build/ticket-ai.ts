@@ -1,10 +1,10 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import type { TicketHandoffResult } from "@/types/projects/ai";
 import type { TicketPriority } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { AiAbortInput } from "@/hooks/api/ai-abort";
 
 export interface TicketSummaryResult {
   summary: string;
@@ -57,93 +57,118 @@ export interface TicketSuggestFieldsResult {
 }
 
 export function useTicketAiSummarize(projectId: number, ticketId: number) {
-  return useAuthorizedMutation("build:ai:use", {
-    mutationKey: ["projects", projectId, "tickets", ticketId, "ai", "summarize"],
-    mutationFn: () =>
-      apiClient.post<TicketSummaryResult>(
-        `/ai/tickets/${projectId}/${ticketId}/summarize`,
-      ),
-  });
+  return useAuthorizedMutation<TicketSummaryResult, Error, AiAbortInput | void>(
+    "build:ai:use",
+    {
+      mutationKey: ["projects", projectId, "tickets", ticketId, "ai", "summarize"],
+      mutationFn: (input) =>
+        apiClient.post<TicketSummaryResult>(`/ai/tickets/${projectId}/${ticketId}/summarize`, undefined, {
+          signal: input?.signal,
+        }),
+    },
+  );
 }
 
 export function useTicketAiSummarizeComments(projectId: number, ticketId: number) {
-  return useAuthorizedMutation("build:ai:use", {
-    mutationKey: ["projects", projectId, "tickets", ticketId, "ai", "summarize-comments"],
-    mutationFn: () =>
-      apiClient.post<TicketCommentsSummaryResult>(
-        `/ai/tickets/${projectId}/${ticketId}/summarize-comments`,
-      ),
-  });
+  return useAuthorizedMutation<TicketCommentsSummaryResult, Error, AiAbortInput | void>(
+    "build:ai:use",
+    {
+      mutationKey: ["projects", projectId, "tickets", ticketId, "ai", "summarize-comments"],
+      mutationFn: (input) =>
+        apiClient.post<TicketCommentsSummaryResult>(`/ai/tickets/${projectId}/${ticketId}/summarize-comments`, undefined, {
+          signal: input?.signal,
+        }),
+    },
+  );
 }
 
+type TicketImproveInput = { draft?: string } & AiAbortInput;
+
 export function useTicketAiImproveDescription(projectId: number, ticketId: number) {
-  return useAuthorizedMutation("build:ai:use", {
+  return useAuthorizedMutation<
+    TicketImproveDescriptionResult,
+    Error,
+    TicketImproveInput | void
+  >("build:ai:use", {
     mutationKey: ["projects", projectId, "tickets", ticketId, "ai", "improve-description"],
-    mutationFn: (input?: { draft?: string }) =>
-      apiClient.post<TicketImproveDescriptionResult>(
+    mutationFn: (input) => {
+      const { signal, ...body } = input ?? {};
+      return apiClient.post<TicketImproveDescriptionResult>(
         `/ai/tickets/${projectId}/${ticketId}/improve-description`,
-        input ?? {},
-      ),
+        body,
+        { signal },
+      );
+    },
   });
 }
 
 export function useTicketAiSuggestSubtasks(projectId: number, ticketId: number) {
-  return useAuthorizedMutation("build:ai:use", {
-    mutationKey: ["projects", projectId, "tickets", ticketId, "ai", "suggest-subtasks"],
-    mutationFn: () =>
-      apiClient.post<TicketSuggestSubtasksResult>(
-        `/ai/tickets/${projectId}/${ticketId}/suggest-subtasks`,
-      ),
-  });
+  return useAuthorizedMutation<TicketSuggestSubtasksResult, Error, AiAbortInput | void>(
+    "build:ai:use",
+    {
+      mutationKey: ["projects", projectId, "tickets", ticketId, "ai", "suggest-subtasks"],
+      mutationFn: (input) =>
+        apiClient.post<TicketSuggestSubtasksResult>(`/ai/tickets/${projectId}/${ticketId}/suggest-subtasks`, undefined, {
+          signal: input?.signal,
+        }),
+    },
+  );
 }
 
 export function useTicketAiGenerateChecklist(projectId: number, ticketId: number) {
-  return useAuthorizedMutation("build:ai:use", {
-    mutationKey: ["projects", projectId, "tickets", ticketId, "ai", "generate-checklist"],
-    mutationFn: () =>
-      apiClient.post<TicketGenerateChecklistResult>(
-        `/ai/tickets/${projectId}/${ticketId}/generate-checklist`,
-      ),
-  });
+  return useAuthorizedMutation<TicketGenerateChecklistResult, Error, AiAbortInput | void>(
+    "build:ai:use",
+    {
+      mutationKey: ["projects", projectId, "tickets", ticketId, "ai", "generate-checklist"],
+      mutationFn: (input) =>
+        apiClient.post<TicketGenerateChecklistResult>(`/ai/tickets/${projectId}/${ticketId}/generate-checklist`, undefined, {
+          signal: input?.signal,
+        }),
+    },
+  );
 }
 
 export function useTicketHandoff(projectId: number, ticketId: number) {
-  return useAuthorizedMutation("build:ai:use", {
-    mutationKey: ["projects", projectId, "tickets", ticketId, "ai", "handoff"],
-    mutationFn: () =>
-      apiClient.post<TicketHandoffResult>(`/ai/tickets/${projectId}/${ticketId}/handoff`),
-  });
+  return useAuthorizedMutation<TicketHandoffResult, Error, AiAbortInput | void>(
+    "build:ai:use",
+    {
+      mutationKey: ["projects", projectId, "tickets", ticketId, "ai", "handoff"],
+      mutationFn: (input) =>
+        apiClient.post<TicketHandoffResult>(
+          `/ai/tickets/${projectId}/${ticketId}/handoff`,
+          undefined,
+          { signal: input?.signal },
+        ),
+    },
+  );
 }
 
 export function useTicketDraftSuggestTitle(projectId: number) {
   return useAuthorizedMutation("build:ai:use", {
     mutationKey: ["projects", projectId, "tickets", "draft", "ai", "suggest-title"],
-    mutationFn: (input: TicketDraftInput) =>
-      apiClient.post<TicketSuggestTitleResult>(
-        `/ai/projects/${projectId}/tickets/draft/suggest-title`,
-        input,
-      ),
+    mutationFn: ({ signal, ...input }: TicketDraftInput & AiAbortInput) =>
+      apiClient.post<TicketSuggestTitleResult>(`/ai/projects/${projectId}/tickets/draft/suggest-title`, input, {
+        signal,
+      }),
   });
 }
 
 export function useTicketDraftImproveDescription(projectId: number) {
   return useAuthorizedMutation("build:ai:use", {
     mutationKey: ["projects", projectId, "tickets", "draft", "ai", "improve-description"],
-    mutationFn: (input: TicketDraftInput) =>
-      apiClient.post<TicketImproveDescriptionResult>(
-        `/ai/projects/${projectId}/tickets/draft/improve-description`,
-        input,
-      ),
+    mutationFn: ({ signal, ...input }: TicketDraftInput & AiAbortInput) =>
+      apiClient.post<TicketImproveDescriptionResult>(`/ai/projects/${projectId}/tickets/draft/improve-description`, input, {
+        signal,
+      }),
   });
 }
 
 export function useTicketDraftSuggestFields(projectId: number) {
   return useAuthorizedMutation("build:ai:use", {
     mutationKey: ["projects", projectId, "tickets", "draft", "ai", "suggest-fields"],
-    mutationFn: (input: TicketDraftInput) =>
-      apiClient.post<TicketSuggestFieldsResult>(
-        `/ai/projects/${projectId}/tickets/draft/suggest-fields`,
-        input,
-      ),
+    mutationFn: ({ signal, ...input }: TicketDraftInput & AiAbortInput) =>
+      apiClient.post<TicketSuggestFieldsResult>(`/ai/projects/${projectId}/tickets/draft/suggest-fields`, input, {
+        signal,
+      }),
   });
 }

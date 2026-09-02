@@ -4,8 +4,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
-import { AiDraftCard, AiGeneratedLabel } from "@/components/ai";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { AiDraftCard, AiGeneratedLabel, AiFailureBody } from "@/components/ai";
 import { useExtractDocument } from "@/hooks/api/accounting/accounting-ai";
 import type { ExtractedDocumentDraft, ExtractedLineItem } from "@/hooks/api/accounting/accounting-ai";
 
@@ -172,7 +171,7 @@ export function DocumentExtractPanel({ onDraftReady, className }: DocumentExtrac
           </LoadingButton>
 
           {mutation.error && (
-            <p className="text-xs text-destructive">{getErrorMessage(mutation.error)}</p>
+            <AiFailureBody error={mutation.error} onRetry={handleExtract} />
           )}
         </div>
       )}

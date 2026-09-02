@@ -1,170 +1,224 @@
-# Ticket 13 — Frontend AI states · session S3 · 2026-09-02
+# Ticket 13 — Frontend AI states · session S4 · 2026-09-02
 
-**Outcome:** 4 of 6 boxes closed, 2 PARTIAL with exact residues. Four P1 defects found and fixed in the
-shared AI machinery, each bite-proven. The `/public/kb/stream-ask` orphan is **recorded as deliberately
-unconsumed with a removal recommendation** — see the last section; the reason is stronger than "no stream
-client exists". No git run. FE = `streamlineos-frontend/frontend`.
+**Outcome:** 5 of 6 boxes closed (was 4). The two boxes the orchestrator reopened were both wrong in
+the source, not just incomplete. FE = `streamlineos-frontend/frontend`. Supersedes the S3 report;
+the S3 findings that still hold are restated rather than repeated in full.
 
-## The three 503-vs-402 states ticket 11 made reachable were all rendering the same
+---
 
-Ticket 11 stopped the breaker's 503, the concurrency cap's 503 and the ledger's 402 flattening to 500.
-On the frontend **all three still landed on one of two states.** Every AI surface hand-rolled the same
-three-branch ladder — `402 → quota`, `403 → denied`, `else → error` — repeated verbatim in
-`ai-actions-menu.tsx`, `use-ai-inline-action.ts`, `use-ai-popover-action.ts`, `project-ai-menu.tsx`,
-`kb-article-ai-actions.tsx`, `kb-page-ai-actions.tsx` and `mail-inbox-summary-sheet.tsx`. A tripped
-breaker, a full queue, an offline browser and a user cancellation were indistinguishable, all rendered as
-a grey sentence with a Retry button.
+## Box 1 — the nine states, enumerated
 
-`components/ai/ai-error-state.ts::classifyAiError` is now the single decision, returning
-**quota · denied · queued · unavailable · offline · cancelled · error**. Two classifications are new
-correctness, not new labels:
+| # | Boundary | Defined state before this session | Now |
+|---|---|---|---|
+| 1 | Credit exhaustion | **Yes** — `quota` → `AiQuotaEmptyState`, top-up link, no Retry | unchanged |
+| 2 | Queueing | **Yes** — `queued` → `AiQueuedNotice` (429, and 503 carrying "too many concurrent") | unchanged |
+| 3 | **Streaming** | **No** — only a `loading` skeleton. The Ask-OS bubble streamed, but ad hoc and unclassified; no other surface could render a partial answer at all | **built**: `{status:"streaming"; text}` → `AiStreamingOutput` (partial text, live caret, "Generating…", Stop) |
+| 4 | Cancellation | **Yes** — `cancelled` → `AiCancelledNotice` | unchanged |
+| 5 | **Retry** | **Partial** — clicking Retry re-entered `loading`, visually identical to a first load | **built**: `{status:"loading"; attempt}` → "Retrying — attempt N", from a monotonic per-surface counter |
+| 6 | **Partial output** | **No** — `cancelled` carried no text; every token received before Stop was discarded | **built**: `{status:"cancelled"; text?}` → `AiCancelledOutput` ("Stopped — partial answer kept" + text + Run again) |
+| 7 | **Citation loading** | **No** — `AiCitationChips` returned `null` until citations existed | **built**: `AiCitationChipsSkeleton` + `AiDraftCard citationsPending`, shown while streaming |
+| 8 | Provider failure | **Yes** — `unavailable` → `AiUnavailableNotice` (503 without the cap phrase, 502/504, TIMEOUT) | unchanged |
+| 9 | Permission revocation | **Yes** — `denied` → `AiPermissionDenied` (403, `MODULE_NOT_ENABLED` 402, and the client gate's `Missing permission:` Error) | unchanged |
 
-- **A plan gate was being sold as exhausted credits.** `ModuleDisabledException` is `402` with
-  `code: "MODULE_NOT_ENABLED"`. Every surface matched on the status alone, so a module the org has not
-  bought rendered "AI credits exhausted — Top up AI credits", pointing the user at a purchase that cannot
-  fix it. It is now `denied`.
-- **A revoked permission rendered as a server error.** `useAuthorizedMutation` throws a plain
-  `Error("Missing permission: <key>")` when the client gate refuses — not an `ApiError`, so no
-  status-based branch ever matched it. It is now `denied`.
+Streaming and partial output are one mechanism, so they were built as one: `AiAction.run` gained an
+optional second parameter `onToken`, `AiActionsMenu` / `useAiInlineAction` / `useAiPopoverAction` feed
+it into a `streaming` state, and cancelling a run that has streamed keeps what arrived. A zero-arg or
+one-arg `run` stays assignable, so none of the ~40 existing call sites churned.
 
-The one thing the classifier cannot do cleanly: **the breaker and the concurrency cap both answer 503
-with no `code`**, so `"too many concurrent"` in the message is the only separator. It is one constant in
-one file with the reason recorded beside it. **Backend ask (ticket 11/10 or whoever owns
-`modules/ai/core/services/`): give those two `ServiceUnavailableException`s distinct codes** — e.g.
-`AI_PROVIDER_UNAVAILABLE` and `AI_CONCURRENCY_LIMIT` — and the message match dies.
+### The bigger finding: 11 surfaces in this territory rendered none of the nine
 
-## P1 defects found and fixed
+`AiActionResultBody` handled all of it, but the surfaces that own their own success rendering never
+used it. Seven build AI cards (`risks`, `summary`, `weekly-update`, `client-update`, `plan`,
+`extract-tasks`, `change-impact`), `features/build/ai/ai-chat-panel.tsx` and all three
+`features/accounting/ai/**` panels rendered **every** AI failure as
 
-1. **Nothing stopped a second paid dispatch.** `AiActionsMenu.runAction`, `useAiInlineAction.execute` and
-   `useAiPopoverAction.execute` had no in-flight guard and no run stamp. `retry()` is handed to callers on
-   every inline session **including the `loading` one**, so a caller could re-dispatch a paid call already
-   in flight; two rapid menu selections raced and the *older* answer won, because the last `setState` to
-   land was the last to resolve. All three now hold a single-flight ref and a monotonic stamp.
-2. **An abandoned AI call was left running and still spending.** Closing the popover/sheet, rejecting an
-   inline draft or unmounting the surface only dropped the UI. There was no `AbortController` anywhere in
-   `components/ai/`. `AiAction.run` now takes an `AbortSignal` (a zero-arg `run` stays assignable, so no
-   call site churned), and every shared surface aborts on close, reject, cancel, new run and unmount.
-3. **`useAskAI` orphaned its own stream.** `sendMessage` overwrote `abortRef.current` without aborting the
-   previous controller, so a second send left the first stream running against a `stop()` that could no
-   longer reach it, and there was no unmount teardown at all. The panel guarded on `isStreaming`, but that
-   flag only flips *inside* `sendMessage` — the `await createConversation.mutateAsync(...)` before it is a
-   window in which two Enters both pass the guard and dispatch two streams. Fixed in the hook (a busy
-   result) and in `global-ask-os.tsx` (a synchronous `sendingRef` covering the create+stream window).
-4. **Stopping a stream threw its output away and reported an error.** `controller.abort()` rejects
-   `reader.read()` from inside the read loop — outside `authedFetch`'s try/catch, so the raw `AbortError`
-   propagated, the panel ran `setErrorMessage(getErrorMessage(error))` **and** `setDraft(null)`. Pressing
-   Stop therefore deleted every token already received and showed a red error for a thing the user chose
-   to do. `sendMessage` now returns `{status:"completed"|"cancelled"|"busy", text}`; a cancel keeps the
-   partial answer and persists it into the conversation, and `cancelled` renders as its own state.
+```
+<p className="text-...-destructive">{getErrorMessage(mutation.error)}</p>  + Retry
+```
 
-Also: `AiActionResultBody` read `usage={state.aiUsage}` only, so a `run` that put usage on the result
-rather than the state silently dropped the chip — now `state.aiUsage ?? state.result.aiUsage`.
+so an exhausted wallet, a plan the org has not bought, a tripped breaker, a full queue, an offline
+browser and a revoked permission were one red sentence with a Retry that cannot help any of them.
+New `components/ai/ai-failure-body.tsx` (`AiFailureBody`) classifies and delegates to
+`AiActionResultBody`, suppressing Retry on the states re-dispatch cannot fix; all 11 now use it.
 
-## Bite proofs (each neutering run, each number read)
+Also in this pass:
+- `features/build/ai/project-ai-menu.tsx` hand-rolled its own run — no single-flight guard, no
+  AbortController, no unmount teardown, closing the sheet did not stop the call. Now `useAiPopoverAction`.
+- `components/assistant/ask-os-chat-view.tsx` carried a 30-line copy of the seven-branch ladder
+  (`AskOsFailureNotice`). Deleted; the chat renders through `AiActionResultBody`.
+- `features/sign/builder/envelope-ai-menu.tsx` wrapped its error in `new Error(getErrorMessage(err))`,
+  destroying the `ApiError` status so `classifyAiError` could only ever answer `error`. Removed.
+- `GlobalAskOs` kept a stopped stream's partial answer but marked it as a normal completed message;
+  it now also raises the `cancelled` state so the user sees that the answer is partial.
 
-| Guard removed | Result |
-|---|---|
-| `if (inFlightRef.current) return` from `useAiInlineAction` + `AiActionsMenu` | **2 failed / 10 passed** (12) → restored |
-| `runSeqRef.current += 1` from the cancel path (stale settle no longer orphaned) | **1 failed / 7 passed** (8) → restored |
-| the 503 message split (breaker and cap collapse to one state) | **1 failed** → restored |
-| `if (inFlightRef.current) return {status:"busy"}` from `useAskAI` | **1 failed** → restored |
+---
 
-Restored state: `npx jest components/ai hooks/api/chat-ai-assistant-stream.test.tsx --maxWorkers=2` →
-**4 suites / 29 tests pass.**
+## Box 3 — the abort was a no-op, exactly as suspected
 
-## Audits that produced numbers, not opinions
+**`useAskAI` created an AbortController and never wired it to the fetch.**
 
-- **Abort signal in the correct argument position.** `pnpm -s check:query-signal` → exit 0,
-  **1053 queryFn blocks across 418 files, 0 violations**. The gate already resolves arguments by position
-  (its `WRONG_SLOT` self-test fixture is exactly `apiClient.get(url, signal)`), so the params-slot trap is
-  genuinely closed for queries. AI-specific re-audit over 23 AI hook files: **13 of 13 AI `queryFn`s
-  destructure and forward `signal`; 0 in the params slot.**
-- **Mutations cannot be cancelled at all.** **0 of 91 AI `mutationFn`s** took a signal at session start.
-  TanStack v5.90.12 gives mutations no signal — `MutationFunctionContext` is `{client, meta, mutationKey}`
-  (`@tanstack/query-core@5.90.12/build/modern/hydration-DksKBgQq.d.ts:1191`) — so the gate's blind spot
-  here is not a gate bug, it is a missing capability. 4 now thread one (`hooks/api/kb/article-ai.ts`).
-- **StrictMode cannot double-charge an AI call.** 10 `useEffect` blocks in the repo fire a mutation;
-  **none of them calls a metered AI endpoint** (chat offline-queue drain, huddle heartbeat, presence lock,
-  markRead, joinHuddle, recordVisit, support draft autosave, invitation accept/join). The remaining
-  StrictMode risk was a double *user* dispatch, which the single-flight refs close — asserted under
-  `<StrictMode>` by "charges once under StrictMode's double-invoked lifecycle".
-- **`aiUsage` coverage is symmetric.** The backend emits `aiUsage` from exactly **8** services;
-  all 8 have a frontend type carrying it and a surface rendering `AiUsageChip`. No metered response
-  arrives with usage that the UI drops.
+```ts
+authedFetch(buildUrl("/chat"), { …, signal: controller.signal }, "/chat")   // before
+```
 
-## The `/public/kb/stream-ask` orphan — recorded as deliberately unconsumed, and recommended for removal
+`authedFetch(url, init, path, signal?)` ends with
 
-**Decision: do not wire it. Remove the whole public KB ask surface, backend and frontend, unless a product
-owner claims it.** The reason is stronger than ticket 11's finding:
+```ts
+fetch(url, { ...init, headers, credentials: "omit", signal: combinedSignal })
+```
 
-`stream-ask`'s only plausible consumer is `KbAskPanel mode="public"` in
-`components/support/kb-ask-panel.tsx`, and **that branch is itself unreachable.** `KbAskPanel` is
-instantiated at exactly two call sites, `app/(authenticated)/ask/page.tsx:13` and
-`features/help-centre/components/kb-manager-content.tsx:349`, and **both pass `mode="authed"`** with no
-prop spread. So `PublicAskPanel` and `usePublicAskSupportKb` are dead too — which means the *buffered*
-sibling `POST /public/kb/ask` has no caller either. The public help centre
-(`app/(public)/help/[orgId]/**`, 2 files) never imports an ask panel; it renders articles only.
+— `signal: combinedSignal` comes **after** the spread, so the caller's `init.signal` is overwritten by
+`makeRequestSignal(signal)` built from the **fourth** argument, which `useAskAI` never passed. The
+combined signal was therefore the 30 s timeout alone. `stop()` aborted a controller attached to
+nothing; the unmount teardown did the same. The read loop kept consuming tokens and the request kept
+spending. The suite that "proved" cancellation mocked `authedFetch` and read `init.signal`, so it
+asserted the bug.
 
-Wiring a consumer requires adding the panel to `app/(public)/help/[orgId]/page.tsx`, which is outside this
-ticket's territory (`Do NOT edit FE/app/**`), and would be inventing a product surface rather than serving
-one. Per PRD §"remove deferred capability after dependency proof", the removal set is:
-backend `KbRagController.streamAsk` + `KbRagService.streamAnswer` (keep `answerQuestion` only if the
-buffered public route is kept), frontend `usePublicAskSupportKb` and the `mode: "public"` half of
-`KbAskPanel`. **This is a judgement for the orchestrator, not a change I made** — deleting across a repo
-boundary on a reachability argument needs knip + a real build (brief rule 10), and it deletes ticket 11's
-own work.
+Fix: pass `controller.signal` in the signal slot (and drop it from `init`, so the illusion is gone),
+plus a `signal.aborted` check at the top of the read loop.
 
-## Gates (run, output read)
+**Proof, against the real client.** `hooks/api/chat-ai-assistant-abort.test.tsx` imports the real
+`@/lib/api-client` and mocks `global.fetch`, asserting the signal `fetch` actually received:
+
+- is not aborted while streaming,
+- becomes aborted when `stop()` is called,
+- becomes aborted when the hook unmounts mid-stream,
+- and one send produces exactly one network call.
+
+**Bite:** restoring `signal` to `init` (the shipped code) → `npx jest --testPathPattern="chat-ai-assistant-abort"`
+→ **3 failed / 1 passed**. Restored → 4 passed.
+
+`hooks/api/chat-ai-assistant-stream.test.tsx` was rewritten to read `authedFetch`'s fourth argument and
+to throw if it is not an `AbortSignal`, so the positional trap cannot be re-introduced silently.
+
+**Buffered path, end to end.** `components/ai/ai-abort-reaches-request.test.tsx` drives
+`AiActionsMenu` → `action.run(signal)` → real `apiClient.post` → real `authedFetch` → mocked `fetch`,
+and asserts the outgoing request's signal aborts on Stop, on unmount, and on rejecting an inline
+session — and that one dispatch is one request.
+
+**Mutation threading.** TanStack v5 gives a mutation no signal, so the surface must put one in the
+variables. New `hooks/api/ai-abort.ts` (`AiAbortInput`) plus a `{ signal, ...input }` destructure so
+the signal never reaches `JSON.stringify` — asserted by
+`hooks/api/ai-mutation-signal.test.tsx::"never serialises the AbortSignal into the request body"`,
+alongside six hook families each proven to abort the real outgoing request.
+
+Threaded families: **4 of 90 → 35 of 90** (`build/ticket-ai` 9/9, `build/ai` 8/8, `crm/ai` 8/11,
+`ai.ts` 5/15, `kb/article-ai` 4/4, `sign/ai` 1/1), with their run sites in `features/build/ai/**`,
+`features/crm/shared/crm-inline-ai-menu.tsx`, `features/inventory/components/{product,vendor}-ai-actions.tsx`,
+`features/hr/recruitment/candidate-detail/use-candidate-ai-actions.ts` and
+`features/sign/builder/envelope-ai-menu.tsx`.
+
+---
+
+## Gates (run, exit code read)
 
 | Gate | Result |
 |---|---|
-| `tsc --noEmit` (8 GB heap) | **exit 0, 0 errors** — the 22 stale `.next/types/validator.ts` errors have cleared repo-wide |
-| `npx jest components/ai components/assistant features/help-centre features/build features/chat` | **25 suites / 168 tests pass** |
-| `npx jest hooks/api` | **44 suites / 476 tests pass** |
-| `pnpm -s check:query-signal` | exit 0 — 1053 queryFn blocks / 418 files, 0 violations |
-| `pnpm -s check:effect-fetches` | exit 0 — 5161 files |
-| `pnpm -s check:empty-states` | exit 0 — 3775 files |
-| `pnpm -s check:colors` | exit 0 — 5161 files |
-| `pnpm -s check:icon-labels` | exit 0 — 3775 files |
-| `pnpm -s check:over-300` | exit 0 — 511 of 5146 (baseline 519) |
-| `npx eslint` on all changed files | **0 errors, 8 warnings** — 7 are the file's own pre-existing `runRef.current = run` during render (reproduced on a 12-line probe outside my files), 1 is the same idiom on a ref I added |
+| `pnpm type-check` (`tsc --noEmit`) | **exit 0, 0 errors** (grep of the full output: 0 `error TS`) |
+| `npx jest --runInBand --testPathPattern="components/ai"` | **6 suites / 78 tests pass** |
+| `npx jest --runInBand --testPathPattern="(components/ai\|components/assistant\|features/build/ai\|features/accounting/ai\|features/crm/shared\|features/inventory/components\|features/sign\|features/help-centre\|hooks/api/ai-mutation-signal\|hooks/api/chat-ai)"` | **14 suites / 128 tests pass** |
+| `npx jest --runInBand --testPathPattern="(components/ai\|components/assistant\|hooks/api\|features/build\|features/crm\|features/accounting\|features/inventory\|features/sign\|features/help-centre)"` | 75 passed / 2 failed — **both failures foreign** (see below) |
+| `pnpm -s check:query-scope` | exit 0 — 5200 files, 0 violations |
+| `pnpm -s check:query-signal` | exit 0 — 1054 queryFn blocks / 419 files, 0 violations |
+| `pnpm -s check:icon-labels` | exit 0 — 3791 files |
+| `pnpm -s check:colors` | exit 0 — 5200 files |
+| `pnpm -s check:effect-fetches` | exit 0 — 5200 files |
+| `pnpm -s check:empty-states` | **exit 1 — 1 violation, not mine** (see below) |
+| `pnpm -s check:file-sizes` | exit 0 — `ai-actions-menu.tsx` was pushed to 511 lines by this change and is back to 493 (duplicate Sheet/Dialog JSX extracted); the remaining >500 file is `hooks/api/notifications-inbox.ts` |
+| `npx eslint` on the 54 files this ticket touched | **0 errors, 10 warnings** — all pre-existing (`refs during render`, `set-state-in-effect`) |
 
-## Files changed (absolute)
+Not run: `next build` (dies at `/billing/ai-credits` env validation), `madge --circular`, e2e.
+
+### Red gates that are not this ticket's
+
+- `check:empty-states` → `features/workflows/builder/workflow-builder-canvas.tsx:118`.
+  `git diff HEAD -- frontend/features/workflows/` is empty, so the file is byte-identical to HEAD and
+  the gate was already red before this session. It is a false positive: the flagged centered flex
+  container is `BuilderErrorState`, and the checker's `empty` indicator matches the neighbouring
+  `<EmptyState>` usage 8 lines below.
+- `hooks/api/read-error-reaches-boundary.test.tsx` (2 failures) and
+  `hooks/api/__tests__/response-contract-fixtures.ts` ("suite failed to run") are another agent's
+  uncommitted work — the first is ` M`, the second is `??`, and neither is in this ticket's import graph.
+
+---
+
+## Files changed (relative to `streamlineos-frontend/frontend`)
 
 New:
-- `.../frontend/components/ai/ai-error-state.ts` · `ai-state-notices.tsx`
-- `.../frontend/components/ai/ai-error-state.test.ts` (11) · `ai-single-flight.test.tsx` (8) ·
-  `ai-actions-menu-dispatch.test.tsx` (5)
-- `.../frontend/hooks/api/chat-ai-assistant-stream.test.tsx` (5)
+- `components/ai/ai-partial-output.tsx` · `components/ai/ai-failure-body.tsx`
+- `hooks/api/ai-abort.ts` · `test-utils/abort-signal-polyfill.ts`
+- `components/ai/ai-nine-states.test.tsx` (32) · `components/ai/ai-failure-body.test.tsx` (16) ·
+  `components/ai/ai-abort-reaches-request.test.tsx` (4) ·
+  `hooks/api/chat-ai-assistant-abort.test.tsx` (4) · `hooks/api/ai-mutation-signal.test.tsx` (7) ·
+  `features/build/ai/ai-card-states.test.tsx` (2)
 
-Edited:
-- `.../frontend/components/ai/`: `ai-actions-menu.tsx`, `ai-action-result-body.tsx`, `ai-inline-preview.tsx`,
-  `use-ai-inline-action.ts`, `use-ai-popover-action.ts`, `ai-field-popover-action.tsx`, `index.ts`
-- `.../frontend/hooks/api/chat-ai-assistant.ts` · `hooks/api/kb/article-ai.ts`
-- `.../frontend/components/assistant/global-ask-os.tsx` · `ask-os-chat-view.tsx`
-- `.../frontend/features/help-centre/components/kb-article-ai-actions.tsx`
-- `.../frontend/features/build/ai/project-ai-menu.tsx`
-- `.../.scratch/code-release-10-10/issues/13-frontend-ai-states.md`
+Edited — shared AI machinery:
+`components/ai/{ai-error-state.ts, ai-action-result-body.tsx, ai-inline-preview.tsx, ai-actions-menu.tsx,
+ai-citation-chips.tsx, ai-draft-card.tsx, ai-field-popover-action.tsx, use-ai-inline-action.ts,
+use-ai-popover-action.ts, index.ts, ai-actions-menu-dispatch.test.tsx}`,
+`components/assistant/{ask-os-chat-view.tsx, global-ask-os.tsx}`
 
-`AiInlineSession` changed shape (`status`/`result`/`errorMessage`/`deniedReason` → one `state`, plus
-`cancel`). Verified first that all 6 consumers in `features/build/**` treat it opaquely — they store it,
-pass it to `AiInlinePreview` and call `reject()`; none reads a field. `tsc` confirms.
+Edited — hooks: `hooks/api/{chat-ai-assistant.ts, chat-ai-assistant-stream.test.tsx, ai.ts,
+build/ai.ts, build/ticket-ai.ts, crm/ai.ts, sign/ai.ts}`
+
+Edited — surfaces: `features/build/ai/{ai-chat-panel, change-impact-card, client-update-card,
+create-ticket-ai-menu, extract-tasks-card, plan-card, project-ai-menu, risks-card, summary-card,
+ticket-ai-generate-checklist, ticket-ai-suggest-subtasks, ticket-detail-ai, weekly-update-card}`,
+`features/accounting/ai/{document-extract-panel, reconciliation-explain-panel, variance-explain-panel}`,
+`features/crm/{shared/crm-inline-ai-menu, shared/ai-panel-extra-tabs, deals/ai-predict-deal-button,
+leads/ai-next-action-button}`, `features/hr/recruitment/candidate-detail/use-candidate-ai-actions.ts`,
+`features/inventory/components/{product-ai-actions, vendor-ai-actions}`,
+`features/sign/builder/envelope-ai-menu.tsx`
+
+---
 
 ## Other agents' territory — found in transit, not fixed
 
-- **Ticket 29 (`features/{calendar,mail,inbox,knowledge}`).** `features/mail/mail-inbox-summary-sheet.tsx`
-  and `features/wiki/components/kb-page-ai-actions.tsx` still hand-roll the 402/403/other ladder. One line
-  each: replace the branch with `classifyAiError(err)` and render the four new notices, exactly as
-  `features/help-centre/components/kb-article-ai-actions.tsx` now does. `features/calendar/meeting-prep-panel.tsx`
-  and `meeting-follow-up-panel.tsx` render `AiPermissionDenied` but have no failure classification at all.
-- **P2, feedbucket owner.** `features/feedbucket/components/feedbucket-ai-panel.tsx:24` has
-  `AI_UNAVAILABLE_STATUSES = new Set([400, 402, 503])`. A **400** — a validation error in our own request —
-  silently falls back to creating a basic ticket toasted as "AI unavailable", hiding a client bug behind a
-  provider excuse. 402 and 503 belong there; 400 does not.
-- **P2, backend `modules/ai/core/services/`.** The breaker's 503 and the concurrency cap's 503 carry no
-  `code`, so the frontend separates them by message text — the one place in this change that violates
-  frontend CLAUDE.md §"branch on the code, never on message prefixes". Coded exceptions retire it.
-- **Ticket 11's box 1 handover is now unblocked in principle:** a frontend stream client that is not
-  hard-wired to `/chat` exists in shape (`useAskAI` is still `/chat`-only, but the reader loop, the
-  cancel/partial-output contract and the failure classifier are now reusable). Converting buffered AI
-  endpoints to streaming is still not worth doing before a surface asks for it.
+1. **`lib/api-client.ts` (unowned shared infra) — two live cancellation traps. P1.**
+   - `makeRequestSignal` falls back to `return timeout;` when `AbortSignal.any` is absent, **silently
+     dropping the caller's signal**. `AbortSignal.any` is Chrome 116 / Safari 17.4 / Firefox 124; on
+     anything older every cancel in the whole app — AI included — is a no-op that looks correct. Fix:
+     link manually with a controller instead of discarding the external signal. (jsdom has neither
+     `AbortSignal.timeout` nor `.any`, which is why `test-utils/abort-signal-polyfill.ts` exists.)
+   - `authedFetch` spreads `init` and then sets `signal`, so a caller who puts a signal in `init`
+     gets a silent no-op. That is precisely the defect this ticket found in `useAskAI`. Fix:
+     `makeRequestSignal(signal ?? init.signal)`, or remove `signal` from the accepted `init` type so it
+     stops compiling.
+2. **55 AI `mutationFn`s still take no signal**, so Stop on those surfaces ends the UI and not the
+   spend. Ordered by user-visible impact (surfaces that render a Stop button first):
+   `hooks/api/support/ai.ts` (11 → `features/support/inbox/ticket-detail-header.tsx`, 5 menu actions),
+   `hooks/api/timesheets-core` run sites in `features/timesheets/**` (5),
+   `hooks/api/payroll/use-explain-payslip.ts` (1 → `features/payroll/ess/...`, a menu),
+   `hooks/api/mail.ts` (3 → `features/mail/mail-reading-ai-actions.ts`, ticket 29),
+   `hooks/api/kb/page-ai.ts` + `kb/ask.ts` (5, ticket 29), `hooks/api/meetings-ai.ts` (4, calendar),
+   `hooks/api/accounting/accounting-ai.ts` (3), `hooks/api/inv-ai-explain.ts` (3),
+   `hooks/api/inventory/ai.ts` (2), `hooks/api/feedbucket/use-feedbucket-ai.ts` (2),
+   `hooks/api/ai-summaries.ts` (1) and 10 remaining in `hooks/api/ai.ts`. The pattern to copy is
+   `hooks/api/ai-abort.ts` + `{ signal, ...input }`.
+3. **Ticket 29.** `features/mail/mail-inbox-summary-sheet.tsx` and
+   `features/wiki/components/kb-page-ai-actions.tsx` still hand-roll `402 → quota / 403 → denied /
+   else → error`. One-line fix each: `classifyAiError(err)` then `<AiFailureBody />` or
+   `<AiActionResultBody />`. `features/calendar/{meeting-prep,meeting-follow-up}-panel.tsx` render
+   `AiPermissionDenied` with no classification at all.
+4. **P2, feedbucket owner.** `features/feedbucket/components/feedbucket-ai-panel.tsx:24` still has
+   `AI_UNAVAILABLE_STATUSES = new Set([400, 402, 503])`; a **400** is our own bad request being hidden
+   behind "AI unavailable".
+5. **P2, backend `modules/ai/core/services/`.** The breaker's 503 and the concurrency cap's 503 still
+   carry no `code`, so `classifyAiError` separates them by message text — the one place this design
+   violates "branch on the code, never on message prefixes". Distinct codes
+   (`AI_PROVIDER_UNAVAILABLE` / `AI_CONCURRENCY_LIMIT`) retire the string match.
+6. **Informational.** `hooks/api/surveys/analytics.ts:107` (`useExportResponses`) calls `authedFetch`
+   with no signal in any position; not AI, but the same class of leak.
+7. **S3's `/public/kb/stream-ask` orphan finding stands** and is unchanged: `KbAskPanel mode="public"`
+   has no reachable call site, so the public ask surface (backend `KbRagController.streamAsk` +
+   `KbRagService.streamAnswer`, frontend `usePublicAskSupportKb` and the `mode: "public"` half of
+   `KbAskPanel`) is recommended for removal. Still a decision for the orchestrator, not a change made
+   here.
+
+## Honest gaps
+
+- `next build`, `madge --circular` and any e2e: **not run**.
+- The buffered cancellation guarantee is proven for the 35 threaded families and for the shared
+  machinery; for the other 55 the Stop button still ends only the UI.
+- `AbortSignal.any` availability is assumed by every cancellation claim in this report — see
+  cross-territory finding 1. The jest proofs polyfill it because jsdom 20 has neither.

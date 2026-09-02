@@ -2,15 +2,7 @@ import type { MouseEvent, RefObject } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import type { AskAiHistoryMessage } from "@/hooks/api";
-import {
-  AiCancelledNotice,
-  AiOfflineNotice,
-  AiPermissionDenied,
-  AiQueuedNotice,
-  AiQuotaEmptyState,
-  AiUnavailableNotice,
-  type AiFailureState,
-} from "@/components/ai";
+import { AiActionResultBody, type AiFailureState } from "@/components/ai";
 import {
   AskOsBubble,
   buildMsgRows,
@@ -144,7 +136,7 @@ export function AskOsChatView({
               />
             )}
             {failure && (
-              <AskOsFailureNotice failure={failure} onRetry={onRetry} />
+              <AiActionResultBody state={failure} onRetry={onRetry} compact />
             )}
           </div>
         )}
@@ -166,35 +158,4 @@ export function AskOsChatView({
       </AnimatePresence>
     </div>
   );
-}
-
-function AskOsFailureNotice({
-  failure,
-  onRetry,
-}: {
-  failure: AiFailureState;
-  onRetry: () => void;
-}) {
-  if (failure.status === "quota") return <AiQuotaEmptyState variant="compact" />;
-  if (failure.status === "denied")
-    return <AiPermissionDenied reason={failure.reason} />;
-  if (failure.status === "queued")
-    return (
-      <AiQueuedNotice message={failure.message} variant="compact" onRetry={onRetry} />
-    );
-  if (failure.status === "unavailable")
-    return (
-      <AiUnavailableNotice
-        message={failure.message}
-        variant="compact"
-        onRetry={onRetry}
-      />
-    );
-  if (failure.status === "offline")
-    return (
-      <AiOfflineNotice message={failure.message} variant="compact" onRetry={onRetry} />
-    );
-  if (failure.status === "cancelled")
-    return <AiCancelledNotice variant="compact" onRetry={onRetry} />;
-  return <p className="px-1 text-dense text-destructive">{failure.message}</p>;
 }

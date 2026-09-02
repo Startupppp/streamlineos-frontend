@@ -27,7 +27,10 @@ interface AiFieldPopoverActionProps {
   popoverTitle?: string;
   disabledReason?: string;
   disabled?: boolean;
-  run: (signal?: AbortSignal) => Promise<AiActionResult>;
+  run: (
+    signal?: AbortSignal,
+    onToken?: (chunk: string) => void,
+  ) => Promise<AiActionResult>;
   onApply?: () => void;
   applyLabel?: string;
   align?: "start" | "end" | "center";

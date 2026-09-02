@@ -5,7 +5,10 @@ import type { AiActionResult, AiActionResultState } from "./ai-action-result-bod
 import { classifyAiError } from "./ai-error-state";
 
 interface UseAiPopoverActionOptions {
-  run: (signal?: AbortSignal) => Promise<AiActionResult>;
+  run: (
+    signal?: AbortSignal,
+    onToken?: (chunk: string) => void,
+  ) => Promise<AiActionResult>;
 }
 
 export function useAiPopoverAction({ run }: UseAiPopoverActionOptions) {
@@ -16,6 +19,8 @@ export function useAiPopoverAction({ run }: UseAiPopoverActionOptions) {
   const runSeqRef = useRef(0);
   const inFlightRef = useRef(false);
   const controllerRef = useRef<AbortController | null>(null);
+  const attemptRef = useRef(1);
+  const streamedRef = useRef("");
 
   runRef.current = run;
 
@@ -29,20 +34,28 @@ export function useAiPopoverAction({ run }: UseAiPopoverActionOptions) {
     return true;
   }, []);
 
-  const execute = useCallback(async () => {
+  const execute = useCallback(async (isRetry = false) => {
     if (inFlightRef.current) return;
 
     const stamp = ++runSeqRef.current;
     const controller = new AbortController();
     controllerRef.current = controller;
     inFlightRef.current = true;
+    attemptRef.current = isRetry ? attemptRef.current + 1 : 1;
+    streamedRef.current = "";
     setOpen(true);
-    setState({ status: "loading" });
+    setState({ status: "loading", attempt: attemptRef.current });
     setIsPending(true);
+
+    function handleToken(chunk: string) {
+      if (runSeqRef.current !== stamp) return;
+      streamedRef.current += chunk;
+      setState({ status: "streaming", text: streamedRef.current });
+    }
 
     let nextState: AiActionResultState;
     try {
-      const result = await runRef.current(controller.signal);
+      const result = await runRef.current(controller.signal, handleToken);
       nextState = { status: "ready", result, aiUsage: result.aiUsage };
     } catch (error) {
       nextState = classifyAiError(error);
@@ -55,13 +68,15 @@ export function useAiPopoverAction({ run }: UseAiPopoverActionOptions) {
     setState(nextState);
   }, []);
 
+  const start = useCallback(() => execute(false), [execute]);
+
   const retry = useCallback(() => {
-    void execute();
+    void execute(true);
   }, [execute]);
 
   const cancel = useCallback(() => {
     if (!discardInFlight()) return;
-    setState({ status: "cancelled" });
+    setState({ status: "cancelled", text: streamedRef.current || undefined });
   }, [discardInFlight]);
 
   const handleOpenChange = useCallback(
@@ -85,7 +100,7 @@ export function useAiPopoverAction({ run }: UseAiPopoverActionOptions) {
     open,
     state,
     isPending,
-    execute,
+    execute: start,
     retry,
     cancel,
     handleOpenChange,

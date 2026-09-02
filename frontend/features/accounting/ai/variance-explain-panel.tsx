@@ -2,8 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { AiDraftCard, AiGeneratedLabel } from "@/components/ai";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { AiDraftCard, AiGeneratedLabel, AiFailureBody } from "@/components/ai";
 import { useExplainVariance } from "@/hooks/api/accounting/accounting-ai";
 import type { VarianceExplainBody, AiNarrationFactor } from "@/hooks/api/accounting/accounting-ai";
 
@@ -76,7 +75,7 @@ export function VarianceExplainPanel({ variance, className }: VarianceExplainPan
       )}
 
       {mutation.error && (
-        <p className="text-xs text-destructive">{getErrorMessage(mutation.error)}</p>
+        <AiFailureBody error={mutation.error} onRetry={handleExplain} />
       )}
 
       {mutation.data && (

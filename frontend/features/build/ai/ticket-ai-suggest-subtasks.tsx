@@ -48,8 +48,8 @@ export function TicketAiSuggestSubtasksAction({
   const [creatingCount, setCreatingCount] = useState(0);
 
   const popover = useAiPopoverAction({
-    run: useCallback(async (): Promise<AiActionResult> => {
-      const data = await suggestMutation.mutateAsync(undefined);
+    run: useCallback(async (signal?: AbortSignal): Promise<AiActionResult> => {
+      const data = await suggestMutation.mutateAsync({ signal });
       setSelected(new Set(data.subtasks.map((_, index) => index)));
       if (data.subtasks.length === 0) {
         return { text: "No subtask suggestions at this time." };

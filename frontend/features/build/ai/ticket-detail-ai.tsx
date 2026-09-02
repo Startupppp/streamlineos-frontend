@@ -70,23 +70,31 @@ export function useTicketDetailAi({
   const summarizeCommentsDisabledReason =
     commentCount === 0 ? "Add a comment first" : undefined;
 
-  const runSummarize = useCallback((): Promise<AiActionResult> => {
-    return summarizeMutation.mutateAsync(undefined).then(formatTicketSummary);
-  }, [summarizeMutation]);
+  const runSummarize = useCallback(
+    (signal?: AbortSignal): Promise<AiActionResult> =>
+      summarizeMutation.mutateAsync({ signal }).then(formatTicketSummary),
+    [summarizeMutation],
+  );
 
-  const runSummarizeComments = useCallback((): Promise<AiActionResult> => {
-    return summarizeCommentsMutation.mutateAsync(undefined).then(formatCommentsSummary);
-  }, [summarizeCommentsMutation]);
+  const runSummarizeComments = useCallback(
+    (signal?: AbortSignal): Promise<AiActionResult> =>
+      summarizeCommentsMutation.mutateAsync({ signal }).then(formatCommentsSummary),
+    [summarizeCommentsMutation],
+  );
 
-  const runImprove = useCallback((): Promise<AiActionResult> => {
-    return improveMutation
-      .mutateAsync({ draft: ticket.description ?? undefined })
-      .then((data) => ({ text: data.description }));
-  }, [improveMutation, ticket.description]);
+  const runImprove = useCallback(
+    (signal?: AbortSignal): Promise<AiActionResult> =>
+      improveMutation
+        .mutateAsync({ draft: ticket.description ?? undefined, signal })
+        .then((data) => ({ text: data.description })),
+    [improveMutation, ticket.description],
+  );
 
-  const runHandoff = useCallback((): Promise<AiActionResult> => {
-    return handoffMutation.mutateAsync(undefined).then(formatHandoff);
-  }, [handoffMutation]);
+  const runHandoff = useCallback(
+    (signal?: AbortSignal): Promise<AiActionResult> =>
+      handoffMutation.mutateAsync({ signal }).then(formatHandoff),
+    [handoffMutation],
+  );
 
   const descriptionAction = useAiInlineAction({
     actionKey: "improve-description",

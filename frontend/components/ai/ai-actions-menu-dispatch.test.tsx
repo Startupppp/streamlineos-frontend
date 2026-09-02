@@ -168,3 +168,87 @@ describe("AiActionsMenu — a state transition never issues a second paid call",
     expect(run).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("AiActionsMenu — streaming, retry and partial output reach the surface", () => {
+  it("renders streamed tokens as a streaming state and keeps them when stopped", async () => {
+    const pending = deferred();
+    const sessions: (AiInlineSession | null)[] = [];
+    let emit: ((chunk: string) => void) | undefined;
+    const action: AiAction = {
+      key: "summarize",
+      label: "summarize",
+      surface: "inline",
+      run: (_signal?: AbortSignal, onToken?: (chunk: string) => void) => {
+        emit = onToken;
+        return pending.promise;
+      },
+      onInlineChange: (session) => sessions.push(session),
+    };
+
+    render(<AiActionsMenu actions={[action]} />);
+    await openAndRun("summarize");
+
+    act(() => {
+      emit?.("half an ");
+      emit?.("answer");
+    });
+
+    const streaming = sessions[sessions.length - 1];
+    expect(streaming?.state.status).toBe("streaming");
+    if (streaming?.state.status === "streaming")
+      expect(streaming.state.text).toBe("half an answer");
+
+    act(() => {
+      sessions[sessions.length - 1]?.cancel();
+    });
+
+    const cancelled = sessions[sessions.length - 1];
+    expect(cancelled?.state.status).toBe("cancelled");
+    if (cancelled?.state.status === "cancelled")
+      expect(cancelled.state.text).toBe("half an answer");
+  });
+
+  it("counts a retry as a second attempt rather than a fresh first load", async () => {
+    const first = deferred();
+    const second = deferred();
+    const run = jest
+      .fn<Promise<AiActionResult>, [AbortSignal?, ((chunk: string) => void)?]>()
+      .mockReturnValueOnce(first.promise)
+      .mockReturnValueOnce(second.promise);
+    const sessions: (AiInlineSession | null)[] = [];
+    const action: AiAction = {
+      key: "summarize",
+      label: "summarize",
+      surface: "inline",
+      run,
+      onInlineChange: (session) => sessions.push(session),
+    };
+
+    render(<AiActionsMenu actions={[action]} />);
+    await openAndRun("summarize");
+
+    const firstLoading = sessions[sessions.length - 1];
+    expect(firstLoading?.state.status).toBe("loading");
+    if (firstLoading?.state.status === "loading")
+      expect(firstLoading.state.attempt).toBe(1);
+
+    await act(async () => {
+      first.reject(new ApiError("AI provider is temporarily unavailable", 503));
+      await first.promise.catch(() => undefined);
+    });
+
+    act(() => {
+      sessions[sessions.length - 1]?.retry();
+    });
+
+    const retryLoading = sessions[sessions.length - 1];
+    expect(retryLoading?.state.status).toBe("loading");
+    if (retryLoading?.state.status === "loading")
+      expect(retryLoading.state.attempt).toBe(2);
+
+    await act(async () => {
+      second.resolve({ text: "summary" });
+      await second.promise;
+    });
+  });
+});

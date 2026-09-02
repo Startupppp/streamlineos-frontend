@@ -6,8 +6,8 @@ import { SparklesIcon, CopyIcon, CheckIcon } from "@animateicons/react/lucide";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AiFailureBody } from "@/components/ai";
 import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { Plan } from "@/lib/billing/feature-gates";
 import { useDraftClientUpdate } from "@/hooks/api/build/ai";
@@ -85,20 +85,7 @@ export function ClientUpdateCard({ projectId, featureEnabled, requiredPlan }: Cl
       ) : null}
 
       {mutation.isError ? (
-        <div className="space-y-2.5">
-          <p className="text-label leading-snug text-destructive">
-            {getErrorMessage(mutation.error)}
-          </p>
-          <LoadingButton
-            variant="outline"
-            size="sm"
-            onClick={handleRun}
-            className="w-full gap-1.5 text-xs"
-          >
-            <RotateCcw className="h-3.5 w-3.5" />
-            Retry
-          </LoadingButton>
-        </div>
+        <AiFailureBody error={mutation.error} onRetry={handleRun} />
       ) : null}
 
       {result ? (

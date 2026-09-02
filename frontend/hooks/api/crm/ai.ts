@@ -2,6 +2,7 @@
 
 import { apiClient } from "@/lib/api-client";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { AiAbortInput } from "@/hooks/api/ai-abort";
 
 interface LeadSummaryResult {
   summary: string;
@@ -150,16 +151,20 @@ export function useDealSummary() {
 export function useNextBestActionsAcrossPipeline() {
   return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["ai-crm-next-best-actions"],
-    mutationFn: (limit?: number) =>
-      apiClient.post<NextBestActionsWithEvidenceResult>("/ai/crm/next-best-actions", { limit }),
+    mutationFn: ({ limit, signal }: { limit?: number } & AiAbortInput) =>
+      apiClient.post<NextBestActionsWithEvidenceResult>(
+        "/ai/crm/next-best-actions",
+        { limit },
+        { signal },
+      ),
   });
 }
 
 export function useCrmEmailDraft() {
   return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["ai-crm-email-draft"],
-    mutationFn: (input: EmailDraftInput) =>
-      apiClient.post<EmailDraftResult>("/ai/crm/email-draft", input),
+    mutationFn: ({ signal, ...input }: EmailDraftInput & AiAbortInput) =>
+      apiClient.post<EmailDraftResult>("/ai/crm/email-draft", input, { signal }),
   });
 }
 
@@ -174,47 +179,66 @@ export function useSummarizeNotes() {
 export function useCrmObjectionHelp() {
   return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["ai-crm-objection-help"],
-    mutationFn: (input: { objection: string; context?: string }) =>
-      apiClient.post<ObjectionHelpResult>("/ai/crm/objection-help", input),
+    mutationFn: ({
+      signal,
+      ...input
+    }: { objection: string; context?: string } & AiAbortInput) =>
+      apiClient.post<ObjectionHelpResult>("/ai/crm/objection-help", input, { signal }),
   });
 }
 
 export function useDuplicateSuggestions() {
   return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["ai-crm-duplicate-suggestions"],
-    mutationFn: (leadId: number) =>
-      apiClient.post<DuplicateSuggestionsResult>(`/ai/crm/duplicate-suggestions/${leadId}`, {}),
+    mutationFn: ({ leadId, signal }: { leadId: number } & AiAbortInput) =>
+      apiClient.post<DuplicateSuggestionsResult>(
+        `/ai/crm/duplicate-suggestions/${leadId}`,
+        {},
+        { signal },
+      ),
   });
 }
 
 export function useLeadSummaryWithCitations() {
   return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["ai-crm-lead-summary-citations"],
-    mutationFn: (leadId: number) =>
-      apiClient.post<LeadSummaryWithCitationsResult>(`/ai/crm/leads/${leadId}/summary-with-citations`, {}),
+    mutationFn: ({ leadId, signal }: { leadId: number } & AiAbortInput) =>
+      apiClient.post<LeadSummaryWithCitationsResult>(
+        `/ai/crm/leads/${leadId}/summary-with-citations`,
+        {},
+        { signal },
+      ),
   });
 }
 
 export function useDealSummaryWithCitations() {
   return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["ai-crm-deal-summary-citations"],
-    mutationFn: (dealId: number) =>
-      apiClient.post<DealSummaryWithCitationsResult>(`/ai/crm/deals/${dealId}/summary-with-citations`, {}),
+    mutationFn: ({ dealId, signal }: { dealId: number } & AiAbortInput) =>
+      apiClient.post<DealSummaryWithCitationsResult>(
+        `/ai/crm/deals/${dealId}/summary-with-citations`,
+        {},
+        { signal },
+      ),
   });
 }
 
 export function useAccountSummaryWithCitations() {
   return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["ai-crm-account-summary-citations"],
-    mutationFn: (clientId: number) =>
-      apiClient.post<AccountSummaryWithCitationsResult>("/ai/crm/account-summary-with-citations", { clientId }),
+    mutationFn: ({ clientId, signal }: { clientId: number } & AiAbortInput) =>
+      apiClient.post<AccountSummaryWithCitationsResult>(
+        "/ai/crm/account-summary-with-citations",
+        { clientId },
+        { signal },
+      ),
   });
 }
 
 export function useMeetingFollowUpDraft() {
   return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["ai-crm-meeting-follow-up"],
-    mutationFn: (input: MeetingFollowUpInput) =>
-      apiClient.post<MeetingFollowUpResult>("/ai/crm/meeting-follow-up", input),
+    mutationFn: ({ signal, ...input }: MeetingFollowUpInput & AiAbortInput) =>
+      apiClient.post<MeetingFollowUpResult>("/ai/crm/meeting-follow-up", input, { signal }),
   });
 }

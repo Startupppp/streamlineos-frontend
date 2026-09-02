@@ -1,5 +1,5 @@
 export { AiGeneratedLabel } from "./ai-generated-label";
-export { AiCitationChips } from "./ai-citation-chips";
+export { AiCitationChips, AiCitationChipsSkeleton } from "./ai-citation-chips";
 export type { Citation } from "./ai-citation-chips";
 export { AiDraftCard } from "./ai-draft-card";
 export { AiActionsMenu } from "./ai-actions-menu";
@@ -17,6 +17,8 @@ export type { AiUsageMeta } from "./ai-usage-chip";
 export { AiConfidenceBadge } from "./ai-confidence-badge";
 export { AiQuotaEmptyState } from "./ai-quota-empty-state";
 export { AiPermissionDenied } from "./ai-permission-denied";
+export { AiStreamingOutput, AiCancelledOutput } from "./ai-partial-output";
+export { AiFailureBody } from "./ai-failure-body";
 export {
   AiStateNotice,
   AiQueuedNotice,

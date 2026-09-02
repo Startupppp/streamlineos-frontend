@@ -131,20 +131,30 @@ export function useCreateTicketAi({
     description,
   );
 
-  const runSuggestTitle = useCallback((): Promise<AiActionResult> => {
-    return suggestTitleMutation.mutateAsync(draftInput()).then((d) => ({ text: d.title }));
-  }, [suggestTitleMutation, draftInput]);
+  const runSuggestTitle = useCallback(
+    (signal?: AbortSignal): Promise<AiActionResult> =>
+      suggestTitleMutation
+        .mutateAsync({ ...draftInput(), signal })
+        .then((d) => ({ text: d.title })),
+    [suggestTitleMutation, draftInput],
+  );
 
-  const runImprove = useCallback((): Promise<AiActionResult> => {
-    return improveMutation.mutateAsync(draftInput()).then((d) => ({ text: d.description }));
-  }, [improveMutation, draftInput]);
+  const runImprove = useCallback(
+    (signal?: AbortSignal): Promise<AiActionResult> =>
+      improveMutation
+        .mutateAsync({ ...draftInput(), signal })
+        .then((d) => ({ text: d.description })),
+    [improveMutation, draftInput],
+  );
 
-  const runSuggestFields = useCallback((): Promise<AiActionResult> => {
-    return suggestFieldsMutation.mutateAsync(draftInput()).then((data) => {
-      lastFieldsRef.current = data;
-      return formatSuggestedFields(data);
-    });
-  }, [suggestFieldsMutation, draftInput]);
+  const runSuggestFields = useCallback(
+    (signal?: AbortSignal): Promise<AiActionResult> =>
+      suggestFieldsMutation.mutateAsync({ ...draftInput(), signal }).then((data) => {
+        lastFieldsRef.current = data;
+        return formatSuggestedFields(data);
+      }),
+    [suggestFieldsMutation, draftInput],
+  );
 
   const handleApplyFieldsFromText = useCallback((_: string) => {
     const data = lastFieldsRef.current;

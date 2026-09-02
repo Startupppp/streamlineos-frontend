@@ -51,7 +51,10 @@ export interface AiAction {
   key: string;
   label: string;
   description?: string;
-  run: (signal?: AbortSignal) => Promise<AiActionResult>;
+  run: (
+    signal?: AbortSignal,
+    onToken?: (chunk: string) => void,
+  ) => Promise<AiActionResult>;
   onApply?: (text: string) => void;
   applyLabel?: string;
   surface?: AiResultSurface;
@@ -121,6 +124,8 @@ export function AiActionsMenu({
   const runSeqRef = React.useRef(0);
   const inFlightRef = React.useRef(false);
   const controllerRef = React.useRef<AbortController | null>(null);
+  const attemptRef = React.useRef(1);
+  const streamedRef = React.useRef("");
 
   React.useEffect(() => {
     activeRef.current = active;
@@ -164,7 +169,7 @@ export function AiActionsMenu({
           inlineActionRef.current = null;
         },
         retry: () => {
-          void runActionRef.current(action);
+          void runActionRef.current(action, true);
         },
         cancel: () => {
           cancelRunRef.current();
@@ -176,13 +181,13 @@ export function AiActionsMenu({
     [discardInFlight],
   );
 
-  const runActionRef = React.useRef<(action: AiAction) => Promise<void>>(
-    async () => {},
-  );
+  const runActionRef = React.useRef<
+    (action: AiAction, isRetry?: boolean) => Promise<void>
+  >(async () => {});
   const cancelRunRef = React.useRef<() => void>(() => {});
 
   const runAction = React.useCallback(
-    async (action: AiAction) => {
+    async (action: AiAction, isRetry = false) => {
       if (inFlightRef.current) return;
 
       const surface = resolveSurface(action, defaultSurface);
@@ -200,21 +205,39 @@ export function AiActionsMenu({
       const controller = new AbortController();
       controllerRef.current = controller;
       inFlightRef.current = true;
+      attemptRef.current = isRetry ? attemptRef.current + 1 : 1;
+      streamedRef.current = "";
+
+      const loadingState: AiActionResultState = {
+        status: "loading",
+        attempt: attemptRef.current,
+      };
 
       setActive(action);
-      setState({ status: "loading" });
+      setState(loadingState);
       if (surface === "inline") {
         inlineActionRef.current = action;
-        pushInlineSession(action, { status: "loading" });
+        pushInlineSession(action, loadingState);
       } else if (surface === "popover") {
         setPopoverOpen(true);
       } else {
         setOverlayOpen(true);
       }
 
+      function handleToken(chunk: string) {
+        if (runSeqRef.current !== stamp) return;
+        streamedRef.current += chunk;
+        const streamingState: AiActionResultState = {
+          status: "streaming",
+          text: streamedRef.current,
+        };
+        setState(streamingState);
+        if (surface === "inline") pushInlineSession(action, streamingState);
+      }
+
       let nextState: AiActionResultState;
       try {
-        const result = await action.run(controller.signal);
+        const result = await action.run(controller.signal, handleToken);
         nextState = { status: "ready", result, aiUsage: result.aiUsage };
       } catch (error) {
         nextState = classifyAiError(error);
@@ -233,9 +256,13 @@ export function AiActionsMenu({
 
   const cancelRun = React.useCallback(() => {
     if (!discardInFlight()) return;
-    setState({ status: "cancelled" });
+    const cancelledState: AiActionResultState = {
+      status: "cancelled",
+      text: streamedRef.current || undefined,
+    };
+    setState(cancelledState);
     const action = inlineActionRef.current;
-    if (action) pushInlineSession(action, { status: "cancelled" });
+    if (action) pushInlineSession(action, cancelledState);
   }, [discardInFlight, pushInlineSession]);
 
   cancelRunRef.current = cancelRun;
@@ -248,7 +275,7 @@ export function AiActionsMenu({
   }, []);
 
   const handleRetry = React.useCallback(() => {
-    if (active) void runAction(active);
+    if (active) void runAction(active, true);
   }, [active, runAction]);
 
   const handleApply = React.useCallback(() => {
@@ -330,6 +357,17 @@ export function AiActionsMenu({
     </>
   );
 
+  const overlays = (
+    <AiResultOverlays
+      title={active?.label ?? "AI assist"}
+      surface={activeSurface}
+      open={overlayOpen}
+      onOpenChange={handleOverlayOpenChange}
+    >
+      {resultBody}
+    </AiResultOverlays>
+  );
+
   const popoverResult =
     activeSurface === "popover" && popoverOpen ? (
       <ResponsivePopoverContent
@@ -365,45 +403,7 @@ export function AiActionsMenu({
           {popoverResult}
         </ResponsivePopover>
 
-        <Sheet
-          open={overlayOpen && activeSurface === "sheet"}
-          onOpenChange={handleOverlayOpenChange}
-        >
-          <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
-            <SheetHeader className="shrink-0 border-b border-border px-6 py-4">
-              <SheetTitle className="text-base font-semibold">
-                {active?.label ?? "AI assist"}
-              </SheetTitle>
-              <SheetDescription className="text-label text-muted-foreground">
-                AI-generated draft grounded in this record. Review before you
-                use it.
-              </SheetDescription>
-            </SheetHeader>
-            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
-              {resultBody}
-            </div>
-          </SheetContent>
-        </Sheet>
-
-        <Dialog
-          open={overlayOpen && activeSurface === "dialog"}
-          onOpenChange={handleOverlayOpenChange}
-        >
-          <DialogContent className="flex max-h-[min(640px,calc(100dvh-2rem))] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
-            <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
-              <DialogTitle className="text-base font-semibold">
-                {active?.label ?? "AI assist"}
-              </DialogTitle>
-              <DialogDescription className="text-label text-muted-foreground">
-                AI-generated draft grounded in this record. Review before you
-                use it.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
-              {resultBody}
-            </div>
-          </DialogContent>
-        </Dialog>
+        {overlays}
       </>
     );
   }
@@ -440,43 +440,52 @@ export function AiActionsMenu({
         {popoverResult}
       </ResponsivePopover>
 
-      <Sheet
-        open={overlayOpen && activeSurface === "sheet"}
-        onOpenChange={handleOverlayOpenChange}
-      >
+      {overlays}
+    </>
+  );
+}
+
+interface AiResultOverlaysProps {
+  title: string;
+  surface: AiResultSurface | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  children: React.ReactNode;
+}
+
+const OVERLAY_DESCRIPTION =
+  "AI-generated draft grounded in this record. Review before you use it.";
+
+function AiResultOverlays({
+  title,
+  surface,
+  open,
+  onOpenChange,
+  children,
+}: AiResultOverlaysProps) {
+  return (
+    <>
+      <Sheet open={open && surface === "sheet"} onOpenChange={onOpenChange}>
         <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
           <SheetHeader className="shrink-0 border-b border-border px-6 py-4">
-            <SheetTitle className="text-base font-semibold">
-              {active?.label ?? "AI assist"}
-            </SheetTitle>
+            <SheetTitle className="text-base font-semibold">{title}</SheetTitle>
             <SheetDescription className="text-label text-muted-foreground">
-              AI-generated draft grounded in this record. Review before you use
-              it.
+              {OVERLAY_DESCRIPTION}
             </SheetDescription>
           </SheetHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
-            {resultBody}
-          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">{children}</div>
         </SheetContent>
       </Sheet>
 
-      <Dialog
-        open={overlayOpen && activeSurface === "dialog"}
-        onOpenChange={handleOverlayOpenChange}
-      >
+      <Dialog open={open && surface === "dialog"} onOpenChange={onOpenChange}>
         <DialogContent className="flex max-h-[min(640px,calc(100dvh-2rem))] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
           <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
-            <DialogTitle className="text-base font-semibold">
-              {active?.label ?? "AI assist"}
-            </DialogTitle>
+            <DialogTitle className="text-base font-semibold">{title}</DialogTitle>
             <DialogDescription className="text-label text-muted-foreground">
-              AI-generated draft grounded in this record. Review before you use
-              it.
+              {OVERLAY_DESCRIPTION}
             </DialogDescription>
           </DialogHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
-            {resultBody}
-          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">{children}</div>
         </DialogContent>
       </Dialog>
     </>

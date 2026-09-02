@@ -42,7 +42,7 @@ export function AIPredictDealButton({
       );
       return;
     }
-    predictMutation.mutate(dealId, {
+    predictMutation.mutate({ dealId }, {
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [featureEnabled, requiredPlan, predictMutation, dealId]);
