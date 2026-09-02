@@ -6,6 +6,56 @@
 
 **Status:** COMPLETE — all six boxes closed. Verdicts in `../reports/07-key-inventory.md`; the `EXPLAIN (ANALYZE, BUFFERS)` half closed 2026-09-02 against `scratch_perf_seed`. Ticket 08 has already executed 354 of the index drops (`0999`/`1002`/`1003`); **§4.3 hands it six measured regressions to repair and a widened S18 (5 -> 172 pairs).**
 
+**Follow-up 07b — the inventory's blind spot, measured and partly closed.** `reports/07b-declaration-drift.md`.
+The classification above reads the Drizzle declarations plus `pg_catalog`, but it never asked whether the
+two agree. They do not, in two ways this ticket did not count:
+**150 live tenant tables carry no Drizzle declaration at all** (49 `notifications` partitions,
+34 inventory, 18 CRM, the 31-table `gl_*`/`ap_*`/`ar_*`/`bank_*`/`tax_*` `drizzle-kit push` artefact
+documented in `0591b`'s own header, and 18 others — 17 of which have zero references in `src/` or
+`test/` under a scanner validated in both directions); and **5 declared columns have a live type that
+makes their declared foreign key impossible** (`integer` columns declared `text` referencing
+`organizations.id`/`users.id`, all in `src/db/schema/billing/billing.ts`, all from migration `0000`).
+That last one is a live 22P02 on `ReferralService.createReferral`, reproduced before the fix.
+**Which gate saw what** is recorded in 07b §1: `check:tenant-indexes --db` (988/988),
+`check:tenant-relationships` and `db:verify-rls` are `pg_catalog`-driven and DID cover all 150;
+`check:tenant-indexes` default (839/839) is declaration-driven and covered none of them;
+`check:tenant-isolation` reads neither. **No gate detects a declared foreign key with no live
+constraint**, which is why the five sat undetected.
+
+**Follow-up 07b, resumed pass (session killed mid-migration by a watchdog; 1023-1026 were already
+committed and the journal was consistent).** Two routed items closed out.
+**Routed A — the `dashboard-personal-my-tasks` read-cost breach: measured, and the routing was
+half wrong.** That budget does not breach `maxScanRows` at head; it is *vacuous* (its predicate is
+the application's `'TODO','IN_PROGRESS','IN_REVIEW'`, the seed writes `'Todo','In Progress'`), and
+the 1,801 rows belong to `dashboard-my-issues`, which declares no `maxScanRows`. The plan defect
+is real and shared by both, and the shape proposed —
+`(org_id, assignee_membership_id, status, updated_at DESC)` — was measured and is **identical to
+head on all four tenants**: a `status` key between the equality columns and the sort column makes
+the ordering unusable, so the majority tenant declines it and keeps walking
+`idx_tickets_org_updated_live`. Dropping `status` is the fix. Migration `1027` adds
+`idx_tickets_org_assignee_updated_live (org_id, assignee_membership_id, updated_at DESC) WHERE
+deleted_at IS NULL`: `dashboard-my-issues` **261 → 22** buffers at 89.93%, 40 → 19, 175 → 75,
+61 → 60, and the same query with the status filter 252 → 13, 34 → 13, 31 → 15, 10 → 10; rows
+scanned on `build.tickets` at the majority tenant **1,801 → 10**. Chosen on every tenant, never
+worse than head on any, 440 kB against a 3,584 kB heap. Measured as `streamline_app` with the
+tenant GUC set, in buffers, on `scratch_t07c`. Details in `reports/07b-declaration-drift.md` §9.
+    PARTIAL: `dashboard-personal-my-tasks` stays VACUOUS after the index — the seed writes
+    title-case ticket statuses. `read-cost-budgets.mjs:1094` says the seed is the side that
+    deviates and the predicate must not be retuned to it, so the fix is in `src/scripts/`, which
+    is not this territory. Its `maxScanRows: 1_000`, `forbid-seq-scan` assertion and 2,000-buffer
+    ceiling are unenforced at every tenant until then.
+**Routed B — the payroll TDS ledger: FK half done, key half deliberately not taken.** `1026`
+already gave `payroll_tds_ytd_ledger.run_id` its composite FK. The natural-key widening is NOT
+taken and is handed on in full in `reports/07b-declaration-drift.md` §11.
+    BLOCKED: needs one owner holding both halves, and a payroll product decision first. The
+    destructive case is already refused at the data layer by `1030`'s
+    `trg_guard_paid_payroll_tds_ytd_row` (23514) once the earlier run is PAID/PUBLISHED/CLOSED;
+    the residual window is a LOCKED-not-yet-PAID run. Adding `run_id` to the two *partial* unique
+    indexes is insufficient as routed because `run_id` is nullable — it needs `NOT NULL` plus a
+    backfill — and **nothing in `src/` or `test/` reads this table**, so no read path decides
+    whether "accumulate" means summing per-run rows or incrementing one. `1030`'s own header
+    reports the follow-up to ticket 24.
+
 - [x] Every inventoried entry carries a verdict, an owner and a stated failure prevented. "May be useful later" is not a KEEP justification.
       Evidence: `reports/07-key-inventory.md` §2 — 70 verdict rows (24 schema S01-S24 + 46 registry P01-P46), each with owner + failure; 29 KEEP / 37 REFACTOR / 11 REMOVE. `grep -c '^| S[0-9]'` = 24, `grep -c '^| P[0-9]'` = 46.
 - [x] Redundant or overlapping foreign keys, unique constraints, checks and indexes are detected from schema declarations, `pg_catalog` and representative `EXPLAIN (ANALYZE, BUFFERS)` plans — statistics alone never justify deletion.
