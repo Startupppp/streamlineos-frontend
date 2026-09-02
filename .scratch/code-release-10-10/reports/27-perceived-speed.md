@@ -126,7 +126,7 @@ primitive, so it wants its own ticket.
 - HTTP compression: `next.config.ts` does not disable Next's `compress` default. Explicit brotli is
   a proxy concern and `next.config.ts` belongs to **ticket 26**.
 
-## Box 6 — measurement — **PARTIAL / BLOCKED**
+## Box 6 — measurement — **CLOSED** (was PARTIAL / BLOCKED)
 
 Done: **render count measured, one avoidable rerender removed.** `ChannelListEntry` is rendered
 twice per channel by the chat sidebar and re-rendered by every keystroke in its search box, while
@@ -136,10 +136,22 @@ parent renders**; with `React.memo`, **1**. At ~100 channels × 2 placements tha
 component renders per keystroke. This is the only place I added `memo` — per `frontend/CLAUDE.md`
 §3, measured first.
 
-**BLOCKED:** memory, long tasks and hydration mismatches. They need a production build driven in a
-real browser; `next build` is ticket 26's and only one may run at a time, and dev-server numbers
-are not comparable. **Ticket 26 owns the Web Vitals capture and should take these three on the Home
-and module journeys.**
+**RESOLVED 2026-09-02 by ticket 26 — this box is now closed.** The three blocked items were taken
+on ticket 26's authenticated production capture (build `qlh_3k7hMskrlYGND5MMp`, 12 routes covering
+Home and the module journeys × 2 profiles × 8 repetitions = **192 samples**, 0 unauthorized,
+0 off-route, 0 unusable, `routeFailures: 0`):
+
+- **Hydration mismatches — 0 of 192**, read from the console over CDP, negative control in the
+  driver's self-test. Reproduced at 0 of 72 on a second pass. The `MessageChannel`/jsdom blocker
+  named below is real and is simply routed around: a real browser needs no polyfill.
+- **Long tasks — desktop 0 ms p75 on every one of the 12 routes**; mobile at 4× CPU throttling
+  **275 ms** profile-wide, worst `/dashboard` **408 ms**, best `/settings` 198 ms.
+- **Memory — no leak, and the naive reading says there is one.** Read without forcing a collection
+  the heap climbs monotonically across a session (59 MB → 362 MB over 12 navigations), which is
+  exactly the shape of a retention leak. With `HeapProfiler.collectGarbage` immediately before every
+  read, the same routes measure **13–17 MB, flat**, p75 15.5 MB desktop / 15.7 MB mobile.
+
+Numbers, method and reproduction: `reports/26-web-vitals.md` §6 and §6a.
 
 ## Box 7 — server prefetch actually hydrates ✔ (the subtle one)
 
