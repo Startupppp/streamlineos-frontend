@@ -41,8 +41,6 @@ const TiptapEditor = dynamic(
   },
 );
 
-export type { MailComposeMode };
-
 interface MailComposeSheetProps {
   open: boolean;
   onClose: () => void;

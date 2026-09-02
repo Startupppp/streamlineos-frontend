@@ -10,5 +10,3 @@ export const mediaImageQuerySchema = z.object({
     .regex(OBJECT_KEY)
     .refine((key) => !key.includes("..")),
 });
-
-export type MediaImageQuery = z.infer<typeof mediaImageQuerySchema>;
