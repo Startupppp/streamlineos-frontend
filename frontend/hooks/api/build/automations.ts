@@ -49,7 +49,7 @@ export function useCreateAutomation(projectId: number) {
 
 export function useUpdateAutomation(projectId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:timesheets:manage", {
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "automations", "update"],
     mutationFn: ({ id, ...data }: Partial<ProjectAutomation> & { id: number }) =>
       apiClient.patch<ProjectAutomation>(`/build/${projectId}/automations/${id}`, data),

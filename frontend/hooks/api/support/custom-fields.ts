@@ -81,7 +81,7 @@ export function useUpdateCustomField() {
 
 export function useDeleteCustomField() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("support:tickets:reply", {
+  return useAuthorizedMutation("support:settings:manage", {
     mutationKey: ["supportCustomFields", "delete"] as const,
     mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/support/custom-fields/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportCustomFields.all }),

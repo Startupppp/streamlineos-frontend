@@ -127,7 +127,7 @@ export function useCreateView(options?: Parameters<typeof useMutation>[0]) {
 
 export function useUpdateView(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation("build:timesheets:manage", {
+  return useAuthorizedMutation("build:workspace:manage", {
     mutationKey: ["projects", "views", "update"],
     mutationFn: ({ id, projectId, ...data }: UpdateViewInput & { projectId: number }) =>
       apiClient.patch<ProjectView>(`/build/${projectId}/views/${id}`, data),
@@ -185,7 +185,7 @@ export function useCreateWorkspaceView(options?: Parameters<typeof useMutation>[
 
 export function useUpdateWorkspaceView(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation("build:manage", {
+  return useAuthorizedMutation("build:workspace:manage", {
     mutationKey: ["projects", "workspace-views", "update"],
     mutationFn: ({ id, ...data }: UpdateWorkspaceViewInput) =>
       apiClient.patch<ProjectView>(`/build/views/${id}`, data),
@@ -200,7 +200,7 @@ export function useUpdateWorkspaceView(options?: Parameters<typeof useMutation>[
 
 export function useDeleteWorkspaceView(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation("build:manage", {
+  return useAuthorizedMutation("build:workspace:manage", {
     mutationKey: ["projects", "workspace-views", "delete"],
     mutationFn: ({ id }: { id: number }) =>
       apiClient.delete<{ success: boolean }>(`/build/views/${id}`),
@@ -258,7 +258,7 @@ export function useCreateIntakeRequest(options?: Parameters<typeof useMutation>[
 
 export function useUpdateIntakeRequest(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation("build:timesheets:manage", {
+  return useAuthorizedMutation("build:workspace:manage", {
     mutationKey: ["projects", "intake", "update"],
     mutationFn: ({ id, projectId, ...data }: UpdateIntakeRequestInput & { projectId: number }) =>
       apiClient.patch<{ success: boolean }>(

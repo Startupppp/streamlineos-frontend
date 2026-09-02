@@ -56,7 +56,7 @@ export function useCreatePortfolio() {
 
 export function useUpdatePortfolio() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:manage", {
+  return useAuthorizedMutation("build:portfolios:manage", {
     mutationKey: ["projects", "portfolios", "update"],
     mutationFn: ({ id, ...data }: UpdatePortfolioInput & { id: number }) =>
       apiClient.patch<Portfolio>(`/build/portfolios/${id}`, data),
@@ -69,7 +69,7 @@ export function useUpdatePortfolio() {
 
 export function useDeletePortfolio() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:manage", {
+  return useAuthorizedMutation("build:portfolios:manage", {
     mutationKey: ["projects", "portfolios", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/build/portfolios/${id}`),
@@ -93,7 +93,7 @@ export function useLinkPortfolioProject(portfolioId: number) {
 
 export function useUnlinkPortfolioProject(portfolioId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:tickets:update", {
+  return useAuthorizedMutation("build:portfolios:manage", {
     mutationKey: ["projects", "portfolios", portfolioId, "unlink"],
     mutationFn: (projectId: number) =>
       apiClient.delete<{ success: boolean }>(`/build/portfolios/${portfolioId}/projects/${projectId}`),

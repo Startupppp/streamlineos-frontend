@@ -68,7 +68,7 @@ export function useAddProjectWorkspaceMember() {
 
 export function useRemoveProjectWorkspaceMember() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:manage", {
+  return useAuthorizedMutation("build:members:manage", {
     mutationKey: [...queryKeys.projects.workspaceMembers.all, "remove"],
     mutationFn: (userId: string) =>
       apiClient.delete<unknown>(`/build/members/${userId}`),

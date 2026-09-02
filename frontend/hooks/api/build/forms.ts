@@ -62,7 +62,7 @@ export function useCreateForm(projectId: number) {
 
 export function useUpdateForm(projectId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:timesheets:manage", {
+  return useAuthorizedMutation("build:forms:manage", {
     mutationKey: ["projects", projectId, "forms", "update"],
     mutationFn: ({ id, ...data }: UpdateFormInput & { id: number }) =>
       apiClient.patch<ProjectForm>(`/build/${projectId}/forms/${id}`, data),

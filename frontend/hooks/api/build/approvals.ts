@@ -76,7 +76,7 @@ export function useDecideApproval(projectId: number) {
 
 export function useUpdateApproval(projectId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:timesheets:manage", {
+  return useAuthorizedMutation("build:approvals:manage", {
     mutationKey: ["projects", projectId, "approvals", "update"],
     mutationFn: ({ id, ...data }: UpdateApprovalInput & { id: number }) =>
       apiClient.patch<Approval>(`/build/${projectId}/approvals/${id}`, data),

@@ -49,7 +49,7 @@ export function useCreateMilestone(projectId: number) {
 
 export function useUpdateMilestone(projectId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:timesheets:manage", {
+  return useAuthorizedMutation("build:workspace:manage", {
     mutationKey: ["projects", "milestones", "update"],
     mutationFn: ({ id, ...input }: UpdateMilestoneInput & { id: number }) =>
       apiClient.patch<ProjectMilestone>(`/build/${projectId}/milestones/${id}`, input),

@@ -75,7 +75,7 @@ export function useUpdateBusinessHours() {
 
 export function useDeleteBusinessHours() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("support:tickets:reply", {
+  return useAuthorizedMutation("support:settings:manage", {
     mutationKey: ["supportBusinessHours", "delete"],
     mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/support/business-hours/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportBusinessHours.all }),

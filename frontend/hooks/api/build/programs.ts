@@ -45,7 +45,7 @@ export function useCreateProgram() {
 
 export function useUpdateProgram() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:manage", {
+  return useAuthorizedMutation("build:programs:manage", {
     mutationKey: ["projects", "programs", "update"],
     mutationFn: ({ id, ...data }: UpdateProgramInput & { id: number }) =>
       apiClient.patch<Program>(`/build/programs/${id}`, data),
@@ -60,7 +60,7 @@ export function useUpdateProgram() {
 
 export function useDeleteProgram() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:manage", {
+  return useAuthorizedMutation("build:programs:manage", {
     mutationKey: ["projects", "programs", "delete"],
     mutationFn: (id: number) => apiClient.delete<void>(`/build/programs/${id}`),
     onSuccess: () => {

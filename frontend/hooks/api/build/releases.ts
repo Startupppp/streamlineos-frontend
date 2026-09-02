@@ -34,7 +34,7 @@ export function useCreateRelease(projectId: number) {
 
 export function useUpdateRelease(projectId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:timesheets:manage", {
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "releases", "update"],
     mutationFn: ({ releaseId, ...data }: UpdateReleaseInput) =>
       apiClient.patch<Release>(`/build/${projectId}/releases/${releaseId}`, data),

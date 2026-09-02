@@ -74,7 +74,7 @@ export function useCreateCustomState(projectId: number) {
 
 export function useUpdateCustomState(projectId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:timesheets:manage", {
+  return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", projectId, "custom-states", "update"],
     mutationFn: ({ stateId, ...data }: StateUpdateInput) =>
       apiClient.patch<CustomState>(

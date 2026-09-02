@@ -45,7 +45,7 @@ export function useCreateBug() {
 
 export function useUpdateBug() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:timesheets:manage", {
+  return useAuthorizedMutation("build:bugs:update", {
     mutationKey: ["projects", "bugs", "update"],
     mutationFn: ({
       projectId,

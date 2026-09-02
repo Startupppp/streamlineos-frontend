@@ -112,7 +112,7 @@ export function useUpdateTicket(
   >
 ) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<UpdateTicketResponse, Error, UpdateTicketInput, UpdateTicketContext>("build:timesheets:manage", {
+  return useAuthorizedMutation<UpdateTicketResponse, Error, UpdateTicketInput, UpdateTicketContext>("build:tickets:update", {
     ...options,
     mutationKey: ["projects", "tickets", "update"],
     mutationFn: ({ ticketId, ...data }) =>
@@ -230,7 +230,7 @@ export function useDeleteTicket(
   options?: Omit<UseMutationOptions<{ success: boolean }, Error, { ticketId: number }>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, { ticketId: number }>({
+  return useAuthorizedMutation<{ success: boolean }, Error, { ticketId: number }>("build:tickets:delete", {
     ...options,
     mutationKey: ["projects", "tickets", "delete"],
     mutationFn: ({ ticketId }) =>

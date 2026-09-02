@@ -61,7 +61,7 @@ export function useCreateManagedProduct() {
 
 export function useUpdateManagedProduct() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:manage", {
+  return useAuthorizedMutation("build:managed-products:update", {
     mutationKey: ["projects", "managed-products", "update"],
     mutationFn: ({
       managedProductId,
@@ -82,7 +82,7 @@ export function useUpdateManagedProduct() {
 
 export function useDeleteManagedProduct() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:manage", {
+  return useAuthorizedMutation("build:managed-products:delete", {
     mutationKey: ["projects", "managed-products", "delete"],
     mutationFn: (managedProductId: number) =>
       apiClient.delete<void>(`/build/managed-products/${managedProductId}`),

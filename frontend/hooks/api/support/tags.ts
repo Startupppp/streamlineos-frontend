@@ -32,7 +32,7 @@ export function useTicketTags(ticketId: number) {
 
 export function useAttachTag() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("support:tickets:reply", {
+  return useAuthorizedMutation("support:tickets:manage", {
     mutationKey: ["attach", "tag"],
     mutationFn: ({ ticketId, tagId }: { ticketId: number; tagId: number }) =>
       apiClient.post<{ success: boolean }>(`/support/${ticketId}/tags/${tagId}`, {}),

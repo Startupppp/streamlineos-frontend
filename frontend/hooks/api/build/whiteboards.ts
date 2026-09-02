@@ -109,7 +109,7 @@ export function useCreateWhiteboard(projectId: number) {
 
 export function useUpdateWhiteboard(projectId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:timesheets:manage", {
+  return useAuthorizedMutation("build:whiteboards:manage", {
     mutationKey: ["projects", "whiteboards", "update"],
     mutationFn: ({ id, ...input }: UpdateWhiteboardInput) =>
       apiClient.patch<WhiteboardDetail>(`/build/${projectId}/whiteboards/${id}`, input),

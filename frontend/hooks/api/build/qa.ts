@@ -70,7 +70,7 @@ export function useCreateTestCase() {
 
 export function useUpdateTestCase() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:timesheets:manage", {
+  return useAuthorizedMutation("build:qa:manage", {
     mutationKey: ["projects", "qa", "cases", "update"],
     mutationFn: ({
       projectId,
@@ -133,7 +133,7 @@ export function useCreateTestRun() {
 
 export function useUpdateTestRun() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:timesheets:manage", {
+  return useAuthorizedMutation("build:qa:manage", {
     mutationKey: ["projects", "qa", "runs", "update"],
     mutationFn: ({
       projectId,

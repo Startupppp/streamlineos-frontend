@@ -54,7 +54,7 @@ export function useCreatePmWorkspace() {
 
 export function useUpdatePmWorkspace() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:manage", {
+  return useAuthorizedMutation("build:workspaces:update", {
     mutationKey: ["projects", "pm-workspaces", "update"],
     mutationFn: ({
       pmWorkspaceId,
@@ -72,7 +72,7 @@ export function useUpdatePmWorkspace() {
 
 export function useDeletePmWorkspace() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:manage", {
+  return useAuthorizedMutation("build:workspaces:delete", {
     mutationKey: ["projects", "pm-workspaces", "delete"],
     mutationFn: (pmWorkspaceId: string) =>
       apiClient.delete<void>(`${BASE}/${pmWorkspaceId}`),
@@ -127,7 +127,7 @@ export function useAddPmWorkspaceMember(pmWorkspaceId: string) {
 
 export function useRemovePmWorkspaceMember(pmWorkspaceId: string) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:tickets:update", {
+  return useAuthorizedMutation("build:workspaces:members:manage", {
     mutationKey: ["projects", "pm-workspaces", "members", "remove"],
     mutationFn: (pmWorkspaceMembershipId: string) =>
       apiClient.delete<{ success: true }>(

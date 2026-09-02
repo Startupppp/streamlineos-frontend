@@ -61,7 +61,7 @@ export function useUpdateSupportChannel() {
 
 export function useDeleteSupportChannel() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("support:tickets:reply", {
+  return useAuthorizedMutation("support:channels:manage", {
     mutationKey: ["support", "channels", "delete"],
     mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/support/channels/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportChannels.all }),

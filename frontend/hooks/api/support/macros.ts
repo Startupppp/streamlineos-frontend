@@ -183,7 +183,7 @@ export function useUpdateMacro() {
 
 export function useDeleteMacro() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("support:tickets:reply", {
+  return useAuthorizedMutation("support:macros:manage", {
     mutationKey: ["delete", "macro"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/support/macros/${id}`),
@@ -250,7 +250,7 @@ export function useUpdateRoutingRule() {
 
 export function useDeleteRoutingRule() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("support:tickets:reply", {
+  return useAuthorizedMutation("support:macros:manage", {
     mutationKey: ["delete", "routing", "rule"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/support/routing-rules/${id}`),
@@ -268,7 +268,7 @@ export function useAgentSkills() {
 
 export function useSetAgentSkills() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("support:tickets:reply", {
+  return useAuthorizedMutation("support:macros:manage", {
     mutationKey: ["supportAgentSkills", "set"],
     mutationFn: ({ userId, skills }: { userId: string; skills: string[] }) =>
       apiClient.put<{ success: boolean; skills: string[] }>(`/support/agent-skills/${userId}`, { skills }),
@@ -314,7 +314,7 @@ export function useAddVipClient() {
 
 export function useRemoveVipClient() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("support:tickets:reply", {
+  return useAuthorizedMutation("support:macros:manage", {
     mutationKey: ["supportVipClients", "remove"],
     mutationFn: (clientId: number) =>
       apiClient.delete<{ success: boolean }>(`/support/vip-clients/${clientId}`),

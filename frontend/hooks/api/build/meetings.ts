@@ -73,7 +73,7 @@ export function useCreateMeeting(projectId: number) {
 
 export function useUpdateMeeting(projectId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:timesheets:manage", {
+  return useAuthorizedMutation("build:meetings:manage", {
     mutationKey: ["projects", projectId, "meetings", "update"],
     mutationFn: ({ id, ...data }: UpdateMeetingInput) =>
       apiClient.patch<Meeting>(`/build/${projectId}/meetings/${id}`, data),

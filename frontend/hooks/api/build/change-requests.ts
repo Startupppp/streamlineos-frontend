@@ -46,7 +46,7 @@ export function useCreateChangeRequest(projectId: number) {
 
 export function useUpdateChangeRequest(projectId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:timesheets:manage", {
+  return useAuthorizedMutation("build:changerequests:manage", {
     mutationKey: ["projects", projectId, "change-requests", "update"],
     mutationFn: ({ id, ...data }: UpdateChangeRequestInput & { id: number }) =>
       apiClient.patch<ChangeRequest>(`/build/${projectId}/change-requests/${id}`, data),

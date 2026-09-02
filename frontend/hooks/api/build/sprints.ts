@@ -47,7 +47,7 @@ export function useUpdateSprint(
   options?: Parameters<typeof useMutation>[0]
 ) {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation("build:timesheets:manage", {
+  return useAuthorizedMutation("build:sprints:manage", {
     mutationKey: ["projects", "sprints", "update"],
     mutationFn: ({ sprintId, ...data }: UpdateSprintInput) =>
       apiClient.patch<{ success: boolean }>(

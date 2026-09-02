@@ -114,7 +114,7 @@ export const useCreateSupportTicket = () => {
 
 export const useUpdateSupportTicket = () => {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<UpdateTicketResult, Error, UpdateTicketInput>("support:settings:manage", {
+  return useAuthorizedMutation<UpdateTicketResult, Error, UpdateTicketInput>("support:tickets:manage", {
     mutationKey: ["update", "support", "ticket"],
     mutationFn: ({ id, ...data }) =>
       apiClient.patch<UpdateTicketResult>(`/support/${id}`, data),

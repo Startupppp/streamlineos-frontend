@@ -78,7 +78,6 @@ const STRICTER_KEYS = new Map([
   ["useEndContract", "hr:contracts:manage"],
   ["useConvertToEmployee", "hr:contracts:manage"],
   ["useRevertLeave", "hr:leaves:approve"],
-  ["useUpdateLeaveType", "hr:leaves:create"],
   ["useUpdatePerformanceReview", "hr:performance:view"],
   ["useUpdateGoal", "hr:performance:view"],
   ["usePreviewPolicy", "payroll:policies:view"],
@@ -112,18 +111,6 @@ const OFF_CLIENT_HOOKS = new Map([
   [
     "useUploadFile",
     "IN-SERVICE — the request lives in the module-local uploadFileRequest helper (POST /storage/upload), which is in-service: the upload is authorized by the feature that consumes the returned key.",
-  ],
-  [
-    "useSetPresenceStatus",
-    "BROKEN — calls PUT /chat/presence/status, which no backend route serves (chat-presence.controller.ts declares only POST presence/heartbeat and GET presence/online), so every status change from ChatPresenceMenu 404s. Handed to S08.",
-  ],
-  [
-    "useDeleteInvoice",
-    "BROKEN — calls DELETE /invoices/{id}; the invoice controller declares no @Delete, so the delete action in invoice-detail.tsx and invoices-client.tsx 404s. Handed to S05.",
-  ],
-  [
-    "useSupportKbAttachmentDownloadUrl",
-    "BROKEN — calls GET /support/kb/articles/{articleId}/attachments/{attachmentId}, which no backend route serves (support-kb.controller.ts declares only GET list, POST and DELETE). Handed to S10; recorded here so the gate is not silently green on it.",
   ],
 ]);
 
@@ -168,16 +155,28 @@ function loadContract() {
 
 function resolveOperation(index, method, literal) {
   const segments = literal.split("?")[0].split("/").filter(Boolean);
-  const matches = (index.get(method) ?? []).filter(
-    (c) =>
-      c.segments.length === segments.length &&
-      c.segments.every((cs, i) => cs === "*" || segments[i] === "*" || cs === segments[i]),
+  const sameShape = (index.get(method) ?? []).filter((c) => c.segments.length === segments.length);
+  const matches = sameShape.filter((c) =>
+    c.segments.every((cs, i) => (segments[i] === "*" ? cs === "*" : cs === "*" || cs === segments[i])),
   );
-  if (matches.length === 0) return null;
-  matches.sort(
-    (a, b) => b.segments.filter((s) => s !== "*").length - a.segments.filter((s) => s !== "*").length,
+  if (matches.length > 0) {
+    matches.sort(
+      (a, b) => b.segments.filter((s) => s !== "*").length - a.segments.filter((s) => s !== "*").length,
+    );
+    return matches[0].op;
+  }
+
+  // An interpolated segment can also select one of several fixed sibling routes
+  // (`/payroll/reports/${reportType}`). Resolve that only when every candidate
+  // agrees, so a hook can never be classified by an arbitrary pick.
+  const loose = sameShape.filter((c) =>
+    c.segments.every((cs, i) => cs === "*" || segments[i] === "*" || cs === segments[i]),
   );
-  return matches[0].op;
+  if (loose.length === 0) return null;
+  const exposures = new Set(loose.map((c) => c.op["x-exposure"] ?? "UNKNOWN"));
+  const permissions = new Set(loose.map((c) => c.op["x-permission"] ?? null));
+  if (exposures.size !== 1 || permissions.size !== 1) return null;
+  return loose[0].op;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -45,7 +45,7 @@ export function useCreateRisk(projectId: number) {
 
 export function useUpdateRisk(projectId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:timesheets:manage", {
+  return useAuthorizedMutation("build:risks:manage", {
     mutationKey: ["projects", projectId, "risks", "update"],
     mutationFn: ({ id, ...data }: UpdateRiskInput & { id: number }) =>
       apiClient.patch<Risk>(`/build/${projectId}/risks/${id}`, data),
@@ -98,7 +98,7 @@ export function useCreateDecision(projectId: number) {
 
 export function useUpdateDecision(projectId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:timesheets:manage", {
+  return useAuthorizedMutation("build:decisions:manage", {
     mutationKey: ["projects", projectId, "decisions", "update"],
     mutationFn: ({ id, ...data }: UpdateDecisionInput & { id: number }) =>
       apiClient.patch<Decision>(`/build/${projectId}/decisions/${id}`, data),

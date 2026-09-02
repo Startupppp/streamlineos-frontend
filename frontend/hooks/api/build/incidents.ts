@@ -58,7 +58,7 @@ export function useCreateIncident() {
 
 export function useUpdateIncident() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:timesheets:manage", {
+  return useAuthorizedMutation("build:incidents:manage", {
     mutationKey: ["projects", "incidents", "update"],
     mutationFn: ({
       projectId,

@@ -91,7 +91,7 @@ export const useOrgMembersByIds = (
 
 export const useRemoveOrgMember = () => {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<void, Error, string>("settings:manage", {
+  return useAuthorizedMutation<void, Error, string>("settings:organization:manage", {
     mutationKey: ["organization", "remove-member"],
     mutationFn: (userId) => apiClient.delete<void>(`/organization/members/${userId}`),
     onSuccess: () => {

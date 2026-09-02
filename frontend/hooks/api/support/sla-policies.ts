@@ -77,7 +77,7 @@ export function useUpdateSlaPolicy() {
 
 export function useDeleteSlaPolicy() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("support:tickets:reply", {
+  return useAuthorizedMutation("support:settings:manage", {
     mutationKey: ["supportSlaPolicies", "delete"],
     mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/support/sla-policies/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportSlaPolicies.all }),

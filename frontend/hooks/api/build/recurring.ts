@@ -14,7 +14,7 @@ export interface RecurrenceRule {
 
 export function useSetRecurrence(projectId: number, ticketId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("build:timesheets:manage", {
+  return useAuthorizedMutation("build:tickets:update", {
     mutationKey: [...queryKeyBase, "projects", projectId, "tickets", ticketId, "recurrence"],
     mutationFn: (rule: RecurrenceRule | null) =>
       apiClient.patch(`/build/${projectId}/tickets/${ticketId}`, {
