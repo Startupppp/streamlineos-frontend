@@ -6,7 +6,7 @@ Immediate target: code-level release candidate
 Deferred target: deployed production and compliance evidence
 Scope: all platform domains except CRM and Inventory
 
-This is the only architecture/refactor TODO list. Do not create session tickets, duplicate PRDs or additional architecture scorecards. Update a checkbox only from current source and reproducible evidence at one recorded commit. Git history is the archive.
+This is the only authoritative architecture/refactor TODO list. The independent implementation tickets under [code-release-sessions](code-release-sessions/README.md) are execution views of this backlog, not competing PRDs or scorecards. Update a checkbox only from current source and reproducible evidence at one recorded commit. Git history is the archive.
 
 ## Release model
 
@@ -59,6 +59,25 @@ shipped as a passing gate:
    relocated. Identity must be derived from a verified credential, never from a
    caller-supplied field.
 
+### Independent code sessions — 2026-09-02
+
+These sessions can run concurrently. Each begins from current source, owns its own audit and implementation, and must not assume another session has run. Completing a session requires updating both its ticket and this ledger with evidence. A module checkbox below is marked only when its complete criterion is proven; shared criteria remain open until every named session contributes evidence.
+
+- [ ] [S01 — Authentication, organization, RBAC and Settings](code-release-sessions/S01-AUTH-ORG-RBAC-SETTINGS.md)
+- [ ] [S02 — Schema, migrations, tenant integrity and retention](code-release-sessions/S02-SCHEMA-MIGRATIONS-TENANT-INTEGRITY.md)
+- [ ] [S03 — API, query, pagination, caching and contracts](code-release-sessions/S03-API-QUERY-CACHE-CONTRACTS.md)
+- [ ] [S04 — Home, Directory and HRMS](code-release-sessions/S04-HOME-DIRECTORY-HRMS.md)
+- [ ] [S05 — Payroll, Accounting and Finance](code-release-sessions/S05-PAYROLL-ACCOUNTING-FINANCE.md)
+- [ ] [S06 — Build and Workflows](code-release-sessions/S06-BUILD-WORKFLOWS.md)
+- [ ] [S07 — Billing and Payments](code-release-sessions/S07-BILLING-PAYMENTS.md)
+- [ ] [S08 — Chat, Notifications and realtime delivery](code-release-sessions/S08-CHAT-NOTIFICATIONS-REALTIME.md)
+- [ ] [S09 — Calendar, Inbox and Mail](code-release-sessions/S09-CALENDAR-INBOX-MAIL.md)
+- [ ] [S10 — Knowledge, Wiki, Chatbot and AI](code-release-sessions/S10-KNOWLEDGE-WIKI-CHATBOT-AI.md)
+- [ ] [S11 — Frontend platform, TanStack and perceived performance](code-release-sessions/S11-FRONTEND-TANSTACK-PERFORMANCE.md)
+- [ ] [S12 — Shared adapters, security, privacy and repository quality](code-release-sessions/S12-SHARED-SECURITY-QUALITY.md)
+
+Session-level commands intentionally exclude full backend/frontend typechecks, ESLint and full builds because those commands contend for memory and can hang parallel work. Sessions use focused tests and targeted architecture gates. The orchestrator runs the full build/typecheck and other one-commit release gates once, after sessions reconcile; this changes execution placement, not the final release standard.
+
 ## Product constraints
 
 - Do not change public landing-page visuals or animations.
@@ -68,7 +87,7 @@ shipped as a passing gate:
 - Never solve growing work with silent truncation. Use keyset pagination, resumable batches, streams or queues.
 - Every tenant relationship, query, cache key, event, object key and search ACL preserves organization scope.
 - Never delete code or schema from text search alone. Require dependency evidence plus build/typecheck and migration-integrity proof.
-- Do not recreate `luna-10-10-sessions` or split this backlog.
+- Keep the master backlog here; execution tickets may exist only under `architecture-refactor/code-release-sessions/` and must follow its two-way reconciliation protocol.
 
 ## Approved implementation decisions — 2026-09-01
 
