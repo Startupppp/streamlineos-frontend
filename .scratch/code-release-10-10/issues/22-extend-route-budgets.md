@@ -4,14 +4,15 @@
 
 **Blocked by:** 21.
 
-**Status:** 4 of 6 closed — 82 budgets declared (was 19), 50 measured, coverage stated as 82/3613 (2.3%). Report: `reports/22-route-budgets.md`.
+**Status:** 4 of 6 closed — 82 budgets declared (was 19), **54 measured** (was 50), **110/570 declared ceilings measured, 19.3%** (was 102/17.9%), 0 records refused as unmeasurable (was 32), coverage stated as 82/3613 (2.3%). Eight read-cost budgets re-pointed at the columns and indexes their services actually use; `contracts/route-budgets.json` regenerated at head. `check:route-budgets` is exit 1 on one real breach (`GET /calendar/events`), not on a stale number. Reports: `reports/22-route-budgets.md`, `reports/22c-budget-drift-and-remeasure.md`.
 
 - [ ] Every critical route and worker batch declares a maximum database-call count, downstream-call count, application latency, response-byte and memory budget.
   - 82 budgets (70 routes + 12 worker batches, up from 19), each declaring all five ceilings plus `maxReadPathP95Ms`, and `maxBatchSize`/`maxDurationMs` on worker batches. Every key validated against `openapi.json`.
   - PARTIAL: **63 of 82 `maxDbCalls` values are the manifest default (10), not a counted call path** — 5 are counted query-by-query, 14 are reasoned estimates. Each entry declares which in `dbCallBasis` and the gate prints the split, so a placeholder is labelled rather than indistinguishable from a measurement. Closing this is one call-path read per route and belongs with each module's owner.
   - PARTIAL: the critical set is asserted in `surface.criticalSelection`, not derived — there is no request-volume telemetry in the repo to rank 3,613 operations by traffic.
 - [ ] p50/p95/p99 are recorded at the release commit for each declared budget, with measured fields populated.
-  - Read-path p50/p95/p99 over 200 `EXPLAIN (ANALYZE, BUFFERS)` samples recorded for **50 of 82** budgets as `streamline_app` under RLS, with commit/database/role/tenant/profile/sample-count provenance per entry, plus a minority-tenant figure alongside. Database-call counts recorded for 2. Overall **102 of 570 declared ceilings (17.9%)**.
+  - Read-path p50/p95/p99 over 200 `EXPLAIN (ANALYZE, BUFFERS)` samples recorded for **54 of 82** budgets as `streamline_app` under RLS, with commit/database/role/tenant/profile/sample-count provenance per entry, plus a minority-tenant figure alongside. Database-call counts recorded for 2. Overall **110 of 570 declared ceilings (19.3%)**.
+  - **Re-measured and regenerated 2026-09-02** on `scratch_t22c` (a copy of the corrected perf seed brought to head, VACUUM ANALYZEd) with `measure-route-budgets.mjs --write`; **0 records refused** as vacuous / below-floor / unmeasurable, down from 32, and **zero declared ceilings changed** (`git diff` touches no `max*` key). The stale `measuredDbCalls: 5` on `GET /notifications` is now the counted **3**, and `unread-count`'s 4 is **2**.
   - PARTIAL: `measuredLatencyP95Ms`, `measuredDownstreamCalls`, `measuredResponseBytes` and `measuredMemoryMb` are null for all 82 — they need an HTTP-level harness. `test/helpers/seeded-e2e-app.ts` is the right vehicle but needs `AUTH_SIGNING_KEYS` (absent from `.env` here) and a seeded permission-holding user. `measure-route-budgets.mjs` deliberately refuses to fill `measuredLatencyP95Ms` from the read-path artifact — a 5.7 ms database read inside a 300 ms end-to-end ceiling would be a false pass.
   - PARTIAL: 32 budgets have no read-cost budget behind them (8 writes, 8 provider-backed mail routes, 12 worker batches, 4 unlinked reads), so the read-path instrument has nothing to measure for them.
 - [x] Regression tests fail when an implementation adds unexpected database calls.
@@ -30,9 +31,76 @@
   - The import also bought two structural checks: a `readCostBudgetId` resolving to nothing is a violation (a budget that looks measured and is not), and a `maxBufferBlocks` disagreeing with the linked read-cost ceiling is a violation. Undeclared, it resolves from the link — one number, one home.
   - **10 stale `excluded:` lines removed** ("CRM/Inventory module not seeded on scratch_e2e" is no longer true): the catalog now has zero exclusions and the runner reports `0 EXCL`.
 
+## Resumption pass — budget drift swept, manifest regenerated (2026-09-02)
+
+- **Eight read-cost budgets were measuring a query the application does not run.** Six filtered
+  `user_id` on tables where a migration moved the recipient authority to a membership column
+  (`notifications-list`, `notifications-unread-count`, `dashboard-personal-notifications-count`
+  under 0520; `kb-page-visits-mine`, `my-leave-requests`, `my-attendance-history`); each was
+  checked against its service before being moved. `timesheets-mine` resolved the membership with a
+  scalar subquery the service does not issue and named `idx_timesheets_org_user_date`, which does
+  not exist at head. `mail-inbox-cached` named `idx_mail_metadata_list`, which migration 1022
+  DROPPED, and ordered by `date DESC` where `listCached` orders by `(date DESC, id DESC)`.
+  Measured before → after, buffers, majority tenant: `notifications-list` 3,173 → 121 (59,561 → 98
+  rows scanned), `notifications-unread-count` 10,566 → 16, `dashboard-personal-notifications-count`
+  11,377 → 16 (it was a Seq Scan), `timesheets-mine` 10 → 7. Reproduced on the 9.00% and 0.90%
+  tenants.
+- **Three budgets that are correct were confirmed, not assumed:** `leave-ledger-mine`,
+  `dashboard-leaves-today` and `dashboard-team-attendance` all still filter `user_id` because their
+  services still do (`hrLeaveLedger.userId`, `leaveRequests.userId`, `attendance.userId`), and
+  `dashboard-personal-calendar-events` matches its service EXISTS-for-EXISTS.
+- **`dashboard-personal-my-tasks` kept its ceiling and is now green on the fix, not on a raised
+  number.** It measured 1,801 rows against 1,000 for as long as the index was missing; `ef3c1960`
+  landed `(org_id, assignee_membership_id, updated_at DESC) WHERE deleted_at IS NULL` mid-run and it
+  now measures **4 buffers / 19 rows scanned**. `dashboard-my-issues` 1,844 → 13.
+- **`dashboard-my-issues` now declares `maxScanRows`, and `dashboard-personal-my-tasks`' was
+  tightened 1,000 → 200.** `my-issues` declared none at all, so it walked the identical 1,801 rows
+  and reported PASS — 1,844 buffers sits inside its 2,000 block ceiling, and a budget with no
+  scan-rows guard cannot see a plan regression that stays under its block ceiling. `my-tasks`' 1,000
+  had stopped guarding at 45× the post-1027 scan. **Bite-proved**, not argued: with
+  `idx_tickets_org_assignee_updated_live` dropped, **both fail at 1,801 > 200**; restored, both pass
+  at 10–22 rows on all three measurable tenants. Tightened, never raised.
+- **A "vacuous" reading on `dashboard-personal-my-tasks` means a stale database, not a stale
+  predicate — verified, because it was routed to me as the opposite.** `seed-perf-scratch.mjs`
+  writes `TODO/IN_PROGRESS/IN_REVIEW/DONE` at head and carries `LEGACY_STATUS_NAMES` to rename an
+  existing database's rows in place (`3d157c15`, the ON UPDATE CASCADE FK carries the tickets).
+  Measured: `scratch_t22b`/`scratch_t22c` hold `TODO 18125 / DONE 125 / IN_PROGRESS 125 /
+  IN_REVIEW 125`; **`scratch_perf_seed` still holds `Todo / In Progress / In Review / Done`** because
+  it predates that commit and was never re-seeded. On a seed at head the budget returns **10 rows,
+  `vacuous: false`, on all three measurable tenants**, and the runner reports `0 vacuous`. The
+  predicate was not retuned, and must not be. The 1,801 rows belong to **both** budgets — they are
+  the same tenant+assignee read — and only look like `my-issues` alone on a title-case database
+  where `my-tasks` matches nothing.
+
 ## Findings raised, not fixed
 
 - **Six read-cost budgets were passing over an empty result set** — a new vacuous-result guard catches them (`dashboard-personal-my-tasks`, `leads-assigned-to-me`, `chat-saved-messages`, `kb-page-visits-mine`, `kb-page-id-probe-sdf`, `module-access-roster`). All six are seed-fixture defects; none was waived.
 - **The status-vocabulary finding needs correcting.** `DEFAULT_PROJECT_STATUSES` and `ACTIVE_TICKET_STATUSES` both use UPPER_SNAKE and agree; the **seed scripts** write title-case. The budget mirrors production correctly and the fixture does not — retuning the budget would have made it measure a query the application never runs.
 - **Minority-tenant measurement is fixed** (`--profile=minority`): the 43 previous "failures" on the 0.18% tenant were all unreachable seed floors. Now 34/70 measured with 0 breaches at 0.90% share, 9/70 at 0.18%, both PARTIAL. `inv-stock-transactions` measures **1,223 blocks on the majority tenant against 6 on every minority tenant** for the identical query.
 - **Backend `pnpm typecheck` is red (exit 2, 20 errors), none in these paths** — schema files gained required columns while their consuming services in `hr/recruitment`, `e-sign`, `support/core`, `kb/wiki`, `build/core` and `automation` have not been updated. All are uncommitted work in the shared tree.
+
+### Raised by the resumption pass — outside this territory
+
+- **`GET /me/attendance/history` Seq Scans the whole tenant.** `AttendanceReadService.history`
+  filters `attendance.user_membership_id`; the only owner index is
+  `idx_attendance_org_user_date (org_id, user_id, date)` and nothing leads with the membership
+  column. Measured: 193 buffers, **9,991 of 10,008 rows removed by filter**, to return 17. Invisible
+  until the budget was re-pointed at the column the code uses. Needs
+  `(org_id, user_membership_id, date DESC)` — `migrations/` + `src/db/schema/**`.
+- **`GET /calendar/events` reads 1,139 buffers against a 500 ceiling** and is the one live breach
+  in `check:route-budgets`. The plan de-correlates the attendee `EXISTS` into a hashed SubPlan that
+  materialises **26,077 `event_attendees` rows (1,127 buffers)** regardless of `LIMIT 3`. The
+  budget matches the service exactly, so this is the route, not the instrument → dashboard/calendar
+  + schema. The ceiling was not raised.
+- **The three CRM read-cost budgets bound tables their modules no longer read.** `GET /leads` and
+  `GET /contacts` read `lead_party_map ⋈ business_parties` (Party is canonical; `leads`/`contacts`
+  are derived mirrors), so `leads-active`, `leads-assigned-to-me` and `contacts-list` measure the
+  mirror. **Not re-pointed:** on the perf seed at head `lead_party_map` and `contact_party_map` hold
+  **0 rows** and `business_parties.owner_user_id` is NULL on all 22,240 rows, while `leads` and
+  `contacts` hold 8,896 each — moving them today would trade a wrong-table budget for a vacuous one.
+  The seed has to write the canonical side first (`test/perf` + `scripts/seed-*`); the column
+  mapping the move needs is recorded in `read-cost-budgets.mjs` beside `leads-active`.
+- **`run-read-cost-budgets.mjs` prints `N PASS / M FAIL` where PASS counts budgets and FAIL counts
+  breaches**, so the two do not sum to the declared total when one budget trips two guards
+  (`67 PASS / 4 FAIL` over 70 budgets was three failing budgets, one of them twice). Cosmetic, but
+  it reads as an arithmetic error. That file is not in this territory.
