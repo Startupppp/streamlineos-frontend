@@ -22,7 +22,9 @@ export function useUnifiedInbox(
 
   return useInfiniteQuery<UnifiedInboxResponse, Error>({
     queryKey: queryKeys.inbox.unified({
-      ...(params as Record<string, unknown>),
+      limit: params?.limit,
+      kinds: params?.kinds,
+      unreadOnly: params?.unreadOnly,
       infinite: true,
     }),
     initialPageParam: undefined as string | undefined,

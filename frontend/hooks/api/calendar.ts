@@ -261,10 +261,11 @@ interface EventAttendee {
 }
 
 export function useEventAttendees(eventId: number | null) {
+  const can = useCan("calendar:read");
   return useQuery({
     queryKey: queryKeys.calendar.attendees(eventId ?? 0),
     queryFn: ({ signal }) => apiClient.get<EventAttendee[]>(`/calendar/events/${eventId}/rsvp`, undefined, signal),
-    enabled: eventId !== null,
+    enabled: can && eventId !== null,
     staleTime: 60 * 1000,
   });
 }
@@ -344,6 +345,52 @@ export function useSetCalendarSourcePreference() {
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.calendar.all, exact: false });
+    },
+  });
+}
+
+export interface EventSyncStatusResponse {
+  status: "synced" | "pending" | "in_flight" | "failed" | "not_synced";
+  attemptCount: number;
+  lastError: string | null;
+  operation: "create" | "update" | "delete" | null;
+  queuedAt: string | null;
+  processedAt: string | null;
+  retryable: boolean;
+}
+
+const calendarSyncStatusKey = (eventId: number) =>
+  [...queryKeys.calendar.all, "sync-status", eventId] as const;
+
+export function useEventSyncStatus(eventId: number | null) {
+  return useQuery({
+    queryKey: calendarSyncStatusKey(eventId ?? 0),
+    queryFn: ({ signal }) =>
+      apiClient.get<EventSyncStatusResponse>(
+        `/calendar/events/${eventId}/sync-status`,
+        undefined,
+        signal,
+      ),
+    enabled: eventId !== null,
+    staleTime: 15_000,
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
+      return status === "pending" || status === "in_flight" ? 5_000 : false;
+    },
+  });
+}
+
+export function useRetryEventSync() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["calendar", "events", "sync-retry"],
+    mutationFn: ({ eventId }: { eventId: number }) =>
+      apiClient.post<{ requeued: number }>(
+        `/calendar/events/${eventId}/sync-retry`,
+        {},
+      ),
+    onSuccess: (_, { eventId }) => {
+      void qc.invalidateQueries({ queryKey: calendarSyncStatusKey(eventId) });
     },
   });
 }

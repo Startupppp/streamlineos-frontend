@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -37,6 +38,11 @@ import type {
   BuildApprovalInboxItem,
 } from "@/types/inbox";
 import { cn } from "@/lib/utils";
+import {
+  parseNotifType,
+  parseNotifPriority,
+  parseNotifCategory,
+} from "./inbox-schema";
 
 type InboxView = "ALL" | "NOTIFICATIONS" | "MAIL" | "APPROVALS";
 
@@ -102,9 +108,9 @@ export function InboxShell() {
           id: fullNotif.id,
           orgId: "",
           userId: null,
-          type: fullNotif.notifType as Notification["type"],
-          priority: fullNotif.priority as Notification["priority"],
-          category: fullNotif.category as Notification["category"],
+          type: parseNotifType(fullNotif.notifType),
+          priority: parseNotifPriority(fullNotif.priority),
+          category: parseNotifCategory(fullNotif.category),
           sourceModule: fullNotif.sourceModule,
           eventKey:
             fullNotif.kind === "notification" ? fullNotif.eventKey : null,
@@ -148,28 +154,57 @@ export function InboxShell() {
     [markRead],
   );
   const handleArchive = useCallback(
-    (id: number) => archive.mutate(id),
+    (id: number) =>
+      archive.mutate(id, {
+        onError: (err) => toast.error(getErrorMessage(err)),
+      }),
     [archive],
   );
   const handleUnarchive = useCallback(
-    (id: number) => unarchive.mutate(id),
+    (id: number) =>
+      unarchive.mutate(id, {
+        onError: (err) => toast.error(getErrorMessage(err)),
+      }),
     [unarchive],
   );
   const handlePin = useCallback(
     (id: number, pinned: boolean) =>
-      pinned ? pin.mutate(id) : unpin.mutate(id),
+      pinned
+        ? pin.mutate(id, { onError: (err) => toast.error(getErrorMessage(err)) })
+        : unpin.mutate(id, { onError: (err) => toast.error(getErrorMessage(err)) }),
     [pin, unpin],
   );
   const handleSnooze = useCallback(
-    (id: number, snoozedUntil: string) => snooze.mutate({ id, snoozedUntil }),
+    (id: number, snoozedUntil: string) =>
+      snooze.mutate(
+        { id, snoozedUntil },
+        { onError: (err) => toast.error(getErrorMessage(err)) },
+      ),
     [snooze],
   );
-  const handleDelete = useCallback((id: number) => del.mutate(id), [del]);
+  const handleDelete = useCallback(
+    (id: number) =>
+      del.mutate(id, {
+        onError: (err) => toast.error(getErrorMessage(err)),
+      }),
+    [del],
+  );
   const handleApprove = useCallback(
-    (id: number) => approve.mutate(id),
+    (id: number) =>
+      approve.mutate(id, {
+        onSuccess: () => toast.success("Approved"),
+        onError: (err) => toast.error(getErrorMessage(err)),
+      }),
     [approve],
   );
-  const handleReject = useCallback((id: number) => reject.mutate(id), [reject]);
+  const handleReject = useCallback(
+    (id: number) =>
+      reject.mutate(id, {
+        onSuccess: () => toast.success("Rejected"),
+        onError: (err) => toast.error(getErrorMessage(err)),
+      }),
+    [reject],
+  );
 
   return (
     <PageWrapper
@@ -181,6 +216,7 @@ export function InboxShell() {
             <button
               key={v.key}
               type="button"
+              aria-pressed={view === v.key}
               onClick={() => setView(v.key)}
               className={cn(
                 "shrink-0 rounded-full px-3 py-1 text-[13px] font-medium transition-colors",

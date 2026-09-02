@@ -15,6 +15,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useEventAttendees, type CalendarListItem } from "@/hooks/api/calendar";
 import { resolveImageUrl } from "@/lib/utils";
 import { EVENT_COLORS } from "./calendar-event-constants";
+import { EventSyncStatus } from "./event-sync-status";
 
 export const RSVP_STATUS_LABELS: Record<string, string> = {
   accepted: "Accepted",
@@ -70,7 +71,7 @@ export function EventDetailContent({
               <span>
                 {event.allDay
                   ? format(new Date(event.start), "PPP")
-                  : `${format(new Date(event.start), "PPp")} – ${format(new Date(event.end), "p")}`}
+                  : `${format(new Date(event.start), "PPp")} – ${format(new Date(event.end), "p")} · ${Intl.DateTimeFormat().resolvedOptions().timeZone}`}
               </span>
             </div>
             {event.location ? (
@@ -127,6 +128,7 @@ export function EventDetailContent({
                 </div>
               </div></>
             ) : null}
+            <EventSyncStatus eventId={isCalendarEvent ? numericEventId : null} />
             {attendees.length > 0 ? <><Separator /><div className="space-y-2">
               <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide"><UsersIcon size={12} />Attendees ({attendees.length})</div>
               <div className="space-y-1.5">{attendees.map((attendee) => <AttendeeRow key={attendee.id} attendee={attendee} />)}</div>

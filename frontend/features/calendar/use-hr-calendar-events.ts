@@ -8,6 +8,7 @@ import type { HrCalendarEvent } from "@/hooks/api/hr/hr-calendar";
 import type { BigCalEvent } from "./big-calendar-wrapper";
 import { useCalendarSourceVisibility } from "./use-calendar-source-visibility";
 import { queryKeys } from "@/lib/query-keys";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 
 export function useHrEventsVisible() {
   return useCalendarSourceVisibility("hrEvents", true);
@@ -29,6 +30,8 @@ export function useHrCalendarEventsMapped(
   hrVisible: boolean,
 ): { hrCalEvents: BigCalEvent[]; hrEnabled: boolean } {
   const [forbidden, setForbidden] = useState(false);
+  const canView = useCan("hr:helpdesk:view");
+  const hrModuleEnabled = useModuleEnabled("hr");
 
   const from = format(rangeStart, "yyyy-MM-dd");
   const to = format(rangeEnd, "yyyy-MM-dd");
@@ -43,7 +46,7 @@ export function useHrCalendarEventsMapped(
       }, signal),
     staleTime: 5 * 60_000,
     retry: false,
-    enabled: !forbidden && hrVisible,
+    enabled: !forbidden && hrVisible && canView && hrModuleEnabled,
   });
 
   useEffect(() => {
@@ -68,5 +71,5 @@ export function useHrCalendarEventsMapped(
     },
   }));
 
-  return { hrCalEvents, hrEnabled: !forbidden };
+  return { hrCalEvents, hrEnabled: !forbidden && canView && hrModuleEnabled };
 }

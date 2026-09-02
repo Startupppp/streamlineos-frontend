@@ -22,6 +22,7 @@ import type {
   MailActionBody,
 } from "@/types/mail";
 import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
+import type { UnifiedInboxItem, UnifiedInboxResponse } from "@/types/inbox";
 
 export function useMailAccounts() {
   const can = useCan("mail:inbox:view");
@@ -170,12 +171,16 @@ export function useMailAction() {
       apiClient.post<{ success: boolean }>(`/mail/messages/${messageId}/actions`, body),
     onMutate: async ({ messageId, body }) => {
       const { action, accountId } = body;
+      const messagesPrefix = [...queryKeys.mail.all, "messages"] as const;
+      const unifiedPrefix = [...queryKeys.inbox.all, "unified"] as const;
 
       await qc.cancelQueries({ queryKey: queryKeys.mail.all });
+      await qc.cancelQueries({ queryKey: unifiedPrefix });
 
       const snapshots: Array<{ key: readonly unknown[]; data: unknown }> = [];
+
       const cache = qc.getQueriesData<InfiniteData<MailListResponse>>({
-        queryKey: queryKeys.mail.messages(),
+        queryKey: messagesPrefix,
       });
 
       for (const [key, data] of cache) {
@@ -228,6 +233,46 @@ export function useMailAction() {
         }
       }
 
+      const unifiedCache = qc.getQueriesData<InfiniteData<UnifiedInboxResponse>>({
+        queryKey: unifiedPrefix,
+      });
+
+      for (const [key, data] of unifiedCache) {
+        if (!data) continue;
+        snapshots.push({ key, data });
+
+        if (action === "archive" || action === "trash") {
+          qc.setQueryData<InfiniteData<UnifiedInboxResponse>>(key, (old) => {
+            if (!old) return old;
+            return {
+              ...old,
+              pages: old.pages.map((page) => ({
+                ...page,
+                items: page.items.filter(
+                  (item) => !(item.kind === "mail" && item.id === messageId),
+                ),
+              })),
+            };
+          });
+        } else if (action === "markRead" || action === "markUnread") {
+          const nextIsRead = action === "markRead";
+          qc.setQueryData<InfiniteData<UnifiedInboxResponse>>(key, (old) => {
+            if (!old) return old;
+            return {
+              ...old,
+              pages: old.pages.map((page) => ({
+                ...page,
+                items: page.items.map((item): UnifiedInboxItem =>
+                  item.kind === "mail" && item.id === messageId
+                    ? { ...item, isRead: nextIsRead }
+                    : item,
+                ),
+              })),
+            };
+          });
+        }
+      }
+
       return { snapshots };
     },
     onError: (_, _variables, context) => {
@@ -238,6 +283,7 @@ export function useMailAction() {
     },
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.mail.all });
+      void qc.invalidateQueries({ queryKey: [...queryKeys.inbox.all, "unified"] });
     },
   });
 }
