@@ -20,6 +20,7 @@ import type { DropResult } from "@hello-pangea/dnd";
 import { SprintCard } from "@/features/build/sprints/sprint-card";
 import { CompleteSprintSheet } from "@/features/build/sprints/complete-sprint-sheet";
 import { SprintPlanningPanel, type PlanningTicket } from "@/features/build/sprints/sprint-planning-panel";
+import { useSprintTicketMover } from "@/features/build/sprints/use-sprint-ticket-mover";
 import { ModuleDisabledState } from "@/features/build/shared/module-disabled-state";
 import {
   PmPageShell,
@@ -46,6 +47,7 @@ export default function SprintsPage({ params }: PageProps) {
 
   const updateSprint = useUpdateSprint(projectId);
   const updateTicket = useUpdateTicket(projectId);
+  const { moveTickets } = useSprintTicketMover(projectId);
 
   const handleStartSprint = useCallback((sprintId: number) => {
     updateSprint.mutate(
@@ -81,13 +83,9 @@ export default function SprintsPage({ params }: PageProps) {
 
     const incompleteTickets = (sprint.tickets || []).filter((t) => t.status !== "DONE");
     const nextSprint = sprints?.find((s) => s.status === "PLANNED");
-    const targetSprintId = moveToOption === "next" && nextSprint ? nextSprint.id : undefined;
+    const targetSprintId = moveToOption === "next" && nextSprint ? nextSprint.id : null;
 
-    const promises = incompleteTickets.map((ticket) =>
-      updateTicket.mutateAsync({ ticketId: ticket.id, sprintId: targetSprintId })
-    );
-
-    Promise.all(promises)
+    moveTickets(incompleteTickets.map((ticket) => ticket.id), targetSprintId)
       .then(() => {
         updateSprint.mutate(
           { sprintId: completionSprintId, status: "COMPLETED" },
@@ -98,10 +96,10 @@ export default function SprintsPage({ params }: PageProps) {
         );
         setCompletionSprintId(null);
       })
-      .catch(() => {
-        toast.error("Failed to move some tickets");
+      .catch((error) => {
+        toast.error(getErrorMessage(error));
       });
-  }, [completionSprintId, sprints, moveToOption, updateTicket, updateSprint]);
+  }, [completionSprintId, sprints, moveToOption, moveTickets, updateSprint]);
 
   const handlePlanningDragEnd = useCallback((result: DropResult) => {
     const { destination, source, draggableId } = result;
@@ -133,22 +131,16 @@ export default function SprintsPage({ params }: PageProps) {
 
   const handleBulkAdd = useCallback((ticketIds: number[]) => {
     if (!planningSprintId) return;
-    const promises = ticketIds.map((ticketId) =>
-      updateTicket.mutateAsync({ ticketId, sprintId: planningSprintId })
-    );
-    Promise.all(promises)
+    moveTickets(ticketIds, planningSprintId)
       .then(() => toast.success(`${ticketIds.length} ticket${ticketIds.length !== 1 ? "s" : ""} added to sprint`))
       .catch((err) => toast.error(getErrorMessage(err)));
-  }, [planningSprintId, updateTicket]);
+  }, [planningSprintId, moveTickets]);
 
   const handleBulkRemove = useCallback((ticketIds: number[]) => {
-    const promises = ticketIds.map((ticketId) =>
-      updateTicket.mutateAsync({ ticketId, sprintId: null })
-    );
-    Promise.all(promises)
+    moveTickets(ticketIds, null)
       .then(() => toast.success(`${ticketIds.length} ticket${ticketIds.length !== 1 ? "s" : ""} removed from sprint`))
       .catch((err) => toast.error(getErrorMessage(err)));
-  }, [updateTicket]);
+  }, [moveTickets]);
 
   if (project?.settings?.modules?.sprints === false) {
     return <ModuleDisabledState moduleName="Sprints" projectId={projectId} />;

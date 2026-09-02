@@ -14,7 +14,7 @@ import type {
   AddPmWorkspaceMemberInput,
 } from "@/types/projects";
 
-const BASE = "/product-management/workspaces";
+const BASE = "/build/workspaces";
 
 interface ListPmWorkspacesParams {
   cursor?: string;

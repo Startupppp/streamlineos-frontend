@@ -21,7 +21,7 @@ export default async function PmWorkspaceLayout({
     redirect("/build");
   }
 
-  const response = await fetch(`${BACKEND_URL}/product-management/workspaces/${pmWorkspaceId}`, {
+  const response = await fetch(`${BACKEND_URL}/build/workspaces/${pmWorkspaceId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
