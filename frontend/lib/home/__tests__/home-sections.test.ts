@@ -6,14 +6,12 @@ import {
   homeSectionModule,
   homeSectionPermission,
 } from "../home-sections";
+import { backendPath } from "@/test-utils/backend-repo";
 
 const FRONTEND_ROOT = resolve(__dirname, "../../..");
 const DASHBOARD_HOOKS = join(FRONTEND_ROOT, "hooks", "api", "dashboard.ts");
 const PERMISSIONS_DIR = join(FRONTEND_ROOT, "lib", "rbac", "permissions");
-const BACKEND_DASHBOARD_CONTROLLER = resolve(
-  FRONTEND_ROOT,
-  "../backend/src/modules/dashboard/dashboard.controller.ts",
-);
+const BACKEND_DASHBOARD_CONTROLLER = backendPath("src", "modules", "dashboard", "dashboard.controller.ts");
 
 function frontendCatalogKeys(): Set<string> {
   const keys = new Set<string>();

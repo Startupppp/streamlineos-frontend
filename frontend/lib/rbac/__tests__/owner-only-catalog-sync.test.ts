@@ -1,11 +1,9 @@
 import * as fs from "fs";
 import * as path from "path";
 import { OWNER_ONLY_OPERATIONS } from "../owner-only-operations";
+import { backendPath } from "@/test-utils/backend-repo";
 
-const BACKEND_FILE = path.resolve(
-  __dirname,
-  "../../../../backend/src/common/rbac/owner-only-operations.ts",
-);
+const BACKEND_FILE = backendPath("src", "common", "rbac", "owner-only-operations.ts");
 
 function extractBackendEntries(source: string): Map<string, string> {
   const result = new Map<string, string>();

@@ -2,24 +2,18 @@ import * as fs from "fs";
 import * as path from "path";
 import { PERMISSIONS } from "../roles";
 import { MODULE_ACCESS_PERMISSIONS } from "../module-access";
+import { BACKEND_ROOT } from "@/test-utils/backend-repo";
 
 /**
- * `backend/` and `frontend/` are siblings inside one checkout, so this walks up
- * five levels — `__tests__` → `permissions` → `rbac` → `lib` → `frontend` — and
- * then down into the backend.
- *
- * It has been wrong twice, in both directions: once resolving to
- * `streamlineos-frontend/backend/...`, and once to a `streamlineos-backend`
- * sibling repository. Neither has ever existed here. Each time,
- * `backendAvailable` was false and all five cross-repo assertions returned
- * before asserting anything — including the ghost-key check this file exists to
- * provide. The first test below is the guard against a third time: it fails
- * loudly rather than letting the suite pass while proving nothing.
+ * The backend checkout sits at a different relative path on different machines,
+ * and a hardcoded guess here has been wrong twice in both directions. Each time
+ * `backendAvailable` was false and all five cross-repo assertions returned before
+ * asserting anything. `backendPath` searches for the real root instead, and the
+ * first test below fails loudly rather than letting the suite prove nothing.
  */
-const BACKEND_PERMS_DIR = path.resolve(
-  __dirname,
-  "../../../../../backend/src/modules/rbac/permissions",
-);
+const BACKEND_PERMS_DIR = BACKEND_ROOT
+  ? path.join(BACKEND_ROOT, "src", "modules", "rbac", "permissions")
+  : "";
 
 const EXCLUDED_BACKEND_FILES = new Set([
   "index.ts",

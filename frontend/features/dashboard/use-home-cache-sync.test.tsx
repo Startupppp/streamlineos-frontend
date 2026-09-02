@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useHomeCacheSync } from "./use-home-cache-sync";
 import { queryKeys } from "@/lib/query-keys";
+import { backendPath } from "@/test-utils/backend-repo";
 
 const mockUseAccess = jest.fn();
 
@@ -74,10 +75,7 @@ describe("Home cache follows the backend permission version", () => {
 
 describe("the Home cache key dimensions match the backend key", () => {
   const backendKeyBuilder = readFileSync(
-    resolve(
-      process.cwd(),
-      "../backend/src/modules/dashboard/dashboard-cache-key.ts",
-    ),
+    backendPath("src", "modules", "dashboard", "dashboard-cache-key.ts"),
     "utf8",
   );
 

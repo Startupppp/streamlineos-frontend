@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { PERMISSIONS } from "../roles";
+import { backendPath } from "@/test-utils/backend-repo";
 
 /**
  * Authority-matrix frontend mirror — PRD §12.
@@ -20,11 +21,8 @@ import { PERMISSIONS } from "../roles";
  * superuser path (CLAUDE.md §21).
  */
 
-const BACKEND_PERMS_DIR = path.resolve(
-  __dirname,
-  "../../../../../backend/src/modules/rbac/permissions",
-);
-const BACKEND_RBAC_DIR = path.resolve(__dirname, "../../../../../backend/src/modules/rbac");
+const BACKEND_PERMS_DIR = backendPath("src", "modules", "rbac", "permissions");
+const BACKEND_RBAC_DIR = backendPath("src", "modules", "rbac");
 
 const EXCLUDED_BACKEND_FILES = new Set(["index.ts", "catalog.ts", "role-defaults.ts", "types.ts"]);
 
