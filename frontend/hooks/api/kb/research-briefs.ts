@@ -19,7 +19,7 @@ interface BriefListResponse {
 export function useKbResearchBriefs(limit = 20) {
   const canViewPages = useCan("kb:pages:view");
   return useInfiniteQuery({
-    queryKey: queryKeys.kb.researchBriefs(),
+    queryKey: queryKeys.kb.researchBriefs(limit),
     queryFn: ({ pageParam, signal }) => {
       const params: Record<string, unknown> = { limit };
       if (pageParam) params.cursor = pageParam;

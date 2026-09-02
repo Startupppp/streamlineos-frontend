@@ -171,6 +171,12 @@ function buildImporterMap(root) {
 
 function classifyFile(relPath, knipDeadSet, importerMap, root) {
   const stem = basename(relPath).replace(/\.[^.]+$/, "");
+  // Path-classified, anchored: a file under a generated/scratch/vendor directory
+  // is not authored product source, so knip's verdict on it says nothing about
+  // this codebase. Segment-wise so an authored `next-intl/` is never swallowed.
+  if (relPath.split("/").some((seg) => isExcludedScanDir(seg))) {
+    return { cls: "OUT-OF-SCOPE", reason: "generated, vendored or scratch path — not authored product source" };
+  }
   if (NEXT_CONVENTION_STEMS.has(stem)) {
     return { cls: "RETAINED-BY-CONVENTION", reason: "Next.js filesystem entry convention" };
   }
@@ -292,6 +298,18 @@ function runSelfTest() {
   assert(stale.length === 1 && stale[0] === "hooks/api/ghost.ts:useGhost",
     `(l) stale verdict detection → expected [hooks/api/ghost.ts:useGhost], got [${stale.join(",")}]`);
 
+  const rScratch = classifyFile(".scratch/mint-session.mjs", new Set([".scratch/mint-session.mjs"]), new Map(), synthRoot);
+  assert(rScratch.cls === "OUT-OF-SCOPE",
+    `(m0) a scratch path → expected OUT-OF-SCOPE, got ${rScratch.cls}`);
+
+  const rGen = classifyFile(".next-buildmart/dev/chunk.js", new Set([".next-buildmart/dev/chunk.js"]), new Map(), synthRoot);
+  assert(rGen.cls === "OUT-OF-SCOPE",
+    `(m1) a generated build path → expected OUT-OF-SCOPE, got ${rGen.cls}`);
+
+  const rAuthored = classifyFile("features/next-intl-shim/thing.ts", new Set(["features/next-intl-shim/thing.ts"]), new Map(), synthRoot);
+  assert(rAuthored.cls === "DEAD",
+    `(m2) an authored dir merely starting with "next-" must NOT be swallowed by the exclusion, got ${rAuthored.cls}`);
+
   const r9 = classifyFile("test-utils/render.tsx", new Set(), new Map(), synthRoot);
   assert(r9.cls === "RETAINED-BY-CONVENTION",
     `(m) test-infra file → expected RETAINED-BY-CONVENTION, got ${r9.cls}`);
@@ -400,6 +418,7 @@ async function runMain() {
 
   const buckets = {
     "DEAD": [],
+    "OUT-OF-SCOPE": [],
     "RETAINED-BY-CONTRACT": [],
     "RETAINED-BY-CONVENTION": [],
     "WIRE": [],

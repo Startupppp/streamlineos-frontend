@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { AvatarCropDialog } from "@/components/ui/avatar-crop-dialog";
+import dynamic from "next/dynamic";
 import { Camera, Loader2 } from "lucide-react";
 import { Trash2Icon, CheckIcon, XIcon } from "@animateicons/react/lucide";
 import { useUpdateMyProfile } from "@/hooks/api/auth";
@@ -19,6 +19,11 @@ import { toast } from "sonner";
 import { resolveImageUrl } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
+
+const AvatarCropDialog = dynamic(
+  () => import("@/components/ui/avatar-crop-dialog").then((m) => ({ default: m.AvatarCropDialog })),
+  { ssr: false },
+);
 import {
   DISPLAY_NAME_MAX_LENGTH,
   settingsDisplayNameSchema,

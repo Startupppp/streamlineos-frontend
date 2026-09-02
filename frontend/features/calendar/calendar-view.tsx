@@ -114,7 +114,8 @@ export function CalendarView() {
   const events = eventsResponse?.events ?? [];
   const sourceFailures = eventsResponse?.failures ?? [];
   const eventsTruncated = eventsResponse?.truncated ?? false;
-  const { data: connections = [] } = useCalendarConnections();
+  const { data: connections = [], isLoading: connectionsLoading } =
+    useCalendarConnections();
   const finalize = useFinalizeIntegrationConnection();
   const finalizeRef = useRef(false);
 
@@ -148,10 +149,13 @@ export function CalendarView() {
       ),
     ];
   }, [events, selfAttendanceEvents]);
+  // External events take only the date range, so waiting for the connection
+  // list before asking is a pure waterfall. Ask optimistically and stop only
+  // once we know the org has no active connection.
   const { data: externalData } = useExternalCalendarEvents(
     rangeStart,
     rangeEnd,
-    activeConnectionCount > 0,
+    connectionsLoading || activeConnectionCount > 0,
   );
 
   const selectedEvent = useMemo<CalendarListItem | null>(

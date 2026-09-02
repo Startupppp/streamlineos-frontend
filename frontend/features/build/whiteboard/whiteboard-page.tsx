@@ -190,12 +190,14 @@ export function WhiteboardPage({ projectId, initialBoardId }: WhiteboardPageProp
     return boards.find((b) => b.id === chosenBoardId) ?? boards[0];
   }, [boards, chosenBoardId]);
 
+  // A deep link already names the board, so the detail read does not have to
+  // wait for the board list to come back before it can start.
   const {
     data: detail,
     isLoading: detailLoading,
     isError: detailError,
     refetch: refetchDetail,
-  } = useWhiteboard(projectId, selectedBoard?.id ?? null);
+  } = useWhiteboard(projectId, selectedBoard?.id ?? chosenBoardId ?? null);
   const updateBoard = useUpdateWhiteboard(projectId);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);

@@ -85,7 +85,7 @@ export function useCreateTimesheetPayrollExport() {
 export function useTimesheetPayrollExports(limit = 20) {
   const canView = useCan("timesheets:payroll:view");
   return useInfiniteQuery<ExportHistoryResponse>({
-    queryKey: queryKeys.timesheets.payroll.exports(),
+    queryKey: queryKeys.timesheets.payroll.exports(limit),
     queryFn: ({ pageParam , signal }) => {
       const params: Record<string, unknown> = { limit };
       if (typeof pageParam === "string") params.cursor = pageParam;

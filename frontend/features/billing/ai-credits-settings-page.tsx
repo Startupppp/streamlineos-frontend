@@ -9,6 +9,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Switch } from "@/components/ui/switch";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -34,14 +35,22 @@ import {
   type PurchaseAiPackResult,
   type AiCreditsUsageDays,
 } from "@/hooks/api/ai-credits";
-import { AiCreditsDailyChart } from "@/features/billing/ai-credits-daily-chart";
 import { AiCreditsBreakdownTables } from "@/features/billing/ai-credits-breakdown-tables";
+import dynamic from "next/dynamic";
 import { AiCreditPackCard } from "@/features/billing/components/ai-credit-pack-card";
 import { TXN_COLUMNS, getTxnRowKey } from "@/features/billing/components/ai-credit-txn-columns";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatCredits, formatTokens } from "@/lib/format-ai";
 import { cn } from "@/lib/utils";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
+
+const AiCreditsDailyChart = dynamic(
+  () =>
+    import("@/features/billing/ai-credits-daily-chart").then((m) => ({
+      default: m.AiCreditsDailyChart,
+    })),
+  { ssr: false, loading: () => <Skeleton className="h-[220px] w-full rounded-lg" /> },
+);
 
 type TxnPageSize = (typeof STANDARD_PAGE_SIZE_OPTIONS)[number];
 

@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback } from "react";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
 import { useProject } from "@/hooks/api";
 import { useCycles, useProjectBoardTickets } from "@/hooks/api/build";
+import { useTicketColumnCounts } from "@/hooks/api/build/ticket-queries";
 import { KanbanBoard } from "@/features/build/views/kanban-board";
 import { ListView } from "@/features/build/views/list-view";
 import { ViewSwitcher, parseViewType, type ViewType } from "@/features/build/views/view-switcher";
@@ -39,6 +40,9 @@ export function CycleDetailPage({
   const { data: projectData, isLoading: projectLoading } = useProject(projectId);
   const { data: boardTickets, isLoading: ticketsLoading } = useProjectBoardTickets(projectId);
   const { data: cycles, isLoading: cyclesLoading } = useCycles(projectId);
+  // The board this page renders reads column counts keyed only on projectId.
+  // Warming it here keeps it off the far side of the loading guard.
+  useTicketColumnCounts(projectId);
 
   const isLoading = projectLoading || cyclesLoading || ticketsLoading;
 

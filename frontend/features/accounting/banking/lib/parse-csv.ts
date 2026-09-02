@@ -1,5 +1,3 @@
-import Papa from "papaparse";
-
 export interface ParsedCsv {
   headers: string[];
   rows: string[][];
@@ -22,7 +20,8 @@ function normalizeRow(row: unknown[]): string[] {
   return row.map((cell) => (cell === null || cell === undefined ? "" : String(cell)));
 }
 
-export function parseCsvFile(file: File): Promise<ParsedCsv> {
+export async function parseCsvFile(file: File): Promise<ParsedCsv> {
+  const { default: Papa } = await import("papaparse");
   return new Promise((resolve, reject) => {
     Papa.parse<unknown[]>(file, {
       header: false,

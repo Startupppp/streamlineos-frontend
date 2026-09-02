@@ -4,10 +4,10 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** implemented-with-two-blocked-boxes
+**Status:** implemented — 7 of 9 boxes closed; 1 partial, 1 blocked on operator actions
 
 - [x] Declared size and magic-byte MIME are validated; names are sanitized; object keys are organization-scoped.
-  - Evidence: `npx jest src/modules/storage --maxWorkers=2` → 13 suites, 155 tests passed, including the new `storage-tenant-private.spec.ts` (13 tests) and `storage-multipart.controller.spec.ts` (14 tests). Multipart now requires a declared `sizeBytes` at initiate and re-measures the assembled object with HeadObject plus a 32-byte ranged read before releasing it; `sanitizeFileName`/`sanitizeFolder` in `storage-key.ts` are pinned by 2 tests.
+  - Evidence: `npx jest src/modules/storage --maxWorkers=2` → 14 suites, 158 tests passed, including the new `storage-tenant-private.spec.ts` (13 tests) and `storage-multipart.controller.spec.ts` (14 tests). Multipart now requires a declared `sizeBytes` at initiate and re-measures the assembled object with HeadObject plus a 32-byte ranged read before releasing it; `sanitizeFileName`/`sanitizeFolder` in `storage-key.ts` are pinned by 2 tests.
 - [x] Multipart completion is idempotent; a retried completion does not duplicate or orphan.
   - Evidence: 3 tests in `storage-multipart.controller.spec.ts` ("replays the first result instead of duplicating the record", "treats a provider NoSuchUpload with a stored object as an already-completed retry", "404s a completion for an upload id nothing knows about") — all pass.
 - [x] Malware quarantine runs before the object becomes reachable.
@@ -24,5 +24,7 @@
   - Backfill half WRITTEN AND PROVEN, on a scratch database: `scripts/backfill-public-object-urls.mjs`, catalog-driven across `public`/`build`/`build_events`. Against `scratch_boot_c` seeded with 2 leaked URLs, 1 already-private key and 1 external customer URL: dry run reported `public.kb_sources.file_url: 2 row(s)`, `--apply` rewrote 2 rows to their keys (URL-decoding `%20`), the external URL and the already-private key were untouched, and a second `--apply` reported 0.
   - BLOCKED: the same dry run against the real data. The only database holding production rows is the shared remote `DATABASE_URL`, which this effort may not touch. An operator must run `node scripts/backfill-public-object-urls.mjs` (dry run) there and then `--apply`.
   - BLOCKED: making the R2 bucket private. Rewriting the column does not invalidate a URL somebody already copied; the objects stay fetchable at their public addresses until the bucket policy changes in the Cloudflare console. This is the same operator action the chat backfill (`scripts/backfill-chat-attachment-file-url.mjs`, still un-run) is waiting on.
+- [x] Referred in from ticket 31: a tenant's filename must not be interpolated into a log message, where the key-based redactor cannot reach it.
+  - Evidence: all 8 flagged call sites moved the filename into the meta object (`common/security/av-scan.ts`, `virustotal-av-scanner.ts`, `clamd-av-scanner.ts`, `common/media/media-compression.service.ts`), plus 6 more of the same shape found in my own paths interpolating object keys (`storage-multipart.service.ts`, `storage.controller.ts`, `cron-storage-sweep.service.ts`). `nice -n 10 pnpm -s check:log-secrets` → **OK**, 3498 files, redactor parity clean. `src/modules/storage/storage-log-redaction.spec.ts` (new, 3 tests) runs the real `redact()` over the structure the Nest adapter builds and shows the name withheld in meta and NOT withheld in a message string.
 - [x] Cross-tenant file keys are rejected at the seam rather than trusted from the client.
   - Evidence: `parseStorageKey`/`isForeignOrgKey` reject a key naming another organisation before any table lookup, on both `/storage/download` and `/storage/image`. 2 new tests pass ("404s a download for a key naming another organisation, before any table lookup", "404s an image render for a key naming another organisation"); before this, `<otherOrgId>/uploads/x.pdf` fell through `resolveFileOwner` as untracked and was streamed out of the caller's own bucket.

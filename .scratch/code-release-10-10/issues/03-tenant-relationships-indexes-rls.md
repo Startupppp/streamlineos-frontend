@@ -4,11 +4,27 @@
 
 **Blocked by:** 02 — a partially bootstrapped target produces findings that are artifacts of the missing tail, not real.
 
-**Status:** ready-for-agent
+**Status:** verified against `scratch_boot_a` at head (637/637 ledger rows, 1027 tables, 0 organizations). Three gates were repaired first; four boxes remain open on findings that need migrations, which are outside this session's territory.
 
 - [ ] Tenant-relationship verification reports zero actionable findings against a fully bootstrapped current-head target.
+      BLOCKED: `check:tenant-relationships` against `scratch_boot_a` → exit 1, **4 actionable** single-column tenant FKs (236 total, 95 CRM, 136 Inventory, 1 platform-global). Before the gate was repaired it reported 0 — `credit_notes`, `vendor_credits` and `enterprise_quotes` were mislabelled CRM, and CRM is excluded from this release. The four are `credit_note_items→credit_notes` (CASCADE), `vendor_credit_items→vendor_credits` (CASCADE), `credit_notes→invoices` (SET NULL), `vendor_credits→purchase_bills` (SET NULL). Each needs a composite `(org_id, child_id)→(org_id, id)` FK, i.e. a migration; `migrations/*.sql` is out of this session's territory.
 - [ ] Tenant-index coverage is complete, with every declared tenant relationship backed by an index.
+      BLOCKED: new `check:tenant-indexes --db` against `scratch_boot_a` → exit 1, **985 of 988** catalog tenant tables have an index leading with the tenant column. The three without: `public.communication_backfill_issues`, `public.subprocessor_subscribers`, `public.support_ticket_tags`. Measured cost on a 50k-row `communication_backfill_issues` as `streamline_app` with the GUC set: **516 buffers** (seq scan, 47,500 rows removed by the RLS filter) vs **6 buffers** with `(org_id, created_at DESC)`. Needs a migration. The declaration gate separately reports 823/828 after being taught the `build.table(...)` form (was 745/745, blind to all 83 Build tables); all 5 of those have a leading `(org_id, id)` unique in the catalog, so they are a Drizzle-declaration gap, not a live one.
 - [ ] Every tenant-scoped table has an RLS policy. A table carrying `org_id` that grants the application role DML with no policy is readable org-wide, and that exposure is invisible until the migration is applied.
-- [ ] Zero Drizzle-declared columns are absent from the live catalog — `db.select()` renders every declared column, so one missing column turns every full-table read into a `42703`.
-- [ ] Benchmark and verify as the application role with tenant context set, never as the database owner; without the GUC the queries fail `42501` rather than returning rows.
-- [ ] `db:generate` still fails closed while snapshots are stale.
+      BLOCKED: enumerated from `pg_catalog`, not from declarations — **988** org-bearing tables, **966** with RLS enabled and exactly one tenant-predicated policy each, **22** with no policy. 6 are registered platform-global with stated justifications. The other **16** are the `inv_*` WMS/landed-cost family; `streamline_app` holds SELECT+INSERT+UPDATE+DELETE on all 16 and no policy constrains them. Proven, not inferred: as `streamline_app` (`rolbypassrls=false`) with `app.organization_id='org_probe_A'`, `access_versions` returned 1 row and `inv_customer_shelf_life_rules` returned 2 — including org_probe_B's. All four tables named in the ticket brief (`git_webhook_seen_deliveries`, `calendar_provider_sync_queue`, `file_quarantine_records`, `multipart_upload_intents`) now carry `tenant_isolation` policies. Closing this needs 16 policy migrations.
+- [x] Zero Drizzle-declared columns are absent from the live catalog — `db.select()` renders every declared column, so one missing column turns every full-table read into a `42703`.
+      Enumerated at runtime through `getTableConfig` over the `src/db/schema` barrel (not a regex, so the `build.table(...)` form is included): **872 declared tables, 10,588 declared columns; 872/872 tables and 10,588/10,588 columns present in `scratch_boot_a`. Zero missing.** The reverse direction is not zero: 105 live non-partition tables are undeclared in Drizzle, 101 of them org-bearing, and the 16 with no policy all sit inside that set.
+- [x] Benchmark and verify as the application role with tenant context set, never as the database owner; without the GUC the queries fail `42501` rather than returning rows.
+      `APP_DB_SCHEMA=public pnpm db:bootstrap-role` against `scratch_boot_a` → exit 0, `superuser=false createdb=false createrole=false bypassrls=false login=true`, **943/943 tables granted**, "can create objects in: (none)". As `streamline_app` with no GUC, `SELECT count(*) FROM access_versions` raises `42501 no tenant context`; with the GUC it returns only its own org's row. Every benchmark above was taken under `SET LOCAL ROLE streamline_app` inside a transaction that was rolled back.
+- [x] `db:generate` still fails closed while snapshots are stale.
+      `node scripts/guard-db-generate.mjs` → **exit 1**, "newest snapshot 0464, journal entries 637, migrations with no snapshot **172**". `check:db-generate-guard` (`--self-test`) → exit 0, 5/5 checks.
+
+## Supporting gates run
+
+- `check:tenant-relationships --self-test` → exit 0, 9/9 (2 new: return-type-annotated `.references()`, accounting tables not excluded as CRM).
+- `check:tenant-indexes --self-test` → exit 0, 18/18 (3 new: `pgSchema` table form).
+- `db:verify-rls` against `scratch_boot_a` → exit 0, 16/16 behavioural checks PASS; coverage 966 of 988; new EXPOSURE block names all 16 no-policy tables with their measured app-role grants.
+- `check:record-access` → exit 0, 1183 `findFirst` calls, 566 record reads, 1 named purge exception. `--self-test` exit 0, 10/10.
+- `check:tenant-isolation` → exit 0, **924/924** (was 923/924; `calendar-provider-webhook.service.ts` had no cross-tenant negative test). `--self-test` exit 0, 7/7.
+- `check:tenant-isolation:run` → exit 0, **446 suites / 1806 tests passed**.
+- Backend `tsc --noEmit` → exit 0, 0 errors.

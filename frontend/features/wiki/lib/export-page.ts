@@ -1,6 +1,3 @@
-import { generateHTML } from "@tiptap/html";
-import StarterKit from "@tiptap/starter-kit";
-
 function escapeHtml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
@@ -107,7 +104,7 @@ function slateToHtml(nodes: SlateNode[]): string {
   return parts.join("\n");
 }
 
-export function exportPageToHtml(title: string, content: unknown): void {
+export async function exportPageToHtml(title: string, content: unknown): Promise<void> {
   let bodyHtml = "";
   if (content) {
     try {
@@ -118,6 +115,10 @@ export function exportPageToHtml(title: string, content: unknown): void {
         content !== null &&
         (content as Record<string, unknown>).type === "doc"
       ) {
+        const [{ generateHTML }, { default: StarterKit }] = await Promise.all([
+          import("@tiptap/html"),
+          import("@tiptap/starter-kit"),
+        ]);
         bodyHtml = generateHTML(content as Record<string, unknown>, [StarterKit]);
       }
     } catch {

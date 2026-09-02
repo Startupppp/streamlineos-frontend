@@ -335,6 +335,7 @@ export function useUpsertWorkLog(
 ) {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:attendance:manage", {
+    ...options,
     mutationKey: ["hr", "work-logs", "upsert"],
     mutationFn: (data: UpsertWorkLogInput) =>
       apiClient.post<WorkLog>("/hr/work-logs", data),
@@ -343,7 +344,6 @@ export function useUpsertWorkLog(
       options?.onSuccess?.(...args);
     },
     onError: options?.onError,
-    ...options,
   });
 }
 

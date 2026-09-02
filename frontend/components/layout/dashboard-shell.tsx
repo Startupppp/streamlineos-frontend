@@ -228,6 +228,7 @@ export function DashboardShell({
 
               <main
                 id="dashboard-content"
+                aria-label="Main content"
                 className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
               >
                 <div

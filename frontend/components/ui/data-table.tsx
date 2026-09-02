@@ -250,9 +250,13 @@ export function DataTable<T>({
       <div className="flex-1 min-h-0 overflow-auto overscroll-x-contain flex flex-col [-webkit-overflow-scrolling:touch]">
         {isLoading ? (
           <div
+            aria-busy="true"
             style={minWidth && minWidth !== "auto" ? { minWidth } : undefined}
             className={cn((!minWidth || minWidth === "content") && "min-w-max")}
           >
+            <span role="status" className="sr-only">
+              Loading results…
+            </span>
             <Table containerClassName="overflow-visible">
               <TableHeader className="sticky top-0 z-10 bg-muted/50 border-b border-border">
                 {table.getHeaderGroups().map((hg) => (
@@ -306,7 +310,10 @@ export function DataTable<T>({
             </Table>
           </div>
         ) : rows.length === 0 ? (
-          <div className="flex flex-1 min-h-0 h-full flex-col justify-center p-2 [&>*]:!border-0 [&>*]:!bg-transparent [&>*]:!shadow-none">
+          <div
+            role="status"
+            className="flex flex-1 min-h-0 h-full flex-col justify-center p-2 [&>*]:!border-0 [&>*]:!bg-transparent [&>*]:!shadow-none"
+          >
             {emptyState ?? (
               <ChartEmptyState message="No results found." height={260} />
             )}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   KbCopyIcon,
   KbFileDownIcon,
@@ -136,7 +137,9 @@ export function PageDocumentToolbar({
   }
 
   function handleExportHtml() {
-    exportPageToHtml(page.title, page.content);
+    void exportPageToHtml(page.title, page.content).catch((error: unknown) =>
+      toast.error(getErrorMessage(error)),
+    );
   }
 
   function handleBacklinkClick(e: React.MouseEvent<HTMLButtonElement>) {

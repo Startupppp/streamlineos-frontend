@@ -40,13 +40,31 @@ function extractTokenValue(css: string, tokenName: string): string | undefined {
 const CSS_PATH = join(__dirname, "../../../globals.css");
 const cssSource = readFileSync(CSS_PATH, "utf-8");
 
-const DARK_BLOCK_START = cssSource.indexOf("\n.dark {");
-const lightCss = DARK_BLOCK_START >= 0
-  ? cssSource.slice(0, DARK_BLOCK_START)
-  : cssSource;
-const darkCss = DARK_BLOCK_START >= 0
-  ? cssSource.slice(DARK_BLOCK_START)
-  : "";
+function collectBlocks(css: string, selector: string): string {
+  const marker = `\n${selector} {`;
+  const parts: string[] = [];
+  let from = 0;
+  for (;;) {
+    const start = css.indexOf(marker, from);
+    if (start < 0) break;
+    let depth = 0;
+    let i = start + marker.length - 1;
+    const bodyStart = i + 1;
+    for (; i < css.length; i += 1) {
+      if (css[i] === "{") depth += 1;
+      else if (css[i] === "}") {
+        depth -= 1;
+        if (depth === 0) break;
+      }
+    }
+    parts.push(css.slice(bodyStart, i));
+    from = i + 1;
+  }
+  return parts.join("\n");
+}
+
+const lightCss = collectBlocks(cssSource, ":root");
+const darkCss = collectBlocks(cssSource, ".dark");
 
 const WCAG_AA_NORMAL = 4.5;
 const WCAG_AA_LARGE = 3.0;
@@ -186,5 +204,123 @@ describe("contrastRatio utility — self-test", () => {
   it("detects a pair that FAILS AA (ratio < 4.5)", () => {
     const failingRatio = contrastRatio("#64748b", "#f1f5f9");
     expect(failingRatio).toBeLessThan(WCAG_AA_NORMAL);
+  });
+});
+
+const WCAG_NON_TEXT = 3.0;
+
+function extractTokenAnyValue(css: string, tokenName: string): string | undefined {
+  const direct = new RegExp(String.raw`--${tokenName}:\s*(#[0-9a-fA-F]{3,8})`).exec(css);
+  if (direct) return direct[1];
+  const viaVar = new RegExp(
+    String.raw`--${tokenName}:\s*var\([^,]+,\s*(#[0-9a-fA-F]{3,8})\s*\)`,
+  ).exec(css);
+  return viaVar?.[1];
+}
+
+function ratioOf(css: string, fgToken: string, bgToken: string): number {
+  const fg = extractTokenAnyValue(css, fgToken);
+  const bg = extractTokenAnyValue(css, bgToken);
+  expect(fg).toBeDefined();
+  expect(bg).toBeDefined();
+  return contrastRatio(fg as string, bg as string);
+}
+
+describe("WCAG 2.2 SC 1.4.11 — focus indicator contrast (3:1 non-text)", () => {
+  const lightRingSurfaces = ["background", "card", "muted"];
+
+  for (const surface of lightRingSurfaces) {
+    it(`--ring on --${surface} (light) reaches 3:1`, () => {
+      expect(ratioOf(lightCss, "ring", surface)).toBeGreaterThanOrEqual(
+        WCAG_NON_TEXT,
+      );
+    });
+  }
+
+  it("--sidebar-ring on --sidebar (light) reaches 3:1", () => {
+    expect(ratioOf(lightCss, "sidebar-ring", "sidebar")).toBeGreaterThanOrEqual(
+      WCAG_NON_TEXT,
+    );
+  });
+
+  it("--ring on --background (dark) reaches 3:1", () => {
+    expect(ratioOf(darkCss, "ring", "background")).toBeGreaterThanOrEqual(
+      WCAG_NON_TEXT,
+    );
+  });
+
+  it("BITE PROOF — slate-400, the value --ring held before this was measured, is below 3:1", () => {
+    expect(contrastRatio("#94a3b8", "#f8fafc")).toBeLessThan(WCAG_NON_TEXT);
+  });
+});
+
+const STATUS_TONES = ["success", "warning", "danger", "info", "neutral"] as const;
+
+describe("WCAG AA contrast — semantic status tokens (light)", () => {
+  for (const tone of STATUS_TONES) {
+    it(`--status-${tone}-ink-strong on --status-${tone}-surface meets AA normal text (4.5:1)`, () => {
+      expect(
+        ratioOf(lightCss, `status-${tone}-ink-strong`, `status-${tone}-surface`),
+      ).toBeGreaterThanOrEqual(WCAG_AA_NORMAL);
+    });
+  }
+
+  for (const tone of STATUS_TONES) {
+    it(`--status-${tone}-ink on --status-${tone}-surface clears at least the 3:1 floor`, () => {
+      expect(
+        ratioOf(lightCss, `status-${tone}-ink`, `status-${tone}-surface`),
+      ).toBeGreaterThanOrEqual(WCAG_NON_TEXT);
+    });
+  }
+
+  it("records that success/warning/danger -ink are BELOW AA normal text on their own surface — -ink-strong is the AA-safe ink", () => {
+    const below = STATUS_TONES.filter(
+      (tone) =>
+        ratioOf(lightCss, `status-${tone}-ink`, `status-${tone}-surface`) <
+        WCAG_AA_NORMAL,
+    );
+    expect(below).toEqual(["success", "warning", "danger"]);
+  });
+});
+
+describe("WCAG AA contrast — semantic status tokens (dark)", () => {
+  for (const tone of ["success", "warning", "danger"] as const) {
+    it(`--status-${tone}-ink on --card (dark) meets AA normal text (4.5:1)`, () => {
+      expect(ratioOf(darkCss, `status-${tone}-ink`, "card")).toBeGreaterThanOrEqual(
+        WCAG_AA_NORMAL,
+      );
+    });
+  }
+});
+
+describe("WCAG AA contrast — chrome surfaces", () => {
+  it("sidebar-foreground on sidebar (light) meets AA normal text", () => {
+    expect(ratioOf(lightCss, "sidebar-foreground", "sidebar")).toBeGreaterThanOrEqual(
+      WCAG_AA_NORMAL,
+    );
+  });
+
+  it("sidebar-foreground on sidebar (dark) meets AA normal text", () => {
+    expect(ratioOf(darkCss, "sidebar-foreground", "sidebar")).toBeGreaterThanOrEqual(
+      WCAG_AA_NORMAL,
+    );
+  });
+
+  it("muted-foreground on card (light) meets AA normal text — EmptyState/ErrorState descriptions render text-sm on --card", () => {
+    expect(ratioOf(lightCss, "muted-foreground", "card")).toBeGreaterThanOrEqual(
+      WCAG_AA_NORMAL,
+    );
+  });
+
+  it("muted-foreground on card (dark) meets AA normal text", () => {
+    expect(ratioOf(darkCss, "muted-foreground", "card")).toBeGreaterThanOrEqual(
+      WCAG_AA_NORMAL,
+    );
+  });
+
+  it("records that muted-foreground on --muted (light) is below AA normal text", () => {
+    expect(ratioOf(lightCss, "muted-foreground", "muted")).toBeLessThan(
+      WCAG_AA_NORMAL,
+    );
   });
 });

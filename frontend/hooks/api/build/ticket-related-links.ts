@@ -27,6 +27,7 @@ export function useAddRelatedLink(
 ) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<TicketRelatedLink, unknown, AddLinkVars>("build:tickets:update", {
+    ...options,
     mutationKey: ["projects", "tickets", "related-links", "add"],
     mutationFn: ({ projectId, ticketId, url, label }) =>
       apiClient.post<TicketRelatedLink>(`/build/${projectId}/tickets/${ticketId}/related-links`, { url, label }),
@@ -34,7 +35,6 @@ export function useAddRelatedLink(
       queryClient.invalidateQueries({ queryKey: relatedLinksKey(variables.projectId, variables.ticketId) });
       options?.onSuccess?.(data, variables, onMutateResult, context);
     },
-    ...options,
   });
 }
 

@@ -32,7 +32,7 @@ interface TestRunFilters {
 export function useTestSuites(projectId?: number) {
   const canView = useCan("build:qa:view");
   return useQuery<TestSuite[]>({
-    queryKey: queryKeys.projects.qa.suites(projectId),
+    queryKey: queryKeys.projects.qa.suites(projectId ?? 0),
     queryFn: ({ signal }) => apiClient.get<TestSuite[]>(`/build/${projectId}/test-suites`, undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
@@ -48,7 +48,7 @@ export function useTestCases(projectId?: number, filters?: TestCaseFilters) {
   if (filters?.automationStatus) params["automationStatus"] = filters.automationStatus;
 
   return useQuery<TestCase[]>({
-    queryKey: queryKeys.projects.qa.cases(projectId, filters),
+    queryKey: queryKeys.projects.qa.cases(projectId ?? 0, filters),
     queryFn: ({ signal }) => apiClient.get<TestCase[]>(`/build/${projectId}/test-cases`, params, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
@@ -102,7 +102,7 @@ export function useTestRuns(projectId?: number, filters?: TestRunFilters) {
   if (filters?.status) params["status"] = filters.status;
 
   return useQuery<TestRun[]>({
-    queryKey: queryKeys.projects.qa.runs(projectId, filters?.status),
+    queryKey: queryKeys.projects.qa.runs(projectId ?? 0, filters?.status),
     queryFn: ({ signal }) => apiClient.get<TestRun[]>(`/build/${projectId}/test-runs`, params, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
@@ -112,7 +112,7 @@ export function useTestRuns(projectId?: number, filters?: TestRunFilters) {
 export function useTestRunDetail(projectId?: number, runId?: number) {
   const canView = useCan("build:qa:view");
   return useQuery<TestRunDetail>({
-    queryKey: queryKeys.projects.qa.run(projectId, runId),
+    queryKey: queryKeys.projects.qa.run(projectId ?? 0, runId ?? 0),
     queryFn: ({ signal }) => apiClient.get<TestRunDetail>(`/build/${projectId}/test-runs/${runId}`, undefined, signal),
     enabled: canView && !!projectId && !!runId,
     staleTime: 30_000,

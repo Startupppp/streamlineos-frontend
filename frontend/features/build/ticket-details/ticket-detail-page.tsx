@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useMemo, useState } from "react";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
@@ -18,7 +18,8 @@ import { isApiError, getApiErrorCode } from "@/lib/api-client";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useProject } from "@/hooks/api";
-import { useTicketByKey } from "@/hooks/api/build";
+import { useTicketByKey, useEpics, useModules, useCycles } from "@/hooks/api/build";
+import { useProjectBoardTickets } from "@/hooks/api/build/ticket-queries";
 import { formatTicketKey, parseTicketKey } from "@/features/build/shared/format-ticket-key";
 import { TicketDetailMainSection } from "./ticket-detail-main-section";
 import { TicketDetailRightPanel } from "./ticket-detail-right-panel";
@@ -78,6 +79,18 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
     parsed?.ticketNumber ?? null,
   );
   const ticketId = byKeyTicket?.id ?? null;
+
+  // The right panel and the relations block are keyed on projectId alone, but
+  // they mount behind the ticket-loading guard, so they used to wait two
+  // round-trips for data they could have asked for immediately. Warming them
+  // here adds no request — it only moves each one onto the first wave.
+  // On mobile the sidebar lives in a drawer that may never open, so the three
+  // sidebar lists stay disabled there (projectId 0 is the hooks' own gate).
+  const sidebarWarmProjectId = isMobile ? 0 : projectId;
+  useEpics(sidebarWarmProjectId);
+  useModules(sidebarWarmProjectId);
+  useCycles(sidebarWarmProjectId);
+  useProjectBoardTickets(projectId);
 
   const handleDeleted = () => {
     router.push(`/build/${projectId}`);

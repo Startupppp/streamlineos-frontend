@@ -33,6 +33,7 @@ import {
 import { compareByRank, computeOptimisticRank } from "./kanban-board-utils";
 import { ListViewItem } from "./list-view-item";
 import { InlineGroupCreate } from "./list-view-group-create";
+import { GroupRows } from "./list-view-group-rows";
 import { OuterGroupHeader, NestedGroup, DroppableGroup } from "./list-view-group";
 import { EmptyState } from "@/components/ui/empty-state";
 
@@ -323,19 +324,14 @@ export const ListView = memo(function ListView({
                 )}
               </div>
               <AccordionContent className="pb-0">
-                <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm divide-y divide-border">
-                  {items.map((ticket) => (
-                    <ListViewItem
-                      key={ticket.id}
-                      ticket={ticket}
-                      projectKey={projectKey}
-                      projectId={projectId}
-                      projectStatuses={projectStatuses}
-                      onClick={onTicketClick}
-                      displayOptions={displayOptions}
-                    />
-                  ))}
-                </div>
+                <GroupRows
+                  items={items}
+                  projectKey={projectKey}
+                  projectId={projectId}
+                  projectStatuses={projectStatuses}
+                  displayOptions={displayOptions}
+                  onTicketClick={onTicketClick}
+                />
               </AccordionContent>
             </AccordionItem>
           ))}

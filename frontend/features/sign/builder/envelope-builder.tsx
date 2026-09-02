@@ -45,7 +45,10 @@ function BuilderContent({ envelopeId }: { envelopeId: number }) {
     }
   }, [data?.documents, selectedDocumentId, setSelectedDocumentId]);
 
-  const { data: preview } = useSignDocumentPreview(selectedDocumentId ?? undefined);
+  // Deriving the fallback rather than waiting for the effect's commit lets the
+  // preview request start in the same render the envelope resolves.
+  const previewDocumentId = selectedDocumentId ?? data?.documents?.[0]?.id;
+  const { data: preview } = useSignDocumentPreview(previewDocumentId ?? undefined);
 
   if (isLoading || !data) {
     return (

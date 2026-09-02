@@ -109,7 +109,12 @@ export function LoadingState({
     (variant === "cards" ? 9 : variant === "form" ? 8 : 12);
 
   return (
-    <div className={cn("p-4", className)} aria-label="Loading..." aria-busy="true">
+    <div
+      className={cn("p-4", className)}
+      role="status"
+      aria-label="Loading..."
+      aria-busy="true"
+    >
       {variant === "table" && <TableSkeleton rows={resolvedRows} />}
       {variant === "cards" && <CardsSkeleton rows={resolvedRows} />}
       {variant === "list" && <ListSkeleton rows={resolvedRows} />}

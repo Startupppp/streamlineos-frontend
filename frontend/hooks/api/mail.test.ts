@@ -102,25 +102,33 @@ function makeInfiniteUnifiedData(
 }
 
 describe("query key prefix regression", () => {
-  it("messages() with no args finds ZERO — proves the trailing-undefined trap", () => {
+  it("messages() with no args is a real invalidation prefix over a params-keyed entry", () => {
     const qc = makeClient();
     qc.setQueryData(
       queryKeys.mail.messages({ folder: "inbox", accountId: 1 }),
       makeInfiniteMailData([makeMailPage([makeMsg("m1", false)])]),
     );
-    const bugPrefix = qc.getQueriesData({ queryKey: queryKeys.mail.messages() });
-    expect(bugPrefix).toHaveLength(0);
+    const matched = qc.getQueriesData({ queryKey: queryKeys.mail.messages() });
+    expect(matched).toHaveLength(1);
   });
 
-  it("3-element prefix finds the entry — proves the fix is correct", () => {
+  it("messages() carries no trailing undefined that would match nothing", () => {
+    expect(queryKeys.mail.messages()).toEqual([
+      ...queryKeys.mail.all,
+      "messages",
+    ]);
+    expect(queryKeys.mail.messages()).not.toContain(undefined);
+  });
+
+  it("messages() matches every distinct filter combination it is meant to invalidate", () => {
     const qc = makeClient();
-    qc.setQueryData(
-      queryKeys.mail.messages({ folder: "inbox", accountId: 1 }),
-      makeInfiniteMailData([makeMailPage([makeMsg("m1", false)])]),
-    );
-    const fixedPrefix = [...queryKeys.mail.all, "messages"];
-    const result = qc.getQueriesData({ queryKey: fixedPrefix });
-    expect(result).toHaveLength(1);
+    for (const folder of ["inbox", "archive", "sent"]) {
+      qc.setQueryData(
+        queryKeys.mail.messages({ folder, accountId: 1 }),
+        makeInfiniteMailData([makeMailPage([makeMsg(`m-${folder}`, false)])]),
+      );
+    }
+    expect(qc.getQueriesData({ queryKey: queryKeys.mail.messages() })).toHaveLength(3);
   });
 });
 

@@ -9,6 +9,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 export function useLogTime(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation("build:timesheets:create", {
+    ...options,
     mutationKey: ["projects", "time-entries", "log"],
     mutationFn: ({ projectId, ticketId, ...data }: LogTimeInput) =>
       apiClient.post<TimeEntry>(
@@ -23,6 +24,5 @@ export function useLogTime(options?: Parameters<typeof useMutation>[0]) {
         queryKey: queryKeys.projects.ticket(variables.ticketId),
       });
     },
-    ...options,
   });
 }

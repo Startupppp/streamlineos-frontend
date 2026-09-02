@@ -10,7 +10,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Check, Loader2, RefreshCw } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -27,6 +26,12 @@ import {
 } from "@/hooks/api";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "./chat-helpers";
+import { ChatUserVirtualList } from "./chat-user-virtual-list";
+import type { OrgUser } from "@/types/chat";
+
+const MEMBER_LIST_BOX_HEIGHT = 280;
+const MEMBER_LIST_PADDING = 8;
+const MEMBER_ROW_HEIGHT = 52;
 
 interface AddChannelMembersDialogProps {
   open: boolean;
@@ -126,6 +131,44 @@ export function AddChannelMembersDialog({
     }
   }, [selectedIds, addMember, channelId, handleClose]);
 
+  const renderUser = useCallback(
+    (user: OrgUser) => {
+      const selected = selectedIds.has(user.id);
+      return (
+        <button
+          type="button"
+          onClick={() => toggleUser(user.id)}
+          className={cn(
+            "w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/40 transition-colors",
+            selected && "bg-primary/5",
+          )}
+        >
+          <div
+            className={cn(
+              "h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all",
+              selected
+                ? "bg-primary border-primary text-primary-foreground"
+                : "border-border/60",
+            )}
+          >
+            {selected && <Check className="h-3 w-3" />}
+          </div>
+          <Avatar className="w-7 shrink-0">
+            <AvatarImage src={resolveImageUrl(user.image)} />
+            <AvatarFallback className="text-micro">
+              {getInitials(user.name)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0 text-left">
+            <TruncatedText text={user.name ?? ""} className="text-label font-medium" />
+            <TruncatedText text={user.email ?? ""} className="text-dense text-muted-foreground" />
+          </div>
+        </button>
+      );
+    },
+    [selectedIds, toggleUser],
+  );
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
@@ -139,53 +182,26 @@ export function AddChannelMembersDialog({
         </div>
         </div>
 
-        <ScrollArea className="h-[280px] border-t border-border/30">
-          <div className="p-1">
-            {filteredUsers.length === 0 ? (
-              <p className="text-label text-muted-foreground text-center py-8 px-4">
-                {availableUsers.length === 0
-                  ? "Everyone in your org is already in this channel."
-                  : "No people match your search."}
-              </p>
-            ) : (
-              filteredUsers.map((user) => {
-                const selected = selectedIds.has(user.id);
-                return (
-                  <button
-                    key={user.id}
-                    type="button"
-                    onClick={() => toggleUser(user.id)}
-                    className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/40 transition-colors",
-                      selected && "bg-primary/5",
-                    )}
-                  >
-                    <div
-                      className={cn(
-                        "h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all",
-                        selected
-                          ? "bg-primary border-primary text-primary-foreground"
-                          : "border-border/60",
-                      )}
-                    >
-                      {selected && <Check className="h-3 w-3" />}
-                    </div>
-                    <Avatar className="w-7 shrink-0">
-                      <AvatarImage src={resolveImageUrl(user.image)} />
-                      <AvatarFallback className="text-micro">
-                        {getInitials(user.name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0 text-left">
-                      <TruncatedText text={user.name ?? ""} className="text-label font-medium" />
-                      <TruncatedText text={user.email ?? ""} className="text-dense text-muted-foreground" />
-                    </div>
-                  </button>
-                );
-              })
-            )}
-          </div>
-        </ScrollArea>
+        <div
+          className="border-t border-border/30 p-1"
+          style={{ height: MEMBER_LIST_BOX_HEIGHT }}
+        >
+          {filteredUsers.length === 0 ? (
+            <p className="text-label text-muted-foreground text-center py-8 px-4">
+              {availableUsers.length === 0
+                ? "Everyone in your org is already in this channel."
+                : "No people match your search."}
+            </p>
+          ) : (
+            <ChatUserVirtualList
+              users={filteredUsers}
+              rowHeight={MEMBER_ROW_HEIGHT}
+              listHeight={MEMBER_LIST_BOX_HEIGHT - MEMBER_LIST_PADDING}
+              ariaLabel="People you can add to this channel"
+              renderUser={renderUser}
+            />
+          )}
+        </div>
 
         {isAdmin && (
           <div className="px-4 py-3 border-t border-border/30">

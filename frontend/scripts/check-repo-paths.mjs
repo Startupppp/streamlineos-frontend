@@ -14,7 +14,7 @@
 
 import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const SCRIPT_DIR = fileURLToPath(new URL(".", import.meta.url));
 const MARKER = join("src", "modules", "rbac", "permissions");
@@ -121,3 +121,45 @@ export function runScanDirSelfTest(assert) {
     isExcludedScanDir("build") === false,
   );
 }
+
+function runSelfTest() {
+  let passed = 0;
+  const failures = [];
+  const assert = (label, condition) => {
+    if (condition) passed++;
+    else failures.push(label);
+  };
+
+  assert("the backend repository resolves in this checkout", backendAvailable);
+  assert(
+    "the resolved backend root actually carries the marker",
+    backendAvailable && existsSync(join(BACKEND_ROOT, MARKER)),
+  );
+  assert("backendPath composes onto the resolved root", backendAvailable && backendPath("src").endsWith(join("src")));
+  assert("no override was needed on this layout", backendRootWasOverridden === false);
+  assert(
+    "the unreachable reason names the marker it searched for",
+    backendUnreachableReason().includes(MARKER),
+  );
+  assert(
+    "a candidate list is generated for every level up to the filesystem root",
+    candidateRoots().length >= 2 && candidateRoots().some((c) => c.endsWith("streamlineos-backend")),
+  );
+  assert(
+    "a directory without the marker is not accepted as a backend root",
+    isBackendRoot(SCRIPT_DIR) === false,
+  );
+  runScanDirSelfTest(assert);
+
+  if (failures.length > 0) {
+    for (const f of failures) console.error(`  FAIL: ${f}`);
+    console.error(`check-repo-paths self-tests: ${failures.length} failed, ${passed} passed`);
+    process.exit(1);
+  }
+  console.log(`check-repo-paths self-tests: ${passed} passed`);
+  process.exit(0);
+}
+
+const invokedDirectly =
+  process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (invokedDirectly && process.argv.includes("--self-test")) runSelfTest();

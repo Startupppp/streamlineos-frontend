@@ -30,6 +30,7 @@ export function useSprints(
 export function useCreateSprint(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation("build:sprints:manage", {
+    ...options,
     mutationKey: ["projects", "sprints", "create"],
     mutationFn: ({ projectId, ...data }: CreateSprintInput) =>
       apiClient.post<Sprint>(`/build/${projectId}/sprints`, data),
@@ -38,7 +39,6 @@ export function useCreateSprint(options?: Parameters<typeof useMutation>[0]) {
         queryKey: queryKeys.projects.sprints(variables.projectId),
       });
     },
-    ...options,
   });
 }
 
@@ -48,6 +48,7 @@ export function useUpdateSprint(
 ) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation("build:sprints:manage", {
+    ...options,
     mutationKey: ["projects", "sprints", "update"],
     mutationFn: ({ sprintId, ...data }: UpdateSprintInput) =>
       apiClient.patch<{ success: boolean }>(
@@ -59,6 +60,5 @@ export function useUpdateSprint(
         queryKey: queryKeys.projects.sprints(projectId),
       });
     },
-    ...options,
   });
 }

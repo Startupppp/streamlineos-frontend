@@ -23,7 +23,7 @@ export function useBugs(projectId?: number, filters?: BugFilters) {
   if (filters?.q) params["q"] = filters.q;
 
   return useQuery<Bug[]>({
-    queryKey: queryKeys.projects.bugs.list(projectId, filters),
+    queryKey: queryKeys.projects.bugs.list(projectId ?? 0, filters),
     queryFn: ({ signal }) => apiClient.get<Bug[]>(`/build/${projectId}/bugs`, params, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,

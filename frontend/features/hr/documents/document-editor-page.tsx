@@ -4,7 +4,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useRichDocument, useUpdateRichDocument, usePublishRichDocument } from "@/hooks/api/hr";
-import { TiptapEditor } from "@/components/editor/tiptap-editor";
+import dynamic from "next/dynamic";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -17,6 +17,11 @@ import Link from "next/link";
 import { UnsavedChangesDialog } from "@/components/ui/unsaved-changes-dialog";
 import { useUnsavedChangesGuard } from "@/hooks/common/use-unsaved-changes-guard";
 import { ErrorState } from "@/components/shared/error-state";
+
+const TiptapEditor = dynamic(
+  () => import("@/components/editor/tiptap-editor").then((m) => ({ default: m.TiptapEditor })),
+  { ssr: false, loading: () => <Skeleton className="h-96 w-full rounded-lg" /> },
+);
 
 export function DocumentEditorPage() {
   const params = useParams<{ documentId: string }>();

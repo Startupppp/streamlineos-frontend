@@ -157,13 +157,13 @@ export function useCreateProject(
 ) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<Project, Error, CreateProjectInput>("build:create", {
+    ...options,
     mutationKey: ["projects", "create"],
     mutationFn: (data: CreateProjectInput) =>
       apiClient.post<Project>("/build", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
     },
-    ...options,
   });
 }
 
@@ -301,13 +301,13 @@ export function useDeleteProject(
 ) {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, { projectId: number }>({
+    ...options,
     mutationKey: ["projects", "delete"],
     mutationFn: ({ projectId }) =>
       apiClient.delete<{ success: boolean }>(`/build/${projectId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
     },
-    ...options,
   });
 }
 
@@ -327,6 +327,7 @@ export function useArchiveProject(
     Error,
     { projectId: number; restore?: boolean }
   >({
+    ...options,
     mutationKey: ["projects", "archive"],
     mutationFn: ({ projectId, restore }) =>
       apiClient.patch<{ success: boolean }>(`/build/${projectId}`, {
@@ -338,7 +339,6 @@ export function useArchiveProject(
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
     },
-    ...options,
   });
 }
 
@@ -368,6 +368,7 @@ export function useAddProjectMember(
 ) {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<ProjectMember, Error, AddProjectMemberInput>("build:manage", {
+    ...options,
     mutationKey: ["projects", "members", "add"],
     mutationFn: ({ projectId, ...data }: AddProjectMemberInput) =>
       apiClient.post<ProjectMember>(`/build/${projectId}/members`, data),
@@ -376,7 +377,6 @@ export function useAddProjectMember(
         queryKey: queryKeys.projects.members(variables.projectId),
       });
     },
-    ...options,
   });
 }
 
@@ -403,6 +403,7 @@ export function useUpdateProjectMemberRole(
     Error,
     UpdateMemberRoleInput
   >({
+    ...options,
     mutationKey: ["projects", "members", "update-role"],
     mutationFn: ({ projectId, memberUserId, role }) =>
       apiClient.patch<{ userId: string; role: string | null }>(
@@ -414,7 +415,6 @@ export function useUpdateProjectMemberRole(
         queryKey: queryKeys.projects.members(variables.projectId),
       });
     },
-    ...options,
   });
 }
 

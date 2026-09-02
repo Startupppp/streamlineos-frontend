@@ -58,6 +58,20 @@ export const useNotifications = (
   });
 };
 
+/**
+ * `/notifications` orders by `id DESC` and continues with `id < cursor`, so the
+ * only safe continuation is the lowest id the page carried. Reading
+ * `page[page.length - 1].id` assumes the rows arrive in sort order; a page that
+ * disagrees skips every row between the last element and the true minimum.
+ */
+function lowestNotificationId(page: Notification[]): number | undefined {
+  let lowest: number | undefined;
+  for (const item of page) {
+    if (lowest === undefined || item.id < lowest) lowest = item.id;
+  }
+  return lowest;
+}
+
 export const useInfiniteNotifications = (
   params?: Omit<NotificationListParams, "cursor">,
   options?: { enabled?: boolean },
@@ -83,7 +97,7 @@ export const useInfiniteNotifications = (
         signal,
       ),
     getNextPageParam: (lastPage) =>
-      lastPage.length < limit ? undefined : lastPage[lastPage.length - 1]?.id,
+      lastPage.length < limit ? undefined : lowestNotificationId(lastPage),
     staleTime: 30_000,
     enabled: !!orgId && (options?.enabled ?? true),
   });
