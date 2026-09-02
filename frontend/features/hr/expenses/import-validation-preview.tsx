@@ -12,6 +12,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
+const PREVIEW_PAGE_SIZE = 50;
+
 const ALLOWED_CATEGORIES = [
   "Travel", "Food", "Office Supplies", "Software", "Hardware", "Marketing",
   "Entertainment", "Utilities", "Rent", "Insurance", "Salary", "Miscellaneous", "Other",
@@ -78,7 +80,7 @@ export function ImportValidationPreview({
   const invalidCount = parsedRows.filter((r) => !r.valid).length;
 
   const displayRows = useMemo<ParsedRowWithIndex[]>(
-    () => parsedRows.slice(0, 50).map((row, idx) => ({ ...row, _index: idx })),
+    () => parsedRows.map((row, idx) => ({ ...row, _index: idx })),
     [parsedRows],
   );
 
@@ -181,12 +183,8 @@ export function ImportValidationPreview({
               getRowKey={(row) => row._index}
               className="h-48 text-xs"
               rowClassName={(row) => row.valid ? "" : "bg-destructive/5"}
+              pagination={{ pageSize: PREVIEW_PAGE_SIZE }}
             />
-            {parsedRows.length > 50 && (
-              <p className="text-xs text-muted-foreground mt-1 text-center">
-                Showing first 50 of {parsedRows.length} rows
-              </p>
-            )}
           </div>
         </>
       )}

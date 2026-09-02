@@ -4,7 +4,7 @@
 
 **Blocked by:** 25.
 
-**Status:** partially-complete — 4 of 7 closed, 2 left open with a precise remainder (both advanced materially this session; neither closeable here).
+**Status:** partially-complete — 6 of 7 closed. Box 4 closed this session; box 6 remains open and is blocked on a real browser (ticket 26's).
 
 - [x] Request waterfalls are eliminated where the dependency is known in advance.
   Evidence: 5 avoidable waterfalls fixed (calendar external events, whiteboard deep link, ticket
@@ -27,32 +27,42 @@
   dynamic boundary. Before: recharts eager on 3 routes, tiptap on 1, react-easy-crop on 1,
   papaparse on 2. Negative control run: adding `ably` to the list fails the gate with the exact
   offending files, so the gate detects a regression rather than passing vacuously.
-- [ ] Large chat, calendar, inbox, notification, directory, HR and Build collections are virtualized or incrementally rendered while preserving accessibility and cursor correctness.
-  PARTIAL: six of the seven named modules are covered — inbox was another agent's territory this
-  session and was not touched. The cross-cutting fix is `components/ui/data-table.tsx`: it attached
-  `getPaginationRowModel()` with a 50-row default but gated the pagination control on
-  `pagination !== undefined`, so **380 of 476 call sites silently rendered 50 rows and made row 51+
-  unreachable** — a data-loss bug, not just a perf one. Now the control appears whenever the table
-  slices, so every row is reachable and the mounted count stays bounded. That bounds 79 of the 97
-  DataTables in the six trees (34 of which feed a genuinely unbounded array). Also closed:
-  `features/chat/channel-sidebar.tsx` + `channel-archived-section.tsx` (the sidebar mounted 2N
-  entries — rail plus section — and `useChatChannels` now drains *every* cursor page, so N is the
-  member's whole channel set), `features/chat/message-list.tsx` via a tail render window in
-  `use-message-panel-data.ts`, and the `features/hr/employees` card grid.
-  Accessibility was added, not traded: `aria-rowcount`/`aria-rowindex` on DataTable so AT reports
-  the true total rather than the page, `role="list"`/`aria-posinset`/`aria-setsize` on the channel
-  lists, and a `Pagination` landmark on `DataTablePagination`. `check:icon-labels` → exit 0.
-  Cursor correctness is proved, not assumed: all cursor surfaces page at ≤50 so no second pager
-  appears; a next-cursor page renders from its first row with no skip or repeat; a sort resets to
-  the first row; and a filter that shrinks the data clamps a stale page index instead of stranding
-  the reader on an empty one (negative control confirms the clamp is load-bearing).
-  Verified stale claims from the previous report: `chat-search-dialog.tsx` is NOT unbounded (the
-  backend caps at 20/10/10), and `useChatChannels` no longer drops `nextCursor` — it now drains
-  every page, which made windowing the sidebar mandatory rather than optional.
-  REMAINS: `features/chat/{thread-panel,saved-messages-panel,shared-files-panel}.tsx` (accumulating
-  infinite queries), `features/build/views/gantt-view.tsx` (up to 500 SVG row groups),
-  `features/build/inbox/inbox-list.tsx` (100 unwindowed rows), and the CSV import/preview tables
-  which are bounded by upload size rather than tenant size.
+- [x] Large chat, calendar, inbox, notification, directory, HR and Build collections are virtualized or incrementally rendered while preserving accessibility and cursor correctness.
+  Evidence: all seven named module families are now bounded, and every bound is asserted by a test
+  that also proves row 51+ is still reachable. The cross-cutting fix stays
+  `components/ui/data-table.tsx` (it sliced to 50 and hid the pager, so **380 of 476 call sites**
+  rendered 50 rows and made row 51+ unreachable — data loss, not a perf bug).
+  Closed this session, each with a render-count/row-count test and a negative control:
+  `features/chat/{thread-panel,saved-messages-panel,shared-files-panel,channel-members-section}.tsx`
+  via a shared `features/chat/panel-render-window.ts` (25-row window, reveal-held-before-fetch);
+  `features/build/views/gantt-view.tsx` via a scroll-band window
+  (`features/build/views/gantt/gantt-row-window.ts` + `gantt-ticket-rows.tsx`) — 500 SVG row groups
+  became ~24; and `features/build/inbox/inbox-list.tsx`, which was the opposite defect — a single
+  `limit: 100` read with no cursor, so notification 101 was unreachable and the Mentions tab
+  filtered that fixed page client-side. It now reads `useInfiniteNotifications` and windows.
+  CSV preview: `features/hr/expenses/import-validation-preview.tsx` pre-sliced to 50 before the
+  table saw the rows, so an invalid line 51 could never be shown — it now hands every row to
+  `DataTable`, which pages them. `features/hr/recruitment/candidates/bulk-import-page.tsx` dropped
+  rows past 500 silently; it now says so. The other 7 CSV previews were checked and are already
+  bounded (5 slice to 5/10 deliberately, 2 hand `DataTable` a `pagination` prop).
+  `features/inbox/**` — the one module family the previous session could not touch — was read (not
+  edited, another territory) and is already virtualized by `features/inbox/inbox-virtual-list.tsx`
+  (react-window), so the box's seventh family is covered.
+  Accessibility was added, not traded: `role="list"`/`role="listitem"` with `aria-posinset` and a
+  true `aria-setsize` (`-1`, the ARIA value for an unknown total, while a cursor still has pages) on
+  every windowed list, and the Gantt rows gained `role`, `aria-label`, `tabIndex` and Enter/Space
+  activation they never had — a windowed SVG row is now keyboard-reachable where the unwindowed one
+  was not. `check:icon-labels` → exit 0.
+  Cursor correctness: a reveal of already-held rows fires **no** cursor request (asserted), a fetch
+  happens only when nothing is held, changing the tab or the thread or the channel resets the window
+  (asserted), and the tail window covers every index exactly once as it widens (asserted).
+  `features/__tests__/cursor-page-size-bounds.test.ts` turns the previous session's hand-read
+  "all ~20 PAGE_SIZE constants are ≤ 50" into an executed gate: it reads `DataTable`'s own default
+  out of the source, scans 61 files that pair a `<DataTable` with a cursor pager, resolves 27
+  page-size constants, and carries a negative control proving an 80-row cursor page is caught.
+  Proofs: `jest features/(chat|build|hr|notifications|__tests__) components/ui/__tests__`
+  → **60 suites / 526 tests pass**. Negative controls run and read: widening the chat panel window
+  fails 10 of 16 assertions; widening the Gantt overscan fails 2 of 8.
 - [x] Images, fonts and eligible static assets are optimized; text responses use HTTP compression; upload and media transformation stay asynchronous.
   Evidence: `grep -rn "<img "` over app/features/components → **0** raw image tags; 31 `next/image`
   call sites; fonts via `next/font/google` in `app/layout.tsx` (self-hosted, no render-blocking

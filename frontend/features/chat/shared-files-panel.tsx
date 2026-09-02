@@ -9,6 +9,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import React from "react";
 import { useChannelFiles } from "@/hooks/api";
 import { ChatAttachment } from "./chat-attachment";
+import { panelRevealLabel, usePanelRenderWindow } from "./panel-render-window";
 
 const FilesPanelCloseButton = React.forwardRef<
   HTMLButtonElement,
@@ -25,6 +26,12 @@ const FilesPanelCloseButton = React.forwardRef<
 export function SharedFilesPanel({ channelId, onClose }: { channelId: number; onClose: () => void }) {
   const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useChannelFiles(channelId);
   const files = useMemo(() => data?.pages.flatMap((p) => p.files) ?? [], [data]);
+  const total = files.length;
+  const renderWindow = usePanelRenderWindow(total, hasNextPage === true, fetchNextPage, channelId);
+  const visibleFiles = useMemo(
+    () => files.slice(0, renderWindow.visibleCount),
+    [files, renderWindow.visibleCount],
+  );
 
   return (
     <div className="flex flex-col h-full w-80 border-l border-border/40 bg-card/50">
@@ -59,25 +66,34 @@ export function SharedFilesPanel({ channelId, onClose }: { channelId: number; on
           </div>
         ) : (
           <div className="py-2">
-            {files.map((file) => (
-              <div key={file.id} className="px-2 py-1">
-                <ChatAttachment
-                  channelId={channelId}
-                  attachmentId={file.id}
-                  fileName={file.fileName}
-                  mimeType={file.mimeType}
-                  fileSize={file.fileSize}
-                />
-              </div>
-            ))}
-            {hasNextPage && (
+            <div role="list" aria-label="Shared files">
+              {visibleFiles.map((file, index) => (
+                <div
+                  key={file.id}
+                  role="listitem"
+                  aria-posinset={index + 1}
+                  aria-setsize={hasNextPage ? -1 : total}
+                  className="px-2 py-1"
+                >
+                  <ChatAttachment
+                    channelId={channelId}
+                    attachmentId={file.id}
+                    fileName={file.fileName}
+                    mimeType={file.mimeType}
+                    fileSize={file.fileSize}
+                  />
+                </div>
+              ))}
+            </div>
+            {renderWindow.hasMore && (
               <div className="flex justify-center py-3">
                 <button
-                  onClick={() => fetchNextPage()}
+                  type="button"
+                  onClick={renderWindow.onLoadMore}
                   disabled={isFetchingNextPage}
                   className="text-dense text-primary hover:underline disabled:opacity-50"
                 >
-                  {isFetchingNextPage ? "Loading..." : "Load more"}
+                  {panelRevealLabel(renderWindow, total, isFetchingNextPage, "Load more")}
                 </button>
               </div>
             )}

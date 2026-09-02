@@ -1,7 +1,7 @@
 # Ticket 27 — perceived speed, lazy loading, virtualization
 
-**4 of 7 boxes closed. 2 partial, 1 partially blocked.** Everything below was run and read;
-numbers are from the command named beside them.
+**6 of 7 boxes closed** (box 4 closed in session 3, below; box 6 remains open and needs a real
+browser). Everything below was run and read; numbers are from the command named beside them.
 
 ---
 
@@ -431,3 +431,153 @@ nothing I touched. Both the test and `lib/utils.ts` are committed and unmodified
 
 Nothing outside `features/**` and `components/**` was edited. `features/inbox/**`, `features/mail/**`,
 `features/**/ai*`, `lib/**`, `hooks/api/**`, `app/**` and `next.config.ts` were read only.
+
+---
+
+# Session 3 — box 4 closed
+
+**Territory:** `features/chat/**`, `features/build/**` and the CSV preview tables.
+**Not touched:** `components/**` (ticket 30), `lib/` and `hooks/api/` (ticket 28),
+`features/inbox|mail/**`, `app/**`, `next.config.ts` (ticket 26). `features/inbox/**` was **read**
+to settle whether it needed anything; it did not.
+
+## The first thing I did was decide, per surface, which defect it had
+
+The previous session's finding — that `DataTable` was *truncating*, not *over-rendering* — is the
+reason each surface got audited before it got windowed. Two of the five remaining surfaces turned
+out to be the opposite of what "virtualize" implies, and windowing them would have made them worse.
+
+| Surface | Actual defect | Fix |
+|---|---|---|
+| `features/chat/{thread,saved-messages,shared-files}-panel.tsx` | unbounded on restore — `useInfiniteQuery` pages accumulate, so re-opening a panel mounts every page ever fetched | 25-row window, reveal-held-before-fetch |
+| `features/chat/channel-members-section.tsx` | unbounded — `channel.members` rides the channel payload with no cursor and no cap | same window, per group |
+| `features/build/views/gantt-view.tsx` | unbounded — one SVG `<g>` (4 nodes) per dated ticket, up to `BOARD_AUTOLOAD_LIMIT` = 500 | scroll-band window |
+| `features/build/inbox/inbox-list.tsx` | **truncating** — one `limit: 100` read, no cursor, no pager: notification 101 unreachable | cursor read + window |
+| `features/hr/expenses/import-validation-preview.tsx` | **truncating** — sliced to 50 *before* the table, so an invalid line 51 could never be shown | hand every row to `DataTable`, let it page |
+| the other 7 CSV previews | already bounded | nothing |
+
+Backend caps were read, not assumed: saved messages 30/page (`chat-saved.controller.ts`, capped at
+100), channel files 20/page (`chat-channel-members-implementation.ts:460`), thread replies
+`pageSizeField(50)`. All ≤ 50, so no surface sprouts a second pager.
+
+## What each fix is
+
+**`features/chat/panel-render-window.ts`** — one 25-row window shared by the four chat panels.
+Two things make it more than a `.slice()`:
+
+- **Reveal held rows before fetching.** A click widens the window if anything is held and only asks
+  the server for another page when nothing is. One click therefore never both fetches a page and
+  mounts it, and nothing is skipped between a reveal and the fetch after it. Asserted both ways:
+  revealing fires **0** `fetchNextPage` calls, and a panel with nothing held fires exactly **1**.
+- **The window resets on the surface's identity, in render, not in an effect.** Switching thread or
+  channel goes back to the newest page (asserted). Written as a render-phase state adjustment rather
+  than `useEffect` + `setState`, so it costs no extra commit and trips no `react-hooks` warning.
+
+Saved messages and shared files window the head (newest-first); thread replies window the **tail**,
+because the thread reads oldest-first and the newest reply is the one you came for. The tail window
+covers every index exactly once as it widens — proved by walking it.
+
+**`features/build/views/gantt/gantt-row-window.ts` + `gantt-ticket-rows.tsx`** — rows are positioned
+absolutely by `computeBarGeometry`, so only the ones inside the scrolled band need to exist. The SVG
+keeps its full height and the scrollbar its length, so nothing moves. 500 rows → **~24 mounted**,
+and scrolling to row 200 mounts it. Writing the band test found a real bug in my own first cut:
+`firstRow` was not clamped to `rowCount`, so a scroll past the content produced `firstRow` **5002**
+against a 500-row board. Caught by "never runs past the last row", fixed before it shipped.
+
+**`features/build/inbox/inbox-list.tsx`** — this was the data-loss one. `useNotifications(...,
+limit: 100)` is a plain `useQuery` against a cursor route, so notification 101 did not exist as far
+as the Build inbox was concerned, and the Mentions tab filtered that same fixed page client-side —
+a mention older than the newest 100 notifications was unreachable, and the surface said "No
+mentions" rather than "there are more pages". It now reads `useInfiniteNotifications`
+(cursor-correct: its `getNextPageParam` uses the *lowest* id on the page, not the last element), and
+the empty state no longer fires while `hasNextPage` is true.
+
+## Accessibility — added, not traded
+
+Every windowed list is a real `role="list"` with `role="listitem"` rows carrying `aria-posinset`.
+`aria-setsize` is the true accumulated total, and **`-1` — the ARIA value for an unknown total —
+while the cursor still has pages**, rather than a number that is confidently wrong. The thread
+panel's tail window numbers a reply by its position in the whole thread (`aria-posinset="476"` for
+the first visible row of 500), not by its position in the window.
+
+The Gantt gained semantics it never had: its rows were bare `<g onClick>` with no role, no name and
+no keyboard path at all. They are now `role="listitem"` inside a named list, with `aria-label`,
+`tabIndex` and Enter/Space activation — a windowed row is keyboard-reachable where the unwindowed
+one was not. `check:icon-labels` → exit 0 (3806 files).
+
+## Cursor page sizes are now a test, not a reading
+
+`features/__tests__/cursor-page-size-bounds.test.ts` replaces the previous session's hand-read
+"all ~20 `PAGE_SIZE` constants are ≤ 50". It reads `DataTable`'s own default out of
+`components/ui/data-table.tsx` (so it follows the primitive), scans **61** files that pair a
+`<DataTable` with a cursor pager, resolves **27** page-size constants through `limit:`/`pageSize:`,
+and asserts none exceeds the table's effective window. **0 violations.** It carries a negative
+control: a synthetic surface with `const PAGE_SIZE = 80` is reported, and the same surface with
+`pagination={{ pageSize: 80 }}` is not.
+
+It resolves *named constants only*, deliberately. A first cut that also read inline `limit: 100`
+literals flagged 5 files; I read all five and every one was a false positive (the literal belonged to
+a different query in the same file — an aging widget, an export mutation). A gate that cries wolf
+five times out of five is worse than no gate. The three I checked by hand are genuinely fine:
+`general-ledger-page.tsx` pages at `GL_LIMIT = 50`, `vendor-payments-page.tsx` at `PAGE_SIZE = 25`,
+`customers-page.tsx` passes `pagination={{ pageSize: 100 }}` to match its own 100-row cursor page.
+
+## Gates run (output read)
+
+| Command | Exit | Number |
+|---|---|---|
+| `jest --runInBand --testPathPattern="features/(chat\|build\|hr\|notifications\|__tests__)\|components/ui/__tests__"` | 0 | **60 suites / 526 tests pass** |
+| negative control — chat panel window widened to 5000 | 1 | 10 of 16 fail |
+| negative control — Gantt overscan widened to 5000 | 1 | 2 of 8 fail |
+| `eslint` over all 21 files I touched | 0 | 0 errors, 3 warnings — all 3 pre-existing `react-hooks/refs` in `inbox-list.tsx`'s ref block, untouched by this work |
+| `pnpm check:icon-labels` | 0 | 3806 files, 0 findings |
+| `pnpm check:query-scope` | 0 | 5228 files, 0 findings |
+| `pnpm check:effect-fetches` | 0 | 5228 files, 0 findings |
+| `pnpm check:over-300` | 0 | 519 of 5224 (baseline 519) — was **521, red**, when I started |
+| `pnpm check:file-sizes` | 1 | 3 files over 500, **none mine** — see below |
+| `pnpm type-check` | 2 | 70 errors, **none in a file I touched** — see below |
+
+## Red that is NOT mine
+
+- **`type-check` went 0 → 1 → 70 errors during this session**, all from ticket 28's in-flight
+  `hooks/api/**` work landing under me. The signature is unmistakable:
+  `Property 'data' does not exist on type 'NonNullable<NoInfer<TQueryFnData>>'` (×many) plus
+  `OrgMember` / `Role` / `Payment` assignability failures in the callers of `hooks/api/roles.ts`,
+  `hooks/api/access/*`, `hooks/api/accounting/banking.ts`, `hooks/api/subscription.ts`.
+  26 files are affected; **zero** are files I wrote or edited. Two sit under `features/build/`
+  (`approvals/project-approvals-page.tsx`, `members/pm-access-sheet.tsx`) — nominally my tree, but
+  both fail purely on a hook signature I am not allowed to touch, so they belong to ticket 28.
+- **`check:file-sizes`**: `hooks/api/notifications-inbox.ts` (534), `hooks/api/accounting/banking.ts`
+  (501), `features/hr/cases/cases-page-content.tsx` (501). None mine; the gate was already red on the
+  first of these when I started.
+
+## Cross-territory findings
+
+- **Ticket 28 — `useNotifications` is a `useQuery` against a cursor route.** Any caller passing a
+  `limit` to it silently truncates and offers no way past that limit. The Build inbox was one; the
+  hook itself invites the mistake. Worth either documenting or narrowing.
+- **Ticket 28 — `useHrEvents` (`hooks/api/hr/enterprise-ops-event-stream.ts:51`) sends no `limit`,**
+  so its page size is whatever the backend defaults to. `features/hr/enterprise/ops/event-stream/`
+  feeds that page straight into a `DataTable` beside a `CursorPageControls`; if the server default is
+  above 50 that surface has two pagers today. Not checkable from the frontend, and not my tree.
+- **`features/mail/mail-reading-pane.tsx` and `components/assistant/ask-os-chat-view.tsx`** remain
+  unwindowed (variable-height, expand-on-click). Neither is one of box 4's seven module families and
+  both are other territories, so they are noted, not fixed.
+
+## Files changed (21) — all inside `frontend/`
+
+**New source (5)** `features/chat/panel-render-window.ts` · `features/chat/thread-message.tsx` ·
+`features/build/views/gantt/gantt-row-window.ts` · `features/build/views/gantt/gantt-ticket-rows.tsx` ·
+`features/build/inbox/inbox-render-window.ts`
+
+**New tests (8)** `features/chat/panel-render-window.test.ts` ·
+`features/chat/chat-side-panels-bounded.test.tsx` · `features/chat/channel-members-section.test.tsx` ·
+`features/build/views/gantt/gantt-row-window.test.ts` · `features/build/views/gantt-view-rows.test.tsx` ·
+`features/build/inbox/inbox-list-bounded.test.tsx` ·
+`features/hr/expenses/import-validation-preview-rows.test.tsx` ·
+`features/__tests__/cursor-page-size-bounds.test.ts`
+
+**Modified (8)** `features/chat/{thread-panel,saved-messages-panel,shared-files-panel,channel-members-section}.tsx` ·
+`features/build/views/gantt-view.tsx` · `features/build/inbox/inbox-list.tsx` ·
+`features/hr/expenses/import-validation-preview.tsx` ·
+`features/hr/recruitment/candidates/bulk-import-page.tsx`

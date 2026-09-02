@@ -23,6 +23,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 
+const MAX_IMPORT_ROWS = 500;
+
 const CANDIDATE_FIELDS = [
   { key: "firstName", label: "First Name", required: true },
   { key: "lastName", label: "Last Name", required: true },
@@ -157,8 +159,13 @@ export function BulkImportPage() {
         }
       }
 
+      if (parsedRows.length > MAX_IMPORT_ROWS)
+        toast.warning(
+          `That file has ${parsedRows.length} rows and ${MAX_IMPORT_ROWS} is the most one import takes. The first ${MAX_IMPORT_ROWS} are loaded; split the file to bring in the rest.`,
+        );
+
       setHeaders(parsedHeaders);
-      setRows(parsedRows.slice(0, 500));
+      setRows(parsedRows.slice(0, MAX_IMPORT_ROWS));
       setFieldMap(autoMap);
       setStep("map");
     } catch {

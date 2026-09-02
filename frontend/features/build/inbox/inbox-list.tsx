@@ -7,10 +7,19 @@ import { ErrorState } from "@/components/shared/error-state";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCheckIcon } from "@animateicons/react/lucide";
-import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead } from "@/hooks/api/notifications";
+import {
+  useInfiniteNotifications,
+  useMarkNotificationRead,
+  useMarkAllNotificationsRead,
+} from "@/hooks/api/notifications";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { Notification, NotificationSection } from "@/types/notifications";
 import { InboxNotificationItem } from "./inbox-notification-item";
+import {
+  INBOX_FETCH_PAGE_SIZE,
+  INBOX_RENDER_PAGE_SIZE,
+  resolveInboxVisibleCount,
+} from "./inbox-render-window";
 
 type InboxTab = NotificationSection | "MENTIONS";
 
@@ -90,10 +99,22 @@ export function InboxList({
 
   const querySection: NotificationSection = activeTab === "MENTIONS" ? "ALL" : activeTab;
 
-  const { data, isLoading, isError, error, refetch } = useNotifications(
-    { section: querySection, category: activeTab === "MENTIONS" ? "PROJECTS" : undefined, limit: 100 },
-    { staleTime: 30_000 },
-  );
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useInfiniteNotifications({
+    section: querySection,
+    category: activeTab === "MENTIONS" ? "PROJECTS" : undefined,
+    limit: INBOX_FETCH_PAGE_SIZE,
+  });
+
+  const [pagesShown, setPagesShown] = React.useState(1);
 
   const { mutate: markRead } = useMarkNotificationRead();
   const { mutate: markAllRead, isPending: isMarkingAll } = useMarkAllNotificationsRead();
@@ -108,6 +129,7 @@ export function InboxList({
   function handleTabChange(value: string) {
     if (isInboxTab(value)) {
       setActiveTab(value);
+      setPagesShown(1);
       onFilterChange?.();
     }
   }
@@ -120,10 +142,23 @@ export function InboxList({
     refetch();
   }
 
-  const rawNotifications = data ?? [];
-  const notifications = activeTab === "MENTIONS"
-    ? rawNotifications.filter(isMentionNotification)
-    : rawNotifications;
+  const rawNotifications = React.useMemo(() => data?.pages.flat() ?? [], [data]);
+  const notifications = React.useMemo(
+    () => (activeTab === "MENTIONS" ? rawNotifications.filter(isMentionNotification) : rawNotifications),
+    [activeTab, rawNotifications],
+  );
+  const total = notifications.length;
+  const visibleCount = resolveInboxVisibleCount(total, pagesShown);
+  const heldCount = total - visibleCount;
+  const visibleNotifications = React.useMemo(
+    () => notifications.slice(0, visibleCount),
+    [notifications, visibleCount],
+  );
+
+  function handleLoadMore() {
+    setPagesShown((p) => p + 1);
+    if (heldCount === 0) fetchNextPage();
+  }
   const hasUnread = notifications.some((n) => !n.isRead);
   const firstNotification = notifications[0] ?? null;
   const selectedStillVisible =
@@ -201,7 +236,7 @@ export function InboxList({
           />
         )}
 
-        {!isLoading && !isError && notifications.length === 0 && (
+        {!isLoading && !isError && total === 0 && !hasNextPage && (
           <EmptyState
             illustrationPreset="mail"
             title={
@@ -223,16 +258,40 @@ export function InboxList({
           />
         )}
 
-        {!isLoading && !isError && notifications.length > 0 && (
+        {!isLoading && !isError && (total > 0 || hasNextPage) && (
           <div>
-            {notifications.map((notification) => (
-              <InboxNotificationItem
-                key={notification.id}
-                notification={notification}
-                isSelected={selectedId === notification.id}
-                onSelect={handleSelect}
-              />
-            ))}
+            <div role="list" aria-label="Notifications">
+              {visibleNotifications.map((notification, index) => (
+                <div
+                  key={notification.id}
+                  role="listitem"
+                  aria-posinset={index + 1}
+                  aria-setsize={hasNextPage ? -1 : total}
+                >
+                  <InboxNotificationItem
+                    notification={notification}
+                    isSelected={selectedId === notification.id}
+                    onSelect={handleSelect}
+                  />
+                </div>
+              ))}
+            </div>
+            {heldCount > 0 || hasNextPage ? (
+              <div className="flex justify-center py-3">
+                <button
+                  type="button"
+                  onClick={handleLoadMore}
+                  disabled={isFetchingNextPage}
+                  className="text-dense text-primary hover:underline disabled:opacity-50"
+                >
+                  {heldCount > 0
+                    ? `Show ${Math.min(heldCount, INBOX_RENDER_PAGE_SIZE)} more (${visibleCount} of ${total})`
+                    : isFetchingNextPage
+                      ? "Loading…"
+                      : "Load older notifications"}
+                </button>
+              </div>
+            ) : null}
           </div>
         )}
       </div>

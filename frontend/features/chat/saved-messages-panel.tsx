@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useSavedMessages, useUnsaveMessage, useChatOrgUsers } from "@/hooks/api";
 import { getInitials, formatMessageTime, buildChatUserMap, resolveChatUserName } from "./chat-helpers";
+import { panelRevealLabel, usePanelRenderWindow } from "./panel-render-window";
 import type { SavedMessage } from "@/types/chat";
 
 const UnsaveButton = React.forwardRef<
@@ -135,7 +136,14 @@ export function SavedMessagesPanel({
     }
   }, [unsave]);
 
-  const handleLoadMore = useCallback(() => fetchNextPage(), [fetchNextPage]);
+  const total = items.length;
+  const renderWindow = usePanelRenderWindow(total, hasNextPage === true, fetchNextPage);
+  const visibleItems = useMemo(
+    () => items.slice(0, renderWindow.visibleCount),
+    [items, renderWindow.visibleCount],
+  );
+
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   return (
     <div className="flex flex-col h-full w-80 border-l border-border/40 bg-card/50">
@@ -165,7 +173,7 @@ export function SavedMessagesPanel({
           <div className="flex flex-col items-center justify-center py-12 px-4">
             <h4 className="text-label font-semibold mb-1">Could not load saved messages</h4>
             <button
-              onClick={() => void refetch()}
+              onClick={handleRetry}
               className="text-dense text-primary hover:underline mt-1"
             >
               Try again
@@ -184,23 +192,32 @@ export function SavedMessagesPanel({
           </div>
         ) : (
           <div>
-            {items.map(item => (
-              <SavedMessageCard
-                key={item.id}
-                item={item}
-                onUnsave={handleUnsave}
-                onJump={onJumpToChannel}
-                resolveUserName={resolveUserName}
-              />
-            ))}
-            {hasNextPage && (
+            <div role="list" aria-label="Saved messages">
+              {visibleItems.map((item, index) => (
+                <div
+                  key={item.id}
+                  role="listitem"
+                  aria-posinset={index + 1}
+                  aria-setsize={hasNextPage ? -1 : total}
+                >
+                  <SavedMessageCard
+                    item={item}
+                    onUnsave={handleUnsave}
+                    onJump={onJumpToChannel}
+                    resolveUserName={resolveUserName}
+                  />
+                </div>
+              ))}
+            </div>
+            {renderWindow.hasMore && (
               <div className="flex justify-center py-3">
                 <button
-                  onClick={handleLoadMore}
+                  type="button"
+                  onClick={renderWindow.onLoadMore}
                   disabled={isFetchingNextPage}
                   className="text-dense text-primary hover:underline disabled:opacity-50"
                 >
-                  {isFetchingNextPage ? "Loading..." : "Load more"}
+                  {panelRevealLabel(renderWindow, total, isFetchingNextPage, "Load more")}
                 </button>
               </div>
             )}
