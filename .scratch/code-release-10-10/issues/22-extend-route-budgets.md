@@ -4,11 +4,35 @@
 
 **Blocked by:** 21.
 
-**Status:** ready-for-agent
+**Status:** 4 of 6 closed — 82 budgets declared (was 19), 50 measured, coverage stated as 82/3613 (2.3%). Report: `reports/22-route-budgets.md`.
 
 - [ ] Every critical route and worker batch declares a maximum database-call count, downstream-call count, application latency, response-byte and memory budget.
+  - 82 budgets (70 routes + 12 worker batches, up from 19), each declaring all five ceilings plus `maxReadPathP95Ms`, and `maxBatchSize`/`maxDurationMs` on worker batches. Every key validated against `openapi.json`.
+  - PARTIAL: **63 of 82 `maxDbCalls` values are the manifest default (10), not a counted call path** — 5 are counted query-by-query, 14 are reasoned estimates. Each entry declares which in `dbCallBasis` and the gate prints the split, so a placeholder is labelled rather than indistinguishable from a measurement. Closing this is one call-path read per route and belongs with each module's owner.
+  - PARTIAL: the critical set is asserted in `surface.criticalSelection`, not derived — there is no request-volume telemetry in the repo to rank 3,613 operations by traffic.
 - [ ] p50/p95/p99 are recorded at the release commit for each declared budget, with measured fields populated.
-- [ ] Regression tests fail when an implementation adds unexpected database calls.
-- [ ] The gate reports PARTIAL honestly when some budgets are unmeasured and only reports OK when every declared budget is measured and within ceiling.
-- [ ] Coverage is stated as a fraction of the total route surface, not as a bare pass. Silent truncation of scope reads as full coverage.
-- [ ] The read-cost guard's own coverage is stated too — it currently covers a negligible share of routes.
+  - Read-path p50/p95/p99 over 200 `EXPLAIN (ANALYZE, BUFFERS)` samples recorded for **50 of 82** budgets as `streamline_app` under RLS, with commit/database/role/tenant/profile/sample-count provenance per entry, plus a minority-tenant figure alongside. Database-call counts recorded for 2. Overall **102 of 570 declared ceilings (17.9%)**.
+  - PARTIAL: `measuredLatencyP95Ms`, `measuredDownstreamCalls`, `measuredResponseBytes` and `measuredMemoryMb` are null for all 82 — they need an HTTP-level harness. `test/helpers/seeded-e2e-app.ts` is the right vehicle but needs `AUTH_SIGNING_KEYS` (absent from `.env` here) and a seeded permission-holding user. `measure-route-budgets.mjs` deliberately refuses to fill `measuredLatencyP95Ms` from the read-path artifact — a 5.7 ms database read inside a 300 ms end-to-end ceiling would be a false pass.
+  - PARTIAL: 32 budgets have no read-cost budget behind them (8 writes, 8 provider-backed mail routes, 12 worker batches, 4 unlinked reads), so the read-path instrument has nothing to measure for them.
+- [x] Regression tests fail when an implementation adds unexpected database calls.
+  - `src/scripts/route-budget-db-calls.ts` counts statements through `QueryTelemetryTracker` (wraps `client.unsafe`, the single entry point Drizzle's postgres-js driver uses), classifying `set_config` separately so tenant setup never inflates a route's count. `assertNoDbCallRegression` ratchets at the last recorded measurement, not the ceiling; `assertWithinDbCallBudget` stays the gate's strict question. Neither raises a ceiling.
+  - Proved: `jest --testPathPattern=route-budget-db-calls` → **12 passed** (unit, no DB); `jest --config jest-e2e.json --testPathPattern=route-db-call-budget` → **5 passed** (live, real services over `scratch_perf_seed` as the app role with RLS live). It bit on first run: **`GET /notifications` issues 5 statements against a declared `maxDbCalls: 3`** — recorded, gate fails on it, not fixed here (notifications territory). `GET /notifications/unread-count` measured 4 against a ceiling of 5, matching its counted-call-path note exactly.
+  - Live coverage is **2 of 82 routes**; the mechanism is general and extending it is one `countDbCalls` call per service.
+- [x] The gate reports PARTIAL honestly when some budgets are unmeasured and only reports OK when every declared budget is measured and within ceiling.
+  - `verdict()` in `check-route-budgets.mjs` has no path from an unmeasured field to OK, and coverage is counted **per field** rather than per entry (the old gate lumped everything into "pending measurement", so 50 measured buffer figures and zero call counts read as one state). Pinned by `ok-verdict` / `partial-verdict` / `inconclusive-verdict` / `fail-verdict` in `--self-test` (exit 0, 21 checks).
+  - The read-cost runner gained the same three-way verdict (`STATUS: OK | PARTIAL | FAIL`); `--strict` / `STREAMLINE_STRICT_BUDGETS=1` makes a non-OK verdict exit 2.
+  - Live: `node src/scripts/check-route-budgets.mjs` → exit 1, FAIL on 2 measured breaches. Before the measurements landed it reported PARTIAL, exit 0.
+- [x] Coverage is stated as a fraction of the total route surface, not as a bare pass. Silent truncation of scope reads as full coverage.
+  - Every run prints `82/3613 operations carry a budget (2.3%)`, denominator recomputed from `openapi.json` rather than read from the manifest; the manifest's recorded total is printed as a drift note when the two disagree. The PARTIAL message repeats the fraction so the last line cannot be mistaken for API coverage.
+  - The read-cost runner prints its own: `Coverage: 64/70 declared read-cost budgets produced a non-empty measurement (91.4%)` with the unmeasured remainder broken out into vacuous / below-seed-floor / no-fixture / excluded.
+- [x] The read-cost guard's own coverage is stated too — it currently covers a negligible share of routes.
+  - `check-route-budgets.mjs` imports the read-cost catalog and prints `70 read-cost budgets declared (0 excluded), covering 70/3613 operations at most (1.9%); 54/82 route budgets are backed by one (65.9%)`.
+  - The import also bought two structural checks: a `readCostBudgetId` resolving to nothing is a violation (a budget that looks measured and is not), and a `maxBufferBlocks` disagreeing with the linked read-cost ceiling is a violation. Undeclared, it resolves from the link — one number, one home.
+  - **10 stale `excluded:` lines removed** ("CRM/Inventory module not seeded on scratch_e2e" is no longer true): the catalog now has zero exclusions and the runner reports `0 EXCL`.
+
+## Findings raised, not fixed
+
+- **Six read-cost budgets were passing over an empty result set** — a new vacuous-result guard catches them (`dashboard-personal-my-tasks`, `leads-assigned-to-me`, `chat-saved-messages`, `kb-page-visits-mine`, `kb-page-id-probe-sdf`, `module-access-roster`). All six are seed-fixture defects; none was waived.
+- **The status-vocabulary finding needs correcting.** `DEFAULT_PROJECT_STATUSES` and `ACTIVE_TICKET_STATUSES` both use UPPER_SNAKE and agree; the **seed scripts** write title-case. The budget mirrors production correctly and the fixture does not — retuning the budget would have made it measure a query the application never runs.
+- **Minority-tenant measurement is fixed** (`--profile=minority`): the 43 previous "failures" on the 0.18% tenant were all unreachable seed floors. Now 34/70 measured with 0 breaches at 0.90% share, 9/70 at 0.18%, both PARTIAL. `inv-stock-transactions` measures **1,223 blocks on the majority tenant against 6 on every minority tenant** for the identical query.
+- **Backend `pnpm typecheck` is red (exit 2, 20 errors), none in these paths** — schema files gained required columns while their consuming services in `hr/recruitment`, `e-sign`, `support/core`, `kb/wiki`, `build/core` and `automation` have not been updated. All are uncommitted work in the shared tree.
