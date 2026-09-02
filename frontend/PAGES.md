@@ -17,6 +17,8 @@
 - 3 routes existed on disk but were absent from this catalog: `/calendar/settings`, `/chat/moderation`, `/chat/settings` — added below.
 - Module-index sum after those additions: 600. Disk: 598. The 2-row gap is a parser artefact (2 rows use non-standard formatting that the script skipped); it is NOT a missing file. The module index is authoritative.
 
+**Route-module thinness (S11, 2026-09-02).** `pnpm check:route-thinness` now measures what the "thin route module" rule asks for, so it is a number rather than a judgement. It scans all 586 authenticated `page.tsx`/`layout.tsx` files for component state, data fetching, forms, direct `apiClient` calls and files over 300 lines, and ratchets the in-scope count at **118**; a further **67** are CRM/Inventory and are printed under OUT OF SCOPE rather than filtered away. Run it with `--list` for the per-file reasons. Owners of the 118: HR 42, Accounting 33, Support 14, Build 10, Workflows 7, Notifications 6, Surveys 2, Settings 2, Payroll 1, Chat 1. Client route modules remain **260 of 600** against the 304 ceiling.
+
 ---
 
 ## Route-Ownership Violations
