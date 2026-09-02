@@ -129,11 +129,26 @@ describe("a route error that replaced the whole shell", () => {
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Something went wrong");
   });
 
-  it("BITE PROOF — the inline boundary sits inside the shell, so it claims neither", () => {
+  it("still owns the h1 inline, because the page heading went down with the page", () => {
+    render(<RouteErrorBoundary error={failure} reset={noop} title="Something went wrong" />);
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
+      "Something went wrong",
+    );
+  });
+
+  it("BITE PROOF — the inline boundary sits inside the shell, so it claims no second main", () => {
     render(<RouteErrorBoundary error={failure} reset={noop} title="Something went wrong" />);
     expect(screen.queryByRole("main")).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { level: 1 })).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 2 })).toBeInTheDocument();
+  });
+
+  it("BITE PROOF — no route error screen may render without a heading at all", () => {
+    for (const layout of ["inline", "centered", "fullscreen"] as const) {
+      const { unmount } = render(
+        <RouteErrorBoundary error={failure} reset={noop} layout={layout} title="Boom" />,
+      );
+      expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+      unmount();
+    }
   });
 });
 

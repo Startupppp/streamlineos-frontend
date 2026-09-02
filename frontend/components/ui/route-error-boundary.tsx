@@ -23,7 +23,6 @@ export function RouteErrorBoundary({
   const displayMessage = fallbackMessage;
   const headingId = useId();
   const isWholePage = layout === "fullscreen";
-  const Heading = isWholePage ? "h1" : "h2";
 
   const handleRetry = useCallback(() => {
     onBeforeReset?.();
@@ -41,9 +40,9 @@ export function RouteErrorBoundary({
           aria-hidden="true"
         />
       </div>
-      <Heading id={headingId} className="text-xl font-bold text-foreground">
+      <h1 id={headingId} className="text-xl font-bold text-foreground">
         {title}
-      </Heading>
+      </h1>
       <p className="text-sm text-muted-foreground max-w-md">{displayMessage}</p>
       <Button onClick={handleRetry} variant="outline">
         <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
@@ -53,10 +52,14 @@ export function RouteErrorBoundary({
   );
 
   /**
-   * Fullscreen means this boundary replaced the shell, so it is the page: it
-   * owns the `main` landmark the shell would have supplied and the only `h1`.
-   * Without them a failed layout read leaves the reader with no landmark to
-   * navigate to and no page heading at all.
+   * Every one of the 175 route `error.tsx` files replaces its segment's whole
+   * body, and the page heading lives in `PageWrapper` inside that body — no
+   * layout supplies one. So a boundary always owns the `h1`; the document had
+   * none at all while this rendered an `h2`.
+   *
+   * `main` is different. Fullscreen means the boundary replaced the shell too,
+   * so it must supply the landmark the shell would have; inline and centred sit
+   * inside the shell's `main` and must not claim a second one.
    */
   if (isWholePage)
     return (
