@@ -24,16 +24,21 @@ import {
   parseExternalRoute,
   EXTERNAL_HOME_ROUTES,
 } from "./home-manifest-parse.mjs";
+import {
+  BACKEND_ROOT,
+  backendAvailable,
+  reportBackendUnreachable,
+} from "./check-repo-paths.mjs";
 
 const FRONTEND_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const MANIFEST_PATH = join(FRONTEND_ROOT, "lib", "home", "home-manifest.generated.json");
-const BACKEND_SRC = join(FRONTEND_ROOT, "..", "backend", "src");
-const CONTROLLER_PATH = join(
-  BACKEND_SRC,
-  "modules",
-  "dashboard",
-  "dashboard.controller.ts",
-);
+// Found by marker, not by relative depth: `<frontend>/../backend` does not exist
+// on a sibling checkout, and the miss turned the whole controller comparison
+// into a green tick.
+const BACKEND_SRC = backendAvailable ? join(BACKEND_ROOT, "src") : null;
+const CONTROLLER_PATH = backendAvailable
+  ? join(BACKEND_SRC, "modules", "dashboard", "dashboard.controller.ts")
+  : null;
 
 function diffRoutes(manifest, controllerRoutes) {
   const violations = [];
@@ -244,9 +249,14 @@ if (typeof manifest.version !== "number") {
   process.exit(1);
 }
 
-if (!existsSync(CONTROLLER_PATH)) {
-  console.warn("  [NOTICE] backend/ is absent — controller comparison is SKIPPED.");
-  console.log("✔  Manifest file is present (controller comparison skipped in this workspace).");
+if (CONTROLLER_PATH === null || !existsSync(CONTROLLER_PATH)) {
+  reportBackendUnreachable(
+    "check-home-manifest",
+    "the manifest-vs-controller comparison — the entire point of this gate",
+  );
+  console.warn(
+    "PARTIAL — home-manifest.generated.json exists and is well-formed. Nothing was compared against the backend controller.",
+  );
   process.exit(0);
 }
 

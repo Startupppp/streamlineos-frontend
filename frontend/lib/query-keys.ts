@@ -13,6 +13,7 @@ import { usersAndCommerceQueryKeys } from "./query-keys/users-and-commerce";
 import { payrollQueryKeys } from "./query-keys/payroll";
 import { growthAndSignQueryKeys } from "./query-keys/growth-and-sign";
 import { directoryAndOwnershipQueryKeys } from "./query-keys/directory-and-ownership";
+import { hrEngagementQueryKeys } from "./query-keys/hr-engagement";
 
 export const queryKeys = {
   ...humanResourcesQueryKeys,
@@ -30,4 +31,5 @@ export const queryKeys = {
   ...payrollQueryKeys,
   ...growthAndSignQueryKeys,
   ...directoryAndOwnershipQueryKeys,
+  ...hrEngagementQueryKeys,
 } as const;

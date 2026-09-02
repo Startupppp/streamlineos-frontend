@@ -4,11 +4,17 @@ export const platformCoreQueryKeys = {
   reports: {
     all: [...base, "reports"] as const,
     attendance: (params?: Record<string, unknown>) =>
-      [...base, "reports", "attendance", params] as const,
+      params === undefined
+        ? ([...base, "reports", "attendance"] as const)
+        : ([...base, "reports", "attendance", params] as const),
     project: (params?: Record<string, unknown>) =>
-      [...base, "reports", "project", params] as const,
+      params === undefined
+        ? ([...base, "reports", "project"] as const)
+        : ([...base, "reports", "project", params] as const),
     teamPerformance: (params?: Record<string, unknown>) =>
-      [...base, "reports", "teamPerformance", params] as const,
+      params === undefined
+        ? ([...base, "reports", "teamPerformance"] as const)
+        : ([...base, "reports", "teamPerformance", params] as const),
     dashboardStats: () => [...base, "reports", "dashboardStats"] as const,
   },
 
@@ -16,12 +22,16 @@ export const platformCoreQueryKeys = {
     all: [...base, "notifications"] as const,
     lists: () => [...base, "notifications", "list"] as const,
     list: (params?: Record<string, unknown>) =>
-      [...base, "notifications", "list", params] as const,
+      params === undefined
+        ? ([...base, "notifications", "list"] as const)
+        : ([...base, "notifications", "list", params] as const),
     unreadList: () => [...base, "notifications", "list", "unread"] as const,
     unreadCount: () => [...base, "notifications", "unreadCount"] as const,
     preferences: () => [...base, "notifications", "preferences"] as const,
     templates: (params?: Record<string, unknown>) =>
-      [...base, "notifications", "templates", params] as const,
+      params === undefined
+        ? ([...base, "notifications", "templates"] as const)
+        : ([...base, "notifications", "templates", params] as const),
     template: (templateId: number) =>
       [...base, "notifications", "template", templateId] as const,
     broadcasts: (params?: Record<string, unknown>) =>
@@ -39,7 +49,9 @@ export const platformCoreQueryKeys = {
   invoice: {
     all: [...base, "invoice"] as const,
     list: (params?: Record<string, unknown>) =>
-      [...base, "invoice", "list", params] as const,
+      params === undefined
+        ? ([...base, "invoice", "list"] as const)
+        : ([...base, "invoice", "list", params] as const),
     detail: (invoiceId: number) =>
       [...base, "invoice", "detail", invoiceId] as const,
     stats: () => [...base, "invoice", "stats"] as const,
@@ -48,7 +60,9 @@ export const platformCoreQueryKeys = {
   support: {
     all: [...base, "support"] as const,
     list: (params?: Record<string, unknown>) =>
-      [...base, "support", "list", params] as const,
+      params === undefined
+        ? ([...base, "support", "list"] as const)
+        : ([...base, "support", "list", params] as const),
     detail: (supportTicketId: number) =>
       [...base, "support", "detail", supportTicketId] as const,
   },
@@ -108,7 +122,9 @@ export const platformCoreQueryKeys = {
     readiness: (providerKey: string) =>
       [...base, "payments", "providers", providerKey, "readiness"] as const,
     audit: (providerKey?: string) =>
-      [...base, "payments", "audit", providerKey ?? "all"] as const,
+      providerKey === undefined
+        ? ([...base, "payments", "audit"] as const)
+        : ([...base, "payments", "audit", providerKey] as const),
   },
 
   recordLayouts: {
@@ -122,10 +138,14 @@ export const platformCoreQueryKeys = {
   inbox: {
     all: [...base, "inbox"] as const,
     list: (params?: Record<string, unknown>) =>
-      [...base, "inbox", "list", params] as const,
+      params === undefined
+        ? ([...base, "inbox", "list"] as const)
+        : ([...base, "inbox", "list", params] as const),
     count: () => [...base, "inbox", "count"] as const,
     unified: (params?: Record<string, unknown>) =>
-      [...base, "inbox", "unified", params] as const,
+      params === undefined
+        ? ([...base, "inbox", "unified"] as const)
+        : ([...base, "inbox", "unified", params] as const),
   },
 
   access: {

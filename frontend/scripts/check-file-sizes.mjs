@@ -24,6 +24,7 @@ import {
 import { join, relative, extname, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
+import { isExcludedScanDir, runScanDirSelfTest } from "./check-repo-paths.mjs";
 
 const LIMIT = 500;
 const MIN_FILES = 200;
@@ -31,10 +32,13 @@ const MIN_FILES = 200;
 const FRONTEND_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const EXCEPTIONS_DOC = fileURLToPath(new URL("file-size-exceptions.md", import.meta.url));
 
-const EXCLUDED_DIRS = new Set([
-  "node_modules", ".next", "feedbucket-widget", ".git", "public",
-  "scripts", ".yarn", "coverage", "contracts", "dist", "out",
-]);
+// Generated/vendor exclusion is shared and anchored (see check-repo-paths.mjs);
+// these are the additional NON-generated directories this gate does not judge.
+const EXTRA_EXCLUDED_DIRS = new Set(["public", "scripts", "contracts", "dist"]);
+
+function isExcludedDir(name) {
+  return isExcludedScanDir(name) || EXTRA_EXCLUDED_DIRS.has(name);
+}
 
 function isCrmOrInventory(relPath) {
   return (
@@ -49,7 +53,7 @@ function collectFiles(dir, files = []) {
   let entries;
   try { entries = readdirSync(dir); } catch { return files; }
   for (const entry of entries) {
-    if (EXCLUDED_DIRS.has(entry)) continue;
+    if (isExcludedDir(entry)) continue;
     const full = join(dir, entry);
     const stat = statSync(full);
     if (stat.isDirectory()) {

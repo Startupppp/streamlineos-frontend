@@ -69,7 +69,10 @@ export const knowledgeAndSurveysQueryKeys = {
       params === undefined
         ? ([...base, "kb", "content-gaps"] as const)
         : ([...base, "kb", "content-gaps", params] as const),
-    researchBriefs: () => [...base, "kb", "research-briefs"] as const,
+    researchBriefs: (limit?: number) =>
+      limit === undefined
+        ? ([...base, "kb", "research-briefs"] as const)
+        : ([...base, "kb", "research-briefs", limit] as const),
     researchBrief: (researchBriefId: number) =>
       [...base, "kb", "research-brief", researchBriefId] as const,
     settings: () => [...base, "kb", "settings"] as const,

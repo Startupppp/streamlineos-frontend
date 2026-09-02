@@ -4,13 +4,25 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** implemented-with-two-blocked-boxes
 
-- [ ] Declared size and magic-byte MIME are validated; names are sanitized; object keys are organization-scoped.
-- [ ] Multipart completion is idempotent; a retried completion does not duplicate or orphan.
-- [ ] Malware quarantine runs before the object becomes reachable.
-- [ ] Authorization is rechecked immediately before minting a short-lived download URL, not only at list time.
+- [x] Declared size and magic-byte MIME are validated; names are sanitized; object keys are organization-scoped.
+  - Evidence: `npx jest src/modules/storage --maxWorkers=2` → 13 suites, 155 tests passed, including the new `storage-tenant-private.spec.ts` (13 tests) and `storage-multipart.controller.spec.ts` (14 tests). Multipart now requires a declared `sizeBytes` at initiate and re-measures the assembled object with HeadObject plus a 32-byte ranged read before releasing it; `sanitizeFileName`/`sanitizeFolder` in `storage-key.ts` are pinned by 2 tests.
+- [x] Multipart completion is idempotent; a retried completion does not duplicate or orphan.
+  - Evidence: 3 tests in `storage-multipart.controller.spec.ts` ("replays the first result instead of duplicating the record", "treats a provider NoSuchUpload with a stored object as an already-completed retry", "404s a completion for an upload id nothing knows about") — all pass.
+- [x] Malware quarantine runs before the object becomes reachable.
+  - Evidence: the quarantine row is now opened at multipart **initiate** (keyed to the upload id), not at completion, and `/storage/image` consults `isKeyBlocked` for the first time. `npx jest src/modules/storage` → "404s an image render for a quarantine-blocked key" passes; it failed against the pre-change controller because `image` never called the quarantine at all.
+- [x] Authorization is rechecked immediately before minting a short-lived download URL, not only at list time.
+  - Evidence: `assertKeyReadable` runs on the same request as `getFileUrl`/`getFileStream` for both `/storage/download` and `/storage/image`; `pnpm check:route-classification` → RESULT: ALL ROUTES CLASSIFIED (3602 handlers, 0 undeclared).
 - [ ] Compression, preview and transcoding run asynchronously as bounded jobs, off the request thread.
-- [ ] Cancellation, failed transforms, replacement and GDPR/retention deletion each clean both the database row and the object, with no orphan and no surviving public URL.
+  - Preview (thumbnail) generation now runs after commit, detached, under a 30 s deadline, and deletes its own half-written object on failure without failing the upload. There is no transcoding path in the repo.
+  - NOT DONE: image compression still runs inline on the request thread (it is bounded by the same 30 s deadline, which is new). Deferring it needs the object key to be chosen before the compressor decides the output format, which changes the stored key's extension and the quota accounting — too large to land safely alongside the rest of this ticket.
+- [x] Cancellation, failed transforms, replacement and GDPR/retention deletion each clean both the database row and the object, with no orphan and no surviving public URL.
+  - Evidence: `npx jest src/modules/storage src/modules/cron/__tests__/cron-hr-retention.service.spec.ts --maxWorkers=2` → all pass. Multipart abort now deletes the object and soft-deletes the quarantine row (2 tests); a failed upload or transform deletes the object *before* the row, matching the invariant `cron-storage-sweep` already relies on; **HR retention was deleting/redacting `documents`/`onboarding_documents` rows while leaving the object in the bucket forever** — `CronHrRetentionService` now collects the retired keys and deletes the objects after the sweep's transactions commit, reporting `storageObjectsDeleted`/`storageObjectsOrphaned`. GDPR erasure already deleted objects and verified with `fileExists` (`gdpr-storage-purge.service.ts:151-164`) — unchanged, that is ticket 18's territory. No in-place file-replacement endpoint exists (grep over every `fileUrl`/`fileKey` writer found none), so there was nothing to fix on that leg.
 - [ ] No upload path mints a permanent public URL. Verify existing stored URLs, not just the code that creates new ones — a backfill is part of this ticket if any remain.
-- [ ] Cross-tenant file keys are rejected at the seam rather than trusted from the client.
+  - Code half DONE: `publicUrlFor`/`PRIVATE_FOLDERS` are deleted, `UploadResult.url` no longer exists, and the four call sites that persisted it (`kb_sources.file_url`, `feedbucket_attachments.file_url`, `feedbucket_submissions.screenshot_url`/`recording_url`, `payslip_publications.pdf_url`) now store the object key. Pinned by "returns an object key, never the configured public base" in `storage-tenant-private.spec.ts`.
+  - Backfill half WRITTEN AND PROVEN, on a scratch database: `scripts/backfill-public-object-urls.mjs`, catalog-driven across `public`/`build`/`build_events`. Against `scratch_boot_c` seeded with 2 leaked URLs, 1 already-private key and 1 external customer URL: dry run reported `public.kb_sources.file_url: 2 row(s)`, `--apply` rewrote 2 rows to their keys (URL-decoding `%20`), the external URL and the already-private key were untouched, and a second `--apply` reported 0.
+  - BLOCKED: the same dry run against the real data. The only database holding production rows is the shared remote `DATABASE_URL`, which this effort may not touch. An operator must run `node scripts/backfill-public-object-urls.mjs` (dry run) there and then `--apply`.
+  - BLOCKED: making the R2 bucket private. Rewriting the column does not invalidate a URL somebody already copied; the objects stay fetchable at their public addresses until the bucket policy changes in the Cloudflare console. This is the same operator action the chat backfill (`scripts/backfill-chat-attachment-file-url.mjs`, still un-run) is waiting on.
+- [x] Cross-tenant file keys are rejected at the seam rather than trusted from the client.
+  - Evidence: `parseStorageKey`/`isForeignOrgKey` reject a key naming another organisation before any table lookup, on both `/storage/download` and `/storage/image`. 2 new tests pass ("404s a download for a key naming another organisation, before any table lookup", "404s an image render for a key naming another organisation"); before this, `<otherOrgId>/uploads/x.pdf` fell through `resolveFileOwner` as untracked and was streamed out of the caller's own bucket.

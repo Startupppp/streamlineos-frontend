@@ -49,13 +49,17 @@ export const accessAndCrmQueryKeys = {
     activityTimeline: (anchor: Record<string, unknown>) =>
       [...base, "crm", "activities", "timeline", anchor] as const,
     myActivityTasks: (params?: Record<string, unknown>) =>
-      [...base, "crm", "activities", "my-tasks", params] as const,
+      params === undefined
+        ? ([...base, "crm", "activities", "my-tasks"] as const)
+        : ([...base, "crm", "activities", "my-tasks", params] as const),
     activityParticipants: (activityId: string) =>
       [...base, "crm", "activities", activityId, "participants"] as const,
     dealStageTransitions: (dealId: number) =>
       [...base, "crm", "deals", dealId, "transitions"] as const,
     autonomyDecisions: (filters?: Record<string, unknown>) =>
-      [...base, "crm", "autonomy", "decisions", filters] as const,
+      filters === undefined
+        ? ([...base, "crm", "autonomy", "decisions"] as const)
+        : ([...base, "crm", "autonomy", "decisions", filters] as const),
     autonomyDecision: (decisionId: string) =>
       [...base, "crm", "autonomy", "decisions", decisionId] as const,
     autonomySwitches: () => [...base, "crm", "autonomy", "switches"] as const,
@@ -102,19 +106,25 @@ export const accessAndCrmQueryKeys = {
     all: [...base, "crmSettings"] as const,
     assignmentRules: () => [...base, "crmSettings", "assignmentRules"] as const,
     emailTemplates: (params?: Record<string, unknown>) =>
-      [...base, "crmSettings", "emailTemplates", params] as const,
+      params === undefined
+        ? ([...base, "crmSettings", "emailTemplates"] as const)
+        : ([...base, "crmSettings", "emailTemplates", params] as const),
     scoringRules: () => [...base, "crmSettings", "scoringRules"] as const,
     slaPolicies: () => [...base, "crmSettings", "slaPolicies"] as const,
     slaReport: () => [...base, "crmSettings", "slaReport"] as const,
     slaBreachedLeads: (params?: Record<string, unknown>) =>
-      [...base, "crmSettings", "slaBreachedLeads", params] as const,
+      params === undefined
+        ? ([...base, "crmSettings", "slaBreachedLeads"] as const)
+        : ([...base, "crmSettings", "slaBreachedLeads", params] as const),
     territories: () => [...base, "crmSettings", "territories"] as const,
   },
 
   crmOrganizations: {
     all: [...base, "crmOrganizations"] as const,
     list: (params?: Record<string, unknown>) =>
-      [...base, "crmOrganizations", "list", params] as const,
+      params === undefined
+        ? ([...base, "crmOrganizations", "list"] as const)
+        : ([...base, "crmOrganizations", "list", params] as const),
     detail: (crmOrganizationId: number) =>
       [...base, "crmOrganizations", "detail", crmOrganizationId] as const,
     hierarchy: (crmOrganizationId: number) =>
@@ -126,19 +136,25 @@ export const accessAndCrmQueryKeys = {
     relatedLeads: (crmOrganizationId: number) =>
       [...base, "crmOrganizations", "relatedLeads", crmOrganizationId] as const,
     duplicates: (params?: Record<string, unknown>) =>
-      [...base, "crmOrganizations", "duplicates", params] as const,
+      params === undefined
+        ? ([...base, "crmOrganizations", "duplicates"] as const)
+        : ([...base, "crmOrganizations", "duplicates", params] as const),
   },
 
   contactRoles: {
     all: [...base, "contactRoles"] as const,
     list: (contactId: number, params?: Record<string, unknown>) =>
-      [...base, "contactRoles", "list", contactId, params] as const,
+      params === undefined
+        ? ([...base, "contactRoles", "list", contactId] as const)
+        : ([...base, "contactRoles", "list", contactId, params] as const),
   },
 
   contactDuplicates: {
     all: [...base, "contactDuplicates"] as const,
     list: (params?: Record<string, unknown>) =>
-      [...base, "contactDuplicates", "list", params] as const,
+      params === undefined
+        ? ([...base, "contactDuplicates", "list"] as const)
+        : ([...base, "contactDuplicates", "list", params] as const),
   },
 
   customer360: {
@@ -148,13 +164,17 @@ export const accessAndCrmQueryKeys = {
     client: (clientId: number) =>
       [...base, "customer360", "client", clientId] as const,
     companyTimeline: (companyId: number, cursor?: string) =>
-      [...base, "customer360", "companyTimeline", companyId, cursor] as const,
+      cursor === undefined
+        ? ([...base, "customer360", "companyTimeline", companyId] as const)
+        : ([...base, "customer360", "companyTimeline", companyId, cursor] as const),
   },
 
   dealActivities: {
     all: [...base, "dealActivities"] as const,
     list: (dealId: number, params?: Record<string, unknown>) =>
-      [...base, "dealActivities", "list", dealId, params] as const,
+      params === undefined
+        ? ([...base, "dealActivities", "list", dealId] as const)
+        : ([...base, "dealActivities", "list", dealId, params] as const),
   },
 
   salesTeamCapacity: {
@@ -170,7 +190,9 @@ export const accessAndCrmQueryKeys = {
   auditLog: {
     all: [...base, "auditLog"] as const,
     list: (params?: Record<string, unknown>) =>
-      [...base, "auditLog", "list", params] as const,
+      params === undefined
+        ? ([...base, "auditLog", "list"] as const)
+        : ([...base, "auditLog", "list", params] as const),
     actions: () => [...base, "auditLog", "actions"] as const,
     targetTypes: () => [...base, "auditLog", "targetTypes"] as const,
   },
@@ -183,7 +205,9 @@ export const accessAndCrmQueryKeys = {
   tasks: {
     all: [...base, "tasks"] as const,
     list: (params?: Record<string, unknown>) =>
-      [...base, "tasks", "list", params] as const,
+      params === undefined
+        ? ([...base, "tasks", "list"] as const)
+        : ([...base, "tasks", "list", params] as const),
     detail: (taskId: number) => [...base, "tasks", "detail", taskId] as const,
     myQueue: () => [...base, "tasks", "myQueue"] as const,
     overdue: () => [...base, "tasks", "overdue"] as const,
@@ -194,19 +218,25 @@ export const accessAndCrmQueryKeys = {
   crmActivities: {
     all: [...base, "crmActivities"] as const,
     list: (params?: Record<string, unknown>) =>
-      [...base, "crmActivities", "list", params] as const,
+      params === undefined
+        ? ([...base, "crmActivities", "list"] as const)
+        : ([...base, "crmActivities", "list", params] as const),
   },
 
   blog: {
     all: [...base, "blog"] as const,
-    feed: <P extends object>(params?: P) =>
-      [...base, "blog", "feed", params] as const,
+    feed: <P>(params?: P) =>
+      params === undefined
+        ? ([...base, "blog", "feed"] as const)
+        : ([...base, "blog", "feed", params] as const),
   },
 
   blogAdmin: {
     all: [...base, "blogAdmin"] as const,
     posts: (params?: Record<string, unknown>) =>
-      [...base, "blogAdmin", "posts", params] as const,
+      params === undefined
+        ? ([...base, "blogAdmin", "posts"] as const)
+        : ([...base, "blogAdmin", "posts", params] as const),
     post: (postId: string) =>
       [...base, "blogAdmin", "post", postId] as const,
     categories: () => [...base, "blogAdmin", "categories"] as const,

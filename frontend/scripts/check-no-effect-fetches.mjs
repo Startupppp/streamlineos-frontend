@@ -1,9 +1,10 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join, extname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isExcludedScanDir } from "./check-repo-paths.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const EXCLUDE_DIRS = new Set(["node_modules", ".next", "feedbucket-widget", "scripts"]);
+
 const EXTENSIONS = new Set([".tsx", ".ts", ".jsx", ".js"]);
 const IMPORTS_API_CLIENT = /from ['"]@\/lib\/api-client['"]/;
 const USECALLBACK_DECL = /(?:const|let)\s+(\w+)\s*=\s*useCallback\s*\(/g;
@@ -12,7 +13,7 @@ const VOID_IN_EFFECT = /useEffect\s*\(\s*\(\)\s*=>\s*\{[^}]*void\s+(\w+)\s*\(/g;
 
 function* walkFiles(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    if (EXCLUDE_DIRS.has(entry.name)) continue;
+    if (isExcludedScanDir(entry.name)) continue;
     const full = join(dir, entry.name);
     if (entry.isDirectory()) {
       yield* walkFiles(full);

@@ -1,18 +1,20 @@
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  BACKEND_ROOT,
+  backendAvailable,
+  backendUnreachableReason,
+  reportBackendUnreachable,
+} from "./check-repo-paths.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const FRONTEND_MANIFEST = join(ROOT, "lib", "module-manifest.json");
-const BACKEND_REGISTRY = join(
-  ROOT,
-  "..",
-  "backend",
-  "src",
-  "common",
-  "rbac",
-  "module-registry.ts",
-);
+// Found by marker, not by relative depth: `<frontend>/../backend` does not exist
+// on a sibling checkout, and the miss downgraded rule-1 to a green NOTICE.
+const BACKEND_REGISTRY = backendAvailable
+  ? join(BACKEND_ROOT, "src", "common", "rbac", "module-registry.ts")
+  : null;
 const SIDEBAR_PRODUCTS = join(
   ROOT,
   "components",
@@ -401,16 +403,23 @@ const violations = [];
 
 const manifest = readJson(FRONTEND_MANIFEST);
 
-if (!existsSync(BACKEND_REGISTRY)) {
-  console.warn(
-    "  [NOTICE] backend/ is absent from the working tree — rule-1 (registry agreement) is SKIPPED.",
-  );
-  console.warn(
-    "  Re-run from a workspace where both repos are present to validate the vendored manifest.",
+let registryCompared = false;
+if (BACKEND_REGISTRY === null || !existsSync(BACKEND_REGISTRY)) {
+  reportBackendUnreachable(
+    "check-module-manifest",
+    "rule-1 (backend registry agreement)",
   );
 } else {
   const registryContent = readFileSync(BACKEND_REGISTRY, "utf8");
+  const registryEntries = (registryContent.match(/\bid:\s*"/g) ?? []).length;
+  if (registryEntries < 5) {
+    console.error(
+      `INCONCLUSIVE — check-module-manifest: parsed ${registryEntries} entries from ${BACKEND_REGISTRY} (floor 5); the registry parser is broken, so rule-1 proves nothing.`,
+    );
+    process.exit(2);
+  }
   violations.push(...checkRegistryAgreement(manifest, registryContent));
+  registryCompared = true;
 }
 
 if (!existsSync(SIDEBAR_PRODUCTS)) {
@@ -429,7 +438,11 @@ const loaderContent = readFileSync(MANIFEST_LOADER, "utf8");
 violations.push(...checkLoaderVersion(manifest, loaderContent));
 
 if (violations.length === 0) {
-  console.log("✔  Module manifest is consistent.");
+  console.log(
+    registryCompared
+      ? "✔  Module manifest is consistent."
+      : "PARTIAL — module manifest is consistent with the frontend surfaces, but rule-1 (backend registry agreement) did NOT run.",
+  );
   process.exit(0);
 } else {
   console.error(

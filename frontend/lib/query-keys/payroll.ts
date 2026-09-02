@@ -4,7 +4,9 @@ export const payrollQueryKeys = {
   payroll: {
     all: [...base, "payroll"] as const,
     templates: (params?: Record<string, unknown>) =>
-      [...base, "payroll", "templates", params] as const,
+      params === undefined
+        ? ([...base, "payroll", "templates"] as const)
+        : ([...base, "payroll", "templates", params] as const),
     template: (templateId: number) =>
       [...base, "payroll", "template", templateId] as const,
     templatePreview: (templateId: number, annualCtc: string) =>
@@ -15,15 +17,21 @@ export const payrollQueryKeys = {
     toggleImpact: (toggle: string) =>
       [...base, "payroll", "toggle-impact", toggle] as const,
     policyPreview: (params?: Record<string, unknown>) =>
-      [...base, "payroll", "policy", "preview", params] as const,
+      params === undefined
+        ? ([...base, "payroll", "policy", "preview"] as const)
+        : ([...base, "payroll", "policy", "preview", params] as const),
     components: (params?: Record<string, unknown>) =>
-      [...base, "payroll", "components", params] as const,
+      params === undefined
+        ? ([...base, "payroll", "components"] as const)
+        : ([...base, "payroll", "components", params] as const),
     runApprovals: (runId: number) =>
       [...base, "payroll", "runs", runId, "approvals"] as const,
     bankValidation: (runId: number) =>
       [...base, "payroll", "runs", runId, "payout", "validation"] as const,
     bankBatches: (runId?: number) =>
-      [...base, "payroll", "payout", "batches", runId] as const,
+      runId === undefined
+        ? ([...base, "payroll", "payout", "batches"] as const)
+        : ([...base, "payroll", "payout", "batches", runId] as const),
     bankBatch: (batchId: number) =>
       [...base, "payroll", "payout", "batches", batchId] as const,
     employeeBank: (employeeUserId: string) =>
@@ -32,25 +40,35 @@ export const payrollQueryKeys = {
     runPublications: (runId: number) =>
       [...base, "payroll", "runs", runId, "payslips"] as const,
     runs: (params?: Record<string, unknown>) =>
-      [...base, "payroll", "runs", params] as const,
+      params === undefined
+        ? ([...base, "payroll", "runs"] as const)
+        : ([...base, "payroll", "runs", params] as const),
     run: (runId: number) => [...base, "payroll", "runs", runId] as const,
     reports: (kind: string, params?: Record<string, unknown>) =>
-      [...base, "payroll", "reports", kind, params] as const,
+      params === undefined
+        ? ([...base, "payroll", "reports", kind] as const)
+        : ([...base, "payroll", "reports", kind, params] as const),
     journal: (month: string) => [...base, "payroll", "journal", month] as const,
     journalBatchesAll: [...base, "payroll", "journal-batches"] as const,
     periodReconciliation: (periodKey: string) =>
       [...base, "payroll", "period-reconciliation", periodKey] as const,
     journalBatches: (params?: Record<string, unknown>) =>
-      [...base, "payroll", "journal-batches", "list", params] as const,
+      params === undefined
+        ? ([...base, "payroll", "journal-batches", "list"] as const)
+        : ([...base, "payroll", "journal-batches", "list", params] as const),
     journalBatch: (batchId: number) =>
       [...base, "payroll", "journal-batches", batchId] as const,
     accountingMappings: () =>
       [...base, "payroll", "accounting-mappings"] as const,
     calendar: (params?: Record<string, unknown>) =>
-      [...base, "payroll", "calendar", params] as const,
+      params === undefined
+        ? ([...base, "payroll", "calendar"] as const)
+        : ([...base, "payroll", "calendar", params] as const),
     taxWindows: () => [...base, "payroll", "tax-windows"] as const,
     taxDeclarations: (params?: Record<string, unknown>) =>
-      [...base, "payroll", "tax-declarations", params] as const,
+      params === undefined
+        ? ([...base, "payroll", "tax-declarations"] as const)
+        : ([...base, "payroll", "tax-declarations", params] as const),
     fnfAll: [...base, "payroll", "fnf"] as const,
     fnfList: () => [...base, "payroll", "fnf", "list"] as const,
     fnfSettlement: (settlementId: number) =>
@@ -62,7 +80,9 @@ export const payrollQueryKeys = {
     commandCenter: (month: string) =>
       [...base, "payroll", "command-center", month] as const,
     employees: (params?: Record<string, unknown>) =>
-      [...base, "payroll", "employees", "list", params] as const,
+      params === undefined
+        ? ([...base, "payroll", "employees", "list"] as const)
+        : ([...base, "payroll", "employees", "list", params] as const),
     employee: (employeeUserId: string) =>
       [...base, "payroll", "employees", employeeUserId] as const,
     employeeHistory: (employeeUserId: string) =>
@@ -71,7 +91,9 @@ export const payrollQueryKeys = {
     runEmployeesAll: (runId: number) =>
       [...base, "payroll", "run-employees", runId] as const,
     runEmployeesList: (runId: number, params?: Record<string, unknown>) =>
-      [...base, "payroll", "run-employees", runId, "list", params] as const,
+      params === undefined
+        ? ([...base, "payroll", "run-employees", runId, "list"] as const)
+        : ([...base, "payroll", "run-employees", runId, "list", params] as const),
     runEmployee: (runId: number, runEmployeeId: number) =>
       [...base, "payroll", "run-employees", runId, runEmployeeId] as const,
     runVariance: (runId: number) =>
@@ -79,11 +101,15 @@ export const payrollQueryKeys = {
     runExceptionsAll: (runId: number) =>
       [...base, "payroll", "run-exceptions", runId] as const,
     runExceptions: (runId: number, params?: Record<string, unknown>) =>
-      [...base, "payroll", "run-exceptions", runId, "list", params] as const,
+      params === undefined
+        ? ([...base, "payroll", "run-exceptions", runId, "list"] as const)
+        : ([...base, "payroll", "run-exceptions", runId, "list", params] as const),
     runInputsAll: (runId: number) =>
       [...base, "payroll", "run-inputs", runId] as const,
     runInputs: (runId: number, params?: Record<string, unknown>) =>
-      [...base, "payroll", "run-inputs", runId, "list", params] as const,
+      params === undefined
+        ? ([...base, "payroll", "run-inputs", runId, "list"] as const)
+        : ([...base, "payroll", "run-inputs", runId, "list", params] as const),
     calendarAll: [...base, "payroll", "calendar"] as const,
     taxDeclarationsAll: [...base, "payroll", "tax-declarations"] as const,
     entitiesAll: [...base, "payroll", "entities"] as const,
@@ -98,7 +124,9 @@ export const payrollQueryKeys = {
     bonuses: () => [...base, "payroll", "bonuses"] as const,
     incentivesAll: [...base, "payroll", "incentives"] as const,
     incentives: (params?: Record<string, unknown>) =>
-      [...base, "payroll", "incentives", "list", params] as const,
+      params === undefined
+        ? ([...base, "payroll", "incentives", "list"] as const)
+        : ([...base, "payroll", "incentives", "list", params] as const),
     essAll: [...base, "payroll", "ess"] as const,
     essOverview: () => [...base, "payroll", "ess", "overview"] as const,
     essPayslips: () => [...base, "payroll", "ess", "payslips"] as const,
@@ -122,31 +150,19 @@ export const payrollQueryKeys = {
   hrPayrollInputs: {
     all: [...base, "hr-payroll-inputs"] as const,
     periods: (params?: Record<string, unknown>) =>
-      [...base, "hr-payroll-inputs", "periods", params] as const,
+      params === undefined
+        ? ([...base, "hr-payroll-inputs", "periods"] as const)
+        : ([...base, "hr-payroll-inputs", "periods", params] as const),
     period: (periodId: number) =>
       [...base, "hr-payroll-inputs", "periods", periodId] as const,
-    section: (
-      periodId: number,
-      section: string,
-      params?: Record<string, unknown>,
-    ) =>
-      [
-        ...base,
-        "hr-payroll-inputs",
-        "periods",
-        periodId,
-        section,
-        params,
-      ] as const,
+    section: (periodId: number, section: string, params?: Record<string, unknown>) =>
+      params === undefined
+        ? ([...base, "hr-payroll-inputs", "periods", periodId, section] as const)
+        : ([...base, "hr-payroll-inputs", "periods", periodId, section, params] as const),
     adjustments: (periodId: number, params?: Record<string, unknown>) =>
-      [
-        ...base,
-        "hr-payroll-inputs",
-        "periods",
-        periodId,
-        "adjustments",
-        params,
-      ] as const,
+      params === undefined
+        ? ([...base, "hr-payroll-inputs", "periods", periodId, "adjustments"] as const)
+        : ([...base, "hr-payroll-inputs", "periods", periodId, "adjustments", params] as const),
   },
 
 } as const;

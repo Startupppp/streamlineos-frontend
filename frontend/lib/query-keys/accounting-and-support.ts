@@ -3,36 +3,50 @@ import { queryKeyBase as base } from "./base";
 export const accountingAndSupportQueryKeys = {
   accounting: {
     all: [...base, "accounting"] as const,
-    accounts: <P extends object>(params?: P) =>
-      [...base, "accounting", "accounts", params] as const,
-    journal: <P extends object>(params?: P) =>
-      [...base, "accounting", "journal", params] as const,
+    accounts: <P>(params?: P) =>
+      params === undefined
+        ? ([...base, "accounting", "accounts"] as const)
+        : ([...base, "accounting", "accounts", params] as const),
+    journal: <P>(params?: P) =>
+      params === undefined
+        ? ([...base, "accounting", "journal"] as const)
+        : ([...base, "accounting", "journal", params] as const),
     journalEntry: (journalEntryId: number) =>
       [...base, "accounting", "journalEntry", journalEntryId] as const,
     trialBalance: (asOf: string) =>
       [...base, "accounting", "trialBalance", asOf] as const,
     profitLoss: (from: string, to: string) =>
       [...base, "accounting", "profitLoss", from, to] as const,
-    customersOutstanding: <P extends object>(params?: P) =>
-      [...base, "accounting", "customersOutstanding", params] as const,
-    customerLedger: <P extends object>(clientId: number, params?: P) =>
-      [...base, "accounting", "customerLedger", clientId, params] as const,
+    customersOutstanding: <P>(params?: P) =>
+      params === undefined
+        ? ([...base, "accounting", "customersOutstanding"] as const)
+        : ([...base, "accounting", "customersOutstanding", params] as const),
+    customerLedger: <P>(clientId: number, params?: P) =>
+      params === undefined
+        ? ([...base, "accounting", "customerLedger", clientId] as const)
+        : ([...base, "accounting", "customerLedger", clientId, params] as const),
     gstr1: (params: { from: string; to: string }) =>
       [...base, "accounting", "gstr1", params] as const,
     balanceSheet: (params: { asOf: string }) =>
       [...base, "accounting", "balanceSheet", params] as const,
     agedReceivables: (params: { asOf: string }) =>
       [...base, "accounting", "agedReceivables", params] as const,
-    purchaseBills: <P extends object>(params?: P) =>
-      [...base, "accounting", "purchaseBills", params] as const,
+    purchaseBills: <P>(params?: P) =>
+      params === undefined
+        ? ([...base, "accounting", "purchaseBills"] as const)
+        : ([...base, "accounting", "purchaseBills", params] as const),
     purchaseBill: (purchaseBillId: number) =>
       [...base, "accounting", "purchaseBill", purchaseBillId] as const,
     gstr3B: (params: { from: string; to: string }) =>
       [...base, "accounting", "gstr3B", params] as const,
-    vendorsOutstanding: <P extends object>(params?: P) =>
-      [...base, "accounting", "vendorsOutstanding", params] as const,
-    vendorLedger: <P extends object>(vendorId: number, params?: P) =>
-      [...base, "accounting", "vendorLedger", vendorId, params] as const,
+    vendorsOutstanding: <P>(params?: P) =>
+      params === undefined
+        ? ([...base, "accounting", "vendorsOutstanding"] as const)
+        : ([...base, "accounting", "vendorsOutstanding", params] as const),
+    vendorLedger: <P>(vendorId: number, params?: P) =>
+      params === undefined
+        ? ([...base, "accounting", "vendorLedger", vendorId] as const)
+        : ([...base, "accounting", "vendorLedger", vendorId, params] as const),
     agedPayables: (params: { asOf: string }) =>
       [...base, "accounting", "agedPayables", params] as const,
     cashFlow: (params: { from: string; to: string }) =>
@@ -41,22 +55,30 @@ export const accountingAndSupportQueryKeys = {
     setupProgress: () => [...base, "accounting", "setupProgress"] as const,
     apAll: [...base, "accounting", "ap"] as const,
     apVendorPayments: (params?: Record<string, unknown>) =>
-      [...base, "accounting", "ap", "vendor-payments", params] as const,
+      params === undefined
+        ? ([...base, "accounting", "ap", "vendor-payments"] as const)
+        : ([...base, "accounting", "ap", "vendor-payments", params] as const),
     arReminderPolicies: (params?: Record<string, unknown>) =>
-      [...base, "accounting", "reminder-policies", params] as const,
+      params === undefined
+        ? ([...base, "accounting", "reminder-policies"] as const)
+        : ([...base, "accounting", "reminder-policies", params] as const),
   },
 
   recurringInvoices: {
     all: [...base, "recurringInvoices"] as const,
     list: (params?: Record<string, unknown>) =>
-      [...base, "recurringInvoices", "list", params] as const,
+      params === undefined
+        ? ([...base, "recurringInvoices", "list"] as const)
+        : ([...base, "recurringInvoices", "list", params] as const),
     due: () => [...base, "recurringInvoices", "due"] as const,
   },
 
   goals: {
     all: [...base, "goals"] as const,
     list: (params?: Record<string, unknown>) =>
-      [...base, "goals", "list", params] as const,
+      params === undefined
+        ? ([...base, "goals", "list"] as const)
+        : ([...base, "goals", "list", params] as const),
     detail: (goalId: number) => [...base, "goals", "detail", goalId] as const,
     stats: () => [...base, "goals", "stats"] as const,
   },
@@ -126,7 +148,9 @@ export const accountingAndSupportQueryKeys = {
   playbook: {
     all: [...base, "playbook"] as const,
     list: (params?: Record<string, unknown>) =>
-      [...base, "playbook", "list", params] as const,
+      params === undefined
+        ? ([...base, "playbook", "list"] as const)
+        : ([...base, "playbook", "list", params] as const),
   },
 
   supportKb: {

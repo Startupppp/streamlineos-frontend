@@ -3,6 +3,7 @@ import { join, relative, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { randomBytes } from "node:crypto";
+import { isExcludedScanDir } from "./check-repo-paths.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const APP_DIR = join(ROOT, "app");
@@ -91,7 +92,7 @@ function isPublicDir(relPath) {
 function walkDir(dir) {
   const results = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    if (entry.name === "node_modules" || entry.name === ".next") continue;
+    if (isExcludedScanDir(entry.name)) continue;
     const full = join(dir, entry.name);
     if (entry.isDirectory()) {
       for (const f of walkDir(full)) results.push(f);

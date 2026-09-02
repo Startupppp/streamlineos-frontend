@@ -4,18 +4,24 @@ export const customerWorkQueryKeys = {
   leads: {
     all: [...base, "leads"] as const,
     list: (params?: Record<string, unknown>) =>
-      [...base, "leads", "list", params] as const,
+      params === undefined
+        ? ([...base, "leads", "list"] as const)
+        : ([...base, "leads", "list", params] as const),
     board: () => [...base, "leads", "board"] as const,
     detail: (leadId: number) => [...base, "leads", "detail", leadId] as const,
     stats: (params?: Record<string, unknown>) =>
-      [...base, "leads", "stats", params] as const,
+      params === undefined
+        ? ([...base, "leads", "stats"] as const)
+        : ([...base, "leads", "stats", params] as const),
     activities: (leadId: number) =>
       [...base, "leads", "activities", leadId] as const,
     timeline: (leadId: number) =>
       [...base, "leads", "timeline", leadId] as const,
     slaAlerts: () => [...base, "leads", "slaAlerts"] as const,
     analyticsSummary: (params?: Record<string, unknown>) =>
-      [...base, "leads", "analyticsSummary", params] as const,
+      params === undefined
+        ? ([...base, "leads", "analyticsSummary"] as const)
+        : ([...base, "leads", "analyticsSummary", params] as const),
     duplicates: () => [...base, "leads", "duplicates"] as const,
     sourceReport: () => [...base, "leads", "sourceReport"] as const,
   },
@@ -23,7 +29,9 @@ export const customerWorkQueryKeys = {
   deals: {
     all: [...base, "deals"] as const,
     list: (params?: Record<string, unknown>) =>
-      [...base, "deals", "list", params] as const,
+      params === undefined
+        ? ([...base, "deals", "list"] as const)
+        : ([...base, "deals", "list", params] as const),
     detail: (dealId: number) => [...base, "deals", "detail", dealId] as const,
     forecast: () => [...base, "deals", "forecast"] as const,
     stats: () => [...base, "deals", "stats"] as const,
@@ -32,12 +40,16 @@ export const customerWorkQueryKeys = {
     meetings: (dealId: number) =>
       [...base, "deals", "meetings", dealId] as const,
     approvals: (params?: Record<string, unknown>) =>
-      [...base, "deals", "approvals", params] as const,
+      params === undefined
+        ? ([...base, "deals", "approvals"] as const)
+        : ([...base, "deals", "approvals", params] as const),
     competitors: (dealId: number) =>
       [...base, "deals", "competitors", dealId] as const,
     health: (dealId: number) => [...base, "deals", "health", dealId] as const,
     forecastSnapshots: (params?: Record<string, unknown>) =>
-      [...base, "deals", "forecastSnapshots", params] as const,
+      params === undefined
+        ? ([...base, "deals", "forecastSnapshots"] as const)
+        : ([...base, "deals", "forecastSnapshots", params] as const),
     forecastCompare: (period: string) =>
       [...base, "deals", "forecastCompare", period] as const,
     stakeholders: (dealId: number) =>
@@ -47,7 +59,9 @@ export const customerWorkQueryKeys = {
   contacts: {
     all: [...base, "contacts"] as const,
     list: (params?: object) =>
-      [...base, "contacts", "list", params] as const,
+      params === undefined
+        ? ([...base, "contacts", "list"] as const)
+        : ([...base, "contacts", "list", params] as const),
     detail: (contactId: number) =>
       [...base, "contacts", "detail", contactId] as const,
     search: (searchQuery: string) =>
@@ -57,7 +71,9 @@ export const customerWorkQueryKeys = {
   clients: {
     all: [...base, "clients"] as const,
     list: (params?: Record<string, unknown>) =>
-      [...base, "clients", "list", params] as const,
+      params === undefined
+        ? ([...base, "clients", "list"] as const)
+        : ([...base, "clients", "list", params] as const),
     detail: (clientId: number) => [...base, "clients", "detail", clientId] as const,
     activities: (clientId: number) =>
       [...base, "clients", "activities", clientId] as const,
@@ -69,7 +85,9 @@ export const customerWorkQueryKeys = {
   clientOpportunities: {
     all: [...base, "clientOpportunities"] as const,
     list: (clientId?: number) =>
-      [...base, "clientOpportunities", "list", clientId] as const,
+      clientId === undefined
+        ? ([...base, "clientOpportunities", "list"] as const)
+        : ([...base, "clientOpportunities", "list", clientId] as const),
   },
 
   clientOnboarding: {

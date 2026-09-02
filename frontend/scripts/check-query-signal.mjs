@@ -20,9 +20,10 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join, extname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isExcludedScanDir } from "./check-repo-paths.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const SKIP_DIRS = new Set(["node_modules", ".next", "feedbucket-widget", "scripts"]);
+
 const EXTENSIONS = new Set([".ts", ".tsx"]);
 
 /**
@@ -272,7 +273,7 @@ function findSignalViolations(content, relPath) {
 
 function* walkFiles(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    if (SKIP_DIRS.has(entry.name)) continue;
+    if (isExcludedScanDir(entry.name)) continue;
     const full = join(dir, entry.name);
     if (entry.isDirectory()) yield* walkFiles(full);
     else if (EXTENSIONS.has(extname(entry.name))) yield full;

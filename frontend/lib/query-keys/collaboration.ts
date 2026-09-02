@@ -9,7 +9,9 @@ export const collaborationQueryKeys = {
     channel: (channelId: number) =>
       [...base, "chat", "channel", channelId] as const,
     messages: (channelId: number, cursor?: number) =>
-      [...base, "chat", "messages", channelId, cursor] as const,
+      cursor === undefined
+        ? ([...base, "chat", "messages", channelId] as const)
+        : ([...base, "chat", "messages", channelId, cursor] as const),
     poll: (channelId: number, since: string) =>
       [...base, "chat", "poll", channelId, since] as const,
     entityActions: (channelId: number, referenceKeys: string) =>

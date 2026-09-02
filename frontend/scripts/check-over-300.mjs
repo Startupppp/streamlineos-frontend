@@ -14,9 +14,11 @@
  *   --self-test   Run internal assertions and exit (no file scan).
  */
 
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, relative, extname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isExcludedScanDir, runScanDirSelfTest } from "./check-repo-paths.mjs";
 
 const LIMIT = 300;
 const BASELINE = 519;
@@ -24,14 +26,11 @@ const MIN_FILES = 100;
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
-const EXCLUDED_DIRS = new Set([
-  "node_modules",
-  ".next",
-  "feedbucket-widget",
-  ".git",
-  "scripts",
-  "public",
-]);
+const EXTRA_EXCLUDED_DIRS = new Set(["scripts", "public"]);
+
+function isExcludedDir(name) {
+  return isExcludedScanDir(name) || EXTRA_EXCLUDED_DIRS.has(name);
+}
 
 function collectFiles(dir, files = []) {
   let entries;
@@ -41,7 +40,7 @@ function collectFiles(dir, files = []) {
     return files;
   }
   for (const entry of entries) {
-    if (EXCLUDED_DIRS.has(entry)) continue;
+    if (isExcludedDir(entry)) continue;
     const full = join(dir, entry);
     const stat = statSync(full);
     if (stat.isDirectory()) {
@@ -81,14 +80,51 @@ function runSelfTests() {
   assert("BASELINE is a positive integer", Number.isInteger(BASELINE) && BASELINE > 0);
   assert("LIMIT is 300", LIMIT === 300);
   assert("MIN_FILES is a positive integer", Number.isInteger(MIN_FILES) && MIN_FILES > 0);
-  assert("countLines counts lines in a string", (() => {
-    const fake = "a\nb\nc\n";
-    const parts = fake.split("\n");
-    const count = fake.endsWith("\n") ? parts.length - 1 : parts.length;
-    return count === 3;
-  })());
-  assert("EXCLUDED_DIRS excludes node_modules", EXCLUDED_DIRS.has("node_modules"));
-  assert("EXCLUDED_DIRS excludes feedbucket-widget", EXCLUDED_DIRS.has("feedbucket-widget"));
+
+  // The scan itself, against known-bad files on disk. Asserting the constants and
+  // re-implementing countLines inside the assertion left a broken collectFiles()
+  // reporting zero crossings and still passing — the backend twin shipped exactly
+  // that defect.
+  const fixture = mkdtempSync(join(tmpdir(), "fe-over-300-self-test-"));
+  try {
+    mkdirSync(join(fixture, "features", "nested"), { recursive: true });
+    mkdirSync(join(fixture, ".next-buildmart", "dev"), { recursive: true });
+    mkdirSync(join(fixture, "next-intl"), { recursive: true });
+    mkdirSync(join(fixture, "node_modules"), { recursive: true });
+
+    writeFileSync(join(fixture, "features", "nested", "over.tsx"), "x\n".repeat(301));
+    writeFileSync(join(fixture, "exactly-at-limit.ts"), "x\n".repeat(300));
+    writeFileSync(join(fixture, "under.ts"), "x\n".repeat(12));
+    writeFileSync(join(fixture, "over.spec.ts"), "x\n".repeat(400));
+    writeFileSync(join(fixture, "over.spec.tsx"), "x\n".repeat(400));
+    writeFileSync(join(fixture, "over.d.ts"), "x\n".repeat(400));
+    writeFileSync(join(fixture, "over.js"), "x\n".repeat(400));
+    writeFileSync(join(fixture, ".next-buildmart", "dev", "chunk.ts"), "x\n".repeat(9000));
+    writeFileSync(join(fixture, "next-intl", "authored.tsx"), "x\n".repeat(400));
+    writeFileSync(join(fixture, "node_modules", "dep.ts"), "x\n".repeat(900));
+
+    const collected = collectFiles(fixture).map((f) => f.replace(/\\/g, "/"));
+    const overLimit = collected.filter((f) => countLines(f) > LIMIT);
+
+    assert("collectFiles recurses into subdirectories", collected.some((f) => f.endsWith("/features/nested/over.tsx")));
+    assert("a 301-line file is over the limit", overLimit.some((f) => f.endsWith("/features/nested/over.tsx")));
+    assert("a file at exactly 300 lines is not over the limit", !overLimit.some((f) => f.endsWith("exactly-at-limit.ts")));
+    assert("an under-limit file is not counted", !overLimit.some((f) => f.endsWith("under.ts")));
+    assert("countLines does not count the trailing newline as a line", countLines(join(fixture, "under.ts")) === 12);
+    assert("spec files are excluded", !collected.some((f) => f.includes(".spec.")));
+    assert("declaration files are excluded", !collected.some((f) => f.endsWith(".d.ts")));
+    assert("non-TypeScript files are excluded", !collected.some((f) => f.endsWith(".js")));
+    assert("generated build output is excluded", !collected.some((f) => f.includes(".next-buildmart")));
+    assert("node_modules is excluded", !collected.some((f) => f.includes("node_modules")));
+    assert(
+      "an authored directory merely starting with 'next-' is still scanned",
+      overLimit.some((f) => f.endsWith("/next-intl/authored.tsx")),
+    );
+    assert("the vacuity guard would fire on this fixture", collected.length < MIN_FILES);
+    runScanDirSelfTest(assert);
+  } finally {
+    rmSync(fixture, { recursive: true, force: true });
+  }
 
   if (failed > 0) {
     console.error(`check-over-300 self-tests: ${failed} failed, ${passed} passed`);

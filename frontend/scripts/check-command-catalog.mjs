@@ -24,6 +24,7 @@
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join, dirname, relative, extname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isExcludedScanDir } from "./check-repo-paths.mjs";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(SCRIPT_DIR, "..");
@@ -139,7 +140,7 @@ const OFF_CONTRACT_READS = new Map([
   ],
 ]);
 
-const SKIP_DIRS = new Set(["node_modules", ".next", "feedbucket-widget", ".git"]);
+
 const SCAN_DIRS = ["hooks/api", "features"];
 const TEST_FILE_RE = /\.test\.|\.spec\.|__tests__/;
 
@@ -507,7 +508,7 @@ function classifyBlock(block, index, consts) {
 function walkDir(dir, cb) {
   if (!existsSync(dir)) return;
   for (const entry of readdirSync(dir)) {
-    if (SKIP_DIRS.has(entry)) continue;
+    if (isExcludedScanDir(entry)) continue;
     const full = join(dir, entry);
     const st = statSync(full);
     if (st.isDirectory()) walkDir(full, cb);

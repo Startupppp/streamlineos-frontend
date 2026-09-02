@@ -5,6 +5,7 @@ import { readFileSync, readdirSync, statSync, existsSync, mkdirSync, writeFileSy
 import { tmpdir } from "node:os";
 import { join, dirname, relative, resolve as pathResolve, basename, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isExcludedScanDir } from "./check-repo-paths.mjs";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(SCRIPT_DIR, "..");
@@ -36,7 +37,7 @@ const PRE_IMPLEMENTATION_CONTRACTS = new Set([
   "lib/backend-token-contract.ts",
 ]);
 
-const SKIP_DIRS = new Set(["node_modules", ".next", "feedbucket-widget", ".git"]);
+
 
 const BASELINE = { deadFiles: 0, deadExports: 0 };
 
@@ -48,7 +49,6 @@ const EXPORT_VERDICTS = new Map([
   ["hooks/api/workflows.ts:WorkflowSortField", { verdict: "KEEP", reason: "re-exported contract type used by live useWorkflows parameter contract" }],
   ["hooks/api/workflows.ts:SortDirection", { verdict: "KEEP", reason: "re-exported contract type used by live workflow and execution list parameter contracts" }],
   ["hooks/api/workflows.ts:WorkflowVersion", { verdict: "KEEP", reason: "re-exported response type used by the live publish-workflow API call" }],
-  ["hooks/api/workflows.ts:WorkflowAnalytics", { verdict: "KEEP", reason: "re-exported response type used by live useWorkflowAnalytics data consumed on the workflow page" }],
   ["hooks/api/workflows.ts:WorkflowCursorPage", { verdict: "KEEP", reason: "re-exported response wrapper used by live workflow and execution list API calls" }],
   ["hooks/api/workflows.ts:WorkflowListParams", { verdict: "KEEP", reason: "re-exported parameter type used by live useWorkflows calls on the workflow list page" }],
   ["hooks/api/workflows.ts:ExecutionListParams", { verdict: "KEEP", reason: "re-exported parameter type used by live execution list hooks and page calls" }],
@@ -121,7 +121,7 @@ function* walkTs(dir) {
   let entries;
   try { entries = readdirSync(dir, { withFileTypes: true }); } catch { return; }
   for (const e of entries) {
-    if (SKIP_DIRS.has(e.name)) continue;
+    if (isExcludedScanDir(e.name)) continue;
     const full = join(dir, e.name);
     if (e.isDirectory()) yield* walkTs(full);
     else if (/\.(ts|tsx)$/.test(e.name)) yield full;

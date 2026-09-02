@@ -8,7 +8,27 @@ const FRONTEND_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const REPO_ROOT = resolve(FRONTEND_ROOT, "..");
 
 const FRONTEND_CONTRACT = join(FRONTEND_ROOT, "contracts", "openapi.json");
-const BACKEND_ARTIFACT = join(REPO_ROOT, "backend", "openapi.json");
+
+/**
+ * Where the backend's generated artifact lives depends on the checkout layout.
+ * A monorepo checkout puts it at `<repo>/backend/`; two sibling clones put it at
+ * `<repo>/../streamlineos-backend/`. Hardcoding only the first made this gate
+ * exit 1 with "missing" on a sibling layout — loud, but still a gate that never
+ * compared the two files. Resolve the candidates and report which one was used,
+ * so a green result names the artifact it actually read.
+ */
+const BACKEND_CANDIDATES = [
+  process.env.STREAMLINEOS_BACKEND_ROOT ? join(process.env.STREAMLINEOS_BACKEND_ROOT, "openapi.json") : null,
+  join(REPO_ROOT, "backend", "openapi.json"),
+  join(REPO_ROOT, "..", "streamlineos-backend", "openapi.json"),
+  join(REPO_ROOT, "..", "backend", "openapi.json"),
+].filter((p) => p !== null);
+
+export function resolveBackendArtifact(candidates, exists) {
+  return candidates.find((p) => exists(p)) ?? null;
+}
+
+const BACKEND_ARTIFACT = resolveBackendArtifact(BACKEND_CANDIDATES, existsSync);
 
 function sha256(content) {
   return createHash("sha256").update(content).digest("hex");
@@ -55,6 +75,23 @@ function runSelfTest() {
       },
     ];
 
+    const seen = new Set([fa, fc]);
+    const has = (p) => seen.has(p);
+    cases.push(
+      {
+        description: "the backend artifact resolves through the first candidate that exists",
+        passes: resolveBackendArtifact([missing, fc, fa], has) === fc,
+      },
+      {
+        description: "a sibling-layout candidate is found when the monorepo path is absent",
+        passes: resolveBackendArtifact([join(dir, "repo", "backend", "openapi.json"), fa], has) === fa,
+      },
+      {
+        description: "no candidate existing returns null, never a path that is not there",
+        passes: resolveBackendArtifact([missing, join(dir, "nope.json")], has) === null,
+      },
+    );
+
     const failures = cases.filter((c) => !c.passes);
     if (failures.length > 0) {
       for (const f of failures) console.error(`✖  self-test FAILED: ${f.description}`);
@@ -81,10 +118,12 @@ if (!existsSync(FRONTEND_CONTRACT)) {
   process.exit(1);
 }
 
-if (!existsSync(BACKEND_ARTIFACT)) {
-  console.error("✖  backend/openapi.json is missing — cannot verify vendored copy.");
-  console.error("   This check requires both repos to be checked out.");
-  console.error("   In a frontend-only CI checkout, skip this check and run");
+if (BACKEND_ARTIFACT === null) {
+  console.error("✖  the backend's openapi.json is missing — cannot verify vendored copy.");
+  console.error("   This check requires both repos to be checked out. Looked in:");
+  for (const c of BACKEND_CANDIDATES) console.error(`     ${c}`);
+  console.error("   Set STREAMLINEOS_BACKEND_ROOT to point at the backend checkout, or");
+  console.error("   in a frontend-only CI checkout skip this check and run");
   console.error("   check-contract-drift.mjs against the vendored copy instead.");
   process.exit(1);
 }
@@ -92,12 +131,12 @@ if (!existsSync(BACKEND_ARTIFACT)) {
 const result = compareFiles(FRONTEND_CONTRACT, BACKEND_ARTIFACT);
 
 if (result.outcome === "match") {
-  console.log("✔  frontend/contracts/openapi.json matches backend/openapi.json");
+  console.log(`✔  frontend/contracts/openapi.json matches ${BACKEND_ARTIFACT}`);
   console.log(`   sha256: ${result.hash.slice(0, 16)}...`);
   process.exit(0);
 }
 
-console.error("✖  frontend/contracts/openapi.json is STALE — it does not match backend/openapi.json.");
+console.error(`✖  frontend/contracts/openapi.json is STALE — it does not match ${BACKEND_ARTIFACT}.`);
 console.error(`   frontend hash: ${result.hashA.slice(0, 16)}...`);
 console.error(`   backend  hash: ${result.hashB.slice(0, 16)}...`);
 console.error("");

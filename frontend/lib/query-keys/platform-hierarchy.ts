@@ -37,13 +37,21 @@ export const platformHierarchyQueryKeys = {
     aging: (thresholdDays: number) =>
       [...base, "salesAnalytics", "aging", thresholdDays] as const,
     cycleLength: (repId?: string) =>
-      [...base, "salesAnalytics", "cycleLength", repId] as const,
+      repId === undefined
+        ? ([...base, "salesAnalytics", "cycleLength"] as const)
+        : ([...base, "salesAnalytics", "cycleLength", repId] as const),
     lostAnalysis: (repId?: string) =>
-      [...base, "salesAnalytics", "lostAnalysis", repId] as const,
+      repId === undefined
+        ? ([...base, "salesAnalytics", "lostAnalysis"] as const)
+        : ([...base, "salesAnalytics", "lostAnalysis", repId] as const),
     cohort: (months: number) =>
       [...base, "salesAnalytics", "cohort", months] as const,
     repComparison: (rep1Id?: number, rep2Id?: number) =>
-      [...base, "salesAnalytics", "repComparison", rep1Id, rep2Id] as const,
+      rep1Id === undefined
+        ? ([...base, "salesAnalytics", "repComparison"] as const)
+        : rep2Id === undefined
+          ? ([...base, "salesAnalytics", "repComparison", rep1Id] as const)
+          : ([...base, "salesAnalytics", "repComparison", rep1Id, rep2Id] as const),
     sourceReport: () => [...base, "salesAnalytics", "sourceReport"] as const,
   },
 
