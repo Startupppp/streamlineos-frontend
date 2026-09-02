@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
@@ -44,6 +44,33 @@ export interface FilingExportSummary {
   entityId?: number | null;
 }
 
+export type FilingExportJobStatus =
+  | "PENDING"
+  | "RUNNING"
+  | "SUCCEEDED"
+  | "FAILED"
+  | "DEAD_LETTER";
+
+export const FILING_EXPORT_TERMINAL: FilingExportJobStatus[] = [
+  "SUCCEEDED",
+  "FAILED",
+  "DEAD_LETTER",
+];
+
+/** Durable handle for an asynchronously prepared statutory export. */
+export interface FilingExportJob {
+  jobId: number;
+  status: FilingExportJobStatus;
+  progress: number;
+  filingId: number | null;
+  correlationId: string | null;
+  errorMessage: string | null;
+  createdAt: string;
+  finishedAt: string | null;
+  statusLabel: string;
+  capability?: FilingCapability;
+}
+
 /** Backend honesty contract — filings are export-only until a provider is connected. */
 export interface FilingCapability {
   mode: "export_only";
@@ -79,8 +106,11 @@ export function useFilingCapabilities() {
   });
 }
 
+/**
+ * The CSV spans every run employee, so the backend prepares it on the payroll
+ * jobs worker. This returns a job handle; poll it with `useFilingExportJob`.
+ */
 export function usePrepareFilingExport() {
-  const qc = useQueryClient();
   return useAuthorizedMutation("payroll:tax:manage", {
     mutationKey: ["payroll", "filings", "export"],
     mutationFn: (body: {
@@ -89,10 +119,25 @@ export function usePrepareFilingExport() {
       month?: string;
       runId?: number;
       entityId?: number;
-    }) => apiClient.post<PayrollFiling>("/payroll/filings/export", body),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.filingsAll });
-    },
+    }) => apiClient.post<FilingExportJob>("/payroll/filings/export", body),
+  });
+}
+
+export function useFilingExportJob(jobId: number | null) {
+  const canView = useCan("payroll:tax:view");
+  return useQuery({
+    queryKey: queryKeys.payroll.filingExportJob(jobId ?? 0),
+    queryFn: ({ signal }) =>
+      apiClient.get<FilingExportJob>(
+        `/payroll/filings/export/jobs/${jobId}`,
+        undefined,
+        signal,
+      ),
+    enabled: canView && jobId != null,
+    refetchInterval: (query) =>
+      query.state.data && FILING_EXPORT_TERMINAL.includes(query.state.data.status)
+        ? false
+        : 2_000,
   });
 }
 

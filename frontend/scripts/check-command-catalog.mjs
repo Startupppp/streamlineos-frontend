@@ -85,6 +85,11 @@ const STRICTER_KEYS = new Map([
   ["usePreviewPolicy", "payroll:policies:view"],
   ["useCreateRun", "payroll:runs:create"],
   ["useUpdateFxRates", "payroll:policies:manage"],
+  // Both hooks always request format=csv, and the csv branch is gated in-service
+  // on payroll:reports:export (reports.controller.ts assertExport,
+  // journal.controller.ts getJournal). The route decorator is the read key.
+  ["useExportPayrollReport", "payroll:reports:view"],
+  ["useExportJournal", "payroll:reports:view"],
 ]);
 
 /**

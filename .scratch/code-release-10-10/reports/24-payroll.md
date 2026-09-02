@@ -1,6 +1,7 @@
 # 24 — Payroll module release matrix
 
-**Status:** 6 of 8 boxes closed. Boxes 1 and 2 are PARTIAL, both for reasons named below.
+**Status:** 7 of 8 boxes closed. Box 2 was closed by a follow-up pass on 2026-09-02 (see *Follow-up pass* at the end);
+box 1 stays PARTIAL, blocked on migrations owned by ticket 08.
 
 Territory: `streamlineos-backend/src/modules/payroll/**`, `streamlineos-frontend/frontend/features/payroll/**`,
 `frontend/app/(authenticated)/payroll/**`. One fix reached `frontend/hooks/api/payroll/**` — see
@@ -84,7 +85,7 @@ carries the journal-ordering risk the brief warns about. Two FKs are also unenfo
 (`payroll_run_allocations.run_id`, `payroll_tds_ytd_ledger.run_id`) and `payroll_bank_batch_items` has
 no natural key on `(batchId, runEmployeeId)`, so one run employee can appear in two batches.
 
-### 2. Bounded indexed reads, no N+1, async exports — **PARTIAL**
+### 2. Bounded indexed reads, no N+1, async exports — **CLOSED** (was PARTIAL; see *Follow-up pass*)
 
 The re-bounding the ticket asked me to verify **still holds**. Every input-length-derived bound traces
 to a DB-side cap, not to a caller-supplied array:
@@ -116,19 +117,12 @@ FILING_EXPORT` out of band.
 
 **PARTIAL because** three things remain, all needing more than a verdict pass:
 
-1. `runs/inputs.service.ts:187` is a **real N+1 the gate cannot see**: `for (const row of toReset) await
-   pullAttendanceInputs(...)` over a 1000-row set, 2–4 queries each → up to ~4000 serial round-trips in
-   one request. `check:db-call-count` only matches `db.x(` / `tx.x(` on a single line, so DB work behind
-   a helper is invisible to it — the gate reports ACTIONABLE 0 and is wrong here. Batched equivalents
-   (`loadLockedSectionsByUser`, `loadLiveAttendanceByUser`) already exist and are used by the calc path.
-2. `POST /payroll/filings/export` builds the whole CSV **synchronously** in the request path, reading all
-   run employees and all line items through `lib/payroll-keyset-batch.ts`, which accumulates every page
-   with **no total ceiling**. Only the row *sample* is capped at 500; the CSV is not. A `FILING_EXPORT`
-   job type already exists and this route does not use it.
+1. ~~`runs/inputs.service.ts:187` is a **real N+1**~~ — **CLOSED in the follow-up pass.**
+2. ~~`POST /payroll/filings/export` builds the whole CSV **synchronously**~~ — **CLOSED in the follow-up pass.**
 3. Index gaps: no `(orgId, runId, status)` on `payroll_run_employees` (the status filter on the run-items
    list is unindexed, and the `users.name` sort is on the joined table so every page sorts the whole run
    partition); no `(orgId, entityId, month, id)` on `payroll_runs`; no `(orgId, userId, status)` on
-   `payslip_publications`. These are migrations, not module code.
+   `payslip_publications`. These are migrations, not module code — **handed to ticket 08**.
 
 ### 3. Caches invalidate after lock, publish and reversal — **CLOSED**
 
@@ -341,3 +335,198 @@ explicit pathspec so no other agent's work could be swallowed. Flagging it rathe
   "bank return fails 1 of N → batch `PARTIALLY_PAID` → reconciliation reports the delta".
 - **Specs do not typecheck** under ts-jest `isolatedModules`, so the green suite above does not enforce
   a signature. `check:spec-typecheck` is the gate for that and it is red for other territories.
+
+
+---
+
+# Follow-up pass — 2026-09-02
+
+A second agent was sent to close the two confirmed §5.1 defects box 2 was PARTIAL on. Both are closed.
+Territory: `streamlineos-backend/src/modules/payroll/**` plus the frontend halves ticket 24 had already
+released (`features/payroll/**`, `hooks/api/payroll/**`). No migration was written — payroll's schema
+needs stay with ticket 08.
+
+## Defect 1 — the N+1 in `runs/inputs.service.ts`
+
+`reimportInputs` ran `for (const row of toReset) await pullAttendanceInputs(this.db, orgId, row.userId, month)`
+over a 1,000-row set at 2–4 queries each, and then a **second** per-row loop issuing one
+`INSERT ... ON CONFLICT DO UPDATE` per payee inside the transaction. Roughly 4,000 reads plus 1,000 writes,
+all serial, in one HTTP request.
+
+**Fix.** `lib/input-puller.ts` gains `pullAttendanceInputsByUser(db, orgId, userIds, month, chunkSize?)`,
+built from the batch loaders the calc path already uses (`getLockedInputPeriodId`,
+`loadLockedSectionsByUser`, `loadLiveAttendanceByUser`). It is **chunked with a documented bound** —
+`PAYROLL_INPUT_PULL_CHUNK = 200`, so no statement carries an arbitrarily long `IN (...)` and no chunk can
+return more than `200 x 100` snapshot rows / `200 x daysInMonth` attendance rows. Round-trips are
+`1 + ceil(users / 200) * 3`. The single-user `pullAttendanceInputs` and its private
+`pullLiveAttendanceInputs` had no other caller and were deleted.
+
+The insert loop became one multi-row `INSERT ... ON CONFLICT DO UPDATE` using `excluded.<col>` SQL fragments,
+matching `run-result-persister.service.ts`. It is safe as one statement because the read above it is
+capped: `PAYROLL_READ_CAP` (1,000) rows x 15 columns is far under Postgres's 65,535 bind-parameter ceiling,
+and the code says so where raising the cap would break it.
+
+Two adjacent defects were fixed in the same method because they are the same contract:
+
+- the `toReset` read was a bare `.limit(1000)` — an org with more than 1,000 non-override inputs
+  **silently reimported only 1,000 of them**. It is now `.limit(PAYROLL_READ_CAP + 1)` +
+  `requirePayrollReadWithinCap`, so it 409s visibly instead of doing partial work on payroll inputs.
+  This is the same probe-and-fail pattern ticket 24 applied to `tax-admin.service.ts exportCsv`.
+- the delete inside the transaction was `where(inArray(payrollInputs.id, idsToDelete))` with **no `orgId`
+  predicate**, relying on RLS alone. Now `and(eq(orgId), inArray(id))`.
+
+**Proof — measured, not asserted-by-gate.** `runs/__tests__/reimport-inputs-call-count.spec.ts` (6 tests)
+spies on the `db` handle and counts real calls:
+
+| Assertion | Number |
+|---|---|
+| select calls, 50 payees | **5** |
+| select calls, 1,000 payees | **14** — the entire delta is the four extra chunks (`(ceil(1000/200) - 1) * 2`) |
+| calls vs row count | `< 1000`, and `<= 4 + chunks * 3` |
+| locked-snapshot statements at 1,000 payees | exactly `ceil(1000/200)` = **5**, each with `limit <= 200 * 100` — this is what pins the chunk size |
+| `tx.insert(payrollInputs)` calls | **1**, carrying **1,000** rows |
+| 1,001 rows | `ConflictException`, not a truncated reimport |
+
+`check:db-call-count` **did** corroborate it, contrary to ticket 24's note: someone has since taught the
+detector to match `await helper(this.db, ...)` and to span a chain broken across lines. At baseline the
+gate listed `/payroll/runs/inputs.service.ts` as **REGRESSED** (8 regressions); after the fix it is gone
+(7 regressions, all other territories). The corroboration is welcome but the spec is the proof — the gate
+still cannot see a chunk loop, which is why `input-puller.ts` now carries a `FALSE-POSITIVE`
+classification with the round-trip formula in its note.
+
+## Defect 2 — `POST /payroll/filings/export` built the CSV on the request thread
+
+**Fix — reuse the seam, no new one.** The `FILING_EXPORT` payroll-job type already existed and was unused.
+`POST /payroll/filings/export` now returns **202** with a durable job handle; a new
+`GET /payroll/filings/export/jobs/:jobId` (`payroll:tax:view`) reports `{ jobId, status, progress,
+filingId, errorMessage, statusLabel }`, resolving `filingId` from the job result once it succeeds. The CSV
+is built by `PayrollFilingsService.prepareExport` on the existing `PayrollJobsWorkerService`, which already
+claims, retries, dead-letters and reclaims stale locks.
+
+**No `LIMIT` was added.** Nothing truncates; the work moved off the request thread, which is what §5.1 and
+§12.1 ask for.
+
+New `filings/filings-export-job.service.ts` owns the request-side seam (validate cheaply, enqueue, report).
+It holds **no database handle at all**, so "the request path does not build the artifact" is structural
+rather than a convention. The cheap synchronous guards kept in the request path are the ones worth a prompt
+400: unsupported filing type, and non-India entity / rule-version contamination (one indexed row read).
+
+**A live bug was found and fixed on the way in:** the worker's `FILING_EXPORT` branch never passed `runId`
+or `month` to `prepareExport`, so a job enqueued through `POST /payroll/jobs` resolved no run and produced
+an empty artifact. That path was unreachable in practice only because nothing enqueued it.
+
+**Proof.** `filings/__tests__/filings-export-async.spec.ts` (7 tests): the request enqueues exactly one
+`FILING_EXPORT` job with the right type/actor/resource/payload and never calls `ensurePeriod`; `runId`
+reaches both the payload and the job resource; an unsupported filing type and a non-India entity are
+refused **before** anything is enqueued; a succeeded job reports its `filingId` and the prepared-export
+honesty label; a job of another type 404s through the filings status route rather than leaking; and the
+worker hands `runId`/`month` through to `prepareExport`.
+
+**Frontend followed the contract**, since leaving it would have told the operator "export prepared" while
+the job was still queued. `usePrepareFilingExport` now returns a `FilingExportJob`; new
+`useFilingExportJob(jobId)` polls `GET /payroll/filings/export/jobs/:jobId` every 2s until terminal; the
+export dialog moved into `features/payroll/taxes/filing-export-dialog.tsx`, holds the job handle, toasts
+*"Export queued"* on enqueue and *"Export prepared…"* (or the failure) on settle, and invalidates the
+filings list only when the job actually succeeded.
+
+## Permission-key drift (cross-territory finding #7) — closed
+
+`useExportPayrollReport` / `useExportJournal` guarded on `payroll:reports:view` while their buttons gate on
+`payroll:reports:export`. The server truth is both: the route decorator is `payroll:reports:view`, and the
+`format=csv` branch additionally calls `authorize(..., "payroll:reports:export")` in-service
+(`reports.controller.ts assertExport`, `journal.controller.ts getJournal`). Both hooks always send
+`format: "csv"`, so `payroll:reports:export` is the correct declaration and it **narrows** the client guard
+rather than widening it — no access is granted.
+
+`check:check-command-catalog` reads the route decorator, so this needed the gate's own sanctioned
+`STRICTER_KEYS` map (which exists for exactly this shape and stores the contract key so the entry goes
+stale the moment the backend gate changes). Two entries added; the gate and its 25-fixture self-test are
+both green.
+
+## Extra coverage — the locking and lock-TTL path
+
+`payout/locking-close-and-ttl.spec.ts` (11 tests) covers two of the untested surfaces ticket 24 flagged:
+
+- **`PayrollRunLockService` generation-lock takeover.** A fresh token and timestamp are stamped when the
+  run is free; the conditional `WHERE` really carries a **15-minute** staleness cutoff (the predicate's
+  bound Date is extracted and measured — mutating `LOCK_TTL_MS` to 1 minute fails two tests, so the
+  assertion is live, not decorative); a live lock that matches nothing 409s; a returning row carrying
+  **another acquirer's** token 409s rather than reporting a lock we do not hold; `release` scopes the clear
+  to the caller's own token, so a takeover winner survives the loser's release; and
+  `assertNoOtherActiveGeneration` blocks a sibling live generation while letting a stale one through.
+- **`LockingService.close()`** — the terminal transition, previously untested: a published run closes with
+  the actor membership stamped and a `CLOSED` run event written; another org's run 404s (never 403);
+  a `PAID` run and an already-`CLOSED` run are both refused; and the optimistic-concurrency branch fires
+  when the run drifts out of its read status before the update commits, writing no event.
+
+**Not covered, honestly:** `writeTdsYtdLedger` and `BatchStatusService.importBankReturn` are still
+untested, and there is still no single test spanning generate → reconcile. Those were out of budget.
+
+## Gates — follow-up pass
+
+Backend (`pnpm -C streamlineos-backend`):
+
+| Command | Exit | Number |
+|---|---|---|
+| `jest --runInBand --testPathPattern=payroll` | 0 | **124 suites / 955 tests** (from 121/931) |
+| `typecheck` | 0 | **0 errors** (the 4 cron/workflows errors ticket 24 saw are gone) |
+| `check:spec-typecheck` | 0 | passed — it caught a real constructor-arity break in `filings-list-pagination.spec.ts` that ts-jest `isolatedModules` could not |
+| `check:unbounded-reads` | 0 | ACTIONABLE 0, 0 unclassified |
+| `check:db-call-count` | 1 | ACTIONABLE **0 in payroll**; `/payroll/runs/inputs.service.ts` left the REGRESSED list (8 → 7, remainder all build/cron/kb/organization/support/surveys) |
+| `check:idempotent-commands` | 0 | every in-scope mutating handler carries `@Idempotent` |
+| `check:outbox-consumers` | 0 | every emitted event type has a consumer |
+| `check:module-gate` · `check:cache-invalidation` · `check:tenant-indexes` | 0 | all pass (tenant-indexes is now green repo-wide) |
+| `check:module-di` · `check:cycles` · `check:route-classification` · `check:route-duplicates` · `check:contract-breaking-change` · `check:contract-registry` · `check:openapi-coverage` · `check:bounded-contracts` · `check:fire-and-forget` · `check:bulk-id-limits` | 0 | all pass |
+| `check:file-sizes` | 1 | 4 files over 500 lines, **0 payroll** (splitting the filings service kept it out) |
+
+Frontend (`pnpm -C streamlineos-frontend/frontend`):
+
+| Command | Exit | Number |
+|---|---|---|
+| `type-check` | 0 | clean |
+| `check:command-catalog` | 0 | 25/25 self-test fixtures; 0 WRONG-KEY |
+| `check:query-scope` · `check:effect-fetches` · `check:colors` · `check:client-pages` · `check:contract-drift` · `check:cycles` · `check:route-access-contract` · `check:query-signal` · `check:icon-labels` · `check:over-300` | 0 | all pass |
+| `check:file-sizes` | 1 | `hooks/api/notifications-inbox.ts` only — **0 payroll** |
+| `check:dead-code` | 1 | 3 unclassified exports in `features/build`, `features/mail`, `app/api/media` — **0 payroll** |
+| `check:empty-states` | 1 | `features/workflows/builder/workflow-builder-canvas.tsx` — **not payroll** |
+
+`next build` and the seeded DB e2e suite were **NOT run** in this pass either.
+
+## Files changed — follow-up pass
+
+Backend:
+- `src/modules/payroll/runs/lib/input-puller.ts` — `pullAttendanceInputsByUser` + `PAYROLL_INPUT_PULL_CHUNK`; deleted the two now-unused single-user pullers
+- `src/modules/payroll/runs/inputs.service.ts` — batched pull, bulk upsert, probe-and-fail cap, `orgId` on the delete
+- `src/modules/payroll/runs/__tests__/reimport-inputs-call-count.spec.ts` *(new)*
+- `src/modules/payroll/filings/filings-export-job.service.ts` *(new)* — request-side export seam
+- `src/modules/payroll/filings/filings.service.ts` — export-job orchestration moved out; `prepareExport` is now documented as worker-side
+- `src/modules/payroll/filings/filings.controller.ts` — `POST export` → 202 + job; new `GET export/jobs/:jobId`
+- `src/modules/payroll/filings/__tests__/filings-export-async.spec.ts` *(new)*
+- `src/modules/payroll/jobs/payroll-jobs-worker.service.ts` — pass `runId`/`month` to `prepareExport`
+- `src/modules/payroll/payroll.module.ts` — register `PayrollFilingsExportJobService`
+- `src/modules/payroll/payout/locking-close-and-ttl.spec.ts` *(new)*
+
+Frontend:
+- `hooks/api/payroll/filings.ts` — `FilingExportJob`, `useFilingExportJob`, async `usePrepareFilingExport`
+- `hooks/api/payroll/reports.ts` — export hooks declare `payroll:reports:export`
+- `features/payroll/taxes/filing-export-dialog.tsx` *(new)* — dialog + job polling
+- `features/payroll/taxes/filings-tab.tsx` — uses the dialog
+- `lib/query-keys/payroll.ts` — `filingExportJob(jobId)`
+- `scripts/check-command-catalog.mjs` — two `STRICTER_KEYS` entries (the gate's own sanctioned mechanism)
+
+## Cross-territory notes from this pass
+
+1. **`src/scripts/baselines/db-call-count-classification.json` was NOT staged.** Another agent is
+   concurrently rewriting it (reclassifying build/cron/kb/organization entries from `N+1-FIXED` to
+   `ACTIONABLE`/`FALSE-POSITIVE`). My two payroll entries — a `FALSE-POSITIVE` for
+   `/payroll/runs/lib/input-puller.ts` and a refreshed note on `/payroll/runs/inputs.service.ts` — are
+   written into the working tree and will travel with whoever commits that file. Staging it would have
+   swallowed their in-progress work.
+2. **`check:db-call-count`'s detector is no longer blind** to DB work behind a helper or to a chain split
+   across lines; ticket 24's finding #6 is fixed by someone else. It still cannot distinguish a bounded
+   chunk loop from an N+1, which is what the `FALSE-POSITIVE` verdict is for.
+3. `check:file-sizes` (backend) fails on `ai-gateway-runner.helper.ts`, `cron-hr-retention.service.ts`,
+   `gdpr-subject-erasure.service.ts`, `storage.service.ts`; frontend on `hooks/api/notifications-inbox.ts`.
+   None are payroll.
+4. `check:dead-code` (frontend) has 3 unclassified exports and `check:empty-states` one hand-rolled block,
+   all outside payroll.

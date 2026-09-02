@@ -120,6 +120,8 @@ export const payrollQueryKeys = {
     filingsAll: [...base, "payroll", "filings"] as const,
     filingCapabilities: () =>
       [...base, "payroll", "filings", "capabilities"] as const,
+    filingExportJob: (jobId: number) =>
+      [...base, "payroll", "filings", "export-jobs", jobId] as const,
     loansAdmin: () => [...base, "payroll", "loans-admin"] as const,
     bonuses: () => [...base, "payroll", "bonuses"] as const,
     incentivesAll: [...base, "payroll", "incentives"] as const,

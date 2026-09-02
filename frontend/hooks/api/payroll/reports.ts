@@ -143,7 +143,7 @@ type ExportReportInput = {
 };
 
 export function useExportPayrollReport() {
-  return useAuthorizedMutation("payroll:reports:view", {
+  return useAuthorizedMutation("payroll:reports:export", {
     mutationKey: ["payroll", "export-report"],
     mutationFn: async ({ reportType, month, department, costCenter, workerType }: ExportReportInput) => {
       const blob = await apiClient.download(`/payroll/reports/${reportType}`, {
@@ -159,7 +159,7 @@ export function useExportPayrollReport() {
 }
 
 export function useExportJournal() {
-  return useAuthorizedMutation("payroll:reports:view", {
+  return useAuthorizedMutation("payroll:reports:export", {
     mutationKey: ["payroll", "export-journal"],
     mutationFn: async ({ month }: { month: string }) => {
       const blob = await apiClient.download("/payroll/reports/journal", { month, format: "csv" });
