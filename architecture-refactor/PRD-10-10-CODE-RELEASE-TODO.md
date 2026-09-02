@@ -749,9 +749,14 @@ Recorded explicitly so no unchecked box above is mistaken for an oversight.
   `payroll:reports:export`. Twelve further hooks declare a *stricter* key than
   their route requires and were deliberately left alone, recorded in
   `STRICTER_KEYS` keyed by the contract value so the entry goes stale the moment
-  the backend gate changes. Worth noting the other direction as a backend
-  question rather than a frontend one: several of those routes are mutating
-  operations gated on a `:view` key.
+  the backend gate changes. Several of those routes are mutating operations
+  gated on a `:view` key, which reads like a hole and is **not** one where it was
+  traced: `PATCH /hr/performance/reviews/{id}` passes
+  `await this.canManagePerformance(u)` into the service, so the route key is a
+  coarse entry gate and the authority check happens at the data layer, and
+  `POST /hr/recruitment/internal-jobs/{id}/apply` is self-service by design —
+  anyone who can see an internal job may apply to it. The remaining ten were not
+  traced individually; they are recorded, not accused.
 - **`useAuthorizedMutation` read "access not loaded yet" as "denied".** It
   consumed `useCan`, a boolean, while `permission-gate.ts` exists precisely to
   keep `pending` and `denied` apart — its own comment says a screen that reads an
