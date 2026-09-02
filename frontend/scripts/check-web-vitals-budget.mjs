@@ -131,6 +131,90 @@ function checkBudgets(results) {
   return { failures, notMeasured };
 }
 
+export function percentileOf(values, p) {
+  const sorted = [...values].filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
+  if (sorted.length === 0) return null;
+  const rank = (p / 100) * (sorted.length - 1);
+  const lo = Math.floor(rank);
+  const hi = Math.ceil(rank);
+  if (lo === hi) return sorted[lo];
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * (rank - lo);
+}
+
+/**
+ * INP measures how long an interaction takes to finish. It says nothing about
+ * whether the user saw ANYTHING happen in the meantime, and a route transition
+ * is where those two come apart: with sidebar prefetch off (ticket 27) and an
+ * authenticated route answering in 400-1000 ms, a nav tap on the mobile profile
+ * showed no DOM change at all for up to 1,739 ms and still recorded a good INP.
+ *
+ * The capture measures intent -> first DOM mutation per route and profile.
+ * Nothing read it, so the 100 ms target in the manifest was narration. This
+ * gates it: the p75 of the measured navigations on each profile must be inside
+ * the target, and a profile with no measurement at all fails rather than
+ * passing by absence. A single route/profile pair that genuinely has no in-app
+ * link in view (a chromeless surface at 390px) is listed, not counted as a
+ * breach — there is no navigation there to be slow.
+ */
+export function checkPerceivedResponsiveness(results) {
+  const block = results.perceivedResponsiveness;
+  const failures = [];
+  const unmeasured = [];
+  if (!block || typeof block !== "object")
+    return {
+      failures: [
+        {
+          profile: "all",
+          metric: "intent_to_feedback_p75_ms",
+          message:
+            "BUDGET BREACH [all] perceived responsiveness was not captured at all — the capture carries no perceivedResponsiveness block",
+        },
+      ],
+      unmeasured,
+      summary: {},
+    };
+
+  const target = Number.isFinite(block.target_ms) ? block.target_ms : 100;
+  const byProfile = { desktop: [], mobile: [] };
+
+  for (const [route, profiles] of Object.entries(block.byRoute ?? {})) {
+    for (const profile of ["desktop", "mobile"]) {
+      const entry = profiles?.[profile];
+      if (!entry) continue;
+      if (entry.measured === true && Number.isFinite(entry.ms)) byProfile[profile].push(entry.ms);
+      else unmeasured.push({ route, profile, reason: String(entry.reason ?? "not measured") });
+    }
+  }
+
+  const summary = {};
+  for (const profile of ["desktop", "mobile"]) {
+    const samples = byProfile[profile];
+    summary[profile] = {
+      count: samples.length,
+      p50_ms: percentileOf(samples, 50),
+      p75_ms: percentileOf(samples, 75),
+      max_ms: samples.length ? Math.max(...samples) : null,
+    };
+    if (samples.length === 0) {
+      failures.push({
+        profile,
+        metric: "intent_to_feedback_p75_ms",
+        message: `BUDGET BREACH [${profile}] intent-to-feedback was never measured on this profile — an unmeasured target is not a met target`,
+      });
+      continue;
+    }
+    const p75 = summary[profile].p75_ms;
+    if (p75 > target)
+      failures.push({
+        profile,
+        metric: "intent_to_feedback_p75_ms",
+        message: `BUDGET BREACH [${profile}] intent-to-feedback p75 ${p75.toFixed(0)}ms > target ${target}ms (${samples.length} navigations)`,
+      });
+  }
+
+  return { failures, unmeasured, summary, target };
+}
+
 function printBudgets() {
   console.log("Core Web Vitals budgets:");
   for (const [profile, b] of Object.entries(BUDGETS)) {
@@ -218,6 +302,50 @@ async function selfTest() {
       `an exception must never remove one`,
   );
 
+  const perceivedBreaching = checkPerceivedResponsiveness({
+    perceivedResponsiveness: {
+      target_ms: 100,
+      byRoute: {
+        "/dashboard": { desktop: { measured: true, ms: 30 }, mobile: { measured: true, ms: 1421 } },
+        "/inbox": { desktop: { measured: true, ms: 14 }, mobile: { measured: true, ms: 1739 } },
+        "/chat": { desktop: { measured: true, ms: 22 }, mobile: { measured: false, reason: "no in-app link in view" } },
+      },
+    },
+  });
+  const perceivedGood = checkPerceivedResponsiveness({
+    perceivedResponsiveness: {
+      target_ms: 100,
+      byRoute: {
+        "/dashboard": { desktop: { measured: true, ms: 12 }, mobile: { measured: true, ms: 40 } },
+        "/inbox": { desktop: { measured: true, ms: 14 }, mobile: { measured: true, ms: 55 } },
+      },
+    },
+  });
+  const perceivedAbsent = checkPerceivedResponsiveness({});
+  const perceivedUnmeasuredProfile = checkPerceivedResponsiveness({
+    perceivedResponsiveness: {
+      target_ms: 100,
+      byRoute: { "/dashboard": { desktop: { measured: true, ms: 12 }, mobile: { measured: false, reason: "no link" } } },
+    },
+  });
+
+  const perceivedOk =
+    perceivedBreaching.failures.length === 1 &&
+    perceivedBreaching.failures[0].profile === "mobile" &&
+    perceivedBreaching.unmeasured.length === 1 &&
+    perceivedGood.failures.length === 0 &&
+    perceivedAbsent.failures.length === 1 &&
+    perceivedUnmeasuredProfile.failures.length === 1 &&
+    perceivedUnmeasuredProfile.failures[0].profile === "mobile";
+
+  console.log(
+    `Perceived responsiveness: breaching fixture -> ${perceivedBreaching.failures.length} failure(s) ` +
+      `(expected 1, mobile), inside-target fixture -> ${perceivedGood.failures.length} (expected 0), ` +
+      `absent block -> ${perceivedAbsent.failures.length} (expected 1), ` +
+      `profile with no measurement -> ${perceivedUnmeasuredProfile.failures.length} (expected 1)`,
+  );
+  for (const f of perceivedBreaching.failures) console.log("  " + f.message);
+
   const expectedBreaches = 6;
   const breachesOk =
     failures.length === expectedBreaches &&
@@ -233,10 +361,11 @@ async function selfTest() {
       `(expected 1 — this is a FAIL without --allow-unmeasured)`,
   );
 
-  if (breachesOk && unmeasuredOk) {
+  if (breachesOk && unmeasuredOk && perceivedOk) {
     console.log(
-    "SELF-TEST PASS: breach detection fires, an unmeasured budget is not reported as met, and a recorded " +
-      "exception annotates a failure without removing it",
+    "SELF-TEST PASS: breach detection fires, an unmeasured budget is not reported as met, a recorded " +
+      "exception annotates a failure without removing it, and the perceived-responsiveness target is " +
+      "enforced rather than narrated",
   );
     process.exitCode = 0;
   } else {
@@ -250,6 +379,12 @@ async function selfTest() {
       console.error(
         `SELF-TEST FAIL: unmeasured fixture expected 0 failures / 1 not-measured, got ` +
           `${unmeasured.failures.length} / ${unmeasured.notMeasured.length}`,
+      );
+    if (!perceivedOk)
+      console.error(
+        `SELF-TEST FAIL: perceived-responsiveness fixtures — breaching ${perceivedBreaching.failures.length}/1, ` +
+          `inside-target ${perceivedGood.failures.length}/0, absent ${perceivedAbsent.failures.length}/1, ` +
+          `unmeasured-profile ${perceivedUnmeasuredProfile.failures.length}/1`,
       );
     process.exitCode = 1;
   }
@@ -303,7 +438,23 @@ function main() {
   }
   console.log(`\nMeasured authenticated routes: ${measuredRoutes.join(", ")}`);
 
-  const { failures, notMeasured } = checkBudgets(results);
+  const { failures: vitalsFailures, notMeasured } = checkBudgets(results);
+  const perceived = checkPerceivedResponsiveness(results);
+  const failures = [...vitalsFailures, ...perceived.failures];
+
+  console.log(
+    `\nPerceived responsiveness (intent -> first DOM mutation, target ${String(perceived.target ?? 100)}ms):`,
+  );
+  for (const profile of ["desktop", "mobile"]) {
+    const s = perceived.summary?.[profile];
+    if (!s) continue;
+    const fmt = (v) => (v === null || v === undefined ? "n/a" : `${v.toFixed(0)}ms`);
+    console.log(
+      `  [${profile}] ${s.count} navigation(s)  p50 ${fmt(s.p50_ms)}  p75 ${fmt(s.p75_ms)}  max ${fmt(s.max_ms)}`,
+    );
+  }
+  for (const u of perceived.unmeasured)
+    console.log(`  not measured: ${u.profile} ${u.route} — ${u.reason} (no navigation there to be slow)`);
 
   if (notMeasured.length > 0) {
     console.log(`\nNot measured:`);
