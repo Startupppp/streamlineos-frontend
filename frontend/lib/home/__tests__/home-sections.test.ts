@@ -10,6 +10,12 @@ import { backendPath } from "@/test-utils/backend-repo";
 
 const FRONTEND_ROOT = resolve(__dirname, "../../..");
 const DASHBOARD_HOOKS = join(FRONTEND_ROOT, "hooks", "api", "dashboard.ts");
+const DASHBOARD_ACCESS = join(
+  FRONTEND_ROOT,
+  "features",
+  "dashboard",
+  "use-dashboard-access.ts",
+);
 const PERMISSIONS_DIR = join(FRONTEND_ROOT, "lib", "rbac", "permissions");
 const BACKEND_DASHBOARD_CONTROLLER = backendPath("src", "modules", "dashboard", "dashboard.controller.ts");
 
@@ -184,5 +190,36 @@ describe("every Home query is gated before it fires", () => {
     }
     expect(ungated).toEqual([]);
     expect(evaluated).toBeGreaterThanOrEqual(8);
+  });
+});
+
+describe("Home consumes the generated contract instead of a parallel registry", () => {
+  const sectionPermissions = new Set(
+    HOME_SECTIONS.map((section) => homeSectionPermission(section.id)).filter(
+      (key): key is string => key !== null,
+    ),
+  );
+
+  it("has section permissions to compare, so an empty set cannot pass", () => {
+    expect(sectionPermissions.size).toBeGreaterThanOrEqual(6);
+  });
+
+  it("keeps no hand-written copy of a section permission in the Home access hook", () => {
+    const source = readFileSync(DASHBOARD_ACCESS, "utf8");
+    expect(source).toContain("homeSectionPermission");
+    const literals = [...source.matchAll(/can\(\s*"([^"]+)"\s*\)/g)].map(
+      (match) => match[1],
+    );
+    expect(literals.length).toBeGreaterThanOrEqual(8);
+    expect(literals.filter((key) => sectionPermissions.has(key))).toEqual([]);
+  });
+
+  it("gates every Home query on a permission the backend manifest declares", () => {
+    const source = readFileSync(DASHBOARD_HOOKS, "utf8");
+    const gateKeys = [...source.matchAll(/useCan\(\s*"([^"]+)"\s*\)/g)].map(
+      (match) => match[1],
+    );
+    expect(gateKeys.length).toBeGreaterThanOrEqual(6);
+    expect(gateKeys.filter((key) => !sectionPermissions.has(key))).toEqual([]);
   });
 });

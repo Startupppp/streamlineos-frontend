@@ -79,18 +79,9 @@ import type {
   NotificationTemplate,
   NotificationChannel,
 } from "@/types/notifications";
+import { NOTIFICATION_CHANNELS } from "@/features/notifications/notification-channels";
 
 const NO_CATEGORY = "none";
-
-const CHANNELS: Array<{ value: NotificationChannel; label: string }> = [
-  { value: "IN_APP", label: "In-App" },
-  { value: "EMAIL", label: "Email" },
-  { value: "PUSH", label: "Push" },
-  { value: "SMS", label: "SMS" },
-  { value: "WHATSAPP", label: "WhatsApp" },
-  { value: "WEBHOOK", label: "Webhook" },
-];
-
 
 export function TemplateSheet({
   open,
@@ -219,7 +210,7 @@ export function TemplateSheet({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {CHANNELS.map((c) => (
+                          {NOTIFICATION_CHANNELS.map((c) => (
                             <SelectItem key={c.value} value={c.value}>
                               {c.label}
                             </SelectItem>

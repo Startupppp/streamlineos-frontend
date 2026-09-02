@@ -18,10 +18,8 @@ import type {
   NotificationCategory,
   NotificationChannel,
 } from "@/types/notifications";
-import {
-  NOTIFICATION_POLICY_CHANNELS,
-  type CategoryState,
-} from "./notification-policy-state";
+import type { CategoryState } from "./notification-policy-state";
+import { NOTIFICATION_CHANNELS } from "@/features/notifications/notification-channels";
 
 interface DefaultChannelsCardProps {
   defaultChannels: NotificationChannel[];
@@ -44,7 +42,7 @@ export function DefaultChannelsCard({
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-2.5">
-          {NOTIFICATION_POLICY_CHANNELS.map((ch) => (
+          {NOTIFICATION_CHANNELS.map((ch) => (
             <div key={ch.value} className="flex items-center gap-2">
               <Checkbox
                 id={`default-ch-${ch.value}`}
@@ -151,7 +149,7 @@ export function CategoryOverridesCard({
                 </div>
                 {!state.muted && (
                   <div className="flex flex-wrap gap-x-5 gap-y-1.5">
-                    {NOTIFICATION_POLICY_CHANNELS.map((ch) => (
+                    {NOTIFICATION_CHANNELS.map((ch) => (
                       <div key={ch.value} className="flex items-center gap-1.5">
                         <Checkbox
                           id={`cat-${cat}-ch-${ch.value}`}

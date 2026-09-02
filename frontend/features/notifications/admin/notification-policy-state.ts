@@ -5,18 +5,6 @@ import type {
   PolicyOverride,
 } from "@/types/notifications";
 
-export const NOTIFICATION_POLICY_CHANNELS: Array<{
-  value: NotificationChannel;
-  label: string;
-}> = [
-  { value: "IN_APP", label: "In-App" },
-  { value: "EMAIL", label: "Email" },
-  { value: "PUSH", label: "Push" },
-  { value: "SMS", label: "SMS" },
-  { value: "WHATSAPP", label: "WhatsApp" },
-  { value: "WEBHOOK", label: "Webhook" },
-];
-
 export interface CategoryState {
   muted: boolean;
   channels: NotificationChannel[];

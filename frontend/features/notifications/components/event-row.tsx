@@ -59,7 +59,7 @@ import type {
   NotificationPriority,
 } from "@/types/notifications";
 
-import { CHANNELS, PRIORITIES, QUIET_HOURS_OPTIONS, priorityBadgeClass } from "./event-config";
+import { PRIORITIES, QUIET_HOURS_OPTIONS, priorityBadgeClass } from "./event-config";
 
 export function EventRow({
   event,

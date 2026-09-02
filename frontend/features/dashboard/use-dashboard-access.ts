@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useAccess } from "@/hooks/api/access";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
+import { homeSectionPermission } from "@/lib/home/home-sections";
 import { matchesOrgModule } from "@/lib/module-vocabulary";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
@@ -44,6 +45,10 @@ export function useDashboardAccess(): DashboardAccess {
     const owner = data?.isOrgOwner ?? false;
     const scopes = data?.scopes ?? {};
     const can = (key: PermissionKey) => owner || key in scopes;
+    const canSection = (id: string) => {
+      const key = homeSectionPermission(id);
+      return key === null ? true : can(key);
+    };
 
     return {
       accessLoading: isLoading,
@@ -55,14 +60,14 @@ export function useDashboardAccess(): DashboardAccess {
       accountingEnabled: moduleOn("accounting"),
       canViewEmployees: can("hr:employees:view"),
       canCreateEmployees: can("hr:employees:create"),
-      canViewAttendance: can("hr:attendance:view"),
+      canViewAttendance: canSection("team-attendance"),
       canSelfAttendance: can("self:attendance"),
-      canViewLeaves: can("hr:leaves:view"),
-      canApproveLeaves: can("hr:leaves:approve"),
-      canViewExecutive: can("hr:analytics:read"),
-      canViewCrmLeads: can("crm:leads:view"),
+      canViewLeaves: canSection("leaves-today"),
+      canApproveLeaves: canSection("pending-approvals"),
+      canViewExecutive: canSection("executive"),
+      canViewCrmLeads: canSection("today-activities"),
       canViewCrmReports: can("crm:reports:view"),
-      canViewTickets: can("build:tickets:view"),
+      canViewTickets: canSection("recent-activity"),
       canViewPayrollSelf: can("self:payroll"),
       canViewPayrollAdmin: can("payroll:runs:view"),
       canViewOnboardingDocsSummary: can("hr:onboarding:manage"),

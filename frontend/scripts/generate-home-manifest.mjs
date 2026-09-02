@@ -15,16 +15,30 @@ import {
   parseControllerRoutes,
   parseExternalHomeRoutes,
 } from "./home-manifest-parse.mjs";
+import {
+  BACKEND_ROOT,
+  backendAvailable,
+  backendUnreachableReason,
+} from "./check-repo-paths.mjs";
 
 const FRONTEND_ROOT = fileURLToPath(new URL("..", import.meta.url));
-const BACKEND_SRC = join(FRONTEND_ROOT, "..", "backend", "src");
+const OUT_PATH = join(FRONTEND_ROOT, "lib", "home", "home-manifest.generated.json");
+
+// Found by marker, not by relative depth: `<frontend>/../backend` does not
+// exist on a sibling checkout, and the miss crashed the generator with ENOENT
+// while check-home-manifest kept telling people to run it.
+if (!backendAvailable) {
+  console.error(`\u2716  Cannot generate the Home manifest: ${backendUnreachableReason()}`);
+  process.exit(1);
+}
+
+const BACKEND_SRC = join(BACKEND_ROOT, "src");
 const CONTROLLER_PATH = join(
   BACKEND_SRC,
   "modules",
   "dashboard",
   "dashboard.controller.ts",
 );
-const OUT_PATH = join(FRONTEND_ROOT, "lib", "home", "home-manifest.generated.json");
 
 const dashboardRoutes = parseControllerRoutes(readFileSync(CONTROLLER_PATH, "utf8"));
 const externalRoutes = parseExternalHomeRoutes(BACKEND_SRC);
