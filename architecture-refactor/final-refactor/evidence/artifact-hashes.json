@@ -1,0 +1,21 @@
+{
+  "generatedAt": "2026-09-02",
+  "sourceDir": "architecture-refactor/final-refactor/evidence",
+  "note": "Connection strings in bootstrap logs are redacted to postgresql://user:***@host before hashing.",
+  "fileCount": 13,
+  "hashes": {
+    "apply-0000-b2-v2.log": "eb68b97b5b42ba7404427d43d678ed4136478ae899b0e9de58b424798c8aa042",
+    "apply-0000-b2.log": "3339672e09bf095033628116e1f0abdfb131f715c4b8183ea6226f4756f15bb2",
+    "apply-0000-c2.log": "3372e417874d8368ab4aac6e81529fe7f1b1b320081d7f67ef67b33b5eb8894d",
+    "parity-boot-b-vs-c-v2.log": "3bbe1680dc30a3955229d2625fb9ee1eeac868dbbe05ad71bbc4e1217c53f20e",
+    "parity-boot-b-vs-c.log": "045b2f87d0b7d5550b66cd9283f8daebcf45678acb489607ef9cc06740482cb2",
+    "replay-boot-b-partial-v2.log": "292466e4b3a56498830ffd99690d3c433a6a46f15af4e61e09e06444f2b4fb65",
+    "replay-boot-b-partial.log": "cd53a1917df20a9e08b9a70f508c650a8571bc4481eb8762c00d8518d5cbc48d",
+    "replay-boot-b-resume-v2.log": "18ba985d6c8eec7205927a3601f1aeb7e6509da1d65faf8333f116853ad60555",
+    "replay-boot-b-resume.log": "7f80f7c26c86812349679d1cdec15a6158d700674f84ba712f1045d3afafcb6e",
+    "replay-scratch-boot-c-v2.log": "13735a381ab2329436248a549d189430af946dec906c0c3e8a6921422b7d456f",
+    "replay-scratch-boot-c.log": "3e569f17cfa951f58857814955d6d0159af988705f93b2ddd99aacae7bd7aa67",
+    "s02-bootstrap-parity.md": "a6e9b72647e856775232f2b0e4e1c45dcc0274489d2c11c7a99b50e9b05c1b4d",
+    "s02-tenant-integrity.md": "0403ee05d49c9434cce0b3a69ab347eff8b8e222f1fca6d70927ddd4548a68af"
+  }
+}

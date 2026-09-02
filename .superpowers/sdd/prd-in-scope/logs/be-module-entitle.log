@@ -1,5 +1,0 @@
-
-> streamlineos-api@0.1.0 check:module-entitlement D:\projects\personal\Streamlineos\backend
-> node src/scripts/check-module-entitlement.mjs
-
-OK — timesheets: planGated=true, storedKey="TIMESHEETS" round-trips correctly.

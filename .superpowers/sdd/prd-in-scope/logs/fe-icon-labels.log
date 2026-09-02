@@ -1,5 +1,0 @@
-
-> streamlineos@0.1.0 check:icon-labels D:\projects\personal\Streamlineos\frontend
-> node scripts/check-no-unlabeled-icon-buttons.mjs
-
-✔  No icon-only buttons without an accessible name found.

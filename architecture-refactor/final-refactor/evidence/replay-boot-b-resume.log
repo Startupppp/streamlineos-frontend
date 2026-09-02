@@ -1,0 +1,45 @@
+  25 applied (81 pre-done) at 29s — last 0380_rls_with_check_nullable_tenant
+  50 applied (81 pre-done) at 56s — last 0400_inv_valuation_grain
+  75 applied (81 pre-done) at 89s — last 0155_roadmap_goals_soft_delete
+  100 applied (81 pre-done) at 132s — last 0180_hr_kb_partial_live_indexes
+  FAIL 0431_build_events_schema: relation "ticket_activity_log" already exists in schema "build_events"
+  125 applied (81 pre-done) at 165s — last 0450_home_module_access_keys
+  150 applied (81 pre-done) at 205s — last 0216_backfill_activity_permissions
+  175 applied (81 pre-done) at 253s — last 0280_importer_at_scale
+  200 applied (81 pre-done) at 277s — last 0499_search_lead_party_probe
+  225 applied (81 pre-done) at 322s — last 0575_ticket_list_sort_indexes
+  250 applied (81 pre-done) at 421s — last 0610_agent_tokens_membership_and_ceiling
+  275 applied (81 pre-done) at 641s — last 0638_accounting_child_tenant_indexes
+  300 applied (81 pre-done) at 708s — last 0663_invoice_reminder_due_index
+  FAIL 0690_build_ticket_activity_log_user_membership_id: column t.user_id does not exist
+  FAIL 0691_build_ticket_activity_log_user_membership_id_validate: constraint "fk_ticket_activity_log_user_actor" of relation "ticket_activity_log" does not exist
+  FAIL 0696_build_sprint_scope_events_actor_membership_id: column t.actor_id does not exist
+  FAIL 0697_build_sprint_scope_events_actor_membership_id_validate: constraint "fk_sprint_scope_events_actor" of relation "sprint_scope_events" does not exist
+  325 applied (81 pre-done) at 751s — last 0629_calendar_events_org_id_composite_unique
+  FAIL 0716_build_attr_contract: column t.user_id does not exist
+  350 applied (81 pre-done) at 793s — last 0725_chat_actor_contraction_backfill
+  375 applied (81 pre-done) at 914s — last 0768_rls_uncovered_tenant_tables
+  400 applied (81 pre-done) at 954s — last 0795_gdpr_export_jobs
+  425 applied (81 pre-done) at 1085s — last 0820_timesheets_portal_actor_companion
+  450 applied (81 pre-done) at 1137s — last 0846_hr_wfh_requests_user_actor
+  475 applied (81 pre-done) at 1210s — last 0909_build_common_actor_validate
+  500 applied (81 pre-done) at 1269s — last 0933_storage_file_quarantine
+  FAIL 0938_ar02_build_self_ref_composite_fks: syntax error at or near "VALIDATE"
+  FAIL 0939_ar02_billing_composite_fks: syntax error at or near "VALIDATE"
+  FAIL 0940_ar02_misc_composite_fks: syntax error at or near "VALIDATE"
+  FAIL 0947_ar02_build_composite_fks: there is no unique constraint matching given keys for referenced table "ticket_comments"
+  FAIL 0955_ar02_drop_hr_payroll_single_fks: relation "payroll_journal_entries" does not exist
+
+RESULT: applied=517 skipped=81 failures=11 tables=946 in 1383s
+FAILURES:
+  0431_build_events_schema: relation "ticket_activity_log" already exists in schema "build_events"
+  0690_build_ticket_activity_log_user_membership_id: column t.user_id does not exist
+  0691_build_ticket_activity_log_user_membership_id_validate: constraint "fk_ticket_activity_log_user_actor" of relation "ticket_activity_log" does not exist
+  0696_build_sprint_scope_events_actor_membership_id: column t.actor_id does not exist
+  0697_build_sprint_scope_events_actor_membership_id_validate: constraint "fk_sprint_scope_events_actor" of relation "sprint_scope_events" does not exist
+  0716_build_attr_contract: column t.user_id does not exist
+  0938_ar02_build_self_ref_composite_fks: syntax error at or near "VALIDATE"
+  0939_ar02_billing_composite_fks: syntax error at or near "VALIDATE"
+  0940_ar02_misc_composite_fks: syntax error at or near "VALIDATE"
+  0947_ar02_build_composite_fks: there is no unique constraint matching given keys for referenced table "ticket_comments"
+  0955_ar02_drop_hr_payroll_single_fks: relation "payroll_journal_entries" does not exist

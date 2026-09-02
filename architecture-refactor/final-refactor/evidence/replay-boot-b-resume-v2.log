@@ -1,0 +1,24 @@
+  25 applied (80 pre-done) at 28s — last 0379_drop_users_department_id
+  50 applied (80 pre-done) at 53s — last 0399_inv_uom_conversions
+  75 applied (80 pre-done) at 85s — last 0419_notification_outbox
+  100 applied (80 pre-done) at 126s — last 0179_curved_falcon
+  125 applied (80 pre-done) at 153s — last 0448_hr_relational_tables
+  150 applied (80 pre-done) at 187s — last 0214_deal_transitions_money_links
+  175 applied (80 pre-done) at 233s — last 0290_issue_records
+  200 applied (80 pre-done) at 258s — last 0497_ticket_key_lookup_index
+  225 applied (80 pre-done) at 300s — last 0543_hr_position_taxonomy
+  250 applied (80 pre-done) at 391s — last 0608_organization_placement_and_lifecycle
+  275 applied (80 pre-done) at 596s — last 0635_kb_composite_tenant_constraints
+  300 applied (80 pre-done) at 638s — last 0661_kb_page_membership_actors
+  325 applied (80 pre-done) at 664s — last 0695_build_ticket_related_links_created_by_membership_id_validate
+  350 applied (80 pre-done) at 687s — last 0718_accounting_attr_expand
+  375 applied (80 pre-done) at 710s — last 0762_chat_presence_membership_not_null
+  400 applied (80 pre-done) at 799s — last 0787_workflow_secrets_encrypt_rls
+  425 applied (80 pre-done) at 830s — last 0813_kb_events_credits_actor_membership_companion
+  450 applied (80 pre-done) at 908s — last 0839_fix_set_null_on_not_null_actor_columns
+  475 applied (80 pre-done) at 950s — last 0902_hr_wellness_mood_actor_expand
+  500 applied (80 pre-done) at 988s — last 0927_s01_invitation_membership_fk_contract
+  525 applied (80 pre-done) at 1070s — last 0962_ar02_tenant_fk_unique_prereqs
+  550 applied (80 pre-done) at 1222s — last 0986_ar02_resolve_conflicting_actor_fks
+
+RESULT: applied=554 skipped=80 failures=0 tables=943 in 1226s

@@ -1,4 +1,0 @@
-
-> streamlineos-api@0.1.0 typecheck D:\projects\personal\Streamlineos\backend
-> node --max-old-space-size=8192 ./node_modules/typescript/bin/tsc --noEmit -p tsconfig.build.json
-

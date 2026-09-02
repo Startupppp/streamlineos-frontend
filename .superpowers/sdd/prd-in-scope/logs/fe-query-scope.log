@@ -1,5 +1,0 @@
-
-> streamlineos@0.1.0 check:query-scope D:\projects\personal\Streamlineos\frontend
-> node scripts/check-query-scope.mjs
-
-✔  No query-scope violations found.
