@@ -242,7 +242,15 @@ export function useGenerateComplianceEvents() {
   return useAuthorizedMutation("hr:compliance:manage", {
     mutationKey: ["hr", "global", "compliance", "generateEvents"],
     mutationFn: (requirementId?: number) =>
-      apiClient.post<{ generated: number }>(`/hr/global/compliance/generate-events${requirementId ? `?requirementId=${requirementId}` : ""}`, {}),
+      requirementId === undefined
+        ? apiClient.post<{ generated: number }>(
+            "/hr/global/compliance/generate-events",
+            {},
+          )
+        : apiClient.post<{ generated: number }>(
+            `/hr/global/compliance/generate-events?requirementId=${requirementId}`,
+            {},
+          ),
     onSuccess: (res: { generated: number }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.hr.complianceEvents() });
       toast.success(`Generated ${res.generated} compliance events`);
