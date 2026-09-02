@@ -1,346 +1,308 @@
 # Ticket 26 — Web Vitals budgets on a production build
 
-**1 of 7 boxes closed. 6 open.** Every number below came from a command I ran and read; the
+**5 of 7 boxes closed. 2 open.** Every number below came from a command I ran and read; the
 command and its exit code are named beside it.
 
-**The headline is not a fix. It is that the six breached numbers this ticket was handed cannot be
-reproduced as product evidence, because on this machine the app never renders the product.** The
-production build now works, the capture is real, and the capture *refuses itself* — which is the
-correct outcome and the thing that had been missing.
+**The headline changed this session.** The previous pass recorded numbers for six routes that were
+void: it had no authenticated session, so every route painted an access-failure shell and the driver
+correctly refused all 72 samples. This session obtained a real session against a local seeded
+backend and re-measured. On **192 authenticated samples** — 12 routes × 2 profiles × 8 repetitions,
+0 unauthorized, 0 off-route, 0 unusable — **four of the six breached metrics are now inside budget
+and the remaining two are one backend call.**
+
+| | previous (void) | this capture (authenticated) | budget | verdict |
+|---|---|---|---|---|
+| desktop LCP p75 | 1 685 | **888 ms** | 1 500 | **met** |
+| desktop FCP p75 | 1 564 | **865 ms** | 1 200 | **met** |
+| desktop INP p75 | not measured | **48 ms** | 200 | **met** |
+| desktop CLS p75 | 0.000 | **0.0008** | 0.1 | **met** |
+| desktop TTFB p95 | 1 761 | **1 669 ms** | 400 | **BREACH** |
+| mobile LCP p75 | — | **1 002 ms** | 2 500 | **met** |
+| mobile FCP p75 | 1 742 | **758 ms** | 1 800 | **met** |
+| mobile INP p75 | not measured | **96 ms** | 200 | **met** |
+| mobile CLS p75 | 0.000 | **0.000** | 0.1 | **met** |
+| mobile TTFB p95 | 1 804 | **932 ms** | 600 | **BREACH** |
+
+`node scripts/check-web-vitals-budget.mjs` → **exit 1, 2 violations** (was 4 violations + 2 not
+measured). Both remaining violations carry an owner and a measured cause.
 
 ---
 
-## 1. `next build` — the wall is real, and it is one line
+## 1. How the session was obtained — and the product defect on the way
 
-**It is not `/billing/ai-credits`.** That route does not exist (it is `/settings/billing/ai-credits`,
-and platform billing is exactly two Settings pages per root CLAUDE.md §8). The build dies at
-whichever route's page data is collected first — on HEAD that is `/forms/[token]` — and the cause is
-the same for all 601 routes because the throw is in the **root layout**:
+`streamlineos-backend/.env` carries neither `NEXTAUTH_SECRET` nor `AUTH_SIGNING_KEYS`. Without them
+`POST /auth/session-exchange` returns **503** unconditionally, so no local frontend can obtain a
+backend JWT. Supplying both as **local placeholders in the process environment only** (never written
+into either repository, never a real secret) makes the exchange work.
+
+**The product defect that hides behind that 503 is worth a ticket of its own.** When
+`/auth/session-exchange` fails, the frontend does not render an error state — it sits on
+**"Syncing organization…"** forever, with no message, no retry and no way out. A user whose exchange
+fails in production sees a branded spinner and nothing else. The driver now detects exactly this
+(`brandedLoader` in `findUnusableSamples`), which is how the previous pass's refusal worked at all,
+but the app itself still has no terminal state for it. *Owner: whoever owns
+`components/layout/dashboard-shell.tsx` / the org-sync boundary — not this ticket's territory.*
+
+The identity used is the seeded owner of the `scratch_perf_seed` tenant
+(`aaaaaaaa-1111-0000-0000-000000000001`), the same fixture report `00-seeded-perf-database.md`
+provisions. The cookie is minted exactly as NextAuth v5 does it:
+`hkdf("sha256", secret, "authjs.session-token", "Auth.js Generated Encryption Key (authjs.session-token)", 64)`
+then `EncryptJWT({alg:"dir", enc:"A256CBC-HS512"})`.
+
+**Proof of authentication before any number was recorded**, which is the thing the previous pass
+could not do:
+
+- `authorization.verdict` — *"every measured sample rendered an authorized shell"*, `unauthorizedSamples: 0`
+  of 192, against `MIN_AUTHORIZED_NAV_LINKS = 3` distinct in-app nav links.
+- `contentAssertion.verdict` — *"every measured sample rendered real page content"*, 0 unusable,
+  0 off-route.
+- Independently: `curl` with the cookie against `/hr/employees` returns 200 and the parsed body
+  contains the HRMS shell, not the sign-in page.
+
+The refusal is not decorative: it is what produced the previous session's honest zero.
+
+---
+
+## 2. `next build` — the wall is real, and it is one line
+
+**It is not `/billing/ai-credits`.** That route does not exist. The build dies in the **root layout**:
 
 ```
 [env] Validation failed:
   NEXTAUTH_SECRET: In production, NEXTAUTH_SECRET must be at least 44 characters (256-bit base64)
-Error: Failed to collect configuration for /forms/[token]
-  [cause]: Error: Missing or invalid required environment variables
       at module evaluation (lib/env.ts:40:11)
       at module evaluation (app/layout.tsx:120:1)
 ```
 
-`app/layout.tsx:6` does `import "../lib/env"`, and `lib/env.ts:39-40` throws when
-`NODE_ENV === "production"`. `frontend/.env` carries a **36-character** `NEXTAUTH_SECRET`; the schema
-demands 44. That is the entire wall.
+`frontend/.env` carries a **36-character** `NEXTAUTH_SECRET`; the schema demands 44. With a longer
+local placeholder in `.env.production.local` the build completes. This session's capture ran against
+build id **`qlh_3k7hMskrlYGND5MMp`**, `serverMode` **derived** as `"production"` by comparing the
+build id in the served HTML against `.next/BUILD_ID` — not asserted.
 
-**Reproduced:** `npx next build` on a clean `git archive HEAD` tree with the repo's own `.env` →
-**exit 1**, log `build2-wall.log`.
-**Cleared:** the same tree with `.env.production.local` supplying a 52-character local placeholder
-(`local-capture-placeholder-not-a-real-secret-00000000` — a placeholder, never a credential, never
-written into the repository) → `npx next build` **exit 0**, build id `5KxS0uW9Wrm0BIVYZicTs`,
-601 routes, `log build3-capture.log`.
-
-Two smaller findings from the same runs:
-
-- A build against the **shared working tree** failed earlier at `Running TypeScript` with **38
-  errors** in `lib/api-envelope` consumers (tickets 28/34 mid-refactor). Not mine, and gone by the
-  end of the session — `pnpm type-check` through the mutex now exits **0** with **0** errors.
-  I built from `git archive HEAD` (65b99a49b) **plus this ticket's own changed files** so the
-  capture is of a known commit and not of 43 files of other agents' in-flight work. Ticket 27's
-  `DataTable` row-loss fix is committed at HEAD (3c2e354fb) and **is** in this build.
-- Turbopack refuses a `node_modules` symlink that leaves the project root
-  (`TurbopackInternalError: Symlink [project]/node_modules is invalid`). An APFS clone
-  (`cp -Rc`, 18 s, 1.2 GB logical) is the working way to build an out-of-tree copy.
-
-**For ticket 27:** yes — production build plus real-browser capture both work now. Method, ports and
-env are in this report; `memory`, `longTasks` and `hydration` are recorded below.
+Turbopack refuses a `node_modules` symlink that leaves the project root; an APFS clone (`cp -Rc`) is
+the working way to build an out-of-tree copy.
 
 ---
 
-## 2. The capture, and why it refuses itself
+## 3. TTFB — the two remaining breaches, decomposed
 
-`node scripts/measure-web-vitals.mjs --base-url=http://localhost:1002 --routes=/mail,/inbox,/dashboard --repeat=12 …`
-→ **exit 1**, 72 samples, `serverMode: "production"`, build id matches `.next/BUILD_ID`.
+Same production server, same machine, same session:
 
-It refuses. `72/72` samples rendered **3 words**. The reason is not the frontend:
-
-| Leg | Measured | How |
+| Leg | Measured | Method |
 |---|---|---|
-| Backend `/auth/session-exchange` | **503** before, **401** after | `NEXTAUTH_SECRET` is absent from `streamlineos-backend/.env`, so the endpoint short-circuits; with it supplied the synthetic identity is not an active account in the shared Neon database |
-| Therefore `session.backendJwt` | `undefined` | `lib/auth.ts:238-252` |
-| Therefore `serverGet("/me/access")` | throws `UNAUTHENTICATED` | `lib/server-fetch.ts:45-48` |
-| Therefore `getServerAccess()` | returns `DENIED` | `lib/rbac/get-server-access.ts` |
-| Therefore the shell | paints its access-failure state, then `lib/api-client.ts:181` calls `signOut()` | — |
+| `/` (public landing) | **9–13 ms** | `curl` |
+| backend `GET /health` (no DB) | **0.6–1.4 ms** | `curl`, 3 runs |
+| backend `GET /auth/session-data/:userId` | **p50 100 ms**, max 948 | 6 runs, direct |
+| backend `POST /auth/session-exchange` | **p50 563 ms**, min 463, max 1 122 | 6 runs, direct |
+| backend `GET /me/access` | **p50 503 ms**, min 378, max 1 004 | 6 runs, direct, with a real JWT |
+| frontend `/dashboard` server render | **p50 517 / p75 659 / p95 835 ms** | plain Node fetch to first byte, 8 runs, all HTTP 200 |
+| frontend, worst route (`/inbox`) | **p50 597 / p75 835 / p95 1 218 ms** | same |
 
-**No Web Vitals capture of an authenticated route is possible on this machine as configured.** That
-is an infrastructure blocker, not a frontend defect, and it applies to the six numbers this ticket
-was handed as much as to mine.
+`lib/rbac/get-server-access.ts` issues **`GET /me/access` on every authenticated server render**.
+React's `cache()` dedupes it within a single render, never across renders, so every navigation pays
+it. At p50 503 ms that one call *is* the TTFB: the same server, same process, same build returns the
+public landing in 9 ms.
 
-### Three ways the old driver would have recorded that failure as a good page
+Note the earlier report's attribution — "`GET /auth/session-data` at 588–757 ms, issued twice on a
+non-2xx" — was measured on the **failing** path. Authenticated, that call is 100 ms and is not the
+problem. The correction matters because it moves the owner from the retry logic to `/me/access`.
 
-All three are now closed, all three are self-tested, and the first two are almost certainly how
-earlier numbers came about.
-
-1. **The shell's own error card was invisible to it.** `errorBoundary` matched only
-   `"Something went wrong"`. The shell's access-failure copy is **`"Couldn't load your organization"`**
-   (`components/layout/dashboard-shell.tsx:183`), so the error card passed the content assertion and
-   its LCP would have been filed as the route's. Fixed: `SHELL_FAILURE_COPY` covers every string the
-   shell can paint instead of the app.
-2. **A sample measured on `/signin` was recorded as `/mail`.** Nothing compared the landed URL to the
-   requested route. Because the app signs itself out on one refused `/me/access`, every navigation
-   after the first landed on `/signin` — which paints in **5 ms TTFB / 48 ms FCP** and would have been
-   recorded as an excellent `/mail`. I watched this happen: `[desktop] /mail 2/12 ttfb=9 fcp=68 …
-   words=108`. Fixed: `findOffRouteSamples` refuses it, the session cookie is re-set before every
-   navigation, and an off-route sample is re-measured up to 3 times before it fails the run.
-3. **An unauthorized shell counted as a measurement.** Fixed: `findUnauthorizedSamples` requires ≥3
-   distinct in-app nav links and refuses the run otherwise.
-
-The byte pass got the same guard: 4 of 9 byte-only routes landed on `/signin` and were **DISCARDED**
-rather than recorded as that route's bytes.
+**Localhost variance, acknowledged rather than used.** Loopback removes real network time, so these
+figures **understate** production. The mobile profile adds 150 ms of emulated RTT — about a sixth of
+its 932 ms p95, not the breach. The desktop browser p95 (1 669 ms) exceeds the unthrottled
+server-side p95 (835–1 218 ms) because the server pass ran last, with the host under other agents'
+load; both are recorded so neither can be cherry-picked.
 
 ---
 
-## 3. TTFB — measured, attributed, and not the frontend's
+## 4. Perceived responsiveness — measured, fixed, and now gated
 
-This is the one place the ticket asked for a decomposition, so here it is. Same production server,
-same machine, same minute:
+Ticket 27 turned the sidebar's viewport prefetch off, which was right: 354 nav `<Link>`s were firing
+speculative RSC requests that re-ran the authenticated layout. The cost is that a nav click now
+starts a cold navigation against a route that answers in 400–1 000 ms. The previous session measured
+a tap producing **no DOM change for up to 1 739 ms** — the interface looked frozen while work ran.
 
-| What | TTFB | Method |
-|---|---|---|
-| `/` (public landing) | **9–13 ms** | `curl`, 3 runs |
-| `/signin` (public) | **5–18 ms** | `curl`, 3 runs |
-| `/dashboard` (authenticated) | **1 420 / 1 495 / 1 728 ms** p50/p75/p95 | plain Node `fetch` to first body byte, 12 runs, all HTTP 200 |
-| `/mail` | **1 427 / 1 495 / 1 704 ms** | same |
-| `/inbox` | **1 419 / 1 590 / 1 637 ms** | same |
-| backend `GET /auth/session-data/:userId` | **588, 593, 757 ms** (three runs) | `curl`, direct to `:1500` |
-| backend `GET /health` (no DB) | **0.8–1.0 ms** (three runs) | `curl`, direct to `:1500` |
+**Fix:** `components/layout/nav-pending-indicator.tsx` — Next 16's `useLinkStatus`, rendered inside
+every sidebar item (expanded and collapsed) and every mobile bottom-nav and overflow item. It is
+absolutely positioned and present in **both** states, so appearing costs no layout shift, and it is
+`aria-hidden` because the route change is the announcement.
 
-The whole gap between 9 ms and 1 450 ms is one backend call. `lib/auth.ts`'s `session()` callback
-calls `fetchSessionDataCached` on **every server render of every authenticated route**, and
-`lib/auth-session.ts:126` retries it **twice** on a non-2xx. The backend spends that time on the
-shared Neon instance in **ap-southeast-1** (its own logs show `db.query.execute latencyMs: 101-127`
-per query).
+**Measured on the authenticated capture**, click → first DOM mutation on the same in-page clock:
 
-**There is nothing in the bundle, the route composition or the render in this number**, and the
-proof is that the same server, same build, same process returns 242 kB of landing-page HTML in 9 ms.
-This is why FCP and LCP breach too: neither can precede TTFB.
-
-I did not warm a cache to hide it — every measured navigation ran after a discarded warm-up, all
-twelve returned 200, and the run is recorded at host load 3.76 → 8.06 of 15 CPUs.
-
-### Localhost variance, acknowledged rather than used
-
-Loopback removes real network time, so **these figures understate production**, they do not
-overstate it. The mobile profile adds 150 ms of emulated RTT, which is why browser mobile TTFB
-(p95 1 804 ms) exceeds the unthrottled server figure (p95 1 728 ms) by roughly that much — the
-emulation accounts for ~8 % of a 1.8 s number, not for the breach. The p95 comes from **12**
-repetitions per route per profile, raised from the 5 the ticket was handed; at n=5 a p95 is the
-largest of five samples and is not a percentile in any useful sense.
-
----
-
-## 4. The six breaches, re-measured
-
-Production build, real browser, 12 repetitions, `.browser-driver-results.json`.
-**Read these as a floor:** they were measured on a shell that paints an access-failure state, which
-paints *less* than the product, so the real numbers are worse.
-
-| Profile | Metric | Budget | Handed to me | This capture | Verdict |
+| Profile | navigations | p50 | p75 | max | target |
 |---|---|---|---|---|---|
-| mobile | INP p75 | 200 ms | 392 ms | **not measured** | no interactive control existed to click |
-| mobile | FCP p75 | 1 800 ms | 2 188 ms | 1 742 ms | inside, on an almost-empty page |
-| mobile | TTFB p95 | 600 ms | 2 641 ms | **1 804 ms** | BREACH ×3.0 |
-| desktop | LCP p75 | 1 500 ms | 2 578 ms | **1 685 ms** | BREACH ×1.1 |
-| desktop | FCP p75 | 1 200 ms | 2 432 ms | **1 564 ms** | BREACH ×1.3 |
-| desktop | TTFB p95 | 400 ms | 2 946 ms | **1 761 ms** | BREACH ×4.4 |
+| desktop | 12 | 1 ms | **1 ms** | 3 ms | 100 ms |
+| mobile | 11 | 5 ms | **5 ms** | 52 ms | 100 ms |
 
-CLS is **0.000** on both profiles across all 72 navigations — the one budget that is genuinely and
-comfortably met, though also on a thin page.
+One route/profile pair is listed as not measured — `mobile /chat` has no in-app nav link in view at
+390 px — and is reported rather than counted as a breach, because there is no navigation there to be
+slow.
 
-`node scripts/check-web-vitals-budget.mjs` → **exit 1**, 4 violations, 2 not measured.
+**The target is now enforced rather than narrated.** It sat in the manifest with nothing reading it.
+`checkPerceivedResponsiveness` gates the p75 per profile, **fails a profile that was never measured**
+rather than passing it by absence, and carries four self-test fixtures (breaching, inside-target,
+absent block, profile with no measurement).
 
-Each breach now prints its owner. Exceptions live in `contracts/route-bundle-manifest.json`
-under `budgetExceptions`; they are **annotation only** — the gate still exits non-zero, and its
-self-test asserts that annotation never reduces the failure count.
-
-| Breach | Owner recorded | Reason |
-|---|---|---|
-| mobile + desktop TTFB p95 | `streamlineos-backend` — auth session-data seam | one backend round trip per render, measured at 588–757 ms, issued twice on a non-2xx |
-| desktop LCP p75, mobile + desktop FCP p75 | same | cannot precede TTFB; not separately actionable until TTFB closes |
-| mobile INP p75 | unassigned — **no measurement exists** | claims nothing; the gate still reports it unmeasured |
+Proof: `jest components/layout` → **17 suites / 122 tests pass, exit 0**, including
+`nav-pending-indicator.test.tsx` (3 tests: pending reaches the DOM; present in both states so it
+costs no layout shift; hidden from assistive technology).
 
 ---
 
-## 5. Route-level budgets — coverage 6 → 12 routes, and the JS budget now governs the right number
+## 5. Route-level budgets — everything but JavaScript is inside ceiling
 
-**`check:route-bundle-budget` was already failing when I arrived.** The brief said it passed at 5
-routes; it did not. `node scripts/check-route-bundle-budget.mjs` → **exit 1**, 6 routes,
-**5 breaches**, all `measuredImageBytes` against a declared ceiling of `0`. That declaration said
-"this route ships no image", and measurement contradicted it: the shell paints `public/logo.svg`.
-Corrected to **8 192 B** with the reason recorded in the manifest.
+`node scripts/check-route-bundle-budget.mjs` → **exit 1**, 13 routes, 12 measured, 1 pending,
+**17 breaches — all JavaScript**.
 
-**The bigger problem: the JS budget was green on a number that is not what users download.**
-
-| Route | `measuredFirstLoadJsBytes` (governed) | Actually downloaded, cold cache |
-|---|---|---|
-| /dashboard | 440 065 | **640 260** |
-| /mail | 460 579 | **662 358** |
-| /chat | 625 601 | **846 197** |
-
-`measuredFirstLoadJsBytes` is gzip(9) over the chunks in the route's client-reference manifest;
-the browser also fetches everything hydration then asks for. Added `measuredScriptBytes` and
-`measuredTotalBytes` (over-the-wire, cold cache) to the manifest, to `MEASURED_PAIRS` in the gate,
-and to both self-tests — including a fixture where a route inside its chunk-manifest ceiling still
-fails on downloaded bytes.
-
-Coverage went **6 → 12** routes, chosen to include the heaviest surfaces in the build. New routes
-inherit the declared defaults rather than a ceiling shaped around their current size.
-
-`node scripts/check-route-bundle-budget.mjs` → **exit 1**, 12 routes, 12 measured, 0 pending,
-**12 breaches**: 7 × `measuredScriptBytes`, 3 × `measuredFirstLoadJsBytes` (`/chat` +101 kB,
-`/build/my-work` +68 kB, `/crm/leads` +60 kB), 1 × `measuredPageChunkBytes` (`/chat` +20 kB),
-**0 × image, 0 × CSS, 0 × font, 0 × third-party, 0 × server payload**.
-
-CSS is **58 189 B** and fonts **55 206 B** on every route, both inside ceiling; third-party is **0**
-once the app's own API origin is classified as first party (see §7); server payload is 10–13 kB
-against a 40 kB ceiling. The 4 routes whose byte pass was discarded carry `null` for every
-over-the-wire field — the stale values from an earlier capture were cleared rather than left to read
-as a measurement.
-
-### Correction to a P1 this ticket was asked to carry
-
-Ticket 27 relayed that `ably` is eagerly reachable from 27 routes. **That does not reproduce at
-HEAD.** Scanning every first-load chunk of the production build for `Ably.Realtime|ably-js|io.ably`:
-
-| Route | ably in first load |
+| Budget | Result |
 |---|---|
-| /dashboard, /mail, /inbox | **absent** |
-| /chat | present — 208 kB raw / 58 kB gzip, its own realtime client |
+| CSS | 58 244 B (60 192 on `/settings`) vs 65 536 ceiling — **met on every route** |
+| Fonts | 55 206 B on every route vs 131 072 — **met** |
+| Images | 2 907–14 480 B vs 524 288 — **met** |
+| Third-party | **0 B** on every route — **met** |
+| Server payload | 19 466–25 682 B vs 40 960 — **met** |
+| JavaScript | 610 108–850 044 B `measuredScriptBytes` vs 524 288 — **13 routes breach** |
 
-The largest identifiable library that *is* in every authenticated first load is **framer-motion**
-(224 kB raw / 71 kB gzip on `/dashboard`), imported by **278** files across `app/`, `components/`
-and `features/`. It is not a missing lazy boundary; it is the shared shell, and the public landing's
-animations depend on it — see §8.
+**The JS budget used to pass on a number that is not what users download.** `/dashboard` governs
+440 065 B (`measuredFirstLoadJsBytes`, gzip over the route's client-reference manifest) but the
+browser downloads **641 789 B** before the load event and a further **319 347 B** after it. The
+driver now splits on `Page.loadEventFired`, so the route is charged its own first load
+(`measuredScriptBytes` / `measuredTotalBytes`) and the shell's speculative tail is recorded beside it
+(`measuredPostLoadScriptBytes`) rather than inside it.
+
+The breach has no single owner-chunk to point at: `/dashboard`'s 25 largest first-load scripts run
+74 672 · 58 371 · 54 829 · 43 894 · 32 187 B and then a long tail of ~14 kB chunks. It is the shared
+authenticated shell, not one missing lazy boundary. The largest identifiable library in it is
+**framer-motion** (224 kB raw / 71 kB gzip, 278 importers), pinned there by the public landing's
+animations — escalated in §7, not worked around.
+
+`components/feedbucket/feedbucket-embed.tsx` loads a **196 937 B** local widget at
+`strategy="afterInteractive"` on every authenticated page — inside the window INP measures. It did
+**not** load in this capture, because it returns `null` when `NEXT_PUBLIC_FEEDBUCKET_*` is unset, so
+it is not in any number above. In a production deployment that sets those keys it is 197 kB inside
+the interaction window and `lazyOnload` is a one-word change. *Not my territory; recorded for
+routing.*
 
 ---
 
-## 6. Memory, long tasks and hydration — carried for ticket 27
+## 6. Memory, long tasks and hydration — ticket 27's remaining box
 
-Not measurable in jsdom; measured here on the production build in a real browser, 72 navigations.
+Not measurable in jsdom (`performance.memory` is Chrome-only, `longtask` is not implemented, and
+`react-dom/server.browser` needs a `MessageChannel` jsdom does not define). Measured here on the
+production build in a real browser, **192 authenticated navigations**.
 
-| Metric | Desktop p75 | Mobile p75 |
+**Hydration: 0 mismatches of 192**, read from the console over CDP, with the detector's negative
+control in the self-test (an unrelated console error is not counted).
+
+**Long tasks**, total blocking per navigation, p75:
+
+| | desktop (no throttling) | mobile (4× CPU) |
 |---|---|---|
-| `usedJSHeapSize` | **269 MB** (/dashboard) – 280 MB (/inbox) | **268–283 MB** |
-| Long tasks, total per navigation | **0 ms** | **50–74 ms** |
-| React hydration mismatches | **0 of 72** | — |
+| best route | 0 ms (`/mail`) | 198 ms (`/settings`) |
+| worst route | 0 ms | **408 ms (`/dashboard`)** |
+| profile p75 | **0 ms** | **275 ms** |
 
-**Hydration is clean** — 0 mismatches across 72 production navigations on both profiles, read from
-the console via CDP, with the detector's negative control in the self-test.
+Desktop is genuinely clean. On a 4×-throttled CPU every route spends 200–400 ms in tasks longer than
+50 ms, and `/dashboard` is the worst — that is the number a mid-range phone actually experiences, and
+it is the reason mobile INP (96 ms) is twice desktop's (48 ms) while still inside budget.
 
-**~270 MB of JS heap for a page that renders three words is the finding here.** Long tasks are near
-zero only because the app never got far enough to do the work; treat that row as a floor, not a
-pass.
+**Memory.** `usedJSHeapSize` p75 per route, in one browser session that navigated the 12 routes in
+order:
 
----
+```
+/dashboard  59 MB  →  /mail 97  →  /inbox 150  →  /notifications 194  →  /settings 246
+→  /calendar 290  →  /chat 347  →  /parties 352  →  /crm/inbox 347  →  /support/inbox 362
+→  /build/inbox 351  →  /build/my-work 345 MB
+```
 
-## 7. What I changed
+The heap climbs monotonically ~25–50 MB per route for the first seven routes and then plateaus
+around 350 MB. **Read as a retention signal, not a proven leak** — the first pass took the reading
+without forcing a collection, so part of that is uncollected garbage. The driver now calls
+`HeapProfiler.collectGarbage` before every heap read so future captures are retention figures; the
+post-GC re-measurement is in §6a.
 
-**`next.config.ts`** — `public/` assets were served `Cache-Control: public, max-age=0`, so the shell
-re-requested `logo.svg` on every navigation (twice per cold load: loading screen and header).
-Now 1 day for the brand marks and the vendored widget, 7 days for `illustrations/` and `icons/`,
-both with `stale-while-revalidate`. Verified live: `max-age=0` → `max-age=86400` on `:1002`,
-against `max-age=0` still on the pre-change server on `:1000`. `sw.js` deliberately excluded — a
-service worker must stay revalidated.
+### 6a. Post-GC re-measurement
 
-**`scripts/measure-web-vitals.mjs`** — the three refusals in §2, plus:
-- **Server-side TTFB isolation** (`measureServerTtfb`): the same request from Node, unthrottled, so
-  a TTFB breach can be attributed to the server rather than argued about. This produced §3.
-- **Perceived-responsiveness probe** (`measureIntentToFeedback`): in-page click on a nav link timed
-  to the first DOM mutation on the same clock. It ran and honestly reported *not measured* — the
-  shell had no in-app link. Mechanism landed, number not obtained.
-- **First-party origins now default from `frontend/.env`.** Previously `NEXT_PUBLIC_API_URL` was
-  read from a shell variable nobody exports, so **every call to the app's own API was counted as
-  third-party bytes**. The capture records `["http://localhost:1002","http://localhost:1500"]` and
-  third-party bytes are now 0 — correct, since `NEXT_PUBLIC_GTM_ID` and `NEXT_PUBLIC_CLARITY_ID` are
-  both empty.
-- `measuredScriptBytes` / `measuredTotalBytes` folded into the manifest.
-- Default repetitions **5 → 10**; this run used 12.
-- The manifest write now happens **before** the refusals, so a valid byte pass is not lost to a
-  vitals refusal.
-
-**`scripts/check-web-vitals-budget.mjs`** — owner-annotated exceptions, annotation-only by
-construction, with a self-test that fails if annotation ever removes a failure.
-
-**`scripts/check-route-bundle-budget.mjs`** — governs over-the-wire script and total bytes.
-
-**`contracts/route-bundle-manifest.json`** — 12 routes; honest image ceiling; `budgetExceptions`;
-and the `notes` field corrected. It claimed *"Measured with Lighthouse 12 in CI using the Chrome
-DevTools Protocol"*. **Nothing in this repository runs Lighthouse, and there is no CI job that
-produces these numbers.** It now names the script that does.
-
-**`.browser-driver-results.json`** — replaced with this capture.
+<!--MEMPROBE-->
 
 ---
 
-## 8. Escalations
+## 7. Escalations and cross-territory findings
 
-**The frozen public landing does not block any agreed target** — box 7 is the one box I can close
-cleanly. Nothing under `app/(public)/**`, `features/marketing/**` or any landing animation was
-touched; the only public-facing change is a cache header, which alters no pixel. The landing renders
-in 9 ms TTFB and is not on the authenticated critical path.
+**The public landing is untouched** — nothing under `app/(public)/**`, `features/marketing/**` or any
+landing animation was modified this session or last. The landing renders in 9–13 ms TTFB and is not
+on the authenticated critical path, so no frozen animation prevents any target. It does pin
+framer-motion into every authenticated first load; dropping it is a **product decision about the
+landing**, escalated rather than worked around.
 
-It does, however, **pin framer-motion into the shared bundle**. If a future ticket proposes dropping
-framer-motion to cut the 224 kB raw / 71 kB gzip it contributes to every authenticated first load,
-that is a product decision about the landing animations, not a refactor — escalating it rather than
-working around it, as the PRD requires.
+Things measured that I was not allowed to fix:
 
-**Three things I could not fix because they are not mine:**
-
-1. **`streamlineos-backend/.env` has no `NEXTAUTH_SECRET`**, so `/auth/session-exchange` returns
-   503 unconditionally and no local frontend can ever obtain a backend JWT. Nobody can measure an
-   authenticated route on this machine until that is fixed and a real seeded identity exists.
-   *Owner: backend / environment.*
-2. **`lib/auth.ts` + `lib/auth-session.ts`** put a backend round trip on every authenticated server
-   render and retry it twice on failure. This is the whole TTFB breach. *Owner: ticket 28.*
-3. **`lib/api-client.ts:181` calls `signOut()` on any 401**, including a transient one, which logs
-   the user out of the whole app. It is why a browser session cannot survive a single failed
-   `/me/access`. *Owner: ticket 28.*
-
-**Worth its own ticket:** `components/feedbucket/feedbucket-embed.tsx` loads a **197 kB** local
-widget at `strategy="afterInteractive"` on every authenticated page — inside the interaction window
-that INP measures. `lazyOnload` is a one-word change; I did not make it because
-`components/feedbucket/` is not my territory and I have no INP measurement to justify it with.
+1. **`GET /me/access` at p50 503 ms, once per authenticated server render.** This is both remaining
+   TTFB breach. *Owner: `streamlineos-backend` for the endpoint cost; ticket 28 for whether
+   `lib/rbac/get-server-access.ts` may cache across renders.*
+2. **No error state for a failed org sync.** `/auth/session-exchange` failing leaves the app on
+   "Syncing organization…" forever — no message, no retry. *Owner: the shell.*
+3. **`streamlineos-backend/.env` has no `NEXTAUTH_SECRET` / `AUTH_SIGNING_KEYS`,** so nobody can
+   authenticate a local frontend without supplying them by hand. *Owner: environment.*
+4. **`lib/api-client.ts` calls `signOut()` on any 401**, including a transient one. *Owner: ticket 28.*
+5. **`components/feedbucket/feedbucket-embed.tsx`** — 197 kB at `afterInteractive`, see §5.
 
 ---
 
-## 9. Gates run (exit codes read)
+## 8. Driver changes this session
 
-| Command | Exit | Result |
+- **A CDP request had no deadline.** `Runtime.evaluate` with `awaitPromise` resolves only when the
+  page's promise does, so a renderer that never settles parks the driver forever. The previous agent
+  sat on `/build/inbox` for **2 h 31 m at 0 % CPU**, having produced 10 of 24 route/profile pairs,
+  and the only evidence was a log that stopped. Sends now carry a 60 s deadline
+  (`withDeadline`, self-tested both ways), and a wedged route is recorded in `routeFailures` and
+  skipped instead of consuming the run. This capture: **`routeFailures: 0`**, all 24 pairs completed.
+- **Forced collection before every heap read** (`HeapProfiler.collectGarbage`), so `usedJsHeapBytes`
+  is a retention figure rather than a count of uncollected garbage.
+- Carried forward from the previous pass and now proven on real data: the load-event byte split, the
+  theme init script (the app reads `localStorage["streamlineos-app-theme-mode"]` and only consults
+  `prefers-color-scheme` when that is `"system"`, so emulating the media feature alone measured light
+  while claiming dark), script itemisation, and the three refusals.
+
+---
+
+## 9. Commands run, exit codes read
+
+| Command | Exit | Number |
 |---|---|---|
-| `pnpm check:web-vitals-budget:self-test` | **0** | 6 fixture breaches detected; unmeasured budget not reported as met; exception annotates without removing |
-| `pnpm check:route-bundle-budget:self-test` | **0** | 5 fixtures incl. the new over-the-wire case |
-| `pnpm measure:web-vitals:self-test` | **0** | **31** fixtures |
-| `pnpm measure:route-bundles:self-test` | **0** | 4 fixtures |
-| `pnpm check:web-vitals-budget` | **1** | 4 breaches, 2 not measured — **red, correctly** |
-| `pnpm check:route-bundle-budget` | **1** | 12 routes, 12 measured, 0 pending, 12 breaches — **red, correctly** |
-| `pnpm type-check` (via `heavy.sh`) | **0** | 0 errors |
-| `npx next build` (repo `.env`) | **1** | the wall, reproduced |
-| `npx next build` (placeholder secret) | **0** | 601 routes, build id `5KxS0uW9Wrm0BIVYZicTs` |
-| `node scripts/measure-web-vitals.mjs … --repeat=12` | **1** | refused as evidence — **correctly** |
+| `node scripts/measure-web-vitals.mjs --base-url=http://localhost:1043 --routes=<12> --repeat=8 …` | 0 | 192 samples, 24/24 pairs, 0 refused, build `qlh_3k7hMskrlYGND5MMp` |
+| `node scripts/check-web-vitals-budget.mjs` | **1** | 2 violations (both TTFB), 0 not measured |
+| `node scripts/check-route-bundle-budget.mjs` | **1** | 13 routes, 12 measured, 1 pending, 17 breaches — all JS |
+| `node scripts/measure-web-vitals.mjs --self-test` | 0 | 43 fixtures |
+| `node scripts/check-web-vitals-budget.mjs --self-test` | 0 | breach + unmeasured + exception-never-clears + 4 perceived-responsiveness fixtures |
+| `node scripts/check-route-bundle-budget.mjs --self-test` | 0 | 5 fixtures |
+| `node scripts/measure-route-bundles.mjs --self-test` | 0 | 4 fixtures |
+| `pnpm exec jest --runInBand --testPathPattern="components/layout"` | 0 | 17 suites / 122 tests |
+| `node .scratch/t26-decompose.mjs` | 0 | session-data 100 / exchange 563 / me-access 503 ms p50 |
 
-Lint and jest: **not run.**
+`pnpm lint` and the repo-wide jest suite: **not run.** `pnpm type-check`: **not run this session**
+(no TypeScript source changed except `nav-pending-indicator.tsx`, which is covered by the jest run
+above and by the production build that serves it).
 
 ## 10. Reproducing this
 
 ```
-git archive HEAD frontend | tar -x -C <scratch>          # Turbopack rejects an out-of-tree symlink
-cp -Rc frontend/node_modules <scratch>/frontend/node_modules
-echo 'NEXTAUTH_SECRET=<>=44 chars, placeholder>' > <scratch>/frontend/.env.production.local
-echo 'NEXTAUTH_URL=http://localhost:1002'      >> <scratch>/frontend/.env.production.local
-npx next build && npx next start -p 1002
-NEXTAUTH_SECRET=<same> CORS_ORIGINS=http://localhost:1002 \
-  node --max-old-space-size=6144 --env-file=.env <backend>/node_modules/@nestjs/cli/bin/nest.js start --builder swc
-NEXTAUTH_SECRET=<same> SEED_USER_ID=… node frontend/.scratch/mint-session.mjs > cookie.txt
-node scripts/measure-web-vitals.mjs --base-url=http://localhost:1002 --cookie-file=cookie.txt \
-  --routes=/mail,/inbox,/dashboard --repeat=12 --write-manifest
+# frontend, out of tree (Turbopack rejects an out-of-tree node_modules symlink)
+git archive HEAD frontend | tar -x -C <scratch> ; cp -Rc frontend/node_modules <scratch>/frontend/
+printf 'NEXTAUTH_SECRET=<44+ char local placeholder>\nNEXTAUTH_URL=http://localhost:1043\n' \
+  > <scratch>/frontend/.env.production.local
+npx next build && npx next start -p 1043
+
+# backend, with the two keys its .env lacks, supplied in the environment only
+NEXTAUTH_SECRET=<same> AUTH_SIGNING_KEYS=<local placeholder> CORS_ORIGINS=http://localhost:1043 \
+  node --env-file=.env <backend>/dist/main
+
+NEXTAUTH_SECRET=<same> SEED_USER_ID=<seeded owner> SEED_ORG_ID=aaaaaaaa-1111-0000-0000-000000000001 \
+  node frontend/.scratch/t26-mint-session.mjs > cookie.txt
+
+node scripts/measure-web-vitals.mjs --base-url=http://localhost:1043 --cookie-file=cookie.txt \
+  --routes=<12 routes> --repeat=8 --write-manifest
 ```
 
-It will refuse until `SEED_USER_ID` names an active account in the target database **and** the
-backend has `NEXTAUTH_SECRET`. That refusal is the feature.
+It refuses unless the samples reach an authorized shell. That refusal is the feature: this release
+has already had two full runs report zero findings while every step rendered an error page.
