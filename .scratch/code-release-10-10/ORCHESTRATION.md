@@ -101,3 +101,249 @@ aggregate of concurrent work and they are release-gating.
 - CRM and Inventory stay excluded, with one live question: a demonstrated cross-tenant read on
   `inv_customer_shelf_life_rules`. Ticket 03 decides whether an exploitable cross-tenant read
   is in scope regardless of module exclusion.
+
+## Findings routed during wave 3 (2026-09-02) — for ticket 40 to verify, not to trust
+
+- **`build.ticket.status_changed` was emitted and never consumed**, and `check:outbox-consumers`
+  reported green because it string-matched the `readonly eventType` literal *inside the orphan
+  consumer file*. Registration was never checked. Routed to a dedicated fix agent; ticket 40 must
+  confirm the gate now checks registration and re-report the true emitted/consumed numbers.
+- **Frontend gate inconsistency, deliberately left for a decision by ticket 37:**
+  `check-over-300.mjs` scans `*.test.ts(x)` while `check-file-sizes.mjs` exempts them. A 663-line
+  test file therefore inflates the over-300 ratchet while being exempt from the hard-500 limit.
+  Aligning them would DROP the count and could green a ratchet — so it needs an owner's decision,
+  not a silent fix. Routed to ticket 35 (gate territory).
+- **Second attribution defect, different mechanism from `886dc785`.** Ticket 37's commit of
+  `src/scripts/baselines/db-call-count-classification.json` carried 5 entries another agent had
+  left uncommitted *in that same file* (autonomy-hold, cron-holiday, vendor-payments-allocations,
+  reconciliation-workspace, organization-purge-adapters). A pathspec on `git commit` bounds which
+  FILES land; it cannot bound which *hunks* of a shared file land. Verified additive — nothing
+  overwritten — but the history is again wrong. No fix available under concurrency; record it.
+- **A line-count registry is fragile under concurrent editing.** `seed-enterprise-workspace.ts`
+  moved 550 -> 551 mid-session. A red file-size gate may not belong to whoever is looking at it.
+- Ticket 37 corrected the exception registry itself: **7 of 12 backend rows were wrong** — five
+  files had dropped below 500 and kept their exemption, and `membership-artifacts.ts` was recorded
+  at 2496 while measuring 3216. An exception list nobody re-measures is a list of stale permissions.
+
+## Two populations ticket 08 measured and could not take (routed 2026-09-02)
+
+- **~150 live tables carry a tenant column that NO Drizzle table declares.** Includes the ~30-table
+  `gl_*`/`ap_*`/`ar_*`/`bank_*`/`tax_*` accounting kernel that migrations create and the schema never
+  declares. The tenant gates read the Drizzle declarations, so a green `check:tenant-indexes` says
+  nothing whatever about these tables. Ticket 40 must NOT read those green numbers as coverage.
+- **70 declared `.references()` with neither a live single FK nor a live composite.** These are
+  *missing* constraints, the inverse of what ticket 08 was removing — deleting the declaration would
+  hide the gap. Four are tenant anchors: `project_ticket_counters.org_id`,
+  `chat_message_reactions.org_id`, `affiliate_commissions.referred_org_id`, `referrals.*`.
+- **Pre-existing, deliberately preserved rather than hidden:** `inv_stock_transactions`' append-only
+  `BEFORE UPDATE` guard lists `location_id`, so an `ON DELETE SET NULL` (an UPDATE) makes an
+  `inv_locations` delete raise `23514`. Reproduced on a database WITHOUT migration 1009 — already
+  true at head. Org purge is unaffected (the guard is UPDATE-only). Inventory is out of release scope.
+- Migration numbering race between tickets 08 and 29 on `1009` resolved by 08 moving its own file;
+  ticket 29's `1020`-`1022` journal entries were still uncommitted at that point and are 29's to land.
+
+## Ticket 21 pass 1 — what it left, for ticket 40 to check against the second pass
+
+- **Hand-authored SQL that was never executed.** Pass 1 wrote `UPDATE … FROM (VALUES …)`, `excluded.`
+  and `GREATEST` statements and ran no e2e. `tsc` cannot catch a malformed SQL string, so "typecheck
+  exit 0" is not evidence about any of it. Pass 2 is executing them against a scratch copy first.
+- **A money race was fixed and then deliberately reverted.** The AI-credit first-purchase race: three
+  spec files pin the old numeric-`SET` shape, so the fix could not land without changing them. That is
+  the right call for an agent with no billing ownership, and the wrong place to leave a release — pass 2
+  owns billing and must resolve it in one direction with the reasoning written down. Ticket 40 should
+  confirm which direction it went, and that no spec was rewritten merely to make a change pass.
+- **`check:db-call-count`'s `BATCHED` verdict is unusable** — a correctly batched loop is still detected,
+  so the gate reports every `BATCHED` file as a regression, i.e. fixing an N+1 makes the gate redder.
+  Routed to ticket 35. Its false-negative twin is already on record: this same gate reported ACTIONABLE 0
+  while sitting over a confirmed N+1, blind to a Drizzle chain split across lines and to a helper taking
+  the db handle as an argument rather than as a receiver.
+- **A file split can red a gate whose baseline is keyed to filenames.** `check:unbounded-reads` went red
+  on `cron/cron-hr-retention-documents.ts`, a file ticket 37 created when splitting an over-500 file.
+  Genuine finding, not noise.
+- **A Drizzle declaration that lies about a constraint:** `storage_pending_purge`'s index is declared as
+  a plain `index()` but is UNIQUE in migration `0741` and in the live database. Same family as the 70
+  `.references()` with no live constraint — the declarations and the database disagree in both directions.
+
+## Release-blocking condition found 2026-09-02 — HEAD's journal names migrations HEAD does not contain
+
+**Verified by the orchestrator against git, not reported.** Every `"tag"` in
+`HEAD:migrations/meta/_journal.json` was resolved against `HEAD:migrations/<tag>.sql`:
+
+    1020_t29_kb_space_grants_tenant_fk        not in HEAD, and NOT ON DISK EITHER
+    1021_t29_kb_page_links_record_unique      not in HEAD, on disk untracked
+    1022_t29_mail_metadata_search_and_keyset  not in HEAD, on disk untracked
+    1023_t07b_billing_legacy_integer_id_columns       not in HEAD, on disk untracked
+    1024_t07b_tenant_anchor_foreign_keys              not in HEAD, on disk untracked
+    1025_t07b_composite_self_reference_foreign_keys   not in HEAD, on disk untracked
+
+Cause: `_journal.json` is a single shared file that **cannot be committed hunk-wise**. A pathspec on
+`git commit` bounds which FILES land; it cannot bound which HUNKS of one file land. So when ticket 24
+committed its own journal entry, it necessarily carried six other agents' uncommitted entries with it,
+while their `.sql` files — separate, untracked files — stayed behind. Ticket 24 checked correctly
+that its diff *added* 49 lines and removed none; that check cannot detect this.
+
+**The working tree is self-consistent: 661 journal entries, 661 `.sql` files, nothing missing.**
+The damage is confined to committed history. A clean clone pinned to `c046faf1` would fail to build,
+because `db:migrate` would look for six files that are not there.
+
+1020 is the sharp one: ticket 29 **withdrew** it — it is absent from the working-tree journal and no
+`.sql` for it exists anywhere. HEAD therefore names a migration that was never written.
+
+**Resolution condition — this must be re-verified before the release is called done.** It clears when
+ticket 29 and the tenant-column-drift agent commit their five `.sql` files plus rollbacks. Both were
+still running when this was written. Re-run the check above and require zero missing tags. Do NOT
+resolve it by editing the journal in HEAD: the entries are correct, the files are simply not committed
+yet, and hand-editing a shared journal under concurrency is how this class of defect starts.
+
+**For ticket 41:** a green `check:migration-ledger` in the working tree does not prove the *committed*
+tree builds — every migration gate reads the working tree. Verify against a clean checkout or against
+`git cat-file`, and treat "journal entry without a committed `.sql`" as a release blocker. This is the
+third distinct attribution defect this release (after the swallowed 17-file commit and the shared
+baselines JSON), and the first with a build-breaking consequence.
+
+## P1 confirmed 2026-09-02 — admission-control slots leak on every 403
+
+Found by the UX/a11y ticket while running the real app; **confirmed on disk by the orchestrator**
+before routing, and now assigned.
+
+`AdmissionGuard.canActivate` takes a slot via `admissionService.tryAdmit(...)` and stamps
+`req._admissionOrgId`. `AdmissionInterceptor` releases it in `next.handle().pipe(finalize(...))`.
+NestJS runs **every guard before any interceptor**, so when a guard that runs after `AdmissionGuard`
+rejects — a permission gate, a module gate, a record-access check, i.e. every 403 in the product —
+`next.handle()` is never subscribed, `finalize` never fires, and the slot is never returned.
+
+Not theoretical: the reporting agent's instance climbed monotonically to **2,278 shed requests** and
+never recovered. Symptom is the entire product returning 503 "temporarily overloaded" under no load,
+unrecoverable without a restart. The fix must prove **exactly-once** release — a double release is as
+harmful as a leak, since it admits more concurrent work than the limiter exists to bound.
+
+## Findings routed 2026-09-02, still open for ticket 40 to confirm
+
+- **Frontend `pnpm lint` lints build output.** `.next-buildmart/**` and `feedbucket-widget/dist/**`
+  are missing from `globalIgnores`, inflating **45 real errors into 2,375**. Three agents reported
+  the inflated number as if it were the repo's error count. Assigned.
+- **`check:dead-code` and `check:type-assertions` exist, pass, and are wired into NO workflow** —
+  `ci.yml` was dirty under another agent at commit time. Same shape as the release's recurring
+  defect: a gate reporting a green number over a set nothing runs it against.
+- **`express` is imported by `src/health/shutdown-drain.spec.ts` and declared in no manifest**;
+  `require.resolve("express")` fails from the repo root under pnpm.
+- **`noUncheckedIndexedAccess` is claimed by shared CLAUDE.md §6 and set in neither tsconfig.**
+- **`payroll_tds_ytd_ledger.run_id` has no foreign key**, and `writeTdsYtdLedger`
+  (`payroll/runs/locking.service.ts:244`, `:279`) **replaces where it should accumulate**, erasing
+  tax actually withheld on an adjustment run. Needs `run_id` in the natural key — schema territory.
+- **`AUTH_SIGNING_KEYS` and `NEXTAUTH_SECRET` are absent from the backend `.env`**, so
+  `/auth/session-exchange` 503s and the frontend hangs on "Syncing organization…" with no error
+  state. The missing env is local config; **the missing error state is a product defect.**
+- **`inventory/purchase-orders/page.tsx` links twice to `/inventory/vendors/new`, which does not
+  exist.** Inventory is out of release scope — record, do not fix.
+- Ticket 30's harness initially **reported 0 findings while every step rendered the error page**.
+  It now refuses to score a run whose steps did not reach a product state. Two earlier runs proved
+  nothing. Any journey/probe harness in this release needs that same refusal.
+
+## The outbox pass, and the parser lesson every remaining gate should apply
+
+Closed 2026-09-02. All three routed findings fixed, proved and committed (`f4c7bdf5`, 10 files).
+
+**The orphan was real and it was costing data.** The event is live
+(`notification-events-build.catalog.ts:25`, `cross-cell-events.spec.ts:28`), so registering — not
+deleting — was correct. Unregistered, `OutboxPublisherService.deliver()` throws `no dispatch handler`,
+so **every ticket status change dead-lettered after 8 retries**. It had passing specs throughout: a
+unit spec constructs the class directly and never consults the module graph, so no spec could have
+caught it. Only a module-graph gate can.
+
+**The correction that matters more than the fix.** The first registration-aware run reported **seven**
+orphans. Six were the agent's own parser: `build.module.ts`, `kb.module.ts`, and the `finance`, `hr`
+and `inventory` modules hoist their children into `const BUILD_MODULES = [...]` and then write
+`imports: BUILD_MODULES`, which an `imports: [` matcher cannot see. The agent hand-checked each
+flagged consumer against its module file *before* believing its own gate, found all six correctly
+wired, and fixed the parser. **The old gate was blind to exactly one orphan, not seven.**
+
+Had it trusted the gate it had just written, it would have "fixed" six things that were never broken
+and reported a six-fold overstatement of the defect — in a release whose entire purpose is to stop
+gates from reporting numbers over sets they cannot see. The discipline to apply everywhere: a gate's
+first run is a hypothesis. Hand-verify every hit against the artifact before acting on any of them,
+and expect the parser to be wrong before expecting the codebase to be.
+
+**Design decision recorded:** `organization.setup.completed` is emitted inside the setup transaction
+and the consumer **rethrows**, so failures retry and dead-letter visibly. Per BE CLAUDE.md §4 this is
+the outbox case rather than `registerAfterCommit`, because losing the role seed leaves no other record.
+Two `void withIdentity(...)` floating promises removed.
+
+**`check:fire-and-forget` is two-tier by design:** banned shapes at zero tolerance, everything else
+ratcheted at the measured **283** (200 floating + 83 swallowed), dated beside the constant. Corpus
+widened 1,839 → 3,574 files and from two method names to every shape. The 54 `registerAfterCommit`
+sites are inventoried, not gated, with the reason stated. The 283 are pinned but individually
+unexamined — that is stated, not hidden.
+
+**For ticket 40:** this agent's numbers are unusually trustworthy because each gate was bite-proven
+in both directions and each bite was reverted. `check:outbox-consumers` 26 emitted / 29 registered /
+0 orphans, self-test 30 assertions; `check:fire-and-forget` tier1=0, tier2=283 vs ratchet 283,
+self-test 18 assertions. Its typecheck was exit 0 **with its full diff applied**, before the schema
+agent's `policies.ts` edit reddened the repo.
+
+## The repo-wide typecheck scare, resolved — and what it should teach ticket 41
+
+Three agents independently reported backend `typecheck` red repo-wide at **195 errors** (and
+`check:spec-typecheck` at 205), each correctly noting **zero errors in its own files**. A fourth
+reported **exit 0, zero errors**. All four were honest; all four were reading the same tree at
+different minutes.
+
+Cause: `src/db/schema/payroll/policies.ts`. `payrollPolicies` and `payrollPolicyVersions` reference
+each other, and a composite foreign key naming the parent columns inline makes each table's type
+depend on the other's. TypeScript gives up with **TS7022**, the Drizzle builder types collapse, and
+~200 callbacks across `hr/`, `chat/`, `inventory/`, `e-sign/`, `dashboard/`, `build/` and `tasks/`
+degrade to implicit `any` — 89 `TS2339` + 69 `TS7006`. **One file, in a schema barrel, reddened the
+whole repository**, and every agent that hit it spent time deciding it was not theirs.
+
+**Resolved.** The fix is an explicit return-type annotation lifted to the tuple the composite FK
+needs: `const activeVersionParentColumns = (): [AnyPgColumn, AnyPgColumn] => [...]`. Verified by the
+orchestrator, not reported: `pnpm typecheck` **exit 0, 0 errors**.
+
+Three lessons worth carrying:
+
+1. **`AnyPgColumn` is load-bearing, not decoration.** Any tool or agent removing "unused" imports
+   will misread it — it is used only at a type position inside a callback. This is the second
+   near-miss of that shape in this release.
+2. **A shared-tree measurement has a timestamp.** Under concurrency, "the repo is red" is a
+   statement about a minute, not about the repo. Every agent here reported correctly and three of the
+   four reports were stale within the hour. For ticket 41 this is decisive: **a release verification
+   run on a tree that 15 agents are still writing to measures nothing.** Quiesce first, then measure,
+   and record the commit the measurement was taken at.
+3. The right agent behaviour was already in the brief and every agent followed it — check whether the
+   failing path is yours before debugging it, and report rather than fix. That is why nobody
+   "helpfully" edited a schema file they did not own while its owner was mid-fix.
+
+## Ticket 11 pass 2 — the census was wrong, and the exclusion is now stated rather than implied
+
+Closed 6/7. The remaining box is blocked on two live territories and is honestly left open.
+
+**The prior census had drifted.** Re-measured: **70 structured · 43 text · 9 streaming · 6 embedding
+= 128**, corroborated independently by `check:ai-charge`'s own "128 invocations scanned" — not the
+119/69/43 previously recorded. Worth noting for ticket 40: a number in a ticket file is evidence of
+what someone once measured, not of what is true now.
+
+**The 70 `invokeStructured*` sites are excluded, with the reason written into the ticket rather than
+left as a silent omission:** a half-parsed Zod object is not renderable partial state, and streaming
+one would require bypassing the `.strict()` boundary this release depends on. That is a real
+architectural reason, and stating it is what makes the 70 auditable instead of invisible.
+
+Six surfaces converted through the existing `respondWithAiTextStream` → `streamTextWithUsage` path —
+**no second mechanism**, and each buffered/streaming pair shares one `resolve…Prompt()` so they cannot
+drift apart. The 7 remaining in-territory text sites are each named with a reason.
+
+**Measured, with the method stated:** `ai.stream.first-byte.app` over a real Nest boot and real socket,
+n=30, p50 **0.39 ms** against a 150 ms budget; `ai.stream.dispatch.overhead` through the real breaker,
+redaction and limiter with the provider stubbed, n=50, p50 **0.054 ms**, +22 ms declared I/O allowance
+against a 50 ms budget. **End-to-end TTFT including provider latency was NOT measured** — no credential
+— and both numbers say so rather than implying coverage they do not have.
+
+Cancellation proven over a real socket with an anti-vacuous control on the healthy path, and
+bite-proven: swapping the real abort signal for a fresh one gives 1 failed / 3 passed, then restored
+with a verified-empty diff.
+
+**Still open and routed:** 26 buffered `invokeText*` surfaces in 17 modules outside `src/modules/ai/**`
+— the 14 in `kb/wiki`, `kb/help-centre` and `timesheets` are long-form prose a human waits on. And no
+frontend stream client exists for the 9 non-chat `/stream` routes: `hooks/api/chat-ai-assistant.ts` is
+still hard-wired to `/chat`, so **these surfaces still buffer from the user's seat even though the
+backend now streams**. Ticket 13's territory. A backend that streams into a client that buffers has
+delivered nothing to the user, and the box is correctly left open on that basis.

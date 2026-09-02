@@ -105,9 +105,14 @@ Gate scripts (`pnpm check:*`) are cheap and need no mutex — run them freely.
 core and will hang the machine for every other agent. Always `--runInBand` or
 `--maxWorkers=2`, always a `--testPathPattern`.
 
-**Do not run `next build`.** It compiles and typechecks, then dies at `/billing/ai-credits`
-env validation — it is not a usable gate here. Use `type-check`, the `check:*` gates and
-focused jest instead.
+**`next build` — CORRECTED 2026-09-02. It DOES work, and the previously-recorded cause was
+wrong.** It does not die at `/billing/ai-credits` (that route does not exist). It fails at
+`frontend/lib/env.ts:40`, reached via `app/layout.tsx:6`: the repo `.env` carries a 36-character
+`NEXTAUTH_SECRET` and the schema requires 44 in production. Supply a longer LOCAL PLACEHOLDER
+(never a real secret, never a real connection string) and the build completes — measured:
+**exit 0, 601 routes**. Prefer `type-check` + the `check:*` gates + focused jest for ordinary
+work, but a production build IS available when you genuinely need one (bundle budgets, Web
+Vitals, hydration).
 
 ## Traps specific to this repository
 
