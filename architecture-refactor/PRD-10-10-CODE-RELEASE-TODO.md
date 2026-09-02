@@ -45,6 +45,12 @@ Verified green on 2026-09-02:
 - Backend hard size: 3,473 files scanned, all within 500 lines with 12 registered exceptions.
 - Backend over-300 ratchet: 394/3,473, exactly the approved baseline.
 - Frontend over-300 ratchet: 518/4,973, below the 519 baseline.
+- Architecture-rule gates that did not exist before this round: `check:kebab-case` (6,049 entries, 0 violations), `check:import-direction` (208 `src/common` files, 0 new violations over a 9-entry named baseline) and `check:module-registration` (216 module classes, 215 reachable from `AppModule`, 0 unreachable). `check:over-300`'s self-test previously asserted only its own constants and never ran the scan; it now writes a known-bad fixture tree and is bite-proven twice.
+- Six `support/core` suites that had been red long enough to reproduce at a clean HEAD worktree are green: 33 suites / 286 tests. Repairing their doubles surfaced a live defect — `splitTicket` called `createTicket` without a `membershipId`, so **every split-ticket request returned 403** on a permission-gated route that looked healthy.
+- Seeded disposable E2E harness: **6/6** (was 2/6), plus a cross-module GDPR privacy artifact at **2/2** run through the real HTTP stack. The harness now refuses a database whose name lacks `scratch`, and can enable a module — without which every plan-gated permission resolved `NO_MODULE` and a correct grant was indistinguishable from a denial.
+- Cross-tenant isolation coverage: **920/920 declared, `check:tenant-isolation` EXIT=0**. The six previously-uncovered services are covered; three of them were uncovered only because the gate is path-keyed and this round's file splits moved the code out from under its spec.
+- Import direction: **zero** `src/common/** -> src/modules/**` imports in production code. All nine baseline entries were relocated to neutral seams and `check:import-direction` now enforces an empty baseline, so the debt cannot reappear.
+- Unbounded reads, contract registry (3,619 operations, 100 published, 0 unclassified), `validate:env`, vulnerabilities, licences and SBOM.
 - Migration discipline, rollback, chain and ledger: 634/634 applied, zero pending/orphan/duplicate/unreachable entries.
 - Tenant relationships: zero actionable in-scope single-column tenant FKs; CRM/Inventory reported separately.
 - Tenant indexes: 745/745.
@@ -65,18 +71,17 @@ Not rerun in this reconciliation because they are expensive final-integration ga
 
 - Clean-bootstrap parity is not current. Existing evidence was captured at a 609-entry journal and failed catalog parity; the current chain has 634 entries. Re-run two clean bootstraps plus interrupted/resumed bootstrap and require exact catalog equality.
 - Eliminate 36 actionable N+1 files / 42 loop-internal database call sites reported by `check:db-call-count`.
-- Add executable cross-tenant negative tests for six services: Accounting receivables, Build project work query, Dashboard project, Finance depreciation reverse, Support AI triage and Support KB-gap detection. Static coverage is 913/919 (99%); final sign-off also requires the executable isolation suite.
 - Classify or remove six frontend exports reported by the dead-code gate: `parseApiResponse`, `ApiResponse` and four Chat realtime payload types.
 - Repair or remove three live frontend controls whose backend operation does not exist: Chat presence status, invoice deletion and Support KB attachment download.
 - Reduce the 114 authenticated thick route modules through domain-owned feature seams; do not raise the ratchet.
 - Refresh and pass route-performance evidence. The committed bundle manifest still reports `/inbox` at 558,680 bytes against 524,288. Current Web Vitals evidence has six breaches: mobile INP/FCP/TTFB and desktop LCP/FCP/TTFB.
 - Decide and implement Calendar provider drift conflict behavior: local wins, provider wins or user-visible conflict resolution.
 - Finish AI gateway consistency: reserve/check credit before public KB embedding, route embedding through the gateway interface, stream non-chat AI surfaces and measure realistic-corpus retrieval latency.
-- Finish GDPR correction and erasure across remaining database PII, Chat/AI content, search/vector indexes, projections, caches and supported adapters while preserving legal holds and immutable records.
+- Finish GDPR erasure across its remaining sinks: Chat/AI message content, search/vector indexes and derived projections, plus full cryptographic session revocation through `SessionsService` (the membership cache and permission version are already busted). **Database PII is now covered:** `GdprSubjectErasureService` anonymises the subject across `organization_people`, `hr_employee_sensitive_fields`, `hr_dependents` and — only once no other org membership remains — the global `users` row, whose email becomes a hashed `erased-<hash>@erased.invalid` tombstone so the NOT NULL UNIQUE constraint still holds. It is idempotent, legal-hold-blocking, audited, tenant-scoped in SQL, and drains on a keyset cursor rather than capping; it first shipped with two bare `.limit(50)` calls that would have reported a partially erased subject as fully erased.
+- Widen GDPR correction beyond `users.name`, which is the only field `gdpr-rectification.schemas.ts` accepts today: `hr_people` personal email/phone/address/DOB/gender/preferred name and emergency contacts (S04), bank and payroll details (S05). `users.email` is authentication-linked and needs a verification challenge, not a blind update.
 - Add durable retry/DLQ semantics and bounded history for module Workflow step execution.
 - Make retention execution self-monitoring: schedule or prove the external scheduler, add a dead-man signal and emit durable failure events. Decide retention for `notification_outbox` and `outbox_events`.
 - Make Chat attachment storage private and backfill existing public attachment URLs to tenant-scoped object keys; current provider-response validation, tenant-fair delivery scheduling and offline Notification UI are already implemented.
-- Reconcile the remaining nine baseline `src/common/** -> src/modules/**` imports by moving shared interfaces/types to neutral seams.
 - Run dependency proof for the remaining dead backend exports/types before deletion; do not delete schema or side-effect imports from text search alone.
 
 ## Product constraints
