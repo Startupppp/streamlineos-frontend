@@ -1,170 +1,198 @@
 # S1 / ticket 03 — tenant relationships, indexes and RLS against a fully bootstrapped target
 
-Target: `scratch_boot_a`, ticket 01's cold build at head — 637/637 ledger rows, 1027 tables,
-0 organizations. Pointed at by overriding `TENANT_RELATIONSHIP_DB_URL` / `DATABASE_URL` in the
-environment; `.env` was never edited and the configured remote was never touched. No git command
-was run. Every number below came from a command I ran and read.
+Second pass. The first pass (17:20) repaired three blind gates and left three findings open,
+each blocked on a migration it was not allowed to write. This pass owns migrations, applies
+them to a live target and closes all three.
 
-## Headline
+Target: **`scratch_t03`**, a private `CREATE DATABASE ... TEMPLATE scratch_boot_a` copy taken at
+637 ledger rows and carried to head. Never `DATABASE_URL` (remote Neon), never a `cornerstone_*`
+database, no `.env` edit. Every number below came from a command I ran and read.
 
-**Three of the four gates this ticket depends on were green because they could not see.** Repaired
-first, then re-run. The delta is the finding:
+## Headline — the migrations already existed and had never been run
 
-| gate | before | after | what it could not see |
-|---|---|---|---|
-| `check:tenant-relationships` (pg_catalog) | 0 actionable | **4 actionable** | `credit_notes`, `vendor_credits`, `enterprise_quotes` were listed in `CRM_TABLE_NAMES`; CRM is excluded from this release, so accounting and billing tables were skipped in **both** modes |
-| `check:tenant-relationships` (static) | 0 violations | **16 violations** | `.references((): AnyPgColumn => …)` — 12 declarations the `(\s*)\s*=>` pattern never matched |
-| `check:tenant-indexes` (declarations) | 745/745 clean | **823/828** | `pgTable(` only, so all **83** Build tables declared `build.table(...)` were invisible |
-| `check:tenant-indexes --db` | did not exist | **985/988** | there was no catalog mode at all |
+`0994`, `0995` and `0996` address exactly the three open findings. They were authored by a
+concurrent session and committed in `a3bf8470` at **17:44**, twenty-four minutes *after* the first
+pass wrote its report, so no report has ever mentioned them and nothing had applied them. They were
+journalled correctly (`idx` 771/772/773, `when` above the 2027-02-19 watermark) and the four
+rollback files were present. I wrote no new migration: the correct action was to prove these, not
+to stand a second set beside them.
 
-A fourth: `check-tenant-relationships`'s mid-bootstrap guard — the exact guard this ticket exists
-to enforce — read `drizzle.__replay`, which only `replay-chain-cold.mjs` writes. Every database
-built by `db:bootstrap` (including the release evidence target) records into
-`drizzle.__drizzle_migrations`, so the guard was **inert**: the query errored, was swallowed by a
-`.catch`, and `midBootstrap` came back `null`. It now reads either ledger and prints
-`Ledger rows on target 637 of 637` on every run. The mode line also printed a hardcoded
-`(scratch_boot_a)` regardless of the real target; it now prints `current_database()`.
+    db-bootstrap.mjs -> scratch_t03    exit 0    RESULT: REACHED_HEAD 646/646
+    exactly 9 pending applied (0992..1000), 0 hash drift on the 637 already present
 
-## Box by box
+| gate | before (ledger 637/646) | after (ledger 646/646) |
+|---|---|---|
+| `check:tenant-relationships` | exit 1 — **4 actionable** | exit 0 — **0 actionable** |
+| `check:tenant-indexes --db` | exit 1 — **985 of 988** | exit 0 — **988 of 988** |
+| `db:verify-rls` coverage | exit 0 — **966 of 988**, 16 exposed | exit 0 — **982 of 988**, 0 exposed |
 
-**1. Tenant relationships — NOT closed.** `pnpm -s check:tenant-relationships` → exit 1.
-236 single-column FKs · 95 CRM · 136 Inventory · 1 platform-global · **4 actionable**:
+The mid-bootstrap guard the first pass installed did its job: before the run it printed
+`Ledger rows on target 637 of 646` and refused to call the number release evidence. After, it
+prints `646 of 646`.
 
-    public.credit_note_items → public.credit_notes    ON DELETE CASCADE
-    public.vendor_credit_items → public.vendor_credits ON DELETE CASCADE
-    public.credit_notes → public.invoices              ON DELETE SET NULL
-    public.vendor_credits → public.purchase_bills      ON DELETE SET NULL
+## 1. Four tenant foreign keys — CLOSED
 
-Two of them cascade, so a delete in one org can reach a child row pinned to another. Each needs a
-composite `(org_id, child_id) → (org_id, id)` FK — a migration, which is outside my territory.
-`vendor_credit_items` already carries `fk_vendor_credit_items_vendor_credit_id_org` **alongside**
-the single-column CASCADE, so for that one the fix is a drop, not an add.
+`0995` drops each single-column constraint and moves its referential action onto the composite
+`(org_id, child_id) → (org_id, id)` twin, which is where the tenant conjunct lives. Verified in
+`pg_constraint`, not inferred from the file:
 
-The static mode's 16 are a wider, weaker set: 12 are self-referencing FKs (`org_units.parent_id`,
-`legal_entities.parent_legal_entity_id`, …) that migrations have **already** replaced with
-composites in the catalog — the Drizzle declaration just never caught up. The catalog answer (4) is
-the release-relevant one. Where evidence below comes from a declaration scan I say so.
+    credit_note_items.fk_credit_note_items_credit_note_id_org
+      FK (org_id, credit_note_id) -> credit_notes(org_id, id) ON DELETE CASCADE     validated=true
+    vendor_credit_items.fk_vendor_credit_items_vendor_credit_id_org
+      FK (org_id, vendor_credit_id) -> vendor_credits(org_id, id) ON DELETE CASCADE validated=true
+    credit_notes.fk_credit_notes_invoice_id_org
+      FK (org_id, invoice_id) -> invoices(org_id, id) ON DELETE SET NULL (invoice_id) validated=true
+    vendor_credits.fk_vendor_credits_bill_id_org
+      FK (org_id, bill_id) -> purchase_bills(org_id, id) ON DELETE SET NULL (bill_id) validated=true
 
-**2. Tenant indexes — NOT closed.** New `check:tenant-indexes --db` → exit 1, **985 of 988**:
+    the four single-column constraints: (none — all four dropped)
 
-    public.communication_backfill_issues   1 index, none leading with org_id
-    public.subprocessor_subscribers        3 indexes, none leading
-    public.support_ticket_tags             2 indexes, none leading
+The `SET NULL` column lists are the detail that matters, and they are right: both name only a
+**nullable** column (`invoice_id notnull=false`, `bill_id notnull=false`). A composite `SET NULL`
+with no list writes NULL into every referencing column including `org_id`, which is `NOT NULL` on
+both tables, so a parent delete would raise `23502` instead of clearing the pointer — the defect
+class `0770` introduced and `0992` swept. `0992` re-derives its lists at run time but runs *before*
+`0995`, so the `DO $$` assertion at the end of `0995` is what keeps these four honest; it passed.
 
-Measured as `streamline_app` with the tenant GUC on 50,000 rows across 20 orgs, inside a rolled-back
-transaction:
+**Scope buckets confirmed unchanged and untouched, as instructed:** `EXCL: CRM 95`,
+`EXCL: Inventory 136`, `EXCL: platform-global 1` — identical before and after. Only the total moved,
+236 → 232, which is exactly the four that were repaired.
 
-    no leading tenant index   Seq Scan, Filter: (org_id = app.current_org_id())
-                              Rows Removed by Filter: 47500      Buffers: shared hit=516
-    with (org_id, created_at) Index Scan, Index Cond: (org_id = app.current_org_id())
-                              Buffers: shared hit=4 read=2
+## 2. Three leading tenant indexes — CLOSED (live), PARTIAL (declarations)
 
-86× at 50k rows and it grows O(organisation). `support_ticket_tags` is the interesting one: the
-Drizzle model declares only `ticket_id, tag_id, created_at`, while the live table carries `org_id` —
-so the declaration gate could not classify it as a tenant table at all. The 5 Build tables the
-repaired declaration gate now flags (`release_tickets`, `ticket_label_mappings`,
-`ticket_related_links`, `webhook_deliveries`, `work_item_relations`) all **do** have a leading
-`(org_id, id)` unique in the catalog; they are a declaration gap, not a live one.
+`0996` adds the three the first pass measured. Catalog mode is now clean:
 
-**3. RLS on every tenant-scoped table — NOT closed.** Enumerated from `pg_catalog` over every
-non-system schema, `relkind IN ('r','p')`, any tenant column type — not from declarations:
+    Tenant tables 988 · Leading tenant index 988 · exit 0
 
-    org-bearing tables                    988
-    RLS enabled + >=1 policy              966   (966 policies, 1 per table)
-    policies whose qual omits the tenant    0
-    policies scoped to a role / RESTRICTIVE  0
-    no policy at all                       22   = 6 platform-global + 16 inv_*
+The three are `communication_backfill_issues (org_id, created_at DESC)`,
+`subprocessor_subscribers (organization_id, created_at DESC)`,
+`support_ticket_tags (org_id, ticket_id)` — the same three named in the ticket, enumerated from the
+gate rather than carried over.
 
-All four tables the brief named — `git_webhook_seen_deliveries`, `calendar_provider_sync_queue`,
-`file_quarantine_records`, `multipart_upload_intents` — now carry `tenant_isolation` with
-`org_id = app.current_org_id()`. The six platform-global ones are registered with written
-justifications (control-plane routing that necessarily runs before a tenant exists).
+**Declaration mode is still red and is not mine.** `pnpm check:tenant-indexes` with no `--db` is
+**exit 1 at 821 of 828**, worse than the 823/828 the first pass saw. All seven were checked
+individually against `pg_index`, and every one carries a leading `uniq_<table>_org_id (org_id, id)`
+in the catalog:
 
-**The 16 without a policy are a live exposure, and I am not folding them into a pass.** Every one
-of them grants `streamline_app` SELECT **and** INSERT/UPDATE/DELETE:
+    crm_sla_breach_log · org_custom_domains · release_tickets · ticket_label_mappings
+    ticket_related_links · webhook_deliveries · work_item_relations
 
-    inv_ai_feedback · inv_allocation_overrides · inv_audit_export_jobs
-    inv_channel_snapshot_diffs · inv_channel_webhook_deliveries
-    inv_customer_shelf_life_rules · inv_demand_forecasts · inv_grn_line_serials
-    inv_inspection_plans · inv_inspection_plan_versions
-    inv_landed_cost_allocations · inv_landed_cost_charges · inv_landed_cost_vouchers
-    inv_proposal_overrides · inv_putaway_tasks · inv_putaway_task_lines
+So the live database is complete and the Drizzle declarations are behind it. Two are new since the
+first pass — `crm_sla_breach_log` and `org_custom_domains`, both from schema edits in `a3bf8470`.
+`org_custom_domains` declares `uniqueIndex("uniq_org_custom_domains_domain").on(table.domain)` and
+nothing on `orgId`; `crm_sla_breach_log` declares only a `(leadId, policyId)` unique. The fix is one
+`uniqueIndex(...).on(t.orgId, t.id)` per table in `src/db/schema/**` — ticket 08's territory.
 
-Demonstrated, not argued. As `streamline_app` (`rolbypassrls = false`) with
-`app.organization_id = 'org_probe_A'`, inside a transaction that was rolled back:
+I did **not** relax the gate to make this green. It is reporting a real drift: a `db:generate` run
+against these declarations would want to drop indexes the catalog depends on.
 
-    POLICY-BEARING access_versions            rows_visible = 1
-    NO-POLICY inv_customer_shelf_life_rules   rows_visible = 2   org_probe_A/10 + org_probe_B/20
+## 3. Sixteen unpoliced inventory tables — CLOSED, and the decision stated
 
-And with **no** GUC at all, `access_versions` raises `42501 no tenant context` while the no-policy
-tables answer normally. `db:verify-rls` reported these as `EXCLUDED: INVENTORY` and still exited 0;
-that exclusion is a statement about who fixes it, never about whether it is exposed, so the gate now
-prints an `EXPOSURE` block naming each table with its measured app-role grants. Verdict: **P1, real,
-not reachable through the ORM but reachable by any raw-SQL path**, and it becomes reachable the
-moment the WMS services land. All 16 sit inside ticket 07's 105 undeclared-in-Drizzle set — one
-finding, not two.
+**Decision: add the policies, even though Inventory is excluded from this release.** A demonstrated
+cross-tenant read is a security defect, not a scope question. A release exclusion decides *who fixes
+a thing*; it has never decided *whether the thing is exposed*. The grant is what makes a row
+readable, not the presence of a caller, so every raw-SQL path reaches these today and every WMS
+service that lands later would inherit an already-open table. `0994` is the durable form — revoking
+the grant instead would be undone by the `ALTER DEFAULT PRIVILEGES` the role bootstrap re-applies.
 
-**4. Drizzle-declared columns absent from the catalog — CLOSED.** Enumerated at runtime through
-`getTableConfig` over the `src/db/schema` barrel rather than by regex, so the Build module's
-`build.table(...)` form is included by construction:
+`0994` enables RLS and adds `tenant_isolation ... USING (org_id = app.current_org_id())` on all 16,
+with `current_org_id()` schema-qualified rather than relying on `0431`'s role-dependent search_path.
 
-    declared tables 872 (789 public · 80 build · 3 build_events)   present in catalog 872
-    declared columns 10,588                                        present in catalog 10,588
-    MISSING TABLES 0 · MISSING COLUMNS 0
+**Before / after of the exploit itself**, as `streamline_app` (`rolbypassrls = false`) inside
+transactions that were rolled back. The pre-`0994` shape is RLS *disabled*, confirmed against the
+untouched `scratch_boot_a`: all 16 had `relrowsecurity = false`.
 
-No `db.select()` on this branch can raise `42703` against a target at head. The reverse direction is
-not zero and I report it because it is the same root cause: **105** live non-partition tables are
-undeclared (`gl_*` 13, `crm_*` 18, `inv_*` 34, `ap_*`/`ar_*` 9, `tax_*` 5, `bank_*` 4, …), 101 of
-them org-bearing, 85 of those already policied and 16 not. My independent count reproduces
-ticket 07's exactly.
+    pre-0994 (RLS off), GUC = org_probe_A   rows_visible = 2   org_ids: org_probe_A,org_probe_B
+    pre-0994 (RLS off), no GUC at all       rows_visible = 2
+    at head (0994 applied), GUC = org_probe_A  rows_visible = 1   org_ids: org_probe_A
+    at head, no GUC at all                  ERROR 42501 no tenant context
 
-**5. Verify as the application role — CLOSED.** `APP_DB_SCHEMA=public pnpm db:bootstrap-role` → exit
-0: `superuser=false createdb=false createrole=false bypassrls=false login=true`, **943/943 tables
-granted**, `can create objects in: (none)`. Every measurement in this report was taken under
-`SET LOCAL ROLE streamline_app` with the GUC set, inside a transaction that was rolled back; the
-owner role was used only to create the fixtures. `drizzle.__drizzle_migrations` is correctly denied
-to the app role (`permission denied for schema drizzle`).
+The first attempt at the "before" leg was wrong and is worth recording: dropping the *policy* while
+leaving RLS *enabled* returns **0** rows, because that state is deny-by-default. It reproduces
+nothing. Only `DISABLE ROW LEVEL SECURITY` reproduces the real exposure.
 
-**6. `db:generate` fails closed — CLOSED.** `node scripts/guard-db-generate.mjs` → **exit 1**,
-"newest snapshot `0464_snapshot.json`, journal entries 637, migrations with no snapshot **172**".
-`check:db-generate-guard` → exit 0, 5/5.
+Coverage after: **982 of 988**, `EXCLUDED: INVENTORY: 0`, no EXPOSURE block, 16/16 behavioural
+checks PASS. Counted independently from `pg_catalog` rather than trusting the gate, exactly **6**
+org-bearing tables have no policy and all 6 are the registered platform-global control-plane set:
+`noisy_neighbour_reviews`, `organization_lifecycle_sagas`, `organization_placement`,
+`organization_relocations`, `organization_reservations`, `placement_decisions`. Every RLS-enabled
+`inv_*` table has exactly one policy.
 
-## Also closed
+**Blast radius of enabling RLS on out-of-scope tables: zero.** All 16 table names and their
+camelCase symbols return **0** hits across `src/modules/`. Nothing can start failing `42501`,
+because nothing reads them.
 
-`check:tenant-isolation` was red at 923/924 — `calendar-provider-webhook.service.ts` had no
-cross-tenant negative test. Added `calendar-provider-webhook-tenant-isolation.spec.ts`: a fake tx that **applies the
-predicate the service actually builds**, so dropping the org clause changes the result rather than
-passing silently. A concurrent session then strengthened the file — actors now come from
-`humanSessionPrincipal`, and two `BITE` cases flip `ignoreTenantPredicate` to prove the harness
-really would serve org B's event, connection and creator to an org A webhook if the org conjunct
-went away. I kept that version: **9 tests, all passing**. Gate now 924/924, exit 0.
-`check:tenant-isolation:run` → **446 suites / 1806 tests, all passed**, exit 0.
+## The honesty hole in `db:verify-rls`, closed
+
+The first pass added an EXPOSURE block that named all 16 tables with their measured app-role
+grants — and the gate still exited **0**. That is the same all-clear the block exists to prevent:
+16 tables were named as cross-tenant readable while `RESULT: RLS VERIFIED` printed underneath.
+One line in `db-verify-rls.mjs` now counts an unpoliced excluded tenant table as a failure.
+
+Proven to bite, rather than asserted:
+
+    RLS disabled on inv_ai_feedback -> exit 1, "RESULT: 1 CHECK(S) FAILED",
+                                        exposed public.inv_ai_feedback SELECT=true WRITE=true
+    restored                        -> exit 0, "RESULT: RLS VERIFIED"
+
+Because exposure is 0 at head, this cannot turn a green gate red today; it only stops the next
+unpoliced tenant table from landing silently.
+
+## Rollback round trip, proven live
+
+On a throwaway `TEMPLATE scratch_t03` copy, down then up:
+
+    DOWN 0996, 0995, 0994  -> 16 inv_* back to RLS off · 4 single-column FKs restored · 3 indexes dropped
+    UP   0994, 0995, 0996  -> 16/16 RLS on · 0 single-column FKs · 3/3 indexes
+    check:tenant-relationships exit 0 (0 actionable) · check:tenant-indexes --db exit 0 (988/988)
+
+Copy dropped afterwards.
+
+## Journal note — the brief's rule is not this repo's rule
+
+The brief says journal `idx` must equal position in the array. It does not, and never has: 646
+entries, last `idx` 777, **316** entries where `idx !== position`, spread throughout the history.
+`check-migration-discipline.mjs` enforces `when` **strictly increasing** and `idx` **unique** — both
+hold, and the gate is exit 0. Renumbering to satisfy the stated rule would have rewritten 316
+entries to fix nothing. Nothing was renumbered. The watermark rule *is* real and holds: `0992`–`1000`
+are all stamped `2027-02-19T01:20:10.088Z` and above.
+
+## Box 4 re-verified rather than inherited
+
+Schema files changed at 17:44 and 17:55, after the first pass checked this. Re-run through
+`getTableConfig` over the `src/db/schema` barrel against `scratch_t03` at head: **872 declared
+tables, 10,588 declared columns, 0 missing tables, 0 missing columns.** Identical to the first pass,
+so the churn introduced no undeclared column and no `db.select()` can raise `42703`.
 
 ## Files changed
 
-- `BE/src/scripts/check-tenant-relationships.mjs` — CRM exclusion no longer swallows accounting/billing; inline `.references()` regex accepts a return-type annotation; mid-bootstrap guard reads both ledgers; target name is printed, not assumed; 2 new self-test checks.
-- `BE/src/scripts/check-tenant-indexes.mjs` — `(?:pgTable|\w+\.table)`; new `--db` pg_catalog mode with its own vacuity guard; 3 new self-test checks.
-- `BE/src/scripts/db-verify-rls.mjs` — sweeps widened to `relkind IN ('r','p')` and to any tenant-column type (the partitioned `notifications` parent and non-`text` tenant columns were invisible); new `EXPOSURE` block measuring the app role's grants on every no-policy table an exclusion covers.
-- `BE/src/modules/calendar/calendar-provider-webhook-tenant-isolation.spec.ts` (new).
-- `FEROOT/.scratch/code-release-10-10/issues/03-tenant-relationships-indexes-rls.md` — ticks, BLOCKED notes, evidence.
+- `BE/src/scripts/db-verify-rls.mjs` — an excluded tenant table with no policy now increments
+  `failures`, so the EXPOSURE block can no longer print under `RESULT: RLS VERIFIED`. `node --check`
+  clean. This is one script outside the two named in my prompt; it is the gate the instruction
+  "make the gate's output honest about it" points at, and the change cannot alter today's result.
+- `FEROOT/.scratch/code-release-10-10/issues/03-tenant-relationships-indexes-rls.md`
+- `FEROOT/.scratch/code-release-10-10/reports/03-tenant-rls.md`
 
-No migration, no `src/db/schema/**`, no `db-bootstrap.mjs`, no `.env`. `node --check` clean on all
-three `.mjs`. Backend `tsc --noEmit` was **exit 0, 0 errors** after my spec landed; a later run shows
-**3 errors, none in my territory** and all appearing after concurrent edits —
-`hr/directory/org-structure-headcount.service.spec.ts:52` (`hrHeadcountNamespace` missing from the
-cache-key map) and `support/core/support-ai-triage-charge.spec.ts:60,116` (arity 6 vs 5). Not mine;
-flagging rather than touching.
+**No migration file was added or edited.** `migrations/` and `migrations/meta/_journal.json` are
+byte-identical to what I found. No `src/db/schema/**`, no `src/modules/**`, no frontend, no `.env`.
 
 ## Handoff
 
-- `scratch_boot_a` is left at head and row-clean: 637 ledger rows, 1027 tables, 0 organizations, 0 users, no probe residue. Every fixture I created was rolled back.
-- **One non-row change to it:** `db:bootstrap-role` granted `streamline_app` DML on `public` and ran `REVOKE CREATE ON SCHEMA public FROM PUBLIC`. If ticket 02's parity comparison reads ACLs, this is mine.
-- `verify-migration-chain.mjs` hardcodes `ssl: "require"` (noted by ticket 01) — the same is now true of nothing I touched; `check-tenant-indexes --db` and `check-tenant-relationships` both connect without forcing SSL.
+- `scratch_t03` is left at head, 646/646, 1027 tables, **0 organizations, 0 users**, no probe
+  residue. `db:bootstrap-role` granted `streamline_app` DML on `public` there (943/943).
+- `scratch_boot_a` was read from only (two `pg_class` queries) and not modified.
+- `scratch_t03b` was created and dropped.
 
 ## Needs an owner outside this session
 
-- **P1** — 16 `inv_*` tables with `org_id`, full app-role DML and no policy. 16 `ENABLE ROW LEVEL SECURITY` + `CREATE POLICY tenant_isolation` statements.
-- **P1** — 4 single-column tenant FKs, 2 of them `ON DELETE CASCADE`, on `credit_notes` / `vendor_credits` / `credit_note_items` / `vendor_credit_items`. This is accounting-rewrite territory.
-- **P2** — 3 tables with no index leading on the tenant column; 516→6 buffers measured.
-- **P2** — `uniq_subprocessor_subscribers_email` is a bare global `UNIQUE(email)` on a tenant-owned table, the same shape as the `coupons.code` finding already assigned elsewhere.
-- **P2** — `support_ticket_tags` carries `org_id` live but not in Drizzle; `communication_backfill_issues` and `subprocessor_subscribers` are undeclared entirely. Schema territory (05/07).
+- **P2 — ticket 08.** 7 Drizzle tables missing a `uniqueIndex(orgId, id)` declaration that exists in
+  the catalog: `crm_sla_breach_log`, `org_custom_domains`, `release_tickets`,
+  `ticket_label_mappings`, `ticket_related_links`, `webhook_deliveries`, `work_item_relations`.
+  `pnpm check:tenant-indexes` is exit 1 at 821/828 until they are declared.
+- **P2 — schema (05/07).** `support_ticket_tags` carries `org_id` live but not in Drizzle;
+  `communication_backfill_issues` and `subprocessor_subscribers` are undeclared entirely. All three
+  now have live indexes but no declaration.
+- **P3.** `uniq_subprocessor_subscribers_email` is a bare global `UNIQUE(email)` on a tenant-owned
+  table — same shape as the `coupons.code` finding, and `0993` shows the fix pattern.
+- **Informational.** 105 live non-partition tables remain undeclared in Drizzle, 101 org-bearing.
+  All 16 of this ticket's inventory tables sat inside that set; the other 85 were already policied.
