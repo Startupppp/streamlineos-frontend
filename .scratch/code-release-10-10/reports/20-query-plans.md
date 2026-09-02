@@ -375,3 +375,198 @@ the qualitative results (which index is chosen, which side of a head-to-head win
 the absolute buffer counts obviously do not. Every measurement transaction was rolled back; the only
 writes this ticket made were the seeders'. `test/perf/seed-heavy-query-load.mjs --purge` removes the
 load and leaves the base seed intact.
+
+---
+
+# Session 2 (2026-09-02) — the projection box, on `scratch_perf_seed`
+
+The plans above were taken on `scratch_boot_d` and are unchanged. This section covers only the one
+box that was left open: *every list, count and existence path selects named columns and returns a
+minimal projection; no full ORM row, global user record or large JSON/blob/vector field is
+hydrated.* Target for everything below: **`scratch_perf_seed`** — journal head, 1,699 MB, 88
+non-empty tables, four tenants at 89.93 / 9.0 / 0.90 / 0.18 percent. Every measurement was taken as
+`streamline_app` (`rolsuper = false`, `rolbypassrls = false`) with `app.organization_id` set inside a
+transaction that was rolled back; a no-GUC read raises
+`no tenant context: app.organization_id is not set for this transaction`, which the runners assert
+before they trust a number.
+
+## 1. The global-users clause is closed, and now locked
+
+CLAUDE.md §3 is specific: *never use an unprojected relation to global `users`* — those rows still
+hold authentication secrets and legacy PII. The previous pass asserted this was clean by grepping for
+four literal spellings (`user: true`, `creator: true`, `approver: true`, `assignee: true`). That test
+is too narrow to be trusted: `crm_deals.salesRep`, `blog_posts.author`, `sign_envelopes.signer` and
+329 other relation names also point at `users`, and none of them matches those four strings.
+
+Re-audited properly, by building a relation map from **every** `relations()` block in
+`src/db/schema/**` and resolving each `with:` entry against it:
+
+| | |
+|---|---:|
+| `db.query.*.find{Many,First}` call sites scanned | **1,573** |
+| of which carry a `with:` block | 251 |
+| relations declared in the schema that target global `users` | 333 |
+| relations to `users` actually hydrated by application code | **169** |
+| …of those, hydrated **without** an explicit `columns:` projection | **0** |
+| relation names the map could not resolve (a silent hole in the scan) | **0** |
+
+The union of every users projection in the codebase is
+`id, name, firstName, lastName, email, image, phone, bio, isActive, designation, linkedinUrl,
+twitterUrl, githubUrl, websiteUrl`. `users.totpSecret` — the TOTP shared secret — appears in none of
+them, and neither do `emergencyContact`, `dateOfBirth` or `metadata`. Separately: no bare `.select()`
+reads `users` directly or through a join, and `getTableColumns(users)` appears nowhere in the repo.
+
+**Locked** by `BE/src/db/users-relation-projection.spec.ts`. It rebuilds the relation map at test
+time, so a new users relation added tomorrow is covered without touching the spec, and it asserts
+three things:
+
+1. every relation to `users` declares an explicit `columns` projection;
+2. no projection names `totpSecret`, `emergencyContact`, `dateOfBirth` or `metadata`;
+3. **the scan is not vacuous** — it must resolve >1,000 query sites, find >100 users relations, and
+   leave zero relation names unresolved. AGENT-BRIEF rule 8 in miniature: a scan that reports
+   everything clean is a broken scan until it proves it found something.
+
+`jest --runInBand --testPathPattern=users-relation-projection` → **3 passed, 0 failed**. Assertion 1
+fired on a real false positive while the spec was being written: `reporter: { columns: USER_COLS }`
+in `projects-tickets-detail.service.ts` passes an identifier rather than an object literal, and a
+naive `columns:\s*\{` test reads it as unprojected. The spec now inlines module-level `const
+UPPER_CASE = {…}` for both `with:` and `columns:` before matching.
+
+## 2. Buffers cannot score a projection — bytes can, and here they are
+
+The previous pass ended on a real obstacle: `dashboard-recent-activity` full-row and 8-field
+projections both cost **417 buffers / 19,587 rows**, because the columns share heap pages, so
+`EXPLAIN (BUFFERS)` reports a projection as free. That is true and it is not a reason to stop
+measuring — it is a reason to change instrument. What a projection costs is bytes across the
+database boundary and bytes resident in the Node heap, and `pg_column_size(row(…))` measures exactly
+the columns named.
+
+`BE/test/perf/measure-projection-bytes.mjs` (`--self-test` **8/8**), as the app role with the GUC:
+
+| path | rows | cols | projected | bytes | projected bytes | x |
+|---|---:|---:|---:|---:|---:|---:|
+| `kb-chunks-page-50` (`kb_article_chunks`) | 50 | 20 | 19 | **322,200** | **14,600** | **22.07** |
+| `kb-pages-update-guard` | 1 | 37 | 4 | 270 | 45 | 6.00 |
+| `dashboard-recent-activity` (`build.tickets`) | 10 | 40 | 8 | 1,560 | 1,080 | **1.44** |
+| `notifications-list-page` | 20 | 26 | 25 | 6,168 | 5,368 | 1.15 |
+| `kb-pages-list-100` | 100 | 37 | 34 | 27,000 | 23,800 | 1.13 |
+| `attendance-list-page` | 100 | 18 | 16 | 14,800 | 14,400 | 1.03 |
+
+Two things this establishes. First, **the instrument discriminates where buffers do not**:
+`dashboard-recent-activity` is 417/417 in buffers and 1.44x in bytes (1.37x on mid, 1.38x on tiny) —
+so a projection ratchet is now possible, which is what the previous pass said was missing. Second,
+**the size of the stake when a vector is involved**: one unprojected 50-row read of
+`kb_article_chunks` would move 315 kB of 1536-dimension embeddings for 14 kB of content. No shipped
+read does that — which is the vector clause of this box, now measured rather than asserted.
+
+**Honest limit.** `attendance` (1.03x) and `notifications` (1.15x) are low because the seeded jsonb
+payloads are small: `attendance.breaks` is set on all 10,188 rows but is a stub, `location_data` is
+null on every row, and `chat_messages.metadata` and `business_parties.social_profiles` are null on
+all 13,344 / 22,240 rows. These ratios are a **floor**, not an estimate of production. Making them
+representative is a seed change (ticket 23's dataset manifest), not an instrument change.
+
+The full-column set is taken from the **declared** Drizzle columns, not `information_schema`. That
+distinction is load-bearing: a bare `.select()` in Drizzle emits the declared column list, not
+`SELECT *`, so scanning the live catalog overstates every count. Verified by building the query and
+printing its SQL — `select "id", "org_id", …, "content", "content_text", "fts", … from "kb_pages"`.
+`kb_pages.fts` **is** declared (`tsvector("fts").generatedAlwaysAs(…)`, `kb/pages.ts:39`), so a bare
+`.select()` on that table really does drag the generated search vector across the wire.
+
+## 3. Fixed — 13 files
+
+Eleven existence-only reads that hydrated a jsonb-bearing row to answer `if (!x) throw`, narrowed to
+the columns actually consumed:
+
+`build/core/projects-write.service.ts` · `chat/chat-pins.service.ts` ·
+`e-sign/sign-envelope-validation.service.ts` · `finance/ar/reminders.service.ts` ·
+`hr/performance/compliance.service.ts` · `hr/performance/review-cycles.service.ts` ·
+`hr/recruitment/recruitment-candidate-ai.service.ts` (also dropped a `with: { resume: true }` whose
+result was never read) · `inventory/ai/inv-ai.service.ts` · `inventory/channels/tpl.service.ts` ·
+`inventory/traceability/inv-traceability.service.ts` · `kb/wiki/kb-page-duplicate.service.ts`
+
+Plus two KB reads:
+
+- `kb/wiki/kb-page-tree.service.ts` — `getTrash()` returned 100 whole `kb_pages` rows including
+  `content` (jsonb), `content_text` and the generated `fts` tsvector. The frontend
+  (`features/wiki/components/trash-page.tsx`) reads exactly four fields: `id`, `title`, `icon`,
+  `deletedAt`, and `fts` appears nowhere in the frontend at all. Now projected through the same
+  `KB_PAGE_LIST_COLUMNS` / `KbPageListItem` shape `kb-page-visits.service.ts:19-25` already
+  established in the same folder, so this follows the repo's own pattern rather than inventing one.
+- `kb/wiki/kb-pages.service.ts` — `update()` read the whole row to check `isLocked`, `trustState`
+  and `content`.
+
+**Typecheck is what made this safe, and it caught four real bugs.** The "value used only as a
+boolean guard" heuristic looked 25 lines past the call; in four files the value was used further
+down. `tsc` failed with `Property 'name' does not exist on type '{ id: number; }'` and three more
+like it. Each was widened to exactly the columns consumed. A mocked spec could not have caught any
+of them — ts-jest runs `isolatedModules`, so a spec never enforces a signature. This is
+CLAUDE.md §8's point, from the wrong end.
+
+## 4. Why the box stays open
+
+Re-counted at head against the declared column set:
+
+| shape | total | on a table with a jsonb/array/tsvector/vector column |
+|---|---:|---:|
+| `findMany` with no top-level `columns:` | **200** | 100 |
+| `findFirst` with no `columns:` | **456** | 222 |
+| non-single-row bare `.select()` | **373** | 151 |
+
+Narrowing the bulk of these changes a response DTO. `hr_form_submissions.formSchemaSnapshot` is what
+`maskSensitiveData` reads to decide which fields to redact; the audit and event-stream jsonb columns
+are the diff the UI renders; `survey_questions.settings` and `automation_rules.conditions` *are* the
+payload the endpoint exists to return. That is a **product decision about API contracts**, not a
+measurement, and it is not one to take from a row count. The two clauses that were measurable —
+global user records and large vector fields — are closed above. The instrument to score the third
+now exists; the decision does not.
+
+## 5. Cross-territory findings (not fixed)
+
+- **P1 — `GET /kb/pages/:id` returns the generated `fts` tsvector to the browser.**
+  `kb-pages.service.ts:123` spreads the whole `PageRow` into the response, and `PageRow` includes
+  `fts` and `content_text`. The frontend references `fts` nowhere. Narrowing it changes the
+  `PageRow` return type across `kb/wiki/`, so it is a contract change and is left to the KB owner.
+  Same shape at `kb-articles.service.ts:116` and `kb-page-versions.service.ts:98`, where the row is
+  also passed to `snapshotIfNeeded`.
+- **P2 — `attendance-read.service.ts`** has six `findMany` with no `columns:` on a table carrying
+  `breaks` and `location_data` jsonb; `recruitment-candidates.service.ts:97` returns `notes`,
+  `bgvNotes`, `aiScoreBreakdown` and `resumeUrl` on a browse list. Both are contract narrowings.
+- **Ticket 08 — six index drops are measured regressions.** See `reports/07-key-inventory.md` §4.3.
+  All six are a narrow `(org_id)` index dropped as a "leading prefix" of a much wider index; on the
+  89.9% tenant `contacts` goes to a full Seq Scan (645 buffers against 30) and `inv_stock_levels`
+  costs 609 against 39, while every minority tenant is flat. The `inv_stock_levels` probe is the
+  literal query at `inventory/settings/settings.service.ts:137`.
+- **Ticket 08 — S18 has grown from 5 overlapping FK pairs to 172 at head**, 25 on non-empty tables.
+  Measured cost: 2,000 redundant FK trigger invocations per 1,000 inserts on
+  `inv_stock_transactions`. See §4.4 of the same report.
+
+## 6. Gates
+
+| command | exit | number |
+|---|---:|---|
+| `pnpm check:unjoined-table-refs` | **0** | 3,052 files · 5,398 queries · every referenced table in its FROM/JOIN |
+| `pnpm typecheck` (through `heavy.sh`) | 2 | **1 error, not mine** — `finance/ap/payment-run-executor.service.ts:157 TS2552 newStatus`, a file with 13 insertions / 10 deletions of another agent's uncommitted work |
+| `pnpm check:spec-typecheck` | 2 | same single error; the new spec compiles clean |
+| `jest --runInBand` over the 10 changed module trees + the new spec | **0** | **173 suites, 1,119 tests, all passed** |
+| `pnpm check:unbounded-reads` | 1 | 1 unclassified path, `cron/cron-hr-retention-documents.ts:130` — not a file I touched, no entry in the baseline |
+| `pnpm check:db-call-count` | 1 | **96** unclassified files repo-wide (access, accounting, ai, billing, calendar, chat, crm, cron, …). One is a file I touched, `build/core/projects-write.service.ts`, where my diff is `+1` line at 254 and the flagged loop-internal call is at 196/204 |
+| `node test/perf/measure-index-redundancy.mjs --self-test` | 0 | 13/13 |
+| `node test/perf/measure-projection-bytes.mjs --self-test` | 0 | 8/8 |
+
+Both red `check:*` gates are pre-existing drift in a shared working tree that currently holds other
+agents' uncommitted changes across ~200 files. Neither is claimed as passing.
+
+## 7. Files changed
+
+- `BE/test/perf/measure-index-redundancy.mjs` (new) — the multi-tenant index-redundancy harness.
+- `BE/test/perf/index-redundancy-candidates.json` (new) — all 354 executed drops with the definition
+  each one removed, so the measurement reproduces without `scratch_boot_c`.
+- `BE/test/perf/measure-projection-bytes.mjs` (new) — the bytes-returned instrument.
+- `BE/src/db/users-relation-projection.spec.ts` (new) — locks the global-users clause.
+- 13 service files listed in §3.
+- `FEROOT/.scratch/code-release-10-10/reports/07-key-inventory.md` §4 (rewritten), §2 rows S14/S15/S18, §6, §7.
+- `FEROOT/.scratch/code-release-10-10/reports/07-index-redundancy/` (new), `reports/20-query-plans/projection-bytes-*.json` (new).
+- Both ticket files.
+
+No migration, no `src/db/schema/**`, no `.env`, no `package.json`. `DATABASE_URL` was never read and
+no `cornerstone_*` database was touched.

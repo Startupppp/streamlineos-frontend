@@ -117,11 +117,11 @@ Rows marked `REMOVE` are safe to execute; rows marked `REFACTOR` need the named 
 | S11 | schema | `platform_subscriptions` | 1 | **REFACTOR** | Billing | Parallel to the live `subscriptions` table (144 refs) that `PlanLimitsService` actually resolves entitlements from. Its sibling `platform_payments` IS live (`platform-analytics.service.ts:80`), so the pair is half-wired. Two subscription tables is a correctness hazard for revenue reporting. | 0 refs; `payment-providers.ts:15` comment |
 | S12 | schema | `inv_reason_codes`, `inv_product_uom_conversions` | 2 | **REFACTOR** | Inventory | Zero business references. `inv_product_uom_conversions` has a `relations()` declaration and an FK to `inv_uom` (which IS live), so it is a designed-but-unwired feature, not litter. Unseeded feature — classify with the S07 batch. | `refscan.json` |
 | S13 | schema | `hr_employment_custom_field_values` vs `hr_employments.custom_field_values` | 2 designs | **REFACTOR** | HR platform | Two live custom-field storage designs behind one `custom_field_definitions` registry: HR uses the JSONB column (`@>` / `?` filters, GIN `jsonb_path_ops` indexed — correct), Support uses the normalized table. The normalized **HR** table is written by nothing. Pick one shape per entity or the two diverge silently. | `hr-custom-fields.service.ts:240,257`; `support-custom-fields.service.ts` |
-| S14 | schema | Exact-duplicate indexes | 47 | **REMOVE** | DB/Platform | Two identical indexes on the same columns: double write amplification, double bloat, double VACUUM cost, zero read benefit. Selection rule applied: a constraint-backing index is never dropped, and a UNIQUE is never dropped in favour of a non-unique. Full list §3.1. | `pg_indexes` |
-| S15 | schema | Prefix-redundant indexes | 299 | **REMOVE** | DB/Platform | Index whose column list is a strict leading prefix of a wider index with the same access method and no `WHERE`; Postgres serves the narrow case from the wide index. 178 are covered by a UNIQUE index that cannot be dropped anyway. Full list §3.2. | `pg_indexes`; EXPLAIN §4 |
+| S14 | schema | Exact-duplicate indexes | 47 | **REMOVE** | DB/Platform | Two identical indexes on the same columns: double write amplification, double bloat, double VACUUM cost, zero read benefit. Selection rule applied: a constraint-backing index is never dropped, and a UNIQUE is never dropped in favour of a non-unique. Full list §3.1. Executed by `0999`/`1003`; 35 measurable drops re-measured against four tenants in §4 — 28 confirmed free. | `pg_indexes`; EXPLAIN §4.2 |
+| S15 | schema | Prefix-redundant indexes | 299 | **REMOVE** | DB/Platform | Index whose column list is a strict leading prefix of a wider index with the same access method and no `WHERE`; Postgres serves the narrow case from the wide index. 178 are covered by a UNIQUE index that cannot be dropped anyway. Full list §3.2. **Prefix containment proves reachability, not cost** — §4.3 measures six `(org_id)` drops that cost 6.5x-21.5x buffers on the majority tenant because the surviving wider index is physically larger than the heap. | `pg_indexes`; EXPLAIN §4.3 |
 | S16 | schema | `ON DELETE CASCADE` FK → `organizations.id` with **no leading index** | 151 | **REFACTOR** | DB/Platform | `cron-org-purge-worker.service.ts:236` hard-deletes an organization inside one transaction. Each of these 151 child tables is then sequentially scanned while holding locks. This is a live production worker, not a hypothetical. Add the index; do not remove the FK. | `fk-no-index.json`; purge worker |
 | S17 | schema | FK → `users.id` with no index (mostly `created_by`/`approved_by`) | 359 | **KEEP (defer)** | DB/Platform | Referential integrity — must not be removed. Indexing is low priority: no production path hard-deletes a `users` row (only scripts and e2e teardown). Revisit if user erasure ships. | `fk-no-index.json` |
-| S18 | schema | Overlapping FK pairs (inline single-column + composite covering the same column to the same parent) | 5 | **REFACTOR** | DB/Platform | Two constraints enforce the same reference: duplicate validation work and two locks per write. The composite (tenant-safe) one is the keeper. | `fk-overlap.json` |
+| S18 | schema | Overlapping FK pairs (inline single-column + composite covering the same column to the same parent) | **172** (was 5) | **REFACTOR** | DB/Platform | Two constraints enforce the same reference: duplicate validation work and two locks per write. The composite (tenant-safe) one is the keeper. Re-derived at head: `0985`/`0986`/`0995` added composite tenant FKs beside the narrow ones without removing them, so the count grew from 5 to 172 (25 on non-empty tables). Measured in §4.4: 2,000 redundant FK trigger invocations per 1,000 inserts on `inv_stock_transactions`. | `pg_constraint` re-derived on `scratch_perf_seed`; EXPLAIN(ANALYZE) §4.4 |
 | S19 | schema | JSONB columns | 402 decl / 457 live | **KEEP** | per module | Legitimate opaque payload for the majority. `metadata` alone appears on 91 tables. | parser |
 | S20 | schema | JSONB properties **filtered in SQL but not indexed** | 5 | **REFACTOR** | Org / Surveys / Support / CRM | Only 2 jsonb-aware indexes exist in the whole database. Unindexed filtered paths: `org_units.metadata->>'address'` and `->>'email'` (ILIKE search), `survey_response_sessions.metadata->>'liveSessionId'` (equality WHERE, twice — this is a join key and belongs in a column), `support_ai_suggestions.payload->>'escalated'` (aggregate filter), `business_parties.social_profiles->>'twitter'` (projected, and named in `record-layout-catalog.ts:169` — a *documented* access path). Normalize `liveSessionId`; index the rest. | §5 |
 | S21 | schema | JSONB properties correctly indexed | 2 | **KEEP** | Audit / HR | `idx_audit_logs_org_module_created` (expression index on `metadata->>'moduleKey'`, used by `module-access.service.ts:309`) and `idx_hr_employments_custom_field_values_gin` (`jsonb_path_ops`). These are the pattern the S20 rows should follow. | `pg_indexes` |
@@ -713,9 +713,141 @@ timer_sessions	org_id```
 
 ---
 
-## 4. `EXPLAIN (ANALYZE, BUFFERS)` evidence — partial, and stated honestly
+## 4. `EXPLAIN (ANALYZE, BUFFERS)` evidence — measured, on a seeded four-tenant database
 
-The ticket asks for representative plans. What was actually run, on `scratch_boot_c`:
+**Superseded 2026-09-02.** The original §4 said only one representative plan had been taken and
+that it was not statistically meaningful, because `scratch_boot_c` held 5 non-empty tables out of
+1,026. That was correct then. `scratch_perf_seed` now exists — journal head, 1,699 MB, 88 non-empty
+tables, four application tenants at 89.93 / 9.0 / 0.90 / 0.18 percent — so the plans have been taken.
+The old paragraph is kept at the end of this section as the record of what the earlier verdict rested
+on.
+
+### 4.1 What was measured, and why in this shape
+
+Ticket 08 has already executed the removal lists: `0999_s08_drop_redundant_indexes` (337 drops),
+`1003_s08_residual_duplicate_keys` (15) and `1002_s08_payroll_read_path_indexes` (2) are journalled
+and applied — **354 indexes**, and `scratch_perf_seed` holds 4,733 indexes where `scratch_boot_c`
+held 5,067. So the question is no longer "may these be dropped" but **"did dropping them cost
+anything on production-shaped, multi-tenant data"**, which is the same question with the answer
+falsifiable.
+
+Harness: `BE/test/perf/measure-index-redundancy.mjs`, candidate list
+`BE/test/perf/index-redundancy-candidates.json` (all 354, with the definition each `DROP` removed,
+recovered from `scratch_boot_c` at 637). Raw output:
+`reports/07-index-redundancy/index-redundancy.{json,txt}`.
+
+For each candidate, in one transaction that is rolled back:
+
+1. `SET LOCAL ROLE streamline_app` — `rolsuper = false`, `rolbypassrls = false`, so the RLS
+   predicate is in every plan. The runner refuses to start unless a no-GUC read fails, and it does
+   (`no tenant context: app.organization_id is not set for this transaction`).
+2. `EXPLAIN (ANALYZE, BUFFERS)` of an equality probe on the dropped index's key columns, and where
+   the index has more than one key column an ordered-page probe on its leading columns, **once per
+   tenant** — large, mid, small and tiny — with values sampled from that tenant.
+3. `RESET ROLE`, recreate the dropped index, `SET LOCAL ROLE` back, and run the identical probes.
+
+Same session, same cache, same statistics; the only difference is the index. Measuring one tenant
+would have been worthless: with a single distinct `org_id` the tenant column has selectivity 1.0, so
+an `org_id`-leading index discriminates nothing and reads as redundant by construction.
+`reports/00-seeded-perf-database.md` §7b is the counter-example — the same query picks
+`idx_inv_txn_org_created` for 6 buffers on the 0.18% tenant and walks the org-less
+`idx_inv_txn_created` for 1,237 on the 89.9% tenant.
+
+`--self-test` covers the definition parser, the buffer summation over a plan tree, the index-name
+collection and the scratch-target guard: **13/13 pass**.
+
+### 4.2 Result
+
+```
+354 candidates
+  319  NO_QUERY             no tenant holds a row on that table on this seed — still structural-only
+   22  CHOSEN_NO_GAIN       the planner picks the dropped index when it exists, and it saves nothing
+    7  CONFIRMED_REDUNDANT  the planner declines the dropped index even when it exists
+    6  REGRESSION           the planner picks it AND it more than halves buffers on some tenant
+```
+
+**28 of the 35 measurable drops are confirmed safe on real data.** Notable: `public.users
+idx_users_email` versus `users_email_unique` — 6 buffers with or without, on all four tenants, and
+the planner switches to whichever exists. `build.tickets idx_tickets_org_assignee_membership`,
+`inv_stock_transactions idx_inv_txn_org_variant` (166,800 rows) and `event_attendees
+idx_event_attendees_org_event` (139,020 rows) are all flat.
+
+### 4.3 Six drops that a seeded database says were not free — for ticket 08
+
+Every one is the same shape: a **narrow `(org_id)` index dropped in favour of a much wider index it
+is a strict prefix of**. Prefix containment is a *reachability* property — the wider btree can
+answer every predicate the narrow one could. It is not a *cost* property, because the wider index is
+physically larger, and for a majority tenant the planner then prefers a sequential scan over
+descending it. The effect appears **only on the large tenant** in five of the six cases; on the
+minority tenants every one of them is flat. That is the mirror image of §7b in the infrastructure
+report, and it is why one tenant is never enough.
+
+| table | dropped | survivor named in `0999` | tenant | buffers now | with the index back |
+|---|---|---|---|---|---|
+| `contacts` (8,896) | `idx_contacts_org` | `idx_contacts_name_email` | large | **645** — Seq Scan | **30** |
+| `inv_stock_levels` (13,344) | `idx_inv_stock_org` | `uniq_inv_stock_levels_natural_key` | large | **609** | **39** |
+| `hr_people` (7,171) | `idx_hr_people_org` | `uniq_hr_people_org_id` | large | **306** | **24** |
+| `chat_channel_members` (2,289) | `idx_chat_channel_members_org` | `idx_chat_channel_members_membership_id` | large | **108** | **12** |
+| `organization_people` (501) | `idx_org_people_org` | `uniq_org_people_org_person` | large | **39** | **6** |
+| `inv_locations` (223) | `idx_inv_locations_warehouse` | `uniq_inv_locations_warehouse_code` | mid | **18** | **4** |
+
+The probe is `SELECT count(*) FROM <table> WHERE org_id = $1` — the pagination-total shape. It is not
+synthetic: `modules/inventory/settings/settings.service.ts:137` is exactly
+`select({ count: sql`count(*)::int` }).from(invStockLevels).where(eq(invStockLevels.orgId, orgId))`,
+and `modules/party/party-legacy-seam.ts:444` is the same shape on `contacts`.
+
+Sizes explain it. On `contacts` the heap is 1,720 kB (215 pages) and the surviving
+`idx_contacts_name_email` is **1,968 kB** — larger than the table — so the planner reads the heap
+instead, and CLAUDE.md §3's "no full-table scans" is violated on the majority tenant. The dropped
+`(org_id)` index would have been ~72 kB.
+
+**Verdict for ticket 08:** these six are a **REFACTOR, not a revert**. Restoring six single-column
+`(org_id)` indexes gives back exactly what was measured. Where a narrower index than the survivor is
+wanted without re-adding write amplification, `(org_id, id)` already exists on `contacts`,
+`hr_people` and `chat_channel_members` (`uniq_*_org_id`) and is smaller than the wide survivor — the
+planner declined it here for the 90% tenant on cost, which is a `default_statistics_target` /
+`random_page_cost` question, not a schema one. Do **not** batch this with the other 348.
+
+### 4.4 The `EXPLAIN` half is not applicable to FKs, uniques and checks — measured a different way
+
+A plan never mentions a foreign key or a check constraint, so `EXPLAIN (ANALYZE, BUFFERS)` on a read
+cannot evidence S18's overlapping-FK verdict. The instrument for that is `EXPLAIN (ANALYZE)` on a
+**write**, which reports per-constraint trigger time and call counts.
+
+**S18 has grown from 5 pairs to 172 at head.** Re-derived from `pg_constraint` on
+`scratch_perf_seed`: 172 pairs where a single-column FK and a composite `(org_id, col)` FK point at
+the same parent, **25 of them on non-empty tables**. Migrations `0985`/`0986`/`0995` added composite
+tenant FKs beside pre-existing single-column ones without removing the narrow member, which is why
+the number moved.
+
+Measured, `INSERT … SELECT` of 1,000 rows into `inv_stock_transactions` as `streamline_app` with the
+tenant GUC, rolled back:
+
+```
+A. as shipped                                   B. the two redundant single-column FKs removed
+  inv_stock_transactions_org_id_…    calls=1000   inv_stock_transactions_org_id_…    calls=1000
+  …_product_variant_id_…             calls=1000   ── gone ──
+  …_location_id_inv_locations_id_fk  calls=1000   ── gone ──
+  …_created_by_users_id_fk           calls=1000   …_created_by_users_id_fk           calls=1000
+  fk_…_product_variant_id_org        calls=1000   fk_…_product_variant_id_org        calls=1000
+  fk_…_location_id_org               calls=1000   fk_…_location_id_org               calls=1000
+  fk_…_correction_of_org             calls=1000   fk_…_correction_of_org             calls=1000
+  fk_inv_stock_txn_cre_mbr           calls=1000   fk_inv_stock_txn_cre_mbr           calls=1000
+  8 triggers                                      6 triggers
+```
+
+**2,000 fewer trigger invocations per 1,000 inserts** — 2,000 fewer `SELECT 1 FROM <parent> … FOR KEY
+SHARE` probes and row locks on the parent. The deterministic number is the call count; the wall clock
+is not usable here and is reported as such — three paired runs gave 75.97 → 27.26 ms, 53.36 → 29.26 ms
+and 33.21 → 33.52 ms, which is exactly the "wall clock lies on a warm cache" CLAUDE.md §7 warns about.
+Trigger cost is not attributed to buffers by `EXPLAIN`, so buffers cannot score this and are not
+claimed.
+
+Dropping the narrow member is safe by construction: `org_id` is `NOT NULL`, the parent carries a
+`UNIQUE (org_id, id)`, and both constraints are `MATCH SIMPLE`, so the composite enforces everything
+the single-column one did and additionally pins the child to its parent's tenant.
+
+### 4.5 What §3.1 and §3.2 rested on before this seed existed (kept for the record)
 
 ```
 EXPLAIN (ANALYZE, BUFFERS) SELECT id FROM audit_logs WHERE org_id='x' ORDER BY created_at DESC LIMIT 20;
@@ -726,24 +858,13 @@ EXPLAIN (ANALYZE, BUFFERS) SELECT id FROM audit_logs WHERE org_id='x' ORDER BY c
          Index Cond: (org_id = 'x'::text)
 ```
 
-The planner chose the wider `idx_audit_logs_org_created_id` and **not** the narrow
-`idx_audit_logs_org_id`, which is the covering relationship §3.2 asserts. That corroborates
-the structural claim on one case.
-
-**It is not statistically meaningful and must not be presented as such.** The bootstrapped
-database holds 5 non-empty tables out of 1,026 (`__drizzle_migrations` 637, `permissions` 39,
-`modules_catalog` 19, `payroll_statutory_rule_sets` 8, `child_fixed` 1). Every plan on an
-empty table is degenerate. `pg_stat_user_indexes.idx_scan` is likewise worthless here
-(451 scans total, all from the bootstrap itself) — and the ticket is right that statistics
-never justify deletion on their own.
-
-Accordingly **§3.1 and §3.2 rest entirely on structural index containment read from
-`pg_indexes`, which is deterministic and does not depend on data.** That is a sound basis
-for dropping a duplicate or a strict-prefix index; it is *not* a basis for dropping any
-index that is merely "unused", and no such row appears in either list.
-
-Getting real plan evidence needs a seeded database with representative volumes. Not
-available on this machine — see §6.
+The planner chose the wider `idx_audit_logs_org_created_id` and not the narrow
+`idx_audit_logs_org_id`, corroborating the containment claim on one case. It was explicitly not
+presented as statistical evidence: `scratch_boot_c` held 5 non-empty tables and
+`pg_stat_user_indexes.idx_scan` there measured the bootstrap. §3.1/§3.2 therefore rested on
+structural index containment read from `pg_indexes`, which is deterministic and needs no data, and no
+index was ever proposed for removal merely for being "unused". §4.3 is the case where that basis,
+though sound for reachability, turned out to be insufficient for cost.
 
 ---
 
@@ -771,9 +892,11 @@ Separately, **229 of 402** declared JSONB columns carry no `$type<>` (row S22). 
 
 ## 6. Not closable on this machine
 
-- **Real `EXPLAIN (ANALYZE, BUFFERS)` plans at representative volume.** Needs a seeded
-  database. `scratch_boot_c` has 5 non-empty tables; the shared remote `DATABASE_URL` is
-  out of bounds for this effort. §4 states exactly what was and was not obtained.
+- ~~**Real `EXPLAIN (ANALYZE, BUFFERS)` plans at representative volume.**~~ **CLOSED 2026-09-02.**
+  `scratch_perf_seed` exists; 35 of the 354 executed drops were measured against four tenants and
+  §4 carries the result. **319 remain structural-only** — their tables hold no rows on this seed, so
+  no plan on them means anything, and the KEEP/REMOVE verdict for those still rests on §3's
+  deterministic containment. That is a property of the seed's coverage, not of the method.
 - **Deleting the 17 catalog-only permission keys (P03).** Blocked on running
   `classifyRetiredPermissions` against a database that holds real tenant role grants — a
   key granted in a customer's role must not be deleted. The classifier exists; the data does not.
@@ -808,8 +931,10 @@ non-partial indexes (prefix-redundant), applying the two selection rules in §3.
 
 Suggested execution order for ticket 08, cheapest and safest first:
 
-1. **S14 + S15** — 341 index drops. Mechanical, deterministic, no code change. Use
-   `DROP INDEX CONCURRENTLY`.
+0. **DONE.** S14 + S15 were executed as `0999`/`1003`/`1002` — 354 drops. **Before closing them,
+   read §4.3: six of those drops are measured regressions on the majority tenant and need six
+   `(org_id)` indexes restored.** S18 has grown to 172 pairs (§4.4).
+1. ~~**S14 + S15** — 341 index drops.~~ Superseded by item 0.
 2. **P18, P20, P25, P39, P43** — dead registry entries with zero readers
    (12 contract entries, 7 universal roots, 9 query namespaces, 2 env vars, 1 flags table).
 3. **P27, P24, P33, P16** — the P1 correctness and security defects. These are fixes, not

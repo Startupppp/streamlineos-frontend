@@ -1,0 +1,80 @@
+[
+ {
+  "id": "kb-pages-list-100",
+  "table": "kb_pages",
+  "note": "the getTrash/list column set. Measured over live pages because trash is empty on this seed; the trash list uses the identical columns and the UI renders only id, title, icon, deleted_at",
+  "rows": 0,
+  "fullColumns": 37,
+  "projectedColumns": 34,
+  "fullBytes": 0,
+  "projectedBytes": 0,
+  "saved": 0,
+  "ratio": null,
+  "columnsNotOnThisTable": []
+ },
+ {
+  "id": "kb-pages-update-guard",
+  "table": "kb_pages",
+  "note": "PATCH /kb/pages/:id reads the row only for is_locked and trust_state",
+  "rows": 0,
+  "fullColumns": 37,
+  "projectedColumns": 3,
+  "fullBytes": 0,
+  "projectedBytes": 0,
+  "saved": 0,
+  "ratio": null,
+  "columnsNotOnThisTable": []
+ },
+ {
+  "id": "dashboard-recent-activity",
+  "table": "build.tickets",
+  "note": "the pair EXPLAIN(BUFFERS) reported as identical at 417 buffers",
+  "rows": 10,
+  "fullColumns": 40,
+  "projectedColumns": 8,
+  "fullBytes": 1880,
+  "projectedBytes": 1360,
+  "saved": 520,
+  "ratio": 1.38,
+  "columnsNotOnThisTable": []
+ },
+ {
+  "id": "attendance-list-page",
+  "table": "attendance",
+  "note": "attendance-read.service.ts findMany with no columns; breaks and location_data are jsonb",
+  "rows": 18,
+  "fullColumns": 18,
+  "projectedColumns": 16,
+  "fullBytes": 2304,
+  "projectedBytes": 2176,
+  "saved": 128,
+  "ratio": 1.06,
+  "columnsNotOnThisTable": []
+ },
+ {
+  "id": "kb-chunks-page-50",
+  "table": "kb_article_chunks",
+  "note": "no shipped read hydrates embedding — this is what one unprojected read of the vector table would cost",
+  "rows": 0,
+  "fullColumns": 20,
+  "projectedColumns": 19,
+  "fullBytes": 0,
+  "projectedBytes": 0,
+  "saved": 0,
+  "ratio": null,
+  "columnsNotOnThisTable": []
+ },
+ {
+  "id": "notifications-list-page",
+  "table": "notifications",
+  "note": "notification list page",
+  "rows": 0,
+  "fullColumns": 26,
+  "projectedColumns": 25,
+  "fullBytes": 0,
+  "projectedBytes": 0,
+  "saved": 0,
+  "ratio": null,
+  "columnsNotOnThisTable": []
+ }
+]
