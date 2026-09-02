@@ -1,6 +1,7 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { queryKeys } from "@/lib/query-keys";
@@ -62,7 +63,7 @@ export function useLetters(employmentId?: number) {
 }
 
 export function useRenderLetter() {
-  return useMutation({
+  return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: [...LETTERS_KEY, "render"],
     mutationFn: (data: RenderLetterInput) =>
       apiClient.post<RenderLetterPreview>("/hr/documents/letters/render", data),
@@ -71,7 +72,7 @@ export function useRenderLetter() {
 
 export function useSaveLetter() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: [...LETTERS_KEY, "save"],
     mutationFn: (data: SaveLetterInput) =>
       apiClient.post<LetterRender>("/hr/documents/letters", data),

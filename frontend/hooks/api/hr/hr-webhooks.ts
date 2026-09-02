@@ -1,8 +1,9 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   HrWebhookSubscription,
   HrWebhookDelivery,
@@ -58,7 +59,7 @@ export function useHrWebhookDeliveries(subscriptionId: number, page = 1, limit =
 
 export function useCreateHrWebhook() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:integrations:manage", {
     mutationKey: [...BASE, "create"],
     mutationFn: (input: CreateHrWebhookInput) =>
       apiClient.post<HrWebhookSubscription & { secret: string }>("/hr/webhooks", input),
@@ -68,7 +69,7 @@ export function useCreateHrWebhook() {
 
 export function useUpdateHrWebhook() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:integrations:manage", {
     mutationKey: [...BASE, "update"],
     mutationFn: ({ id, ...input }: UpdateHrWebhookInput & { id: number }) =>
       apiClient.patch<HrWebhookSubscription>(`/hr/webhooks/${id}`, input),
@@ -81,7 +82,7 @@ export function useUpdateHrWebhook() {
 
 export function useToggleHrWebhook() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:integrations:manage", {
     mutationKey: [...BASE, "toggle"],
     mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) =>
       apiClient.patch<HrWebhookSubscription>(`/hr/webhooks/${id}`, { isActive }),
@@ -104,7 +105,7 @@ export function useToggleHrWebhook() {
 
 export function useDeleteHrWebhook() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:integrations:manage", {
     mutationKey: [...BASE, "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/webhooks/${id}`),
@@ -114,7 +115,7 @@ export function useDeleteHrWebhook() {
 
 export function useTestHrWebhook() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:integrations:manage", {
     mutationKey: [...BASE, "test"],
     mutationFn: (id: number) =>
       apiClient.post<{ deliveryId: number; event: string }>(`/hr/webhooks/${id}/test`, {}),
@@ -126,7 +127,7 @@ export function useTestHrWebhook() {
 
 export function useRedeliverHrWebhook() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:integrations:manage", {
     mutationKey: [...BASE, "redeliver"],
     mutationFn: ({ subscriptionId, deliveryId }: { subscriptionId: number; deliveryId: number }) =>
       apiClient.post<{ success: boolean }>(

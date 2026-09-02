@@ -76,7 +76,8 @@ function EmptyWidget({ message }: { message: string }) {
 
 export function LeavesTodayWidget() {
   const { data, isLoading, error, refetch } = useLeavesToday();
-  const leaves = data ?? [];
+  const leaves = data?.data ?? [];
+  const total = data?.total ?? leaves.length;
   const handleRetry = () => void refetch();
 
   return (
@@ -84,7 +85,7 @@ export function LeavesTodayWidget() {
       icon={CalendarOff}
       iconClassName="text-status-warning-ink"
       title="Who's On Leave Today"
-      badge={leaves.length || undefined}
+      badge={total || undefined}
       isLoading={isLoading}
       error={error}
       onRetry={handleRetry}
@@ -112,6 +113,11 @@ export function LeavesTodayWidget() {
           </li>
         ))}
       </ul>
+      {data?.hasMore ? (
+        <p className="pt-2 text-micro text-muted-foreground">
+          Showing {leaves.length} of {total}
+        </p>
+      ) : null}
     </WidgetCard>
   );
 }

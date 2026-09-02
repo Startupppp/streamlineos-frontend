@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   JobPosting,
   RecruitmentStats,
@@ -135,7 +136,7 @@ const JOB_POSTINGS_ROOT = [...queryKeys.hr.all, "jobPostings"] as const;
 
 export function useCreateJobPosting() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "jobs", "create"],
     mutationFn: (data: CreateJobPostingInput) =>
       apiClient.post<JobPosting>("/hr/recruitment/jobs", data),
@@ -148,7 +149,7 @@ export function useCreateJobPosting() {
 
 export function useUpdateJobPosting() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "jobs", "update"],
     mutationFn: ({ id, ...data }: UpdateJobPostingInput & { id: number }) =>
       apiClient.patch<{ success: boolean }>(`/hr/recruitment/jobs/${id}`, data),
@@ -162,7 +163,7 @@ export function useUpdateJobPosting() {
 
 export function useDeleteJobPosting() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "jobs", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/jobs/${id}`),
@@ -175,7 +176,7 @@ export function useDeleteJobPosting() {
 
 export function useDuplicateJobPosting() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "jobs", "duplicate"],
     mutationFn: (id: number) =>
       apiClient.post<JobPosting>(`/hr/recruitment/jobs/${id}/duplicate`, {}),
@@ -188,7 +189,7 @@ export function useDuplicateJobPosting() {
 
 export function usePublishJobToBoards() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "jobs", "publish"],
     mutationFn: ({ jobId, platforms }: { jobId: number; platforms: JobBoardPlatform[] }) =>
       apiClient.post<PublishJobResult>(`/hr/recruitment/jobs/${jobId}/publish`, { platforms }),
@@ -209,7 +210,7 @@ export function useSourcePortals() {
 
 export function useUpsertSourcePortal() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "portals", "upsert"],
     mutationFn: (data: UpsertPortalInput) =>
       apiClient.post<SourcePortal>("/hr/recruitment/portals", data),

@@ -1,10 +1,11 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { workersListParams } from "@/lib/query-keys/directory-workers-list";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   CreateEngagementInput,
   CreateWorkerInput,
@@ -47,7 +48,7 @@ export function useWorkers(params: UseWorkersParams = {}) {
 
 export function useCreateWorker() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("directory:workers:manage", {
     mutationKey: ["directory", "workers", "create"],
     mutationFn: (input: CreateWorkerInput) =>
       apiClient.post<Worker>("/directory/workers", input),
@@ -71,7 +72,7 @@ export function useWorkerEngagements(workerId: string) {
 
 export function useCreateEngagement() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("directory:workers:manage", {
     mutationKey: ["directory", "engagements", "create"],
     mutationFn: ({ workerId, ...input }: CreateEngagementInput) =>
       apiClient.post<WorkerEngagement>(
@@ -96,7 +97,7 @@ export function useCreateEngagement() {
 
 export function useUpdateEngagement() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("directory:workers:manage", {
     mutationKey: ["directory", "engagements", "update"],
     mutationFn: ({
       workerEngagementId,
@@ -126,7 +127,7 @@ export function useUpdateEngagement() {
 
 export function useTerminateEngagement() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("directory:workers:terminate", {
     mutationKey: ["directory", "engagements", "terminate"],
     mutationFn: ({
       workerEngagementId,
@@ -156,7 +157,7 @@ export function useTerminateEngagement() {
 
 export function useCancelEngagement() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("directory:workers:manage", {
     mutationKey: ["directory", "engagements", "cancel"],
     mutationFn: ({
       workerEngagementId,

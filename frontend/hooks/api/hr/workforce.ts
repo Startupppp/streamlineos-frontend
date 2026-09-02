@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
@@ -91,7 +92,7 @@ export function useHrSuccessionRisk() {
     queryKey: workforceKeys.successionRisk(),
     queryFn: ({ signal }) =>
       apiClient.get<{ riskyRoles: SuccessionRisk[] }>(
-        "/hr/analytics-plus/workforce/succession-risk", signal,
+        "/hr/analytics-plus/workforce/succession-risk", undefined, signal,
       ),
     staleTime: 10 * 60_000,
     enabled: canSuccession,
@@ -117,7 +118,7 @@ interface CreatePlanInput {
 
 export function useCreateHeadcountPlan() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:workforce:manage", {
     mutationKey: ["hr", "workforce", "createPlan"],
     mutationFn: (data: CreatePlanInput) =>
       apiClient.post<HeadcountPlan>("/hr/analytics-plus/workforce/plans", data),
@@ -137,7 +138,7 @@ interface UpdatePlanInput {
 
 export function useUpdateHeadcountPlan() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:workforce:manage", {
     mutationKey: ["hr", "workforce", "updatePlan"],
     mutationFn: ({ id, ...data }: UpdatePlanInput) =>
       apiClient.patch<HeadcountPlan>(`/hr/analytics-plus/workforce/plans/${id}`, data),

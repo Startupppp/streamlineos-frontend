@@ -1,6 +1,7 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -41,7 +42,7 @@ export function useAccessRequests(employeeId?: string) {
 
 export function useCreateAccessRequest() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:assets:manage", {
     mutationKey: [...AR_KEY, "create"],
     mutationFn: (data: CreateAccessRequestInput) =>
       apiClient.post<AccessRequest>("/hr/access-requests", data),
@@ -51,7 +52,7 @@ export function useCreateAccessRequest() {
 
 export function useUpdateAccessRequest() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:assets:manage", {
     mutationKey: [...AR_KEY, "update"],
     mutationFn: ({ id, ...data }: PatchAccessRequestInput & { id: string }) =>
       apiClient.patch<AccessRequest>(`/hr/access-requests/${id}`, data),

@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
@@ -27,7 +28,7 @@ export function useGeofences() {
 
 export function useCreateGeofence() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "geofencing", "create"],
     mutationFn: (data: { name: string; lat: string; lng: string; radiusMeters?: number }) =>
       apiClient.post<Geofence>("/hr/geofencing", data),
@@ -37,7 +38,7 @@ export function useCreateGeofence() {
 
 export function useUpdateGeofence() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "geofencing", "update"],
     mutationFn: ({ id, ...data }: { id: number; name?: string; lat?: string; lng?: string; radiusMeters?: number }) =>
       apiClient.patch<Geofence>(`/hr/geofencing/${id}`, data),
@@ -47,7 +48,7 @@ export function useUpdateGeofence() {
 
 export function useDeleteGeofence() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "geofencing", "delete"],
     mutationFn: (id: number) => apiClient.delete(`/hr/geofencing/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "geofences"] }),

@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -68,7 +68,7 @@ export function useMyOnboarding() {
 
 export function useCompleteOnboardingTask() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("self:onboarding-tasks", {
     mutationKey: ["onboarding", "task", "complete"],
     mutationFn: ({ taskId, status }: { taskId: number; status: "COMPLETED" | "PENDING" }) =>
       apiClient.patch<{ success: boolean }>(`/onboarding/tasks/${taskId}`, { status }),

@@ -1,8 +1,9 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   HrWorkflowDefinition,
   HrWorkflowInstance,
@@ -56,7 +57,7 @@ export interface CreateWorkflowDefinitionPayload {
 
 export function useCreateWorkflowDefinition() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:workflows:manage", {
     mutationKey: ["hr", "workflows", "create"],
     mutationFn: (data: CreateWorkflowDefinitionPayload) =>
       apiClient.post<HrWorkflowDefinition>("/hr/workflows", data),
@@ -66,7 +67,7 @@ export function useCreateWorkflowDefinition() {
 
 export function useUpdateWorkflowDefinition() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:workflows:manage", {
     mutationKey: ["hr", "workflows", "update"],
     mutationFn: ({ id, ...data }: Partial<CreateWorkflowDefinitionPayload> & { id: number }) =>
       apiClient.patch<HrWorkflowDefinition>(`/hr/workflows/${id}`, data),
@@ -76,7 +77,7 @@ export function useUpdateWorkflowDefinition() {
 
 export function useActivateWorkflow() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:workflows:manage", {
     mutationKey: ["hr", "workflows", "activate"],
     mutationFn: (id: number) => apiClient.post<HrWorkflowDefinition>(`/hr/workflows/${id}/activate`),
     onSuccess: () => qc.invalidateQueries({ queryKey: WORKFLOWS_KEY }),
@@ -85,7 +86,7 @@ export function useActivateWorkflow() {
 
 export function useArchiveWorkflow() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:workflows:manage", {
     mutationKey: ["hr", "workflows", "archive"],
     mutationFn: (id: number) => apiClient.post<HrWorkflowDefinition>(`/hr/workflows/${id}/archive`),
     onSuccess: () => qc.invalidateQueries({ queryKey: WORKFLOWS_KEY }),
@@ -94,7 +95,7 @@ export function useArchiveWorkflow() {
 
 export function useDuplicateWorkflow() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:workflows:manage", {
     mutationKey: ["hr", "workflows", "duplicate"],
     mutationFn: (id: number) => apiClient.post<HrWorkflowDefinition>(`/hr/workflows/${id}/duplicate`),
     onSuccess: () => qc.invalidateQueries({ queryKey: WORKFLOWS_KEY }),
@@ -121,7 +122,7 @@ export type WorkflowSimulateResult = {
 };
 
 export function useSimulateWorkflow() {
-  return useMutation({
+  return useAuthorizedMutation("hr:workflows:view", {
     mutationKey: ["hr", "workflows", "simulate"],
     mutationFn: (input: {
       workflowId: number;
@@ -140,7 +141,7 @@ export function useSimulateWorkflow() {
 
 export function useDeleteWorkflow() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:workflows:manage", {
     mutationKey: ["hr", "workflows", "delete"],
     mutationFn: (id: number) => apiClient.delete(`/hr/workflows/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: WORKFLOWS_KEY }),
@@ -185,7 +186,7 @@ interface RejectPayload { comment: string; attachments?: { url: string; name: st
 
 export function useApproveInstance() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:workflows:approve", {
     mutationKey: ["hr", "workflow-instances", "approve"],
     mutationFn: ({ instanceId, ...body }: ActPayload & { instanceId: number }) =>
       apiClient.post<HrWorkflowInstance>(`/hr/workflows/instances/${instanceId}/approve`, body),
@@ -197,7 +198,7 @@ export function useApproveInstance() {
 
 export function useRejectInstance() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:workflows:approve", {
     mutationKey: ["hr", "workflow-instances", "reject"],
     mutationFn: ({ instanceId, ...body }: RejectPayload & { instanceId: number }) =>
       apiClient.post<HrWorkflowInstance>(`/hr/workflows/instances/${instanceId}/reject`, body),
@@ -218,7 +219,7 @@ export function useMyDelegations(options?: { enabled?: boolean }) {
 
 export function useCreateDelegation() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:workflows:view", {
     mutationKey: ["hr", "workflow-delegations", "create"],
     mutationFn: (data: {
       delegateUserId: string;
@@ -233,7 +234,7 @@ export function useCreateDelegation() {
 
 export function useDeleteDelegation() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:workflows:view", {
     mutationKey: ["hr", "workflow-delegations", "delete"],
     mutationFn: (id: number) => apiClient.delete(`/hr/workflows/delegations/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: DELEGATIONS_KEY }),

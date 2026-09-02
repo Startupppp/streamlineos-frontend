@@ -1,6 +1,7 @@
 "use client";
 
-import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
@@ -71,7 +72,7 @@ export function useRichDocument(documentId: number) {
 
 export function useCreateRichDocument() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: ["hr", "rich-documents", "create"],
     mutationFn: (data: { title: string; templateType?: string; contentJson?: unknown }) =>
       apiClient.post<RichDocument>("/hr/rich-documents", data),
@@ -81,7 +82,7 @@ export function useCreateRichDocument() {
 
 export function useUpdateRichDocument() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: ["hr", "rich-documents", "update"],
     mutationFn: ({ documentId, ...data }: { documentId: number; title?: string; contentJson?: unknown }) =>
       apiClient.patch<{ success: boolean }>(`/hr/rich-documents/${documentId}`, data),
@@ -94,7 +95,7 @@ export function useUpdateRichDocument() {
 
 export function useDeleteRichDocument() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: ["hr", "rich-documents", "delete"],
     mutationFn: (documentId: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/rich-documents/${documentId}`),
@@ -104,7 +105,7 @@ export function useDeleteRichDocument() {
 
 export function usePublishRichDocument() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: ["hr", "rich-documents", "publish"],
     mutationFn: (documentId: number) =>
       apiClient.patch<{ success: boolean }>(`/hr/rich-documents/${documentId}/publish`),

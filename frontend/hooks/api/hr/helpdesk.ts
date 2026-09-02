@@ -1,8 +1,9 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface CursorPage<T> {
   data: T[];
@@ -163,7 +164,7 @@ export function useHelpdeskRoutingRules() {
 
 export function useCreateHelpdeskTicket() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:helpdesk:create", {
     mutationKey: ["hr", "helpdesk", "create"],
     mutationFn: (data: CreateTicketInput) => apiClient.post<HelpdeskTicket>("/hr/helpdesk", data),
     onSuccess: () => {
@@ -174,7 +175,7 @@ export function useCreateHelpdeskTicket() {
 
 export function useUpdateHelpdeskTicket(ticketId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:helpdesk:manage", {
     mutationKey: ["hr", "helpdesk", "update", ticketId],
     mutationFn: (data: UpdateTicketInput) =>
       apiClient.patch<HelpdeskTicket>(`/hr/helpdesk/${ticketId}`, data),
@@ -187,7 +188,7 @@ export function useUpdateHelpdeskTicket(ticketId: number) {
 
 export function useAddHelpdeskComment(ticketId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:helpdesk:view", {
     mutationKey: ["hr", "helpdesk", "comment", ticketId],
     mutationFn: (data: { body: string }) =>
       apiClient.post<HelpdeskComment>(`/hr/helpdesk/${ticketId}/comments`, data),
@@ -199,7 +200,7 @@ export function useAddHelpdeskComment(ticketId: number) {
 
 export function useDeleteHelpdeskRouting() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:helpdesk:manage", {
     mutationKey: ["hr", "helpdesk", "routing", "delete"],
     mutationFn: (ruleId: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/helpdesk/routing/${ruleId}`),

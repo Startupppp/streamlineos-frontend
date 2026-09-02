@@ -1,6 +1,7 @@
 "use client";
 
-import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
@@ -74,7 +75,7 @@ export function useSafetyIncidents(params: ListIncidentsParams = {}) {
 
 export function useReportIncident() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:safety:manage", {
     mutationKey: ["hr-safety", "incident", "create"],
     mutationFn: (body: {
       type: IncidentType;
@@ -95,7 +96,7 @@ export function useReportIncident() {
 
 export function useSubmitCheckin() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:safety:view", {
     mutationKey: ["hr-safety", "checkin"],
     mutationFn: (body: { date: string; score: number; flags?: string[] }) =>
       apiClient.post<WellnessCheckin>("/hr/safety/wellness/checkin", body),

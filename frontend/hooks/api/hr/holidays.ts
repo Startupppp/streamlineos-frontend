@@ -1,4 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
@@ -31,7 +32,7 @@ export function useHolidays() {
 
 export function useCreateHoliday() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "holidays", "create"],
     mutationFn: (data: CreateHolidayInput) =>
       apiClient.post<Holiday>("/hr/attendance/holidays", data),
@@ -41,7 +42,7 @@ export function useCreateHoliday() {
 
 export function useUpdateHoliday() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "holidays", "update"],
     mutationFn: ({ id, ...data }: Partial<CreateHolidayInput> & { id: string }) =>
       apiClient.patch<Holiday>(`/hr/attendance/holidays/${id}`, data),
@@ -51,7 +52,7 @@ export function useUpdateHoliday() {
 
 export function useDeleteHoliday() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "holidays", "delete"],
     mutationFn: (id: string) =>
       apiClient.delete<void>(`/hr/attendance/holidays/${id}`),

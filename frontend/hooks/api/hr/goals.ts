@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -36,7 +37,7 @@ export function useHrGoals(params?: { userId?: string }) {
 
 export function useCreateHrGoal() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "goals", "create"],
     mutationFn: (data: {
       title: string;

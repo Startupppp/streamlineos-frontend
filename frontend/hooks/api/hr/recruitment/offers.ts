@@ -1,9 +1,10 @@
 "use client";
 
-import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface CandidateOffer {
   id: number;
@@ -125,7 +126,7 @@ export function useOfferNegotiations(candidateId: number, offerId: number) {
 
 export function useRespondToNegotiation(candidateId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:offers:manage", {
     mutationKey: ["hr", "recruitment", "offers", "negotiate", candidateId],
     mutationFn: ({
       offerId,
@@ -161,7 +162,7 @@ export function useCandidateOffers(candidateId: number) {
 
 export function useCreateCandidateOffer(candidateId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:offers:manage", {
     mutationKey: ["hr", "recruitment", "offers", "create", candidateId],
     mutationFn: (data: {
       jobPostingId?: number;
@@ -179,7 +180,7 @@ export function useCreateCandidateOffer(candidateId: number) {
 
 export function useUpdateCandidateOffer(candidateId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:offers:manage", {
     mutationKey: ["hr", "recruitment", "offers", "update", candidateId],
     mutationFn: ({ offerId, ...data }: { offerId: number; offerStatus?: CandidateOffer["offerStatus"]; notes?: string; joiningDate?: string; validUntil?: string; offeredSalary?: number; offeredDesignation?: string }) =>
       apiClient.patch<CandidateOffer>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}`, data),
@@ -190,7 +191,7 @@ export function useUpdateCandidateOffer(candidateId: number) {
 
 export function useDeleteCandidateOffer(candidateId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:offers:manage", {
     mutationKey: ["hr", "recruitment", "offers", "delete", candidateId],
     mutationFn: (offerId: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}`),
@@ -201,7 +202,7 @@ export function useDeleteCandidateOffer(candidateId: number) {
 
 export function useSubmitOfferForApproval(candidateId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:offers:manage", {
     mutationKey: ["hr", "recruitment", "offers", "submit-approval", candidateId],
     mutationFn: (offerId: number) =>
       apiClient.post<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/submit-for-approval`, {}),
@@ -212,7 +213,7 @@ export function useSubmitOfferForApproval(candidateId: number) {
 
 export function useApproveOffer(candidateId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:offers:approve", {
     mutationKey: ["hr", "recruitment", "offers", "approve", candidateId],
     mutationFn: ({ offerId, remarks }: { offerId: number; remarks?: string }) =>
       apiClient.post<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/approve`, { remarks }),
@@ -223,7 +224,7 @@ export function useApproveOffer(candidateId: number) {
 
 export function useRejectOfferApproval(candidateId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:offers:approve", {
     mutationKey: ["hr", "recruitment", "offers", "reject-approval", candidateId],
     mutationFn: ({ offerId, remarks }: { offerId: number; remarks?: string }) =>
       apiClient.post<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/reject-approval`, { remarks }),

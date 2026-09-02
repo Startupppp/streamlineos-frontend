@@ -1,9 +1,10 @@
 "use client";
 
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   HrTemplate,
   HrTemplateKind,
@@ -67,7 +68,7 @@ interface CreateTemplateInput {
 
 export function useCreateHrTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:templates:manage", {
     mutationKey: ["hr", "templates", "create"],
     mutationFn: (data: CreateTemplateInput) =>
       apiClient.post<HrTemplate>("/hr/templates", data),
@@ -86,7 +87,7 @@ interface UpdateTemplateInput {
 
 export function useUpdateHrTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:templates:manage", {
     mutationKey: ["hr", "templates", "update"],
     mutationFn: ({ templateId, ...data }: UpdateTemplateInput) =>
       apiClient.patch<HrTemplate>(`/hr/templates/${templateId}`, data),
@@ -99,7 +100,7 @@ export function useUpdateHrTemplate() {
 
 export function useTransitionHrTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:templates:manage", {
     mutationKey: ["hr", "templates", "transition"],
     mutationFn: ({ templateId, to }: { templateId: number; to: HrTemplateStatus }) =>
       apiClient.post<HrTemplate>(`/hr/templates/${templateId}/transition`, { to }),
@@ -118,7 +119,7 @@ interface RenderInput {
 
 export function useRenderHrTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:templates:view", {
     mutationKey: ["hr", "templates", "render"],
     mutationFn: ({ templateId, ...body }: RenderInput & { templateId: number }) =>
       apiClient.post<RenderResponse>(`/hr/templates/${templateId}/render`, body),
@@ -130,7 +131,7 @@ export function useRenderHrTemplate() {
 
 export function useSeedHrTemplateDefaults() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:templates:manage", {
     mutationKey: ["hr", "templates", "seed"],
     mutationFn: () => apiClient.post<{ seeded: boolean; count?: number }>("/hr/templates/seed-defaults", {}),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplates() }),

@@ -26,7 +26,7 @@ const ROOT = join(SCRIPT_DIR, "..");
 // Run `node scripts/check-command-catalog.mjs` to see the current count.
 // Lower this number after migrating hooks to useAuthorizedMutation or adding them
 // to EXPLICIT_SELF_HOOKS. Never raise it — that is a regression.
-const BASELINE = { unclassified: 895 };
+const BASELINE = { unclassified: 677 };
 
 // ── Auto-SELF endpoint prefixes ──────────────────────────────────────────────
 // A mutation whose mutationFn body contains an apiClient call to any of these
@@ -49,6 +49,12 @@ const SELF_ENDPOINT_PREFIXES = [
 const EXPLICIT_SELF_HOOKS = new Set([
   // Notification inbox — user manages their own notification state
   // (endpoint /notifications/* is already caught by SELF_ENDPOINT_PREFIXES)
+
+  // Backend marks these @Universal(): the subject is always @CurrentUser().
+  // POST /org/announcements/:id/read      — announcements.controller.ts
+  // POST /hr/enterprise/ops/emergency/events/:id/respond — emergency.controller.ts
+  "useMarkHrAnnouncementRead",
+  "useRespondToEmergency",
 ]);
 
 // ── Skip patterns ─────────────────────────────────────────────────────────────

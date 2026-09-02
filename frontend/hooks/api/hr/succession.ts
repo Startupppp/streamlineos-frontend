@@ -1,6 +1,7 @@
 "use client";
 
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 
 export type SuccessionReadiness = "ready_now" | "1_2_years" | "3_plus";
@@ -44,7 +45,7 @@ export function useSuccessionPlans() {
 
 export function useCreateSuccessionPlan() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:succession:manage", {
     mutationKey: ["hr", "succession", "create"],
     mutationFn: (body: Omit<SuccessionPlan, "id" | "orgId" | "createdBy" | "createdAt" | "updatedAt">) =>
       apiClient.post<SuccessionPlan>("/hr/succession", body),
@@ -54,7 +55,7 @@ export function useCreateSuccessionPlan() {
 
 export function useDeleteSuccessionPlan() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:succession:manage", {
     mutationKey: ["hr", "succession", "delete"],
     mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/hr/succession/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.list() }),

@@ -1,9 +1,10 @@
 "use client";
 
-import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface TalentPool {
   id: number;
@@ -52,7 +53,7 @@ export function useTalentPools() {
 
 export function useCreateTalentPool() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "talent-pools", "create"],
     mutationFn: (data: { name: string; description?: string }) =>
       apiClient.post<TalentPool>("/hr/recruitment/talent-pools", data),
@@ -62,7 +63,7 @@ export function useCreateTalentPool() {
 
 export function useDeleteTalentPool() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "talent-pools", "delete"],
     mutationFn: (poolId: number) => apiClient.delete<{ success: boolean }>(`/hr/recruitment/talent-pools/${poolId}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: poolsKey }),
@@ -87,7 +88,7 @@ export function usePoolMembers(poolId: number, params?: PoolMembersParams) {
 
 export function useAddPoolMember(poolId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "talent-pools", "add-member", poolId],
     mutationFn: (data: { candidateId: number; notes?: string }) =>
       apiClient.post(`/hr/recruitment/talent-pools/${poolId}/members`, data),
@@ -100,7 +101,7 @@ export function useAddPoolMember(poolId: number) {
 
 export function useRemovePoolMember(poolId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "talent-pools", "remove-member", poolId],
     mutationFn: (candidateId: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/talent-pools/${poolId}/members/${candidateId}`),

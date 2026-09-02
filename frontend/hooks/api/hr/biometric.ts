@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
@@ -38,7 +39,7 @@ export function useBiometricDevices() {
 
 export function useCreateBiometricDevice() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "biometric", "createDevice"],
     mutationFn: (data: { name: string; ipAddress: string; port?: number; vendor?: string; location?: string }) =>
       apiClient.post<BiometricDevice>("/hr/biometric/devices", data),
@@ -48,7 +49,7 @@ export function useCreateBiometricDevice() {
 
 export function useUpdateBiometricDevice() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "biometric", "updateDevice"],
     mutationFn: ({ id, ...data }: { id: number; name?: string; ipAddress?: string; port?: number; vendor?: string; location?: string }) =>
       apiClient.patch<BiometricDevice>(`/hr/biometric/devices/${id}`, data),

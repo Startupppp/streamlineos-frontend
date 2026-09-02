@@ -1,9 +1,10 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   CreatePersonInput,
   OrganizationPerson,
@@ -64,7 +65,7 @@ export function usePeople(params: UsePeopleParams = {}) {
 
 export function useCreatePerson() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("directory:people:create", {
     mutationKey: ["directory", "people", "create"],
     mutationFn: (input: CreatePersonInput) =>
       apiClient.post<OrganizationPerson>("/directory/people", input),
@@ -80,7 +81,7 @@ export function useCreatePerson() {
 
 export function useUpdatePerson() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("directory:people:update", {
     mutationKey: ["directory", "people", "update"],
     mutationFn: ({
       organizationPersonId,
@@ -121,7 +122,7 @@ export function useUpdatePerson() {
 
 export function useDeletePerson() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("directory:people:delete", {
     mutationKey: ["directory", "people", "delete"],
     mutationFn: (organizationPersonId: string) =>
       apiClient.delete(`/directory/people/${organizationPersonId}`),

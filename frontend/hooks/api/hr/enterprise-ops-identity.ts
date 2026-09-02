@@ -1,7 +1,8 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -87,7 +88,7 @@ export function useExitVerification(userId: string) {
 
 export function useCreateProvisioning() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:identity:manage", {
     mutationKey: ["hr-identity", "provisioning-create"],
     mutationFn: (body: {
       userId: string;
@@ -105,7 +106,7 @@ export function useCreateProvisioning() {
 
 export function useCreateProvisioningTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:identity:manage", {
     mutationKey: ["hr-identity", "template-create"],
     mutationFn: (body: {
       name: string;
@@ -122,7 +123,7 @@ export function useCreateProvisioningTemplate() {
 
 export function useDeleteProvisioningTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:identity:manage", {
     mutationKey: ["hr-identity", "template-delete"],
     mutationFn: (id: string) => apiClient.delete(`${BASE}/templates/${id}`),
     onSuccess: () => {

@@ -1,4 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
@@ -49,7 +50,7 @@ export function useLeavePolicies() {
 
 export function useCreateLeavePolicy() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:leaves:manage", {
     mutationKey: ["hr", "leave-policies", "create"],
     mutationFn: (data: CreateLeavePolicyInput) =>
       apiClient.post<LeavePolicy>("/hr/leave-policies", data),
@@ -59,7 +60,7 @@ export function useCreateLeavePolicy() {
 
 export function useUpdateLeavePolicy() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:leaves:manage", {
     mutationKey: ["hr", "leave-policies", "update"],
     mutationFn: ({ id, ...data }: Partial<CreateLeavePolicyInput> & { id: number }) =>
       apiClient.patch<LeavePolicy>(`/hr/leave-policies/${id}`, data),
@@ -69,7 +70,7 @@ export function useUpdateLeavePolicy() {
 
 export function useDeleteLeavePolicy() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:leaves:manage", {
     mutationKey: ["hr", "leave-policies", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<void>(`/hr/leave-policies/${id}`),

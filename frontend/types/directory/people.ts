@@ -25,25 +25,8 @@ export interface OrganizationPerson {
   phone: string | null;
   whatsappNumber: string | null;
   avatarUrl: string | null;
-  dateOfBirth: string | null;
-  gender: string | null;
-  nationality: string | null;
   timezone: string | null;
   languageCode: string | null;
-  address: {
-    line1?: string;
-    line2?: string;
-    city?: string;
-    state?: string;
-    country?: string;
-    postalCode?: string;
-  } | null;
-  emergencyContact: {
-    name?: string;
-    relationship?: string;
-    phone?: string;
-    email?: string;
-  } | null;
   linkedinUrl: string | null;
   githubUrl: string | null;
   bio: string | null;

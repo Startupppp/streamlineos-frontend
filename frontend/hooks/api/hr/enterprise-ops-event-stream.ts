@@ -1,7 +1,8 @@
 "use client";
 
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -71,7 +72,7 @@ export function useHrMetricDefinitions() {
 }
 
 export function useExportHrEvents() {
-  return useMutation({
+  return useAuthorizedMutation("hr:analytics:read", {
     mutationKey: ["hr-event-stream", "export"],
     mutationFn: (body: {
       cursor?: string;

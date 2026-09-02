@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
@@ -52,7 +53,7 @@ export function useHrShifts() {
 
 export function useCreateShift() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "shifts", "create"],
     mutationFn: (data: { name: string; type: string; startTime: string; endTime: string; breakMinutes?: number; isNightShift?: boolean; gracePeriodMinutes?: number }) =>
       apiClient.post<ShiftTemplate>("/hr/shifts", data),
@@ -62,7 +63,7 @@ export function useCreateShift() {
 
 export function useUpdateShift() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "shifts", "update"],
     mutationFn: ({ id, ...data }: { id: number; name?: string; type?: string; startTime?: string; endTime?: string; breakMinutes?: number; isNightShift?: boolean; gracePeriodMinutes?: number }) =>
       apiClient.patch<ShiftTemplate>(`/hr/shifts/${id}`, data),
@@ -72,7 +73,7 @@ export function useUpdateShift() {
 
 export function useDeleteShift() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "shifts", "delete"],
     mutationFn: (id: number) => apiClient.delete(`/hr/shifts/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "shifts"] }),
@@ -103,7 +104,7 @@ export function useShiftSwaps() {
 
 export function useUpdateSwapStatus() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "shifts", "swapStatus"],
     mutationFn: ({ id, status }: { id: number; status: string }) =>
       apiClient.patch<ShiftSwap>(`/hr/shifts/swaps/${id}`, { status }),

@@ -1,8 +1,9 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type VendorStatus = "ACTIVE" | "INACTIVE";
 export type VendorPlacementStatus = "SUBMITTED" | "INTERVIEWING" | "PLACED" | "REJECTED";
@@ -105,7 +106,7 @@ export function useRecruitmentVendors() {
 
 export function useCreateVendor() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "vendors", "create"],
     mutationFn: (data: CreateVendorInput) => apiClient.post<RecruitmentVendor>("/hr/recruitment/vendors", data),
     onSuccess: () => {
@@ -116,7 +117,7 @@ export function useCreateVendor() {
 
 export function useUpdateVendor(id: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "vendors", "update", id],
     mutationFn: (data: UpdateVendorInput) =>
       apiClient.patch<RecruitmentVendor>(`/hr/recruitment/vendors/${id}`, data),
@@ -128,7 +129,7 @@ export function useUpdateVendor(id: number) {
 
 export function useDeleteVendor() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "vendors", "delete"],
     mutationFn: (id: number) => apiClient.delete(`/hr/recruitment/vendors/${id}`),
     onSuccess: () => {
@@ -148,7 +149,7 @@ export function useVendorSubmissions(vendorId: number) {
 
 export function useCreateVendorSubmission(vendorId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "vendor-submissions", "create", vendorId],
     mutationFn: (data: CreateSubmissionInput) =>
       apiClient.post<VendorSubmission>(`/hr/recruitment/vendors/${vendorId}/submissions`, data),
@@ -161,7 +162,7 @@ export function useCreateVendorSubmission(vendorId: number) {
 
 export function useUpdateVendorSubmission(vendorId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "vendor-submissions", "update", vendorId],
     mutationFn: ({ submissionId, ...data }: UpdateSubmissionInput & { submissionId: number }) =>
       apiClient.patch<VendorSubmission>(
@@ -176,7 +177,7 @@ export function useUpdateVendorSubmission(vendorId: number) {
 }
 
 export function useGenerateVendorPortalLink(vendorId: number) {
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "vendors", "portal-link", vendorId],
     mutationFn: () =>
       apiClient.post<{ portalToken: string; portalTokenExpiresAt: string }>(

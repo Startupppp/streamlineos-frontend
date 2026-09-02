@@ -1,8 +1,9 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   HiringFlow,
   HiringFlowRound,
@@ -22,7 +23,7 @@ export function useHiringFlows() {
 
 export function useCreateHiringFlow() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "hiring-flows", "create"],
     mutationFn: (data: CreateHiringFlowInput) =>
       apiClient.post<HiringFlow>("/hr/recruitment/hiring-flows", data),
@@ -34,7 +35,7 @@ export function useCreateHiringFlow() {
 
 export function useUpdateHiringFlow() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "hiring-flows", "update"],
     mutationFn: ({ id, ...data }: UpdateHiringFlowInput & { id: number }) =>
       apiClient.patch<HiringFlow>(`/hr/recruitment/hiring-flows/${id}`, data),
@@ -47,7 +48,7 @@ export function useUpdateHiringFlow() {
 
 export function useDeleteHiringFlow() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "hiring-flows", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/hiring-flows/${id}`),
@@ -59,7 +60,7 @@ export function useDeleteHiringFlow() {
 
 export function useCreateHiringFlowRound() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "hiring-flow-rounds", "create"],
     mutationFn: ({ flowId, ...data }: CreateHiringFlowRoundInput & { flowId: number }) =>
       apiClient.post<HiringFlowRound>(`/hr/recruitment/hiring-flows/${flowId}/rounds`, data),
@@ -73,7 +74,7 @@ export function useCreateHiringFlowRound() {
 
 export function useUpdateHiringFlowRound() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "hiring-flow-rounds", "update"],
     mutationFn: ({ flowId, roundId, ...data }: UpdateHiringFlowRoundInput & { flowId: number; roundId: number }) =>
       apiClient.patch<HiringFlowRound>(`/hr/recruitment/hiring-flows/${flowId}/rounds/${roundId}`, data),
@@ -87,7 +88,7 @@ export function useUpdateHiringFlowRound() {
 
 export function useDeleteHiringFlowRound() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "hiring-flow-rounds", "delete"],
     mutationFn: ({ flowId, roundId }: { flowId: number; roundId: number }) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/hiring-flows/${flowId}/rounds/${roundId}`),

@@ -5,7 +5,6 @@ describe("shouldRenderDashboardLoading", () => {
     expect(
       shouldRenderDashboardLoading({
         accessLoading: false,
-        isLoading: false,
         mounted: false,
       }),
     ).toBe(true);
@@ -15,9 +14,17 @@ describe("shouldRenderDashboardLoading", () => {
     expect(
       shouldRenderDashboardLoading({
         accessLoading: false,
-        isLoading: false,
         mounted: true,
       }),
     ).toBe(false);
+  });
+
+  it("waits for access, because every widget gate depends on it", () => {
+    expect(
+      shouldRenderDashboardLoading({
+        accessLoading: true,
+        mounted: true,
+      }),
+    ).toBe(true);
   });
 });

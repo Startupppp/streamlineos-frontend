@@ -1,7 +1,8 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type JobBoardPostingStatus = "DRAFT" | "POSTED" | "EXPIRED" | "CLOSED";
 
@@ -59,7 +60,7 @@ export function useJobBoardPostings(jobId: number) {
 
 export function useCreateJobBoardPosting(jobId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "jobBoardPostings", "create", jobId],
     mutationFn: (data: CreateJobBoardPostingInput) =>
       apiClient.post<JobBoardPosting>(`/hr/recruitment/jobs/${jobId}/board-postings`, data),
@@ -69,7 +70,7 @@ export function useCreateJobBoardPosting(jobId: number) {
 
 export function useUpdateJobBoardPosting(jobId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "jobBoardPostings", "update", jobId],
     mutationFn: ({ id, ...data }: UpdateJobBoardPostingInput & { id: number }) =>
       apiClient.patch<JobBoardPosting>(`/hr/recruitment/jobs/${jobId}/board-postings/${id}`, data),
@@ -79,7 +80,7 @@ export function useUpdateJobBoardPosting(jobId: number) {
 
 export function useDeleteJobBoardPosting(jobId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "jobBoardPostings", "delete", jobId],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/jobs/${jobId}/board-postings/${id}`),

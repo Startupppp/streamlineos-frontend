@@ -2,7 +2,8 @@
  * generate-home-manifest.mjs
  *
  * Generates frontend/lib/home/home-manifest.generated.json from the backend
- * dashboard controller. Run after adding or changing a /dashboard/* route.
+ * dashboard controller plus the declared external Home routes. Run after
+ * adding or changing a Home route.
  *
  *   node frontend/scripts/generate-home-manifest.mjs
  */
@@ -10,44 +11,32 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  parseControllerRoutes,
+  parseExternalHomeRoutes,
+} from "./home-manifest-parse.mjs";
 
 const FRONTEND_ROOT = fileURLToPath(new URL("..", import.meta.url));
+const BACKEND_SRC = join(FRONTEND_ROOT, "..", "backend", "src");
 const CONTROLLER_PATH = join(
-  FRONTEND_ROOT,
-  "..",
-  "backend",
-  "src",
+  BACKEND_SRC,
   "modules",
   "dashboard",
   "dashboard.controller.ts",
 );
 const OUT_PATH = join(FRONTEND_ROOT, "lib", "home", "home-manifest.generated.json");
 
-const source = readFileSync(CONTROLLER_PATH, "utf8");
-const lines = source.split("\n");
-const sections = [];
+const dashboardRoutes = parseControllerRoutes(readFileSync(CONTROLLER_PATH, "utf8"));
+const externalRoutes = parseExternalHomeRoutes(BACKEND_SRC);
 
-for (let i = 0; i < lines.length; i++) {
-  const getMatch = /@Get\(\s*["']([^"']+)["']\s*\)/.exec(lines[i]);
-  if (!getMatch) continue;
-
-  const endpoint = `/dashboard/${getMatch[1]}`;
-  let permission = null;
-  let module = null;
-  let universal = false;
-
-  for (let ahead = i + 1; ahead < lines.length; ahead++) {
-    const line = lines[ahead];
-    if (!/^\s*@/.test(line)) break;
-    const permMatch = /@RequirePermission\(\s*["']([^"']+)["']/.exec(line);
-    if (permMatch) permission = permMatch[1];
-    const modMatch = /@RequireModule\(\s*["']([^"']+)["']/.exec(line);
-    if (modMatch) module = modMatch[1];
-    if (/@Universal\(\)/.test(line)) universal = true;
-  }
-
-  sections.push({ endpoint, universal, module, permission });
-}
+const sections = [...dashboardRoutes, ...externalRoutes].map(
+  ([endpoint, access]) => ({
+    endpoint,
+    universal: access.universal,
+    module: access.module,
+    permission: access.permission,
+  }),
+);
 
 if (sections.length < 5) {
   console.error(`✖  Only ${sections.length} routes parsed — check the controller path.`);
@@ -56,7 +45,8 @@ if (sections.length < 5) {
 
 const manifest = {
   version: 1,
-  generatedFrom: "backend/src/modules/dashboard/dashboard.controller.ts",
+  generatedFrom:
+    "backend/src/modules/dashboard/dashboard.controller.ts + declared external Home routes",
   sections,
 };
 

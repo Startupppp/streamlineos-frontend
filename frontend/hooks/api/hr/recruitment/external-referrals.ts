@@ -1,8 +1,9 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type ExternalReferralStatus =
   | "SUBMITTED"
@@ -51,7 +52,7 @@ export function useExternalReferrals() {
 
 export function useUpdateExternalReferral() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "external-referrals", "update"],
     mutationFn: ({ id, ...data }: { id: number } & UpdateExternalReferralInput) =>
       apiClient.patch<ExternalReferral>(`/hr/recruitment/external-referrals/${id}`, data),
@@ -71,7 +72,7 @@ export function useExternalReferrers() {
 
 export function useUpdateExternalReferrerStatus(referrerId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "external-referrers", "update-status", referrerId],
     mutationFn: (status: ExternalReferrerStatus) =>
       apiClient.patch<ExternalReferrer>(`/hr/recruitment/external-referrers/${referrerId}`, { status }),

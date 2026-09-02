@@ -1,8 +1,9 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type ReportEntity = "candidates" | "jobs" | "interviews" | "offers";
 export type ReportSchedule = "WEEKLY" | "MONTHLY";
@@ -45,7 +46,7 @@ export interface CreateScheduledReportInput {
 }
 
 export function useGenerateReport() {
-  return useMutation({
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "reports", "generate"],
     mutationFn: (config: ReportConfig) =>
       apiClient.post<GenerateReportResult>("/hr/recruitment/reports/generate", config),
@@ -62,7 +63,7 @@ export function useScheduledReports() {
 
 export function useCreateScheduledReport() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "reports", "create-scheduled"],
     mutationFn: (data: CreateScheduledReportInput) =>
       apiClient.post<ScheduledReport>("/hr/recruitment/reports/scheduled", data),
@@ -74,7 +75,7 @@ export function useCreateScheduledReport() {
 
 export function useDeleteScheduledReport() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "reports", "delete-scheduled"],
     mutationFn: (id: number) => apiClient.delete(`/hr/recruitment/reports/scheduled/${id}`),
     onSuccess: () => {

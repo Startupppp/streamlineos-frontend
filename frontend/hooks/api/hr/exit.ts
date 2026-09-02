@@ -1,9 +1,10 @@
 "use client";
 
-import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface Resignation {
   id: number;
@@ -90,7 +91,7 @@ export function useResignations(params?: ResignationListParams) {
 
 export function useCreateResignation() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:exit:create", {
     mutationKey: ["hr", "exit", "create"],
     mutationFn: (data: {
       reason: string;
@@ -107,7 +108,7 @@ export function useCreateResignation() {
 
 export function useHrReviewResignation() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:exit:manage", {
     mutationKey: ["hr", "exit", "hr-review"],
     mutationFn: ({ id, action, remarks }: { id: number; action: "approve" | "reject"; remarks?: string }) =>
       apiClient.patch<{ success: boolean }>(`/hr/exit/${id}/hr-review`, { decision: action, remarks }),
@@ -117,7 +118,7 @@ export function useHrReviewResignation() {
 
 export function useFinalReviewResignation() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:exit:approve", {
     mutationKey: ["hr", "exit", "final-review"],
     mutationFn: ({ id, action, remarks }: { id: number; action: "approve" | "reject"; remarks?: string }) =>
       apiClient.patch<{ success: boolean }>(`/hr/exit/${id}/final-review`, { decision: action, remarks }),
@@ -127,7 +128,7 @@ export function useFinalReviewResignation() {
 
 export function useWithdrawResignation() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:exit:view", {
     mutationKey: ["hr", "exit", "withdraw"],
     mutationFn: ({ id }: { id: number }) =>
       apiClient.patch<{ success: boolean }>(`/hr/exit/${id}/withdraw`, {}),

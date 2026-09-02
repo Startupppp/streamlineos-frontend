@@ -18,51 +18,22 @@
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  parseControllerRoutes,
+  parseExternalHomeRoutes,
+  parseExternalRoute,
+  EXTERNAL_HOME_ROUTES,
+} from "./home-manifest-parse.mjs";
 
 const FRONTEND_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const MANIFEST_PATH = join(FRONTEND_ROOT, "lib", "home", "home-manifest.generated.json");
+const BACKEND_SRC = join(FRONTEND_ROOT, "..", "backend", "src");
 const CONTROLLER_PATH = join(
-  FRONTEND_ROOT,
-  "..",
-  "backend",
-  "src",
+  BACKEND_SRC,
   "modules",
   "dashboard",
   "dashboard.controller.ts",
 );
-
-/**
- * Parse GET routes from the dashboard controller.
- * Returns a map of endpoint → { universal, module, permission }.
- */
-function parseControllerRoutes(source) {
-  const routes = new Map();
-  const lines = source.split("\n");
-
-  for (let i = 0; i < lines.length; i++) {
-    const getMatch = /@Get\(\s*["']([^"']+)["']\s*\)/.exec(lines[i]);
-    if (!getMatch) continue;
-
-    const endpoint = `/dashboard/${getMatch[1]}`;
-    let permission = null;
-    let module = null;
-    let universal = false;
-
-    for (let ahead = i + 1; ahead < lines.length; ahead++) {
-      const line = lines[ahead];
-      if (!/^\s*@/.test(line)) break;
-      const permMatch = /@RequirePermission\(\s*["']([^"']+)["']/.exec(line);
-      if (permMatch) permission = permMatch[1];
-      const modMatch = /@RequireModule\(\s*["']([^"']+)["']/.exec(line);
-      if (modMatch) module = modMatch[1];
-      if (/@Universal\(\)/.test(line)) universal = true;
-    }
-
-    routes.set(endpoint, { universal, module, permission });
-  }
-
-  return routes;
-}
 
 function diffRoutes(manifest, controllerRoutes) {
   const violations = [];
@@ -206,6 +177,54 @@ function runSelfTest() {
     })());
   }
 
+  {
+    const externalSource = `
+      @RequireModule("hr")
+      @Controller("hr")
+      @UseGuards(JwtAuthGuard, PermissionGuard)
+      export class DocumentsController {
+        @Get("documents")
+        @RequirePermission("hr:documents:view")
+        listDocuments() {}
+      }
+    `;
+    const access = parseExternalRoute(externalSource, "documents");
+    assert("external route inherits the class-level module", access?.module === "hr");
+    assert(
+      "external route reads its method-level permission",
+      access?.permission === "hr:documents:view",
+    );
+    assert(
+      "external route is not marked universal",
+      access?.universal === false,
+    );
+    assert(
+      "an undeclared route in the same controller resolves to null",
+      parseExternalRoute(externalSource, "not-a-route") === null,
+    );
+
+    const externalManifest = {
+      version: 1,
+      sections: [
+        { endpoint: "/hr/documents", universal: false, module: "hr", permission: "hr:documents:view" },
+      ],
+    };
+    const drifted = new Map([
+      ["/hr/documents", { universal: false, module: "hr", permission: "hr:documents:manage" }],
+    ]);
+    assert(
+      "permission drift on an external Home route is detected",
+      diffRoutes(externalManifest, drifted).some((v) => v.includes("/hr/documents")),
+    );
+    assert(
+      "a removed class-level module gate on an external route is detected",
+      diffRoutes(
+        externalManifest,
+        new Map([["/hr/documents", { universal: false, module: null, permission: "hr:documents:view" }]]),
+      ).some((v) => v.includes("module")),
+    );
+  }
+
   console.log(`\nSelf-test complete: ${passed} passed, ${failed} failed.`);
   if (failed > 0) process.exit(1);
   process.exit(0);
@@ -239,9 +258,24 @@ if (controllerRoutes.size < 5) {
   process.exit(1);
 }
 
-const violations = diffRoutes(manifest, controllerRoutes);
+let externalRoutes;
+try {
+  externalRoutes = parseExternalHomeRoutes(BACKEND_SRC);
+} catch (error) {
+  console.error(`✖  ${error instanceof Error ? error.message : String(error)}`);
+  process.exit(1);
+}
+
+if (externalRoutes.size !== EXTERNAL_HOME_ROUTES.length) {
+  console.error("✖  Declared external Home routes did not all resolve.");
+  process.exit(1);
+}
+
+const backendRoutes = new Map([...controllerRoutes, ...externalRoutes]);
+const violations = diffRoutes(manifest, backendRoutes);
 
 console.log(`Dashboard controller routes parsed   ${controllerRoutes.size}`);
+console.log(`External Home routes parsed          ${externalRoutes.size}`);
 console.log(`Manifest sections                    ${manifest.sections.length}`);
 console.log("");
 

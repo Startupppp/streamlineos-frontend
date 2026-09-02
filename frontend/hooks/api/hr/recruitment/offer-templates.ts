@@ -1,8 +1,9 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface OfferLetterTemplate {
   id: number;
@@ -26,7 +27,7 @@ export function useOfferTemplates() {
 
 export function useCreateOfferTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:offers:manage", {
     mutationKey: ["hr", "recruitment", "offer-templates", "create"],
     mutationFn: (data: { name: string; htmlContent: string; isDefault?: boolean }) =>
       apiClient.post<OfferLetterTemplate>("/hr/recruitment/offer-templates", data),
@@ -38,7 +39,7 @@ export function useCreateOfferTemplate() {
 
 export function useUpdateOfferTemplate(id: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:offers:manage", {
     mutationKey: ["hr", "recruitment", "offer-templates", "update", id],
     mutationFn: (data: { name?: string; htmlContent?: string; isDefault?: boolean }) =>
       apiClient.patch<OfferLetterTemplate>(`/hr/recruitment/offer-templates/${id}`, data),
@@ -50,7 +51,7 @@ export function useUpdateOfferTemplate(id: number) {
 
 export function useDeleteOfferTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:offers:manage", {
     mutationKey: ["hr", "recruitment", "offer-templates", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/offer-templates/${id}`),
@@ -61,7 +62,7 @@ export function useDeleteOfferTemplate() {
 }
 
 export function useGenerateOfferPdf() {
-  return useMutation({
+  return useAuthorizedMutation("hr:offers:manage", {
     mutationKey: ["hr", "recruitment", "offer-templates", "generate-pdf"],
     mutationFn: ({
       templateId,

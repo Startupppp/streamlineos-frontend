@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -46,7 +47,7 @@ export function useHandbookVersions() {
 
 export function useCreateHandbookVersion() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:handbook:manage", {
     mutationKey: ["hr", "handbook", "create"],
     mutationFn: (data: CreateHandbookVersionInput) =>
       apiClient.post<HandbookVersion>("/hr/handbook", data),
@@ -56,7 +57,7 @@ export function useCreateHandbookVersion() {
 
 export function useUpdateHandbookVersion() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:handbook:manage", {
     mutationKey: ["hr", "handbook", "update"],
     mutationFn: ({ id, ...data }: UpdateHandbookVersionInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/handbook/${id}`, data),
@@ -66,7 +67,7 @@ export function useUpdateHandbookVersion() {
 
 export function useDeleteHandbookVersion() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:handbook:manage", {
     mutationKey: ["hr", "handbook", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/handbook/${id}`),

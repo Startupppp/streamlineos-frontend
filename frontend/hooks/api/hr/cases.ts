@@ -1,6 +1,7 @@
 "use client";
 
-import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -115,7 +116,7 @@ export function useHrCase(id: number) {
 
 export function useCreateCase() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:cases:manage", {
     mutationKey: ["hr-cases", "create"],
     mutationFn: (body: {
       category: CaseCategory;
@@ -135,7 +136,7 @@ export function useCreateCase() {
 }
 
 export function useAnonymousReport() {
-  return useMutation({
+  return useAuthorizedMutation("hr:cases:view", {
     mutationKey: ["hr-cases", "anonymous"],
     mutationFn: (body: {
       category: CaseCategory;
@@ -150,7 +151,7 @@ export function useAnonymousReport() {
 
 export function useUpdateCase(id: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:cases:manage", {
     mutationKey: ["hr-cases", "update", id],
     mutationFn: (body: Partial<{
       status: CaseStatus;
@@ -172,7 +173,7 @@ export function useUpdateCase(id: number) {
 
 export function useStartInvestigation(id: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:cases:manage", {
     mutationKey: ["hr-cases", "investigate", id],
     mutationFn: () => apiClient.post<HrCase>(`/hr/cases/${id}/investigate`, {}),
     onSuccess: () => {
@@ -195,7 +196,7 @@ export function useCaseNotes(caseId: number) {
 
 export function useAddCaseNote(caseId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:cases:manage", {
     mutationKey: ["hr-cases", "notes", "add", caseId],
     mutationFn: (body: { note: string; isConfidential?: boolean }) =>
       apiClient.post<CaseNote>(`/hr/cases/${caseId}/notes`, body),
@@ -226,7 +227,7 @@ export function useDisciplinaryActions(params: { employeeId?: string; cursor?: s
 
 export function useCreateDisciplinaryAction() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:cases:manage", {
     mutationKey: ["hr-disciplinary", "create"],
     mutationFn: (body: {
       caseId?: number;
@@ -268,7 +269,7 @@ export function useMyDisciplinaryActions() {
 
 export function useAcknowledgeDisciplinaryAction() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("self:cases", {
     mutationKey: ["hr-disciplinary", "acknowledge"],
     mutationFn: ({ id, note }: { id: number; note?: string }) =>
       apiClient.post(`/hr/cases/disciplinary/${id}/acknowledge`, { note }),

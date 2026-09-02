@@ -1,9 +1,10 @@
 "use client";
 
-import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   Interview,
   CreateInterviewInput,
@@ -107,7 +108,7 @@ export function useInterviews(
 
 export function useCreateInterview() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "interviews", "create"],
     mutationFn: (data: CreateInterviewInput) =>
       apiClient.post<Interview>("/hr/recruitment/interviews", data),
@@ -121,7 +122,7 @@ export function useCreateInterview() {
 
 export function useUpdateInterview() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "interviews", "update"],
     mutationFn: ({ id, ...data }: UpdateInterviewInput & { id: number }) =>
       apiClient.patch<{ success: boolean }>(`/hr/recruitment/interviews/${id}`, data),
@@ -142,7 +143,7 @@ export function useScorecardTemplates() {
 
 export function useCreateScorecardTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "scorecard-templates", "create"],
     mutationFn: (data: { name: string; criteria: ScorecardCriterion[]; isBlindMode?: boolean }) =>
       apiClient.post<ScorecardTemplate>("/hr/recruitment/scorecard-templates", data),
@@ -152,7 +153,7 @@ export function useCreateScorecardTemplate() {
 
 export function useUpdateScorecardTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "scorecard-templates", "update"],
     mutationFn: ({ id, ...data }: { id: number; name?: string; criteria?: ScorecardCriterion[] }) =>
       apiClient.patch<{ success: boolean }>(`/hr/recruitment/scorecard-templates/${id}`, data),
@@ -162,7 +163,7 @@ export function useUpdateScorecardTemplate() {
 
 export function useDeleteScorecardTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "scorecard-templates", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/scorecard-templates/${id}`),
@@ -172,7 +173,7 @@ export function useDeleteScorecardTemplate() {
 
 export function useSubmitScorecard(interviewId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "interviews", "submit-scorecard", interviewId],
     mutationFn: (data: {
       ratings: Record<string, number>;
@@ -194,7 +195,7 @@ export function useSubmitScorecard(interviewId: number) {
 
 export function useScheduleInterview() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "interviews", "schedule"],
     mutationFn: (data: ScheduleInterviewInput) =>
       apiClient.post<Interview>("/hr/recruitment/interviews/schedule", data),
@@ -216,7 +217,7 @@ export function useInterviewSlas() {
 
 export function useUpsertInterviewSla() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "interview-slas", "upsert"],
     mutationFn: (data: { stage: string; maxHours: number; warningHours: number }) =>
       apiClient.put<InterviewSla>("/hr/recruitment/interviews/slas", data),
@@ -236,7 +237,7 @@ export function useHrSlaReport() {
 
 export function useBulkRescheduleInterviews() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "interviews", "bulk-reschedule"],
     mutationFn: async ({ ids, scheduledAt }: { ids: number[]; scheduledAt: string }) => {
       await Promise.all(
@@ -274,7 +275,7 @@ export function useInterviewQuestions(filters?: {
 
 export function useCreateInterviewQuestion() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "interview-questions", "create"],
     mutationFn: (data: CreateQuestionInput) =>
       apiClient.post<InterviewQuestion>("/hr/interview-questions", data),
@@ -285,7 +286,7 @@ export function useCreateInterviewQuestion() {
 
 export function useUpdateInterviewQuestion(questionId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "interview-questions", "update", questionId],
     mutationFn: (data: Partial<CreateQuestionInput> & { isActive?: boolean }) =>
       apiClient.patch<{ success: boolean }>(`/hr/interview-questions/${questionId}`, data),
@@ -296,7 +297,7 @@ export function useUpdateInterviewQuestion(questionId: number) {
 
 export function useDeleteInterviewQuestion(questionId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "interview-questions", "delete", questionId],
     mutationFn: () =>
       apiClient.delete<{ success: boolean }>(`/hr/interview-questions/${questionId}`),
@@ -328,7 +329,7 @@ export function useHrBookingLinks() {
 
 export function useRevokeBookingLink() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "booking-links", "revoke"],
     mutationFn: (id: number) =>
       apiClient.patch<{ success: boolean }>(`/hr/recruitment/booking-links/${id}`, {}),

@@ -4,6 +4,7 @@ import { act, renderHook } from "@testing-library/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { WorkerEngagement } from "@/types/directory/workers";
+import { useCan } from "@/hooks/api/access";
 import { useCancelEngagement, useUpdateEngagement } from "./workers";
 
 jest.mock("@/lib/api-client", () => ({
@@ -13,8 +14,13 @@ jest.mock("@/lib/api-client", () => ({
   },
 }));
 
+jest.mock("@/hooks/api/access", () => ({
+  useCan: jest.fn(() => true),
+}));
+
 const mockedPatch = apiClient.patch as jest.Mock;
 const mockedPost = apiClient.post as jest.Mock;
+const mockedUseCan = useCan as jest.Mock;
 
 function engagement(
   overrides: Partial<WorkerEngagement> = {},
@@ -53,6 +59,7 @@ function engagement(
 describe("directory engagement mutations", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockedUseCan.mockReturnValue(true);
   });
 
   it("cancels a plan without deleting it and updates the engagement cache", async () => {
@@ -148,5 +155,33 @@ describe("directory engagement mutations", () => {
     expect(invalidateSpy).toHaveBeenCalledWith({
       queryKey: queryKeys.directory.worker("worker-1"),
     });
+  });
+
+  it("refuses to issue an engagement command without the manage permission", async () => {
+    mockedUseCan.mockReturnValue(false);
+    const client = new QueryClient({
+      defaultOptions: { mutations: { retry: false } },
+    });
+
+    function Wrapper({ children }: { children: ReactNode }) {
+      return (
+        <QueryClientProvider client={client}>{children}</QueryClientProvider>
+      );
+    }
+
+    const { result } = renderHook(() => useCancelEngagement(), {
+      wrapper: Wrapper,
+    });
+    await act(async () => {
+      await expect(
+        result.current.mutateAsync({
+          workerId: "worker-1",
+          workerEngagementId: "engagement-1",
+          expectedVersion: 1,
+        }),
+      ).rejects.toThrow("Missing permission: directory:workers:manage");
+    });
+
+    expect(mockedPost).not.toHaveBeenCalled();
   });
 });

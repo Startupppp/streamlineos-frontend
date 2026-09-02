@@ -1,4 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
@@ -38,7 +39,7 @@ export function useJobRequisitions(status?: string) {
 
 export function useCreateJobRequisition() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "requisitions", "create"],
     mutationFn: (data: Omit<JobRequisition, "id" | "orgId" | "requestedBy" | "status" | "createdAt">) =>
       apiClient.post<JobRequisition>("/hr/recruitment/requisitions", data),
@@ -48,7 +49,7 @@ export function useCreateJobRequisition() {
 
 export function useSubmitRequisition() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "requisitions", "submit"],
     mutationFn: (id: number) =>
       apiClient.patch<JobRequisition>(`/hr/recruitment/requisitions/${id}/submit`),
@@ -58,7 +59,7 @@ export function useSubmitRequisition() {
 
 export function useApproveRequisition() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "requisitions", "approve"],
     mutationFn: (id: number) =>
       apiClient.patch<JobRequisition>(`/hr/recruitment/requisitions/${id}/approve`),
@@ -68,7 +69,7 @@ export function useApproveRequisition() {
 
 export function useRejectRequisition() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "requisitions", "reject"],
     mutationFn: ({ id, reason }: { id: number; reason: string }) =>
       apiClient.patch<JobRequisition>(`/hr/recruitment/requisitions/${id}/reject`, { reason }),
@@ -78,7 +79,7 @@ export function useRejectRequisition() {
 
 export function useCreateJobFromRequisition() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "requisitions", "create-job"],
     mutationFn: (id: number) =>
       apiClient.post<{ jobId: number; jobTitle: string }>(`/hr/recruitment/requisitions/${id}/create-job`),

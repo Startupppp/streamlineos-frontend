@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
@@ -38,7 +39,7 @@ export function useRosters() {
 
 export function useCreateRoster() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "rosters", "create"],
     mutationFn: (data: { name: string; weekStart: string; weekEnd: string }) =>
       apiClient.post<Roster>("/hr/rosters", data),
@@ -59,7 +60,7 @@ export function useRosterEntries(rosterId: number) {
 
 export function usePublishRoster() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "rosters", "publish"],
     mutationFn: (rosterId: number) =>
       apiClient.patch<Roster>(`/hr/rosters/${rosterId}/publish`, {}),

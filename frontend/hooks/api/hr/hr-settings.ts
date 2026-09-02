@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   Asset,
   Document,
@@ -22,7 +23,7 @@ import type {
 
 export function useCreateAsset() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:assets:manage", {
     mutationKey: ["hr", "assets", "create"],
     mutationFn: (data: CreateAssetInput) =>
       apiClient.post<Asset>("/hr/assets", data),
@@ -32,7 +33,7 @@ export function useCreateAsset() {
 
 export function useUpdateAsset() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:assets:manage", {
     mutationKey: ["hr", "assets", "update"],
     mutationFn: ({ assetId, ...data }: UpdateAssetInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/assets/${assetId}`, data),
@@ -42,7 +43,7 @@ export function useUpdateAsset() {
 
 export function useAssignAsset() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:assets:manage", {
     mutationKey: ["hr", "assets", "assign"],
     mutationFn: (data: AssignAssetInput) =>
       apiClient.patch<{ success: boolean }>("/hr/assets", data),
@@ -52,7 +53,7 @@ export function useAssignAsset() {
 
 export function useCreateDocument() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: ["hr", "documents", "create"],
     mutationFn: (data: CreateDocumentInput) =>
       apiClient.post<Document>("/hr/documents", data),
@@ -66,7 +67,7 @@ export function useCreateDocument() {
 
 export function useUpdateDocument() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: ["hr", "documents", "update"],
     mutationFn: ({ id, ...data }: { id: number; name?: string; description?: string | null; type?: string; category?: string | null; userId?: string | null; isPublic?: boolean; tags?: string[]; expiryDate?: string | null }) =>
       apiClient.patch<Document>(`/hr/documents/${id}`, data),
@@ -80,7 +81,7 @@ export function useUpdateDocument() {
 
 export function useDeleteDocument() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: ["hr", "documents", "delete"],
     mutationFn: (documentId: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/documents/${documentId}`),
@@ -122,7 +123,7 @@ export function useHrPerformanceReviews(params?: HrPerformanceReviewParams) {
 
 export function useCreateGoal() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["hr", "goals", "create"],
     mutationFn: (data: CreateGoalInput) =>
       apiClient.post<Goal>("/hr/performance/goals", data),
@@ -157,7 +158,7 @@ export function useHrPendingWfhRequests(options?: { enabled?: boolean }) {
 
 export function useCreateWfhRequest() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("self:attendance", {
     mutationKey: ["hr", "wfh", "create"],
     mutationFn: (data: CreateWfhRequestInput) =>
       apiClient.post<{ success: boolean }>("/me/time-off/wfh", data),
@@ -170,7 +171,7 @@ export function useCreateWfhRequest() {
 
 export function useProcessWfhRequest() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "wfh", "process"],
     mutationFn: ({ requestId, ...data }: ProcessWfhRequestInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/wfh/${requestId}`, data),

@@ -203,17 +203,24 @@ export interface TeamAttendance {
     checkOut: string | null;
     status: string | null;
   }[];
+  hasMore: boolean;
+}
+
+export interface LeavesTodayPage {
+  data: LeaveToday[];
+  total: number;
+  hasMore: boolean;
 }
 
 export const useLeavesToday = (
-  options?: Omit<UseQueryOptions<LeaveToday[], Error>, "queryKey" | "queryFn">
+  options?: Omit<UseQueryOptions<LeavesTodayPage, Error>, "queryKey" | "queryFn">
 ) => {
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
   const canView = useCan("hr:leaves:view");
-  return useQuery<LeaveToday[], Error>({
+  return useQuery<LeavesTodayPage, Error>({
     queryKey: queryKeys.dashboard.leavesToday(),
-    queryFn: ({ signal }) => apiClient.get<LeaveToday[]>("/dashboard/leaves-today", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<LeavesTodayPage>("/dashboard/leaves-today", undefined, signal),
     staleTime: 2 * 60_000,
     ...options,
     enabled: !!orgId && canView && (options?.enabled ?? true),
@@ -314,13 +321,13 @@ interface PersonalDashboard {
 }
 
 interface ExecutiveDashboard {
-  mrr: number;
-  pipelineValue: number;
   headcount: number;
   openRoles: number;
-  newLeadsThisWeek: number;
   activeProjects: number;
-  conversionRate: number;
+  mrr?: number;
+  pipelineValue?: number;
+  newLeadsThisWeek?: number;
+  conversionRate?: number;
 }
 
 export const useAnnouncements = (

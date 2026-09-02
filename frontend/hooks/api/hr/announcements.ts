@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -43,7 +44,7 @@ export function useAllHrAnnouncements(options?: { enabled?: boolean }) {
 
 export function useCreateHrAnnouncement() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:announcements:manage", {
     mutationKey: ["hr", "announcements", "create"],
     mutationFn: (data: CreateHrAnnouncementData) =>
       apiClient.post<HrAnnouncement>("/org/announcements", data),
@@ -53,7 +54,7 @@ export function useCreateHrAnnouncement() {
 
 export function useUpdateHrAnnouncement() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:announcements:manage", {
     mutationKey: ["hr", "announcements", "update"],
     mutationFn: ({ id, ...data }: UpdateHrAnnouncementData) =>
       apiClient.patch<HrAnnouncement>(`/org/announcements/${id}`, data),
@@ -63,7 +64,7 @@ export function useUpdateHrAnnouncement() {
 
 export function useDeleteHrAnnouncement() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:announcements:manage", {
     mutationKey: ["hr", "announcements", "delete"],
     mutationFn: (id: number) => apiClient.delete<void>(`/org/announcements/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.announcements() }),

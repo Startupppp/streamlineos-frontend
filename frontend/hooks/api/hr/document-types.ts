@@ -2,10 +2,10 @@
 
 import {
   keepPreviousData,
-  useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
@@ -84,7 +84,7 @@ export interface HrDocumentTypeMutationInput {
 
 export function useCreateHrDocumentType() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: ["hr", "documentTypes", "create"],
     mutationFn: ({
       name,
@@ -110,7 +110,7 @@ export function useCreateHrDocumentType() {
 
 export function useUpdateHrDocumentType() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: ["hr", "documentTypes", "update"],
     mutationFn: ({
       documentTypeId,
@@ -126,7 +126,7 @@ export function useUpdateHrDocumentType() {
 
 export function useDeactivateHrDocumentType() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: ["hr", "documentTypes", "deactivate"],
     mutationFn: (documentTypeId: number) =>
       apiClient.patch(`/hr/document-types/${documentTypeId}`, {

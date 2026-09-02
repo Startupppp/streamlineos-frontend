@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
@@ -66,7 +67,7 @@ export function useDocumentTemplate(templateId: number) {
 
 export function useCreateDocumentTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: ["hr", "document-templates", "create"],
     mutationFn: (data: CreateDocumentTemplateInput) =>
       apiClient.post<DocumentTemplate>("/hr/documents/templates", data),
@@ -76,7 +77,7 @@ export function useCreateDocumentTemplate() {
 
 export function useUpdateDocumentTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: ["hr", "document-templates", "update"],
     mutationFn: ({ templateId, ...data }: UpdateDocumentTemplateInput & { templateId: number }) =>
       apiClient.put<DocumentTemplate>(`/hr/documents/templates/${templateId}`, data),
@@ -89,7 +90,7 @@ export function useUpdateDocumentTemplate() {
 
 export function useDeleteDocumentTemplate() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: ["hr", "document-templates", "delete"],
     mutationFn: (templateId: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/documents/templates/${templateId}`),
@@ -99,7 +100,7 @@ export function useDeleteDocumentTemplate() {
 
 export function useSetDocumentTemplateDefault() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:documents:manage", {
     mutationKey: ["hr", "document-templates", "set-default"],
     mutationFn: ({ templateId, isDefault }: { templateId: number; isDefault: boolean }) =>
       apiClient.patch<DocumentTemplate>(`/hr/documents/templates/${templateId}`, { isDefault }),

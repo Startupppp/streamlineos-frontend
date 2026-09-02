@@ -1,8 +1,9 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   EmailSequence,
   CreateEmailSequenceInput,
@@ -19,7 +20,7 @@ export function useEmailSequences() {
 
 export function useCreateEmailSequence() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "email-sequences", "create"],
     mutationFn: (data: CreateEmailSequenceInput) =>
       apiClient.post<EmailSequence>("/hr/recruitment/email-sequences", data),
@@ -31,7 +32,7 @@ export function useCreateEmailSequence() {
 
 export function useUpdateEmailSequence(id: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "email-sequences", "update", id],
     mutationFn: (data: UpdateEmailSequenceInput) =>
       apiClient.patch<EmailSequence>(`/hr/recruitment/email-sequences/${id}`, data),
@@ -44,7 +45,7 @@ export function useUpdateEmailSequence(id: number) {
 
 export function useDeleteEmailSequence() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "recruitment", "email-sequences", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/email-sequences/${id}`),

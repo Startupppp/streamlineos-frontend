@@ -297,7 +297,6 @@ export function DashboardClient() {
   if (
     shouldRenderDashboardLoading({
       accessLoading: access.accessLoading,
-      isLoading,
       mounted,
     })
   ) {
@@ -334,7 +333,9 @@ export function DashboardClient() {
         actions={hrEnabled ? <ClockInWidget /> : undefined}
       >
         <div className="flex flex-1 min-h-0 flex-col gap-4">
-          {error ? (
+          {isLoading ? (
+            <DashboardStatsSkeleton />
+          ) : error ? (
             <div
               className="rounded-xl border border-destructive/30 bg-destructive/5 p-6"
               role="alert"

@@ -1,7 +1,8 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -86,7 +87,7 @@ export function useAccommodationTasks(requestId: string) {
 
 export function useCreateAccommodation() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:accommodations:manage", {
     mutationKey: ["hr-accommodations", "create"],
     mutationFn: (body: {
       userId: string;
@@ -104,7 +105,7 @@ export function useCreateAccommodation() {
 
 export function useApproveAccommodation(id: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:accommodations:manage", {
     mutationKey: ["hr-accommodations", "approve", id],
     mutationFn: (body: {
       note?: string;

@@ -139,11 +139,7 @@ export const HOME_SECTIONS: readonly HomeSection[] = [
     id: "public-documents",
     label: "Company documents",
     endpoint: "/hr/documents",
-    access: {
-      kind: "module-permission",
-      module: "hr",
-      permission: "hr:documents:view",
-    },
+    access: accessFromManifest(requiredEntry("/hr/documents")),
   },
 ];
 

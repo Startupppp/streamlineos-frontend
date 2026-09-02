@@ -2,7 +2,6 @@
 
 import {
   useInfiniteQuery,
-  useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
@@ -125,7 +124,7 @@ export function useRequestLeave() {
   const qc = useQueryClient();
   const identity = useLeaveQueryIdentity();
   const invalidateLeaveDashboard = useInvalidateLeaveDashboard();
-  return useMutation({
+  return useAuthorizedMutation("self:leaves", {
     mutationKey: ["hr", "leaves", "request"],
     mutationFn: (data: RequestLeaveInput) =>
       apiClient.post<{ success: boolean }>("/me/time-off", data),
@@ -180,6 +179,7 @@ export function useRejectLeaveDedicated() {
       qc.invalidateQueries({ queryKey: leaveContextKey(identity) });
       qc.invalidateQueries({ queryKey: leaveTeamKey(identity) });
       qc.invalidateQueries({ queryKey: leaveMyRequestsKey(identity) });
+      qc.invalidateQueries({ queryKey: leaveThisWeekKey(identity) });
       invalidateLeaveDashboard();
     },
   });
@@ -189,13 +189,15 @@ export function useCancelLeave() {
   const qc = useQueryClient();
   const identity = useLeaveQueryIdentity();
   const invalidateLeaveDashboard = useInvalidateLeaveDashboard();
-  return useMutation({
+  return useAuthorizedMutation("self:leaves", {
     mutationKey: ["hr", "leaves", "cancel"],
     mutationFn: (leaveId: number) =>
       apiClient.patch<{ success: boolean }>(`/me/time-off/${leaveId}/cancel`, {}),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: leaveContextKey(identity) });
       qc.invalidateQueries({ queryKey: leaveMyRequestsKey(identity) });
+      qc.invalidateQueries({ queryKey: leaveTeamKey(identity) });
+      qc.invalidateQueries({ queryKey: leaveThisWeekKey(identity) });
       invalidateLeaveDashboard();
     },
   });
@@ -438,7 +440,7 @@ export function useDeleteLegacyHoliday() {
 
 export function useUpdateLegacyHoliday() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "holidays", "update"],
     mutationFn: ({ holidayId, ...data }: UpdateHolidayInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/holidays/${holidayId}`, data),

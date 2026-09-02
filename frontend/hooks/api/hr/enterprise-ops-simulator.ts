@@ -1,8 +1,9 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -35,7 +36,7 @@ export function useSimulationHistory(params: { cursor?: string; type?: Simulatio
 
 export function useSimulatePolicy() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:policies:manage", {
     mutationKey: ["hr-simulations", "policy"],
     mutationFn: (body: {
       employeeId: string;
@@ -49,7 +50,7 @@ export function useSimulatePolicy() {
 
 export function useSimulateLeaveBalance() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:policies:manage", {
     mutationKey: ["hr-simulations", "leave"],
     mutationFn: (body: {
       employeeId: string;
@@ -64,7 +65,7 @@ export function useSimulateLeaveBalance() {
 
 export function useSimulateApprovalRouting() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:policies:manage", {
     mutationKey: ["hr-simulations", "approval"],
     mutationFn: (body: {
       objectType: string;
@@ -78,7 +79,7 @@ export function useSimulateApprovalRouting() {
 
 export function useSimulatePayrollImpact() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:policies:manage", {
     mutationKey: ["hr-simulations", "payroll"],
     mutationFn: (body: {
       employeeId: string;

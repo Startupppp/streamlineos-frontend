@@ -2,10 +2,10 @@
 
 import {
   useInfiniteQuery,
-  useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
@@ -57,7 +57,7 @@ export function useLegacyHrDepartments() {
 
 export function useCreateDepartment() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["hr", "departments", "create"],
     mutationFn: (data: CreateDepartmentInput) =>
       apiClient.post<Department>("/hr/departments", data),
@@ -220,7 +220,7 @@ export function useHrEmployeeOptions(
 
 export function useUpdateProfile() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:employees:update", {
     mutationKey: ["hr", "employees", "update"],
     mutationFn: ({ userId, ...data }: UpdateProfileInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/employees/${userId}`, data),
@@ -268,7 +268,7 @@ export function useHrEmployeeTickets(userId: string) {
 
 export function useOnboardEmployee() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:onboarding:manage", {
     mutationKey: ["hr", "employee", "onboard"],
     mutationFn: (data: OnboardEmployeeInput) =>
       apiClient.post<{ success: boolean; userId: string }>("/hr/employees/onboard", data),
@@ -278,7 +278,7 @@ export function useOnboardEmployee() {
 
 export function useBulkOnboardEmployees() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:onboarding:manage", {
     mutationKey: ["hr", "employee", "onboard", "bulk"],
     mutationFn: (employees: BulkOnboardEmployeeRow[]) =>
       apiClient.post<BulkOnboardResult>(
@@ -477,7 +477,7 @@ export function useEmployeeSensitive(employmentId: number | undefined) {
 
 export function useUpdateSensitive(employmentId: number) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:sensitive:manage", {
     mutationKey: ["hr", "employee", "sensitive", "update", employmentId],
     mutationFn: (data: Partial<HrSensitiveData>) =>
       apiClient.patch<{ success: boolean }>(`/hr/employees/${employmentId}/sensitive`, data),

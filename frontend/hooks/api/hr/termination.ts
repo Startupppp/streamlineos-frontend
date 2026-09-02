@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
@@ -111,7 +112,7 @@ export function useTerminations(params: UseTerminationsParams = {}) {
     }),
     queryFn: ({ signal }) =>
       apiClient.get<TerminationListResponse>(
-        `/hr/termination?${search.toString()}`, signal,
+        `/hr/termination?${search.toString()}`, undefined, signal,
       ),
     enabled: hrEnabled && canView,
     staleTime: 2 * 60_000,
@@ -120,7 +121,7 @@ export function useTerminations(params: UseTerminationsParams = {}) {
 
 export function useCreateTermination() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:exit:manage", {
     mutationKey: [...terminationKeys.all, "create"],
     mutationFn: ({ employeeUserId, ...terminationInput }: CreateTerminationInput) =>
       apiClient.post<Termination>("/hr/termination", {
@@ -133,7 +134,7 @@ export function useCreateTermination() {
 
 export function useSubmitTermination() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:exit:manage", {
     mutationKey: [...terminationKeys.all, "submit"],
     mutationFn: (terminationId: number) =>
       apiClient.patch<{ success: boolean }>(
@@ -150,7 +151,7 @@ export function useSubmitTermination() {
 
 export function useFinalReviewTermination() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:exit:approve", {
     mutationKey: [...terminationKeys.all, "final-review"],
     mutationFn: ({
       terminationId,
@@ -180,7 +181,7 @@ export function useFinalReviewTermination() {
 
 export function useSendTerminationEmail() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:exit:manage", {
     mutationKey: [...terminationKeys.all, "send-email"],
     mutationFn: (terminationId: number) =>
       apiClient.post<{ success: boolean }>(
@@ -198,7 +199,7 @@ export function useSendTerminationEmail() {
 
 export function useCompleteTermination() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:exit:manage", {
     mutationKey: [...terminationKeys.all, "complete"],
     mutationFn: (terminationId: number) =>
       apiClient.patch<{ success: boolean }>(

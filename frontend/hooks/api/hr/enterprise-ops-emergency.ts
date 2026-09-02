@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -75,7 +76,7 @@ export function useEmergencyEventStatus(eventId: string) {
 
 export function useCreateEmergencyEvent() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:emergency:manage", {
     mutationKey: ["hr-emergency", "create"],
     mutationFn: (body: {
       name: string;
@@ -93,7 +94,7 @@ export function useCreateEmergencyEvent() {
 
 export function useUpdateEmergencyEvent(eventId: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:emergency:manage", {
     mutationKey: ["hr-emergency", "update", eventId],
     mutationFn: (body: Partial<{ name: string; message: string; status: EmergencyEventStatus }>) =>
       apiClient.patch<EmergencyEvent>(`${BASE}/events/${eventId}`, body),
@@ -108,7 +109,7 @@ export function useUpdateEmergencyEvent(eventId: string) {
 
 export function useBroadcastEmergency(eventId: string) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:emergency:manage", {
     mutationKey: ["hr-emergency", "broadcast", eventId],
     mutationFn: (body: { message?: string }) =>
       apiClient.post<{ broadcasted: number; eventId: string }>(`${BASE}/events/${eventId}/broadcast`, body),
