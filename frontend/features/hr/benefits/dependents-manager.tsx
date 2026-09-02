@@ -30,6 +30,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 
 const depSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -78,7 +79,7 @@ function DependentRow({ dep, onDelete }: { dep: Dependent; onDelete: () => void 
 }
 
 export function DependentsManager() {
-  const { data: dependents, isLoading } = useDependents();
+  const { data: dependents, isLoading, isError, error, refetch } = useDependents();
   const addDependent = useAddDependent();
   const deleteDependent = useDeleteDependent();
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -146,6 +147,13 @@ export function DependentsManager() {
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
             </div>
+          ) : isError ? (
+            <ErrorState
+              compact
+              title="Couldn't load your dependents"
+              description={getErrorMessage(error)}
+              onRetry={() => void refetch()}
+            />
           ) : !dependents?.length ? (
             <EmptyState
               illustrationPreset="team"

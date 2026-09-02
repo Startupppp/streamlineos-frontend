@@ -10,6 +10,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 
@@ -35,7 +37,7 @@ function getRowStatus(row: OnboardingStatus): RowStatus {
 }
 
 export function OnboardingList() {
-  const { data, isLoading } = useOnboardingStatus();
+  const { data, isLoading, isError, error, refetch } = useOnboardingStatus();
   const [initiateOpen, setInitiateOpen] = useState(false);
 
   if (isLoading) {
@@ -45,6 +47,17 @@ export function OnboardingList() {
           <Skeleton key={i} className="h-[60px] rounded-2xl" />
         ))}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        compact
+        title="Couldn't load onboardings"
+        description={getErrorMessage(error)}
+        onRetry={() => void refetch()}
+      />
     );
   }
 

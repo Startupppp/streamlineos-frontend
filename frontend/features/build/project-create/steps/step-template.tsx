@@ -53,6 +53,12 @@ export function StepTemplate({ draft, updateDraft }: StepSharedProps) {
         </div>
       )}
 
+      {templateList.length === 0 && (
+        <p className="rounded-lg border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">
+          No templates exist yet. Start from scratch below, or create a template first.
+        </p>
+      )}
+
       <div className="space-y-2">
         <div
           onClick={() => handleSelect(null)}

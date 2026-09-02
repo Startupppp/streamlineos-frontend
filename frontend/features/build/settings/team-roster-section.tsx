@@ -3,6 +3,8 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useProjectRoster } from "@/hooks/api/build/roster";
 import {
   getUserDisplayName,
@@ -50,10 +52,21 @@ interface TeamRosterSectionProps {
 }
 
 export function TeamRosterSection({ projectId }: TeamRosterSectionProps) {
-  const { data, isLoading } = useProjectRoster(projectId);
+  const { data, isLoading, isError, error, refetch } = useProjectRoster(projectId);
 
   if (isLoading) {
     return <RosterSkeleton />;
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        compact
+        title="Couldn't load the roster"
+        description={getErrorMessage(error)}
+        onRetry={() => void refetch()}
+      />
+    );
   }
 
   const teams = data?.teams ?? [];

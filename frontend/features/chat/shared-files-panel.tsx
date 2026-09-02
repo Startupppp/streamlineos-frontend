@@ -4,6 +4,8 @@ import { useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Paperclip } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { XIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import React from "react";
@@ -24,7 +26,8 @@ const FilesPanelCloseButton = React.forwardRef<
 });
 
 export function SharedFilesPanel({ channelId, onClose }: { channelId: number; onClose: () => void }) {
-  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useChannelFiles(channelId);
+  const { data, isLoading, isError, error, refetch, hasNextPage, isFetchingNextPage, fetchNextPage } =
+    useChannelFiles(channelId);
   const files = useMemo(() => data?.pages.flatMap((p) => p.files) ?? [], [data]);
   const total = files.length;
   const renderWindow = usePanelRenderWindow(total, hasNextPage === true, fetchNextPage, channelId);
@@ -56,6 +59,14 @@ export function SharedFilesPanel({ channelId, onClose }: { channelId: number; on
               </div>
             ))}
           </div>
+        ) : isError ? (
+          <ErrorState
+            compact
+            className="m-3"
+            title="Couldn't load shared files"
+            description={getErrorMessage(error)}
+            onRetry={() => void refetch()}
+          />
         ) : files.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4">
             <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center mb-3">

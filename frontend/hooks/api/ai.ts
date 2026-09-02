@@ -12,6 +12,7 @@ import type {
 } from "@/lib/ai/schemas";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { AiAbortInput } from "@/hooks/api/ai-abort";
+import { streamAiText, type AiTextStreamResult } from "@/hooks/api/ai-text-stream";
 
 export function useAIScoreLead() {
   const qc = useQueryClient();
@@ -159,11 +160,21 @@ interface GenerateJdInput {
   salaryMax?: number;
 }
 
+/**
+ * Streams. `POST /ai/generate-jd/stream` takes the same body and the same permission as the
+ * buffered route, so the only thing the buffered call bought was a blank pane until the whole
+ * draft existed. `signal` and `onToken` are stripped from the body by the rest spread — a
+ * serialised AbortSignal is the trap `ai-mutation-signal.test.tsx` guards.
+ */
 export function useGenerateJobDescription() {
-  return useAuthorizedMutation("hr:interviews:manage", {
+  return useAuthorizedMutation<
+    AiTextStreamResult,
+    Error,
+    GenerateJdInput & AiAbortInput & { onToken?: (token: string) => void }
+  >("hr:interviews:manage", {
     mutationKey: ["generate", "job", "description"],
-    mutationFn: (input: GenerateJdInput) =>
-      apiClient.post<{ description: string }>("/ai/generate-jd", input),
+    mutationFn: ({ signal, onToken, ...input }) =>
+      streamAiText({ path: "/ai/generate-jd/stream", body: input, onToken, signal }),
   });
 }
 

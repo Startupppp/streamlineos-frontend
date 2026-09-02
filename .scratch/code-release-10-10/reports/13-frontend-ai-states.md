@@ -222,3 +222,120 @@ leads/ai-next-action-button}`, `features/hr/recruitment/candidate-detail/use-can
   machinery; for the other 55 the Stop button still ends only the UI.
 - `AbortSignal.any` availability is assumed by every cancellation claim in this report — see
   cross-territory finding 1. The jest proofs polyfill it because jsdom 20 has neither.
+
+---
+
+## Session S6 — the AI stream client, and the states the routing note pointed at
+
+### The client (the substance of the open box)
+
+The backend exposes **11** AI text-stream routes and they share **one** wire format.
+`respondWithAiTextStream` (`ai-text-stream-route.ts`) pipes the provider stream through
+`pipeTextStreamToResponse`, so the body is raw UTF-8 text deltas under
+`text/plain; charset=utf-8` — no SSE frames, no `data:` prefix, no JSON envelope and no
+terminator sentinel. A parser that splits on newlines or calls `JSON.parse` corrupts it.
+A contract spec (`ai-stream-route-contract.spec.ts`) holds every route to that helper.
+
+The only client able to read it was the loop inside `useAskAI`, hard-wired to `POST /chat`.
+The **nine** routes ending in `/stream`, plus `/public/kb/stream-ask`, had no client at all.
+
+New `frontend/hooks/api/ai-text-stream.ts` exports two things, deliberately split:
+
+- `streamAiText({ path, body, onToken, signal })` — the transport, no React. For a surface
+  like `AiActionsMenu` that already owns single-flight and hands `run` a signal, a second
+  in-flight ref would be a second source of truth.
+- `useAiTextStream()` — single-flight + `stop()` + unmount abort, for a surface that owns
+  its own Stop button.
+
+Behaviour that matters and is asserted: the signal goes in `authedFetch`'s **fourth**
+argument (an `init.signal` is overwritten by the combined signal, which is exactly how this
+seam shipped a no-op cancel once already); a cancel keeps the partial text; a pre-aborted
+signal opens no request at all; a non-ok response raises the real HTTP status so a 402 stays
+renderable as credit exhaustion rather than a generic failure; `headers` is returned so
+`/public/kb/stream-ask`'s `x-kb-sources` citations are reachable; and the final
+`decoder.decode()` is flushed — the old chat loop omitted it and could drop a trailing
+multi-byte character.
+
+`useAskAI` now delegates rather than owning a second copy. Faithfulness is proven by the 9
+pre-existing tests passing unchanged, including the 4 that drive the REAL `lib/api-client`.
+
+One non-chat surface is wired end to end so the client is delivered rather than merely built:
+`useGenerateJobDescription` streams `POST /ai/generate-jd/stream` (same body schema, same
+`hr:interviews:manage` permission as the buffered route) and the JD action passes
+`(signal, onToken)` through the existing `AiAction.run` seam.
+
+### What the routing note got wrong
+
+Two of the three routed items were already fixed and the note was stale, verified against
+current source rather than trusted in either direction:
+
+- `components/ui/data-table.tsx` already carries the paused-read fix (commit `a03bbe6f3`).
+- `features/chat/channel-sidebar.tsx` already has an `isError` -> `ErrorState` branch.
+
+The real remaining gap was **`DataTableSkeleton`** — the standalone export callers return
+directly from their loading branch, which is what the `T7` template in `frontend/CLAUDE.md`
+tells them to do. It had no `aria-busy`, no connection check, and four per-header-cell
+`sr-only "Loading"` spans. It now carries the same three lines as `LoadingState`.
+
+### States
+
+Five read-error branches, each on a surface where a failed read rendered the empty state and
+told the user there was no data:
+`hr/onboarding/onboarding-list.tsx` · `hr/helpdesk/my-tickets-tab.tsx` ·
+`hr/benefits/dependents-manager.tsx` · `chat/shared-files-panel.tsx` ·
+`build/settings/team-roster-section.tsx`.
+
+Five empty states: `build/ticket-details/watcher-list.tsx` (also had no error branch) ·
+`hr/recruitment/jobs/share-job-dialog.tsx` (error and empty were one "Could not load"
+sentence; now separated, with a retry) · `build/project-create/steps/step-template.tsx` ·
+`build/ticket-details/ticket-checklists.tsx` · `hr/exit/progress-timeline.tsx`.
+
+`progress-timeline.tsx` was the worst of the ten. On a failed read it fell through to
+`data?.steps ?? PROGRESS_STEPS.map(...)` and rendered a **fabricated** timeline showing
+"Submitted / current" — invented progress presented to a departing employee as fact.
+
+### Proofs, run and read
+
+| Command | Exit | Number |
+|---|---|---|
+| `pnpm -C frontend type-check` | 0 | 0 errors |
+| `npx eslint <17 changed files>` | 0 | 0 findings |
+| `jest --testPathPattern="ai-text-stream\|chat-ai-assistant"` | 0 | 3 suites, 19 tests |
+| `jest --testPathPattern="components/ai\|hooks/api/ai\|...\|data-table\|read-state"` | 0 | 15 suites, 173 tests |
+| `jest --testPathPattern="features/(hr\|build\|chat)"` | 0 | 37 suites, 234 tests |
+| `jest --testPathPattern="paused-reads\|data-table-states"` | 0 | 2 suites, 38 tests |
+| `pnpm -s check:query-signal` | 0 | 1054 queryFn blocks / 420 files / 0 violations |
+| `pnpm -s check:empty-states` | 0 | 3814 files |
+| `pnpm -s check:effect-fetches` | 0 | 5256 files |
+| `pnpm -s check:cycles` | 0 | 0 circular |
+| `pnpm -s check:over-300` | 0 | 519 of 5241 (baseline 519) |
+| `pnpm -s check:colors` | 0 | 5256 files |
+
+Bite proof, one-off, file restored byte-identical (sha256 `f5e75af9...4792` before and after):
+the signal moved back into `init` — the original defect — gives **3 failed / 16 passed / 19**.
+
+### Still open, and why
+
+Eight of the nine `/stream` routes still have no caller, and each is now a one-line adoption
+against `streamAiText`:
+
+| Route | Why not adopted here |
+|---|---|
+| `/ai/blog/posts/:postId/{improve-writing,suggest-title,summarize}/stream` | no frontend reference of any kind — no surface exists to wire |
+| `/ai/account-summary/stream`, `/ai/meeting-prep/stream`, `/ai/report-narrator/stream` | `features/crm/**`, excluded from release scope |
+| `/ai/crm/meeting-follow-up/stream` | `features/crm/**`, excluded from release scope |
+| `/ai/surveys/:surveyId/summarize-responses/stream` | surface change in `features/surveys/**` |
+| `/public/kb/stream-ask` | renders on a public page this territory must not alter; it is also the only route with sidecar metadata (`x-kb-sources`), which the client already returns |
+
+### Cross-territory findings
+
+1. **`lib/api-client.ts` still arms the trap.** `makeRequestSignal` returns the timeout signal
+   alone when `AbortSignal.any` is missing, silently dropping the caller's signal — on a browser
+   without it, every cancel in the app is a no-op. And `authedFetch` still overwrites
+   `init.signal`, so the next caller who puts a signal in `init` gets the same silent no-op.
+   The new client documents and avoids it; the trap itself is not this territory's to disarm.
+2. **`frontend/CLAUDE.md` §15 wants a row** for the new shared hook
+   (`streamAiText` / `useAiTextStream` — `hooks/api/ai-text-stream.ts`), under the AI row.
+   Not added: the constitution file is not this territory's to edit.
+3. The Explore-agent audit that produced the surface list was **stale on two of three routed
+   items**. Anything else from it should be re-verified against source before being trusted.

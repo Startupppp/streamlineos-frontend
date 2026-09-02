@@ -1,14 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback } from "react";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  ApiError,
-  apiClient,
-  authedFetch,
-  buildUrl,
-  getApiErrorCode,
-} from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
+import { useAiTextStream } from "@/hooks/api/ai-text-stream";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -120,17 +115,14 @@ export type AskAiStreamOutcome =
   | { status: "cancelled"; text: string }
   | { status: "busy" };
 
-function isAbortError(error: unknown): boolean {
-  return (
-    (error instanceof DOMException || error instanceof Error) &&
-    error.name === "AbortError"
-  );
-}
-
+/**
+ * Chat is one caller of the shared AI text-stream client. The transport, the single-flight
+ * guard, the partial-output-on-cancel behaviour and the unmount teardown all live in
+ * `useAiTextStream`, so the other nine `/stream` routes get the same client rather than a
+ * second copy of this loop.
+ */
 export function useAskAI() {
-  const [isStreaming, setIsStreaming] = useState(false);
-  const abortRef = useRef<AbortController | null>(null);
-  const inFlightRef = useRef(false);
+  const { stream, stop, isStreaming } = useAiTextStream();
 
   const sendMessage = useCallback(
     async (
@@ -139,82 +131,21 @@ export function useAskAI() {
       conversationId?: number,
       persona?: string,
     ): Promise<AskAiStreamOutcome> => {
-      if (inFlightRef.current) return { status: "busy" };
-
-      const controller = new AbortController();
-      abortRef.current = controller;
-      inFlightRef.current = true;
-      setIsStreaming(true);
-      let received = "";
-
-      try {
-        const res = await authedFetch(
-          buildUrl("/chat"),
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              messages,
-              ...(conversationId !== undefined && { conversationId }),
-              ...(persona !== undefined && { persona }),
-            }),
-          },
-          "/chat",
-          controller.signal,
-        );
-
-        if (!res.ok) {
-          let message = `${res.status} ${res.statusText}`;
-          let code: string | undefined;
-          try {
-            const body = (await res.json()) as {
-              message?: string;
-              error?: string;
-              code?: string;
-            };
-            message = body.message ?? body.error ?? message;
-            code = body.code;
-          } catch {
-          }
-          throw new ApiError(message, res.status, code);
-        }
-
-        const reader = res.body?.getReader();
-        if (!reader) throw new Error("Streaming is not supported in this browser");
-
-        const decoder = new TextDecoder();
-        for (;;) {
-          if (controller.signal.aborted)
-            return { status: "cancelled", text: received };
-          const { done, value } = await reader.read();
-          if (done) break;
-          const token = decoder.decode(value, { stream: true });
-          received += token;
-          onToken(token);
-        }
-        return { status: "completed", text: received };
-      } catch (error) {
-        if (isAbortError(error) || getApiErrorCode(error) === "ABORTED")
-          return { status: "cancelled", text: received };
-        throw error;
-      } finally {
-        inFlightRef.current = false;
-        setIsStreaming(false);
-        abortRef.current = null;
-      }
+      const outcome = await stream({
+        path: "/chat",
+        body: {
+          messages,
+          ...(conversationId !== undefined && { conversationId }),
+          ...(persona !== undefined && { persona }),
+        },
+        onToken,
+      });
+      if (outcome.status === "completed")
+        return { status: "completed", text: outcome.text };
+      return outcome;
     },
-    [],
+    [stream],
   );
-
-  const stop = useCallback(() => {
-    abortRef.current?.abort();
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      abortRef.current?.abort();
-    };
-  }, []);
 
   return { sendMessage, stop, isStreaming };
 }

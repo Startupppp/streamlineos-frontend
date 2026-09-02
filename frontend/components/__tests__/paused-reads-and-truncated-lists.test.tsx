@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { ListTruncationNotice } from "@/components/ui/list-truncation-notice";
 import { LoadingState } from "@/components/shared/loading-state";
 import { DataTable } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { RouteErrorBoundary } from "@/components/ui/route-error-boundary";
 import { createAppQueryClient } from "@/components/providers/query-provider";
 import { ApiError } from "@/lib/api-client";
@@ -51,6 +52,27 @@ describe("a read paused by the browser being offline", () => {
   it("BITE PROOF — an online skeleton must not carry the offline copy", () => {
     mockUseOnlineStatus.mockReturnValue(true);
     render(<LoadingState variant="table" rows={1} />);
+    expect(screen.queryByText(/offline/i)).not.toBeInTheDocument();
+  });
+
+  it("DataTableSkeleton announces loading while the connection is up", () => {
+    mockUseOnlineStatus.mockReturnValue(true);
+    const { container } = render(<DataTableSkeleton rows={2} columns={3} />);
+    expect(screen.getByRole("status")).toHaveTextContent(/loading/i);
+    expect(container.querySelector('[aria-busy="true"]')).not.toBeNull();
+  });
+
+  it("DataTableSkeleton says paused rather than spinning for ever when offline", () => {
+    mockUseOnlineStatus.mockReturnValue(false);
+    const { container } = render(<DataTableSkeleton rows={2} columns={3} />);
+    expect(screen.getByRole("status")).toHaveTextContent(/paused/i);
+    expect(screen.getByText(/offline/i)).toBeInTheDocument();
+    expect(container.querySelector('[aria-busy="false"]')).not.toBeNull();
+  });
+
+  it("BITE PROOF — an online DataTableSkeleton must not carry the offline copy", () => {
+    mockUseOnlineStatus.mockReturnValue(true);
+    render(<DataTableSkeleton rows={1} columns={2} />);
     expect(screen.queryByText(/offline/i)).not.toBeInTheDocument();
   });
 });

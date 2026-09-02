@@ -420,6 +420,12 @@ export function TicketChecklists({
         />
       </div>
 
+      {checklists.length === 0 ? (
+        <p className="text-xs text-muted-foreground">
+          No checklists on this ticket yet. Add one to break the work into steps.
+        </p>
+      ) : null}
+
       <AnimatePresence initial={false}>
         {checklists.map((checklist) => (
           <motion.div
