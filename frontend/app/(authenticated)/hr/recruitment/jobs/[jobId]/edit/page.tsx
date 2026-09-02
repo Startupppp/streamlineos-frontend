@@ -1,9 +1,9 @@
 "use client";
 
-import { use, useMemo } from "react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { use, useCallback, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { CreateJobForm } from "@/features/hr/recruitment/jobs/create-job-form";
 import { useJobPosting } from "@/hooks/api/hr/recruitment";
@@ -15,8 +15,12 @@ interface Props {
 }
 
 function EditJobContent({ jobId }: { jobId: number }) {
-  const { data: job, isLoading, isError } = useJobPosting(jobId);
+  const { data: job, isLoading, isError, refetch } = useJobPosting(jobId);
   const generateJd = useGenerateJobDescription();
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const aiActions = useMemo<AiAction[]>(() => {
     if (!job) return [];
@@ -25,7 +29,7 @@ function EditJobContent({ jobId }: { jobId: number }) {
         key: "draft-jd",
         label: "Draft JD",
         description: "Generate a job description draft",
-        run: async () => {
+        run: async (signal, onToken) => {
           const result = await generateJd.mutateAsync({
             title: job.title,
             requirements: job.requirements ?? undefined,
@@ -33,8 +37,10 @@ function EditJobContent({ jobId }: { jobId: number }) {
             type: job.type ?? undefined,
             salaryMin: job.salaryMin != null ? Number(job.salaryMin) : undefined,
             salaryMax: job.salaryMax != null ? Number(job.salaryMax) : undefined,
+            signal,
+            onToken,
           });
-          return { text: result.description };
+          return { text: result.text };
         },
         onApply: () => {},
       },
@@ -53,29 +59,22 @@ function EditJobContent({ jobId }: { jobId: number }) {
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center flex-1 gap-3 p-6 text-center">
-        <p className="text-sm font-semibold text-foreground">Unable to load this job</p>
-        <p className="text-xs text-muted-foreground max-w-sm">
-          This job may no longer exist, or you do not have permission to view it.
-        </p>
-        <Button variant="outline" size="sm" asChild>
-          <Link href="/hr/recruitment/jobs">Back to Jobs</Link>
-        </Button>
-      </div>
+      <ErrorState
+        title="Couldn't load this job"
+        description="The job posting could not be read. Please try again."
+        onRetry={handleRetry}
+      />
     );
   }
 
   if (!job) {
     return (
-      <div className="flex flex-col items-center justify-center flex-1 gap-3 p-6 text-center">
-        <p className="text-sm font-semibold text-foreground">This job no longer exists</p>
-        <p className="text-xs text-muted-foreground max-w-sm">
-          The job posting may have been deleted or the link is invalid.
-        </p>
-        <Button variant="outline" size="sm" asChild>
-          <Link href="/hr/recruitment/jobs">Back to Jobs</Link>
-        </Button>
-      </div>
+      <EmptyState
+        illustrationPreset="search"
+        title="This job no longer exists"
+        description="The job posting may have been deleted, or the link is invalid."
+        action={{ label: "Back to jobs", href: "/hr/recruitment/jobs" }}
+      />
     );
   }
 
@@ -106,9 +105,12 @@ export default function EditJobPage({ params }: Props) {
         backHref="/hr/recruitment/jobs"
         backLabel="Back to Jobs"
       >
-        <div className="flex items-center justify-center flex-1">
-          <p className="text-sm text-muted-foreground">Invalid job ID.</p>
-        </div>
+        <EmptyState
+          illustrationPreset="search"
+          title="That job link is not valid"
+          description="The address does not name a job posting."
+          action={{ label: "Back to jobs", href: "/hr/recruitment/jobs" }}
+        />
       </PageWrapper>
     );
   }

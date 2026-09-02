@@ -5,6 +5,7 @@ import { useRouter, notFound } from "next/navigation";
 import { useProject, useProjectBoardTickets } from "@/hooks/api/build";
 import { GanttView } from "@/features/build/views/gantt-view";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ErrorState } from "@/components/shared/error-state";
 import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { buildTicketDetailUrl } from "@/features/build/ticket-details/build-ticket-detail-url";
@@ -23,10 +24,25 @@ export default function TimelinePage({ params }: PageProps) {
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr, 10);
   const router = useRouter();
-  const { data, isLoading: projectLoading } = useProject(projectId);
-  const { data: boardTickets, isLoading: ticketsLoading } =
-    useProjectBoardTickets(projectId);
+  const {
+    data,
+    isLoading: projectLoading,
+    isError: projectFailed,
+    refetch: refetchProject,
+  } = useProject(projectId);
+  const {
+    data: boardTickets,
+    isLoading: ticketsLoading,
+    isError: ticketsFailed,
+    refetch: refetchTickets,
+  } = useProjectBoardTickets(projectId);
   const isLoading = projectLoading || ticketsLoading;
+  const isError = projectFailed || ticketsFailed;
+
+  const handleRetry = useCallback(() => {
+    void refetchProject();
+    void refetchTickets();
+  }, [refetchProject, refetchTickets]);
 
   const tickets = useMemo(() => {
     if (!boardTickets) return [];
@@ -81,6 +97,20 @@ export default function TimelinePage({ params }: PageProps) {
               </div>
             ))}
           </PmPanel>
+        </PmPageShell>
+      </PageWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageWrapper title="Timeline" noInternalScroll contentClassName="!p-0">
+        <PmPageShell className={cn(PAGE_CHROME_X, "pt-0")}>
+          <ErrorState
+            title="Couldn't load the timeline"
+            description="The project or its work items could not be read. Please try again."
+            onRetry={handleRetry}
+          />
         </PmPageShell>
       </PageWrapper>
     );

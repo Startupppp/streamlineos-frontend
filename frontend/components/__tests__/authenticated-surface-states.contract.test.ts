@@ -15,8 +15,8 @@ import {
 const BASELINE = {
   minimumSurfaces: 540,
   missingLoading: 0,
-  missingEmpty: 10,
-  missingError: 5,
+  missingEmpty: 8,
+  missingError: 1,
   missingPermissionDenied: 0,
   filterEmptyConflation: 56,
 } as const;
@@ -201,5 +201,19 @@ describe("analyzer self-test — each signal is detected and its absence is dete
     expect(
       classifySource("const m = useMutation({ mutationFn });").readsServerState,
     ).toBe(false);
+  });
+
+  it("does NOT read a cache handle as a read — useQueryClient invalidates, it does not fetch", () => {
+    expect(
+      classifySource("const qc = useQueryClient();\nvoid qc.invalidateQueries({ queryKey });")
+        .readsServerState,
+    ).toBe(false);
+  });
+
+  it("BITE PROOF — a real useQuery call is still a read", () => {
+    expect(classifySource("const q = useQuery({ queryKey, queryFn });").readsServerState).toBe(
+      true,
+    );
+    expect(classifySource("const q = useQuery<Row[]>({ queryKey });").readsServerState).toBe(true);
   });
 });

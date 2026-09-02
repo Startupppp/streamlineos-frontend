@@ -133,7 +133,7 @@ function surfaceClosure(pageModule: string, maxModules = 120): string[] {
 const SERVER_STATE_SIGNALS = [
   /\bisLoading\b/,
   /\bisError\b/,
-  /useQuery|useGatedQuery|useInfiniteQuery|useSuspenseQuery/,
+  /\buse(?:Query|GatedQuery|InfiniteQuery|SuspenseQuery)\s*[<(]/,
 ];
 const LOADING_SIGNALS = [
   /\bSkeleton\b/,

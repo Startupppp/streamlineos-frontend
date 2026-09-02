@@ -4,6 +4,8 @@ import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { SearchInput } from "@/components/ui/search-input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import {
   Archive,
@@ -17,7 +19,6 @@ import {
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import React from "react";
 import { useRouter } from "next/navigation";
-import { EmptyMailIllustration } from "@/components/illustrations";
 import { useChatChannels, useArchivedChannels, useChatOnlineUsers } from "@/hooks/api";
 import { cn } from "@/lib/utils";
 import { ChannelSidebarSection } from "./channel-sidebar-section";
@@ -65,7 +66,7 @@ export function ChannelSidebar({
   onOpenSettings,
 }: ChannelSidebarProps) {
   const router = useRouter();
-  const { data: channels, isLoading } = useChatChannels();
+  const { data: channels, isLoading, isError, refetch } = useChatChannels();
   const { data: archivedChannels, isLoading: isArchivedLoading } = useArchivedChannels();
   const { data: onlineUsers } = useChatOnlineUsers();
   const [search, setSearch] = useState("");
@@ -81,6 +82,9 @@ export function ChannelSidebar({
 
   const handleSearchChange = useCallback((value: string) => setSearch(value), []);
   const handleClearSearch = useCallback(() => setSearch(""), []);
+  const handleRetryChannels = useCallback(() => {
+    void refetch();
+  }, [refetch]);
   const handleToggleGroups = useCallback(() => setGroupsCollapsed((p) => !p), []);
   const handleToggleDMs = useCallback(() => setDmsCollapsed((p) => !p), []);
   const handleTogglePublic = useCallback(() => setPublicCollapsed((p) => !p), []);
@@ -246,6 +250,14 @@ export function ChannelSidebar({
               onStartCall={onStartCall}
               onOpenSettings={onOpenSettings}
             />
+          ) : isError ? (
+            <ErrorState
+              compact
+              className="m-2"
+              title="Couldn't load your conversations"
+              description="The channel list could not be read. Please try again."
+              onRetry={handleRetryChannels}
+            />
           ) : isLoading ? (
             <div className="p-3 space-y-2">
               {[1, 2, 3, 4, 5].map((i) => (
@@ -376,15 +388,15 @@ export function ChannelSidebar({
                 )}
 
                 {filteredChannels.length === 0 && (
-                  <div className="text-center py-10 px-4">
-                    <EmptyMailIllustration className="mx-auto mb-4 w-32 h-32" />
-                    <p className="text-label text-muted-foreground font-medium">
-                      {search ? "No results found" : "No conversations yet"}
-                    </p>
-                    <p className="text-dense text-muted-foreground/50 mt-1">
-                      {search ? "Try a different search" : "Start a new conversation"}
-                    </p>
-                  </div>
+                  <EmptyState
+                    compact
+                    illustrationPreset="mail"
+                    title="No conversations yet"
+                    description="Start a direct message or create a channel to begin."
+                    filtersActive={Boolean(search)}
+                    filteredTitle="No conversations match your search."
+                    onClearFilters={handleClearSearch}
+                  />
                 )}
               </div>
             </>
