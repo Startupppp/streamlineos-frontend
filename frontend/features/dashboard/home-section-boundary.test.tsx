@@ -62,7 +62,7 @@ describe("a failing Home section is contained", () => {
 });
 
 describe("every Home widget is individually contained", () => {
-  const source = ["dashboard-client.tsx", "home-widget-grid.tsx"]
+  const source = ["dashboard-client.tsx", "dashboard-deferred-body.tsx", "home-widget-grid.tsx"]
     .map((file) =>
       readFileSync(
         resolve(process.cwd(), "features", "dashboard", file),
