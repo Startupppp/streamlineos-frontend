@@ -81,21 +81,63 @@ function countLines(filePath) {
   return content.endsWith("\n") ? parts.length - 1 : parts.length;
 }
 
+/**
+ * The nine columns a §7 exception must carry, in order. A row that looks like an
+ * exception but is malformed is returned as an ERROR rather than skipped: skipping
+ * turned a typo into "not an exception", which reads as a size violation instead of a
+ * broken registry, and a header row with no owner or review date used to be accepted.
+ */
+const COLUMNS = [
+  "path",
+  "lines",
+  "category",
+  "owner",
+  "interface",
+  "cohesion",
+  "alternatives",
+  "reviewDate",
+  "removalTrigger",
+];
+
 function parseExceptions(doc) {
-  const exceptions = new Map();
+  const entries = new Map();
+  const errors = [];
   for (const line of doc.split("\n")) {
     if (!line.startsWith("|")) continue;
     const cells = line.split("|").map((c) => c.trim());
     const match = cells[1]?.match(/^`([^`]+)`$/);
     if (!match) continue;
-    if (cells.length < 7) continue;
     const path = match[1];
-    if (path.includes("*") || path.endsWith("/")) continue;
-    const lines = parseInt(cells[2], 10);
-    if (isNaN(lines)) continue;
-    exceptions.set(path, lines);
+
+    if (path.includes("*") || path.endsWith("/")) {
+      errors.push({ path, error: "wildcard and directory-wide exceptions are not allowed" });
+      continue;
+    }
+    const values = cells.slice(1, 1 + COLUMNS.length);
+    if (values.length < COLUMNS.length || values.some((v) => v === undefined || v === "")) {
+      errors.push({
+        path,
+        error: `row must carry all ${COLUMNS.length} columns (${COLUMNS.join(", ")}) with none blank`,
+      });
+      continue;
+    }
+    const record = Object.fromEntries(COLUMNS.map((name, i) => [name, values[i]]));
+    const lines = Number(record.lines);
+    if (!Number.isInteger(lines) || lines <= 0) {
+      errors.push({ path, error: `line count "${record.lines}" is not a positive integer` });
+      continue;
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(record.reviewDate) || Number.isNaN(Date.parse(record.reviewDate))) {
+      errors.push({ path, error: `review date "${record.reviewDate}" is not an ISO calendar date` });
+      continue;
+    }
+    if (entries.has(path)) {
+      errors.push({ path, error: "registered more than once" });
+      continue;
+    }
+    entries.set(path, lines);
   }
-  return exceptions;
+  return { entries, errors };
 }
 
 function runCheck(rootDir, exceptionsPath, { minFiles = MIN_FILES } = {}) {
@@ -110,9 +152,9 @@ function runCheck(rootDir, exceptionsPath, { minFiles = MIN_FILES } = {}) {
     };
   }
 
-  const exceptions = parseExceptions(doc);
+  const { entries: exceptions, errors } = parseExceptions(doc);
 
-  const staleErrors = [];
+  const staleErrors = [...errors];
   for (const [regPath, regLines] of exceptions) {
     const fullPath = join(rootDir, regPath);
     let actualLines;
@@ -190,13 +232,16 @@ function runSelfTests() {
     }
   }
 
+  const row = (path, lines) =>
+    `| \`${path}\` | ${lines} | Cohesive | Build | BigComponent | one screen | per-tab split rejected | 2026-12-01 | drops to 500 |`;
+
   const fakeDoc = [
     "## Exceptions",
     "",
-    "| Path | Lines | Category | Interface | Reason | Owner |",
-    "|---|---|---|---|---|---|",
-    "| `app/feature/big-component.tsx` | 601 | Cohesive | BigComponent | cohesive | Build |",
-    "| `features/hr/hr-catalog.ts` | 712 | Catalog | HR_CATALOG | flat array | HR |",
+    "| Path | Lines | Category | Owner | Interface | Cohesion | Alternatives | Review date | Removal trigger |",
+    "|---|---|---|---|---|---|---|---|---|",
+    row("app/feature/big-component.tsx", 601),
+    row("features/hr/hr-catalog.ts", 712),
     "",
     "## Audit trail",
     "- `app/other/file.tsx` mentioned in prose only.",
@@ -204,20 +249,36 @@ function runSelfTests() {
   ].join("\n");
 
   const parsed = parseExceptions(fakeDoc);
-  assert("parses first exception path", parsed.has("app/feature/big-component.tsx"));
-  assert("parses registered line count for first entry", parsed.get("app/feature/big-component.tsx") === 601);
-  assert("parses second exception path", parsed.has("features/hr/hr-catalog.ts"));
-  assert("does not include prose-only paths", !parsed.has("app/other/file.tsx"));
-  assert("does not include glob patterns in prose", !parsed.has("features/**"));
-  assert("grants exactly the two table rows", parsed.size === 2);
-  assert(
-    "rejects a table row missing required columns",
-    parseExceptions("| `app/x.tsx` | 600 |").size === 0,
-  );
-  assert(
-    "rejects wildcard paths",
-    parseExceptions("| `app/**/*.tsx` | 600 | Cat | Int | Reason | Owner |").size === 0,
-  );
+  assert("parses first exception path", parsed.entries.has("app/feature/big-component.tsx"));
+  assert("parses registered line count for first entry", parsed.entries.get("app/feature/big-component.tsx") === 601);
+  assert("parses second exception path", parsed.entries.has("features/hr/hr-catalog.ts"));
+  assert("does not include prose-only paths", !parsed.entries.has("app/other/file.tsx"));
+  assert("does not include glob patterns in prose", !parsed.entries.has("features/**"));
+  assert("grants exactly the two table rows", parsed.entries.size === 2);
+  assert("a well-formed registry reports no row errors", parsed.errors.length === 0);
+
+  const short = parseExceptions("| `app/x.tsx` | 600 |");
+  assert("rejects a table row missing required columns", short.entries.size === 0);
+  assert("reports a short row as an error rather than skipping it", short.errors.length === 1);
+
+  const blank = parseExceptions("| `app/x.tsx` | 600 | Cohesive |  | I | C | A | 2026-12-01 | T |");
+  assert("rejects a row with a blank owner", blank.entries.size === 0);
+  assert("reports a blank owner as an error", blank.errors.length === 1);
+
+  const wildcard = parseExceptions(row("app/**/*.tsx", 600));
+  assert("rejects wildcard paths", wildcard.entries.size === 0);
+  assert("reports a wildcard path as an error", wildcard.errors.some((e) => e.error.includes("wildcard")));
+
+  const dirWide = parseExceptions(row("features/hr/", 600));
+  assert("rejects directory-wide paths", dirWide.entries.size === 0);
+  assert("reports a directory-wide path as an error", dirWide.errors.length === 1);
+
+  const badDate = parseExceptions("| `app/x.tsx` | 600 | Cohesive | Build | I | C | A | soon | T |");
+  assert("rejects a non-ISO review date", badDate.entries.size === 0);
+  assert("reports a non-ISO review date as an error", badDate.errors.some((e) => e.error.includes("review date")));
+
+  const dupe = parseExceptions([row("app/x.tsx", 600), row("app/x.tsx", 700)].join("\n"));
+  assert("reports a duplicate registration as an error", dupe.errors.some((e) => e.error.includes("more than once")));
   assert("countLines counts trailing-newline file correctly", (() => {
     const fake = "a\nb\nc\n";
     const parts = fake.split("\n");
@@ -238,9 +299,9 @@ function runSelfTests() {
     function makeRegistry(rows) {
       return [
         "## Exceptions", "",
-        "| Path | Lines | Category | Interface | Reason | Owner |",
-        "|---|---|---|---|---|---|",
-        ...rows.map((r) => `| \`${r.path}\` | ${r.lines} | Cat | Int | Reason | Owner |`),
+        "| Path | Lines | Category | Owner | Interface | Cohesion | Alternatives | Review date | Removal trigger |",
+        "|---|---|---|---|---|---|---|---|---|",
+        ...rows.map((r) => row(r.path, r.lines)),
       ].join("\n") + "\n";
     }
 
@@ -259,6 +320,16 @@ function runSelfTests() {
     assert("over-limit no exception: reason=violations", noExcRes.reason === "violations");
     assert("over-limit no exception: names the file", noExcRes.violations.some((v) => v.path.includes("big.tsx")));
     assert("over-limit no exception: reports 501 lines", noExcRes.violations.some((v) => v.lines === 501));
+
+    const missingDir = join(tmpRoot, "missing");
+    writeLines(join(missingDir, "app", "feat", "big.tsx"), 510);
+    writeFileSync(join(missingDir, "exc.md"), makeRegistry([
+      { path: "app/feat/big.tsx", lines: 510 },
+      { path: "app/feat/gone.tsx", lines: 900 },
+    ]));
+    const missingRes = runCheck(missingDir, join(missingDir, "exc.md"), { minFiles: 1 });
+    assert("a registered path that no longer exists fails the gate", missingRes.ok === false);
+    assert("a missing registered path is named", missingRes.staleErrors.some((e) => e.path.includes("gone.tsx")));
 
     const staleDir = join(tmpRoot, "stale");
     writeLines(join(staleDir, "app", "feat", "big.tsx"), 510);
