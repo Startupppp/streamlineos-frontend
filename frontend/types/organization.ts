@@ -39,16 +39,7 @@ export interface OrgSettings {
   updatedAt: Date;
 }
 
-export interface OrgMember {
-  membershipId?: number;
-  userId: string;
-  role: string;
-  joinedAt: Date;
-  name: string | null;
-  email: string;
-  image: string | null;
-  totpEnabled?: boolean;
-}
+export type { OrgMember } from "@/hooks/api/organization-schema";
 
 export interface Branch {
   id: number;
@@ -81,14 +72,5 @@ export interface Branch {
   updatedAt: Date;
 }
 
-export interface Role {
-  id: number;
-  orgId: string;
-  name: string;
-  slug: string;
-  isSystem: boolean;
-  version: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
+export type { Role } from "@/hooks/api/roles-schema";
 

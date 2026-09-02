@@ -126,14 +126,21 @@ export interface PayrollRunListItem {
   createdAt: string;
 }
 
+/**
+ * `userName` is `users.name`, a nullable column, and
+ * `hooks/api/payroll/runs-schema.ts::runEmployeeContract` says so. That
+ * contract is not wired to `useRunEmployees` yet because the corrected type
+ * fails `features/payroll/runs/employees-tab.tsx:31`, which hands `userName`
+ * straight to `TruncatedText`'s `text: string`. One line, another territory.
+ */
 export interface RunEmployee {
   id: number;
   userId: string;
   workerType: PayrollWorkerType;
   currency: string;
-  gross: string | null;
-  totalDeductions: string | null;
-  net: string | null;
+  gross: string;
+  totalDeductions: string;
+  net: string;
   status: string;
   holdReason: string | null;
   userName: string;

@@ -3,13 +3,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import {
+  bankAccountsPageContract,
+  type BankAccountRecord,
+  type BankAccountsPage,
+  type BankAccountType as BankAccountTypeValue,
+} from "@/hooks/api/accounting/banking-schema";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import type { CursorPage } from "@/hooks/api/accounting";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-export type BankAccountType = "BANK" | "CASH" | "CARD" | "WALLET";
+export type { BankAccountType } from "@/hooks/api/accounting/banking-schema";
 export type BankTxnStatus = "UNMATCHED" | "SUGGESTED" | "MATCHED" | "RECONCILED" | "IGNORED";
 export type MatchType =
   | "CUSTOMER_PAYMENT"
@@ -18,23 +24,7 @@ export type MatchType =
   | "BANK_FEE"
   | "TRANSFER";
 
-export interface BankAccount {
-  id: number;
-  orgId: string;
-  name: string;
-  accountType: BankAccountType;
-  bankName: string | null;
-  accountNumberMasked: string | null;
-  ifsc: string | null;
-  currency: string;
-  ledgerAccountId: number | null;
-  openingBalance: string;
-  openingBalanceDate: string | null;
-  currentBalance: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+export type { BankAccountRecord as BankAccount } from "@/hooks/api/accounting/banking-schema";
 
 export interface BankTransaction {
   id: number;
@@ -151,10 +141,10 @@ export interface ListBankAccountsParams {
 
 export function useBankAccounts(params: ListBankAccountsParams = {}) {
   const can = useCan("accounting:banking:read");
-  return useQuery<CursorPage<BankAccount>, Error>({
+  return useQuery<BankAccountsPage, Error>({
     queryKey: bankingKeys.accounts(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<BankAccount>>("/finance/bank-accounts", toQuery(params), signal),
+      apiClient.get("/finance/bank-accounts", toQuery(params), signal, bankAccountsPageContract),
     staleTime: 60_000,
     enabled: can,
   });
@@ -162,9 +152,9 @@ export function useBankAccounts(params: ListBankAccountsParams = {}) {
 
 export function useBankAccount(id: number) {
   const can = useCan("accounting:banking:read");
-  return useQuery<BankAccount, Error>({
+  return useQuery<BankAccountRecord, Error>({
     queryKey: bankingKeys.account(id),
-    queryFn: ({ signal }) => apiClient.get<BankAccount>(`/finance/bank-accounts/${id}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<BankAccountRecord>(`/finance/bank-accounts/${id}`, undefined, signal),
     staleTime: 60_000,
     enabled: can,
   });
@@ -195,7 +185,7 @@ export function useBankTransactions(bankAccountId: number, params: ListTxnParams
 
 export interface CreateBankAccountInput {
   name: string;
-  accountType: BankAccountType;
+  accountType: BankAccountTypeValue;
   bankName?: string;
   accountNumberMasked?: string;
   ifsc?: string;
@@ -207,9 +197,9 @@ export interface CreateBankAccountInput {
 
 export function useCreateBankAccount() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation<BankAccount, Error, CreateBankAccountInput>("accounting:banking:manage", {
+  return useAuthorizedMutation<BankAccountRecord, Error, CreateBankAccountInput>("accounting:banking:manage", {
     mutationKey: ["banking", "createAccount"],
-    mutationFn: (data) => apiClient.post<BankAccount>("/finance/bank-accounts", data),
+    mutationFn: (data) => apiClient.post<BankAccountRecord>("/finance/bank-accounts", data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: bankingKeys.all });
       toast.success("Bank account created");

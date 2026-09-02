@@ -6,13 +6,12 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { Invoice, InvoiceItem, InvoiceStats, InvoiceStatus, PatchableInvoiceStatus, Payment, PaymentMethod } from "@/types/invoice";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-
-interface InvoicesResponse {
-  items: Invoice[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
+import {
+  invoiceContract,
+  invoiceStatsContract,
+  invoicesPageContract,
+  type InvoicesResponse,
+} from "@/hooks/api/invoice-schema";
 
 interface InvoiceFilters {
   status?: InvoiceStatus;
@@ -62,12 +61,12 @@ export const useInvoices = (
   return useQuery<InvoicesResponse, Error>({
     queryKey: queryKeys.invoice.list(filters as Record<string, unknown>),
     queryFn: ({ signal }) =>
-      apiClient.get<InvoicesResponse>("/invoices", {
+      apiClient.get("/invoices", {
         ...(filters?.status ? { status: filters.status } : {}),
         ...(filters?.clientId ? { clientId: String(filters.clientId) } : {}),
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(filters?.limit ? { limit: String(filters.limit) } : {}),
-      }, signal),
+      }, signal, invoicesPageContract),
     staleTime: 2 * 60_000,
     ...options,
   });
@@ -82,7 +81,7 @@ export const useInvoice = (
 ) => {
   return useQuery<Invoice, Error>({
     queryKey: queryKeys.invoice.detail(id),
-    queryFn: ({ signal }) => apiClient.get<Invoice>(`/invoices/${id}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get(`/invoices/${id}`, undefined, signal, invoiceContract),
     enabled: id > 0,
     staleTime: 2 * 60_000,
     ...options,
@@ -97,7 +96,7 @@ export const useInvoiceStats = (
 ) => {
   return useQuery<InvoiceStats, Error>({
     queryKey: queryKeys.invoice.stats(),
-    queryFn: ({ signal }) => apiClient.get<InvoiceStats>("/invoices/stats", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/invoices/stats", undefined, signal, invoiceStatsContract),
     staleTime: 5 * 60_000,
     ...options,
   });

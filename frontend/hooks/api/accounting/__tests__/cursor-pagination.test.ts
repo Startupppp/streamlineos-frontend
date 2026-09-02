@@ -214,6 +214,7 @@ describe("useBankAccounts — cursor pagination contract", () => {
       "/finance/bank-accounts",
       expect.not.objectContaining({ cursor: expect.anything() }),
       forwardedSignal,
+      expect.anything(),
     );
   });
 
@@ -231,6 +232,7 @@ describe("useBankAccounts — cursor pagination contract", () => {
       "/finance/bank-accounts",
       expect.objectContaining({ cursor: "eyJpZCI6Mn0" }),
       forwardedSignal,
+      expect.anything(),
     );
   });
 
@@ -248,6 +250,7 @@ describe("useBankAccounts — cursor pagination contract", () => {
       "/finance/bank-accounts",
       expect.not.objectContaining({ page: expect.anything() }),
       forwardedSignal,
+      expect.anything(),
     );
   });
 });

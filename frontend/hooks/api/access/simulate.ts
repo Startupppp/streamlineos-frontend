@@ -5,41 +5,24 @@ import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
-import type { DataScope } from "@/types/access";
+import {
+  simulatedAccessContract,
+  simulationCandidatesPageContract,
+  type SimulatedAccess,
+  type SimulationCandidatesPage,
+} from "@/hooks/api/roles-schema";
 
-interface SimulateAccessResult {
-  userId: string;
-  permissions: string[];
-  scopes: Record<string, DataScope>;
-  isOrgOwner: boolean;
-}
-
-export interface SimulationCandidate {
-  id: string;
-  name: string | null;
-  email: string;
-  image: string | null;
-  designation: string | null;
-}
-
-interface SimulationCandidatesResult {
-  data: SimulationCandidate[];
-  pagination: {
-    limit: number;
-    nextCursor: string | null;
-    hasMore: boolean;
-  };
-}
+export type { SimulationCandidate } from "@/hooks/api/roles-schema";
 
 export function useSimulationCandidates(search: string) {
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
   const canManageRbac = useCan("settings:rbac:manage");
   const params = { limit: 100, ...(search ? { search } : {}) };
-  return useQuery<SimulationCandidatesResult, Error>({
+  return useQuery<SimulationCandidatesPage, Error>({
     queryKey: queryKeys.access.simulationCandidates(params),
     queryFn: ({ signal }) =>
-      apiClient.get<SimulationCandidatesResult>("/roles/simulate/candidates", params, signal),
+      apiClient.get("/roles/simulate/candidates", params, signal, simulationCandidatesPageContract),
     enabled: !!orgId && canManageRbac,
     staleTime: 30_000,
   });
@@ -49,10 +32,10 @@ export function useSimulateAccess(targetUserId: string | undefined) {
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
   const canManageRbac = useCan("settings:rbac:manage");
-  return useQuery<SimulateAccessResult, Error>({
+  return useQuery<SimulatedAccess, Error>({
     queryKey: queryKeys.access.simulate(targetUserId ?? ""),
     queryFn: ({ signal }) =>
-      apiClient.get<SimulateAccessResult>(`/roles/simulate/${targetUserId}`, undefined, signal),
+      apiClient.get(`/roles/simulate/${targetUserId}`, undefined, signal, simulatedAccessContract),
     enabled: !!orgId && canManageRbac && !!targetUserId,
     staleTime: 30 * 1000,
   });

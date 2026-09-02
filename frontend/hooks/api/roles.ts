@@ -14,6 +14,17 @@ import type {
   UnassignRoleMemberInput,
 } from "@/types/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import {
+  roleContract,
+  rolesPageContract,
+  type Role as RoleRecordType,
+  type RoleListItem,
+} from "@/hooks/api/roles-schema";
+
+type RolesPage = {
+  data: RoleListItem[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
+};
 
 export interface PaginatedRolesParams {
   cursor?: string;
@@ -21,32 +32,24 @@ export interface PaginatedRolesParams {
   search?: string;
 }
 
-export interface RoleListRow extends Role {
-  permissionCount: number;
-  memberCount: number;
-}
-
-export interface PaginatedRolesResponse {
-  data: RoleListRow[];
-  pagination: {
-    limit: number;
-    nextCursor: string | null;
-    hasMore: boolean;
-  };
-}
+export type {
+  RoleListItem as RoleListRow,
+  Role as RoleRecord,
+} from "@/hooks/api/roles-schema";
+export type PaginatedRolesResponse = RolesPage;
 
 const ROLE_SELECTOR_PARAMS = { limit: 100 } as const;
 
 export const useRoles = (
-  options?: Omit<UseQueryOptions<Role[], Error>, "queryKey" | "queryFn">
+  options?: Omit<UseQueryOptions<RoleListItem[], Error>, "queryKey" | "queryFn">
 ) => {
   const canManage = useCan("settings:rbac:manage");
-  return useQuery<Role[], Error>({
+  return useQuery<RoleListItem[], Error>({
     queryKey: queryKeys.roles.selectorList(),
     queryFn: async ({ signal }) => {
-      const response = await apiClient.get<PaginatedRolesResponse>(
+      const response = await apiClient.get(
         "/roles",
-        ROLE_SELECTOR_PARAMS, signal,
+        ROLE_SELECTOR_PARAMS, signal, rolesPageContract,
       );
       return response.data;
     },
@@ -67,11 +70,11 @@ export const usePaginatedRoles = (
   return useQuery<PaginatedRolesResponse, Error>({
     queryKey: queryKeys.roles.list(params),
     queryFn: ({ signal }) =>
-      apiClient.get<PaginatedRolesResponse>("/roles", {
+      apiClient.get("/roles", {
         cursor: params.cursor,
         limit: params.limit,
         search: params.search,
-      }, signal),
+      }, signal, rolesPageContract),
     staleTime: 60_000,
     ...options,
     enabled: canManage && (options?.enabled ?? true),
@@ -81,14 +84,14 @@ export const usePaginatedRoles = (
 export const useRole = (
   id: number,
   options?: Omit<
-    UseQueryOptions<Role, Error>,
+    UseQueryOptions<RoleRecordType, Error>,
     "queryKey" | "queryFn"
   >
 ) => {
   const canManage = useCan("settings:rbac:manage");
-  return useQuery<Role, Error>({
+  return useQuery<RoleRecordType, Error>({
     queryKey: queryKeys.roles.detail(id),
-    queryFn: ({ signal }) => apiClient.get<Role>(`/roles/${id}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get(`/roles/${id}`, undefined, signal, roleContract),
     staleTime: 30 * 60_000,
     ...options,
     enabled: canManage && id > 0 && (options?.enabled ?? true),

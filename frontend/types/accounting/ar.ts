@@ -1,3 +1,6 @@
+import type { ArPayment } from "@/hooks/api/accounting/ar-schema";
+export type { ArPayment };
+
 export type ArInvoiceStatus =
   | "DRAFT"
   | "ISSUED"
@@ -46,27 +49,6 @@ export interface ArInvoice {
   payments?: ArPayment[];
 }
 
-export interface ArPaymentAllocation {
-  invoiceId: number;
-  amount: string;
-}
-
-export interface ArPayment {
-  id: number;
-  invoiceId: number;
-  invoiceNumber: string;
-  clientId: number | null;
-  clientName: string | null;
-  orgId: string;
-  amount: string;
-  paymentDate: string;
-  paymentMethod: ArPaymentMethod;
-  referenceNumber: string | null;
-  notes: string | null;
-  createdAt: string;
-  allocations: ArPaymentAllocation[];
-}
-
 export interface PaymentAllocation {
   invoiceId: number;
   amount: number;
@@ -81,7 +63,7 @@ export interface RecordPaymentInput {
   allocations?: PaymentAllocation[];
 }
 
-export type CreditNoteStatus = "DRAFT" | "POSTED" | "APPLIED" | "VOID";
+export type { CreditNoteStatus } from "@/hooks/api/accounting/ar-schema";
 
 export interface CreditNoteItem {
   description: string;
@@ -91,23 +73,7 @@ export interface CreditNoteItem {
   gstRate: 0 | 5 | 12 | 18 | 28;
 }
 
-export interface CreditNote {
-  id: number;
-  creditNoteNumber: string;
-  orgId: number;
-  clientId: number | null;
-  invoiceId: number | null;
-  status: CreditNoteStatus;
-  currency: string;
-  total: string;
-  appliedAmount: string;
-  reason: string | null;
-  notes: string | null;
-  items?: CreditNoteItem[];
-  client: { id: number; name: string } | null;
-  createdAt: string;
-  updatedAt: string;
-}
+export type { CreditNote } from "@/hooks/api/accounting/ar-schema";
 
 export interface CreateCreditNoteInput {
   clientId?: number;

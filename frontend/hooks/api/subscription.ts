@@ -6,46 +6,32 @@ import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import {
+  billingPlansContract,
+  billingProfileContract,
+  couponValidationContract,
+  seatInfoContract,
+  subscriptionResponseContract,
+  type BillingPlansResponse,
+  type BillingProfile,
+  type CouponValidationResult,
+  type SeatInfo,
+  type SubscriptionPlan,
+  type SubscriptionResponse,
+} from "@/hooks/api/subscription-schema";
 
-export type SubscriptionPlan = "STARTER" | "PROFESSIONAL" | "ENTERPRISE";
-type SubscriptionStatus = "TRIAL" | "ACTIVE" | "PAST_DUE" | "CANCELLED" | "EXPIRED";
-
-interface SubscriptionPayment {
-  id: number;
-  orgId: string;
-  subscriptionId: number;
-  razorpayPaymentId: string | null;
-  razorpayOrderId: string | null;
-  amount: string;
-  currency: string;
-  status: string;
-  paidAt: string | null;
-  createdAt: string;
-}
-
-interface Subscription {
-  id: number;
-  orgId: string;
-  plan: SubscriptionPlan;
-  status: SubscriptionStatus;
-  razorpaySubscriptionId: string | null;
-  razorpayCustomerId: string | null;
-  razorpayPlanId: string | null;
-  currentPeriodStart: string | null;
-  currentPeriodEnd: string | null;
-  trialEndsAt: string | null;
-  cancelledAt: string | null;
-  metadata: Record<string, unknown> | null;
-  createdAt: string;
-  updatedAt: string;
-  payments: SubscriptionPayment[];
-}
-
-interface SubscriptionResponse {
-  subscription: Subscription | null;
-  publicKeyId: string | null;
-  isConfigured: boolean;
-}
+export type {
+  SubscriptionPlan,
+  SubscriptionStatus,
+  SubscriptionPayment,
+  Subscription,
+  SubscriptionResponse,
+  PlanDefinition,
+  BillingPlansResponse,
+  BillingProfile,
+  SeatInfo,
+  CouponValidationResult,
+} from "@/hooks/api/subscription-schema";
 
 export type BillingCycle = "monthly" | "annual";
 
@@ -77,7 +63,7 @@ export function useSubscription() {
   const canViewSubscription = useCan("billing:subscription:view");
   return useQuery<SubscriptionResponse, Error>({
     queryKey: queryKeys.billing.subscription(),
-    queryFn: ({ signal }) => apiClient.get<SubscriptionResponse>("/billing", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/billing", undefined, signal, subscriptionResponseContract),
     staleTime: 5 * 60_000,
     enabled: !!orgId && canViewSubscription,
   });
@@ -104,35 +90,10 @@ export function useVerifySubscription() {
   });
 }
 
-export interface CouponValidationResult {
-  valid: boolean;
-  couponId: number | null;
-  type: "PERCENTAGE" | "FIXED" | null;
-  value: number | null;
-  discountAmount: number | null;
-  message: string;
-}
-
-export interface PlanDefinition {
-  id: SubscriptionPlan;
-  name: string;
-  monthlyPrice: number;
-  annualPrice: number;
-  /** Monthly price in paise when returned by the catalog API. */
-  monthlyPricePaise?: number;
-  features: string[];
-  maxEmployees: number | null;
-}
-
-export interface BillingPlansResponse {
-  plans: PlanDefinition[];
-  trialPlan?: SubscriptionPlan;
-}
-
 export function useBillingPlans() {
   return useQuery<BillingPlansResponse, Error>({
     queryKey: queryKeys.billing.plans(),
-    queryFn: ({ signal }) => apiClient.get<BillingPlansResponse>("/billing/plans", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/billing/plans", undefined, signal, billingPlansContract),
     staleTime: 60 * 60_000,
   });
 }
@@ -142,8 +103,11 @@ export function useValidateCoupon(code: string, plan: SubscriptionPlan | null) {
   return useQuery<CouponValidationResult, Error>({
     queryKey: queryKeys.billing.coupon(code, plan),
     queryFn: ({ signal }) =>
-      apiClient.get<CouponValidationResult>(
-        `/billing/coupons/validate?code=${encodeURIComponent(code)}&plan=${plan ?? ""}`, undefined, signal,
+      apiClient.get(
+        `/billing/coupons/validate?code=${encodeURIComponent(code)}&plan=${plan ?? ""}`,
+        undefined,
+        signal,
+        couponValidationContract,
       ),
     enabled: canManage && code.trim().length >= 3 && plan !== null,
     staleTime: 30_000,
@@ -151,37 +115,11 @@ export function useValidateCoupon(code: string, plan: SubscriptionPlan | null) {
   });
 }
 
-export interface BillingProfile {
-  id: number;
-  orgId: string;
-  gstin: string | null;
-  pan: string | null;
-  billingName: string | null;
-  billingEmail: string | null;
-  addressLine1: string | null;
-  addressLine2: string | null;
-  city: string | null;
-  state: string | null;
-  pincode: string | null;
-  country: string;
-  isTaxExempt: boolean;
-}
-
-export interface SeatInfo {
-  /** Honours negotiated ENTERPRISE seats, not just the base plan limit. */
-  total: number | null;
-  /** activeMembers + pendingInvitations — matches what blocks a new invite. */
-  used: number;
-  available: number | null;
-  activeMembers: number;
-  pendingInvitations: number;
-}
-
 export function useBillingProfile() {
   const canViewProfile = useCan("billing:profile:view");
   return useQuery<BillingProfile>({
     queryKey: queryKeys.billing.profile(),
-    queryFn: ({ signal }) => apiClient.get<BillingProfile>("/billing/profile", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/billing/profile", undefined, signal, billingProfileContract),
     staleTime: 5 * 60 * 1000,
     enabled: canViewProfile,
   });
@@ -203,7 +141,7 @@ export function useSeatInfo() {
   const canViewSeats = useCan("billing:seats:view");
   return useQuery<SeatInfo>({
     queryKey: queryKeys.billing.seats(),
-    queryFn: ({ signal }) => apiClient.get<SeatInfo>("/billing/seats", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/billing/seats", undefined, signal, seatInfoContract),
     staleTime: 2 * 60 * 1000,
     enabled: canViewSeats,
   });

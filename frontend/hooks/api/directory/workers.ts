@@ -6,6 +6,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { workersListParams } from "@/lib/query-keys/directory-workers-list";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { workersPageContract } from "@/hooks/api/directory/workers-schema";
 import type {
   CreateEngagementInput,
   CreateWorkerInput,
@@ -29,7 +30,7 @@ export function useWorkers(params: UseWorkersParams = {}) {
   const { cursor, limit = 20, status, search, organizationPersonId } = params;
   const queryParams = workersListParams(params);
 
-  return useQuery({
+  return useQuery<WorkersPage, Error>({
     queryKey: queryKeys.directory.workers(queryParams),
     queryFn: ({ signal }) => {
       const searchParams = new URLSearchParams({
@@ -39,7 +40,7 @@ export function useWorkers(params: UseWorkersParams = {}) {
       if (status) searchParams.set("status", status);
       if (search) searchParams.set("search", search);
       if (organizationPersonId) searchParams.set("organizationPersonId", organizationPersonId);
-      return apiClient.get<WorkersPage>(`/directory/workers?${searchParams.toString()}`, undefined, signal);
+      return apiClient.get(`/directory/workers?${searchParams.toString()}`, undefined, signal, workersPageContract);
     },
     staleTime: 60_000,
     enabled: canView,

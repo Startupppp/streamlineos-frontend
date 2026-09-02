@@ -45,10 +45,9 @@ function getToday(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-function formatMoney(value: string): string {
-  const n = parseFloat(value);
-  if (!Number.isFinite(n)) return value;
-  return n.toLocaleString(undefined, {
+function formatMoney(value: number): string {
+  if (!Number.isFinite(value)) return "";
+  return value.toLocaleString(undefined, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -56,22 +55,22 @@ function formatMoney(value: string): string {
 
 const glColumns: DataTableColumn<GlRow>[] = [
   {
-    key: "date",
+    key: "entryDate",
     header: "Date",
     cell: (row) => (
       <span className="tabular-nums text-muted-foreground">
-        {formatShortDate(row.date) || ""}
+        {formatShortDate(row.entryDate) || ""}
       </span>
     ),
     className: "w-[120px]",
     sortable: true,
-    sortValue: (row) => row.date,
+    sortValue: (row) => row.entryDate,
   },
   {
     key: "entryNumber",
     header: "Entry #",
     cell: (row) =>
-      row.entryId !== null ? (
+      row.entryId > 0 ? (
         <Link
           href={"/accounting/journal/" + String(row.entryId)}
           className="text-foreground hover:text-primary hover:underline font-mono text-xs"
@@ -95,34 +94,24 @@ const glColumns: DataTableColumn<GlRow>[] = [
     header: "Debit",
     cell: (row) => (
       <span className="text-right font-mono text-sm tabular-nums text-destructive block">
-        {parseFloat(row.debit) > 0
-          ? parseFloat(row.debit).toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })
-          : ""}
+        {row.debit > 0 ? formatMoney(row.debit) : ""}
       </span>
     ),
     className: "w-[130px] text-right",
     sortable: true,
-    sortValue: (row) => parseFloat(row.debit),
+    sortValue: (row) => row.debit,
   },
   {
     key: "credit",
     header: "Credit",
     cell: (row) => (
       <span className="text-right font-mono text-sm tabular-nums text-status-success-ink block">
-        {parseFloat(row.credit) > 0
-          ? parseFloat(row.credit).toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })
-          : ""}
+        {row.credit > 0 ? formatMoney(row.credit) : ""}
       </span>
     ),
     className: "w-[130px] text-right",
     sortable: true,
-    sortValue: (row) => parseFloat(row.credit),
+    sortValue: (row) => row.credit,
   },
   {
     key: "runningBalance",
@@ -131,7 +120,7 @@ const glColumns: DataTableColumn<GlRow>[] = [
       <span
         className={cn(
           "text-right font-mono text-sm tabular-nums block",
-          parseFloat(row.runningBalance) < 0 ? "text-destructive" : "text-foreground",
+          row.runningBalance < 0 ? "text-destructive" : "text-foreground",
         )}
       >
         {formatMoney(row.runningBalance)}
@@ -139,7 +128,7 @@ const glColumns: DataTableColumn<GlRow>[] = [
     ),
     className: "w-[140px] text-right",
     sortable: true,
-    sortValue: (row) => parseFloat(row.runningBalance),
+    sortValue: (row) => row.runningBalance,
   },
 ];
 
@@ -157,7 +146,7 @@ export function GeneralLedgerPage() {
   const { iconRef: exportIconRef, hoverHandlers: exportHoverHandlers } = useAnimatedIcon();
 
   const glAccountsQuery = useGlAccounts({ from, to });
-  const glAccounts = glAccountsQuery.data?.items ?? [];
+  const glAccounts = glAccountsQuery.data ?? [];
 
   const customersQuery = useCustomersOutstanding({ limit: 200 });
   const vendorsQuery = useVendorsOutstanding({ limit: 200 });
@@ -280,7 +269,7 @@ export function GeneralLedgerPage() {
               <SelectContent>
                 <SelectItem value="__none__">All accounts</SelectItem>
                 {glAccounts.map((a) => (
-                  <SelectItem key={a.id} value={String(a.id)}>
+                  <SelectItem key={a.accountId} value={String(a.accountId)}>
                     {a.code} — {a.name}
                   </SelectItem>
                 ))}
@@ -353,7 +342,7 @@ export function GeneralLedgerPage() {
               className="flex-1 min-h-0"
               data={rows}
               columns={glColumns}
-              getRowKey={(row) => row.entryId ?? row.entryNumber}
+              getRowKey={(row) => row.lineId}
               isLoading={glQuery.isLoading}
               emptyState={
                 <EmptyState

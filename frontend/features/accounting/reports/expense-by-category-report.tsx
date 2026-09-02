@@ -52,7 +52,7 @@ const EXPENSE_BY_CATEGORY_COLUMNS: DataTableColumn<ExpenseByCategoryRow>[] = [
 ];
 
 function getExpenseCategoryRowKey(row: ExpenseByCategoryRow): string | number {
-  return row.categoryId;
+  return row.categoryId ?? "uncategorized";
 }
 
 export function ExpenseByCategoryReport() {

@@ -4,6 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import {
+  expenseByCategoryContract,
+  taxSummaryContract,
+  type ExpenseByCategoryRow,
+  type TaxSummaryRow,
+} from "@/hooks/api/accounting/reports-schema";
+export type { ExpenseByCategoryRow, TaxSummaryRow };
 
 export interface ReportCatalogItem {
   id: string;
@@ -52,24 +59,6 @@ export interface SalesByItemRow {
   totalQuantity: number;
   totalAmount: string;
   invoiceCount: number;
-}
-
-export interface ExpenseByCategoryRow {
-  categoryId: number;
-  categoryName: string;
-  totalAmount: string;
-  count: number;
-}
-
-export interface TaxSummaryRow {
-  month: string;
-  outputCgst: string;
-  outputSgst: string;
-  outputIgst: string;
-  inputCgst: string;
-  inputSgst: string;
-  inputIgst: string;
-  netPayable: string;
 }
 
 export interface ProfitabilityRow {
@@ -177,17 +166,18 @@ export function useSalesByItem(from?: string, to?: string) {
   });
 }
 
+/** `from` and `to` are required and the query DTO is `.strict()`, so a read without both 400s. */
 export function useExpenseByCategory(from?: string, to?: string) {
   const can = useCan("accounting:reports:read");
   return useQuery<ExpenseByCategoryRow[], Error>({
     queryKey: [...queryKeys.accounting.all, "reports", "expense-by-category", from, to],
     queryFn: ({ signal }) =>
-      apiClient.get<ExpenseByCategoryRow[]>(
+      apiClient.get(
         "/accounting/reports/expense-by-category",
-        toQuery({ from, to }), signal,
+        toQuery({ from, to }), signal, expenseByCategoryContract,
       ),
     staleTime: 60_000,
-    enabled: can,
+    enabled: can && !!from && !!to,
   });
 }
 
@@ -196,12 +186,12 @@ export function useTaxSummary(from?: string, to?: string) {
   return useQuery<TaxSummaryRow[], Error>({
     queryKey: [...queryKeys.accounting.all, "reports", "tax-summary", from, to],
     queryFn: ({ signal }) =>
-      apiClient.get<TaxSummaryRow[]>(
+      apiClient.get(
         "/accounting/reports/tax-summary",
-        toQuery({ from, to }), signal,
+        toQuery({ from, to }), signal, taxSummaryContract,
       ),
     staleTime: 60_000,
-    enabled: can,
+    enabled: can && !!from && !!to,
   });
 }
 

@@ -4,19 +4,15 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient, setAutoSignOutSuppressed } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import type { OrgSettings, OrgMember } from "@/types/organization";
+import type { OrgSettings } from "@/types/organization";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import {
+  orgMembersPageContract,
+  type OrgMembersPage as MembersResponse,
+} from "@/hooks/api/organization-schema";
 
-interface MembersResponse {
-  data: OrgMember[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
+export type { OrgMember, OrgMembersPage } from "@/hooks/api/organization-schema";
 
 export const useOrgSettings = (
   options?: Omit<UseQueryOptions<OrgSettings, Error>, "queryKey" | "queryFn">,
@@ -32,6 +28,13 @@ export const useOrgSettings = (
   });
 };
 
+/**
+ * `page` is inert and kept only so the ~50 existing call sites compile.
+ * `GET /organization/members` is keyset paginated and its query DTO is
+ * `.strict()`, so sending `page` was a 400 rather than a no-op. Page 2 comes
+ * from `pagination.nextCursor`, and the cursor is invalidated by a filter
+ * change.
+ */
 export const useOrgMembers = (
   page = 1,
   limit = 20,
@@ -50,11 +53,10 @@ export const useOrgMembers = (
       { page, limit: safeLimit, search, includeInactive: false },
     ] as const,
     queryFn: ({ signal }) =>
-      apiClient.get<MembersResponse>("/organization/members", {
-        page: String(page),
+      apiClient.get("/organization/members", {
         limit: String(safeLimit),
         ...(search ? { search } : {}),
-      }, signal),
+      }, signal, orgMembersPageContract),
     staleTime: 30_000,
     ...restOptions,
     enabled: canViewMembers && (callerEnabled ?? true),
@@ -77,12 +79,11 @@ export const useOrgMembersByIds = (
       { userIds: ids, includeInactive: true },
     ] as const,
     queryFn: ({ signal }) =>
-      apiClient.get<MembersResponse>("/organization/members", {
-        page: "1",
+      apiClient.get("/organization/members", {
         limit: String(Math.min(Math.max(ids.length, 1), 100)),
         userIds: ids.join(","),
         includeInactive: "true",
-      }, signal),
+      }, signal, orgMembersPageContract),
     staleTime: 5 * 60_000,
     ...restOptions,
     enabled: canViewMembers && ids.length > 0 && (callerEnabled ?? true),

@@ -12,9 +12,14 @@ import { UserStatsCards } from "@/features/users/user-stats-cards";
 
 /**
  * The shape this pins: a read that fails reaches a surface as `data === undefined`,
- * which every one of these screens spells `?? 0`. Without the provider's
- * `throwOnError` the user is told, in the largest type on the page, that they have
- * earned 0.0 days of comp-off and that the organization has 0 users.
+ * and a screen that spells that `?? 0` renders a confident zero. Without the
+ * provider's `throwOnError`, `UserStatsCards` tells the user the organization has
+ * 0 users, 0 active and 0 suspended — five numbers, none of them measured.
+ *
+ * `CompOffPageClient` is the control: it branches on `isError` first, so the same
+ * failed read renders its own inline `ErrorState` rather than a fabricated 0.0.
+ * Both still reach the route boundary once the policy is installed, which is the
+ * point — the policy does not depend on the screen remembering to check.
  */
 
 const ORG_ID = "org-1";
@@ -107,11 +112,14 @@ afterEach(() => {
 });
 
 describe("a 500 on /hr/overtime/comp-off", () => {
-  it("was rendered as a confident 0.0 days earned", async () => {
+  it("renders the screen's own inline error, not a fabricated 0.0", async () => {
     renderUnderBoundary(<CompOffPageClient />, clientWithoutPolicy());
 
-    expect(await screen.findByText("0.0")).toBeInTheDocument();
-    expect(screen.getByText("days earned")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Couldn't load comp-off balance"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("0.0")).not.toBeInTheDocument();
+    expect(screen.queryByText("days earned")).not.toBeInTheDocument();
     expect(screen.queryByText("route error boundary")).not.toBeInTheDocument();
   });
 
@@ -127,10 +135,14 @@ describe("a 500 on /users/stats", () => {
   it("was rendered as five confident zeroes", async () => {
     renderUnderBoundary(<UserStatsCards />, clientWithoutPolicy());
 
+    /**
+     * The label renders while the read is still in flight, so waiting on it
+     * asserts against a skeleton. Wait for the settled zeroes themselves.
+     */
     await waitFor(() =>
-      expect(screen.getByText("Total Users")).toBeInTheDocument(),
+      expect(screen.getAllByText("0").length).toBeGreaterThanOrEqual(5),
     );
-    expect(screen.getAllByText("0").length).toBeGreaterThanOrEqual(5);
+    expect(screen.getByText("Total Users")).toBeInTheDocument();
     expect(screen.queryByText("route error boundary")).not.toBeInTheDocument();
   });
 

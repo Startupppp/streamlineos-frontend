@@ -9,11 +9,16 @@ import {
   essBankDetailsContract,
   essPayslipsContract,
 } from "@/hooks/api/payroll/ess-schema";
+import {
+  essLoansContract,
+  essReimbursementsContract,
+  essSalaryStructureContract,
+  type EssLoan,
+  type EssReimbursement,
+  type EssSalaryStructure,
+} from "@/hooks/api/payroll/ess-money-schema";
 import type {
   EssOverview,
-  EssSalaryStructure,
-  EssReimbursement,
-  EssLoan,
   EssTaxDeclarationResponse,
   EssBankDetails,
   EssFnfSettlement,
@@ -138,9 +143,9 @@ export function useEssPayslips() {
 
 export function useEssSalaryStructure() {
   const canSelf = useCan("self:payroll");
-  return useQuery({
+  return useQuery<EssSalaryStructure, Error>({
     queryKey: queryKeys.payroll.essSalaryStructure(),
-    queryFn: ({ signal }) => apiClient.get<EssSalaryStructure>("/payroll/me/salary-structure", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/payroll/me/salary-structure", undefined, signal, essSalaryStructureContract),
     staleTime: 300_000,
     enabled: canSelf,
   });
@@ -148,9 +153,9 @@ export function useEssSalaryStructure() {
 
 export function useEssReimbursements() {
   const canSelf = useCan("self:payroll");
-  return useQuery({
+  return useQuery<EssReimbursement[], Error>({
     queryKey: queryKeys.payroll.essReimbursements(),
-    queryFn: ({ signal }) => apiClient.get<EssReimbursement[]>("/payroll/me/reimbursements", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/payroll/me/reimbursements", undefined, signal, essReimbursementsContract),
     staleTime: 60_000,
     enabled: canSelf,
   });
@@ -158,9 +163,9 @@ export function useEssReimbursements() {
 
 export function useEssLoans() {
   const canSelf = useCan("self:payroll");
-  return useQuery({
+  return useQuery<EssLoan[], Error>({
     queryKey: queryKeys.payroll.essLoans(),
-    queryFn: ({ signal }) => apiClient.get<EssLoan[]>("/payroll/me/loans", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/payroll/me/loans", undefined, signal, essLoansContract),
     staleTime: 60_000,
     enabled: canSelf,
   });

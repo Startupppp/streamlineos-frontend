@@ -5,6 +5,7 @@ import type { UseQueryOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { userStatsContract } from "@/hooks/api/users/users-schema";
 import type {
   User,
   UserListParams,
@@ -89,7 +90,7 @@ export const useUserStats = (
   const canView = useCan("settings:view");
   return useQuery<UserStats, Error>({
     queryKey: queryKeys.users.stats(),
-    queryFn: ({ signal }) => apiClient.get<UserStats>("/users/stats", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/users/stats", undefined, signal, userStatsContract),
     staleTime: 60_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),

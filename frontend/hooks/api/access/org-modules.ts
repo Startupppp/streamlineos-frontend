@@ -8,6 +8,7 @@ import { useAccess, useCan } from "@/hooks/api/access";
 import { ORG_MODULE_NAME, normalizeOrgModuleKey } from "@/lib/module-vocabulary";
 import type { AccessResponse } from "@/types/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { orgModuleStatusesContract } from "@/hooks/api/access/module-status-schema";
 
 export interface OrgModule {
   moduleKey: string;
@@ -82,7 +83,7 @@ export function useOrgModules() {
     queryKey: queryKeys.access.orgModules(),
     queryFn: async ({ signal }) =>
       normalizeOrgModulesResponse(
-        await apiClient.get<unknown>("/access/org-modules", undefined, signal),
+        await apiClient.get("/access/org-modules", undefined, signal, orgModuleStatusesContract),
       ),
     // Also protects an in-memory query cache created by an older hot-reloaded
     // bundle that stored the response envelope instead of the list.

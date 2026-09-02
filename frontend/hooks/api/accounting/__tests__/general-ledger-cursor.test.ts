@@ -68,6 +68,7 @@ describe("useGeneralLedger — cursor pagination contract", () => {
       "/accounting/general-ledger",
       expect.not.objectContaining({ cursor: expect.anything() }),
       undefined,
+      expect.anything(),
     );
   });
 
@@ -80,6 +81,7 @@ describe("useGeneralLedger — cursor pagination contract", () => {
       "/accounting/general-ledger",
       expect.objectContaining({ cursor: "eyJpZCI6OTl9" }),
       undefined,
+      expect.anything(),
     );
   });
 
@@ -92,11 +94,13 @@ describe("useGeneralLedger — cursor pagination contract", () => {
       "/accounting/general-ledger",
       expect.not.objectContaining({ page: expect.anything() }),
       undefined,
+      expect.anything(),
     );
     expect(apiClient.get).toHaveBeenCalledWith(
       "/accounting/general-ledger",
       expect.not.objectContaining({ pageSize: expect.anything() }),
       undefined,
+      expect.anything(),
     );
   });
 

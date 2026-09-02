@@ -17,7 +17,13 @@ import ts from "typescript";
  */
 
 const FE_ROOT = join(__dirname, "..");
-const HOOKS_DIR = join(FE_ROOT, "hooks", "api");
+/**
+ * The whole hook tree, not just `hooks/api`. The org-switch seam — the single
+ * highest-consequence tenancy boundary in the product, since its response is
+ * what the session's active org is set from — lives in `hooks/common`, and a
+ * scanner anchored on `hooks/api` could never see it.
+ */
+const HOOKS_DIR = join(FE_ROOT, "hooks");
 
 /** Where the contract sits in each seam function's argument list. */
 const SEAM_METHODS: Readonly<Record<string, number>> = {
@@ -41,21 +47,61 @@ const SEAM_FUNCTIONS: Readonly<Record<string, number>> = {
  * lockout, a wrong number or a leak — never a cosmetic gap.
  */
 const CONTRACTED_ROUTES: readonly string[] = [
-  "/me/access",
-  "/rbac/permissions",
-  "/rbac/discovery/grantable",
-  "/rbac/discovery/members",
+  // money — platform billing
+  "/billing",
+  "/billing/plans",
+  "/billing/profile",
+  "/billing/seats",
+  "/billing/coupons/validate",
   "/billing/entitlements",
   "/billing/ai-credits",
   "/billing/ai-credits/transactions",
   "/billing/ai-credits/usage",
-  "/directory/people",
-  "/directory/people/:p",
-  "/me/org-display",
-  "/module-access/:p/catalog",
-  "/module-access/:p/me/permissions",
+  // money — customer invoicing
+  "/invoices",
+  "/invoices/:p",
+  "/invoices/stats",
+  // money — accounting
+  "/accounting/ar-payments",
+  "/accounting/credit-notes",
+  "/accounting/coa/tree",
+  "/accounting/settings/setup-status",
+  "/accounting/reports/tax-summary",
+  "/accounting/reports/expense-by-category",
+  "/accounting/general-ledger",
+  "/accounting/general-ledger/accounts",
+  "/finance/bank-accounts",
+  // money — payroll
+  "/payroll/runs",
+  "/payroll/runs/:p",
+  "/payroll/reports/summary",
   "/payroll/me/payslips",
   "/payroll/me/bank",
+  "/payroll/me/salary-structure",
+  "/payroll/me/loans",
+  "/payroll/me/reimbursements",
+  // permissions and tenancy
+  "/me/access",
+  "/me/org-display",
+  "/rbac/permissions",
+  "/rbac/discovery/grantable",
+  "/rbac/discovery/members",
+  "/module-access/:p/catalog",
+  "/module-access/:p/me/permissions",
+  "/organization",
+  "/organization/switch",
+  "/organization/members",
+  "/roles",
+  "/roles/:p",
+  "/roles/simulate/candidates",
+  "/roles/simulate/:p",
+  "/access/org-modules",
+  "/access/user-module-access/:p",
+  // PII
+  "/directory/people",
+  "/directory/people/:p",
+  "/directory/workers",
+  "/users/stats",
 ];
 
 const MIN_SCANNED_CALLS = 1500;
@@ -177,7 +223,7 @@ describe("response contract coverage", () => {
 
   it("reports the un-validated remainder as a number rather than hiding it", () => {
     const validated = CALLS.filter((call) => call.validated).length;
-    const coverage = `${validated}/${CALLS.length} seam calls under hooks/api carry a response contract`;
+    const coverage = `${validated}/${CALLS.length} seam calls under hooks/ carry a response contract`;
 
     expect(coverage).toContain("seam calls");
     expect(validated).toBeGreaterThanOrEqual(CONTRACTED_ROUTES.length);

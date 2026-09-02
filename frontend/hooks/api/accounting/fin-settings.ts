@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { setupStatusContract } from "@/hooks/api/accounting/core-coa-schema";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -51,7 +52,7 @@ export function useSetupStatus() {
   const can = useCan("accounting:settings:read");
   return useQuery<SetupStatus, Error>({
     queryKey: finSettingsKeys.setupStatus(),
-    queryFn: ({ signal }) => apiClient.get<SetupStatus>("/accounting/settings/setup-status", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/accounting/settings/setup-status", undefined, signal, setupStatusContract),
     staleTime: 300_000,
     enabled: can,
   });

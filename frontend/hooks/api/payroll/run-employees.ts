@@ -5,12 +5,12 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { RunEmployee, RunEmployeeDetail, VarianceData } from "@/types/payroll/runs";
-import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface RunEmployeesPage {
   data: RunEmployee[];
   pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface AdjustmentBody {
   type: "EARNING" | "DEDUCTION";
@@ -24,7 +24,7 @@ export function useRunEmployees(
   params?: { cursor?: string; limit?: number; search?: string; status?: string; workerType?: string },
 ) {
   const canView = useCan("payroll:runs:view");
-  return useQuery({
+  return useQuery<RunEmployeesPage, Error>({
     queryKey: queryKeys.payroll.runEmployeesList(runId, params as Record<string, unknown> | undefined),
     queryFn: ({ signal }) =>
       apiClient.get<RunEmployeesPage>(

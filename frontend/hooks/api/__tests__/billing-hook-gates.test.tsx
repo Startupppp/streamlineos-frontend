@@ -142,6 +142,7 @@ describe("billing hook gates — fire when permission granted", () => {
       expect.stringContaining("/billing/coupons/validate"),
       undefined,
       expect.any(AbortSignal),
+      expect.anything(),
     );
   });
 

@@ -4,32 +4,14 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import { coreKeys, toQuery } from "./core-keys";
+import {
+  glAccountsContract,
+  glResponseContract,
+  type GlAccount,
+  type GlResponse,
+} from "./core-gl-schema";
 
-export interface GlRow {
-  entryId?: number;
-  entryNumber: string;
-  date: string;
-  description: string | null;
-  debit: string;
-  credit: string;
-  runningBalance: string;
-}
-
-export interface GlResponse {
-  openingBalance: string;
-  closingBalance: string;
-  items: GlRow[];
-  nextCursor: string | null;
-}
-
-export interface GlAccount {
-  id: number;
-  code: string;
-  name: string;
-  accountType: string;
-  totalDebit: string;
-  totalCredit: string;
-}
+export type { GlAccount, GlResponse, GlRow } from "./core-gl-schema";
 
 export interface GlParams {
   accountId?: number;
@@ -54,20 +36,28 @@ export function useGeneralLedger(params: GlParams) {
   return useQuery<GlResponse, Error>({
     queryKey: coreKeys.gl(params),
     queryFn: ({ signal }) =>
-      apiClient.get<GlResponse>("/accounting/general-ledger", toQuery(params), signal),
+      apiClient.get(
+        "/accounting/general-ledger",
+        toQuery(params),
+        signal,
+        glResponseContract,
+      ),
     staleTime: 30_000,
     enabled: can && !!params.from && !!params.to,
   });
 }
 
+/** The route returns a bare array; the client declared `{ items }` and read `undefined`. */
 export function useGlAccounts(params: GlAccountsParams) {
   const can = useCan("accounting:general-ledger:read");
-  return useQuery<{ items: GlAccount[] }, Error>({
+  return useQuery<GlAccount[], Error>({
     queryKey: coreKeys.glAccounts(params),
     queryFn: ({ signal }) =>
-      apiClient.get<{ items: GlAccount[] }>(
+      apiClient.get(
         "/accounting/general-ledger/accounts",
-        toQuery(params), signal,
+        toQuery(params),
+        signal,
+        glAccountsContract,
       ),
     staleTime: 60_000,
     enabled: can && !!params.from && !!params.to,

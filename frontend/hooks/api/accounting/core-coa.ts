@@ -5,21 +5,14 @@ import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import { queryKeys } from "@/lib/query-keys";
 import { coreKeys } from "./core-keys";
+import {
+  coaTreeContract,
+  setupStatusContract,
+  type AccountTreeNode,
+  type SetupStep,
+} from "@/hooks/api/accounting/core-coa-schema";
+export type { AccountTreeNode, SetupStep };
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-
-export interface AccountTreeNode {
-  id: number;
-  code: string;
-  name: string;
-  accountType: string;
-  normalBalance: string | null;
-  isSystem: boolean;
-  isActive: boolean;
-  description: string | null;
-  parentAccountId: number | null;
-  hasActivity: boolean;
-  children: AccountTreeNode[];
-}
 
 export interface CoaTemplate {
   key: string;
@@ -28,17 +21,11 @@ export interface CoaTemplate {
   accountCount: number;
 }
 
-export interface SetupStep {
-  key: string;
-  label: string;
-  done: boolean;
-}
-
 export function useCoaTree() {
   const can = useCan("accounting:accounts:read");
   return useQuery<{ items: AccountTreeNode[] }, Error>({
     queryKey: coreKeys.coaTree(),
-    queryFn: ({ signal }) => apiClient.get<{ items: AccountTreeNode[] }>("/accounting/coa/tree", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/accounting/coa/tree", undefined, signal, coaTreeContract),
     staleTime: 60_000,
     enabled: can,
   });
@@ -58,7 +45,7 @@ export function useSetupStatus() {
   const can = useCan("accounting:settings:read");
   return useQuery<{ steps: SetupStep[] }, Error>({
     queryKey: coreKeys.setupStatus(),
-    queryFn: ({ signal }) => apiClient.get<{ steps: SetupStep[] }>("/accounting/settings/setup-status", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get("/accounting/settings/setup-status", undefined, signal, setupStatusContract),
     staleTime: 60_000,
     enabled: can,
   });

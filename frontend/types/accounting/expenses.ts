@@ -107,14 +107,6 @@ export interface FinExpensePolicy {
   category: FinExpenseCategory | null;
 }
 
-export interface FinBankAccount {
-  id: number;
-  name: string;
-  accountNumber: string | null;
-  currency: string;
-  isActive: boolean;
-}
-
 export interface ListResponse<T> {
   data: T[];
   page: number;

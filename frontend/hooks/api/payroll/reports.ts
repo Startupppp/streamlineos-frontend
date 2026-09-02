@@ -4,6 +4,10 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import {
+  payrollReportSummaryContract,
+  type PayrollReportSummary,
+} from "@/hooks/api/payroll/runs-schema";
 import { downloadBlob } from "@/lib/download-blob";
 import type {
   PayrollSummaryReport,
@@ -26,9 +30,9 @@ type ReportFilterParams = {
 
 export function usePayrollSummary(params: ReportFilterParams) {
   const canView = useCan("payroll:reports:view");
-  return useQuery({
+  return useQuery<PayrollReportSummary, Error>({
     queryKey: queryKeys.payroll.reports("summary", params as Record<string, unknown>),
-    queryFn: ({ signal }) => apiClient.get<PayrollSummaryReport>("/payroll/reports/summary", params, signal),
+    queryFn: ({ signal }) => apiClient.get("/payroll/reports/summary", params, signal, payrollReportSummaryContract),
     staleTime: 60_000,
     enabled: canView,
   });

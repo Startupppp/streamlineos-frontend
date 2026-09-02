@@ -2,6 +2,10 @@
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import {
+  bankAccountsPageContract,
+  type BankAccountRecord,
+} from "@/hooks/api/accounting/banking-schema";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -9,7 +13,6 @@ import type {
   FinReimbursementBatch,
   FinReimbursementBatchDetail,
   FinExpensePolicy,
-  FinBankAccount,
   ListResponse,
   CreateBatchInput,
   PayBatchInput,
@@ -229,11 +232,27 @@ export function useDeleteExpensePolicy(policyId: number) {
   });
 }
 
+/**
+ * `/finance/bank-accounts` is a keyset PAGE, not a bare array. Typing it as an
+ * array meant `data` was the envelope object, `data.filter` was not a function
+ * and the account picker in the pay-batch dialog listed nothing. The page is
+ * unwrapped here so the hook keeps returning a list, which is what its one
+ * caller reads. `FinBankAccount` also named the masked account column
+ * `accountNumber`; the server sends `accountNumberMasked`.
+ */
 export function useFinBankAccounts() {
   const can = useCan("accounting:banking:read");
-  return useQuery<FinBankAccount[], Error>({
+  return useQuery<BankAccountRecord[], Error>({
     queryKey: expenseKeys.bankAccounts(),
-    queryFn: ({ signal }) => apiClient.get<FinBankAccount[]>("/finance/bank-accounts", undefined, signal),
+    queryFn: async ({ signal }) => {
+      const page = await apiClient.get(
+        "/finance/bank-accounts",
+        undefined,
+        signal,
+        bankAccountsPageContract,
+      );
+      return page.data;
+    },
     staleTime: 120_000,
     enabled: can,
   });

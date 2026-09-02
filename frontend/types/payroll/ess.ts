@@ -189,37 +189,7 @@ export interface TotalRewardsStatement {
   };
 }
 
-export interface EssSalaryComponent {
-  code: string;
-  name: string;
-  type: string;
-  amount: string | null;
-  percent: string | null;
-}
-
-export interface EssSalaryStructure {
-  profile: {
-    annualCtc: string | null;
-    workerType: string | null;
-    taxRegime: string | null;
-    costCenter: string | null;
-    effectiveFrom: string | null;
-  };
-  components: EssSalaryComponent[];
-}
-
 export type ReimbursementStatus = "PENDING" | "APPROVED" | "REJECTED" | "PAID";
-
-export interface EssReimbursement {
-  id: number;
-  category: string;
-  amount: string;
-  description: string;
-  receiptUrl: string | null;
-  status: ReimbursementStatus;
-  createdAt: string;
-  payrollMonth?: string | null;
-}
 
 export interface EssTaxDeclaration {
   id: number;
@@ -244,17 +214,7 @@ export interface EssTaxDeclarationResponse {
 
 export type LoanStatus = "PENDING" | "APPROVED" | "REJECTED" | "ACTIVE" | "CLOSED";
 
-export interface EssLoan {
-  id: number;
-  amount: string;
-  reason: string | null;
-  emiAmount: string | null;
-  totalEmis: number | null;
-  paidEmis: number;
-  status: LoanStatus;
-  balance: string;
-  createdAt: string;
-}
+export type { EssLoan } from "@/hooks/api/payroll/ess-money-schema";
 
 export interface EssFnfSettlement {
   id: number;

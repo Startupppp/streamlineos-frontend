@@ -16,6 +16,11 @@ import {
 import { clearGateCookies } from "@/lib/onboarding-gate";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { queryKeys } from "@/lib/query-keys";
+import {
+  switchOrgResultContract,
+  userOrganizationsContract,
+  type UserOrganization,
+} from "@/hooks/api/organization-schema";
 import { toast } from "sonner";
 
 async function attemptCredentialsSignIn(magicToken: string): Promise<boolean> {
@@ -113,19 +118,12 @@ export function useSignOut() {
   });
 }
 
-type OrgSummary = {
-  id: string;
-  name: string;
-  slug: string;
-  role: string;
-  joinedAt: string | null;
-};
-
 export function useGetOrganizations(enabled = true) {
   const { status } = useSession();
-  return useQuery<OrgSummary[]>({
+  return useQuery<UserOrganization[]>({
     queryKey: queryKeys.organization.all,
-    queryFn: ({ signal }) => apiClient.get<OrgSummary[]>("/organization", undefined, signal),
+    queryFn: ({ signal }) =>
+      apiClient.get("/organization", undefined, signal, userOrganizationsContract),
     staleTime: 60_000,
     enabled: status === "authenticated" && enabled,
     placeholderData: keepPreviousData,
@@ -141,12 +139,12 @@ export function useSwitchOrg() {
   return useMutation({
     mutationKey: ["organization", "switch"],
     mutationFn: (orgId: string) =>
-      apiClient.post<{
-        orgId: string;
-        name: string;
-        slug: string;
-        role: string;
-      }>("/organization/switch", { orgId }),
+      apiClient.post(
+        "/organization/switch",
+        { orgId },
+        undefined,
+        switchOrgResultContract,
+      ),
     onMutate: () => {
       setAutoSignOutSuppressed(true);
       clearGateCookies();

@@ -2,6 +2,12 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import {
+  arPaymentsPageContract,
+  creditNotesPageContract,
+  type ArPaymentsPage,
+  type CreditNotesPage,
+} from "@/hooks/api/accounting/ar-schema";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { CursorPage } from "@/hooks/api/accounting";
@@ -57,12 +63,12 @@ export interface ListCreditNotesParams {
 
 export function useCreditNotes(params: ListCreditNotesParams = {}) {
   const can = useCan("accounting:credit-notes:read");
-  return useQuery<CursorPage<CreditNote>, Error>({
+  return useQuery<CreditNotesPage, Error>({
     queryKey: arKeys.creditNotes.list(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<CreditNote>>(
+      apiClient.get(
         "/accounting/credit-notes",
-        toQuery(params), signal,
+        toQuery(params), signal, creditNotesPageContract,
       ),
     staleTime: 30_000,
     enabled: can,
@@ -102,12 +108,12 @@ export interface ArPaymentsParams {
 
 export function useArPayments(params: ArPaymentsParams = {}) {
   const can = useCan("accounting:receivables:read");
-  return useQuery<CursorPage<ArPayment>, Error>({
+  return useQuery<ArPaymentsPage, Error>({
     queryKey: arKeys.arPayments.list(params),
     queryFn: ({ signal }) =>
-      apiClient.get<CursorPage<ArPayment>>(
+      apiClient.get(
         "/accounting/ar-payments",
-        toQuery(params), signal,
+        toQuery(params), signal, arPaymentsPageContract,
       ),
     staleTime: 30_000,
     enabled: can,

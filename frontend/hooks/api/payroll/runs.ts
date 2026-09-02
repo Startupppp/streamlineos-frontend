@@ -5,18 +5,12 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import type { PayrollRun, PayrollRunListItem, PayrollChecklistItem } from "@/types/payroll/runs";
-
-interface RunsPage {
-  data: PayrollRunListItem[];
-  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
-}
-
-interface RunDetail {
-  run: PayrollRun;
-  checklist: PayrollChecklistItem[];
-  payoutHealth: { failedCount: number; heldCount: number } | null;
-}
+import {
+  payrollRunDetailContract,
+  payrollRunsPageContract,
+  type PayrollRunDetail as RunDetail,
+  type PayrollRunsPage as RunsPage,
+} from "@/hooks/api/payroll/runs-schema";
 
 export function usePayrollRuns(params?: {
   cursor?: string;
@@ -24,10 +18,10 @@ export function usePayrollRuns(params?: {
   entityId?: number;
 }) {
   const canView = useCan("payroll:runs:view");
-  return useQuery({
+  return useQuery<RunsPage, Error>({
     queryKey: queryKeys.payroll.runs(params as Record<string, unknown> | undefined),
     queryFn: ({ signal }) =>
-      apiClient.get<RunsPage>("/payroll/runs", params as Record<string, string | number> | undefined, signal),
+      apiClient.get("/payroll/runs", params as Record<string, string | number> | undefined, signal, payrollRunsPageContract),
     staleTime: 60_000,
     enabled: canView,
   });
@@ -35,9 +29,9 @@ export function usePayrollRuns(params?: {
 
 export function usePayrollRun(runId: number) {
   const canView = useCan("payroll:runs:view");
-  return useQuery({
+  return useQuery<RunDetail, Error>({
     queryKey: queryKeys.payroll.run(runId),
-    queryFn: ({ signal }) => apiClient.get<RunDetail>(`/payroll/runs/${runId}`, undefined, signal),
+    queryFn: ({ signal }) => apiClient.get(`/payroll/runs/${runId}`, undefined, signal, payrollRunDetailContract),
     staleTime: 30_000,
     enabled: canView && runId > 0,
   });
