@@ -1,6 +1,6 @@
 "use client";
 
-export { stopEvent, InlineFieldWrapper } from "./card-field-wrapper";
+export { stopEvent, InlineFieldWrapper, InlineFieldCell } from "./card-field-wrapper";
 export { InlinePriority } from "./card-field-priority";
 export { InlineAssignee } from "./card-field-assignee";
 export { InlineEstimate } from "./card-field-estimate";

@@ -35,6 +35,7 @@ import {
   type HrWorkflowInstanceStatus,
 } from "@/types/hr/workflows";
 import { getUserDisplayName } from "@/lib/person-display";
+import { activationProps } from "@/lib/keyboard-activation";
 
 const STATUS_CHIP: Record<
   HrWorkflowInstanceStatus,
@@ -104,7 +105,7 @@ function InstanceRow({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.18, ease: "easeOut" }}
       className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 hover:bg-muted/30 cursor-pointer group transition-colors"
-      onClick={handleClick}
+      {...activationProps(handleClick)}
     >
       <div className="flex-1 min-w-0 space-y-1">
         <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">

@@ -328,6 +328,7 @@ export const WorkloadView = memo(function WorkloadView({
                           <span
                             onMouseDown={stopEvent}
                             onClick={stopEvent}
+                            onKeyDown={stopEvent}
                             className="shrink-0 opacity-0 group-hover/unassigned:opacity-100 transition-opacity"
                           >
                             <InlineAssignee

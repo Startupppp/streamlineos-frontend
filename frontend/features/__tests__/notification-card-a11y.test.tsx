@@ -197,8 +197,8 @@ describe("a11y — Notifications/Inbox surface (NotificationCard — real compon
         })}
       />,
     );
-    expect(screen.getByRole("button", { name: /Approve/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Reject/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Approve" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Reject" })).toBeInTheDocument();
   });
 
   it("selection checkbox renders when onSelect is provided", () => {

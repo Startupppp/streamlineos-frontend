@@ -164,7 +164,12 @@ export function CalendarView({ tickets, onTicketClick, projectId }: CalendarView
                             <span className="text-micro text-foreground truncate">{t.title}</span>
                           </button>
                           {projectId != null && (
-                            <span onMouseDown={stopEvent} onClick={stopEvent} className="shrink-0 opacity-0 group-hover/chip:opacity-100 transition-opacity">
+                            <span
+                              onMouseDown={stopEvent}
+                              onClick={stopEvent}
+                              onKeyDown={stopEvent}
+                              className="shrink-0 opacity-0 group-hover/chip:opacity-100 transition-opacity"
+                            >
                               <TicketQuickActions
                                 ticketId={t.id}
                                 projectId={projectId}

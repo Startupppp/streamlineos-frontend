@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { PM_ROW } from "@/features/build/shared/pm-chrome";
 import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { CARD_ACTIVATOR_CLASS } from "@/lib/keyboard-activation";
 
 export interface ViewItem {
   id: number;
@@ -56,7 +57,10 @@ export const ViewCard = memo(function ViewCard({
   onDelete,
 }: ViewCardProps) {
   const handleNavigate = useCallback(() => onNavigate(view), [onNavigate, view]);
-  const handleStopPropagation = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
+  const handleStopPropagation = useCallback(
+    (e: React.MouseEvent | React.KeyboardEvent) => e.stopPropagation(),
+    [],
+  );
   const handleTogglePin = useCallback(
     () => onTogglePin(view.id, !isPinned),
     [onTogglePin, view.id, isPinned],
@@ -70,20 +74,19 @@ export const ViewCard = memo(function ViewCard({
 
   return (
     <div
-      className={cn(PM_ROW, "cursor-pointer rounded-lg border-0 last:border-b-0")}
-      onClick={handleNavigate}
+      className={cn(PM_ROW, "relative cursor-pointer rounded-lg border-0 last:border-b-0")}
     >
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <div className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-md", meta?.color ?? "bg-muted text-muted-foreground")}>
           {meta?.icon}
         </div>
-        <div className="min-w-0">
+        <button type="button" onClick={handleNavigate} className={cn("min-w-0", CARD_ACTIVATOR_CLASS)}>
           <TruncatedText text={view.name} className="text-sm font-medium" />
           <p className={cn("text-xs text-muted-foreground", TEXT_ONE_LINE)}>
             {meta?.label ?? view.layoutType}
             {filterCount > 0 ? ` · ${filterCount} filter${filterCount > 1 ? "s" : ""}` : ""}
           </p>
-        </div>
+        </button>
         <div className="flex items-center gap-1 shrink-0">
           {isPinned && (
             <Badge variant="outline" className="text-micro bg-status-warning-surface text-status-warning-ink border-status-warning-rule">
@@ -97,7 +100,11 @@ export const ViewCard = memo(function ViewCard({
           )}
         </div>
       </div>
-      <div className="flex items-center gap-1 shrink-0" onClick={handleStopPropagation}>
+      <div
+        className="relative z-10 flex items-center gap-1 shrink-0"
+        onClick={handleStopPropagation}
+        onKeyDown={handleStopPropagation}
+      >
         {isOwner && (
           <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={handleTogglePin}>
             {isPinned ? <PinOff className="h-3.5 w-3.5" /> : <Pin className="h-3.5 w-3.5" />}

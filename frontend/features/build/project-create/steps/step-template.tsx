@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useProjectTemplates } from "@/hooks/api/build/templates";
 import type { StepSharedProps } from "../use-project-create";
+import { activationProps } from "@/lib/keyboard-activation";
 
 export function StepTemplate({ draft, updateDraft }: StepSharedProps) {
   const { data: templates, isLoading, isError, refetch } = useProjectTemplates();
@@ -61,7 +62,7 @@ export function StepTemplate({ draft, updateDraft }: StepSharedProps) {
 
       <div className="space-y-2">
         <div
-          onClick={() => handleSelect(null)}
+          {...activationProps(() => handleSelect(null), "Blank Project")}
           className={cn(
             "cursor-pointer rounded-xl border p-4 transition-all",
             draft.templateId === null
@@ -76,7 +77,7 @@ export function StepTemplate({ draft, updateDraft }: StepSharedProps) {
         {templateList.map((t) => (
           <div
             key={t.id}
-            onClick={() => handleSelect(t.id)}
+            {...activationProps(() => handleSelect(t.id), t.name)}
             className={cn(
               "cursor-pointer rounded-xl border p-4 transition-all",
               draft.templateId === t.id

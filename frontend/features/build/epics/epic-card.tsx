@@ -110,7 +110,7 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
 
   const handleToggleExpand = useCallback(() => setIsExpanded(prev => !prev), []);
 
-  const handleStopPropagation = useCallback((e: MouseEvent) => {
+  const handleStopPropagation = useCallback((e: MouseEvent | React.KeyboardEvent) => {
     e.stopPropagation();
   }, []);
 
@@ -201,7 +201,11 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
                 ) : null}
               </div>
             </div>
-            <div className="ml-1 flex shrink-0 items-center gap-1" onClick={handleStopPropagation}>
+            <div
+              className="ml-1 flex shrink-0 items-center gap-1"
+              onClick={handleStopPropagation}
+              onKeyDown={handleStopPropagation}
+            >
               <Badge
                 variant="outline"
                 className={cn("h-5 px-1.5 text-micro", getColorSafe(priorityColors, epic.priority || "MEDIUM"))}

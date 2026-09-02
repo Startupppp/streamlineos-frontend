@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import type { StepSharedProps } from "../use-project-create";
+import { activationProps } from "@/lib/keyboard-activation";
 
 interface WorkflowOption {
   id: string;
@@ -33,7 +34,7 @@ export function StepWorkflow({ draft, updateDraft }: StepSharedProps) {
         {WORKFLOWS.map((w) => (
           <div
             key={w.id}
-            onClick={() => handleSelect(w.id)}
+            {...activationProps(() => handleSelect(w.id), w.label)}
             className={cn(
               "cursor-pointer rounded-xl border p-4 flex items-start justify-between gap-4 transition-all",
               draft.workflow === w.id

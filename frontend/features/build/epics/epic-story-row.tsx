@@ -160,7 +160,7 @@ export const EpicStoryRow = memo(function EpicStoryRow({
             ) : null}
           </div>
 
-          <div className="shrink-0" onMouseDown={stopEvent} onClick={stopEvent}>
+          <div className="shrink-0" onMouseDown={stopEvent} onClick={stopEvent} onKeyDown={stopEvent}>
             <Link href={detailHref}>
               <Button
                 variant="ghost"

@@ -50,6 +50,10 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
     [ticket.id, onSelect, dragStartRef],
   );
 
+  const handleActivate = useCallback(() => {
+    onSelect(ticket.id);
+  }, [ticket.id, onSelect]);
+
   const ticketKey = projectKey
     ? `${projectKey}-${ticket.ticketNumber}`
     : `#${ticket.ticketNumber ?? ""}`;
@@ -90,9 +94,16 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
             />
           </div>
         ) : null}
-        <p className={cn(TEXT_TWO_LINES, "flex-1 text-xs font-medium leading-snug text-foreground/95")}>
+        <button
+          type="button"
+          onClick={handleActivate}
+          className={cn(
+            TEXT_TWO_LINES,
+            "flex-1 text-left text-xs font-medium leading-snug text-foreground/95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+          )}
+        >
           {ticket.title}
-        </p>
+        </button>
         <TicketQuickActions
           ticketId={ticket.id}
           projectId={projectId}

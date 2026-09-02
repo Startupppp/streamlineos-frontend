@@ -27,6 +27,7 @@ import {
 import { useCreateTicket } from "@/hooks/api/build";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { activationProps } from "@/lib/keyboard-activation";
 
 const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 
@@ -81,7 +82,7 @@ export function CreateEpicDialog({ projectId, trigger }: CreateEpicDialogProps) 
   return (
     <>
       {trigger ? (
-        <span onClick={handleOpen} role="button" tabIndex={0}>
+        <span {...activationProps(handleOpen)}>
           {trigger}
         </span>
       ) : (

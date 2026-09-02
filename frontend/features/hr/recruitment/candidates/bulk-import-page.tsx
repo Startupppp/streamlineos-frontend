@@ -22,6 +22,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { activationProps } from "@/lib/keyboard-activation";
 
 const MAX_IMPORT_ROWS = 500;
 
@@ -322,7 +323,7 @@ export function BulkImportPage() {
                   className="border-2 border-dashed rounded-lg p-10 text-center cursor-pointer hover:border-primary/60 transition-colors"
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}
-                  onClick={handleClickDropzone}
+                  {...activationProps(handleClickDropzone, "Choose a file to upload")}
                 >
                   <svg className="h-10 w-10 mx-auto mb-3 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />

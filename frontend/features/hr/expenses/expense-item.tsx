@@ -24,6 +24,7 @@ import {
   receiptKindLabel,
 } from "./expense-constants";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { activationProps } from "@/lib/keyboard-activation";
 
 interface AdminExpenseItemProps {
   expense: ExpenseWithRelations;
@@ -106,7 +107,7 @@ export function AdminExpenseItem({
             primaryReceipt &&
               "cursor-pointer hover:ring-2 hover:ring-primary/40 transition-all duration-200",
           )}
-          onClick={handleViewReceiptArea}
+          {...activationProps(handleViewReceiptArea, "View receipt")}
         >
           {primaryImageSrc ? (
             <Image

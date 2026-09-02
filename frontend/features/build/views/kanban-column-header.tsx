@@ -5,6 +5,7 @@ import { GripVertical, Pencil, Trash2 } from "lucide-react";
 import type { DraggableProvidedDragHandleProps } from "@hello-pangea/dnd";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { Input } from "@/components/ui/input";
+import { isActivationKey } from "@/lib/keyboard-activation";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -180,6 +181,15 @@ export function KanbanColumnHeader({
     if (isEditable) handleStartRename();
   }, [isEditable, handleStartRename]);
 
+  const handleTitleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (!isEditable || !isActivationKey(e)) return;
+      e.preventDefault();
+      handleStartRename();
+    },
+    [isEditable, handleStartRename],
+  );
+
   const handleColorChange = useCallback(
     (newColor: string) => {
       const statusId = column.statusId;
@@ -271,7 +281,10 @@ export function KanbanColumnHeader({
               "font-medium text-label text-foreground truncate",
               isEditable && "cursor-text hover:text-foreground/80",
             )}
+            role={isEditable ? "button" : undefined}
+            tabIndex={isEditable ? 0 : undefined}
             onClick={handleTitleClick}
+            onKeyDown={handleTitleKeyDown}
             title={isEditable ? "Click to rename" : column.name}
           >
             {column.name}

@@ -11,6 +11,7 @@ import { editSprintSchema, type EditSprintInput } from "./sprint-schema";
 import { useUpdateSprint } from "@/hooks/api/build";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { activationProps } from "@/lib/keyboard-activation";
 
 interface EditSprintDialogProps {
   sprint: {
@@ -61,7 +62,7 @@ export function EditSprintDialog({ sprint, projectId, trigger }: EditSprintDialo
   return (
     <>
       {trigger ? (
-        <span onClick={handleOpen} role="button" tabIndex={0}>
+        <span {...activationProps(handleOpen)}>
           {trigger}
         </span>
       ) : (

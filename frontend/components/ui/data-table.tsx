@@ -36,6 +36,10 @@ import type { DataTableColumn, DataTableProps, ClientPagination, ServerPaginatio
 
 export type { DataTableColumn, DataTableProps };
 
+function stopRowEvent(event: React.MouseEvent | React.KeyboardEvent): void {
+  event.stopPropagation();
+}
+
 function readSortKey(row: unknown, key: string): string | number | boolean | null {
   if (row === null || typeof row !== "object") return null;
   const value: unknown = Reflect.get(row, key);
@@ -117,7 +121,8 @@ export function DataTable<T>({
               <TooltipTrigger asChild>
                 <span
                   className="inline-flex cursor-not-allowed"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={stopRowEvent}
+                  onKeyDown={stopRowEvent}
                 >
                   <Checkbox
                     checked={false}

@@ -18,6 +18,7 @@ import {
 } from "./notification-types";
 import { formatRelativeTime } from "./format-relative-time";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { CARD_ACTIVATOR_CLASS, propagationShield } from "@/lib/keyboard-activation";
 
 export interface NotificationCardProps {
   id: number;
@@ -152,7 +153,6 @@ export function NotificationCard({
 
   return (
     <div
-      onClick={handleCardClick}
       className={cn(
         "group relative flex items-start gap-2.5 px-3 py-2.5 cursor-pointer transition-colors hover:bg-muted/40 hover:shadow-md",
         isUnread && !isArchived &&
@@ -162,8 +162,8 @@ export function NotificationCard({
     >
       {onSelect && (
         <div
-          className="flex items-center shrink-0 pt-0.5"
-          onClick={(e) => e.stopPropagation()}
+          className="relative z-10 flex items-center shrink-0 pt-0.5"
+          {...propagationShield}
         >
           <Checkbox
             checked={selected}
@@ -185,13 +185,15 @@ export function NotificationCard({
 
       <div className="min-w-0 flex-1 overflow-hidden">
         <div className="flex min-w-0 items-center gap-1.5">
-          <TruncatedText
-            text={title}
-            className={cn(
-              "min-w-0 flex-1 text-sm leading-snug",
-              isUnread && !isArchived ? "font-semibold text-foreground" : "font-medium text-muted-foreground",
-            )}
-          />
+          <button type="button" onClick={handleCardClick} className={cn("min-w-0 flex-1", CARD_ACTIVATOR_CLASS)}>
+            <TruncatedText
+              text={title}
+              className={cn(
+                "min-w-0 text-sm leading-snug",
+                isUnread && !isArchived ? "font-semibold text-foreground" : "font-medium text-muted-foreground",
+              )}
+            />
+          </button>
           {pinned && <Pin className="h-3 w-3 shrink-0 text-status-warning-ink" />}
           <Badge
             variant="outline"
@@ -215,7 +217,10 @@ export function NotificationCard({
         )}
 
         {isApproval && (onApprove || onReject) && (
-          <div className="flex items-center gap-1.5 mt-2" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="relative z-10 flex items-center gap-1.5 mt-2"
+            {...propagationShield}
+          >
             {onApprove && (
               <LoadingButton
                 size="sm"
@@ -245,8 +250,8 @@ export function NotificationCard({
       <div className="flex items-center gap-1.5 shrink-0 self-start pt-0.5">
         {hasHoverActions && (
           <div
-            className="flex items-center gap-0.5 w-0 overflow-hidden opacity-0 group-hover:w-auto group-hover:opacity-100 transition-all duration-150"
-            onClick={(e) => e.stopPropagation()}
+            className="relative z-10 flex items-center gap-0.5 w-0 overflow-hidden opacity-0 group-hover:w-auto group-hover:opacity-100 transition-all duration-150"
+            {...propagationShield}
           >
             {!isArchived && onArchive && (
               <Button

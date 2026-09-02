@@ -145,7 +145,7 @@ export function CandidateCard({
 }: CandidateCardProps) {
   const cfg = getStageConfig(candidate.status);
 
-  function handleStopPropagation(e: React.MouseEvent) {
+  function handleStopPropagation(e: React.MouseEvent | React.KeyboardEvent) {
     e.stopPropagation();
   }
   function handleCheckboxChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -171,7 +171,11 @@ export function CandidateCard({
           : "border-border/70",
       )}
     >
-      <div className="absolute top-3 right-3 flex items-center gap-1 z-10" onClick={handleStopPropagation}>
+      <div
+        className="absolute top-3 right-3 flex items-center gap-1 z-10"
+        onClick={handleStopPropagation}
+        onKeyDown={handleStopPropagation}
+      >
         <input
           type="checkbox"
           checked={isSelected}
@@ -270,7 +274,11 @@ export function CandidateCard({
         </div>
       </Link>
 
-      <div className="px-3 pb-3 flex items-center gap-2" onClick={handleStopPropagation}>
+      <div
+        className="px-3 pb-3 flex items-center gap-2"
+        onClick={handleStopPropagation}
+        onKeyDown={handleStopPropagation}
+      >
         <AIScoreCandidateButton candidateId={candidate.id} compact />
         <Select value={candidate.status ?? "NEW"} onValueChange={handleStatusChange}>
           <SelectTrigger className="flex-1 text-xs bg-muted/40 border-border/50">

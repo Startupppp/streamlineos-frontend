@@ -27,6 +27,7 @@ import { useUpdateTicket } from "@/hooks/api/build";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { activationProps } from "@/lib/keyboard-activation";
 
 const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 const STATUSES = ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"] as const;
@@ -110,7 +111,7 @@ export function EditEpicDialog({ epic, projectId, trigger }: EditEpicDialogProps
   return (
     <>
       {trigger ? (
-        <span onClick={handleOpen} role="button" tabIndex={0}>
+        <span {...activationProps(handleOpen)}>
           {trigger}
         </span>
       ) : (

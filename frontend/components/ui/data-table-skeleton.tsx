@@ -52,6 +52,7 @@ export function DataTableSkeleton({
             {Array.from({ length: columns }).map((_, colIdx) => (
               <TableHead key={colIdx} className="px-2 py-2">
                 <Skeleton className="h-3.5 w-16" aria-hidden="true" />
+                <span className="sr-only">Column {colIdx + 1}</span>
               </TableHead>
             ))}
           </TableRow>

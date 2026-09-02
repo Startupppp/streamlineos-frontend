@@ -14,6 +14,7 @@ import { useImportExpenses } from "@/hooks/api/use-import-expenses";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyUploadIllustration } from "@/components/illustrations/illustration-image";
+import { activationProps } from "@/lib/keyboard-activation";
 
 const TEMPLATE_COLUMNS = [
   "category", "amount", "description", "merchant", "payment_method", "expense_date",
@@ -269,7 +270,10 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
             </div>
 
             {!file ? (
-              <div className="pl-8 cursor-pointer min-h-[92px]" onClick={handleClickUploadArea}>
+              <div
+                className="pl-8 cursor-pointer min-h-[92px]"
+                {...activationProps(handleClickUploadArea, "Choose a CSV file to import")}
+              >
                 <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 transition-colors hover:border-primary/50 hover:bg-primary/5">
                   <div className="mb-2 h-16 w-16">
                     <EmptyUploadIllustration className="h-full w-full" />

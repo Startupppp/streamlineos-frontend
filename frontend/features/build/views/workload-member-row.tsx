@@ -218,6 +218,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
                 <span
                   onMouseDown={stopEvent}
                   onClick={stopEvent}
+                  onKeyDown={stopEvent}
                   className="shrink-0 opacity-0 group-hover/workload:opacity-100 transition-opacity"
                 >
                   <InlineAssignee
@@ -230,6 +231,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
                 <span
                   onMouseDown={stopEvent}
                   onClick={stopEvent}
+                  onKeyDown={stopEvent}
                   className="shrink-0 opacity-0 group-hover/workload:opacity-100 transition-opacity"
                 >
                   <TicketQuickActions ticketId={ticket.id} projectId={projectId} />

@@ -47,7 +47,7 @@ export function TicketQuickActions({
     e.stopPropagation();
   }
 
-  function handleWrapperClick(e: React.MouseEvent) {
+  function handleWrapperClick(e: React.MouseEvent | React.KeyboardEvent) {
     e.stopPropagation();
   }
 
@@ -56,6 +56,7 @@ export function TicketQuickActions({
       className={cn("shrink-0", className)}
       onMouseDown={handleWrapperMouseDown}
       onClick={handleWrapperClick}
+      onKeyDown={handleWrapperClick}
     >
       <Button
         variant="ghost"

@@ -6,6 +6,7 @@ import { Globe, Hash, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { PublicChannel } from "@/types/chat";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { isActivationKey } from "@/lib/keyboard-activation";
 
 export function PublicChannelRow({
   channel,
@@ -27,6 +28,14 @@ export function PublicChannelRow({
   const handleRowClick = useCallback(() => {
     if (channel.isMember) onSelect(channel.id);
   }, [channel.id, channel.isMember, onSelect]);
+  const handleRowKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (!channel.isMember || !isActivationKey(e)) return;
+      e.preventDefault();
+      onSelect(channel.id);
+    },
+    [channel.id, channel.isMember, onSelect],
+  );
 
   return (
     <div
@@ -34,7 +43,10 @@ export function PublicChannelRow({
         "flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted/30 transition-colors",
         channel.isMember && "cursor-pointer"
       )}
+      role={channel.isMember ? "button" : undefined}
+      tabIndex={channel.isMember ? 0 : undefined}
       onClick={handleRowClick}
+      onKeyDown={handleRowKeyDown}
     >
       <div className="h-10 w-10 rounded-full bg-gradient-to-br from-gradient-success-wash-from to-gradient-success-wash-to flex items-center justify-center border border-border/40 shrink-0">
         <Hash className="h-4 w-4 text-status-success-ink" />
