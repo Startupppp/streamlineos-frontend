@@ -113,7 +113,7 @@ Not rerun in this reconciliation because they are expensive final-integration ga
 
 These decisions are final for this release and remove implementation alternatives from the checklist:
 
-1. **RBAC:** exactly six fixed standings — organization owner/admin/member and module owner/admin/member. Capability customization uses fixed templates, per-person permission grants, delegations and DataScope. No runtime custom-role creation.
+1. **RBAC:** exactly six fixed standings — organization owner, organization admin, organization member, module owner, module admin and module member. Capability customization uses fixed templates, per-person permission grants, delegations and DataScope. No runtime custom-role creation.
 2. **Token authority:** the backend exposes an authenticated session-exchange interface and alone signs short-lived asymmetric JWTs. Frontend and edge runtimes contain no backend signing key.
 3. **Payroll posting:** Payroll commits an idempotent Accounting-posting intent through the transactional outbox; Accounting consumes it asynchronously and idempotently. Brief `pending` state is accepted; lost or dangling journals are not.
 4. **Calendar synchronization:** local Calendar state commits first with durable `pending` synchronization state. Provider synchronization runs asynchronously with `synced`/`failed` state, retry/backoff and user-visible recovery.
