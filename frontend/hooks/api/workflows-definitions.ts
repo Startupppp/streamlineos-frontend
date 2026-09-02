@@ -19,7 +19,7 @@ interface CreateWorkflowInput {
 interface UpdateWorkflowInput {
   name?: string;
   description?: string;
-  status?: "draft" | "published" | "disabled" | "archived";
+  status?: "draft" | "disabled" | "archived";
 }
 
 interface PublishWorkflowInput {

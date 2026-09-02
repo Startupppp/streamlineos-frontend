@@ -16,7 +16,13 @@ import {
 import { RefreshCw, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { ClockInWidget } from "@/components/attendance/clock-in-widget";
+const ClockInWidget = dynamic(
+  () =>
+    import("@/components/attendance/clock-in-widget").then((m) => ({
+      default: m.ClockInWidget,
+    })),
+  { ssr: false },
+);
 import { DashboardStatsSkeleton } from "@/components/ui/dashboard-skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
@@ -40,20 +46,54 @@ import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
 import { ModuleSetupBanners } from "@/features/dashboard/module-setup-banners";
 import { useDashboardAccess } from "@/features/dashboard/use-dashboard-access";
 import { useDashboardStatCards } from "@/features/dashboard/use-dashboard-stat-cards";
-import {
-  LeavesTodayWidget,
-  TeamAttendanceWidget,
-  PendingApprovalsWidget,
-  BirthdaysWidget,
-  UpcomingHolidaysWidget,
-} from "@/features/dashboard/hr-widgets";
+const LeavesTodayWidget = dynamic(
+  () =>
+    import("@/features/dashboard/hr-widgets").then((m) => ({
+      default: m.LeavesTodayWidget,
+    })),
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+);
+const TeamAttendanceWidget = dynamic(
+  () =>
+    import("@/features/dashboard/hr-widgets").then((m) => ({
+      default: m.TeamAttendanceWidget,
+    })),
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+);
+const PendingApprovalsWidget = dynamic(
+  () =>
+    import("@/features/dashboard/hr-widgets").then((m) => ({
+      default: m.PendingApprovalsWidget,
+    })),
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+);
+const BirthdaysWidget = dynamic(
+  () =>
+    import("@/features/dashboard/hr-widgets").then((m) => ({
+      default: m.BirthdaysWidget,
+    })),
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+);
+const UpcomingHolidaysWidget = dynamic(
+  () =>
+    import("@/features/dashboard/hr-widgets").then((m) => ({
+      default: m.UpcomingHolidaysWidget,
+    })),
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+);
 import { PublicDocumentsCard } from "@/features/dashboard/public-documents-card";
 import { shouldRenderDashboardLoading } from "./dashboard-hydration";
 import { DeferredDashboardContent } from "./deferred-dashboard-content";
 import { HomeSectionBoundary } from "./home-section-boundary";
 import { HomeWidgetGrid } from "./home-widget-grid";
 import { useHomeCacheSync } from "./use-home-cache-sync";
-import { GuidedTourOverlay } from "./guided-tour-overlay";
+const GuidedTourOverlay = dynamic(
+  () =>
+    import("./guided-tour-overlay").then((m) => ({
+      default: m.GuidedTourOverlay,
+    })),
+  { ssr: false },
+);
 
 const ExecutiveKpiWidget = dynamic(
   () =>
@@ -200,10 +240,22 @@ export function DashboardClient() {
     () => router.push("/build/all"),
     [router],
   );
-  const handleRetryTickets = useCallback(() => void refetchTickets(), [refetchTickets]);
-  const handleRetryProjects = useCallback(() => void refetchProjects(), [refetchProjects]);
-  const handleRetryActivity = useCallback(() => void refetchActivity(), [refetchActivity]);
-  const handleRetrySprint = useCallback(() => void refetchSprint(), [refetchSprint]);
+  const handleRetryTickets = useCallback(
+    () => void refetchTickets(),
+    [refetchTickets],
+  );
+  const handleRetryProjects = useCallback(
+    () => void refetchProjects(),
+    [refetchProjects],
+  );
+  const handleRetryActivity = useCallback(
+    () => void refetchActivity(),
+    [refetchActivity],
+  );
+  const handleRetrySprint = useCallback(
+    () => void refetchSprint(),
+    [refetchSprint],
+  );
   const handleRetryTeam = useCallback(() => void refetchTeam(), [refetchTeam]);
 
   const sortedMyTickets = useMemo((): DashboardTicket[] => {
@@ -237,8 +289,7 @@ export function DashboardClient() {
 
   const showHrTeamRow =
     hrEnabled && (canViewLeaves || canViewAttendance || canApproveLeaves);
-  const showDocumentsCard =
-    hrEnabled || (signEnabled && canViewSignEnvelopes);
+  const showDocumentsCard = hrEnabled || (signEnabled && canViewSignEnvelopes);
   const showProjectsRow = projectsEnabled;
   const showBottomRow =
     (projectsEnabled && canViewTickets) || (hrEnabled && canViewAttendance);
@@ -270,214 +321,234 @@ export function DashboardClient() {
   }
 
   const pageSubtitle = stats
-    ? (headerClock
-        ? `${headerClock.todayFormatted} · ${stats.orgName}`
-        : stats.orgName)
+    ? headerClock
+      ? `${headerClock.todayFormatted} · ${stats.orgName}`
+      : stats.orgName
     : (headerClock?.todayFormatted ?? undefined);
 
   return (
     <>
-    <PageWrapper
-      title={pageTitle}
-      subtitle={pageSubtitle}
-      actions={hrEnabled ? <ClockInWidget /> : undefined}
-    >
-      <div className="flex flex-1 min-h-0 flex-col gap-4">
-        {error ? (
-          <div
-            className="rounded-xl border border-destructive/30 bg-destructive/5 p-6"
-            role="alert"
-          >
-            <div className="flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-              <div className="flex-1 space-y-3">
-                <p className="text-sm text-foreground">{getErrorMessage(error)}</p>
-                <Button onClick={handleRefresh} size="sm">
-                  <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
-                  Retry
-                </Button>
-              </div>
-            </div>
-          </div>
-        ) : !stats ? (
-          <EmptyState
-            illustration={<EmptyActivityIllustration className="h-40 w-40" />}
-            title="No data available"
-            description="Dashboard statistics are not available. Please try refreshing."
-            action={{ label: "Refresh", onClick: handleRefresh }}
-          />
-        ) : statCards.length > 0 ? (
-          <motion.div variants={fadeUp} initial="hidden" animate="visible">
-            <StatCardGrid
-              cols={statCards.length >= 4 ? 4 : statCards.length >= 3 ? 3 : 2}
+      <PageWrapper
+        title={pageTitle}
+        subtitle={pageSubtitle}
+        actions={hrEnabled ? <ClockInWidget /> : undefined}
+      >
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+          {error ? (
+            <div
+              className="rounded-xl border border-destructive/30 bg-destructive/5 p-6"
+              role="alert"
             >
-              {statCards.map((stat) => (
-                <StatCard
-                  key={stat.id}
-                  label={stat.label}
-                  value={stat.value}
-                  icon={stat.icon}
-                  href={stat.href}
-                />
-              ))}
-            </StatCardGrid>
-          </motion.div>
-        ) : null}
-
-        <motion.div variants={fadeUp} initial="hidden" animate="visible">
-          <QuickActions />
-        </motion.div>
-
-        <ModuleSetupBanners />
-
-        {canViewExecutive && (
-          <motion.div variants={fadeUp} initial="hidden" animate="visible">
-            <ExecutiveKpiWidget />
-          </motion.div>
-        )}
-
-        <DeferredDashboardContent
-          onVisible={handleDeferredVisible}
-          fallback={
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-              <WidgetSkeleton rows={3} />
-              <WidgetSkeleton rows={3} />
-              <WidgetSkeleton rows={3} />
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                <div className="flex-1 space-y-3">
+                  <p className="text-sm text-foreground">
+                    {getErrorMessage(error)}
+                  </p>
+                  <Button onClick={handleRefresh} size="sm">
+                    <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+                    Retry
+                  </Button>
+                </div>
+              </div>
             </div>
-          }
-        >
-          <>
-            <HomeWidgetGrid
-              projectsEnabled={projectsEnabled}
-              hrEnabled={hrEnabled}
-              canViewExecutive={canViewExecutive}
-              canSelfAttendance={canSelfAttendance}
+          ) : !stats ? (
+            <EmptyState
+              illustration={<EmptyActivityIllustration className="h-40 w-40" />}
+              title="No data available"
+              description="Dashboard statistics are not available. Please try refreshing."
+              action={{ label: "Refresh", onClick: handleRefresh }}
             />
+          ) : statCards.length > 0 ? (
+            <motion.div variants={fadeUp} initial="hidden" animate="visible">
+              <StatCardGrid
+                cols={statCards.length >= 4 ? 4 : statCards.length >= 3 ? 3 : 2}
+              >
+                {statCards.map((stat) => (
+                  <StatCard
+                    key={stat.id}
+                    label={stat.label}
+                    value={stat.value}
+                    icon={stat.icon}
+                    href={stat.href}
+                  />
+                ))}
+              </StatCardGrid>
+            </motion.div>
+          ) : null}
 
-        {showHrTeamRow && (
-          <motion.div
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
-          >
-            {canViewLeaves && <HomeSectionBoundary sectionLabel="Who is out today"><LeavesTodayWidget /></HomeSectionBoundary>}
-            {canViewAttendance && (
-              <HomeSectionBoundary sectionLabel="Team attendance">
-                <TeamAttendanceWidget
-                  data={teamAttendance}
-                  isLoading={teamLoading}
-                  error={teamError}
-                  onRetry={handleRetryTeam}
-                />
-              </HomeSectionBoundary>
-            )}
-            {canApproveLeaves && <HomeSectionBoundary sectionLabel="Pending approvals"><PendingApprovalsWidget /></HomeSectionBoundary>}
-          </motion.div>
-        )}
-
-        {hrEnabled && (
-          <motion.div
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-1 gap-4 md:grid-cols-2"
-          >
-            <HomeSectionBoundary sectionLabel="Birthdays"><BirthdaysWidget /></HomeSectionBoundary>
-            <HomeSectionBoundary sectionLabel="Upcoming holidays"><UpcomingHolidaysWidget /></HomeSectionBoundary>
-          </motion.div>
-        )}
-
-        {showDocumentsCard && (
           <motion.div variants={fadeUp} initial="hidden" animate="visible">
-            <HomeSectionBoundary sectionLabel="Company documents"><PublicDocumentsCard /></HomeSectionBoundary>
+            <QuickActions />
           </motion.div>
-        )}
 
-        {showProjectsRow && (
-          <motion.div
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-1 gap-4 md:auto-rows-[22rem] lg:grid-cols-7"
-          >
-            <div className="min-h-0 lg:col-span-4">
-              <HomeSectionBoundary sectionLabel="My issues">
-                <MyIssuesCard
-                  tickets={sortedMyTickets}
-                  isLoading={ticketsLoading}
-                  error={ticketsError}
-                  onRetry={handleRetryTickets}
-                />
-              </HomeSectionBoundary>
-            </div>
-            <div className="min-h-0 lg:col-span-3">
-              <HomeSectionBoundary sectionLabel="Active sprint">
-                <SprintCard
-                  summary={sprintSummary ?? undefined}
-                  isLoading={sprintLoading}
-                  error={sprintError}
-                  onRetry={handleRetrySprint}
-                />
-              </HomeSectionBoundary>
-            </div>
-          </motion.div>
-        )}
+          <ModuleSetupBanners />
 
-            {showBottomRow && (
-          <motion.div
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:auto-rows-[22rem] lg:grid-cols-3"
+          {canViewExecutive && (
+            <motion.div variants={fadeUp} initial="hidden" animate="visible">
+              <ExecutiveKpiWidget />
+            </motion.div>
+          )}
+
+          <DeferredDashboardContent
+            onVisible={handleDeferredVisible}
+            fallback={
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <WidgetSkeleton rows={3} />
+                <WidgetSkeleton rows={3} />
+                <WidgetSkeleton rows={3} />
+              </div>
+            }
           >
-            {projectsEnabled && canViewTickets && (
-              <div className="min-h-0">
-                <HomeSectionBoundary sectionLabel="Recent projects">
-                <RecentProjectsCard
-                    projects={recentProjects?.map((p) => ({
-                      ...p,
-                      key: p.key ?? "",
-                    }))}
-                    isLoading={projectsLoading}
-                    error={projectsError}
-                    onCreateProject={handleGoToProjects}
-                    onRetry={handleRetryProjects}
-                  />
-                </HomeSectionBoundary>
-              </div>
-            )}
-            {projectsEnabled && canViewTickets && (
-              <div className="min-h-0">
-                <HomeSectionBoundary sectionLabel="Recent activity">
-                <RecentActivityCard
-                    items={recentActivity}
-                    isLoading={activityLoading}
-                    error={activityError}
-                    onRetry={handleRetryActivity}
-                  />
-                </HomeSectionBoundary>
-              </div>
-            )}
-            {hrEnabled && canViewAttendance && (
-              <div className="min-h-0">
-                <HomeSectionBoundary sectionLabel="Team availability">
-                  <TeamCard
-                    members={teamAvailability}
-                    isLoading={teamLoading}
-                    error={teamError}
-                    onRetry={handleRetryTeam}
-                  />
-                </HomeSectionBoundary>
-              </div>
-            )}
-          </motion.div>
-            )}
-          </>
-        </DeferredDashboardContent>
-      </div>
-    </PageWrapper>
-    <GuidedTourOverlay />
+            <>
+              <HomeWidgetGrid
+                projectsEnabled={projectsEnabled}
+                hrEnabled={hrEnabled}
+                canViewExecutive={canViewExecutive}
+                canSelfAttendance={canSelfAttendance}
+              />
+
+              {showHrTeamRow && (
+                <motion.div
+                  variants={fadeUp}
+                  initial="hidden"
+                  animate="visible"
+                  className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
+                >
+                  {canViewLeaves && (
+                    <HomeSectionBoundary sectionLabel="Who is out today">
+                      <LeavesTodayWidget />
+                    </HomeSectionBoundary>
+                  )}
+                  {canViewAttendance && (
+                    <HomeSectionBoundary sectionLabel="Team attendance">
+                      <TeamAttendanceWidget
+                        data={teamAttendance}
+                        isLoading={teamLoading}
+                        error={teamError}
+                        onRetry={handleRetryTeam}
+                      />
+                    </HomeSectionBoundary>
+                  )}
+                  {canApproveLeaves && (
+                    <HomeSectionBoundary sectionLabel="Pending approvals">
+                      <PendingApprovalsWidget />
+                    </HomeSectionBoundary>
+                  )}
+                </motion.div>
+              )}
+
+              {hrEnabled && (
+                <motion.div
+                  variants={fadeUp}
+                  initial="hidden"
+                  animate="visible"
+                  className="grid grid-cols-1 gap-4 md:grid-cols-2"
+                >
+                  <HomeSectionBoundary sectionLabel="Birthdays">
+                    <BirthdaysWidget />
+                  </HomeSectionBoundary>
+                  <HomeSectionBoundary sectionLabel="Upcoming holidays">
+                    <UpcomingHolidaysWidget />
+                  </HomeSectionBoundary>
+                </motion.div>
+              )}
+
+              {showDocumentsCard && (
+                <motion.div
+                  variants={fadeUp}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  <HomeSectionBoundary sectionLabel="Company documents">
+                    <PublicDocumentsCard />
+                  </HomeSectionBoundary>
+                </motion.div>
+              )}
+
+              {showProjectsRow && (
+                <motion.div
+                  variants={fadeUp}
+                  initial="hidden"
+                  animate="visible"
+                  className="grid grid-cols-1 gap-4 md:auto-rows-[22rem] lg:grid-cols-7"
+                >
+                  <div className="min-h-0 lg:col-span-4">
+                    <HomeSectionBoundary sectionLabel="My issues">
+                      <MyIssuesCard
+                        tickets={sortedMyTickets}
+                        isLoading={ticketsLoading}
+                        error={ticketsError}
+                        onRetry={handleRetryTickets}
+                      />
+                    </HomeSectionBoundary>
+                  </div>
+                  <div className="min-h-0 lg:col-span-3">
+                    <HomeSectionBoundary sectionLabel="Active sprint">
+                      <SprintCard
+                        summary={sprintSummary ?? undefined}
+                        isLoading={sprintLoading}
+                        error={sprintError}
+                        onRetry={handleRetrySprint}
+                      />
+                    </HomeSectionBoundary>
+                  </div>
+                </motion.div>
+              )}
+
+              {showBottomRow && (
+                <motion.div
+                  variants={fadeUp}
+                  initial="hidden"
+                  animate="visible"
+                  className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:auto-rows-[22rem] lg:grid-cols-3"
+                >
+                  {projectsEnabled && canViewTickets && (
+                    <div className="min-h-0">
+                      <HomeSectionBoundary sectionLabel="Recent projects">
+                        <RecentProjectsCard
+                          projects={recentProjects?.map((p) => ({
+                            ...p,
+                            key: p.key ?? "",
+                          }))}
+                          isLoading={projectsLoading}
+                          error={projectsError}
+                          onCreateProject={handleGoToProjects}
+                          onRetry={handleRetryProjects}
+                        />
+                      </HomeSectionBoundary>
+                    </div>
+                  )}
+                  {projectsEnabled && canViewTickets && (
+                    <div className="min-h-0">
+                      <HomeSectionBoundary sectionLabel="Recent activity">
+                        <RecentActivityCard
+                          items={recentActivity}
+                          isLoading={activityLoading}
+                          error={activityError}
+                          onRetry={handleRetryActivity}
+                        />
+                      </HomeSectionBoundary>
+                    </div>
+                  )}
+                  {hrEnabled && canViewAttendance && (
+                    <div className="min-h-0">
+                      <HomeSectionBoundary sectionLabel="Team availability">
+                        <TeamCard
+                          members={teamAvailability}
+                          isLoading={teamLoading}
+                          error={teamError}
+                          onRetry={handleRetryTeam}
+                        />
+                      </HomeSectionBoundary>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </>
+          </DeferredDashboardContent>
+        </div>
+      </PageWrapper>
+      <GuidedTourOverlay />
     </>
   );
 }

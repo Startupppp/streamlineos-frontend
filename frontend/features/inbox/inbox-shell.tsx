@@ -27,12 +27,15 @@ import {
   useSnoozeNotification,
 } from "@/hooks/api/notifications";
 import { useUnifiedInbox } from "@/hooks/api/inbox";
-import { InboxItemCard } from "./inbox-item-card";
+import { InboxVirtualList } from "./inbox-virtual-list";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Button } from "@/components/ui/button";
 import { Inbox } from "lucide-react";
 import type { Notification } from "@/types/notifications";
-import type { InboxKind, MailInboxItem, BuildApprovalInboxItem } from "@/types/inbox";
+import type {
+  InboxKind,
+  MailInboxItem,
+  BuildApprovalInboxItem,
+} from "@/types/inbox";
 import { cn } from "@/lib/utils";
 
 type InboxView = "ALL" | "NOTIFICATIONS" | "MAIL" | "APPROVALS";
@@ -54,7 +57,8 @@ const VIEWS: Array<{ key: InboxView; label: string }> = [
 export function InboxShell() {
   const router = useRouter();
   const [view, setView] = useState<InboxView>("ALL");
-  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
+  const [selectedNotification, setSelectedNotification] =
+    useState<Notification | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const {
@@ -90,7 +94,10 @@ export function InboxShell() {
       const fullNotif = items
         .filter((i) => i.kind === "notification" || i.kind === "broadcast")
         .find((i) => i.id === n.id);
-      if (fullNotif && (fullNotif.kind === "notification" || fullNotif.kind === "broadcast")) {
+      if (
+        fullNotif &&
+        (fullNotif.kind === "notification" || fullNotif.kind === "broadcast")
+      ) {
         const mapped: Notification = {
           id: fullNotif.id,
           orgId: "",
@@ -99,7 +106,8 @@ export function InboxShell() {
           priority: fullNotif.priority as Notification["priority"],
           category: fullNotif.category as Notification["category"],
           sourceModule: fullNotif.sourceModule,
-          eventKey: fullNotif.kind === "notification" ? fullNotif.eventKey : null,
+          eventKey:
+            fullNotif.kind === "notification" ? fullNotif.eventKey : null,
           title: fullNotif.subject,
           message: fullNotif.body,
           link: fullNotif.deepLink,
@@ -131,12 +139,25 @@ export function InboxShell() {
     [router],
   );
 
-  const handleOpenLink = useCallback((link: string) => router.push(link), [router]);
-  const handleMarkRead = useCallback((id: number) => markRead.mutate(id), [markRead]);
-  const handleArchive = useCallback((id: number) => archive.mutate(id), [archive]);
-  const handleUnarchive = useCallback((id: number) => unarchive.mutate(id), [unarchive]);
+  const handleOpenLink = useCallback(
+    (link: string) => router.push(link),
+    [router],
+  );
+  const handleMarkRead = useCallback(
+    (id: number) => markRead.mutate(id),
+    [markRead],
+  );
+  const handleArchive = useCallback(
+    (id: number) => archive.mutate(id),
+    [archive],
+  );
+  const handleUnarchive = useCallback(
+    (id: number) => unarchive.mutate(id),
+    [unarchive],
+  );
   const handlePin = useCallback(
-    (id: number, pinned: boolean) => (pinned ? pin.mutate(id) : unpin.mutate(id)),
+    (id: number, pinned: boolean) =>
+      pinned ? pin.mutate(id) : unpin.mutate(id),
     [pin, unpin],
   );
   const handleSnooze = useCallback(
@@ -144,7 +165,10 @@ export function InboxShell() {
     [snooze],
   );
   const handleDelete = useCallback((id: number) => del.mutate(id), [del]);
-  const handleApprove = useCallback((id: number) => approve.mutate(id), [approve]);
+  const handleApprove = useCallback(
+    (id: number) => approve.mutate(id),
+    [approve],
+  );
   const handleReject = useCallback((id: number) => reject.mutate(id), [reject]);
 
   return (
@@ -184,42 +208,32 @@ export function InboxShell() {
         ) : items.length === 0 ? (
           <EmptyState
             className="flex-1 min-h-0"
-            illustration={<Inbox className="h-8 w-8 text-muted-foreground/40" />}
+            illustration={
+              <Inbox className="h-8 w-8 text-muted-foreground/40" />
+            }
             title="All caught up"
             description="Notifications, mail and approvals will appear here when they arrive."
           />
         ) : (
-          <>
-            {items.map((item) => (
-              <InboxItemCard
-                key={`${item.kind}:${item.id}`}
-                item={item}
-                onNotificationClick={handleNotificationClick}
-                onMailClick={handleMailClick}
-                onApprovalClick={handleApprovalClick}
-                onArchive={handleArchive}
-                onDelete={handleDelete}
-                onApprove={handleApprove}
-                onReject={handleReject}
-                isApproving={approve.isPending && approve.variables === item.id}
-                isRejecting={reject.isPending && reject.variables === item.id}
-                isArchiving={archive.isPending && archive.variables === item.id}
-                isDeleting={del.isPending && del.variables === item.id}
-              />
-            ))}
-            {hasNextPage && (
-              <div className="flex justify-center py-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => void fetchNextPage()}
-                  disabled={isFetchingNextPage}
-                >
-                  {isFetchingNextPage ? "Loading…" : "Load more"}
-                </Button>
-              </div>
-            )}
-          </>
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <InboxVirtualList
+              items={items}
+              hasNextPage={hasNextPage ?? false}
+              isFetchingNextPage={isFetchingNextPage}
+              onNotificationClick={handleNotificationClick}
+              onMailClick={handleMailClick}
+              onApprovalClick={handleApprovalClick}
+              onArchive={handleArchive}
+              onDelete={handleDelete}
+              onApprove={handleApprove}
+              onReject={handleReject}
+              approvingId={approve.isPending ? approve.variables : undefined}
+              rejectingId={reject.isPending ? reject.variables : undefined}
+              archivingId={archive.isPending ? archive.variables : undefined}
+              deletingId={del.isPending ? del.variables : undefined}
+              onLoadMore={() => void fetchNextPage()}
+            />
+          </div>
         )}
       </div>
 

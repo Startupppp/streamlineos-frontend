@@ -6494,6 +6494,7 @@
                     "type": "object",
                     "properties": {
                       "vendorIds": {
+                        "maxItems": 200,
                         "type": "array",
                         "items": {
                           "type": "integer",
@@ -13986,6 +13987,7 @@
                     "type": "string"
                   },
                   "memberIds": {
+                    "maxItems": 100,
                     "type": "array",
                     "items": {
                       "type": "string"
@@ -14130,6 +14132,7 @@
                     "type": "string"
                   },
                   "assigneeIds": {
+                    "maxItems": 20,
                     "type": "array",
                     "items": {
                       "type": "string"
@@ -20570,16 +20573,6 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "userId": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 128
-                  },
-                  "sessionId": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 256
-                  },
                   "orgId": {
                     "anyOf": [
                       {
@@ -20593,10 +20586,6 @@
                     ]
                   }
                 },
-                "required": [
-                  "userId",
-                  "sessionId"
-                ],
                 "additionalProperties": false
               }
             }
@@ -21299,6 +21288,100 @@
           }
         },
         "x-idempotency-command": "billing.checkout",
+        "x-idempotent": true
+      },
+      "patch": {
+        "operationId": "BillingController_confirmCheckout",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKeyHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "Billing"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "billing:subscription:manage",
+        "description": "Exposure: permission — billing:subscription:manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "orderId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "paymentId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "signature": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "plan": {
+                    "type": "string",
+                    "enum": [
+                      "STARTER",
+                      "PROFESSIONAL",
+                      "ENTERPRISE"
+                    ]
+                  },
+                  "billingCycle": {
+                    "default": "monthly",
+                    "type": "string",
+                    "enum": [
+                      "monthly",
+                      "annual"
+                    ]
+                  },
+                  "couponId": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "orderId",
+                  "paymentId",
+                  "signature",
+                  "plan"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "x-idempotency-command": "billing.subscription.verify",
         "x-idempotent": true
       }
     },
@@ -22667,206 +22750,6 @@
         "x-exposure": "permissioned",
         "x-permission": "billing:subscription:view",
         "description": "Exposure: permission — billing:subscription:view"
-      }
-    },
-    "/billing/razorpay": {
-      "get": {
-        "operationId": "BillingController_getRazorpaySubscription",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/Forbidden"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          },
-          "503": {
-            "$ref": "#/components/responses/ServiceUnavailable"
-          }
-        },
-        "tags": [
-          "Billing"
-        ],
-        "x-exposure": "permissioned",
-        "x-permission": "billing:subscription:view",
-        "description": "Exposure: permission — billing:subscription:view"
-      },
-      "post": {
-        "operationId": "BillingController_createOrder",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/IdempotencyKeyHeader"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/Forbidden"
-          },
-          "409": {
-            "$ref": "#/components/responses/Conflict"
-          },
-          "422": {
-            "$ref": "#/components/responses/UnprocessableEntity"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          },
-          "503": {
-            "$ref": "#/components/responses/ServiceUnavailable"
-          }
-        },
-        "tags": [
-          "Billing"
-        ],
-        "x-exposure": "permissioned",
-        "x-permission": "billing:subscription:manage",
-        "description": "Exposure: permission — billing:subscription:manage",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "plan": {
-                    "type": "string",
-                    "enum": [
-                      "STARTER",
-                      "PROFESSIONAL",
-                      "ENTERPRISE"
-                    ]
-                  },
-                  "billingCycle": {
-                    "default": "monthly",
-                    "type": "string",
-                    "enum": [
-                      "monthly",
-                      "annual"
-                    ]
-                  },
-                  "couponId": {
-                    "type": "integer",
-                    "exclusiveMinimum": 0,
-                    "maximum": 9007199254740991
-                  }
-                },
-                "required": [
-                  "plan"
-                ]
-              }
-            }
-          }
-        },
-        "x-idempotency-command": "billing.order.create",
-        "x-idempotent": true
-      },
-      "patch": {
-        "operationId": "BillingController_verifyPayment",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/IdempotencyKeyHeader"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/Forbidden"
-          },
-          "409": {
-            "$ref": "#/components/responses/Conflict"
-          },
-          "422": {
-            "$ref": "#/components/responses/UnprocessableEntity"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          },
-          "503": {
-            "$ref": "#/components/responses/ServiceUnavailable"
-          }
-        },
-        "tags": [
-          "Billing"
-        ],
-        "x-exposure": "permissioned",
-        "x-permission": "billing:subscription:manage",
-        "description": "Exposure: permission — billing:subscription:manage",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "razorpay_order_id": {
-                    "type": "string"
-                  },
-                  "razorpay_payment_id": {
-                    "type": "string"
-                  },
-                  "razorpay_signature": {
-                    "type": "string"
-                  },
-                  "plan": {
-                    "type": "string",
-                    "enum": [
-                      "STARTER",
-                      "PROFESSIONAL",
-                      "ENTERPRISE"
-                    ]
-                  },
-                  "billingCycle": {
-                    "default": "monthly",
-                    "type": "string",
-                    "enum": [
-                      "monthly",
-                      "annual"
-                    ]
-                  },
-                  "couponId": {
-                    "type": "integer",
-                    "exclusiveMinimum": 0,
-                    "maximum": 9007199254740991
-                  }
-                },
-                "required": [
-                  "razorpay_order_id",
-                  "razorpay_payment_id",
-                  "razorpay_signature",
-                  "plan"
-                ]
-              }
-            }
-          }
-        },
-        "x-idempotency-command": "billing.subscription.verify",
-        "x-idempotent": true
       }
     },
     "/billing/referrals": {
@@ -24386,6 +24269,7 @@
                           },
                           "roleIds": {
                             "minItems": 1,
+                            "maxItems": 50,
                             "type": "array",
                             "items": {
                               "type": "string"
@@ -24406,6 +24290,7 @@
                           },
                           "departmentIds": {
                             "minItems": 1,
+                            "maxItems": 200,
                             "type": "array",
                             "items": {
                               "type": "string"
@@ -24426,6 +24311,7 @@
                           },
                           "userIds": {
                             "minItems": 1,
+                            "maxItems": 200,
                             "type": "array",
                             "items": {
                               "type": "string"
@@ -24598,6 +24484,7 @@
                           },
                           "roleIds": {
                             "minItems": 1,
+                            "maxItems": 50,
                             "type": "array",
                             "items": {
                               "type": "string"
@@ -24618,6 +24505,7 @@
                           },
                           "departmentIds": {
                             "minItems": 1,
+                            "maxItems": 200,
                             "type": "array",
                             "items": {
                               "type": "string"
@@ -24638,6 +24526,7 @@
                           },
                           "userIds": {
                             "minItems": 1,
+                            "maxItems": 200,
                             "type": "array",
                             "items": {
                               "type": "string"
@@ -25117,6 +25006,7 @@
                     "type": "string"
                   },
                   "memberIds": {
+                    "maxItems": 100,
                     "type": "array",
                     "items": {
                       "type": "string"
@@ -25331,6 +25221,7 @@
                     ]
                   },
                   "memberIds": {
+                    "maxItems": 100,
                     "type": "array",
                     "items": {
                       "type": "string"
@@ -35562,6 +35453,7 @@
                     "type": "string"
                   },
                   "caseIds": {
+                    "maxItems": 500,
                     "type": "array",
                     "items": {
                       "type": "integer",
@@ -36575,6 +36467,7 @@
                     "type": "string"
                   },
                   "assigneeIds": {
+                    "maxItems": 20,
                     "type": "array",
                     "items": {
                       "type": "string"
@@ -36822,6 +36715,7 @@
                     "type": "string"
                   },
                   "assigneeIds": {
+                    "maxItems": 20,
                     "type": "array",
                     "items": {
                       "type": "string"
@@ -47697,6 +47591,7 @@
                     "type": "string"
                   },
                   "attendeeIds": {
+                    "maxItems": 200,
                     "type": "array",
                     "items": {
                       "type": "string"
@@ -47875,6 +47770,7 @@
                     ]
                   },
                   "attendeeIds": {
+                    "maxItems": 200,
                     "type": "array",
                     "items": {
                       "type": "string"
@@ -48883,6 +48779,7 @@
                       },
                       "memberIds": {
                         "minItems": 1,
+                        "maxItems": 200,
                         "type": "array",
                         "items": {
                           "type": "string"
@@ -48930,6 +48827,7 @@
                       },
                       "memberIds": {
                         "minItems": 1,
+                        "maxItems": 200,
                         "type": "array",
                         "items": {
                           "type": "string"
@@ -48977,6 +48875,7 @@
                       },
                       "memberIds": {
                         "minItems": 1,
+                        "maxItems": 200,
                         "type": "array",
                         "items": {
                           "type": "string"
@@ -52813,6 +52712,7 @@
                 "properties": {
                   "userIds": {
                     "minItems": 1,
+                    "maxItems": 10,
                     "type": "array",
                     "items": {
                       "type": "string",
@@ -91404,6 +91304,7 @@
                   },
                   "userIds": {
                     "minItems": 1,
+                    "maxItems": 100,
                     "type": "array",
                     "items": {
                       "type": "string",
@@ -97615,6 +97516,7 @@
                         "minLength": 1
                       },
                       "ids": {
+                        "maxItems": 500,
                         "type": "array",
                         "items": {
                           "type": "string"
@@ -97724,6 +97626,7 @@
                         "minLength": 1
                       },
                       "ids": {
+                        "maxItems": 500,
                         "type": "array",
                         "items": {
                           "type": "string"
@@ -127387,6 +127290,7 @@
                   },
                   "participantIds": {
                     "default": [],
+                    "maxItems": 30,
                     "type": "array",
                     "items": {
                       "type": "string"
@@ -127512,6 +127416,7 @@
                     ]
                   },
                   "participantIds": {
+                    "maxItems": 30,
                     "type": "array",
                     "items": {
                       "type": "string"
@@ -129355,6 +129260,7 @@
                 "properties": {
                   "templateIds": {
                     "minItems": 1,
+                    "maxItems": 20,
                     "type": "array",
                     "items": {
                       "type": "integer",
@@ -133241,6 +133147,7 @@
                   },
                   "interviewerIds": {
                     "minItems": 1,
+                    "maxItems": 20,
                     "type": "array",
                     "items": {
                       "type": "string"
@@ -163125,6 +163032,7 @@
                 "type": "object",
                 "properties": {
                   "tagIds": {
+                    "maxItems": 50,
                     "type": "array",
                     "items": {
                       "type": "integer",
@@ -170540,6 +170448,7 @@
                 "properties": {
                   "leadIds": {
                     "minItems": 1,
+                    "maxItems": 200,
                     "type": "array",
                     "items": {
                       "type": "number"
@@ -170613,6 +170522,7 @@
                 "properties": {
                   "leadIds": {
                     "minItems": 1,
+                    "maxItems": 200,
                     "type": "array",
                     "items": {
                       "type": "number"
@@ -170754,6 +170664,7 @@
                 "properties": {
                   "leadIds": {
                     "minItems": 1,
+                    "maxItems": 200,
                     "type": "array",
                     "items": {
                       "type": "number"
@@ -199774,12 +199685,14 @@
                 "type": "object",
                 "properties": {
                   "userIds": {
+                    "maxItems": 100,
                     "type": "array",
                     "items": {
                       "type": "string"
                     }
                   },
                   "runEmployeeIds": {
+                    "maxItems": 100,
                     "type": "array",
                     "items": {
                       "type": "integer",
@@ -206802,6 +206715,7 @@
                           "maxLength": 10000
                         },
                         "choiceIds": {
+                          "maxItems": 50,
                           "type": "array",
                           "items": {
                             "type": "integer",
@@ -206900,6 +206814,7 @@
                           "maxLength": 10000
                         },
                         "choiceIds": {
+                          "maxItems": 50,
                           "type": "array",
                           "items": {
                             "type": "integer",
@@ -207088,6 +207003,7 @@
                   },
                   "answerValue": {},
                   "choiceIds": {
+                    "maxItems": 50,
                     "type": "array",
                     "items": {
                       "type": "integer",
@@ -217509,6 +217425,536 @@
         "description": "Exposure: authorized in service — resolveFileOwner"
       }
     },
+    "/storage/multipart/abort": {
+      "post": {
+        "operationId": "StorageMultipartController_abort",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "StorageMultipart"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "storage:files:manage",
+        "description": "Exposure: permission — storage:files:manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  },
+                  "uploadId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  }
+                },
+                "required": [
+                  "key",
+                  "uploadId"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/storage/multipart/complete": {
+      "post": {
+        "operationId": "StorageMultipartController_complete",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "StorageMultipart"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "storage:files:manage",
+        "description": "Exposure: permission — storage:files:manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  },
+                  "uploadId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "parts": {
+                    "minItems": 1,
+                    "maxItems": 10000,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "partNumber": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        },
+                        "eTag": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "partNumber",
+                        "eTag"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "key",
+                  "uploadId",
+                  "parts"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/storage/multipart/initiate": {
+      "post": {
+        "operationId": "StorageMultipartController_initiate",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "StorageMultipart"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "storage:files:manage",
+        "description": "Exposure: permission — storage:files:manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "folder": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "pattern": "^[a-zA-Z0-9_-]+$"
+                  },
+                  "fileName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "mimeType": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "partCount": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000
+                  }
+                },
+                "required": [
+                  "folder",
+                  "fileName",
+                  "mimeType",
+                  "partCount"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/storage/quarantine": {
+      "get": {
+        "operationId": "StorageQuarantineController_list",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending_scan",
+                "clean",
+                "infected",
+                "error"
+              ]
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "StorageQuarantine"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "storage:quarantine:view",
+        "description": "Exposure: permission — storage:quarantine:view"
+      }
+    },
+    "/storage/quarantine/{quarantineId}": {
+      "get": {
+        "operationId": "StorageQuarantineController_getOne",
+        "parameters": [
+          {
+            "name": "quarantineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "StorageQuarantine"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "storage:quarantine:view",
+        "description": "Exposure: permission — storage:quarantine:view"
+      },
+      "delete": {
+        "operationId": "StorageQuarantineController_remove",
+        "parameters": [
+          {
+            "name": "quarantineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "StorageQuarantine"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "storage:quarantine:manage",
+        "description": "Exposure: permission — storage:quarantine:manage"
+      }
+    },
+    "/storage/quarantine/{quarantineId}/reject": {
+      "post": {
+        "operationId": "StorageQuarantineController_reject",
+        "parameters": [
+          {
+            "name": "quarantineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKeyHeader"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "StorageQuarantine"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "storage:quarantine:manage",
+        "description": "Exposure: permission — storage:quarantine:manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "x-idempotency-command": "storage.quarantine.reject",
+        "x-idempotent": true
+      }
+    },
+    "/storage/quarantine/{quarantineId}/release": {
+      "post": {
+        "operationId": "StorageQuarantineController_release",
+        "parameters": [
+          {
+            "name": "quarantineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKeyHeader"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "StorageQuarantine"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "storage:quarantine:manage",
+        "description": "Exposure: permission — storage:quarantine:manage",
+        "x-idempotency-command": "storage.quarantine.release",
+        "x-idempotent": true,
+        "x-bodyless": true
+      }
+    },
     "/storage/upload": {
       "post": {
         "operationId": "StorageController_upload",
@@ -220549,37 +220995,353 @@
                     "default": [],
                     "type": "array",
                     "items": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "enum": [
-                            "notify_roles",
-                            "notify_all",
-                            "email",
-                            "create_task",
-                            "webhook",
-                            "support_assign_ticket",
-                            "support_set_priority",
-                            "support_add_tag",
-                            "support_internal_note",
-                            "ai_classify",
-                            "ai_summarize",
-                            "ai_extract",
-                            "ai_routing_suggestion"
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "notify_roles"
+                            },
+                            "config": {
+                              "type": "object",
+                              "properties": {
+                                "roles": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                "title": {
+                                  "type": "string"
+                                },
+                                "message": {
+                                  "type": "string"
+                                },
+                                "link": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "roles",
+                                "title",
+                                "message"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "config"
                           ]
                         },
-                        "config": {
+                        {
                           "type": "object",
-                          "propertyNames": {
-                            "type": "string"
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "notify_all"
+                            },
+                            "config": {
+                              "type": "object",
+                              "properties": {
+                                "title": {
+                                  "type": "string"
+                                },
+                                "message": {
+                                  "type": "string"
+                                },
+                                "link": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "title",
+                                "message"
+                              ]
+                            }
                           },
-                          "additionalProperties": {}
+                          "required": [
+                            "type",
+                            "config"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "email"
+                            },
+                            "config": {
+                              "type": "object",
+                              "properties": {
+                                "to": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  ]
+                                },
+                                "subject": {
+                                  "type": "string"
+                                },
+                                "body": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "to",
+                                "subject",
+                                "body"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "config"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "create_task"
+                            },
+                            "config": {
+                              "type": "object",
+                              "properties": {
+                                "title": {
+                                  "type": "string"
+                                },
+                                "assigneeId": {
+                                  "type": "string"
+                                },
+                                "dueInDays": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                }
+                              },
+                              "required": [
+                                "title"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "config"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "webhook"
+                            },
+                            "config": {
+                              "type": "object",
+                              "properties": {
+                                "event": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "event"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "config"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "support_assign_ticket"
+                            },
+                            "config": {
+                              "type": "object",
+                              "properties": {
+                                "assigneeId": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "assigneeId"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "config"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "support_set_priority"
+                            },
+                            "config": {
+                              "type": "object",
+                              "properties": {
+                                "priority": {
+                                  "type": "string",
+                                  "minLength": 1
+                                }
+                              },
+                              "required": [
+                                "priority"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "config"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "support_add_tag"
+                            },
+                            "config": {
+                              "type": "object",
+                              "properties": {
+                                "tagId": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                }
+                              },
+                              "required": [
+                                "tagId"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "config"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "support_internal_note"
+                            },
+                            "config": {
+                              "type": "object",
+                              "properties": {
+                                "body": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "body"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "config"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "ai_classify"
+                            },
+                            "config": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {}
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "config"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "ai_summarize"
+                            },
+                            "config": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {}
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "config"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "ai_extract"
+                            },
+                            "config": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {}
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "config"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "ai_routing_suggestion"
+                            },
+                            "config": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {}
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "config"
+                          ]
                         }
-                      },
-                      "required": [
-                        "type",
-                        "config"
                       ]
                     }
                   },
@@ -220720,37 +221482,353 @@
                   "actions": {
                     "type": "array",
                     "items": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "enum": [
-                            "notify_roles",
-                            "notify_all",
-                            "email",
-                            "create_task",
-                            "webhook",
-                            "support_assign_ticket",
-                            "support_set_priority",
-                            "support_add_tag",
-                            "support_internal_note",
-                            "ai_classify",
-                            "ai_summarize",
-                            "ai_extract",
-                            "ai_routing_suggestion"
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "notify_roles"
+                            },
+                            "config": {
+                              "type": "object",
+                              "properties": {
+                                "roles": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                "title": {
+                                  "type": "string"
+                                },
+                                "message": {
+                                  "type": "string"
+                                },
+                                "link": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "roles",
+                                "title",
+                                "message"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "config"
                           ]
                         },
-                        "config": {
+                        {
                           "type": "object",
-                          "propertyNames": {
-                            "type": "string"
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "notify_all"
+                            },
+                            "config": {
+                              "type": "object",
+                              "properties": {
+                                "title": {
+                                  "type": "string"
+                                },
+                                "message": {
+                                  "type": "string"
+                                },
+                                "link": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "title",
+                                "message"
+                              ]
+                            }
                           },
-                          "additionalProperties": {}
+                          "required": [
+                            "type",
+                            "config"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "email"
+                            },
+                            "config": {
+                              "type": "object",
+                              "properties": {
+                                "to": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  ]
+                                },
+                                "subject": {
+                                  "type": "string"
+                                },
+                                "body": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "to",
+                                "subject",
+                                "body"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "config"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "create_task"
+                            },
+                            "config": {
+                              "type": "object",
+                              "properties": {
+                                "title": {
+                                  "type": "string"
+                                },
+                                "assigneeId": {
+                                  "type": "string"
+                                },
+                                "dueInDays": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                }
+                              },
+                              "required": [
+                                "title"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "config"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "webhook"
+                            },
+                            "config": {
+                              "type": "object",
+                              "properties": {
+                                "event": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "event"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "config"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "support_assign_ticket"
+                            },
+                            "config": {
+                              "type": "object",
+                              "properties": {
+                                "assigneeId": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "assigneeId"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "config"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "support_set_priority"
+                            },
+                            "config": {
+                              "type": "object",
+                              "properties": {
+                                "priority": {
+                                  "type": "string",
+                                  "minLength": 1
+                                }
+                              },
+                              "required": [
+                                "priority"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "config"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "support_add_tag"
+                            },
+                            "config": {
+                              "type": "object",
+                              "properties": {
+                                "tagId": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                }
+                              },
+                              "required": [
+                                "tagId"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "config"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "support_internal_note"
+                            },
+                            "config": {
+                              "type": "object",
+                              "properties": {
+                                "body": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "body"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "config"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "ai_classify"
+                            },
+                            "config": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {}
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "config"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "ai_summarize"
+                            },
+                            "config": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {}
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "config"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "ai_extract"
+                            },
+                            "config": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {}
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "config"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "ai_routing_suggestion"
+                            },
+                            "config": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {}
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "config"
+                          ]
                         }
-                      },
-                      "required": [
-                        "type",
-                        "config"
                       ]
                     }
                   },
@@ -239525,6 +240603,11 @@
                       "type": "string"
                     },
                     "additionalProperties": {}
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
                   }
                 },
                 "required": [
