@@ -24,3 +24,53 @@
 - [x] Quoted globs are checked on this platform.
       All four globs in the BE `lint` script match on macOS/zsh (5447 / 50 / 182 / 56 files). No `check:*` gate in either repo uses a shell glob or `globSync`; all walk with `readdirSync`, so the platform risk is a walk that reaches nothing — measured directly by the empty-corpus sweep above rather than by inspection.
       PARTIAL: 7 of 27 tree-scanning **specs** carry no non-empty floor, including `test/security/operator-access.spec.ts` and `test/security/appsec/secrets-cookies-and-keys.spec.ts`. Both resolve real paths today, so neither is currently vacuous; spec territory.
+
+---
+
+## Session S9b — the four §4 findings, closed outside gate-script territory
+
+**Status addendum:** 7 of 8 closed; 1 partial. Report: `reports/35b-gate-wiring.md`.
+No `check-*.mjs` was touched; no application source was modified.
+
+- [x] Coverage counts are honest — **re-closed with a larger finding than the one it named.**
+      The "44 of 89 gates are never invoked" measurement is right and incomplete. Two of the
+      five workflow files (FE `backend.yml`, `seeded-e2e.yml`) target a `backend/` directory
+      the frontend repo does not have and die at `Setup pnpm` in 40s — measured on FE runs
+      33601538287 / 33601538365, every gate step `-`. They named 11 more backend gates. And in
+      BOTH live workflows every gate is sequenced after `Lint`, which is red — BE run
+      33622305895 and FE run 33622293615 show `X Lint` then `-` for all 26 / 10 gate steps.
+      So NO gate in either repo had executed in CI. Both workflows now carry a `gates` job with
+      no `needs:`. 66 gates classified and wired: **49 blocking · 8 allow-failure with a named
+      measured reason · 9 genuinely un-runnable with the prerequisite named**. Never-invoked
+      count 51 → 9; dead-workflow-only 11 → 0. The two dead FE workflows are deleted and their
+      database-bearing jobs ported to BE `.github/workflows/db-gates.yml` (dispatch-only,
+      because they have never executed anywhere and an unproven required check gets muted).
+- [x] Five gate scripts wired to no package script — **closed.** BE `check:cache-key-shapes` (0),
+      `check:hr-pagination` (0), `check:namespace-coverage` (0), `check:replay-ledger` (2, needs
+      `COLD_DATABASE_URL` — its self-test exits 2 too); FE `check:import-direction` (1).
+- [x] Zero baselines raised merely to turn a regression green — **closed for the N+1 baseline.**
+      7 of the 8 (payroll `inputs.service.ts` now reports 0, fixed in-tree by another agent).
+      Reclassified with line numbers: 5 ACTIONABLE, 2 FALSE-POSITIVE (`cron-leave` — both sites
+      are `while (true)` keyset pagination; `support-kb` — all three "loops" are single-line
+      `.map`/`.filter` callbacks and the insert is at method top level). ACTIONABLE 0 → 5 files
+      / 9 call sites, REGRESSIONS 7 → 0, UNCLASSIFIED still 101, **gate still rc=1 and left red**.
+      That FALSE-POSITIVE pair is one detector bug: an array-callback opener whose line contains
+      an object literal defeats the balanced-single-line skip, and the scanner adopts the next
+      multi-line block up to 30 lines later. Measured blast radius: 8 of 153 files, 18 of 224
+      sites. Fix is in `check-db-call-count.mjs` — ticket 35's file.
+- [x] Suppressed coverage on a money path — **closed.** `quotes.service.spec.ts` `it.skip`
+      replaced with 8 tests over both call sites (`quotes.service.ts:141` create, `:245` update)
+      and both directions. Mutation-proven: neutering both `approvalStatus` assignments kills
+      exactly 2 (23 passed → 2 failed / 21 passed); service restored, `git diff` clean.
+      NEW DEFECT, deliberately not encoded in a test: `update()` gates approval on
+      `input.discountPercent` but recomputes money only when `input.lineItems` is also present,
+      and `quotes` stores `discount_amount` with no `discount_percent` column — so a
+      discount-only PATCH raises an approval for a price change that never happens.
+- [ ] `check:lifecycle-predicates` (ticket 06) — **diagnosed, not fixed.**
+      PARTIAL: it is a GENUINE committed regression, not a broken gate. The failing self-test
+      assertion runs the real detector over the real tree and asserts the same ratchet the gate
+      asserts (76 vs baseline 75), so a source regression necessarily reds both; the other 21
+      assertions pass. The 53 contributing files have an empty intersection with
+      `git status --porcelain src`, so it is committed. Not pinned to one read — the gate keeps
+      a count baseline, not a list, and 12 candidate files were touched today. Suspect set in
+      the report. Wired allow-failure; `PRIMARY_CANDIDATE_BASELINE` NOT raised.

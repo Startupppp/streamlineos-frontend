@@ -63,7 +63,9 @@
     "check:effect-fetches:self-test": "node scripts/check-no-effect-fetches.mjs --self-test",
     "check:routes:self-test": "node scripts/check-no-business-routes.mjs --self-test",
     "check:icon-labels:self-test": "node scripts/check-no-unlabeled-icon-buttons.mjs --self-test",
-    "check:repo-paths:self-test": "node scripts/check-repo-paths.mjs --self-test"
+    "check:repo-paths:self-test": "node scripts/check-repo-paths.mjs --self-test",
+    "check:import-direction": "node scripts/check-import-direction.mjs",
+    "check:import-direction:self-test": "node scripts/check-import-direction.mjs --self-test"
   },
   "dependencies": {
     "@animateicons/react": "^0.3.4",
