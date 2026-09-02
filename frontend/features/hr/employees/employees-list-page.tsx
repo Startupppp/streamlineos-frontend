@@ -44,6 +44,15 @@ type ViewMode = "grid" | "list";
 
 const PAGE_SIZE = DEFAULT_PAGE_SIZE;
 
+/**
+ * `useInfiniteHrEmployees` accumulates its pages, so the grid would mount one
+ * card per employee ever loaded. The list branch is bounded by `DataTable`'s own
+ * window; this bounds the grid to match, and "Load more employees" reveals the
+ * cards already in hand before asking the server for another page — one control,
+ * so nothing loaded is ever stranded behind a second one.
+ */
+const GRID_RENDER_PAGE_SIZE = 24;
+
 function buildEmployeeListColumns(
   getDept: (emp: Employee) => string | null,
 ): DataTableColumn<Employee>[] {
@@ -184,6 +193,25 @@ export function EmployeesListPage() {
     () => employeePages?.pages.flatMap((page) => page.data) ?? [],
     [employeePages],
   );
+
+  const [gridPagesShown, setGridPagesShown] = useState(1);
+  const gridVisibleCount = Math.min(
+    employees.length,
+    gridPagesShown * GRID_RENDER_PAGE_SIZE,
+  );
+  const hasUnrenderedEmployees = view === "grid" && gridVisibleCount < employees.length;
+  const gridEmployees = useMemo(
+    () => (view === "grid" ? employees.slice(0, gridVisibleCount) : employees),
+    [view, employees, gridVisibleCount],
+  );
+
+  const handleLoadMore = useCallback(() => {
+    if (hasUnrenderedEmployees) {
+      setGridPagesShown((p) => p + 1);
+      return;
+    }
+    void fetchNextPage();
+  }, [hasUnrenderedEmployees, fetchNextPage]);
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -346,7 +374,7 @@ export function EmployeesListPage() {
                   isFetching && "opacity-70 transition-opacity",
                 )}
               >
-                {employees.map((emp) => (
+                {gridEmployees.map((emp) => (
                   <EmployeeCard key={emp.id} employee={emp} department={getDept(emp)} />
                 ))}
               </div>
@@ -367,13 +395,13 @@ export function EmployeesListPage() {
           </div>
         </div>
 
-        {!isError && hasNextPage ? (
+        {!isError && (hasNextPage || hasUnrenderedEmployees) ? (
           <div className="flex shrink-0 justify-center rounded-xl border border-border/70 p-2">
             <Button
               variant="outline"
               size="sm"
               disabled={isFetchingNextPage}
-              onClick={() => void fetchNextPage()}
+              onClick={handleLoadMore}
             >
               {isFetchingNextPage ? "Loading..." : "Load more employees"}
             </Button>

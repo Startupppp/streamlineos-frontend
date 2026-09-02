@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import { Mail, Building2, Briefcase } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -25,7 +26,17 @@ function employeeInitials(emp: Employee): string {
   return (fromName ?? "?").toUpperCase();
 }
 
-export function EmployeeCard({ employee: emp, department }: EmployeeCardProps) {
+/**
+ * One per loaded employee in the directory grid, and `useInfiniteHrEmployees`
+ * accumulates its pages — so the mounted count grows with every "Load more"
+ * while the page re-renders on each search keystroke. Both props are already
+ * stable (`employees` is a `useMemo` over the query pages, `department` a
+ * string), so memo turns 60 avoidable renders per keystroke into zero.
+ */
+export const EmployeeCard = memo(function EmployeeCard({
+  employee: emp,
+  department,
+}: EmployeeCardProps) {
   const displayName = employeeDisplayName(emp);
   const initials = employeeInitials(emp);
   const designation = emp.designation?.trim() || null;
@@ -123,4 +134,4 @@ export function EmployeeCard({ employee: emp, department }: EmployeeCardProps) {
       </article>
     </Link>
   );
-}
+});

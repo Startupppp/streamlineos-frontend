@@ -21,7 +21,7 @@ import { EmptyMailIllustration } from "@/components/illustrations";
 import { useChatChannels, useArchivedChannels, useChatOnlineUsers } from "@/hooks/api";
 import { cn } from "@/lib/utils";
 import { ChannelSidebarSection } from "./channel-sidebar-section";
-import { ChannelListEntry } from "./channel-list-entry";
+import { ChannelSectionList } from "./channel-section-list";
 import { NewDMDialog } from "./new-dm-dialog";
 import { NewGroupDialog } from "./new-group-dialog";
 import { ChatSearchDialog } from "./chat-search-dialog";
@@ -260,18 +260,17 @@ export function ChannelSidebar({
             </div>
           ) : (
             <>
-              <div className={cn("py-1 flex overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden gap-1 [&>*]:shrink-0", isCollapsed && "hidden md:block")}>
-                {compactChannels.map((ch) => (
-                  <ChannelListEntry
-                    key={ch.id}
-                    channel={ch}
-                    activeChannelId={activeChannelId}
-                    currentUserId={currentUserId}
-                    onlineUserIds={onlineUserIds}
-                    onSelectChannel={onSelectChannel}
-                    compact
-                  />
-                ))}
+              <div className={cn("py-1", isCollapsed && "hidden md:block")}>
+                <ChannelSectionList
+                  channels={compactChannels}
+                  label="Conversations"
+                  compact
+                  className="flex gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                  activeChannelId={activeChannelId}
+                  currentUserId={currentUserId}
+                  onlineUserIds={onlineUserIds}
+                  onSelectChannel={onSelectChannel}
+                />
               </div>
 
               <div className={cn("py-1", isCollapsed && "md:hidden")}>
@@ -283,18 +282,16 @@ export function ChannelSidebar({
                     onToggle={handleToggleFavorites}
                     icon={<Star className="h-3 w-3 fill-amber-400 text-status-warning-ink" />}
                   >
-                    {favorites.map((ch) => (
-                      <ChannelListEntry
-                        key={ch.id}
-                        channel={ch}
-                        activeChannelId={activeChannelId}
-                        currentUserId={currentUserId}
-                        onlineUserIds={onlineUserIds}
-                        onSelectChannel={onSelectChannel}
-                        onStartCall={onStartCall}
-                        onOpenSettings={onOpenSettings}
-                      />
-                    ))}
+                    <ChannelSectionList
+                      channels={favorites}
+                      label="Favorites"
+                      activeChannelId={activeChannelId}
+                      currentUserId={currentUserId}
+                      onlineUserIds={onlineUserIds}
+                      onSelectChannel={onSelectChannel}
+                      onStartCall={onStartCall}
+                      onOpenSettings={onOpenSettings}
+                    />
                   </ChannelSidebarSection>
                 )}
               </div>
@@ -325,18 +322,16 @@ export function ChannelSidebar({
                     collapsed={publicCollapsed}
                     onToggle={handleTogglePublic}
                   >
-                    {publicChannels.map((ch) => (
-                      <ChannelListEntry
-                        key={ch.id}
-                        channel={ch}
-                        activeChannelId={activeChannelId}
-                        currentUserId={currentUserId}
-                        onlineUserIds={onlineUserIds}
-                        onSelectChannel={onSelectChannel}
-                        onStartCall={onStartCall}
-                        onOpenSettings={onOpenSettings}
-                      />
-                    ))}
+                    <ChannelSectionList
+                      channels={publicChannels}
+                      label="Public channels"
+                      activeChannelId={activeChannelId}
+                      currentUserId={currentUserId}
+                      onlineUserIds={onlineUserIds}
+                      onSelectChannel={onSelectChannel}
+                      onStartCall={onStartCall}
+                      onOpenSettings={onOpenSettings}
+                    />
                   </ChannelSidebarSection>
                 )}
 
@@ -347,18 +342,16 @@ export function ChannelSidebar({
                     collapsed={groupsCollapsed}
                     onToggle={handleToggleGroups}
                   >
-                    {groups.map((ch) => (
-                      <ChannelListEntry
-                        key={ch.id}
-                        channel={ch}
-                        activeChannelId={activeChannelId}
-                        currentUserId={currentUserId}
-                        onlineUserIds={onlineUserIds}
-                        onSelectChannel={onSelectChannel}
-                        onStartCall={onStartCall}
-                        onOpenSettings={onOpenSettings}
-                      />
-                    ))}
+                    <ChannelSectionList
+                      channels={groups}
+                      label="Groups"
+                      activeChannelId={activeChannelId}
+                      currentUserId={currentUserId}
+                      onlineUserIds={onlineUserIds}
+                      onSelectChannel={onSelectChannel}
+                      onStartCall={onStartCall}
+                      onOpenSettings={onOpenSettings}
+                    />
                   </ChannelSidebarSection>
                 )}
 
@@ -369,18 +362,16 @@ export function ChannelSidebar({
                     collapsed={dmsCollapsed}
                     onToggle={handleToggleDMs}
                   >
-                    {dms.map((ch) => (
-                      <ChannelListEntry
-                        key={ch.id}
-                        channel={ch}
-                        activeChannelId={activeChannelId}
-                        currentUserId={currentUserId}
-                        onlineUserIds={onlineUserIds}
-                        onSelectChannel={onSelectChannel}
-                        onStartCall={onStartCall}
-                        onOpenSettings={onOpenSettings}
-                      />
-                    ))}
+                    <ChannelSectionList
+                      channels={dms}
+                      label="Direct messages"
+                      activeChannelId={activeChannelId}
+                      currentUserId={currentUserId}
+                      onlineUserIds={onlineUserIds}
+                      onSelectChannel={onSelectChannel}
+                      onStartCall={onStartCall}
+                      onOpenSettings={onOpenSettings}
+                    />
                   </ChannelSidebarSection>
                 )}
 

@@ -4,7 +4,7 @@ import { Archive, ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type { Channel } from "./chat-types";
-import { ChannelListEntry } from "./channel-list-entry";
+import { ChannelSectionList } from "./channel-section-list";
 
 interface ChannelArchivedSectionProps {
   isLoading: boolean;
@@ -57,18 +57,16 @@ export function ChannelArchivedSection({
           ))}
         </div>
       ) : channels.length > 0 ? (
-        channels.map((ch) => (
-          <ChannelListEntry
-            key={ch.id}
-            channel={ch}
-            activeChannelId={activeChannelId}
-            currentUserId={currentUserId}
-            onlineUserIds={onlineUserIds}
-            onSelectChannel={onSelectChannel}
-            onStartCall={onStartCall}
-            onOpenSettings={onOpenSettings}
-          />
-        ))
+        <ChannelSectionList
+          channels={channels}
+          label="Archived conversations"
+          activeChannelId={activeChannelId}
+          currentUserId={currentUserId}
+          onlineUserIds={onlineUserIds}
+          onSelectChannel={onSelectChannel}
+          onStartCall={onStartCall}
+          onOpenSettings={onOpenSettings}
+        />
       ) : (
         <div className="text-center py-10 px-4">
           <div className="h-12 w-12 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-3">

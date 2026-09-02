@@ -18,6 +18,7 @@ import { useHuddleRealtime } from "./huddle-realtime";
 import { getDateLabel, buildChatUserMap, resolveChatUserName } from "./chat-helpers";
 import type { Message } from "./chat-types";
 import { useChatScroll } from "./use-chat-scroll";
+import { resolveMessageWindowStart } from "./message-render-window";
 import type { AiAction } from "@/components/ai";
 import { useChatSummarize } from "@/hooks/api/chat-summarize";
 import { useCan } from "@/hooks/api/access";
@@ -202,6 +203,11 @@ export function useMessagePanelData({
     });
   }, [messagesData]);
 
+  const [renderPages, setRenderPages] = useState(1);
+  useEffect(() => {
+    setRenderPages(1);
+  }, [channelId]);
+
   const { data: pollResult } = useChatPoll(channelId, lastPollTime, !ablyConnected && messages.length > 0);
 
   useEffect(() => {
@@ -338,25 +344,49 @@ export function useMessagePanelData({
     startHuddle.mutate(channelId);
   }, [activeHuddle, channelId, joinHuddle, startHuddle]);
 
+  const firstUnreadIndex = useMemo(() => {
+    const currentMember = channel?.members?.find((m) => m.user?.id === currentUserId);
+    const lastReadAt = currentMember?.lastReadAt;
+    if (!lastReadAt) return -1;
+    const lastReadTime = new Date(lastReadAt).getTime();
+    return messages.findIndex(
+      (m) => m.createdAt && new Date(m.createdAt).getTime() > lastReadTime,
+    );
+  }, [messages, channel, currentUserId]);
+
+  const firstUnreadMessageId =
+    firstUnreadIndex >= 0 ? messages[firstUnreadIndex]?.id : undefined;
+
+  const windowStart = resolveMessageWindowStart(
+    messages.length,
+    renderPages,
+    firstUnreadIndex,
+  );
+  const renderedMessages = useMemo(
+    () => (windowStart === 0 ? messages : messages.slice(windowStart)),
+    [messages, windowStart],
+  );
+  const hasOlderHeld = windowStart > 0;
+
+  const handleLoadOlder = useCallback(() => {
+    if (hasOlderHeld) {
+      setRenderPages((p) => p + 1);
+      return;
+    }
+    void fetchNextPage();
+  }, [hasOlderHeld, fetchNextPage]);
+
   const groupedMessages = useMemo(() => {
     const groups: { date: string; messages: Message[] }[] = [];
     let currentDate = "";
-    for (const msg of messages) {
+    for (const msg of renderedMessages) {
       const d = msg.createdAt ? new Date(msg.createdAt) : new Date();
       const dateStr = getDateLabel(d);
       if (dateStr !== currentDate) { currentDate = dateStr; groups.push({ date: dateStr, messages: [] }); }
       groups[groups.length - 1]!.messages.push(msg);
     }
     return groups;
-  }, [messages]);
-
-  const firstUnreadMessageId = useMemo(() => {
-    const currentMember = channel?.members?.find((m) => m.user?.id === currentUserId);
-    const lastReadAt = currentMember?.lastReadAt;
-    if (!lastReadAt) return undefined;
-    const lastReadTime = new Date(lastReadAt).getTime();
-    return messages.find((m) => m.createdAt && new Date(m.createdAt).getTime() > lastReadTime)?.id;
-  }, [messages, channel, currentUserId]);
+  }, [renderedMessages]);
 
   const handleStartEdit = useCallback((msg: Message) => {
     setEditingMessage(msg);
@@ -383,7 +413,7 @@ export function useMessagePanelData({
   return {
     header: { onBack, displayName, channel, otherMember, isOtherOnline, memberCount, activeHuddle, isInHuddle, onHuddle: handleHuddle, huddleStartPending: startHuddle.isPending, huddleJoinPending: joinHuddle.isPending, canUseAi, summarizeAction, channelId, onToggleFiles: handleToggleFiles, onToggleSaved: handleToggleSaved, showFilesPanel, showSavedPanel, onToggleInfo, showInfoPanel, isSidebarCollapsed, onToggleSidebar },
     workspace: {
-      messageList: { groupedMessages, messages, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage, currentUserId, channelId, displayName, channelType: channel?.type, editingMessage, editInput, pinnedMessageIds, savedMessageIds, replyCountMap, firstUnreadMessageId, onEditInputChange: setEditInput, onStartEdit: handleStartEdit, onCancelEdit: handleCancelEdit, onSaveEdit: handleEdit, onReply: handleReply, onOpenThread: handleOpenThread, onDelete: handleDelete, onReact: handleReact, onPin: handlePin, onUnpin: handleUnpin, onSave: handleSave, onUnsaveMsg: handleUnsaveMsg, onForward: handleForward, resolveUserName, showScrollBtn, scrollToBottom: handleScrollToBottom, messagesEndRef, scrollContainerRef, onScroll: handleScroll },
+      messageList: { groupedMessages, messages, isLoading, hasNextPage: hasNextPage || hasOlderHeld, isFetchingNextPage, fetchNextPage: handleLoadOlder, currentUserId, channelId, displayName, channelType: channel?.type, editingMessage, editInput, pinnedMessageIds, savedMessageIds, replyCountMap, firstUnreadMessageId, onEditInputChange: setEditInput, onStartEdit: handleStartEdit, onCancelEdit: handleCancelEdit, onSaveEdit: handleEdit, onReply: handleReply, onOpenThread: handleOpenThread, onDelete: handleDelete, onReact: handleReact, onPin: handlePin, onUnpin: handleUnpin, onSave: handleSave, onUnsaveMsg: handleUnsaveMsg, onForward: handleForward, resolveUserName, showScrollBtn, scrollToBottom: handleScrollToBottom, messagesEndRef, scrollContainerRef, onScroll: handleScroll },
       messageInput: { channelId, displayName, channelType: channel?.type, messageInput, setMessageInput, inputRef, fileInputRef, replyTo, setReplyTo, pendingAttachments, setPendingAttachments, uploading, onFileSelect: handleFileSelect, showEmojiPicker, setShowEmojiPicker, emojiRef, insertEmoji, showMentions, setShowMentions, mentionQuery, mentionIndex, setMentionIndex, filteredMentions, insertMention, showTicketPicker, ticketQuery, ticketSelectedIndex, onTicketSelect: insertTicket, typingText, sendMessage, onSend: handleSend, onKeyDown: handleKeyDown, onInputChange: handleInputChange, onFilesSelected: handlePastedFiles },
       huddle: activeHuddle && isInHuddle ? { huddle: activeHuddle, channelId, currentUserId } : undefined,
     },

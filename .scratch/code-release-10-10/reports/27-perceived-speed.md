@@ -240,3 +240,194 @@ so that a mid-session red typecheck in this window is not misattributed to ticke
 
 Nothing outside `features/**` and `components/**` was edited. `next.config.ts`, `scripts/`,
 `hooks/**`, `lib/query*` and `app/(public)/**` were read only. No git command was run.
+
+---
+
+# Session 2 — boxes 4 and 6 (virtualization + measurement)
+
+**Territory this session:** `features/{chat,notifications,directory,hr,build,calendar}` and the
+shared `components/**` list/table primitives. **`features/inbox/**` and `features/mail/**` were
+another agent's and were not touched**, so box 4's coverage below is six of the seven named
+modules, not seven.
+
+## The defect that mattered most: `components/ui/data-table.tsx` lost rows
+
+The previous session's report said "`DataTable` windows neither branch — when a caller omits
+`pagination`, every row mounts." **That is not what the code did, and the truth was worse.**
+
+`getPaginationRowModel()` was attached unconditionally on the client branch with
+`pageSize = clientPag?.pageSize ?? 50`, so the row model *was* sliced to 50. But the footer was
+gated on `pagination !== undefined`:
+
+```ts
+const showPagination = pagination !== undefined && totalItems > 0 && (totalPages > 1 || …);
+```
+
+So a caller who omitted `pagination` got **50 rows and no way to reach row 51**. Silently. Across
+**380 of 476** `<DataTable` call sites repo-wide, and **79 of the 97** inside my six trees — 34 of
+which are fed by a genuinely unbounded array (accumulating `useInfiniteQuery`, or a hook that sends
+no `limit` at all). `features/hr/employees/employees-list-page.tsx` is the clearest case: it has a
+"Load more employees" button that appends a server page to an accumulating infinite query, into a
+table that could never show past row 50.
+
+I wrote the test first and watched it fail (4 of 5), then fixed the gate to
+`totalItems > 0 && (totalPages > 1 || hasPageSizeControl)`. A table whose data fits one window is
+unchanged — `totalPages === 1`, no footer — so the 300-odd small tables see no difference.
+
+## What else changed in the primitive
+
+| Change | Why |
+|---|---|
+| `aria-rowcount` on the table, `aria-rowindex` on header + body rows | a windowed table otherwise tells a screen reader "row 3 of 50" when it is row 3 of 4,000 |
+| `role="navigation" aria-label="Pagination"` on `DataTablePagination` | the control had no landmark and no accessible name |
+| `clientPage = Math.min(internalPage, clientPageCount - 1)` | a filter that shrinks the data left the reader on a dead page with the footer hidden (`totalPages === 1`), i.e. an empty table and no way back. **Negative control:** reverting just this line fails exactly one test, so it is load-bearing and not a duplicate of TanStack's `autoResetPageIndex` |
+| header markup extracted to `components/ui/data-table-header.tsx` | it was duplicated verbatim between the loading and loaded branches; extracting it took the file **501 → 396 lines** and off the `check:file-sizes` over-500 list |
+
+## Cursor correctness — proved, not assumed
+
+The brief's constraint was that windowing must not duplicate or skip records at a page boundary,
+and that changing filter or sort resets pagination. Four assertions in
+`components/ui/__tests__/data-table-unbounded-rows.test.tsx`:
+
+- **No second pager on a cursor page.** Every `CursorPageControls` surface in the repo pages at
+  ≤ 50 (`directory` 20, accounting 25, the two largest at exactly 50), so `totalPages === 1` and
+  the internal footer stays hidden. Verified by reading all 20-odd `PAGE_SIZE` constants, and
+  pinned by a test that a 20-row page renders no pagination landmark.
+- **Page boundary.** Replacing page one's rows with page two's renders page two from its first row;
+  the assertion checks that no page-one row survives into the page-two render.
+- **Sort resets position.** From the last page, sorting returns `aria-rowindex` to `2` (row 1).
+- **Filter resets position.** 180 rows → last page → data shrinks to 10: all 10 render, from Row 0.
+
+Plus a full walk: paging through 180 rows in 50s collects exactly 180 distinct rows, first `Row 0`,
+last `Row 179` — no gap, no repeat.
+
+## Chat
+
+- **`channel-sidebar.tsx` + `channel-archived-section.tsx`.** The sidebar mounted **2N**
+  `ChannelListEntry` per member — once in the compact rail, once in the section. And the previous
+  report's note that `useChatChannels` "drops `nextCursor` and silently truncates" is **stale**: it
+  now runs `drainChannelPages`, a `for(;;)` loop that pulls *every* cursor page into one array. The
+  cursor bug is fixed and the render bug is therefore worse, not better. New
+  `features/chat/channel-section-list.tsx` renders a 30-row page with `role="list"`, per-row
+  `aria-posinset` and `aria-setsize` **set to the true total**, and a "Show N more (x of y)" reveal.
+  It replaced five duplicated `.map` blocks. 9 assertions, including that a 500-channel member
+  mounts 30 rows, that walking the reveals reaches channel 500 with no repeat, and that the first
+  row is still the first tab stop.
+- **`message-list.tsx`** — the item the previous session deliberately deferred. `useChatMessages`
+  sends no `limit` and its pages accumulate, so a channel read back far enough mounts its entire
+  history. Chat reads newest-last, so the window is a *tail*, and the whole change fits behind the
+  hook — `message-list.tsx` itself is untouched, because `use-message-panel-data.ts` already owns
+  `groupedMessages`, `hasNextPage` and `fetchNextPage`. "Load older messages" now widens the window
+  before asking the server for another page, so it is still one control.
+  **The trap was the unread divider.** It is drawn on one specific message; a window starting after
+  it makes it vanish, telling the reader they have nothing unread when they do. `resolveMessageWindowStart`
+  therefore always reaches back far enough to include it, and that is asserted directly.
+- **`chat-search-dialog.tsx` is NOT a finding.** The previous report listed it as "three result
+  lists with no limit and no slice". The backend caps them: `searchMessages` at 20,
+  `searchChannels` and `searchUsers` at 10 each. Verified in
+  `backend/src/modules/chat/chat-search.service.ts`. Nothing to do.
+
+## Calendar, directory, notifications
+
+- **Calendar is clean.** `calendar-events-panel.tsx` is already `react-window`; the grid is
+  `react-big-calendar`; the remaining `.map`s are per-connection and per-attendee, structurally
+  small. No change needed.
+- **Directory is clean.** Both pages cursor-paginate at `PAGE_SIZE = 20` with `CursorPageControls`,
+  and the cursor page *replaces* rather than accumulates. Verified rather than assumed — and this
+  is exactly the surface my DataTable change had to not disturb.
+- **Notifications** — the inbox is already `notification-virtual-list.tsx`. The admin tables
+  (templates, providers, broadcasts, suppressions) are `DataTable` and are bounded by the fix above.
+  `notification-events-page.tsx` maps a code-sized catalog and grows with features, not tenants.
+
+## Box 6 — measurement
+
+**The journey: HR employees list, grid view, three server pages loaded (60 employees), five
+keystrokes in the search box.** `useInfiniteHrEmployees` accumulates, so the grid mounts one
+`EmployeeCard` per employee ever loaded, and the page re-renders on every keystroke while every card
+prop is already stable (`employees` is a `useMemo` over the query pages; `department` is a string).
+
+Measured, test written failing first:
+
+| | Card body renders |
+|---|---|
+| Mount | 60 |
+| **5 keystrokes, before** | **+300** |
+| **5 keystrokes, after `memo`** | **+0** |
+
+This is the only `memo` I added, and it was measured first per `frontend/CLAUDE.md` §3.
+
+The same file's grid was also unbounded, so `GRID_RENDER_PAGE_SIZE = 24` now bounds it and the
+existing "Load more employees" button reveals cards already in hand before fetching — one control,
+so nothing loaded is stranded behind a second one.
+
+**What I could not measure, and exactly why:**
+
+- **Memory** — `performance.memory` is Chrome-only; jsdom has no real heap. `process.memoryUsage()`
+  measures the jest Node heap, which is not comparable to a browser's. Needs a browser.
+- **Long tasks** — `PerformanceObserver` does not implement `entryTypes: ["longtask"]` in jsdom.
+  Needs a browser.
+- **Hydration mismatches** — I attempted a real harness rather than declaring it blocked:
+  `renderToString` → `hydrateRoot` → collect `onRecoverableError` and hydration `console.error`,
+  with a negative control component that drifts between server and client render. It cannot run
+  here. `react-dom/server.browser` schedules through `MessageChannel`, which this jsdom environment
+  does not define; polyfilling from `node:worker_threads` gets past the import and then **hangs the
+  jest runner**, because the message ports keep the event loop alive and are never closed. Ticket 26
+  should either add a `MessageChannel` polyfill that calls `port.unref()` in `jest.setup.js`, or
+  take this on the real browser it already drives. I removed the spike rather than leave a hanging
+  test in the tree.
+
+`next build` was not run (the brief forbids it), so **no number here is a production measurement.**
+
+## Gates run this session (output read)
+
+| Command | Exit | Number |
+|---|---|---|
+| `pnpm -C frontend type-check` | **0** | **0** errors |
+| `jest --runInBand --testPathPattern="features/(chat\|notifications\|directory\|hr\|build\|calendar)\|components/(ui\|shared)\|features/__tests__"` | 1 | **75/76 suites, 629/630 tests** — the one failure is not mine, see below |
+| `jest --runInBand --testPathPattern="data-table-unbounded-rows"` | 0 | 12/12 |
+| `jest --runInBand --testPathPattern="features/chat"` | 0 | 13 suites / 91 tests |
+| `jest --runInBand --testPathPattern="employee-grid-renders"` | 0 | 2/2 (300 → 0) |
+| `jest --runInBand --testPathPattern="message-render-window"` | 0 | 10/10 |
+| `pnpm check:icon-labels` | **0** | 3796 files, 0 unlabelled icon buttons |
+| `pnpm check:query-scope` | **0** | 5207 files, 0 violations |
+| `pnpm check:effect-fetches` | **0** | 5207 files, 0 violations |
+| `pnpm check:empty-states` | 1 | 1 violation, **not mine** — `features/workflows/builder/workflow-builder-canvas.tsx:118`, committed at `8e9c7a11c`, unmodified in the working tree, outside my territory |
+| `pnpm check:over-300` | 0 | 519 of 5193 vs baseline 519 |
+| `pnpm check:file-sizes` | 0 | `data-table.tsx` **left** the over-500 list (501 → 396) |
+| `eslint` over the 14 changed files | 0 errors | **0 errors, 8 warnings**, all pre-existing lines in `use-message-panel-data.ts` (`scrollToBottomRef`, `pendingMentionsRef`, `setTicketSelectedIndex`) — verified present at `HEAD` |
+
+**The one red test is not mine:** `features/hr/expenses/components/receipt-manager.storage-key.test.tsx`
+expects `${API}/storage/image` and gets `/api/media/image`. It turns entirely on
+`resolveImageUrl`/`storageObjectUrl` in `lib/utils.ts` — **ticket 28's territory** — and imports
+nothing I touched. Both the test and `lib/utils.ts` are committed and unmodified in the tree.
+
+## For other agents
+
+- **Ticket 28 — `receipt-manager.storage-key.test.tsx` is red.** `storageObjectUrl` now returns
+  `/api/media/image` while the spec still expects the absolute backend `/storage/image`. One of the
+  two is wrong; both are in your territory.
+- **Ticket 28 — `drainChannelPages` (`hooks/api/chat-core-read.ts:28`) is an unbounded `for(;;)`.**
+  It fixes the dropped-cursor bug the previous report flagged, but it now pulls the member's entire
+  channel set on mount with no ceiling. The rendering side is bounded now; the fetching side is not.
+- **Ticket 26 — hydration.** The blocker is specific: `MessageChannel` is missing from jsdom and the
+  `node:worker_threads` polyfill hangs the runner. Details above.
+- **Still open in box 4:** `features/chat/{thread-panel,saved-messages-panel,shared-files-panel}.tsx`,
+  `features/build/views/gantt-view.tsx`, `features/build/inbox/inbox-list.tsx`, and the CSV
+  import/preview tables (bounded by upload size, not tenant size — a 5k-row CSV still mounts 5k rows).
+
+## Files changed this session (14, all inside `frontend/`)
+
+**Modified (7)** — `components/ui/data-table.tsx` · `components/shared/data-table-pagination.tsx` ·
+`features/chat/channel-sidebar.tsx` · `features/chat/channel-archived-section.tsx` ·
+`features/chat/use-message-panel-data.ts` · `features/hr/employees/employee-card.tsx` ·
+`features/hr/employees/employees-list-page.tsx`
+
+**New source (3)** — `components/ui/data-table-header.tsx` ·
+`features/chat/channel-section-list.tsx` · `features/chat/message-render-window.ts`
+
+**New tests (4)** — `components/ui/__tests__/data-table-unbounded-rows.test.tsx` ·
+`features/chat/channel-section-list.test.tsx` · `features/chat/message-render-window.test.ts` ·
+`features/hr/employees/employee-grid-renders.test.tsx`
+
+Nothing outside `features/**` and `components/**` was edited. `features/inbox/**`, `features/mail/**`,
+`features/**/ai*`, `lib/**`, `hooks/api/**`, `app/**` and `next.config.ts` were read only.

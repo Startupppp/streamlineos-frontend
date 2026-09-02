@@ -69,7 +69,10 @@ export function DataTablePagination({
   if (total === 0) return null;
 
   return (
-    <div className="flex flex-col items-center justify-between gap-1.5 px-0 py-1.5 sm:flex-row sm:gap-2">
+    <nav
+      aria-label="Pagination"
+      className="flex flex-col items-center justify-between gap-1.5 px-0 py-1.5 sm:flex-row sm:gap-2"
+    >
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <span className="tabular-nums">Showing {start}-{end} of {total}</span>
         {onLimitChange ? (
@@ -125,6 +128,6 @@ export function DataTablePagination({
           <ChevronsRight className="h-3.5 w-3.5" />
         </Button>
       </div>
-    </div>
+    </nav>
   );
 }

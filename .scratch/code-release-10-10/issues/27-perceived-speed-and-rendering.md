@@ -4,7 +4,7 @@
 
 **Blocked by:** 25.
 
-**Status:** partially-complete — 4 of 7 closed, 3 left open with a precise remainder.
+**Status:** partially-complete — 4 of 7 closed, 2 left open with a precise remainder (both advanced materially this session; neither closeable here).
 
 - [x] Request waterfalls are eliminated where the dependency is known in advance.
   Evidence: 5 avoidable waterfalls fixed (calendar external events, whiteboard deep link, ticket
@@ -28,15 +28,31 @@
   papaparse on 2. Negative control run: adding `ably` to the list fails the gate with the exact
   offending files, so the gate detects a regression rather than passing vacuously.
 - [ ] Large chat, calendar, inbox, notification, directory, HR and Build collections are virtualized or incrementally rendered while preserving accessibility and cursor correctness.
-  PARTIAL: 5 of ~20 audited surfaces closed — the two org-wide chat user pickers
-  (`react-window`, `jest features/chat/chat-user-virtual-list.test.tsx` 2/2: 2,000 users, 0 rows
-  mounted, list stays labelled), the three grouped Build list-view paths (which bypassed the flat
-  path's 100-row cap entirely — `jest features/build/views/list-view-group-rows.test.tsx` 3/3),
-  the ticket activity log and the ticket comment feed (both had no pagination at all; the comment
-  feed keeps a deep-linked comment visible past the cap). 15 further surfaces are inventoried in
-  the report with row counts, hook pagination status and row-height shape — the largest,
-  `features/chat/message-list.tsx`, is deliberately not attempted here because flattening its
-  date-group nesting and sticky-bottom behaviour is a change of its own.
+  PARTIAL: six of the seven named modules are covered — inbox was another agent's territory this
+  session and was not touched. The cross-cutting fix is `components/ui/data-table.tsx`: it attached
+  `getPaginationRowModel()` with a 50-row default but gated the pagination control on
+  `pagination !== undefined`, so **380 of 476 call sites silently rendered 50 rows and made row 51+
+  unreachable** — a data-loss bug, not just a perf one. Now the control appears whenever the table
+  slices, so every row is reachable and the mounted count stays bounded. That bounds 79 of the 97
+  DataTables in the six trees (34 of which feed a genuinely unbounded array). Also closed:
+  `features/chat/channel-sidebar.tsx` + `channel-archived-section.tsx` (the sidebar mounted 2N
+  entries — rail plus section — and `useChatChannels` now drains *every* cursor page, so N is the
+  member's whole channel set), `features/chat/message-list.tsx` via a tail render window in
+  `use-message-panel-data.ts`, and the `features/hr/employees` card grid.
+  Accessibility was added, not traded: `aria-rowcount`/`aria-rowindex` on DataTable so AT reports
+  the true total rather than the page, `role="list"`/`aria-posinset`/`aria-setsize` on the channel
+  lists, and a `Pagination` landmark on `DataTablePagination`. `check:icon-labels` → exit 0.
+  Cursor correctness is proved, not assumed: all cursor surfaces page at ≤50 so no second pager
+  appears; a next-cursor page renders from its first row with no skip or repeat; a sort resets to
+  the first row; and a filter that shrinks the data clamps a stale page index instead of stranding
+  the reader on an empty one (negative control confirms the clamp is load-bearing).
+  Verified stale claims from the previous report: `chat-search-dialog.tsx` is NOT unbounded (the
+  backend caps at 20/10/10), and `useChatChannels` no longer drops `nextCursor` — it now drains
+  every page, which made windowing the sidebar mandatory rather than optional.
+  REMAINS: `features/chat/{thread-panel,saved-messages-panel,shared-files-panel}.tsx` (accumulating
+  infinite queries), `features/build/views/gantt-view.tsx` (up to 500 SVG row groups),
+  `features/build/inbox/inbox-list.tsx` (100 unwindowed rows), and the CSV import/preview tables
+  which are bounded by upload size rather than tenant size.
 - [x] Images, fonts and eligible static assets are optimized; text responses use HTTP compression; upload and media transformation stay asynchronous.
   Evidence: `grep -rn "<img "` over app/features/components → **0** raw image tags; 31 `next/image`
   call sites; fonts via `next/font/google` in `app/layout.tsx` (self-hosted, no render-blocking
@@ -46,14 +62,24 @@
   does not disable it); explicit brotli belongs to the proxy and to ticket 26, which owns
   `next.config.ts`.
 - [ ] Memory, render count, long tasks and hydration mismatches are measured on representative Home and module journeys, and avoidable rerenders removed.
-  PARTIAL / BLOCKED: render count measured and one avoidable rerender removed —
-  `ChannelListEntry` is rendered twice per channel by the chat sidebar and re-rendered on every
-  keystroke in its search box; measured 4 renders for 3 unrelated parent renders, now 1
-  (`jest features/chat/channel-list-entry-renders.test.tsx`, the test was written failing first).
-  BLOCKED: memory, long tasks and hydration mismatches cannot be measured here. They need a
-  production build driven in a real browser, and `next build` is owned by ticket 26 (only one
-  build may run at a time); dev-server numbers would not be comparable. Ticket 26 owns the Web
-  Vitals capture and should take these three on the Home and module journeys.
+  PARTIAL: render count is measured on a named journey and the avoidable renders are gone.
+  Journey — *HR employees list, grid view, three server pages loaded (60 employees), five keystrokes
+  in the search box*: measured **300** avoidable `EmployeeCard` body renders (60 per keystroke, all
+  props already stable), now **0** (`jest features/hr/employees/employee-grid-renders.test.tsx`,
+  2/2, written failing first). Mount counts on the chat sidebar journey went from 2N per channel
+  (unbounded) to a 30-row page with the rest revealed on request
+  (`jest features/chat/channel-section-list.test.tsx`, 9/9).
+  BLOCKED — memory: `performance.memory` is Chrome-only and jsdom has no real heap;
+  `process.memoryUsage()` would measure the jest Node heap, not the browser's, so it is not a
+  comparable number. Needs a browser.
+  BLOCKED — long tasks: `PerformanceObserver` with `entryTypes: ["longtask"]` is not implemented in
+  jsdom, so there is nothing to observe here. Needs a browser.
+  BLOCKED — hydration mismatches: attempted a real harness (`renderToString` + `hydrateRoot` +
+  `onRecoverableError`, with a negative control). It cannot run in this setup:
+  `react-dom/server.browser` schedules through `MessageChannel`, which this jsdom environment does
+  not define, and polyfilling it from `node:worker_threads` hangs the jest runner because the ports
+  keep the event loop alive. That is a concrete blocker for ticket 26 to route around, not a vague
+  one. All three still want a production build driven in a real browser, which is ticket 26's.
 - [x] Server prefetch actually hydrates the client cache — a prefetch whose key hash disagrees with the client's is dead work that renders a spinner anyway.
   Evidence: all 6 server prefetch factories (`access`, `roles`, `directory`, `hr` documents,
   `hr` assets, `payroll` runs) build their client through `createServerQueryClient`, and

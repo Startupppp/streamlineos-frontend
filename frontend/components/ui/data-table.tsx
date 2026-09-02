@@ -11,17 +11,15 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { DataTablePagination } from "@/components/shared/data-table-pagination";
+import { DataTableHeader } from "@/components/ui/data-table-header";
 import { SearchInput } from "@/components/ui/search-input";
 import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
-  TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -46,14 +44,6 @@ function readSortKey(row: unknown, key: string): string | number | boolean | nul
     return value;
   }
   return null;
-}
-
-function SortIndicator({ sorted }: { sorted: "asc" | "desc" | false }) {
-  if (sorted === "asc")
-    return <ArrowUp className="h-3 w-3 text-primary" />;
-  if (sorted === "desc")
-    return <ArrowDown className="h-3 w-3 text-primary" />;
-  return <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />;
 }
 
 export function DataTable<T>({
@@ -88,6 +78,9 @@ export function DataTable<T>({
   const clientPageSize = clientPag?.pageSize ?? 50;
 
   const isRowSelectable = selection?.isRowSelectable;
+
+  const clientPageCount = Math.max(1, Math.ceil(data.length / clientPageSize));
+  const clientPage = Math.min(internalPage, clientPageCount - 1);
 
   const rowSelection = useMemo<RowSelectionState>(() => {
     if (!selection) return localRowSelection;
@@ -170,7 +163,7 @@ export function DataTable<T>({
       rowSelection,
       pagination: serverPag !== null
         ? { pageIndex: serverPag.page - 1, pageSize: serverPag.pageSize }
-        : { pageIndex: internalPage, pageSize: clientPageSize },
+        : { pageIndex: clientPage, pageSize: clientPageSize },
     },
     manualSorting: sortState !== undefined,
     manualPagination: isServerPagination,
@@ -209,7 +202,7 @@ export function DataTable<T>({
           serverPag.onPageChange(next.pageIndex + 1);
         }
       } else {
-        const prev = { pageIndex: internalPage, pageSize: clientPageSize };
+        const prev = { pageIndex: clientPage, pageSize: clientPageSize };
         const next = typeof updater === "function" ? updater(prev) : updater;
         setInternalPage(next.pageIndex);
       }
@@ -221,17 +214,15 @@ export function DataTable<T>({
 
   const rows = table.getRowModel().rows;
 
-  const currentPage = serverPag !== null ? serverPag.page - 1 : internalPage;
+  const currentPage = serverPag !== null ? serverPag.page - 1 : clientPage;
   const totalPages = serverPag !== null
     ? Math.ceil(serverPag.total / serverPag.pageSize)
     : table.getPageCount();
   const totalItems = serverPag !== null ? serverPag.total : data.length;
   const pSize = serverPag !== null ? serverPag.pageSize : clientPageSize;
   const hasPageSizeControl = !!(serverPag?.onPageSizeChange ?? clientPag?.onPageSizeChange);
-  const showPagination =
-    pagination !== undefined &&
-    totalItems > 0 &&
-    (totalPages > 1 || hasPageSizeControl);
+  const showPagination = totalItems > 0 && (totalPages > 1 || hasPageSizeControl);
+  const firstRowNumber = currentPage * pSize + 1;
 
   function handleSearchChange(value: string) {
     search?.onChange(value);
@@ -274,51 +265,7 @@ export function DataTable<T>({
               Loading results…
             </span>
             <Table containerClassName="overflow-visible">
-              <TableHeader className="sticky top-0 z-10 bg-muted/50 border-b border-border">
-                {table.getHeaderGroups().map((hg) => (
-                  <TableRow
-                    key={hg.id}
-                    className="border-b border-border hover:bg-transparent"
-                  >
-                    {hg.headers.map((header) => {
-                      const canSort = header.column.getCanSort();
-                      const sorted = header.column.getIsSorted();
-                      const headerLabel =
-                        typeof header.column.columnDef.header === "string"
-                          ? header.column.columnDef.header
-                          : undefined;
-                      return (
-                        <TableHead
-                          key={header.id}
-                          className={cn(
-                            "text-sm font-medium px-2 py-2",
-                            header.column.columnDef.meta?.headerClassName,
-                          )}
-                        >
-                          {header.isPlaceholder ? null : canSort ? (
-                            <button
-                              type="button"
-                              aria-label={
-                                headerLabel ? `Sort by ${headerLabel}` : undefined
-                              }
-                              onClick={header.column.getToggleSortingHandler()}
-                              className={cn(
-                                "flex items-center gap-1 rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                                sorted && "text-primary",
-                              )}
-                            >
-                              {flexRender(header.column.columnDef.header, header.getContext())}
-                              <SortIndicator sorted={sorted} />
-                            </button>
-                          ) : (
-                            flexRender(header.column.columnDef.header, header.getContext())
-                          )}
-                        </TableHead>
-                      );
-                    })}
-                  </TableRow>
-                ))}
-              </TableHeader>
+              <DataTableHeader table={table} announceSort={false} rowIndex={1} />
               <TableBody>
                 {Array.from({ length: 12 }).map((_, i) => (
                   <TableRow key={i} className="h-10 hover:bg-transparent">
@@ -379,63 +326,16 @@ export function DataTable<T>({
               mobileCard && "hidden sm:block",
             )}
           >
-            <Table containerClassName="overflow-visible">
-              <TableHeader className="sticky top-0 z-10 bg-muted/50 border-b border-border">
-                {table.getHeaderGroups().map((hg) => (
-                  <TableRow
-                    key={hg.id}
-                    className="border-b border-border hover:bg-transparent"
-                  >
-                    {hg.headers.map((header) => {
-                      const canSort = header.column.getCanSort();
-                      const sorted = header.column.getIsSorted();
-                      const headerLabel =
-                        typeof header.column.columnDef.header === "string"
-                          ? header.column.columnDef.header
-                          : undefined;
-                      return (
-                        <TableHead
-                          key={header.id}
-                          className={cn(
-                            "text-sm font-medium px-2 py-2",
-                            header.column.columnDef.meta?.headerClassName,
-                          )}
-                          aria-sort={
-                            sorted === "asc"
-                              ? "ascending"
-                              : sorted === "desc"
-                                ? "descending"
-                                : undefined
-                          }
-                        >
-                          {header.isPlaceholder ? null : canSort ? (
-                            <button
-                              type="button"
-                              aria-label={
-                                headerLabel ? `Sort by ${headerLabel}` : undefined
-                              }
-                              onClick={header.column.getToggleSortingHandler()}
-                              className={cn(
-                                "flex items-center gap-1 rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                                sorted && "text-primary",
-                              )}
-                            >
-                              {flexRender(header.column.columnDef.header, header.getContext())}
-                              <SortIndicator sorted={sorted} />
-                            </button>
-                          ) : (
-                            flexRender(header.column.columnDef.header, header.getContext())
-                          )}
-                        </TableHead>
-                      );
-                    })}
-                  </TableRow>
-                ))}
-              </TableHeader>
+            <Table
+              containerClassName="overflow-visible"
+              aria-rowcount={totalItems + 1}
+            >
+              <DataTableHeader table={table} announceSort rowIndex={1} />
               <TableBody>
                 {rows.map((row, rowIndex) => (
                   <TableRow
                     key={row.id}
+                    aria-rowindex={firstRowNumber + rowIndex + 1}
                     className={cn(
                       "h-10 hover:bg-muted/50 transition-colors",
                       onRowClick && "cursor-pointer active:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
