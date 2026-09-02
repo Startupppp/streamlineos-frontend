@@ -61,7 +61,14 @@ Identify from the real codebase: module · entities · existing schema, APIs, ca
 
 ## 6. TypeScript & Code Quality
 
-- `strict: true` + `noUncheckedIndexedAccess`. No `any` (`unknown` + narrowing), no `@ts-ignore`, no `!` abuse.
+- `strict: true`. No `any` (`unknown` + narrowing), no `@ts-ignore`, no `!` abuse.
+- `noUncheckedIndexedAccess` is **NOT enabled** in either repo and this rule has been aspirational, not
+  enforced. Measured 2026-09-02: backend **574 errors / 190 files**, frontend **184 / 84** — and both
+  are **floors**, because each build config excludes tests and scripts, so the flag would report "on"
+  while much of the code went unchecked. Deliberately left off for the 10/10 code release rather than
+  half-migrated; a half-enabled strictness flag is worse than an honest absent one. Tracked as a NEW
+  REQUIREMENT needing an owner, not as a passing rule. Do not turn it on without owning the migration
+  and stating what it does not cover.
 - **Never force types.** No `as X` / `as unknown as X`. Raw `db.execute(sql\`…\`)` rows are `Record<string, unknown>` — convert at the use site (`Number(row.count)`, `row?.field ?? fallback`). If a cast feels necessary, fix the source type or the projection.
 - **Discriminated unions** for state machines and API responses; exhaustive `switch` + `assertNever`.
 - **Zod-validate every untrusted boundary** (bodies, params, env); types are compile-time only. **Schemas live in `*-schema.ts`** beside the feature (frontend) or the module's `dto/` (backend) — never inline in a controller, route, component or hook. Type via `z.infer`, never a parallel `interface`. Trivial single-field guards may stay inline.
