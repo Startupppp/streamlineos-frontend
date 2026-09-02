@@ -35,6 +35,7 @@ import { DrilldownSheet } from "./drilldown-sheet";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { formatMoneyCompact } from "@/lib/format-utils";
+import { activationProps } from "@/lib/keyboard-activation";
 
 const JoinsExitsChart = dynamic(
   () => import("./command-center-charts").then((m) => ({ default: m.JoinsExitsChart })),
@@ -82,15 +83,7 @@ function DrillableStatCard({ label, value, hint, icon, tone = "default", onClick
 
   return (
     <div
-      role="button"
-      tabIndex={0}
-      onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onClick();
-        }
-      }}
+      {...activationProps(onClick, label)}
       className="h-full cursor-pointer rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
     >
       {card}

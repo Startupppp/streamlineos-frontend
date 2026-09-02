@@ -11,6 +11,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { useCompCycles, type CompCycle } from "@/hooks/api/hr/enterprise-comp";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { activationProps } from "@/lib/keyboard-activation";
 
 interface Props {
   onSelect: (cycle: CompCycle) => void;
@@ -89,15 +90,7 @@ export function CompCycleList({ onSelect }: Props) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2, delay: idx * 0.05 }}
           className="flex items-center justify-between p-4 rounded-xl border bg-card hover:shadow-md transition-shadow cursor-pointer"
-          onClick={() => onSelect(cycle)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              onSelect(cycle);
-            }
-          }}
+          {...activationProps(() => onSelect(cycle), cycle.name)}
         >
           <div className="min-w-0">
             <div className="flex items-center gap-2 min-w-0">

@@ -35,6 +35,7 @@ import {
 } from "@/hooks/api/hr/hr-webhooks";
 import type { HrWebhookSubscription } from "@/types/hr/webhooks";
 import type { HrAutomationEvent } from "@/types/hr/automations";
+import { setListMembership } from "@/lib/toggle-in-list";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Name is required").max(150),
@@ -47,6 +48,25 @@ const schema = z.object({
 });
 
 type FormValues = z.infer<typeof schema>;
+
+interface EventCheckboxRowProps {
+  value: string;
+  selected: string[];
+  onChange: (next: string[]) => void;
+}
+
+function EventCheckboxRow({ value, selected, onChange }: EventCheckboxRowProps) {
+  function handleCheckedChange(checked: boolean | "indeterminate"): void {
+    onChange(setListMembership(selected, value, checked === true));
+  }
+
+  return (
+    <label className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-muted/50 transition-colors">
+      <Checkbox checked={selected.includes(value)} onCheckedChange={handleCheckedChange} />
+      <span className="text-sm font-mono text-muted-foreground">{value}</span>
+    </label>
+  );
+}
 
 interface Props {
   open: boolean;
@@ -212,29 +232,14 @@ export function WebhookUpsertSheet({ open, onOpenChange, subscription }: Props) 
                         <FormLabel>Events</FormLabel>
                         <ScrollArea className="max-h-64 rounded-md border">
                           <div className="divide-y">
-                          {events.map((ev) => {
-                            const checked = field.value.includes(ev.value);
-                            return (
-                              <label
-                                key={ev.value}
-                                className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-muted/50 transition-colors"
-                              >
-                                <Checkbox
-                                  checked={checked}
-                                  onCheckedChange={(c) => {
-                                    field.onChange(
-                                      c
-                                        ? [...field.value, ev.value]
-                                        : field.value.filter((v) => v !== ev.value),
-                                    );
-                                  }}
-                                />
-                                <span className="text-sm font-mono text-muted-foreground">
-                                  {ev.value}
-                                </span>
-                              </label>
-                            );
-                          })}
+                          {events.map((ev) => (
+                            <EventCheckboxRow
+                              key={ev.value}
+                              value={ev.value}
+                              selected={field.value}
+                              onChange={field.onChange}
+                            />
+                          ))}
                           </div>
                         </ScrollArea>
                         <FormMessage />

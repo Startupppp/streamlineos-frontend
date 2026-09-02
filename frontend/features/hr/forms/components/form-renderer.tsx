@@ -10,6 +10,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { HrFormField, SubmitHrFormPayload } from "../lib/types";
+import { toggleListMembership } from "@/lib/toggle-in-list";
 
 interface FormRendererProps {
   fields: HrFormField[];
@@ -146,11 +147,9 @@ export function FormRenderer({ fields, onSubmit, isPending, readOnly = false, in
                     <Checkbox
                       checked={arrVal.includes(opt.value)}
                       disabled={readOnly}
-                      onCheckedChange={() => {
-                        setValue(field.key, arrVal.includes(opt.value)
-                          ? arrVal.filter((v) => v !== opt.value)
-                          : [...arrVal, opt.value]);
-                      }}
+                      onCheckedChange={() =>
+                        setValue(field.key, toggleListMembership(arrVal, opt.value))
+                      }
                       id={`${field.key}-${opt.value}`}
                     />
                     <Label htmlFor={`${field.key}-${opt.value}`} className="text-sm font-normal cursor-pointer">
