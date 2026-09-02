@@ -203,3 +203,157 @@ revert. Every mutated file was restored from a backup and re-verified by `shasum
 
 No `FE/hooks/**`, `FE/lib/query*`, `FE/app/**`, `BE/migrations/**` or `BE/src/db/schema/**` file
 was edited. `kb/retrieval/**` was read only. No git command was run.
+
+---
+
+# S8 · Ticket 29 — second pass
+
+## Headline: the calendar provider-webhook receiver was dead *and* unauthenticated
+
+The previous session committed `calendar-provider-webhook.controller.ts`, `calendar-webhook-secret.ts`,
+`dto/provider-webhook.schemas.ts` and `calendar-provider-webhook-delivery.spec.ts` — and committed the
+spec **5 red**. Three independent defects, all live:
+
+1. **The route did not exist.** `CalendarProviderWebhookController` was imported at the top of
+   `calendar.module.ts` but never added to its `controllers: []` array. Nest registers controllers from
+   that array, so `POST /webhooks/calendar/provider` was unroutable. Provider drift detection — 110 lines
+   of service, ~32 tests — still never ran.
+2. **The secret check was imported and never called.** `handle()` imported `assertCalendarWebhookSecret`
+   and declared the `x-calendar-webhook-secret` header parameter, then went straight to
+   `this.webhooks.handleDelivery(...)`. The controller is `@Public()`, so the moment step 1 was fixed the
+   endpoint would have accepted **any unauthenticated POST naming any `connectionId`**. The tenant is
+   resolved from the connection row, so this was not a cross-tenant write — but it was an unauthenticated
+   trigger for arbitrary provider-sync re-queues.
+3. **The body schema was not `.strict()`.** A caller-supplied `orgId` was silently stripped rather than
+   rejected — the exact failure mode the brief's rule 9 describes.
+
+Fixed all three. `jest calendar-provider-webhook` → **3 suites / 32 pass** (was 5 failing).
+
+## Two more calendar defects, both permanent divergence
+
+**A re-claimed CREATE minted a duplicate provider event.** `ExternalCalendarSyncService.pushCreate`
+carries no idempotency key, and `processRow` pushed unconditionally. If a worker pushed successfully and
+then died before `mark(PROCESSED)`, the 90-second lease expired, the row was re-claimed, and a **second**
+external event was created — with the local row's `externalEventId` overwritten to point at the new one,
+orphaning the first in the user's real calendar forever. The sweep now skips the push when the event
+already carries an external id.
+
+**A failed DELETE was invisible and unretryable.** `deleteEvent` hard-deletes the local row and enqueues a
+delete intent — the tombstone — but wrote `eventId: null`. Both `getSyncStatus` and `retrySync` key on
+`eventId` *and* resolve visibility by reading the event row, which no longer exists. So a delete that
+exhausted its 5 attempts sat in `FAILED` with **no status surface and no retry path**, and the provider's
+copy of a deleted meeting lived forever. That is precisely the "no permanent local/external divergence"
+requirement failing.
+
+The tombstone now keeps the deleted event's id — `calendar_provider_sync_queue.event_id` has **no foreign
+key** (verified against `migrations/0934_ar05_calendar_provider_sync_queue.sql`, where only `org_id` is an
+FK), so retaining the id of a deleted row is exactly what a tombstone should do. `getSyncStatus`/`retrySync`
+fall back to the tombstone's own author — the person `deleteEvent` already verified as the creator — when
+the local row is gone. A bystander still gets a 404; the tombstone is not a hole in event visibility.
+
+Also hardened: `mark()` now carries an explicit `org_id` predicate rather than leaning on RLS alone.
+
+Proof: new `calendar-provider-divergence.spec.ts` → **7 pass**. Reverting the tombstone id turns 1 red,
+reverting the idempotent-create guard turns 1 red, reverting the tombstone-aware status/retry turns 3 red.
+Full module: **41 suites / 391 tests** (was 39/371).
+
+## KB: two stale claims, one real fix, one repo-wide gate moved
+
+Re-audited against current source. **Two of the ticket's "not satisfied" items are stale:**
+- The ingestion lease **no longer fails open.** It returns a discriminated
+  `{status: "acquired"|"contended"|"unavailable"}` with no boolean; no-Redis and Redis-error both refuse.
+- A space-property ACL change **does** reindex — the sync moved inside `bumpSpaceAclRevision`, which both
+  the spaces and members paths call symmetrically.
+
+**Real and fixed here: lease contention burned the retry budget.** Contention was thrown as an ordinary
+`Error`, and the outbox has *no* error classification — `outbox-envelope.ts` exports only
+`nextRetryDelayMs` and `shouldDeadLetter`, and `handleFailure` treats every throw identically. So a
+heavily-edited page could dead-letter after 8 contentions **without ever failing to index**. Contention now
+suppresses the delivery, which is correct rather than merely lenient: the lease is held for the exact same
+`(org, contentType, contentId)`, the indexer re-reads the live row rather than the payload, and every KB
+content mutation emits its own `kb.content.index` — so suppressing a duplicate loses no write. I did not
+touch `common/outbox/**`; adding a defer there would change retry semantics for all 28 consumers.
+
+**The repo-wide isolation gate moved.** `kb-acl-isolation.spec.ts` was red
+(`this.indexing.bumpSpaceAclRevision is not a function`) — the coordinator's item 2. It was double-vs-service
+drift: the spec asserted `db.update(kbPages)`/`db.update(kbArticles)` inside `KbMembersService.remove`, but
+that bump had moved into `KbIndexingService`. Rather than restore the assertion against a stub — which is
+what drifted in the first place — the spec now constructs the **real** `KbIndexingService` over the same mock
+db, so the two-table bump is behaviour again and cannot drift silently. Same treatment for the coordinator's
+item 1: `kb-spaces-tenant-isolation.spec.ts` passed 2 constructor args to a 3-arg service.
+`check:tenant-isolation:run` → **447 suites / 1816 tests, all pass** (was 444/446 with 2 red).
+
+On the coordinator's item 3: I did not touch KB search plans, cache keys, `kb-candidate.service.ts` or any
+`hnsw` setting. `SET LOCAL hnsw.iterative_scan = relaxed_order` is untouched.
+
+## Frontend: closed the compose data-loss path
+
+**`handleClose` unconditionally `reset()` the form.** Escape or an outside-click on the compose sheet
+silently destroyed an unsent body, with no confirmation and nothing persisted anywhere — no localStorage,
+no backend draft. Combined with the total absence of offline handling (confirmed: zero `onlineManager` /
+`navigator.onLine` / `refetchOnReconnect` in `features/mail` and `features/inbox`), composing on a flaky
+connection could lose a message with one keypress.
+
+- New `use-mail-connectivity.ts` — subscribes to TanStack's `onlineManager` via `useSyncExternalStore`.
+  (An effect + `setState` trips this repo's `react-hooks/set-state-in-effect` rule; `useSyncExternalStore`
+  is the right primitive for an external store anyway.) Compose and reply now refuse to send while offline,
+  save the draft, and say so — instead of firing a doomed request into a toast.
+- New `mail-draft-storage.ts` — persists body and subject, keyed per-compose and per-replied-message so two
+  replies never collide. Escape/outside-click now **preserves** and restores on reopen; the explicit
+  **Discard** button clears; a successful send clears; a failed send persists and the error toast now
+  carries a **Retry** action. Every access is try/caught, so a private window or a quota error degrades to
+  "no draft" rather than breaking compose.
+
+Proof: new `mail-draft-storage.test.ts` → **10 pass**, incl. 3 BITE cases (unparseable JSON, non-string
+body, throwing `localStorage`). `jest features/(mail|inbox)` → **9 suites / 54 pass**.
+
+## Gates (every one run and read)
+
+| Gate | Result |
+|---|---|
+| `check:cache-invalidation` | exit 0 — LOW-only, 0 blockers, 1072 files |
+| `check:idempotent-commands` | exit 0 — OK, every in-scope handler carries `@Idempotent` |
+| `check:outbox-consumers` | exit 0 — OK (and confirms `kb.content.delete` is consumed by nobody's emit) |
+| `check:unbounded-reads` | exit 0 — 0 offset, 0 unbounded |
+| `check:tenant-indexes` | FAIL 7/828 — **none mine** (build ×4, crm, auth, releases) |
+| `check:tenant-isolation` (declaration) | FAIL 1 — `cron-gdpr-export-retention.service.ts`, another agent's new untracked file |
+| `check:tenant-isolation:run` (execution) | **447 suites / 1816 tests, all pass** |
+| `check:spec-typecheck` | FAIL — 18 `modules/storage`, 2 `degradation`, 1 `rbac`; **0 in calendar/kb/mail** |
+| backend `pnpm typecheck` | exit 2 — 3 errors, all `feedbucket` + `storage` `AfterCommitHook`; **0 in my modules** |
+| `jest src/modules/(calendar\|kb\|mail)` | **136 of 137 suites / 980 tests pass** |
+| frontend `pnpm type-check` | **exit 0** |
+| frontend `check:query-scope` | exit 0 — no violations, 5184 files |
+| frontend `check:command-catalog` | exit 0 — PASS |
+| `jest features/(mail\|inbox)` | **9 suites / 54 tests pass** |
+| `eslint` on my 4 frontend files | **0 problems** |
+
+## Not mine — regressed mid-session, reported not fixed
+
+`sharp.concurrency is not a function` in `src/common/media/media-compression.service.ts` (reached via
+`src/modules/storage/storage.service.ts`) breaks `src/modules/kb/wiki/kb-media.service.spec.ts` at import
+time — the one red suite above. It ran green earlier in this same session and stopped mid-way; `git status`
+shows `common/media` and twelve `modules/storage` files modified by another agent, plus a new untracked
+`storage/media-transform.runner.ts`. Same root cause as the 18 storage `check:spec-typecheck` errors and
+the 3 backend typecheck errors. **Ticket 33's territory** — I did not touch it.
+
+Also note `src/modules/kb/wiki/kb-media.service.ts` and `src/modules/kb/core/kb-tags.service.ts` are
+modified in the shared tree by another agent, inside my nominal territory. I staged neither.
+
+## Files changed this pass
+
+**Backend, new** — `src/modules/calendar/calendar-provider-divergence.spec.ts`
+
+**Backend, modified** — `src/modules/calendar/`: `calendar.module.ts`, `calendar.service.ts`,
+`calendar-provider-webhook.controller.ts`, `calendar-provider-sync-sweep.service.ts`,
+`calendar-sync-status.service.ts`, `dto/provider-webhook.schemas.ts` ·
+`src/modules/kb/retrieval/`: `kb-ingestion-consumer.ts`, `kb-ingestion-consumer.spec.ts`,
+`kb-ingestion-lease-fail-closed.spec.ts`, `kb-acl-isolation.spec.ts` ·
+`src/modules/kb/wiki/kb-spaces-tenant-isolation.spec.ts`
+
+**Frontend, new** — `features/mail/use-mail-connectivity.ts` · `features/mail/mail-draft-storage.ts` ·
+`features/mail/mail-draft-storage.test.ts`
+
+**Frontend, modified** — `features/mail/mail-compose-sheet.tsx`
+
+No `migrations/**`, `db/schema/**`, `modules/ai/**`, `modules/storage/**`, `common/telemetry/**`,
+frontend `lib/**` or frontend `hooks/api/**` file was touched.

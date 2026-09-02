@@ -20,6 +20,13 @@ import { mailComposeSchema, mailReplySchema } from "./mail-compose-schema";
 import type { MailComposeValues, MailReplyValues } from "./mail-compose-schema";
 import { MailAiComposeToolbar } from "./mail-ai-compose-toolbar";
 import { MailComposeHeaderFields } from "./mail-compose-header-fields";
+import { useMailConnectivity } from "./use-mail-connectivity";
+import {
+  clearMailDraft,
+  mailDraftKey,
+  readMailDraft,
+  writeMailDraft,
+} from "./mail-draft-storage";
 import type { MailAccount } from "@/types/mail";
 
 const TiptapEditor = dynamic(
@@ -87,6 +94,8 @@ export function MailComposeSheet({
 
   const sendMail = useSendMail();
   const replyMail = useReplyMail();
+  const { isOnline } = useMailConnectivity();
+  const draftKey = mailDraftKey(mode);
 
   const [showCc, setShowCc] = useState(false);
   const [showBcc, setShowBcc] = useState(false);
@@ -102,28 +111,31 @@ export function MailComposeSheet({
 
     if (!open) return;
 
+    const saved = readMailDraft(mailDraftKey(mode));
+
     if (mode.type === "reply") {
+      const body = saved?.bodyHtml ?? mode.prefillBody ?? "";
       replyForm.reset({
         accountId: mode.accountId,
         to: [mode.toEmail],
         cc: [],
-        bodyHtml: mode.prefillBody ?? "",
+        bodyHtml: body,
         messageId: mode.messageId,
         threadId: mode.threadId,
       });
-      const prefill = mode.prefillBody ?? "";
-      setBodyHtmlForEditor(prefill);
+      setBodyHtmlForEditor(body);
       setBodyContentKey((k) => k + 1);
     } else if (mode.type === "compose" && (prev.type === "reply" || !open)) {
+      const body = saved?.bodyHtml ?? "";
       composeForm.reset({
         accountId: defaultAccountId,
         to: [],
         cc: [],
         bcc: [],
-        subject: "",
-        bodyHtml: "",
+        subject: saved?.subject ?? "",
+        bodyHtml: body,
       });
-      setBodyHtmlForEditor("");
+      setBodyHtmlForEditor(body);
       setBodyContentKey((k) => k + 1);
     }
   }, [open, mode, replyForm, composeForm, defaultAccountId]);
@@ -165,7 +177,16 @@ export function MailComposeSheet({
   const handleToggleCc = useCallback(() => setShowCc((v) => !v), []);
   const handleToggleBcc = useCallback(() => setShowBcc((v) => !v), []);
 
-  const handleClose = useCallback(() => {
+  const persistDraft = useCallback(() => {
+    const values = isReply ? replyForm.getValues() : composeForm.getValues();
+    const subject = isReply ? undefined : composeForm.getValues("subject");
+    writeMailDraft(draftKey, {
+      bodyHtml: values.bodyHtml ?? "",
+      ...(subject ? { subject } : {}),
+    });
+  }, [draftKey, isReply, composeForm, replyForm]);
+
+  const resetSheet = useCallback(() => {
     onClose();
     composeForm.reset();
     replyForm.reset();
@@ -175,12 +196,27 @@ export function MailComposeSheet({
     setBodyContentKey(0);
   }, [onClose, composeForm, replyForm]);
 
+  const handleClose = useCallback(() => {
+    persistDraft();
+    resetSheet();
+  }, [persistDraft, resetSheet]);
+
+  const handleDiscard = useCallback(() => {
+    clearMailDraft(draftKey);
+    resetSheet();
+  }, [draftKey, resetSheet]);
+
   const handleOpenChange = useCallback(
     (v: boolean) => { if (!v) handleClose(); },
     [handleClose],
   );
 
   const onSubmitCompose = composeForm.handleSubmit(async (data) => {
+    if (!isOnline) {
+      persistDraft();
+      toast.error("You're offline — your draft is saved. Try again once you reconnect.");
+      return;
+    }
     try {
       await sendMail.mutateAsync({
         accountId: data.accountId,
@@ -191,13 +227,21 @@ export function MailComposeSheet({
         bodyHtml: data.bodyHtml,
       });
       toast.success("Message sent");
-      handleClose();
+      handleDiscard();
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      persistDraft();
+      toast.error(getErrorMessage(err), {
+        action: { label: "Retry", onClick: () => void onSubmitCompose() },
+      });
     }
   });
 
   const onSubmitReply = replyForm.handleSubmit(async (data) => {
+    if (!isOnline) {
+      persistDraft();
+      toast.error("You're offline — your draft is saved. Try again once you reconnect.");
+      return;
+    }
     try {
       await replyMail.mutateAsync({
         accountId: data.accountId,
@@ -207,9 +251,12 @@ export function MailComposeSheet({
         cc: data.cc?.length ? data.cc : undefined,
       });
       toast.success("Reply sent");
-      handleClose();
+      handleDiscard();
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      persistDraft();
+      toast.error(getErrorMessage(err), {
+        action: { label: "Retry", onClick: () => void onSubmitReply() },
+      });
     }
   });
 
@@ -306,7 +353,7 @@ export function MailComposeSheet({
               variant="outline"
               size="sm"
               className="h-9 text-sm"
-              onClick={handleClose}
+              onClick={handleDiscard}
               disabled={isPending}
             >
               Discard
