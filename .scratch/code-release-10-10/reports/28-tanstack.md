@@ -463,3 +463,238 @@ tag. Spec updated to `MEDIA_IMAGE_ROUTE`; both its cases pass.
 `frontend/hooks/api/chat-core-read.ts`,
 `frontend/features/hr/expenses/components/receipt-manager.storage-key.test.tsx`
 (stale assertion only)
+
+---
+
+# S12 — finishing the sweep S11 was killed mid-way through
+
+S11 built the contract-coverage gate, proved it bites, and was killed before the
+full gate sweep. Its work was on disk and intact. This session verified it, took
+five routed items, and closed the sweep.
+
+## 1 · The strictness decision, stated once
+
+`ResponseContract` in `lib/api-envelope.ts` is deliberately **not** `.strict()`,
+and the reasoning is now written where the type is declared. A response contract
+is read from a server we deploy separately: an *added* field is a
+backward-compatible deploy and must not take the client down, while a *removed*,
+*renamed* or *retyped* field is exactly the drift the contract exists to catch —
+and a plain `z.object` rejects all three, because the missing key fails the
+required check.
+
+The mirror image is the request side, and it is where the strictness actually
+bit. Backend query DTOs **are** `.strict()`. `listMembersSchema` is strict, so
+the `page` param the client was sending was an `unrecognized_keys` **400**, not
+a silent strip. A non-strict DTO there would have made the member list quietly
+return page 1 forever instead of erroring.
+
+## 2 · `MembersResponse` was fiction — verified against the server, not the report
+
+Routed in as "reported as fiction". It is, and S11's fix is correct; this session
+verified it against the source rather than the claim:
+
+- `organization.controller.ts:176` → `orgMembership.listMembers` →
+  `org-membership-read.service.ts:101` returns `buildCursorPage(...)`, whose
+  shape (`common/pagination/cursor.ts:79`) is
+  `{ data, pagination: { limit, hasMore, nextCursor } }`.
+- The client declared `{ data, pagination: { page, limit, total, totalPages } }`.
+  `total` and `totalPages` were `undefined` at runtime and any page count
+  computed from them was invented.
+- Column by column: `joinedAt` is `timestamp(...).notNull()` → an ISO **string**,
+  not the `Date` the client declared (`member.joinedAt.getTime()` would have
+  thrown); `users.name` and `users.image` are nullable, `email` and
+  `totpEnabled` are not. The contract now says exactly that.
+- `role` is deliberately `z.string()`. `organization_members.role` is plain
+  `text` with a `"MEMBER"` default and the RBAC catalog grows roles at runtime,
+  so the `z.enum(["OWNER","ORG_ADMIN","MEMBER"])` S11 had drafted would have
+  rejected a legitimate role and locked the settings page out of its own member
+  list. That enum is deleted rather than kept unused.
+
+## 3 · The general ledger was wrong at runtime, and the contract said so first
+
+S11 wrote `core-gl-schema.ts` and left a comment saying it could not be wired
+because the one consumer would fail to compile. Both halves are landed here,
+after re-verifying the contract against `general-ledger.service.ts`:
+
+| Client declared | Server sends |
+|---|---|
+| `date` | `entryDate` |
+| `id` on an account | `accountId` |
+| `totalDebit` / `totalCredit` | `periodDebit` / `periodCredit` |
+| `{ items: GlAccount[] }` | a bare array |
+| every amount a decimal string | every amount a JSON **number** (`emitAmount()` at `general-ledger.service.ts:21`) |
+
+Consequences on the page, all real: the Date column rendered blank, the account
+picker was permanently empty so the ledger could never be filtered to an
+account, and `getRowKey` was `row.entryId` — a *line* list keyed by its *entry*,
+so every multi-line journal collided on one React key. The page now reads
+`lineId`, `entryDate` and the numeric amounts, and `formatMoney` takes a number.
+
+`accountType` is a pg enum on both this route and the COA tree, so the contract
+validates the five members. On the COA tree the runtime check is tightened while
+the compile-time field stays `string`, because the filter and badge lookups on
+`chart-of-accounts-page.tsx` already treat it as one — the annotation on the
+recursive `ResponseContract<AccountTreeNode>` does that for free.
+
+## 4 · Calendar, the client half
+
+The backend now carries `calendar_events.timezone` through to
+`CalendarEventItem`. `CalendarListItem` gains the field, and
+`event-detail-content.tsx` stops doing the thing that made the zone useless:
+formatting the instant in the browser's zone and then labelling it with the
+browser's zone. That is right about the moment and silent about the intent — a
+09:00 Asia/Kolkata standup read as 03:30 Europe/London with nothing saying it
+was not scheduled at 03:30.
+
+`formatEventTimeRange` renders in the authored zone and appends the reader's own
+reading only when they disagree. An IANA zone the browser does not know makes
+`Intl.DateTimeFormat` throw a `RangeError`, which would take the whole detail
+panel down — and the contract only promises a *string* — so an unknown zone
+degrades to the reader's. That case is a test, not a hope.
+
+**Source toggles in the query key.** `/calendar/events` is filtered server-side
+by the caller's per-source preferences, so the enabled set is a correctness
+dimension of the response body and belongs in the key. It was absent, leaving
+two different aggregations sharing one cache entry with only a blanket
+`queryKeys.calendar.all` invalidation between them. The set is now the optional
+tail of the factory, which keeps the short call a prefix of the long one — the
+blanket invalidation still reaches it — and puts no literal `undefined` in the
+key when the set is unknown.
+
+The deliberate trade: `useCalendarEvents` now waits for `useCalendarSources`
+rather than firing under a key it would immediately have to change. That costs
+one round-trip of latency on a cold `calendar-event-combobox` mount, where the
+sources query is not already in flight; on `/calendar` itself the source panel
+already mounts it in parallel. The alternative — key it once sources arrive,
+don't gate — issues **two** requests per cold mount for the same range, which is
+worse on every surface.
+
+## 5 · Unread-count invalidation: the routed defect does not exist
+
+Routed in as "no mail hook invalidates `notifications.unreadCount()` /
+`inbox.count()`". The first half is true and is not a defect:
+
+- `/notifications/unread-count` counts rows in the `notifications` table for one
+  membership (`notifications-read.service.ts:335`). Mail writes no notification
+  row — there is no mail→notification producer anywhere in
+  `src/modules/mail/**`. Invalidating that key from a mail mutation would be a
+  refetch that cannot change its answer.
+- The count that *does* include mail is `/me/inbox/unified/count`
+  (`unified-inbox.service.ts:352`, `mail: mailCount.unread`). **No frontend hook
+  calls it**, and every badge in the product — sidebar, bell, inbox page, the
+  document title — reads the notifications-only count. So mail unread is never
+  displayed anywhere.
+
+Writing a hook nobody renders would have added dead code and a fake tick. What
+was actually wrong is one prefix: `useMailAction` invalidated
+`[...inbox.all, "unified"]`, which excludes `inbox.count()`. Fixed to
+`inbox.all`. Standing up the unified badge is a product decision for the
+inbox/notifications owner, not a data-layer fix.
+
+## 6 · One structural rule for 36 exports and 23 KEEPs
+
+`check:dead-code` reported 41 unclassified exports. Adding a hand-written
+verdict for each would have taken `EXPORT_VERDICTS` from 27 entries to 68 and
+recorded, 36 times, the same sentence.
+
+The 36 are all **types**, and a type is erased. A consumer reaches
+`PayrollRunListItem` through `useRunEmployees`' inferred return type and never
+imports it by name, so a module-graph tool reports it unused *by construction*.
+That is a property of the language, not evidence of dead code, and it is one
+rule: a **type** exported from a live module under `hooks/api/` is
+RETAINED-BY-CONTRACT.
+
+The rule stops at types on purpose, and that is the part that matters. A
+**value** exported there that nothing imports is a contract nothing parses
+with — an unvalidated boundary wearing the costume of a classification gap.
+Three of those were hiding in the 41: `expenseByCategoryContract`,
+`glAccountsContract` and `accountTypeContract`. All three are now wired to their
+seam. `core-gl.ts` had said so in its own comment; the gate is what made the
+comment actionable.
+
+Three of the four new self-test assertions are bites, because a suppression rule
+is only as good as its edges: a data-layer VALUE nothing imports stays
+UNCLASSIFIED, a type in a module *no live file imports* stays UNCLASSIFIED (so
+an orphaned schema file is still caught), and a type outside `hooks/api/` stays
+UNCLASSIFIED so the rule cannot quietly widen into `types/**` or `features/**`.
+
+Separately, four exports in `types/**` were genuinely dead and are deleted, not
+excused: `EssSalaryComponent` (a hand-written duplicate of the contract's), two
+re-export lines nothing imported, and `FinBankAccount` — which named the masked
+column `accountNumber` when the server sends `accountNumberMasked`.
+
+**41 → 1.** The survivor is `features/build/analytics/project-charts.tsx:22`,
+which re-exports `CHART_COLORS` from `./project-stats` while the only consumer
+(`project-charts-impl.tsx:22`) imports it from `./project-stats` directly. A
+one-token deletion in another territory.
+
+## 7 · Widening the coverage gate to the seam it could not see
+
+`lib/api-contract-coverage.test.ts` was anchored on `hooks/api/`. The single
+highest-consequence tenancy boundary in the product is not there:
+`POST /organization/switch` lives in `hooks/common/auth-hooks.ts`, and its
+response is what `update({ orgId: data.orgId })` sets the session's active org
+from. A drifted `orgId` there is not a cosmetic gap, it is a wrong-tenant write.
+The scanner now walks all of `hooks/`, and `/organization` and
+`/organization/switch` are on the contracted list.
+
+Bite proof: deleting the `switchOrgResultContract` argument turns the gate red
+with `missing: ["/organization/switch"]`.
+
+## Gates, S12
+
+| Gate | Result |
+|---|---|
+| `pnpm -C frontend type-check` | **exit 0**, 0 errors |
+| `jest --maxWorkers=2` on `hooks/api\|lib/query-keys\|lib/api-\|lib/date-utils\|features/{calendar,accounting}` | **79 suites, 817 tests, all pass** |
+| `check:query-scope` · `check:query-signal` · `check:effect-fetches` · `check:cycles` · `check:contract-drift` | exit 0 |
+| `check:over-300` | exit 0 — 519/519. The new ledger cases pushed it to 521; the money suite was split at its payroll seam and the coverage gate's prose trimmed |
+| `check:dead-code --self-test` | exit 0, 18 assertions |
+| `check:dead-code` | exit 1 — **1 unclassified**, `features/build/**` |
+| `check:command-catalog` | exit 1 — 3 WRONG-KEY on `git-integration.ts`; **not ours**, see below |
+| `check:file-sizes` | exit 1 — 3 files, all already oversize at `2556ab503` |
+| `check:routes` | exit 1 — the deliberate `app/api/media/image/route.ts` |
+| `check:import-direction` | exit 1 — `shared-imports-feature: 20 (baseline 19)`; every violation is `components/** -> features/**` and this session touched no file under `components/` |
+
+## Cross-territory findings
+
+1. **`check:command-catalog` is red on a stale snapshot, not a wrong gate.**
+   `hooks/api/git-integration.ts` declares `integrations:git:manage` and the
+   backend controller (`src/modules/integrations/git/git-connections.controller.ts:54`,
+   uncommitted, another lane) requires exactly that. `contracts/openapi.json`
+   was generated at 16:25, before the move, and still says `settings:manage`.
+   The fix is to regenerate the contract snapshot, not to touch either side.
+2. **`features/build/analytics/project-charts.tsx:22`** re-exports
+   `CHART_COLORS` with no consumer; the real importer goes to `./project-stats`.
+   Deleting that one name closes `check:dead-code` completely.
+3. **`hooks/api/notifications-inbox.ts` is 534 lines and its spec is 663** — both
+   over the 500 hard-review line and both already over at the session's starting
+   commit. Splitting it is a real refactor with rollback-path risk, not a
+   sweep-tail edit.
+4. **The unified unread badge is unbuilt, not broken.**
+   `/me/inbox/unified/count` returns a mail-inclusive total that no client
+   fetches. Whoever owns the shell badge should decide whether it becomes the
+   badge; until then `queryKeys.inbox.count()` has no reader.
+
+## Files changed (S12)
+
+`frontend/hooks/api/calendar.ts`, `frontend/hooks/api/mail.ts`,
+`frontend/hooks/api/accounting/core-gl.ts`,
+`frontend/hooks/api/accounting/core-coa-schema.ts`,
+`frontend/hooks/api/accounting/reports.ts`,
+`frontend/hooks/api/organization-schema.ts`,
+`frontend/hooks/common/auth-hooks.ts`,
+`frontend/hooks/api/accounting/__tests__/general-ledger-cursor.test.ts`,
+`frontend/hooks/api/response-contracts-money.test.ts`,
+`frontend/hooks/api/response-contracts-payroll.test.ts` (new),
+`frontend/hooks/api/response-contracts-tenancy.test.ts`,
+`frontend/hooks/api/calendar-source-key.test.ts` (new),
+`frontend/lib/api-contract-coverage.test.ts`, `frontend/lib/date-utils.ts`,
+`frontend/lib/date-utils.event-timezone.test.ts` (new),
+`frontend/lib/query-keys/platform-hierarchy.ts`,
+`frontend/scripts/check-dead-code.mjs`,
+`frontend/types/accounting/ar.ts`, `frontend/types/accounting/expenses.ts`,
+`frontend/types/payroll/ess.ts`,
+`frontend/features/calendar/event-detail-content.tsx`,
+`frontend/features/accounting/core/general-ledger-page.tsx`,
+`frontend/features/accounting/reports/expense-by-category-report.tsx`
