@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 
 jest.mock("next/image", () => ({
   __esModule: true,
@@ -136,5 +136,46 @@ describe("AppLoadingScreen — reduced-motion preference", () => {
     (useReducedMotion as jest.Mock).mockReturnValue(false);
     rerender(<AppLoadingScreen />);
     expect(screen.getByRole("status")).toHaveAttribute("aria-busy", "true");
+  });
+});
+
+describe("AppLoadingScreen — a sync that never lands stops claiming to be loading", () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+    jest.useRealTimers();
+  });
+
+  it("keeps announcing loading while the wait is still reasonable", () => {
+    render(<AppLoadingScreen stalledAfterMs={20_000} />);
+    act(() => {
+      jest.advanceTimersByTime(19_000);
+    });
+    expect(screen.getByRole("status")).toHaveAttribute("aria-busy", "true");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("says so, and offers a way out, once the wait is unreasonable", () => {
+    render(<AppLoadingScreen stalledAfterMs={20_000} />);
+    act(() => {
+      jest.advanceTimersByTime(20_000);
+    });
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveAttribute("aria-busy", "false");
+    expect(alert).toHaveTextContent(/taking longer/i);
+    expect(screen.getByRole("button", { name: /reload/i })).toBeInTheDocument();
+  });
+
+  it("BITE PROOF — the stalled screen must not still be announced as a busy status", () => {
+    render(<AppLoadingScreen stalledAfterMs={1_000} />);
+    act(() => {
+      jest.advanceTimersByTime(1_000);
+    });
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 });
