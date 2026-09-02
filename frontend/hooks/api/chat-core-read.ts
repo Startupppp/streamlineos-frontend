@@ -16,6 +16,8 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useRealtimePollInterval } from "@/hooks/common/use-realtime-poll-interval";
 import type {
   Channel,
+  ChannelsPage,
+  PublicChannelsPage,
   ChatNotificationPreference,
   Message,
   MessagesPage,
@@ -40,6 +42,9 @@ import type {
 import { refreshRealtimeCapability } from "./chat-shared";
 
 
+const selectChannels = (page: ChannelsPage): Channel[] => page.channels;
+const selectPublicChannels = (page: PublicChannelsPage): PublicChannel[] => page.channels;
+
 export function useChatChannels(enabled = true) {
   const { data: session } = useSession();
   const orgId = session?.orgId;
@@ -47,7 +52,10 @@ export function useChatChannels(enabled = true) {
   const chatEnabled = useModuleEnabled("chat");
   return useQuery({
     queryKey: queryKeys.chat.myChannels(),
-    queryFn: ({ signal }) => apiClient.get<Channel[]>("/chat/channels", undefined, signal),
+    // The route is keyset-paginated and answers { channels, nextCursor }; typing it
+    // as an array made every consumer read `.filter`/`[number]` off an object.
+    queryFn: ({ signal }) => apiClient.get<ChannelsPage>("/chat/channels", undefined, signal),
+    select: selectChannels,
     staleTime: 300_000,
     refetchOnWindowFocus: true,
     enabled: !!orgId && enabled && chatEnabled && canRead,
@@ -58,7 +66,8 @@ export function useArchivedChannels(enabled = true) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: queryKeys.chat.archivedChannels(),
-    queryFn: ({ signal }) => apiClient.get<Channel[]>("/chat/channels/archived", undefined, signal),
+    queryFn: ({ signal }) => apiClient.get<ChannelsPage>("/chat/channels/archived", undefined, signal),
+    select: selectChannels,
     staleTime: 2 * 60_000,
     enabled: enabled && canRead,
   });
@@ -68,7 +77,9 @@ export function usePublicChannels(enabled = true) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: queryKeys.chat.publicChannels(),
-    queryFn: ({ signal }) => apiClient.get<PublicChannel[]>("/chat/channels/public", undefined, signal),
+    queryFn: ({ signal }) =>
+      apiClient.get<PublicChannelsPage>("/chat/channels/public", undefined, signal),
+    select: selectPublicChannels,
     staleTime: 2 * 60_000,
     enabled: enabled && canRead,
   });

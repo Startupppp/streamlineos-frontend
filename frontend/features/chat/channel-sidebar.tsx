@@ -20,7 +20,6 @@ import { useRouter } from "next/navigation";
 import { EmptyMailIllustration } from "@/components/illustrations";
 import { useChatChannels, useArchivedChannels, useChatOnlineUsers } from "@/hooks/api";
 import { cn } from "@/lib/utils";
-import type { Channel } from "./chat-types";
 import { ChannelSidebarSection } from "./channel-sidebar-section";
 import { ChannelListEntry } from "./channel-list-entry";
 import { NewDMDialog } from "./new-dm-dialog";
@@ -66,10 +65,8 @@ export function ChannelSidebar({
   onOpenSettings,
 }: ChannelSidebarProps) {
   const router = useRouter();
-  const { data: rawChannels, isLoading } = useChatChannels();
-  const channels = rawChannels as Channel[] | undefined;
-  const { data: rawArchivedChannels, isLoading: isArchivedLoading } = useArchivedChannels();
-  const archivedChannels = rawArchivedChannels as Channel[] | undefined;
+  const { data: channels, isLoading } = useChatChannels();
+  const { data: archivedChannels, isLoading: isArchivedLoading } = useArchivedChannels();
   const { data: onlineUsers } = useChatOnlineUsers();
   const [search, setSearch] = useState("");
   const [showArchived, setShowArchived] = useState(false);

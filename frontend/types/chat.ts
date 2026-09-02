@@ -168,6 +168,16 @@ export interface MessagesPage {
   nextCursor?: number;
 }
 
+export interface ChannelsPage {
+  channels: Channel[];
+  nextCursor: string | null;
+}
+
+export interface PublicChannelsPage {
+  channels: PublicChannel[];
+  nextCursor: string | null;
+}
+
 export interface CreateDMInput {
   targetUserId: string;
 }

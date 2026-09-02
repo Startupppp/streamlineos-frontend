@@ -353,29 +353,41 @@ export function NotificationBell() {
     </button>
   );
 
+  const liveRegion = (
+    <span className="sr-only" role="status" aria-live="polite">
+      {unreadCount > 0 ? `${unreadCount} unread notifications` : ""}
+    </span>
+  );
+
   if (isMobile) {
     return (
-      <Drawer open={open} onOpenChange={handleOpenChange}>
-        <DrawerTrigger asChild>{trigger}</DrawerTrigger>
-        <DrawerContent className="flex h-[min(80dvh,32rem)] flex-col gap-0 overflow-hidden rounded-t-xl border bg-card p-0 shadow-2xl">
-          {notificationPanel}
-        </DrawerContent>
-      </Drawer>
+      <>
+        {liveRegion}
+        <Drawer open={open} onOpenChange={handleOpenChange}>
+          <DrawerTrigger asChild>{trigger}</DrawerTrigger>
+          <DrawerContent className="flex h-[min(80dvh,32rem)] flex-col gap-0 overflow-hidden rounded-t-xl border bg-card p-0 shadow-2xl">
+            {notificationPanel}
+          </DrawerContent>
+        </Drawer>
+      </>
     );
   }
 
   return (
-    <Popover open={open} onOpenChange={handleOpenChange}>
-      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-      <PopoverContent
-        align="end"
-        sideOffset={8}
-        className="flex max-h-[420px] w-80 flex-col p-0 shadow-lg sm:w-[360px]"
-        onMouseEnter={handleHoverEnter}
-        onMouseLeave={handleHoverLeave}
-      >
-        {notificationPanel}
-      </PopoverContent>
-    </Popover>
+    <>
+      {liveRegion}
+      <Popover open={open} onOpenChange={handleOpenChange}>
+        <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+        <PopoverContent
+          align="end"
+          sideOffset={8}
+          className="flex max-h-[420px] w-80 flex-col p-0 shadow-lg sm:w-[360px]"
+          onMouseEnter={handleHoverEnter}
+          onMouseLeave={handleHoverLeave}
+        >
+          {notificationPanel}
+        </PopoverContent>
+      </Popover>
+    </>
   );
 }

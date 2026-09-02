@@ -9,59 +9,26 @@ import { queryKeys } from "@/lib/query-keys";
 import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
 import type {
   Message,
-  MessageAttachment,
-  MessageMetadata,
-  MessageType,
   MessagesPage,
   ThreadPage,
   TypingIndicator,
 } from "@/types/chat";
 import type { InfiniteData } from "@tanstack/react-query";
-
-interface AblyMessagePayload {
-  id: number;
-  channelId: number;
-  senderId: string;
-  senderName?: string | null;
-  senderImage?: string | null;
-  content: string | null;
-  createdAt: string | null;
-  replyToId: number | null;
-  messageType?: MessageType;
-  metadata?: MessageMetadata | null;
-  attachments?: MessageAttachment[];
-}
-
-interface AblyMessageUpdatedPayload {
-  id: number;
-  channelId: number;
-  content: string | null;
-  isEdited: true;
-  updatedAt: string;
-}
-
-interface AblyMessageDeletedPayload {
-  id: number;
-  channelId: number;
-}
-
-interface AblyReactionUpdatedPayload {
-  messageId: number;
-  channelId: number;
-  reactions: Record<string, string[]>;
-}
-
-interface AblyTypingPayload {
-  userId: string;
-  name: string;
-}
+import {
+  messagePayloadSchema,
+  messageUpdatedPayloadSchema,
+  messageDeletedPayloadSchema,
+  reactionUpdatedPayloadSchema,
+  typingPayloadSchema,
+  type MessagePayload,
+} from "./chat-realtime-schema";
 
 const TYPING_TIMEOUT_MS = 5_000;
 
 const CHAT_EVENTS = ["message", "typing", "message:updated", "message:deleted", "reaction:updated"] as const;
 type ChatEvent = (typeof CHAT_EVENTS)[number];
 
-function payloadToMessage(payload: AblyMessagePayload): Message {
+function payloadToMessage(payload: MessagePayload): Message {
   return {
     id: payload.id,
     channelId: payload.channelId,
@@ -78,7 +45,11 @@ function payloadToMessage(payload: AblyMessagePayload): Message {
     sender: payload.senderName
       ? { id: payload.senderId, name: payload.senderName, image: payload.senderImage ?? null }
       : null,
-    attachments: payload.attachments ?? [],
+    attachments: (payload.attachments ?? []).map((a) => ({
+      ...a,
+      messageId: payload.id,
+      createdAt: null,
+    })),
     replyTo: null,
   };
 }
@@ -174,8 +145,9 @@ export function useChatRealtime(channelId: number | null): {
     const subscribed: ChatEvent[] = [];
 
     const messageHandler = (msg: InboundMessage) => {
-      const payload = msg.data as AblyMessagePayload;
-      if (!payload?.id) return;
+      const parsed = messagePayloadSchema.safeParse(msg.data);
+      if (!parsed.success) return;
+      const payload = parsed.data;
 
       const cacheKey = queryKeys.chat.messages(channelId);
 
@@ -217,8 +189,9 @@ export function useChatRealtime(channelId: number | null): {
     };
 
     const messageUpdatedHandler = (msg: InboundMessage) => {
-      const payload = msg.data as AblyMessageUpdatedPayload;
-      if (!payload?.id) return;
+      const parsed = messageUpdatedPayloadSchema.safeParse(msg.data);
+      if (!parsed.success) return;
+      const payload = parsed.data;
 
       const cacheKey = queryKeys.chat.messages(channelId);
       patchMessagesCache(queryClient, cacheKey, (m) => {
@@ -233,8 +206,9 @@ export function useChatRealtime(channelId: number | null): {
     };
 
     const messageDeletedHandler = (msg: InboundMessage) => {
-      const payload = msg.data as AblyMessageDeletedPayload;
-      if (!payload?.id) return;
+      const parsed = messageDeletedPayloadSchema.safeParse(msg.data);
+      if (!parsed.success) return;
+      const payload = parsed.data;
 
       const cacheKey = queryKeys.chat.messages(channelId);
       patchMessagesCache(queryClient, cacheKey, (m) => {
@@ -244,8 +218,9 @@ export function useChatRealtime(channelId: number | null): {
     };
 
     const reactionUpdatedHandler = (msg: InboundMessage) => {
-      const payload = msg.data as AblyReactionUpdatedPayload;
-      if (!payload?.messageId) return;
+      const parsed = reactionUpdatedPayloadSchema.safeParse(msg.data);
+      if (!parsed.success) return;
+      const payload = parsed.data;
 
       const cacheKey = queryKeys.chat.messages(channelId);
       patchMessagesCache(queryClient, cacheKey, (m) => {
@@ -279,8 +254,10 @@ export function useChatRealtime(channelId: number | null): {
     };
 
     const typingHandler = (msg: InboundMessage) => {
-      const payload = msg.data as AblyTypingPayload;
-      if (!payload?.userId || payload.userId === currentUserId) return;
+      const parsed = typingPayloadSchema.safeParse(msg.data);
+      if (!parsed.success) return;
+      const payload = parsed.data;
+      if (payload.userId === currentUserId) return;
 
       setTypingUsers((prev) => {
         const exists = prev.some((t) => t.userId === payload.userId);
