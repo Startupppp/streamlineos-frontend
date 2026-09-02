@@ -48,6 +48,9 @@ const BROWSER_CANDIDATES = [
   "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
 ];
 
+const MIN_AUTHORIZED_NAV_LINKS = 3;
+const OFF_ROUTE_RETRIES = 3;
+
 const MOBILE_PROFILE = {
   width: 390,
   height: 844,
@@ -107,6 +110,19 @@ export function buildProfileSummary(samples) {
  * mode this driver is entitled to make.
  */
 /**
+ * The shell renders its own error card when `/me/access` is refused, and its
+ * copy is not "Something went wrong" — so a driver that only looks for that one
+ * string files the error card as a good page and reports the error card's LCP
+ * as the product's. Every string the shell can put on screen in place of the
+ * app belongs here.
+ */
+export const SHELL_FAILURE_COPY = [
+  "Something went wrong",
+  "Couldn't load your organization",
+  "An error occurred while loading this data",
+];
+
+/**
  * A capture taken while the app was rendering its branded loading screen, an
  * error boundary, or an all-but-empty document measures the failure, not the
  * product — and reads as a good LCP while doing it. That is exactly how the
@@ -124,6 +140,47 @@ export function findUnusableSamples(samples, minWords = 10) {
       brandedLoader: content.brandedLoader ?? null,
       errorBoundary: content.errorBoundary ?? null,
     }));
+}
+
+/**
+ * An authenticated route whose `/me/access` was refused still renders — as a
+ * shell with no navigation, or as the shell's own error card. Its LCP, FCP and
+ * INP are the refusal's, and they *flatter* the numbers because there is almost
+ * nothing on the page to paint or to interact with. These budgets govern
+ * authorized routes, so a capture that never saw an authorized shell is not
+ * evidence for them in either direction.
+ */
+export function findUnauthorizedSamples(samples, minNavLinks = 3) {
+  return samples
+    .map((s, index) => ({ index, content: s.content ?? {} }))
+    .filter(({ content }) => (content.navLinks ?? 0) < minNavLinks)
+    .map(({ index, content }) => ({
+      index,
+      url: content.url ?? null,
+      navLinks: content.navLinks ?? 0,
+      words: content.words ?? null,
+    }));
+}
+
+/**
+ * The driver asks for /mail and records whatever the tab ended up showing. When
+ * the app signs itself out — `lib/api-client.ts` calls `signOut()` on a 401, so
+ * one refused `/me/access` is enough — every navigation after that lands on
+ * /signin, which paints in about 5ms and would be filed under /mail as a very
+ * good LCP. A sample whose final path is not the route that was requested is
+ * not a measurement of that route.
+ */
+export function findOffRouteSamples(samples) {
+  return samples
+    .map((s, index) => ({ index, requested: s.requestedRoute ?? null, url: s.content?.url ?? null }))
+    .filter(({ requested, url }) => {
+      if (!requested || !url) return false;
+      try {
+        return new URL(url).pathname !== requested;
+      } catch {
+        return true;
+      }
+    });
 }
 
 export function resolveServerMode({ buildIdOnDisk, html }) {
@@ -186,6 +243,12 @@ export function itemiseBytes(entries, kinds) {
  * `measuredFirstLoadJsBytes` is deliberately left alone — that field has a
  * different definition (gzip(9) over the route's client-reference manifest) and
  * `measure-route-bundles.mjs` owns it. Everything here is over-the-wire bytes.
+ *
+ * `measuredScriptBytes` exists because those two numbers are not the same one.
+ * The client-reference manifest counts the chunks Next calls the route's first
+ * load; the browser also fetches everything hydration then asks for. On this
+ * app the second number is roughly twice the first, so a JS budget checked only
+ * against the first is green while the user downloads far more than it allows.
  */
 export function mergeBytesIntoManifest(manifest, bytesByRoute) {
   const updated = { ...manifest, budgets: { ...manifest.budgets } };
@@ -195,6 +258,8 @@ export function mergeBytesIntoManifest(manifest, bytesByRoute) {
     if (!entry) continue;
     updated.budgets[route] = {
       ...entry,
+      measuredScriptBytes: totals.scriptBytes,
+      measuredTotalBytes: totals.totalBytes,
       measuredCssBytes: totals.stylesheetBytes,
       measuredImageBytes: totals.imageBytes,
       measuredFontBytes: totals.fontBytes,
@@ -204,6 +269,62 @@ export function mergeBytesIntoManifest(manifest, bytesByRoute) {
     touched.push(route);
   }
   return { manifest: updated, touched };
+}
+
+/**
+ * TTFB measured inside the browser carries the emulated RTT and the browser's
+ * own scheduling; on the mobile profile that is 150ms of RTT before the server
+ * is even asked. The same request issued from Node against the same server,
+ * unthrottled, is the server-render cost on its own — which is what decides
+ * whether a TTFB breach belongs to the page, to the server render, or to the
+ * profile. Recorded alongside, never instead of, the browser figure.
+ */
+export async function measureServerTtfb(baseUrl, routes, cookieHeader, repeat, fetchImpl = fetch) {
+  const byRoute = {};
+  for (const route of routes) {
+    const samples = [];
+    for (let i = 0; i < repeat; i++) {
+      const started = performance.now();
+      try {
+        const res = await fetchImpl(`${baseUrl}${route}`, { headers: { cookie: cookieHeader }, redirect: "manual" });
+        const reader = res.body?.getReader?.();
+        if (reader) {
+          await reader.read();
+          await reader.cancel().catch(() => {});
+        }
+        samples.push({ ms: performance.now() - started, status: res.status });
+      } catch {
+        samples.push({ ms: null, status: null });
+      }
+    }
+    const ms = samples.map((x) => x.ms).filter((v) => v !== null && Number.isFinite(v)).sort((a, b) => a - b);
+    byRoute[route] = {
+      count: ms.length,
+      statuses: [...new Set(samples.map((x) => x.status))],
+      p50_ms: percentile(ms, 50),
+      p75_ms: percentile(ms, 75),
+      p95_ms: percentile(ms, 95),
+    };
+  }
+  return byRoute;
+}
+
+/**
+ * The app's own API origin lives in `NEXT_PUBLIC_API_URL`, which the driver's
+ * shell does not have unless somebody exports it. Read it from the package's
+ * own env file so first-party API traffic is not filed under "third party" —
+ * that misclassification is what makes the third-party byte budget meaningless.
+ */
+export function readEnvValue(source, key) {
+  for (const line of String(source ?? "").split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq === -1) continue;
+    if (trimmed.slice(0, eq).trim() !== key) continue;
+    return trimmed.slice(eq + 1).trim().replace(/^["']|["']$/g, "");
+  }
+  return "";
 }
 
 function sleep(ms) {
@@ -365,6 +486,45 @@ async function interact(cdp) {
   return { interacted: true, selector: target.selector };
 }
 
+/**
+ * Perceived responsiveness: the time between a navigation intent and the first
+ * thing the user can see change. A route transition that paints a skeleton in
+ * 40ms and finishes in 900ms feels responsive; one that shows nothing for 600ms
+ * does not, at the same total. Measured as click -> first DOM mutation, in the
+ * page, so the two timestamps share a clock.
+ */
+async function measureIntentToFeedback(cdp, currentPath) {
+  const raw = await evaluate(
+    cdp,
+    `(async () => {
+      const here = ${JSON.stringify(currentPath)};
+      const link = Array.from(document.querySelectorAll('a.nav-item[href^="/"], nav a[href^="/"]'))
+        .find((a) => {
+          const href = a.getAttribute('href');
+          if (!href || href === here || href.startsWith('#')) return false;
+          const r = a.getBoundingClientRect();
+          return r.width > 4 && r.height > 4 && r.top >= 0 && r.bottom <= innerHeight;
+        });
+      if (!link) return JSON.stringify({ measured: false, reason: 'no in-app link in view' });
+      const state = { t0: 0, firstMs: null };
+      const observer = new MutationObserver(() => {
+        if (state.firstMs === null && state.t0 > 0) state.firstMs = performance.now() - state.t0;
+      });
+      observer.observe(document.body, { childList: true, subtree: true, attributes: true, characterData: true });
+      state.t0 = performance.now();
+      link.click();
+      await new Promise((r) => setTimeout(r, 1500));
+      observer.disconnect();
+      return JSON.stringify({ measured: state.firstMs !== null, ms: state.firstMs, href: link.getAttribute('href') });
+    })()`,
+  );
+  try {
+    return JSON.parse(raw ?? '{"measured":false}');
+  } catch {
+    return { measured: false, reason: "probe did not return" };
+  }
+}
+
 async function collectSample(cdp) {
   const nav = JSON.parse(
     (await evaluate(
@@ -384,7 +544,8 @@ async function collectSample(cdp) {
         title: document.title,
         words: (document.body?.innerText ?? '').trim().split(/\\s+/).filter(Boolean).length,
         brandedLoader: !!document.querySelector('[data-app-loading-screen]') || (document.body?.innerText ?? '').includes('Syncing organization'),
-        errorBoundary: (document.body?.innerText ?? '').includes('Something went wrong')
+        errorBoundary: ${JSON.stringify(SHELL_FAILURE_COPY)}.some((needle) => (document.body?.innerText ?? '').includes(needle)),
+        navLinks: new Set(Array.from(document.querySelectorAll('a.nav-item[href^="/"], nav a[href^="/"]')).map((a) => a.getAttribute('href'))).size
       })`,
     )) ?? "{}",
   );
@@ -469,7 +630,7 @@ async function run() {
   const routes = flag("routes", "/mail,/inbox,/dashboard").split(",").map((r) => r.trim()).filter(Boolean);
   const byteOnlyRoutes = flag("byte-routes", "").split(",").map((r) => r.trim()).filter(Boolean);
   const writeManifest = argv.includes("--write-manifest");
-  const repeat = Number(flag("repeat", "5"));
+  const repeat = Number(flag("repeat", "10"));
   const out = resolve(process.cwd(), flag("out", join(ROOT, ".browser-driver-results.json")));
   const timeoutMs = Number(flag("timeout", "30000"));
   const debugPort = Number(flag("debug-port", "9224"));
@@ -483,7 +644,9 @@ async function run() {
   const cookieValue = readFileSync(cookieFile, "utf8").trim();
 
   const baseOrigin = new URL(baseUrl).origin;
-  const firstPartyOrigins = flag("first-party-origins", process.env.NEXT_PUBLIC_API_URL ?? "")
+  const envFile = join(ROOT, ".env");
+  const envApiUrl = existsSync(envFile) ? readEnvValue(readFileSync(envFile, "utf8"), "NEXT_PUBLIC_API_URL") : "";
+  const firstPartyOrigins = flag("first-party-origins", process.env.NEXT_PUBLIC_API_URL || envApiUrl)
     .split(",")
     .map((o) => o.trim())
     .filter(Boolean)
@@ -530,6 +693,7 @@ async function run() {
   const byProfile = {};
   const byRoute = {};
   const bytesByRoute = {};
+  const intentByRoute = {};
   const allSamples = [];
   const hydrationFindings = [];
 
@@ -559,10 +723,13 @@ async function run() {
         // Cold-cache pass: the route bundle budgets are first-load figures.
         if (profile === "desktop") {
           await cdp.send("Network.setCacheDisabled", { cacheDisabled: true });
+          await cdp.send("Network.setCookie", { name: cookieName, value: cookieValue, url: baseUrl, httpOnly: true, path: "/" });
           bytes.reset();
           await navigate(cdp, url, timeoutMs);
           await sleep(1200);
-          bytesByRoute[route] = bytes.totals();
+          const landed = await evaluate(cdp, "location.pathname");
+          if (landed === route) bytesByRoute[route] = bytes.totals();
+          else log(`[bytes] ${route} DISCARDED — landed on ${String(landed)}; byte totals for another page are not this route's`);
           await cdp.send("Network.setCacheDisabled", { cacheDisabled: false });
         }
 
@@ -573,11 +740,23 @@ async function run() {
 
         const routeSamples = [];
         for (let i = 0; i < repeat; i++) {
-          consoleLog.reset();
-          await navigate(cdp, url, timeoutMs);
-          await sleep(900);
-          const probeInteraction = await interact(cdp);
-          const sample = await collectSample(cdp);
+          let sample = null;
+          let probeInteraction = null;
+          // The app calls signOut() on a refused /me/access, so a navigation can
+          // land on /signin through no fault of the route. Restore the session
+          // and re-measure rather than record the sign-in page as this route —
+          // bounded, and every remaining off-route sample still fails the run.
+          for (let attempt = 1; attempt <= OFF_ROUTE_RETRIES; attempt++) {
+            consoleLog.reset();
+            await cdp.send("Network.setCookie", { name: cookieName, value: cookieValue, url: baseUrl, httpOnly: true, path: "/" });
+            await navigate(cdp, url, timeoutMs);
+            await sleep(900);
+            probeInteraction = await interact(cdp);
+            sample = await collectSample(cdp);
+            sample.requestedRoute = route;
+            sample.attempts = attempt;
+            if (findOffRouteSamples([sample]).length === 0) break;
+          }
           sample.interaction = probeInteraction;
           const mismatches = consoleLog.hydrationMismatches();
           if (mismatches.length > 0) hydrationFindings.push({ route, profile, sample: i, messages: mismatches.slice(0, 3) });
@@ -591,6 +770,11 @@ async function run() {
           );
           await sleep(300);
         }
+        const intent = await measureIntentToFeedback(cdp, route);
+        intentByRoute[route] ??= {};
+        intentByRoute[route][profile] = intent;
+        log(`[${profile}] ${route} intent->first paint change ${intent.measured ? `${Math.round(intent.ms)}ms via ${intent.href}` : `not measured (${intent.reason ?? "no link"})`}`);
+
         byRoute[route] ??= {};
         byRoute[route][profile] = buildProfileSummary(routeSamples);
         byRoute[route][`${profile}Content`] = routeSamples.at(-1)?.content ?? null;
@@ -602,9 +786,15 @@ async function run() {
       if (profile === "desktop" && byteOnlyRoutes.length > 0) {
         await cdp.send("Network.setCacheDisabled", { cacheDisabled: true });
         for (const route of byteOnlyRoutes) {
+          await cdp.send("Network.setCookie", { name: cookieName, value: cookieValue, url: baseUrl, httpOnly: true, path: "/" });
           bytes.reset();
           await navigate(cdp, `${baseUrl}${route}`, timeoutMs);
           await sleep(1200);
+          const landed = await evaluate(cdp, "location.pathname");
+          if (landed !== route) {
+            log(`[bytes] ${route} DISCARDED — landed on ${String(landed)}`);
+            continue;
+          }
           bytesByRoute[route] = bytes.totals();
           log(`[bytes] ${route} ${bytesByRoute[route].totalBytes} bytes first load`);
         }
@@ -618,7 +808,13 @@ async function run() {
     rmSync(userDataDir, { recursive: true, force: true });
   }
 
+  const serverTtfb = await measureServerTtfb(baseUrl, routes, `${cookieName}=${cookieValue}`, repeat);
+  for (const [route, t] of Object.entries(serverTtfb))
+    log(`[server] ${route} ttfb p50=${t.p50_ms?.toFixed(0) ?? "n/a"} p75=${t.p75_ms?.toFixed(0) ?? "n/a"} p95=${t.p95_ms?.toFixed(0) ?? "n/a"} statuses=${t.statuses.join(",")}`);
+
   const unusable = findUnusableSamples(allSamples);
+  const offRoute = findOffRouteSamples(allSamples);
+  const unauthorized = findUnauthorizedSamples(allSamples, MIN_AUTHORIZED_NAV_LINKS);
 
   const result = {
     generatedAtMs: Date.now(),
@@ -633,6 +829,26 @@ async function run() {
     mobile: byProfile.mobile,
     byRoute,
     firstLoadBytesByRoute: bytesByRoute,
+    serverTtfb: {
+      method: "plain Node fetch to first response byte, no browser, no CPU or network emulation",
+      repeat,
+      byRoute: serverTtfb,
+      note: "The browser TTFB above includes the emulated RTT (150ms on the mobile profile) and the browser's own scheduling. This figure is the server render on its own.",
+    },
+    perceivedResponsiveness: {
+      target_ms: 100,
+      method: "in-page click on an in-app nav link, timed to the first DOM mutation on the same clock",
+      byRoute: intentByRoute,
+    },
+    authorization: {
+      minNavLinksForAuthorizedShell: MIN_AUTHORIZED_NAV_LINKS,
+      samplesMeasured: allSamples.length,
+      unauthorizedSamples: unauthorized,
+      verdict:
+        unauthorized.length === 0
+          ? "every measured sample rendered an authorized shell"
+          : "capture is NOT evidence for these budgets: the shell rendered without authorized navigation",
+    },
     hydration: {
       navigationsInspected: allSamples.length,
       mismatchesFound: hydrationFindings.length,
@@ -642,6 +858,7 @@ async function run() {
     contentAssertion: {
       minWordsPerSample: 10,
       samplesMeasured: allSamples.length,
+      offRouteSamples: offRoute,
       unusableSamples: unusable,
       verdict: unusable.length === 0 ? "every measured sample rendered real page content" : "capture is NOT usable evidence",
     },
@@ -665,6 +882,17 @@ async function run() {
   writeFileSync(out, `${JSON.stringify(result, null, 2)}\n`, "utf8");
   log(`wrote ${out}`);
 
+  // The byte pass carries its own landed-path guard, so it is a valid
+  // measurement even when the vitals half of the run is refused. Losing it to
+  // an unrelated refusal is how a manifest ends up with stale measured bytes.
+  if (writeManifest) {
+    const manifestPath = join(ROOT, "contracts", "route-bundle-manifest.json");
+    const current = JSON.parse(readFileSync(manifestPath, "utf8"));
+    const { manifest, touched } = mergeBytesIntoManifest(current, bytesByRoute);
+    writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+    log(`recorded CSS/image/font/third-party/server-payload bytes for ${touched.join(", ")} in ${manifestPath}`);
+  }
+
   if (unusable.length > 0) {
     console.error(
       `\nREFUSED as evidence: ${unusable.length}/${allSamples.length} sample(s) did not render real page content ` +
@@ -676,16 +904,33 @@ async function run() {
     return;
   }
 
-  if (writeManifest) {
-    const manifestPath = join(ROOT, "contracts", "route-bundle-manifest.json");
-    const current = JSON.parse(readFileSync(manifestPath, "utf8"));
-    const { manifest, touched } = mergeBytesIntoManifest(current, bytesByRoute);
-    writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
-    log(`recorded CSS/image/font/third-party/server-payload bytes for ${touched.join(", ")} in ${manifestPath}`);
+  if (offRoute.length > 0) {
+    console.error(
+      `\nREFUSED as evidence: ${offRoute.length}/${allSamples.length} sample(s) were measured on a page other than ` +
+        `the route requested. The commonest cause is the app signing itself out after a refused /me/access, which ` +
+        `sends every later navigation to /signin — a page that paints in milliseconds and would otherwise be ` +
+        `recorded as the route's own LCP.`,
+    );
+    for (const o of offRoute.slice(0, 8)) console.error(`  sample ${o.index} requested ${o.requested} but measured ${o.url}`);
+    process.exitCode = 1;
+    return;
   }
+
+  if (unauthorized.length > 0) {
+    console.error(
+      `\nREFUSED as evidence: ${unauthorized.length}/${allSamples.length} sample(s) rendered fewer than ` +
+        `${MIN_AUTHORIZED_NAV_LINKS} distinct in-app navigation links. These budgets govern AUTHORIZED routes; a shell ` +
+        `whose /me/access was refused paints almost nothing, so its LCP, FCP and INP flatter the product. ` +
+        `The numbers were still written to ${out} for diagnosis.`,
+    );
+    for (const u of unauthorized.slice(0, 8)) console.error(`  sample ${u.index} ${u.url ?? "?"} navLinks=${u.navLinks} words=${u.words}`);
+    process.exitCode = 1;
+    return;
+  }
+
 }
 
-function selfTest() {
+async function selfTest() {
   let failed = false;
   const check = (label, actual, expected) => {
     const ok = JSON.stringify(actual) === JSON.stringify(expected);
@@ -766,14 +1011,16 @@ function selfTest() {
   const merged = mergeBytesIntoManifest(
     { budgets: { "/mail": { maxCssBytes: 1, measuredFirstLoadJsBytes: 99 }, "/absent-from-capture": { maxCssBytes: 2 } } },
     {
-      "/mail": { stylesheetBytes: 10, imageBytes: 20, fontBytes: 30, thirdPartyBytes: 40, documentBytes: 50 },
-      "/not-in-manifest": { stylesheetBytes: 1, imageBytes: 1, fontBytes: 1, thirdPartyBytes: 1, documentBytes: 1 },
+      "/mail": { stylesheetBytes: 10, imageBytes: 20, fontBytes: 30, thirdPartyBytes: 40, documentBytes: 50, scriptBytes: 60, totalBytes: 210 },
+      "/not-in-manifest": { stylesheetBytes: 1, imageBytes: 1, fontBytes: 1, thirdPartyBytes: 1, documentBytes: 1, scriptBytes: 1, totalBytes: 7 },
     },
   );
   check("only routes present in both the manifest and the capture are written", merged.touched, ["/mail"]);
   check("a measured JS figure owned by another script is not overwritten", merged.manifest.budgets["/mail"].measuredFirstLoadJsBytes, 99);
   check("an unmeasured route keeps its entry untouched", merged.manifest.budgets["/absent-from-capture"], { maxCssBytes: 2 });
   check("server payload is recorded from the document response", merged.manifest.budgets["/mail"].measuredServerPayloadBytes, 50);
+  check("the JS the browser actually downloaded is recorded beside the chunk-manifest figure", merged.manifest.budgets["/mail"].measuredScriptBytes, 60);
+  check("total first-load bytes are recorded", merged.manifest.budgets["/mail"].measuredTotalBytes, 210);
 
   check("a React hydration warning is recognised", isHydrationMismatch("Warning: Text content did not match. Server: \"a\" Client: \"b\""), true);
   check("a hydration failure is recognised", isHydrationMismatch("Hydration failed because the server rendered HTML didn't match the client."), true);
@@ -794,6 +1041,57 @@ function selfTest() {
   check("a profile summary carries every gated metric plus the supplementary ones", Object.keys(summary).sort(), ["cls", "fcp", "inp", "lcp", "longTasks", "ttfb", "usedJsHeap"]);
   check("an all-null metric summarises to null rather than 0", buildProfileSummary([{ lcpMs: null, inpMs: null, cls: null, fcpMs: null, ttfbMs: null, longTaskMs: null }]).lcp.p75_ms, null);
 
+  check(
+    "the shell's own access-failure card is refused, not recorded as a good page",
+    findUnusableSamples([
+      { content: { words: 40, brandedLoader: false, errorBoundary: true, url: "/dashboard" } },
+      { content: { words: 40, brandedLoader: false, errorBoundary: false, url: "/ok" } },
+    ]).map((u) => u.url),
+    ["/dashboard"],
+  );
+  check(
+    "the shell failure copy covers the access-failure card, not just the generic boundary",
+    SHELL_FAILURE_COPY.includes("Couldn't load your organization"),
+    true,
+  );
+
+  check(
+    "a sample measured on /signin is not recorded as the route that was requested",
+    findOffRouteSamples([
+      { requestedRoute: "/mail", content: { url: "http://localhost:1002/mail" } },
+      { requestedRoute: "/mail", content: { url: "http://localhost:1002/signin?callbackUrl=%2Fmail" } },
+      { requestedRoute: "/dashboard", content: { url: "http://localhost:1002/dashboard" } },
+    ]).map((o) => o.url),
+    ["http://localhost:1002/signin?callbackUrl=%2Fmail"],
+  );
+
+  check(
+    "a shell with no authorized navigation is refused as evidence",
+    findUnauthorizedSamples(
+      [
+        { content: { navLinks: 41, url: "/dashboard", words: 300 } },
+        { content: { navLinks: 0, url: "/mail", words: 13 } },
+        { content: { navLinks: 2, url: "/inbox", words: 22 } },
+      ],
+      3,
+    ).map((u) => u.url),
+    ["/mail", "/inbox"],
+  );
+  check(
+    "an authorized shell is not refused",
+    findUnauthorizedSamples([{ content: { navLinks: 41, url: "/dashboard" } }], 3).length,
+    0,
+  );
+
+  check("the API origin is read out of the package env file", readEnvValue("# c\nNEXT_PUBLIC_API_URL=http://localhost:1500\n", "NEXT_PUBLIC_API_URL"), "http://localhost:1500");
+  check("a quoted env value is unquoted", readEnvValue('NEXT_PUBLIC_API_URL="http://x"', "NEXT_PUBLIC_API_URL"), "http://x");
+  check("a commented-out key is not read", readEnvValue("# NEXT_PUBLIC_API_URL=http://x", "NEXT_PUBLIC_API_URL"), "");
+
+  const fakeFetch = async () => ({ status: 200, body: { getReader: () => ({ read: async () => ({ done: true }), cancel: async () => {} }) } });
+  const server = await measureServerTtfb("http://localhost:1000", ["/dashboard"], "authjs.session-token=x", 3, fakeFetch);
+  check("server-side TTFB is summarised per route at p50/p75/p95", Object.keys(server["/dashboard"]).sort(), ["count", "p50_ms", "p75_ms", "p95_ms", "statuses"]);
+  check("server-side TTFB records the status it saw, so a 307 to /signin cannot pass as a measured page", server["/dashboard"].statuses, [200]);
+
   if (failed) {
     console.error("\nSELF-TEST FAILED");
     process.exit(1);
@@ -801,7 +1099,11 @@ function selfTest() {
   console.log("\nSELF-TEST PASSED — percentiles, server-mode derivation, resource classification and byte accounting all behave");
 }
 
-if (SELF_TEST) selfTest();
+if (SELF_TEST)
+  selfTest().catch((err) => {
+    console.error(err);
+    process.exitCode = 1;
+  });
 else
   run().catch((err) => {
     console.error(`measure-web-vitals failed: ${err instanceof Error ? err.message : String(err)}`);

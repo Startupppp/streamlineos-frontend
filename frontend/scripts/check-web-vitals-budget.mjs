@@ -1,7 +1,11 @@
-import { readFileSync, writeFileSync, rmSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync, writeFileSync, rmSync, existsSync } from "node:fs";
+import { join, resolve, dirname } from "node:path";
 import { tmpdir } from "node:os";
 import { randomBytes } from "node:crypto";
+import { fileURLToPath } from "node:url";
+
+const FRONTEND_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const MANIFEST_PATH = join(FRONTEND_ROOT, "contracts", "route-bundle-manifest.json");
 
 const argv = process.argv.slice(2);
 const SELF_TEST = argv.includes("--self-test");
@@ -30,6 +34,36 @@ const BUDGETS = {
   },
 };
 
+/**
+ * A breach that nobody owns is a breach nobody fixes. `budgetExceptions` in
+ * contracts/route-bundle-manifest.json names an owner and a concrete reason for
+ * a metric this ticket could not bring inside budget.
+ *
+ * It is ANNOTATION ONLY. It never removes a failure, never changes the exit
+ * code, and the self-test asserts exactly that — otherwise the first thing an
+ * exceptions mechanism does is turn every red budget green.
+ */
+export function loadExceptions(manifestPath = MANIFEST_PATH) {
+  if (!existsSync(manifestPath)) return [];
+  try {
+    const parsed = JSON.parse(readFileSync(manifestPath, "utf8"));
+    return Array.isArray(parsed.budgetExceptions) ? parsed.budgetExceptions : [];
+  } catch {
+    return [];
+  }
+}
+
+export function annotate(failures, exceptions) {
+  return failures.map((failure) => {
+    const hit = exceptions.find(
+      (e) => failure.profile === e.profile && failure.metric === e.metric,
+    );
+    return hit
+      ? `${failure.message}\n      EXCEPTION recorded by ${String(hit.recordedBy ?? "unknown")} on ${String(hit.recordedOn ?? "unknown")} — owner: ${String(hit.owner ?? "unnamed")}\n      reason: ${String(hit.reason ?? "none given")}\n      (still counted as a failure)`
+      : `${failure.message}\n      NO EXCEPTION RECORDED — this breach has no named owner`;
+  });
+}
+
 function checkBudgets(results) {
   const failures = [];
   const notMeasured = [];
@@ -42,45 +76,55 @@ function checkBudgets(results) {
     if (lcp === null) {
       notMeasured.push(`${profile}.lcp.p75_ms`);
     } else if (lcp > budget.lcp_p75_ms) {
-      failures.push(
-        `BUDGET BREACH [${profile}] LCP p75 ${lcp.toFixed(0)}ms > budget ${budget.lcp_p75_ms}ms`,
-      );
+      failures.push({
+        profile,
+        metric: "lcp_p75_ms",
+        message: `BUDGET BREACH [${profile}] LCP p75 ${lcp.toFixed(0)}ms > budget ${budget.lcp_p75_ms}ms`,
+      });
     }
 
     const inp = data.inp?.p75_ms ?? null;
     if (inp === null) {
       notMeasured.push(`${profile}.inp.p75_ms`);
     } else if (inp > budget.inp_p75_ms) {
-      failures.push(
-        `BUDGET BREACH [${profile}] INP p75 ${inp.toFixed(0)}ms > budget ${budget.inp_p75_ms}ms`,
-      );
+      failures.push({
+        profile,
+        metric: "inp_p75_ms",
+        message: `BUDGET BREACH [${profile}] INP p75 ${inp.toFixed(0)}ms > budget ${budget.inp_p75_ms}ms`,
+      });
     }
 
     const cls = data.cls?.p75 ?? null;
     if (cls === null) {
       notMeasured.push(`${profile}.cls.p75`);
     } else if (cls > budget.cls_p75) {
-      failures.push(
-        `BUDGET BREACH [${profile}] CLS p75 ${cls.toFixed(3)} > budget ${budget.cls_p75}`,
-      );
+      failures.push({
+        profile,
+        metric: "cls_p75",
+        message: `BUDGET BREACH [${profile}] CLS p75 ${cls.toFixed(3)} > budget ${budget.cls_p75}`,
+      });
     }
 
     const fcp = data.fcp?.p75_ms ?? results.allNavigations?.fcpMs?.p75 ?? null;
     if (fcp === null) {
       notMeasured.push(`${profile}.fcp.p75_ms`);
     } else if (fcp > budget.fcp_p75_ms) {
-      failures.push(
-        `BUDGET BREACH [${profile}] FCP p75 ${fcp.toFixed(0)}ms > budget ${budget.fcp_p75_ms}ms`,
-      );
+      failures.push({
+        profile,
+        metric: "fcp_p75_ms",
+        message: `BUDGET BREACH [${profile}] FCP p75 ${fcp.toFixed(0)}ms > budget ${budget.fcp_p75_ms}ms`,
+      });
     }
 
     const ttfb = data.ttfb?.p95_ms ?? results.allNavigations?.ttfbMs?.p95 ?? null;
     if (ttfb === null) {
       notMeasured.push(`${profile}.ttfb.p95_ms`);
     } else if (ttfb > budget.ttfb_p95_ms) {
-      failures.push(
-        `BUDGET BREACH [${profile}] TTFB p95 ${ttfb.toFixed(0)}ms > budget ${budget.ttfb_p95_ms}ms`,
-      );
+      failures.push({
+        profile,
+        metric: "ttfb_p95_ms",
+        message: `BUDGET BREACH [${profile}] TTFB p95 ${ttfb.toFixed(0)}ms > budget ${budget.ttfb_p95_ms}ms`,
+      });
     }
   }
 
@@ -134,7 +178,7 @@ async function selfTest() {
   console.log("--- self-test fixtures ---");
   printBudgets();
   console.log(`\nBreaching result breaches found: ${failures.length}  (expected 6 — mobile LCP,INP,CLS,FCP,TTFB + desktop LCP)`);
-  for (const f of failures) console.log("  " + f);
+  for (const f of failures) console.log("  " + f.message);
   if (notMeasured.length > 0) console.log(`  Not measured: ${notMeasured.join(", ")}`);
   console.log("---");
 
@@ -156,8 +200,31 @@ async function selfTest() {
   };
   const unmeasured = checkBudgets(unmeasuredFixture);
 
+  const annotated = annotate(failures, [
+    {
+      profile: "mobile",
+      metric: "ttfb_p95_ms",
+      owner: "somebody",
+      reason: "because",
+      recordedBy: "self-test",
+      recordedOn: "2026-09-02",
+    },
+  ]);
+  const annotationKeepsEveryFailure = annotated.length === failures.length;
+  const annotationNamesTheOwner = annotated.some((line) => line.includes("owner: somebody"));
+  const unownedBreachIsMarked = annotated.some((line) => line.includes("NO EXCEPTION RECORDED"));
+  console.log(
+    `Exception annotation: ${annotated.length} line(s) for ${failures.length} failure(s) — ` +
+      `an exception must never remove one`,
+  );
+
   const expectedBreaches = 6;
-  const breachesOk = failures.length === expectedBreaches && notMeasured.length === 0;
+  const breachesOk =
+    failures.length === expectedBreaches &&
+    notMeasured.length === 0 &&
+    annotationKeepsEveryFailure &&
+    annotationNamesTheOwner &&
+    unownedBreachIsMarked;
   const unmeasuredOk =
     unmeasured.failures.length === 0 && unmeasured.notMeasured.length === 1;
 
@@ -167,12 +234,17 @@ async function selfTest() {
   );
 
   if (breachesOk && unmeasuredOk) {
-    console.log("SELF-TEST PASS: breach detection fires, and an unmeasured budget is not reported as met");
+    console.log(
+    "SELF-TEST PASS: breach detection fires, an unmeasured budget is not reported as met, and a recorded " +
+      "exception annotates a failure without removing it",
+  );
     process.exitCode = 0;
   } else {
     if (!breachesOk)
       console.error(
-        `SELF-TEST FAIL: expected ${expectedBreaches} failures, got ${failures.length}; not-measured: ${notMeasured.length}`,
+        `SELF-TEST FAIL: expected ${expectedBreaches} failures, got ${failures.length}; not-measured: ${notMeasured.length}; ` +
+          `annotation kept every failure: ${annotationKeepsEveryFailure}; named the owner: ${annotationNamesTheOwner}; ` +
+          `marked the unowned breach: ${unownedBreachIsMarked}`,
       );
     if (!unmeasuredOk)
       console.error(
@@ -238,7 +310,7 @@ function main() {
     for (const m of notMeasured) console.log(`  ${m}`);
   }
 
-  for (const f of failures) console.error(f);
+  for (const line of annotate(failures, loadExceptions())) console.error(line);
 
   if (failures.length > 0) {
     console.error(`\ncheck-web-vitals-budget: ${failures.length} budget violation(s)`);

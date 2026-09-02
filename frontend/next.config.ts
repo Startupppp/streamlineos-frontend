@@ -158,6 +158,24 @@ const nextConfig: NextConfig = {
   },
   headers: async () => [
     {
+      source: "/:asset(logo.svg|logo-email.svg|bimi-logo.svg|feedbucket-widget.js)",
+      headers: [
+        {
+          key: "Cache-Control",
+          value: "public, max-age=86400, stale-while-revalidate=604800",
+        },
+      ],
+    },
+    {
+      source: "/:dir(illustrations|icons)/:path*",
+      headers: [
+        {
+          key: "Cache-Control",
+          value: "public, max-age=604800, stale-while-revalidate=2592000",
+        },
+      ],
+    },
+    {
       source: "/(.*)",
       headers: [
         { key: "X-Frame-Options", value: "DENY" },

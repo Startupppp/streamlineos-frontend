@@ -22,8 +22,17 @@ const ALLOW_PENDING = argv.includes("--allow-pending");
 const FRONTEND_ROOT = resolve(fileURLToPath(new URL(".", import.meta.url)), "..");
 const MANIFEST_PATH = join(FRONTEND_ROOT, "contracts", "route-bundle-manifest.json");
 
+/**
+ * `measuredFirstLoadJsBytes` is gzip(9) over the chunks Next lists in the
+ * route's client-reference manifest. `measuredScriptBytes` is what the browser
+ * actually downloaded on a cold cache. They are not the same number — on this
+ * app the second is roughly twice the first — so a JS budget checked only
+ * against the first passes while the user pays for the rest. Both are governed.
+ */
 const MEASURED_PAIRS = [
   ["measuredFirstLoadJsBytes", "maxFirstLoadJsBytes"],
+  ["measuredScriptBytes", "maxScriptBytes"],
+  ["measuredTotalBytes", "maxTotalBytes"],
   ["measuredPageChunkBytes", "maxPageChunkBytes"],
   ["measuredCssBytes", "maxCssBytes"],
   ["measuredImageBytes", "maxImageBytes"],
@@ -91,6 +100,21 @@ function selfTest() {
   });
   if (clean.length !== 0) fail("within-budget-passes", `expected 0, got ${clean.length}`);
   else pass("within-budget-passes — measured ≤ ceiling produces no violation");
+
+  const overTheWire = findExceededBundles({
+    defaults: { maxScriptBytes: 524288, maxTotalBytes: 1048576 },
+    budgets: {
+      "/downloads-more-than-next-counts": { measuredFirstLoadJsBytes: 488551, maxFirstLoadJsBytes: 524288, measuredScriptBytes: 954265 },
+      "/total-over": { measuredTotalBytes: 1124402 },
+      "/both-within": { measuredScriptBytes: 400000, measuredTotalBytes: 900000 },
+    },
+  });
+  if (overTheWire.length !== 2)
+    fail(
+      "over-the-wire-detected",
+      `expected 2 breaches (script bytes, total bytes), got ${overTheWire.length}`,
+    );
+  else pass("over-the-wire-detected — a route within its chunk-manifest budget still fails on the JS the browser downloads");
 
   const nonJs = findExceededBundles({
     defaults: { maxFontBytes: 100, maxServerPayloadBytes: 100 },
