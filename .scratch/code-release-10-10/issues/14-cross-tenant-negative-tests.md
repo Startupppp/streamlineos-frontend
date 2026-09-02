@@ -4,11 +4,50 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** done except one box — blocked outside this territory (re-verified S5)
+**Status:** done — all 6 boxes closed (S6: both halves of the gate now green)
 
 - [x] Each service gains an executable cross-tenant negative test proving an actor from organization A cannot read or mutate organization B's rows, and that a cross-tenant miss returns 404 rather than 403.
   - Evidence: `nice -n 10 npx jest src/modules/support/core/support-kb-engagement-tenant-isolation.spec.ts src/modules/rbac/__tests__/role-seed-tenant-isolation.spec.ts --maxWorkers=2` → **21 passed, 21 total, 2 suites**. New files: `src/modules/support/core/support-kb-engagement-tenant-isolation.spec.ts` (13 tests), `src/modules/rbac/__tests__/role-seed-tenant-isolation.spec.ts` (8 tests).
-- [ ] Static declaration coverage reaches complete, and the executable isolation suite passes.
+- [x] Static declaration coverage reaches complete, and the executable isolation suite passes.
+  - **S6 — BOTH HALVES ARE NOW GREEN. Measured, not inferred.**
+    - Static: `pnpm -s check:tenant-isolation` -> **exit 0, 928 / 928 (100%)**, zero MISSING.
+    - Executable: `pnpm -s check:tenant-isolation:run` -> **exit 0, 450 suites passed / 450,
+      1847 tests passed / 1847**. The two S5 failures (`cron-group-a-tenant-isolation.spec.ts`
+      REDIS injection, `kb-acl-isolation.spec.ts` `bumpSpaceAclRevision`) were fixed by their
+      own lanes and no longer fail.
+    - The static gap had MOVED AGAIN, and this time it was inside reach. It is no longer
+      `role-grant-reconciler.service.ts` (ticket 19 covered it); it was
+      `src/modules/organization/setup/org-setup-completed-consumer.service.ts`, which no
+      exclusion list claims. Closing it vacuously was not an option — the gate's own note says a
+      spec that names a service and contains the word "isolation" ticks it without proving
+      anything — so a real cross-tenant negative suite was written, and it found a real hole.
+    - **The hole.** That consumer provisions an entire organisation: it seeds every system role,
+      provisions the module checklists, closes the setup session and dispatches the owner's
+      welcome. Every one of those writes takes `orgId` from the event **payload**, while the
+      inbox fence, the relay's lease and the audit trail are all bound to the outbox row's
+      `organization_id`. Nothing compared the two. An event recorded against organisation A
+      carrying a payload naming organisation B would have seeded roles and dispatched a
+      notification inside B. The payload schema was also a bare `z.object({})`, which strips an
+      unexpected key rather than rejecting it, so a producer that renamed `orgId` would have
+      parsed clean with the tenant field simply gone. Both are now closed: the schema is
+      `.strict()`, and the consumer refuses a mismatch, marks the inbox row FAILED with the
+      reason and throws so the publisher retries and finally dead-letters where the dead-outbox
+      alert reports it. The producer sets both fields from one value
+      (`org-setup.service.ts:emitSetupCompleted`), so the guard costs nothing legitimate.
+    - Evidence: new `src/modules/organization/setup/__tests__/org-setup-completed-tenant-isolation.spec.ts`
+      (10 tests). `jest --runInBand --testPathPattern="organization/setup"` -> **9 suites,
+      47 tests passed, exit 0**.
+    - Proven to bite, twice, both one-off with the files restored byte-identical (sha256 verified
+      before and after — `f8ed5195...c9439` consumer, `1d63c9e3...0edda` schema):
+      the tenant guard forced false -> **4 failed / 6 passed / 10** (`refuses to provision
+      organization B...`, `names neither organization in any write...`, `records the refusal
+      durably on the inbox row...`, `never reads the subject when it refuses...`);
+      `.strict()` removed -> **1 failed / 9 passed / 10** (`an unexpected key is rejected by the
+      schema, not stripped and provisioned`).
+    - Cross-boundary note: this box required editing two files in `src/modules/organization/setup/`
+      (the consumer and its payload schema), not only a spec. That module is on no exclusion list
+      and is held by no other agent, but the edit is a fix rather than a test and is called out here
+      deliberately.
   - Re-verified S5. BOTH halves are now red, and neither cause is in this ticket's territory.
   - Static half: `pnpm -s check:tenant-isolation` -> **924 / 925 (100% rounded), exit 1**, one `MISSING`.
     `pnpm -s check:tenant-isolation:self-test` -> all 7 checks pass, exit 0, so the gate itself is sound.
