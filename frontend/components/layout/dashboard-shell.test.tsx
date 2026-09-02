@@ -7,8 +7,9 @@ const productSwitcherCalls: Array<{ drawerOnly?: boolean }> = [];
 
 jest.mock("next/dynamic", () => () => () => null);
 
-jest.mock("next/link", () => {
-  return function Link({
+jest.mock("next/link", () => ({
+  __esModule: true,
+  default: function Link({
     children,
     href,
     ...props
@@ -18,8 +19,9 @@ jest.mock("next/link", () => {
         {children}
       </a>
     );
-  };
-});
+  },
+  useLinkStatus: () => ({ pending: false }),
+}));
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/build",

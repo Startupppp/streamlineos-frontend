@@ -15,6 +15,7 @@ import {
 } from "./sidebar-nav-items";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useNavIntentPrefetch } from "@/components/layout/nav-intent-prefetch";
+import { NavPendingIndicator } from "@/components/layout/nav-pending-indicator";
 
 function hoistSingletonParentRoutes(routes: NavRoute[]): NavRoute[] {
   if (routes.length !== 1) return routes;
@@ -183,6 +184,7 @@ function CollapsedItem({ route, pathname, pendingLeaves, onNavigate, accent }: I
           {hasBadge && (
             <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-status-danger-fill ring-1 ring-sidebar z-[2]" />
           )}
+          <NavPendingIndicator className="z-[2]" />
         </Link>
       </TooltipTrigger>
       <TooltipContent side="right" sideOffset={10} className="z-[9999] text-xs font-medium" style={{ zIndex: 9999 }}>
@@ -269,6 +271,7 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate, accen
             />
           </button>
         )}
+        <NavPendingIndicator />
       </Link>
 
       {(hasChildren && expanded || singleChild) && (

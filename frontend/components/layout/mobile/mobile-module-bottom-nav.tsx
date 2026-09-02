@@ -18,6 +18,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useNavIntentPrefetch } from "@/components/layout/nav-intent-prefetch";
+import { NavPendingIndicator } from "@/components/layout/nav-pending-indicator";
 
 function ModuleNavLink({
   route,
@@ -32,7 +33,7 @@ function ModuleNavLink({
     <Link
       href={route.href}
       className={cn(
-        "flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 text-center transition-colors",
+        "relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 text-center transition-colors",
         isActive
           ? "text-primary"
           : "text-muted-foreground hover:text-foreground",
@@ -45,6 +46,7 @@ function ModuleNavLink({
         text={route.label}
         className="max-w-full truncate text-center text-micro leading-none"
       />
+      <NavPendingIndicator />
     </Link>
   );
 }
@@ -111,7 +113,7 @@ function OverflowNavLink({
       onFocus={handleIntent}
       onClick={onNavigate}
       className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
+        "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
         isActive
           ? "bg-primary/10 text-primary"
           : "text-foreground hover:bg-muted",
@@ -120,6 +122,7 @@ function OverflowNavLink({
     >
       <Icon className="size-4 shrink-0" />
       {label}
+      <NavPendingIndicator />
     </Link>
   );
 }

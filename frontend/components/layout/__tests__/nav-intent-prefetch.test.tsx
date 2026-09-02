@@ -42,6 +42,7 @@ jest.mock("next/link", () => ({
       </a>
     );
   },
+  useLinkStatus: () => ({ pending: false }),
 }));
 
 jest.mock("@/components/ui/tooltip", () => ({

@@ -33,6 +33,7 @@ jest.mock("next/link", () => ({
       {children}
     </a>
   ),
+  useLinkStatus: () => ({ pending: false }),
 }));
 
 jest.mock("next/dynamic", () => () => () => null);
