@@ -46,6 +46,9 @@ function useInvalidateBatches() {
   const qc = useQueryClient();
   return (batchId?: number) => {
     void qc.invalidateQueries({ queryKey: queryKeys.payroll.journalBatchesAll });
+    void qc.invalidateQueries({
+      queryKey: [...queryKeys.payroll.all, "period-reconciliation"],
+    });
     if (batchId !== undefined) {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.journalBatch(batchId) });
     }

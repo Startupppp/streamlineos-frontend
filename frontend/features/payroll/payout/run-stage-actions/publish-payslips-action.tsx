@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { useCan } from "@/hooks/api/access";
 import { usePublishPayslips } from "@/hooks/api/payroll";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { useRunConflictHandler } from "@/features/payroll/shared/run-conflict";
 import type { PublishResult } from "@/types/payroll";
 
 interface Props {
@@ -27,6 +27,7 @@ export function PublishPayslipsAction({ runId, status }: Props) {
   const canManage = useCan("payroll:payslips:manage");
   const [open, setOpen] = useState(false);
   const { mutate, isPending } = usePublishPayslips();
+  const handleError = useRunConflictHandler(runId);
 
   if (status !== "PAID") return null;
   if (!canManage) return null;
@@ -45,14 +46,19 @@ export function PublishPayslipsAction({ runId, status }: Props) {
       {
         onSuccess: (data: PublishResult) => {
           setOpen(false);
+          if (data.published < data.total) {
+            toast.warning(`Published ${data.published} of ${data.total} payslip(s)`, {
+              description:
+                "The remaining payslips failed. Open the Payslips tab to see which employees failed and retry them.",
+            });
+            return;
+          }
           toast.success(`Published ${data.published} of ${data.total} payslip(s)`);
           if (data.runStatus === "PAYSLIPS_PUBLISHED") {
             toast.success("Run status updated to Payslips Published");
           }
         },
-        onError: (err) => {
-          toast.error(getErrorMessage(err));
-        },
+        onError: handleError,
       },
     );
   }

@@ -31,6 +31,8 @@ export function usePublishPayslips() {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.runPublications(runId) });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
       void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.essPayslips() });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.commandCenterAll });
     },
   });
 }

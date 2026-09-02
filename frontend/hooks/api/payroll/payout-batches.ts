@@ -134,9 +134,8 @@ export function useMarkBatchPaid() {
       void qc.invalidateQueries({
         queryKey: queryKeys.payroll.bankBatches(runId),
       });
-      void qc.invalidateQueries({
-        queryKey: queryKeys.payroll.run(runId ?? 0),
-      });
+      if (runId !== undefined)
+        void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
     },
   });
 }
@@ -161,6 +160,8 @@ export function useMarkItemPaid() {
       void qc.invalidateQueries({
         queryKey: queryKeys.payroll.bankBatches(runId),
       });
+      if (runId !== undefined)
+        void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
     },
   });
 }
@@ -185,6 +186,8 @@ export function useMarkItemFailed() {
       void qc.invalidateQueries({
         queryKey: queryKeys.payroll.bankBatches(runId),
       });
+      if (runId !== undefined)
+        void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
     },
   });
 }
@@ -219,9 +222,8 @@ export function useImportBankReturn() {
       void qc.invalidateQueries({
         queryKey: queryKeys.payroll.bankBatches(runId),
       });
-      void qc.invalidateQueries({
-        queryKey: queryKeys.payroll.run(runId ?? 0),
-      });
+      if (runId !== undefined)
+        void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
       void qc.invalidateQueries({
         queryKey: queryKeys.payroll.journalBatchesAll,
       });

@@ -6,6 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
+import { useRunConflictHandler } from "@/features/payroll/shared/run-conflict";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -72,7 +74,7 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
   const canUpdate = useCan("payroll:runs:update");
   const canManage = useCan("payroll:runs:manage");
 
-  const { data: exceptions, isLoading } = useRunExceptions(
+  const { data: exceptions, isLoading, isError, refetch } = useRunExceptions(
     runId,
     filterSeverity !== "all" || filterStatus !== "all"
       ? {
@@ -84,6 +86,7 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
 
   const resolveMutation = useResolveException(runId);
   const overrideMutation = useOverrideException(runId);
+  const handleMutationError = useRunConflictHandler(runId);
 
   const form = useForm<OverrideForm>({
     resolver: zodResolver(overrideSchema),
@@ -103,7 +106,7 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
       { exceptionId: ex.id },
       {
         onSuccess: () => toast.success("Exception resolved"),
-        onError: () => toast.error("Failed to resolve"),
+        onError: handleMutationError,
       },
     );
   }
@@ -127,7 +130,7 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
           toast.success("Exception overridden");
           handleOverrideCancel();
         },
-        onError: () => toast.error("Failed to override"),
+        onError: handleMutationError,
       },
     );
   }
@@ -140,7 +143,11 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
     setFilterStatus(val as PayrollExceptionStatus | "all");
   }
 
-  const allEmpty = !isLoading && (exceptions ?? []).length === 0;
+  const allEmpty = !isLoading && !isError && (exceptions ?? []).length === 0;
+
+  function handleRetry() {
+    void refetch();
+  }
 
   return (
     <div className="space-y-3">
@@ -168,6 +175,14 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
           </SelectContent>
         </Select>
       </div>
+
+      {isError && (
+        <ErrorState
+          title="Failed to load exceptions"
+          description="This run's validation exceptions could not be loaded — this is not an all-clear. Retry before acting on the run."
+          onRetry={handleRetry}
+        />
+      )}
 
       {allEmpty && (
         <EmptyState

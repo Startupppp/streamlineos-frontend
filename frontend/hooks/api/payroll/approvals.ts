@@ -77,41 +77,45 @@ export function useRejectStage() {
   });
 }
 
-export function useLockRun() {
+function useInvalidateRunWorkspace() {
   const qc = useQueryClient();
+  return (runId: number) => {
+    void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
+    void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
+    void qc.invalidateQueries({ queryKey: queryKeys.payroll.runInputsAll(runId) });
+    void qc.invalidateQueries({ queryKey: queryKeys.payroll.runExceptionsAll(runId) });
+    void qc.invalidateQueries({ queryKey: queryKeys.payroll.runEmployeesAll(runId) });
+    void qc.invalidateQueries({ queryKey: queryKeys.payroll.runVariance(runId) });
+    void qc.invalidateQueries({ queryKey: queryKeys.payroll.commandCenterAll });
+  };
+}
+
+export function useLockRun() {
+  const invalidateRunWorkspace = useInvalidateRunWorkspace();
   return useAuthorizedMutation<{ success: boolean }, Error, { runId: number }>("payroll:runs:manage", {
     mutationKey: ["payroll", "lock-run"],
     mutationFn: ({ runId }) =>
       apiClient.post<{ success: boolean }>(`/payroll/runs/${runId}/lock`),
-    onSuccess: (_, { runId }) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
-    },
+    onSuccess: (_, { runId }) => invalidateRunWorkspace(runId),
   });
 }
 
 export function useReopenRun() {
-  const qc = useQueryClient();
+  const invalidateRunWorkspace = useInvalidateRunWorkspace();
   return useAuthorizedMutation<{ success: boolean }, Error, { runId: number; reason: string }>("payroll:runs:manage", {
     mutationKey: ["payroll", "reopen-run"],
     mutationFn: ({ runId, reason }) =>
       apiClient.post<{ success: boolean }>(`/payroll/runs/${runId}/reopen`, { reason }),
-    onSuccess: (_, { runId }) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
-    },
+    onSuccess: (_, { runId }) => invalidateRunWorkspace(runId),
   });
 }
 
 export function useCloseRun() {
-  const qc = useQueryClient();
+  const invalidateRunWorkspace = useInvalidateRunWorkspace();
   return useAuthorizedMutation<{ success: boolean }, Error, { runId: number }>("payroll:runs:manage", {
     mutationKey: ["payroll", "close-run"],
     mutationFn: ({ runId }) =>
       apiClient.post<{ success: boolean }>(`/payroll/runs/${runId}/close`),
-    onSuccess: (_, { runId }) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
-    },
+    onSuccess: (_, { runId }) => invalidateRunWorkspace(runId),
   });
 }

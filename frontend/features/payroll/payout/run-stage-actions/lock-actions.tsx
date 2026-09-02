@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useCan } from "@/hooks/api/access";
 import { useLockRun, useReopenRun, useCloseRun } from "@/hooks/api/payroll";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { useRunConflictHandler } from "@/features/payroll/shared/run-conflict";
 
 interface Props {
   runId: number;
@@ -31,6 +31,7 @@ function LockButton({ runId }: { runId: number }) {
   const canManage = useCan("payroll:runs:manage");
   const [open, setOpen] = useState(false);
   const { mutate, isPending } = useLockRun();
+  const handleError = useRunConflictHandler(runId);
 
   if (!canManage) return null;
 
@@ -41,7 +42,7 @@ function LockButton({ runId }: { runId: number }) {
       { runId },
       {
         onSuccess: () => { setOpen(false); toast.success("Payroll locked"); },
-        onError: (err) => { toast.error(getErrorMessage(err)); },
+        onError: handleError,
       },
     );
   }
@@ -79,6 +80,7 @@ function ReopenButton({ runId }: { runId: number }) {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   const { mutate, isPending } = useReopenRun();
+  const handleError = useRunConflictHandler(runId);
 
   if (!canManage) return null;
 
@@ -91,7 +93,7 @@ function ReopenButton({ runId }: { runId: number }) {
       { runId, reason: reason.trim() },
       {
         onSuccess: () => { setOpen(false); setReason(""); toast.success("Run reopened"); },
-        onError: (err) => { toast.error(getErrorMessage(err)); },
+        onError: handleError,
       },
     );
   }
@@ -143,6 +145,7 @@ function CloseButton({ runId }: { runId: number }) {
   const canManage = useCan("payroll:runs:manage");
   const [open, setOpen] = useState(false);
   const { mutate, isPending } = useCloseRun();
+  const handleError = useRunConflictHandler(runId);
 
   if (!canManage) return null;
 
@@ -153,7 +156,7 @@ function CloseButton({ runId }: { runId: number }) {
       { runId },
       {
         onSuccess: () => { setOpen(false); toast.success("Run closed"); },
-        onError: (err) => { toast.error(getErrorMessage(err)); },
+        onError: handleError,
       },
     );
   }

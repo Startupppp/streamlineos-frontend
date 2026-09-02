@@ -84,6 +84,9 @@ export function useGenerateRun() {
     onSuccess: (_, runId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
       void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runEmployeesAll(runId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runExceptionsAll(runId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runVariance(runId) });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.commandCenterAll });
     },
   });
