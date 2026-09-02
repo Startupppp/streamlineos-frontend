@@ -1,11 +1,12 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { homeSectionModule } from "@/lib/home/home-sections";
 import type {
   DashboardStats,
@@ -346,7 +347,7 @@ export const useAnnouncements = (
 
 export const useCreateAnnouncement = () => {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:manage", {
     mutationKey: ["dashboard", "announcements", "create"],
     mutationFn: (body: { title: string; content: string; isPinned?: boolean; expiresAt?: string }) =>
       apiClient.post<Announcement>("/dashboard/announcements", body),
@@ -358,7 +359,7 @@ export const useCreateAnnouncement = () => {
 
 export const useDeleteAnnouncement = () => {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("settings:manage", {
     mutationKey: ["dashboard", "announcements", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/dashboard/announcements?id=${id}`),

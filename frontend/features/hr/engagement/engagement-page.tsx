@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import {
@@ -25,7 +25,9 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared/error-state";
-import { useCan } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { useEngagementOverview, useMyMoodHistory, useOrgMoodAggregate } from "@/hooks/api/hr/engagement";
 import { useOrgMembers } from "@/hooks/api/organization";
@@ -69,16 +71,19 @@ interface Recognition {
 }
 
 function useRecognitions() {
+  const canView = useCan("hr:engagement:view");
+  const hrEnabled = useModuleEnabled("hr");
   return useQuery<Recognition[]>({
     queryKey: queryKeys.hr.hrRecognition,
     queryFn: ({ signal }) => apiClient.get<Recognition[]>("/hr/recognition", undefined, signal),
     staleTime: 60_000,
+    enabled: canView && hrEnabled,
   });
 }
 
 function useCreateRecognition() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("hr:engagement:view", {
     mutationKey: ["hr", "recognition", "create"],
     mutationFn: (data: { toUserId: string; message: string; category: string }) =>
       apiClient.post<Recognition>("/hr/recognition", data),
@@ -360,6 +365,7 @@ export function HrEngagementPage() {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const { data: session } = useSession();
   const currentUserId = session?.user?.id ?? "";
+  const canViewEngagement = useCan("hr:engagement:view");
 
   const tabContent = useMemo(() => {
     switch (activeTab) {
@@ -371,6 +377,17 @@ export function HrEngagementPage() {
       case "campaigns": return <CampaignsTab />;
     }
   }, [activeTab, currentUserId]);
+
+  if (!canViewEngagement) {
+    return (
+      <PageWrapper
+        title="Employee Engagement"
+        subtitle="Recognition, mood, communities, and culture"
+      >
+        <NoPermissionState permission="hr:engagement:view" />
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper

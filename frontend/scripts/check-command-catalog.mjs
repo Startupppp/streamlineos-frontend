@@ -53,8 +53,11 @@ const EXPLICIT_SELF_HOOKS = new Set([
   // Backend marks these @Universal(): the subject is always @CurrentUser().
   // POST /org/announcements/:id/read      — announcements.controller.ts
   // POST /hr/enterprise/ops/emergency/events/:id/respond — emergency.controller.ts
+  // DELETE /sessions/:sessionId, DELETE /sessions — sessions.controller.ts
   "useMarkHrAnnouncementRead",
   "useRespondToEmergency",
+  "useRevokeSession",
+  "useRevokeAllSessions",
 ]);
 
 // ── Skip patterns ─────────────────────────────────────────────────────────────
@@ -71,12 +74,18 @@ const SCAN_FLOOR = { minHooks: 50 };
 
 function extractMutationBlocks(src, filePath) {
   const results = [];
-  // Match export function use* ... up to the closing brace at function level.
-  // Strategy: find each `export function use`, capture name, then find the block.
-  const EXPORT_RE = /^[ \t]*export\s+(?:async\s+)?function\s+(use\w+)\s*\(/gm;
+  // Both hook declaration styles must be visible. A scanner that only knows
+  // `export function` silently omits every arrow-declared hook — such a hook is
+  // then neither PERMISSIONED, SELF nor UNCLASSIFIED, so the count reads clean
+  // while the command is ungoverned.
+  // The annotation on `const useX: () => UseMutationResult<T> = () => {` itself
+  // contains `=>`, so the type segment has to admit it while still stopping at
+  // the real assignment.
+  const EXPORT_RE =
+    /^[ \t]*export\s+(?:(?:async\s+)?function\s+(use\w+)\s*\(|const\s+(use\w+)\s*(?::(?:[^=]|=>)*?)?=\s*(?:async\s*)?(?:\([^)]*\)|\w+)\s*=>)/gm;
   let match;
   while ((match = EXPORT_RE.exec(src)) !== null) {
-    const name = match[1];
+    const name = match[1] ?? match[2];
     const start = match.index;
     // Find the opening { of this function
     const openBrace = src.indexOf("{", start + match[0].length);
@@ -238,6 +247,36 @@ function runSelfTest() {
   const r6 = classify(goodAuthorized, "useNonExistent");
   assert(r6 === null, `(f) unknown hook name should return null`);
   console.log("  (f) unknown hook name returns null (scan is not vacuous) → correct");
+
+  // (g) The shape this scanner used to be blind to. An arrow-declared hook was
+  // invisible entirely — neither PERMISSIONED, SELF nor UNCLASSIFIED — so an
+  // ungoverned command read as a clean count. Four real hooks were hidden this way.
+  const arrowUnclassified = `
+    export const useArrowDeclaredCommand = () => {
+      const qc = useQueryClient();
+      return useMutation({ mutationFn: (id) => apiClient.delete("/widgets/" + id) });
+    };
+  `;
+  const arrowAuthorized = `
+    export const useCreateAnnouncement = () => {
+      return useAuthorizedMutation("settings:manage", {
+        mutationFn: (b) => apiClient.post("/dashboard/announcements", b),
+      });
+    };
+  `;
+  const arrowTyped = `
+    export const useThing: () => UseMutationResult<Foo> = () => {
+      return useMutation({ mutationFn: () => apiClient.post("/thing") });
+    };
+  `;
+  const r7 = classify(arrowUnclassified, "useArrowDeclaredCommand");
+  assert(r7?.kind === "UNCLASSIFIED", `(g) arrow hook → expected UNCLASSIFIED, got ${r7?.kind}`);
+  const r8 = classify(arrowAuthorized, "useCreateAnnouncement");
+  assert(r8?.kind === "PERMISSIONED", `(g) arrow authorized → expected PERMISSIONED, got ${r8?.kind}`);
+  assert(r8?.key === "settings:manage", `(g) arrow key → got ${r8?.key}`);
+  const r9 = classify(arrowTyped, "useThing");
+  assert(r9?.kind === "UNCLASSIFIED", `(g) type-annotated arrow hook must still be seen, got ${r9?.kind}`);
+  console.log("  (g) arrow-declared hooks (const use… = () =>)          → seen, not skipped");
 
   console.log("\n✔ All command-catalog fixtures passed — check-command-catalog is live.\n");
 }
