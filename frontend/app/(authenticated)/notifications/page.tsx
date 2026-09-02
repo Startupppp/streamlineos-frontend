@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { CheckCheck } from "lucide-react";
 import {
   useInfiniteNotifications,
@@ -96,6 +97,8 @@ export default function NotificationsPage() {
     [detailId, items],
   );
 
+  const isOnline = useOnlineStatus();
+
   const { handlers, mutations, emptyTitle, emptyDescription } = useNotificationInbox({
     setSelectedIds,
     setDetailId,
@@ -173,6 +176,15 @@ export default function NotificationsPage() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col gap-2">
+        <span className="sr-only" role="status" aria-live="polite">
+          {!isOnline ? "You are offline. Notifications may be stale." : ""}
+        </span>
+        {!isOnline && (
+          <div className="shrink-0 px-4 py-1.5 bg-status-warning-surface border border-status-warning-rule rounded-lg flex items-center gap-2 text-xs text-status-warning-ink font-medium">
+            <span className="h-1.5 w-1.5 rounded-full bg-status-warning-fill animate-pulse shrink-0" aria-hidden="true" />
+            You&apos;re offline — notifications may be stale
+          </div>
+        )}
         {selectedIds.size > 0 && (
           <div className="flex items-center gap-1.5 px-3 py-2 border rounded-lg bg-muted/40 flex-wrap">
             <span className="text-xs text-muted-foreground mr-1">

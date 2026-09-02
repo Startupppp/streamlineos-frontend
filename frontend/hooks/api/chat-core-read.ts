@@ -110,6 +110,12 @@ export function useChatMessages(channelId: number) {
   });
 }
 
+export type PollPage = {
+  messages: Message[];
+  nextCursor: number | null;
+  hasMore: boolean;
+};
+
 export function useChatPoll(
   channelId: number,
   since: string,
@@ -120,7 +126,7 @@ export function useChatPoll(
   return useQuery({
     queryKey: queryKeys.chat.poll(channelId, since),
     queryFn: ({ signal }) =>
-      apiClient.get<Message[]>(`/chat/channels/${channelId}/messages/poll`, {
+      apiClient.get<PollPage>(`/chat/channels/${channelId}/messages/poll`, {
         since,
       }, signal),
     staleTime: 2 * 60_000,

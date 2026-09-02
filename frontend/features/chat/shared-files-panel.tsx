@@ -1,16 +1,14 @@
 "use client";
 
 import { useMemo } from "react";
-import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { FileText, Paperclip } from "lucide-react";
+import { Paperclip } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { XIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import React from "react";
-import { cn } from "@/lib/utils";
 import { useChannelFiles } from "@/hooks/api";
-import { formatFileSize, getFileExt, getFileColor, resolveFileUrl, isImageMime } from "./chat-helpers";
+import { ChatAttachment } from "./chat-attachment";
 
 const FilesPanelCloseButton = React.forwardRef<
   HTMLButtonElement,
@@ -61,41 +59,17 @@ export function SharedFilesPanel({ channelId, onClose }: { channelId: number; on
           </div>
         ) : (
           <div className="py-2">
-            {files.map((file) => {
-              const url = resolveFileUrl(file.fileUrl, file.mimeType);
-              const colors = getFileColor(file.fileName);
-              return isImageMime(file.mimeType) ? (
-                <a
-                  key={file.id}
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block px-4 py-2 hover:bg-muted/30 transition-colors"
-                >
-                  <Image src={url} alt={file.fileName} width={400} height={120} className="w-full rounded-lg object-cover max-h-[120px]" />
-                  <p className="text-dense text-muted-foreground mt-1 truncate">{file.fileName}</p>
-                </a>
-              ) : (
-                <a
-                  key={file.id}
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/30 transition-colors"
-                >
-                  <div className={cn("h-9 w-9 rounded-lg flex flex-col items-center justify-center shrink-0", colors.bg)}>
-                    <FileText className={cn("h-4 w-4", colors.text)} />
-                    <span className={cn("text-micro font-bold text-white px-1 rounded mt-0.5", colors.badge)}>
-                      {getFileExt(file.fileName)}
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold truncate">{file.fileName}</p>
-                    <p className="text-micro text-muted-foreground">{formatFileSize(file.fileSize)}</p>
-                  </div>
-                </a>
-              );
-            })}
+            {files.map((file) => (
+              <div key={file.id} className="px-2 py-1">
+                <ChatAttachment
+                  channelId={channelId}
+                  attachmentId={file.id}
+                  fileName={file.fileName}
+                  mimeType={file.mimeType}
+                  fileSize={file.fileSize}
+                />
+              </div>
+            ))}
             {hasNextPage && (
               <div className="flex justify-center py-3">
                 <button

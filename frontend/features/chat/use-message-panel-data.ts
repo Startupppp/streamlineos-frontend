@@ -202,15 +202,15 @@ export function useMessagePanelData({
     });
   }, [messagesData]);
 
-  const { data: polledMessages } = useChatPoll(channelId, lastPollTime, !ablyConnected && messages.length > 0);
+  const { data: pollResult } = useChatPoll(channelId, lastPollTime, !ablyConnected && messages.length > 0);
 
   useEffect(() => {
-    if (polledMessages && polledMessages.length > 0) {
+    if (pollResult && pollResult.messages.length > 0) {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.messages(channelId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
       setLastPollTime(new Date().toISOString());
     }
-  }, [polledMessages, channelId, queryClient]);
+  }, [pollResult, channelId, queryClient]);
 
   useEffect(() => {
     if (channelId > 0 && markReadCalledRef.current !== channelId) {

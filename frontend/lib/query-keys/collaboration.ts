@@ -30,6 +30,8 @@ export const collaborationQueryKeys = {
     savedMessages: () => [...base, "chat", "savedMessages"] as const,
     inviteLink: (channelId: number) =>
       [...base, "chat", "inviteLink", channelId] as const,
+    attachment: (channelId: number, attachmentId: number) =>
+      [...base, "chat", "attachment", channelId, attachmentId] as const,
   },
 
   aiChat: {

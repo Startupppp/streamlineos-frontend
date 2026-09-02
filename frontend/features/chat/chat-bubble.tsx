@@ -1,9 +1,8 @@
 ﻿"use client";
 
 import React, { useCallback, useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ArrowDown, CalendarClock, CheckCheck, FileText, Forward, Link, ListPlus, Loader2, Lock, MessageSquare, Pencil, Pin, Smile, Ticket, Trash2 } from "lucide-react";
+import { CalendarClock, CheckCheck, Forward, Link, ListPlus, Loader2, Lock, MessageSquare, Pencil, Pin, Smile, Ticket, Trash2 } from "lucide-react";
 import { ReplyIcon, BookmarkCheckIcon, BookmarkPlusIcon, CopyIcon, Trash2Icon, UserPlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useQuery } from "@tanstack/react-query";
@@ -22,13 +21,9 @@ import {
   getInitials,
   formatMessageTime,
   formatMessageTimeFull,
-  formatFileSize,
-  getFileExt,
-  getFileColor,
-  isImageMime,
-  resolveFileUrl,
   getForwardedDisplay,
 } from "./chat-helpers";
+import { ChatAttachment } from "./chat-attachment";
 import type { Message, TicketEntityRef, CommentEntityRef, MessageMetadata } from "./chat-types";
 import { useCan } from "@/hooks/api/access";
 import { apiClient, isApiError } from "@/lib/api-client";
@@ -294,63 +289,17 @@ export function ChatBubble({
 
             {message.attachments.length > 0 && (
               <div className="mt-1.5 space-y-1.5">
-                {message.attachments.map((att) => {
-                  const url = resolveFileUrl(att.fileUrl, att.mimeType);
-                  return isImageMime(att.mimeType) ? (
-                    <a
-                      key={att.id}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block rounded-lg overflow-hidden"
-                    >
-                      <Image
-                        src={url}
-                        alt={att.fileName}
-                        width={280}
-                        height={200}
-                        unoptimized
-                        className="max-w-[280px] max-h-[200px] object-cover rounded-lg"
-                      />
-                    </a>
-                  ) : (() => {
-                    const colors = getFileColor(att.fileName);
-                    return (
-                      <a
-                        key={att.id}
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={cn(
-                          "flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-colors min-w-0 max-w-full",
-                          isOwn
-                            ? "bg-primary-foreground/10 border-primary-foreground/15 hover:bg-primary-foreground/15"
-                            : "bg-background border-border/50 hover:bg-muted/30 shadow-sm"
-                        )}
-                      >
-                        <div className={cn(
-                          "h-10 w-10 rounded-lg flex flex-col items-center justify-center shrink-0",
-                          isOwn ? "bg-primary-foreground/15" : colors.bg
-                        )}>
-                          <FileText className={cn("h-4 w-4", isOwn ? "text-primary-foreground/80" : colors.text)} />
-                          <span className={cn(
-                            "text-micro font-bold px-1 rounded mt-0.5",
-                            isOwn ? "bg-primary-foreground/25 text-primary-foreground" : cn("text-white", colors.badge)
-                          )}>
-                            {getFileExt(att.fileName)}
-                          </span>
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <TruncatedText text={att.fileName} className="text-xs font-semibold" />
-                          <p className={cn("text-micro mt-0.5", isOwn ? "text-primary-foreground/60" : "text-muted-foreground")}>
-                            {formatFileSize(att.fileSize)} · {getFileExt(att.fileName)}
-                          </p>
-                        </div>
-                        <ArrowDown className={cn("h-4 w-4 shrink-0", isOwn ? "text-primary-foreground/50" : "text-muted-foreground/50")} />
-                      </a>
-                    );
-                  })();
-                })}
+                {message.attachments.map((att) => (
+                  <ChatAttachment
+                    key={att.id}
+                    channelId={message.channelId}
+                    attachmentId={att.id}
+                    fileName={att.fileName}
+                    mimeType={att.mimeType}
+                    fileSize={att.fileSize}
+                    isOwn={isOwn}
+                  />
+                ))}
               </div>
             )}
 
