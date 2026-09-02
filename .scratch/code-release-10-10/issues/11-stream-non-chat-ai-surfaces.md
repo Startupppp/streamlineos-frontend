@@ -4,28 +4,57 @@
 
 **Blocked by:** 09.
 
-**Status:** ready-for-agent
+**Status:** 6 of 7 boxes closed · session S4 (2026-09-02)
 
 - [ ] Non-chat AI surfaces stream rather than buffering; first visible streamed state lands within the target and application overhead before provider dispatch stays inside its budget.
-  PARTIAL — NOT CLOSED. Audit: exactly one non-chat AI surface streams, `POST /public/kb/stream-ask`
-  (`grep -rn "streamText(\|pipeTextStreamToResponse" src --include=*.ts` → 4 non-spec hits, all in chat + KB RAG).
-  The other ~60 AI endpoints across 11 controllers buffer. What landed: the KB stream measured NEITHER
-  ttft NOR app overhead, so there was no number to hold to a budget; it now records both
-  (`kb-rag-stream-resilience.spec.ts` → 13 passed, incl. "records ttft and app overhead on the settled usage row").
-  What did not: converting the buffered surfaces needs a frontend stream client — `hooks/api/chat-ai-assistant.ts`
-  is the only one and it is hard-wired to `/chat`, so `stream-ask` itself has no consumer today; frontend is
-  outside session S3's territory. Most buffered surfaces are `invokeStructured` (Zod-validated JSON), where a
-  half-parsed object is not a renderable partial state.
-- [ ] Client aborts propagate through the gateway, database, cache and provider adapters. Spending stops on cancellation.
-  PARTIAL — NOT CLOSED. Closed: signal reaches the provider adapter (`streamText.abortSignal`) and the gateway
-  runner; both routes now build the signal through one seam (`createStreamAbortSignal`) whose disconnect arm is
-  gated on `res.writableEnded` — the old `res.on("close", abort)` also fired on a *successful* response; spending
-  stops (slot + reservation released on abort, and an open breaker short-circuits before retrieval/embed/reserve:
-  `kb-rag-stream-resilience.spec.ts` "short-circuits BEFORE retrieval"). 6 abort tests + 10 KB route tests pass.
-  NOT closed, both outside S3: (a) `KbRagRetrievalService.retrieveContext` and `embedQueryWithCredit` take no
-  `AbortSignal`, so a disconnect during the retrieval leg does not stop the embedding call — ticket 10 owns the
-  embedding path and is editing those files now; (b) `withTenantScopedTools` forwards `options.abortSignal` to each
-  tool intact, but the per-tool `runInNewTenantTransaction` is not torn down on abort — `common/tenant/`.
+  PARTIAL — NOT CLOSED. S4 audit of current source (`grep -rn "streamText(\|pipeTextStreamToResponse" src --include="*.ts"` → 5 non-spec hits):
+  streaming today = `POST /chat`, `POST /public/kb/stream-ask`, and **new** `POST /ai/blog/posts/:postId/{improve-writing,suggest-title,summarize}/stream`.
+  Buffering = the other ~65 endpoints across 11 AI controllers. Of the 119 paid gateway call sites, 69 are
+  `invokeStructured*` (Zod-validated JSON — a half-parsed object is not renderable partial state) and 43 are
+  `invokeText*` (streamable). What landed: `AiGatewayService.streamTextWithUsage` — the real streaming sibling of
+  `invokeText` (breaker · concurrency slot · atomic reserve before the paid call · token-metered settle after ·
+  abort release), plus `respondWithAiTextStream`, so converting one more surface is now a prompt-builder extraction
+  and ~10 lines of controller. TTFT and app overhead land on the settled usage row through `AiCallMetrics`
+  (`ai-gateway-stream.helper.spec.ts` → "records ttft and application overhead onto the settled usage row").
+  What did not: the remaining ~40 `invokeText` surfaces. **Correction to the S3 note** — the blocker was never
+  `@NoTenantTransaction()`: every AI controller already carries it at class level, so streaming needs no transaction
+  refactor. The real blocker is a frontend stream client (only `hooks/api/chat-ai-assistant.ts` exists, hard-wired
+  to `/chat`) — ticket 13's territory. There is also **no declared TTFT target or app-overhead budget in the repo**:
+  `common/observability/seam-budgets.ts` has 9 seams, none of them AI, so "inside its budget" has no number to
+  check against. That is a product decision, not a code gap.
+
+- [x] Client aborts propagate through the gateway, database, cache and provider adapters. Spending stops on cancellation.
+  P1 FOUND AND FIXED — the S3 claim that "signal reaches the provider adapter" was **false in production**, and its
+  6 passing tests could not see it. `createStreamAbortSignal` detected a hang-up with `req.on("close")`. Express
+  drains the body before a handler runs, so by then `req.complete === true` and `req.destroyed === true`: a listener
+  attached early fires **immediately on a healthy request**, one attached late (the real Nest case) **never fires at
+  all**. Measured on a real Express 5 server: `req:close +0ms writableEnded=false` on a successful request;
+  on a client abort at 100 ms the only event was `res:close +100ms writableEnded=false`. So **no client disconnect
+  has ever reached a provider call** on either streaming route — only the 60 s/120 s deadline stopped the spend.
+  `TenantContextInterceptor` (`common/tenant/`, NOT my territory) has the identical arm; it is invisible only
+  because `getTenantAbortSignal()` had **zero readers** repo-wide.
+  Fixed: watch `res.on("close")` gated on `writableEnded`, and treat a request close as a hang-up only when
+  `req.complete !== true`. Second gap closed: every AI controller is `@NoTenantTransaction()`, so the tenant
+  interceptor never establishes a signal there and the gateway's `signal` option had **no supplier at any of the 119
+  call sites** — `AiRequestAbortInterceptor` now scopes a request signal that the gateway resolves for the text,
+  structured, image and embedding paths (explicit still wins).
+  Proof — asserts on what the **LangChain client** received, not on what the test handed the gateway:
+  `ai-abort-reaches-provider.spec.ts` → 9 passed ("hands the ambient request signal to the LangChain client, with no
+  call site passing one"; "releases the reservation and settles NO charge when the caller hangs up mid-call" →
+  `settle` 0 calls, `release(42, "cancelled", "org_1")`; "records the turn as cancelled and bills zero
+  milli-credits"; "a caller who already left never reserves credits and never reaches the provider").
+  Real-server proof: `ai-request-abort.integration.spec.ts` → 3 passed — boots Nest, hangs a real socket up
+  mid-request, ambient signal aborts; a healthy request is never cancelled; a `@Res()` handler still works.
+  Bite proof: reverting to the request-only detector → the real-server hang-up case **fails**
+  (`abortedAtEnd` expected true, received false) and the four-suite abort run goes **8 failed / 28 passed**;
+  restored, SHA-256 `a1269342…` and an empty `git diff`.
+  Cache leg: a cancelled call returns `{ok:false}`, which `AiResponseCacheService` raises as `UncacheableAiFailure`,
+  so nothing is cached. Residuals, both harmless to spend and both stated rather than hidden: (a) the embedding
+  **HTTP request** cannot be torn down — `@langchain/openai`'s `embeddingWithRetry` hardcodes `requestOptions = {}`
+  (`node_modules/@langchain/openai/dist/embeddings.js:126`), so there is no per-call signal; the seam still refuses
+  before dispatch, releases the reservation and never reaches the completion leg; (b) `withTenantScopedTools`' per-tool
+  `runInNewTenantTransaction` is still not torn down on abort — `common/tenant/`, another territory, chat-only, no spend.
+
 - [x] Deadlines and circuit breakers are enforced, and the breaker is proven to actually trip — a breaker that is wired but never opens is inert.
   P1 FOUND AND FIXED: the breaker could open **exactly once per process, ever**. `recordCbFailure` set `openedAt`
   only on `failures === THRESHOLD`; past the threshold the equality stops matching, the 30s window expires, and
