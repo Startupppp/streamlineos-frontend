@@ -71,14 +71,6 @@ export function useUnarchiveChannel() {
   });
 }
 
-export function useSetPresenceStatus() {
-  return useAuthorizedMutation("chat:messages:write", {
-    mutationKey: ["chat", "presence", "set-status"],
-    mutationFn: (status: "ONLINE" | "AWAY" | "BUSY" | "INVISIBLE") =>
-      apiClient.put<{ ok: boolean }>("/chat/presence/status", { status }),
-  });
-}
-
 export function useMarkChannelUnread() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation("chat:messages:write", {

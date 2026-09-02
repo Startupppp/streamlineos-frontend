@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 import { useDeletePayslipTemplate } from "@/hooks/api/payroll";
 import type { PayslipTemplate } from "@/types/payroll";
 
@@ -34,11 +35,10 @@ export function TemplateDeleteDialog({ template, open, onOpenChange }: Props) {
           onOpenChange(false);
         },
         onError: (err) => {
-          const msg = getErrorMessage(err);
-          if (msg.includes("conflict") || msg.toLowerCase().includes("default")) {
+          if (isApiError(err) && err.status === 409) {
             toast.error("Cannot delete the default template");
           } else {
-            toast.error(msg);
+            toast.error(getErrorMessage(err));
           }
           onOpenChange(false);
         },

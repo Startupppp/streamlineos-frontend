@@ -7,7 +7,7 @@ import {
   useInvoices,
   useInvoiceStats,
   useUpdateInvoice,
-  useDeleteInvoice,
+  useVoidInvoice,
 } from "@/hooks/api/invoice";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,6 @@ import {
   Send,
   Check,
   Ban,
-  Trash2,
   IndianRupee,
   AlertCircle,
   XCircle,
@@ -48,7 +47,7 @@ import {
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { formatCurrencyFull } from "@/lib/format-utils";
-import type { InvoiceStatus, Invoice } from "@/types/invoice";
+import type { InvoiceStatus, PatchableInvoiceStatus, Invoice } from "@/types/invoice";
 import { CreateInvoiceDialog } from "@/features/billing/create-invoice-dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
@@ -69,15 +68,14 @@ const STATUS_CONFIG: Record<
 
 interface InvoiceActionsCellProps {
   inv: Invoice;
-  onUpdateStatus: (id: number, status: InvoiceStatus) => void;
-  onDelete: (id: number) => void;
+  onUpdateStatus: (id: number, status: PatchableInvoiceStatus) => void;
+  onVoid: (id: number) => void;
 }
 
-function InvoiceActionsCell({ inv, onUpdateStatus, onDelete }: InvoiceActionsCellProps) {
+function InvoiceActionsCell({ inv, onUpdateStatus, onVoid }: InvoiceActionsCellProps) {
   const handleMarkIssued = useCallback(() => onUpdateStatus(inv.id, "ISSUED"), [inv.id, onUpdateStatus]);
   const handleMarkPaid = useCallback(() => onUpdateStatus(inv.id, "PAID"), [inv.id, onUpdateStatus]);
-  const handleMarkVoided = useCallback(() => onUpdateStatus(inv.id, "VOIDED"), [inv.id, onUpdateStatus]);
-  const handleDelete = useCallback(() => onDelete(inv.id), [inv.id, onDelete]);
+  const handleMarkVoided = useCallback(() => onVoid(inv.id), [inv.id, onVoid]);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -107,11 +105,6 @@ function InvoiceActionsCell({ inv, onUpdateStatus, onDelete }: InvoiceActionsCel
         {inv.status !== "PAID" && inv.status !== "VOIDED" && (
           <DropdownMenuItem variant="destructive" onClick={handleMarkVoided}>
             <Ban className="h-3.5 w-3.5 mr-2" /> Void
-          </DropdownMenuItem>
-        )}
-        {inv.status !== "PAID" && (
-          <DropdownMenuItem variant="destructive" onClick={handleDelete}>
-            <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>
@@ -155,12 +148,12 @@ export function InvoicesClient() {
   );
   const { data: stats } = useInvoiceStats();
   const updateInvoice = useUpdateInvoice();
-  const deleteInvoice = useDeleteInvoice();
+  const voidInvoice = useVoidInvoice();
 
   const invoices = invoicesData?.items ?? [];
 
   const handleUpdateStatus = useCallback(
-    (id: number, status: InvoiceStatus) => {
+    (id: number, status: PatchableInvoiceStatus) => {
       updateInvoice.mutate(
         { id, status },
         {
@@ -172,14 +165,14 @@ export function InvoicesClient() {
     [updateInvoice],
   );
 
-  const handleDeleteInvoice = useCallback(
+  const handleVoidInvoice = useCallback(
     (id: number) => {
-      deleteInvoice.mutate(id, {
-        onSuccess: () => toast.success("Invoice deleted"),
+      voidInvoice.mutate(id, {
+        onSuccess: () => toast.success("Invoice voided and its journal entry reversed"),
         onError: (err) => toast.error(getErrorMessage(err)),
       });
     },
-    [deleteInvoice],
+    [voidInvoice],
   );
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
@@ -244,7 +237,7 @@ export function InvoicesClient() {
         <InvoiceActionsCell
           inv={inv}
           onUpdateStatus={handleUpdateStatus}
-          onDelete={handleDeleteInvoice}
+          onVoid={handleVoidInvoice}
         />
       ),
     },

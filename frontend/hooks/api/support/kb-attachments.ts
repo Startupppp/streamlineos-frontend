@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -20,11 +20,6 @@ interface StorageUploadResult {
   key: string;
   size: number;
   mimeType: string;
-}
-
-interface AttachmentDownloadResponse {
-  url: string;
-  fileName: string;
 }
 
 const KB_ATTACHMENT_FOLDER = "kb-attachments";
@@ -84,13 +79,4 @@ export function useDeleteSupportKbAttachment(articleId: number) {
   });
 }
 
-export function useSupportKbAttachmentDownloadUrl(articleId: number) {
-  return useMutation({
-    mutationKey: ["supportKbAttachments", "download-url"],
-    mutationFn: (attachmentId: number) =>
-      apiClient.get<AttachmentDownloadResponse>(
-        `/support/kb/articles/${articleId}/attachments/${attachmentId}`,
-      ),
-  });
-}
 

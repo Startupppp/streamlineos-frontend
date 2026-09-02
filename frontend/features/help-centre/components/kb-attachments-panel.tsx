@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { DownloadIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -31,7 +31,6 @@ import {
   useSupportKbAttachments,
   useUploadSupportKbAttachment,
   useDeleteSupportKbAttachment,
-  useSupportKbAttachmentDownloadUrl,
   type KbAttachment,
 } from "@/hooks/api/support/kb-attachments";
 import { useSupportKbIndexStatus, useReindexSupportKbArticle } from "@/hooks/api/support/kb-rag";
@@ -44,30 +43,22 @@ const ATTACHMENT_ACCEPT = ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp
 const ATTACHMENT_MAX_SIZE = 10 * 1024 * 1024;
 
 function AttachmentIcon({ mimeType }: { mimeType: string | null }) {
-  if (mimeType?.startsWith("image/")) {
+  if (mimeType?.startsWith("image/"))
     return <ImageIcon className="h-4 w-4 text-muted-foreground shrink-0" />;
-  }
   return <FileText className="h-4 w-4 text-muted-foreground shrink-0" />;
 }
 
 interface AttachmentRowItemProps {
   attachment: KbAttachment;
-  isDownloadPending: boolean;
   isDeletePending: boolean;
-  onDownload: (attachment: KbAttachment) => void;
   onDelete: (attachment: KbAttachment) => void;
 }
 
 function AttachmentRowItem({
   attachment,
-  isDownloadPending,
   isDeletePending,
-  onDownload,
   onDelete,
 }: AttachmentRowItemProps) {
-  function handleDownload() {
-    onDownload(attachment);
-  }
   function handleDelete() {
     onDelete(attachment);
   }
@@ -85,15 +76,6 @@ function AttachmentRowItem({
       <AnimatedIconButton
         variant="ghost"
         size="icon"
-        className="h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground"
-        onClick={handleDownload}
-        disabled={isDownloadPending}
-        aria-label={`Download ${attachment.fileName}`}
-        icon={DownloadIcon}
-      />
-      <AnimatedIconButton
-        variant="ghost"
-        size="icon"
         className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
         onClick={handleDelete}
         disabled={isDeletePending}
@@ -108,7 +90,6 @@ export function KbAttachmentsPanel({ article }: { article: KbArticleDetail }) {
   const attachmentsQuery = useSupportKbAttachments(article.id);
   const uploadAttachment = useUploadSupportKbAttachment(article.id);
   const deleteAttachment = useDeleteSupportKbAttachment(article.id);
-  const downloadUrl = useSupportKbAttachmentDownloadUrl(article.id);
   const indexStatus = useSupportKbIndexStatus(article.id);
   const reindex = useReindexSupportKbArticle();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -141,13 +122,6 @@ export function KbAttachmentsPanel({ article }: { article: KbArticleDetail }) {
     }
     uploadAttachment.mutate(file, {
       onSuccess: () => toast.success("Attachment uploaded"),
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }
-
-  function handleDownload(attachment: KbAttachment) {
-    downloadUrl.mutate(attachment.id, {
-      onSuccess: (data) => window.open(data.url, "_blank", "noopener,noreferrer"),
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
@@ -223,9 +197,7 @@ export function KbAttachmentsPanel({ article }: { article: KbArticleDetail }) {
               <AttachmentRowItem
                 key={attachment.id}
                 attachment={attachment}
-                isDownloadPending={downloadUrl.isPending}
                 isDeletePending={deleteAttachment.isPending}
-                onDownload={handleDownload}
                 onDelete={setPendingDelete}
               />
             ))}

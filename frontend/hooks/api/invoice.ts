@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -139,18 +139,6 @@ export const useVoidInvoice = () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.invoice.detail(id) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.invoice.stats() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
-    },
-  });
-};
-
-export const useDeleteInvoice = () => {
-  const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, number>({
-    mutationKey: ["delete", "invoice"],
-    mutationFn: (id) =>
-      apiClient.delete<{ success: boolean }>(`/invoices/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
     },
   });
 };

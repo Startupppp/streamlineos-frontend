@@ -1,16 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { FileText } from "lucide-react";
+import { useCallback, useState } from "react";
+import { Download, FileText } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyTransferIllustration } from "@/components/illustrations";
-import { usePayoutBatches } from "@/hooks/api/payroll/payout-batches";
+import { useBatchFileUrl, usePayoutBatches } from "@/hooks/api/payroll/payout-batches";
 import { usePayrollPolicyCurrent } from "@/hooks/api/payroll/policies";
 import { formatMoney } from "@/features/payroll/shared";
 import { formatShortDate } from "@/lib/date-utils";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { toast } from "sonner";
 import { GeneratePayoutDialog } from "./generate-payout-dialog";
 import { MarkBatchSentDialog, MarkBatchPaidDialog } from "./mark-batch-dialogs";
 import { cn } from "@/lib/utils";
@@ -45,7 +47,8 @@ export function BatchesTable({
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
   const [format, setFormat] = useState<BatchFormat>("NEFT_CSV");
   const [idempotencyKey, setIdempotencyKey] = useState("");
-  const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [generatedBatchId, setGeneratedBatchId] = useState<number | null>(null);
+  const batchFile = useBatchFileUrl();
 
   const [markSentBatchId, setMarkSentBatchId] = useState<number | null>(null);
   const [markPaidBatchId, setMarkPaidBatchId] = useState<number | null>(null);
@@ -54,14 +57,24 @@ export function BatchesTable({
   function handleOpenGenerateDialog() {
     setIdempotencyKey(crypto.randomUUID());
     setFormat("NEFT_CSV");
-    setFileUrl(null);
+    setGeneratedBatchId(null);
     setShowGenerateDialog(true);
   }
 
   function handleCloseGenerateDialog() {
     setShowGenerateDialog(false);
-    setFileUrl(null);
+    setGeneratedBatchId(null);
   }
+
+  const handleDownloadBatchFile = useCallback(
+    (batchId: number) => {
+      batchFile.mutate(batchId, {
+        onSuccess: ({ url }) => window.open(url, "_blank", "noopener,noreferrer"),
+        onError: (err) => toast.error(getErrorMessage(err)),
+      });
+    },
+    [batchFile],
+  );
 
   function handleOpenMarkPaid(batchId: number) {
     setMarkPaidBatchId(batchId);
@@ -91,6 +104,17 @@ export function BatchesTable({
                   onClick={() => setMarkSentBatchId(row.id)}
                 >
                   Mark Sent
+                </Button>
+              )}
+              {row.status !== "DRAFT" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-xs"
+                  disabled={batchFile.isPending}
+                  onClick={() => handleDownloadBatchFile(row.id)}
+                >
+                  <Download className="mr-1 h-3 w-3" /> Bank File
                 </Button>
               )}
               {row.status === "SENT" && (
@@ -227,8 +251,10 @@ export function BatchesTable({
         format={format}
         onFormatChange={setFormat}
         idempotencyKey={idempotencyKey}
-        fileUrl={fileUrl}
-        onFileUrl={setFileUrl}
+        generatedBatchId={generatedBatchId}
+        onGenerated={setGeneratedBatchId}
+        onDownload={handleDownloadBatchFile}
+        isDownloading={batchFile.isPending}
       />
 
       <MarkBatchSentDialog

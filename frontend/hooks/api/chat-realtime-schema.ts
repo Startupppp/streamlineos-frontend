@@ -64,7 +64,3 @@ export const typingPayloadSchema = z.object({
 });
 
 export type MessagePayload = z.infer<typeof messagePayloadSchema>;
-export type MessageUpdatedPayload = z.infer<typeof messageUpdatedPayloadSchema>;
-export type MessageDeletedPayload = z.infer<typeof messageDeletedPayloadSchema>;
-export type ReactionUpdatedPayload = z.infer<typeof reactionUpdatedPayloadSchema>;
-export type TypingPayload = z.infer<typeof typingPayloadSchema>;

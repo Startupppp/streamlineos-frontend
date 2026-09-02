@@ -228,7 +228,6 @@ export {
   ApiError,
   isApiError,
   getApiErrorCode,
-  parseApiResponse,
 } from "@/lib/api-envelope";
 
 async function get<T>(
@@ -358,6 +357,3 @@ export const apiClient = {
   download,
 } as const;
 
-export type ApiResponse<T = void> =
-  | { success: true; data: T }
-  | { success: false; error: string };
