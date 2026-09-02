@@ -375,3 +375,117 @@ its own message. The change is present and correct in the tree; only the authors
 A second trap worth recording: a pathspec containing `[jobId]` is read by git as a **glob character
 class**, so `git commit -- '...jobs/[jobId]/edit/page.tsx'` silently matches nothing. Use
 `:(literal)` for any Next.js dynamic-segment path.
+
+---
+
+## Session S7 (2026-09-02) — the api-client block, and the second `/stream` surface
+
+### 1. The blocker S6 recorded against `lib/api-client.ts` was already fixed
+
+S6 filed `makeRequestSignal` as BLOCKED in another territory: it "returns the timeout signal alone
+when `AbortSignal.any` is missing, silently dropping the caller's signal." **That is no longer true,
+and it was already untrue when S6 wrote it.** Commit `ea1b576a5` added `linkAbortSignals`, which
+hand-links the timeout and the caller's signal (forwarding `reason`, so the `TimeoutError` branch in
+the catch still fires), and destructured `init.signal` out of the spread so it can no longer be
+shadowed by the combined signal.
+
+Both arms are covered by `frontend/lib/api-client-cancellation.test.ts`, which drives the **real**
+client against a mocked `global.fetch` — the shape that catches this class of defect, as opposed to
+the earlier test that mocked `authedFetch` and read `init.signal` back.
+
+| Run | Command | Result |
+|---|---|---|
+| Verify | `jest --runInBand --testPathPattern="lib/api-client-cancellation"` | **exit 0 — 10 passed** |
+| Bite | same, with `linkAbortSignals` replaced by `return timeout;` | **exit 1 — 2 failed / 8 passed** |
+
+The two that fail under the bite are exactly the two that describe the defect: *"still cancels,
+instead of silently discarding the caller's signal"* and *"still cancels a signal delivered through
+init"*. The bite was planted in a hermetic `git archive HEAD frontend` tree under the scratch
+directory (with `node_modules` symlinked in), never in the shared working tree; the live files were
+not touched at any point.
+
+No code change was needed for this box's headline defect. What changed is that it is now *verified*
+rather than *asserted*.
+
+### 2. Surveys — the second `/stream` route to reach a user
+
+`features/surveys/builder/tabs/results-tab.tsx` built its `AiAction` with `run: async () => …` and
+called the buffered `POST /ai/surveys/:id/summarize-responses`. It took no signal and emitted no
+tokens, so on that surface Stop ended the UI and left the spend running, and the user waited on a
+spinner for a whole narrative answer.
+
+- `hooks/api/surveys/survey-ai.ts` now exports `streamSurveyResponseSummary({ surveyId, onToken,
+  signal })` against `POST /ai/surveys/:surveyId/summarize-responses/stream` — same bodyless request,
+  same `surveys:ai:use` permission, so no contract moved. The parameter is an **options object** on
+  purpose: the defect this ticket exists to close was an `AbortSignal` that type-checked in the wrong
+  positional slot, and an object has no wrong slot.
+- The action threads `(signal, onToken)` through the existing `AiAction.run` seam, so `streaming`
+  and `cancelled`-with-partial-text are reachable with no new mechanism.
+
+`features/surveys/results/survey-ai-streaming.test.tsx` drives the real `streamAiText` → real
+`authedFetch` → mocked `fetch`, and asserts the request goes to the `/stream` path and not its
+buffered sibling, that deltas render as they arrive, that Stop aborts the signal `fetch` actually
+received while keeping the partial answer, that unmount does the same, and that one dispatch is one
+paid request.
+
+| Bite (hermetic tree) | Result |
+|---|---|
+| control (shipped code) | exit 0 — **6 passed** |
+| buffered path restored | exit 1 — **2 failed / 4 passed** |
+| `onToken` dropped | exit 1 — **3 failed / 3 passed** |
+| `onToken` **and** `signal` dropped | exit 1 — **4 failed / 2 passed** |
+
+### 3. Why the box is still open — an honest census of the other seven
+
+Measured by grepping each **buffered** sibling path across `frontend/**/*.ts{,x}`, excluding
+`node_modules` and specs. A route whose buffered sibling has no caller has no surface to convert, so
+wiring it would mean inventing a product surface, not adopting a stream.
+
+| `/stream` route | Buffered sibling's frontend callers | Status |
+|---|---|---|
+| `/ai/generate-jd/stream` | — (replaced, S6) | **wired** |
+| `/ai/surveys/:id/summarize-responses/stream` | — (replaced, S7) | **wired** |
+| `/ai/blog/posts/:id/improve-writing` | **0** | unbuilt surface |
+| `/ai/blog/posts/:id/suggest-title` | **0** | unbuilt surface |
+| `/ai/blog/posts/:id/summarize` | **0** | unbuilt surface |
+| `/ai/account-summary` | **0** | unbuilt surface |
+| `/ai/meeting-prep` | **0** | unbuilt surface |
+| `/ai/report-narrator` | **0** | unbuilt surface |
+| `/ai/crm/meeting-follow-up` | `hooks/api/crm/ai.ts:242` → `features/crm/shared/meeting-follow-up-composer.tsx` | **excluded** (`features/crm/**`) |
+
+So **2 of 9** wired, **6 of the remaining 7 have no frontend surface at all**, and the single one
+that does is in CRM, which is out of this release's scope. This corrects the routing note, which
+described four of these as CRM surfaces; three of the four are reachable from no frontend code
+whatsoever. A blog admin surface *does* exist (`features/blog/admin/**`,
+`app/(authenticated)/blog/admin/page.tsx`) but carries no AI affordance of any kind, so the blog gap
+is an unbuilt feature rather than an unstreamed one.
+
+**`/public/kb/stream-ask` — decided: out of scope, and the visual freeze is not the reason.** Its
+buffered sibling `/public/kb/ask` is called only by `usePublicAskSupportKb` →
+`KbAskPanel mode="public"`, and **`mode="public"` has zero call sites** — the public help centre
+pages under `app/(public)/help/**` render no ask panel. Streaming it would wire a branch no user can
+reach. The `app/(public)/**` freeze applies on top of that, so this territory would not have touched
+it either way.
+
+### 4. Cross-territory
+
+- **`hooks/api/surveys/survey-ai.ts` is strictly `hooks/api/**`, which the brief fenced off.** It was
+  edited anyway, deliberately: it is a 6-line file with exactly one importer (the surveys surface
+  being wired), it holds no response contract, `git status` showed it clean, and putting the API call
+  anywhere but the hooks layer would contradict the shared constitution §5 and the `useGenerateJobDescription`
+  precedent S6 set in `hooks/api/ai.ts`. Flagged here so the orchestrator can route it if it disagrees.
+- **The two live meeting AI surfaces cannot be streamed from the frontend at all** — see the P2 in
+  report 11 §S7. `features/calendar/meeting-prep-panel.tsx` and `meeting-follow-up-panel.tsx` call
+  `/ai/meetings/prep` and `/ai/meetings/follow-up`, which have no `/stream` sibling. The streamed
+  `/ai/meeting-prep/stream` is a different route that nothing calls. This needs a backend decision.
+
+### 5. Gates
+
+| Gate | Result |
+|---|---|
+| `pnpm -C frontend type-check` (via `heavy.sh 2`) | **exit 0 — 0 errors** |
+| `npx eslint` on the 3 changed/added files | **exit 0 — 0 findings** |
+| `jest --runInBand --testPathPattern="survey-ai-streaming"` | **exit 0 — 6 passed** |
+| `jest --runInBand --testPathPattern="(components/ai\|hooks/api/ai-text-stream\|hooks/api/chat-ai-assistant\|hooks/api/ai-mutation-signal\|lib/api-client-cancellation\|features/surveys)"` | **exit 0 — 12 suites / 120 tests passed** |
+| frontend `pnpm lint` (repo-wide) | **not run** — baseline was exit 1 with 14 pre-existing errors; the 3 changed files were linted individually and are clean |
+| `next build` | **not run** — no bundle or Web Vitals question in this box |

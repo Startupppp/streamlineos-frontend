@@ -4,7 +4,7 @@
 
 **Blocked by:** 11.
 
-**Status:** done (1 box still PARTIAL; S6 built the shared stream client the nine `/stream` routes had no client for)
+**Status:** 5 of 6 boxes closed · 1 still PARTIAL · session S7 (2026-09-02) — api-client cancellation block cleared and verified; surveys wired, 2 of 9 `/stream` routes now reach a user
 
 - [x] Credit exhaustion, queueing, streaming, cancellation, retry, partial output, citation loading, provider failure and permission revocation each render a defined state.
   All nine enumerated and audited. Four had **no** defined state: **streaming** (only a `loading`
@@ -77,15 +77,45 @@
   the new suite drives the REAL `lib/api-client` with a mocked `global.fetch` against a non-chat route.
   Bite proof, one-off: the signal moved back into `init` (the original defect) -> **3 failed / 16 passed
   / 19**; file restored byte-identical (sha256 `f5e75af9...4792`).
-  PARTIAL remains: 8 of the 9 `/stream` routes still have no caller. Three blog routes have no frontend
-  reference of any kind; three `crm-ai` routes and `/ai/crm/meeting-follow-up/stream` are in
-  `features/crm/**`, excluded from release scope; `/ai/surveys/:id/summarize-responses/stream` and
-  `/public/kb/stream-ask` need their surfaces changed and `/public/kb/stream-ask` renders on a public
-  page this territory must not alter. Each is now a one-line adoption against `streamAiText`.
-  BLOCKED (other territory, `lib/api-client.ts`): `makeRequestSignal` returns the timeout signal alone
-  when `AbortSignal.any` is missing, silently dropping the caller's signal — on any browser without it
-  every cancel in the app is a no-op. And `authedFetch` overwrites `init.signal`, so the trap that
-  caused this box's defect is still armed for the next caller.
+  **S7 — the `lib/api-client.ts` block is GONE, and the S6 note recording it was already stale.**
+  `makeRequestSignal` no longer drops the caller's signal: `linkAbortSignals` hand-links the timeout and
+  the caller's signal wherever `AbortSignal.any` is missing, and `authedFetch` destructures `init.signal`
+  out rather than letting the spread shadow it. Both landed in commit `ea1b576a5` with
+  `lib/api-client-cancellation.test.ts`, which drives the REAL client against a mocked `global.fetch`.
+  Verified, not assumed: `jest --testPathPattern="lib/api-client-cancellation"` → **10 passed, exit 0**.
+  Bite proof in a hermetic `git archive HEAD` tree (never the shared working tree): restoring the original
+  `return timeout;` → **exit 1, 2 failed / 8 passed**, and the two that fail are exactly
+  "still cancels, instead of silently discarding the caller's signal" and "still cancels a signal
+  delivered through init". The live tree was never modified.
+
+  **S7 — surveys wired, 2 of 9 `/stream` routes now reach a user.**
+  `features/surveys/builder/tabs/results-tab.tsx` passed `run: async () =>` and called the buffered
+  sibling, so its Stop ended the UI and not the spend. `hooks/api/surveys/survey-ai.ts` now exports
+  `streamSurveyResponseSummary({ surveyId, onToken, signal })` — an options object on purpose, since the
+  defect this ticket exists to close was a signal that type-checked in the wrong positional slot — and the
+  action threads `(signal, onToken)` through the existing `AiAction.run` seam. Evidence:
+  `features/surveys/results/survey-ai-streaming.test.tsx` → **6 passed, exit 0**, driving the real
+  `streamAiText` → real `authedFetch` → mocked `fetch`. Three bite proofs, all in the hermetic tree:
+  buffered path restored → **2 failed / 4 passed**; `onToken` dropped → **3 failed / 3 passed**;
+  `signal` dropped as well → **4 failed / 2 passed**.
+
+  PARTIAL remains, and the count is smaller than the S6 note implied — but so is the reachable work.
+  **7 of the 9 `/stream` routes are still unwired, and 6 of those 7 have no frontend surface of any kind
+  — neither the streaming route nor its buffered sibling is referenced anywhere in the frontend.**
+  Measured by grepping each buffered path across `**/*.ts{,x}` excluding `node_modules` and specs:
+  `/ai/blog/posts/:id/{improve-writing,suggest-title,summarize}` ×3, `/ai/account-summary`,
+  `/ai/meeting-prep`, `/ai/report-narrator` — **zero callers each**; only `contracts/openapi.json`
+  mentions them. Wiring those is building a product surface, not adopting a stream, so they are recorded
+  rather than invented. The 7th, `/ai/crm/meeting-follow-up/stream`, is the only one with a live caller
+  (`hooks/api/crm/ai.ts` → `features/crm/shared/meeting-follow-up-composer.tsx`) and `features/crm/**` is
+  excluded from this release's scope.
+  `/public/kb/stream-ask` is OUT OF SCOPE and the reason is not the visual freeze: its buffered sibling's
+  only client is `KbAskPanel mode="public"`, and **`mode="public"` has zero call sites** — the public help
+  centre pages under `app/(public)/help/**` render no ask panel at all. Streaming it would wire an
+  unreachable branch. (The `app/(public)/**` freeze applies regardless, so this territory would not have
+  touched it either way.)
+  PARTIAL also remains on the buffered half, unchanged from S6: 55 AI `mutationFn`s still take no signal,
+  all outside this territory, so their Stop buttons end the UI and not the spend.
 
 - [x] AI usage metadata is returned and rendered on the surfaces that consume metered endpoints.
   Unchanged from session S3: backend emits `aiUsage` from exactly 8 services; all 8 have a frontend

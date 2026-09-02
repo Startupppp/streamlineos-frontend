@@ -4,7 +4,7 @@
 
 **Blocked by:** 09.
 
-**Status:** 6 of 7 boxes closed · session S5 (2026-09-02)
+**Status:** 6 of 7 boxes closed · box 1 still PARTIAL · session S7 (2026-09-02) — 2 of 9 `/stream` routes now reach a user; 6 of the remaining 7 have no frontend surface at all, and the two live meeting surfaces call routes that were never given a `/stream` sibling
 
 - [ ] Non-chat AI surfaces stream rather than buffering; first visible streamed state lands within the target and application overhead before provider dispatch stays inside its budget.
   PARTIAL — NOT CLOSED. **S5 converted six more surfaces and measured both numbers; the box stays open because
@@ -81,6 +81,46 @@
      client in the frontend and is hard-wired to `/chat`; a surface whose only client calls the buffered sibling
      still buffers *for the user*. Ticket 13's territory.
   2. **The 26 text surfaces in 17 other modules.** Each needs an edit outside `src/modules/ai/**`.
+
+  **S7 UPDATE (2026-09-02) — blocker 1 is now partly cleared, and the reason the rest cannot clear is not
+  what S5 recorded.** A shared client exists (`hooks/api/ai-text-stream.ts`, S6) and **2 of the 9 `/stream`
+  routes now reach a real user**: `/ai/generate-jd/stream` (S6) and
+  `/ai/surveys/:surveyId/summarize-responses/stream` (S7, frontend commit `9c3f607cd`, 6 tests + 3 bite
+  proofs). Blocker 2 is untouched.
+
+  **The remaining 7 are not "a one-line adoption" — 6 of them have no frontend surface at all.** Measured
+  in the frontend by grepping each *buffered* sibling path across `**/*.ts{,x}`, excluding `node_modules`
+  and specs. A route whose buffered sibling has no caller has no surface to convert:
+  · `/ai/blog/posts/:postId/improve-writing` · `/ai/blog/posts/:postId/suggest-title` ·
+  `/ai/blog/posts/:postId/summarize` — **0 callers each**. A blog admin surface does exist
+  (`features/blog/admin/**`, `app/(authenticated)/blog/admin/page.tsx`) but it has no AI affordance of any
+  kind, so this is an unbuilt product surface, not an unstreamed one.
+  · `/ai/account-summary` · `/ai/meeting-prep` · `/ai/report-narrator` — **0 callers each**; only
+  `contracts/openapi.json` mentions them.
+  · `/ai/crm/meeting-follow-up` — the **only** one of the seven with a live caller
+  (`hooks/api/crm/ai.ts:242` → `features/crm/shared/meeting-follow-up-composer.tsx`), and `features/crm/**`
+  is excluded from this release's scope.
+  This corrects S5's framing: the four routes filed as "CRM" are not four CRM surfaces. Three of them are
+  reachable from no frontend code at all, CRM or otherwise.
+
+  **P2 FINDING — S5 streamed three routes the product does not call.** The live calendar surfaces
+  `features/calendar/meeting-prep-panel.tsx` and `features/calendar/meeting-follow-up-panel.tsx` call
+  `useMeetingPrep` / `useMeetingFollowUp` in `hooks/api/meetings-ai.ts`, which POST **`/ai/meetings/prep`**
+  and **`/ai/meetings/follow-up`** — `MeetingsAiController` (`@Controller("ai/meetings")`, permission
+  `calendar:ai:use`). Those two routes have **no `/stream` sibling**. Meanwhile `CrmAiController`
+  (`@Controller("ai")`) exposes `/ai/meeting-prep` + `/ai/meeting-prep/stream`, which nothing calls. So the
+  two meeting surfaces a user can actually reach still buffer, and cannot be converted from the frontend at
+  all: the streaming route they would need does not exist. Same shape for follow-up
+  (`/ai/meetings/follow-up` live and unstreamed vs `/ai/crm/meeting-follow-up/stream` streamed and
+  CRM-only). Closing this box for the meeting surfaces needs a backend change in `src/modules/ai/**` —
+  either a `/stream` sibling on `MeetingsAiController`, or a decision that the two route families are
+  duplicates and one should go. Neither is ticket 13's territory to make.
+
+  **`/public/kb/stream-ask` is out of scope, and not because of the visual freeze.** Its buffered sibling
+  `/public/kb/ask` is called only by `usePublicAskSupportKb` → `KbAskPanel mode="public"`, and
+  **`mode="public"` has zero call sites** — the public help centre pages under `app/(public)/help/**` render
+  no ask panel. Streaming it would wire an unreachable branch. (`app/(public)/**` is frozen this release
+  regardless.)
 
   Incidental fix inside this territory: `hr-recruitment-ai.generateJd` reserved and settled against
   `actor: { orgId: "system", userId: null }`, so every JD generation was billed to a fake organisation. Both the

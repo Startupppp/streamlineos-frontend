@@ -312,3 +312,75 @@ implicit `any`. Rule 4 applies — none of it is under `src/modules/ai/`.
 - **`common/observability/`.** `AI_STREAM_BUDGETS` deliberately lives in the AI module because the parity spec
   bars an AI seam. If a future alert wants to read AI budgets from one table, that table has to grow a
   non-seam section rather than absorb the AI keys.
+
+---
+
+## Session S7 (2026-09-02) — frontend adoption, and a P2 the backend needs to answer
+
+Written from ticket 13's territory (frontend), against this report's box 1. **No backend file was
+changed**; `src/modules/ai/**` is done and was read, not edited.
+
+### Blocker 1 is partly cleared: 2 of 9 `/stream` routes now reach a user
+
+S5 recorded "no frontend consumes any `/stream` route." That is no longer true. S6 built the shared
+client `frontend/hooks/api/ai-text-stream.ts` (`streamAiText` + `useAiTextStream`) against this
+report's wire-format description — raw UTF-8 deltas under `text/plain`, no framing — and wired
+`/ai/generate-jd/stream`. S7 wired the second, `/ai/surveys/:surveyId/summarize-responses/stream`
+(frontend commit `9c3f607cd`): 6 tests driving the real client against a mocked `fetch`, plus three
+bite proofs (buffered path restored → 2 failed; `onToken` dropped → 3 failed; `signal` dropped as
+well → 4 failed). Blocker 2 — the 26 text surfaces in 17 other modules — is untouched.
+
+### The other seven are not "a one-line adoption"
+
+Measured in the frontend by grepping each **buffered** sibling path across `**/*.ts{,x}` excluding
+`node_modules` and specs:
+
+- `/ai/blog/posts/:postId/{improve-writing,suggest-title,summarize}` — **0 callers each**.
+- `/ai/account-summary`, `/ai/meeting-prep`, `/ai/report-narrator` — **0 callers each**; only
+  `contracts/openapi.json` mentions them.
+- `/ai/crm/meeting-follow-up` — the only one of the seven with a live caller
+  (`hooks/api/crm/ai.ts:242` → `features/crm/shared/meeting-follow-up-composer.tsx`), and
+  `features/crm/**` is excluded from this release's scope.
+
+So six of the seven have **no frontend surface at all** — neither the streaming route nor its
+buffered sibling is referenced anywhere. This corrects S5's framing that four of them were CRM
+surfaces: three of those four are reachable from no frontend code, CRM or otherwise. Converting them
+means building a product surface, not adopting a stream, so they are recorded rather than invented.
+
+### P2 — three of S5's six conversions landed on routes the product does not call
+
+This is the finding worth acting on.
+
+| What the user can reach | Route it POSTs | Streamed? |
+|---|---|---|
+| `features/calendar/meeting-prep-panel.tsx` → `useMeetingPrep` (`hooks/api/meetings-ai.ts`) | `POST /ai/meetings/prep` — `MeetingsAiController`, `@Controller("ai/meetings")`, `calendar:ai:use` | **no `/stream` sibling exists** |
+| `features/calendar/meeting-follow-up-panel.tsx` → `useMeetingFollowUp` | `POST /ai/meetings/follow-up` — same controller | **no `/stream` sibling exists** |
+| nothing | `POST /ai/meeting-prep` + `/ai/meeting-prep/stream` — `CrmAiController`, `@Controller("ai")` | streamed in S5, **0 callers** |
+| `features/crm/shared/meeting-follow-up-composer.tsx` (CRM, excluded) | `POST /ai/crm/meeting-follow-up` + `/stream` | streamed in S5 |
+
+The two meeting surfaces a user can actually open still buffer, and **cannot be converted from the
+frontend at all**, because the streaming route they would need does not exist. `/ai/meeting-prep` and
+`/ai/meetings/prep` are near-duplicate route families and streaming was added to the one the product
+does not use. Closing box 1 for these two surfaces needs a decision in `src/modules/ai/**`: either
+give `MeetingsAiController` `/stream` siblings, or rule the two families duplicates and retire one.
+Neither is ticket 13's call, and no backend file was touched.
+
+Same question applies, less urgently, to `/ai/account-summary` and `/ai/report-narrator`: both were
+streamed in S5 and neither has ever had a caller.
+
+### `/public/kb/stream-ask` — decided, out of scope
+
+Its buffered sibling `/public/kb/ask` is called only by `usePublicAskSupportKb` →
+`KbAskPanel mode="public"`, and **`mode="public"` has zero call sites**; the public help centre pages
+under `app/(public)/help/**` render no ask panel. Streaming it would wire an unreachable branch. The
+`app/(public)/**` visual freeze applies regardless.
+
+Worth noting for whoever revives that surface: this report's `x-kb-sources` header is the citation
+path for the streaming route, whereas the buffered `/public/kb/ask` returns sources in the body. A
+surface converting from one to the other must move its citation read, not just its transport.
+
+### Gates run from this side
+
+`pnpm -C frontend type-check` → **exit 0, 0 errors** · `npx eslint` on the 3 changed files →
+**exit 0** · `jest --testPathPattern="(components/ai|hooks/api/ai-text-stream|hooks/api/chat-ai-assistant|hooks/api/ai-mutation-signal|lib/api-client-cancellation|features/surveys)"`
+→ **exit 0, 12 suites / 120 tests**. No backend gate was run this session.
