@@ -1,6 +1,236 @@
 # 36 — Repository hygiene, dead code and type integrity
 
-**Status:** 4 of 11 boxes closed. The other seven are measured, not closed, and this
+> ## Second pass — 2026-09-02, later session
+>
+> **7 of 11 boxes closed** (the `**Status:**` line previously said 5 while the file
+> already carried 6 ticks; box 9 had been closed without the line moving).
+> Everything below the divider is the first pass and is still accurate except where
+> this section supersedes it.
+>
+> ### 1. The two gates that protected nothing are now wired
+>
+> `check:dead-code` and `check:type-assertions` landed in backend `0587da30` with
+> self-tests and **no workflow named either**. Both are now steps in the backend
+> `gates` job, confirmed by parsing the workflow: every job in `ci.yml` reports
+> `needs: null`, and there is no `pnpm lint` step inside `gates`. That matters
+> because this release established that every gate in both repositories sat behind
+> a red `Lint` and had therefore never executed.
+>
+> ### 2. Two more CI defects of the same shape, found and fixed
+>
+> **`Type Check` and `Build` had never run in frontend CI.** Both sat in the
+> `frontend` job below `Lint`, which is red — the identical masking defect 35b
+> fixed for `gates` and 35 fixed for `tests`, one step further down, in a file
+> whose own header documents the earlier fixes. Both are now their own jobs with
+> no `needs:`.
+>
+> `Build` also could not have passed even unmasked. `next build` runs with
+> `NODE_ENV=production`, and `lib/env.ts` parses `process.env` at import from
+> `app/layout.tsx` and throws in production on failure. Measured against that
+> schema under a scrubbed environment:
+>
+> | env supplied | result |
+> |---|---|
+> | none | FAILS on `NEXTAUTH_SECRET` **and** `NEXT_PUBLIC_API_URL` → would throw |
+> | `NEXTAUTH_SECRET` only (the shape the deleted copies used) | still FAILS on `NEXT_PUBLIC_API_URL` |
+> | both | PASSES |
+>
+> The step now carries both, plus `NEXTAUTH_URL`. The secret is a build-only
+> placeholder, 50 characters because the schema requires >= 44 in production.
+>
+> **Four workflow files under `frontend/.github/workflows/` were inert — deleted.**
+> GitHub reads workflows only from `.github/workflows/` at the repository root.
+> They were also *unrunnable*: each invokes `pnpm lint` / `pnpm build` /
+> `pnpm check:*` with no `working-directory`, so they would execute against the
+> root `streamlineos-root` package.json, which declares none of those scripts —
+> `pnpm lint` there returns `ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL Command "lint" not
+> found`, and root `build` is `node scripts/run.mjs build` pointing at a `backend/`
+> directory this repository does not contain. Every check they named is already
+> carried at equal or stronger enforcement by the live root workflow
+> (`check:cycles`, `check:dead-code`, `check:contract-vendor`,
+> `check:route-access-contract` all run as hard gates in `gates`, not under
+> `continue-on-error`). Nothing was lost.
+>
+> ### 3. The assertion gate could not see the thing it banned
+>
+> This is the pass's most consequential finding, and it was in this ticket's own
+> gate. `check:type-assertions` counted all four escapes with
+> `countOutsideComments`, which strips comments before matching — and
+> `@ts-ignore`, `@ts-expect-error` and `@ts-nocheck` **only ever exist inside a
+> comment**. Rule 1 was structurally incapable of firing. Proven directly against
+> the shipped module:
+>
+> ```
+> "// @ts-ignore"        -> 0
+> "// @ts-expect-error"  -> 0
+> "/* @ts-nocheck */"    -> 0
+> "const x = y as any;"  -> 1
+> ```
+>
+> Only `as any`, which appears in code, was genuinely enforced. The gate reported
+> "0 suppressions" because it could not see, not because the tree was clean.
+>
+> Fixed in both repos: directives are matched in the raw source, anchored to the
+> start of the comment, so `// @ts-ignore` is caught and `// we ship zero
+> @ts-ignore` stays prose. Three self-test assertions pin the precondition, the fix
+> and the prose case.
+>
+> The fixed detector immediately bit: **`frontend/instrumentation.ts:4` carried a
+> real `@ts-expect-error`** over a dev-only `globalThis.setTimeout` patch. It was
+> **converted, not ledgered** — a `@ts-expect-error` blankets every error on the
+> statement, while the same seam as one narrow `as unknown as` is bounded, counted
+> and carries a written invariant. Re-running the backend gate with the fixed
+> detector still measures 0, so that claim was accidentally correct and is now
+> actually checked.
+>
+> ### 4. Box 1 closed — and Pattern B was wired, not classified away
+>
+> The frontend gate was at 42 unclassified. It is now **0**:
+>
+> - ~36 Pattern-A types were absorbed by the structural rule the first pass
+>   specified, landed by another lane as `b119059e9` ("classify data-layer types
+>   structurally instead of one KEEP each"). It also replaced the 27 hand-written
+>   KEEPs, exactly as designed.
+> - **Pattern B was wired.** `core-gl.ts:43,60` now parses with
+>   `glResponseContract` / `glAccountsContract`, and `reports.ts:177` with
+>   `expenseByCategoryContract`. Those were the "contracts nothing parses with" —
+>   unvalidated boundaries. They validate now; none was silenced with a KEEP.
+> - The last one, `features/build/analytics/project-charts.tsx:CHART_COLORS`, was a
+>   genuinely dead barrel re-export and was removed. Proven by knip's module graph
+>   plus a repo-wide symbol grep: the only consumer imports it directly from
+>   `./project-stats`, and the sole external importer of `project-charts` takes
+>   `STATE_COLORS` and `PRIORITY_COLORS` only. Confirmed by a real `next build`.
+>
+> ### 5. The frontend now has an assertion ledger
+>
+> `frontend/scripts/check-type-assertions.mjs` + `pnpm check:type-assertions`,
+> exit 0: **4,258 application files, 7 `as unknown as` sites in 6 files**, each
+> with a seam kind and a written invariant — 2 `external` (a `globalThis.setTimeout`
+> patch, an `XMLHttpRequest` monkey-patch), 5 `narrow-me` (four on the
+> `RecordValue = Record<string, unknown>` index-signature seam in the layout
+> renderer, one on a params object handed to a `Record<string, string>` query-string
+> builder). Self-test exit 0, 16 assertions. It skips every directory whose name
+> begins `.next`, so the phantom "661 `@ts-ignore`" from `.next-buildmart` cannot
+> re-enter the count. Wired into the frontend `gates` job.
+>
+> ### 6. `express` — fixed, and the ledger closed the loop by itself
+>
+> `src/health/shutdown-drain.spec.ts:1` value-imports express; only
+> `@types/express` was declared. It was **not** broken, which is the interesting
+> part: `node_modules/express` does not exist and `require.resolve("express")`
+> fails from the repo root, but the spec passes because it resolves through pnpm's
+> hidden hoisted store at `node_modules/.pnpm/node_modules/express`, where express
+> sits as a transitive dependency of the Nest platform adapter. That is a local
+> layout artifact, not a declared edge, and a clean `--frozen-lockfile` install has
+> no obligation to reproduce it.
+>
+> Declared at the already-resolved version (5.2.1) via `--lockfile-only`, so no
+> agent's `node_modules` moved. Then the ratchet worked without being asked: knip
+> stopped reporting `dep:express`, the WIRE verdict went **STALE**, and
+> `check:dead-code` failed at exit 1 naming it. Removing the entry is what returned
+> the gate to green — an unscripted, live bite proof that the ledger cannot keep a
+> line that is no longer true.
+>
+> ### 7. Box 2 and `noUncheckedIndexedAccess` — measured with tsc, decided, recorded
+>
+> Previously estimated from an ESLint strict-probe at 2,294 across both repos.
+> Measured this pass with tsc itself:
+>
+> | flag | scope | errors | files |
+> |---|---|---|---|
+> | `noUnusedLocals` + `noUnusedParameters` | `tsconfig.build.json` (production) | **288** | 193 |
+> | `noUnusedLocals` + `noUnusedParameters` | `tsconfig.json` (incl. specs + evals) | **472** | 315 (122 spec) |
+> | `noUncheckedIndexedAccess` | `tsconfig.build.json` | **574** | 190 |
+>
+> **DECISION: neither is enabled**, deliberately, for two measured reasons.
+> (1) `pnpm typecheck` is the one gate every agent in this release runs; turning it
+> red across ~193 files, many dirty with in-flight work, removes everyone's only
+> proof. (2) Enabling either in `tsconfig.build.json` would report the flag ON
+> while `test/`, `evals/` and all 1,930 specs stayed invisible — that config
+> excludes exactly those. The 288-vs-472 gap is that blind spot measured: **184
+> errors and 122 spec files** the build config cannot see. Shipping a setting that
+> reports green over a set it cannot see, to tick a hygiene box, would be the same
+> defect this release keeps finding.
+>
+> `noUncheckedIndexedAccess` additionally is a **constitution-vs-config
+> divergence**: shared `CLAUDE.md` section 6 states it as in force and it is set in
+> neither repo. One of the two must move; that is an orchestrator call, not a
+> unilateral edit.
+>
+> ### 8. Spec suppression hygiene
+>
+> `eslint --report-unused-disable-directives` over the four AI spec files: **7
+> errors → 0 errors, 0 warnings**. Five were unused
+> `@typescript-eslint/no-require-imports` directives above `jest.requireMock(...)`,
+> which is not a require() import. The sixth and seventh are the real find:
+> `ai-call-metrics.spec.ts:261` disabled `no-var-requires` — a rule
+> typescript-eslint **renamed** — while the two errors below it were
+> `no-require-imports`, which the directive did not name and so did not cover. A
+> suppression pointing at a renamed rule silences nothing and hides that it
+> silences nothing. Both `require()` calls became static imports, so no suppression
+> is needed at all. Two genuinely unused imports were removed alongside.
+> 4 suites / 47 tests pass.
+>
+> ### 9. Proofs — this pass
+>
+> | command | exit | result |
+> |---|---|---|
+> | `pnpm check:dead-code` (backend) | **0** | 35 findings, 0 unclassified, 0 stale; graph 9,812 files / 68,261 edges |
+> | `pnpm check:dead-code` (backend, mid-express-fix) | **1** | 1 STALE verdict — `dep:express`; the ratchet biting |
+> | `pnpm check:dead-code:self-test` (backend) | **0** | 20 assertions |
+> | `pnpm check:type-assertions` (backend) | **0** | 3,561 files, 26 sites in 16 files, 0 banned escapes |
+> | `pnpm check:type-assertions:self-test` (backend) | **0** | 14 assertions |
+> | `node scripts/check-dead-code.mjs` (frontend, before) | 1 | 1 unclassified — `CHART_COLORS` |
+> | `pnpm check:dead-code` (frontend, after) | **0** | **0 unclassified** |
+> | `pnpm check:type-assertions` (frontend, before ledgering) | 1 | caught `instrumentation.ts :: @ts-expect-error` |
+> | `pnpm check:type-assertions` (frontend, after) | **0** | 4,258 files, 7 sites in 6 files, 0 banned escapes |
+> | `pnpm check:type-assertions:self-test` (frontend) | **0** | 16 assertions |
+> | `pnpm run type-check` (frontend, through mutex) | **0** | 0 errors |
+> | `pnpm run build` (frontend `next build`) | **0** | compiled in 12.6s, **466 static pages** |
+> | `jest --runInBand --testPathPattern="shutdown-"` | **0** | 3 suites / 16 tests |
+> | `jest --runInBand` over the 4 AI specs | **0** | 4 suites / 47 tests |
+> | `eslint --report-unused-disable-directives` (4 AI specs, before) | 1 | 7 errors / 2 warnings |
+> | `eslint --report-unused-disable-directives` (4 AI specs, after) | **0** | 0 errors / 0 warnings |
+> | `tsc -p tsconfig.build.json --noUnusedLocals --noUnusedParameters` | 2 | 288 errors / 193 files |
+> | `tsc -p tsconfig.json --noUnusedLocals --noUnusedParameters` | 2 | 472 errors / 315 files (122 spec) |
+> | `tsc -p tsconfig.build.json --noUncheckedIndexedAccess` | 2 | 574 errors / 190 files |
+>
+> ### 10. Cross-territory findings — this pass
+>
+> 1. **`features/crm/leads/leads-funnel-view.tsx:73` calls `useReducedMotion`
+>    conditionally** — a rules-of-hooks violation and a genuine correctness bug, not
+>    a style finding. CRM is excluded from this release's scope, so it is recorded,
+>    not fixed.
+> 2. **`gdpr-export-worker.service.ts`** still forwards names nobody imports through
+>    the shim. GDPR territory; unchanged from the first pass.
+> 3. **`noUncheckedIndexedAccess`**: constitution says on, both configs say off.
+>    Backend cost measured at 574/190. Needs an orchestrator decision.
+> 4. **32 dead backend exports** remain ledgered as `REMOVE` with their owning
+>    workstream named. When an owner removes one, the ledger entry must go in the
+>    same change or the gate reddens on staleness — by design, as the express fix
+>    demonstrated live.
+> 5. **The frontend `Build` job's env is now correct but unproven in CI.** The env
+>    gate is proven in isolation; the rest of `next build` is proven locally at exit
+>    0. The first CI run is the remaining proof.
+>
+> ### 11. Corrections to earlier notes
+>
+> - The kickoff brief said "42 unclassified frontend exports". By the time this pass
+>   ran it was **1**, because another lane landed the structural rule.
+> - The brief said `require.resolve("express")` failing means the spec fails. It
+>   does not — the spec passes via pnpm's hidden store. The defect is real but its
+>   mechanism is different, and the fix is the same.
+> - The brief's "~2,375 frontend lint errors from linting build output" was already
+>   corrected by the coordinator: the pristine baseline was 2,365, the ignore fix
+>   has landed, lint is now exit 1 with 14 errors, and **no CI gate was ever
+>   inflated** — both directories are gitignored, so CI never saw them.
+>   `feedbucket-widget/dist/**` does not exist.
+> - Box 2's "2,294 symbols" was an ESLint strict-probe figure spanning both repos
+>   and including specs. The tsc figures above supersede it for the backend.
+
+---
+
+**Status (first pass):** 4 of 11 boxes closed. The other seven are measured, not closed, and this
 report is mostly that measurement: an honest count of what the ticket is actually
 asking for, so the remaining work can be scoped instead of guessed at.
 
