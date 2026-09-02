@@ -119,6 +119,17 @@
   `features/build/project-create/steps/step-template.tsx`, `features/build/ticket-details/ticket-checklists.tsx`,
   and `features/hr/exit/progress-timeline.tsx` — the worst of them, which on a failed read **fabricated**
   a timeline from `PROGRESS_STEPS` showing "Submitted / current", presenting invented progress as fact.
+  **The counted gate moved.** `components/__tests__/authenticated-surface-states.contract.test.ts` is
+  the ratchet behind the "5 lack a read-error branch / 5 lack an empty state" routing note; another
+  lane had already taken it to `missingError 1 / missingEmpty 8` (commit `5a97f6691`). The single
+  remaining read-error gap in the whole authenticated app was **`/ai/executive-brief`** — this
+  ticket's own territory. Its error and empty branches existed but were hand-rolled divs the analyzer
+  cannot see, and the error branch had no retry at all. Both now use the canonical `ErrorState` /
+  `EmptyState`. Measured before and after over 556 surfaces / 539 data surfaces:
+  **missingError 1 -> 0** and **missingEmpty 8 -> 7**. The 7 that remain are named and all outside
+  this territory: `/crm/import`, `/inventory/operations`, `/inventory/products/new` (excluded from
+  release scope), `/hr/recruitment/sla`, `/notifications/policy`,
+  `/settings/organization/structure`, `/surveys/new`.
   Gates: `type-check` exit 0 / 0 errors · `eslint` on all 17 changed files exit 0 / 0 findings ·
   `check:query-signal` exit 0 (1054 queryFn blocks, 420 files, 0 violations) · `check:empty-states`,
   `check:effect-fetches`, `check:cycles`, `check:over-300` (519/519), `check:colors` all exit 0 ·

@@ -1,12 +1,14 @@
 "use client";
 
-import { AlertTriangle, RefreshCw, Sparkles } from "lucide-react";
+import { AlertTriangle, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { AiCitationChips } from "@/components/ai/ai-citation-chips";
 import { AiGeneratedLabel } from "@/components/ai/ai-generated-label";
 import { AiUsageChip } from "@/components/ai/ai-usage-chip";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useExecutiveBrief,
@@ -16,8 +18,12 @@ import {
 } from "@/lib/api/hooks/executive-brief";
 
 export default function ExecutiveBriefPage() {
-  const { data, isLoading, error } = useExecutiveBrief();
+  const { data, isLoading, isError, error, refetch } = useExecutiveBrief();
   const generate = useGenerateBrief();
+
+  function handleRetry() {
+    void refetch();
+  }
 
   function handleGenerate() {
     generate.mutate(undefined, {
@@ -42,12 +48,15 @@ export default function ExecutiveBriefPage() {
       }
     >
       {isLoading && <BriefSkeleton />}
-      {error && (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-destructive text-sm">
-          {getErrorMessage(error)}
-        </div>
+      {!isLoading && isError && (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load the executive brief"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
       )}
-      {!isLoading && !error && data && (
+      {!isLoading && !isError && data && (
         <BriefContent data={data} freshUsage={generate.data?.aiUsage} />
       )}
     </PageWrapper>
@@ -70,10 +79,11 @@ function BriefContent({ data, freshUsage }: { data: LatestBriefResponse; freshUs
 
   if (!snapshot) {
     return (
-      <div className="flex flex-col items-center justify-center flex-1 min-h-[300px] gap-3 text-muted-foreground">
-        <RefreshCw className="h-8 w-8 opacity-30" />
-        <p className="text-sm">No executive brief yet. Click &quot;Generate Brief&quot; to create one.</p>
-      </div>
+      <EmptyState
+        className="flex-1"
+        title="No executive brief yet"
+        description="Generate one to see a cross-module operational summary for leadership."
+      />
     );
   }
 

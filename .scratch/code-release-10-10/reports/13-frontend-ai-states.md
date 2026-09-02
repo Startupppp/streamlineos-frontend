@@ -339,3 +339,39 @@ against `streamAiText`:
    Not added: the constitution file is not this territory's to edit.
 3. The Explore-agent audit that produced the surface list was **stale on two of three routed
    items**. Anything else from it should be re-verified against source before being trusted.
+
+### Addendum — the counted gate, measured
+
+`components/__tests__/authenticated-surface-states.contract.test.ts` is the ratchet behind the
+"5 lack a read-error branch / 5 lack an empty state" routing note. Another lane had already taken
+it from `missingError 5 / missingEmpty 10` to `1 / 8` (commit `5a97f6691`) before this session's
+commit landed. The ten feature-level fixes above are real defects verified against source, but they
+sit below the route granularity this analyzer measures, so on their own they moved neither number.
+
+The single remaining read-error gap in the entire authenticated app was **`/ai/executive-brief`** —
+this ticket's own territory. Its error and empty branches existed but were hand-rolled `<div>`s the
+analyzer cannot recognise, and the error branch offered **no retry at all**: a failed read left the
+user with a red box and no way forward. Both now use the canonical `ErrorState` / `EmptyState`.
+
+Measured over 556 surfaces / 539 data surfaces, before and after:
+
+| | before | after |
+|---|---|---|
+| `missingError` | 1 (`/ai/executive-brief`) | **0** |
+| `missingEmpty` | 8 | **7** |
+
+The 7 remaining are named and all outside this territory: `/crm/import`, `/inventory/operations`,
+`/inventory/products/new` (excluded from release scope), `/hr/recruitment/sla`,
+`/notifications/policy`, `/settings/organization/structure`, `/surveys/new`.
+
+**Cross-territory:** the `BASELINE` in that contract test should now be tightened to
+`missingError: 0, missingEmpty: 7`. The gate asserts `toBeLessThanOrEqual`, so it is green as it
+stands and nothing is broken — but a ratchet left loose is a ratchet that lets the number climb
+back. That file belongs to the lane that wrote it.
+
+**Note on the shared tree:** commit `5a97f6691` (another lane) swallowed this session's edit to
+`app/(authenticated)/hr/recruitment/jobs/[jobId]/edit/page.tsx` — the JD streaming wiring — under
+its own message. The change is present and correct in the tree; only the authorship is wrong.
+A second trap worth recording: a pathspec containing `[jobId]` is read by git as a **glob character
+class**, so `git commit -- '...jobs/[jobId]/edit/page.tsx'` silently matches nothing. Use
+`:(literal)` for any Next.js dynamic-segment path.
