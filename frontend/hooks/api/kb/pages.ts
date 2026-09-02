@@ -5,6 +5,11 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useKbSpaces } from "./spaces";
+
+function deriveAclVersion(ids: number[]): string {
+  return [...ids].sort((a, b) => a - b).join(",");
+}
 
 export type KbPage = {
   id: number;
@@ -163,11 +168,16 @@ export function useKbPagesTrash() {
 
 export function useKbPagesSearch(q: string) {
   const canView = useCan("kb:pages:view");
+  const { data: spaces, isLoading: spacesLoading } = useKbSpaces();
+  const aclVersion = spacesLoading
+    ? null
+    : deriveAclVersion((spaces ?? []).map((s) => s.id));
   return useQuery({
-    queryKey: queryKeys.kb.pagesSearch(q),
-    queryFn: ({ signal }) => apiClient.get<KbPageSearchResult[]>("/kb/pages/search", { q }, signal),
+    queryKey: queryKeys.kb.pagesSearch(q, aclVersion ?? ""),
+    queryFn: ({ signal }) =>
+      apiClient.get<KbPageSearchResult[]>("/kb/pages/search", { q }, signal),
     staleTime: 0,
-    enabled: canView && q.length > 0,
+    enabled: canView && q.length > 0 && aclVersion !== null,
   });
 }
 
