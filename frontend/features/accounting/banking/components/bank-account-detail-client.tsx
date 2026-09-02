@@ -26,6 +26,7 @@ import { useBankAccount, useBankTransactions } from "@/hooks/api/accounting/bank
 import type { BankTransaction, BankTxnStatus } from "@/hooks/api/accounting/banking";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
+import { useCursorPageStack } from "@/hooks/common/use-cursor-page-stack";
 
 type StatusFilter = "ALL" | BankTxnStatus;
 
@@ -132,17 +133,11 @@ interface Props {
 
 export function BankAccountDetailClient({ bankAccountId }: Props) {
   const id = Number(bankAccountId);
-  const [cursors, setCursors] = useState<(string | null)[]>([null]);
-  const [cursorIndex, setCursorIndex] = useState(0);
+  const pagination = useCursorPageStack();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [search, setSearch] = useState("");
-
-  function resetCursor() {
-    setCursors([null]);
-    setCursorIndex(0);
-  }
 
   const accountQuery = useBankAccount(id);
   const txnQuery = useBankTransactions(id, {
@@ -150,7 +145,7 @@ export function BankAccountDetailClient({ bankAccountId }: Props) {
     from: from || undefined,
     to: to || undefined,
     q: search || undefined,
-    cursor: cursors[cursorIndex] ?? undefined,
+    cursor: pagination.cursor,
     limit: PAGE_SIZE,
   });
 
@@ -168,34 +163,38 @@ export function BankAccountDetailClient({ bankAccountId }: Props) {
     void txnQuery.refetch();
   }
 
+  function handleNextPage() {
+    pagination.goToNextPage(txnQuery.data?.pagination.nextCursor);
+  }
+
   function handleClearFilters() {
     setStatusFilter("ALL");
     setFrom("");
     setTo("");
     setSearch("");
-    resetCursor();
+    pagination.resetToFirstPage();
   }
 
   function handleStatusChange(value: string) {
     if (isTxnStatus(value)) {
       setStatusFilter(value);
-      resetCursor();
+      pagination.resetToFirstPage();
     }
   }
 
   function handleFromChange(e: ChangeEvent<HTMLInputElement>) {
     setFrom(e.target.value);
-    resetCursor();
+    pagination.resetToFirstPage();
   }
 
   function handleToChange(e: ChangeEvent<HTMLInputElement>) {
     setTo(e.target.value);
-    resetCursor();
+    pagination.resetToFirstPage();
   }
 
   function handleSearchChange(value: string) {
     setSearch(value);
-    resetCursor();
+    pagination.resetToFirstPage();
   }
 
   return (
@@ -299,20 +298,12 @@ export function BankAccountDetailClient({ bankAccountId }: Props) {
                 />
               }
             />
-            {(cursorIndex > 0 || hasMore) ? (
+            {(pagination.hasPrevious || hasMore) ? (
               <CursorPageControls
-                page={cursorIndex + 1}
+                page={pagination.page}
                 hasNext={hasMore}
-                onPrevious={() => setCursorIndex(Math.max(0, cursorIndex - 1))}
-                onNext={() => {
-                  const next = txnQuery.data?.pagination.nextCursor ?? null;
-                  setCursors((prev) => {
-                    const copy = prev.slice(0, cursorIndex + 1);
-                    copy.push(next);
-                    return copy;
-                  });
-                  setCursorIndex(cursorIndex + 1);
-                }}
+                onPrevious={pagination.goToPreviousPage}
+                onNext={handleNextPage}
                 className="mt-2"
               />
             ) : null}

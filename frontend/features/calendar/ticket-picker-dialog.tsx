@@ -93,15 +93,8 @@ export const TicketPickerDialog = memo(function TicketPickerDialog({
   onOpenChange,
   onSelect,
 }: TicketPickerDialogProps) {
-  const handleOpenChange = useCallback(
-    (isOpen: boolean) => {
-      onOpenChange(isOpen);
-    },
-    [onOpenChange],
-  );
-
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md gap-0 p-0 pb-0 md:pb-0 flex flex-col overflow-hidden rounded-xl">
         <DialogHeader className="px-4 py-3 border-b shrink-0">
           <DialogTitle className="text-base font-semibold">

@@ -45,12 +45,12 @@ function CreateTemplateSheet({ open, onOpenChange }: { open: boolean; onOpenChan
   const { data: departments } = useOnboardingTemplateDepartments();
   const createTemplate = useCreateHrOnboardingTemplate();
 
-  function resetForm() {
+  const resetForm = useCallback(() => {
     setName("");
     setDepartmentId("");
     setDescription("");
     setSteps([emptyStep()]);
-  }
+  }, []);
 
   function updateStep(index: number, patch: Partial<OnboardingTemplateStep>) {
     setSteps((prev) => prev.map((s, i) => (i === index ? { ...s, ...patch } : s)));
@@ -82,7 +82,7 @@ function CreateTemplateSheet({ open, onOpenChange }: { open: boolean; onOpenChan
         onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
-  }, [name, departmentId, description, steps, createTemplate, onOpenChange]);
+  }, [name, departmentId, description, steps, createTemplate, onOpenChange, resetForm]);
 
   return (
     <HrSheet

@@ -31,10 +31,6 @@ export function AutomationRuleCard({
   isToggling,
   canManage,
 }: AutomationRuleCardProps) {
-  function handleToggleChange(next: boolean) {
-    onToggle(next);
-  }
-
   return (
     <Card>
       <CardContent className="pt-4">
@@ -59,7 +55,7 @@ export function AutomationRuleCard({
             <Switch
               checked={rule.isEnabled}
               disabled={isToggling || !canManage}
-              onCheckedChange={handleToggleChange}
+              onCheckedChange={onToggle}
               aria-label="Toggle automation"
             />
             <div className="flex items-center gap-1">

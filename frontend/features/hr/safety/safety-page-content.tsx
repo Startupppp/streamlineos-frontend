@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { DataTable } from "@/components/ui/data-table";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
+import { useCursorPageStack } from "@/hooks/common/use-cursor-page-stack";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { StateIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -67,6 +68,18 @@ const SEVERITY_OPTIONS: { value: IncidentSeverity | typeof SENTINEL; label: stri
   { value: "critical", label: "Critical" },
 ];
 
+function isIncidentStatus(value: string): value is IncidentStatus {
+  return STATUS_OPTIONS.some((option) => option.value !== SENTINEL && option.value === value);
+}
+
+function isIncidentType(value: string): value is IncidentType {
+  return TYPE_OPTIONS.some((option) => option.value !== SENTINEL && option.value === value);
+}
+
+function isIncidentSeverity(value: string): value is IncidentSeverity {
+  return SEVERITY_OPTIONS.some((option) => option.value !== SENTINEL && option.value === value);
+}
+
 type ActiveTab = "incidents" | "wellness";
 
 function WellnessPulseCard() {
@@ -108,19 +121,34 @@ export function SafetyPageContent() {
   const [status, setStatus] = useState<IncidentStatus | "">("");
   const [type, setType] = useState<IncidentType | "">("");
   const [severity, setSeverity] = useState<IncidentSeverity | "">("");
-  const [cursors, setCursors] = useState<(string | null)[]>([null]);
-  const [cursorIndex, setCursorIndex] = useState(0);
+  const pagination = useCursorPageStack();
   const [showReport, setShowReport] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>("incidents");
 
+  const resetToFirstPage = pagination.resetToFirstPage;
+
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
-    setCursors([null]);
-    setCursorIndex(0);
-  }, []);
+    resetToFirstPage();
+  }, [resetToFirstPage]);
+
+  const handleStatusChange = useCallback((value: string) => {
+    setStatus(value === SENTINEL || !isIncidentStatus(value) ? "" : value);
+    resetToFirstPage();
+  }, [resetToFirstPage]);
+
+  const handleTypeChange = useCallback((value: string) => {
+    setType(value === SENTINEL || !isIncidentType(value) ? "" : value);
+    resetToFirstPage();
+  }, [resetToFirstPage]);
+
+  const handleSeverityChange = useCallback((value: string) => {
+    setSeverity(value === SENTINEL || !isIncidentSeverity(value) ? "" : value);
+    resetToFirstPage();
+  }, [resetToFirstPage]);
 
   const { data, isLoading, isFetching, isError, error, refetch } = useSafetyIncidents({
-    cursor: cursors[cursorIndex] ?? undefined,
+    cursor: pagination.cursor,
     search: debouncedSearch.trim() || undefined,
     status: status || undefined,
     type: type || undefined,
@@ -135,9 +163,14 @@ export function SafetyPageContent() {
     setStatus("");
     setType("");
     setSeverity("");
-    setCursors([null]);
-    setCursorIndex(0);
-  }, []);
+    resetToFirstPage();
+  }, [resetToFirstPage]);
+
+  const handleNextPage = useCallback(() => {
+    const nextCursor = data?.pagination.nextCursor;
+    if (!nextCursor) return;
+    pagination.goToNextPage(nextCursor);
+  }, [data, pagination]);
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -194,7 +227,7 @@ export function SafetyPageContent() {
       />
       <Select
         value={status || SENTINEL}
-        onValueChange={(v) => { setStatus(v === SENTINEL ? "" : (v as IncidentStatus)); setCursors([null]); setCursorIndex(0); }}
+        onValueChange={handleStatusChange}
       >
         <SelectTrigger
           aria-label="Filter by status"
@@ -210,7 +243,7 @@ export function SafetyPageContent() {
       </Select>
       <Select
         value={type || SENTINEL}
-        onValueChange={(v) => { setType(v === SENTINEL ? "" : (v as IncidentType)); setCursors([null]); setCursorIndex(0); }}
+        onValueChange={handleTypeChange}
       >
         <SelectTrigger
           aria-label="Filter by type"
@@ -226,7 +259,7 @@ export function SafetyPageContent() {
       </Select>
       <Select
         value={severity || SENTINEL}
-        onValueChange={(v) => { setSeverity(v === SENTINEL ? "" : (v as IncidentSeverity)); setCursors([null]); setCursorIndex(0); }}
+        onValueChange={handleSeverityChange}
       >
         <SelectTrigger
           aria-label="Filter by severity"
@@ -320,21 +353,13 @@ export function SafetyPageContent() {
                 }
               />
             )}
-            {!isError && (cursorIndex > 0 || data?.pagination.hasMore) ? (
+            {!isError && (pagination.hasPrevious || data?.pagination.hasMore) ? (
               <CursorPageControls
-                page={cursorIndex + 1}
+                page={pagination.page}
                 hasNext={data?.pagination.hasMore ?? false}
                 disabled={isFetching}
-                onPrevious={() => setCursorIndex((current) => Math.max(0, current - 1))}
-                onNext={() => {
-                  const nextCursor = data?.pagination.nextCursor;
-                  if (!nextCursor) return;
-                  setCursors((current) => [
-                    ...current.slice(0, cursorIndex + 1),
-                    nextCursor,
-                  ]);
-                  setCursorIndex((current) => current + 1);
-                }}
+                onPrevious={pagination.goToPreviousPage}
+                onNext={handleNextPage}
               />
             ) : null}
           </div>

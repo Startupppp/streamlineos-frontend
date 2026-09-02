@@ -33,8 +33,6 @@ export function WorkflowBuilderCanvasSurface({ initialEdges, initialNodes, onDef
   const [selectedNode, setSelectedNode] = useState<WorkflowNode | null>(null);
 
   useEffect(() => { onDefinitionChange(nodes, edges); }, [edges, nodes, onDefinitionChange]);
-  const handleNodesChange = useCallback((changes: Parameters<typeof onNodesChange>[0]) => { onNodesChange(changes); }, [onNodesChange]);
-  const handleEdgesChange = useCallback((changes: Parameters<typeof onEdgesChange>[0]) => { onEdgesChange(changes); }, [onEdgesChange]);
 
   const handleConnect = useCallback((connection: Connection) => {
     setEdges((currentEdges) => {
@@ -73,7 +71,7 @@ export function WorkflowBuilderCanvasSurface({ initialEdges, initialNodes, onDef
   return (
     <div className="flex-1 min-h-0 flex">
       <div className="flex-1" onDrop={handleDrop} onDragOver={handleDragOver}>
-        <ReactFlow nodes={nodes} edges={edges} onNodesChange={handleNodesChange} onEdgesChange={handleEdgesChange} onConnect={handleConnect} onNodeClick={handleNodeClick} onPaneClick={handlePaneClick} nodeTypes={workflowNodeTypes} defaultEdgeOptions={DEFAULT_EDGE_OPTIONS} fitView deleteKeyCode="Delete" className="bg-muted/30">
+        <ReactFlow nodes={nodes} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={handleConnect} onNodeClick={handleNodeClick} onPaneClick={handlePaneClick} nodeTypes={workflowNodeTypes} defaultEdgeOptions={DEFAULT_EDGE_OPTIONS} fitView deleteKeyCode="Delete" className="bg-muted/30">
           <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="var(--border)" />
           <Controls className="border border-border shadow-sm rounded-lg overflow-hidden" />
           <MiniMap className="border border-border shadow-sm rounded-lg overflow-hidden" />

@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type MouseEvent } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -140,6 +140,14 @@ export function IdentityPageContent() {
     },
   ], [resolveMemberName]);
 
+  const handleTemplateDelete = useCallback(
+    (templateId: string) => (event: MouseEvent<HTMLButtonElement>) => {
+      event.stopPropagation();
+      deleteTemplate.mutate(templateId);
+    },
+    [deleteTemplate],
+  );
+
   const templateColumns: DataTableColumn<ProvisioningTemplate>[] = [
     {
       key: "name",
@@ -170,7 +178,7 @@ export function IdentityPageContent() {
           variant="ghost"
           size="sm"
           className="text-destructive hover:text-destructive hover:bg-destructive/10"
-          onClick={(e) => { e.stopPropagation(); deleteTemplate.mutate(r.id); }}
+          onClick={handleTemplateDelete(r.id)}
         >
           Delete
         </Button>

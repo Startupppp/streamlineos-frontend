@@ -252,7 +252,6 @@ export function OrgLocationsPage() {
 
   const handleClearSearch = useCallback(() => setSearch(""), [setSearch]);
 
-  function handleSearchInputChange(value: string) { handleSearchChange(value); }
 
   function makeRestoreHandler(loc: OrgLocation) { return () => handleRestore(loc); }
   function makeArchiveHandler(loc: OrgLocation) { return () => archiveFlow.requestArchive(loc); }
@@ -372,7 +371,7 @@ export function OrgLocationsPage() {
         </div>
       }
       filters={
-        <SearchInput placeholder="Search locations…" value={search} onValueChange={handleSearchInputChange} />
+        <SearchInput placeholder="Search locations…" value={search} onValueChange={handleSearchChange} />
       }
     >
       {isError ? (

@@ -23,6 +23,16 @@ export function EssDisciplinarySection() {
   const { data, isLoading, isError } = useMyDisciplinaryActions();
   const acknowledge = useAcknowledgeDisciplinaryAction();
 
+  function handleAcknowledgeError(error: unknown) {
+    toast.error(getErrorMessage(error));
+  }
+
+  function handleAcknowledge(actionId: number) {
+    return function acknowledgeAction() {
+      acknowledge.mutate({ id: actionId }, { onError: handleAcknowledgeError });
+    };
+  }
+
   if (isLoading) {
     return (
       <section id="disciplinary" className="flex min-h-0 w-full flex-1 flex-col">
@@ -88,14 +98,7 @@ export function EssDisciplinarySection() {
                 size="sm"
                 className="h-7 text-xs"
                 isPending={acknowledge.isPending}
-                onClick={() =>
-                  acknowledge.mutate(
-                    { id: row.id },
-                    {
-                      onError: (e) => toast.error(getErrorMessage(e)),
-                    },
-                  )
-                }
+                onClick={handleAcknowledge(row.id)}
               >
                 Acknowledge receipt
               </LoadingButton>

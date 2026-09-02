@@ -11,8 +11,9 @@ import {
   FormField, FormItem, FormLabel, FormControl, FormMessage,
 } from "@/components/ui/form";
 import {
-  NO_PRIORITY, NO_BUSINESS_HOURS, PAUSE_STATUS_OPTIONS, type PolicyForm,
+  NO_PRIORITY, NO_BUSINESS_HOURS, PAUSE_STATUS_OPTIONS, togglePauseStatus, type PolicyForm,
 } from "./sla-policy-form.schema";
+import type { SlaPauseStatus } from "@/hooks/api/support/sla-policies";
 
 export interface BusinessHoursOption {
   id: number;
@@ -26,6 +27,16 @@ interface PolicyFormFieldsProps {
 }
 
 export function PolicyFormFields({ form, businessHoursOptions, idPrefix }: PolicyFormFieldsProps) {
+  function handlePauseStatusToggle(status: SlaPauseStatus) {
+    return function togglePauseStatusForField(checked: boolean | "indeterminate") {
+      form.setValue(
+        "pauseStatuses",
+        togglePauseStatus(form.getValues("pauseStatuses"), status, Boolean(checked)),
+        { shouldDirty: true },
+      );
+    };
+  }
+
   return (
     <>
       <FormField control={form.control} name="name" render={({ field }) => (
@@ -102,16 +113,7 @@ export function PolicyFormFields({ form, businessHoursOptions, idPrefix }: Polic
                 <Checkbox
                   id={`${idPrefix}-pause-${option.value}`}
                   checked={form.watch("pauseStatuses").includes(option.value)}
-                  onCheckedChange={(checked) => {
-                    const current = form.getValues("pauseStatuses");
-                    form.setValue(
-                      "pauseStatuses",
-                      checked
-                        ? [...current, option.value]
-                        : current.filter((v) => v !== option.value),
-                      { shouldDirty: true },
-                    );
-                  }}
+                  onCheckedChange={handlePauseStatusToggle(option.value)}
                 />
                 {option.label}
               </label>

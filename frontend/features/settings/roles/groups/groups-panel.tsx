@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
+import { useCursorPageStack } from "@/hooks/common/use-cursor-page-stack";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   RichPanel,
@@ -193,14 +194,14 @@ function GroupRow({ group, onRename, onManage }: GroupRowProps) {
 }
 
 export function GroupsPanel() {
-  const [cursors, setCursors] = useState<Array<string | undefined>>([undefined]);
+  const pageStack = useCursorPageStack();
   const [createOpen, setCreateOpen] = useState(false);
   const [renameTarget, setRenameTarget] = useState<PrincipalGroup | null>(null);
   const [detailTarget, setDetailTarget] = useState<PrincipalGroup | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
   const { data, isLoading, isError, error } = usePrincipalGroups({
-    cursor: cursors.at(-1),
+    cursor: pageStack.cursor,
     limit: PAGE_SIZE,
   });
   const groups = data?.data ?? [];
@@ -209,7 +210,10 @@ export function GroupsPanel() {
     nextCursor: null,
     hasMore: false,
   };
-  const page = cursors.length;
+
+  const handleNextPage = useCallback(() => {
+    if (pagination.nextCursor) pageStack.goToNextPage(pagination.nextCursor);
+  }, [pageStack, pagination.nextCursor]);
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
   const handleRename = useCallback((group: PrincipalGroup) => setRenameTarget(group), []);
@@ -269,16 +273,12 @@ export function GroupsPanel() {
           )}
         </div>
 
-        {(page > 1 || pagination.hasMore) && (
+        {(pageStack.hasPrevious || pagination.hasMore) && (
           <CursorPageControls
-            page={page}
+            page={pageStack.page}
             hasNext={pagination.hasMore}
-            onPrevious={() => setCursors((current) => current.slice(0, -1))}
-            onNext={() => {
-              if (pagination.nextCursor) {
-                setCursors((current) => [...current, pagination.nextCursor ?? undefined]);
-              }
-            }}
+            onPrevious={pageStack.goToPreviousPage}
+            onNext={handleNextPage}
           />
         )}
       </RichPanel>

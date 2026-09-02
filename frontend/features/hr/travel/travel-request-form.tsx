@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { DatePicker } from "@/components/ui/date-picker";
-import { planningEndPickerProps } from "@/lib/date-constraints";
+import { clearEndIfInvalid, planningEndPickerProps } from "@/lib/date-constraints";
 import type { TravelFormValues } from "./travel-schema";
 
 interface TravelRequestFormProps {
@@ -22,6 +22,17 @@ export function TravelRequestForm({
   onHotelRequiredChange,
   onAdvanceRequiredChange,
 }: TravelRequestFormProps) {
+  function handleDepartureDateChange(setDepartureDate: (value: string) => void) {
+    return function applyDepartureDate(value: string) {
+      setDepartureDate(value);
+      const currentReturn = form.getValues("returnDate");
+      const clearedReturn = clearEndIfInvalid(value, currentReturn, "onOrAfter");
+      if (clearedReturn !== currentReturn)
+        form.setValue("returnDate", clearedReturn, { shouldValidate: true });
+      void form.trigger(["departureDate", "returnDate"]);
+    };
+  }
+
   return (
     <>
       <div className="space-y-1.5">
@@ -62,14 +73,7 @@ export function TravelRequestForm({
               <DatePicker
                 id="departureDate"
                 value={field.value ?? ""}
-                onChange={(value) => {
-                  field.onChange(value);
-                  const currentReturn = form.getValues("returnDate");
-                  if (currentReturn && value && currentReturn < value) {
-                    form.setValue("returnDate", "", { shouldValidate: true });
-                  }
-                  void form.trigger(["departureDate", "returnDate"]);
-                }}
+                onChange={handleDepartureDateChange(field.onChange)}
                 placeholder="Pick a date"
                 className="text-sm"
                 disablePast

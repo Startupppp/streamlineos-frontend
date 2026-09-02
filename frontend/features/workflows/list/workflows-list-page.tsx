@@ -34,6 +34,7 @@ import { WorkflowAnalyticsStats } from "@/features/workflows/list/workflow-analy
 import { WorkflowCardGrid } from "@/features/workflows/list/workflow-card-grid";
 import { DeleteWorkflowDialog } from "@/features/workflows/list/delete-workflow-dialog";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
+import { useCursorPageStack } from "@/hooks/common/use-cursor-page-stack";
 
 type StatusFilter = WorkflowStatus | "all";
 
@@ -45,25 +46,23 @@ export function WorkflowsListPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Workflow | null>(null);
-  const [cursors, setCursors] = useState<(string | null)[]>([null]);
-  const [cursorIndex, setCursorIndex] = useState(0);
+  const pagination = useCursorPageStack();
 
   const debouncedSearch = useDebouncedValue(search, 300);
 
   const filterKey = `${debouncedSearch}|${statusFilter}`;
 
-  useEffect(() => {
-    setCursors([null]);
-    setCursorIndex(0);
-  }, [filterKey]);
+  const resetToFirstPage = pagination.resetToFirstPage;
 
-  const currentCursor = cursors[cursorIndex] ?? null;
+  useEffect(() => {
+    resetToFirstPage();
+  }, [filterKey, resetToFirstPage]);
 
   const { data, isLoading, isError, refetch } = useWorkflows({
     search: debouncedSearch.trim() || undefined,
     status: statusFilter === "all" ? undefined : statusFilter,
     limit: WORKFLOW_PAGE_SIZE,
-    cursor: currentCursor ?? undefined,
+    cursor: pagination.cursor,
   });
 
   const { data: analytics, isLoading: analyticsLoading } =
@@ -119,6 +118,10 @@ export function WorkflowsListPage() {
 
   function handleStatusChange(value: string) {
     setStatusFilter(value as StatusFilter);
+  }
+
+  function handleNextPage() {
+    pagination.goToNextPage(data?.pagination.nextCursor);
   }
 
   function handleRetry() {
@@ -201,20 +204,12 @@ export function WorkflowsListPage() {
               onDuplicate={handleDuplicate}
               onDelete={handleSetDeleteTarget}
             />
-            {(cursorIndex > 0 || hasMore) ? (
+            {(pagination.hasPrevious || hasMore) ? (
               <CursorPageControls
-                page={cursorIndex + 1}
+                page={pagination.page}
                 hasNext={hasMore}
-                onPrevious={() => setCursorIndex(Math.max(0, cursorIndex - 1))}
-                onNext={() => {
-                  const next = data?.pagination.nextCursor ?? null;
-                  setCursors((prev) => {
-                    const copy = prev.slice(0, cursorIndex + 1);
-                    copy.push(next);
-                    return copy;
-                  });
-                  setCursorIndex(cursorIndex + 1);
-                }}
+                onPrevious={pagination.goToPreviousPage}
+                onNext={handleNextPage}
               />
             ) : null}
           </>

@@ -50,13 +50,6 @@ export function ExpenseFiltersBar({
   onStartDateChange,
   onEndDateChange,
 }: ExpenseFiltersBarProps) {
-  const handleSearchChange = useCallback(
-    (value: string) => {
-      onSearchChange(value);
-    },
-    [onSearchChange],
-  );
-
   const handleStatusChange = useCallback(
     (value: string) => {
       if (isStatusFilter(value)) onStatusChange(value);
@@ -66,7 +59,7 @@ export function ExpenseFiltersBar({
 
   return (
     <div className={FILTER_TOOLBAR_ROW}>
-      <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search merchant or description" />
+      <SearchInput value={search} onValueChange={onSearchChange} placeholder="Search merchant or description" />
       <Select value={status} onValueChange={handleStatusChange}>
         <SelectTrigger className={`w-[170px] ${FILTER_SELECT_TRIGGER}`}>
           <SelectValue />

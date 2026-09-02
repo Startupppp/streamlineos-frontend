@@ -104,13 +104,16 @@ export function LoansTable() {
     router.replace(`?${params.toString()}`);
   }
 
-  function handleOpenAdjust(row: LoanAdminItem, defaultType: LoanAdjustmentType) {
-    setAdjustState({ loanId: row.id, employeeName: row.user.name ?? row.user.email, defaultType });
-  }
+  const handleOpenAdjust = useCallback(
+    (row: LoanAdminItem, defaultType: LoanAdjustmentType) => {
+      setAdjustState({ loanId: row.id, employeeName: row.user.name ?? row.user.email, defaultType });
+    },
+    [],
+  );
 
-  function handleOpenApproval(loanId: number, action: "approve" | "reject") {
+  const handleOpenApproval = useCallback((loanId: number, action: "approve" | "reject") => {
     setApprovalState({ loanId, action });
-  }
+  }, []);
 
   function handleAdjustClose() {
     setAdjustState(null);
@@ -122,7 +125,7 @@ export function LoansTable() {
 
   const columns = useMemo(
     () => buildLoanColumns({ canManage, onAdjust: handleOpenAdjust, onApproval: handleOpenApproval }),
-    [canManage],
+    [canManage, handleOpenAdjust, handleOpenApproval],
   );
 
   return (

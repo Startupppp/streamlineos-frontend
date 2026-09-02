@@ -38,10 +38,6 @@ export function ApprovalActions({
 }: ApprovalActionsProps) {
   const [rejectOpen, setRejectOpen] = useState(false);
 
-  function handleApprove() {
-    onApprove();
-  }
-
   function handleOpenRejectSheet() {
     setRejectOpen(true);
   }
@@ -61,7 +57,7 @@ export function ApprovalActions({
           isPending={isApproving}
           loadingText="Approving…"
           disabled={disabled || isRejecting}
-          onClick={handleApprove}
+          onClick={onApprove}
         >
           {approveLabel}
         </LoadingButton>

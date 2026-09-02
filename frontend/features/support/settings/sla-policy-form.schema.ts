@@ -81,3 +81,12 @@ export function buildUpdatePayload(data: PolicyForm): UpdateSlaPolicyInput {
     isEnabled: data.isEnabled,
   };
 }
+
+export function togglePauseStatus(
+  current: readonly SlaPauseStatus[],
+  status: SlaPauseStatus,
+  shouldPause: boolean,
+): SlaPauseStatus[] {
+  if (shouldPause) return [...current, status];
+  return current.filter((value) => value !== status);
+}

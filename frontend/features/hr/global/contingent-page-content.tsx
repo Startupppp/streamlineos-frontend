@@ -97,6 +97,24 @@ export function ContingentPageContent() {
   const endContract = useEndContract();
   const convert = useConvertToEmployee();
 
+  function handleConfirmEndContract() {
+    if (!endContractId) return;
+    endContract.mutate({ contractId: endContractId }, { onSuccess: handleEndContractDone });
+  }
+
+  function handleEndContractDone() {
+    setEndContractId(null);
+  }
+
+  function handleConfirmConvertContract() {
+    if (!convertContractId) return;
+    convert.mutate({ contractId: convertContractId }, { onSuccess: handleConvertContractDone });
+  }
+
+  function handleConvertContractDone() {
+    setConvertContractId(null);
+  }
+
   const handleOpenEdit = useCallback((contract: HrContract) => {
     setEditingContract(contract);
     setSheetOpen(true);
@@ -192,14 +210,7 @@ export function ContingentPageContent() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              onClick={() => {
-                if (endContractId) {
-                  endContract.mutate({ contractId: endContractId }, { onSuccess: () => setEndContractId(null) });
-                }
-              }}
-            >
+            <AlertDialogAction variant="destructive" onClick={handleConfirmEndContract}>
               End contract
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -217,13 +228,7 @@ export function ContingentPageContent() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (convertContractId) {
-                  convert.mutate({ contractId: convertContractId }, { onSuccess: () => setConvertContractId(null) });
-                }
-              }}
-            >
+            <AlertDialogAction onClick={handleConfirmConvertContract}>
               Convert to employee
             </AlertDialogAction>
           </AlertDialogFooter>

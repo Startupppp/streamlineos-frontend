@@ -50,11 +50,6 @@ export function MemberDetailSheet({
     toast.success(`Reminder sent to ${memberName}`);
   }, [memberName]);
 
-  const handleOpenChange = useCallback(
-    (v: boolean) => onOpenChange(v),
-    [onOpenChange],
-  );
-
   const isMissingOrDraft =
     !period || period.status === "OPEN" || period.status === "DRAFT";
 
@@ -64,7 +59,7 @@ export function MemberDetailSheet({
   const sortedDates = [...grouped.keys()].sort();
 
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left">
           <SheetTitle className="text-sm font-semibold">{memberName}</SheetTitle>

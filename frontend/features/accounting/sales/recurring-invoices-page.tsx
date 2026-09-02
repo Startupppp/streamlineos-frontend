@@ -7,6 +7,7 @@ import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
+import { useCursorPageStack } from "@/hooks/common/use-cursor-page-stack";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -37,12 +38,11 @@ export function RecurringInvoicesPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editTemplate, setEditTemplate] = useState<RecurringInvoiceTemplate | undefined>();
   const [activeFilter, setActiveFilter] = useState<"all" | "true" | "false">("all");
-  const [cursors, setCursors] = useState<(string | null)[]>([null]);
-  const [cursorIndex, setCursorIndex] = useState(0);
+  const pagination = useCursorPageStack();
 
   const query = useRecurringTemplates({
     isActive: activeFilter === "all" ? undefined : activeFilter === "true",
-    cursor: cursors[cursorIndex] ?? undefined,
+    cursor: pagination.cursor,
     limit: 20,
   });
 
@@ -66,9 +66,12 @@ export function RecurringInvoicesPage() {
   function handleActiveFilterChange(value: string): void {
     if (value === "all" || value === "true" || value === "false") {
       setActiveFilter(value);
-      setCursors([null]);
-      setCursorIndex(0);
+      pagination.resetToFirstPage();
     }
+  }
+
+  function handleNextPage(): void {
+    pagination.goToNextPage(query.data?.pagination.nextCursor);
   }
 
   const columns: DataTableColumn<RecurringInvoiceTemplate>[] = [
@@ -177,20 +180,12 @@ export function RecurringInvoicesPage() {
                 />
               }
             />
-            {(cursorIndex > 0 || hasMore) ? (
+            {(pagination.hasPrevious || hasMore) ? (
               <CursorPageControls
-                page={cursorIndex + 1}
+                page={pagination.page}
                 hasNext={hasMore}
-                onPrevious={() => setCursorIndex(Math.max(0, cursorIndex - 1))}
-                onNext={() => {
-                  const next = query.data?.pagination.nextCursor ?? null;
-                  setCursors((prev) => {
-                    const copy = prev.slice(0, cursorIndex + 1);
-                    copy.push(next);
-                    return copy;
-                  });
-                  setCursorIndex(cursorIndex + 1);
-                }}
+                onPrevious={pagination.goToPreviousPage}
+                onNext={handleNextPage}
                 className="mt-2"
               />
             ) : null}

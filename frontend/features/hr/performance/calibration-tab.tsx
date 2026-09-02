@@ -46,19 +46,22 @@ export function CalibrationTab() {
     [memberById],
   );
 
-  function handleChange(employeeId: string, field: "preRating" | "postRating" | "note", value: string) {
-    setEditingEntry((prev) => {
-      const current = prev[employeeId] ?? { preRating: "", postRating: "", note: "" };
-      return { ...prev, [employeeId]: { ...current, [field]: value } };
-    });
-    setRowErrors((prev) => {
-      const current = prev[employeeId];
-      if (!current) return prev;
-      const nextRow = { ...current };
-      delete nextRow[field];
-      return { ...prev, [employeeId]: nextRow };
-    });
-  }
+  const handleChange = useCallback(
+    (employeeId: string, field: "preRating" | "postRating" | "note", value: string) => {
+      setEditingEntry((prev) => {
+        const current = prev[employeeId] ?? { preRating: "", postRating: "", note: "" };
+        return { ...prev, [employeeId]: { ...current, [field]: value } };
+      });
+      setRowErrors((prev) => {
+        const current = prev[employeeId];
+        if (!current) return prev;
+        const nextRow = { ...current };
+        delete nextRow[field];
+        return { ...prev, [employeeId]: nextRow };
+      });
+    },
+    [],
+  );
 
   const handleSave = useCallback(async (employeeId: string) => {
     const row = entries.find((e) => e.employeeId === employeeId);
@@ -181,7 +184,7 @@ export function CalibrationTab() {
         </LoadingButton>
       ),
     },
-  ], [editingEntry, rowErrors, resolveMemberName, upsert.isPending, handleSave]);
+  ], [editingEntry, rowErrors, resolveMemberName, upsert.isPending, handleSave, handleChange]);
 
   return (
     <div className="space-y-4">

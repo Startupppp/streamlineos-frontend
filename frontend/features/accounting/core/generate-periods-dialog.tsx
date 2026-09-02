@@ -49,16 +49,12 @@ export function GeneratePeriodsDialog({ open, onOpenChange }: GeneratePeriodsDia
     );
   }
 
-  function handleClose(isOpen: boolean): void {
-    onOpenChange(isOpen);
-  }
-
   function handleCancelClick(): void {
-    handleClose(false);
+    onOpenChange(false);
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[340px]">
         <DialogHeader>
           <DialogTitle>Generate fiscal periods</DialogTitle>

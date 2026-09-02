@@ -14,6 +14,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { Money } from "@/features/accounting/shared";
 import { useBankAccounts, useTransfers } from "@/hooks/api/accounting/banking";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
+import { useCursorPageStack } from "@/hooks/common/use-cursor-page-stack";
 import type { BankTransfer } from "@/hooks/api/accounting/banking";
 import { useCan } from "@/hooks/api/access";
 import { NewTransferDialog } from "./new-transfer-dialog";
@@ -31,8 +32,7 @@ function formatDate(value: string): string {
 }
 
 export function TransfersClient() {
-  const [cursors, setCursors] = useState<(string | null)[]>([null]);
-  const [cursorIndex, setCursorIndex] = useState(0);
+  const pagination = useCursorPageStack();
   const [dialogOpen, setDialogOpen] = useState(false);
   const canManage = useCan("accounting:banking:manage");
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -41,7 +41,7 @@ export function TransfersClient() {
   const accounts = accountsQuery.data?.data ?? [];
   const accountMap = new Map(accounts.map((a) => [a.id, a.name]));
 
-  const transfersQuery = useTransfers({ cursor: cursors[cursorIndex] ?? undefined, limit: PAGE_SIZE });
+  const transfersQuery = useTransfers({ cursor: pagination.cursor, limit: PAGE_SIZE });
   const transfers = transfersQuery.data?.data ?? [];
   const hasMore = transfersQuery.data?.pagination.hasMore ?? false;
 
@@ -105,6 +105,10 @@ export function TransfersClient() {
     void transfersQuery.refetch();
   }
 
+  function handleNextPage() {
+    pagination.goToNextPage(transfersQuery.data?.pagination.nextCursor);
+  }
+
   return (
     <PageWrapper
       title="Transfers"
@@ -144,20 +148,12 @@ export function TransfersClient() {
                 />
               }
             />
-            {(cursorIndex > 0 || hasMore) ? (
+            {(pagination.hasPrevious || hasMore) ? (
               <CursorPageControls
-                page={cursorIndex + 1}
+                page={pagination.page}
                 hasNext={hasMore}
-                onPrevious={() => setCursorIndex(Math.max(0, cursorIndex - 1))}
-                onNext={() => {
-                  const next = transfersQuery.data?.pagination.nextCursor ?? null;
-                  setCursors((prev) => {
-                    const copy = prev.slice(0, cursorIndex + 1);
-                    copy.push(next);
-                    return copy;
-                  });
-                  setCursorIndex(cursorIndex + 1);
-                }}
+                onPrevious={pagination.goToPreviousPage}
+                onNext={handleNextPage}
                 className="mt-2"
               />
             ) : null}

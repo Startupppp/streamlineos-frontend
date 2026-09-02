@@ -19,6 +19,7 @@ import { DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
+import { useCursorPageStack } from "@/hooks/common/use-cursor-page-stack";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { SemanticBadge } from "@/components/ui/semantic-badge";
@@ -120,9 +121,7 @@ export function PeopleDirectoryPage({
   const canUpdate = useCan("directory:people:update");
   const canDelete = useCan("directory:people:delete");
 
-  const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([
-    undefined,
-  ]);
+  const pagination = useCursorPageStack();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
@@ -131,7 +130,7 @@ export function PeopleDirectoryPage({
   const [deleteTarget, setDeleteTarget] = useState<OrganizationPerson | null>(null);
 
   const { data, isLoading, isError, refetch } = usePeople({
-    cursor: cursorHistory.at(-1),
+    cursor: pagination.cursor,
     limit: PAGE_SIZE,
     search: debouncedSearch || undefined,
   });
@@ -146,7 +145,11 @@ export function PeopleDirectoryPage({
 
   function handleSearchChange(value: string) {
     setSearch(value);
-    setCursorHistory([undefined]);
+    pagination.resetToFirstPage();
+  }
+
+  function handleNextPage() {
+    if (pageInfo?.nextCursor) pagination.goToNextPage(pageInfo.nextCursor);
   }
 
   const handleOpenCreate = useCallback(() => {
@@ -313,21 +316,12 @@ export function PeopleDirectoryPage({
                 minWidth="760px"
                 className={CONTENT_FILL_PANEL}
               />
-              {cursorHistory.length > 1 || pageInfo?.hasMore ? (
+              {pagination.hasPrevious || pageInfo?.hasMore ? (
                 <CursorPageControls
-                  page={cursorHistory.length}
+                  page={pagination.page}
                   hasNext={pageInfo?.hasMore ?? false}
-                  onPrevious={() =>
-                    setCursorHistory((current) => current.slice(0, -1))
-                  }
-                  onNext={() => {
-                    if (pageInfo?.nextCursor) {
-                      setCursorHistory((current) => [
-                        ...current,
-                        pageInfo.nextCursor ?? undefined,
-                      ]);
-                    }
-                  }}
+                  onPrevious={pagination.goToPreviousPage}
+                  onNext={handleNextPage}
                   className="mt-2"
                 />
               ) : null}

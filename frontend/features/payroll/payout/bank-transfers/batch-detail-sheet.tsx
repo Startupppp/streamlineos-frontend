@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useRef, type ChangeEvent } from "react";
 import { toast } from "sonner";
 import { Upload } from "lucide-react";
 import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -174,9 +174,9 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
     setActionDialog(null);
   }
 
-  function handleAction(type: "paid" | "failed", item: PayoutBatchItem) {
+  const handleAction = useCallback((type: "paid" | "failed", item: PayoutBatchItem) => {
     setActionDialog({ type, item });
-  }
+  }, []);
 
   function handleReturnFile(file: File | undefined) {
     if (!file || batchId == null || batch == null) return;
@@ -215,13 +215,18 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
     reader.readAsText(file);
   }
 
+  function handleReturnFileChange(event: ChangeEvent<HTMLInputElement>) {
+    handleReturnFile(event.target.files?.[0]);
+    event.target.value = "";
+  }
+
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
 
   const columns = useMemo(
     () => buildColumns(canManage, handleAction, resolveMemberName),
-    [canManage, resolveMemberName],
+    [canManage, handleAction, resolveMemberName],
   );
 
   return (
@@ -260,10 +265,7 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
                     type="file"
                     accept=".csv,text/csv"
                     className="hidden"
-                    onChange={(e) => {
-                      handleReturnFile(e.target.files?.[0]);
-                      e.target.value = "";
-                    }}
+                    onChange={handleReturnFileChange}
                   />
                   <LoadingButton
                     size="sm"

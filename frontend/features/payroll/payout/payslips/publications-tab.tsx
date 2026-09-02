@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Download, CheckCircle2 } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
@@ -142,7 +142,7 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
     setSelectedRunId(Number(value));
   }
 
-  async function handleDownload(publicationId: number) {
+  const handleDownload = useCallback(async (publicationId: number) => {
     setDownloadingIds((prev) => new Set([...prev, publicationId]));
     try {
       await downloadPayslipPdf(publicationId);
@@ -155,7 +155,7 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
         return next;
       });
     }
-  }
+  }, []);
 
   function handleOpenPublish() {
     setPublishOpen(true);
@@ -218,7 +218,7 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
         },
       },
     ],
-    [downloadingIds, memberById],
+    [downloadingIds, memberById, handleDownload],
   );
 
   const canPublish = canManage && selectedRun?.status === "PAID";

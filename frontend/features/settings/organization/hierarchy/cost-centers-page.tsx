@@ -230,7 +230,6 @@ export function OrgCostCentersPage() {
 
   const handleClearSearch = useCallback(() => setSearch(""), [setSearch]);
 
-  function handleSearchInputChange(value: string) { handleSearchChange(value); }
 
   function makeRestoreHandler(cc: OrgCostCenter) { return () => handleRestore(cc); }
   function makeArchiveHandler(cc: OrgCostCenter) { return () => archiveFlow.requestArchive(cc); }
@@ -352,7 +351,7 @@ export function OrgCostCentersPage() {
         </div>
       }
       filters={
-        <SearchInput placeholder="Search cost centers…" value={search} onValueChange={handleSearchInputChange} />
+        <SearchInput placeholder="Search cost centers…" value={search} onValueChange={handleSearchChange} />
       }
     >
       {isError ? (

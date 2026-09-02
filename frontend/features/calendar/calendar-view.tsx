@@ -53,6 +53,8 @@ const BigCalendarWrapper = dynamic(
   { ssr: false },
 );
 
+const NO_CALENDAR_EVENTS: CalendarListItem[] = [];
+
 export function CalendarView() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -111,7 +113,7 @@ export function CalendarView() {
     error: eventsError,
     refetch: refetchEvents,
   } = useCalendarEvents(rangeStart, rangeEnd);
-  const events = eventsResponse?.events ?? [];
+  const events = eventsResponse?.events ?? NO_CALENDAR_EVENTS;
   const sourceFailures = eventsResponse?.failures ?? [];
   const eventsTruncated = eventsResponse?.truncated ?? false;
   const { data: connections = [], isLoading: connectionsLoading } =
