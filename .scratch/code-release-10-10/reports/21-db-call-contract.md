@@ -444,3 +444,234 @@ reclassified, 5 marked `N+1-FIXED`. 170 entries total.
 - The three audits behind boxes 3, 6 and 8/9 were run by subagents over the current tree. I spot-read
   and acted on the findings I fixed; the counts in the tails (≈60 probes, 24 quota call sites, 337
   cache awaits) are theirs and I did not independently recount them.
+
+---
+
+# Second pass — 2026-09-02
+
+**Boxes: 3 closed / 6 partial** (was 2 / 7). Box 6 closes: every money path named in
+the first pass is now atomic, and the four races it left open are fixed.
+
+The first pass's own headline gap was: *"the SQL I wrote (`UPDATE … FROM (VALUES …)`, the
+`excluded.` references, `GREATEST`) is **not** execution-verified. That is the largest single
+gap in this report."* That gap is closed. Three probes now run every one of those statements
+against `scratch_t21b` (a writable copy of `scratch_perf_seed`, 945 tables, 96 MB):
+
+| Probe | Covers | Result |
+|---|---|---|
+| `.t21-sql-probe.ts` | watermark `GREATEST` in `ON CONFLICT`, `excluded.` in the purge upsert, the allocations `UPDATE … FROM (VALUES …)`, the bank-transfer atomic decrement, the payment-run `round()`+`CASE`, the usage-meter advisory lock, the wallet increment, affiliate counters, the chunked import upsert, six `bulkUpdateFromValues` shapes, the preference-rule row-constructor IN, and the AI-credit bootstrap race in both shapes | **exit 0, 21/21 PASS** |
+| `.t21c-money-probe.ts` | the three tier-1 money races, each run twice concurrently | **exit 0, 6/6 PASS** |
+| `.t21d-bulk-probe.ts` | the four real `bulkUpdateFromValues` call shapes: `numeric` + `acc_asset_status`, `uuid` + `workflow_execution_status` + `jsonb` with `extraWhere`, and the schema-qualified `build.project_statuses` with the reserved word `"order"` | **exit 0, 7/7 PASS** |
+
+34 assertions. Four defects the probes found that `tsc` could not: three wrong fixture column
+names and one enum label — all in the probe, none in the shipped SQL, which is the point:
+the shipped SQL had never been parsed by Postgres before this.
+
+## The AI-credit money race — settled, and why
+
+The first pass wrote this fix and **reverted it**, because three spec files pinned the
+numeric-`SET` shape and it could not exercise the grant path against a database. Both failure
+modes were live: leaving a money race open because a spec was inconvenient, and quietly
+rewriting a spec to make a change pass. The evidence settles it in one direction.
+
+**Measured, not argued.** `.t21-sql-probe.ts` section 13 races two 5,000-milli first purchases
+against an organisation with no wallet row, on two separate connections:
+
+```
+AI credits (OLD shape): concurrent first purchase loses money :: balance=5000 (both paid 5000 => 10000 expected) rejected=1
+AI credits (UPSERT):    concurrent first purchase credits both :: balance=10000 rejected=0
+AI credits (UPSERT):    creates then accumulates               :: first=7000 second=10000 lifetime=10000
+```
+
+The old shape loses half the money. `SELECT … FOR UPDATE` acquires no lock when the row does
+not exist, so both payments see no wallet, both insert, the loser dies `23505`, and the catch
+returns the current balance — the customer is charged and no ledger row records the purchase.
+All three grant paths (`grantPlanCredits`, `purchaseCreditsDirectly`, the webhook grant) now
+share one `INSERT … ON CONFLICT DO UPDATE … RETURNING` whose balance moves in SQL, and
+`balanceAfter` is read back from what the database committed rather than recomputed.
+
+**The specs.** Twelve assertions across three files. Nine were arithmetic invariants
+(`balanceAfter = prev + amount`, milli↔credit conversion, the 23505 backstop not
+double-crediting) — every one is preserved, only the mock plumbing changed, because
+`insert(...).values(...)` now has to be both awaitable (the ledger insert) and chainable (the
+wallet upsert). Two pinned the **defective mechanism** itself:
+
+- *"SELECT FOR UPDATE (reserve wallet lock) happens strictly before UPDATE balance (spend)"* —
+  the lock it pinned is the defect. Replaced with `expect(callOrder).not.toContain("SELECT_FOR_UPDATE")`
+  plus assertions on the upsert, and a comment saying exactly what was wrong with the old ordering.
+- *"starting from zero balance: newBalance === creditsAddedMilli"* — this asserted the
+  JS-computed literal. Replaced with an assertion that the insert leg grants the whole pack and
+  the conflict leg is an SQL expression.
+
+One assertion was **added** so the new shape is pinned as tightly as the old one was:
+`expect(is(captured.conflictSetBalance, SQL)).toBe(true)` — a number there means the balance
+was read, added to in JavaScript and written back, which is the shape that lets a concurrent
+grant be erased.
+
+**Proof the specs still bite.** Mutating `balance: sql\`${orgAiCredits.balance} + ${amountMilli}\``
+to `balance: amountMilli` (a JS literal — the defect class) and re-running:
+
+```
+● ...reserve-before-spend ordering › the wallet credit takes no SELECT FOR UPDATE
+● ...balanceAfter invariant › the wallet credit is an upsert whose balance moves in SQL
+Tests: 2 failed, 25 passed
+```
+
+Both new assertions fail. The mutation was reverted immediately; `modules/billing` is
+42 suites / 516 tests green.
+
+## The three tier-1 money races
+
+| File | The race | The fix, and its executed proof |
+|---|---|---|
+| `finance/ap/vendor-credits.service.ts` | credit read outside the transaction, checked, then written as an absolute `appliedAmount` — two applies both passed and both wrote, so the credit was spent twice and recorded once | sufficiency test moved into the `WHERE` against the row the database is already locking; zero affected rows is a `ConflictException`. Two concurrent full applies: **exactly one lands, `applied_amount` = 1,000 of 1,000** |
+| `invoices/invoices-payment.service.ts` | the overpayment guard summed payments outside the transaction, so two full payments both saw the same remaining balance and the `payments` rows totalled double the invoice | invoice row locked `FOR UPDATE`, the sum re-asserted under the lock. Two concurrent 250 payments on a 250 invoice: **one paid, one refused, `sum(payments)` = 250** |
+| `accounting/core/accounting-payables.service.ts` | same shape for accounts payable — `amount_paid` is a projection of `sum(vendor_payments.amount)` and under READ COMMITTED a concurrent insert is invisible to that sum | bill row locked `FOR UPDATE`, sufficiency re-asserted against it. Two concurrent 100 payments on a 100 bill: **one paid, one refused, `amount_paid` = 100 = `sum(vendor_payments)`** |
+
+The `fin_credit_note_status` enum cast in the vendor-credit `CASE` is exactly the kind of thing
+`tsc` cannot check: `vendor_credits.status` is that enum while `purchase_bills.status` is bare
+`text`, so one branch needs the cast and the other must not have it. Verified against
+`pg_type`/`information_schema` and then executed.
+
+## The bulk-update helper the first pass said was missing
+
+`src/common/db/bulk-update.ts` — one `UPDATE … FROM (VALUES …)` for a set of rows that each
+carry a *different* value, which is the shape `inArray` cannot serve. Chunked under
+`BULK_UPDATE_CHUNK` (500). Three deliberate properties:
+
+- **The tenant predicate is not optional.** The join key is a surrogate id, so `org_id` is in
+  the `WHERE` unconditionally. Proved: the same statement with another tenant's `orgId`
+  updates 0 rows.
+- **A repeated key is refused before it reaches Postgres.** A duplicate joins the target row
+  twice and Postgres applies one arbitrary row while silently discarding the rest — a
+  last-write-wins that looks like success. `projects-custom-states` gained the matching
+  request-level guard, and the reorder spec now asserts it.
+- **`extraWhere` carries the caller's compare-and-set**, which a per-row update would otherwise
+  lose. Proved on `workflow_executions`: an execution a concurrent runner already claimed is
+  skipped, its context untouched.
+
+Converted: `depreciation-runs`, `depreciation-reverse`, `projects-custom-states` (reorder) and
+`workflow-runner` (stuck-execution release).
+
+## Specs: four suites pinned the old mechanism
+
+Two were pure mock gaps — the double lacked `.for`, `.returning` or `.execute` and blew up on a
+`TypeError`, which says nothing about behaviour. Two were real rewrites, both replacing a
+mechanism assertion with a stronger one:
+
+- `retry-dlq-bounded-history.spec.ts` — the release moved from one statement per execution to
+  one for the batch, so the values ride as bind parameters rather than in `.set({...})`. The
+  mock now decodes the statement through `PgDialect.sqlToQuery` and feeds the **same**
+  `allSetCalls` array, so every existing assertion (including *"does NOT set timed_out"*) reads
+  what the runner actually wrote, by either mechanism. Added: the whole batch is **one**
+  statement.
+- `projects-custom-states-bulk-reorder.spec.ts` — two tests asserted `db.transaction` was
+  called once. The reorder is now a single statement, which is its own transaction, so the
+  atomicity those tests were really about is *stronger*. Replaced with
+  `expect(store.statements).toBe(1)` and an exact assertion on the returned items, plus a new
+  test that a repeated `stateId` is refused before any statement runs.
+
+## The spec-typecheck defect (routed in mid-flight)
+
+`pnpm check:spec-typecheck` exited 2 with two `TS2554`s at
+`hr/config/hr-config-tenant-isolation.spec.ts:136` and `:146`:
+`HrNotificationPreferencesService.get` gained a second parameter and the spec still called it
+with one. **Decided deliberately, not made to match:** `notification_preferences` is keyed on
+`(org_id, user_id)`, so without `org_id` a member of two organisations reads whichever row the
+planner returns first. The signature is right; the spec was updated **and strengthened** —
+both tests now assert the org id appears in the predicate, so dropping it again fails the spec
+rather than passing silently. `pnpm check:spec-typecheck` **rc=0**.
+
+## Commands run — second pass
+
+| Command | Exit | Number |
+|---|---|---|
+| `.t21-sql-probe.ts` against `scratch_t21b` | **0** | 21/21 PASS |
+| `.t21c-money-probe.ts` against `scratch_t21b` | **0** | 6/6 PASS |
+| `.t21d-bulk-probe.ts` against `scratch_t21b` | **0** | 7/7 PASS |
+| `pnpm typecheck` (heavy.sh) | **0** | 0 errors, run twice |
+| `pnpm check:spec-typecheck` | **0** | passed (was rc=2, 2 errors) |
+| `jest --testPathPattern="modules/(hr|finance|accounting|invoices|notifications|workflows|chat|build|storage|billing|timesheets|support)"` | 0 | **4,567 passed**, 655 suites (was 4 suites / 7 tests red) |
+| `jest --testPathPattern="modules/billing"` | 0 | 516 passed, 42 suites |
+| `jest --testPathPattern="modules/(chat|finance|billing)"` | 0 | 1,210 passed, 172 suites |
+| mutation: JS literal for the SQL increment, then the two ai-credit specs | 1 | **2 failed** (both new assertions), reverted |
+| `pnpm check:db-call-count` | 1 | ACTIONABLE **44** files (was 49); 3 stale + 1 unclassified remain, none mine — see below |
+| `pnpm check:dead-code` · `file-sizes` · `cycles` · `kebab-case` · `unjoined-table-refs` · `transaction-callbacks` · `fire-and-forget` · `bulk-id-limits` · `log-secrets` · `mock-surface` · `scope-application` | **0** | all green |
+| `pnpm check:tenant-isolation` | 1 | 1 missing negative test, `organization/setup/org-setup-completed-consumer.service.ts` — **not my territory** |
+| `pnpm check:tenant-relationships` | 1 | hundreds of composite-tenant-FK findings repo-wide — schema/migration territory, pre-existing |
+
+`pnpm lint` — **not run.** `pnpm test:e2e` — **not run.**
+
+## Routed to me: `GET /notifications/events` shares one 50-slot bucket deployment-wide
+
+Confirmed by reading, and it is worse than a capacity shortage.
+
+- `AdmissionGuard` is the **third** global `APP_GUARD` (`app.module.ts:207`), after
+  `RouteClassifierGuard` and `JwtAuthGuard`. `JwtAuthGuard` skips a `@Public()` route, so
+  `req.user` is undefined when `AdmissionGuard` runs and `admission.guard.ts:43` resolves
+  `orgId = "__public__"`.
+- `notifications` is not in `RESERVED_ROUTES` and the handler carries no `@UseWorkClass`, so
+  the class is `ordinary-write` — **sheddable**, which is the only branch that applies
+  `orgMaxConcurrent` (`admission.service.ts:39-41`). Default 50, and `admission.config.spec.ts`
+  asserts it stays below `maxConcurrent`.
+- `attachAdmissionSlot` releases on the response's `close`/`finish`, so an SSE connection holds
+  its slot for the whole stream.
+
+So 50 concurrent listeners across **all** organisations saturate the bucket and the 51st gets
+503 — and the same bucket serves every other genuinely public request, so public traffic and
+notification streams starve each other in both directions.
+
+**The org is resolvable, and that is the actual bug.** The route is `@Public()` only because it
+authenticates by a one-shot stream token rather than the session: the client calls
+`POST /notifications/events/token` (which *is* `@Universal()`), and the handler reads
+`Authorization: Bearer <token>` and `consumeToken(token)` returns `{ userId, orgId }`. The
+frontend uses `fetch` (`features/notifications/use-notification-events.ts`), not the browser's
+`EventSource`, so it can and does set the header. The stream has a real organisation; the guard
+simply has no way to learn it before the handler runs — and it cannot call `consumeToken`,
+which deletes the token.
+
+**Why each obvious fix is wrong, checked rather than assumed:**
+
+- *Raise the cap* — treats a bucketing bug as a shortage, and raises the per-org ceiling for
+  every real organisation at the same time.
+- *Exempt the route* — removes the only backpressure on the endpoint that holds connections
+  longest.
+- *Re-classify the work class* — a `ReservedClass` **does** bypass the per-org cap
+  (`isReserved` short-circuits at `admission.service.ts:31`, before the org check), so it would
+  appear to work. It also bypasses the shedding threshold, which would admit notification
+  streams ahead of authentication under load — wrong for a stream. And the semantically correct
+  class, `non-mandatory-notification`, is sheddable and therefore still hits the `__public__`
+  cap. Re-classification alone does not fix this.
+- *A timeout or reaper* — rejected upstream and correctly: the stream legitimately outlives
+  `maxExecutionMs`.
+
+**Recommended fix — needs `src/common/admission/**`, which I do not own, so it is reported, not
+made.** Give `AdmissionGuard` an org resolver a route can declare, so a route that authenticates
+by token can name its tenant before the handler runs: either an optional
+`@AdmissionOrg((req) => string | undefined)` metadata, or `AdmissionGuard` reading a
+`req._admissionOrgHint` set by a route-local guard that **peeks** the stream token without
+consuming it. `NotificationEventService` would gain a non-consuming `peekToken`; that is one
+method in my territory and I have not added it, because an unused export is a speculative
+abstraction until the admission side exists to call it. With the hint in place, 50 concurrent
+streams *per organisation* is a sane cap and the `__public__` bucket goes back to serving only
+genuinely tenant-less traffic.
+
+## Still open, honestly
+
+- **Box 3 is bigger than the first pass thought.** A scan of the eleven modules in this
+  territory finds **248 where-clauses across 106 files** with no `org_id` (down from 260 before
+  this pass). "~60" was a sample. The scan is not a defect list — many are inside an
+  already-scoped join — but the read-then-write pair inside it is a real and repeated shape.
+- **Box 6's non-money remainder**: `assertWithinLimit` check-then-act at 24 of 29 call sites,
+  4 version-bump-without-CAS sites, 3 `MAX(sortOrder)+1` sites.
+- **Boxes 4 and 7** are unchanged and are product decisions (opt-in totals; the
+  calendar-conflict budget). **Boxes 1 and 8** are unchanged and are the
+  `TenantContextInterceptor` architectural question.
+- **`check:db-call-count` rc=1** on 3 stale verdicts and 1 unclassified. I reclassified the five
+  that were mine to `N+1-FIXED` with the proof named. Of the three left,
+  `/access/access-permission.resolver.ts` and `/cron/cron-hr-retention-documents.ts` belong to
+  other agents. `/hr/global/compliance-requirements.service.ts` **is** in my territory and I
+  deliberately did not touch it: the file is unchanged since well before this ticket and has no
+  DB call inside any loop (I read it), so the detector losing sight of it is a possible detector
+  regression, not a fix — and `src/scripts/check-*.mjs` is not mine to investigate. → **ticket 35.**
+- **`test:e2e` and `lint` — not run.**
