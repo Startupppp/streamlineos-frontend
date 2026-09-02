@@ -1,7 +1,7 @@
 # StreamlineOS code-release remaining-work PRD
 
 Status: active — single authoritative backlog
-Last reconciled: 2026-09-02 at root commit `10c06d01c`
+Last reconciled: 2026-09-02 against committed head `731d688ab` and the visible working tree
 Scope: all platform domains except CRM and Inventory
 
 This file contains only remaining acceptance work. Completed checklist items and the temporary session documents were removed after current-source reconciliation; their evidence remains in Git history. A missing checkbox must never be interpreted as waived work: every removed checkbox was either previously evidenced or freshly re-verified below.
@@ -52,6 +52,8 @@ Verified green on 2026-09-02:
 - Permission catalog: 3,115 usages, 627 unique keys, all valid in both catalogs.
 - Route classification: 3,596 handlers, zero undeclared.
 - OpenAPI coverage: 3,607/3,607 operations; 1,370/1,370 mutating request schemas.
+- Unbounded-read and pagination gate: zero actionable offsets, zero actionable unbounded reads and zero unordered paging violations across 2,182 scanned service files.
+- Fail-closed contract registry: all 3,619 operations and 24 events classified. Twelve deliberately retained removed-operation records remain governed by the breaking-change/deprecation gate.
 - Bounded contracts, bulk-id limits, cache invalidation, idempotent commands, fire-and-forget notification checks and outbox consumers.
 - Frontend client routes: 256/600, 48 below the ceiling.
 - Query cancellation/scope and command catalog: 1,053 query functions with zero signal violations; 1,506 mutations with zero unclassified commands.
@@ -62,10 +64,8 @@ Not rerun in this reconciliation because they are expensive final-integration ga
 ## Current reproducible blockers
 
 - Clean-bootstrap parity is not current. Existing evidence was captured at a 609-entry journal and failed catalog parity; the current chain has 634 entries. Re-run two clean bootstraps plus interrupted/resumed bootstrap and require exact catalog equality.
-- Classify or repair two newly unclassified reads: `build/core/projects-search.service.ts` and `cron/cron-storage-sweep.service.ts`. The scanner reports zero actionable reads but remains red until both paths are classified from source evidence.
 - Eliminate 36 actionable N+1 files / 42 loop-internal database call sites reported by `check:db-call-count`.
-- Add executable cross-tenant negative tests for seven services: Accounting receivables, Build project work query, cron storage sweep, Dashboard project, Finance depreciation reverse, Support AI triage and Support KB-gap detection.
-- Reconcile three new internal routes in the fail-closed contract registry: `GET /cron/storage-sweep`, `POST /cron/storage-sweep` and `POST /gdpr/erasure/{subjectId}`.
+- Add executable cross-tenant negative tests for six services: Accounting receivables, Build project work query, Dashboard project, Finance depreciation reverse, Support AI triage and Support KB-gap detection. Static coverage is 913/919 (99%); final sign-off also requires the executable isolation suite.
 - Classify or remove six frontend exports reported by the dead-code gate: `parseApiResponse`, `ApiResponse` and four Chat realtime payload types.
 - Repair or remove three live frontend controls whose backend operation does not exist: Chat presence status, invoice deletion and Support KB attachment download.
 - Reduce the 114 authenticated thick route modules through domain-owned feature seams; do not raise the ratchet.
@@ -320,6 +320,17 @@ These decisions are final for this release and remove implementation alternative
 - [ ] Release authority records commit, evidence, accepted code-level residual risks and date.
 
 Completing this gate permits the label **code-level 10/10 release candidate** only.
+
+## Closure and future-review protocol
+
+This section prevents the completion target from moving after the work is done.
+
+- The checklist is closed only at one recorded release commit where every immediate checkbox is evidenced, every named blocker above is resolved, the final integration gate passes, and no reproducible code-level P0/P1 remains.
+- At that point, reviewers must report the release commit as the **top-notch code-level architecture baseline (10/10 release candidate)** for the stated scope. They must not reopen it for naming taste, cosmetic rewrites, speculative abstractions, a preferred framework pattern, or production-only evidence already classified as deferred.
+- A later reviewer may add work only by recording one of four change classes: **REGRESSION** (the certified gate now fails), **NEW REQUIREMENT** (scope or acceptance behavior changed), **NEWLY DISCOVERED RISK** (a concrete correctness, security, scale or operability failure with reproducible evidence), or **PRODUCTION EVIDENCE** (a deferred deployed-environment gate). Every addition must name the affected commit, executable reproduction or evidence, severity, owner and concrete failure prevented.
+- Newly discovered work does not retroactively make the certified evidence false. It creates a new dated delta from the certified baseline. The baseline remains the answer to “was this PRD completed at that commit?”
+- KEEP is the default verdict for a module whose interface, tenancy, authorization, query, cache, async, frontend and verification contracts pass. A REFACTOR or REMOVE verdict is invalid unless it identifies what breaks at target scale or under a defined failure scenario.
+- “Bug-free forever,” “nothing can ever be improved,” and “million-user proven” are not code-review claims. The strongest truthful code-only claim is the certified 10/10 release candidate above; production-proven 10/10 additionally requires the deferred gate.
 
 ## Deferred production-readiness evidence
 
