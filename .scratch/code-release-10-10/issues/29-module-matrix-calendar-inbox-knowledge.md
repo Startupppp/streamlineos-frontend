@@ -4,7 +4,7 @@
 
 **Blocked by:** 28.
 
-**Status:** partially closed — 6 of 9 boxes closed, 3 open (Calendar, Inbox/mail backend, Knowledge — each now PARTIAL rather than BLOCKED). S10 had schema and migrations in territory and closed the **Knowledge** integrity box; the two mail defects named as the release blockers (dead-end cached paging, unreachable and unindexed search) are fixed inside the still-open Inbox/mail backend box. See the S10 notes per box, and `reports/29-calendar-inbox-knowledge.md` §S10 for the measurements.
+**Status:** partially closed — 6 of 9 boxes closed, 3 open (Calendar, Inbox/mail backend, Knowledge — each now PARTIAL rather than BLOCKED). S10 had schema and migrations in territory. It closed five of the seven **Knowledge** integrity gaps (two of which were already fixed and one of which was not a defect), and fixed both mail defects named as release blockers — the dead-end cached paging and the unreachable, unindexed search. All three boxes stay open on named remainders: KB attachments have no DB row at all, mail's other four sub-criteria are unbuilt features, and three of the four calendar items are frontend territory. See the S10 notes per box, and `reports/29-calendar-inbox-knowledge.md` §S10 for the measurements.
 
 - [ ] **Calendar:** one `/calendar` serving everyone with module events as toggleable sources; timezone display, series-versus-instance edits, cursor/range keys, and DST, exception, conflict and reminder coverage. No module-specific calendar page exists.
   BLOCKED: three sub-criteria remain and all three are outside this session's territory.
