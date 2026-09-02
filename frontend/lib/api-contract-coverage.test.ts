@@ -11,18 +11,12 @@ import ts from "typescript";
  * visible: it counts every call through the fetch seam, prints the covered
  * fraction, and — the part that bites — fails when a route carrying money,
  * permissions, tenancy or PII loses the contract it had.
- *
- * `CONTRACTED_ROUTES` is the policy, not a snapshot. A route is added to it
- * when its contract lands, and it can only be removed deliberately.
+ * `CONTRACTED_ROUTES` is the policy, not a snapshot: a route joins it when its
+ * contract lands and can only leave deliberately.
  */
 
 const FE_ROOT = join(__dirname, "..");
-/**
- * The whole hook tree, not just `hooks/api`. The org-switch seam — the single
- * highest-consequence tenancy boundary in the product, since its response is
- * what the session's active org is set from — lives in `hooks/common`, and a
- * scanner anchored on `hooks/api` could never see it.
- */
+/** The whole hook tree: the org-switch seam lives in `hooks/common`, not `hooks/api`. */
 const HOOKS_DIR = join(FE_ROOT, "hooks");
 
 /** Where the contract sits in each seam function's argument list. */
