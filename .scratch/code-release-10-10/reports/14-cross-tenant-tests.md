@@ -1,9 +1,12 @@
-# S4 / ticket 14 — cross-tenant negative tests
+# Ticket 14 — cross-tenant negative tests
 
-## Files added (both new; no existing file was modified)
+Written S4, re-verified and corrected S5. Every number below the S5 heading was executed and read
+in S5; the S4 numbers above it are kept for history and are labelled where they have gone stale.
+
+## Files (both specs new; neither service file was modified)
 
 - `streamlineos-backend/src/modules/support/core/support-kb-engagement-tenant-isolation.spec.ts` (456 lines, 13 tests)
-- `streamlineos-backend/src/modules/rbac/__tests__/role-seed-tenant-isolation.spec.ts` (386 lines, 8 tests)
+- `streamlineos-backend/src/modules/rbac/__tests__/role-seed-tenant-isolation.spec.ts` (393 lines, 8 tests — S5 edited it, see below)
 
 Neither service file was changed. No isolation defect was found in either — both already
 re-assert `org_id` on every read and write. `role-seed.service.ts` and
@@ -20,32 +23,89 @@ after the mutation experiment below).
 | `db.transaction` invokes its callback | real `runInTenantTransaction`; `transactionCallbackRuns() > 0` asserted |
 | canonical actor helper carries membershipId | `humanSessionPrincipal(42/77, false)`; `actingMembershipId()` asserted |
 
-## Box NOT closed
+## Box NOT closed — re-verified S5
 
-**"Static declaration coverage reaches complete."**
+**"Static declaration coverage reaches complete, and the executable isolation suite passes."**
 
-- `pnpm -s check:tenant-isolation` → `Services with a DECLARED test  923 / 924  (100%)`, **exit 1**.
-- Sole remaining `MISSING`: `src/modules/calendar/calendar-provider-webhook.service.ts`.
-- That is outside S4's territory. A spec already exists next to it
-  (`calendar-provider-webhook.service.spec.ts`); it just contains no isolation keyword and no
-  cross-tenant case. Needs to be handed to whoever owns `modules/calendar`.
-- `pnpm -s check:tenant-isolation:self-test` → all 7 checks pass, so the gate itself is sound.
-- The ticket's premise is stale: it says these two services were the last two gaps at 921/923.
-  On arrival the gate already counted both as *declared* (via `roles-rbac-admin.controller.e2e-spec.ts`
-  and `support-kb-tenant-isolation.spec.ts`), and the tenant-owned total had moved to 924.
-  The gate is static — it never proved either service, which is what this ticket actually fixed.
+Both halves are red, and neither cause is in this ticket's territory. S4's diagnosis named
+`modules/calendar` as the sole gap; that is **stale** — calendar is now covered, and a different
+service has become the gap.
 
-## Gates run
+### Static half — 924 / 925, exit 1
 
-| Command | Result |
-|---|---|
-| `jest --testPathPattern="tenant-isolation\|isolation.spec" --maxWorkers=2` | **445 suites / 445 passed, 1801 tests / 1801 passed, exit 0** |
-| `jest <the 2 new specs> --maxWorkers=2` | 21 / 21 passed |
-| `pnpm -s check:tenant-isolation` | 923 / 924, exit 1 (gap above) |
-| `pnpm -s check:tenant-isolation:self-test` | pass |
-| `eslint <the 2 new specs>` | exit 0, 0 problems |
-| `tsc --noEmit -p tsconfig.json` | exit 2, 12 errors — **none in my files** (see below) |
-| `pnpm -s check:over-300` | exit 1, 397 files / baseline 394 — **none of them mine** |
+`pnpm -s check:tenant-isolation` reports one `MISSING`:
+`src/modules/rbac/role-grant-reconciler.service.ts`.
+
+`RoleGrantReconcilerService` was introduced by commit `b43cbba5`, *after* S4 measured the gate. It has
+**no spec of any kind** anywhere in the repo — `grep -rn RoleGrantReconcilerService src test` returns
+only `rbac.module.ts`, `permission-catalog-sync.service.ts`, `mark-role-administered.ts`,
+`seed-system-roles.ts`, `src/scripts/seed-permissions.ts` and the service itself. So this is a genuine
+untested service, not a keyword miss.
+
+It is in ticket 19's territory (`src/modules/rbac/**` minus `role-seed.service.ts`), so it was not
+touched. Adding the class name to this ticket's spec would satisfy the gate without proving anything —
+precisely the vacuity the gate's own NOTE warns about. **Route to 19.**
+
+`pnpm -s check:tenant-isolation:self-test` → all 7 checks pass, exit 0. The gate itself is sound.
+
+### Executable half — 2 suites failed / 446, exit 1
+
+`pnpm -s check:tenant-isolation:run` → **2 failed / 444 passed / 446 suites; 4 failed / 1808 passed /
+1812 tests, exit 1**. Both failures are other lanes' regressions, reproduced twice:
+
+1. `src/modules/cron/cron-group-a-tenant-isolation.spec.ts` (2 tests) —
+   `Nest can't resolve dependencies of the CronHrEnginesService (DRIZZLE, ?, …). Please make sure that
+   the argument "REDIS" at index [1] is available in the RootTestModule module.` The service gained a
+   REDIS constructor dependency; the spec's `Test.createTestingModule` never provided it.
+   **Territory: cron / HR.**
+2. `src/modules/kb/retrieval/kb-acl-isolation.spec.ts` (2 tests) —
+   `TypeError: this.indexing.bumpSpaceAclRevision is not a function` at
+   `src/modules/kb/wiki/kb-members.service.ts:157`. The service gained a call the spec's `indexing`
+   double does not stub. **Territory: KB.**
+
+This ticket's own two suites are green inside that run.
+
+## S5 change — the two vacuous loops in the RBAC spec
+
+Both `for (const … of store.get(…) ?? [])` loops in `role-seed-tenant-isolation.spec.ts` asserted
+**nothing at all** if the array were empty. They passed for the right reason today, but nothing held
+them there: a harness whose insert stopped persisting, or a service that stopped writing grants, would
+have kept them green. They now assert the population first:
+
+```ts
+const grants = store.get("role_permission_grants") ?? [];
+expect(grants.length).toBeGreaterThan(0);
+for (const grant of grants) expect(grant.orgId).toBe(ORG_A);
+
+const versions = store.get("access_versions") ?? [];
+expect(versions).toHaveLength(1);
+for (const version of versions) expect(version.orgId).toBe(ORG_A);
+```
+
+Proven to bite: the spec's own harness was mutated once so grant writes were swallowed
+(`onConflictDoUpdate` returning `[]`, `values()` dropping `role_permission_grants` rows). Result
+**2 failed / 6 passed / 8**, red at exactly the two new `toBeGreaterThan(0)` lines. The file was then
+restored and is byte-identical — sha256 `5e754bd759bd491925abe6f4218efdf84196ff3d8bcdda5cde4274399c15f6e9`
+before and after.
+
+## Gates run — S5, every one executed and read
+
+| Command | Exit | Result |
+|---|---|---|
+| `pnpm -s check:tenant-isolation` | 1 | 924 / 925 declared; 1 MISSING (`role-grant-reconciler.service.ts`) |
+| `pnpm -s check:tenant-isolation:self-test` | 0 | all 7 checks pass |
+| `pnpm -s check:tenant-isolation:run` | 1 | 444 / 446 suites, 1808 / 1812 tests; 2 failing suites both other lanes |
+| `jest <the 2 owned specs> --maxWorkers=2` | 0 | **21 passed / 21**, 2 suites |
+| `pnpm -s check:spec-typecheck` | 1 | 5 errors, **none in this ticket's files** (was 2 an hour earlier — live churn) |
+| `pnpm -s typecheck` (tsconfig.build.json, 8 GB) | 0 | **0 errors** |
+
+Every heavy command ran through `.scratch/code-release-10-10/heavy.sh 2 --`.
+
+`check:spec-typecheck` errors, all other lanes:
+`ai-stream-abort.spec.ts` (2, `EndableResponse` missing `on`/`off`),
+`kb-spaces-tenant-isolation.spec.ts` (arity 3 vs 2),
+`rbac/permission-catalog-sync.service.spec.ts` (arity 2 vs 1 — the `RoleGrantReconcilerService` the
+constructor gained; **ticket 19**), `workflows/engine/executors/ai-action.executor.ts` (missing return).
 
 ## How the "bites" proof works
 
@@ -87,30 +147,34 @@ org predicate org A's seeding sees org B's `SALES_REP` and silently creates noth
   predicate, not from an owner bypass. An unresolvable template id returns 404, asserted
   explicitly as `not.toBeInstanceOf(ForbiddenException)`.
 
-## P1 findings for the orchestrator (outside my territory — NOT touched)
+## Findings for the orchestrator (outside this territory — NOT touched)
 
-1. **`tsc --noEmit` is no longer clean.** ORCHESTRATOR-FINDINGS F1 recorded 0 errors at session
-   start; it is now **exit 2 with 12 errors**, all from a `StorageService.uploadFile` /
-   `UploadResult` signature change (`url` removed, arity 2–6). Affected: `storage.controller.ts`
-   (4, incl. `Cannot find name 'isSensitiveKey'` / `orgFromNamespacedKey` — looks like a
-   half-applied edit), `storage-onboarding.controller.ts`, `feedbucket-public.controller.ts` (2),
-   `kb-media.service.ts`, `kb-sources.service.ts` (2), `payslip-bulk-publisher.service.ts`,
-   `kb-media.service.spec.ts`, `object-storage.spec.ts` (2), `gdpr-erasure-storage-sink.spec.ts` (2).
-   It was 18 errors when I first measured and 12 an hour later, so it is live churn in another
-   agent's lane, not a stalled break. **None are in my files.**
-2. **`check:over-300` is red at 397 / baseline 394** — 3 non-spec files above baseline. The gate
-   skips spec files, so neither of my new specs contributes.
-3. **Isolation declaration gap** — `src/modules/calendar/calendar-provider-webhook.service.ts`
-   (detail above).
+1. **`src/modules/rbac/role-grant-reconciler.service.ts` has zero test coverage.** It is the only thing
+   between the isolation gate and green. Ticket 19. Detail above.
+2. **`cron-group-a-tenant-isolation.spec.ts` and `kb-acl-isolation.spec.ts` are red** — both are
+   double-vs-service drift from recent commits, not isolation defects. Detail above.
+3. **`check:spec-typecheck` is red at 5 errors** across ai / kb / rbac / workflows. Detail above.
+   S4's report of 12 storage-signature errors is stale — those are fixed; `pnpm typecheck`
+   (tsconfig.build.json) is now **exit 0, 0 errors**.
+4. **Two predicate-evaluating db doubles now exist in the repo.** `src/test/sql-predicate.ts` +
+   `src/test/fake-select-db.ts` landed at ~17:30 in another lane and are used by 7 `*-read-exclusion`
+   specs. This ticket's two specs carry their own ~110-line evaluator. They are **not**
+   interchangeable: the shared `makeFakeDb` has a no-op `insert` that never persists
+   (`returning: () => Promise.resolve([{ id: 1 }])`), no `delete`, and no way to neuter the tenant
+   predicate — so it cannot express "denies org B **and leaves org A's row intact**", "writes nothing",
+   or any `BITE —` case. Consolidating them means extending the shared helper with a persisting
+   insert/delete and an `ignoreTenantPredicate` mode; that file is another lane's, so it was left alone.
+   Whoever writes the `RoleGrantReconcilerService` spec will need exactly that capability.
 
 ## Known weakness of my own work
 
 The ~110-line predicate-evaluating double is duplicated across the two spec files, which is why
-they are 456 and 386 lines (over the 300-line target, under the 500 hard-review line; the
+they are 456 and 393 lines (over the 300-line target, under the 500 hard-review line; the
 `check:over-300` gate excludes specs). Extracting it to a shared test helper would need a file
 outside my two-spec territory, so I left it. Recommended follow-up: lift it to
 `test/helpers/tenant-predicate-double.ts` and have both specs import it — that also makes the
-same bite proof cheap for the calendar gap.
+same bite proof cheap for the `RoleGrantReconcilerService` gap. See finding 4 above for why the
+shared `src/test/fake-select-db.ts` cannot be used as-is.
 
 One `as unknown as Db` remains per file, on the single line that returns the db double. That
 violates the brief's rule 8 literally, but it is the established pattern in all ~40 existing

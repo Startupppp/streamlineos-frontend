@@ -4,15 +4,35 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** done (one box carried, see below)
+**Status:** done except one box — blocked outside this territory (re-verified S5)
 
 - [x] Each service gains an executable cross-tenant negative test proving an actor from organization A cannot read or mutate organization B's rows, and that a cross-tenant miss returns 404 rather than 403.
   - Evidence: `nice -n 10 npx jest src/modules/support/core/support-kb-engagement-tenant-isolation.spec.ts src/modules/rbac/__tests__/role-seed-tenant-isolation.spec.ts --maxWorkers=2` → **21 passed, 21 total, 2 suites**. New files: `src/modules/support/core/support-kb-engagement-tenant-isolation.spec.ts` (13 tests), `src/modules/rbac/__tests__/role-seed-tenant-isolation.spec.ts` (8 tests).
 - [ ] Static declaration coverage reaches complete, and the executable isolation suite passes.
-  - Executable half PASSES: `nice -n 10 node --max-old-space-size=4096 ./node_modules/jest/bin/jest.js --testPathPattern="tenant-isolation|isolation.spec" --maxWorkers=2` → **445 suites passed / 445, 1801 tests passed / 1801, exit 0**.
-  - Static half is NOT complete: `pnpm -s check:tenant-isolation` → **923 / 924 (100% rounded), exit 1**, with one remaining `MISSING`.
-  - BLOCKED: the single remaining gap is `src/modules/calendar/calendar-provider-webhook.service.ts`, which is outside session S4's declared territory (this ticket names only `rbac/role-seed.service.ts` and `support/core/support-kb-engagement.service.ts`). A spec already exists at `src/modules/calendar/calendar-provider-webhook.service.spec.ts`; it simply carries no isolation-pattern keyword or cross-tenant case. Needs reassignment to whoever owns `modules/calendar`.
+  - Re-verified S5. BOTH halves are now red, and neither cause is in this ticket's territory.
+  - Static half: `pnpm -s check:tenant-isolation` -> **924 / 925 (100% rounded), exit 1**, one `MISSING`.
+    `pnpm -s check:tenant-isolation:self-test` -> all 7 checks pass, exit 0, so the gate itself is sound.
+  - BLOCKED (static): the sole remaining gap has MOVED. It is no longer `modules/calendar` — that one is
+    now covered. It is `src/modules/rbac/role-grant-reconciler.service.ts`, a service introduced by
+    commit `b43cbba5` *after* this ticket's first pass measured the gate. `RoleGrantReconcilerService`
+    has **no spec of any kind** anywhere in the repo (grep: only `rbac.module.ts`,
+    `permission-catalog-sync.service.ts` and `src/scripts/seed-permissions.ts` name it). It sits in
+    ticket 19's territory (`src/modules/rbac/**` minus `role-seed.service.ts`). Needs routing to 19.
+    Declaring it from this ticket's spec without proving it would be exactly the vacuity the gate warns about.
+  - Executable half: `pnpm -s check:tenant-isolation:run` -> **2 suites failed / 446, 4 tests failed / 1812,
+    exit 1**. Both failures are other lanes' regressions:
+    - `src/modules/cron/cron-group-a-tenant-isolation.spec.ts` — `Nest can't resolve dependencies of
+      CronHrEnginesService … argument "REDIS" at index [1]`. The service gained a REDIS constructor
+      dependency; the spec's TestingModule never provided it. Territory: cron / HR.
+    - `src/modules/kb/retrieval/kb-acl-isolation.spec.ts` — `TypeError: this.indexing.bumpSpaceAclRevision
+      is not a function` at `kb-members.service.ts:157`. The service gained a call the spec's double
+      does not stub. Territory: KB.
+  - This ticket's own two suites are green inside that run: 21 passed / 21, 2 suites, exit 0.
 - [x] Each test is proven to bite: neuter the tenant predicate in a double and confirm the test goes red. A defence-in-depth guard with zero load-bearing paths makes the delete-it proof lie.
+  - Evidence (S5, non-vacuity): the two `for … of store.get(…)` loops in the RBAC spec asserted nothing if
+    the array were empty. They now assert `grants.length > 0` and `access_versions` has exactly 1 row first.
+    Proven to bite by a one-off mutation of the spec's own harness (grant writes swallowed): **2 failed / 8**,
+    red at the two new lines; file restored byte-identical (sha256 `5e754bd7…f6e9` before and after).
   - Evidence (double side, permanent and in-suite): 6 `BITE —` tests run the same probes against a double whose predicate evaluator drops every `org_id` conjunct, and assert the leak concretely (org A's attachment file name, org A's comment body, org A's deleted row, org A's role row, org B's ORG_ADMIN membership authorizing in org A).
   - Evidence (service side, one-off): the `org_id` predicates were stripped from both service files, the specs re-run, and the files restored byte-identical (sha256 verified). Result: **8 failed, 13 passed, 21 total**. Red list: `seeds org A's own starter roles…`, `returns org A's own role, never org B's row…`, `getAttachmentDownloadUrl denies org B…`, `listComments / listFeedback / listAttachments deny org B…`, `deleteComment denies org B…`, `deleteAttachment denies org B…`, `createComment denies org B…`, `createAttachment denies org B…`.
 - [x] Probe with a non-owner actor. Organization-owner bypass masks the 403 that a normal member would receive, so an owner-only probe proves nothing.
