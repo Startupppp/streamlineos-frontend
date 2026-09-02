@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import {
   KbCheckIcon,
   KbEdit2Icon,
@@ -25,6 +26,7 @@ import {
   useDeleteKbPageComment,
   useResolveKbPageComment,
 } from "@/hooks/api/kb";
+import { useCan } from "@/hooks/api/access";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import type { KbPageComment } from "@/hooks/api/kb/page-comments";
 
@@ -33,9 +35,13 @@ interface CommentRowProps {
   replies: KbPageComment[];
   pageId: number;
   onReply: (comment: KbPageComment) => void;
+  currentUserId: string | null | undefined;
+  canUpdate: boolean;
 }
 
-function CommentRow({ comment, replies, pageId, onReply }: CommentRowProps) {
+function CommentRow({ comment, replies, pageId, onReply, currentUserId, canUpdate }: CommentRowProps) {
+  const isAuthor = Boolean(comment.authorId && comment.authorId === currentUserId);
+  const canEdit = isAuthor || canUpdate;
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(comment.content);
   const updateComment = useUpdateKbPageComment();
@@ -128,13 +134,15 @@ function CommentRow({ comment, replies, pageId, onReply }: CommentRowProps) {
           {!editing && (
             <div className="flex items-center gap-2 mt-1">
               <button
+                type="button"
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                 onClick={handleReplyClick}
               >
                 Reply
               </button>
-              {!isResolved && (
+              {!isResolved && canUpdate && (
                 <button
+                  type="button"
                   className="text-xs text-muted-foreground hover:text-status-success-ink transition-colors"
                   onClick={handleResolve}
                 >
@@ -142,20 +150,26 @@ function CommentRow({ comment, replies, pageId, onReply }: CommentRowProps) {
                   Resolve
                 </button>
               )}
-              <button
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                onClick={handleStartEdit}
-              >
-                <KbEdit2Icon className="h-3 w-3 inline mr-0.5" />
-                Edit
-              </button>
-              <button
-                className="text-xs text-muted-foreground hover:text-destructive transition-colors"
-                onClick={handleDelete}
-              >
-                <KbXIcon className="h-3 w-3 inline mr-0.5" />
-                Delete
-              </button>
+              {canEdit && (
+                <button
+                  type="button"
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={handleStartEdit}
+                >
+                  <KbEdit2Icon className="h-3 w-3 inline mr-0.5" />
+                  Edit
+                </button>
+              )}
+              {canEdit && (
+                <button
+                  type="button"
+                  className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+                  onClick={handleDelete}
+                >
+                  <KbXIcon className="h-3 w-3 inline mr-0.5" />
+                  Delete
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -169,6 +183,8 @@ function CommentRow({ comment, replies, pageId, onReply }: CommentRowProps) {
               replies={[]}
               pageId={pageId}
               onReply={onReply}
+              currentUserId={currentUserId}
+              canUpdate={canUpdate}
             />
           ))}
         </div>
@@ -184,6 +200,9 @@ interface PageCommentsSheetProps {
 }
 
 export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCommentsSheetProps) {
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id ?? null;
+  const canUpdate = useCan("kb:pages:update");
   const { data: comments = [], isLoading } = useKbPageComments(pageId);
   const createComment = useCreateKbPageComment();
   const [newContent, setNewContent] = useState("");
@@ -258,6 +277,8 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
                   replies={comments.filter((c) => c.parentId === comment.id)}
                   pageId={pageId}
                   onReply={handleSetReplyingTo}
+                  currentUserId={currentUserId}
+                  canUpdate={canUpdate}
                 />
               ))}
               {resolved.length > 0 && (
@@ -273,6 +294,8 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange }: PageCo
                       replies={comments.filter((c) => c.parentId === comment.id)}
                       pageId={pageId}
                       onReply={handleSetReplyingTo}
+                      currentUserId={currentUserId}
+                      canUpdate={canUpdate}
                     />
                   ))}
                 </>

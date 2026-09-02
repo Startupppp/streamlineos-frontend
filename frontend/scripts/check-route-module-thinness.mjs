@@ -22,7 +22,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const ROUTE_ROOT = join(ROOT, "app", "(authenticated)");
 
 // Lower this after moving orchestration behind a feature interface. Never raise it.
-const BASELINE = { inScopeThick: 114 };
+const BASELINE = { inScopeThick: 58 };
 const MAX_ROUTE_LINES = 300;
 const SCAN_FLOOR = { minRouteFiles: 200 };
 

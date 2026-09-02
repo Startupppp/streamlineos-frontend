@@ -2,6 +2,7 @@
 
 import { useRef, useState, type ChangeEvent } from "react";
 import {
+  Download,
   FileText,
   ImageIcon,
   Paperclip,
@@ -31,6 +32,7 @@ import {
   useSupportKbAttachments,
   useUploadSupportKbAttachment,
   useDeleteSupportKbAttachment,
+  useDownloadSupportKbAttachment,
   type KbAttachment,
 } from "@/hooks/api/support/kb-attachments";
 import { useSupportKbIndexStatus, useReindexSupportKbArticle } from "@/hooks/api/support/kb-rag";
@@ -51,16 +53,23 @@ function AttachmentIcon({ mimeType }: { mimeType: string | null }) {
 interface AttachmentRowItemProps {
   attachment: KbAttachment;
   isDeletePending: boolean;
+  isDownloadPending: boolean;
   onDelete: (attachment: KbAttachment) => void;
+  onDownload: (attachment: KbAttachment) => void;
 }
 
 function AttachmentRowItem({
   attachment,
   isDeletePending,
+  isDownloadPending,
   onDelete,
+  onDownload,
 }: AttachmentRowItemProps) {
   function handleDelete() {
     onDelete(attachment);
+  }
+  function handleDownload() {
+    onDownload(attachment);
   }
   return (
     <div className="flex items-center gap-2 rounded-lg border border-border px-3 py-2">
@@ -73,6 +82,15 @@ function AttachmentRowItem({
           </p>
         )}
       </div>
+      <button
+        type="button"
+        className="h-6 w-6 shrink-0 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground disabled:opacity-50"
+        onClick={handleDownload}
+        disabled={isDownloadPending}
+        aria-label={`Download ${attachment.fileName}`}
+      >
+        <Download className="h-3.5 w-3.5" />
+      </button>
       <AnimatedIconButton
         variant="ghost"
         size="icon"
@@ -90,6 +108,7 @@ export function KbAttachmentsPanel({ article }: { article: KbArticleDetail }) {
   const attachmentsQuery = useSupportKbAttachments(article.id);
   const uploadAttachment = useUploadSupportKbAttachment(article.id);
   const deleteAttachment = useDeleteSupportKbAttachment(article.id);
+  const downloadAttachment = useDownloadSupportKbAttachment();
   const indexStatus = useSupportKbIndexStatus(article.id);
   const reindex = useReindexSupportKbArticle();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -124,6 +143,16 @@ export function KbAttachmentsPanel({ article }: { article: KbArticleDetail }) {
       onSuccess: () => toast.success("Attachment uploaded"),
       onError: (e) => toast.error(getErrorMessage(e)),
     });
+  }
+
+  function handleDownload(attachment: KbAttachment) {
+    downloadAttachment.mutate(
+      { articleId: attachment.articleId, attachmentId: attachment.id },
+      {
+        onSuccess: (result) => window.open(result.downloadUrl, "_blank", "noopener,noreferrer"),
+        onError: (e) => toast.error(getErrorMessage(e)),
+      },
+    );
   }
 
   function handleConfirmDelete() {
@@ -198,7 +227,9 @@ export function KbAttachmentsPanel({ article }: { article: KbArticleDetail }) {
                 key={attachment.id}
                 attachment={attachment}
                 isDeletePending={deleteAttachment.isPending}
+                isDownloadPending={downloadAttachment.isPending}
                 onDelete={setPendingDelete}
+                onDownload={handleDownload}
               />
             ))}
           </div>

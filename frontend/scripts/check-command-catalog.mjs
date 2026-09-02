@@ -1,23 +1,24 @@
 #!/usr/bin/env node
 /**
- * check-command-catalog — every mutation hook is classified against the backend
- * contract, and no command is unclassified.
+ * check-command-catalog — every mutation and gated-read hook is classified
+ * against the backend contract, and no hook is unclassified.
  *
- * The classification is derived from `contracts/openapi.json`, not from a hand
- * list: each hook's apiClient call is resolved to an operation and that
- * operation's `x-exposure` / `x-permission` decides what the hook must do.
- *
- *   x-exposure: permissioned  -> the hook MUST call useAuthorizedMutation, and the
- *                               key must be the contract key, or an entry in
- *                               STRICTER_KEYS recording why a stricter key is used
- *   x-exposure: universal     -> SELF; the subject is always @CurrentUser()
+ * Mutations (useAuthorizedMutation):
+ *   x-exposure: permissioned  -> hook MUST call useAuthorizedMutation; key must
+ *                               equal the contract key, or appear in STRICTER_KEYS
+ *   x-exposure: universal     -> SELF; subject is always @CurrentUser()
  *   x-exposure: public        -> PUBLIC; no session required
- *   x-exposure: in-service    -> must be named in IN_SERVICE_HOOKS with a reason
+ *   x-exposure: in-service    -> must be in IN_SERVICE_HOOKS with a reason
  *   unresolvable endpoint     -> UNCLASSIFIED, which fails
  *
- * --self-test exercises the classifier against fixtures, including the shapes the
- * previous gate could not see: a path built from a module constant, an imperative
- * GET/download used as a mutation, and a declared key that no longer matches.
+ * Reads (useGatedQuery):
+ *   x-exposure: permissioned  -> declared key must equal x-permission on the route
+ *   spreads queryOptions()    -> must be in OFF_CONTRACT_READS with a reason
+ *   unresolvable endpoint     -> UNCLASSIFIED, which fails
+ *
+ * --self-test: adversarial matcher fixtures (sibling routes, literal vs param
+ * collision, depth isolation) + per-hook classification cases for both mutations
+ * and reads.
  */
 
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
@@ -27,9 +28,9 @@ import { fileURLToPath } from "node:url";
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(SCRIPT_DIR, "..");
 
-// Zero unclassified commands is the standard. Never raise this.
 const BASELINE = { unclassified: 0 };
 const SCAN_FLOOR = { minHooks: 900 };
+const SCAN_FLOOR_READS = { minHooks: 60 };
 
 /**
  * Hooks whose endpoint carries no permission because authorization happens
@@ -114,15 +115,36 @@ const OFF_CLIENT_HOOKS = new Map([
   ],
 ]);
 
+/**
+ * Read hooks (useGatedQuery) whose queryFn lives in a shared queryOptions()
+ * factory rather than inline. The scanner cannot reach apiClient.get through
+ * a spread, so each entry documents the actual path and why the key is correct.
+ */
+const OFF_CONTRACT_READS = new Map([
+  [
+    "useCrmMetadata",
+    "crm:leads:view — spreads crmMetadataQueryOptions(); path GET /crm/metadata (x-permission: crm:leads:view); queryFn lives in the factory, not the hook body",
+  ],
+  [
+    "useCrmPipelines",
+    "crm:leads:view — select wrapper over crmMetadataQueryOptions(); same path as useCrmMetadata",
+  ],
+  [
+    "useCrmStages",
+    "crm:leads:view — select wrapper over crmMetadataQueryOptions(); same path as useCrmMetadata",
+  ],
+  [
+    "useCrmOptions",
+    "crm:leads:view — select wrapper over crmMetadataQueryOptions(); same path as useCrmMetadata",
+  ],
+]);
+
 const SKIP_DIRS = new Set(["node_modules", ".next", "feedbucket-widget", ".git"]);
 const SCAN_DIRS = ["hooks/api", "features"];
 const TEST_FILE_RE = /\.test\.|\.spec\.|__tests__/;
 
-// Methods that reach the API. `get`/`download` appear inside mutations for
-// imperative reads (exports, signed-URL fetches) and are classified too.
-// `useMutation<T, E, V>({...})` is the dominant form in this repo (382 of 463
-// call sites). A scanner matching only `useMutation(` sees none of them.
 const MUTATION_CALL_RE = /\buse(?:Authorized)?Mutation\s*[<(]/;
+const QUERY_CALL_RE = /\buseGatedQuery\s*[<(]/;
 
 const METHOD_OF = {
   post: "POST",
@@ -323,6 +345,101 @@ function extractMutationBlocks(src, filePath) {
   return results;
 }
 
+function readGatedKey(body) {
+  const m = /\buseGatedQuery/.exec(body);
+  if (!m) return null;
+  let i = m.index + m[0].length;
+  while (/\s/.test(body[i] ?? "")) i++;
+  if (body[i] === "<") {
+    let angle = 0;
+    for (; i < body.length; i++) {
+      if (body[i] === "<") angle++;
+      else if (body[i] === ">") { angle--; if (angle === 0) { i++; break; } }
+    }
+  }
+  while (/\s/.test(body[i] ?? "")) i++;
+  if (body[i] !== "(") return null;
+  const args = splitCallArgs(body, i);
+  if (!args || !args.length) return null;
+  const first = args[0].trim();
+  const q = /^["'`]([^"'`]+)["'`]$/.exec(first);
+  return q ? q[1] : null;
+}
+
+function extractQueryBlocks(src, filePath) {
+  const results = [];
+  const EXPORT_RE = /^[ \t]*export\s+(?:const|(?:async\s+)?function)\s+(use\w+)\s*[=(]/gm;
+  let match;
+  while ((match = EXPORT_RE.exec(src)) !== null) {
+    const name = match[1];
+    const openBrace = src.indexOf("{", match.index + match[0].length);
+    if (openBrace === -1) continue;
+    const nextExport = src.indexOf("\nexport ", match.index + match[0].length);
+    if (nextExport !== -1 && openBrace > nextExport) continue;
+    let depth = 0;
+    let end = openBrace;
+    for (let i = openBrace; i < src.length; i++) {
+      if (src[i] === "{") depth++;
+      else if (src[i] === "}") { depth--; if (depth === 0) { end = i; break; } }
+    }
+    const body = src.slice(openBrace, end + 1);
+    if (!QUERY_CALL_RE.test(body)) continue;
+    results.push({ name, body, file: filePath, line: src.slice(0, match.index).split("\n").length });
+  }
+  return results;
+}
+
+function classifyQueryBlock(block, index, consts) {
+  const { name, body } = block;
+  const declaredKey = readGatedKey(body);
+  if (!declaredKey)
+    return { kind: "UNCLASSIFIED", reason: "could not extract permission key from useGatedQuery first argument" };
+
+  if (OFF_CONTRACT_READS.has(name)) return { kind: "OFF-CONTRACT", reason: OFF_CONTRACT_READS.get(name) };
+
+  const exposures = new Set();
+  const permissions = new Set();
+  let sawCall = false;
+  const CALL_RE = /apiClient\.get\s*(?:<[\s\S]*?>)?\s*\(/g;
+  let cm;
+  while ((cm = CALL_RE.exec(body)) !== null) {
+    sawCall = true;
+    const args = splitCallArgs(body, cm.index + cm[0].length - 1);
+    const literal = args && args.length ? normalizePath(args[0], consts) : null;
+    if (!literal) { exposures.add("UNRESOLVED"); continue; }
+    const op = resolveOperation(index, "GET", literal);
+    if (!op) { exposures.add("UNRESOLVED"); continue; }
+    exposures.add(op["x-exposure"] ?? "UNKNOWN");
+    if (op["x-permission"]) permissions.add(op["x-permission"]);
+  }
+
+  if (!sawCall || exposures.has("UNRESOLVED") || exposures.has("UNKNOWN")) {
+    return {
+      kind: "UNCLASSIFIED",
+      reason: sawCall
+        ? "endpoint could not be resolved against contracts/openapi.json"
+        : "no apiClient.get call found in the hook body — if this spreads queryOptions(), add it to OFF_CONTRACT_READS",
+    };
+  }
+
+  if (exposures.has("permissioned")) {
+    if (permissions.size !== 1)
+      return {
+        kind: "UNCLASSIFIED",
+        reason: `resolves to ${permissions.size} different permissions (${[...permissions].join(", ")}); split the hook`,
+      };
+    const contractKey = [...permissions][0];
+    if (declaredKey === contractKey) return { kind: "GATED", key: declaredKey };
+    return { kind: "WRONG-KEY", reason: `declares "${declaredKey}" but the contract enforces "${contractKey}"` };
+  }
+
+  if (exposures.has("in-service"))
+    return { kind: "UNCLASSIFIED", reason: "in-service GET must not use useGatedQuery; use plain useQuery" };
+  if (exposures.has("universal"))
+    return { kind: "UNCLASSIFIED", reason: "universal endpoint needs no permission gate; use plain useQuery" };
+  return { kind: "UNCLASSIFIED", reason: `unrecognised exposure ${[...exposures].join(", ")}` };
+}
+
 function classifyBlock(block, index, consts) {
   const { name, body } = block;
   const declaredKey = readAuthorizedKey(body);
@@ -408,6 +525,21 @@ function collectBlocks(rootDir, scanDirs) {
       if (!MUTATION_CALL_RE.test(src)) return;
       const consts = moduleConstants(src);
       for (const b of extractMutationBlocks(src, relPath)) blocks.push({ ...b, consts });
+    });
+  }
+  return blocks;
+}
+
+function collectQueryBlocks(rootDir, scanDirs) {
+  const blocks = [];
+  for (const rel of scanDirs) {
+    walkDir(join(rootDir, rel), (filePath) => {
+      const relPath = relative(rootDir, filePath).replace(/\\/g, "/");
+      if (TEST_FILE_RE.test(relPath)) return;
+      const src = stripComments(readFileSync(filePath, "utf8"));
+      if (!QUERY_CALL_RE.test(src)) return;
+      const consts = moduleConstants(src);
+      for (const b of extractQueryBlocks(src, relPath)) blocks.push({ ...b, consts });
     });
   }
   return blocks;
@@ -571,7 +703,136 @@ export const useOther = () => {
   assert(missing === null, "(j) an unknown hook name must return null so the scan is not vacuous");
   console.log("  (j) unknown hook name returns null (scan is not vacuous)");
 
-  console.log(`\n✔ ${cases.length + 1} command-catalog fixtures passed — check-command-catalog is live.\n`);
+  // Adversarial matcher fixtures — synthetic index independent of the real contract
+  {
+    function buildSyntheticIndex(routes) {
+      const idx = new Map();
+      for (const [path, method, op] of routes) {
+        const segments = path.split("/").filter(Boolean).map((s) => (s.startsWith("{") ? "*" : s));
+        if (!idx.has(method)) idx.set(method, []);
+        idx.get(method).push({ path, segments, op });
+      }
+      return idx;
+    }
+    const EXP_PERM = (permission) => ({ "x-exposure": "permissioned", "x-permission": permission });
+    const synth = buildSyntheticIndex([
+      ["/foo/export",     "GET", EXP_PERM("adv:export:view")],
+      ["/foo/{id}",       "GET", EXP_PERM("adv:id:view")],
+      ["/sib/alpha",      "GET", EXP_PERM("adv:alpha:view")],
+      ["/sib/beta",       "GET", EXP_PERM("adv:beta:view")],
+      ["/deep/a/b",       "GET", EXP_PERM("adv:shallow:view")],
+      ["/deep/a/b/c",     "GET", EXP_PERM("adv:deep:view")],
+      ["/reports/{type}", "GET", EXP_PERM("adv:report:view")],
+    ]);
+    assert(
+      resolveOperation(synth, "GET", "/foo/export")?.["x-permission"] === "adv:export:view",
+      "adv-1: literal segment must beat param when both match /foo/export",
+    );
+    assert(
+      resolveOperation(synth, "GET", "/foo/123")?.["x-permission"] === "adv:id:view",
+      "adv-2: numeric id must fall through to param route /foo/{id}",
+    );
+    assert(
+      resolveOperation(synth, "GET", "/sib/alpha")?.["x-permission"] === "adv:alpha:view",
+      "adv-3a: sibling literal /sib/alpha must not bleed into /sib/beta",
+    );
+    assert(
+      resolveOperation(synth, "GET", "/sib/beta")?.["x-permission"] === "adv:beta:view",
+      "adv-3b: sibling literal /sib/beta must not bleed into /sib/alpha",
+    );
+    assert(
+      resolveOperation(synth, "GET", "/sib/*") === null,
+      "adv-4: wildcard /sib/* is ambiguous (alpha vs beta have different perms) — must return null",
+    );
+    assert(
+      resolveOperation(synth, "GET", "/deep/a/b")?.["x-permission"] === "adv:shallow:view",
+      "adv-5a: /deep/a/b (2-segment match) must not pick up /deep/a/b/c (3 segments)",
+    );
+    assert(
+      resolveOperation(synth, "GET", "/deep/a/b/c")?.["x-permission"] === "adv:deep:view",
+      "adv-5b: /deep/a/b/c (3-segment match) must not pick up /deep/a/b (2 segments)",
+    );
+    assert(
+      resolveOperation(synth, "GET", "/reports/*")?.["x-permission"] === "adv:report:view",
+      "adv-6: wildcard /reports/* with single-permission candidates must resolve to that permission",
+    );
+    console.log("  (adv-1..6) adversarial matcher fixtures → all correct");
+  }
+
+  // Read-hook self-test
+  function classifyRead(rawSrc, name) {
+    const src = stripComments(rawSrc);
+    const consts = moduleConstants(src);
+    const block = extractQueryBlocks(src, "test.ts").find((b) => b.name === name);
+    if (!block) return null;
+    return classifyQueryBlock(block, index, consts);
+  }
+
+  const readCases = [
+    {
+      label: "(r-a) correct gated read carries the contract key",
+      src: `export function useContacts() {
+        return useGatedQuery("crm:contacts:view", {
+          queryFn: ({ signal }) => apiClient.get("/contacts", undefined, signal),
+        });
+      }`,
+      name: "useContacts",
+      expect: "GATED",
+    },
+    {
+      label: "(r-b) wrong key on a read is WRONG-KEY",
+      src: `export function useContacts() {
+        return useGatedQuery("crm:contacts:manage", {
+          queryFn: ({ signal }) => apiClient.get("/contacts", undefined, signal),
+        });
+      }`,
+      name: "useContacts",
+      expect: "WRONG-KEY",
+    },
+    {
+      label: "(r-c) a read with no apiClient.get in its body is UNCLASSIFIED",
+      src: `export function useContacts() {
+        return useGatedQuery("crm:contacts:view", {
+          ...someQueryOptions(),
+        });
+      }`,
+      name: "useContacts",
+      expect: "UNCLASSIFIED",
+    },
+    {
+      label: "(r-d) a read path from a module constant is resolved correctly",
+      src: `const BASE = "/contacts";
+      export function useContact(id) {
+        return useGatedQuery("crm:contacts:view", {
+          queryFn: ({ signal }) => apiClient.get(\`\${BASE}/\${id}\`, undefined, signal),
+        });
+      }`,
+      name: "useContact",
+      expect: "GATED",
+    },
+    {
+      label: "(r-e) an OFF_CONTRACT_READS entry is classified OFF-CONTRACT, not UNCLASSIFIED",
+      src: `export function useCrmMetadata() {
+        return useGatedQuery("crm:leads:view", {
+          ...crmMetadataQueryOptions(),
+        });
+      }`,
+      name: "useCrmMetadata",
+      expect: "OFF-CONTRACT",
+    },
+  ];
+
+  for (const c of readCases) {
+    const result = classifyRead(c.src, c.name);
+    assert(result !== null, `${c.label}: hook was not extracted at all`);
+    assert(
+      result.kind === c.expect,
+      `${c.label}: expected ${c.expect}, got ${result.kind}${result.reason ? ` (${result.reason})` : ""}`,
+    );
+    console.log(`  ${c.label} → ${result.kind}`);
+  }
+
+  console.log(`\n✔ ${cases.length + 1 + 6 + readCases.length} command-catalog fixtures passed — check-command-catalog is live.\n`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -636,6 +897,56 @@ function runMainScan() {
   }
 
   console.log("PASS: zero unclassified commands; every permissioned mutation carries its contract key.");
+
+  runReadScan(index);
+}
+
+function runReadScan(index) {
+  console.log("Classifying read hooks (useGatedQuery) against contracts/openapi.json...\n");
+  const blocks = collectQueryBlocks(ROOT, ["hooks/api"]);
+
+  if (blocks.length < SCAN_FLOOR_READS.minHooks) {
+    console.error(
+      `FAIL: read scan floor not met — found only ${blocks.length} gated-query hooks ` +
+        `(expected ≥${SCAN_FLOOR_READS.minHooks}). The scanner is broken or the wrong directory was scanned.`,
+    );
+    process.exit(1);
+  }
+
+  const byKind = new Map();
+  const problems = [];
+  const seenOffContract = new Set();
+
+  for (const block of blocks) {
+    const result = classifyQueryBlock(block, index, block.consts);
+    byKind.set(result.kind, (byKind.get(result.kind) ?? 0) + 1);
+    if (result.kind === "OFF-CONTRACT") seenOffContract.add(block.name);
+    if (result.kind === "UNCLASSIFIED" || result.kind === "WRONG-KEY")
+      problems.push(`  [${result.kind}] ${block.file}:${block.line} ${block.name} — ${result.reason}`);
+  }
+
+  console.log("=== Read hook classification ===");
+  console.log(`Total hooks scanned:  ${blocks.length}`);
+  for (const [kind, count] of [...byKind.entries()].sort((a, b) => b[1] - a[1]))
+    console.log(`${kind.padEnd(21)} ${count}`);
+  console.log();
+
+  const staleOffContract = [...OFF_CONTRACT_READS.keys()].filter((k) => !seenOffContract.has(k));
+  if (staleOffContract.length > 0) {
+    console.error(
+      `FAIL: ${staleOffContract.length} stale OFF_CONTRACT_READS entr(y|ies) — hook no longer exists or now has a direct apiClient.get call:`,
+    );
+    for (const s of staleOffContract) console.error(`  OFF_CONTRACT_READS: ${s}`);
+    process.exit(1);
+  }
+
+  if (problems.length > 0) {
+    console.error(`FAIL: ${problems.length} read hook(s) unclassified or mis-keyed:`);
+    for (const p of problems) console.error(p);
+    process.exit(1);
+  }
+
+  console.log("PASS: all gated-read hooks carry a key the backend enforces on that route.");
 }
 
 if (process.argv.includes("--self-test")) runSelfTest();

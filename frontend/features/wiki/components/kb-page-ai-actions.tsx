@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useState, useRef, type ChangeEvent, type FormEvent } from "react";
 import { SparklesIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -73,6 +73,7 @@ export function KbPageAiActions({ pageId, onApplyImprovement }: KbPageAiActionsP
   const [panelState, setPanelState] = useState<PanelState>({ status: "idle" });
   const [question, setQuestion] = useState("");
   const [lastQuestion, setLastQuestion] = useState("");
+  const invokeRef = useRef(0);
 
   const summarize = useKbPageSummarize(pageId);
   const askMutation = useKbPageAsk(pageId);
@@ -80,6 +81,7 @@ export function KbPageAiActions({ pageId, onApplyImprovement }: KbPageAiActionsP
   const suggestRelated = useKbPageSuggestRelated(pageId);
 
   async function runAction(action: ActiveAction) {
+    const stamp = ++invokeRef.current;
     setActive(action);
     if (action === "ask") {
       setPanelState({ status: "ask-input" });
@@ -105,8 +107,10 @@ export function KbPageAiActions({ pageId, onApplyImprovement }: KbPageAiActionsP
         text = res.text;
         aiUsage = res.aiUsage;
       }
+      if (invokeRef.current !== stamp) return;
       setPanelState({ status: "ready", text, isImprove: action === "improve", aiUsage });
     } catch (err) {
+      if (invokeRef.current !== stamp) return;
       if (isApiError(err) && err.status === 402) { setPanelState({ status: "quota" }); return; }
       if (isApiError(err) && err.status === 403) { setPanelState({ status: "denied", reason: getErrorMessage(err) }); return; }
       setPanelState({ status: "error", message: getErrorMessage(err) });
@@ -114,12 +118,15 @@ export function KbPageAiActions({ pageId, onApplyImprovement }: KbPageAiActionsP
   }
 
   async function runAsk(q: string) {
+    const stamp = ++invokeRef.current;
     setLastQuestion(q);
     setPanelState({ status: "loading" });
     try {
       const res = await askMutation.mutateAsync(q);
+      if (invokeRef.current !== stamp) return;
       setPanelState({ status: "ready", text: res.text, isImprove: false, aiUsage: res.aiUsage });
     } catch (err) {
+      if (invokeRef.current !== stamp) return;
       if (isApiError(err) && err.status === 402) { setPanelState({ status: "quota" }); return; }
       if (isApiError(err) && err.status === 403) { setPanelState({ status: "denied", reason: getErrorMessage(err) }); return; }
       setPanelState({ status: "error", message: getErrorMessage(err) });

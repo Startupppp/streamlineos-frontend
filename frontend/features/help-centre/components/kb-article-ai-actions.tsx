@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useState, useRef, type ChangeEvent, type FormEvent } from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { AiActionsMenu, type AiAction, type AiActionResult } from "@/components/ai";
@@ -47,6 +47,7 @@ export function KbArticleAiActions({ articleId, onApplyImprovement }: KbArticleA
   const [askState, setAskState] = useState<AskPanelState>({ status: "input" });
   const [question, setQuestion] = useState("");
   const [lastQuestion, setLastQuestion] = useState("");
+  const invokeRef = useRef(0);
 
   const summarize = useKbArticleSummarize(articleId);
   const askMutation = useKbArticleAsk(articleId);
@@ -54,12 +55,15 @@ export function KbArticleAiActions({ articleId, onApplyImprovement }: KbArticleA
   const suggestRelated = useKbArticleSuggestRelated(articleId);
 
   async function runAsk(q: string) {
+    const stamp = ++invokeRef.current;
     setLastQuestion(q);
     setAskState({ status: "loading" });
     try {
       const res = await askMutation.mutateAsync(q);
+      if (invokeRef.current !== stamp) return;
       setAskState({ status: "ready", text: res.text, aiUsage: res.aiUsage });
     } catch (err) {
+      if (invokeRef.current !== stamp) return;
       if (isApiError(err) && err.status === 402) { setAskState({ status: "quota" }); return; }
       if (isApiError(err) && err.status === 403) { setAskState({ status: "denied", reason: getErrorMessage(err) }); return; }
       setAskState({ status: "error", message: getErrorMessage(err) });

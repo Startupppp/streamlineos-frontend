@@ -22,6 +22,12 @@ interface StorageUploadResult {
   mimeType: string;
 }
 
+export interface KbAttachmentDownloadResult {
+  fileName: string;
+  mimeType: string | null;
+  downloadUrl: string;
+}
+
 const KB_ATTACHMENT_FOLDER = "kb-attachments";
 
 export function useSupportKbAttachments(articleId: number) {
@@ -29,7 +35,9 @@ export function useSupportKbAttachments(articleId: number) {
     queryKey: queryKeys.kbAttachments.list(articleId),
     queryFn: ({ signal }) =>
       apiClient.get<KbAttachment[]>(
-        `/support/kb/articles/${articleId}/attachments`, undefined, signal,
+        `/support/kb/articles/${articleId}/attachments`,
+        undefined,
+        signal,
       ),
     enabled: Number.isFinite(articleId) && articleId > 0,
     staleTime: 30_000,
@@ -62,7 +70,9 @@ export function useUploadSupportKbAttachment(articleId: number) {
       );
     },
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.kbAttachments.list(articleId) }),
+      qc.invalidateQueries({
+        queryKey: queryKeys.kbAttachments.list(articleId),
+      }),
   });
 }
 
@@ -75,8 +85,23 @@ export function useDeleteSupportKbAttachment(articleId: number) {
         `/support/kb/articles/${articleId}/attachments/${attachmentId}`,
       ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.kbAttachments.list(articleId) }),
+      qc.invalidateQueries({
+        queryKey: queryKeys.kbAttachments.list(articleId),
+      }),
   });
 }
 
-
+export function useDownloadSupportKbAttachment() {
+  return useAuthorizedMutation("support:kb:view", {
+    mutationFn: ({
+      articleId,
+      attachmentId,
+    }: {
+      articleId: number;
+      attachmentId: number;
+    }) =>
+      apiClient.get<KbAttachmentDownloadResult>(
+        `/support/kb/articles/${articleId}/attachments/${attachmentId}/download`,
+      ),
+  });
+}
