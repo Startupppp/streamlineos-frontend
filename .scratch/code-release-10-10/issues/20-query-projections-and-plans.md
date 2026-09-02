@@ -4,7 +4,10 @@
 
 **Blocked by:** 03 — plans taken against an empty or partially bootstrapped database measure nothing.
 
-**Status:** measured; one box open by design. 2026-09-02: its global-users and vector clauses are closed and the users clause is locked by a spec; what remains is an API-contract decision on full-row list DTOs.
+**Status:** measured; one box open by design. 2026-09-02: its global-users and vector clauses are closed and the
+users clause is locked by a spec. **Re-read and re-measured at head 2026-09-02 (third pass).** The count clause
+yielded three more concrete fixes (below); the residue is confirmed to be a product/API-contract decision, and the
+box is now BLOCKED on that decision rather than PARTIAL on more measurement.
 
 Report: `reports/20-query-plans.md`. Raw plan trees: `reports/20-query-plans/plans-{large,mid,small}.{json,txt}`.
 Harness: `BE/test/perf/{heavy-query-fixtures,seed-heavy-query-load,heavy-query-catalog,heavy-query-catalog-{calendar,notifications,search,dashboard},heavy-query-plan-analysis,measure-heavy-query-plans}.mjs`.
@@ -19,7 +22,47 @@ Harness: `BE/test/perf/{heavy-query-fixtures,seed-heavy-query-load,heavy-query-c
     - Vector clause: **0** reads hydrate an `embedding`/`fts` column on a list path after the fixes below. The stake is now measured, not asserted — `kb-chunks-page-50` moves **322,200 bytes** unprojected against **14,600** projected, **22.07x**, identical on large and mid.
   - **The bytes-returned instrument the previous pass said was missing now exists**: `BE/test/perf/measure-projection-bytes.mjs` (`--self-test` 8/8), run as `streamline_app` with the tenant GUC in a rolled-back transaction. It discriminates exactly where `EXPLAIN (BUFFERS)` cannot — `dashboard-recent-activity` is **417 buffers either way** but **1,560 -> 1,080 bytes (1.44x)** on large and 1,880 -> 1,368 (1.37x) on mid. Output `reports/20-query-plans/projection-bytes-{large,mid,tiny}.json`.
   - **13 files fixed this pass** (existence-only reads narrowed to the columns actually consumed, and the KB trash list stopped shipping `content`/`content_text`/`fts`). Typecheck caught four of them where the value was used beyond the guard — `projects-write` needed `name`, `sign-envelope-validation` needed `routingMode`/`expiresAt`, `recruitment-candidate-ai` needed `firstName`/`lastName`/`currentRole`, `kb-pages.update` needed `content` — all widened to exactly those; the heuristic alone would have shipped four runtime bugs.
-  - PARTIAL: the remaining clause is *full ORM rows on ordinary list paths*. Re-counted at head against the **declared** Drizzle column set (not `information_schema` — a bare `.select()` emits the declared columns, so the live catalog overstates it): **200** `findMany` with no top-level `columns:` (100 on a table carrying jsonb/array), **456** `findFirst` with no `columns:` (222 heavy) and **373** non-single-row bare `.select()` (151 heavy). Narrowing the bulk of these changes a response DTO — `hr_form_submissions.formSchemaSnapshot` is what `maskSensitiveData` reads, the audit and event-stream jsonb columns are the diff the UI renders — so it is a **product/API-contract decision, not a measurement**, and it is the reason this box stays open. The instrument to score any such decision now exists; the decision does not.
+  - **2026-09-02, third pass — the box was RE-READ against current source rather than taken on the note above, and
+    the `count` and `existence` clauses yielded three more real fixes.** The earlier passes scored the box on
+    *whole-table* shape (does this `findMany` carry `columns:`) and concluded the residue was all DTO-bound. But the
+    box names three path kinds — list, **count** and **existence** — and a count or an existence check has no
+    response DTO at all, so narrowing one changes no contract and needs no product decision. Scanning every
+    `findMany` with no `columns:` for a result whose *only* use is `.length` found four sites; one is a false
+    positive of the scan (`dashboard/dashboard-project.service.ts:66` — the variable the heuristic attributed comes
+    from a different query and the `findMany` is the returned list), and **three are real and are now fixed**:
+    - `e-sign/sign-envelope-validation.service.ts:42` — `documents.length === 0` ("Envelope has no document") read
+      all **17** declared columns of every `sign_documents` row in the envelope, including `sha256Hash`,
+      `originalFileKey` and `currentFileKey`. Now `columns: { id: true }, limit: 1`.
+    - `e-sign/sign-bulk-send.service.ts:70` — an active-job quota check (`activeJobs.length >= max`) read all **15**
+      declared columns of `sign_bulk_send_jobs`, including the `columnMappingJson` **jsonb**. Now
+      `columns: { id: true }`.
+    - `surveys/survey-participant.service.ts:106` — `remind()` counts non-completed participants and read all **21**
+      declared columns of `survey_participants` for every requested id, including the `metadata` **jsonb** and
+      **`accessTokenHash`** — the hashed bearer token that grants access to a survey response, hydrated into the Node
+      heap to answer a count. Now `columns: { status: true }`, which is the only column the count reads.
+    Proof: `pnpm typecheck` **exit 0**; `jest --runInBand --testPathPattern="e-sign|survey"` **exit 0, 34 suites /
+    211 tests**; `pnpm check:openapi-coverage` exit 0 (1,371/1,371 mutating ops) and
+    `pnpm check:contract-breaking-change` exit 0 (101 published operations) — i.e. measured, not assumed, to be
+    contract-neutral.
+  - BLOCKED — the remaining clause is *full ORM rows on ordinary list paths*, and it is a **product/API-contract
+    decision, not a measurement or a missing instrument**. Re-counted independently at head over all 3,708
+    non-spec `src/**` files (previous passes counted only the 33 in-scope module directories, which is why these
+    numbers are larger, not because anything regressed): **290** `findMany` with no top-level `columns:`, **499**
+    `findFirst` with no `columns:`, **600** bare `.select()`. Narrowing the bulk of these changes a response DTO —
+    `hr_form_submissions.formSchemaSnapshot` is what `maskSensitiveData` reads, the audit and event-stream jsonb
+    columns are the diff the UI renders, `survey_questions.settings` and `automation_rules.conditions` *are* the
+    payload the endpoint exists to return. Two further facts make this a decision and not work anyone can just do:
+    - **the residue is concentrated where this release cannot reach it.** `findMany`-without-`columns` by area:
+      hr 83 · inventory 37 · e-sign 28 · surveys 23 · support 20 · build 12 · chat 11 · billing 10 · crm 7. Bare
+      `.select()`: hr 190 · finance 55 · crm 49 · build 39 · inventory 38 · payroll 37 · billing 31. Inventory and
+      CRM are **excluded from this release**; hr, support, build, chat, billing, finance, timesheets, accounting,
+      invoices, notifications, workflows and storage belong to another agent's territory. Roughly 80% of the
+      population is unreachable from here even with the decision made.
+    - **the earlier "PARTIAL" reading was too soft.** There is no further measurement that would close this box —
+      `measure-projection-bytes.mjs` already scores any candidate (`kb-chunks-page-50` 22.07x,
+      `dashboard-recent-activity` 1.44x where buffers say 417/417). What is missing is a product owner deciding
+      which list endpoints may return less than they return today. Recorded as BLOCKED so it is routed as a decision
+      rather than left looking like unfinished measurement.
 - [x] The named heavy queries run against a production-shaped seed with plans captured.
   - `node test/perf/measure-heavy-query-plans.mjs --org={large,mid,small}` → **36 queries × 3 tenant sizes**, all eight named categories covered. Seed: 3 orgs, 66,613 calendar events (9,507 recurring), 140,360 event attendees, 266,400 notifications, 13,320 kb chunks, 18,500 `build.tickets`.
 - [x] Plans are taken as the application role with tenant context set, never as the database owner, so real authorization predicates are included.

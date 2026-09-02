@@ -4,8 +4,35 @@
 
 **Blocked by:** 07, 03.
 
-**Status:** 6 of 7 closed · 1 PARTIAL (CRM/inventory, out of release scope) · reports at
-`reports/08-execute-schema-key-minimization.md` and `reports/08b-close-schema-key-minimization.md`
+**Status:** 6 of 7 closed · **1 BLOCKED** (box 4) · reports at
+`reports/08-execute-schema-key-minimization.md`, `reports/08b-close-schema-key-minimization.md`
+and `reports/07b-declaration-drift.md`
+
+**Follow-up 07b executed the third population 08b handed on, and corrected its cause.** Re-measured
+on a database cold-built from zero to head: the "70 declared `.references()` with neither a live
+single nor a live composite" is **101** under a definition that keeps the rows whose child table is
+not live (08b excluded those 23 `hrms-phase1` rows). Split: 23 SQL-managed · 19 legacy-actor ·
+47 CRM/inventory · **12 in release scope, and all 12 are now enforced** — population **101 → 87**,
+in-scope **12 → 0**, foreign keys **3,133 → 3,196**. 08b was right that deleting these declarations
+would hide the gap.
+
+**Four of the eight 08b called "a real gap" have a cause it did not find: the column type.**
+`referrals.referrer_org_id`/`referred_org_id`/`referrer_user_id`,
+`affiliate_commissions.referred_org_id` and `app_installations.installed_by` are `integer` in the
+catalog and `text` in the declaration, referencing `organizations.id`/`users.id` which are `text`.
+Postgres could never install those foreign keys. This is a live run-time defect, not a stale
+declaration: `ReferralService.createReferral` inserts an organisation id into an integer column and
+raises **22P02**, reproduced on a database at head before migration `1023` fixed it. All three tables
+hold 0 rows on `scratch_perf_seed`, which is what a write path that has never succeeded looks like.
+
+`notifications.org_id` — a fifth anchor 08b's list did not name — was a genuine orphan, not just a
+missing declaration: `membership_id` is nullable, so an org-wide notification survived
+`DELETE FROM organizations` (reproduced: 1 row left behind, now 0).
+
+Migrations `1023`-`1026`. The six self/sibling references were added as **composite**
+`(org_id, col)` with explicit SET NULL column lists, per section 3 — the declaration was asking for
+the single-column form, which is the cross-tenant hole. 12/12 behavioural assertions including the
+real organisation purge; cold bootstrap 662/662; rollback round trip 3196 -> 3133 -> 3196.
 
 **Follow-up pass (08b) closed box 3 for every module in this release and added a third population
 ticket 08 had not counted.** Migration `1006` drops 16 redundant single-column foreign keys, moving
@@ -48,6 +75,30 @@ purge path was run, not reasoned about — **5/5** assertions including `DELETE 
 - [ ] Unused request/response/DTO/Zod fields are removed across backend, OpenAPI and frontend hooks/forms as one contract change. Server-controlled tenant/actor fields, idempotency/version fields, authorization dimensions and audit fields are never removed.
       BLOCKED on territory: no DTO or Zod schema lives under `src/db/schema/**` or `migrations/**`. `check:openapi-coverage` and `check:contract-breaking-change` both exit 0 — nothing regressed, nothing was executed here.
       08b: still BLOCKED on the same territory boundary, and re-confirmed — declaring `org_id` on ten tables changed no DTO, no Zod schema and no response shape; `org_id` is a server-controlled tenant field, which this box explicitly excludes from removal.
+      **2026-09-02 — third pass RE-VERIFIED whether this is now actionable, since response contracts have been
+      worked extensively since 08b. It is not, and the reason is stronger than the territory one both earlier
+      passes gave: BLOCKED ON INSTRUMENTATION.** The box's own bar is a module graph plus a real build, never a
+      text search. Run at head:
+      - FE `pnpm exec knip --no-progress` → exit 1: **1 unused file, 38 unused exports, 65 unused exported types**.
+      - FE `pnpm check:dead-code` → exit 1, **1 unclassified** (`lib/keyboard-activation.ts:nestedActivationProps`).
+      - BE `pnpm check:dead-code` → exit 1, **1 unclassified** (`src/common/admission/admission-tenant-hint.ts:UseAdmissionTenantHint`), over a 9,813-file / 68,271-edge importer graph, knip 0 unused files / 36 other findings.
+      - BE `pnpm check:openapi-coverage` exit 0 (1,371/1,371 mutating ops carry a body schema) · BE `pnpm check:contract-breaking-change` exit 0 (101 published operations, 3,524 internal, 23 published webhook event names).
+      **Every one of those instruments resolves at the granularity of a file, an export or a type alias. None of
+      them resolves a FIELD.** This box asks for unused *fields inside* request/response/DTO/Zod schemas, and
+      neither knip, nor the dead-code ledger, nor `tsc` (`noUnusedLocals` does not reach object or interface
+      members) can say whether a property of a live, imported, exported type is read anywhere. So the only
+      available evidence for a field-level removal here is a text search — which this box's own wording, and
+      AGENT-BRIEF rule 8, forbid as sole grounds for deletion. Closing it needs an instrument that does not exist
+      yet (a cross-repo property-reachability analysis over the OpenAPI schema and the frontend hooks), not more
+      reading.
+      Confirmatory detail that this is not merely a naming problem: of the 65 unused exported *types* knip does
+      report, **62 sit in `frontend/hooks/api/**` and `frontend/types/**`** — and those are unused *aliases*, not
+      unused fields, so removing them would not satisfy this box even if they were in reach.
+      The territory bar is unchanged and independent: the removal must land "as one contract change" across
+      backend, OpenAPI **and** frontend hooks/forms, and `frontend/hooks/api/**` and `frontend/types/**` are another
+      agent's, while the DTO-dense backend modules (hr, support, notifications, workflows, chat, timesheets,
+      accounting, finance, billing, storage, build, invoices) are another agent's and crm/inventory are excluded
+      from the release. Two independent blockers, either of which alone keeps the box open.
 - [x] A removed field is proven removed at the boundary too — a bare `z.object({})` strips silently rather than rejecting, which turns a dropped field into a wrong-subject write rather than an error.
       `support_ticket_tags.orgId` is `notNull()`, so both insert sites are compile-enforced; the write is tenant-scoped in code instead of by the `trg_set_org_id` trigger.
       08b: the same argument now covers 10 more tables. `org_id` is declared `notNull()` on `hr_workflow_steps`, `email_sequence_steps`, `email_sequence_enrollments`, `vendor_candidate_submissions`, `onboarding_template_steps`, `key_results`, `competencies`, `hr_import_rows`, `support_ticket_messages` and `sign_bulk_send_rows`, so all 12 insert sites are compile-enforced. The composite FK now *refuses* a cross-tenant parent id instead of letting the trigger write the row into the parent's organisation — proven: an automation `support_internal_note` carrying another tenant's `ticketId` is refused with `23503`, where it previously succeeded.
@@ -56,4 +107,5 @@ purge path was run, not reasoned about — **5/5** assertions including `DELETE 
       08b: re-proved after `1006`. Two more cold bootstraps from zero (`scratch_t09` 651/651 then 652/652 on resume; `scratch_t09_cold` **652/652 cold at the new head**), plus a rollback round trip (3,134 → 3,150 down → 3,134 re-applied, REACHED_HEAD 652/652). discipline/chain/ledger/rollback/tenant-indexes (both modes)/tenant-relationships (pg_catalog)/verify-rls/drop-column-safety/restrict-fks/set-null-column-lists — **11 gates, all exit 0**. **5/5** purge assertions including the real `DELETE FROM organizations` path, plus 2/2 cross-tenant message assertions. 179 jest suites / 1,424 tests green across the touched modules. `typecheck` and `check:spec-typecheck` are red **only** on files three concurrent agents have modified and I have not (`payment-run-executor.service.ts(157)`, an untracked `db-call-count-contract.spec.ts`) — enumerated in report 08b §5.
 - [x] Before/after counts are recorded. Final acceptance is zero unclassified unnecessary keys and no orphaned schema or code reference.
       Duplicates 9→0, prefix-redundant 6→0, S16 0, S23 3-intentional, FKs 3,150 unchanged, payroll immutability triggers 2→7, `check:tenant-indexes` 821/828→829/829. Everything not executed is classified and handed on in report §9, not left unclassified.
-      08b: FKs 3,150 → **3,134**; undeclared tenant columns 32 → **22**; single-column FKs beside a composite 169 → **153**; dead `.references()` 97 → 80; `check:tenant-indexes` declaration mode 829/829 → **839/839**; `check:set-null-column-lists` column lists 258 → 267, catalog half OK. Every remaining item in both populations is CRM or inventory. A third population ticket 08 never counted is now classified: **70 declared `.references()` with neither a live single nor a live composite** — a *missing* constraint, not a redundant one, so removing the declaration would hide a gap. 62 are legacy-actor columns whose FK the contraction dropped; 8 look like a real gap, four of them tenant anchors (`project_ticket_counters.org_id`, `chat_message_reactions.org_id`, `affiliate_commissions.referred_org_id`, `referrals.*`). Handed on in report 08b §7.
+      08b: FKs 3,150 → **3,134**; undeclared tenant columns 32 → **22**; single-column FKs beside a composite 169 → **153**; dead `.references()` 97 → 80; `check:tenant-indexes` declaration mode 829/829 → **839/839**; `check:set-null-column-lists` column lists 258 → 267, catalog half OK. Every remaining item in both populations is CRM or inventory. A third population ticket 08 never counted is now classified: **70 declared `.references()` with neither a live single nor a live composite** — a *missing* constraint, not a redundant one, so removing the declaration would hide a gap. 62 are legacy-actor columns whose FK the contraction dropped; 8 look like a real gap, four of them tenant anchors (`project_ticket_counters.org_id`, `chat_message_reactions.org_id`, `affiliate_commissions.referred_org_id`, `referrals.*`). Handed on in report 08b §7. 
+      07b: **executed.** Re-measured as **101** (08b's 70 excluded 23 rows whose child table is not live) -> **87**; the **12 in release scope are 0**. Foreign keys **3,134 -> 3,196**; declared `.references()` 1,385 -> 1,379 (six converted to composite `foreignKey()`); `check:set-null-column-lists` column lists **267 -> 274**. The 62 legacy-actor rows re-measure as **19 -> 17**: two were never legacy-actor at all but an integer-vs-text type drift that made their foreign key impossible. Numbers and gate output in `reports/07b-declaration-drift.md` sections 3-7.

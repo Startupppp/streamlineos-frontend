@@ -4,7 +4,11 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** implemented — 8 of 9 boxes closed; 1 PARTIAL (box 2, blocked on one operator action in the object-storage console)
+**Status:** implemented — 8 of 9 boxes closed; **1 BLOCKED on operator action** (box 7). Every code half is
+landed and gated; what remains is two things nobody may do from code — running the written backfill against the
+real database, and making the R2 buckets private in the Cloudflare console. Re-verified at head 2026-09-02:
+`pnpm check:public-object-urls` exit 0 (3,567 files · 9 declared references · 0 upload-result `url` fields),
+`:self-test` exit 0.
 
 - [x] Declared size and magic-byte MIME are validated; names are sanitized; object keys are organization-scoped.
   - Evidence: `npx jest src/modules/storage --maxWorkers=2` → 14 suites, 158 tests passed, including the new `storage-tenant-private.spec.ts` (13 tests) and `storage-multipart.controller.spec.ts` (14 tests). Multipart now requires a declared `sizeBytes` at initiate and re-measures the assembled object with HeadObject plus a 32-byte ranged read before releasing it; `sanitizeFileName`/`sanitizeFolder` in `storage-key.ts` are pinned by 2 tests.
@@ -23,7 +27,7 @@
   - Evidence: `jest --runInBand --testPathPattern="storage|feedbucket|media-compression|kb-media|cron-hr-retention|gdpr"` → exit 0, **48 suites / 538 passed**. New `media-transform.runner.spec.ts` (8 tests) pins the concurrency ceiling (peak 2 of 8 submitted), the queue refusal, compensation on failure, compensation on a job that never settles, that `/storage/upload` returns while the codec is still blocked, that no `*thumb*` key is written, and that a failed transform deletes the object BEFORE the row.
 - [x] Cancellation, failed transforms, replacement and GDPR/retention deletion each clean both the database row and the object, with no orphan and no surviving public URL.
   - Evidence: `npx jest src/modules/storage src/modules/cron/__tests__/cron-hr-retention.service.spec.ts --maxWorkers=2` → all pass. Multipart abort now deletes the object and soft-deletes the quarantine row (2 tests); a failed upload or transform deletes the object *before* the row, matching the invariant `cron-storage-sweep` already relies on; **HR retention was deleting/redacting `documents`/`onboarding_documents` rows while leaving the object in the bucket forever** — `CronHrRetentionService` now collects the retired keys and deletes the objects after the sweep's transactions commit, reporting `storageObjectsDeleted`/`storageObjectsOrphaned`. GDPR erasure already deleted objects and verified with `fileExists` (`gdpr-storage-purge.service.ts:151-164`) — unchanged, that is ticket 18's territory. No in-place file-replacement endpoint exists (grep over every `fileUrl`/`fileKey` writer found none), so there was nothing to fix on that leg.
-- [ ] PARTIAL — No upload path mints a permanent public URL. Verify existing stored URLs, not just the code that creates new ones — a backfill is part of this ticket if any remain.
+- [ ] BLOCKED — No upload path mints a permanent public URL. Verify existing stored URLs, not just the code that creates new ones — a backfill is part of this ticket if any remain.
   - Code half DONE: `publicUrlFor`/`PRIVATE_FOLDERS` are deleted, `UploadResult.url` no longer exists, and the four call sites that persisted it (`kb_sources.file_url`, `feedbucket_attachments.file_url`, `feedbucket_submissions.screenshot_url`/`recording_url`, `payslip_publications.pdf_url`) now store the object key. Pinned by "returns an object key, never the configured public base" in `storage-tenant-private.spec.ts`.
   - Backfill half WRITTEN AND PROVEN, on a scratch database: `scripts/backfill-public-object-urls.mjs`, catalog-driven across `public`/`build`/`build_events`. Against `scratch_boot_c` seeded with 2 leaked URLs, 1 already-private key and 1 external customer URL: dry run reported `public.kb_sources.file_url: 2 row(s)`, `--apply` rewrote 2 rows to their keys (URL-decoding `%20`), the external URL and the already-private key were untouched, and a second `--apply` reported 0.
   - Code half is now PROVEN, not asserted: new gate `pnpm check:public-object-urls` (+ `:self-test`) scans 3,526 source files and fails on any file referencing a public object-storage base that is not on `MINT_ALLOWLIST` with a stated reason, and on any upload-result type declaring a `url` member. Real run: **9 references, all 9 declared, 0 upload-result `url` fields, exit 0**. Self-test: 14/14 checks. Bite-tested against the live tree: a temporary file minting `${base}/${key}` and a `ThingUploadResult { url }` both failed it (exit 1), and removing them returned exit 0. The stripper deliberately keeps `${…}` interpolation contents, because blanking a whole template literal is what would make this gate blind to the only shape it exists to catch.
@@ -31,8 +35,44 @@
   - Backfill also: schemas are now DISCOVERED from `pg_namespace` rather than the hard-coded `public/build/build_events` (a new `reporting` schema in the fixture was found only after this change); a table with no single-column primary key is rewritten by `ctid` instead of being reported SKIPPED; and the summary prints `ROWS HOLDING A PUBLIC URL: n … UNVERIFIABLE COLUMNS: m` so the remaining work is a number.
   - Proof on `scratch_t33_backfill` (local, dropped afterwards; the shared remote was never connected to): adversarial fixture of 12 rows across 4 schemas — 9 leaked URLs, 1 external customer URL, 1 value already a key, 1 RLS table, 1 no-PK table, 1 composite-PK table. Owner dry run → `ROWS HOLDING A PUBLIC URL: 9 across 7 column(s)`, exit 0. RLS-subject dry run → 7 counted, `UNVERIFIABLE COLUMNS: 3`, **exit 2**. Owner `--apply` → 9 rewritten; `%20` decoded to a space; the external URL and the already-key row untouched; `chat_attachments.file_url` came out equal to `file_key`. Second `--apply` → 0.
   - Consequence for the operator: run as the DATABASE OWNER and one command covers everything, `chat_attachments.file_url` included — `backfill-chat-attachment-file-url.mjs` is only needed when running as the app role.
-  - BLOCKED: the same dry run against the real data. The only database holding production rows is the shared remote `DATABASE_URL`, which this effort may not touch. An operator must run `node scripts/backfill-public-object-urls.mjs` (dry run, as the owner) there and then `--apply`. The dry run now prints the exact remaining number.
-  - BLOCKED — THE BOX CANNOT CLOSE FROM CODE: **the R2 bucket must be set to private in the Cloudflare R2 console (remove the public-access / r2.dev public development URL on the bucket named by `R2_BUCKET_NAME`, and the KB bucket `R2_KB_BUCKET_NAME`).** Rewriting the column does not invalidate a URL somebody already copied; every object already at a public address stays fetchable until that bucket policy changes. No code change substitutes for it.
+  - **BLOCKED — this box cannot be closed from code, and re-confirmed at head on 2026-09-02.** The code half is
+    complete and gated; both remaining steps are operator actions against live infrastructure, which this effort
+    may not take. `pnpm check:public-object-urls` exit 0 and `pnpm check:public-object-urls:self-test` exit 0 were
+    re-run this session, so nothing has regressed while the box waits.
+
+    **What an operator must run — step 1, the database backfill.** As the **database owner** (not the application
+    role), against the production database, from the backend repo root:
+
+    ```
+    node scripts/backfill-public-object-urls.mjs --url <owner DSN>            # dry run, writes nothing
+    node scripts/backfill-public-object-urls.mjs --url <owner DSN> --apply    # rewrites
+    node scripts/backfill-public-object-urls.mjs --url <owner DSN>            # confirm it is now 0
+    ```
+
+    Read the exit code, not just the text. **0** = the scan was complete. **2** = at least one column sat behind a
+    row-level security policy this role does not bypass, and its rows were NOT counted — that output cannot be read
+    as "nothing found", and the run must be repeated as the owner. Running as the owner is also what makes the single
+    command sufficient: `chat_attachments.file_url` is discovered like any other column, so
+    `backfill-chat-attachment-file-url.mjs` is needed only if step 1 has to run as the application role.
+
+    **What an operator must run — step 2, the bucket policy.** In the Cloudflare R2 console, remove public access
+    (the r2.dev public development URL / any public-access binding) from the bucket named by `R2_BUCKET_NAME` **and**
+    from the KB bucket named by `R2_KB_BUCKET_NAME`. Step 1 alone is not sufficient and step 2 alone is not
+    sufficient: rewriting the column stops the application handing out a permanent URL, but every object already at a
+    public address stays fetchable to anyone who copied one until the bucket policy changes. No code change
+    substitutes for either.
+
+    **Evidence that would close this box**, to be pasted under it:
+    1. The step-1 confirmation run's final line reading
+       `DRY RUN — ROWS HOLDING A PUBLIC URL: 0 across 0 column(s); ROWS REWRITTEN: 0; UNVERIFIABLE COLUMNS: 0`,
+       with **exit 0** — the `UNVERIFIABLE COLUMNS: 0` half is what distinguishes "clean" from "not visible to this
+       role", and a run reporting exit 2 closes nothing.
+    2. The `--apply` run's `ROWS REWRITTEN: n` line, so the number of rows that had leaked is on the record.
+    3. For step 2, an unauthenticated `curl -I` of one previously-public object URL returning **401/403** where it
+       previously returned 200 — the only proof that the objects themselves are no longer reachable.
+
+    Neither step is blocked on another agent's territory, on a product decision, or on any further code: both are
+    infrastructure actions requiring credentials this session does not hold and must not use.
 - [x] Referred in from ticket 31: a tenant's filename must not be interpolated into a log message, where the key-based redactor cannot reach it.
   - RE-AUDITED this session and one live leak was still there: `media-compression.service.ts` logged ``Video transcode for "${fileName}" produced no size saving`` — the filename in the message string, out of the redactor's reach, and `check:log-secrets` passes at 3,526 files because it cannot see inside an interpolated message. Moved to a structured field.
   - `storage-log-redaction.spec.ts` now also SOURCE-SCANS 9 files (the 3 AV scanners, media compression, the storage upload seam, the transform runner, the multipart service, the storage sweep) for a logger message template interpolating `fileName|filename|originalname|storageKey|fileKey|objectKey`, with a bite test and a false-positive test. 14 tests pass. Bite proven against the real file: reinstating the transcode line turned it red, restoring it green.
