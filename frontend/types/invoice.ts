@@ -1,4 +1,5 @@
 export type InvoiceStatus = "DRAFT" | "ISSUED" | "PAID" | "FAILED" | "VOIDED";
+export type PatchableInvoiceStatus = Extract<InvoiceStatus, "ISSUED" | "PAID" | "FAILED">;
 export type PaymentMethod = "bank_transfer" | "upi" | "cheque" | "cash" | "card" | "other";
 
 export interface InvoiceItem {
