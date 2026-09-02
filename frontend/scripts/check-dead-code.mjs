@@ -38,7 +38,7 @@ const PRE_IMPLEMENTATION_CONTRACTS = new Set([
 
 const SKIP_DIRS = new Set(["node_modules", ".next", "feedbucket-widget", ".git"]);
 
-const BASELINE = { deadFiles: 1, deadExports: 0 };
+const BASELINE = { deadFiles: 0, deadExports: 0 };
 
 const SCAN_FLOOR = { knipTotal: 5, graphFiles: 100, graphEdges: 300 };
 
@@ -206,7 +206,7 @@ function classifyFile(relPath, knipDeadSet, importerMap, root) {
   return { cls: "DEAD", reason: "no live importers found in module graph" };
 }
 
-function classifyExport(filePath, name) {
+function classifyExport(filePath, name, verdicts = EXPORT_VERDICTS) {
   if (CONTRACT_BARRELS.has(filePath)) {
     return { cls: "RETAINED-BY-CONTRACT", reason: "named intentional barrel" };
   }
@@ -220,8 +220,8 @@ function classifyExport(filePath, name) {
     return { cls: "EXCLUDED", reason: "CRM/Inventory excluded from PRD scope; not counted in dead-code baseline" };
   }
   const key = `${filePath}:${name}`;
-  if (EXPORT_VERDICTS.has(key)) {
-    const { verdict, reason } = EXPORT_VERDICTS.get(key);
+  if (verdicts.has(key)) {
+    const { verdict, reason } = verdicts.get(key);
     return { cls: verdict, reason };
   }
   return { cls: "UNCLASSIFIED", reason: "no verdict recorded in EXPORT_VERDICTS; add a WIRE/KEEP entry to resolve" };
@@ -276,7 +276,10 @@ function runSelfTest() {
   assert(r6.cls === "UNCLASSIFIED",
     `(i) unclassified export → expected UNCLASSIFIED (gate would fail), got ${r6.cls}`);
 
-  const r7 = classifyExport("hooks/api/workflows.ts", "useWorkflowSchedules");
+  const synthVerdicts = new Map([
+    ["hooks/api/workflows.ts:useWorkflowSchedules", { verdict: "DEFERRED", reason: "planned schedule-management UI — hook stub exists, page not yet implemented" }],
+  ]);
+  const r7 = classifyExport("hooks/api/workflows.ts", "useWorkflowSchedules", synthVerdicts);
   assert(r7.cls === "DEFERRED",
     `(j) DEFERRED verdict → expected DEFERRED, got ${r7.cls}`);
 
