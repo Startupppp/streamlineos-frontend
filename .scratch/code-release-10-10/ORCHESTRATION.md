@@ -1918,3 +1918,59 @@ recorded this.
 
 Proved concretely, with the swallow planted back in a `git archive` tree: **2000 moved out of an
 account asked for 500.**
+
+---
+
+## Billing scheduler: resolved, with three jobs deliberately NOT scheduled
+
+**Two jobs scheduled, both proven idempotent in the DATABASE, not merely in application code.**
+`monthly-plan-grants` (daily/300s) and `trial-expiry` (daily/300s). Daily rather than monthly *because*
+the grant is idempotent per calendar month — it grants once, skips the rest of the month, and
+self-heals a missed 1st instead of costing a customer a month of credits.
+
+The bite proof is the part that matters. With the application guards removed **and the unique index
+dropped**, three runs wrote **15 rows / 30,000,000 milli-credits where 5 rows / 10,000,000 were
+owed**. With the index restored and the guards still gone: **5 rows.** The index alone is sufficient
+— which is precisely what makes a daily cadence safe under concurrency, and it is why "is it
+idempotent?" had to be answered at the schema level rather than by reading the service.
+
+**Three NOT scheduled, each for a different and specific reason:**
+
+| job | why not |
+|---|---|
+| `ai-jobs-flush` | **The RLS trap does bite here** — `claimBatch` is a cross-tenant `UPDATE ai_jobs` with no `org_id` predicate, outside any tenant transaction. Run as `streamline_app` it is `42501`. Scheduling it registers a job that **fails silently forever**. Behind it: `crm.stale-pipeline` has no registered handler, the no-handler branch writes `DEAD`, and `enqueue` returns the existing row whatever its status — so the first successful tick would **permanently poison that key for every org**. |
+| `provider-webhook-redrive` | `BillingWebhookEffects.apply` pushes the `addon_purchase` revenue entry without reading the ledger's outcome, the `refunded` branch has no ledger guard at all, and `revenue_events` has no natural key (each emit mints a fresh UUID). The credit grant is safe; the revenue emit is not. |
+| `auto-topup-flush` | Not an idempotency problem at all. **`purchaseCreditsDirectly(..., automatic = true)` never calls a payment provider — scheduling it issues credit packs for free.** A missing charge, not a race. Product decision. |
+
+All three are registered in `UNSCHEDULED_BILLING_JOBS` with their blocker, and a spec now fails if any
+leased route on that controller is neither scheduled nor excluded — so the omission cannot recur
+silently.
+
+### ⚠ Operator check — the decisive one, needs production credentials
+
+`withLease` writes `cron:heartbeat:<jobKey>` with a **7-day TTL** on every successful run from either
+entry point. **If `cron:heartbeat:monthly-plan-grants` and `cron:heartbeat:trial-expiry` are absent
+in production Redis, nothing has run them in a week.** One `GET` per key. The dead-man alert already
+reads exactly these keys. This is the only way to settle whether an out-of-repo scheduler exists;
+it cannot be determined from source.
+
+### Three more corrections to the orchestrator
+
+1. **`vercel.json` DOES exist** — at `frontend/vercel.json`, declaring no `crons` key. I reported "no
+   vercel.json" after looking in the **backend** repo, which is the wrong place: the frontend is what
+   deploys to Vercel. Conclusion unchanged, method wrong.
+2. **`retention-schedule.ts` holds 16 `RETENTION_JOBS` + 4 `UNSCHEDULED_PURGE_JOBS`, not 25.** My grep
+   counted job-name string literals, which double-counts `-sweep`-suffixed pairs.
+3. **The `:1500` `NEXT_PUBLIC_API_URL` finding is local drift, NOT a committed defect.**
+   `frontend/.env` is untracked; `.env.example`, `package.json` (`dev -p 1000`) and the backend's
+   `.env.example` (`PORT=1500`, `CORS_ORIGINS=:1000`) all agree. The running backend was started with
+   `PORT=1501` in its process env. Nothing in the repo is wrong. I relayed this as a possible repo
+   defect; it is not one.
+
+### A false failure the agent caught in its own harness
+
+Its first database probe reported `42501` for every ACTIVE org — and that was **its harness**, not the
+code: it built the db as a bare `drizzle(client)` instead of `createTenantAwareDb(...)`.
+`processMonthlyPlanGrants` reaches through `this.db` rather than the `tx` that `forEachOrg` hands it,
+so its GUC comes from that proxy and nowhere else. **Anyone probing a sweep at service level needs
+the proxy or they will measure a false failure** — and would have concluded a working job was broken.
