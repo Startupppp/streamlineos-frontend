@@ -990,6 +990,9 @@ the `06b9d725` capture and this one, and is now the only route in the capture **
 ceiling (800 ms, approved complex). It holds **75.8 MB of heap in one request**. The statement count
 is deterministic, so this is not machine load. → calendar / dashboard owner.
 
+**Attribution corrected, same session.** The calendar movement is almost certainly the calendar owner's own in-flight refactor, not an unexplained regression: `d93676ad` *"perf(calendar): split the range branches and fetch by candidate id in GET /calendar/events"* and `971e8c5d` *"perf(calendar): merge the two range branches in memory and route the source double on projection"* both landed in the shared tree **before** the commit this capture recorded (`295e55cb`, working tree dirty). A fetch-by-candidate-id split is exactly the shape that turns 79 statements into 196. Reported as a measurement, routed to the owner who is already in that file — not as a mystery.
+
+
 ### 10.6 Commands run, exit codes, numbers
 
 ```
