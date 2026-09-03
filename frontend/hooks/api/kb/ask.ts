@@ -1,6 +1,5 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import type { KbAskInput, KbAskResponse, KbAiFeedbackInput } from "@/types/kb";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";

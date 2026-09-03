@@ -1,6 +1,5 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
