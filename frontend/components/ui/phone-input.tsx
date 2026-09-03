@@ -82,6 +82,16 @@ const CountrySelect = ({
   const [searchValue, setSearchValue] = React.useState("");
   const [isOpen, setIsOpen] = React.useState(false);
 
+  function handleCountrySearchChange(value: string): void {
+    setSearchValue(value);
+    setTimeout(() => {
+      const viewportElement = scrollAreaRef.current?.querySelector(
+        "[data-radix-scroll-area-viewport]",
+      );
+      if (viewportElement) viewportElement.scrollTop = 0;
+    }, 0);
+  }
+
   return (
     <Popover
       open={isOpen}
@@ -114,19 +124,7 @@ const CountrySelect = ({
         <Command>
           <CommandInput
             value={searchValue}
-            onValueChange={(value) => {
-              setSearchValue(value);
-              setTimeout(() => {
-                if (scrollAreaRef.current) {
-                  const viewportElement = scrollAreaRef.current.querySelector(
-                    "[data-radix-scroll-area-viewport]",
-                  );
-                  if (viewportElement) {
-                    viewportElement.scrollTop = 0;
-                  }
-                }
-              }, 0);
-            }}
+            onValueChange={handleCountrySearchChange}
             placeholder="Search country..."
           />
           <CommandList>

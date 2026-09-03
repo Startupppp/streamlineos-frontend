@@ -100,6 +100,13 @@ export function CandidatesPage() {
     [searchParams, router],
   );
 
+  const handlePageChange = useCallback(
+    (page: number) => {
+      setFilter("page", page <= 1 ? null : String(page));
+    },
+    [setFilter],
+  );
+
   const debouncedSearchRef = useRef(debouncedSearch);
   useEffect(() => {
     if (debouncedSearchRef.current === debouncedSearch) return;
@@ -388,7 +395,7 @@ export function CandidatesPage() {
               page={candidatesPage?.page ?? 1}
               pageSize={candidatesPage?.pageSize ?? 24}
               total={candidatesPage?.total ?? 0}
-              onPageChange={(p) => setFilter("page", p <= 1 ? null : String(p))}
+              onPageChange={handlePageChange}
             />
           </>
         )}

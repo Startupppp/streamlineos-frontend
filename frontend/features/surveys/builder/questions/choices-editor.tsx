@@ -4,6 +4,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { ChoiceInput } from "@/hooks/api/surveys/builder";
+import { numericFieldChangeOr } from "@/lib/numeric-field";
 
 interface ChoicesEditorProps {
   choices: ChoiceInput[];
@@ -42,6 +43,12 @@ export function ChoicesEditor({ choices, onChange, showCorrectAnswer, showScore 
     [choices, onChange],
   );
 
+  const handleScoreInput = useCallback(
+    (index: number) =>
+      numericFieldChangeOr((score) => handleScoreChange(index, score), 0),
+    [handleScoreChange],
+  );
+
   const handleRemove = useCallback(
     (index: number) => {
       onChange(choices.filter((_, i) => i !== index));
@@ -70,7 +77,7 @@ export function ChoicesEditor({ choices, onChange, showCorrectAnswer, showScore 
             <Input
               type="number"
               value={choice.score ?? ""}
-              onChange={(e) => handleScoreChange(index, e.target.value === "" ? 0 : Number(e.target.value))}
+              onChange={handleScoreInput(index)}
               placeholder="Score"
               className="h-8 w-20"
             />

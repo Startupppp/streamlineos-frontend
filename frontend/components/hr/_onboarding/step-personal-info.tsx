@@ -16,8 +16,17 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { apiClient } from "@/lib/api-client";
+import { latinNameFieldChange } from "./restricted-field-change";
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
+
+function dateOfBirthChange(
+  onChange: (value: Date | null) => void,
+): (value: string) => void {
+  return function handleDateOfBirthChange(value) {
+    onChange(value ? new Date(value) : null);
+  };
+}
 
 interface StepPersonalInfoProps {
   form: UseFormReturn<FormValues>;
@@ -52,9 +61,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
           <FormItem>
             <FormLabel>First Name <span className="text-destructive">*</span></FormLabel>
             <FormControl>
-              <Input placeholder="John" {...field} onChange={(e) => {
-                if (/^[A-Za-z\s]*$/.test(e.target.value)) field.onChange(e.target.value);
-              }} />
+              <Input placeholder="John" {...field} onChange={latinNameFieldChange(field.onChange)} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -67,9 +74,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
           <FormItem>
             <FormLabel>Last Name <span className="text-destructive">*</span></FormLabel>
             <FormControl>
-              <Input placeholder="Doe" {...field} onChange={(e) => {
-                if (/^[A-Za-z\s]*$/.test(e.target.value)) field.onChange(e.target.value);
-              }} />
+              <Input placeholder="Doe" {...field} onChange={latinNameFieldChange(field.onChange)} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -141,7 +146,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
             <FormControl>
               <DatePicker
                 value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
-                onChange={(v) => field.onChange(v ? new Date(v) : null)}
+                onChange={dateOfBirthChange(field.onChange)}
                 fromYear={1940}
                 toDate={minDob}
                 placeholder="Select DOB"

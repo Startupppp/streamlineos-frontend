@@ -89,6 +89,10 @@ export function SubjectsPage() {
     limit: PAGE_SIZE,
   });
 
+  function handleSubjectRowClick(row: RecordValue): void {
+    setOpenSubjectId(String(row.subjectId));
+  }
+
   function handleTypeChange(value: string) {
     setTypeId(value);
     setCursor(undefined);
@@ -232,7 +236,7 @@ export function SubjectsPage() {
               layout={layout}
               rows={rows.map((row) => subjectRecord(row) as RecordValue)}
               getRowKey={(row) => String(row.subjectId)}
-              onRowClick={(row) => setOpenSubjectId(String(row.subjectId))}
+              onRowClick={handleSubjectRowClick}
               minWidth="720px"
               className={CONTENT_FILL_PANEL}
             />

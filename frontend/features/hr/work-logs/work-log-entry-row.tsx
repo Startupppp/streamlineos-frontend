@@ -116,6 +116,12 @@ export function WorkLogEntryRow({
     setIsDirty(false);
   };
 
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (readOnly) return;
+    setContent(e.target.value);
+    setIsDirty(true);
+  };
+
   const handleDiscard = () => {
     setContent(initialContent);
     setLinks(parseLinks(initialWorkLink));
@@ -287,11 +293,7 @@ export function WorkLogEntryRow({
               <div className="flex items-start gap-2">
                 <Textarea
                   value={content}
-                  onChange={(e) => {
-                    if (readOnly) return;
-                    setContent(e.target.value);
-                    setIsDirty(true);
-                  }}
+                  onChange={handleContentChange}
                   autoFocus={!readOnly && !initialContent}
                   readOnly={readOnly}
                   maxLength={2000}

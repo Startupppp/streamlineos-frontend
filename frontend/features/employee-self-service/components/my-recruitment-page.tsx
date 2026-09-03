@@ -168,6 +168,10 @@ export function MyRecruitmentPage() {
     if (!open) setFeedbackInterview(null);
   }, []);
 
+  const handlePreviousPage = useCallback(() => {
+    setPage((value) => Math.max(1, value - 1));
+  }, []);
+
   return (
     <PageWrapper
       title="My Recruitment"
@@ -262,7 +266,7 @@ export function MyRecruitmentPage() {
                 variant="outline"
                 size="sm"
                 disabled={page <= 1}
-                onClick={() => setPage((value) => Math.max(1, value - 1))}
+                onClick={handlePreviousPage}
               >
                 Previous
               </Button>

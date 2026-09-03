@@ -48,6 +48,12 @@ export function PayrollSimulator() {
     setNewAmount("");
   }
 
+  function handleRemoveComponent(index: number) {
+    return function removeComponent(): void {
+      setComponents((cs) => cs.filter((_, i) => i !== index));
+    };
+  }
+
   function onSubmit(values: FormValues) {
     simulate.mutate(
       { ...values, hypotheticalComponents: components },
@@ -120,7 +126,7 @@ export function PayrollSimulator() {
                       size="icon"
                       variant="ghost"
                       className="h-5 w-5 text-destructive"
-                      onClick={() => setComponents((cs) => cs.filter((_, idx) => idx !== i))}
+                      onClick={handleRemoveComponent(i)}
                       aria-label={`Remove ${c.name}`}
                     />
                   </div>

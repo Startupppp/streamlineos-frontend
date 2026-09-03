@@ -44,6 +44,15 @@ export function CreateBulkSendDialog({ open, onOpenChange }: { open: boolean; on
     },
   });
 
+  function submitBulkSend(dryRun: boolean) {
+    return function startBulkSend(): void {
+      void form.handleSubmit((values) => handleSubmit(values, dryRun))();
+    };
+  }
+
+  const handleDryRun = submitBulkSend(true);
+  const handleStartBulkSend = submitBulkSend(false);
+
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -237,14 +246,14 @@ export function CreateBulkSendDialog({ open, onOpenChange }: { open: boolean; on
           <Button
             type="button"
             variant="outline"
-            onClick={() => form.handleSubmit((values) => handleSubmit(values, true))()}
+            onClick={handleDryRun}
             disabled={createJob.isPending}
           >
             Dry run
           </Button>
           <LoadingButton
             type="button"
-            onClick={() => form.handleSubmit((values) => handleSubmit(values, false))()}
+            onClick={handleStartBulkSend}
             isPending={createJob.isPending}
             loadingText="Starting…"
           >

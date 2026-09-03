@@ -71,6 +71,14 @@ export interface RecordFormProps {
   controls?: Record<string, (control: RecordFieldControl) => ReactNode>;
 }
 
+function booleanFieldChange(
+  onChange: (value: string) => void,
+): (checked: boolean) => void {
+  return function handleBooleanFieldChange(checked) {
+    onChange(String(checked));
+  };
+}
+
 function controlType(kind: FieldSpec["kind"]): string {
   switch (kind) {
     case "email":
@@ -237,7 +245,7 @@ export function RecordForm({
                             <Switch
                               checked={control.value === "true"}
                               disabled={isSubmitting}
-                              onCheckedChange={(next) => control.onChange(String(next))}
+                              onCheckedChange={booleanFieldChange(control.onChange)}
                               aria-label={field.label}
                             />
                           </FormControl>

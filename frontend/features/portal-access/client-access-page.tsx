@@ -211,6 +211,10 @@ export function ClientAccessPage() {
     setCursorHistory([undefined]);
   }
 
+  const handlePreviousPage = useCallback(() => {
+    setCursorHistory((history) => history.slice(0, -1));
+  }, []);
+
   const handleOpenCreate = useCallback(() => {
     openCreate();
   }, [openCreate]);
@@ -398,7 +402,7 @@ export function ClientAccessPage() {
                   page={cursorHistory.length}
                   hasNext={pagination.hasMore}
                   disabled={isLoading}
-                  onPrevious={() => setCursorHistory((history) => history.slice(0, -1))}
+                  onPrevious={handlePreviousPage}
                   onNext={() => {
                     if (pagination.nextCursor) setCursorHistory((history) => [...history, pagination.nextCursor!]);
                   }}

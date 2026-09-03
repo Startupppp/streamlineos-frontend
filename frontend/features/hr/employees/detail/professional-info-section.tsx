@@ -15,6 +15,14 @@ import { DepartmentCombobox } from "@/components/hr/department-combobox";
 import { Briefcase } from "lucide-react";
 import type { EmployeeFormValues } from "@/features/hr/employees/detail/employee-form-schema";
 
+function joiningDateChange(
+  onChange: (value: Date | undefined) => void,
+): (value: string) => void {
+  return function handleJoiningDateChange(value) {
+    onChange(value ? new Date(value) : undefined);
+  };
+}
+
 export function ProfessionalInfoSection() {
   const { control } = useFormContext<EmployeeFormValues>();
 
@@ -73,9 +81,7 @@ export function ProfessionalInfoSection() {
                       ? new Date(field.value).toISOString().split("T")[0]
                       : ""
                   }
-                  onChange={(value) =>
-                    field.onChange(value ? new Date(value) : undefined)
-                  }
+                  onChange={joiningDateChange(field.onChange)}
                 />
               </FormControl>
               <FormMessage />

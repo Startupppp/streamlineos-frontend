@@ -99,6 +99,10 @@ export function DocumentEditorPage() {
     },
   });
 
+  const handleBackToDocuments = useCallback(() => {
+    requestLeave(() => router.push("/hr/documents"));
+  }, [requestLeave, router]);
+
   if (isLoading) {
     return (
       <PageWrapper title="Document Editor" subtitle="Loading...">
@@ -142,7 +146,7 @@ export function DocumentEditorPage() {
       <PageWrapper
         title="Document Editor"
         subtitle={doc.templateType ? `Template: ${doc.templateType}` : undefined}
-        onBack={() => requestLeave(() => router.push("/hr/documents"))}
+        onBack={handleBackToDocuments}
         actions={
           <div className="flex items-center gap-2">
             {isDirty && (

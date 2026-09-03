@@ -54,6 +54,10 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
   const [scoreThreshold, setScoreThreshold] = useState("");
   const [createFollowUpTask, setCreateFollowUpTask] = useState(false);
 
+  function handleFollowUpTaskToggle(checked: boolean | "indeterminate"): void {
+    setCreateFollowUpTask(Boolean(checked));
+  }
+
   async function handleAdd() {
     try {
       await createRule.mutateAsync({
@@ -151,7 +155,7 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
 
           {actionType === "create_lead" && (
             <label className="flex items-center gap-2 text-sm">
-              <Checkbox checked={createFollowUpTask} onCheckedChange={(v) => setCreateFollowUpTask(Boolean(v))} />
+              <Checkbox checked={createFollowUpTask} onCheckedChange={handleFollowUpTaskToggle} />
               Create a follow-up task for the assigned owner
             </label>
           )}

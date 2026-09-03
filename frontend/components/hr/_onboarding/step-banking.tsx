@@ -14,6 +14,7 @@ import {
   FormLabel,
   FormMessage,
 } from "../../ui/form";
+import { latinNameFieldChange, digitsOnlyFieldChange } from "./restricted-field-change";
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
@@ -48,9 +49,7 @@ export function StepBanking({ form }: StepBankingProps) {
             <FormItem>
               <FormLabel>Account Holder Name</FormLabel>
               <FormControl>
-                <Input placeholder="Name as per bank records" {...field} onChange={(e) => {
-                  if (/^[A-Za-z\s]*$/.test(e.target.value)) field.onChange(e.target.value);
-                }} />
+                <Input placeholder="Name as per bank records" {...field} onChange={latinNameFieldChange(field.onChange)} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -63,9 +62,7 @@ export function StepBanking({ form }: StepBankingProps) {
             <FormItem>
               <FormLabel>Bank Name</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Chase, HDFC" {...field} onChange={(e) => {
-                  if (/^[A-Za-z\s]*$/.test(e.target.value)) field.onChange(e.target.value);
-                }} />
+                <Input placeholder="e.g. Chase, HDFC" {...field} onChange={latinNameFieldChange(field.onChange)} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -78,9 +75,7 @@ export function StepBanking({ form }: StepBankingProps) {
             <FormItem>
               <FormLabel>Branch Name</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Down Town Branch" {...field} onChange={(e) => {
-                  if (/^[A-Za-z\s]*$/.test(e.target.value)) field.onChange(e.target.value);
-                }} />
+                <Input placeholder="e.g. Down Town Branch" {...field} onChange={latinNameFieldChange(field.onChange)} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -93,9 +88,7 @@ export function StepBanking({ form }: StepBankingProps) {
             <FormItem>
               <FormLabel>Account Number</FormLabel>
               <FormControl>
-                <Input placeholder="XXXX-XXXX-XXXX" inputMode="numeric" {...field} onChange={(e) => {
-                  if (/^\d*$/.test(e.target.value)) field.onChange(e.target.value);
-                }} />
+                <Input placeholder="XXXX-XXXX-XXXX" inputMode="numeric" {...field} onChange={digitsOnlyFieldChange(field.onChange)} />
               </FormControl>
               <FormMessage />
             </FormItem>

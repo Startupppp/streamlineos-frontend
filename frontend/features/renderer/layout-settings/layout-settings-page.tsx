@@ -116,6 +116,21 @@ export function LayoutSettingsPage() {
     [layout?.key, saved],
   );
 
+  const handleMoveRow = useCallback(
+    (index: number, by: number) => setRows((current) => moveRow(current, index, by)),
+    [setRows],
+  );
+
+  const handleHiddenChange = useCallback(
+    (name: string, hidden: boolean) => setRows((current) => setHidden(current, name, hidden)),
+    [setRows],
+  );
+
+  const handleGroupChange = useCallback(
+    (name: string, group: string) => setRows((current) => setGroup(current, name, group)),
+    [setRows],
+  );
+
   /*
     A permission check in flight is not an empty result. Showing "no record
     types" to somebody whose scopes have not arrived yet is the failure this
@@ -265,13 +280,9 @@ export function LayoutSettingsPage() {
           <FieldArrangement
             rows={rows}
             disabled={!canAdjust || isBusy}
-            onMove={(index, by) => setRows((current) => moveRow(current, index, by))}
-            onHiddenChange={(name, hidden) =>
-              setRows((current) => setHidden(current, name, hidden))
-            }
-            onGroupChange={(name, group) =>
-              setRows((current) => setGroup(current, name, group))
-            }
+            onMove={handleMoveRow}
+            onHiddenChange={handleHiddenChange}
+            onGroupChange={handleGroupChange}
           />
         )}
 

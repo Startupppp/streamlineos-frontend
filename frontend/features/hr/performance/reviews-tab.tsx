@@ -85,6 +85,15 @@ export function ReviewsTab() {
     setCursorHistory([undefined]);
   }, []);
 
+  const handleEmployeeChange = useCallback((id: string) => {
+    setEmployeeId(id);
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.employeeId;
+      return next;
+    });
+  }, []);
+
   const handleNextPage = useCallback(() => {
     const nextCursor = data?.pagination.nextCursor;
     if (nextCursor) setCursorHistory((h) => [...h, nextCursor]);
@@ -331,10 +340,7 @@ export function ReviewsTab() {
           employees={employees}
           cycles={Array.isArray(cycles) ? cycles : []}
           employeeId={employeeId}
-          onEmployeeChange={(id) => {
-            setEmployeeId(id);
-            setFieldErrors((prev) => { const next = { ...prev }; delete next.employeeId; return next; });
-          }}
+          onEmployeeChange={handleEmployeeChange}
           employeePickerOpen={employeePickerOpen}
           onEmployeePickerOpenChange={setEmployeePickerOpen}
           cycleId={cycleId}

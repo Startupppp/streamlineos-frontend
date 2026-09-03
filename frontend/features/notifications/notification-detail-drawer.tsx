@@ -52,7 +52,12 @@ function formatFullDate(value: Date | string): string {
   return date.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 }
 
-const SNOOZE_PRESETS: Array<{ label: string; getIso: () => string }> = [
+interface SnoozePreset {
+  label: string;
+  getIso: () => string;
+}
+
+const SNOOZE_PRESETS: SnoozePreset[] = [
   { label: "1 hour", getIso: () => new Date(Date.now() + 60 * 60 * 1000).toISOString() },
   { label: "3 hours", getIso: () => new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString() },
   {
@@ -86,6 +91,13 @@ export function NotificationDetailDrawer({
     onDelete(notification.id);
     onOpenChange(false);
   }, [notification, onDelete, onOpenChange]);
+
+  const handleSnooze = (preset: SnoozePreset) =>
+    function snoozeUntilPreset(): void {
+      if (!notification) return;
+      onSnooze(notification.id, preset.getIso());
+      onOpenChange(false);
+    };
 
   const handleMute = useCallback(() => {
     if (!notification?.eventKey) return;
@@ -206,10 +218,7 @@ export function NotificationDetailDrawer({
                 {SNOOZE_PRESETS.map((preset) => (
                   <DropdownMenuItem
                     key={preset.label}
-                    onClick={() => {
-                      onSnooze(notification.id, preset.getIso());
-                      onOpenChange(false);
-                    }}
+                    onClick={handleSnooze(preset)}
                   >
                     {preset.label}
                   </DropdownMenuItem>
