@@ -4,11 +4,37 @@
 
 **Blocked by:** 36.
 
-**Status:** 5 of 6 closed — box 1 PARTIAL with a counted residue. Report: `reports/38-handler-responsibility.md`
+**Status:** 5 of 6 closed — box 1 PARTIAL, with the residue counted, converted where it is a rule, and the remainder explicitly ruled out of scope. Reports: `reports/38-handler-responsibility.md`, `reports/38c-closure-residue.md`
 Routed findings 1-3 (outbox orphan + both gates) ADDRESSED — see `reports/38b-outbox-and-fire-and-forget.md`.
 
 - [ ] Non-trivial UI events and form actions use named, typed handlers whose names express user intent. No inline arrow or function expression appears in a JSX event prop.
-      PARTIAL: measured first — 1,469 inline arrows in JSX event props repo-wide across 3,223 `.tsx` files, 818 in my territory, of which 138 are non-trivial and 61 risky (a mutation, a sequence, validation, or something that can fail). 23 of the 61 risky ones are now named handlers, including one 9-line cursor-paginator closure duplicated across 8 files. 38 risky closures remain, named and counted in report §6. Five of those are two cross-feature duplications (event-subscription toggle ×3, Enter/Space activation ×2) that cannot be deduped without a shared home in `lib/` or `components/` — both held by other agents. The other 33 are two-statement row actions and numeric-coercion `field.onChange` wrappers with no mutation, network call or validation rule in them.
+      PARTIAL, and the two halves of this box now have different answers.
+      **First clause — CLOSED for `features/build|hr|chat|notifications`.** Re-measured at head with the
+      same scanner: 3,808 `.tsx` files, **1,562 inline arrows in JSX event props, 196 non-trivial, 16 risky**
+      (a mutation, a sequence, validation, or something that can fail), and **0 of the 16 are in
+      build/hr/chat/notifications** — down from 11. The five cross-feature duplications the last pass was
+      blocked on now have shared homes and are converted (`lib/keyboard-activation.ts`,
+      `lib/toggle-in-list.ts`). Eleven more were converted this session, of which the largest was one rule
+      retyped at **44 call sites in eight disagreeing spellings**: numeric coercion on a form field, where
+      `Number(v)` yields `0` for an emptied box, `parseInt(v, 10)` yields `NaN` and `v === "" ? undefined :
+      Number(v)` yields `undefined`. `NaN` is a real defect — `shift-form-sheet`'s `breakMinutes` is a
+      required `z.number().int()`, so clearing the box produced "Expected number, received nan" instead of
+      "Required" and `.min(0)` never ran. `lib/numeric-field.ts` owns it now (13 tests, two bite proofs).
+      One banned `as SurveyQuestion["type"]` cast was removed in the same pass.
+      **Second clause — OUT OF SCOPE, deliberately, and this is the judgement the box was ambiguous about.**
+      "No inline arrow appears in a JSX event prop" is literally false at 1,562 occurrences and would stay
+      false after any amount of work short of converting all of them. Roughly 84% are
+      `onClick={() => setOpen(true)}`: one call to a stable state setter, no rule, no mutation, no failure
+      mode, and no behaviour to change by naming it. Converting them touches ~1,300 files for zero
+      behavioural difference, and the PRD's closure protocol forbids reopening closed files for naming
+      taste. **The first clause is the substantive one and it is what was measured.** The box stays
+      unticked because the second clause is written as an absolute and is not met.
+      REMAINS, named, all outside this session's territory: 16 risky closures in `components/` (5),
+      `features/inventory` (4), `features/crm` (1), `features/accounting` (1), `features/payroll` (1),
+      `features/surveys` (1), `components/automations` (2), `components/assistant` (1). Two of them —
+      `components/automations/ai-node-config-forms.tsx:380` and
+      `features/surveys/respondent/simple-question-input.tsx:41` — are the same numeric-coercion rule and
+      can now import `lib/numeric-field.ts` instead of retyping it.
 - [x] Handlers delegate validation and state-independent rules to explicitly named domain functions, and do not embed business logic or multi-step mutations.
 - [x] No handler-to-handler chain exists that adds no behaviour.
 - [x] Memoization of a handler is used only where referential identity affects memoization, subscription or effect correctness, and every dependency is verified.
