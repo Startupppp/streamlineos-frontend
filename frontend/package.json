@@ -202,6 +202,7 @@
     "jest-environment-jsdom": "^29.7.0",
     "knip": "^6.31.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "yaml": "2.9.0"
   }
 }
