@@ -6,6 +6,7 @@
     "NO_ASSERTION": 0,
     "TAUTOLOGY": 0,
     "COND_ASSERT": 0,
+    "EARLY_RETURN": 0,
     "FLOATING_ASSERT": 0,
     "FOCUSED": 0,
     "SUPPRESSION": 0,

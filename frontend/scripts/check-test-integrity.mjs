@@ -28,6 +28,12 @@
  *                   branch absent or vacuous. HIGHEST-YIELD CLASS: it is
  *                   indistinguishable from a passing test in every report, and
  *                   it is the class that was actually live here.
+ *   EARLY_RETURN    COND_ASSERT's other syntax: `it("...", () => { if (!x)
+ *                   return; ... expect(...) })`. Every assertion below the
+ *                   guard is conditional on it, but the AST shape differs so the
+ *                   COND_ASSERT detector never sees it. Added after the backend
+ *                   twin found 7 live sites, one of which passed over a foreign
+ *                   key whose tenant column had been removed.
  *   FLOATING_ASSERT expect(p).resolves/.rejects.<matcher>(...) neither awaited
  *                   nor returned. It settles after the test has already passed.
  *   FOCUSED         it.only / describe.only / fit / fdescribe — silently drops
@@ -84,6 +90,7 @@ const CLASSES = [
   "NO_ASSERTION",
   "TAUTOLOGY",
   "COND_ASSERT",
+  "EARLY_RETURN",
   "FLOATING_ASSERT",
   "FOCUSED",
   "SUPPRESSION",
@@ -200,6 +207,47 @@ function testBody(callNode) {
 const OTHER_ASSERT = /^(assert|ok|strictEqual|deepStrictEqual|fail|throws|doesNotThrow)$/;
 const THROW_MATCHER = /^(toThrow|toThrowError)$/;
 
+const SENTINEL_CACHE = new WeakMap();
+
+/**
+ * Identifiers this file asserts on OUTSIDE the given test body. "Outside" is
+ * load-bearing: a guard's own identifier almost always appears in the
+ * assertions it guards, so crediting those would exempt every early return
+ * including the real ones.
+ */
+function sentinelAsserted(sf, exclude) {
+  let byFile = SENTINEL_CACHE.get(sf);
+  if (!byFile) {
+    byFile = [];
+    const visit = (node) => {
+      if (
+        ts.isCallExpression(node) &&
+        ts.isIdentifier(node.expression) &&
+        node.expression.text === "expect"
+      ) {
+        const names = new Set();
+        const collect = (n) => {
+          if (ts.isIdentifier(n)) names.add(n.text);
+          ts.forEachChild(n, collect);
+        };
+        for (const arg of node.arguments) collect(arg);
+        byFile.push({ start: node.getStart(sf), end: node.getEnd(), names });
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(sf);
+    SENTINEL_CACHE.set(sf, byFile);
+  }
+  const lo = exclude.getStart(sf);
+  const hi = exclude.getEnd();
+  const out = new Set();
+  for (const e of byFile) {
+    if (e.start >= lo && e.end <= hi) continue;
+    for (const n of e.names) out.add(n);
+  }
+  return out;
+}
+
 function analyseBody(fn, sf, counters) {
   let expectCount = 0;
   let hasOtherAssertion = false;
@@ -280,7 +328,57 @@ function analyseBody(fn, sf, counters) {
     ts.forEachChild(node, visit);
   };
   visit(fn.body ?? fn);
-  return { expectCount, hasOtherAssertion, tautologies, floating, conditional, bareThrows };
+
+  // A bare `if (guard) return;` at the top level of the body, no else, standing
+  // ABOVE every assertion. Scanned over the body's own statement list, so a
+  // guard inside a helper or a loop is not counted; and a guard with nothing to
+  // silence is not a defect.
+  const earlyReturns = [];
+  if (fn.body && ts.isBlock(fn.body)) {
+    let sawAssertion = false;
+    for (const st of fn.body.statements) {
+      if (!sawAssertion && ts.isIfStatement(st) && !st.elseStatement) {
+        const t = st.thenStatement;
+        const bare =
+          (ts.isReturnStatement(t) && !t.expression) ||
+          (ts.isBlock(t) &&
+            t.statements.length === 1 &&
+            ts.isReturnStatement(t.statements[0]) &&
+            !t.statements[0].expression);
+        if (bare)
+          earlyReturns.push({
+            node: st,
+            detail: `if (${st.expression.getText(sf).slice(0, 70)}) return;`,
+          });
+      }
+      const text = st.getText(sf);
+      if (/\bexpect\s*\(/.test(text) || /\bthrow\b/.test(text)) sawAssertion = true;
+    }
+    if (!/\bexpect\s*\(/.test(fn.getText(sf))) earlyReturns.length = 0;
+
+    // SENTINEL EXEMPTION. A guard whose own identifier is asserted by a sibling
+    // test in the same file is not an escape hatch: the file goes red when the
+    // guard is false, so the guarded tests cannot pass while asserting nothing.
+    // This is not hypothetical — it is why this class reports 0 here and not 11.
+    // The frontend's two cross-repo permission-catalog suites guard 11 tests on
+    // `if (!backendAvailable) return;` and each carries
+    //   it("can reach the backend catalog — the cross-repo checks below assert
+    //      nothing without it", () => { expect({ backendAvailable, ... })
+    //        .toEqual({ backendAvailable: true, ... }); });
+    // Flagging those would have banked 11 sites of detector noise as debt.
+    for (let i = earlyReturns.length - 1; i >= 0; i -= 1) {
+      const ids = [];
+      const collect = (n) => {
+        if (ts.isIdentifier(n)) ids.push(n.text);
+        ts.forEachChild(n, collect);
+      };
+      collect(earlyReturns[i].node.expression);
+      const outside = sentinelAsserted(sf, fn);
+      if (ids.some((id) => outside.has(id))) earlyReturns.splice(i, 1);
+    }
+  }
+
+  return { expectCount, hasOtherAssertion, tautologies, floating, conditional, bareThrows, earlyReturns };
 }
 
 function scanFile(file, rel, counters, findings) {
@@ -334,6 +432,7 @@ function scanFile(file, rel, counters, findings) {
             push("NO_ASSERTION", node, node, "no expect(), no throw, no assert helper");
           for (const t of s.tautologies) push("TAUTOLOGY", t.node, node, t.detail);
           for (const t of s.conditional) push("COND_ASSERT", t.node, node, t.detail);
+          for (const t of s.earlyReturns) push("EARLY_RETURN", t.node, node, t.detail);
           for (const t of s.floating) push("FLOATING_ASSERT", t.node, node, t.detail);
           for (const t of s.bareThrows) push("BARE_THROW", t.node, node, t.detail);
         }
@@ -370,10 +469,22 @@ describe("caught", () => {
   it.only("F focused", () => { expect(1).toBe(2); });
   it.skip("G suppressed", () => { expect(1).toBe(1); });
   it("H bare toThrow", () => { expect(() => boom()).toThrow(); });
+  it("R early return above the assertions", () => {
+    const found = ["a"].find((x) => x === "b");
+    if (!found) return;
+    expect(found).toContain("b");
+  });
 });
 `,
   "not-caught.test.tsx": `
 describe("not caught", () => {
+  it("U sentinel: the guard itself is asserted by this sibling", () => {
+    expect({ backendAvailable }).toEqual({ backendAvailable: true });
+  });
+  it("V sentinel-protected guard is NOT an escape hatch", () => {
+    if (!backendAvailable) return;
+    expect(catalog).toContain("x");
+  });
   it("I throw is an assertion", () => {
     for (const s of items) if (!s.ok) throw new Error("bad " + s.key);
   });
@@ -390,6 +501,14 @@ describe("not caught", () => {
   });
   it("M a named toThrow is fine", () => { expect(() => boom()).toThrow(TypeError); });
   xit("N xit is a suppression, not a vacuous test", () => { expect(1).toBe(1); });
+  it("S a return BELOW the assertions silences nothing", () => {
+    expect(1).toBe(1);
+    if (!ready) return;
+    expect(2).toBe(2);
+  });
+  it("T an early return with an else branch is a real two-way test", () => {
+    if (!found) { expect(fallback).toBe(1); } else { expect(found).toBe(2); }
+  });
 });
 `,
 };
@@ -431,6 +550,19 @@ function selfTest() {
       none("L negated bare toThrow cannot be satisfied by a crash", "BARE_THROW"),
     ],
     ["M toThrow(Class) is NOT BARE_THROW", none("M a named toThrow is fine", "BARE_THROW")],
+    [
+      "V a guard asserted by a SIBLING test is NOT EARLY_RETURN (sentinel)",
+      none("V sentinel-protected guard is NOT an escape hatch", "EARLY_RETURN"),
+    ],
+    ["R is EARLY_RETURN", at("caught.test.ts", "R early return above the assertions", "EARLY_RETURN")],
+    [
+      "S a return BELOW the assertions is NOT EARLY_RETURN",
+      none("S a return BELOW the assertions silences nothing", "EARLY_RETURN"),
+    ],
+    [
+      "T an if/else is NOT EARLY_RETURN",
+      none("T an early return with an else branch is a real two-way test", "EARLY_RETURN"),
+    ],
     ["N xit is SUPPRESSION", at("not-caught.test.tsx", "N xit is a suppression, not a vacuous test", "SUPPRESSION")],
     [
       "N a suppressed test is NOT also counted as vacuous",
