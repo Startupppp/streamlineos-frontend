@@ -1164,3 +1164,30 @@ Make the R2 buckets private (`R2_BUCKET_NAME`, `R2_KB_BUCKET_NAME`); rotate the 
 credential; the support-channel `rotateInboundSecret` rotation owed after the hashing migration;
 the owner-DSN backfill `--apply`. Also: objects orphaned BEFORE the purge-drain fix leave no row,
 so recovering them needs a bucket listing — an operator action, recorded as owed.
+
+## First full gate sweep at head — 2026-09-03 (ticket 41 box 3 evidence)
+
+`release-verify.mjs --allow-dirty`, cheap gates only: **38 PASS / 16 FAIL / 4 SKIP**.
+Backend 20 pass / 11 not-pass, frontend 18 pass / 9 not-pass.
+
+The 16 reds, and who owns each:
+
+| gate | owner / cause |
+|---|---|
+| `openapi:check` | **ORCHESTRATOR, and only at quiesce.** ~16 routes changed. This is a regenerate-and-diff; doing it while agents are still adding routes just makes it stale again. It is a ticket 41 STEP, not a defect. |
+| `check:tenant-isolation` | 929/930 — `storage-pending-purge.service.ts` has no cross-tenant negative spec. Assigned to the storage agent. |
+| `check:effect-fetches` | 1 real site, `components/layout/command-palette.tsx:177`. Found only because the gate was repaired — it previously printed "✔ No useEffect-driven API fetches found (5,278 files scanned)" **over a real one**. Left red deliberately: the code is what is wrong. |
+| `check:web-vitals-budget`, `check:route-bundle-budget` | 17 JS breaches. Needs a finished production build; assigned. |
+| `check:dead-code` (FE) | `hooks/api/meetings-ai.ts`. `useMeetingPrep` must NOT be deleted — teach the gate. |
+| `check:command-catalog` | 4 real defects. |
+| `check:file-sizes`, `check:over-300` | file-size violations. |
+| `check:vulnerabilities` | 4 HIGH in fast-uri. Dependency owner. |
+| `check:licenses` | sharp-libvips LGPL-3.0. Legal/dependency decision. |
+| `db:verify-rls` | needs a live database at head. |
+| `check:lifecycle-predicates`, `check:module-lifecycle`, `check:audit-log-privileges` | two exit 2 — re-check whether these are prerequisite-unmet (should be SKIP) rather than real failures. |
+
+The 4 SKIPs: backend `typecheck` and both `build`s behind `--with-heavy`, and
+`check:tenant-relationships` correctly reporting its target is mid-bootstrap.
+
+**A gate that did not run is not a gate that passed**, and 16 of these must be resolved or
+accepted with a named owner and deadline before ticket 41 box 7 can close.
