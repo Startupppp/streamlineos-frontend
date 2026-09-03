@@ -194,6 +194,54 @@ const OUT_OF_RELEASE_SCOPE = [
  * Key: "<file>::<hook>::<METHOD> <path>"
  */
 const MIN_REASON_LENGTH = 60;
+
+/**
+ * Reads that call a PERMISSIONED route from a `useQuery` whose `enabled`
+ * consults no permission at all. That is a different defect from a key
+ * mismatch — the request is sent for every user, the backend 403s, and
+ * TanStack reports the failure as `isPending: true, isFetching: false`,
+ * which renders as a finished empty read. The screen says "none yet" to a
+ * user who was actually refused.
+ *
+ * This list is a RATCHET, not an allowlist: each entry records the exact
+ * number of such reads the file is permitted to carry. A new one in a listed
+ * file fails the gate just as loudly as one in an unlisted file, and a file
+ * that drops below its recorded count fails too so the number cannot rot
+ * upward unnoticed.
+ *
+ * `check-gated-reads.mjs` asks a related question but cannot answer this one:
+ * it walks `hooks/api` only, so every `features/**` read is invisible to it,
+ * and it scores a hook "gated" if the enclosing block mentions
+ * `useModuleEnabled` — a module toggle, which is org configuration and not a
+ * permission. Both gaps are why it reported 0 while 48 of these existed.
+ */
+const UNGATED_HELD_BACK = new Map([
+  [
+    "hooks/api/leads.ts",
+    {
+      count: 11,
+      reason:
+        "Every read here calls a crm:leads:view route with no permission in `enabled`. CRM is out of the 10/10 release scope, so the conversion is deferred rather than done blind — the leads screens have their own gating story under the CRM lane. One line each (useCan(\"crm:leads:view\") ANDed into `enabled`) the day CRM re-enters scope.",
+    },
+  ],
+  [
+    "hooks/api/inv-ai-explain.ts",
+    {
+      count: 1,
+      reason:
+        "useSupplierDelayBriefing reads GET /inventory/ai/supplier-delay, which declares inventory:reports:read, with no permission in `enabled`. Inventory is out of the 10/10 release scope.",
+    },
+  ],
+  [
+    "features/inventory/components/tools/export-tab.tsx",
+    {
+      count: 1,
+      reason:
+        "useExportJobsWithPolling reads GET /inventory/export/jobs, which declares inventory:export, with no permission in `enabled`. Inventory is out of the 10/10 release scope.",
+    },
+  ],
+]);
+
 const DELIBERATE = new Map([
   [
     "hooks/api/accounting/expenses.ts::useTeamExpenses::GET /hr/expenses/page-data",
@@ -1331,7 +1379,7 @@ console.log(`Backend controllers indexed   ${backendStats.controllers} (${backen
 console.log(`Frontend files scanned        ${scanned}`);
 console.log(`WRAPPER gate sites            ${wrapper.length}  matched ${wrapperResult.tally.matched}  mismatch ${wrapperResult.mismatches.length}  ambiguous ${wrapperResult.tally.ambiguous}  unresolved-route ${wrapperResult.tally.unresolvedRoute}  no-path ${wrapperResult.tally.noPath}  route-unpermissioned ${wrapperResult.tally.unpermissionedRoute}`);
 console.log(`ENABLED gate sites            ${scope.length}  matched ${scopeResult.tally.matched}  mismatch ${scopeResult.mismatches.length}  ambiguous ${scopeResult.tally.ambiguous}  unresolved-route ${scopeResult.tally.unresolvedRoute}  route-unpermissioned ${scopeResult.tally.unpermissionedRoute}`);
-console.log(`Reads with no permission in \`enabled\`  ${ungated.length}  (not this gate's failure — see --list)`);
+console.log(`Reads with no permission in \`enabled\`  ${ungated.length}  (the permissioned subset IS enforced below)`);
 
 if (floors.length > 0) {
   console.error("");
@@ -1379,28 +1427,103 @@ if (excepted.length > 0) {
   for (const m of excepted) console.log(`${render(m)}\n      deliberate  ${m.reason}`);
 }
 
+// Reads whose `enabled` consults no permission at all. A DIFFERENT defect from
+// a key mismatch, and this gate owns it: `check-gated-reads.mjs` walks only
+// `hooks/api` and counts a module toggle as a gate, so it cannot see the
+// `features/**` half of the set and scores part of the rest as already gated.
+const permissionedUngated = [];
+for (const u of ungated)
+  for (const c of u.calls) {
+    const hit = resolveRoute(bySegments, c.method, c.path);
+    if (hit && hit.route.value.permission !== null)
+      permissionedUngated.push({
+        file: u.file,
+        line: u.line,
+        hook: u.hook,
+        call: `${c.method} ${c.path}`,
+        declared: hit.route.value.permission,
+      });
+  }
+
+const ungatedByFile = new Map();
+for (const r of permissionedUngated)
+  ungatedByFile.set(r.file, [...(ungatedByFile.get(r.file) ?? []), r]);
+
+const ungatedNew = [];
+const ungatedOverCount = [];
+const ungatedUnderCount = [];
+const ungatedStale = [];
+const ungatedMalformed = [];
+for (const [file, rows] of ungatedByFile) {
+  const held = UNGATED_HELD_BACK.get(file);
+  if (!held) { ungatedNew.push(...rows); continue; }
+  if (typeof held.reason !== "string" || held.reason.length < MIN_REASON_LENGTH)
+    ungatedMalformed.push(file);
+  if (rows.length > held.count) ungatedOverCount.push({ file, found: rows.length, held: held.count, rows });
+  if (rows.length < held.count) ungatedUnderCount.push({ file, found: rows.length, held: held.count });
+}
+for (const file of UNGATED_HELD_BACK.keys())
+  if (!ungatedByFile.has(file)) ungatedStale.push(file);
+
+const renderUngated = (r) =>
+  `   ${r.file}:${r.line}  ${r.hook}  ${r.call}  route requires ${r.declared}`;
+
+console.log(
+  `\n${permissionedUngated.length} read(s) on a permissioned route whose \`enabled\` consults no permission ` +
+    `(${permissionedUngated.length - ungatedNew.length} held back and counted, ${ungatedNew.length} unaccounted).`,
+);
 if (process.argv.includes("--list")) {
   const unresolved = [...wrapperResult.unresolved, ...scopeResult.unresolved];
   console.log(`\n${unresolved.length} binding(s) whose route did not resolve against the controllers:`);
   for (const u of unresolved) console.log(`   ${u.file}:${u.line}  ${u.hook}  ${u.call}  (gates ${u.permission})`);
-
-  // Reads whose `enabled` consults no permission at all. This gate cannot fail
-  // on them — it checks WHICH key, not WHETHER there is one, and
-  // check-gated-reads.mjs owns that question for hooks/api. It is printed
-  // because that gate scans only hooks/api, so a permissioned read sitting in
-  // features/** or app/** is invisible to both without this line.
-  const permissionedUngated = [];
-  for (const u of ungated)
-    for (const c of u.calls) {
-      const hit = resolveRoute(bySegments, c.method, c.path);
-      if (hit && hit.route.value.permission !== null)
-        permissionedUngated.push(`   ${u.file}:${u.line}  ${u.hook}  ${c.method} ${c.path}  route requires ${hit.route.value.permission}`);
-    }
-  console.log(`\n${permissionedUngated.length} read(s) on a permissioned route whose \`enabled\` consults no permission:`);
-  for (const line of permissionedUngated) console.log(line);
+  console.log("");
+  for (const r of permissionedUngated) console.log(renderUngated(r));
+  for (const [file, held] of UNGATED_HELD_BACK)
+    console.log(`   held back  ${file} (${held.count})  ${held.reason}`);
 }
 
 let failed = false;
+
+if (ungatedNew.length > 0) {
+  failed = true;
+  console.error(
+    `\n✖  ${ungatedNew.length} read(s) call a permissioned route with no permission in \`enabled\`:\n`,
+  );
+  for (const r of ungatedNew) console.error(renderUngated(r));
+  console.error("");
+  console.error("   The request is sent for a user the backend will refuse. TanStack surfaces");
+  console.error("   that 403 as isPending with nothing fetching, which renders identically to a");
+  console.error("   finished empty read — the screen says \"none yet\" to someone who was denied,");
+  console.error("   and no gate is visible anywhere. AND the route's own key into `enabled`, or");
+  console.error("   move the read onto useGatedQuery(<key>, { ... }).");
+}
+
+if (ungatedOverCount.length > 0) {
+  failed = true;
+  console.error(`\n✖  ${ungatedOverCount.length} held-back file(s) grew a new ungated permissioned read:`);
+  for (const o of ungatedOverCount) {
+    console.error(`   ${o.file}: ${o.found} found, ${o.held} recorded`);
+    for (const r of o.rows) console.error(renderUngated(r));
+  }
+}
+
+if (ungatedUnderCount.length > 0) {
+  failed = true;
+  console.error(`\n✖  ${ungatedUnderCount.length} held-back file(s) are now BELOW their recorded count — lower it so the ratchet holds:`);
+  for (const o of ungatedUnderCount) console.error(`   ${o.file}: ${o.found} found, ${o.held} recorded`);
+}
+
+if (ungatedStale.length > 0) {
+  failed = true;
+  console.error(`\n✖  ${ungatedStale.length} stale UNGATED_HELD_BACK entry(entries) — the file carries none any more; delete them:`);
+  for (const f of ungatedStale) console.error(`   ${f}`);
+}
+
+if (ungatedMalformed.length > 0) {
+  failed = true;
+  console.error(`\n✖  ${ungatedMalformed.length} UNGATED_HELD_BACK entry(entries) whose reason does not justify itself (min ${MIN_REASON_LENGTH} chars):`);
+  for (const f of ungatedMalformed) console.error(`   ${f}`);
+}
 
 if (malformed.length > 0) {
   failed = true;

@@ -22,6 +22,30 @@
  * first is decidable from `hooks/api/**`. The NOTE printed at the end of a run
  * measures the second and never fails — see the comment on reportGateConsumption.
  *
+ * WHAT THIS GATE'S ZERO DOES NOT MEAN — read before quoting it as coverage.
+ * `permissionedUngated: 0` is TRUE of this scan and FALSE of the repository.
+ * Measured 2026-09-03: 48 reads called a permissioned route with an `enabled`
+ * that consulted no permission, and this gate reported 0 over all of them, for
+ * two independent reasons that are properties of the scan, not of the tree:
+ *
+ *   1. SCAN_DIRS is ["hooks/api"]. Half the set lived in `features/**`, which
+ *      this scanner never opens. A permissioned read on a page component is
+ *      invisible here no matter how ungated it is.
+ *   2. GATE_MARKERS counts `useModuleEnabled` — a MODULE TOGGLE, which is org
+ *      configuration and not a permission — and it counts a marker mentioned
+ *      ANYWHERE in the enclosing hook, not one reached from `enabled`. So a
+ *      hook gated on nothing scores as gated if it mentions a toggle nearby.
+ *
+ * Neither is fixable by lowering a baseline. The question "does this read
+ * consult a permission, and is it the one its route declares" is answered
+ * repo-wide, against the CONTROLLERS rather than the vendored contract, by
+ * `scripts/check-permission-route-binding.mjs` (`pnpm check:permission-binding`),
+ * which walks `hooks/api` AND `features/**`, resolves `enabled` through the
+ * TypeScript AST, and FAILS on any permissioned ungated read not recorded in
+ * its UNGATED_HELD_BACK ratchet. That gate — not this one — is the coverage.
+ * assertSiblingEnforcement() below refuses to let this file pass if that
+ * enforcement ever disappears, so this deferral cannot quietly become a lie.
+ *
  * SCAN DEFINITION — state this whenever you quote a number from this gate.
  * Call sites of `useQuery` / `useInfiniteQuery` / `useSuspenseQuery` under
  * `hooks/api/**` (non-test), whose enclosing exported hook mentions none of
@@ -51,7 +75,11 @@ const ROOT = join(SCRIPT_DIR, "..");
  * convert reads; raising it needs a reason in the ticket.
  */
 const BASELINE = {
-  /** Permissioned reads still on a raw useQuery. This is the number that bites. */
+  /**
+   * Permissioned reads still on a raw useQuery, AS THIS SCAN DEFINES BOTH
+   * WORDS. It is not the repo-wide number and must never be quoted as one —
+   * see "WHAT THIS GATE'S ZERO DOES NOT MEAN" in the header.
+   */
   permissionedUngated: 0,
   /**
    * Ungated reads whose route the scanner cannot resolve at all. These are NOT
@@ -783,6 +811,39 @@ export function useAllThings(options?: { enabled?: boolean }) {
 // Main
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * This gate's honesty depends on a sibling actually enforcing the wider set.
+ * If that enforcement is deleted or renamed, this file's carefully-worded
+ * deferral becomes a lie and its 0 reads as coverage again — which is exactly
+ * the failure it is documenting. So refuse to pass without it.
+ */
+const SIBLING = join(SCRIPT_DIR, "check-permission-route-binding.mjs");
+const SIBLING_REQUIRED = [
+  "UNGATED_HELD_BACK",
+  "call a permissioned route with no permission in",
+];
+
+function assertSiblingEnforcement() {
+  if (!existsSync(SIBLING)) {
+    console.error(
+      "FAIL: scripts/check-permission-route-binding.mjs is gone. This gate's zero is scoped to\n" +
+        "hooks/api and treats a module toggle as a permission, so it was never the coverage —\n" +
+        "that file was. With it absent, nothing in the repo fails on an ungated permissioned read.",
+    );
+    process.exit(1);
+  }
+  const sibling = readFileSync(SIBLING, "utf8");
+  const missing = SIBLING_REQUIRED.filter((needle) => !sibling.includes(needle));
+  if (missing.length > 0) {
+    console.error(
+      `FAIL: check-permission-route-binding.mjs no longer enforces ungated permissioned reads ` +
+        `(missing: ${missing.join(", ")}). This gate defers that question to it by name; with the ` +
+        `enforcement gone, this gate's 0 would be read as coverage over a set nobody checks.`,
+    );
+    process.exit(1);
+  }
+}
+
 function runMainScan() {
   const list = process.argv.includes("--list");
   console.log("Classifying raw reads under hooks/api/** against contracts/openapi.json...\n");
@@ -886,7 +947,24 @@ function runMainScan() {
     process.exit(1);
   }
 
-  console.log(`PASS: permissioned ungated reads at the recorded baseline (${offenders.length}).`);
+  assertSiblingEnforcement();
+
+  console.log(
+    `PASS: permissioned ungated reads at the recorded baseline (${offenders.length}) ` +
+      `FOR THIS SCAN'S DEFINITION.`,
+  );
+  console.log(
+    "  COVERS:         raw useQuery/useInfiniteQuery/useSuspenseQuery under hooks/api/**,\n" +
+      "                  classified against contracts/openapi.json.\n" +
+      "  DOES NOT COVER: features/** and app/** at all; whether a gate marker is actually\n" +
+      "                  reached from `enabled`; whether the key matches the one the route\n" +
+      "                  declares; and it treats useModuleEnabled (a module toggle, i.e. org\n" +
+      "                  configuration) as a permission. This zero is therefore NOT evidence\n" +
+      "                  that the repository has no ungated permissioned reads — measured\n" +
+      "                  2026-09-03 it reported 0 while 48 existed.\n" +
+      "  THE GATE THAT DOES: pnpm check:permission-binding (scripts/check-permission-route-binding.mjs),\n" +
+      "                  repo-wide, oracle is the controllers, and it FAILS on an unaccounted one.",
+  );
 }
 
 if (process.argv.includes("--self-test")) runSelfTest();
