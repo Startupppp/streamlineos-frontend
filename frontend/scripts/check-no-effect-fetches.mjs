@@ -11,7 +11,53 @@ const IMPORTS_API_CLIENT = /from ['"]@\/lib\/api-client['"]/;
 const USECALLBACK_DECL = /(?:const|let)\s+(\w+)\s*=\s*useCallback\s*\(/g;
 const DIRECT_ASYNC_EFFECT = /useEffect\s*\(\s*async\s*\(\s*\)\s*=>/;
 const VOID_IN_EFFECT = /useEffect\s*\(\s*\(\)\s*=>\s*\{[^}]*void\s+(\w+)\s*\(/g;
+const USEEFFECT_OPEN = /useEffect\s*\(/g;
+const API_CLIENT_CALL = /\bapiClient\s*\./;
 const MIN_FILES = 500;
+
+/**
+ * The callback bodies of every `useEffect(` in a file, brace-matched.
+ *
+ * Regex cannot do this: an effect body holds nested blocks, object literals and
+ * arrow callbacks, and a `[^}]*` window stops at the first of them. Matching
+ * braces is also what keeps the scan from running past the end of one effect
+ * and into an unrelated `useQuery({ queryFn: () => apiClient.get(...) })`
+ * below it, which would flag the correct pattern as the forbidden one.
+ */
+export function effectBodies(source) {
+  const bodies = [];
+  USEEFFECT_OPEN.lastIndex = 0;
+  let match;
+  while ((match = USEEFFECT_OPEN.exec(source)) !== null) {
+    let i = match.index + match[0].length;
+    let parens = 0;
+    let start = -1;
+    for (; i < source.length; i++) {
+      const c = source[i];
+      if (c === "(") parens++;
+      else if (c === ")") {
+        if (parens === 0) break;
+        parens--;
+      } else if (c === "{") {
+        start = i;
+        break;
+      }
+    }
+    if (start < 0) continue;
+    let depth = 0;
+    let end = start;
+    for (; end < source.length; end++) {
+      const c = source[end];
+      if (c === "{") depth++;
+      else if (c === "}") {
+        depth--;
+        if (depth === 0) break;
+      }
+    }
+    bodies.push({ body: source.slice(start, end + 1), line: source.slice(0, match.index).split("\n").length });
+  }
+  return bodies;
+}
 
 function* walkFiles(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -48,6 +94,16 @@ export function scan(root) {
       const name = cbMatch[1];
       const window = content.slice(cbMatch.index, cbMatch.index + 3000);
       if (window.includes("apiClient.")) apiCallbacks.add(name);
+    }
+
+    // Rule 3: a bare `apiClient.` call inside the effect body. This is the
+    // CANONICAL shape of the thing the gate is named for --
+    // `useEffect(() => { apiClient.get(...).then(setState); }, [dep])` -- and
+    // until 2026-09-03 the scan could not see it: rule 1 needs an `async`
+    // effect and rule 2 needs both a `useCallback` and a `void` call. The gate
+    // reported "No useEffect-driven API fetches found" over one.
+    for (const { body, line } of effectBodies(content)) {
+      if (API_CLIENT_CALL.test(body)) violations.push(`  ${rel}:${line}  (apiClient call inside a useEffect body)`);
     }
 
     if (apiCallbacks.size === 0) continue;
@@ -127,6 +183,40 @@ function runSelfTest() {
     );
 
     writeFileSync(
+      join(fixture, "direct-call.tsx"),
+      [
+        'import { apiClient } from "@/lib/api-client";',
+        "export function E() {",
+        "  useEffect(() => {",
+        "    let cancelled = false;",
+        '    apiClient.get("/search", { q }).then((d) => {',
+        "      if (!cancelled) setRows(d.results);",
+        "    });",
+        "    return () => {",
+        "      cancelled = true;",
+        "    };",
+        "  }, [q]);",
+        "}",
+      ].join("\n"),
+    );
+
+    writeFileSync(
+      join(fixture, "effect-then-query.tsx"),
+      [
+        'import { apiClient } from "@/lib/api-client";',
+        "export function F() {",
+        "  useEffect(() => {",
+        "    const opts = { capture: true };",
+        "    document.addEventListener(\"keydown\", onKey, opts);",
+        "    return () => document.removeEventListener(\"keydown\", onKey, opts);",
+        "  }, [onKey]);",
+        '  const { data } = useQuery({ queryKey: k, queryFn: () => apiClient.get("/things") });',
+        "  return data;",
+        "}",
+      ].join("\n"),
+    );
+
+    writeFileSync(
       join(fixture, ".next-buildmart", "chunk.js"),
       'import{apiClient}from"@/lib/api-client";useEffect(async()=>{await apiClient.get("/x")},[]);',
     );
@@ -141,7 +231,24 @@ function runSelfTest() {
     assert("a useQuery hook with an unrelated effect is not a violation", !joined.includes("query-hook.tsx"));
     assert("a DOM-only effect is not a violation", !joined.includes("dom-effect.tsx"));
     assert("generated build output is outside the corpus", !joined.includes("chunk.js"));
-    assert("exactly the two known-bad files are reported", violations.length === 2);
+    assert(
+      "a bare apiClient call inside a useEffect body is rejected -- the canonical shape rules 1 and 2 both miss",
+      joined.includes("direct-call.tsx"),
+    );
+    assert("the direct-call finding says why", joined.includes("apiClient call inside a useEffect body"));
+    assert(
+      "brace matching stops at the end of the effect: a DOM effect above a useQuery is NOT a violation",
+      !joined.includes("effect-then-query.tsx"),
+    );
+    assert(
+      "an effect body holding an object literal does not truncate the match",
+      effectBodies('useEffect(() => { const o = { a: 1 }; apiClient.get("/x"); }, []);').length === 1,
+    );
+    assert(
+      "an effect body holding an object literal is still searched to its end",
+      API_CLIENT_CALL.test(effectBodies('useEffect(() => { const o = { a: 1 }; apiClient.get("/x"); }, []);')[0].body),
+    );
+    assert("exactly the three known-bad files are reported", violations.length === 3);
     assert("the vacuity floor would fire on this fixture", scannedFiles < MIN_FILES);
     runScanDirSelfTest(assert);
   } finally {
