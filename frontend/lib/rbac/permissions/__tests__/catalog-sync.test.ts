@@ -2,29 +2,20 @@ import * as fs from "fs";
 import * as path from "path";
 import { PERMISSIONS } from "../roles";
 import { MODULE_ACCESS_PERMISSIONS } from "../module-access";
-import { BACKEND_ROOT } from "@/test-utils/backend-repo";
+import {
+  PERMISSION_CATALOG_PATH,
+  backendPermissionNames,
+  delegableModuleIds,
+} from "@/test-utils/permission-catalog";
 
 /**
  * The backend checkout sits at a different relative path on different machines,
- * and a hardcoded guess here has been wrong twice in both directions. Each time
- * `backendAvailable` was false and all five cross-repo assertions returned before
- * asserting anything. `backendPath` searches for the real root instead, and the
- * first test below fails loudly rather than letting the suite prove nothing.
+ * and a hardcoded guess here was wrong twice in both directions; in CI, which
+ * clones one repository, it was wrong every time and all five cross-repo
+ * assertions returned before asserting anything. The catalogue is now vendored
+ * as contracts/permission-catalog.json, so these checks run everywhere and
+ * `check:permission-catalog` is what keeps the copy honest.
  */
-const BACKEND_PERMS_DIR = BACKEND_ROOT
-  ? path.join(BACKEND_ROOT, "src", "modules", "rbac", "permissions")
-  : "";
-
-const EXCLUDED_BACKEND_FILES = new Set([
-  "index.ts",
-  "catalog.ts",
-  "role-defaults.ts",
-  "types.ts",
-]);
-
-function extractNamesFromSource(source: string): string[] {
-  return [...source.matchAll(/^\s*name:\s*["'`]([^"'`]+)["'`]/gm)].map((m) => m[1]);
-}
 
 function readPermissionKeyValues(): Set<string> {
   const permissionDirectory = path.resolve(__dirname, "..");
@@ -52,17 +43,27 @@ describe("permission catalog sync", () => {
 
   beforeAll(() => {
     try {
-      const files = fs
-        .readdirSync(BACKEND_PERMS_DIR)
-        .filter((f) => f.endsWith(".ts") && !EXCLUDED_BACKEND_FILES.has(f));
-      const names = files.flatMap((f) =>
-        extractNamesFromSource(fs.readFileSync(path.join(BACKEND_PERMS_DIR, f), "utf8")),
+      /**
+       * The comparison set is the DECLARED backend names plus the FRONTEND's own
+       * module-access list, which is what this suite has always compared. The
+       * vendored artifact folds the generated `<module>:access:view|manage` keys
+       * in for every delegable module, so they are subtracted here; substituting
+       * them would silently widen this suite into a second, different assertion.
+       * Four delegable modules are absent from ACCESS_MANAGED_MODULES and
+       * feedbucket's two access keys are absent from the PermissionKey union —
+       * both are real drift, reported rather than absorbed here.
+       */
+      const generated = new Set(
+        delegableModuleIds().flatMap((moduleId) => [
+          `${moduleId}:access:view`,
+          `${moduleId}:access:manage`,
+        ]),
       );
       backendNames = new Set([
-        ...names.filter((name) => !name.includes("${")),
+        ...[...backendPermissionNames()].filter((name) => !generated.has(name)),
         ...MODULE_ACCESS_PERMISSIONS.map((permission) => permission.name),
       ]);
-      backendAvailable = true;
+      backendAvailable = backendNames.size > 400;
     } catch {
       backendNames = new Set();
       backendAvailable = false;
@@ -70,10 +71,11 @@ describe("permission catalog sync", () => {
   });
 
   it("can reach the backend catalog — the cross-repo checks below assert nothing without it", () => {
-    expect({ backendAvailable, dir: BACKEND_PERMS_DIR }).toEqual({
+    expect({ backendAvailable, artifact: PERMISSION_CATALOG_PATH }).toEqual({
       backendAvailable: true,
-      dir: BACKEND_PERMS_DIR,
+      artifact: PERMISSION_CATALOG_PATH,
     });
+    expect(fs.existsSync(PERMISSION_CATALOG_PATH)).toBe(true);
   });
 
   it("has no duplicate permission names in the frontend catalog", () => {

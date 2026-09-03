@@ -463,6 +463,30 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm run check:import-direction:self-test && pnpm run check:import-direction
 
+      # 2026-09-03 — the permission catalogue is now VENDORED as
+      # contracts/permission-catalog.json, the same way contracts/openapi.json
+      # vendors the API contract. Eight jest suites used to read the backend's
+      # RBAC catalogue out of a sibling checkout that this workflow never clones;
+      # measured on run 33719474880 the `tests` job reported 9 failed suites, 8
+      # of them that cause, which meant the page-level RBAC gate had never once
+      # been enforced in CI.
+      #
+      # A vendored copy that goes stale is worse than no copy, so this gate is
+      # the load-bearing half and TWO of its three rules are hermetic:
+      # rule 1 floors and shape, rule 2 cross-checks every `x-permission` in the
+      # vendored OpenAPI contract against the catalogue. Both were bite-proved in
+      # a frontend-only tree: dropping one route-bound permission exits 1 naming
+      # it, and emptying the catalogue exits 1 — WITH the opt-in set, so the
+      # opt-in cannot mask them. It downgrades only rule 3, the byte-for-byte
+      # regeneration against the backend, which is reported PARTIAL here and
+      # NOT RUN rather than silently skipped. To make rule 3 blocking, add a
+      # checkout of Startupppp/streamlineos-backend and set STREAMLINE_BACKEND_ROOT.
+      - name: Vendored permission catalogue is well-formed and agrees with the API contract
+        if: ${{ !cancelled() }}
+        env:
+          STREAMLINE_ALLOW_FRONTEND_ONLY: "1"
+        run: pnpm run check:permission-catalog:self-test && pnpm run check:permission-catalog
+
       # Compares frontend/contracts/openapi.json byte-for-byte against the
       # BACKEND repository's generated artifact. In a frontend-only checkout the
       # artifact does not resolve and the gate exits 1 by design — its own error

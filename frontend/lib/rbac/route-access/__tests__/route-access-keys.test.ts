@@ -8,57 +8,12 @@ import {
   isUniversalRoute,
 } from "../universal-routes";
 import { resolveRouteAccess } from "../route-access";
-import { backendPath } from "@/test-utils/backend-repo";
-
-const BACKEND_PERMS_DIR = backendPath("src", "modules", "rbac", "permissions");
-
-const EXCLUDED_BACKEND_FILES = new Set([
-  "index.ts",
-  "catalog.ts",
-  "role-defaults.ts",
-  "types.ts",
-]);
-
-const BACKEND_MODULE_REGISTRY = backendPath("src", "common", "rbac", "module-registry.ts");
-
-function readDelegableModuleIds(): string[] {
-  const source = fs.readFileSync(BACKEND_MODULE_REGISTRY, "utf8");
-  const ids: string[] = [];
-  const entry = /id:\s*["'`]([^"'`]+)["'`][\s\S]*?ladder:\s*["'`]([^"'`]+)["'`]/g;
-  for (const match of source.matchAll(entry))
-    if (match[2] === "delegable") ids.push(match[1]);
-  return ids;
-}
-
-const BACKEND_ROLE_DEFAULTS = backendPath("src", "modules", "rbac", "permissions", "role-defaults.ts");
-
-function memberDefaultPermissions(): Set<string> {
-  const source = fs.readFileSync(BACKEND_ROLE_DEFAULTS, "utf8");
-  const end = source.indexOf("ROLE_DEFAULT_PERMISSIONS");
-  const block = source.slice(0, end);
-  return new Set(
-    [...block.matchAll(/"([a-z0-9-]+:[a-z0-9:-]+)"/g)].map((m) => m[1]),
-  );
-}
-
-function readBackendPermissionNames(): Set<string> {
-  const names = new Set<string>();
-  for (const fileName of fs.readdirSync(BACKEND_PERMS_DIR)) {
-    if (!fileName.endsWith(".ts")) continue;
-    if (EXCLUDED_BACKEND_FILES.has(fileName)) continue;
-    const source = fs.readFileSync(
-      path.join(BACKEND_PERMS_DIR, fileName),
-      "utf8",
-    );
-    for (const match of source.matchAll(/^\s*name:\s*["'`]([^"'`]+)["'`]/gm))
-      if (!match[1].includes("${")) names.add(match[1]);
-  }
-  for (const moduleId of readDelegableModuleIds()) {
-    names.add(`${moduleId}:access:view`);
-    names.add(`${moduleId}:access:manage`);
-  }
-  return names;
-}
+import {
+  PERMISSION_CATALOG_PATH,
+  backendPermissionNames as readBackendPermissionNames,
+  delegableModuleIds as readDelegableModuleIds,
+  memberDefaultPermissions,
+} from "@/test-utils/permission-catalog";
 
 function keysOf(pathname: string): string[] {
   const decision = resolveRouteAccess(pathname);
@@ -77,7 +32,7 @@ describe("route-access registry keys", () => {
   });
 
   it("can reach the backend catalog, so a silent empty sweep cannot pass", () => {
-    expect(fs.existsSync(BACKEND_PERMS_DIR)).toBe(true);
+    expect(fs.existsSync(PERMISSION_CATALOG_PATH)).toBe(true);
     expect(backendNames.size).toBeGreaterThan(400);
   });
 

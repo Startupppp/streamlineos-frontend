@@ -3,3 +3,12 @@ export { expectNoAxeViolations } from "./axe";
 export { setViewport, atViewport, setReducedMotion, VIEWPORTS } from "./viewport";
 export type { ViewportName } from "./viewport";
 export { BACKEND_ROOT, backendAvailable, backendPath } from "./backend-repo";
+export {
+  PERMISSION_CATALOG_PATH,
+  backendPermissionNames,
+  delegableModuleIds,
+  memberDefaultPermissions,
+  ownerOnlyOperations,
+  permissionCatalog,
+} from "./permission-catalog";
+export type { VendoredPermissionCatalog } from "./permission-catalog";

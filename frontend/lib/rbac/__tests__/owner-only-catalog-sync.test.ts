@@ -1,25 +1,17 @@
 import * as fs from "fs";
-import * as path from "path";
 import { OWNER_ONLY_OPERATIONS } from "../owner-only-operations";
-import { backendPath } from "@/test-utils/backend-repo";
-
-const BACKEND_FILE = backendPath("src", "common", "rbac", "owner-only-operations.ts");
-
-function extractBackendEntries(source: string): Map<string, string> {
-  const result = new Map<string, string>();
-  const pattern = /"([^"]+)":\s*\{[^}]*?reason:\s*"([^"]+)"/gs;
-  for (const [, id, reason] of source.matchAll(pattern)) {
-    result.set(id, reason);
-  }
-  return result;
-}
+import {
+  PERMISSION_CATALOG_PATH,
+  ownerOnlyOperations,
+} from "@/test-utils/permission-catalog";
 
 describe("owner-only-operations catalog sync", () => {
   let backendEntries: Map<string, string>;
 
   beforeAll(() => {
-    expect(fs.existsSync(BACKEND_FILE)).toBe(true);
-    backendEntries = extractBackendEntries(fs.readFileSync(BACKEND_FILE, "utf8"));
+    expect(fs.existsSync(PERMISSION_CATALOG_PATH)).toBe(true);
+    backendEntries = ownerOnlyOperations();
+    expect(backendEntries.size).toBeGreaterThan(0);
   });
 
   it("frontend has no ids absent from the backend", () => {

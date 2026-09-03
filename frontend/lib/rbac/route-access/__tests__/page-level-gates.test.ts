@@ -3,18 +3,12 @@ import { dirname, join, resolve } from "node:path";
 import { collectAppRoutes } from "../app-routes";
 import { resolveRouteAccess } from "../route-access";
 import { isUniversalRoute } from "../universal-routes";
+import { backendPermissionNames } from "@/test-utils/permission-catalog";
 
 const APP_DIR = resolve(process.cwd(), "app");
 const AUTHENTICATED_DIR = join(APP_DIR, "(authenticated)");
 const FRONTEND_CATALOG_DIR = resolve(process.cwd(), "lib", "rbac", "permissions");
 const PERMISSION_KEY = /^[a-z][a-z0-9_-]*(?::[a-z0-9_-]+)+$/;
-
-const BACKEND_CANDIDATES = [
-  process.env.STREAMLINE_BACKEND_DIR ?? "",
-  resolve(process.cwd(), "..", "backend"),
-  resolve(process.cwd(), "..", "..", "streamlineos-backend"),
-  resolve(process.cwd(), "..", "..", "backend"),
-].filter((value) => value.length > 0);
 
 export interface SessionOnlySurface {
   readonly path: string;
@@ -157,34 +151,6 @@ function matchesSurface(routePath: string, surface: SessionOnlySurface): boolean
 
 function sessionOnlyByDesign(routePath: string): boolean {
   return SESSION_ONLY_BY_DESIGN.some((surface) => matchesSurface(routePath, surface));
-}
-
-function backendCatalogDir(): string {
-  const dirs = BACKEND_CANDIDATES.map((c) => join(c, "src", "modules", "rbac", "permissions"));
-  const found = dirs.find((dir) => existsSync(dir));
-  if (!found) throw new Error(`backend permission catalog not found. Tried: ${dirs.join(", ")}`);
-  return found;
-}
-
-function backendPermissionNames(): Set<string> {
-  const dir = backendCatalogDir();
-  const names = new Set<string>();
-  for (const fileName of readdirSync(dir)) {
-    if (!fileName.endsWith(".ts")) continue;
-    const source = readFileSync(join(dir, fileName), "utf8");
-    for (const match of source.matchAll(/^\s*name:\s*["'`]([^"'`]+)["'`]/gm))
-      if (!match[1].includes("${")) names.add(match[1]);
-  }
-  const registry = readFileSync(
-    join(dirname(dirname(dirname(dir))), "common", "rbac", "module-registry.ts"),
-    "utf8",
-  );
-  for (const match of registry.matchAll(/id:\s*["'`]([^"'`]+)["'`][\s\S]*?ladder:\s*["'`]([^"'`]+)["'`]/g))
-    if (match[2] === "delegable") {
-      names.add(`${match[1]}:access:view`);
-      names.add(`${match[1]}:access:manage`);
-    }
-  return names;
 }
 
 function frontendPermissionKeys(): Set<string> {

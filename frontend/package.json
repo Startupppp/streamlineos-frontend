@@ -81,6 +81,9 @@
     "check:named-handlers": "node scripts/check-named-handlers.mjs",
     "check:named-handlers:self-test": "node scripts/check-named-handlers.mjs --self-test",
     "check:import-direction": "node scripts/check-import-direction.mjs",
+    "generate:permission-catalog": "node scripts/generate-permission-catalog.mjs",
+    "check:permission-catalog": "node scripts/check-permission-catalog.mjs",
+    "check:permission-catalog:self-test": "node scripts/check-permission-catalog.mjs --self-test",
     "check:import-direction:self-test": "node scripts/check-import-direction.mjs --self-test",
     "check:test-typecheck": "node scripts/check-test-typecheck.mjs",
     "check:test-typecheck:self-test": "node scripts/check-test-typecheck.mjs --self-test"
