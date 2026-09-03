@@ -468,3 +468,109 @@ Plus the **nine module rows in §9.2** (60 carried "Proven" boxes) which are NOT
 | N8 | Six §10-preamble PRD boxes (296–301) belong to no table row and no ticket — counted nowhere | P3 | PRD ownership |
 | N9 | The module table's nine 100% rows rest on deleted text (§9.2) | P2 | PRD ownership |
 | N10 | Ticket 21's `**Status:**` line says "3 of 9 closed"; its boxes say **2** | P3 | ticket 21 |
+
+---
+
+## 11. Cross-check against the two findings registers
+
+The registers (`findings-register.md`, `findings-register-20-43.md`) and `ORCHESTRATION.md` were used
+as the candidate list, not as evidence. Where a register verdict was cheap to re-measure, it was
+re-measured. Results:
+
+### 11.1 Register claims this pass CONFIRMED
+
+| Register item | Claim | Measured 2026-09-03 |
+|---|---|---|
+| #204 / C13 | `check:over-300` backend 400 vs baseline 394, unowned | **400 / 394, exit 1** — identical |
+| #203 | frontend `check:file-sizes` red on three files | **exit 1**, 3 files (501 / 663 / 534) |
+| #205 | `check:dead-code` unclassified in **both** repos | **exit 1 both**, 2 unclassified each |
+| #206 | `check:command-catalog` red on a stale contract snapshot | **exit 1**, 4 vs baseline 0 |
+| #207 | `check:import-direction` frontend, genuine violation + gate bug; 194 below baseline once test harnesses are excluded | **exit 1** — `cross-feature-import: 194/194 at baseline`, but `shared-imports-feature: 20 vs 19` **REGRESSED** |
+| #209 | `db-gates.yml` has never run anywhere; jobs are dispatch-only | **confirmed** — see §11.4 |
+| C7 | frontend lint ≈14 real errors, none a CI inflation | **15 errors**, and none in in-scope production code (§8) |
+| #177 | route JS budget breaches across the board | **17 breaches / 12 measured routes** |
+| #152 | both remaining TTFB breaches are `GET /me/access` | **2 breaches**, both TTFB, both carrying that owner exception |
+
+### 11.2 Register claims this pass found RESOLVED — stop citing them as open
+
+| Register item | Claim | Measured 2026-09-03 |
+|---|---|---|
+| C16 / #73 | `check:tenant-indexes` **declaration side RED at 821/828**, open | **exit 0 — 840 tenant tables, 840 leading tenant indexes** |
+| C15 | tenant-isolation coverage 924 → 926 → 928 | **929/929 (100%), exit 0** — a fifth value, and the current one |
+| ORCH:167–202 | **release blocker**: HEAD's journal names six migrations (`1020`–`1025`) HEAD does not contain | **cleared** — 666 journal entries, 666 `.sql` files, **0 journalled-but-missing** |
+| #250 / C23 | `policies.ts` TS7022 ranked the 3rd unowned blocker in one place, FIXED in another | backend `typecheck` **exit 0, 0 errors** — FIXED is correct |
+
+### 11.3 A register claim this pass found NOT to hold
+
+**C14 / #199 — `check:lifecycle-predicates`.** The register records it *"Fixed at source, rc=0,
+baseline not raised"*, attributing the single extra read to `kb-tags.service.ts:88`.
+
+Measured: **exit 1, 76 primary reads against a baseline of 75.** Two further facts:
+- the cited path is wrong — the file is `src/modules/kb/core/kb-tags.service.ts`, not
+  `src/modules/kb/kb-tags.service.ts`;
+- running the gate with `--list`, **`kb-tags` appears nowhere** in the 76 primary-read candidates.
+
+So the named fix did land, and the gate is *still* one over. Whether a different read regressed in or
+the original attribution was wrong cannot be settled from the gate output, **because the baseline is
+a bare count with no named list**. A count-based ratchet cannot attribute its own regression — which
+is precisely why ORCHESTRATION recorded this one as "unowned, needs a bisect", and it still is.
+Recorded as **NEW (N4)**, and as a gate-design finding: this ratchet should carry a named inventory.
+
+### 11.4 Gates that do not gate anything
+
+§5 reported 73 of 75 backend gates "wired". Reading the workflow triggers sharpens that number
+downward.
+
+`db-gates.yml` runs on **`schedule` (daily 04:00) and `workflow_dispatch` only — never on push or
+pull request**, and its own header states the position plainly:
+
+> *"NOT ENABLED ON PUSH OR PULL REQUEST ON PURPOSE. These jobs have never executed in any repository,
+> so their green is unproven; wiring an unproven job as a required check is how a pipeline gets
+> muted."*
+
+Five backend gates are named **only** there: `check:migration-ledger`, `check:replay-ledger`,
+`check:retention-coverage`, `check:set-null-column-lists`, `check:tenant-relationships`.
+`ci.yml`'s `tenant-isolation` and `live-evals` jobs are likewise `if: schedule || workflow_dispatch`,
+so `check:tenant-isolation:run` — the **executable** half of the cross-tenant proof — does not run on
+a pull request either.
+
+**Corrected CI position:**
+
+| | defined | run on push/PR | schedule/dispatch only | wired nowhere |
+|---|---:|---:|---:|---:|
+| backend | 75 | **68** | 5 | 2 |
+| frontend | 26 | **25** | 0 | 1 |
+
+That is honest and it is also **not a defect** — the header's reasoning is sound, and the pre-existing
+"every gate sat behind a red Lint" defect is genuinely closed (no `needs:` anywhere in either
+workflow). But **7 backend gates and 1 frontend gate do not block a pull request today**, and the
+frontend one (`check:properties`) is currently red. Ticket 41 should not read "73 wired" as "73
+enforced".
+
+### 11.5 Deferred-operator items, consolidated
+
+The registers name **more** operator actions than the two this ticket was briefed on. All stay
+**DEFERRED-OPERATOR** and none may be folded into a code-level claim:
+
+1. **R2 bucket privacy** — remove public access from `R2_BUCKET_NAME` and `R2_KB_BUCKET_NAME`; closing
+   evidence is an unauthenticated `curl -I` returning 401/403.
+2. **The owner-role public-URL backfill** paired with it — `backfill-public-object-urls.mjs`, dry →
+   apply → confirming dry. Exit 2 means "not visible to this role", never "nothing found". **Not
+   executed anywhere.**
+3. **Support-channel inbound-secret rotation**, owed since migration `1008` hashed them.
+4. **Ed25519 signing-key rotation** (recommendation, unowned).
+5. **`PLATFORM_ADMIN_USER_IDS` absent from the live `.env`** — `/blog/admin/*` is reachable by nobody.
+6. **`AUTH_SIGNING_KEYS` / `NEXTAUTH_SECRET`** environment configuration.
+7. **Regenerating `openapi.json`** — requires booting the app against the shared Neon database.
+8. **Running `db-gates.yml` once by dispatch** and promoting the jobs that pass.
+9. **Merging `origin/main`** — 3 backend and 4 frontend commits are not on the release branch.
+10. **The first real CI run.** Every gate in both repos previously sat behind a red Lint; the wiring
+    is fixed, but no run has yet proved it. This is ticket 41's, and it has not happened.
+
+### 11.6 One register conclusion this pass did not re-test
+
+Report 22c's finding that a route budget can **re-measure green with nothing fixed** (the
+`GET /calendar/events` figure is time-dependent on wall-clock since seed) was **not re-tested** — it
+needs a seeded database at a controlled age. It is the strongest reason not to read any single
+`check:route-budgets` run as proof, and `check:route-budgets` was **exit 0** this pass. That exit 0
+is reported here as *what the command returned*, not as evidence the budgets are met.
