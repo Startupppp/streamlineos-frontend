@@ -376,9 +376,9 @@ rather than presented as measurement.
 
 | Class | Count | Share of 171 |
 |---|---:|---:|
-| **VERIFIED DONE** | **74** | 43.3% |
+| **VERIFIED DONE** | **73** | 42.7% |
 | **REGRESSED** | **14** | 8.2% |
-| **STILL PENDING** | **76** | 44.4% |
+| **STILL PENDING** | **77** | 45.0% |
 | **NOT-VERIFIED** | **6** | 3.5% |
 | **DEFERRED-OPERATOR** | **1** | 0.6% |
 | Deferred production-readiness (untouched) | 34 | — |
@@ -406,7 +406,7 @@ rather than presented as measurement.
 | 10.1 Auth/identity/sessions/org | 2 | 19 | 1 | 0 | 1 | 0 | 0 |
 | 10.2 Organization/module RBAC | 2 | 19 | 1 | 0 | 1 | 0 | 0 |
 | 10.4 Settings and module access | 2 | 19 (partial) | 0 | 0 | 1 | 1 | 0 |
-| 10.7 Payroll | 3 | 24 (**8/8**) | 3 | 0 | 0 | 0 | 0 |
+| 10.7 Payroll | 3 | 24 (**8/8**) | 2 | 0 | 1 | 0 | 0 |
 | 10.13 Calendar | 2 | 29 (partial) | 0 | 0 | 1 | 1 | 0 |
 | 10.14 Inbox and mail | 2 | 29 | 1 | 0 | 1 | 0 | 0 |
 | 10.15 Notifications, email, push | 1 | **none** | 1 | 0 | 0 | 0 | 0 |
@@ -417,7 +417,7 @@ rather than presented as measurement.
 | 12.2 Next.js and perceived speed | 7 | 26 (6/7), 27 (7/7) | 4 | 2 | 1 | 0 | 0 |
 | 12.3 AI gateway, retrieval, streaming | 10 | 09,10,11,12,13 | 7 | 0 | 3 | 0 | 0 |
 | Immediate code-level final gate | 6 | 41, 42 | 0 | 0 | 6 | 0 | 0 |
-| **Total** | **171** | | **74** | **14** | **76** | **6** | **1** |
+| **Total** | **171** | | **73** | **14** | **77** | **6** | **1** |
 
 ### 10.2 The 14 REGRESSED items, named
 
@@ -574,3 +574,35 @@ Report 22c's finding that a route budget can **re-measure green with nothing fix
 needs a seeded database at a controlled age. It is the strongest reason not to read any single
 `check:route-budgets` run as proof, and `check:route-budgets` was **exit 0** this pass. That exit 0
 is reported here as *what the command returned*, not as evidence the budgets are met.
+
+---
+
+## 12. Addendum — state at the end of this pass
+
+**N1 re-checked and still standing.** At the close of this pass
+`frontend/hooks/api/meetings-ai.ts` is **still modified and uncommitted**, `useMeetingPrep` is still
+absent from it, and `features/calendar/meeting-prep-panel.tsx` still imports that symbol. The
+frontend working tree does not typecheck. 21 files are dirty in the frontend repo.
+
+**A constitution change landed mid-pass and settles one criterion's status.**
+`streamlineos-frontend/CLAUDE.md` §6 gained a measured entry for unused-symbol enforcement while this
+reconciliation was running: `noUnusedLocals`/`noUnusedParameters` are absent from both tsconfigs and
+`@typescript-eslint/no-unused-vars` is `warn` with `^_` ignore patterns; at
+`["error", {args:"all", caughtErrors:"all"}]` the two repos hold **4,186 violations across 1,896
+files**, of which **2,912 (69.6%) name a `_`-prefixed identifier** — they exist only because the
+escape does. It records that `--noUnusedParameters` exempts `_`-prefixed parameters *by construction
+with no off switch*, so tsc cannot enforce the rule at all.
+
+This bears directly on **PRD §2.1 box 3** ("Enable and enforce TypeScript/ESLint unused-symbol checks
+… Remove unused symbols instead of renaming them to `_`"). It is classified **STILL PENDING** above,
+and that classification is now backed by a deliberate, measured decision rather than by absence of
+work: like `noUncheckedIndexedAccess`, it is a **NEW REQUIREMENT needing an owner**, explicitly left
+off for this release because a half-enabled flag would report "on" over a set it cannot see. Ticket
+42 should carry both as accepted, owned residual risk — not as pending cleanup, and not as passing.
+
+**What a reader of this report should not conclude.** Nothing here says the release is close to or far
+from done; it says what is true on disk at `feaad0402` / `47a68ba2` on 2026-09-03. Three limits are
+worth restating: the 73 VERIFIED DONE rest on gate exit codes and ticket box state, and a gate can be
+green because it cannot see (this release has found that four separate times); the nine module rows in
+§9.2 are unproven rather than proven; and no build, unit suite or end-to-end run was executed this
+pass, so the three most expensive forms of proof remain outstanding and are ticket 41's.
