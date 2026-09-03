@@ -35,7 +35,7 @@ import { useBulkInviteUsers } from "@/hooks/api/users";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
-import { USER_INVITE_ROLES } from "./user-invite-roles";
+import { USER_INVITE_ROLES } from "@/lib/constants/user-invite-roles";
 import { cn } from "@/lib/utils";
 
 const bulkInviteSchema = z.object({

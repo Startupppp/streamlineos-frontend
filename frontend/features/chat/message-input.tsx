@@ -28,7 +28,7 @@ import type { Message } from "./chat-types";
 import type { TicketSearchResult } from "@/hooks/api/build";
 import { TicketMentionPicker } from "./ticket-mention-picker";
 import { EmojiGrid } from "./emoji-grid";
-import { getChatMobileComposerInsetClassName } from "./chat-mobile-chrome-layout";
+import { getChatMobileComposerInsetClassName } from "@/components/layout/mobile/chat-mobile-chrome-layout";
 type PendingAttachment = {
   fileName: string;
   fileUrl: string;

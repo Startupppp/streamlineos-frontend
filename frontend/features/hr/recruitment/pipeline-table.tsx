@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
+import { RecruitmentEmptyState } from "./components/recruitment-empty-state";
 import { Star } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { AtsPipelineStage } from "@/types/hr/recruitment";

@@ -34,7 +34,7 @@ import { useCanManageOrganizationMembership } from "@/hooks/api/access";
 import type { BulkUpdatePayload } from "@/hooks/api/users";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
-import { USER_INVITE_ROLES } from "@/features/users/user-invite-roles";
+import { USER_INVITE_ROLES } from "@/lib/constants/user-invite-roles";
 
 const KEEP = "all";
 

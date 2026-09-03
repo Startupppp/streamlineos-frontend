@@ -94,7 +94,7 @@ describe("the upload wire contract carries no field named url", () => {
     for (const file of [
       "hooks/api/use-upload-file.ts",
       "hooks/api/support/kb-attachments.ts",
-      "features/wiki/lib/upload-kb-media.ts",
+      "components/editor/plate/upload-media.ts",
       "components/editor/tiptap-editor.tsx",
     ]) {
       const source = readFileSync(path.join(ROOT, file), "utf8");

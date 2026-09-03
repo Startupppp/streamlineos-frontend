@@ -38,7 +38,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useCreateTestCase, useUpdateTestCase } from "@/hooks/api/build/qa";
 import { useProject } from "@/hooks/api/build/projects";
-import { TicketCombobox } from "@/components/ui/ticket-combobox";
+import { TicketCombobox } from "@/features/build/shared/ticket-combobox";
 import type { TestCase, TestSuite } from "@/types/projects";
 
 const schema = z.object({

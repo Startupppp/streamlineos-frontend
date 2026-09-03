@@ -32,7 +32,7 @@ import { useUpdateUserRole } from "@/hooks/api/users";
 import type { User } from "@/hooks/api/users";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
-import { USER_INVITE_ROLES } from "./user-invite-roles";
+import { USER_INVITE_ROLES } from "@/lib/constants/user-invite-roles";
 
 const changeRoleSchema = z.object({
   role: z.string().min(1, "Please select a role"),

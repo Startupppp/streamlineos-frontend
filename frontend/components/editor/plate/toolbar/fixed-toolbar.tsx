@@ -4,7 +4,7 @@ import { Minus } from 'lucide-react';
 import { useEditorReadOnly, useEditorRef } from 'platejs/react';
 import { Separator } from '@/components/ui/separator';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import type { UploadedKbMedia } from '@/features/wiki/lib/upload-kb-media';
+import type { UploadedEditorMedia } from '@/components/editor/plate/upload-media';
 import { ToolbarButton } from './toolbar-button';
 import { HistoryButtons } from './history-buttons';
 import { TurnIntoDropdown } from './turn-into-dropdown';
@@ -19,7 +19,7 @@ import { EmojiButton } from './emoji-button';
 import { MediaButtons } from './media-buttons';
 
 interface FixedToolbarProps {
-  uploadFile?: (file: File) => Promise<UploadedKbMedia>;
+  uploadFile?: (file: File) => Promise<UploadedEditorMedia>;
 }
 
 function VSep() {

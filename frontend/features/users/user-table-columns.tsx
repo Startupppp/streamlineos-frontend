@@ -10,7 +10,7 @@ import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import type { User } from "@/hooks/api/users";
 import { resolveOrgUnitName } from "./resolve-org-unit-name";
 import { UserActionsMenu } from "./user-actions-menu";
-import { formatRoleLabel } from "./user-invite-roles";
+import { formatRoleLabel } from "@/lib/constants/user-invite-roles";
 import { UserStatusBadge } from "./user-status-badge";
 import type { EmploymentFacts } from "@/hooks/api/directory/employment";
 import { resolveImageUrl } from "@/lib/utils";

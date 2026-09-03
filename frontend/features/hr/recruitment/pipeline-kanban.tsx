@@ -25,7 +25,7 @@ import {
   CandidateSheet,
   ColumnSkeleton,
   type ColumnConfig,
-} from "@/features/hr/recruitment/kanban";
+} from "./kanban";
 
 
 interface KanbanColumnProps {

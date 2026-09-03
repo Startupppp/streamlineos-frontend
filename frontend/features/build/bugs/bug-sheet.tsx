@@ -42,7 +42,7 @@ const TiptapEditor = dynamic(
 import { useCreateBug, useUpdateBug } from "@/hooks/api/build/bugs";
 import { useProject } from "@/hooks/api/build/projects";
 import { ProjectMemberSelect } from "@/components/members/project-member-select";
-import { TicketCombobox } from "@/components/ui/ticket-combobox";
+import { TicketCombobox } from "@/features/build/shared/ticket-combobox";
 import { ReleaseCombobox } from "@/components/ui/release-combobox";
 import type { Bug, BugSeverity, BugPriority, BugStatus } from "@/types/projects";
 

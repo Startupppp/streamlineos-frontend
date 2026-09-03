@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Invitation } from "@/hooks/api/users";
-import { USER_INVITE_ROLES, formatRoleLabel } from "./user-invite-roles";
+import { USER_INVITE_ROLES, formatRoleLabel } from "@/lib/constants/user-invite-roles";
 
 export type InvitationStatus = "pending" | "accepted" | "expired" | "revoked";
 export type InvitationStatusFilter = "all" | InvitationStatus;

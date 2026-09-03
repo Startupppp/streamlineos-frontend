@@ -15,7 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getChatMobileBottomNavClassName } from "./chat-mobile-chrome-layout";
+import { getChatMobileBottomNavClassName } from "@/components/layout/mobile/chat-mobile-chrome-layout";
 import { ChatPresenceMenu } from "./chat-presence-menu";
 
 interface ChatMobileBottomNavProps {

@@ -25,7 +25,7 @@ import { UserMembershipSection } from "./user-membership-section";
 import { UserModuleAccessSection } from "./user-module-access-section";
 import { UserAccessLinksSection } from "./user-access-links-section";
 import { UserAuditTab } from "./user-audit-tab";
-import { formatRoleLabel } from "./user-invite-roles";
+import { formatRoleLabel } from "@/lib/constants/user-invite-roles";
 import {
   Mail,
   Phone,

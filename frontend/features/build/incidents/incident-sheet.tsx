@@ -50,7 +50,7 @@ import {
 } from "@/hooks/api/build/incidents";
 import { useProject } from "@/hooks/api/build/projects";
 import { ProjectMemberSelect } from "@/components/members/project-member-select";
-import { TicketCombobox } from "@/components/ui/ticket-combobox";
+import { TicketCombobox } from "@/features/build/shared/ticket-combobox";
 import type {
   Incident,
   IncidentSeverity,

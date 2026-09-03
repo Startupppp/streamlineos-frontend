@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Boxes, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatRoleLabel } from "@/features/users/user-invite-roles";
+import { formatRoleLabel } from "@/lib/constants/user-invite-roles";
 import type { PersonAccountAccess } from "@/types/directory/people";
 import {
   getInvitationManagementHref,

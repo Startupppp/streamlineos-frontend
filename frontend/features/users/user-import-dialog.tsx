@@ -20,7 +20,7 @@ import { Upload, FileText, CheckCircle, XCircle, AlertTriangle, Users, UserCheck
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { useMutation } from "@tanstack/react-query";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { formatRoleLabel } from "./user-invite-roles";
+import { formatRoleLabel } from "@/lib/constants/user-invite-roles";
 
 interface ImportRow {
   email: string;

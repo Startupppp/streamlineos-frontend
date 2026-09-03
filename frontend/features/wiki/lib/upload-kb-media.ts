@@ -2,13 +2,9 @@
 
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/api-client';
+import type { UploadedEditorMedia } from '@/components/editor/plate/upload-media';
 
-export interface UploadedKbMedia {
-  key: string;
-  size: number;
-  mimeType: string;
-  name: string;
-}
+export type UploadedKbMedia = UploadedEditorMedia;
 
 const IMAGE_MAX = 10 * 1024 * 1024;
 const VIDEO_MAX = 100 * 1024 * 1024;

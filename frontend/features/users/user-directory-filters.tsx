@@ -6,7 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { USER_STRUCTURAL_ROLES } from "./user-invite-roles";
+import { USER_STRUCTURAL_ROLES } from "@/lib/constants/user-invite-roles";
 
 interface OrgUnitOption {
   id: string | number;

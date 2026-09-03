@@ -13,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { formatRoleLabel } from "@/features/users/user-invite-roles";
+import { formatRoleLabel } from "@/lib/constants/user-invite-roles";
 
 export function InvitationCard({
   children,

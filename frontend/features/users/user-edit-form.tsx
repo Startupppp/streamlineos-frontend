@@ -30,7 +30,7 @@ import { useCanManageOrganizationMembership } from "@/hooks/api/access";
 import type { User } from "@/hooks/api/users";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
-import { ORG_OWNER_ROLE, USER_INVITE_ROLES } from "@/features/users/user-invite-roles";
+import { ORG_OWNER_ROLE, USER_INVITE_ROLES } from "@/lib/constants/user-invite-roles";
 import { useEmploymentFacts } from "@/hooks/api/directory/employment";
 
 const USER_EDIT_FORM_ID = "user-edit-form";

@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { INVITE_ROLES } from "../lib/constants";
 import { useBillingPlans } from "@/hooks/api/subscription";
-import { formatRoleLabel } from "@/features/users/user-invite-roles";
+import { formatRoleLabel } from "@/lib/constants/user-invite-roles";
 import type { Invitee, WizardData } from "../lib/wizard-data-schema";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { StepGeneration } from "./step-generation";

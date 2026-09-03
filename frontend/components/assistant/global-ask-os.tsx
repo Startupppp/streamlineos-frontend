@@ -32,7 +32,7 @@ import { cn } from "@/lib/utils";
 import { classifyAiError, type AiFailureState } from "@/components/ai";
 import { useHydrated } from "@/hooks/common/use-hydrated";
 import { useIsMobile } from "@/hooks/common/use-mobile";
-import { type PersonaId } from "@/features/ai-summaries/components/persona-chip-strip";
+import { type PersonaId } from "./persona-chip-strip";
 import { AskOsChatComposer } from "./ask-os-chat-composer";
 import { AskOsChatView } from "./ask-os-chat-view";
 import { AskOsConversationList } from "./ask-os-conversation-list";

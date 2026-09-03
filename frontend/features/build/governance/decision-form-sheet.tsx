@@ -25,7 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ProjectMemberSelect } from "@/components/members/project-member-select";
-import { TicketCombobox } from "@/components/ui/ticket-combobox";
+import { TicketCombobox } from "@/features/build/shared/ticket-combobox";
 import { useProject } from "@/hooks/api/build/projects";
 import type { Decision, CreateDecisionInput, UpdateDecisionInput } from "@/types/projects";
 

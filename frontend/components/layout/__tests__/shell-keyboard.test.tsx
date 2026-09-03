@@ -138,7 +138,7 @@ jest.mock("@/features/command-palette", () => ({
   CommandPaletteProvider: ({ children }: PropsWithChildren) => <>{children}</>,
 }));
 
-jest.mock("@/features/chat/chat-mobile-chrome-layout", () => ({
+jest.mock("@/components/layout/mobile/chat-mobile-chrome-layout", () => ({
   getChatMobileContentPaddingClassName: () => "",
 }));
 

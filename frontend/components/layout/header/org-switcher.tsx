@@ -25,11 +25,11 @@ import { CreateWorkspaceDialog } from "@/components/layout/header/create-workspa
 import {
   LeaveOrganizationDialog,
   LeaveOrganizationMenuItem,
-} from "@/features/settings/organization/leave-organization-control";
+} from "@/components/organization/leave-organization-control";
 
 const ArchivedOrgsRestore = dynamic(
   () =>
-    import("@/features/settings/organization/archived-orgs-restore").then(
+    import("@/components/organization/archived-orgs-restore").then(
       (m) => m.ArchivedOrgsRestore,
     ),
   { ssr: false },
