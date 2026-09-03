@@ -2013,3 +2013,61 @@ The email template test route no longer sends to an arbitrary address — the ca
 address only. Justified: the route has no frontend caller and `GET .../preview` covers on-screen use.
 **Side effect worth naming:** `scripts/functional/int-email.test.mjs` was the repository's only real
 external email send, and no longer is.
+
+---
+
+## Bare-throw residue closed — and the number was wrong in both directions
+
+**Not 333.** The 35e scanner was ephemeral and nothing named `BARE_THROW` was on disk, so it was
+re-derived by AST over `git archive HEAD src test`: **370 sites / 150 files**, of which **150 are
+`.not.toThrow()`** — which fails on ANY throw and therefore *cannot* be satisfied by a crash — and 220
+positive, 207 in scope.
+
+**All 207 were EXECUTED, not read**, by rewriting each to `.toThrow(__rec(id))` where `__rec` returns
+a class whose `Symbol.hasInstance` records the real error's constructor, status and message before
+returning true. 205 produced an observed class.
+
+**Split: 4 real · 60 tightened · 152 fine by class · 2 open.** The four:
+
+* `calendar-series-exception-scope.spec.ts:404` — **a test literally named "BITE PROOF"** passing on
+  `TypeError: (intermediate value) is not iterable`, its only other assertion naming a `jest.fn()`
+  wired to nothing.
+* `employee-onboarding-tenant-isolation.spec.ts:143` and `:204` — both green over an
+  `InternalServerErrorException` the double produced. `:204` is titled **"control — same-tenant access
+  works"** and was asserting that same-tenant onboarding **rejects**.
+* `payment-test-transaction-tenant-isolation.spec.ts:45` — the control "proceeds for the owning org"
+  stopped at a credential check and never reached the insert; dropping the `orgId` predicate from the
+  update passed HEAD 2/2.
+
+**404-never-403 is now enforceable**: cross-tenant cases pin `NotFoundException`, and mutating payroll
+setup to 403 on a cross-tenant id passes the pre-fix spec 17/17 and reds the tightened one.
+
+New gate `check:bare-throw`, ACTIONABLE 2, ratchet 2 — **with its own blind spot written into its
+header**: the calendar finding carries no risk word, so its classifier would not have caught it. A gate
+that documents what it cannot see is the opposite of the failure this release keeps finding.
+
+## Cache and pool: fixed, with one claim of mine corrected
+
+* **Composio was overstated.** Not "no timeout at all": `@composio/client` defaults to
+  `DEFAULT_TIMEOUT = 60000` × `maxRetries: 2` → **~180 s per call**, past the 30 s `statement_timeout`
+  around it. Bad, but bounded. All 7 SDK calls now carry a 15 s `AbortSignal`. VirusTotal's three bare
+  `fetch` calls genuinely had none.
+* **Cache outage: 20 sequential requests for one key went from 20 DB calls to 1**, measured with every
+  Redis command rejecting `ECONNREFUSED`. The null-key lease pathology — where the lease was *worse*
+  than none — went **2,045 ms / 40 GETs → 61 ms / ≤6 GETs**.
+* **The pool admission gate sits in FRONT of the driver**, and that is the load-bearing property: a
+  shed caller never reaches postgres-js and executes no statement. Racing `sql.begin()` would shed the
+  caller *and still run the query* — a phantom write. Bite-proved precisely: moving the shed after the
+  body fails exactly one test, the phantom-statement one.
+* **SWR deliberately not attempted**, and the reason is right: it lengthens an entry's life, which §6
+  forbids for authorization data, so it can only ship opt-in and choosing that set across 213 sites is
+  a product judgement.
+
+### New findings needing owners
+
+* **`PayrollRunLockService.acquire` answers a cross-tenant run id with 409** — asserting to another org
+  that a run exists. An existence oracle; 404-vs-409 is payroll's decision.
+* **4 unlimited public writes**: `/internal/audit`, `/careers/apply` (tier `public:job-apply` declared
+  at 3/hr and **wired to nothing**), `/csat/:surveyId/responses`, `/crm/mailboxes/push`.
+* **`auth:login` names no route** — login is magic-link + Google, both limited. Do not delete the tier:
+  `check-log-secrets.mjs:279` asserts it exists.
