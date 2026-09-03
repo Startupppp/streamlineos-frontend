@@ -162,6 +162,10 @@ is blocked on another agent, on infrastructure or on a measurement.
       `lib/onboarding-gate.ts:33` and `app/(auth)/invitation/[token]/page.tsx:160`, both
       `update().catch(() => null)` on the durable-wizard path CLAUDE.md §8 requires to be durable, and
       `hooks/common/use-push-subscription.ts:33`.
+      **ADJUDICATED 2026-09-03 — the two wizard-path sites are NOT defects. Do not re-raise them.**
+      Neither swallow can bounce a user back into a wizard, because the gate never reads `update()`'s
+      result. Full trace in the addendum "Adjudication — the two durable-wizard `update()` swallows"
+      at the end of this file.
       [x] **`rate-limit-coverage.spec.ts` — DECIDED, and it was RED at head.** It is **not** an instance of
       any of the four modes: not skipped, not vacuous, swallows nothing, its registry never raised, and its
       two-directional set-equality is a feature. **But the concern was right and had already fired.** The spec
@@ -605,3 +609,106 @@ deliberately NOT raised to absorb them — see the cross-territory findings.
 - **`@AuthorizedInService` is 57 handlers whose deny is unobservable from a route test.** Reported as
   INFO by the new gate rather than counted. If that class matters, it needs a service-level deny
   convention, not a controller-level one.
+
+---
+
+## Adjudication — the two durable-wizard `update()` swallows (2026-09-03)
+
+**Verdict: NOT a defect. Both sites are deliberate best-effort. Do not re-raise them.**
+
+The report treated `update()` as the mechanism that makes wizard completion durable. It is not.
+It is the *least* load-bearing of three independent sources, and the gate never reads its result.
+
+### The gate, literally
+
+`app/(authenticated)/layout.tsx:31-33` is a **server component**: it calls
+`resolveWizardGate(session, await cookies())` and redirects on a non-null answer.
+`lib/wizard-gate.ts:27-39` fires a wizard only when **the session claim is falsy AND the scoped
+cookie is absent**:
+
+```ts
+if (isOrgOwner && !session.orgOnboardingCompletedAt) {
+  const setupDone = Boolean(cookieStore.get(gateCookieName("org-setup-done", orgId))?.value);
+  if (!setupDone) return "/org-setup";
+}
+```
+
+`app/org-setup/layout.tsx:20-21` and `app/employee-onboarding/layout.tsx:20-21` call the same
+function, so there is exactly one decision authority.
+
+### Where `session.orgOnboardingCompletedAt` comes from — the fact that settles it
+
+`lib/auth.ts:178-180`, in the NextAuth **`session`** callback (not the `jwt` callback):
+
+```ts
+const fresh = token.id ? await fetchSessionDataCached(token.id as string, tokenOrgId) : null;
+```
+
+`fetchSessionDataCached` (`lib/auth-session.ts:124-153`) is a React per-request memo over a **live
+`GET {BACKEND}/auth/session-data/:userId`**, `cache: "no-store"`, 2 attempts. It runs on **every**
+session read, including the one the server layout performs — with no dependence on `update()`.
+`lib/auth.ts:216-223` then prefers `fresh?.orgOnboardingCompletedAt` and only falls back to the
+token claim. `update()` (`lib/auth.ts:141-166`) refreshes **only the JWT token claim**, i.e. the
+fallback.
+
+### The three layers, and what each covers
+
+| Layer | Written by | Fails when |
+|---|---|---|
+| 1. DB stamp, read live on every session read | `org-setup.service.ts:153` / `:251` (`organizations.onboardingCompletedAt`), `onboarding-submission.service.ts:50` (`users.onboardingCompletedAt`) — each **awaited before** `completeOnboardingGate` | the backend is unreachable for 2 × 8 s |
+| 2. JWT token claim | `update()` — the swallowed call | `update()` fails; harmless while layer 1 answers |
+| 3. Scoped cookie `org-setup-done--<orgId>` / `onboarding-done--<userId>` | `lib/onboarding-gate.ts:31`, **before** the race | cookie cleared, or 30 days elapse |
+
+Layer 1 is authoritative and the backend invalidates `CACHE_KEYS.userSession(userId)` at
+`org-setup.service.ts:191` / `:287` / `onboarding-submission.service.ts:69`, whose read cache
+(`auth.service.ts:209-341`) has a **60-second TTL**. So the window the cookie actually bridges is
+**60 seconds of a possibly-dropped Redis invalidation** (`cache.service.ts:127-131` logs and
+continues) — not 30 days of durability. A 30-day cookie guarding a 60-second window is belt, braces
+and a second pair of braces; the `Promise.race` timeout is a third.
+
+### The two questions asked, answered
+
+- **Different device / different browser (no cookie).** Layer 1 answers. `resolveWizardGate` reads
+  `session.orgOnboardingCompletedAt`, which came from the live backend read, which reads the DB row
+  stamped before the client call. `lib/wizard-gate.test.ts:114` already pins this
+  ("passes when the DB stamp is present, even without a cookie").
+- **After `GATE_COOKIE_MAX_AGE` (30 days).** Same answer, and `session.maxAge` is 30 days
+  (`lib/auth.ts:69`), so the session itself expires on the same horizon and a fresh sign-in
+  re-mints the claim from the DB (`lib/auth.ts:55-58`, `:121-139`).
+- **Did the server stamp always happen first?** Yes, on all three paths, each `await`ed:
+  `app/org-setup/page.tsx:126 → :131` (skip), `features/org-setup/components/step-generation.tsx:289
+  → :141` (complete), `features/employee-onboarding/components/step-review.tsx:211 → :213`.
+
+Bouncing a completed/skipped user therefore requires layers 1, 2 **and** 3 to be unavailable at the
+same instant — and layer 1 being unavailable means the backend is down, in which case the wizard
+destination is equally broken. The swallow is not what makes that possible.
+
+### `app/(auth)/invitation/[token]/page.tsx:140` — checked separately, as asked
+
+It does **not** call `completeOnboardingGate`; it is a bare
+`clearBackendTokenCache(); await update().catch(() => null); router.push("/dashboard");`
+so it has **no cookie and no timeout cap**. It is still not a bounce:
+`invitation-acceptance.service.ts:174` invalidates `userSession`, and layer 1 supplies the new
+`orgId` on the next server render — `lib/auth.ts:182-184` takes `fresh.orgId` whenever `fresh` is
+non-null. The sibling branch (`autoLoginToken`, line 137) re-mints the JWT outright via
+`signInWithMagicToken`.
+
+What the swallow *does* cost here, honestly: it removes layer 2 as a **correct** fallback. If the
+live read also fails, `orgId` falls back to the stale token value of `null` and the user is sent to
+`/org-setup` — the create-an-organization wizard — moments after joining an existing org. That
+needs a *simultaneous* second failure, and the same stale-token fallback would misfire on any other
+`update()`-driven claim too. It is a resilience thinness, not the durability defect reported. No fix
+is landed for it, and none is recommended without a product decision about what `/org-setup` should
+do for a user whose invitation has already been accepted server-side.
+
+### Cross-checks that came out of the trace and are worth someone's time
+
+1. **`clearGateCookies()` (`lib/onboarding-gate.ts:18-22`) is dead.** It clears the *unscoped* names
+   `org-setup-done=` / `onboarding-done=`, while `completeOnboardingGate` writes the *scoped*
+   `${base}--${scopeId}`. Its two callers — sign-out and org-switch (`hooks/common/auth-hooks.ts:115`,
+   `:147`) — therefore clear nothing. Harmless today precisely because the cookies are scoped by
+   `orgId`/`userId`, so a different org or user cannot satisfy the gate with a stale one. Flagged
+   because "fixing" it to clear scoped cookies on org switch would *remove* layer 3, not restore it.
+2. **`org-setup.service.ts:231-238`, the non-owner skip branch, stamps nothing** — no
+   `onboardingCompletedAt`, no `userSession` invalidation. Not reachable as a bounce, because
+   `wizard-gate.ts:27` gates org-setup on `isOrgOwner`, but it is an asymmetry to know about.
