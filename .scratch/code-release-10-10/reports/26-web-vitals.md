@@ -325,3 +325,98 @@ node scripts/measure-web-vitals.mjs --base-url=http://localhost:1043 --cookie-fi
 
 It refuses unless the samples reach an authorized shell. That refusal is the feature: this release
 has already had two full runs report zero findings while every step rendered an error page.
+
+---
+
+# Session S9 — 2026-09-03 — production build completed; the shell's biggest library is not framer-motion
+
+**Build:** `NEXTAUTH_SECRET=<47-char local placeholder> NODE_ENV=production npx next build` through `heavy.sh 2`
+→ **exit 0**, build id `pRoNmQpD1X5_6lTUEhSv9`, **601 routes**. S8's killed build left `.next` with no
+`BUILD_ID`; it was deleted (cache kept) before rebuilding, so nothing below reads a half-written artifact.
+`pnpm -C frontend type-check` → **exit 0**.
+
+## 1. The governed number understates the download — confirmed
+
+`/dashboard` `measuredFirstLoadJsBytes` re-measures at **441,834 B** gzip over **37** chunks by the
+client-reference-manifest method. Next's own accounting for the same route, from
+`.next/diagnostics/route-bundle-stats.json`, is **2,281,422 B raw / 573,428 B gzip over 42 chunks** — the extra
+five are framework/polyfill/main, which the manifest method never sees. The recorded 640,260 B over-the-wire
+figure sits between the two and is the honest one for what users fetch.
+
+## 2. framer-motion, priced
+
+Isolated bundles built with the repo's own `esbuild 0.27.1` (`--bundle --minify --format=esm`, react external):
+
+| entry surface | raw | gzip |
+|---|---|---|
+| `motion, AnimatePresence, useReducedMotion, LayoutGroup, MotionConfig, useTransform, useSpring, useMotionValue, useInView` | 121,284 B | **40,690 B** |
+| `motion, AnimatePresence, useReducedMotion` | 117,537 B | 39,330 B |
+| `useReducedMotion` alone | 368 B | **253 B** |
+
+In the build itself framer-motion is a single merged module of 94,837 B inside chunk `2-tfck0qpw5kq.js`
+(95,216 B raw / **30,554 B gzip**), a first-load chunk of **601 of 601** routes.
+
+Importers at head: **278** — 22 `features/landing`, 256 authenticated. `useReducedMotion` is used by 102 of them
+and costs **253 B**, so those files are not part of any migration. The price is `motion` (256) and
+`AnimatePresence` (67).
+
+**Answer for the scope decision: ~40 kB gzip per first load.** Smallest open breach is 59,598 B. Replacing
+framer-motion does not close the JS budget by itself.
+
+## 3. The finding that changes the decision — `@animateicons/react/lucide`
+
+| | raw | gzip | routes in first load |
+|---|---|---|---|
+| `@animateicons/react/lucide` (`448xe3n3zsx8s.js`) | **481,691 B** | **55,869 B** | **559 / 601** |
+| framer-motion (`2-tfck0qpw5kq.js`) | 95,216 B | 30,554 B | 601 / 601 |
+
+- Ships **248** icons (counted from `displayName=` literals in the built chunk); the app imports **90** distinct
+  icons across **596** files.
+- `next.config.ts` **already** lists it in `experimental.optimizePackageImports`. **The optimisation is vacuous
+  here** — the package is one 412,078 B ESM file with no per-icon modules to rewrite to, and it carries **zero
+  `@__PURE__` annotations** on 248 top-level `forwardRef(...)` calls, so no bundler may drop an unused one.
+- Reproduced outside Next: all 248 → 455,497 B raw / 60,394 B gzip; only the 90 used → 452,184 B raw /
+  59,354 B gzip. A **1,040 B** difference. Structurally unshakeable.
+- It **vendors its own copy of framer-motion** (`dist/chunk-SZP4YRB3.js`, 73,833 B, carrying
+  `transformPerspective` / `anticipate` / `whileHover` / `originX`) and declares no dependency on it —
+  **framer-motion ships twice** in every authenticated first load.
+- Prorating 90/248 puts roughly **35 kB gzip** per first load in icons that are never rendered.
+
+**Owner: a dependency decision, outside ticket 26's territory.** It is a one-dependency lever, larger than
+framer-motion, versus a 256-file refactor.
+
+## 4. `org-switcher.tsx` — the `dynamic()` deferred nothing
+
+`LeaveOrganizationDialog`'s own description string sits in `.next/static/chunks/176qxkejwz55m.js`
+(71,974 B raw / 22,373 B gzip) **together with** `LeaveOrganizationMenuItem` — the module the static import on the
+line above already pulled in. That chunk is a **first-load** chunk of **556 of 601** routes, confirmed directly
+against `/dashboard`, `/inbox` and `/settings`. **No async chunk carrying the module exists** anywhere under
+`.next/static/chunks`; the only other file containing the string is `1-t3ze_xbo39w.js`, itself a first-load chunk
+of `/settings/organization`. Collapsed to a static import. **Byte saving: zero** — the value is that the code no
+longer claims a deferral it never performed. Dropping `ssr: false` is safe: the dialog returns `null` unless
+`access.isOrgOwner === false`, and `ConfirmDialog` renders through a Radix portal that emits nothing while closed.
+
+## 5. `maxTotalBytes` — governed, loose, deliberately not tightened
+
+1,048,576 B, every route inside: `/chat` 989,423 B (**94.4%**), `/build/my-work` 963,374 (91.9%), `/crm/leads`
+951,954 (90.8%). It would fire, so it is not vacuous — but it has never rejected anything and it sits above a
+`measuredScriptBytes` ceiling that 14 routes breach, so it is not evidence that page weight is controlled.
+Tightening it would manufacture red routes on a box already blocked, with no agreed target. Recorded in the
+manifest rather than changed.
+
+## 6. Gates
+
+| command | exit | number |
+|---|---|---|
+| `npx next build` | **0** | build `pRoNmQpD1X5_6lTUEhSv9`, 601 routes |
+| `pnpm -C frontend type-check` | **0** | clean |
+| `node scripts/measure-route-bundles.mjs` | **0** | baseline `/dashboard` 441,834 B / 37 chunks |
+| `node scripts/measure-route-bundles.mjs --write` | **0** | `/parties` 456,830 B; **0 pending** |
+| `node scripts/check-route-bundle-budget.mjs` | **1** | 13 routes, 13 measured, **17 breaches, all JS** |
+| `node scripts/check-route-bundle-budget.mjs --self-test` | **0** | SELF-TEST PASSED |
+
+**NOT RUN:** `measure-web-vitals.mjs`, `check-web-vitals-budget.mjs`, lint, jest. No browser cold-cache pass and
+no LCP/INP/CLS/TTFB re-capture — the machine reached **6% battery**. All over-the-wire, CSS, font, image,
+third-party and server-payload figures in the manifest remain from the 2026-09-02 capture on build
+`5KxS0uW9Wrm0BIVYZicTs`; `measurementNotes.measurementProvenance2026_09_03` now states this in the contract
+itself rather than leaving a mixed-provenance file looking uniform.

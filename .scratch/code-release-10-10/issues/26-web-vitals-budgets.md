@@ -4,7 +4,12 @@
 
 **Blocked by:** 25 — route composition drives most of these numbers, so measuring before the thinning lands wastes the run. (25 is done; this is no longer a blocker.)
 
-**Status:** 6 of 7 closed. Four of the six breached metrics are inside budget on a real authenticated production
+**Status:** 6 of 7 closed (unchanged). Re-measured 2026-09-03 on a COMPLETED production build
+`pRoNmQpD1X5_6lTUEhSv9` (exit 0, 601 routes). Box 6 still open and still blocked on a cross-lane decision, but the
+recorded cause is corrected a second time: the largest identifiable library in the authenticated shell is
+**`@animateicons/react/lucide` (481,691 B raw / 55,869 B gzip, 559 of 601 routes, 248 icons shipped for 90 used)**,
+not framer-motion (95,216 B / 30,554 B gzip). Replacing framer-motion is worth **~40 kB gzip**, measured, against a
+smallest open overage of 59,598 B. Original status follows: 6 of 7 closed. Four of the six breached metrics are inside budget on a real authenticated production
 capture (192 samples, 0 refused); the last box is **BLOCKED on a cross-lane engineering decision**, re-measured at
 head 2026-09-03 (`check-route-bundle-budget.mjs` exit 1, **17 breaches, all JavaScript**; CSS, fonts, images,
 third-party and server payload all met). **The recorded cause is corrected this pass:** framer-motion's 283
@@ -50,6 +55,10 @@ not pin it into the authenticated shell — the decision is who replaces it acro
     the View Transitions API)? That is a cross-lane engineering decision with an owner and a budget, not an
     escalation about a frozen landing page, and not something a lazy boundary fixes. Until it is made this box
     cannot be met, and the previous framing would have sent it to the wrong owner.
+    **SUPERSEDED IN PART by Session S9 below (2026-09-03, build `pRoNmQpD1X5_6lTUEhSv9`): framer-motion is NOT the
+    largest library in the shell and replacing it is worth a measured ~40 kB gzip, not an unpriced project.
+    `@animateicons/react/lucide` is larger. Read S9 before routing this decision.**
+
     **BLOCKED on that decision.** Not on territory (the shell is reachable), not on infrastructure (the budget
     script runs and measures), and not on tool capability.
 - [x] Public landing visuals and animations remain unchanged; if a frozen landing animation prevents an agreed target, that is escalated rather than worked around.
@@ -60,20 +69,97 @@ not pin it into the authenticated shell — the decision is who replaces it acro
 
 ## Session S8 (2026-09-03) — NOT MEASURED THIS PASS
 
-A production build was started (`NEXTAUTH_SECRET=<44-char local placeholder> npx next build`, through
-`heavy.sh 2`) precisely to re-measure `measuredTotalBytes` and `measuredScriptBytes` at head and to settle the
-`org-switcher.tsx` double-import question. It reached "Running TypeScript …" and was **killed at ~15% battery
-before it produced a `BUILD_ID`**. `frontend/.next` is therefore **incomplete at the end of this session** — the
-previous build (`4LuMJdkchN7tMbNJc04IH`, 2026-09-02 23:23) was overwritten and the new one never finished. The
-next agent to need a build must run one; do not read `.next` as if it were a finished artifact.
+A production build was started and killed at ~15% battery before producing a `BUILD_ID`. Nothing was measured,
+ticked or changed. Superseded by S9 below, which ran the build to completion.
 
-**Nothing in this ticket was measured, ticked or changed this session.** Box 6 stays open with the numbers and the
-framer-motion correction already recorded above. Two items are left for whoever picks it up:
-1. `measuredTotalBytes` is governed (`defaults.maxTotalBytes` = 1 048 576) and every route is inside it, the
-   closest being `/chat` at 989 423 B (94%). It is not a vacuous budget, but it is a loose one and the margin is
-   thinner than the recorded JS breaches suggest.
-2. **Unsettled, and deliberately not guessed:** `components/layout/header/org-switcher.tsx` imports
-   `@/features/settings/organization/leave-organization-control` twice — statically at line 25 for
-   `LeaveOrganizationMenuItem`, and through `dynamic(() => import(...))` at line 28 for `LeaveOrganizationDialog`.
-   Whether the `dynamic()` defers anything once the module is already in the static graph is a webpack question
-   that only a finished build answers. Not measured. (Both files are outside this session's territory anyway.)
+---
+
+## Session S9 (2026-09-03) — BUILD COMPLETED, BOX 6 STILL OPEN, RECORDED CAUSE CORRECTED AGAIN
+
+`NEXTAUTH_SECRET=<47-char local placeholder> NODE_ENV=production npx next build` through `heavy.sh 2` →
+**exit 0**, build id **`pRoNmQpD1X5_6lTUEhSv9`**, **601 routes** (counted from
+`.next/diagnostics/route-bundle-stats.json`). The stale `.next` left by S8 was deleted first (cache kept), so
+nothing here reads a half-written artifact. `pnpm -C frontend type-check` → **exit 0**.
+
+### 1. `measuredTotalBytes` — governed, but loose, and NOT tightened
+`defaults.maxTotalBytes` = 1,048,576 B. All 13 routes are inside it: `/chat` 989,423 B (**94.4%**),
+`/build/my-work` 963,374 (91.9%), `/crm/leads` 951,954 (90.8%), `/dashboard` 781,242 (74.5%). The budget is
+**not vacuous** — `check-route-bundle-budget.mjs` compares it and the self-test asserts the pair fires — but it
+has never rejected anything, and it sits *above* a `measuredScriptBytes` ceiling that 14 routes breach. Left
+untightened deliberately: tightening to the measured maximum manufactures red routes on a box already blocked on
+a cross-lane decision, and no owner has agreed a target. Recorded as
+`measurementNotes.totalBytesBudgetHonesty2026_09_03`.
+
+Separately: the governed `/dashboard` figure of 440,065 B (now re-measured 441,834 B) really does understate what
+users fetch. Next's own accounting for the same route is **2,281,422 B raw / 573,428 B gzip over 42 chunks** —
+the manifest number is the client-reference-manifest subset (37 chunks) and omits framework/polyfill/main.
+
+### 2. framer-motion — settled with numbers, and it is NOT the biggest thing in the shell
+278 importers at head (22 `features/landing`, 256 authenticated). Used surface: `motion` 256 files,
+`useReducedMotion` 102, `AnimatePresence` 67, then single-digit `LayoutGroup` / `MotionConfig` / `useTransform` /
+`useSpring` / `useMotionValue` / `useInView`.
+
+**What replacing it would actually save**, bundled in isolation with the repo's esbuild 0.27.1
+(`--bundle --minify --format=esm`, react external):
+
+| surface | raw | gzip |
+|---|---|---|
+| full used surface | 121,284 B | **40,690 B** |
+| `motion` + `AnimatePresence` + `useReducedMotion` | 117,537 B | 39,330 B |
+| `useReducedMotion` alone | 368 B | **253 B** |
+
+Corroborated in the build: framer-motion is one merged module of 94,837 B inside chunk `2-tfck0qpw5kq.js`
+(95,216 B raw / **30,554 B gzip**), a first-load chunk of **601 of 601** routes.
+
+So the answer for the scope decision: **replacing framer-motion buys about 40 kB gzip per first load**, the 102
+`useReducedMotion`-only call sites are free (253 B) and can be excluded from the migration, and the smallest
+open breach is **59,598 B**. It does not close the JS budget on its own.
+
+### 3. THE LARGER LEVER, previously unrecorded — `@animateicons/react/lucide`
+Chunk `448xe3n3zsx8s.js` is **481,691 B raw / 55,869 B gzip** in the first load of **559 of 601** routes —
+**larger than framer-motion**. It ships **all 248** animated icons (counted from `displayName=` literals in the
+built chunk) while the app imports **90** distinct icons across **596** files.
+
+`next.config.ts` **already lists** `@animateicons/react/lucide` in `experimental.optimizePackageImports`, and it
+cannot bite: the package is a single 412,078 B ESM file with no per-icon modules for a barrel rewrite to target,
+and it has **zero `@__PURE__` annotations** on 248 top-level `forwardRef(...)` calls, so no bundler may drop an
+unused one. Reproduced outside Next with esbuild — all 248 → 455,497 B raw / 60,394 B gzip; only the 90 used →
+452,184 B raw / 59,354 B gzip, a **1,040 B** difference. Structurally unshakeable, not mis-configured.
+
+It also **vendors its own copy of framer-motion** (`dist/chunk-SZP4YRB3.js`, 73,833 B, carrying
+`transformPerspective` / `anticipate` / `whileHover` / `originX`) while declaring no dependency on it — so
+**framer-motion ships twice** in every authenticated first load. Prorating 90/248 puts roughly **35 kB gzip** per
+first load in icons the app never renders. **Owner: a dependency decision, not ticket 26.**
+
+### 4. `org-switcher.tsx` double import — SETTLED, the `dynamic()` deferred nothing
+`LeaveOrganizationDialog`'s own description string sits in `.next/static/chunks/176qxkejwz55m.js`
+(71,974 B raw / 22,373 B gzip) **together with** `LeaveOrganizationMenuItem`, and that chunk is a **first-load**
+chunk of **556 of 601** routes (checked directly against `/dashboard`, `/inbox`, `/settings`). **No async chunk
+carrying the module exists** anywhere under `.next/static/chunks` — the only other file containing the string is
+`1-t3ze_xbo39w.js`, itself a first-load chunk of `/settings/organization`. Collapsed to a static import.
+Byte saving **zero**; the value is that the construct no longer claims a deferral it never performed. Dropping
+`ssr: false` is safe: the dialog returns `null` unless `access.isOrgOwner === false`, and `ConfirmDialog` renders
+through a Radix portal that emits nothing while closed.
+
+### Gates run this session
+| command | exit | result |
+|---|---|---|
+| `NEXTAUTH_SECRET=<47-char placeholder> NODE_ENV=production npx next build` | **0** | build `pRoNmQpD1X5_6lTUEhSv9`, 601 routes |
+| `pnpm -C frontend type-check` (`tsc --noEmit`) | **0** | clean |
+| `node scripts/measure-route-bundles.mjs` | **0** | 13 routes measured, baseline `/dashboard` 441,834 B / 37 chunks |
+| `node scripts/measure-route-bundles.mjs --write` | **0** | `/parties` measured 456,830 B → **0 pending** |
+| `node scripts/check-route-bundle-budget.mjs` | **1** | 13 routes, **13 measured, 0 pending**, **17 breaches, all JS** |
+| `node scripts/check-route-bundle-budget.mjs --self-test` | **0** | SELF-TEST PASSED |
+
+**NOT RUN this session:** `scripts/measure-web-vitals.mjs` and `scripts/check-web-vitals-budget.mjs` — no browser
+cold-cache pass, no LCP/INP/CLS/TTFB re-capture. The machine hit **6% battery**. Every `measuredScriptBytes` /
+`measuredTotalBytes` / CSS / font / image / third-party / server-payload figure in the manifest therefore remains
+from the 2026-09-02 capture on build `5KxS0uW9Wrm0BIVYZicTs`, and the manifest now says so in
+`measurementNotes.measurementProvenance2026_09_03`. First-load figures moved +1,505 to +8,149 B between the two
+builds, so the older over-the-wire numbers are close but are not from this build.
+
+**Box 6 remains OPEN.** Still blocked on a cross-lane engineering decision, but the decision is now a different
+and better-priced one: it is not "who replaces framer-motion across 261 files for an unknown gain", it is
+"@animateicons/react ships 248 icons for 90 used and vendors a second framer-motion — do we replace the icon
+dependency (larger lever, ~35 kB gzip, one dependency swap) before or instead of framer-motion (~40 kB gzip, 256
+files)?" Neither closes 17 breaches alone; together they are ~75 kB gzip against a smallest overage of 59,598 B.
