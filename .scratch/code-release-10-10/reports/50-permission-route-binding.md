@@ -1,7 +1,8 @@
 # 50 — Permission/route binding: generalising the git-connection defect
 
-**Status:** check built and committed; findings reported below; fixes applied in a
-follow-up commit named at the end.
+**Status:** DONE. Check built (`128a46a17`, `d203bf1d0`, `e999629f1`), findings
+reported below before fixing (`fb937b608`), 23 hooks fixed and 4 documented as
+deliberate (`2a3e3523a`). `pnpm check:permission-binding` exits 0 on head.
 **Oracle:** the backend controllers (`@RequirePermission` read with the TypeScript AST),
 NOT `contracts/openapi.json`. See §6.
 **Date:** 2026-09-03.
@@ -283,10 +284,55 @@ Recommended order for whoever picks this up: `ai.ts` first (free), then git (nee
 envelope handled in `useGitConnections` and its three mutations moved together), then
 `users/bulk-mutations.ts` (needs the member id), then CRM when CRM re-enters scope.
 
-## 8. Bite-proof
+## 8. Outcome and bite-proof
 
-Planted in a hermetic `git archive HEAD` tree, never in the shared working tree.
-See §9 of the final message for the exact commands and exit codes.
+### 8.1 What was done
+
+23 hooks changed to the key their route declares (commit `2a3e3523a`); 4 recorded
+as `DELIBERATE` with both keys and a >=60-character justification each — §4.8 and
+§4.9. `pnpm check:permission-binding` now exits 0 with **2,349 bindings checked**.
+
+Three stale entries in `hooks/api/hr/hr-gating-extensions.test.ts` (a source-text
+table asserting each hook's key) and four stale test NAMES in
+`hooks/api/__tests__/billing-hook-gates.test.tsx` were corrected in the same
+commit. The jest run went from **exit 1 / 3 failures** to **exit 0 / 150 tests**.
+
+### 8.2 Bite-proof — hermetic, never in the shared working tree
+
+`git archive HEAD | tar -x` into a scratch directory, with `node_modules` and the
+sibling backend symlinked in. 6,045 files. The shared tree was never touched;
+`git status` after the run showed only the 17 intended modifications.
+
+| Planted defect | Exit | What the gate said |
+|---|---|---|
+| baseline, nothing planted | **0** | 2,349 bindings checked |
+| (a) `useGatedQuery("integrations:git:view"` → `"settings:manage"` — the ORIGINAL defect | **1** | 1 finding: `hooks/api/git-integration.ts:59 useGitConnections` hook `settings:manage` / route `integrations:git:view`, `GET /settings/integrations/git` [DEPRECATED ALIAS], backend `settings-deprecated-routes.controller.ts:87` |
+| (a) restored | **0** | clean |
+| (b) `useAuthorizedMutation` key swapped in `useRevertLeave` | **1** | 1 finding: `hooks/api/hr/leaves.ts:210`, route `hr:leaves:approve`, backend `leaves.controller.ts:224` |
+| (b) restored | **0** | clean |
+| (c) `enabled`-bound `useCan` key swapped in `useEpics` | **1** | 1 finding: `hooks/api/build/advanced.ts:31`, route `build:tickets:view`, backend `iterations.controller.ts:228` |
+| (c) restored | **0** | clean |
+| (d) `STREAMLINE_BACKEND_ROOT` pointed at an empty backend | **1** | `only 0 backend routes indexed (floor 3000)` + `only 0 bindings resolved to a route (floor 1500)` — refused to report a clean tree |
+| (e) a `DELIBERATE` entry matching no finding | **1** | `1 stale DELIBERATE entry(entries) — they match no current finding; delete them` |
+| (f) a `DELIBERATE` reason shortened to `"deliberate"` | **1** | `1 malformed DELIBERATE entry(entries) — an exception must justify itself and name both keys` |
+| (g) everything restored | **0** | 2,349 bindings checked |
+
+Case (a) is the point: the gate reproduces the exact defect `7166ce394` fixed,
+names the hook, both keys, the route and the backend decorator's file and line,
+and reports **exactly one** finding — no noise to hide it in.
+
+### 8.3 Gates run
+
+| Command | Exit | Number |
+|---|---|---|
+| `pnpm -C frontend type-check` | 0 | 0 errors |
+| `node scripts/check-permission-route-binding.mjs` | 0 | 2,349 bindings |
+| `node scripts/check-permission-route-binding.mjs --self-test` | 0 | 31 cases |
+| `node scripts/check-route-access-contract.mjs` | 0 | 203 keys / 627 contract keys |
+| `node scripts/check-route-access-contract.mjs --self-test` | 0 | — |
+| `node scripts/check-gated-reads.mjs` | 0 | permissionedUngated at baseline 0 |
+| `pnpm exec eslint <17 changed files>` | 0 | 0 errors, 11 pre-existing warnings |
+| `jest --runInBand --testPathPattern="(billing-hook-gates\|hr-gating-extensions\|global-cursor-pagination)"` | 0 | 3 suites, 150 tests (was exit 1 / 3 failures before the table fix) |
 
 ## 9. What this method would MISS
 
