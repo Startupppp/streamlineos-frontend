@@ -190,6 +190,8 @@ export type ExtendedPermissionKey =
   | "crm:issues:manage"
   | "crm:issues:escalate"
   | "crm:email-templates:manage"
+  | "crm:custom-fields:manage"
+  | "crm:custom-fields:view"
   | "crm:offer-fulfillment:create"
   | "crm:offer-fulfillment:delete"
   | "crm:offer-fulfillment:update"

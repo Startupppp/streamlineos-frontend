@@ -89,6 +89,8 @@ export const CRM_PERMISSIONS: Permission[] = [
   { name: "crm:offer-fulfillment:delete", resource: "crm:offer-fulfillment", action: "delete", description: "Delete CRM offer → Inventory SKU fulfillment mappings" },
   { name: "crm:offer-fulfillment:update", resource: "crm:offer-fulfillment", action: "update", description: "Update CRM offer → Inventory SKU fulfillment mappings" },
   { name: "crm:offer-fulfillment:view", resource: "crm:offer-fulfillment", action: "view", description: "View CRM offer → Inventory SKU fulfillment mappings" },
+  { name: "crm:custom-fields:manage", resource: "crm:custom-fields", action: "manage", description: "Create, edit and remove CRM custom field definitions" },
+  { name: "crm:custom-fields:view", resource: "crm:custom-fields", action: "view", description: "View CRM custom field definitions" },
   { name: "crm:products:manage", resource: "crm:products", action: "manage", description: "Manage the CRM product catalog" },
   { name: "crm:scoring-rules:manage", resource: "crm:scoring-rules", action: "manage", description: "Manage lead scoring rules" },
   { name: "crm:sequences:manage", resource: "crm:sequences", action: "manage", description: "Manage CRM email/call sequences" },
