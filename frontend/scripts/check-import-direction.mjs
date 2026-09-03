@@ -36,7 +36,13 @@ const REAL_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const BASELINE_SHARED_IMPORTS_FEATURE = 19;
 // 194, re-measured 2026-09-02 immediately after test files left the corpus
 // (222 with them, 194 without). NOT 210 — see the header.
-const BASELINE_CROSS_FEATURE = 194;
+// Tightened 194 -> 182 on 2026-09-03. These 12 were NOT fixed: deduplicating
+// violation edges (see dedupeEdges) stopped counting repeated references to the
+// same module as separate violations. The baseline is lowered to the measured
+// value anyway, because leaving it at 194 would leave 12 slots of slack for a
+// real future regression to hide in -- which is the one thing a ratchet exists
+// to prevent.
+const BASELINE_CROSS_FEATURE = 182;
 
 const EXCLUDED_DIRS = new Set(["node_modules", ".next", "feedbucket-widget", ".git"]);
 
@@ -192,10 +198,35 @@ function runSelfTest() {
 
 const args = process.argv.slice(2);
 
+/** Collapse repeated references to the same module from the same file to one edge. */
+function dedupeEdges(violations) {
+  const seen = new Set();
+  return violations.filter((v) => {
+    const key = `${v.rule}\u0000${v.file}\u0000${v.specifier}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 if (args.includes("--self-test")) {
   runSelfTest();
 } else {
-  const violations = scanViolations(REAL_ROOT);
+  // A violation is the EDGE (file -> module), not the number of times the edge is
+  // written. `org-switcher.tsx` references
+  // `@/features/settings/organization/leave-organization-control` twice -- once as a
+  // static import and once inside a `dynamic(() => import(...))` -- and when this
+  // detector learned to see dynamic imports that single architectural violation
+  // started counting as two, reporting 20 against a baseline of 19 and failing the
+  // gate as REGRESSED. Nothing had regressed: the distinct edge set was, and still is,
+  // 19. Deduplicating is the fix. Raising the baseline to 20 would have laundered the
+  // ratchet, and deleting a working import to chase the number would have changed
+  // shipping code to satisfy a counting artifact.
+  //
+  // This does not weaken the rule. A shared component importing two DIFFERENT feature
+  // modules is still two violations; only repeated references to the SAME module
+  // collapse, which is exactly the granularity the rule is about.
+  const violations = dedupeEdges(scanViolations(REAL_ROOT));
   const sharedCount = violations.filter((v) => v.rule === "shared-imports-feature").length;
   const crossCount = violations.filter((v) => v.rule === "cross-feature-import").length;
 
