@@ -21,11 +21,24 @@ import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useGetOrganizations, useSwitchOrg } from "@/hooks/common/auth-hooks";
 import { useAccess } from "@/hooks/api/access";
-import { CreateWorkspaceDialog } from "@/components/layout/header/create-workspace-dialog";
 import {
   LeaveOrganizationDialog,
   LeaveOrganizationMenuItem,
 } from "@/components/organization/leave-organization-control";
+
+/**
+ * The create-workspace form is the shell's only eager react-hook-form +
+ * zodResolver tree, and it cannot paint until someone opens it — so it mounts
+ * on first open rather than on hydration, which is what keeps its chunk out of
+ * a cold authenticated load rather than merely out of the first-load manifest.
+ */
+const CreateWorkspaceDialog = dynamic(
+  () =>
+    import("@/components/layout/header/create-workspace-dialog").then(
+      (m) => m.CreateWorkspaceDialog,
+    ),
+  { ssr: false },
+);
 
 const ArchivedOrgsRestore = dynamic(
   () =>
@@ -220,6 +233,7 @@ function OrganizationSwitcher({
   const { data: access } = useAccess();
   const switchOrg = useSwitchOrg();
   const [createOpen, setCreateOpen] = useState(false);
+  const [createMounted, setCreateMounted] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [internalOpen, setInternalOpen] = useState(false);
 
@@ -260,6 +274,7 @@ function OrganizationSwitcher({
   );
 
   const handleCreateWorkspace = useCallback(() => {
+    setCreateMounted(true);
     setCreateOpen(true);
   }, []);
 
@@ -376,9 +391,9 @@ function OrganizationSwitcher({
     </button>
   );
 
-  const createDialog = (
+  const createDialog = createMounted ? (
     <CreateWorkspaceDialog open={createOpen} onOpenChange={setCreateOpen} />
-  );
+  ) : null;
   const leaveDialog = (
     <LeaveOrganizationDialog
       open={leaveOpen}
