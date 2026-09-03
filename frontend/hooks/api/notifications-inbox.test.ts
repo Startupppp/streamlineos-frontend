@@ -324,16 +324,15 @@ describe("abort-signal propagation", () => {
     };
     apiClient.get.mockResolvedValue([]);
 
-    const { result } = renderHook(() => useNotifications(), { wrapper: wrapper(client) });
+    renderHook(() => useNotifications(), { wrapper: wrapper(client) });
 
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
     });
 
-    if (apiClient.get.mock.calls.length > 0) {
-      const [, , signal] = apiClient.get.mock.calls[0] as [unknown, unknown, unknown];
-      expect(signal).toBeDefined();
-    }
+    expect(apiClient.get).toHaveBeenCalled();
+    const [, , signal] = apiClient.get.mock.calls[0] as [unknown, unknown, unknown];
+    expect(signal).toBeInstanceOf(AbortSignal);
   });
 
   it("useInfiniteNotifications passes signal to apiClient.get", async () => {
@@ -343,7 +342,7 @@ describe("abort-signal propagation", () => {
     };
     apiClient.get.mockResolvedValue([]);
 
-    const { result } = renderHook(() => useInfiniteNotifications(), {
+    renderHook(() => useInfiniteNotifications(), {
       wrapper: wrapper(client),
     });
 
@@ -351,10 +350,9 @@ describe("abort-signal propagation", () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
     });
 
-    if (apiClient.get.mock.calls.length > 0) {
-      const [, , signal] = apiClient.get.mock.calls[0] as [unknown, unknown, unknown];
-      expect(signal).toBeDefined();
-    }
+    expect(apiClient.get).toHaveBeenCalled();
+    const [, , signal] = apiClient.get.mock.calls[0] as [unknown, unknown, unknown];
+    expect(signal).toBeInstanceOf(AbortSignal);
   });
 });
 
