@@ -6,14 +6,24 @@
 
 **Status:** 6 of 7 closed · **1 PARTIAL** (box 4) · reports at
 `reports/08-execute-schema-key-minimization.md`, `reports/08b-close-schema-key-minimization.md`,
-`reports/07b-declaration-drift.md`, **`reports/08c-unread-request-fields.md`** and
-**`reports/08d-field-intent-honoured-or-removed.md`**.
+`reports/07b-declaration-drift.md`, `reports/08c-unread-request-fields.md`,
+`reports/08d-field-intent-honoured-or-removed.md` and
+**`reports/08e-unbound-blocker-cleared.md`**.
 
-**2026-09-03 — box 4's SECOND blocker is CLEARED.** 08c held the box open on two independent
-grounds: the 35 unbound routes, and the section-5 residue of six fields the client sends and the
-server drops. All six are now resolved — two honoured, four removed — in
-`reports/08d-field-intent-honoured-or-removed.md`. **The first blocker (35 unbound routes) still
-stands, so the box stays open.**
+**2026-09-03 — box 4's FIRST blocker is now CLEARED too, and the box is open on a THIRD reason.**
+08c held the box open on two grounds: the 35 unbound routes, and the section-5 residue of six
+fields the client sends and the server drops. 08d cleared the second (two honoured, four removed).
+**`reports/08e-unbound-blocker-cleared.md` clears the first: UNBOUND is 0.** 26 of the 35 were
+repaired by commit `09c01de8`, which retyped twenty controllers' `@Body()` as
+`z.infer<typeof theValidatingSchema>`; **the other 9 were never unbound** — all carried
+`schemaFieldCount: 0` because their schemas are six `z.union`, one `z.record` and one empty
+`z.object`, and `getPropertiesOfType` on a union returns only the properties common to every
+constituent. The instrument now walks constituents, and the result is ratcheted by a new gate,
+`pnpm check:body-binding` (exit 0: 1,941 slots, 1,932 BOUND, **0 UNBOUND**), bite-proved in a
+hermetic tree — reverting one route to the old style gives exit 1 naming it.
+**The box stays open on its RESPONSE half:** `openapi.json` declares a 2xx JSON schema for
+**1 of 3,642** operations (1,394 declare a request body), so there is no response contract to
+minimise against. See 08e §7.
 
 **2026-09-03 — the box-4 blocker as written is WITHDRAWN.** The earlier finding, that neither
 `tsc --noUnusedLocals` nor `knip` reports a never-read DTO field, is correct about those two tools
@@ -26,7 +36,10 @@ is built, self-tests, and lives at `reports/08c-field-reach/`. Five request fiel
 its evidence plus a compiler bite; the box stays open for a different and better-founded reason,
 recorded under the box itself.
 
-**2026-09-03 residual-risk register:** box 4 = **R-11**, ACCEPTED RESIDUAL, blocker TOOL (permanent), owner release owner, deadline 2027-03-03 review. Bite proof rebuilt with anti-vacuous controls on both instruments. See `reports/residual-risk-register.md` §3.1.
+**2026-09-03 residual-risk register:** box 4 = **R-11**, ACCEPTED RESIDUAL, owner release owner,
+deadline 2027-03-03 review. **The blocker is now RESPONSE CONTRACT, not TOOL and not the unbound
+routes — both of those are struck with evidence in `reports/08e-unbound-blocker-cleared.md`.**
+See `reports/residual-risk-register.md` §3.1.
 
 **2026-09-03 — the composite-FK-with-a-NULL-tenant-column sweep was run to completion, and it found two live
 holes that every previous pass on this ticket missed.** A composite FOREIGN KEY is MATCH SIMPLE, so it does not
@@ -130,10 +143,17 @@ purge path was run, not reasoned about — **5/5** assertions including `DELETE 
 - [x] Redundant single-column foreign keys are removed only after all callers and migrations target the composite relationship.
       Closed for every module in this release. Re-measured at head: **169**, not 171 (same definition applied to `pg_constraint`). Of those, **16 were outside CRM/inventory and all 16 are gone** via migration `1006` — 8 dropped outright where single and composite already carried the same action, 8 with the action first MOVED onto the composite (1 CASCADE, 7 `SET NULL (col)` with explicit column lists) so no parent delete changes behaviour. Every pair was verified LIVE in `pg_catalog` per table before removal. A further **17 dead `.references()` covered by an existing composite** were removed as declaration-only changes. **HR needed nothing**: `hr_*` (130) and `payroll_*` (48) tenant→tenant FKs are already 100% composite. FKs 3,150 → **3,134**; remaining 153 are CRM 53 / inventory 100, both out of release scope.
 - [ ] Unused request/response/DTO/Zod fields are removed across backend, OpenAPI and frontend hooks/forms as one contract change. Server-controlled tenant/actor fields, idempotency/version fields, authorization dimensions and audit fields are never removed.
-      PARTIAL: five fields removed as one contract change (backend Zod -> `openapi.json` ->
-      frontend type); the box does not close because 35 routes are structurally unmeasurable and
-      the residue on the measurable ones is unimplemented intent, not dead weight. Full method,
-      numbers and misses in `reports/08c-unread-request-fields.md`.
+      PARTIAL: **13 request fields removed in total across three passes** — 5 (08c) + 4 (08d) + 4
+      (08e) — each as one contract change (backend Zod -> regenerated `openapi.json` -> vendored
+      frontend copy -> frontend type/hook). **The REQUEST half of this box is executed:** the full
+      population was re-measured at head, every route-bound candidate was bitten, all 12 survivors
+      were triaged by hand, and each retention carries a written reason.
+      **The box does not close because of its RESPONSE half only** — `openapi.json` declares a 2xx
+      JSON schema for **1 of 3,642** operations, so there is no response contract to minimise
+      against (08e §7). The two blockers recorded below — TOOL capability, and the 35 unbound
+      routes — are BOTH STRUCK, with evidence.
+      Method and numbers: `reports/08e-unbound-blocker-cleared.md` (current),
+      `reports/08c-unread-request-fields.md` and `reports/08d-field-intent-honoured-or-removed.md`.
       **Measured** (`field-reach.mjs`, exit 0, 5,708 program files, 410,074 property references
       resolved): **10,277** top-level `z.object` fields · **8,452 READ** · 1,825 with zero resolved
       references, of which **186** are CRM/inventory, **99 RETAINED BY RULE** (tenant/actor 32,
@@ -158,6 +178,66 @@ purge path was run, not reasoned about — **5/5** assertions including `DELETE 
       (`ingress.accept(body as InboundCommunicationEvent)`) hides the whole inbound webhook payload.
       (4) Three full runs of the checker returned 97,832 / 136,730 / 129,558 reached sites and the
       third is not a superset of the second, so the **union** was used.
+      **2026-09-03 (08e) — the 35-unbound blocker below is STRUCK, the population was re-measured at
+      head, and four more fields were removed. The box stays open on a THIRD reason: the RESPONSE half.**
+      `body-binding` at head: **UNBOUND 0** (was 35). 26 repaired by `09c01de8`; the other 9 were never
+      unbound — `schemaFieldCount: 0` on six `z.union`, one `z.record` and one empty `z.object`, because
+      `getPropertiesOfType` on a union returns only the properties common to EVERY constituent. Ratcheted
+      by new gate `pnpm check:body-binding` — **exit 0**, 1,941 slots, 1,932 BOUND, 0 UNBOUND, bite-proved
+      in a hermetic tree (revert one route -> exit 1 naming `auth.controller.ts:160`).
+      **Re-measured at head, not carried forward** (`enumerate-fields` 0, `field-reach` x3 0, `classify` 0):
+      **10,268** top-level fields · **8,492 READ** · 1,776 zero-read, of which 186 CRM/inventory, **89
+      RETAINED BY RULE** (tenant/actor 29, idempotency/version 12, authz-dimension 31, audit 17) and 1,501
+      CANDIDATE. **Route-bound candidates 96 -> 58** — the drop IS the blocker clearing.
+      **Bitten by a single sentinel round over all 58** (strictly stronger than deletion: renaming never
+      empties a literal, so the `Record<string, never>` index signature can never appear). Hermetic tree,
+      shared working tree never mutated. Floor = 2 pre-existing errors in another lane's
+      `test/security/bola/**`; sentinel run **exit 2, 96 errors = 94 above floor**. **46 REJECTED** (the
+      whole KB-wiki and platform blocks are read), **12 survivors, all triaged by hand.**
+      **Two further blind spots found — either one trusted blindly is a wrong deletion.**
+      **(5) A read through `@Query("literal")`.** 08c excluded 694 `@Param` fields for exactly this reason
+      and did not apply it to `@Query`. Measured: 6 `no-param` slots carry 9 candidates and **5 of the 9
+      survived the bite** — `cursorQuery.afterCreatedAt`/`.afterId` on both KB comment controllers and
+      `webhookQuerySchema.connectionId`, each read via `@Query("name")`. Removing any breaks KB comment
+      pagination or git webhook routing, and `.strict()` would make it a 400. All five retained.
+      **(6) A re-parse at the seam.** `resumeParseRequestSchema.resumeText` is read as
+      `resumeParseBodySchema.parse(body).resumeText` — `.parse()` takes `unknown`, so the type link is
+      erased exactly like the `as` cast of blind spot 3. **It is one of the 29 fields 08c dropped for the
+      unbound reason: the blocker accidentally protected it.** Retained.
+      **REMOVED — 4 more, as one contract change** (backend Zod -> regenerated `openapi.json` -> vendored
+      frontend copy -> frontend hook type; diff exactly **0 insertions, 13 deletions**):
+      `registerSchema.plan` (`register()` hardcodes `TRIAL_PLAN`; no caller in either repo; a public
+      endpoint now rejects a plan it silently ignored) · `createEpicSchema.assigneeId` (service writes
+      `assigneeMembershipId: undefined`; nothing posts to the route at all — the epics UI creates through
+      the tickets route) · `createBugFromResultSchema.assigneeId` (same; the hook types only
+      `{title?, severity?}`) · `createScorecardTemplateSchema.isBlindMode` (**`scorecard_templates` has no
+      `is_blind_mode` column**; the one call site sends `{name, criteria}` — the same "hook forwards it,
+      caller never sets it" shape 08d corrected for `attachmentSchema.fileKey`).
+      All four schemas are `.strict()`, so each field is REJECTED not stripped, pinned by
+      `src/test/removed-unread-request-fields.spec.ts` — **4/4 pass here, 4/4 FAIL against the HEAD
+      schemas** in a hermetic `git archive` tree, so the spec is not vacuous.
+      **RETAINED with the reason:** the 5 `@Query`-literal fields, `resumeText`,
+      `nextBestActionsSchema.withEvidence` (CRM, excluded) and `approveLeaveSchema.forceApprove` (08c's
+      audit-pair rule stands).
+      **Gates** (08e), exit codes read directly: BE `tsc --noEmit` **0** (0 errors, log 0 bytes — not a
+      crashed tsc) · `check:spec-typecheck` **0** · `openapi:generate` **0** (3,642 ops) · `openapi:check`
+      **0** (was exit 1, stale on exactly these 4 routes and nothing else) · `check:contract-breaking-change`
+      **0** · `check:contract-registry` **0** · `check:openapi-coverage` **0** · `check:operation-ids` **0** ·
+      `check:envelope-consistency` **0** · **`check:body-binding` 0** · BE jest **33 suites / 186 tests** 0 ·
+      FE `type-check` **0** · `check:contract-vendor` **0** (sha256 `35bfdbd1...` both sides) ·
+      `check:contract-drift` **0** · `check:response-contracts` **0** · FE jest **25 suites / 340 tests** 0.
+      **BLOCKED (the remaining blocker, replacing both of the ones below): the RESPONSE half is not
+      measurable.** Measured directly against `openapi.json` at head: **3,642 operations, 1,394 with a
+      requestBody schema, and a 2xx JSON response schema on exactly ONE** (`GET /calendar/admin/settings`).
+      There is no response contract to minimise against — a response field's only definition is the Drizzle
+      projection on one side and an `apiClient.get<T>` **cast** on the other, and per AGENT-BRIEF rule 11
+      nothing arbitrates those two. Over-fetched projection columns certainly exist; nothing has counted
+      them, and counting them is a different instrument from the one this ticket built.
+      **Two bounded exclusions remain, stated not resolved:** the 694 `@Param` fields plus the
+      `@Query("literal")` class (§4.1 above is the measured proof that exclusion is load-bearing), and 407
+      fields bound to no route, which are outside the request/response contract surface but are not proven
+      dead either. Full method and numbers: `reports/08e-unbound-blocker-cleared.md`.
+      ---- superseded below (kept for the audit trail) ----
       BLOCKED (the real blocker, replacing the tool one): **35 of 1,941 validated body/query slots
       are UNBOUND** — `@Validate({ body: S })` beside a hand-written `@Body() body: { ... }`, so the
       runtime and compile-time contracts are unlinked and NO instrument can see a read there. 9 of
