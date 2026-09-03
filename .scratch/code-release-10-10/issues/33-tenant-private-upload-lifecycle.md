@@ -4,9 +4,17 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** implemented — 8 of 9 boxes closed; **1 STILL OPEN** (box 7). Re-audited 2026-09-03 by a fifth
-agent, and the box does NOT close: the code half is clean and is now cleaner, but the stored-data half cannot be
-measured from any database this session may touch, and claiming otherwise would be the fourth falsification of
+**Status:** implemented — 8 of 9 boxes closed; **1 STILL OPEN** (box 7). Re-audited 2026-09-03 by a SIXTH
+agent. The box still does not close, and this pass found that the instruments its closure depends on were
+themselves defective: the backfill and migration `1047` both rewrote a trailing-slash URL to an UNREACHABLE key,
+`1047` reported a constraint-held whole URL as "EMBEDDED", and **`1047` as journalled would have ABORTED AND
+ROLLED BACK THE DEPLOY** on any migration role without BYPASSRLS, because `public.external_effect_ledger` carries
+FORCE ROW LEVEL SECURITY. All three fixed and measured (commit `998d386d`). A read-path audit then found that
+**all four columns this box calls fixed are still returned verbatim to clients by live endpoints**, which makes
+bucket privacy (R-2) load-bearing rather than belt-and-braces — registered as R-3. One in-territory leak closed:
+the vault download no longer returns the permanent address beside the signed one (`856f7fa3`).
+Fifth-agent status line, retained verbatim: the code half is clean and is now cleaner, but the stored-data
+half cannot be measured from any database this session may touch, and claiming otherwise would be the fourth falsification of
 this ticket. What changed this pass: the backfill is now a **journalled migration** (`1047`) that runs at deploy
 instead of an operator action nobody ever ran; the verification script was found to see only 1 of 6 planted leaks
 and was fixed; and one live endpoint that handed back a **stored** permanent URL was closed. Making the R2 buckets
@@ -15,6 +23,16 @@ private (`R2_BUCKET_NAME`, `R2_KB_BUCKET_NAME`) is unchanged and OWED. Re-verifi
 `:self-test` exit 0. Full audit: `reports/33c-stored-public-url-audit.md`.
 
 **2026-09-03 residual-risk register:** box 7 = **R-1 / R-2 / R-2b**, ACCEPTED RESIDUAL, blocker INFRA, owner infrastructure operator, deadline **2026-09-08 before cutover** (R-2b 2026-09-30). **R-1 and R-2 are the only items in the whole register that are a live data exposure rather than a code-quality residual.** See `reports/residual-risk-register.md` §3.6.
+
+**2026-09-03 sixth pass adds R-3 and one PRE-FLIGHT gate on R-1.**
+**R-3 (NEW, cross-territory, code — not infra):** 21 live handlers return a stored object pointer with no
+presign and no expiry, including all four columns box 7 calls fixed (`kb_sources.file_url`,
+`feedbucket_submissions.screenshot_url`, `payslip_publications.pdf_url`, `candidate_documents_vault.file_url`
+via `GET …/vault`). Post-backfill these serve a bare object key; while the bucket is public that key IS the
+permanent URL, so **R-1 without R-2 does not close them**. Owners: kb, payroll, feedbucket, hr/recruitment,
+build, chat, support, cron. Detail and the seven I verified myself: box 7, sixth pass, (6).
+**R-1 now has a hard pre-flight:** run the `row_security_active` probe in box 7 (4) as the migration role
+BEFORE deploying. A non-empty result means migration 1047 aborts and the deploy fails.
 
 **2026-09-03, box 6 — the coordinator flagged this box as falsely ticked and told me to untick it. I found a
 SECOND, independent reason it was false, fixed that one, and verified the first was fixed by another agent while
@@ -269,6 +287,193 @@ Fixed in commit `a6902e5e`. The two halves compose — reason A's fix writes the
     `ROWS HOLDING A PUBLIC URL: 0 …; ROWS WITH AN EMBEDDED PUBLIC URL: 0 …; UNVERIFIABLE COLUMNS: 0` with
     **exit 0** — all three zeros required, exit 2 and exit 3 each close nothing; (b) 1047's deploy-log
     `rows_rewritten=n`; (c) an unauthenticated `curl -I` of a previously-public object URL returning 401/403.
+
+
+    **2026-09-03, SIXTH PASS — the two instruments this box's closure depends on were BOTH defective, and
+    migration 1047 as journalled would have FAILED THE DEPLOY on this schema. All three are now fixed and
+    measured. The box still does not close, and the reason is unchanged: no database this session may touch
+    can answer what production stores.**
+
+    **(0) Gates re-verified at head first, so nothing is read as regressed while the box waits.**
+    `pnpm check:public-object-urls` -> **exit 0** (3,591 files, 9 public-base references, all 9 declared,
+    **0** upload-result `url` fields). `pnpm check:public-object-urls:self-test` -> **exit 0**.
+    `pnpm check:migration-discipline` -> **exit 0**. `pnpm check:migration-rollback` -> **exit 0**.
+    `pnpm check:route-classification` -> **exit 0**. `pnpm check:spec-typecheck` -> **exit 0**.
+    Backend `typecheck` -> **exit 0**.
+
+    **(1) VERIFIED, not assumed: the set of public bases the backfill must strip is COMPLETE.** Earlier passes
+    left this as a worry ("a base this run was never told about"). Measured against the historical minting code
+    rather than against the env file: `git show bafd606f:src/modules/storage/storage.service.ts` shows
+    `publicUrlFor` returning ``${publicBase}/${key}`` with `publicBase = override ?? NEXT_PUBLIC_R2_PUBLIC_URL`,
+    and the only caller that ever passed an override was KB, with `R2_KB_PUBLIC_URL`
+    (`kb-media.service.ts:108`, `kb-sources.service.ts:117` at that commit). So exactly two names could ever
+    have been minted from, and `BASE_ENV_VARS` names exactly those two. The per-region
+    `REGION_<KEY>_R2_PUBLIC_URL` / `_R2_KB_PUBLIC_URL` read at `region.config.ts:244-249` are **not** a third
+    source: `RegionStorageConfig.publicUrl` / `.kbPublicUrl` have **zero consumers** anywhere in `src/`
+    (grep for `.publicUrl` / `.kbPublicUrl` returns nothing outside the definition). The custom-domain gap
+    remains the only one, and it is already stated.
+
+    **(2) DEFECT FOUND AND FIXED IN BOTH INSTRUMENTS: a trailing-slash base made the backfill write an
+    UNREACHABLE key.** `publicUrlFor` concatenated ``${publicBase}/${key}`` without stripping a trailing slash,
+    and `env.validation.ts` accepts one (`optionalUrl` is `z.string().url()`), so any deployment whose
+    `NEXT_PUBLIC_R2_PUBLIC_URL` or `R2_KB_PUBLIC_URL` ended in `/` minted `<base>//<key>`. Both the script and
+    1047 took the tail after the FIRST slash, so that value was rewritten to `/<key>` — a leading slash no
+    object key in this codebase ever has. **That is worse than the leak**: it points the row at an object that
+    does not exist, and 1047's down file is a deliberate no-op so it cannot be reversed. Measured on a fixture
+    row: `https://pub-<32 hex>.r2.dev//kb/9f5-b.pdf` came out `/kb/9f5-b.pdf`. Fixed in commit `998d386d`
+    (leading slashes stripped in `__t33_object_key` and in a new `tailToKey` helper); the same row now comes out
+    `kb/9f5-b.pdf` from both.
+
+    **(3) DEFECT FOUND AND FIXED IN 1047: a whole leaked URL it could not rewrite was reported as EMBEDDED.**
+    1047 skips any column participating in a primary key, unique constraint or foreign key, and any generated
+    or identity column — correctly, because rewriting two spellings of one URL (`%20` and a space) onto the same
+    key would raise a unique violation and abort the deploy. But such a row was then counted in
+    `rows_with_an_EMBEDDED_public_url_remaining` and announced by a WARNING reading *"EMBEDDED inside a larger
+    value (rich text, jsonb or an array)"*. It is not embedded in anything; it is a bare, whole, leaked URL, and
+    the two need opposite remediations. **This is a live shape, not a hypothetical:
+    `termination_supporting_documents.legacy_url` is `text NOT NULL` under
+    `unique(organization_id, termination_id, legacy_url)` (`src/db/schema/hr/termination-relational-records.ts:61,72-76`)** —
+    found by listing every p/u/f-constrained text column in the head schema (1,855 of them; 38 URL-ish).
+    Fixed in `998d386d`: a third catalog aggregate counts that class separately, the per-table NOTICE is now
+    `held=… rewritten=… CONSTRAINT-HELD=… EMBEDDED-REMAINING=…`, the summary carries `rows_CONSTRAINT_HELD=`,
+    and it gets its own WARNING naming the tables and the remediation.
+    Fixture proof (`scratch_t33f_mig`, adversarial: 12 rows / 4 schemas / 8 shapes) —
+    before: `uniq_urls: held=1 rewritten=0 EMBEDDED-REMAINING=1`;
+    after: `uniq_urls: held=1 rewritten=0 CONSTRAINT-HELD=1 EMBEDDED-REMAINING=0`.
+
+    **(4) MEASURED: migration 1047, as journalled, ABORTS AND ROLLS BACK unless the migration role bypasses RLS —
+    i.e. it would fail the deploy and rewrite nothing.** 1047 aborts on any table it reads through a policy it
+    does not bypass, which is right. What nobody had checked is whether that abort is REACHABLE here. It is:
+    at head **981 tables have RLS enabled and exactly one — `public.external_effect_ledger`, set by
+    `migrations/0474_external_effect_ledger.sql:27` — also has FORCE ROW LEVEL SECURITY**, and FORCE filters the
+    table's own OWNER. Reproduced on `scratch_t33f_force` as a `NOSUPERUSER NOBYPASSRLS` owner:
+    `row_security_active` -> `t`, and 1047 raised
+    `ERROR: 1047 aborted: 1 table(s) are read through a row-level security policy this role does not bypass …
+    public.external_effect_ledger`, exit 3, transaction rolled back, `kb_sources` still holding all its leaked
+    URLs. The abort message previously said *"Re-run as the database owner"* — **wrong advice for the only case
+    that reaches it**, since the owner is exactly who FORCE filters. Fixed in `998d386d`: the message now says a
+    BYPASSRLS role or superuser is required, names the table and the migration that set FORCE, and carries a
+    pre-flight probe. **The operator must run this AS THE MIGRATION ROLE BEFORE DEPLOY — an empty result means
+    1047 will proceed, a non-empty one means it will fail the deploy:**
+    ```sql
+    SELECT n.nspname, c.relname
+    FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE c.relkind = 'r' AND c.relrowsecurity AND row_security_active(c.oid);
+    ```
+    The abort was deliberately NOT downgraded to a warning (that would put "nothing to do" and "cannot see it"
+    back on one line), and FORCE is deliberately NOT toggled off around the scan (a migration that disables a
+    security control and relies on its own rollback to restore it is a worse defect than the one it fixes).
+
+    **(5) 1047 re-proven end to end after the fixes.** Fresh adversarial fixture, owner role:
+    `tables_scanned=7 rows_holding_a_public_url=9 rows_rewritten=7 rows_CONSTRAINT_HELD=1
+    rows_with_an_EMBEDDED_public_url_remaining=1`, **exit 0**; `%20` decoded to a space, query and fragment
+    stripped, the external customer URL and the already-a-key row untouched, the second schema (`reporting`)
+    swept. Second pass -> `rows_rewritten=0`, values unchanged: **idempotent**. On `scratch_t33f_head`, a clone
+    of the 668/671 schema, **1,026 tables scanned, 0 rewritten, exit 0, 1 second** — still safe in the deploy
+    path. The script re-proven on the same fixture: dry run **changed nothing** (`diff` of a full before/after
+    dump, exit 0), `--apply` rewrote 9 with `--base`, second `--apply` rewrote **0**.
+
+    **(6) THE FINDING THAT MATTERS MOST, and it changes why R-2 is owed. Every one of the four columns this box
+    names as "now stores the object key" is STILL HANDED TO A CLIENT VERBATIM by a live read path.** A read-path
+    audit (74 `*_url` columns enumerated, 47 object-storage-shaped, 52 read sites followed) found **21**
+    handlers returning a stored object pointer with no presign and no expiry. I verified seven of them against
+    the source myself rather than taking them on report:
+      * `kb/wiki/kb-sources.service.ts:51` — `fileUrl: kbSources.fileUrl` in the `GET kb/sources` projection.
+      * `payroll/payout/publishing.service.ts:69` — `pdfUrl: true` in the `columns` list of
+        `GET payroll/runs/:runId/payslips`, while the correct sibling `…/download` streams a `StreamableFile`.
+        `payslips` is in `SENSITIVE_FOLDER_ROOTS`.
+      * `feedbucket/feedbucket-submissions.service.ts:85` — `return { ...submission, recordingUrl: … }`; the
+        spread carries `screenshotUrl` and `screenshotKey`, and the list at `:41` uses a NEGATIVE projection
+        (`columns: { consoleLogs: false, networkLogs: false }`), which by construction includes every URL column.
+      * `hr/recruitment/recruitment-candidate-vault.service.ts:35-45` — `findMany` with **no `columns`
+        projection** on `candidate_documents_vault`, i.e. the same table and the same rows the fifth pass
+        hardened at `…/vault/:documentId/url`; the sibling `GET …/vault` still returns `file_url` and `s3_key`.
+      * `agent-access/agent-access.service.ts:93` -> `:157` — `ticket_attachments.file_url` returned in a
+        `{ ...ticket, … }` spread on `@Public() @Controller("agent/v1")`. It is not unauthenticated (an
+        `AgentTokenGuard` plus `@RequirePermission("build:tickets:view")` still apply), but the holder of a
+        machine token receives the raw pointer. `ticketAttachments` has **no presign or stream path anywhere in
+        the repository**.
+      * `cron/cron-recruitment.service.ts:74 -> :148` — `candidate_offers.offer_letter_url` becomes `offerLink`
+        in `sendEmail({ to: offer.email })`, an EXTERNAL candidate address.
+      * `feedbucket/feedbucket-ai.service.ts:368-369` -> `feedbucket-ai.prompts.ts:83,97` —
+        `submission.screenshotUrl` is interpolated into `<img src="…">` and **persisted** as the ticket
+        description via `createFromFeedback`.
+    **Why this changes the argument for R-2.** The previous reason to make the buckets private was "somebody may
+    have copied a URL". The real reason is stronger: these endpoints keep handing the pointer out. Before the
+    backfill they hand out a permanent public URL; AFTER the backfill they hand out the bare object key — and
+    while the bucket is public, a key plus the public base IS the permanent URL. **So R-1 without R-2 does not
+    close these surfaces at all; it only changes the shape of what is served.** It also means the discipline box
+    4 claims — authorization rechecked immediately before minting a SHORT-LIVED URL — is bypassed for these
+    columns entirely: the pointer they return never expires, so it outlives revocation, offboarding and org
+    switch. Box 4's own evidence (`/storage/download`, `/storage/image`) is still true as written; this is a
+    different surface and is not being used to untick it.
+    **Cross-territory: kb, payroll, feedbucket, hr, build, chat, support and cron are other agents'. Reported,
+    not fixed.** Registered below as **R-3**.
+
+    **(7) TWO NEW COLLATERAL-DAMAGE RISKS FROM RUNNING 1047, both the same shape as the email-logo hazard in
+    (5) of the fifth pass, both previously unrecorded.**
+      * `candidate_offers.offer_letter_url` is **client-supplied** (`candidate-records.schemas.ts:120`,
+        `z.string().url()`) and is emailed to the external candidate. If a recruiter ever pasted the org's own
+        `pub-*.r2.dev` URL there, 1047 rewrites it to a bare key and **the candidate's offer-letter link in the
+        deadline-reminder email breaks**. An email client cannot present a presigned URL, which is the same
+        constraint that puts `getEmailLogoUrl` on the mint allowlist.
+      * `feedbucket-ai.service.ts` copies `screenshot_url` into ticket-description HTML. Before 1047 that
+        **manufactures a fresh EMBEDDED leak from a legacy row** — the one class neither 1047 nor the script
+        will ever rewrite, because the pointer is inside an `<img src>`. After 1047 it writes a bare key into an
+        `<img src>`, which is simply broken. Either way it must be changed by its owner before 1047 runs.
+
+    **(8) One fix inside this territory: the vault download no longer returns the permanent address beside the
+    signed one.** The fifth pass made `storage-vault.controller.ts` presign instead of falling back to the
+    stored `file_url` — but the handler still ended `return { ...doc, signedUrl }`, so the value it had just
+    replaced went back to the caller anyway, along with the raw `s3_key`. No assertion on `signedUrl` can see
+    that. Commit `856f7fa3`: the response is an explicit `VaultDownloadResponse` projection carrying neither
+    column. Safe as a contract change — grep over the whole frontend package finds no source reference to the
+    route or to `signedUrl`, only the generated `contracts/openapi.json`.
+    **Bite-proved in an isolated `git archive HEAD src` copy, never in the shared tree**: restoring
+    `return { ...doc, signedUrl }` turns the new test red with the received body showing
+    `"fileUrl":"https://pub-…r2.dev/org-1/candidate-vault/passport.pdf"` and `"s3Key":"…"` — while the OTHER
+    FOUR tests still pass, which is exactly why the presign fix alone read as complete.
+    `jest --testPathPattern="src/modules/storage"` -> **exit 0, 19 suites / 210 tests**.
+
+    **(9) THE BOX STILL DOES NOT CLOSE, and the reason is the same one as every previous pass.** The code half is
+    clean, gated and now measurably sounder. The data half is UNKNOWN: no database this session may touch holds
+    production rows, and reading the shared remote or listing the bucket are both forbidden here. What changed is
+    that the instruments which will answer it are no longer wrong.
+
+    **What an operator must do, in this order.**
+      1. **PRE-FLIGHT (new, and it gates everything else).** As the migration role, against production, run the
+         `row_security_active` probe in (4). **Non-empty -> 1047 will abort the deploy.** Fix by running
+         migrations as a BYPASSRLS role. Do not skip this: the failure is a rolled-back deploy, not a warning.
+      2. **Have the owners of `cron-recruitment` and `feedbucket-ai` (7) decide before 1047 runs.** 1047 will
+         break the offer-letter link in the candidate reminder email if that column holds an r2.dev URL.
+      3. **Deploy.** 1047 runs. Capture its NOTICE line —
+         `1047 SUMMARY tables_scanned=… rows_holding_a_public_url=… rows_rewritten=… rows_CONSTRAINT_HELD=…
+         rows_with_an_EMBEDDED_public_url_remaining=…` — and both WARNING lines if present.
+      4. **Confirm with the script, as the DATABASE OWNER**, from the backend repo root. This is still needed
+         after 1047 because 1047 cannot match a CUSTOM public domain (SQL cannot read
+         `NEXT_PUBLIC_R2_PUBLIC_URL`) and does not rewrite constraint-held columns:
+         ```
+         node scripts/backfill-public-object-urls.mjs --url <owner DSN> [--base <custom public base>]
+         node scripts/backfill-public-object-urls.mjs --url <owner DSN> [--base …] --apply
+         node scripts/backfill-public-object-urls.mjs --url <owner DSN> [--base …]
+         ```
+      5. **Remove public access from the buckets named by `R2_BUCKET_NAME` and `R2_KB_BUCKET_NAME`**, sequenced
+         behind moving `email-assets/logo-v2.png` off the first bucket (fifth pass, (5)). Correct
+         `src/scripts/setup-r2-buckets.ts:79,86` in the same change — it re-applies public-read CORS and prints
+         guidance telling the operator to ENABLE public access on the KB bucket.
+    **Read the exit code, never the text.** Script: **0** clean · **1** config error · **2** a column sat behind
+    an RLS policy this role does not bypass and was NOT counted · **3** a public URL survives EMBEDDED. Only
+    **exit 0** counts. **Exit 2 means "not visible to this role", never "nothing found."**
+
+    **Evidence that would close this box** (all of it, not any of it):
+      a. A script confirmation run ending `ROWS HOLDING A PUBLIC URL: 0 across 0 column(s); ROWS REWRITTEN: 0;
+         ROWS WITH AN EMBEDDED PUBLIC URL: 0 across 0 column(s); UNVERIFIABLE COLUMNS: 0` with **exit 0**.
+      b. 1047's deploy-log SUMMARY line, with `rows_CONSTRAINT_HELD=0` as well as the other zeros.
+      c. An unauthenticated `curl -I` of a previously-public object URL returning **401/403** where it returned
+         200 — the only proof the objects themselves stopped being reachable.
+      d. **NEW, and (6) is why it belongs here:** the R-3 read paths converted to presigning, or an accepted
+         decision that a permanent object key may be handed to an authorized caller. Until then, (c) is doing
+         all the work.
 
   **DISPOSITION 2026-09-03 — ACCEPTED RESIDUAL R-1, R-2, R-2b. Blocker: INFRA (credentials and a console this
   effort does not hold and must not use). Owner: infrastructure operator. Deadline: R-1 and R-2 **2026-09-08,
