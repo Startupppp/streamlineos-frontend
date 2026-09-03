@@ -136,6 +136,29 @@ themselves are unblocked:
 The register's ask is that the release owner re-routes these to a ticket whose box is still open, or
 re-opens ticket 30 box 1 for the per-screen half.
 
+### 1.5 Ticket 30 box 1 is ticked partly on a sentence that is false at head
+
+**This landed while this pass was running**, which is why it is here rather than in §3.11. Ticket 30's box 1
+was rewritten today to close the offline clause with:
+
+> **Offline is closed on both halves.** `components/shared/loading-state.tsx` and `components/ui/data-table.tsx`
+> — … — both read `fetchStatus === "paused"` …
+
+Measured at head, twice, minutes apart: a non-test grep for `fetchStatus` across
+`app features components hooks lib` returns **zero** occurrences — the only hits are a variable named
+`refetchStatus` — and both named files read the **global browser signal** instead.
+`components/shared/loading-state.tsx:6,121,131` and `components/ui/data-table.tsx:19,74,269` import and call
+`useOnlineStatus()` (`navigator.onLine` plus the window online/offline events) and set `aria-busy={isOnline}`.
+**Neither reads `fetchStatus === "paused"`.**
+
+The *substance* may still hold — `useOnlineStatus()` does render an offline state and `PAUSED_LABEL` is real —
+so this is recorded as a correction and **the box was not unticked**; that is the owner's call. What is not
+arguable is that **ticket 28 box 6 and ticket 30 box 1 now assert opposite things in writing about the same two
+files**, and ticket 28 already corrected this exact claim once. It is the second instance in this release of
+the failure part 1 recorded at its §4.2: two agents reading two files reach opposite conclusions. **A-25 owns
+the resolution** — decide which signal is canonical — and until it is decided, ticket 30 box 1's offline
+evidence should not be cited.
+
 ---
 
 ## 2. The register
@@ -365,6 +388,12 @@ doubt.*
 
 ### 3.7 Ticket 28 box 2 — noted, not adopted
 
+**Superseded during this pass: box 2 was CLOSED by another lane while this file was being written.** At the
+time of the final read it is `- [x] Queries are gated by effective access and required identifiers`, with the
+former `[~]` retained below it as `- [~] (superseded)`. Ticket 28 is therefore **6 of 8 closed**, and its two
+open boxes are 6 and 7, exactly as this register treats them. The paragraph below is the state at the start of
+the pass and is kept for the record.
+
 Box 2 is still `[~]` and is outside the seven boxes this pass was asked for, so it is recorded here without
 a disposition: 105 of 133 ungated reads converted, 16 further `BASE`-const reads resolved and gated, 11
 deliberately held back and 12 CRM/inventory deliberately not converted. It is not left without an owner —
@@ -485,6 +514,9 @@ S14 run could report `63 of 63 planned steps` without shrinking a denominator. N
 5. **Ticket 28 box 6 is addressed to ticket 30 box 1, which is closed.** Three items of per-screen work
    have no live box to land in. (§1.4)
 6. **The frontend JS budget is growing during the release** and no instrument would catch it: the gate
+7. **Ticket 30 box 1 is ticked over evidence that names the wrong mechanism** (§1.5), and it contradicts ticket
+   28 box 6 in writing. The box was not unticked here; the owner should either correct the sentence or reopen
+   the clause.
    compares against a fixed ceiling 14 routes already breach, with no ratchet on the last measurement.
    (**A-24**)
 
@@ -530,13 +562,15 @@ and 38 now carries a disposition, an owner and a date.
 - Part 1: 6 assignable · 22 accepted residuals.
 - Part 2: **20 assignable · 15 accepted residuals**, over eighteen open boxes.
 
-**Three of part 2's items should be looked at by the release owner directly rather than accepted as
+**Four of part 2's items should be looked at by the release owner directly rather than accepted as
 lower-severity:**
 
 - **A-17** — two release gates are red on stale numbers. It is a re-run, and until it happens the release
   cannot honestly report its own perf posture.
 - **A-22** — a user-visible regression is shipping in chat.
 - **A-28** — the calendar box's own last clause is false at head, and the file has survived three passes.
+- **§1.5** — ticket 30 box 1 is ticked over evidence naming a mechanism that is not in the code, and it
+  contradicts ticket 28 box 6 in writing. A false tick is the one outcome this release exists to prevent.
 
 And **two boxes should be amended rather than left to fail**: 28 box 7 and 29 box 2 ask for things this
 release has decided, correctly, not to do.
