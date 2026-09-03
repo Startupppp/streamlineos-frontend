@@ -14,69 +14,16 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Loader2, CheckCircle2, Send } from "lucide-react";
-import { buildUrl } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import {
   type FormField,
   buildFieldSchema,
   buildDynamicSchema,
 } from "@/features/build/forms/form-submission-schema";
-
-interface PublicFormDefinition {
-  id: number;
-  name: string;
-  description: string | null;
-  type: string;
-  fields: FormField[];
-}
-
-interface SubmitResponse {
-  id: number;
-  message: string;
-}
-
-async function fetchPublicForm(token: string): Promise<PublicFormDefinition> {
-  const res = await fetch(buildUrl(`/public/forms/${token}`));
-  if (!res.ok) {
-    let message = "Form not found or no longer active.";
-    try {
-      const data = (await res.json()) as Record<string, unknown>;
-      if (typeof data?.message === "string" && data.message && !data.message.startsWith(String(res.status))) {
-        message = data.message;
-      }
-    } catch {
-    }
-    throw new Error(message);
-  }
-  return res.json() as Promise<PublicFormDefinition>;
-}
-
-async function submitPublicForm(
-  token: string,
-  values: Record<string, string>,
-  submittedByName?: string,
-): Promise<SubmitResponse> {
-  const res = await fetch(buildUrl(`/public/forms/${token}/submit`), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ values, submittedByName }),
-  });
-  if (!res.ok) {
-    let message = "Failed to submit. Please try again.";
-    try {
-      const data = (await res.json()) as Record<string, unknown>;
-      if (typeof data?.message === "string" && data.message && !data.message.startsWith(String(res.status))) {
-        message = data.message;
-      } else if (Array.isArray(data?.message) && data.message.length > 0) {
-        const msgs = data.message.filter((m): m is string => typeof m === "string");
-        if (msgs.length > 0) message = msgs.join(", ");
-      }
-    } catch {
-    }
-    throw new Error(message);
-  }
-  return res.json() as Promise<SubmitResponse>;
-}
+import {
+  fetchPublicForm,
+  submitPublicForm,
+} from "@/features/build/forms/public-form-api";
 
 function FieldInput({
   field,

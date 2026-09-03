@@ -14,12 +14,11 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Loader2, CheckCircle2, Send } from "lucide-react";
-import { buildUrl } from "@/lib/api-client";
 import {
   intakeFormSchema,
   type IntakeFormValues,
-  type IntakeFormOutput,
 } from "@/features/build/intake/public-intake-schema";
+import { submitIntake } from "@/features/build/intake/public-intake-api";
 
 const PRIORITY_OPTIONS = [
   { value: "low", label: "Low" },
@@ -35,35 +34,6 @@ const REQUEST_TYPE_OPTIONS = [
   { value: "question", label: "Question" },
   { value: "other", label: "Other" },
 ] as const;
-
-interface IntakeResponse {
-  id: number;
-  message: string;
-}
-
-async function submitIntake(projectId: string, body: IntakeFormOutput): Promise<IntakeResponse> {
-  const url = buildUrl(`/public/intake/${projectId}`);
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    let message = "Failed to submit. Please try again.";
-    try {
-      const data = (await res.json()) as Record<string, unknown>;
-      if (typeof data?.message === "string" && data.message && !data.message.startsWith(String(res.status))) {
-        message = data.message;
-      } else if (Array.isArray(data?.message) && data.message.length > 0) {
-        const msgs = data.message.filter((m): m is string => typeof m === "string");
-        if (msgs.length > 0) message = msgs.join(", ");
-      }
-    } catch {
-    }
-    throw new Error(message);
-  }
-  return res.json() as Promise<IntakeResponse>;
-}
 
 export default function PublicIntakePage() {
   const params = useParams<{ projectId: string }>();

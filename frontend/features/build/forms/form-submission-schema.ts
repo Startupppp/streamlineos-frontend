@@ -1,12 +1,42 @@
 import { z } from "zod";
 
-export interface FormField {
-  key: string;
-  label: string;
-  type: string;
-  required: boolean;
-  options?: string[];
-}
+export const formFieldContract = z.object({
+  key: z.string(),
+  label: z.string(),
+  type: z.string(),
+  required: z.boolean(),
+  options: z.array(z.string()).optional(),
+});
+
+export type FormField = z.infer<typeof formFieldContract>;
+
+/**
+ * The public form read, validated rather than asserted. The cast this replaces
+ * (`res.json() as Promise<PublicFormDefinition>`) skipped the `{ success, data }`
+ * envelope that the backend's global ResponseTransformInterceptor adds to every
+ * handler return, so `form.fields` was always undefined: the header stayed on
+ * "Loading form…" and `form.fields.length` threw. Reading through
+ * `parseApiResponse` unwraps the envelope; the contract is what makes the next
+ * shape change an error instead of a blank page.
+ */
+export const publicFormDefinitionContract = z.object({
+  id: z.number(),
+  name: z.string(),
+  description: z.string().nullable(),
+  type: z.string(),
+  fields: z.array(formFieldContract),
+});
+
+export type PublicFormDefinition = z.infer<typeof publicFormDefinitionContract>;
+
+export const publicFormSubmitResponseContract = z.object({
+  id: z.number(),
+  message: z.string(),
+});
+
+export type PublicFormSubmitResponse = z.infer<
+  typeof publicFormSubmitResponseContract
+>;
 
 type StringSchema = z.ZodString;
 

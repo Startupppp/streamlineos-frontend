@@ -14,3 +14,17 @@ export const intakeFormSchema = z.object({
 
 export type IntakeFormValues = z.input<typeof intakeFormSchema>;
 export type IntakeFormOutput = z.output<typeof intakeFormSchema>;
+
+/**
+ * The intake submit response, validated rather than asserted. The cast this
+ * replaces (`res.json() as Promise<IntakeResponse>`) skipped the
+ * `{ success, data }` envelope the backend's global ResponseTransformInterceptor
+ * adds to every handler return, so the resolved value was the envelope and both
+ * declared fields were undefined.
+ */
+export const intakeSubmitResponseContract = z.object({
+  id: z.number(),
+  message: z.string(),
+});
+
+export type IntakeSubmitResponse = z.infer<typeof intakeSubmitResponseContract>;
