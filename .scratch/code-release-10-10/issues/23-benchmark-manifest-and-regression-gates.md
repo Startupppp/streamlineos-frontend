@@ -4,7 +4,9 @@
 
 **Blocked by:** 22.
 
-**Status:** 2 of 8 closed (boxes 1 and 8), unchanged — but the gates are now EXECUTED BY CI for the first time, and the calendar breach is re-measured and gone.
+**Status:** 2 of 8 closed (boxes 1 and 8), unchanged. **S15 (2026-09-03) — the STRUCTURAL halves of boxes 4, 5, 6 and 7 were audited against source and are now recorded per clause, with verdicts, file:line and no stopwatch. NO TIMING NUMBER WAS MEASURED OR RECORDED** — load average was 5.64 with ~7 agents concurrent, and the one database run taken (plan shape and buffers only, as `streamline_app` with the tenant GUC) had its milliseconds discarded at the point of reading. `measuredLatencyP95Ms: 915.944` and `measuredBufferBlocks: 7072` are untouched; A-17 is unchanged and still open. Four of the six p95/measurement halves stay deferred to the quiet-machine pass. Report: `reports/22e-derived-critical-set-and-structural-clauses.md` §6.
+
+**Historic status (S14):** the gates are now EXECUTED BY CI for the first time, and the calendar breach is re-measured and gone.
 
 **Residual-risk disposition (2026-09-03):** every open box below now carries an ASSIGNABLE-or-ACCEPTED verdict, a named owner and a date, recorded inline under the box and in `reports/residual-risk-register-19-30.md`. Blockers were re-verified against source, a live gate run or a committed artifact rather than transcribed; where a stated blocker did not survive, the correction is inline.
 
@@ -50,6 +52,40 @@
       PARTIAL: the plan half is done — every approved-complex statement has a retained plan per tenant (`test/perf/benchmark-plans/approved-complex-<tenant>.txt`, large 20 · mid 18 · small 18 · tiny 17 of 20), and the gate rejects a statement claiming the looser 200 ms COMPLEX ceiling with no approval reason. The ceiling half is measured on 154/280 (55.0%) of benchmark×tenant slots with **0 over ceiling** — but 120 slots the seed is too small to reach and 6 vacuous are reported as unmeasured, and a 50 ms p95 on loopback Postgres is an easy bar. The buffer count is the finding; the millisecond is the artefact.
       NOT ADVANCED (S13): the statement half is `run-read-cost-budgets.mjs` + `read-cost-budgets.mjs`, neither of which is in this territory. The 120 unreachable slots need seed rows for modules the perf seed does not populate — `src/scripts/seed-perf-scratch.mjs`, the seeding owner.
 - [ ] Cache-hit paths meet their ceiling while preserving authorization correctness; a miss or a cache outage degrades safely without a request storm.
+      **S15 — STRUCTURAL HALF AUDITED PER CLAUSE. IT DOES NOT HOLD, AND A-21 IS STALE.** Read at head in
+      `src/common/cache/cache.service.ts` (391 lines); CLAUDE.md §6:145 quoted verbatim in the report.
+      **(1) in-process single-flight HOLDS** — `inFlight` Map `:14`, gate `:78-88`, identity-checked delete `:86`.
+      **(2) a DISTRIBUTED FILL LEASE EXISTS AND HOLDS** — `:126-137` `SET cache:fill-lease:<key> <uuid> EX 10 NX`
+      with a compare-and-delete Lua release `:161-170`, on the single fill path behind all 213 call sites, asserted
+      across two `CacheService` instances on one Redis (`cache.service.spec.ts:48`). **A-21's premise — "single-flight
+      is in-process only" — is FALSE at head and should be retired as written.** The blast radius it describes is
+      real but belongs to the outage case below, where it is worse than A-21 says because it is continuous rather
+      than once. **(3) TTL jitter PARTIAL** — `applyJitter` `:299-301` is +/-15% but is wired into only
+      `cachedForOrg` `:345` and `cachedVersionedForOrg` `:371`: **30 of 213 call sites (14%)**. It is absent from
+      `cached` (88 sites) and `cachedVersioned` (95 sites) — the path §6:146 names as canonical — and the TTLs are
+      five shared constants (`cache-keys.ts:261-267`), so un-jittered keys filled in one second expire in one
+      second. No spec asserts jitter on either uncovered method. **(4) stale-while-revalidate FAILS — ABSENT.**
+      `loadOrFetch` has one read `:120` and one branch `:121`; no soft/hard TTL pair, no stored `staleAt`, no
+      background refresh, and values are written raw `:156` so SWR cannot be added without changing the on-wire
+      shape. The only `stale-while-revalidate` in `src/` is a `Cache-Control` header on two public routes
+      (`public.controller.ts:143,356`) — that is §6 bullet 1, the CDN half, not this. **(5) CACHE OUTAGE FAILS.**
+      Provider-null `:118` and all three runtime-throw catches (`:122-124`, `:134-136`, `:145-147`) `return
+      fetcher()`; the distributed lease is UNREACHABLE in the first and ABANDONED in the second. `inFlight` holds
+      promises and deletes on settle `:86` — **there is no value memo** — so only temporally overlapping requests
+      coalesce and **serialized traffic hits the database at 100% for the whole outage, on all 213 call sites**.
+      No Redis circuit breaker exists (three do, all outbound HTTP). Partial mitigations exist only outside
+      `CacheService`: `AccessService`'s in-process `permsCache`/`versionCache` (`access.service.ts:74-77`) and
+      `JwtAuthGuard`'s `orgCtxCache`/`revocationCache` (`jwt-auth.guard.ts:51-52`, explicit outage fallback
+      `:100-113`). **(6) negative caching FAILS — absent by design** (`:121` `if (hit !== null)`), pinned
+      deliberately by `cache.service.spec.ts:211-224` for authorization correctness.
+      **SHARPEST FINDING — clauses 2 and 6 interact destructively.** For a hot key whose value is legitimately
+      `null`, the lease is STRICTLY WORSE than no lease. The winner fills `null`; every loser enters the poll loop
+      `:138-150`, reads `null` at `:143`, `:144` treats that as "not yet filled", never checks whether the lease is
+      still held, and after `FILL_WAIT_MS = 2_000` calls `fetcher()` anyway. Per losing request: **+2 s, 40 extra
+      Redis GETs, and the database query regardless.** The stampede is delayed two seconds and amplified 40x in
+      Redis traffic, not prevented. **Owner: cache owner.**
+      STRUCTURAL VERDICT: **the clause FAILS as written** — for a null-valued hot key with Redis healthy, and for
+      any cache outage. The latency half (the 100 ms cache-hit ceiling) is UNCHANGED and still blocked on R-15.
       **RESIDUAL-RISK REGISTER 2026-09-03 — R-15 (ACCEPTED RESIDUAL · INFRA), and this box names the WRONG missing
       thing.** Verified: `package.json:360` carries `@upstash/redis` and there is **no `ioredis`, no `redis` and no
       docker-compose** in the backend repo; `cache.module.ts:25-38` builds
@@ -70,6 +106,43 @@
       PARTIAL: the storm half is verified by reading `cache.service.ts`: concurrent fills coalesce through an `inFlight` map that wraps `loadOrFetch`, so a **cache outage still single-flights**; `cachedVersioned` makes invalidation an O(1) generation bump with no `SCAN`; TTL jitter is spec-asserted. The latency half is NOT MEASURED — no Redis runs against this seed, so every number in the manifest is the cache-MISS path. That is now ASSERTED rather than narrated: the HTTP spec fails if the `REDIS` provider is anything but `null`, and the artifact's `cache` field is derived from that same read, so it cannot claim a miss ceiling while a warm cache was serving it. The 100 ms cache-hit ceiling stays unmeasured; the Upstash client is a REST client pointed at a shared remote instance, so measuring a hit here would both pollute other people's cache and time a network round trip instead of a cache. Gap found and routed: single-flight is **in-process only**, so N instances produce up to N fills of one hot key, and `cache-multi-instance.spec.ts`'s "runs the fetcher exactly once" claims more than two separate `inFlight` maps can deliver.
       BLOCKED (S13, unchanged): on **infrastructure — specifically, a Redis this seed may talk to**. The only Redis configured here is an Upstash REST client pointed at a shared remote instance, so measuring a cache hit would both pollute other sessions' cache and time a network round trip instead of a cache. The named missing thing is a **local Redis (or an in-process cache provider the seeded harness can bind)**; with one, the HTTP harness measures the hit ceiling unchanged, since it already asserts and records which of the two paths it ran.
 - [ ] Home loads sections concurrently and independently, renders available sections without waiting for the slowest, and never starts an unbounded fanout.
+      **S15 — ALL FOUR CLAUSES AUDITED, BOTH SIDES. 1 HOLDS, 2 PARTIAL, 1 FAILS — and R-16 understates it.**
+      Home is `/dashboard`; `app/(authenticated)` has no `page.tsx`.
+      **CONCURRENTLY — PARTIAL.** `dashboard-personal.service.ts:80` is one `Promise.all` over **5** arms, confirmed.
+      But two arms hide a serial 2-hop chain behind a service boundary: `getMyIssues`
+      (`dashboard-project.service.ts:84` then `:87`) and `unreadCount` (`notifications-read.service.ts:122` then
+      `:348`) — and `:84` **re-fetches the exact membership row the caller already read** at
+      `dashboard-personal.service.ts:55`. With the sequential prefix `:45` then `:55`, the critical path is
+      **4 sequential DB hops, not 1**. The spec that pins this (`dashboard-section-isolation.spec.ts:411-452`)
+      mocks all three collaborators, so its "1 findFirst" is true only of the file under test.
+      **R-16's frontend half is WRONG: Home is NOT a single query.** It issues **~29 distinct endpoints**;
+      `/dashboard/personal` is one of them, shared by 3 widgets. Two dependency gates serialise them into stages —
+      `useCan`->`useAccess` (`hooks/api/access.ts:53-59`) and an `IntersectionObserver`
+      (`deferred-dashboard-content.tsx:31-34`).
+      **INDEPENDENTLY — PARTIAL, not the clean pass recorded.** `/dashboard/personal` settles per arm and records
+      `degraded[]` (`:57-72`, `:206`). **`/dashboard/stats` logs but records NO `degraded[]`** — a broken section is
+      byte-identical to a denied one (`dashboard-stats.service.ts:98,117,136` vs `:100,119,138`).
+      **`/dashboard/executive` has NO `settle()` at all** (`dashboard-crm.service.ts:164-196`): one failing `count()`
+      of eight rejects the endpoint. Frontend containment is strong — 22 widgets wrapped in `HomeSectionBoundary`,
+      enforced by a source-scanning test — with **four holes above the fold**: `ClockInWidget`, `QuickActions`,
+      `ModuleSetupBanners`, `ExecutiveKpiWidget` (`dashboard-client.tsx:150,199,202,206`) are unwrapped, so a render
+      throw there blanks the page via `dashboard/error.tsx`.
+      **WITHOUT WAITING FOR THE SLOWEST — FAILS, for a second reason this box does not record.** Three aggregates
+      are one `Promise.all` returning one body. **Zero `Suspense` anywhere in the Home tree** — no per-section server
+      components, no streamed response; `loading.tsx` is the route-level whole-page skeleton. AND
+      `shouldRenderDashboardLoading` (`dashboard-hydration.ts:14-20`, used `dashboard-client.tsx:113-137`) replaces
+      the **ENTIRE PAGE** with a skeleton while `setupBannersPending` — ONE query, `/onboarding/module-checklists` —
+      is in flight, bounded at 1500 ms. **For up to 1.5 s every available section is withheld while one section
+      loads.** That is the clause negated on the client as well as the server, and it is a deliberate CLS fix, so
+      closing it is a product decision on both sides, not just the backend one R-16 names.
+      **NEVER AN UNBOUNDED FANOUT — HOLDS, positively proved.** Every `Promise.all` in `src/modules/dashboard/` is
+      over a compile-time constant arm list (5 / 3+3 / 2,3,5 / 3 / 2 / 2 / 3). The single `Promise.all(x.map(...))`
+      (`dashboard-scope.ts:42-44`) maps `DASHBOARD_HOME_SECTIONS`, a frozen literal — exactly 3 distinct modules.
+      **Zero `.map(async ...)` over a query result anywhere in the module.** Row-derived ids feed one `IN (...)`
+      capped at 200 (`dashboard-read-limits.ts:17`); list cap 100, attendance cap 500. Frontend has no `useQueries`
+      and no `.map()` producing a hook — the query set is the component tree, a constant ~29.
+      STRUCTURAL VERDICT: the fanout clause is CLOSED (proved, not assumed); "concurrently" and "independently" are
+      PARTIAL with named defects; "without waiting for the slowest" FAILS on both sides. Box stays open.
       **RESIDUAL-RISK REGISTER 2026-09-03 — R-16 (ACCEPTED RESIDUAL · DECISION). Confirmed, and it is false on
       BOTH sides, which this box only says of the backend.** `dashboard-personal.service.ts:80` is
       `await Promise.all([...])` with `settle()` on the arms (`:82, :89, :109, :115, :169`), so the response waits
@@ -81,6 +154,54 @@
       PARTIAL: three clauses of four hold server-side in `dashboard-personal.service.ts`. Concurrently: one `Promise.all`. Independently: each arm wrapped in `settle()`, so one failing section degrades to empty and is recorded in `degraded[]`. No unbounded fanout: fixed arm list, module entitlement resolved once, no per-row or per-member fanout. **"Without waiting for the slowest" does NOT hold** — `Promise.all` returns one aggregate, so the response waits for the slowest arm by construction. Streaming section-by-section needs per-section endpoints or a streaming response. Open on a **product decision**, not on infrastructure. Now costed at request level: `GET /dashboard/personal` is 20.04 ms p95 over 17 request statements on the majority tenant, so today the aggregate is cheap and the cost of waiting for the slowest arm is small — the clause is still false by construction, and the decision is whether to pay for streaming before an arm becomes slow.
       BLOCKED (S13, unchanged): on a **product decision**, not on infrastructure or on another territory. Streaming needs per-section endpoints or a streaming response, which changes the Home contract; nobody has decided to pay for it while the aggregate costs 20 ms.
 - [ ] Chat, Calendar, Inbox and Notifications list, unread/count, range/history and realtime-token paths meet budget without table scans, N+1 or per-item calls.
+      **S15 — THE TABLE-SCAN HALF IS NOW ENFORCED AND MEASURED (plan shape, no stopwatch). THE N+1 HALF FAILS ON
+      ONE ROUTE, verified at source.**
+      **Table scans.** Run on `scratch_perf_seed` (local, at head) as **`streamline_app`, `rolbypassrls = false`**,
+      tenant GUC set, reference tenant. **Buffers, rows scanned and plan node type only — the milliseconds this run
+      printed were discarded and are recorded nowhere.** **Five of the ten read-cost budgets backing these four
+      families carried `planAssertions: []`** and passed on a block ceiling alone (across the whole catalog it is
+      **53 of 71**). `forbid-seq-scan` added to all five on the growing relation of each — `chat-channel-list` and
+      `chat-channel-members` (`chat_channel_members`), `chat-messages-page` and `chat-saved-messages`
+      (`chat_messages`), `dashboard-personal-notifications-count` (`notifications`, 235,297 tenant rows, whose two
+      siblings over the same table already forbade one). Result **10/10 PASS**, whole catalog **71/71 PASS / 0 FAIL,
+      exit 0**. Warm blocks / rows scanned for rows returned: notifications-list 121 / 42:50 · unread-count 16 / 0:1
+      · dashboard-personal-notifications-count 16 / 0:1 · chat-channel-list 11 / 2:2 · chat-messages-page 10 / 50:50
+      · chat-channel-members 9 / **500:100** · chat-saved-messages 81 / 230:25 · mail-inbox-cached 30 / 51:51 ·
+      dashboard-personal-calendar-events **24** / 4:3 · calendar-events-visible-batch 697 / 517:500.
+      **Bite-proved** in a temp tree from `git archive HEAD src`: defeating the index on `chat-messages-page` gives
+      exit **1**, "chat_messages resolved by Seq Scan", at **13,344 rows scanned for a 50-row page and 243 blocks —
+      INSIDE the unchanged 10,000-block ceiling**. The block ceiling could not have caught it; the assertion is the
+      only thing that does. No ceiling raised. Commit `285f4bf2`.
+      **N+1 — `GET /chat/channels` IS AN N+1, and it is the only one of the thirteen paths that is.** Verified at
+      source, not taken on report: `chat-channel-list.service.ts:278-280` is
+      `Promise.allSettled(channels.map((ch) => this.resolveEntityChannelDisplayName(ch, actor)))`, and
+      `resolveEntityChannelDisplayName` `:58-60` calls `this.entities.resolve(actor, [ONE reference])` — a
+      **single-element batch per channel**, defeating the batching machinery. Each resolves to one real `SELECT`
+      (`crm-entity.adapter.ts:107`/`:146`, `build-entity.adapter.ts:86-94`). A 50-channel page of entity channels
+      issues **50 extra SELECTs**. The fix shape is in the same file: `withResolvedReferences`
+      (`entity-reference.service.ts:46-86`) flattens references across all rows into one dispatch and the message
+      paths already use it. **Owner: chat owner. Not fixed here.**
+      **Everything else is constant.** messages 5 · members 4 · unread 2 · saved 1+fixed · ably-token 2 SQL + 1
+      outbound · notifications 3 · unread-count 2 · realtime-token 0 by construction. **Mail is per-ACCOUNT, not
+      per-message** (`mail.service.ts:92` fans out over connected accounts; `gmail-mail.provider.ts:61` uses
+      `include_payload: true` so a 100-message page is still one call); threads and message detail are 1 and 1-2
+      fixed calls.
+      **CALENDAR ANSWERED POSITIVELY: the source set is COMPILE-TIME FIXED at 7** — a `Set` written only by
+      `register()`, every caller an `onModuleInit`. `HrCalendarSource`'s wide 11-way load is **never registered** and
+      does not run on this route; there is no birthdays calendar source. **The "fetch by candidate id" change did NOT
+      introduce a per-id loop**: `calendar-event-source.loader.ts:257` and `:286` both use `inArray(...)`, and `:170`
+      resolves creator names once per request. The one loop `:139` is a keyset drain in 500-row batches capped by
+      `CALENDAR_EVENTS_CAP = 2000` -> <=4 iterations. Caveat: `calendar-exception-loader.ts:53` is a `for (;;)` drain
+      with no overall cap — a batch drain, not an N+1, but the one place the statement count is not constant.
+      **UNBOUNDED RELATION HYDRATION STILL ON THESE PATHS — the same defect class as the 436 KB chat payload already
+      fixed.** `chat-saved.service.ts:42` is `attachments: true` with **no `limit` AND no `columns`** projection;
+      `chat-message-timeline.service.ts:156,224,261,302` hydrate `attachments` unqualified; and
+      **`GET /chat/channels/{channelId}` still carries the unqualified `with: { members: ... }`**, including
+      `user.email` (`chat-channel-members-implementation.ts:94-105`) — the LIST route was fixed, the DETAIL route was
+      not. Same shape on the write path at `chat-channels.service.ts:95`. `chat-channel-list.service.ts:80` has no
+      `LIMIT` at all. **Owner: chat owner.**
+      STRUCTURAL VERDICT: table-scan half CLOSED and enforced for these ten budgets; per-item half CLOSED (none
+      found); **N+1 half FAILS on `GET /chat/channels`**. Inbox stays provider-declined (R-14). Box stays open.
       **RESIDUAL-RISK REGISTER 2026-09-03 — the FRONTEND FOLLOW-UP below is a LIVE USER-VISIBLE REGRESSION and it
       is owned by nobody.** Verified all three halves at head: backend
       `src/modules/chat/chat-channel-member-preview.ts:159-163` returns
@@ -101,6 +222,72 @@
       FRONTEND FOLLOW-UP RAISED, NOT FIXED: `use-message-panel-data.ts` derives its member count as `channel.members.length`, which is now the preview length. The response carries `memberCount` and `membersTruncated` for exactly this; the one-line change is `channel.memberCount ?? channel.members.length` and it belongs to `streamlineos-frontend/frontend/features/chat/**`. Separately, that file and five others read `m.user?.id` on list members, but the payload has always nested it as `m.membership.user` — a pre-existing contract drift this change neither caused nor fixed.
 
 - [ ] Connection-pool, worker-concurrency, queue, provider and per-tenant limits apply backpressure rather than exhausting memory, sockets or connections.
+      **S15 — AUDITED PER LIMIT AGAINST SOURCE. THE POOL FAILS, AND TWO PROVIDERS HAVE NO TIMEOUT AT ALL.**
+      **1. CONNECTION POOL — DECLARED + ENFORCED + QUEUES-UNBOUNDED.** `src/db/pool.config.ts:148-154`: `max` 20
+      pooled / 10 direct, `connect_timeout` 30 s, `idle_timeout` 15 s, `max_lifetime` 240 s; transaction guards
+      `statement_timeout` 30 s / `lock_timeout` 5 s / `idle_in_transaction_session_timeout` 60 s (`:88-92`, applied
+      `with-tenant.ts:22-28`). **There is NO acquire/queue timeout, and postgres-js has none to set** — its option
+      parser (`node_modules/postgres/src/index.js:447`) has no such key and its pool handler `:329-342` ends
+      `busy.length ? go(busy.shift(), query) : queries.push(query)`: with every connection checked out the query is
+      pushed onto an **unbounded FIFO and waits forever**; only `end()`/`destroy()` reject a waiter. `connect_timeout`
+      bounds a NEW connection's handshake, not waiting for a checked-out one. The code knows and only measures it:
+      `pool-telemetry.ts:96-98` increments `waiting` and `:221-229` logs "Database pool saturated — tenant
+      transactions are queueing for a connection". **It logs; it does not shed.** In-request traffic is bounded only
+      INCIDENTALLY by admission's 400; anything bypassing admission — cron sweeps, the outbox drain, the detached
+      `void this.run(...)` webhook dispatch — queues with no ceiling at all. **Owner: db/platform owner.**
+      **2. ADMISSION — DECLARED + ENFORCED + SHEDS, and it IS registered.** Every number verified in
+      `admission.config.ts:55-66` (200 / 400 / 50 / 0.2 / 3 MiB / enabled). Registered `APP_GUARD`
+      **`app.module.ts:207`** and `APP_INTERCEPTOR` `:210`. `tryAdmit` is **synchronous** — no waiter array, no
+      promise pile — and refuses with **503 + `Retry-After: 6`** (`admission.guard.ts:59-66`). Two holes:
+      **(a) the per-tenant 50 does not apply to reserved classes** (`admission.service.ts:30-33` returns admitted
+      before the org check at `:39-41`), so one tenant can hold all 400 slots on auth/billing/payroll/audit; and
+      **(b) the URI version prefix defeats reserved-route classification** — `main.ts:85-87` enables
+      `VersioningType.URI` so `@Controller("auth")` is mounted at `/auth/...` AND `/v1/auth/...`, while
+      `normalisePath` (`reserved-routes.ts:23-28`) does not strip the version segment, so `/v1/auth/login`
+      classifies `ordinary-write` and sheds at 160 instead of being protected to 400. `reserved-routes.spec.ts`
+      only tests the unversioned form. Whether this is live depends on which URL the frontend calls — **not
+      determinable from source.** Also `maxExecutionMs` is **DECLARED-NOT-ENFORCED** as a deadline (its only
+      consumer is the `Retry-After` arithmetic), and no `server.requestTimeout`/`headersTimeout` is set in `main.ts`.
+      **3. WORKER CONCURRENCY / QUEUE — batch size SHEDS, deadline ABSENT, lease FAILS OPEN.** `forEachOrg`
+      (`for-each-org.ts:168`) is a **strictly sequential** `for` loop — fanout **1**, not O(tenants); no
+      `Promise.all` over orgs exists anywhere. Outbox `BATCH_SIZE = 50` is a GLOBAL cap across orgs
+      (`outbox-publisher.service.ts:23`, `remaining` `:138-139`) with `FOR UPDATE SKIP LOCKED` and a lease fence on
+      every state write. `drainPages` (`cron/drain.ts`) bounds pages per tick and separates *selected* from
+      *processed* so a stalled page cannot spin. **But `CronLeaseService` fails OPEN** — Redis unavailable and it
+      runs anyway with no dedup (`cron-lease.service.ts:41-44`, `:53-56`) — and **the lease TTL is not a deadline on
+      `fn`**, so an over-running tick is overtaken by the next. **There is no max-runtime, abort signal or org-count
+      cap on any sweep.** (`/cron/notifications-retention-detach` DOES take a lease, inside the service at
+      `notification-retention.service.ts:48-52` rather than the controller — checked; not a gap.)
+      **4. PROVIDER LIMITS — good shared seam, three holes.** `callProvider` (`common/outbound/call-provider.ts:102-145`)
+      has a per-attempt timeout, a breaker check before each attempt and full-jitter backoff, and `outboundRequest`
+      (`common/http/outbound-request.ts:10,42-44`) makes `timeoutMs` a **required** field so a caller cannot forget
+      it. Then: **(a) Composio has NO timeout** — `composio.gateway.ts:104` is `new Composio({ apiKey })` with no
+      `signal`, no `callProvider` wrapper and no breaker, and **this is the mail path**
+      (`gmail-mail.provider.ts:61,83,97,125,147,169,187,202`); the SDK accepts `{ signal }` and none is passed.
+      **(b) VirusTotal makes three bare `fetch` calls with no `AbortSignal`** — `virustotal-av-scanner.ts:49, 67, 85`
+      (verified: `headers` only); Node's `fetch` has no default request timeout and `:67` uploads a whole file body
+      unbounded. **(c) There is NO outbound concurrency cap anywhere.** The only limiter is `AiConcurrencyLimiter`
+      (cap 20, per-org, and it **fails open** on a Redis error). `webhooks-dispatch.service.ts:107` is
+      `void this.run(...)` — detached from the request, invisible to admission, uncapped in number — and `:124-126`
+      is `Promise.allSettled(active.map(...))` over an **unlimited** `findMany` `:114-117` with no per-org endpoint
+      cap: 500 endpoints means 500 concurrent sockets per event, each up to 5 attempts with backoff to 30 s.
+      **5. PER-TENANT — body cap SHEDS, rate limiting is OPT-IN, pagination SILENTLY CLAMPS.** Body cap enforced at
+      the boundary (`main.ts:114-122`, `bodyParser: false` `:66`). **`RateLimitGuard` is NOT an `APP_GUARD`** — zero
+      occurrences in `app.module.ts`; it is per-controller opt-in (~30) and `rate-limit.guard.ts:27` **no-ops when no
+      tier is declared**, a failure mode the tier table's own comments record as having bitten before. So the
+      majority of authenticated tenant routes have no rate limit and rely entirely on admission's 50 slots.
+      **Pagination is NOT a hard 400**: `pagination.ts:14,17` is `Math.min(pageSize, 100)`, so `pageSize=100000`
+      returns 100 rows and **200**. Hard 400s exist only where a module's Zod schema declares one (3 call sites).
+      **MEMORY HALF — a family of "drain every page into one array" helpers.** `hr-keyset-batch.ts:17-32`,
+      `payroll-keyset-batch.ts:18-30`, `calendar-keyset-drain.ts:6-15`, `gdpr-subject-erasure-paging.ts:4-18`,
+      `gdpr-export-types.ts:87-104` (which hard-codes `truncated: false`), `role-grant-reconciler.service.ts:185-204`,
+      `calendar-conflict.service.ts:104`, `mail.service.ts:111`, `for-each-org.ts:157-161`, and
+      `outbox-report.service.ts:71-95` — one object per tenant and **HTTP-reachable via the cron controller**. Page
+      size is bounded; the total is not. Each carries a comment justifying it, so this is intentional and still an
+      unbounded growth path proportional to tenant row count.
+      STRUCTURAL VERDICT: **1 limit FAILS outright (pool), 2 have material holes (provider, per-tenant), 1 has an
+      absent deadline (worker), 1 holds with two classification holes (admission).** The exhaustion MEASUREMENT half
+      is unchanged and still needs a concurrent driver (R-18); A-23 is unchanged. Box stays open.
       **RESIDUAL-RISK REGISTER 2026-09-03 — one half is free, the other is a genuine tool absence.**
       **A-23 (ASSIGNABLE).** The measurement half needs no new instrumentation, and this was verified rather than
       taken from the note: `CronStorageSweepService` declares `organizations: number`
