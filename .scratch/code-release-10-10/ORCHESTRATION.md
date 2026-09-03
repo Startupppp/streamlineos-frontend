@@ -1471,3 +1471,97 @@ floor fixes is published as a pair and all five are equally fixed in `7.29.0`. B
 **A trap worth propagating:** Next 16 loads jsdom as a Turbopack external module and **memoises the
 failed load for the worker's lifetime**. The dev server kept 500ing after the fix landed. Anyone
 testing this without restarting the server will wrongly conclude the fix did not work.
+
+---
+
+## Session S12 (2026-09-03) — a mass agent death, a rescue, and the census at 256/300
+
+### Six agents died simultaneously
+
+All six running agents failed within the same moment with `Agent stalled: no progress for 600s
+(stream watchdog did not recover)`. Six independent failures at one instant is one infrastructure
+event, not six agent faults — recorded so a later reader does not go looking for six causes.
+
+**One of them left uncommitted work, and it was nearly lost.** The huddle-contract agent had
+finished its backend edit and its spec but had not committed. `git status` found
+`chat-huddles.service.ts` modified and `chat-huddle-wire-shape.spec.ts` untracked. Verified before
+committing rather than after — `jest --testPathPattern=chat-huddle` **46/46 pass**, and
+`node --max-old-space-size=8192 tsc --noEmit -p tsconfig.build.json` **exit 0, zero output** —
+then committed as `755b45e3`.
+
+It had found more than it was briefed on: `membership.columns` was `{}`, so `userId` was never
+selected at all. Beyond the "Unknown" labels, that made `isInHuddle` permanently false — the huddle
+panel never rendered — and left the WebRTC mesh with no peer ids to dial.
+
+**Every agent respawned since carries an explicit COMMIT EARLY AND OFTEN instruction.** Batching
+work to the end of a run is now a known way to lose it.
+
+### The `git commit -- <newfile>` incident is NOT reproducible
+
+The A-2 agent reported that `git add -- <newfile>` followed by `git commit -m … -- <newfile>` was
+rejected with "no changes added to commit", leaving its file in the shared index to be swept into
+another agent's commit (`2bb472d7`). It asked for the brief's rule 2 to be corrected.
+
+**Tested in a scratch repo, and the documented pattern works**: a new file staged with
+`git add -- path` and committed with `git commit -m msg -- path` lands correctly, and a second
+staged file left in the index is NOT swept in. Exit 0, one file in the commit.
+
+So the rule stands as written, and the incident's real cause is unknown — most likely a concurrent
+`git add -A` from another agent between the add and the commit, which would genuinely leave nothing
+for the pathspec to commit. Recording it as unexplained rather than inventing a mechanism. The
+mitigation is unchanged and already in the brief: `git show --stat` every commit.
+
+### A shell trap that made my own output lie
+
+`git push … | tail -3 && echo "PUSHED"` printed PUSHED after a **rejected** push, because `tail`
+exits 0 regardless. Also: **`${PIPESTATUS[0]}` does not work in this zsh** — it silently expands to
+empty, so `echo "EXIT=${PIPESTATUS[0]}"` prints `EXIT=` and reads as success at a glance. Use `$?`
+directly, or zsh's `$pipestatus[1]`. Every agent prompt now says so.
+
+Same family as the release's other findings: the failure was not the push, it was the thing that
+vouched for the push.
+
+### Frontend had diverged from origin
+
+`origin/main` carried two commits from the user (`f3fa8310b`, `4897a49a1`) touching only
+`PRD-10-10-CODE-RELEASE-TODO.md`. Merged with `--no-edit` (0 conflict hunks, `merge-tree` verified
+before running it), pushed as `00f1ceb41`. **Never force-pushed** — origin holds work this branch
+does not.
+
+### Census at S12: 256 done / 3 partial / 41 open = 300 boxes, 85.3%
+
+Counting every `- [x]` / `- [~]` / `- [ ]` in all 43 ticket files. 23 tickets are fully closed.
+
+The 44 remaining boxes are NOT evenly spread — they concentrate:
+
+| Ticket | Open | Note |
+|---|---|---|
+| 41 one-commit-release-verification | 8 | orchestrator's, needs a quiesced tree |
+| 42 record-release-authority | 6 | orchestrator's, follows 41 |
+| 23 benchmark-manifest | 6 | worst ticket in the release, 2/8 |
+| 21 db-call-contract | 3 | |
+| 28 tanstack-data-layer | 3 | all `[~]` partials |
+| 19, 22, 29, 30 | 2 each | |
+| 08, 11, 13, 15, 20, 26, 33, 35, 36, 38 | 1 each | |
+
+**Tickets 22 and 23 are deliberately NOT assigned yet.** Both need the 164-slot perf capture, and a
+benchmark run on a machine carrying eleven concurrent agents produces numbers worth nothing. They
+wait for quiesce. That is a scheduling decision, not an oversight.
+
+### Eleven agents dispatched this session
+
+23505-systemic · support-watchers-migration · test-typecheck-gap · dashboard-CLS ·
+e-sign+BOLA-body-probe · wire-shape-sweep · t38-named-handlers · t36-assertion-ledger ·
+t21-db-call-contract · t30-a11y+journeys · t28-tanstack
+
+### The systemic finding this session opened
+
+Another agent proved against a real database that **drizzle-orm 0.45.2 wraps every driver error in
+`DrizzleQueryError`, which has no `.code` — the `PostgresError` sits on `.cause`.** So the idiom
+`(err as {code?:string}).code === "23505"` is false for *every* real database error.
+
+That idiom is not rare here. `grep -rn "23505" src/ --include='*.ts'` finds ~40 non-spec sites, and
+there are at least **10 independent local copies** of an `isUniqueViolation` helper. If it
+generalises, every one of those "already exists" `ConflictException`s is unreachable and a 500
+leaks instead. Assigned, with instructions to establish the real error shapes empirically first and
+to report a correct small number rather than a flattering large one.
