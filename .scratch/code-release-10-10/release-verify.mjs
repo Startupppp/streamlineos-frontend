@@ -67,7 +67,12 @@ const BACKEND_GATES = [
   ["check:tenant-isolation", {}],
   ["check:tenant-indexes", {}],
   ["check:tenant-relationships", {}],
-  ["db:verify-rls", { live: true }],
+  // WRITES to whatever DATABASE_URL points at: it CREATEs rls_probe / rls_probe_nullable
+  // and a rls_probe_role, then drops them in a finally. In a default checkout DATABASE_URL
+  // is the SHARED REMOTE neondb, so this must never run there by accident. Gated behind an
+  // explicit scratch target; the teardown is sound, but a release harness has no business
+  // writing to a shared database to find out.
+  ["db:verify-rls", { live: true, needsScratchTarget: "TENANT_RELATIONSHIP_DB_URL or a scratch DATABASE_URL" }],
   ["verify:permissions", { live: true }],
   ["check:permission-keys", {}],
   ["check:navigation-permissions", {}],
@@ -172,6 +177,12 @@ function verifyRepo(state, gates) {
   const results = [];
   for (const [script, meta] of gates) {
     if (ONLY_GATES.length && !ONLY_GATES.includes(script)) continue;
+    if (meta.needsScratchTarget && !process.env.RELEASE_VERIFY_SCRATCH_DB) {
+      results.push({ script, status: "SKIP", exitCode: null,
+        prerequisite: `writes probe objects; set RELEASE_VERIFY_SCRATCH_DB after pointing it at ${meta.needsScratchTarget}`,
+        note: meta.note ?? null, tail: "" });
+      continue;
+    }
     if (meta.heavy && !WITH_HEAVY) {
       results.push({ script, status: "SKIP", exitCode: null, prerequisite: "--with-heavy not passed", note: meta.note ?? null, tail: "" });
       continue;
