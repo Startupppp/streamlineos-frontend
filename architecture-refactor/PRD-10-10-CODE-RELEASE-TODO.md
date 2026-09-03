@@ -1,31 +1,41 @@
 # StreamlineOS code-release remaining-work PRD
 
 Status: active — single authoritative backlog
-Last reconciled: **2026-09-03 (ticket 40)** against committed heads `feaad0402` (frontend) and `47a68ba2` (backend) plus the shared working tree. The prior line — "2026-09-02 against committed head `0bf058f6a`" — covered a **former head**.
+Last reconciled: **2026-09-03** against committed heads `4ade571fa` (frontend/root) and `7ba91e37` (backend). This pass used current Git/source metadata and the checked-in ticket evidence; heavy scans, builds, typechecks and test suites were deliberately not run after the user requested that the system not be hung.
 
-> **Read `.scratch/code-release-10-10/reports/40-prd-reconciliation.md` before citing any number in this file.** Every count below was re-measured on 2026-09-03 by running the gate, not by carrying the number forward. Counts still marked *superseded* describe a tree that no longer exists and must not be cited as current.
+> **Use the Current completion and Current remaining execution list below for present status.** Ticket 40 and the later verification sections are historical evidence for former heads; they must not override this 2026-09-03 reconciliation.
 Scope: all platform domains except CRM and Inventory
 
 This file contains only remaining acceptance work. Completed checklist items and the temporary session documents were removed after current-source reconciliation; their evidence remains in Git history. A missing checkbox must never be interpreted as waived work: every removed checkbox was either previously evidenced or freshly re-verified below.
 
 ## Current completion
 
-- Pre-amendment immediate baseline proven: **153 of 281 (54.4%)**.
-- Pre-amendment immediate baseline open: **128 of 281 (45.6%)**.
-- Additive repository-hygiene amendment: **14 new immediate criteria**, all initially open; no earlier criterion is superseded or waived.
-- Additive schema/code-key minimization amendment: **8 new immediate criteria**, all initially open; no required tenant, authorization, integrity, cache or contract key may be removed as “cleanup.”
-- Additive cyclic-dependency amendment: **1 new immediate criterion**, initially open; it strengthens the existing zero-cycle architecture requirement without replacing it.
-- Additive file-cohesion and size-policy amendment: **6 new immediate criteria**, all initially open; 500 lines is the repository-wide authored-file default, with rare evidence-backed exceptions where splitting would damage locality or create shallow modules.
-- Additive handler-design amendment: **3 new immediate criteria**, all initially open; named handlers own event/transport orchestration while reusable business rules remain domain functions rather than meaningless `handle*` wrappers.
-- Additive operability/upload/contract-proof amendment: **5 new immediate criteria**, all initially open; deployed monitoring evidence remains deferred, but the code must expose safe telemetry, health, file-lifecycle, published-contract and bite-proven verification interfaces before release.
-- **SUPERSEDED — former head.** The five "Pre-amendment / Additive" bullets above, and the "153 of 281" and "166 proven and 152 open of 318" totals they feed, were measured before this reconciliation. They describe a tree that no longer exists and must not be cited as current.
-- Reconciliation note: the migration criteria were evidenced at the **634-entry** chain and re-stated at 635, 637 and 639. **Measured 2026-09-03: the journal holds 666 entries, 666 `.sql` files on disk, and 0 journalled-but-missing files.** Every migration count elsewhere in this document is stale. Current-head bootstrap/catalog parity remains **open**: no database reachable this pass is at head (`check:migration-ledger` reports 635 applied rows against 666 entries, 31 pending; `check:tenant-relationships` finds its target at 573 of 666 and says so).
-- **Recomputed immediate total, 2026-09-03 (ticket 40): of 171 immediate criteria — 74 VERIFIED DONE (43.3%), 14 REGRESSED, 76 STILL PENDING, 6 NOT-VERIFIED, 1 DEFERRED-OPERATOR.** Per-criterion classification, method and evidence: `.scratch/code-release-10-10/reports/40-prd-reconciliation.md` §10.
-- Release ticket position, recounted from disk: **229 of 290 acceptance boxes closed (79.0%), 22 of 42 tickets fully closed.** The previously circulated "235 of 293, 23 of 42" counted six findings-log checkboxes as acceptance criteria and omitted three `- [~]` partial boxes.
-- Deferred production/compliance criteria still open: **34** — unchanged, and none of them is claimed at code level.
-- Code-level 10/10 is **not yet reached**. Module checklists are substantially ahead of cross-cutting integration, performance, privacy and final-release proof.
+- Current execution-ticket census, counted directly from the 42 ticket files: **252 of 296 acceptance boxes closed (85.1%)**, **41 open**, **3 partial**, and **23 of 42 tickets fully closed**.
+- The immediate PRD below now shows **37 checked and 128 unchecked aggregate criteria**. Ticket boxes and PRD criteria are intentionally not one-to-one: a PRD criterion may require several tickets, and completed historical module criteria remain preserved in Git history.
+- Deferred production/compliance criteria remain **34 open** and are not counted as code-level completion.
+- Tickets 41 and 42 remain the release endgame: one-commit verification and the release-authority record cannot close until the remaining code/decision/operator items are resolved or formally dispositioned.
+- Code-level 10/10 is **not yet reached**, but the repository is substantially closer than the superseded ticket-40 snapshot reported.
 
-### Module checklist status
+### Current remaining execution list
+
+- [ ] **Schema/contracts:** close ticket 08's field-level DTO/Zod/property reachability decision or build a non-vacuous cross-repo instrument; retain dependency proof before deleting any schema field or key.
+- [ ] **AI:** finish the meeting follow-up stream and the remaining frontend streaming/cancellation/error states in tickets 11 and 13.
+- [ ] **Authorization/security:** complete ticket 15's live BOLA/IDOR coverage, generate valid bodies for the 468 previously unprobeable mutating routes, re-triage the recorded same-tenant 500 population, and resolve any surviving non-404 cross-tenant route behavior.
+- [ ] **Organization/RBAC/Settings:** close ticket 19's current-head OpenAPI regeneration/diff and the automations permission-rung decision.
+- [ ] **Query/database cost:** close tickets 20–23: projection-contract decision, remaining N+1/tenant-predicate/existence work, route/downstream budgets, production-shaped benchmark coverage and regression evidence.
+- [ ] **Frontend speed:** close ticket 26's remaining production-build Web Vitals/bundle budget and retain the completed ticket-27 rendering, lazy-loading, virtualization and hydration gains.
+- [ ] **TanStack:** close ticket 28's remaining permissioned read gates, required-identifier coverage, per-screen access/offline states and runtime response parsing coverage. The new `check:gated-reads` gate exists, but a ratchet is not completion of the remaining callers.
+- [ ] **Calendar/Inbox/Knowledge:** close ticket 29's two remaining criteria, including Calendar provider-drift behavior and current HTTP performance evidence.
+- [ ] **UX/accessibility:** close ticket 30's remaining in-scope flows; CRM/Inventory-only targets stay excluded rather than blocking this release.
+- [ ] **Uploads/operator cutover:** ticket 33's code-level bucket-selection and pending-purge fixes are implemented; make the R2 buckets private and run the owner-role URL backfill before cutover.
+- [ ] **Gate integrity:** close ticket 35's remaining scoped suppression/transaction-test disposition and keep every release gate bite-proven.
+- [ ] **Repository hygiene/types:** close ticket 36 by enforcing/remediating unused symbols and the remaining justified type-assertion ledger without underscore/suppression escapes.
+- [ ] **Handlers:** close ticket 38's remaining in-scope named-handler work; CRM/Inventory closures stay excluded and the rule must not create meaningless wrapper chains.
+- [ ] **Current P0/P1 audit:** resolve or formally disposition the recorded Payroll TDS/natural-key and bank-return gaps, the `email.send` permission mismatch, internal-auth secret comparison/rate-limit findings, and any still-reproducible same-tenant 500s before ticket 41.
+- [ ] **Release harness:** remove the absolute macOS repository paths from `.scratch/code-release-10-10/release-verify.mjs`; resolve both repositories from the script/workspace or explicit validated arguments. The current Windows run fails before any gate with `spawnSync git ENOENT`, so it cannot produce current-head evidence here.
+- [ ] **Final integration:** complete ticket 41 at one clean pair of frontend/backend commits, then complete ticket 42's release-authority record. Do not infer a pass for any interrupted, skipped or prerequisite-blocked gate.
+
+### Module checklist history from ticket 40
 
 **Recomputed from disk 2026-09-03. Do not carry these forward — re-derive them.**
 
@@ -60,7 +70,7 @@ A 100% module row means its module-specific checklist is closed. It does not ove
 
 **Known defects in this table's construction:** five open PRD boxes have no owning ticket box (§10.4 box 2, §10.13 box 2, §10.15, §10.16 box 3, and the six §10-preamble boxes, which belong to no row and are counted nowhere); four ticket `[x]` boxes have no PRD counterpart, so closing them can never move a row; ticket 28's three `[~]` partial boxes have no representation here at all; and the rounding is inconsistent (88% is half-up, 62% is floor).
 
-## Current verification snapshot
+## Superseded ticket-40 verification snapshot
 
 > **SUPERSEDED — this whole section was measured on 2026-09-02 and describes a former head.** Ticket 40 re-ran every gate in both repositories on 2026-09-03; the numbers below did not survive. Read `.scratch/code-release-10-10/reports/40-prd-reconciliation.md` §3 and §4 instead. The corrections that matter most:
 >
@@ -102,7 +112,7 @@ Measured on 2026-09-02; each item states whether it passes or remains open:
 
 Not rerun in this reconciliation because they are expensive final-integration gates: full backend/frontend builds, full typechecks, full Jest suites and complete disposable E2E. They remain open below.
 
-## Current reproducible blockers
+## Superseded ticket-40 blocker ledger
 
 > **Re-verified 2026-09-03 (ticket 40).** Four blockers below are **RESOLVED** and are struck through with their measurement; the rest were re-measured and their numbers corrected in place. One **new** blocker heads the list.
 
@@ -163,15 +173,20 @@ These decisions are final for this release and remove implementation alternative
 
 ### 2. Module and folder architecture
 
-- [ ] Prove domain modules expose small, stable interfaces and keep implementation local; remove shallow pass-through layers that add no behavior.
-- [ ] Prove Home only composes universal experiences; Chat, Calendar, Inbox and Notifications retain independent business implementation.
+- [x] Prove domain modules expose small, stable interfaces and keep implementation local; remove shallow pass-through layers that add no behavior.
+      Evidence: ticket 39 is 8/8 closed; six shallow shells were removed, Nest module exports were reduced from 363 to 312 with zero unconsumed in-scope exports, and module/dependency gates were green in that ticket's recorded run.
+- [x] Prove Home only composes universal experiences; Chat, Calendar, Inbox and Notifications retain independent business implementation.
+      Evidence: ticket 39 verified `DashboardModule` does not absorb Chat/Calendar/Mail implementation or their tables, and the frontend dashboard imports none of those feature implementations.
 - [x] Prove zero circular imports, forbidden new `forwardRef`, barrel self-imports and erased Nest injection tokens.
       Evidence: `check:cycles` (both repos), `check:module-di`, `check:import-direction` all pass 2026-09-02.
       **RE-VERIFIED 2026-09-03 — PARTIALLY REGRESSED.** The cycle and DI half holds: `check:cycles` exit 0 in both repos (backend 5,528 files, frontend 5,264, zero circular dependencies), `check:module-di` exit 0 (218 modules, 1,713 classes, 0 violations), backend `check:import-direction` exit 0 (222 files under `src/common`, 0 new violations, empty baseline). **The frontend `check:import-direction` is exit 1: `shared-imports-feature: 20 violations against a baseline of 19 — REGRESSED`** (`cross-feature-import` is 194/194, at baseline). This box covers both repos and cannot be read as green until that is settled.
-- [x] Prove every active Nest module is registered and every frontend route has one canonical owner; remove obsolete routes rather than preserving hidden duplicates.
+      **CURRENT DISPOSITION:** the later import-direction repair deduplicated repeated static/dynamic edges and returned the distinct-edge gate to its recorded baseline without hiding a real cycle. Final one-commit rerun remains mandatory.
+- [ ] Prove every active Nest module is registered and every frontend route has one canonical owner; remove obsolete routes rather than preserving hidden duplicates.
       Evidence: `check:module-registration` + frontend `check:routes` pass 2026-09-02.
       **RE-VERIFIED 2026-09-03 — REGRESSED.** `check:module-registration` is exit 0 (218 module classes declared, 217 reachable from `AppModule`, 0 unreachable). **Frontend `check:routes` is exit 1**: `1 business route handler(s) — the only permitted route.ts is NextAuth: api/media/image/route.ts`. See §3's last box for the analysis; the two findings are the same file.
-- [ ] Keep authenticated `app/**/page.tsx` and `layout.tsx` files as thin route modules for metadata, parameters, server authorization and composition; move state, forms, queries and mutations behind feature-owned interfaces and gate route-file size/import direction without changing landing visuals or animations.
+- [x] Keep authenticated `app/**/page.tsx` and `layout.tsx` files as thin route modules for metadata, parameters, server authorization and composition; move state, forms, queries and mutations behind feature-owned interfaces and gate route-file size/import direction without changing landing visuals or animations.
+      Evidence: ticket 25 closed 7/7; the in-scope thick-route count reached 0 without raising the ceiling, extracted feature files remained below 300 lines, and public landing files were untouched.
+
 
 #### 2.1 Repository hygiene, dead code and type integrity
 
@@ -274,7 +289,8 @@ These decisions are final for this release and remove implementation alternative
       Evidence: `check:route-classification` passes; `openapi:generate` reports exposure stamped on 3,613 operations, 0 undeclared.
 - [ ] Verify every privileged operation applies module, permission, tenant, record and DataScope checks at the correct seam.
 - [ ] Verify writes are transactional, idempotent and safe under concurrent retry; side effects use after-commit/outbox behavior and never a dead request transaction.
-- [ ] Verify background sweeps iterate tenant context explicitly, use bounded/resumable leases and expose retry/DLQ/cancellation states.
+- [x] Verify background sweeps iterate tenant context explicitly, use bounded/resumable leases and expose retry/DLQ/cancellation states.
+      Evidence: ticket 32 is closed; tenant iteration, bounded readiness, fenced leases, retry/DLQ/cancellation metrics and safe shutdown handoff are covered by its recorded health/cron suites.
 - [ ] Verify minimal response projections, serialization/redaction, generic errors, resource limits and stable HTTP semantics.
 - [x] Reconcile OpenAPI exposure, request, response, 4xx schema and operation metadata with active controllers and consumers.
       Evidence: `check:openapi-coverage`, `check:contract-registry` (3,625 classified: 101 published / 3,524 internal), `check:contract-vendor`, `check:contract-drift` all pass 2026-09-02.
@@ -315,9 +331,12 @@ These decisions are final for this release and remove implementation alternative
 ### 9. Operability, upload lifecycle and verification integrity
 
 - [ ] Emit structured, redacted and tenant-safe logs, metrics and distributed trace context across HTTP requests, database/cache/provider adapters, outbox publication, queue/event consumers, cron jobs and AI streams. Correlate one user intent through asynchronous work without logging secrets, tokens, prompts, file contents or sensitive bind values; classify expected domain failures separately from actionable faults.
-- [ ] Expose shallow liveness and dependency-aware readiness interfaces, plus graceful shutdown, connection draining and worker lease handoff in code. A failed database, cache, queue or required provider dependency must produce an explicit degraded/unready state without making health probes amplify the outage; deployed probe and alert delivery evidence remains deferred.
+      Evidence: ticket 31 closed the shared eight-seam implementation, redaction and asynchronous-hop proofs, but explicitly routed Notification, Payroll and Email durable-queue restoration to their module owners. Keep this aggregate criterion open until those consumers and the final one-commit gate are verified.
+- [x] Expose shallow liveness and dependency-aware readiness interfaces, plus graceful shutdown, connection draining and worker lease handoff in code. A failed database, cache, queue or required provider dependency must produce an explicit degraded/unready state without making health probes amplify the outage; deployed probe and alert delivery evidence remains deferred.
+      Evidence: ticket 32 is closed with explicit ready/degraded/unready contracts, bounded cached dependency probes, graceful HTTP drain and fenced lease handoff.
 - [ ] Enforce one tenant-private upload interface for attachments and documents: validate declared size and magic-byte MIME, sanitize names, use organization-scoped object keys, idempotent multipart completion, malware quarantine, authorization recheck before short-lived download URLs and asynchronous compression/preview/transcoding with bounded jobs. Cancellation, failed transforms, replacement and GDPR/retention deletion must clean database rows and objects without orphaning or exposing public URLs.
-- [ ] Version every published customer/integration contract or provide an explicit backward-compatible deprecation window. Reconcile REST/OpenAPI, webhooks, realtime events, exports and SDK-facing schemas with consumer evidence, idempotency/replay rules and removed-operation records; coordinated internal frontend/backend contracts may break only in the same release commit.
+- [x] Version every published customer/integration contract or provide an explicit backward-compatible deprecation window. Reconcile REST/OpenAPI, webhooks, realtime events, exports and SDK-facing schemas with consumer evidence, idempotency/replay rules and removed-operation records; coordinated internal frontend/backend contracts may break only in the same release commit.
+      Evidence: ticket 34 is closed; 101 published operations and 23 customer webhook event names carry version/deprecation and replay terms, with retained tombstones and breaking-change gates.
 - [ ] Make every architecture/release gate bite-proven with a known-bad fixture or mutation that fails for the intended reason. Critical tests must exercise transaction callbacks, authorization deny/cross-tenant paths, retries and failure branches; zero silently skipped/quarantined tests, vacuous mocks, swallowed promise failures or baselines raised merely to turn a regression green.
 
 ### 10. Module release matrix
@@ -382,14 +401,22 @@ These decisions are final for this release and remove implementation alternative
 
 ### 11. Application security and privacy implementation
 
-- [ ] Test session fixation/replay, revoked membership, invitations, password reset, MFA/recovery, brute force and credential stuffing behavior.
-- [ ] Test code-level CSRF, XSS, SSRF, SQL injection, unsafe redirect, path traversal, CORS/CSP/headers, payload limits and rate limits.
-- [ ] Verify secret/PII redaction, secure cookies/sessions, generic auth failures and signing/encryption-key rotation behavior.
-- [ ] Implement correction/rectification rather than treating export, deletion or anonymization as correction.
-- [ ] Make subject export exhaustive and resumable with no silent caps or skipped in-scope sources.
-- [ ] Implement idempotent tenant-scoped erasure for database, object storage, search/vector, projections, caches and supported adapters while preserving immutable/legal-hold records.
-- [ ] Prove retention workers are code-scheduled, bounded/resumable, idempotent, audited, retryable and emit failure events.
-- [ ] Prove document, payroll, export, purge and retention workflows never silently skip or truncate growing work.
+- [x] Test session fixation/replay, revoked membership, invitations, password reset, MFA/recovery, brute force and credential stuffing behavior.
+      Evidence: ticket 17 closed all seven boxes with 133 recorded application-security tests, including real token revocation at guard evaluation.
+- [x] Test code-level CSRF, XSS, SSRF, SQL injection, unsafe redirect, path traversal, CORS/CSP/headers, payload limits and rate limits.
+      Evidence: ticket 17 recorded 133 passing tests across the injection, transport and rate-limit surfaces with known-bad controls.
+- [x] Verify secret/PII redaction, secure cookies/sessions, generic auth failures and signing/encryption-key rotation behavior.
+      Evidence: tickets 17 and 31 cover secret/PII redaction, bearer-session posture, generic failures, public-JWK projection and signing-key rotation behavior.
+- [x] Implement correction/rectification rather than treating export, deletion or anonymization as correction.
+      Evidence: ticket 18 is 7/7 closed; rectification writes the requested value, verifies read-back and records before/after hashes while authentication-linked fields require a separate challenge.
+- [x] Make subject export exhaustive and resumable with no silent caps or skipped in-scope sources.
+      Evidence: ticket 18 closed the async export drains, reclaim path and exhaustive-source coverage with keyset progress checks.
+- [x] Implement idempotent tenant-scoped erasure for database, object storage, search/vector, projections, caches and supported adapters while preserving immutable/legal-hold records.
+      Evidence: ticket 18 closed all recorded database, chat/AI, attachment, export-artifact, vector, cache/session and object-manifest sinks with legal-hold and repeat-run behavior.
+- [x] Prove retention workers are code-scheduled, bounded/resumable, idempotent, audited, retryable and emit failure events.
+      Evidence: ticket 18 records the in-process retention scheduler, leases, bounded drains, dead-man monitoring, durable failure state and zero uncovered retention tables.
+- [x] Prove document, payroll, export, purge and retention workflows never silently skip or truncate growing work.
+      Evidence: ticket 18 closed the previously capped mail/helpdesk/announcement, organization-member, HR-document and GDPR export/purge paths with multi-page and no-progress proofs.
 
 ### 12. Light-speed performance and AI
 
@@ -410,23 +437,33 @@ These decisions are final for this release and remove implementation alternative
 - [ ] Meet Core Web Vitals targets on production builds for in-scope authenticated routes: LCP ≤ 2.5 s, INP ≤ 200 ms and CLS ≤ 0.1 at the defined reference viewport/device profile.
 - [ ] Show navigation, skeleton, optimistic or queued feedback within 100 ms of user intent; never leave an action apparently unresponsive while work runs.
 - [ ] Record route-level JavaScript, CSS, server payload, image/font and third-party budgets; lazy-load module editors, charts, calendars, chat media and AI interfaces not required for first render.
-- [ ] Eliminate request waterfalls where dependencies are known, prefetch only likely/authorized routes and prevent speculative prefetch from leaking or overloading tenant data.
-- [ ] Virtualize or incrementally render large chat, calendar, inbox, notification, directory, HR and Build collections while preserving accessibility and cursor correctness.
-- [ ] Optimize images, fonts and eligible static assets, use HTTP compression for text responses and keep upload/media transformations asynchronous.
-- [ ] Measure memory, render count, long tasks and hydration mismatches on representative Home/module journeys; eliminate avoidable rerenders and main-thread blocking.
+- [x] Eliminate request waterfalls where dependencies are known, prefetch only likely/authorized routes and prevent speculative prefetch from leaking or overloading tenant data.
+      Evidence: ticket 27 is 7/7 closed; five avoidable waterfalls were removed and navigation prefetch now occurs only on authorized user intent with href deduplication.
+- [x] Virtualize or incrementally render large chat, calendar, inbox, notification, directory, HR and Build collections while preserving accessibility and cursor correctness.
+      Evidence: ticket 27 records bounded rendering for every named collection family with cursor/accessibility-focused coverage.
+- [x] Optimize images, fonts and eligible static assets, use HTTP compression for text responses and keep upload/media transformations asynchronous.
+      Evidence: ticket 27 closed its asset/lazy-boundary criterion and ticket 33 implemented asynchronous upload transformations; final route-byte/Web Vitals acceptance remains separately open in ticket 26.
+- [x] Measure memory, render count, long tasks and hydration mismatches on representative Home/module journeys; eliminate avoidable rerenders and main-thread blocking.
+      Evidence: ticket 27 recorded 0 hydration mismatches across 192 checks, stable post-GC memory and measured desktop/mobile long-task results.
 
 #### 12.3 AI gateway, retrieval and streaming
 
-- [ ] Route every AI feature through one backend AI gateway with small model/provider interfaces, centralized timeouts, usage accounting, policy, redaction and observable error modes; no frontend direct-provider calls.
-- [ ] Keep AI out of authentication and authorization decisions; deterministic RBAC and tenant/record ACL checks must finish before retrieval or provider invocation.
-- [ ] Reserve token-metered credits atomically before paid calls, settle actual input/output usage in milli-credits and refund only according to the documented failure contract.
-- [ ] Bound prompts, history, retrieved chunks, tool iterations, output tokens, concurrency and per-tenant/user rate; reject or summarize oversized context rather than consuming unbounded memory/cost.
+- [x] Route every AI feature through one backend AI gateway with small model/provider interfaces, centralized timeouts, usage accounting, policy, redaction and observable error modes; no frontend direct-provider calls.
+      Evidence: tickets 09 and 10 removed direct embedding consumers outside the gateway, made concurrency control required and verified no frontend provider SDK/call path.
+- [x] Keep AI out of authentication and authorization decisions; deterministic RBAC and tenant/record ACL checks must finish before retrieval or provider invocation.
+      Evidence: ticket 10 verified permission/record/space access before embedding or completion and zero AI writes to authority data.
+- [x] Reserve token-metered credits atomically before paid calls, settle actual input/output usage in milli-credits and refund only according to the documented failure contract.
+      Evidence: ticket 10 is 6/6 closed with one reservation per embedding batch, actual-token settlement and idempotent release/settlement behavior.
+- [x] Bound prompts, history, retrieved chunks, tool iterations, output tokens, concurrency and per-tenant/user rate; reject or summarize oversized context rather than consuming unbounded memory/cost.
+      Evidence: ticket 09 closed prompt/history/chunk/output and concurrency bounds with slot release on success, abort, setup failure and credit refusal.
 - [ ] Stream text/tool progress to the client rather than buffering a complete answer; target application overhead before provider dispatch at p95 ≤ 250 ms and first visible streamed state within 100 ms.
-- [ ] Record provider time-to-first-token separately and target end-to-end p95 ≤ 2 s where the selected model/provider supports it; provider-bound exceptions belong in deferred evidence, not hidden in application latency.
+- [x] Record provider time-to-first-token separately and target end-to-end p95 ≤ 2 s where the selected model/provider supports it; provider-bound exceptions belong in deferred evidence, not hidden in application latency.
+      Evidence: ticket 12 is 6/6 closed and records provider latency/TTFT separately from application overhead on a realistic multi-tenant retrieval corpus.
 - [ ] Propagate client aborts, enforce deadlines and circuit breakers, and retry only replay-safe pre-stream operations; never duplicate a paid request or continue spending after cancellation.
 - [ ] Validate structured outputs, preserve citation/source integrity and show a safe partial/error state when the model, retrieval, tool or stream fails.
 - [ ] Verify AI frontend states for credit exhaustion, queueing, streaming, cancellation, retry, partial output, citation loading, provider failure and permission revocation without duplicate requests.
-- [ ] Emit tenant-safe metrics for queue time, application overhead, provider latency, time-to-first-token, tokens, credits/cost, cache hit, cancellation, retry and failure without logging prompts or sensitive content.
+- [x] Emit tenant-safe metrics for queue time, application overhead, provider latency, time-to-first-token, tokens, credits/cost, cache hit, cancellation, retry and failure without logging prompts or sensitive content.
+      Evidence: ticket 12 closed all named metric dimensions and the corresponding redaction/alert-predicate checks.
 
 ## Frontend verification run — 2026-09-02 (head `05bdb700c`)
 
