@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import dynamic from "next/dynamic";
 import { ArrowLeft } from "lucide-react";
 import { EllipsisIcon, MicIcon, UsersIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -14,15 +15,35 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { AiActionsMenu, type AiAction } from "@/components/ai";
+import type { AiAction } from "@/components/ai";
 import { ChannelAvatar } from "./channel-avatar";
 import { ChannelSidebarCollapseButton } from "./channel-sidebar-collapse-button";
-import { ThreadPanel } from "./thread-panel";
 import { MessagePanelWorkspace } from "./message-panel-workspace";
 import { MessagePanelSidePanels } from "./message-panel-side-panels";
 import { BookmarkButton, PaperclipButton } from "./message-panel-actions";
+import {
+  ChatPanelFallback,
+  ChatTriggerFallback,
+} from "./chat-lazy-fallbacks";
 import { getInitials } from "./chat-helpers";
 import type { Channel, ChannelMember, Huddle } from "@/types/chat";
+
+const ThreadPanel = dynamic(
+  () => import("./thread-panel").then((m) => ({ default: m.ThreadPanel })),
+  { ssr: false, loading: () => <ChatPanelFallback label="Loading thread" /> },
+);
+
+/**
+ * The trigger is a fixed-size toolbar button, so the fallback matches its box
+ * rather than collapsing the header row while the AI chunk lands.
+ */
+const AiActionsMenu = dynamic(
+  () => import("@/components/ai").then((m) => ({ default: m.AiActionsMenu })),
+  {
+    ssr: false,
+    loading: () => <ChatTriggerFallback label="Loading AI actions" />,
+  },
+);
 
 interface PanelHeaderProps {
   onBack: () => void;

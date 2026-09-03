@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import dynamic from "next/dynamic";
 import { format } from "date-fns";
 import Link from "next/link";
 import { Pencil, Sparkles } from "lucide-react";
@@ -26,8 +27,23 @@ import {
   getEventColor,
   RSVP_STATUS_LABELS,
 } from "./event-detail-content";
-import { MeetingFollowUpPanel } from "./meeting-follow-up-panel";
-import { MeetingPrepPanel } from "./meeting-prep-panel";
+import { CalendarListFallback } from "./calendar-lazy-fallbacks";
+
+const MeetingFollowUpPanel = dynamic(
+  () =>
+    import("./meeting-follow-up-panel").then((m) => ({
+      default: m.MeetingFollowUpPanel,
+    })),
+  { ssr: false, loading: () => <CalendarListFallback label="Loading AI follow-up" /> },
+);
+
+const MeetingPrepPanel = dynamic(
+  () =>
+    import("./meeting-prep-panel").then((m) => ({
+      default: m.MeetingPrepPanel,
+    })),
+  { ssr: false, loading: () => <CalendarListFallback label="Loading AI meeting prep" /> },
+);
 
 interface EventDetailSheetProps {
   event: CalendarListItem | null;

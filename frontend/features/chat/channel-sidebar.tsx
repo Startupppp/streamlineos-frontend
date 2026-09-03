@@ -14,21 +14,40 @@ import {
 } from "lucide-react";
 import {
   CompassIcon,
+  PlusIcon,
   SearchIcon,
+  UsersIcon,
 } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import React from "react";
 import { useRouter } from "next/navigation";
 import { useChatChannels, useArchivedChannels, useChatOnlineUsers } from "@/hooks/api";
 import { cn } from "@/lib/utils";
+import dynamic from "next/dynamic";
 import { ChannelSidebarSection } from "./channel-sidebar-section";
 import { ChannelSectionList } from "./channel-section-list";
-import { NewDMDialog } from "./new-dm-dialog";
-import { NewGroupDialog } from "./new-group-dialog";
-import { ChatSearchDialog } from "./chat-search-dialog";
+import { ChatOverlayFallback } from "./chat-lazy-fallbacks";
 import { ChatSidebarNav } from "./chat-sidebar-nav";
 import { ChannelCompactRail } from "./channel-compact-rail";
 import { ChannelArchivedSection } from "./channel-archived-section";
+
+const NewDMDialog = dynamic(
+  () => import("./new-dm-dialog").then((m) => ({ default: m.NewDMDialog })),
+  { ssr: false, loading: () => <ChatOverlayFallback label="Loading new message" /> },
+);
+
+const NewGroupDialog = dynamic(
+  () =>
+    import("./new-group-dialog").then((m) => ({ default: m.NewGroupDialog })),
+  { ssr: false, loading: () => <ChatOverlayFallback label="Loading new channel" /> },
+);
+
+const ChatSearchDialog = dynamic(
+  () =>
+    import("./chat-search-dialog").then((m) => ({ default: m.ChatSearchDialog })),
+  { ssr: false, loading: () => <ChatOverlayFallback label="Loading chat search" /> },
+);
 
 const RAIL_ICON_SIZE = 14;
 
@@ -212,8 +231,26 @@ export function ChannelSidebar({
               >
                 <CompassIcon size={RAIL_ICON_SIZE} />
               </button>
-              <NewDMDialog open={newDMOpen} onOpenChange={setNewDMOpen} onCreated={onSelectChannel} />
-              <NewGroupDialog open={newGroupOpen} onOpenChange={setNewGroupOpen} onCreated={onSelectChannel} />
+              <AnimatedIconButton
+                icon={PlusIcon}
+                iconSize={RAIL_ICON_SIZE}
+                variant="ghost"
+                size="icon"
+                className="w-7 rounded-lg"
+                onClick={handleOpenNewDM}
+                title="New Direct Message"
+                aria-label="New Direct Message"
+              />
+              <AnimatedIconButton
+                icon={UsersIcon}
+                iconSize={RAIL_ICON_SIZE}
+                variant="ghost"
+                size="icon"
+                className="w-7 rounded-lg"
+                onClick={handleOpenNewGroup}
+                title="New Channel"
+                aria-label="New Channel"
+              />
             </div>
           </div>
 
@@ -403,11 +440,29 @@ export function ChannelSidebar({
           )}
         </ScrollArea>
 
-        <ChatSearchDialog
-          open={chatSearchOpen}
-          onOpenChange={setChatSearchOpen}
-          onSelectChannel={onSelectChannel}
-        />
+        {chatSearchOpen && (
+          <ChatSearchDialog
+            open
+            onOpenChange={setChatSearchOpen}
+            onSelectChannel={onSelectChannel}
+          />
+        )}
+        {newDMOpen && (
+          <NewDMDialog
+            open
+            onOpenChange={setNewDMOpen}
+            onCreated={onSelectChannel}
+            hideTrigger
+          />
+        )}
+        {newGroupOpen && (
+          <NewGroupDialog
+            open
+            onOpenChange={setNewGroupOpen}
+            onCreated={onSelectChannel}
+            hideTrigger
+          />
+        )}
       </div>
     </TooltipProvider>
   );

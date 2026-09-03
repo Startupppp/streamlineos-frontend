@@ -21,13 +21,11 @@ import {
   useExternalCalendarEvents,
 } from "@/hooks/api/calendar";
 import type { CalendarListItem } from "@/hooks/api/calendar";
-import { EventCreateDialog } from "./event-create-dialog";
-import { EventDetailSheet } from "./event-detail-sheet";
-import { CalendarEventsPanel } from "./calendar-events-panel";
-import { CreateTicketFromCalendarDialog } from "./create-ticket-from-calendar-dialog";
-import { CalendarAccountsSheet } from "./calendar-accounts-sheet";
-import { ExternalEventDetailSheet } from "./external-event-detail-sheet";
-import { HrEventDetailSheet } from "./hr-event-detail-sheet";
+import {
+  CalendarListFallback,
+  CalendarOverlayFallback,
+  CalendarSheetFallback,
+} from "./calendar-lazy-fallbacks";
 import { useCalendarAccountFilters } from "./use-calendar-account-filters";
 import { useHrCalendarEventsMapped, useHrEventsVisible } from "./use-hr-calendar-events";
 import { useCrmEventsVisible } from "./use-crm-calendar-events";
@@ -51,7 +49,63 @@ const BigCalendarWrapper = dynamic(
     import("./big-calendar-wrapper").then((m) => ({
       default: m.BigCalendarWrapper,
     })),
-  { ssr: false },
+  { ssr: false, loading: () => <CalendarListFallback label="Loading calendar" /> },
+);
+
+const CalendarEventsPanel = dynamic(
+  () =>
+    import("./calendar-events-panel").then((m) => ({
+      default: m.CalendarEventsPanel,
+    })),
+  { ssr: false, loading: () => <CalendarListFallback label="Loading events" /> },
+);
+
+const EventCreateDialog = dynamic(
+  () =>
+    import("./event-create-dialog").then((m) => ({
+      default: m.EventCreateDialog,
+    })),
+  { ssr: false, loading: () => <CalendarOverlayFallback label="Loading event form" /> },
+);
+
+const CreateTicketFromCalendarDialog = dynamic(
+  () =>
+    import("./create-ticket-from-calendar-dialog").then((m) => ({
+      default: m.CreateTicketFromCalendarDialog,
+    })),
+  { ssr: false, loading: () => <CalendarOverlayFallback label="Loading ticket form" /> },
+);
+
+const EventDetailSheet = dynamic(
+  () =>
+    import("./event-detail-sheet").then((m) => ({
+      default: m.EventDetailSheet,
+    })),
+  { ssr: false, loading: () => <CalendarSheetFallback label="Loading event" /> },
+);
+
+const ExternalEventDetailSheet = dynamic(
+  () =>
+    import("./external-event-detail-sheet").then((m) => ({
+      default: m.ExternalEventDetailSheet,
+    })),
+  { ssr: false, loading: () => <CalendarSheetFallback label="Loading event" /> },
+);
+
+const HrEventDetailSheet = dynamic(
+  () =>
+    import("./hr-event-detail-sheet").then((m) => ({
+      default: m.HrEventDetailSheet,
+    })),
+  { ssr: false, loading: () => <CalendarSheetFallback label="Loading event" /> },
+);
+
+const CalendarAccountsSheet = dynamic(
+  () =>
+    import("./calendar-accounts-sheet").then((m) => ({
+      default: m.CalendarAccountsSheet,
+    })),
+  { ssr: false, loading: () => <CalendarSheetFallback label="Loading calendar accounts" /> },
 );
 
 const NO_CALENDAR_EVENTS: CalendarListItem[] = [];
@@ -323,17 +377,21 @@ export function CalendarView() {
           </div>
         )}
 
-        <EventCreateDialog
-          open={isCreateOpen}
-          onOpenChange={setIsCreateOpen}
-          defaultSlot={createSlot}
-        />
+        {isCreateOpen && (
+          <EventCreateDialog
+            open
+            onOpenChange={setIsCreateOpen}
+            defaultSlot={createSlot}
+          />
+        )}
 
-        <CreateTicketFromCalendarDialog
-          open={isCreateTicketOpen}
-          onClose={handleCloseCreateTicket}
-          defaultSlot={createTicketSlot}
-        />
+        {isCreateTicketOpen && (
+          <CreateTicketFromCalendarDialog
+            open
+            onClose={handleCloseCreateTicket}
+            defaultSlot={createTicketSlot}
+          />
+        )}
 
         <Dialog open={isSlotChoiceOpen} onOpenChange={setIsSlotChoiceOpen}>
           <DialogContent
@@ -369,19 +427,24 @@ export function CalendarView() {
           </DialogContent>
         </Dialog>
 
-        <EventDetailSheet event={selectedEvent} onClose={handleCloseDetail} />
-        <ExternalEventDetailSheet
-          event={selectedExternal}
-          onClose={handleCloseExternal}
-        />
-        <HrEventDetailSheet
-          event={selectedHrEvent}
-          onClose={handleCloseHrEvent}
-        />
-        <CalendarAccountsSheet
-          open={accountsOpen}
-          onClose={handleCloseAccounts}
-        />
+        {selectedEvent !== null && (
+          <EventDetailSheet event={selectedEvent} onClose={handleCloseDetail} />
+        )}
+        {selectedExternal !== null && (
+          <ExternalEventDetailSheet
+            event={selectedExternal}
+            onClose={handleCloseExternal}
+          />
+        )}
+        {selectedHrEvent !== null && (
+          <HrEventDetailSheet
+            event={selectedHrEvent}
+            onClose={handleCloseHrEvent}
+          />
+        )}
+        {accountsOpen && (
+          <CalendarAccountsSheet open onClose={handleCloseAccounts} />
+        )}
       </div>
     </PageWrapper>
   );

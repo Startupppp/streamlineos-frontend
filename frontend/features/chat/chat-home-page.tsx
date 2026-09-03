@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -9,14 +10,39 @@ import { useChatChannels } from "@/hooks/api";
 import { useChatGlobalNotifications } from "@/hooks/api/chat-notifications";
 import { ChannelSidebar } from "@/features/chat/channel-sidebar";
 import { MessagePanel } from "@/features/chat/message-panel";
-import { ChannelInfoPanel } from "@/features/chat/channel-info-panel";
 import { EmptyChatState } from "@/features/chat/empty-chat-state";
-import { NewDMDialog } from "@/features/chat/new-dm-dialog";
-import { NewGroupDialog } from "@/features/chat/new-group-dialog";
 import { ChatAblyProvider } from "@/features/chat/ably-provider";
 import { useChatSidebarCollapse } from "@/features/chat/chat-shell";
 import { useChatPresence } from "@/features/chat/use-chat-presence";
+import {
+  ChatOverlayFallback,
+  ChatPanelFallback,
+} from "@/features/chat/chat-lazy-fallbacks";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+
+const ChannelInfoPanel = dynamic(
+  () =>
+    import("@/features/chat/channel-info-panel").then((m) => ({
+      default: m.ChannelInfoPanel,
+    })),
+  { ssr: false, loading: () => <ChatPanelFallback label="Loading channel info" /> },
+);
+
+const NewDMDialog = dynamic(
+  () =>
+    import("@/features/chat/new-dm-dialog").then((m) => ({
+      default: m.NewDMDialog,
+    })),
+  { ssr: false, loading: () => <ChatOverlayFallback label="Loading new message" /> },
+);
+
+const NewGroupDialog = dynamic(
+  () =>
+    import("@/features/chat/new-group-dialog").then((m) => ({
+      default: m.NewGroupDialog,
+    })),
+  { ssr: false, loading: () => <ChatOverlayFallback label="Loading new channel" /> },
+);
 
 function ChatNotifications({
   activeChannelId,
@@ -236,18 +262,22 @@ export function ChatHomePage() {
           </Sheet>
         )}
 
-        <NewDMDialog
-          open={emptyDMOpen}
-          onOpenChange={setEmptyDMOpen}
-          onCreated={handleSelectChannel}
-          hideTrigger
-        />
-        <NewGroupDialog
-          open={emptyGroupOpen}
-          onOpenChange={setEmptyGroupOpen}
-          onCreated={handleSelectChannel}
-          hideTrigger
-        />
+        {emptyDMOpen && (
+          <NewDMDialog
+            open
+            onOpenChange={setEmptyDMOpen}
+            onCreated={handleSelectChannel}
+            hideTrigger
+          />
+        )}
+        {emptyGroupOpen && (
+          <NewGroupDialog
+            open
+            onOpenChange={setEmptyGroupOpen}
+            onCreated={handleSelectChannel}
+            hideTrigger
+          />
+        )}
         </div>
       </div>
     </ChatAblyProvider>

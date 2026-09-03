@@ -1,16 +1,11 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
-import Image from "next/image";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowDown, CalendarClock, CheckCheck, FileText, Forward, Link, ListPlus, Loader2, Lock, MessageSquare, Pencil, Pin, Smile, Ticket, Trash2 } from "lucide-react";
-import { ReplyIcon, BookmarkCheckIcon, BookmarkPlusIcon, CopyIcon, Trash2Icon, UserPlusIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { Loader2, Lock, MessageSquare, Ticket } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { resolveImageUrl } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,30 +13,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import {
-  getInitials,
-  formatMessageTime,
-  formatMessageTimeFull,
-  formatFileSize,
-  getFileExt,
-  getFileColor,
-  isImageMime,
-  resolveFileUrl,
-  getForwardedDisplay,
-} from "./chat-helpers";
-import type { Message, TicketEntityRef, CommentEntityRef, MessageMetadata } from "./chat-types";
+import type { TicketEntityRef, CommentEntityRef } from "./chat-types";
 import { useCan } from "@/hooks/api/access";
-import { apiClient, isApiError } from "@/lib/api-client";
+import { isApiError } from "@/lib/api-client";
 import { useEntityAction } from "./entity-actions-context";
 import { useSubmitEntityAction } from "@/hooks/api/chat";
-import { ConvertToTaskDialog } from "./convert-to-task-dialog";
-import { EntityActionDialog } from "./entity-action-dialog";
 import { ticketPermalinkQueryOptions } from "@/hooks/api/build/comment-permalink";
-import { InternalLinkPreview } from "./internal-link-preview";
 import { getStatusBadgeClass } from "@/features/build/shared/status-badge";
 import { formatTicketKey } from "@/features/build/shared/format-ticket-key";
-import { renderFormattedContent } from "./formatted-message-content";
-
 
 const TICKET_STATUS_DISPLAY: Record<string, string> = {
   TODO: "Todo",

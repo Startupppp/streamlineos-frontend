@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useCallback } from "react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -26,9 +27,21 @@ import {
 } from "./chat-helpers";
 import type { Message } from "./chat-types";
 import type { TicketSearchResult } from "@/hooks/api/build";
-import { TicketMentionPicker } from "./ticket-mention-picker";
-import { EmojiGrid } from "./emoji-grid";
+import { ChatPopoverFallback } from "./chat-lazy-fallbacks";
 import { getChatMobileComposerInsetClassName } from "@/components/layout/mobile/chat-mobile-chrome-layout";
+
+const TicketMentionPicker = dynamic(
+  () =>
+    import("./ticket-mention-picker").then((m) => ({
+      default: m.TicketMentionPicker,
+    })),
+  { ssr: false, loading: () => <ChatPopoverFallback label="Loading ticket picker" /> },
+);
+
+const EmojiGrid = dynamic(
+  () => import("./emoji-grid").then((m) => ({ default: m.EmojiGrid })),
+  { ssr: false, loading: () => <ChatPopoverFallback label="Loading emoji picker" /> },
+);
 type PendingAttachment = {
   fileName: string;
   fileUrl: string;

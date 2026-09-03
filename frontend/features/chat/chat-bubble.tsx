@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import React, { useCallback, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { CalendarClock, CheckCheck, Forward, Link, ListPlus, Loader2, Lock, MessageSquare, Pencil, Pin, Smile, Ticket, Trash2 } from "lucide-react";
 import { ReplyIcon, BookmarkCheckIcon, BookmarkPlusIcon, CopyIcon, Trash2Icon, UserPlusIcon } from "@animateicons/react/lucide";
@@ -29,15 +30,40 @@ import { useCan } from "@/hooks/api/access";
 import { apiClient, isApiError } from "@/lib/api-client";
 import { useEntityAction } from "./entity-actions-context";
 import { useSubmitEntityAction } from "@/hooks/api/chat";
-import { ConvertToTaskDialog } from "./convert-to-task-dialog";
-import { EntityActionDialog } from "./entity-action-dialog";
 import { ticketPermalinkQueryOptions } from "@/hooks/api/build/comment-permalink";
-import { InternalLinkPreview } from "./internal-link-preview";
+import {
+  ChatInlineFallback,
+  ChatOverlayFallback,
+} from "./chat-lazy-fallbacks";
 import { getStatusBadgeClass } from "@/features/build/shared/status-badge";
 import { formatTicketKey } from "@/features/build/shared/format-ticket-key";
 import { renderFormattedContent } from "./formatted-message-content";
 import { TicketPill, CommentPill } from "./chat-entity-pills";
 import { MessageActions } from "./chat-message-actions";
+
+const ConvertToTaskDialog = dynamic(
+  () =>
+    import("./convert-to-task-dialog").then((m) => ({
+      default: m.ConvertToTaskDialog,
+    })),
+  { ssr: false, loading: () => <ChatOverlayFallback label="Loading convert to task" /> },
+);
+
+const EntityActionDialog = dynamic(
+  () =>
+    import("./entity-action-dialog").then((m) => ({
+      default: m.EntityActionDialog,
+    })),
+  { ssr: false, loading: () => <ChatOverlayFallback label="Loading ticket action" /> },
+);
+
+const InternalLinkPreview = dynamic(
+  () =>
+    import("./internal-link-preview").then((m) => ({
+      default: m.InternalLinkPreview,
+    })),
+  { ssr: false, loading: () => <ChatInlineFallback label="Loading link preview" /> },
+);
 
 export function ChatBubble({
   message,
@@ -358,27 +384,27 @@ export function ChatBubble({
           </div>
         )}
 
-        {canConvertToTask && (
+        {canConvertToTask && convertDialogOpen && (
           <ConvertToTaskDialog
-            open={convertDialogOpen}
+            open
             onOpenChange={setConvertDialogOpen}
             channelId={message.channelId}
             messageId={message.id}
             defaultTitle={(message.content ?? "").slice(0, 80)}
           />
         )}
-        {assignAction && (
+        {assignAction && assignDialogOpen && (
           <EntityActionDialog
-            open={assignDialogOpen}
+            open
             onOpenChange={setAssignDialogOpen}
             channelId={message.channelId}
             reference={ticketReference}
             action={assignAction}
           />
         )}
-        {dueDateAction && (
+        {dueDateAction && dueDateDialogOpen && (
           <EntityActionDialog
-            open={dueDateDialogOpen}
+            open
             onOpenChange={setDueDateDialogOpen}
             channelId={message.channelId}
             reference={ticketReference}
