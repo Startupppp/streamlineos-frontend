@@ -1,0 +1,412 @@
+[
+ {
+  "file": "src/common/audit/internal-audit.controller.ts",
+  "line": 11,
+  "method": "logAudit",
+  "slot": "body",
+  "schema": "auditEntrySchema",
+  "schemaFieldCount": 16,
+  "verdict": "UNBOUND",
+  "paramType": "AuditEntry"
+ },
+ {
+  "file": "src/modules/finance/controls/approval-policies.controller.ts",
+  "line": 44,
+  "method": "list",
+  "slot": "query",
+  "schema": "listPoliciesSchema",
+  "schemaFieldCount": 2,
+  "verdict": "UNBOUND",
+  "paramType": "{ cursor?: string | undefined; limit: number; }"
+ },
+ {
+  "file": "src/modules/ai/core/controllers/crm-ai.controller.ts",
+  "line": 119,
+  "method": "scoreLead",
+  "slot": "body",
+  "schema": "scoreLeadBodySchema",
+  "schemaFieldCount": 0,
+  "verdict": "UNBOUND",
+  "paramType": "unknown"
+ },
+ {
+  "file": "src/modules/ai/core/controllers/chat-assistant.controller.ts",
+  "line": 179,
+  "method": "createConversation",
+  "slot": "body",
+  "schema": "conversationCreateSchema",
+  "schemaFieldCount": 1,
+  "verdict": "UNBOUND",
+  "paramType": "unknown"
+ },
+ {
+  "file": "src/modules/ai/core/controllers/chat-assistant.controller.ts",
+  "line": 189,
+  "method": "renameConversation",
+  "slot": "body",
+  "schema": "conversationRenameSchema",
+  "schemaFieldCount": 1,
+  "verdict": "UNBOUND",
+  "paramType": "unknown"
+ },
+ {
+  "file": "src/modules/ai/core/controllers/chat-assistant.controller.ts",
+  "line": 235,
+  "method": "chatAssistant",
+  "slot": "body",
+  "schema": "chatRequestSchema",
+  "schemaFieldCount": 3,
+  "verdict": "UNBOUND",
+  "paramType": "unknown"
+ },
+ {
+  "file": "src/modules/ai/core/controllers/chat-assistant.controller.ts",
+  "line": 273,
+  "method": "confirmAction",
+  "slot": "body",
+  "schema": "confirmActionBodySchema",
+  "schemaFieldCount": 1,
+  "verdict": "UNBOUND",
+  "paramType": "unknown"
+ },
+ {
+  "file": "src/modules/chat/chat-channels.controller.ts",
+  "line": 389,
+  "method": "updateRole",
+  "slot": "body",
+  "schema": "memberRoleSchema",
+  "schemaFieldCount": 1,
+  "verdict": "UNBOUND",
+  "paramType": "{ role: string; }"
+ },
+ {
+  "file": "src/modules/crm/metadata/crm-metadata.controller.ts",
+  "line": 55,
+  "method": "listPipelines",
+  "slot": "query",
+  "schema": "listPipelinesSchema",
+  "schemaFieldCount": 1,
+  "verdict": "no-param",
+  "paramType": null
+ },
+ {
+  "file": "src/modules/party/party-merge.controller.ts",
+  "line": 45,
+  "method": "addRole",
+  "slot": "body",
+  "schema": "partyRoleBodySchema",
+  "schemaFieldCount": 1,
+  "verdict": "UNBOUND",
+  "paramType": "{ role: string; }"
+ },
+ {
+  "file": "src/modules/party/party-merge.controller.ts",
+  "line": 102,
+  "method": "merge",
+  "slot": "body",
+  "schema": "partyMergeBodySchema",
+  "schemaFieldCount": 2,
+  "verdict": "UNBOUND",
+  "paramType": "{ leftPartyId: string; rightPartyId: string; }"
+ },
+ {
+  "file": "src/modules/expenses/expenses.controller.ts",
+  "line": 106,
+  "method": "update",
+  "slot": "body",
+  "schema": "updateExpensePatchSchema",
+  "schemaFieldCount": 0,
+  "verdict": "UNBOUND",
+  "paramType": "{ status: \"APPROVED\" | \"REJECTED\" | \"PAID\"; rejectionReason?: string | undefined; } | { merchant: string | null | undefi"
+ },
+ {
+  "file": "src/modules/platform/platform.controller.ts",
+  "line": 37,
+  "method": "visit",
+  "slot": "body",
+  "schema": "visitSchema",
+  "schemaFieldCount": 3,
+  "verdict": "no-param",
+  "paramType": null
+ },
+ {
+  "file": "src/modules/integrations/git/integrations-git.controller.ts",
+  "line": 23,
+  "method": "webhook",
+  "slot": "query",
+  "schema": "webhookQuerySchema",
+  "schemaFieldCount": 1,
+  "verdict": "no-param",
+  "paramType": null
+ },
+ {
+  "file": "src/modules/public/public.controller.ts",
+  "line": 278,
+  "method": "submitLeadForm",
+  "slot": "body",
+  "schema": "leadFormBodySchema",
+  "schemaFieldCount": 0,
+  "verdict": "UNBOUND",
+  "paramType": "Record<string, unknown>"
+ },
+ {
+  "file": "src/modules/deals/deals-approvals.controller.ts",
+  "line": 64,
+  "method": "submitApproval",
+  "slot": "body",
+  "schema": "submitApprovalSchema",
+  "schemaFieldCount": 0,
+  "verdict": "UNBOUND",
+  "paramType": "{ approvalId: number; action: \"approve\" | \"reject\"; rejectionReason?: string | undefined; } | { dealId: number; requeste"
+ },
+ {
+  "file": "src/modules/kb/retrieval/kb-ask.controller.ts",
+  "line": 116,
+  "method": "createConversation",
+  "slot": "body",
+  "schema": "kbConversationCreateSchema",
+  "schemaFieldCount": 1,
+  "verdict": "UNBOUND",
+  "paramType": "{ title?: string | undefined; }"
+ },
+ {
+  "file": "src/modules/kb/retrieval/kb-ask.controller.ts",
+  "line": 124,
+  "method": "renameConversation",
+  "slot": "body",
+  "schema": "kbConversationRenameSchema",
+  "schemaFieldCount": 1,
+  "verdict": "UNBOUND",
+  "paramType": "{ title: string; }"
+ },
+ {
+  "file": "src/modules/kb/retrieval/kb-research-brief.controller.ts",
+  "line": 54,
+  "method": "rateBrief",
+  "slot": "body",
+  "schema": "kbResearchBriefRateSchema",
+  "schemaFieldCount": 1,
+  "verdict": "UNBOUND",
+  "paramType": "{ rating: \"helpful\" | \"not_helpful\"; }"
+ },
+ {
+  "file": "src/modules/kb/help-centre/kb-comments.controller.ts",
+  "line": 44,
+  "method": "list",
+  "slot": "query",
+  "schema": "cursorQuery",
+  "schemaFieldCount": 2,
+  "verdict": "no-param",
+  "paramType": null
+ },
+ {
+  "file": "src/modules/kb/help-centre/kb-article-ai.controller.ts",
+  "line": 87,
+  "method": "ask",
+  "slot": "body",
+  "schema": "kbAiAskBodySchema",
+  "schemaFieldCount": 1,
+  "verdict": "UNBOUND",
+  "paramType": "{ question: string; }"
+ },
+ {
+  "file": "src/modules/kb/help-centre/kb-article-ai.controller.ts",
+  "line": 99,
+  "method": "askStream",
+  "slot": "body",
+  "schema": "kbAiAskBodySchema",
+  "schemaFieldCount": 1,
+  "verdict": "UNBOUND",
+  "paramType": "{ question: string; }"
+ },
+ {
+  "file": "src/modules/kb/wiki/kb-page-comments.controller.ts",
+  "line": 42,
+  "method": "list",
+  "slot": "query",
+  "schema": "cursorQuery",
+  "schemaFieldCount": 2,
+  "verdict": "no-param",
+  "paramType": null
+ },
+ {
+  "file": "src/modules/kb/wiki/kb-page-ai.controller.ts",
+  "line": 87,
+  "method": "ask",
+  "slot": "body",
+  "schema": "kbAiAskBodySchema",
+  "schemaFieldCount": 1,
+  "verdict": "UNBOUND",
+  "paramType": "{ question: string; }"
+ },
+ {
+  "file": "src/modules/kb/wiki/kb-page-ai.controller.ts",
+  "line": 99,
+  "method": "askStream",
+  "slot": "body",
+  "schema": "kbAiAskBodySchema",
+  "schemaFieldCount": 1,
+  "verdict": "UNBOUND",
+  "paramType": "{ question: string; }"
+ },
+ {
+  "file": "src/modules/storage/storage-onboarding.controller.ts",
+  "line": 53,
+  "method": "upload",
+  "slot": "body",
+  "schema": "uploadBodySchema",
+  "schemaFieldCount": 1,
+  "verdict": "no-param",
+  "paramType": null
+ },
+ {
+  "file": "src/modules/hr/workflows/hr-workflow-instances.controller.ts",
+  "line": 53,
+  "method": "inbox",
+  "slot": "query",
+  "schema": "PaginationSchema",
+  "schemaFieldCount": 2,
+  "verdict": "UNBOUND",
+  "paramType": "{ page: number; limit: number; }"
+ },
+ {
+  "file": "src/modules/hr/payroll-inputs/payroll-inputs.controller.ts",
+  "line": 176,
+  "method": "rejectAdjustment",
+  "slot": "body",
+  "schema": "rejectAdjustmentSchema",
+  "schemaFieldCount": 1,
+  "verdict": "UNBOUND",
+  "paramType": "{ reason: string; }"
+ },
+ {
+  "file": "src/modules/hr/time/attendance.controller.ts",
+  "line": 63,
+  "method": "checkOut",
+  "slot": "body",
+  "schema": "checkOutSchema",
+  "schemaFieldCount": 0,
+  "verdict": "UNBOUND",
+  "paramType": "Record<string, never>"
+ },
+ {
+  "file": "src/modules/hr/time/employee-attendance.controller.ts",
+  "line": 69,
+  "method": "checkOut",
+  "slot": "body",
+  "schema": "checkOutSchema",
+  "schemaFieldCount": 0,
+  "verdict": "UNBOUND",
+  "paramType": "Record<string, never>"
+ },
+ {
+  "file": "src/modules/hr/performance/engagement.controller.ts",
+  "line": 91,
+  "method": "createOrSubmitAssessment",
+  "slot": "body",
+  "schema": "createOrSubmitAssessmentSchema",
+  "schemaFieldCount": 0,
+  "verdict": "UNBOUND",
+  "paramType": "unknown"
+ },
+ {
+  "file": "src/modules/hr/performance/engagement.controller.ts",
+  "line": 150,
+  "method": "createOrRespondSurvey",
+  "slot": "body",
+  "schema": "createOrRespondSurveySchema",
+  "schemaFieldCount": 0,
+  "verdict": "UNBOUND",
+  "paramType": "unknown"
+ },
+ {
+  "file": "src/modules/hr/enterprise-comp/payroll-compliance.controller.ts",
+  "line": 148,
+  "method": "seedPresets",
+  "slot": "body",
+  "schema": "seedPresetsSchema",
+  "schemaFieldCount": 2,
+  "verdict": "UNBOUND",
+  "paramType": "{ countryCode: string; periodKey: string; }"
+ },
+ {
+  "file": "src/modules/hr/enterprise-comp/workforce-costing.controller.ts",
+  "line": 28,
+  "method": "byDepartment",
+  "slot": "query",
+  "schema": "costByDeptSchema",
+  "schemaFieldCount": 1,
+  "verdict": "UNBOUND",
+  "paramType": "{ periodKey: string; }"
+ },
+ {
+  "file": "src/modules/hr/enterprise-comp/workforce-costing.controller.ts",
+  "line": 46,
+  "method": "forecasted",
+  "slot": "query",
+  "schema": "forecastedCostQuerySchema",
+  "schemaFieldCount": 1,
+  "verdict": "UNBOUND",
+  "paramType": "{ cycleId: number; }"
+ },
+ {
+  "file": "src/modules/hr/recruitment/recruitment-candidate-records.controller.ts",
+  "line": 93,
+  "method": "resumeParse",
+  "slot": "body",
+  "schema": "resumeParseRequestSchema",
+  "schemaFieldCount": 1,
+  "verdict": "UNBOUND",
+  "paramType": "unknown"
+ },
+ {
+  "file": "src/modules/mfa/mfa.controller.ts",
+  "line": 62,
+  "method": "verify",
+  "slot": "body",
+  "schema": "verifyMfaSchema",
+  "schemaFieldCount": 0,
+  "verdict": "UNBOUND",
+  "paramType": "{ token: string; } | { backupCode: string; }"
+ },
+ {
+  "file": "src/modules/auth/auth.controller.ts",
+  "line": 160,
+  "method": "resendVerification",
+  "slot": "body",
+  "schema": "resendVerificationSchema",
+  "schemaFieldCount": 1,
+  "verdict": "UNBOUND",
+  "paramType": "{ email: string; }"
+ },
+ {
+  "file": "src/modules/feedbucket/feedbucket-public.controller.ts",
+  "line": 160,
+  "method": "submit",
+  "slot": "body",
+  "schema": "publicSubmitDeclSchema",
+  "schemaFieldCount": 8,
+  "verdict": "UNBOUND",
+  "paramType": "Record<string, unknown>"
+ },
+ {
+  "file": "src/modules/feedbucket/feedbucket-public.controller.ts",
+  "line": 322,
+  "method": "aiAssist",
+  "slot": "body",
+  "schema": "publicAiAssistDeclSchema",
+  "schemaFieldCount": 4,
+  "verdict": "UNBOUND",
+  "paramType": "Record<string, unknown>"
+ },
+ {
+  "file": "src/modules/finance/banking/reconciliation.controller.ts",
+  "line": 100,
+  "method": "listRules",
+  "slot": "query",
+  "schema": "rulesQuerySchema",
+  "schemaFieldCount": 2,
+  "verdict": "UNBOUND",
+  "paramType": "{ cursor?: string | undefined; limit: number; }"
+ }
+]
