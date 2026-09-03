@@ -5,13 +5,6 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(),
 }));
 
-jest.mock("@/hooks/api/kb/page-ai", () => ({
-  useKbPageSummarize: jest.fn(() => ({ mutateAsync: jest.fn() })),
-  useKbPageAsk: jest.fn(() => ({ mutateAsync: jest.fn() })),
-  useKbPageImprove: jest.fn(() => ({ mutateAsync: jest.fn() })),
-  useKbPageSuggestRelated: jest.fn(() => ({ mutateAsync: jest.fn() })),
-}));
-
 const { useCan } = jest.requireMock<{ useCan: jest.Mock }>("@/hooks/api/access");
 
 beforeEach(() => {

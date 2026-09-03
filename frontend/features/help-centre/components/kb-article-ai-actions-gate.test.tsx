@@ -5,13 +5,6 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(),
 }));
 
-jest.mock("@/hooks/api/kb/article-ai", () => ({
-  useKbArticleSummarize: jest.fn(() => ({ mutateAsync: jest.fn() })),
-  useKbArticleAsk: jest.fn(() => ({ mutateAsync: jest.fn() })),
-  useKbArticleImprove: jest.fn(() => ({ mutateAsync: jest.fn() })),
-  useKbArticleSuggestRelated: jest.fn(() => ({ mutateAsync: jest.fn() })),
-}));
-
 jest.mock("@/components/ai", () => ({
   AiActionsMenu: () => <div data-testid="ai-actions-menu" />,
 }));
