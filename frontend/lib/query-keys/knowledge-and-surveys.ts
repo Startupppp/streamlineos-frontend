@@ -10,8 +10,8 @@ export const knowledgeAndSurveysQueryKeys = {
     pagesRecent: () => [...base, "kb", "pages", "recent"] as const,
     pagesFavorites: () => [...base, "kb", "pages", "favorites"] as const,
     pagesTrash: () => [...base, "kb", "pages", "trash"] as const,
-    pagesSearch: (searchQuery: string) =>
-      [...base, "kb", "pages", "search", searchQuery] as const,
+    pagesSearch: (searchQuery: string, aclVersion: string) =>
+      [...base, "kb", "pages", "search", searchQuery, aclVersion] as const,
     page: (pageId: number) => [...base, "kb", "pages", pageId] as const,
     pageBacklinks: (pageId: number) =>
       [...base, "kb", "pages", pageId, "backlinks"] as const,

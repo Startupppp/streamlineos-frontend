@@ -85,3 +85,55 @@ describe("automations.list — no-arg partial match", () => {
     qc.clear();
   });
 });
+
+describe("kb.pagesSearch — ACL dimension is required and discriminates by space membership", () => {
+  it("two entries with different aclVersion produce distinct keys", () => {
+    const qc = new QueryClient();
+    qc.setQueryData(qk.kb.pagesSearch("hello", "1,2"), [{ id: 1 }]);
+    qc.setQueryData(qk.kb.pagesSearch("hello", "1,2,3"), [{ id: 2 }]);
+    expect(qc.getQueriesData({ queryKey: qk.kb.pagesSearch("hello", "1,2") })).toHaveLength(1);
+    expect(qc.getQueriesData({ queryKey: qk.kb.pagesSearch("hello", "1,2,3") })).toHaveLength(1);
+    qc.clear();
+  });
+
+  it("stale ACL version key produces zero matches against a new membership key", () => {
+    const qc = new QueryClient();
+    qc.setQueryData(qk.kb.pagesSearch("hello", "1,2,3"), [{ id: 1 }]);
+    const oldMembershipKey = qk.kb.pagesSearch("hello", "1,2");
+    expect(qc.getQueriesData({ queryKey: oldMembershipKey })).toHaveLength(0);
+    qc.clear();
+  });
+
+  it("prefix without aclVersion matches all pagesSearch entries across ACL versions", () => {
+    const qc = new QueryClient();
+    qc.setQueryData(qk.kb.pagesSearch("hello", "1"), [{ id: 1 }]);
+    qc.setQueryData(qk.kb.pagesSearch("hello", "1,2"), [{ id: 2 }]);
+    const prefix = [...qk.kb.all, "pages", "search"];
+    expect(qc.getQueriesData({ queryKey: prefix })).toHaveLength(2);
+    qc.clear();
+  });
+});
+
+describe("kb.search — ACL version embedded in params discriminates by space membership", () => {
+  it("search with aclVersion in params differs from search without it", () => {
+    const qc = new QueryClient();
+    qc.setQueryData(qk.kb.search({ q: "hello", aclVersion: "1,2" }), { items: [] });
+    qc.setQueryData(qk.kb.search({ q: "hello", aclVersion: "1,2,3" }), { items: [] });
+    expect(
+      qc.getQueriesData({ queryKey: qk.kb.search({ q: "hello", aclVersion: "1,2" }) }),
+    ).toHaveLength(1);
+    expect(
+      qc.getQueriesData({ queryKey: qk.kb.search({ q: "hello", aclVersion: "1,2,3" }) }),
+    ).toHaveLength(1);
+    qc.clear();
+  });
+
+  it("prefix without params matches all search entries across ACL versions", () => {
+    const qc = new QueryClient();
+    qc.setQueryData(qk.kb.search({ q: "x", aclVersion: "1" }), { items: [] });
+    qc.setQueryData(qk.kb.search({ q: "x", aclVersion: "2" }), { items: [] });
+    const prefix = qk.kb.search();
+    expect(qc.getQueriesData({ queryKey: prefix })).toHaveLength(2);
+    qc.clear();
+  });
+});

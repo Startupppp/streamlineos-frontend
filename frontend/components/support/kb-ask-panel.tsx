@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, type ChangeEvent, type FormEvent } from "react";
-import { Sparkles, Send, Loader2, ThumbsUp, ThumbsDown, BookMarked, FileText, Paperclip } from "lucide-react";
+import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { Sparkles, Send, ThumbsUp, ThumbsDown, BookMarked, FileText, Paperclip } from "lucide-react";
 import Link from "next/link";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -108,6 +109,7 @@ function AuthedAskPanel({ className, articleId }: { className?: string; articleI
   const [answer, setAnswer] = useState<KbAskResponse | null>(null);
   const [feedbackGiven, setFeedbackGiven] = useState(false);
   const askMutation = useKbAsk();
+  const submissionRef = useRef(0);
 
   function handleQuestionChange(event: ChangeEvent<HTMLInputElement>) {
     setQuestion(event.target.value);
@@ -124,12 +126,20 @@ function AuthedAskPanel({ className, articleId }: { className?: string; articleI
       toast.error("Please enter a longer question");
       return;
     }
+    if (askMutation.isPending) return;
+    const id = ++submissionRef.current;
     setFeedbackGiven(false);
     askMutation.mutate(
       { question: trimmed },
       {
-        onSuccess: (data) => setAnswer(data),
-        onError: (e) => toast.error(getErrorMessage(e)),
+        onSuccess: (data) => {
+          if (submissionRef.current !== id) return;
+          setAnswer(data);
+        },
+        onError: (e) => {
+          if (submissionRef.current !== id) return;
+          toast.error(getErrorMessage(e));
+        },
       },
     );
   }
@@ -163,19 +173,17 @@ function AuthedAskPanel({ className, articleId }: { className?: string; articleI
             className="flex-1 text-label"
             disabled={askMutation.isPending}
           />
-          <Button
+          <LoadingButton
             type="submit"
             size="sm"
-            disabled={askMutation.isPending || question.trim().length < MIN_QUESTION_LENGTH}
+            isPending={askMutation.isPending}
+            loadingText="Thinking…"
+            disabled={question.trim().length < MIN_QUESTION_LENGTH}
             className="gap-1.5 text-xs shrink-0"
           >
-            {askMutation.isPending ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Send className="h-3.5 w-3.5" />
-            )}
-            {askMutation.isPending ? "Thinking…" : "Ask"}
-          </Button>
+            <Send className="h-3.5 w-3.5" />
+            Ask
+          </LoadingButton>
         </form>
 
         {answer && !askMutation.isPending && (
@@ -210,6 +218,7 @@ function PublicAskPanel({ className, orgId }: { className?: string; orgId: strin
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState<KbAnswer | null>(null);
   const publicAsk = usePublicAskSupportKb();
+  const submissionRef = useRef(0);
 
   function handleQuestionChange(event: ChangeEvent<HTMLInputElement>) {
     setQuestion(event.target.value);
@@ -222,11 +231,19 @@ function PublicAskPanel({ className, orgId }: { className?: string; orgId: strin
       toast.error("Please enter a longer question");
       return;
     }
+    if (publicAsk.isPending) return;
+    const id = ++submissionRef.current;
     publicAsk.mutate(
       { orgId, question: trimmed },
       {
-        onSuccess: (data) => setAnswer(data),
-        onError: (e) => toast.error(getErrorMessage(e)),
+        onSuccess: (data) => {
+          if (submissionRef.current !== id) return;
+          setAnswer(data);
+        },
+        onError: (e) => {
+          if (submissionRef.current !== id) return;
+          toast.error(getErrorMessage(e));
+        },
       },
     );
   }
@@ -249,15 +266,17 @@ function PublicAskPanel({ className, orgId }: { className?: string; orgId: strin
             className="flex-1 text-label"
             disabled={publicAsk.isPending}
           />
-          <Button
+          <LoadingButton
             type="submit"
             size="sm"
-            disabled={publicAsk.isPending || question.trim().length < MIN_QUESTION_LENGTH}
+            isPending={publicAsk.isPending}
+            loadingText="Thinking…"
+            disabled={question.trim().length < MIN_QUESTION_LENGTH}
             className="gap-1.5 text-xs shrink-0"
           >
-            {publicAsk.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
-            {publicAsk.isPending ? "Thinking…" : "Ask"}
-          </Button>
+            <Send className="h-3.5 w-3.5" />
+            Ask
+          </LoadingButton>
         </form>
 
         {answer && !publicAsk.isPending && (

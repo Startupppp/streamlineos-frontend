@@ -36,6 +36,35 @@ const FOLDER_NAV: {
   { key: "trash", label: "Trash", icon: Trash2 },
 ];
 
+function MailFolderButton({
+  folder,
+  active,
+  onSelect,
+}: {
+  folder: (typeof FOLDER_NAV)[number];
+  active: boolean;
+  onSelect: (folder: MailFolder) => void;
+}) {
+  const Icon = folder.icon;
+  const handleClick = useCallback(() => onSelect(folder.key), [onSelect, folder.key]);
+  return (
+    <button
+      type="button"
+      className={cn(
+        "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-dense font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+        active
+          ? "bg-primary text-primary-foreground"
+          : "bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted",
+      )}
+      onClick={handleClick}
+      aria-current={active ? "page" : undefined}
+    >
+      <Icon className="h-3 w-3 shrink-0" aria-hidden />
+      {folder.label}
+    </button>
+  );
+}
+
 interface MailListPaneProps {
   selectedMessageId: string | null;
   selectedAccountId: number | "all";
@@ -135,7 +164,7 @@ export function MailListPane({
     [threadSummary],
   );
 
-  const handleFolderClick = useCallback((folder: MailFolder) => {
+  const handleFolderSelect = useCallback((folder: MailFolder) => {
     setActiveFolder(folder);
     setSearch("");
   }, []);
@@ -173,27 +202,14 @@ export function MailListPane({
           className="flex gap-1 overflow-x-auto scrollbar-hide pb-0.5 -mx-0.5 px-0.5"
           aria-label="Mail folders"
         >
-          {FOLDER_NAV.map((folder) => {
-            const Icon = folder.icon;
-            const active = activeFolder === folder.key;
-            return (
-              <button
-                key={folder.key}
-                type="button"
-                className={cn(
-                  "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-dense font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                  active
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted",
-                )}
-                onClick={() => handleFolderClick(folder.key)}
-                aria-current={active ? "page" : undefined}
-              >
-                <Icon className="h-3 w-3 shrink-0" aria-hidden />
-                {folder.label}
-              </button>
-            );
-          })}
+          {FOLDER_NAV.map((folder) => (
+            <MailFolderButton
+              key={folder.key}
+              folder={folder}
+              active={activeFolder === folder.key}
+              onSelect={handleFolderSelect}
+            />
+          ))}
         </nav>
       </div>
 

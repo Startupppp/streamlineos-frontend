@@ -4,8 +4,8 @@ import { useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
 import type { AiAction } from "@/components/ai";
-import { AlertCircle } from "lucide-react";
 import { useCan } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -216,22 +216,17 @@ export function MailReadingPane({
     );
   }
 
+  const handleRetry = useCallback(() => { void retry(); }, [retry]);
+
   if (isError) {
     return (
-      <div className="flex flex-col h-full min-h-0 items-center justify-center gap-3 p-6">
-        <AlertCircle className="h-8 w-8 text-muted-foreground" aria-hidden />
-        <p className="text-sm text-muted-foreground text-center">
-          {getErrorMessage(errorVal)}
-        </p>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => void retry()}
-          className="h-8 text-xs"
-        >
-          Retry
-        </Button>
-      </div>
+      <ErrorState
+        className="flex-1 m-4"
+        compact
+        title="Couldn't load message"
+        description={getErrorMessage(errorVal)}
+        onRetry={handleRetry}
+      />
     );
   }
 
