@@ -1506,10 +1506,27 @@ another agent's commit (`2bb472d7`). It asked for the brief's rule 2 to be corre
 `git add -- path` and committed with `git commit -m msg -- path` lands correctly, and a second
 staged file left in the index is NOT swept in. Exit 0, one file in the commit.
 
-So the rule stands as written, and the incident's real cause is unknown — most likely a concurrent
-`git add -A` from another agent between the add and the commit, which would genuinely leave nothing
-for the pathspec to commit. Recording it as unexplained rather than inventing a mechanism. The
-mitigation is unchanged and already in the brief: `git show --stat` every commit.
+So the rule stands as written. **The mechanism is now known — it happened to the orchestrator's own
+commit an hour later, and the earlier "unexplained" note above is superseded.**
+
+Staged `frontend/package.json` (a `type-check` heap flag) and `.github/workflows/frontend.yml`
+together, then committed both by explicit pathspec. The commit landed with **one** file. The
+`package.json` change was not lost — it was already at HEAD, inside `de257302a
+feat(gates): add check:named-handlers`, another agent's commit, whose message describes none of it.
+
+That agent had `package.json` staged for its own gate script at the same moment. Its commit went
+first and took the shared index's version of the file — including the orchestrator's line. By the
+time the orchestrator's commit ran, that path had no diff left, so git dropped it silently and
+committed only the workflow.
+
+This is exactly what the A-2 agent hit and could not explain. It is NOT a `git commit -- <newfile>`
+defect (a scratch-repo test confirms that form works fine); it is **concurrent agents staging the
+same file**. Nothing is lost, but authorship in the log is wrong, and a reader auditing
+`de257302a` would find a change its message never mentions.
+
+Mitigation, unchanged and already in the brief: `git show --stat` every commit and check it holds
+what you expected. The stronger mitigation for shared files like `package.json` is to treat a
+"1 file changed" surprise as a signal to go looking, not as a no-op.
 
 ### A shell trap that made my own output lie
 
