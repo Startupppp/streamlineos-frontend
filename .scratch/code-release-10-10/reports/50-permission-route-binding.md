@@ -194,6 +194,22 @@ in `DELIBERATE`, with both keys and the reason — not silently tolerated.**
 
 ### 4.9 Deliberately stricter than the route (2 findings) — NOT fixed
 
+> **CORRECTION 2026-09-03 — the backend conclusion below is WRONG. See report 55 §A.**
+> `GET /payroll/reports/*` and `GET /payroll/reports/journal` DO enforce
+> `payroll:reports:export` on the CSV branch, and have since `4855b581`
+> (2026-07-05). Every one of the eleven `if (q.format === "csv")` branches calls
+> `authorize(this.access, u, "payroll:reports:export")` first —
+> `reports.controller.ts:47` (`assertExport`, 10 branches) and
+> `journal.controller.ts:49` (inline). A `:view`-only holder passing
+> `?format=csv` gets a 403; this is now asserted in both directions on all 11
+> routes by `payroll-insights.controller.e2e-spec.ts` (backend `f1078b03`).
+> This gate reads decorators, so a **conditional raise inside a handler** is
+> invisible to it — the limitation §9 of this report already lists. The
+> paragraph below inferred an under-declaration from that blind spot. The hook
+> keys are correct; the DELIBERATE reasons in the script were rewritten to say
+> why. No backend authorization change was needed.
+
+
 `hooks/api/payroll/reports.ts:150` `useExportPayrollReport` and `:166`
 `useExportJournal` gate `payroll:reports:export`. Both hit
 `GET /payroll/reports/<type>?format=csv`, which declares `payroll:reports:view`.
