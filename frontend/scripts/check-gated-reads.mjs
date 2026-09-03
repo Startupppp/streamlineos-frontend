@@ -53,6 +53,12 @@ const ROOT = join(SCRIPT_DIR, "..");
 const BASELINE = {
   /** Permissioned reads still on a raw useQuery. This is the number that bites. */
   permissionedUngated: 0,
+  /**
+   * Ungated reads whose route the scanner cannot resolve at all. These are NOT
+   * known to be safe — a permissioned read hides here as easily as a public
+   * one — so a new one fails the gate and has to be made resolvable or explained.
+   */
+  unresolvedUngated: 0,
 };
 
 /**
@@ -241,6 +247,31 @@ function moduleConstants(src) {
   return consts;
 }
 
+/**
+ * Replace every `${...}` with the constant it names, or with `*`.
+ *
+ * Brace matching is balanced, not `[^}]*`. A nested template —
+ * `` `/talent-pools/${poolId}/members${qs ? `?${qs}` : ""}` `` — closes the
+ * naive pattern on the inner `${qs}`'s brace and emits a mangled path, which
+ * scored `absent` and hid a permissioned read from the gate.
+ */
+function collapseInterpolations(body, consts) {
+  let out = "";
+  for (let i = 0; i < body.length; i++) {
+    if (body[i] !== "$" || body[i + 1] !== "{") { out += body[i]; continue; }
+    let depth = 0;
+    let j = i + 1;
+    for (; j < body.length; j++) {
+      if (body[j] === "{") depth++;
+      else if (body[j] === "}") { depth--; if (depth === 0) break; }
+    }
+    const inner = body.slice(i + 2, j).trim();
+    out += consts.has(inner) ? consts.get(inner) : "*";
+    i = j;
+  }
+  return out;
+}
+
 /** A literal or template argument reduced to a contract-shaped path, or null. */
 function normalizePath(arg, consts) {
   let a = arg.trim();
@@ -249,12 +280,7 @@ function normalizePath(arg, consts) {
   if (a.startsWith("`")) {
     const close = a.lastIndexOf("`");
     if (close <= 0) return null;
-    s = a
-      .slice(1, close)
-      .replace(/\$\{\s*([A-Za-z_$][\w$]*)\s*\}/g, (whole, name) =>
-        consts.has(name) ? consts.get(name) : whole,
-      )
-      .replace(/\$\{[^}]*\}/g, "*");
+    s = collapseInterpolations(a.slice(1, close), consts);
   } else if (/^["']/.test(a)) {
     const q = a[0];
     const endQ = a.indexOf(q, 1);
@@ -263,29 +289,73 @@ function normalizePath(arg, consts) {
     if (a.slice(endQ + 1).trim().startsWith("+")) s += "*";
   }
   if (s === null || !s.startsWith("/")) return null;
-  return s.replace(/\/+$/, "") || "/";
+  // `${qs ? `?${qs}` : ""}` collapses to a `*` glued to the last segment, which
+  // then matches nothing. A `*` NOT preceded by `/` is a query tail, never a
+  // path segment — a real interpolated segment always follows a slash.
+  s = s.replace(/([^/])\*+$/, "$1");
+  return s.split("?")[0].replace(/\/+$/, "") || "/";
 }
 
 /**
- * Every path-shaped first argument of a call inside `body`.
+ * Every path-shaped call inside `body`, with the HTTP method it uses.
  *
  * Deliberately not restricted to `apiClient.get`: `hooks/api/sign/public.ts`
  * reaches the backend through a module-local `publicGet`, and a gate that only
  * knew `apiClient` would score those two reads "unresolved" and skip the very
- * routes it has to recognise as public.
+ * routes it has to recognise as public. Anything unrecognised is read as a GET,
+ * which is what a queryFn does.
+ *
+ * The type-argument skip is BALANCED. `[^<>()]*` cannot cross
+ * `apiClient.get<CursorPaginatedResult<HrWorkflowInstance>>(...)`, so five
+ * permissioned reads carrying a nested generic were invisible to this gate.
  */
+const METHOD_OF = {
+  get: "GET",
+  download: "GET",
+  post: "POST",
+  upload: "POST",
+  put: "PUT",
+  patch: "PATCH",
+  delete: "DELETE",
+};
+
+/**
+ * Index just past a balanced `<...>` starting at `open`, or -1 if it is not one.
+ *
+ * Object-type braces are allowed inside: `apiClient.get<{ enabled: boolean }>(...)`
+ * is an ordinary shape here and bailing on `{` made four reads pathless.
+ */
+function endOfTypeArgs(src, open) {
+  let depth = 0;
+  for (let i = open; i < src.length; i++) {
+    const c = src[i];
+    if (c === "<") depth++;
+    else if (c === ">") { depth--; if (depth === 0) return i + 1; }
+    else if (c === ";") return -1;
+  }
+  return -1;
+}
+
 function pathsIn(body, consts) {
-  const paths = [];
-  const CALL_RE = /(?:\.\s*)?\b([A-Za-z_$][\w$]*)\s*(?:<[^<>()]*>)?\s*\(/g;
+  const found = [];
+  const IDENT_RE = /(?:\.\s*)?\b([A-Za-z_$][\w$]*)\s*/g;
   let m;
-  while ((m = CALL_RE.exec(body)) !== null) {
-    const open = m.index + m[0].length - 1;
-    const args = splitCallArgs(body, open);
+  while ((m = IDENT_RE.exec(body)) !== null) {
+    let i = m.index + m[0].length;
+    if (body[i] === "<") {
+      const after = endOfTypeArgs(body, i);
+      if (after === -1) continue;
+      i = after;
+      while (/\s/.test(body[i] ?? "")) i++;
+    }
+    if (body[i] !== "(") continue;
+    const args = splitCallArgs(body, i);
     if (!args || args.length === 0) continue;
     const p = normalizePath(args[0], consts);
-    if (p) paths.push(p);
+    if (p) found.push({ path: p, method: METHOD_OF[m[1]] ?? "GET" });
+    IDENT_RE.lastIndex = i + 1;
   }
-  return paths;
+  return found;
 }
 
 /**
@@ -322,6 +392,27 @@ function lineAt(src, index) {
 }
 
 /**
+ * Source text of the module-level declarations a read spreads in.
+ *
+ * `useQuery({ ...portalProjectOverviewQueryOptions(id), enabled })` keeps its
+ * queryFn in a `queryOptions()` factory, so the read's own argument text holds
+ * no path at all and the gate cannot see the route. Splicing the factory's text
+ * in is enough: this scanner only needs the path literals, not the structure.
+ */
+function spreadSources(src, argText) {
+  let out = "";
+  for (const m of argText.matchAll(/\.\.\.\s*([A-Za-z_$][\w$]*)/g)) {
+    const decl = new RegExp(`^[ \\t]*(?:export\\s+)?(?:const|(?:async\\s+)?function)\\s+${m[1]}\\b`, "m").exec(src);
+    if (!decl) continue;
+    const after = /^[ \t]*export\b/gm;
+    after.lastIndex = decl.index + decl[0].length;
+    const next = after.exec(src);
+    out += src.slice(decl.index, next ? next.index : src.length);
+  }
+  return out;
+}
+
+/**
  * Every raw read call site in one file, classified against the contract.
  *
  * A call site whose enclosing hook cannot be identified is still counted, with
@@ -349,9 +440,17 @@ function scanFile(relPath, rawSrc, index) {
     const gated = GATE_MARKERS.some((k) => gateScope.includes(k));
 
     const argText = src.slice(openParen, endOfCall(src, openParen));
-    const literals = [...new Set(pathsIn(argText, consts))];
+    const calls = pathsIn(argText + spreadSources(src, argText), consts);
+    const seen = new Set();
+    const literals = [];
+    for (const c of calls) {
+      const k = `${c.method} ${c.path}`;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      literals.push(c);
+    }
 
-    const resolutions = literals.map((p) => ({ literal: p, hit: resolveOperation(index, "GET", p) }));
+    const resolutions = literals.map((c) => ({ literal: c.path, hit: resolveOperation(index, c.method, c.path) }));
     const resolved = resolutions.filter((r) => r.hit !== null);
 
     let exposure;
@@ -375,7 +474,7 @@ function scanFile(relPath, rawSrc, index) {
       exposure,
       permission,
       route,
-      literals,
+      literals: literals.map((c) => `${c.method} ${c.path}`),
     });
   }
   return sites;
@@ -571,6 +670,73 @@ export function useNoop() { return 1; }`,
     console.log(`  ${c.label} → ok`);
   }
 
+  // A nested generic must not hide the path: `[^<>()]*` cannot cross this.
+  const nested = scanFile(
+    "hooks/api/x.ts",
+    `export function useActed() {
+  return useQuery({
+    queryKey: ["a"],
+    queryFn: ({ signal }) => apiClient.get<CursorPage<Thing>>("/support/tickets", undefined, signal),
+  });
+}`,
+    synth,
+  );
+  assert(
+    nested.length === 1 && nested[0].exposure === "permissioned",
+    `a nested generic must not hide the path: ${JSON.stringify(nested)}`,
+  );
+  console.log("  (p) a nested generic type argument does not hide the route → ok");
+
+  // An object type argument must not bail the type-argument skip either.
+  const objType = scanFile(
+    "hooks/api/x.ts",
+    `export function useStatus() {
+  return useQuery({ queryKey: ["s"], queryFn: () => apiClient.get<{ enabled: boolean }>("/me/login-history") });
+}`,
+    synth,
+  );
+  assert(
+    objType.length === 1 && objType[0].exposure === "universal",
+    `an object type argument must not hide the path: ${JSON.stringify(objType)}`,
+  );
+  console.log("  (q) an object-literal type argument does not hide the route → ok");
+
+  // A nested template in the query-string tail must not mangle the path.
+  const tail = scanFile(
+    "hooks/api/x.ts",
+    `export function useThing(id, qs) {
+  return useQuery({
+    queryKey: ["t"],
+    queryFn: () => apiClient.get(\`/support/tickets/\${id}\${qs ? \`?\${qs}\` : ""}\`),
+  });
+}`,
+    synth,
+  );
+  assert(
+    tail.length === 1 && tail[0].exposure === "permissioned",
+    `a nested query-string template must not mangle the path: ${JSON.stringify(tail)}`,
+  );
+  console.log("  (r) a nested query-string template still resolves its route → ok");
+
+  // A queryFn living in a spread factory is still reachable.
+  const spread = scanFile(
+    "hooks/api/x.ts",
+    `export function thingOptions(id) {
+  return queryOptions({ queryKey: ["t", id], queryFn: () => apiClient.get(\`/support/tickets/\${id}\`) });
+}
+
+export function useThing(id) {
+  return useQuery({ ...thingOptions(id), enabled: id > 0 });
+}`,
+    synth,
+  );
+  const spreadRead = spread.find((x) => x.hook === "useThing");
+  assert(
+    spreadRead && spreadRead.exposure === "permissioned",
+    `a spread queryOptions factory must still expose its route: ${JSON.stringify(spread)}`,
+  );
+  console.log("  (s) a queryFn reached through a spread factory still resolves → ok");
+
   // Attribution: a brace inside a PARAMETER TYPE must not end the hook's block,
   // and an unrelated useCan elsewhere in the file must not launder the read.
   const attributed = scanFile(
@@ -610,7 +776,7 @@ export function useAllThings(options?: { enabled?: boolean }) {
   assert(amb.length === 1 && amb[0].exposure === "absent", `disagreeing siblings must not resolve: ${JSON.stringify(amb)}`);
   console.log("  (n) disagreeing sibling routes resolve to nothing rather than a guess → ok");
 
-  console.log(`\n✔ ${cases.length + 2} fixtures passed — check-gated-reads is live.\n`);
+  console.log(`\n✔ ${cases.length + 6} fixtures passed — check-gated-reads is live.\n`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -652,6 +818,10 @@ function runMainScan() {
   for (const [kind, count] of [...byExposure.entries()].sort((a, b) => b[1] - a[1]))
     console.log(`  ${String(kind).padEnd(24)} ${count}`);
   console.log();
+  const unresolved = ungated.filter((s) => ["no-path", "absent", "mixed", "UNKNOWN"].includes(s.exposure));
+  console.log(`Unresolvable + ungated:     ${unresolved.length}   (baseline ${BASELINE.unresolvedUngated})`);
+  for (const s of unresolved) console.log(`  ${s.file}:${s.line} ${s.hook} — ${s.exposure}`);
+  console.log();
   console.log(`Permissioned + ungated:     ${permissioned.length}`);
   console.log(`  held back (out of scope): ${permissioned.length - offenders.length}`);
   console.log(`  counted against baseline: ${offenders.length}   (baseline ${BASELINE.permissionedUngated})`);
@@ -682,6 +852,15 @@ function runMainScan() {
     "  This gate certifies request suppression, NOT that a screen renders the refusal.\n" +
       "  The unread gates are an app/** and features/** change — ticket 30, not this scanner.\n",
   );
+
+  if (unresolved.length > BASELINE.unresolvedUngated) {
+    console.error(
+      `FAIL: ${unresolved.length} ungated read(s) whose route the gate cannot resolve, above the ` +
+        `recorded baseline of ${BASELINE.unresolvedUngated}. An unresolvable read is not a safe read — ` +
+        `make the path literal reachable, or the gate is certifying nothing about it.`,
+    );
+    process.exit(1);
+  }
 
   if (offenders.length > BASELINE.permissionedUngated) {
     console.error(

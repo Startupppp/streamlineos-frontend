@@ -52,6 +52,7 @@ export function useInfiniteAllWork(
   >
 ) {
   const { enabled: enabledOption, ...restOptions } = options ?? {};
+  const canView = useCan("build:tickets:view");
   return useInfiniteQuery({
     queryKey: queryKeys.projects.allWorkInfinite({ ...filters }),
     queryFn: ({ pageParam, signal }) =>
@@ -63,6 +64,6 @@ export function useInfiniteAllWork(
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 30_000,
     ...restOptions,
-    enabled: enabledOption ?? true,
+    enabled: canView && (enabledOption ?? true),
   });
 }

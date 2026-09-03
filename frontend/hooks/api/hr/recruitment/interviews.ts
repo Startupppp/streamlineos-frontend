@@ -92,7 +92,7 @@ export function useInterviews(
   if (params?.upcoming != null) queryParams.upcoming = params.upcoming ? "true" : "false";
   if (params?.relevant != null) queryParams.relevant = params.relevant ? "true" : "false";
 
-  return useQuery({
+  return useGatedQuery("hr:interviews:view", {
     enabled: options?.enabled ?? true,
     queryKey: queryKeys.hr.interviews(queryParams),
     queryFn: async ({ signal }): Promise<Interview[]> => {

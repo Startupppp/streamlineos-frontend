@@ -1,6 +1,7 @@
 "use client";
 
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
@@ -71,7 +72,7 @@ export function useDeleteTalentPool() {
 }
 
 export function usePoolMembers(poolId: number, params?: PoolMembersParams) {
-  return useQuery({
+  return useGatedQuery("hr:employees:view", {
     queryKey: [...queryKeys.hr.hrTalentPoolMembersAll(poolId), params] as const,
     queryFn: ({ signal }) => {
       const search = new URLSearchParams();
