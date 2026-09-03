@@ -14,6 +14,8 @@ head 2026-09-03: **3 of 10 `/stream` routes reach a user** (generate-jd, survey 
 product decision — and the 7th is CRM, excluded. The 26 buffered text sites in 17 other modules are another
 territory. Neither blocker is a missing helper; both helpers exist and are adopted wherever a surface exists.
 
+**2026-09-03 residual-risk register:** box 1 splits into **A-6 ASSIGNABLE** (`/ai/meetings/follow-up/stream` does not exist — real backend work in `src/modules/ai/**`, owner that module, deadline 2026-09-08) plus residuals **R-3 / R-3b / R-3c** (product decisions and territory). See `reports/residual-risk-register.md` §1.5, §3.2.
+
 - [ ] Non-chat AI surfaces stream rather than buffering; first visible streamed state lands within the target and application overhead before provider dispatch stays inside its budget.
   PARTIAL — NOT CLOSED. **S5 converted six more surfaces and measured both numbers; the box stays open because
   ~33 buffered text surfaces remain, 26 of them outside this territory, and no frontend consumes any of the new
@@ -155,6 +157,23 @@ territory. Neither blocker is a missing helper; both helpers exist and are adopt
   (`hooks/api/ai-text-stream.ts`) and the server helper (`respondWithAiTextStream`) both exist, are proven, and are
   adopted wherever a surface exists to adopt them.
 
+  **DISPOSITION 2026-09-03 — this box holds one ASSIGNABLE item and three accepted residuals. Register:
+  `reports/residual-risk-register.md` §3.2 and §1.5.**
+  **ASSIGNABLE A-6 — `/ai/meetings/follow-up` still has no `/stream` sibling. Owner: `src/modules/ai/**` owner.
+  Deadline: 2026-09-08.** This is real, scoped backend work and it was buried above inside a paragraph headed
+  "P2 FINDING", whose first sentence reads as an observation about S5 rather than as an open item. Verified at
+  head by enumerating every `@Post("...stream...")` in `src/modules/ai`: **10 streaming routes**, and
+  `meetings-ai.controller.ts:83` now carries `@Post("prep/stream")` — but **there is no `follow-up/stream`**. So
+  `features/calendar/meeting-follow-up-panel.tsx` still buffers and cannot be converted from the frontend at all.
+  The shape is the one already landed one method above it in the same file: `@Post("follow-up/stream")` on
+  `MeetingsAiController` delegating to a `streamFollowUp` on `MeetingsPrepService` through
+  `respondWithAiTextStream`, then point `useMeetingFollowUp` at it.
+  **RESIDUAL R-3 — 6 `/stream` routes with no frontend surface at all. Blocker: DECISION (unbuilt product
+  surface). Owner: release owner (product). Deadline: 2026-09-10.**
+  **RESIDUAL R-3b — whether `MeetingsAiController` and `CrmAiController`'s meeting route families are duplicates
+  and one should be retired. Blocker: DECISION. Owner: release owner (product). Deadline: 2026-09-10.**
+  **RESIDUAL R-3c — the 26 buffered text surfaces in 17 other modules. Blocker: territory + DECISION on ordering.
+  Owner: release owner to route to the 17 module owners. Deadline: 2026-09-17.**
 - [x] Client aborts propagate through the gateway, database, cache and provider adapters. Spending stops on cancellation.
   P1 FOUND AND FIXED — the S3 claim that "signal reaches the provider adapter" was **false in production**, and its
   6 passing tests could not see it. `createStreamAbortSignal` detected a hang-up with `req.on("close")`. Express

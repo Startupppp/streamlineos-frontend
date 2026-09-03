@@ -9,6 +9,8 @@ more. The live sweep ran: **1,921 routes probed, 666 return the required 404, 11
 unprobeable and are covered statically only, and 1 real cross-tenant leak was found and fixed.** What remains is
 per-module contract work in held or excluded territory (register #165–#167).
 
+**2026-09-03 residual-risk register: THIS TICKET'S RECORDED BLOCKER IS STALE.** The 113 + 2 + 1 are fully closed (84 fixed / 17 excluded / 4 territory / 8 n-a / **0 open**). The box stays open on the **1,138 never-asked** routes — and those are not one blocker: **468 are a harness gap (no request body sent; the OpenAPI bodies already exist at 1,371/1,371)**, 168 a seed gap, **88 are routes returning 500 to a VALID same-tenant request**, ~149 permanently unprobeable. **A-1 / A-2 / A-3 ASSIGNABLE**, **R-4 / R-4b** residual. See `reports/residual-risk-register.md` §1.1, §1.2, §3.3.
+
 Full reports: `.scratch/code-release-10-10/reports/15-bola-sweep.md` (sweep),
 `reports/15b-authorization-fixes.md` (first fix pass), `reports/15c-bola-defect-fixes.md` (second pass),
 `reports/15d-rag-scope-and-support-secret.md` (RAG object scope + the support inbound secret).
@@ -44,6 +46,51 @@ whoever lands that schema change.
       (contacts, deals, leads, hr rich-documents, surveys, organization) in modules this session does not hold, and
       crm/leads/deals/contacts are excluded from the release outright. The fix shape is the repo's own template,
       `build/core/projects-tickets-query.service.ts:155`. Tracked as register items #165–#167.
+      **DISPOSITION 2026-09-03 — the BLOCKED line above is STALE and would have sent the next reader looking for
+      work that no longer exists. Register: `reports/residual-risk-register.md` §3.3 and §1.1-1.2.**
+      **The recorded blocker ("BLOCKED on other territory for the actionable remainder: the 113 + 2 + 1") is false
+      at head.** `reports/cross-tenant-404-contract.md` accounts for all 113 — **84 fixed · 17 excluded scope · 4
+      another territory · 8 not applicable · 0 still open** — and the 2 SERVER-ERRORs, the 1 INCONCLUSIVE and the 1
+      LEAK are all fixed. What actually keeps this box open is the clause buried below it: **1,138 routes were never
+      asked**, so 666/1,921 = 34.7% is what "every object-addressable route" currently means.
+      **Re-verified from the raw artifact, not from this ticket.** `bola-live-offline.json` was located and
+      re-parsed: 1,921 outcomes, `PASS 666 · UNPROBEABLE 1138 · NO-404 113 · SERVER-ERROR 2 · LEAK 1 ·
+      INCONCLUSIVE 1`, at backend commit `ca4ec171`, generated 2026-09-02T20:19:47Z. Every count reproduces.
+      **The 1,138 had never been opened, and they are not one blocker.** Bucketed by the probe's own `detail` field
+      (`reports/residual-risk-register/bola-unprobeable-buckets.json`): **468** own-tenant control 400
+      VALIDATION_FAILED (the probe sent no valid body — a HARNESS gap) · **168** the seed holds no object of that
+      type · **149** the path segment is not an object (`:moduleKey`, `:token`, `:providerKey`) and is permanently
+      unprobeable · **135** control 404 · **88** own-tenant control **500 INTERNAL_ERROR** · 48/32/24/14/8/4 control
+      403/402/409/503/401/timeout.
+      **ASSIGNABLE A-1 — recover the 468. Owner: security/BOLA harness owner. Deadline: 2026-09-08.** 41% of the
+      unprobeable set and 24% of the whole surface are unprobed only because the probe sends no body, and the input
+      needed already exists: `pnpm check:openapi-coverage` is **exit 0 at 1,371/1,371 mutating operations carrying a
+      body schema**. Generating a minimal valid body per route from `contracts/openapi.json` is a bounded change to
+      `test/security/bola/bola-live-cross-tenant.seeded-e2e-spec.ts`. This is not infrastructure and nobody has been
+      asked to do it.
+      **ASSIGNABLE A-2 — triage the 88 own-tenant 500s. Owner: release owner to route per module. Deadline:
+      2026-09-08.** These return `INTERNAL_ERROR` to a **valid same-tenant** request on the seeded database — hr 37,
+      build 10, finance 9, inventory 6, crm 5, accounting 4, party 3, payroll 3, support 3, +8 more. Two routes of
+      exactly this shape (`GET /surveys/:surveyId/builder`, `/logic`) turned out to be a **write on a GET** violating
+      a composite FK. Nothing says the other 88 are benign; nothing has looked. Full list in the companion JSON.
+      **ASSIGNABLE A-3 — 3 e-sign no-404 routes, not 4. Owner: e-sign module owner. Deadline: 2026-09-08.**
+      `GET /sign/envelopes/:envelopeId/audit` is **already fixed** — `SignAuditService.listForEnvelope`
+      (`sign-audit.service.ts:111`) calls `mustGetVisibleEnvelope`. The other three are a bare `findMany` on
+      `(orgId, envelopeId)` returning `[]` (HTTP 200) for another organisation's envelope:
+      `sign-fields.service.ts:156`, `sign-recipients.service.ts:150`, `sign-documents.service.ts:118`. The remedy is
+      in the same module — `src/modules/e-sign/sign-envelope-scope.ts::mustGetVisibleEnvelope`, whose docstring
+      already says "Out of scope and out of tenant answer the same 404 a missing envelope answers." Three call
+      sites, three lines each.
+      **RESIDUAL R-4 — 17 excluded-scope no-404 routes (crm/leads/deals/contacts/inventory), 7 of them write verbs
+      answering 204 on nothing. Blocker: SCOPE. Owner: CRM/inventory release owner. Deadline: 2026-12-01 review.**
+      **RESIDUAL R-4b — whatever of the 1,138 survives A-1 and A-2 (at minimum the ~149 not-an-object routes, which
+      are correctly unprobeable, plus the 135/48/32/24 control preconditions). Blocker: harness reach. Owner:
+      security/BOLA harness owner. Deadline: 2026-09-17.**
+      **ARTIFACT WARNING — `bola-live-offline.json` is NOT in either repository.** It exists only in the session's
+      temporary scratchpad (1.4 MB, alongside `bola-live-partA.json` and `bola-live-full.json`); a `find` across
+      both repos for `bola-live*` returns nothing. Ticket 41 box 2 requires the failure artifact to be recorded.
+      The derived bucket summary is committed at `reports/residual-risk-register/bola-unprobeable-buckets.json`,
+      but the raw per-route probe should be copied into the repo before this session ends.
 - [x] Bulk endpoints are probed with a mixed-tenant id list; the whole request fails rather than silently processing the subset the caller owns.
       10 confirmed silent-subset sites repaired (notifications ×3, recruitment ×2, surveys ×2, kb tags, timesheets approvals ×2 counting `bulkApprove`, data-quality) plus `enrollSequence`. Each fetches under the tenant predicate, compares the row count with the requested id count, and throws `NotFoundException` for the WHOLE request. Detector: `no-count-check` 51 → 45 while the scan itself got stronger (46 → 66 visible sites); `fail-whole` 4 → 21. Behavioural proof in `bola-bulk-fail-whole.spec.ts` (14 assertions incl. no-write-on-miss and no-email-on-miss), mutation-tested.
       PARTIAL: `DealsCrudService.bulkDelete|bulkUpdate` are CRM and excluded from this release. They are unchanged, still detected as `no-count-check`, and pinned by name in `bola-bulk-mixed-tenant.spec.ts` so the finding is not lost.

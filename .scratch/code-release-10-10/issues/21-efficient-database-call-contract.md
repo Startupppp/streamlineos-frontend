@@ -13,6 +13,8 @@ Box 2 and box 3 remain open. Report: `reports/21b-n-plus-one-gate-blind-spot.md`
 
 **Status:** partial — 6 of 9 closed, 3 partial. FOURTH PASS (2026-09-03) did not close a box; it repaired the GATE, which had been red at HEAD and, more importantly, blind. `check:db-call-count` skipped **2,417 of 4,765 loop openers (50.7%), across 753 files**, with no body inspection at all — every braceless loop body, which is the shape CLAUDE.md §6 mandates, plus `Promise.all(xs.map((x) => this.db...))`, whose opener leaves a paren open so `parenBalance >= 0` counted it as closed. It now inspects 2,739 and ratchets that number. Gate rc 1 -> **rc 0**. Report: `reports/21-db-call-contract.md`. Third pass (2026-09-03) batched three more per-row call sites, deleted a per-candidate probe that could never match a row, converted two more write paths to `bulkUpdateFromValues`, gave five more read-then-write pairs their tenant predicate, reconciled the N+1 baseline with what the source now does (ACTIONABLE 44 -> 40), and **recorded the four decisions** boxes 1, 4, 7 and 8 were waiting on. Boxes 1, 4, 7 and 8 are closed as RECORDED DECISIONS — the decision and its consequences are written below; no code was guessed at for them.
 
+**2026-09-03 residual-risk register: one of the three recorded N+1s is NO LONGER BLOCKED.** `clients/client-accounts.service.ts:483` is **A-4 ASSIGNABLE** (the lane that held it has committed; last commit `9d840a1f`; batched form already written down). Boxes 2/3/5 otherwise carry residuals **R-6 / R-6b / R-6c / R-7 / R-7b / R-7c**, each with an owner and a deadline. See `reports/residual-risk-register.md` §1.3, §3.5.
+
 - [x] Tenant-owned request work runs inside the minimum correct tenant transaction, reusing one handle. No nested or per-row transactions; no borrowing a committed request transaction.
    CLOSED AS A RECORDED DECISION (architectural). Every per-row-transaction sweep that could be fixed in service
    code is fixed and proved (`ai-credits-reservation`, `usage-metering`, `organization-purge-adapters`). Two
@@ -91,6 +93,25 @@ Box 2 and box 3 remain open. Report: `reports/21b-n-plus-one-gate-blind-spot.md`
    ratchet of 2 cannot be reached honestly. **The ACTIONABLE count of 40 is a floor, not a population.**
    PARTIAL: 9 N+1s removed in total. The second pass added three: the notification digest's per-user `notification_digest_runs` insert (now one multi-row claim for every ripe window, with the item flush one chunked `inArray` keyed on the ids already read), the preference-rule save's per-channel DELETE (one row-constructor IN over `(scope_type, scope_key, channel)`, executed against a database because the `::notification_channel` cast is invisible to `tsc`), and `payment-provider-setup.listProviders`' credentials read per provider. 44 files remain ACTIONABLE (down from 49). Original first-pass note follows.
    FIRST PASS: 6 N+1s removed (largest: `finance/banking/imports.service.ts`, up to 4,000 round trips per import) and proved by counting calls at 1 and 50 rows in `src/db/__tests__/db-call-count-contract.spec.ts`, mutation-tested. All 96 previously-unclassified files read and classified with per-file notes; 49 files / 71 call sites remain ACTIONABLE with their batched form written down. `check:db-call-count` rc=0 but is NOT the proof — it cannot distinguish a batched loop from an N+1 (see box note in the report, routed to ticket 35).
+   **DISPOSITION 2026-09-03 — one of the three recorded N+1s is NO LONGER BLOCKED. Register:
+   `reports/residual-risk-register.md` §3.5 and §1.3.** `pnpm check:db-call-count` re-run at head -> **exit 0**,
+   all patterns classified, `ACTIONABLE-UNDETECTED: 3 (ratchet 3)`.
+   **ASSIGNABLE A-4 — `clients/client-accounts.service.ts:483` is free. Owner: clients module owner. Deadline:
+   2026-09-08.** The note above says it "was being edited by another lane while this ran". **That is no longer
+   true**: `git status --short` shows 11 uncommitted paths in `streamlineos-backend` and this file is not among
+   them; its last commit is `9d840a1f`. The N+1 is still present — `reassignAccounts` (lines 483-490) issues one
+   `db.update(clientAccounts)` per distinct assignee inside `Promise.all(Object.entries(assignments).map(...))` —
+   and the batched form is already written down in `db-call-count-classification.json`: one `bulkUpdateFromValues`
+   keyed on id with `assignedCrmId` per row. `src/common/db/bulk-update.ts` exists, is chunked, makes the tenant
+   predicate mandatory, refuses a repeated key, and has its own spec.
+   **RESIDUAL R-6 — `party/party-legacy-employer.ts:213`. Blocker: SCOPE (it writes CRM's `contacts` table).
+   Owner: CRM/inventory release owner. Deadline: 2026-12-01 review.** Verified still true at head.
+   **RESIDUAL R-6b — `party/party-legacy-writer.ts:252` (`claimIdentifiers` per moved row). Blocker: DECISION
+   (`claimIdentifiers` owns a per-party conflict resolution whose bulk semantics need its owner). Owner: party
+   module owner. Deadline: 2026-09-17.** Verified still true at head.
+   **RESIDUAL R-6c — the 3 `ACTIONABLE-UNDETECTED` files (`hr-effective-change-applier`, `leave-approver`,
+   `approvals-bulk`). Blocker: TOOL (the per-row work is a service call, unmatchable by any pattern detector).
+   Owner: hr and timesheets owners. Deadline: 2026-09-17.**
 - [ ] Existence and authorization probes use tenant-correlated indexed predicates with `LIMIT 1` — never a fetch or a count when only existence is needed.
    PARTIAL: ~54 probes fixed in total. THIRD PASS added five read-then-write pairs, each verified individually
    against its preceding read and not swept: `hr-document-templates.setDefault` and `.updateVersion` (both had
@@ -118,6 +139,15 @@ Box 2 and box 3 remain open. Report: `reports/21b-n-plus-one-gate-blind-spot.md`
    `inv_packages(orgId, shipmentId)` — migration territory.
    PARTIAL: ~49 probes fixed in total (9 first pass, ~16 more across billing/payments, HR, notifications, storage, build and chat, then 24 in the second pass across billing/payments, chat and finance/ap). Remaining: a fresh scan of the eleven modules in this territory finds **248 where-clauses across 106 files with no `org_id`** — the earlier "~60" was a sample, not the population. The read-then-write pair is the dominant shape: an org-scoped read followed by a write keyed on the id alone, which discards the authorization the read performed. Also still open: 10 count-for-existence sites, 6 fetch-for-existence sites, and 1 unindexed probe needing `inv_packages(orgId, shipmentId)` — migration territory. Original first-pass note follows.
    FIRST PASS: 9 authorization probes on `projectMembers` / `chatHuddles` / `journalLines` given `org_id` equality (they were keyed on a surrogate id alone — BOLA-adjacent), one gained a missing `.limit(1)`, two gained `columns: { id: true }`. Inventoried and not fixed: ~60 more missing-`org_id` probes (billing/payments, e-sign public, crm metadata, hr workflows, platform), 10 count-for-existence sites, 6 fetch-for-existence sites, and 1 confirmed unindexed probe needing an index on `inv_packages(orgId, shipmentId)` — migration territory.
+   **DISPOSITION 2026-09-03. Register: `reports/residual-risk-register.md` §3.5.**
+   **RESIDUAL R-7 — what `team` scope SHOULD mean for leave approval ("reports to me" vs "shares my department").
+   Blocker: DECISION — it widens who may approve leave. Owner: HR product owner. Deadline: 2026-09-17.**
+   **RESIDUAL R-7b — the 79 write sites with no `org_id` in this ticket's eleven modules, the 10
+   count-for-existence sites, the 6 fetch-for-existence sites, and the 1 unindexed probe needing
+   `inv_packages(orgId, shipmentId)`. Blocker: territory (per-module) plus migration territory for the index.
+   Owner: per-module owners, routed by the release owner. Deadline: 2026-09-17.** These populations were NOT
+   independently recounted by the register pass — the blocker class was verified, the numbers were taken from
+   this ticket.
 - [x] Exact totals are opt-in and independently budgeted; a cursor page does not run a `COUNT(*)` on every request.
    CLOSED AS A RECORDED DECISION (product). Verified satisfied: `common/pagination/cursor.ts` over-fetches
    `limit + 1` and the sentinel is the `hasMore` signal; every sampled service gates its `count()` on
@@ -152,6 +182,13 @@ Box 2 and box 3 remain open. Report: `reports/21b-n-plus-one-gate-blind-spot.md`
    recorded rather than done because it changes those sweeps' transaction shape. ~5 candidate sites remain.
    PARTIAL: the missing `UPDATE … FROM (VALUES …)` helper now exists — `src/common/db/bulk-update.ts`, chunked under `BULK_UPDATE_CHUNK`, with the tenant predicate mandatory (not optional), an `extraWhere` for a caller's compare-and-set, and a refusal for a repeated key (Postgres joins the target row twice and applies one arbitrary row while silently discarding the rest). Four call sites converted: depreciation runs, depreciation reversals, the project custom-state reorder and the workflow stuck-execution release. Every shape those call sites depend on — numeric, `acc_asset_status` and `workflow_execution_status` enums, `jsonb`, a `uuid` key, a schema-qualified table (`build.project_statuses`) and the reserved word `"order"` — is executed against a database, because `tsc` cannot see inside a SQL string. ~8 of the dozen candidate sites remain. Original first-pass note follows.
    FIRST PASS: 6 conversions, each chunked under a named constant, two keyed on a real unique index so the constraint decides existence instead of a preceding probe. The tail is the same 49 ACTIONABLE files. About a dozen of them write different values per row and need `UPDATE … FROM (VALUES …)`; no helper for that exists in the repo and writing one would serve six call sites at once.
+   **DISPOSITION 2026-09-03. Register: `reports/residual-risk-register.md` §3.5.**
+   **RESIDUAL R-7c — `accounting/gl/recurring-journals` and `finance/ap/recurring-bills`. Blocker: DECISION, and
+   the recorded reasoning is that a bulk write is the WRONG remedy here — batching the `lastRunDate`/`nextRunDate`
+   advance widens the crash window from one template to up to 1,000, and every template whose document was already
+   spawned would spawn a duplicate on the next run. The right fix is one transaction per template, which changes
+   those sweeps' transaction shape. Owner: accounting and finance module owners. Deadline: 2026-09-17.** The
+   remaining "~5 candidate sites" were not independently recounted by the register pass.
 - [x] Counters, unread state, seats, balances, ordering and idempotency use atomic SQL, upsert or locking semantics with no read-then-write race.
    CLOSED for every money path. 8 races closed in the first pass; the second pass closed the four that were left. `billing/core/ai-credits.service.ts` — `SELECT … FOR UPDATE` locks nothing when the row does not exist, so on an organisation's FIRST purchase two payments both inserted and the loser died 23505 into a catch that returned the current balance: the customer paid and got no credits. Measured on a database (`scratch_t21b`): old shape leaves balance 5,000 for two concurrent 5,000 grants with one rejection; the upsert leaves 10,000 with none. All three grant paths now share one upsert whose balance moves in SQL, and the three specs that pinned the numeric-`SET` shape were rewritten to assert the new mechanism — mutation-tested (reverting the SQL increment to a JS literal fails both new assertions). `finance/ap/vendor-credits.service.ts`, `invoices/invoices-payment.service.ts` and `accounting/core/accounting-payables.service.ts` are the three tier-1 races: the first now carries its sufficiency test in the WHERE (zero rows = 409), the other two lock the invoice/bill row and re-sum under it. All three executed against a database: two concurrent full applies/payments leave exactly one committed and the projection matching the sum.
    PARTIAL (non-money remainder): `assertWithinLimit` is still check-then-act at 24 of 29 call sites; the four version-bump-without-CAS sites and the three `MAX(sortOrder)+1` sites are unchanged. Original first-pass note follows.

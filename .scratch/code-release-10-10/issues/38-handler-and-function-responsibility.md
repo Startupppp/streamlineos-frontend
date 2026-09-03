@@ -7,6 +7,8 @@
 **Status:** 5 of 6 closed — box 1 PARTIAL. S13 converted the 10 of the 16 named risky closures that fall in this territory; the 6 that remain are features/inventory (5) and features/crm (1), both out of release scope. The box still cannot tick, for the reason S11 recorded: clause two is written as an absolute and 1,562 inline arrows remain, deliberately out of scope. Reports: `reports/38-handler-responsibility.md`, `reports/38c-closure-residue.md`, `reports/30c-a11y-residue-and-query-gating.md` (S13)
 Routed findings 1-3 (outbox orphan + both gates) ADDRESSED — see `reports/38b-outbox-and-fire-and-forget.md`.
 
+**2026-09-03 residual-risk register:** box 1 = **R-10 / R-10b / R-10c**, ACCEPTED RESIDUAL. Clause two is NOT reopened; the release owner ratifies the exclusion (deadline 2026-09-10). Path correction: the five inventory paths in this ticket are missing their `components/` segment. See `reports/residual-risk-register.md` §3.9.
+
 - [ ] Non-trivial UI events and form actions use named, typed handlers whose names express user intent. No inline arrow or function expression appears in a JSX event prop.
       PARTIAL, and the two halves of this box now have different answers.
       **First clause — CLOSED for `features/build|hr|chat|notifications`.** Re-measured at head with the
@@ -61,6 +63,27 @@ Routed findings 1-3 (outbox orphan + both gates) ADDRESSED — see `reports/38b-
       `components/automations/ai-node-config-forms.tsx:380` and
       `features/surveys/respondent/simple-question-input.tsx:41` — are the same numeric-coercion rule and
       can now import `lib/numeric-field.ts` instead of retyping it.
+      **DISPOSITION 2026-09-03 — ACCEPTED RESIDUAL R-10, R-10b, R-10c. Clause two is NOT reopened. Register:
+      `reports/residual-risk-register.md` §3.9.**
+      **R-10 — clause two ("no inline arrow appears in a JSX event prop"), 1,562 occurrences. Blocker: DECISION,
+      already taken and recorded in writing above. Owner: release owner, to RATIFY the exclusion so this box's
+      failure to tick is an accepted decision rather than an unexplained gap. Deadline: 2026-09-10.** A coarse
+      recount at head returns **1,575** occurrences of an inline arrow opening a JSX event prop, consistent with
+      the 1,562 measured by this ticket's stricter scanner. Not reopened.
+      **R-10b — the 6 remaining risky closures. Blocker: SCOPE. Owner: CRM/inventory release owner. Deadline:
+      2026-12-01 review.** All 6 verified present at head.
+      **PATH CORRECTION — the five inventory paths above are missing their `components/` segment**, so a reader
+      checking them finds five missing files and would conclude the note was stale. They are
+      `features/inventory/components/order-line-table.tsx:146` ·
+      `features/inventory/components/receive-goods-sheet.tsx:381` ·
+      `features/inventory/components/stock/create-adjustment-sheet.tsx:119` ·
+      `features/inventory/components/stock/new-transfer-sheet.tsx:110` ·
+      `features/inventory/components/warehouse/warehouse-create-sheet.tsx:138`. The sixth,
+      `features/crm/autonomy/autonomy-switches-panel.tsx:116` (`onCheckedChange={(enabled) =>`), is correct as
+      written.
+      **R-10c — `components/hr/_onboarding/step-banking.tsx:33`'s `/^[A-Za-z\s]*$/` account-holder-name rule.
+      Blocker: DECISION (which characters a name may hold; a pasted "O'Brien" or a diacritic silently does
+      nothing). Owner: HR product owner. Deadline: 2026-09-17.**
 - [x] Handlers delegate validation and state-independent rules to explicitly named domain functions, and do not embed business logic or multi-step mutations.
 - [x] No handler-to-handler chain exists that adds no behaviour.
 - [x] Memoization of a handler is used only where referential identity affects memoization, subscription or effect correctness, and every dependency is verified.

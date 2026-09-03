@@ -16,6 +16,8 @@ resting on a hand-scan, and the blocked clause is RATCHETED at 1,441 unprojected
 closed and the global-users clause is locked by a spec; the residue is "which list endpoints may return less", which
 no further measurement can answer.
 
+**2026-09-03 residual-risk register:** box 1 = **R-5**, ACCEPTED RESIDUAL, blocker DECISION (product / API contract), owner release owner, deadline 2026-09-17. Gate re-verified exit 0 at 1,441/1,441 with count/existence at 0. See `reports/residual-risk-register.md` §3.4.
+
 Report: `reports/20-query-plans.md`. Raw plan trees: `reports/20-query-plans/plans-{large,mid,small}.{json,txt}`.
 Harness: `BE/test/perf/{heavy-query-fixtures,seed-heavy-query-load,heavy-query-catalog,heavy-query-catalog-{calendar,notifications,search,dashboard},heavy-query-plan-analysis,measure-heavy-query-plans}.mjs`.
 
@@ -125,6 +127,14 @@ Harness: `BE/test/perf/{heavy-query-fixtures,seed-heavy-query-load,heavy-query-c
     such decision — count paths, existence paths, and global-`users`/vector hydration — are **closed**, and the
     last pass proved the point by finding a count path that hydrated `survey_participants.accessTokenHash` to
     answer a `.length`.
+  **DISPOSITION 2026-09-03 — ACCEPTED RESIDUAL R-5. Blocker: DECISION (product / API contract). Owner: release
+  owner. Deadline: 2026-09-17.** Recorded for ticket 41 box 7; register: `reports/residual-risk-register.md` §3.4.
+  Blocker re-verified at head, not carried forward: `pnpm check:query-projections` -> **exit 0**, 3,575 files,
+  `findMany` 294 · `findFirst` 547 · bare `.select()` 600 = **1,441 against a ceiling of 1,441**, and
+  **unprojected COUNT/EXISTENCE paths 0 (allowed 0)**. That is the correct shape for this box: the two clauses
+  needing no contract decision are at zero and enforced, and the clause that needs one is ratcheted so it cannot
+  grow while the decision is outstanding. There is no measurement left that would close it — what is missing is a
+  product owner deciding which list endpoints may return less than they return today.
 - [x] The named heavy queries run against a production-shaped seed with plans captured.
   - `node test/perf/measure-heavy-query-plans.mjs --org={large,mid,small}` → **36 queries × 3 tenant sizes**, all eight named categories covered. Seed: 3 orgs, 66,613 calendar events (9,507 recurring), 140,360 event attendees, 266,400 notifications, 13,320 kb chunks, 18,500 `build.tickets`.
 - [x] Plans are taken as the application role with tenant context set, never as the database owner, so real authorization predicates are included.

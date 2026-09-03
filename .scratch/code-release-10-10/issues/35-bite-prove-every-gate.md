@@ -8,6 +8,8 @@
 BOX 7 — the gates still had never run, for two reasons neither of which 35b addressed.**
 See `reports/35d-gate-execution-and-bite-proofs-s12.md`.
 
+**2026-09-03 residual-risk register:** the last box = **R-9**, ACCEPTED RESIDUAL, blocker SCOPE, owner CRM/inventory release owner, deadline 2026-12-01 review. Both gates re-verified exit 0 at their ratchets. See `reports/residual-risk-register.md` §3.7.
+
 **S12 headline, measured 2026-09-03:** (1) NOTHING IS PUSHED — `git rev-list --count
 origin/main..HEAD` is **129 backend / 131 frontend**, so 35b's `gates` job has never reached
 GitHub; the newest real runs (BE 33622305895, FE 33622293615) are both on the PRE-35b workflow and
@@ -102,6 +104,15 @@ is blocked on another agent, on infrastructure or on a measurement.
       items become actionable the moment CRM and inventory enter scope and not before; touching them now would
       edit modules the release excludes. Both ratchets are capped at the current numbers, so the residue can only
       shrink, and neither can grow back silently. Left untouched, deliberately.
+      **DISPOSITION 2026-09-03 — ACCEPTED RESIDUAL R-9. Blocker: SCOPE (CRM and inventory are excluded from this
+      release). Owner: CRM/inventory release owner. Deadline: 2026-12-01 review.** Recorded for ticket 41 box 7;
+      register: `reports/residual-risk-register.md` §3.7.
+      Both gates re-run at head by the register pass, so the exclusion is measured and not carried forward:
+      `pnpm check:test-suppressions` -> **exit 0**, **2,029 spec files** (up from 2,013 — the corpus grew, the
+      residue did not) · 20 suppression sites · 27 conditional aliases -> conditional 28 (ratchet 28) ·
+      placeholder 13 · **quarantine 6 (ratchet 6)**. `pnpm check:transaction-callbacks` -> **exit 0**, **2,014 spec
+      files** · 264 files with a transaction double · 464 doubles -> invokes 255 · declared-unreached 7 · rejects 0
+      · **VOID 2 (ratchet 2)**. Both ratchets may only go down, so the residue cannot grow back silently.
 - [x] Text-based scans are validated against a known defect before being trusted.
       `check:db-call-count` reported ACTIONABLE 0 sitting over a confirmed N+1 at `payroll/runs/inputs.service.ts:187`. Two blind spots: a Drizzle chain split across lines (patterns tested one line at a time) and a helper receiving the db handle as an ARGUMENT (patterns only matched it as a receiver). Both fixed, both fixtured from that real code. Detected files 41 → 147; that line now reports REGRESSED. `check:hardcoded-secrets` was validated the other way — it flagged `calendar-webhook-secret.ts` where the only match was a header NAME; fixed and re-proven against four planted credential classes and two negatives.
 - [x] Coverage counts are honest: a path-filtered run that reports green while suites outside the filter are red is a false pass.

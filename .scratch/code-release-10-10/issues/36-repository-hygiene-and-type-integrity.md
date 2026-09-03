@@ -15,6 +15,8 @@ owner, not a cleanup. The one box left open is the per-site negative test on the
 blocked on territory for most sites and, for the 13 `narrow-me` ones, on the box's own requirement being the wrong
 remedy. See `reports/36-repo-hygiene.md`.
 
+**2026-09-03 residual-risk register:** box 7 splits into **A-5 ASSIGNABLE** (the three in-scope negative tests this box names and then records as not written — all three sites and all three spec files verified present, deadline 2026-09-08) plus **R-8** (the box's own requirement is wrong for the 13 `narrow-me` sites; the release owner amends it) and **R-8b**. See `reports/residual-risk-register.md` §1.4, §3.8.
+
 - [x] Fail-closed dead-code analysis over backend, frontend, shared packages, workers and scripts reports zero unclassified unused files, dependencies, exports and exported types in scope. Excluded modules and generated/vendor artifacts are reported separately, never silently included or deleted.
   - CLOSED. Both halves are green and, for the first time, both actually run. Backend `pnpm check:dead-code` exit 0 — 35 knip findings, **0 unclassified, 0 stale**, importer graph 9,812 files / 68,261 edges; self-test exit 0, 20 assertions. Frontend `pnpm check:dead-code` exit 0 — **0 unclassified**, down from 42 at the last pass: another lane landed the structural rule this ticket specified (`b119059e9`, "classify data-layer types structurally instead of one KEEP each"), which absorbed the ~36 Pattern-A types; Pattern B was **wired, not classified away** — `core-gl.ts:43,60` now parses with `glResponseContract`/`glAccountsContract` and `reports.ts:177` with `expenseByCategoryContract`, so those boundaries validate instead of being silenced; and the last one, `features/build/analytics/project-charts.tsx:CHART_COLORS`, was a genuinely dead barrel re-export and was removed. Excluded modules report separately (12 CRM/Inventory `EXCLUDED`, 9 generated/scratch `OUT-OF-SCOPE`), never counted and never deleted. **Both gates are now wired into CI** in the job with no `needs:` — backend `ci.yml` `gates`, frontend `frontend.yml` `gates` — which they were not before: they existed, passed, and no workflow named either.
   - Superseded PARTIAL from the previous pass: backend half is closed — the backend had NO dead-code gate at all; `src/scripts/check-dead-code.mjs` + `pnpm check:dead-code` now exist, fail-closed with a verdict ledger, stale-verdict detection, a scan floor and a 20-assertion self-test. `pnpm check:dead-code` exits 0 with 36 findings and 0 unclassified. CRM/Inventory classify EXCLUDED, generated paths OUT-OF-SCOPE. The frontend gate exits 1 on 42 unclassified exports (24 when this session started), every one in held territory and 40 of them created during the session by the contracts lane; the 2 in my territory are resolved. They are two patterns, not 42 problems: a structural rule for "the inferred type of a contract nested inside a contract parsed at a live boundary" would absorb ~36 and replace the gate's existing 27 hand-written KEEP verdicts, while a handful (`core-gl-schema.ts`, `reports-schema.ts`) are contracts NOTHING parses with — `core-gl.ts:9` says so itself — and want WIRE plus a consumer.
@@ -151,6 +153,28 @@ remedy. See `reports/36-repo-hygiene.md`.
     `db/query-telemetry.ts` (the proxy reaches the thenable branch only after checking for `.then`) — and those three
     are the concrete, in-scope remainder of this box.
     Not run: no negative test was written this pass, so nothing here is claimed as tested.
+  **DISPOSITION 2026-09-03 — one ASSIGNABLE item and two accepted residuals, and one of the residuals is a defect
+  in this box's own wording. Register: `reports/residual-risk-register.md` §3.8 and §1.4.**
+  Both ledgers re-run at head: BE `pnpm check:type-assertions` -> **exit 0**, 3,573 files, **26** `as unknown as`
+  in 16 files, **18 external / 8 narrow-me**, self-test exit 0. FE -> **exit 0**, 4,264 files, **7** in 6 files,
+  **2 external / 5 narrow-me**, self-test exit 0. Totals **33 sites · 20 external · 13 narrow-me** — exactly the
+  numbers this box records.
+  **ASSIGNABLE A-5 — write the three in-scope negative tests. Owner: observability / platform / db owners.
+  Deadline: 2026-09-08.** This box already names its own concrete remainder and then records "Not run: no negative
+  test was written this pass." All three sites and all three spec files were verified present at head:
+  `src/common/observability/tracing.ts:93` (traceparent capture-group arity) beside `tracing.spec.ts` ·
+  `src/modules/platform/operator-session.guard.ts:46` (`req.route` absent degrades to `req.url`) beside
+  `operator-session.guard.spec.ts` · `src/db/query-telemetry.ts:137,152,156` (the proxy reaches the thenable
+  branch only after checking `.then`) beside `query-telemetry.spec.ts`. Three tests in three files that already
+  have a spec neighbour.
+  **RESIDUAL R-8 — the 13 `narrow-me` sites. Blocker: the requirement as written is WRONG for them, and that is
+  an amendment only the release owner can make. Owner: release owner. Deadline: 2026-09-10.** Their recorded
+  remedy is to DELETE the cast; a per-site negative test would certify a cast the ledger already says must not
+  exist and would make its later removal look like a regression. The box should read "a per-site negative test for
+  each `external` site; a scheduled deletion for each `narrow-me` site."
+  **RESIDUAL R-8b — 17 of the 20 `external` sites. Blocker: territory (another lane's harnesses), a compile-time-
+  only invariant no runtime test can reach (the Drizzle-instantiation seam), and one vendored file. Owner:
+  per-lane owners. Deadline: 2026-09-17.**
 - [x] Every deletion is proven by dependency graph plus checks for Nest metadata and DI, Next.js file conventions, dynamic imports, raw SQL and table names, migrations, reflection, queues and events, cron registration, package scripts and side-effect imports. Text search alone is never sufficient.
   - Every one of the 9 deletions was proven by `pnpm exec knip --no-progress` (module graph) and cross-checked with a repo-wide symbol grep including specs, evals and scripts. The new backend gate models all four import kinds — side-effect, named, dynamic and re-export — over 9,795 files and 68,130 edges, and refuses to call anything under `src/db/schema/` dead on knip's word alone. Nothing under `migrations/`, no cron registration, no queue or outbox wiring and no package script was touched.
 - [x] Prove with a module-graph tool and confirm with a real build. A typecheck does not catch a missing side-effect import; a bare side-effect import is invisible to import search.

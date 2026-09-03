@@ -10,6 +10,8 @@ private in the Cloudflare console (`R2_BUCKET_NAME`, `R2_KB_BUCKET_NAME`). Re-ve
 `pnpm check:public-object-urls` exit 0 (9 declared references, 0 upload-result `url` fields) and `:self-test`
 exit 0.
 
+**2026-09-03 residual-risk register:** box 7 = **R-1 / R-2 / R-2b**, ACCEPTED RESIDUAL, blocker INFRA, owner infrastructure operator, deadline **2026-09-08 before cutover** (R-2b 2026-09-30). **R-1 and R-2 are the only items in the whole register that are a live data exposure rather than a code-quality residual.** See `reports/residual-risk-register.md` §3.6.
+
 **2026-09-03, box 6 — the coordinator flagged this box as falsely ticked and told me to untick it. I found a
 SECOND, independent reason it was false, fixed that one, and verified the first was fixed by another agent while
 I worked. Box 6 is re-ticked with both proofs under it and the whole history is left on the record so the
@@ -162,6 +164,20 @@ Fixed in commit `a6902e5e`. The two halves compose — reason A's fix writes the
          every object already sitting at a public r2.dev address stays fetchable by anyone who copied one, no
          matter what the database columns now say.
     Read the exit code, not the text: **exit 2 means "not visible to this role", never "nothing found."**
+  **DISPOSITION 2026-09-03 — ACCEPTED RESIDUAL R-1, R-2, R-2b. Blocker: INFRA (credentials and a console this
+  effort does not hold and must not use). Owner: infrastructure operator. Deadline: R-1 and R-2 **2026-09-08,
+  before cutover**; R-2b 2026-09-30.** Register: `reports/residual-risk-register.md` §3.6.
+  Code half re-verified at head, so nothing regressed while the box waits: `pnpm check:public-object-urls` ->
+  **exit 0** (9 public-base references, all 9 declared with a stated non-minting reason, **0 upload-result `url`
+  fields**) and `pnpm check:public-object-urls:self-test` -> **exit 0**.
+  **R-1 and R-2 are the only two items in this release's residual register that are a LIVE DATA EXPOSURE rather
+  than a code-quality residual, which is why they are dated before cutover and not with the other residuals.**
+  Until the buckets are made private, every object already sitting at a public r2.dev address stays fetchable by
+  anyone who ever copied one, whatever the database columns now say. Neither step substitutes for the other and
+  no code change substitutes for either.
+  **R-2b** — objects orphaned by KB trash purge BEFORE commit `0edadaa0` leave no database row at all, so the
+  backfill cannot find them; recovering them needs a bucket-side listing diffed against
+  `kb_page_attachments.file_key`. The ongoing leak is fixed; this is historical cleanup only.
 - [x] Referred in from ticket 31: a tenant's filename must not be interpolated into a log message, where the key-based redactor cannot reach it.
   - RE-AUDITED this session and one live leak was still there: `media-compression.service.ts` logged ``Video transcode for "${fileName}" produced no size saving`` — the filename in the message string, out of the redactor's reach, and `check:log-secrets` passes at 3,526 files because it cannot see inside an interpolated message. Moved to a structured field.
   - `storage-log-redaction.spec.ts` now also SOURCE-SCANS 9 files (the 3 AV scanners, media compression, the storage upload seam, the transform runner, the multipart service, the storage sweep) for a logger message template interpolating `fileName|filename|originalname|storageKey|fileKey|objectKey`, with a bite test and a false-positive test. 14 tests pass. Bite proven against the real file: reinstating the transcode line turned it red, restoring it green.

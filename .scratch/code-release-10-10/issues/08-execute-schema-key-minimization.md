@@ -11,6 +11,8 @@ bite-proved, not inferred: neither `tsc --noUnusedLocals` nor `knip` reports a n
 (both exit 0 on a hermetic probe built to contain one), so the only evidence a field-level removal
 could rest on is the text search this box forbids.
 
+**2026-09-03 residual-risk register:** box 4 = **R-11**, ACCEPTED RESIDUAL, blocker TOOL (permanent), owner release owner, deadline 2027-03-03 review. Bite proof rebuilt with anti-vacuous controls on both instruments. See `reports/residual-risk-register.md` §3.1.
+
 **2026-09-03 — the composite-FK-with-a-NULL-tenant-column sweep was run to completion, and it found two live
 holes that every previous pass on this ticket missed.** A composite FOREIGN KEY is MATCH SIMPLE, so it does not
 fire **at all** when ANY of its columns is NULL — the exact shape that produced this release's P1 cross-tenant
@@ -143,6 +145,24 @@ purge path was run, not reasoned about — **5/5** assertions including `DELETE 
       lane's in-flight work, reported not touched. Note the shape of the 65: they are unused *aliases*, not unused
       *fields*, so removing every one of them would not satisfy this box.
       **Explicitly not half-satisfied.** No field was removed on text-search evidence, and none should be.
+      **RESIDUAL RISK R-11 — ACCEPTED. Blocker: TOOL (permanent). Owner: release owner (revisit only if the
+      instrument is built). Deadline: 2027-03-03 review.** Recorded for ticket 41 box 7; register:
+      `reports/residual-risk-register.md` §3.1.
+      **The bite proof was REBUILT from scratch on 2026-09-03, not read off this ticket, and it now carries
+      anti-vacuous controls in both directions.** The probe recorded above is single-file, which makes its knip half
+      vacuous — knip treats an entry file's own exports as used by construction, so a single-file probe reports
+      nothing whether or not the tools can see a field. A three-file probe was used instead (`dto.ts` declaring the
+      DTO -> `service.ts` importing it -> `main.ts` as the entry), in a hermetic scratch tree with the backend's
+      `node_modules` symlinked in; the shared working tree was never touched.
+      · `tsc --noEmit --strict --noUnusedLocals --noUnusedParameters --esModuleInterop main.ts service.ts dto.ts`
+        (TypeScript 5.9.3) -> **exit 0** with two never-read DTO fields present.
+      · `knip --no-progress` (`entry: main.ts`) -> **exit 0**, zero findings.
+      · CONTROL, tsc: add one unused **local** -> **exit 2**, `TS6133: 'neverReadLocal' is declared but its value is
+        never read`. Reverted -> exit 0.
+      · CONTROL, knip: add one **unimported export** to `dto.ts` -> **exit 1**, `Unused exports (1)
+        neverImportedConst` + `Unused exported types (1) NeverImportedType`. Reverted -> exit 0.
+      Both instruments **bite** at the granularity they resolve and are **silent** on a field. The block is a
+      property of the tools, not of this codebase, and no further run should be spent on it.
 - [x] A removed field is proven removed at the boundary too — a bare `z.object({})` strips silently rather than rejecting, which turns a dropped field into a wrong-subject write rather than an error.
       `support_ticket_tags.orgId` is `notNull()`, so both insert sites are compile-enforced; the write is tenant-scoped in code instead of by the `trg_set_org_id` trigger.
       08b: the same argument now covers 10 more tables. `org_id` is declared `notNull()` on `hr_workflow_steps`, `email_sequence_steps`, `email_sequence_enrollments`, `vendor_candidate_submissions`, `onboarding_template_steps`, `key_results`, `competencies`, `hr_import_rows`, `support_ticket_messages` and `sign_bulk_send_rows`, so all 12 insert sites are compile-enforced. The composite FK now *refuses* a cross-tenant parent id instead of letting the trigger write the row into the parent's organisation — proven: an automation `support_internal_note` carrying another tenant's `ticketId` is refused with `23503`, where it previously succeeded.
