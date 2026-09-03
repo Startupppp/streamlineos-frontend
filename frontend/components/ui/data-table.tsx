@@ -40,6 +40,18 @@ function stopRowEvent(event: React.MouseEvent | React.KeyboardEvent): void {
   event.stopPropagation();
 }
 
+/**
+ * A row checkbox announced as "Select row" is indistinguishable from every
+ * other one in the table, so a screen-reader user has nothing to confirm which
+ * row they just selected. `selection.getRowLabel` supplies the row's own
+ * subject; the generic wording survives only where a call site has not given
+ * one yet, and `design-system-control-names.contract` counts those.
+ */
+function selectionRowLabel(rowLabel: string | undefined): string {
+  const trimmed = rowLabel?.trim();
+  return trimmed ? `Select ${trimmed}` : "Select row";
+}
+
 function readSortKey(row: unknown, key: string): string | number | boolean | null {
   if (row === null || typeof row !== "object") return null;
   const value: unknown = Reflect.get(row, key);
@@ -105,7 +117,7 @@ export function DataTable<T>({
           <Checkbox
             checked={table.getIsAllPageRowsSelected()}
             onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)}
-            aria-label="Select all"
+            aria-label="Select all rows on this page"
           />
         ),
         cell: ({ row }) =>
@@ -113,7 +125,9 @@ export function DataTable<T>({
             <Checkbox
               checked={row.getIsSelected()}
               onCheckedChange={(v) => row.toggleSelected(!!v)}
-              aria-label="Select row"
+              aria-label={selectionRowLabel(
+                selection.getRowLabel?.(row.original, row.index),
+              )}
               onClick={(e) => e.stopPropagation()}
             />
           ) : (

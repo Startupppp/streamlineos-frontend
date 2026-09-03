@@ -190,7 +190,11 @@ export function PayrollQueueTable({
       onRowClick={onRowClick}
       isLoading={isLoading}
       emptyState={emptyState}
-      selection={{ selected: selection, onChange: onSelectionChange }}
+      selection={{
+        selected: selection,
+        onChange: onSelectionChange,
+        getRowLabel: (row) => row.userName ?? "",
+      }}
       minWidth="900px"
     />
   );

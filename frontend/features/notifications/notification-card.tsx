@@ -169,6 +169,7 @@ export function NotificationCard({
             checked={selected}
             onCheckedChange={handleSelectChange}
             className="h-3.5 w-3.5"
+            aria-label={`Select notification: ${title}`}
           />
         </div>
       )}

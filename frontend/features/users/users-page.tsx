@@ -411,6 +411,7 @@ export function UsersPage() {
                   selected: selectedUserIds,
                   onChange: handleSelectionChange,
                   isRowSelectable: (user) => !user.isOwner,
+                  getRowLabel: (user) => user.name || user.email,
                 }}
                 sortState={{
                   field: sortBy,

@@ -255,7 +255,10 @@ export default function StockLevelsPage() {
           </Select>
         )}
         <Select value={stockStatusParam} onValueChange={handleStockStatusChange}>
-          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-[160px]")}>
+          <SelectTrigger
+            aria-label="Filter by stock level"
+            className={cn(FILTER_SELECT_TRIGGER, "text-xs w-[160px]")}
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

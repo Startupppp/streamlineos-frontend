@@ -6,6 +6,9 @@ import {
   Fragment,
   isValidElement,
   memo,
+  useEffect,
+  useRef,
+  useState,
   type ComponentType,
   type ReactNode,
 } from "react";
@@ -137,6 +140,26 @@ export interface StatCardGridSkeletonProps {
   className?: string;
 }
 
+/**
+ * The stats row scrolls horizontally at every breakpoint by design, and a
+ * `StatCard` with no `href` renders nothing focusable — so a keyboard user
+ * could not scroll it at all and never saw the cards past the fold. That is
+ * WCAG 2.1.1, and axe reported `scrollable-region-focusable` on it across five
+ * routes.
+ *
+ * The fix axe asks for is a bare `tabIndex={0}`, and taken literally it puts a
+ * tab stop on nearly every list page in the product whether or not the row
+ * overflows — a cost paid on every page for a problem that only exists on some
+ * of them. So the tab stop follows the actual overflow: measured on mount and
+ * on every resize, the row is tabbable exactly when there is something off
+ * screen to reach, and disappears from the tab order when all the cards fit.
+ * A row that carries links is already reachable through them and stays out of
+ * the tab order either way.
+ *
+ * The stop is a labelled `group` rather than an anonymous `div`, because
+ * landing on an unnamed tab stop tells a screen-reader user nothing about why
+ * focus stopped there.
+ */
 export function StatCardGrid({
   children,
   cols = 4,
@@ -144,13 +167,39 @@ export function StatCardGrid({
 }: StatCardGridProps) {
   const childCount = countGridChildren(children);
   const columnCount = childCount > 0 ? childCount : cols;
+  const ref = useRef<HTMLDivElement>(null);
+  const [scrollableWithoutFocus, setScrollableWithoutFocus] = useState(false);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    const measure = () => {
+      const scrolls = element.scrollWidth - element.clientWidth > 1;
+      const focusable = element.querySelector(
+        "a[href], button, input, select, textarea, [tabindex]",
+      );
+      setScrollableWithoutFocus(scrolls && focusable === null);
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return undefined;
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    for (const child of Array.from(element.children)) observer.observe(child);
+    return () => observer.disconnect();
+  }, [children]);
 
   return (
     <div
+      ref={ref}
+      data-slot="stat-card-grid"
+      {...(scrollableWithoutFocus
+        ? { tabIndex: 0, role: "group", "aria-label": "Summary statistics" }
+        : {})}
       className={cn(
         "grid w-full min-w-0 shrink-0 gap-3",
         "overflow-x-auto scrollbar-hide touch-pan-x snap-x snap-mandatory md:snap-none",
         "[&>*]:min-w-0 [&>*]:h-full [&>*]:snap-start",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         className,
       )}
       style={{

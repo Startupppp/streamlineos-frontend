@@ -133,7 +133,11 @@ export function SurveyParticipantsPage({ surveyId: surveyIdParam }: SurveyPartic
               columns={columns}
               getRowKey={(row) => row.id}
               isLoading={isLoading}
-              selection={{ selected, onChange: setSelected }}
+              selection={{
+                selected,
+                onChange: setSelected,
+                getRowLabel: (row) => row.name ?? row.email ?? "",
+              }}
             />
           ) : (
             <EmptyState

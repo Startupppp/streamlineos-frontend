@@ -356,7 +356,10 @@ export function ChartOfAccountsPage() {
             searchPlaceholder="Search by code or name..."
           />
           <Select value={typeFilter} onValueChange={handleTypeChange}>
-            <SelectTrigger className={cn("w-[160px]", FILTER_SELECT_TRIGGER)}>
+            <SelectTrigger
+              aria-label="Filter by account type"
+              className={cn("w-[160px]", FILTER_SELECT_TRIGGER)}
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

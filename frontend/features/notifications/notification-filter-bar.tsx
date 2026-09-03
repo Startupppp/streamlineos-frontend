@@ -248,7 +248,10 @@ export function NotificationFilterBar({
       </ResponsivePopover>
 
       <Select value={activeSection} onValueChange={handleSectionSelect}>
-        <SelectTrigger className={cn("hidden sm:flex w-[160px] shrink-0", FILTER_SELECT_TRIGGER)}>
+        <SelectTrigger
+          aria-label="Notification section"
+          className={cn("hidden sm:flex w-[160px] shrink-0", FILTER_SELECT_TRIGGER)}
+        >
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

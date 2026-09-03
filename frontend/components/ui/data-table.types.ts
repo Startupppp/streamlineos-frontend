@@ -39,6 +39,14 @@ export interface DataTableProps<T> {
     selected: Set<string | number>;
     onChange: (sel: Set<string | number>) => void;
     isRowSelectable?: (row: T) => boolean;
+    /**
+     * Names the row a selection checkbox belongs to. Without it every checkbox
+     * in the table is announced identically, so a screen-reader user selecting
+     * the fourth row hears the same words as the first and has nothing to
+     * confirm the selection against. Return the row's own subject — a name, a
+     * title, a reference — not a position.
+     */
+    getRowLabel?: (row: T, index: number) => string;
   };
   pagination?: ClientPagination | ServerPagination;
   isLoading?: boolean;

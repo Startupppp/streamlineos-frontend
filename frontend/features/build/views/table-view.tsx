@@ -287,7 +287,11 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
         data={tickets}
         columns={columns}
         getRowKey={(ticket) => ticket.id}
-        selection={selection}
+        selection={
+          selection
+            ? { ...selection, getRowLabel: (ticket: Ticket) => ticket.title }
+            : undefined
+        }
         pagination={{ pageSize: 50 }}
         minWidth="640px"
         className="w-full min-w-0 overflow-hidden"

@@ -105,7 +105,11 @@ export function AllWorkTableSection({
         columns={tableColumns}
         getRowKey={(row) => row.id}
         onRowClick={(row) => onTicketClick(row.id)}
-        selection={{ selected: tableSelection, onChange: onSelectionChange }}
+        selection={{
+          selected: tableSelection,
+          onChange: onSelectionChange,
+          getRowLabel: (row) => row.title,
+        }}
         minWidth="640px"
         className={cn(PM_PANEL_SOLID, "overflow-hidden")}
       />

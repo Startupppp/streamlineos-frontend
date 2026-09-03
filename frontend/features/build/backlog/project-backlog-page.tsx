@@ -285,7 +285,11 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
             columns={columns}
             getRowKey={(ticket) => ticket.id}
             onRowClick={handleRowClick}
-            selection={{ selected: selectedIds, onChange: handleSelectionChange }}
+            selection={{
+              selected: selectedIds,
+              onChange: handleSelectionChange,
+              getRowLabel: (ticket) => ticket.title ?? "",
+            }}
             minWidth="640px"
             className="border-0 rounded-none flex-1 min-h-0"
             emptyState={
