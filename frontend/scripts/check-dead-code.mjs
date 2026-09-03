@@ -68,6 +68,7 @@ const EXPORT_VERDICTS = new Map([
   ["lib/command-catalog.ts:ChatCommandName", { verdict: "KEEP", reason: "keyof typeof CHAT_COMMANDS — available for consumers that need a typed command-name union without importing the full catalog" }],
   ["lib/command-catalog.ts:CommandDomain", { verdict: "KEEP", reason: "keyof typeof ALL_COMMANDS — available for consumers that iterate over command domains" }],
   ["features/hr/expenses/expense-constants.ts:ReceiptFileKind", { verdict: "KEEP", reason: "re-exported type from lib/expense-receipts; provides stable import path for consumers that need the kind union without importing the full receipts module" }],
+  ["hooks/api/meetings-ai.ts:useMeetingFollowUp", { verdict: "KEEP", reason: "the buffered POST /ai/meetings/follow-up client, deliberately kept beside streamMeetingFollowUp now that meeting-follow-up-panel streams; the buffered route returns a Zod-validated record this release does not stream, and a previous pass deleted a buffered hook before its surface had moved and broke the live panel" }],
 ]);
 
 function checkStaleVerdicts(verdicts, processedKeys) {
