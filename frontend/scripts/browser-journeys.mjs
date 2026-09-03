@@ -15,8 +15,15 @@
  *   - the document never scrolls horizontally at 375, 768 or 1280, and the
  *     widest offending element is named when it does
  *   - painted text meets WCAG AA against the colour actually behind it
+ *   - axe-core runs against the tree the product actually PAINTS, which is the
+ *     one blind spot the static ARIA census names in its own header: it cannot
+ *     see through a PascalCase component, cannot prove a runtime-computed name
+ *     is non-empty, and honours an id threaded through a prop by name rather
+ *     than by proof. Here `<Dialog>` is expanded and every id either resolves
+ *     in the document or does not.
  *   - a real mutation, driven through the UI, SURVIVES A RELOAD — see
- *     WRITE_JOURNEYS. Reads rendering is not the product working.
+ *     WRITE_JOURNEYS. Reads rendering is not the product working, and one
+ *     module's create dialog is not "the main module flows".
  *
  *   node scripts/browser-journeys.mjs --self-test
  *   node scripts/browser-journeys.mjs \
@@ -26,8 +33,9 @@
  *
  * Budgets govern authenticated surfaces, so an unauthenticated run is refused
  * rather than reported as a pass — and so is a run that reached fewer steps
- * than it planned, one where most steps rendered the error page, or one whose
- * write never landed.
+ * than it planned, one where most steps rendered the error page, one whose
+ * write never landed, or one where axe failed to run on a step it probed. A
+ * step axe never judged is not a step with no violations.
  *
  * `--allow-cross-origin-api` turns the BROWSER's CORS check off, for the case
  * where the API's allowlist does not name the port the harness is serving the
@@ -37,6 +45,7 @@
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
 import { join, resolve, dirname } from "node:path";
 import { tmpdir } from "node:os";
 import { randomBytes } from "node:crypto";
@@ -95,6 +104,64 @@ const JOURNEYS = [
 ];
 
 /**
+ * The three page expressions every write journey is built from. Builders, not
+ * copied literals: the same three shapes recur across modules, and a copy per
+ * journey is how one of them quietly stops going through React's value setter
+ * and starts writing a string the framework never sees — which submits an empty
+ * form and reports it as a product defect.
+ */
+function clickByName(name, scope) {
+  const root = scope ? `document.querySelector(${JSON.stringify(scope)})` : "document";
+  return `(() => {
+    const root = ${root};
+    if (!root) return false;
+    const named = (el) =>
+      (el.getAttribute("aria-label") || el.textContent || "").trim().replace(/\\s+/g, " ");
+    const button = Array.from(root.querySelectorAll("button, [role='button']")).find(
+      (el) => named(el) === ${JSON.stringify(name)} && el.offsetParent !== null && !el.disabled,
+    );
+    if (!button) return false;
+    button.click();
+    return true;
+  })()`;
+}
+
+/**
+ * React owns a controlled input's value, so assigning `.value` is discarded on
+ * the next render and the form submits blank. The native prototype setter plus
+ * a bubbling `input` event is the only way a script reaches one — and the
+ * expression returns whether the value actually STUCK, not whether it was
+ * attempted, so a field that silently rejected it fails the step.
+ */
+function setFieldValue(selector, valueExpression) {
+  return `(() => {
+    const field = document.querySelector(${JSON.stringify(selector)});
+    if (!field) return false;
+    const value = ${valueExpression};
+    const proto =
+      field.tagName === "TEXTAREA"
+        ? window.HTMLTextAreaElement.prototype
+        : window.HTMLInputElement.prototype;
+    Object.getOwnPropertyDescriptor(proto, "value").set.call(field, value);
+    field.dispatchEvent(new Event("input", { bubbles: true }));
+    return field.value === value;
+  })()`;
+}
+
+function submitDialogForm() {
+  return `(() => {
+    const dialog = document.querySelector('div[role="dialog"]');
+    if (!dialog) return false;
+    const submit = Array.from(dialog.querySelectorAll('button[type="submit"]')).find(
+      (el) => el.offsetParent !== null && !el.disabled,
+    );
+    if (!submit) return false;
+    submit.click();
+    return true;
+  })()`;
+}
+
+/**
  * WRITE journeys. Every step above is a route plus an inert interaction, and a
  * sweep made only of those cannot tell a working product from a read-only one:
  * a page that renders is not a page that saves. These drive a real mutation
@@ -105,6 +172,17 @@ const JOURNEYS = [
  * load can name without knowing what the value was before. The subject is
  * unique per run, so a row left by an earlier run can never be mistaken for
  * this one's, and the run asserts the subject is ABSENT before it writes.
+ *
+ * ONE MODULE'S WRITE IS NOT COVERAGE. A single create journey proves the
+ * harness can drive a mutation; it says nothing about whether the other seven
+ * areas the read sweep visits can save anything at all. Each write below is a
+ * different module, a different backend service and a different table, and the
+ * self-test refuses a set that collapses back onto one module. They are
+ * deliberately different SHAPES too — an inline column composer, a modal form
+ * with two required fields, a modal form that navigates away on success, and a
+ * form whose submit opens a confirmation the run must also drive — because a
+ * harness that can only work one shape of dialog will report the next one as a
+ * product defect.
  */
 const WRITE_JOURNEYS = [
   {
@@ -152,11 +230,182 @@ const WRITE_JOURNEYS = [
       },
     ],
   },
+  {
+    name: "accounting-create-account",
+    route: "/accounting/coa",
+    reloadVia: "/dashboard",
+    absent: `!document.body.innerText.includes("{subject}")`,
+    present: `document.body.innerText.includes("{subject}")`,
+    actions: [
+      { label: "open the new-account dialog", expression: clickByName("New account") },
+      /**
+       * The code is derived from the subject rather than drawn separately, so
+       * one unique value per run governs both fields and a half-completed run
+       * cannot leave a code that collides with the next one.
+       */
+      {
+        label: "type the account code",
+        expression: setFieldValue(
+          'div[role="dialog"] input[name="code"]',
+          `"{subject}".replace(/\\D/g, "").slice(-6)`,
+        ),
+      },
+      {
+        label: "type the account name",
+        expression: setFieldValue('div[role="dialog"] input[name="name"]', `"{subject}"`),
+      },
+      { label: "submit the account form", expression: submitDialogForm() },
+    ],
+  },
+  {
+    name: "workflows-create-workflow",
+    route: "/workflows",
+    reloadVia: "/dashboard",
+    absent: `!document.body.innerText.includes("{subject}")`,
+    present: `document.body.innerText.includes("{subject}")`,
+    actions: [
+      { label: "open the new-workflow dialog", expression: clickByName("New Workflow") },
+      {
+        label: "type the workflow name",
+        expression: setFieldValue('div[role="dialog"] input[name="name"]', `"{subject}"`),
+      },
+      /**
+       * This submit navigates to the builder, so the assertion cannot be made
+       * on the page that did the writing at all — which is the point. The run
+       * leaves via `reloadVia` and comes back to the listing regardless.
+       */
+      { label: "submit and open the builder", expression: submitDialogForm() },
+    ],
+  },
+  {
+    name: "hr-create-holiday",
+    route: "/hr/attendance",
+    reloadVia: "/dashboard",
+    absent: `!document.body.innerText.includes("{subject}")`,
+    present: `document.body.innerText.includes("{subject}")`,
+    actions: [
+      { label: "type the holiday name", expression: setFieldValue("#holiday-name", `"{subject}"`) },
+      { label: "submit the holiday form", expression: clickByName("Add Holiday") },
+      /**
+       * Submitting only opens a confirmation. A run that stopped at the first
+       * click would report a write it never made, so the confirm is a step of
+       * the journey rather than something the harness waves through.
+       */
+      {
+        label: "confirm in the alert dialog",
+        expression: clickByName("Add", 'div[role="alertdialog"]'),
+      },
+    ],
+  },
 ];
 
 /** `{subject}` is the only substitution a write expression may carry. */
 export function substituteSubject(expression, subject) {
   return expression.split("{subject}").join(subject);
+}
+
+/**
+ * RUNTIME accessibility, and specifically the half no static walk can reach.
+ *
+ * `components/__tests__/aria-semantics.contract.test.ts` censuses names, roles
+ * and ARIA references over 3,652 source files, and its own header lists what
+ * that cannot see: anything inside a PascalCase component (`<Dialog>`'s
+ * semantics are behind an import), a name computed at runtime (`aria-label=
+ * {label}` counts as named without proving `label` is non-empty), and an id
+ * threaded through a prop, which it honours BY NAME rather than by proof.
+ * Every one of those blind spots exists because the tree it judges is source.
+ *
+ * Here the tree is the render. axe-core runs in the engine that painted the
+ * page, on the same steps at the same three widths, so `<Dialog>` is expanded,
+ * `aria-label={label}` has resolved to a string or to nothing, and an
+ * `aria-labelledby` either finds its id in the document or does not.
+ *
+ * IT IS STILL NOT COVERAGE. axe judges only what a page happened to render —
+ * a dialog nobody opened is invisible to it — and neither instrument can tell
+ * whether a name is the RIGHT name: `aria-label="Button"` on a delete control
+ * passes both. The two together are a floor.
+ *
+ * `color-contrast` is off because this harness already measures contrast
+ * against the colour actually behind each text node and reports it as its own
+ * finding kind; running both would count the same pixels twice under two
+ * different methods and make each look like corroboration of the other.
+ */
+const AXE_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"];
+const AXE_RULES_OFF = ["color-contrast"];
+const AXE_TIMEOUT_MS = 25000;
+
+export function axeExpression(tags, rulesOff, timeoutMs) {
+  return `(() => {
+    if (typeof window.axe === "undefined")
+      return Promise.resolve({ ran: false, reason: "axe-not-injected" });
+    const rules = {};
+    for (const id of ${JSON.stringify(rulesOff)}) rules[id] = { enabled: false };
+    const run = window.axe
+      .run(document, { runOnly: { type: "tag", values: ${JSON.stringify(tags)} }, rules })
+      .then((r) => ({
+        ran: true,
+        rulesEvaluated:
+          r.passes.length + r.violations.length + r.incomplete.length + r.inapplicable.length,
+        nodesChecked:
+          r.passes.reduce((n, x) => n + x.nodes.length, 0) +
+          r.violations.reduce((n, x) => n + x.nodes.length, 0) +
+          r.incomplete.reduce((n, x) => n + x.nodes.length, 0),
+        violations: r.violations.map((v) => ({
+          id: v.id,
+          impact: v.impact,
+          nodes: v.nodes.length,
+          targets: v.nodes.slice(0, 2).map((n) => String(n.target)),
+        })),
+      }))
+      .catch((e) => ({ ran: false, reason: String((e && e.message) || e) }));
+    return Promise.race([
+      run,
+      new Promise((res) => setTimeout(() => res({ ran: false, reason: "axe-timeout" }), ${timeoutMs})),
+    ]);
+  })()`;
+}
+
+const AXE_EXPRESSION = axeExpression(AXE_TAGS, AXE_RULES_OFF, AXE_TIMEOUT_MS);
+
+/**
+ * A step where axe never ran is NOT a step with no violations, and the whole
+ * value of this instrument dies the moment those two are conflated — a broken
+ * injection would otherwise turn every page green at once. The verdict keeps
+ * them as different shapes so no caller can read one as the other.
+ */
+export function axeVerdict(result) {
+  if (!result || result.ran !== true)
+    return {
+      ran: false,
+      reason: (result && result.reason) || "no-result",
+      nodesChecked: 0,
+      rulesEvaluated: 0,
+      violations: [],
+    };
+  return {
+    ran: true,
+    reason: null,
+    nodesChecked: result.nodesChecked ?? 0,
+    rulesEvaluated: result.rulesEvaluated ?? 0,
+    violations: result.violations ?? [],
+  };
+}
+
+/** The mirror of `stepsIncomplete` and `writesIncomplete`, for the a11y pass. */
+export function axeIncomplete(ran, probed) {
+  return ran < probed;
+}
+
+/**
+ * axe-core reaches this repo through jest-axe, its only declared dependency on
+ * it. Resolving by name from jest-axe's own root keeps the pnpm store path out
+ * of this file — a hardcoded `.pnpm/axe-core@x.y.z` would rot on the next
+ * install and the run would silently lose its a11y pass.
+ */
+export function axeSourcePath() {
+  const here = createRequire(import.meta.url);
+  const fromJestAxe = createRequire(here.resolve("jest-axe/package.json"));
+  return fromJestAxe.resolve("axe-core/axe.min.js");
 }
 
 /**
@@ -655,6 +904,87 @@ function runSelfTest() {
     "BITE — a run whose write never landed is incomplete, not a clean read-only run",
     writesIncomplete(0, 1),
   );
+  assert(
+    "the writes span four distinct modules, so a green run is not one create dialog four times",
+    new Set(WRITE_JOURNEYS.map((w) => w.route.split("/")[1])).size >= 4,
+  );
+  assert(
+    "no two write journeys write on the same route",
+    new Set(WRITE_JOURNEYS.map((w) => w.route)).size === WRITE_JOURNEYS.length,
+  );
+  assert(
+    "every write subject is unique to its journey, so one row cannot satisfy two of them",
+    new Set(WRITE_JOURNEYS.map((w) => w.name)).size === WRITE_JOURNEYS.length,
+  );
+  assert(
+    "a controlled field is set through React's own value setter, never by assignment",
+    /HTMLInputElement\.prototype/.test(setFieldValue("#x", '"y"')) &&
+      /new Event\("input", \{ bubbles: true \}\)/.test(setFieldValue("#x", '"y"')),
+  );
+  assert(
+    "BITE — setting a field reports whether the value STUCK, not whether it was attempted",
+    /return field\.value === value;/.test(setFieldValue("#x", '"y"')),
+  );
+  assert(
+    "clicking by name matches the whole accessible name, never a substring",
+    /named\(el\) === "Save"/.test(clickByName("Save")),
+  );
+  assert(
+    "a scoped click looks only inside its own overlay",
+    clickByName("Add", 'div[role="alertdialog"]').includes(
+      'document.querySelector("div[role=\\"alertdialog\\"]")',
+    ),
+  );
+
+  const axeSample = {
+    ran: true,
+    rulesEvaluated: 90,
+    nodesChecked: 640,
+    violations: [{ id: "aria-valid-attr-value", impact: "critical", nodes: 2, targets: ["#a"] }],
+  };
+  assert("an axe result that ran reports its violations", axeVerdict(axeSample).violations.length === 1);
+  assert(
+    "an axe result that ran carries a denominator, so a clean page is a measured page",
+    axeVerdict(axeSample).nodesChecked === 640 && axeVerdict(axeSample).rulesEvaluated === 90,
+  );
+  assert(
+    "BITE — a step where axe never ran is not a step with zero violations",
+    axeVerdict({ ran: false, reason: "axe-not-injected" }).ran === false &&
+      axeVerdict(undefined).ran === false,
+  );
+  assert(
+    "BITE — an axe pass that ran on fewer steps than were probed makes the run incomplete",
+    axeIncomplete(62, 63) && axeIncomplete(63, 63) === false,
+  );
+  assert(
+    "the axe expression cannot resolve to a violation-free result when axe is absent",
+    AXE_EXPRESSION.includes('reason: "axe-not-injected"') &&
+      AXE_EXPRESSION.includes('reason: "axe-timeout"'),
+  );
+  assert(
+    "axe judges the WCAG A and AA rule sets, not a hand-picked subset",
+    AXE_TAGS.includes("wcag2a") && AXE_TAGS.includes("wcag2aa") && AXE_TAGS.includes("wcag21aa"),
+  );
+  assert(
+    "contrast is measured once, by this harness, not twice under two methods",
+    AXE_RULES_OFF.includes("color-contrast") &&
+      AXE_EXPRESSION.includes('rules[id] = { enabled: false }'),
+  );
+  /**
+   * Without this the a11y pass degrades to nothing the day the dependency
+   * moves: every step records `axe-not-injected`, and a reader skimming the
+   * finding counts sees an unfamiliar kind rather than a missing instrument.
+   */
+  let axePath = null;
+  try {
+    axePath = axeSourcePath();
+  } catch {
+    axePath = null;
+  }
+  assert(
+    "axe-core resolves on disk, so the run can never quietly ship without its a11y pass",
+    typeof axePath === "string" && existsSync(axePath) && readFileSync(axePath, "utf8").length > 100000,
+  );
 
   for (const f of failures) console.error(`✖  self-test FAILED: ${f}`);
   if (failures.length > 0) {
@@ -719,6 +1049,15 @@ async function main() {
   const steps = [];
   const writes = [];
   const tokens = {};
+  let axeStepsRun = 0;
+  let axeNodesChecked = 0;
+
+  /**
+   * Read before the browser is driven anywhere. A missing axe-core must stop
+   * the run, not turn every page green — the whole point of the pass is that
+   * its absence is louder than its silence.
+   */
+  const axeSource = readFileSync(axeSourcePath(), "utf8");
 
   try {
     await waitForDevTools(debugPort, 20000);
@@ -736,6 +1075,12 @@ async function main() {
       httpOnly: true,
       path: "/",
     });
+    /**
+     * On EVERY new document, not once: the run navigates ~70 times and an
+     * injection made only into the first page would leave every later step
+     * reporting `axe-not-injected`.
+     */
+    await cdp.send("Page.addScriptToEvaluateOnNewDocument", { source: axeSource });
     log(`browser ${browserPath} · base ${baseUrl} · widths ${widths.join("/")}`);
     if (allowCrossOriginApi)
       log("⚠  --allow-cross-origin-api: the browser's CORS check is OFF — this run is not evidence that CORS is configured");
@@ -840,6 +1185,17 @@ async function main() {
             (c) => !isUnresolvedSample(c) && c.ratio !== null && c.ratio < c.need,
           );
 
+          const axeRaw = await cdp.send("Runtime.evaluate", {
+            expression: AXE_EXPRESSION,
+            returnByValue: true,
+            awaitPromise: true,
+          });
+          const axe = axeVerdict(axeRaw.result?.value);
+          if (axe.ran) {
+            axeStepsRun += 1;
+            axeNodesChecked += axe.nodesChecked;
+          }
+
           steps.push({
             width,
             journey: journey.name,
@@ -854,7 +1210,24 @@ async function main() {
             contrastSampled: probe.contrast.length,
             contrastUnresolved: unresolved.length,
             contrastFailures: contrastFailures.length,
+            axeRan: axe.ran,
+            axeNodesChecked: axe.nodesChecked,
+            axeRulesEvaluated: axe.rulesEvaluated,
+            axeViolations: axe.violations.length,
           });
+
+          if (!axe.ran)
+            findings.push({ width, journey: journey.name, route, kind: "axe-not-run", reason: axe.reason });
+          for (const v of axe.violations)
+            findings.push({
+              width,
+              journey: journey.name,
+              route,
+              kind: `axe:${v.id}`,
+              impact: v.impact,
+              nodes: v.nodes,
+              targets: v.targets,
+            });
 
           if (probe.signIn)
             findings.push({ width, journey: journey.name, route, kind: "unauthenticated", landed: probe.url });
@@ -976,6 +1349,12 @@ async function main() {
     writesPlanned: WRITE_JOURNEYS.length,
     writesAsserted: writes.filter((w) => w.asserted).length,
     writes,
+    axeTags: AXE_TAGS,
+    axeRulesDisabled: AXE_RULES_OFF,
+    axeStepsProbed: steps.length,
+    axeStepsRun,
+    axeNodesChecked,
+    axeViolations: findings.filter((f) => String(f.kind).startsWith("axe:")).length,
     findings,
     steps,
   };
@@ -986,7 +1365,9 @@ async function main() {
   const writesAsserted = writes.filter((w) => w.asserted).length;
   log(
     `${steps.length} of ${planned} planned steps run · ` +
-      `${writesAsserted} of ${WRITE_JOURNEYS.length} writes asserted · ${findings.length} findings`,
+      `${writesAsserted} of ${WRITE_JOURNEYS.length} writes asserted · ` +
+      `axe ran on ${axeStepsRun} of ${steps.length} steps over ${axeNodesChecked} nodes · ` +
+      `${findings.length} findings`,
   );
   for (const [kind, count] of Object.entries(byKind).sort()) console.log(`   ${kind}: ${count}`);
   console.log(`results -> ${outPath}`);
@@ -1027,6 +1408,18 @@ async function main() {
     console.error(
       `✖  only ${writesAsserted} of ${WRITE_JOURNEYS.length} write journeys were asserted — ` +
         "this run proved reads render, not that a write survives a reload",
+    );
+    process.exit(1);
+  }
+  /**
+   * And the same refusal for the a11y pass. A step axe never judged reports no
+   * violations, which is indistinguishable from a clean page unless the run
+   * says so out loud.
+   */
+  if (axeIncomplete(axeStepsRun, steps.length)) {
+    console.error(
+      `✖  axe ran on only ${axeStepsRun} of ${steps.length} probed steps — ` +
+        "the steps it missed are unmeasured, not clean",
     );
     process.exit(1);
   }
