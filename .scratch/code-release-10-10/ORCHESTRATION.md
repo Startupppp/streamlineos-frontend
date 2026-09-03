@@ -1191,3 +1191,61 @@ The 4 SKIPs: backend `typecheck` and both `build`s behind `--with-heavy`, and
 
 **A gate that did not run is not a gate that passed**, and 16 of these must be resolved or
 accepted with a named owner and deadline before ticket 41 box 7 can close.
+
+## Six "blocked" boxes that are not blocked — 2026-09-03
+
+An agent whose only job was to DOUBT every stated blocker found that six of eleven open boxes
+were not risks at all, just unowned work. Two are real defects nobody had recorded.
+
+- **88 routes answer `500 INTERNAL_ERROR` to a VALID SAME-TENANT request.** Untriaged and
+  unrecorded anywhere until now: hr 37, build 10, finance 9, plus 12 other modules. Two routes of
+  exactly this shape already turned out to be a **write-on-a-GET violating a composite FK**, so
+  this population is where the next real defects are. **This is the single highest-value open
+  item in the release.**
+- **Three e-sign routes leak cross-tenant reads.** The count is 3, not 4 — `…/audit` already calls
+  `mustGetVisibleEnvelope`. `fields`, `recipients` and `documents` are a bare `findMany` returning
+  `[]` / 200 for another tenant. Remedy is in the same directory.
+- **468 of the 1,138 "unprobeable" BOLA routes are unprobed only because the probe sends no request
+  body** — 41% of that set, 24% of the whole surface. Nobody had ever opened the 1,138.
+  `check:openapi-coverage` is exit 0 at 1,371/1,371 mutating ops carrying a body schema, so the
+  input already exists. A harness gap, not infrastructure.
+- `clients/client-accounts.service.ts:483` is **no longer held by another lane**; the batched form
+  is already written in the gate baseline (ticket 21).
+- Ticket 36's three in-scope negative tests: all three sites and all three spec files verified
+  present, recorded as "Not run".
+- `/ai/meetings/follow-up/stream` genuinely does not exist (10 stream routes enumerated), so
+  ticket 11's last piece is real, scoped backend work in `src/modules/ai/**`.
+
+**Two tickets were materially wrong and are corrected in place:** ticket 15's stated blocker was
+false (all three classes are closed), and ticket 38's five inventory paths were missing their
+`components/` segment, so any checker would report five missing files.
+
+**A bite proof in ticket 08 was itself VACUOUS** — its single-file probe made the knip half prove
+nothing. Rebuilt with a 3-file probe and anti-vacuous controls in BOTH directions (tsc exit 0 on a
+field / exit 2 on an unused local; knip exit 0 on a field / exit 1 on an unimported export). The
+tool-capability block is real and permanent, but it is only now actually proved.
+
+**R-1/R-2 must NOT be nodded through as "lower-severity."** Until the R2 buckets are made private,
+every object already at a public `r2.dev` address stays fetchable by anyone who ever copied one,
+whatever the database columns say. That is a live exposure with a date before cutover, not a
+deferred nicety.
+
+## The authenticated shell's biggest library is not the one everyone assumed
+
+Measured on a real production build (exit 0, build `pRoNmQpD1X5_6lTUEhSv9`, 601 routes):
+**`@animateicons/react/lucide` is 481,691 B raw / 55,869 B gzip and first-load on 559 of 601
+routes.** It ships **all 248** icons while the app imports **90** across 596 files.
+`next.config.ts` already lists it in `optimizePackageImports` and **that optimisation is vacuous**:
+one 412,078 B ESM file with no per-icon modules and **zero `@__PURE__` annotations** on 248
+top-level `forwardRef(...)` calls — proved with esbuild, all 248 = 60,394 B gzip vs only-the-90 =
+59,354 B, a **1,040 B** difference. It also **vendors its own framer-motion** (73,833 B) while
+declaring no dependency, so **framer-motion ships twice**.
+
+By comparison framer-motion's own used surface is 40,690 B gzip, and `useReducedMotion` alone is
+253 B — so 102 of its 278 importers are free and are not part of any migration. Replacing
+framer-motion buys ~40 kB gzip while the smallest open breach is 59,598 B: **it does not close the
+budget alone.** The scope decision can now be made on numbers instead of a guess.
+
+**The org-switcher `dynamic()` deferred nothing** — settled by measurement, not by my assumption.
+The dialog sits in a **first-load chunk of 556 of 601 routes** and **no async chunk carrying the
+module exists** anywhere under `.next/static/chunks`. Collapsed to a static import.
