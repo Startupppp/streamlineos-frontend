@@ -4,8 +4,9 @@ Two items, one per section. Both were framed as blocking ticket 41 (a one-commit
 verification that cannot run against a red tree). One was a real regression and is fixed; the
 other was a misdiagnosis and is now recorded as such so it is not re-raised.
 
-Commits: backend `26f7c5b0`-shaped split commit (see `git log -1` in `streamlineos-backend`),
-frontend `90315022` (ticket 35 adjudication) and the `file-size-exceptions.md` record.
+Commits: backend `c7e4628a` (the fourteen splits + baseline 392); frontend `90315022`
+(ticket 35 adjudication), plus the `file-size-exceptions.md` record, this report and the ticket 37
+status addendum.
 
 ---
 
