@@ -270,16 +270,17 @@ commands through `heavy.sh 2`. Exit codes captured with `$?` / `$pipestatus[1]` 
 | `pnpm exec jest --runInBand --testPathPattern="(modules/support\|modules/build/core\|modules/hr/recruitment\|modules/chat)"` | **0** | 144 suites, 1034 tests, 1034 pass |
 | frontend `jest --runInBand --testPathPattern="(features/chat\|features/support\|features/build\|hooks/api)"` | **0** | 87 suites, 882 tests, 882 pass |
 | `node scripts/check-contract-drift.mjs` (frontend) | **0** | 49 timesheets calls, 0 new drift |
-| `pnpm check:spec-typecheck` | **2** | **not mine — see below** |
+| `pnpm check:spec-typecheck` | **0** (green on the re-run) | spec-inclusive typecheck passed |
 
-**`check:spec-typecheck` is red and it is not this work.** The complete failing set is
+**`check:spec-typecheck` was red mid-session and is green now.** Three separate owners were
+involved and it is worth separating them. At the start of this work the gate failed on three files:
+`chat-huddle-wire-shape.spec.ts` (TS2559 — introduced by `755b45e3`, **mine**, fixed in
+`15f36ff9`) and two in `src/modules/e-sign/__tests__/`. Later in the session it failed instead on
 `src/modules/ai/core/streaming/__tests__/ai-cancellation-stops-the-spend.spec.ts` and
-`src/modules/ownership/ownership-transfer-expiry.service.ts` — both belong to another agent's
-concurrent, uncommitted work in the shared tree (`git status` shows `src/modules/ai/**` modified and
-`src/modules/ai/core/streaming/__tests__/` untracked by that agent). None of the six wire-shape
-specs appears. The one failure in this gate that *was* mine — the `755b45e3` huddle spec's TS2559 —
-is fixed in `15f36ff9`, and two e-sign errors present at the start of this session were fixed by
-another agent mid-run.
+`src/modules/ownership/ownership-transfer-expiry.service.ts` — another agent's concurrent
+uncommitted work in the shared tree. Both the e-sign and the ai/ownership errors were fixed by their
+owners mid-run (`0c559448`). Final re-run: **exit 0, "spec-inclusive typecheck passed."** None of
+the six wire-shape specs ever appeared in a failing set.
 
 **Not run:** lint (either repo), `next build`, e2e, any database-backed verification. The shared
 working tree carried ~20 other files modified by concurrent agents throughout, so the typechecks
