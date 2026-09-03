@@ -50,7 +50,13 @@ interface UpdateGitConnectionInput {
 }
 
 export function useGitConnections() {
-  return useGatedQuery("settings:manage", {
+  // The three mutations below gate on `integrations:git:manage`, matching the controller. This
+  // read gated on `settings:manage`, which the route has never required — the backend declares
+  // `integrations:git:view` on both the canonical `GET /integrations/git/connections` and the
+  // `/settings/integrations/git` alias. A user holding the git-integration grants but not
+  // `settings:manage` could therefore create, edit and delete connections while the list itself
+  // stayed empty.
+  return useGatedQuery("integrations:git:view", {
     queryKey: queryKeys.gitIntegration.connections(),
     queryFn: ({ signal }) => apiClient.get<GitConnection[]>("/settings/integrations/git", undefined, signal),
     staleTime: 60_000,
