@@ -176,6 +176,74 @@ jobs:
       - name: Run Tests
         run: pnpm test --runInBand
         env:
+          TZ: UTC
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'ci-test-only-placeholder-not-a-real-secret-abc123' }}
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'http://localhost:1500' }}
+
+  # The same unfiltered suite, at zones that are NOT UTC.
+  #
+  # 2026-09-03 — nothing pins TZ for the test run (not jest.config.cjs, not
+  # jest.setup.js) and a GitHub runner is UTC, so every date assertion in this
+  # package had only ever been checked against ONE zone and a whole class of
+  # defect could not fail CI. Backend d01b3c41 is what that costs: recurrence
+  # expansion tracked the HOST's zone, a weekly all-day Monday series landed on
+  # TUESDAY at +05:30, and 43 suites / 406 tests were green throughout. Running
+  # THIS suite off UTC on 2026-09-03 found two more of the shape at once:
+  # `lib/date-utils.relative.test.ts` failed at Pacific/Auckland, and
+  # `formatShortDate` rendered every date-only column a day early for readers
+  # west of UTC.
+  #
+  # Pinning `TZ: UTC` everywhere would have CEMENTED that blind spot while
+  # looking like a fix. `TZ: UTC` above is the other half of a deliberate pair,
+  # not the fix on its own.
+  #
+  # Unfiltered for exactly the reason the `tests` job is: `--testPathPattern`
+  # reports green while every suite outside the filter is red, and a maintained
+  # list of "date-sensitive" suites is wrong the moment someone adds a
+  # `new Date()` to a suite nobody classified — which is how this class hides.
+  # The whole suite is 25s locally, so scoping would buy nothing.
+  #
+  # Three zones, three independent axes: a NEGATIVE offset with northern DST, a
+  # large POSITIVE offset with southern DST, and a HALF-HOUR offset (the case
+  # that breaks integer-hour arithmetic). `fail-fast: false` so one red zone
+  # still reports the other two — a matrix that stops at the first failure
+  # reports on a prefix, the same masking defect ticket 35 fixed at job level.
+  tests-non-utc:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    strategy:
+      fail-fast: false
+      matrix:
+        tz:
+          - America/New_York
+          - Pacific/Auckland
+          - Australia/Adelaide
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Tests at ${{ matrix.tz }}
+        run: pnpm test --runInBand
+        env:
+          TZ: ${{ matrix.tz }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'ci-test-only-placeholder-not-a-real-secret-abc123' }}
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'http://localhost:1500' }}
 
