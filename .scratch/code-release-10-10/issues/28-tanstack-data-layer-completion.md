@@ -4,7 +4,11 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** 5 of 8 closed. 2026-09-03 S14: box 2's three named residues are resolved or correctly
+**Status:** 6 of 8 closed. 2026-09-03 S15: box 2 is CLOSED. The openapi-permission gate S14 left
+unwritten now exists as `frontend/scripts/check-gated-reads.mjs` / `pnpm check:gated-reads`, is
+bite-proven in 8 directions hermetically, and the permissioned residue is **0** — 79 reads converted,
+12 CRM/Inventory reads held back by name. Report `reports/28c-the-gated-reads-gate.md`.
+2026-09-03 S14: box 2's three named residues are resolved or correctly
 recorded — the import cycle is broken and the 2 gateable rbac reads are gated, the 10 BASE-const routes
 resolved to 16 gated reads, and the 12 CRM/inventory ones are named below and deliberately NOT converted.
 Boxes 6 and 7 were re-audited against source: box 6's "this is stale" note was itself wrong and the honest
@@ -13,7 +17,59 @@ per-screen number is now measured; box 7 was not moved. Box 2's blocker is GONE 
 - [x] One hierarchical key factory per domain, carrying organization, subject, scope, filters, sort and cursor dimensions as applicable.
       Evidence: 16 domain modules behind the single `queryKeys` facade; org/user live in the hash (`scopedQueryKeyHashFn`). Folded the last two out-of-registry key objects in (`hooks/api/hr/engagement.ts` 11 keys, `hooks/api/hr/succession.ts` 1 key) into new `lib/query-keys/hr-engagement.ts`; added the missing page-size dimension to `kb.researchBriefs` and `timesheets.payroll.exports`. `pnpm -s check:query-signal` exit 0; `lib/query-keys/key-factory-contract.test.ts` indexes 1119 registry entries (933 callable factories) and passes 8/8.
 
-- [~] Queries are gated by effective access and required identifiers; a disabled query sends no unauthorized or malformed request.
+- [x] Queries are gated by effective access and required identifiers; a disabled query sends no unauthorized or malformed request.
+      **S15 — CLOSED. The gate is written, and the residue is gone.**
+      `frontend/scripts/check-gated-reads.mjs`, wired as `pnpm check:gated-reads` and
+      `check:gated-reads:self-test` (19 fixtures). It resolves every raw read call site under
+      `hooks/api/**` against `contracts/openapi.json` and fails on any whose route is
+      `x-exposure: permissioned`. Four ratchets, all bite-proven hermetically in a `git archive HEAD`
+      tree (the live tree was never modified): above baseline, BELOW baseline, an unresolvable
+      ungated read, and a stale exception entry.
+      **Bite proof, 8 directions:** clean 0 · self-test 0 · ungated permissioned read **1** · the
+      same read behind a nested generic **1** · the same route hidden in a spread `queryOptions()`
+      factory **1** · a path that is a variable **1** · the same route via `useGatedQuery` **0** · an
+      ungated read on a PUBLIC route **0** · on a UNIVERSAL route **0** · restored **0**.
+      **The baseline was measured, never assumed.** S14 said 84; my first scan said 81 and I adopted
+      neither. Two scanner defects were found and fixed and the number re-measured after each:
+      81 -> 86 (hook attribution by brace match is wrong — a braced PARAMETER TYPE dropped six reads
+      into module scope, where the gate scope is the whole FILE and one unrelated `useCan` launders
+      them) -> 17 visible after the parser fixes -> **0** after conversion. The 81-vs-84 gap is two
+      implementations of one definition disagreeing, not a regression; treat neither as a fact, treat
+      the gate's printed number as the fact.
+      **Scan definition:** the WIDER of the two used this release (it counts a hook whose only
+      `enabled` is a non-permission guard), i.e. S14's 155/100 family, NOT the narrow 133. The two
+      must never be added or differenced; the definition is in the script header.
+      `sign/public.ts` is resolved through its module-local `publicGet`, scores `public`, and is
+      correctly NOT gated — fixture (e) and bite direction B6 both lock that in.
+      **79 reads converted.** 74 in the first pass, then 5 more that only became visible once three
+      parser defects were fixed: `[^<>()]*` cannot cross `apiClient.get<CursorPage<Thing>>` or
+      `get<{ enabled: boolean }>`, and `\$\{[^}]*\}` closes on the inner brace of
+      `${qs ? `?${qs}` : ""}`. Those hid `/build/all-work`, `/hr/workflows/instances/acted`,
+      `/hr/recruitment/interviews`, `/hr/recruitment/talent-pools/{poolId}/members` and
+      `/timesheets/exceptions`. Calls now resolve against their real HTTP method, and a queryFn in a
+      spread `queryOptions()` factory is followed.
+      All 33 distinct keys exist verbatim in `lib/rbac/permissions/`, so `tsc` bites on drift; four
+      spot-checked against the controller decorator rather than the snapshot.
+      The two `useInfiniteQuery` reads take `useCan` + composed `enabled` rather than a new wrapper —
+      26 of the 30 files with an infinite read already gate that way and `useInfiniteAllWork` sits
+      beside its own `useQuery` twin doing exactly that. Cost recorded, not hidden: `useCan`
+      suppresses the request but puts no reason on the result.
+      **Held back, named, deliberately NOT converted (out of release scope):** 12 permissioned reads
+      in `hooks/api/leads.ts:32,43,52,60,69,79,90,257,266,288,303` (`crm:leads:view`) and
+      `hooks/api/inv-ai-explain.ts:97` (`inventory:reports:read`). They sit in the gate's `HELD_BACK`
+      map with a reason, so they are counted, printed under `--list`, and the entry FAILS if the file
+      is deleted or gated.
+      **What this box does NOT claim.** The gate certifies request suppression only. It would pass a
+      `useGatedQuery` read whose `access` gate no screen consumes — and 274 of 275 are exactly that.
+      The gate MEASURES that on every run and never fails on it; owner is ticket 30 (see box 6).
+      Evidence: `pnpm -s check:gated-reads` exit 0 — 720 read sites, 50 ungated (21 universal, 12
+      permissioned all held back, 11 public, 6 in-service), **0 unresolvable**;
+      `check:gated-reads:self-test` exit 0, 19 fixtures; `pnpm -C frontend type-check` exit 0 / 0
+      errors; `npx jest --maxWorkers=2` whole frontend suite exit 0 — 330 suites / 3208 tests;
+      `npx eslint` on all 44 changed files exit 0, 0 errors (24 warnings, all pre-existing — the same
+      44 files at HEAD~2 produce the identical count in a hermetic tree).
+      PREVIOUS STATE, kept for the audit trail:
+- [~] (superseded) Queries are gated by effective access and required identifiers.
       **S13 — the blocker dissolved.** The note below said this was blocked on "per-route backend reading".
       It is not: `contracts/openapi.json` carries `x-exposure` and `x-permission` per operation, generated
       from the controllers' own `@RequirePermission`. Re-scanned at head with the TS compiler API:
@@ -75,10 +131,11 @@ per-screen number is now measured; box 7 was not moved. Box 2's blocker is GONE 
       clusters are `support/**` 18, `hr/recruitment/**` 17, `accounting.ts` 12, `leads.ts` 11 (excluded),
       `timesheets-core/**` 7, `hr/hr-workflows.ts` 4. Every one has a resolved key already; this is
       mechanical volume, not a blocker.
-      **The openapi-permission GATE was NOT written.** The scanner that produced every number above lives
-      in a session scratchpad, not in `frontend/scripts/`; there is no `check:gated-reads` script and no
-      bite proof. Whoever writes it should gate on `exposure === "permissioned"` from a recorded baseline
-      of 84, not 0.
+      **The openapi-permission GATE was NOT written.** — SUPERSEDED BY S15: it is written, wired as
+      `pnpm check:gated-reads`, bite-proven in 8 directions, and its baseline is 0 with 12 CRM/Inventory
+      reads held back by name. The "recorded baseline of 84" in this note was S14's own measurement and
+      S15 could not reproduce it (81 on a first independent scan, 86 after fixing hook attribution);
+      do not carry 84 forward as a fact.
       (c) 10 unresolved, all building their path from a `BASE` const:
       `hr/enterprise-ops-accommodations.ts:64`, `hr/enterprise-ops-emergency.ts:52`,
       `hr/enterprise-ops-event-stream.ts:52,60,68`, `hr/enterprise-ops-identity.ts:66,74`,
