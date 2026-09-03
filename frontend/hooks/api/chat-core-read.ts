@@ -3,9 +3,15 @@
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
+import type { ResponseContract } from "@/lib/api-envelope";
 import { queryKeys } from "@/lib/query-keys";
 import { reportError } from "@/lib/observability/error-reporter";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import {
+  chatChannelContract,
+  chatChannelPageContract,
+  chatPublicChannelContract,
+} from "@/hooks/api/chat-schema";
 import type {
   Channel,
   Message,
@@ -39,6 +45,7 @@ export const MAX_CHANNEL_PAGES = 20;
 export async function drainChannelPages<TChannel>(
   path: string,
   signal: AbortSignal,
+  contract: ResponseContract<ChannelPage<TChannel>>,
 ): Promise<TChannel[]> {
   const channels: TChannel[] = [];
   const seenCursors = new Set<string>();
@@ -48,6 +55,7 @@ export async function drainChannelPages<TChannel>(
       path,
       cursor === null ? undefined : { cursor },
       signal,
+      contract,
     );
     channels.push(...result.channels);
     if (result.nextCursor === null || seenCursors.has(result.nextCursor))
@@ -70,7 +78,12 @@ export function useChatChannels(enabled = true) {
   const chatEnabled = useModuleEnabled("chat");
   return useQuery({
     queryKey: queryKeys.chat.myChannels(),
-    queryFn: ({ signal }) => drainChannelPages<Channel>("/chat/channels", signal),
+    queryFn: ({ signal }) =>
+      drainChannelPages<Channel>(
+        "/chat/channels",
+        signal,
+        chatChannelPageContract(chatChannelContract),
+      ),
     staleTime: 300_000,
     refetchOnWindowFocus: true,
     enabled: !!orgId && enabled && chatEnabled && canRead,
@@ -81,7 +94,12 @@ export function useArchivedChannels(enabled = true) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: queryKeys.chat.archivedChannels(),
-    queryFn: ({ signal }) => drainChannelPages<Channel>("/chat/channels/archived", signal),
+    queryFn: ({ signal }) =>
+      drainChannelPages<Channel>(
+        "/chat/channels/archived",
+        signal,
+        chatChannelPageContract(chatChannelContract),
+      ),
     staleTime: 2 * 60_000,
     enabled: enabled && canRead,
   });
@@ -92,7 +110,11 @@ export function usePublicChannels(enabled = true) {
   return useQuery({
     queryKey: queryKeys.chat.publicChannels(),
     queryFn: ({ signal }) =>
-      drainChannelPages<PublicChannel>("/chat/channels/public", signal),
+      drainChannelPages<PublicChannel>(
+        "/chat/channels/public",
+        signal,
+        chatChannelPageContract(chatPublicChannelContract),
+      ),
     staleTime: 2 * 60_000,
     enabled: enabled && canRead,
   });

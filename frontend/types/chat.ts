@@ -83,6 +83,12 @@ export interface LastMessage {
   createdAt: Date | string | null;
 }
 
+/**
+ * `createdBy` was declared here and emitted by NO read path: `chat_channels` has
+ * no `created_by` column, only `created_by_membership_id`, which the list
+ * projection deliberately omits. Nothing read it, so it never showed — the same
+ * class as the three chat defects, caught by writing `chatChannelContract`.
+ */
 export interface Channel {
   id: number;
   orgId: string;
@@ -90,7 +96,6 @@ export interface Channel {
   type: ChannelType;
   description: string | null;
   avatarUrl: string | null;
-  createdBy: string;
   isArchived: boolean;
   isPrivate: boolean;
   entityType: string | null;
@@ -259,10 +264,16 @@ export interface PinnedMessage {
   pinnedByUser: { id: string; name: string | null } | null;
 }
 
+/**
+ * `userId` and `startedBy` are NULLABLE, and the backend has always emitted them
+ * that way: `flattenChannelMember` and `loadHuddleWire` both resolve a missing
+ * `organization_members` row to `null`. Declared non-nullable here, they were the
+ * half of the huddle defect a typecheck could not see.
+ */
 export interface HuddleParticipant {
   id: number;
   huddleId: number;
-  userId: string;
+  userId: string | null;
   joinedAt: Date | string;
   leftAt: Date | string | null;
   isMuted: boolean;
@@ -274,7 +285,7 @@ export interface HuddleParticipant {
 export interface Huddle {
   id: number;
   channelId: number;
-  startedBy: string;
+  startedBy: string | null;
   status: "active" | "ended";
   calendarEventId: number | null;
   startedAt: Date | string;

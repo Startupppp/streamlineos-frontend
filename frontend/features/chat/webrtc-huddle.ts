@@ -324,7 +324,10 @@ export function useWebRTCHuddle(
 
     const activeUserIds = new Set(
       participants
-        .filter((p) => p.userId !== currentUserId && !p.leftAt)
+        .filter(
+          (p): p is HuddleParticipant & { userId: string } =>
+            p.userId !== null && p.userId !== currentUserId && !p.leftAt,
+        )
         .map((p) => p.userId),
     );
 

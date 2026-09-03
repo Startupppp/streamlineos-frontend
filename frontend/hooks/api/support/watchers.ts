@@ -5,6 +5,7 @@ import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { supportTicketWatchersContract } from "@/hooks/api/watchers-schema";
 
 export interface SupportTicketWatcher {
   id: number;
@@ -18,7 +19,13 @@ export interface SupportTicketWatcher {
 export function useSupportWatchers(ticketId: number) {
   return useGatedQuery("support:tickets:view", {
     queryKey: queryKeys.supportWatchers.list(ticketId),
-    queryFn: ({ signal }) => apiClient.get<SupportTicketWatcher[]>(`/support/${ticketId}/watchers`, undefined, signal),
+    queryFn: ({ signal }) =>
+      apiClient.get<SupportTicketWatcher[]>(
+        `/support/${ticketId}/watchers`,
+        undefined,
+        signal,
+        supportTicketWatchersContract,
+      ),
     enabled: Number.isFinite(ticketId) && ticketId > 0,
     staleTime: 30_000,
   });

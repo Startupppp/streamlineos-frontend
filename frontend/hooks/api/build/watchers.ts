@@ -5,6 +5,7 @@ import type { UseQueryOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { buildTicketWatchersContract } from "@/hooks/api/watchers-schema";
 import type { TicketWatcher } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -18,8 +19,11 @@ export function useWatchers(
     queryKey: queryKeys.projects.watchers(ticketId),
     queryFn: ({ signal }) =>
       apiClient.get<TicketWatcher[]>(
-        `/build/${projectId}/tickets/${ticketId}/watchers`
-      , undefined, signal),
+        `/build/${projectId}/tickets/${ticketId}/watchers`,
+        undefined,
+        signal,
+        buildTicketWatchersContract,
+      ),
     enabled: canView && !!ticketId && !!projectId,
     staleTime: 30_000,
     ...options,

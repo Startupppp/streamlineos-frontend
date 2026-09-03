@@ -239,17 +239,22 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
           />
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
-            {huddle.participants.map((participant) => (
-              <HuddleParticipantCard
-                key={participant.userId}
-                participant={participant}
-                audioLevel={audioLevels[participant.userId] ?? 0}
-                isCurrentUser={participant.userId === currentUserId}
-                isHost={isHost}
-                onKick={isHost && participant.userId !== currentUserId ? () => handleKick(participant.userId) : undefined}
-                peerConnection={participant.userId !== currentUserId ? getPeerConnection(participant.userId) ?? null : null}
-              />
-            ))}
+            {huddle.participants.map((participant) => {
+              const participantUserId = participant.userId;
+              const isSelf = participantUserId !== null && participantUserId === currentUserId;
+              const isPeer = participantUserId !== null && !isSelf;
+              return (
+                <HuddleParticipantCard
+                  key={participant.id}
+                  participant={participant}
+                  audioLevel={participantUserId === null ? 0 : audioLevels[participantUserId] ?? 0}
+                  isCurrentUser={isSelf}
+                  isHost={isHost}
+                  onKick={isHost && isPeer ? () => handleKick(participantUserId) : undefined}
+                  peerConnection={isPeer ? getPeerConnection(participantUserId) ?? null : null}
+                />
+              );
+            })}
           </div>
 
           <div className="relative flex items-center justify-center gap-2 flex-wrap">

@@ -59,10 +59,35 @@ const SCAN_DIRS = ["hooks", "app", "features", "components", "lib"];
 
 /** Where the contract sits in each seam function's argument list. */
 const SEAM_METHODS = { get: 3, post: 3, put: 3, patch: 3, delete: 3, upload: 2 };
-const SEAM_FUNCTIONS = { serverGet: 1, publicGet: 2, publicGetNoStore: 2 };
+
+/**
+ * `drainChannelPages` is a seam function, not a caller of one.
+ *
+ * It wraps `apiClient.get` in a cursor loop and takes the path as a PARAMETER,
+ * so until it was listed here the route it reads was invisible to every
+ * route-based rule in this gate and in `check:gated-reads` — and the route it
+ * reads is `/chat/channels`, the exact call site the `members[].membership.user`
+ * defect shipped through. The wrapper's own inner `apiClient.get(path, …)` is
+ * still unresolvable and still counted as such; what this entry recovers is the
+ * three call sites above it, where the path IS a literal. A wrapper that takes a
+ * path and a contract belongs on this list; one that hides the path in a
+ * module-local constant belongs in UNRESOLVED_ROUTE_FILES instead.
+ */
+const SEAM_FUNCTIONS = {
+  serverGet: 1,
+  publicGet: 2,
+  publicGetNoStore: 2,
+  drainChannelPages: 2,
+};
 
 /** Every seam function that READS. A contracted route must not be read uncontracted. */
-const READ_METHODS = new Set(["get", "serverGet", "publicGet", "publicGetNoStore"]);
+const READ_METHODS = new Set([
+  "get",
+  "serverGet",
+  "publicGet",
+  "publicGetNoStore",
+  "drainChannelPages",
+]);
 
 /**
  * The ratchet. MEASURED against the tree this file is committed with — run
@@ -75,7 +100,7 @@ const READ_METHODS = new Set(["get", "serverGet", "publicGet", "publicGetNoStore
  * ratchet becomes a comment.
  */
 const BASELINE = {
-  unvalidatedCalls: 2603,
+  unvalidatedCalls: 2598,
   minScannedCalls: 2400,
 };
 
@@ -170,6 +195,19 @@ const CONTRACTED_ROUTES = [
   "/directory/people/:p",
   "/directory/workers",
   "/users/stats",
+  // identity on a screen — every route below carries a PERSON whose id the UI
+  // compares against the viewer's own (`isOwn`, `isFollowing`, `isWatching`,
+  // `isInHuddle`). A comparison that silently collapses to false renders a
+  // plausible screen rather than an error, which is why all seven of this
+  // release's shape-drift defects survived review. These are the routes those
+  // defects shipped through.
+  "/chat/channels",
+  "/chat/channels/archived",
+  "/chat/channels/public",
+  "/chat/channels/:p/huddle",
+  "/chat/channels/:p/huddle/start",
+  "/support/:p/watchers",
+  "/build/:p/tickets/:p/watchers",
 ];
 
 const TEST_FILE_RE = /\.(test|spec)\.tsx?$/;
@@ -357,8 +395,10 @@ function selfTest() {
       'serverGet("/h");',
       'publicGet("/i", 60, iContract);',
       'publicGet("/j", 60);',
+      'drainChannelPages("/k", signal, kContract);',
+      'drainChannelPages("/l", signal);',
     ]).map((c) => `${c.route}:${c.validated}`),
-    ["/a:true", "/b:false", "/c:true", "/d:false", "/e:true", "/f:false", "/g:true", "/h:false", "/i:true", "/j:false"],
+    ["/a:true", "/b:false", "/c:true", "/d:false", "/e:true", "/f:false", "/g:true", "/h:false", "/i:true", "/j:false", "/k:true", "/l:false"],
   );
 
   // (b) a nested generic does not hide the call, and a template route normalises.

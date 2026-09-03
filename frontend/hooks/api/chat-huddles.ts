@@ -7,13 +7,23 @@ import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useCan } from "@/hooks/api/access";
+import {
+  chatActiveHuddleContract,
+  chatHuddleContract,
+} from "@/hooks/api/chat-schema";
 import type { Huddle, HuddleSignalInput } from "@/types/chat";
 
 export function useActiveHuddle(channelId: number) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
     queryKey: queryKeys.chat.huddle(channelId),
-    queryFn: ({ signal }) => apiClient.get<Huddle | null>(`/chat/channels/${channelId}/huddle`, undefined, signal),
+    queryFn: ({ signal }) =>
+      apiClient.get<Huddle | null>(
+        `/chat/channels/${channelId}/huddle`,
+        undefined,
+        signal,
+        chatActiveHuddleContract,
+      ),
     staleTime: 10_000,
     enabled: canRead && channelId > 0,
   });
@@ -24,7 +34,12 @@ export function useStartHuddle() {
   return useAuthorizedMutation("chat:huddles:start", {
     mutationKey: ["chat", "huddle", "start"],
     mutationFn: (channelId: number) =>
-      apiClient.post<Huddle>(`/chat/channels/${channelId}/huddle/start`),
+      apiClient.post<Huddle>(
+        `/chat/channels/${channelId}/huddle/start`,
+        undefined,
+        undefined,
+        chatHuddleContract,
+      ),
     onSuccess: (_, channelId) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(channelId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.calendar.all, exact: false });
