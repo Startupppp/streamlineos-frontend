@@ -59,8 +59,8 @@
       "maxCssBytes": 65536,
       "maxImageBytes": 8192,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 460579,
-      "measuredPageChunkBytes": 59863,
+      "measuredFirstLoadJsBytes": 463280,
+      "measuredPageChunkBytes": 61323,
       "lazyLoadedModules": [
         "mail-compose-sheet",
         "mail-ai-compose-toolbar",
@@ -75,7 +75,7 @@
       "imageBudgetNote": "The shell paints one brand mark (public/logo.svg, 2,872 B over the wire) and a cold-cache load requests it twice, once for the loading screen and once for the header. The previous declaration of 0 asserted the route ships no image at all, which measurement contradicts; 8 kB is the honest ceiling for one brand mark and it still fails if a route starts shipping photography.",
       "measuredScriptBytes": 665207,
       "measuredTotalBytes": 803328,
-      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit — it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client.",
+      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route’s own composition. See notes.sharedShellComposition2026_09_03 for the measured composition of that shell: the single largest first-load chunk is @animateicons/react/lucide at 481,691 B raw / 55,869 B gzip in 559 of 601 routes, ahead of framer-motion at 95,216 B raw / 30,554 B gzip in 601 of 601. The earlier text on this key attributed the breach to framer-motion pinned by the public landing; both halves of that were measured false and are superseded.",
       "measuredPostLoadScriptBytes": 165223,
       "measuredPostLoadTotalBytes": 187629
     },
@@ -85,8 +85,8 @@
       "maxCssBytes": 65536,
       "maxImageBytes": 8192,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 412561,
-      "measuredPageChunkBytes": 19571,
+      "measuredFirstLoadJsBytes": 414462,
+      "measuredPageChunkBytes": 20231,
       "lazyLoadedModules": [
         "notification-detail-drawer"
       ],
@@ -99,7 +99,7 @@
       "imageBudgetNote": "The shell paints one brand mark (public/logo.svg, 2,872 B over the wire) and a cold-cache load requests it twice, once for the loading screen and once for the header. The previous declaration of 0 asserted the route ships no image at all, which measurement contradicts; 8 kB is the honest ceiling for one brand mark and it still fails if a route starts shipping photography.",
       "measuredScriptBytes": 610108,
       "measuredTotalBytes": 752426,
-      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit — it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client.",
+      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route’s own composition. See notes.sharedShellComposition2026_09_03 for the measured composition of that shell: the single largest first-load chunk is @animateicons/react/lucide at 481,691 B raw / 55,869 B gzip in 559 of 601 routes, ahead of framer-motion at 95,216 B raw / 30,554 B gzip in 601 of 601. The earlier text on this key attributed the breach to framer-motion pinned by the public landing; both halves of that were measured false and are superseded.",
       "measuredPostLoadScriptBytes": 194172,
       "measuredPostLoadTotalBytes": 216578
     },
@@ -109,8 +109,8 @@
       "maxCssBytes": 65536,
       "maxImageBytes": 8192,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 414490,
-      "measuredPageChunkBytes": 21500,
+      "measuredFirstLoadJsBytes": 416069,
+      "measuredPageChunkBytes": 21838,
       "lazyLoadedModules": [
         "inbox-ticket-preview"
       ],
@@ -134,8 +134,8 @@
       "maxCssBytes": 65536,
       "maxImageBytes": 8192,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 438011,
-      "measuredPageChunkBytes": 41148,
+      "measuredFirstLoadJsBytes": 439555,
+      "measuredPageChunkBytes": 41451,
       "lazyLoadedModules": [],
       "note": "CRM inbox — deals and contact conversations. PASSES: 487kB < 614kB ceiling",
       "measuredCssBytes": 58244,
@@ -146,7 +146,7 @@
       "imageBudgetNote": "The shell paints one brand mark (public/logo.svg, 2,872 B over the wire) and a cold-cache load requests it twice, once for the loading screen and once for the header. The previous declaration of 0 asserted the route ships no image at all, which measurement contradicts; 8 kB is the honest ceiling for one brand mark and it still fails if a route starts shipping photography.",
       "measuredScriptBytes": 639947,
       "measuredTotalBytes": 782276,
-      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit — it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client.",
+      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route’s own composition. See notes.sharedShellComposition2026_09_03 for the measured composition of that shell: the single largest first-load chunk is @animateicons/react/lucide at 481,691 B raw / 55,869 B gzip in 559 of 601 routes, ahead of framer-motion at 95,216 B raw / 30,554 B gzip in 601 of 601. The earlier text on this key attributed the breach to framer-motion pinned by the public landing; both halves of that were measured false and are superseded.",
       "measuredPostLoadScriptBytes": 181957,
       "measuredPostLoadTotalBytes": 212569
     },
@@ -156,8 +156,8 @@
       "maxCssBytes": 65536,
       "maxImageBytes": 8192,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 545238,
-      "measuredPageChunkBytes": 140649,
+      "measuredFirstLoadJsBytes": 550153,
+      "measuredPageChunkBytes": 144323,
       "lazyLoadedModules": [],
       "note": "Support ticket inbox. PASSES: 542kB < 614kB ceiling",
       "measuredCssBytes": 58244,
@@ -168,7 +168,7 @@
       "imageBudgetNote": "The shell paints one brand mark (public/logo.svg, 2,872 B over the wire) and a cold-cache load requests it twice, once for the loading screen and once for the header. The previous declaration of 0 asserted the route ships no image at all, which measurement contradicts; 8 kB is the honest ceiling for one brand mark and it still fails if a route starts shipping photography.",
       "measuredScriptBytes": 758783,
       "measuredTotalBytes": 901740,
-      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit — it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client.",
+      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route’s own composition. See notes.sharedShellComposition2026_09_03 for the measured composition of that shell: the single largest first-load chunk is @animateicons/react/lucide at 481,691 B raw / 55,869 B gzip in 559 of 601 routes, ahead of framer-motion at 95,216 B raw / 30,554 B gzip in 601 of 601. The earlier text on this key attributed the breach to framer-motion pinned by the public landing; both halves of that were measured false and are superseded.",
       "measuredPostLoadScriptBytes": 156493,
       "measuredPostLoadTotalBytes": 186019
     },
@@ -180,7 +180,7 @@
       "maxFontBytes": 131072,
       "maxThirdPartyBytes": 102400,
       "maxServerPayloadBytes": 40960,
-      "measuredFirstLoadJsBytes": 440065,
+      "measuredFirstLoadJsBytes": 441834,
       "measuredPageChunkBytes": 0,
       "lazyLoadedModules": [
         "clock-in-widget",
@@ -196,15 +196,15 @@
       "measuredServerPayloadBytes": 20798,
       "measuredScriptBytes": 641789,
       "measuredTotalBytes": 781242,
-      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit — it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client.",
+      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route’s own composition. See notes.sharedShellComposition2026_09_03 for the measured composition of that shell: the single largest first-load chunk is @animateicons/react/lucide at 481,691 B raw / 55,869 B gzip in 559 of 601 routes, ahead of framer-motion at 95,216 B raw / 30,554 B gzip in 601 of 601. The earlier text on this key attributed the breach to framer-motion pinned by the public landing; both halves of that were measured false and are superseded.",
       "measuredPostLoadScriptBytes": 319347,
       "measuredPostLoadTotalBytes": 360072
     },
     "/chat": {
       "lazyLoadedModules": [],
       "note": "Chat home — realtime surface; the widest client-state route in the shell. Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
-      "measuredFirstLoadJsBytes": 625601,
-      "measuredPageChunkBytes": 224885,
+      "measuredFirstLoadJsBytes": 633750,
+      "measuredPageChunkBytes": 231793,
       "measuredScriptBytes": 850044,
       "measuredTotalBytes": 989423,
       "measuredCssBytes": 58244,
@@ -212,15 +212,15 @@
       "measuredFontBytes": 55206,
       "measuredThirdPartyBytes": 0,
       "measuredServerPayloadBytes": 19521,
-      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit — it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client. Page-chunk and first-load breaches are this route's own: 224,885 B of page-only chunks over a 204,800 B ceiling and 52 first-load chunks. features/chat is ticket 29's territory for calendar/inbox/kb and unowned for chat itself; the realtime client it pulls in is ticket 28's. Not fixable from ticket 26.",
+      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route’s own composition. See notes.sharedShellComposition2026_09_03 for the measured composition of that shell: the single largest first-load chunk is @animateicons/react/lucide at 481,691 B raw / 55,869 B gzip in 559 of 601 routes, ahead of framer-motion at 95,216 B raw / 30,554 B gzip in 601 of 601. The earlier text on this key attributed the breach to framer-motion pinned by the public landing; both halves of that were measured false and are superseded. Page-chunk and first-load breaches are this route's own: 224,885 B of page-only chunks over a 204,800 B ceiling and 52 first-load chunks. features/chat is ticket 29's territory for calendar/inbox/kb and unowned for chat itself; the realtime client it pulls in is ticket 28's. Not fixable from ticket 26.",
       "measuredPostLoadScriptBytes": 105035,
       "measuredPostLoadTotalBytes": 136526
     },
     "/calendar": {
       "lazyLoadedModules": [],
       "note": "Unified calendar — one route serves every module's event sources. Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
-      "measuredFirstLoadJsBytes": 515959,
-      "measuredPageChunkBytes": 115243,
+      "measuredFirstLoadJsBytes": 523580,
+      "measuredPageChunkBytes": 121623,
       "byteCaptureNote": "No cold-cache byte pass in the 2026-09-02 capture: the navigation landed on /signin because the app signs itself out on a refused /me/access, and the driver discards byte totals for a page it did not ask for rather than recording another page's bytes as this route's.",
       "measuredScriptBytes": 728786,
       "measuredTotalBytes": 883526,
@@ -235,8 +235,8 @@
     "/notifications": {
       "lazyLoadedModules": [],
       "note": "Notification centre. Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
-      "measuredFirstLoadJsBytes": 425340,
-      "measuredPageChunkBytes": 24624,
+      "measuredFirstLoadJsBytes": 426845,
+      "measuredPageChunkBytes": 24888,
       "measuredScriptBytes": 623968,
       "measuredTotalBytes": 766914,
       "measuredCssBytes": 58244,
@@ -244,15 +244,15 @@
       "measuredFontBytes": 55206,
       "measuredThirdPartyBytes": 0,
       "measuredServerPayloadBytes": 21883,
-      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit — it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client.",
+      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route’s own composition. See notes.sharedShellComposition2026_09_03 for the measured composition of that shell: the single largest first-load chunk is @animateicons/react/lucide at 481,691 B raw / 55,869 B gzip in 559 of 601 routes, ahead of framer-motion at 95,216 B raw / 30,554 B gzip in 601 of 601. The earlier text on this key attributed the breach to framer-motion pinned by the public landing; both halves of that were measured false and are superseded.",
       "measuredPostLoadScriptBytes": 183975,
       "measuredPostLoadTotalBytes": 235058
     },
     "/settings": {
       "lazyLoadedModules": [],
       "note": "Global administration landing. Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
-      "measuredFirstLoadJsBytes": 437551,
-      "measuredPageChunkBytes": 44561,
+      "measuredFirstLoadJsBytes": 439150,
+      "measuredPageChunkBytes": 44919,
       "byteCaptureNote": "No cold-cache byte pass in the 2026-09-02 capture: the navigation landed on /signin because the app signs itself out on a refused /me/access, and the driver discards byte totals for a page it did not ask for rather than recording another page's bytes as this route's.",
       "measuredScriptBytes": 654878,
       "measuredTotalBytes": 807933,
@@ -267,8 +267,8 @@
     "/build/my-work": {
       "lazyLoadedModules": [],
       "note": "Build my-work — one of the heaviest first-load routes in the build (3.02 MB uncompressed). Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
-      "measuredFirstLoadJsBytes": 592731,
-      "measuredPageChunkBytes": 192015,
+      "measuredFirstLoadJsBytes": 597612,
+      "measuredPageChunkBytes": 195655,
       "measuredScriptBytes": 817721,
       "measuredTotalBytes": 963374,
       "measuredCssBytes": 58244,
@@ -276,16 +276,16 @@
       "measuredFontBytes": 55206,
       "measuredThirdPartyBytes": 0,
       "measuredServerPayloadBytes": 23097,
-      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit — it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client. First-load breach is this route's own composition (192,015 B page-only over the /dashboard baseline). Owner: the Build module; ticket 25 thinned the route module but the feature tree behind it is unchanged.",
+      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route’s own composition. See notes.sharedShellComposition2026_09_03 for the measured composition of that shell: the single largest first-load chunk is @animateicons/react/lucide at 481,691 B raw / 55,869 B gzip in 559 of 601 routes, ahead of framer-motion at 95,216 B raw / 30,554 B gzip in 601 of 601. The earlier text on this key attributed the breach to framer-motion pinned by the public landing; both halves of that were measured false and are superseded. First-load breach is this route's own composition (192,015 B page-only over the /dashboard baseline). Owner: the Build module; ticket 25 thinned the route module but the feature tree behind it is unchanged.",
       "measuredPostLoadScriptBytes": 127014,
       "measuredPostLoadTotalBytes": 163367
     },
     "/crm/leads": {
       "lazyLoadedModules": [],
       "note": "CRM leads — one of the heaviest first-load routes in the build (3.00 MB uncompressed). Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
-      "measuredFirstLoadJsBytes": 583886,
-      "measuredPageChunkBytes": 179297,
-      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition. The /dashboard baseline is 39 chunks / 440,065 B gzip by the client-reference-manifest method and 640,260 B actually downloaded; the largest identifiable library in it is framer-motion at 224 kB raw / 71 kB gzip, imported by 278 files across app/, components/ and features/ and required by the frozen public landing animations, so it is an architecture decision rather than a lazy boundary. Measured on build 5KxS0uW9Wrm0BIVYZicTs, 2026-09-02. CORRECTION to ticket 27's P1 relay: ably is NOT in the first load of /dashboard, /mail or /inbox at this commit — it appears only in /chat (208 kB raw / 58 kB gzip), where it is that route's own realtime client. First-load breach is this route's own composition (179,297 B page-only over the /dashboard baseline). Owner: the CRM module.",
+      "measuredFirstLoadJsBytes": 588086,
+      "measuredPageChunkBytes": 182256,
+      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route’s own composition. See notes.sharedShellComposition2026_09_03 for the measured composition of that shell: the single largest first-load chunk is @animateicons/react/lucide at 481,691 B raw / 55,869 B gzip in 559 of 601 routes, ahead of framer-motion at 95,216 B raw / 30,554 B gzip in 601 of 601. The earlier text on this key attributed the breach to framer-motion pinned by the public landing; both halves of that were measured false and are superseded. First-load breach is this route's own composition (179,297 B page-only over the /dashboard baseline). Owner: the CRM module.",
       "byteCaptureNote": "No cold-cache byte pass in the 2026-09-02 capture: the navigation landed on /signin because the app signs itself out on a refused /me/access, and the driver discards byte totals for a page it did not ask for rather than recording another page's bytes as this route's.",
       "measuredScriptBytes": 807617,
       "measuredTotalBytes": 951954,
@@ -308,7 +308,9 @@
       "measuredThirdPartyBytes": 0,
       "measuredServerPayloadBytes": 23085,
       "measuredPostLoadScriptBytes": 187331,
-      "measuredPostLoadTotalBytes": 232132
+      "measuredPostLoadTotalBytes": 232132,
+      "measuredFirstLoadJsBytes": 456830,
+      "measuredPageChunkBytes": 54873
     }
   },
   "budgetExceptions": [
@@ -332,5 +334,13 @@
     }
   ],
   "budgetExceptionsNote": "An exception records who owns a breach and why. It is annotation only: check-web-vitals-budget.mjs prints it next to the failure and still exits non-zero, and its self-test asserts that an exception never reduces the failure count. Nothing here makes a red budget green.",
-  "notes": "Vitals figures come from frontend/scripts/measure-web-vitals.mjs driving Chrome over CDP against a production `next build` + `next start`, with a minted NextAuth session cookie; nothing here runs Lighthouse and no CI job produces these numbers. Byte figures are a separate cache-disabled first-load pass: measuredFirstLoadJsBytes is gzip over the route's client-reference manifest, measuredScriptBytes and measuredTotalBytes are what the browser actually downloaded before the load event, and measuredPostLoadScriptBytes is the shell's speculative tail recorded beside the route rather than charged to it."
+  "notes": "Vitals figures come from frontend/scripts/measure-web-vitals.mjs driving Chrome over CDP against a production `next build` + `next start`, with a minted NextAuth session cookie; nothing here runs Lighthouse and no CI job produces these numbers. Byte figures are a separate cache-disabled first-load pass: measuredFirstLoadJsBytes is gzip over the route's client-reference manifest, measuredScriptBytes and measuredTotalBytes are what the browser actually downloaded before the load event, and measuredPostLoadScriptBytes is the shell's speculative tail recorded beside the route rather than charged to it.",
+  "measurementNotes": {
+    "measurementProvenance2026_09_03": "MIXED PROVENANCE — read this before citing a number. measuredFirstLoadJsBytes and measuredPageChunkBytes on all 13 routes were re-measured 2026-09-03 on production build pRoNmQpD1X5_6lTUEhSv9 (npx next build, exit 0, 601 routes) via node scripts/measure-route-bundles.mjs --write. measuredScriptBytes, measuredTotalBytes, measuredCssBytes, measuredImageBytes, measuredFontBytes, measuredThirdPartyBytes, measuredServerPayloadBytes and the measuredPostLoad* pair are STILL from the 2026-09-02 browser cold-cache capture on build 5KxS0uW9Wrm0BIVYZicTs; no browser pass was run on 2026-09-03 because the machine was at 6% battery. Between the two builds the first-load figures moved +1,505 to +8,149 B, so the older over-the-wire figures are close but are not from this build.",
+    "sharedShellComposition2026_09_03": "Measured on build pRoNmQpD1X5_6lTUEhSv9 from .next/diagnostics/route-bundle-stats.json plus gzip(9) over the chunk files. /dashboard first load by Next own accounting: 2,281,422 B raw / 573,428 B gzip over 42 chunks — the 441,834 B recorded as measuredFirstLoadJsBytes is the client-reference-manifest subset (37 chunks) and excludes framework/polyfill/main. The two largest identifiable libraries in that shell: (1) @animateicons/react/lucide — chunk 448xe3n3zsx8s.js, 481,691 B raw / 55,869 B gzip, first load of 559 of 601 routes; (2) framer-motion 12.23.25 — chunk 2-tfck0qpw5kq.js, 95,216 B raw / 30,554 B gzip (one merged module of 94,837 B), first load of 601 of 601 routes. The icon library is the larger of the two and had never been recorded.",
+    "framerMotionScope2026_09_03": "framer-motion has 278 importers at head: 22 in features/landing, 256 authenticated (hr 46, build 42, app/(authenticated) 27, crm 23, org-setup 15, notifications 14, payroll 10, then a tail). Used API surface: motion (256 files), useReducedMotion (102), AnimatePresence (67), then single-digit LayoutGroup / MotionConfig / useTransform / useSpring / useMotionValue / useInView. WHAT REMOVING IT WOULD ACTUALLY SAVE, measured by bundling the used surface in isolation with the repo esbuild 0.27.1 (--bundle --minify --format=esm, react external): full used surface 121,284 B raw / 40,690 B gzip; motion + AnimatePresence + useReducedMotion 117,537 B raw / 39,330 B gzip; useReducedMotion ALONE 368 B raw / 253 B gzip. The 102 useReducedMotion-only sites are therefore free and the entire price is motion/AnimatePresence. Upper bound on the saving: about 40 kB gzip off every first load, against 17 breaches whose SMALLEST overage is 59,598 B. Replacing framer-motion does not close the JS budget on its own, and it is not the largest thing in the shell.",
+    "animateIconsFinding2026_09_03": "NOT TREE-SHAKEN, AND THE CONFIGURED OPTIMISATION IS VACUOUS. @animateicons/react/lucide 0.3.4 ships all 248 animated icons into the first load of 559 of 601 routes while the app imports only 90 distinct icons across 596 files — verified by counting displayName= literals in the built chunk (248) against the import sites (90). next.config.ts ALREADY lists @animateicons/react/lucide in experimental.optimizePackageImports and it cannot bite: the package is one 412,078 B ESM file (dist/lucide.js) with no per-icon modules for a barrel rewrite to target, and it carries ZERO @__PURE__ annotations on 248 top-level forwardRef(...) calls, so no bundler is permitted to drop an unused one. Reproduced outside Next with esbuild: re-exporting all 248 gives 455,497 B raw / 60,394 B gzip, re-exporting only the 90 used gives 452,184 B raw / 59,354 B gzip — a 1,040 B difference. It is structurally unshakeable, not mis-configured. It also VENDORS ITS OWN COPY of framer-motion (dist/chunk-SZP4YRB3.js, 73,833 B, carrying transformPerspective / anticipate / whileHover / originX) while declaring no dependency on it, so framer-motion ships TWICE in every authenticated first load. Prorating 90/248 of the gzip figure puts roughly 35 kB gzip per first load in unused icons. OWNER: not ticket 26 — this is a dependency decision, and it is a larger lever than framer-motion.",
+    "totalBytesBudgetHonesty2026_09_03": "defaults.maxTotalBytes = 1,048,576 B is GOVERNED — check-route-bundle-budget compares measuredTotalBytes against it and the self-test asserts that pair fires — but it is LOOSE. All 13 routes are inside it; closest are /chat 989,423 B (94.4%), /build/my-work 963,374 (91.9%), /crm/leads 951,954 (90.8%). It is not vacuous, it would fire, but it has never rejected anything and it sits above a measuredScriptBytes ceiling that 14 of the same routes breach, so it must not be cited as evidence that page weight is under control. DELIBERATELY NOT TIGHTENED this pass: tightening to the measured maximum would manufacture red routes on a box already blocked on a cross-lane decision, and no owner has agreed a target. Tighten it together with the decision on the JS breaches, and state the target then.",
+    "orgSwitcherDynamicImport2026_09_03": "SETTLED. components/layout/header/org-switcher.tsx imported @/features/settings/organization/leave-organization-control twice — statically for LeaveOrganizationMenuItem and through next/dynamic for LeaveOrganizationDialog. The dynamic() deferred NOTHING: on build pRoNmQpD1X5_6lTUEhSv9 the dialog own description string sits in .next/static/chunks/176qxkejwz55m.js (71,974 B raw / 22,373 B gzip) together with the menu item, and that chunk is a FIRST-LOAD chunk of 556 of 601 routes (checked directly against /dashboard, /inbox and /settings). No async chunk carrying the module exists anywhere under .next/static/chunks — the only other file containing the string is 1-t3ze_xbo39w.js, itself a first-load chunk of /settings/organization. The dynamic() was collapsed to a static import. Byte saving: zero; the value is that the construct no longer claims a deferral it never performed. Dropping ssr:false is safe because the dialog returns null unless access.isOrgOwner === false and ConfirmDialog renders through a Radix portal that emits nothing while closed."
+  }
 }
