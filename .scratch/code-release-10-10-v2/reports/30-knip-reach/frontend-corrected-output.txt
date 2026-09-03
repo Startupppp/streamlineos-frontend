@@ -1,0 +1,142 @@
+Unused files (8)
+features/calendar/meeting-stream-test-harness.ts
+hooks/api/notifications-inbox-test-fixtures.ts  
+lib/backend-token-contract.ts                   
+lib/command-catalog.ts                          
+lib/optimistic-cache.ts                         
+lib/rbac/owner-only-operations.ts               
+lib/rbac/route-access/app-routes.ts             
+scripts/run-gate.mjs                            
+Unused devDependencies (3)
+@testing-library/react       package.json:193:6
+@testing-library/user-event  package.json:194:6
+jest-environment-jsdom       package.json:205:6
+Unlisted binaries (1)
+feedbucket-widget  package.json
+Unused exports (44)
+WORKSPACE_PROJECT_ROUTE_ROOT             app/(authenticated)/build/workspaces/mirrored-project-routes.ts:1:14
+RichPanel                                components/shared/index.ts:12:3                                     
+RichHero                                 components/shared/index.ts:13:3                                     
+RichQuickAction                          components/shared/index.ts:14:3                                     
+RichSectionHeader                        components/shared/index.ts:15:3                                     
+RichIconWell                             components/shared/index.ts:16:3                                     
+RichPageContent                          components/shared/index.ts:17:3                                     
+resolveFileUrl                 function  features/chat/chat-helpers.ts:104:17                                
+resolvePanelWindowStart        function  features/chat/panel-render-window.ts:35:17                          
+MyAttendancePage                         features/employee-self-service/index.ts:3:10                        
+attendancePollInterval         function  features/hr/attendance/attendance-utils.ts:15:17                    
+declaredGroups                 function  features/renderer/layout-settings/arrangement-draft.ts:32:17        
+isInvitationResendPending                features/users/user-invitations-panel.tsx:49:3                      
+isInvitationRoleChangePending            features/users/user-invitations-panel.tsx:50:3                      
+useActivityParticipants        function  hooks/api/crm/activity-timeline.ts:90:17                            
+useLogActivity                 function  hooks/api/crm/activity-timeline.ts:102:17                           
+useAutonomyReviewQueue         function  hooks/api/crm/autonomy.ts:127:17                                    
+useMarkReviewed                function  hooks/api/crm/autonomy.ts:135:17                                    
+useAutonomySettings            function  hooks/api/crm/autonomy.ts:151:17                                    
+useUpdateAutonomySettings      function  hooks/api/crm/autonomy.ts:159:17                                    
+useKbArticleSummarize          function  hooks/api/kb/article-ai.ts:17:17                                    
+useKbArticleAsk                function  hooks/api/kb/article-ai.ts:32:17                                    
+useKbArticleImprove            function  hooks/api/kb/article-ai.ts:47:17                                    
+useKbArticleSuggestRelated     function  hooks/api/kb/article-ai.ts:62:17                                    
+useKbPageSummarize             function  hooks/api/kb/page-ai.ts:14:17                                       
+useKbPageAsk                   function  hooks/api/kb/page-ai.ts:22:17                                       
+useKbPageImprove               function  hooks/api/kb/page-ai.ts:32:17                                       
+useKbPageSuggestRelated        function  hooks/api/kb/page-ai.ts:40:17                                       
+useCheckLeadDuplicates         function  hooks/api/leads.ts:286:17                                           
+useMeetingFollowUp             function  hooks/api/meetings-ai.ts:161:17                                     
+useNotifications                         hooks/api/notifications-inbox.ts:37:14                              
+automationTriggersForModule    function  lib/automations/automation-triggers.ts:137:17                       
+EXPECTED_MANIFEST_VERSION                lib/module-manifest.ts:7:14                                         
+moduleById                     function  lib/module-manifest.ts:21:17                                        
+resetErrorReporter             function  lib/observability/error-reporter.ts:30:17                           
+INLINE_READ_ERROR                        lib/query-error-policy.ts:46:14                                     
+requestBudgetForWindow         function  lib/query-request-policies.ts:20:17                                 
+describeRouteAccess            function  lib/rbac/route-access/route-access.ts:54:17                         
+isUniversalRoute               function  lib/rbac/route-access/universal-routes.ts:152:17                    
+hidableFields                  function  lib/renderer/layout-adjustment.ts:73:17                             
+payloadForCreate               function  lib/renderer/layout-schema.ts:254:17                                
+validateLayout                 function  lib/renderer/layout.ts:317:17                                       
+RECORD_LAYOUTS                           lib/renderer/registry.ts:221:14                                     
+layoutByKey                    function  lib/renderer/registry.ts:229:17                                     
+Unused exported types (69)
+RichTone               type       components/shared/index.ts:18:8                 
+RichWellTone           type       components/shared/index.ts:19:8                 
+ReceiptFileKind        type       features/hr/expenses/expense-constants.ts:89:31 
+OrgModuleStatus        type       hooks/api/access/module-status-schema.ts:33:13  
+ArPaymentAllocation    type       hooks/api/accounting/ar-schema.ts:98:13         
+SetupStatus            type       hooks/api/accounting/core-coa-schema.ts:72:13   
+ChatChannelWire        type       hooks/api/chat-schema.ts:233:13                 
+ChatChannelMemberWire  type       hooks/api/chat-schema.ts:234:13                 
+ChatPublicChannelWire  type       hooks/api/chat-schema.ts:235:13                 
+ChatHuddleWire         type       hooks/api/chat-schema.ts:236:13                 
+WorkerRecord           type       hooks/api/directory/workers-schema.ts:36:13     
+WorkersPageResponse    type       hooks/api/directory/workers-schema.ts:37:13     
+SlaReportStage         type       hooks/api/hr/recruitment/interviews.ts:34:3     
+SlaReportMonth         type       hooks/api/hr/recruitment/interviews.ts:35:3     
+SlaReportStageSummary  type       hooks/api/hr/recruitment/interviews.ts:36:3     
+BusyBlock              type       hooks/api/hr/recruitment/interviews.ts:40:3     
+StockSummaryParams     interface  hooks/api/inventory/reports-types.ts:21:18      
+ReorderReportParams    interface  hooks/api/inventory/reports-types.ts:26:18      
+StockSummaryParams     type       hooks/api/inventory/reports.ts:39:3             
+ReorderReportParams    type       hooks/api/inventory/reports.ts:40:3             
+InvoiceItem            type       hooks/api/invoice-schema.ts:141:13              
+ModuleRolePermission   type       hooks/api/module-access/index.ts:6:3            
+ModuleMemberCandidate  type       hooks/api/module-access/index.ts:9:3            
+ModuleOwnership        type       hooks/api/module-access/index.ts:10:3           
+MemberGrant            type       hooks/api/module-access/index.ts:13:3           
+Pagination             type       hooks/api/module-access/index.ts:14:3           
+PaginatedResult        type       hooks/api/module-access/index.ts:15:3           
+CursorPaginatedResult  type       hooks/api/module-access/index.ts:16:3           
+AuditCursorPage        type       hooks/api/module-access/index.ts:17:3           
+ModuleMyPermissions    type       hooks/api/module-access/index.ts:19:3           
+PaginatedResult        interface  hooks/api/module-access/types.ts:85:18          
+SwitchOrgResult        type       hooks/api/organization-schema.ts:67:13          
+OrgMember              type       hooks/api/organization.ts:15:15                 
+OrgMembersPage         type       hooks/api/organization.ts:15:26                 
+EssSalaryComponent     type       hooks/api/payroll/ess-money-schema.ts:91:13     
+PayrollRunStatus       type       hooks/api/payroll/runs-schema.ts:152:13         
+PayrollWorkerType      type       hooks/api/payroll/runs-schema.ts:153:13         
+PayrollRunListItem     type       hooks/api/payroll/runs-schema.ts:154:13         
+PayrollRun             type       hooks/api/payroll/runs-schema.ts:156:13         
+PayrollChecklistItem   type       hooks/api/payroll/runs-schema.ts:157:13         
+RunEmployee            type       hooks/api/payroll/runs-schema.ts:159:13         
+RunEmployeesPage       type       hooks/api/payroll/runs-schema.ts:160:13         
+ApprovalStage          type       hooks/api/payroll/setup-preview-schema.ts:152:13
+CalendarPlan           type       hooks/api/payroll/setup-preview-schema.ts:154:13
+DataScope              type       hooks/api/roles-schema.ts:69:13                 
+RolesPage              type       hooks/api/roles-schema.ts:74:13                 
+RoleRecord             type       hooks/api/roles.ts:37:11                        
+RoleTemplate           interface  hooks/api/roles.ts:138:18                       
+SubscriptionStatus     type       hooks/api/subscription-schema.ts:125:13         
+SubscriptionPayment    type       hooks/api/subscription-schema.ts:126:13         
+Subscription           type       hooks/api/subscription-schema.ts:127:13         
+SubscriptionStatus     type       hooks/api/subscription.ts:25:3                  
+SubscriptionPayment    type       hooks/api/subscription.ts:26:3                  
+Subscription           type       hooks/api/subscription.ts:27:3                  
+UserApiTokenPage       type       hooks/api/user-api-tokens-schema.ts:40:13       
+UserApiTokenPage       type       hooks/api/user-api-tokens.ts:22:3               
+UserStats              type       hooks/api/users/users-schema.ts:21:13           
+TriggerType            type       hooks/api/workflows.ts:6:3                      
+ApprovalStatus         type       hooks/api/workflows.ts:7:3                      
+WorkflowSortField      type       hooks/api/workflows.ts:9:3                      
+SortDirection          type       hooks/api/workflows.ts:10:3                     
+WorkflowVersion        type       hooks/api/workflows.ts:12:3                     
+WorkflowCursorPage     type       hooks/api/workflows.ts:20:3                     
+WorkflowListParams     type       hooks/api/workflows.ts:21:3                     
+ExecutionListParams    type       hooks/api/workflows.ts:22:3                     
+ChannelsPage           interface  types/chat.ts:199:18                            
+PublicChannelsPage     interface  types/chat.ts:204:18                            
+QuoteFilters           interface  types/crm/quotes.ts:74:18                       
+InvoiceItem            type       types/invoice.ts:3:3                            
+Configuration hints (11)
+.next/**                       …e30866-b3de-489c-bab6-88ed65398eed/scratchpad/knip-fe-E.json  Remove from ignore        
+public/**                      …e30866-b3de-489c-bab6-88ed65398eed/scratchpad/knip-fe-E.json  Remove from ignore        
+next-env.d.ts                  …e30866-b3de-489c-bab6-88ed65398eed/scratchpad/knip-fe-E.json  Remove from ignore        
+feedbucket-widget/dist/**      …e30866-b3de-489c-bab6-88ed65398eed/scratchpad/knip-fe-E.json  Remove from ignore        
+proxy.ts                       …e30866-b3de-489c-bab6-88ed65398eed/scratchpad/knip-fe-E.json  Remove redundant entry pa…
+instrumentation.ts             …e30866-b3de-489c-bab6-88ed65398eed/scratchpad/knip-fe-E.json  Remove redundant entry pa…
+next.config.ts                 …e30866-b3de-489c-bab6-88ed65398eed/scratchpad/knip-fe-E.json  Remove redundant entry pa…
+postcss.config.mjs             …e30866-b3de-489c-bab6-88ed65398eed/scratchpad/knip-fe-E.json  Remove redundant entry pa…
+eslint.config.mjs              …e30866-b3de-489c-bab6-88ed65398eed/scratchpad/knip-fe-E.json  Remove redundant entry pa…
+feedbucket-widget/build.mjs    …e30866-b3de-489c-bab6-88ed65398eed/scratchpad/knip-fe-E.json  Remove redundant entry pa…
+.css                           …e30866-b3de-489c-bab6-88ed65398eed/scratchpad/knip-fe-E.json  Compiled extension exclud…
