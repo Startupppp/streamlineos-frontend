@@ -4,7 +4,7 @@
 
 **Blocked by:** Sessions 1–8 substantially complete.
 
-**Status:** **10 of 11 closed.** **A-5 IS DONE (2026-09-03, commit `15c4d926`)** — the three in-scope negative tests are written and bite-proved (six planted defects, control 59/59). Box 7 still does not close: **3 of 20 `external` sites** now carry one; R-8 (13 `narrow-me`) and R-8b (17 `external`) remain, unchanged and for the reasons already recorded. `check:type-assertions` exit 0, ledger counts unmoved. Report: `reports/47-a4-a5-clients-n1-and-negative-tests.md`. Box 3 is discharged in code — 31 of the 32 ledgered dead backend exports deleted, the
+**Status:** **10 of 11 closed.** **2026-09-03 (second pass, report `reports/51-assertion-census-and-the-envelope-cast.md`): the box is still open, and the reason is now sharper — the ledger's DENOMINATOR was wrong.** An AST census of both repos (two passes: a directory walk, and a `ts.createProgram` + TypeChecker pass, no regex anywhere) found the forced-typing population is not 33 sites. It is **2,603 unparsed `apiClient` response reads · 28 backend `db.execute<T>` raw-SQL row generics · 13 frontend raw-`fetch` `.json() as T` reads · 1,819 single `as X` casts · 407 non-null `!`** — plus the 33 already ledgered. A generic type parameter on a fetch or driver helper is a type assertion with no `as` in it, and no gate in either repo could see one. **One of the newly visible casts was a live user-visible defect and is FIXED** (`9e01f3d5`): `app/(public)/forms/[token]/page.tsx` read `res.json() as Promise<PublicFormDefinition>`, skipping the global `ResponseTransformInterceptor`'s `{ success, data }` envelope, so a public form link showed a header stuck on "Loading form…" and threw `TypeError` on `form.fields.length`; two sibling submit seams carried the same cast. Two gate rules added and bite-proved hermetically (`1dfc844a` backend, `16941905` frontend), and **a blind spot fixed in this ticket's own frontend gate**: `SKIP_DIRS` matched `build` by NAME at any depth, so `features/build/` (456 files, the product's largest module) plus three more `build/` trees were excluded from every rule — files scanned 4,279 -> 4,982. **A-5 IS DONE (2026-09-03, commit `15c4d926`)** — the three in-scope negative tests are written and bite-proved (six planted defects, control 59/59). Box 7 still does not close: **3 of 20 `external` sites** now carry one; R-8 (13 `narrow-me`) and R-8b (17 `external`) remain, unchanged and for the reasons already recorded. `check:type-assertions` exit 0, ledger counts unmoved. Report: `reports/47-a4-a5-clients-n1-and-negative-tests.md`. Box 3 is discharged in code — 31 of the 32 ledgered dead backend exports deleted, the
 32nd reclassified `WIRE` because deleting it would have made a live cancellation signal unreachable — with knip findings
 38 → 7 and the ledger 34 verdicts → 5, proven by `check:dead-code` exit 0, `typecheck` exit 0, `check:spec-typecheck`
 exit 0 and a real `nest build` exit 0. Boxes 2 and 6 are closed as **recorded decisions with their numbers**, on the
@@ -201,6 +201,122 @@ remedy. See `reports/36-repo-hygiene.md`.
   remedy is to DELETE the cast; a per-site negative test would certify a cast the ledger already says must not
   exist and would make its later removal look like a regression. The box should read "a per-site negative test for
   each `external` site; a scheduled deletion for each `narrow-me` site."
+  **SECOND PASS 2026-09-03 — the box still does not close, and the census says why. Report:
+  `reports/51-assertion-census-and-the-envelope-cast.md`.**
+  **The measurement, stated with its method and its blind spots.** Two AST passes, no regex:
+  (A) `ts.createSourceFile` over a directory walk, which sees everything on disk including
+  `test/` and `evals/` but cannot resolve types; (B) `ts.createProgram` + TypeChecker from each
+  repo's tsconfig, which resolves the type on BOTH sides of every assertion but cannot see what
+  the tsconfig excludes (backend `tsconfig.build.json` excludes the whole spec suite). What the
+  method still MISSES, recorded so nobody rediscovers it: a hand-written `interface` that
+  disagrees with the wire is the same defect with no cast at all and is out of reach of any
+  syntactic method; `satisfies` and `as const` are deliberately excluded as checks not asserts.
+  **Application code, pass B.** Backend 3,580 files: `as X` **910** app + 11 script,
+  `as unknown as` 26, non-null **330**, angle-cast 0, `as any` 0, suppressions 0/0/0.
+  Frontend 4,978 files: `as X` **909**, `as unknown as` 6, non-null **77**, same four escapes 0.
+  **Only the `as unknown as` row was ever under a gate.** Classified by the SOURCE type — the
+  only casts TypeScript lets become anything — backend has 23 casts from `any`, 87 from
+  `unknown`, 147 from `{}`/`object`, 51 from `Record<string, unknown>`; frontend 42 / 45 / 37 / 23.
+  So "as any: 0" is true of one syntax and not of `any`.
+  **The population nobody was counting: generic parameters that function as casts.**
+  `apiClient.get<T>` is the cast that shipped twice. `pnpm check:response-contracts` (landed this
+  session by the response-contracts lane — NOT duplicated here) measures **2,662 seam call sites,
+  59 parsed (2.2%), 2,603 unparsed**. Beside it, two seams that gate structurally cannot see and
+  that are now ledgered by this ticket's gates: **28 backend `db.execute<T>` sites in 20 files**
+  and **13 frontend raw-`fetch` `.json() as T` sites in 8 files**.
+  **CATEGORY (b) — ONE CONFIRMED, USER-VISIBLE, AND FIXED (`9e01f3d5`, frontend).**
+  `app/(public)/forms/[token]/page.tsx` ended `fetchPublicForm` with
+  `return res.json() as Promise<PublicFormDefinition>`. `ResponseTransformInterceptor` is
+  installed globally at `main.ts:118` and wraps EVERY handler return as `{ success: true, data }`
+  unless it already carries a `success` key; `PublicFormsService.getFormByToken` returns a bare
+  Drizzle row. So the resolved value was the ENVELOPE: `form?.name ?? "Loading form…"` left the
+  header of a public form link permanently on **"Loading form…"**, `form?.description` never
+  rendered, and because the envelope is a truthy object the body rendered and hit
+  `form.fields.length` -> **`TypeError: Cannot read properties of undefined (reading 'length')`**
+  into the error boundary. Two sibling sites carried the identical cast
+  (`/public/forms/:token/submit`, `/public/intake/:projectId`); their consumers read only
+  `mutation.isSuccess`, so neither was visible. All three now read through `parseApiResponse`
+  with a real Zod contract. Four gates existed and none could see it: both typechecks were
+  green, `lib/api-contract-coverage.test.ts` scans `hooks/` only, `check:response-contracts`
+  scans `apiClient` seams and this is a raw `fetch`, and `check:type-assertions` counted
+  `as unknown as` only.
+  **CATEGORY (b) CHECKED AND CLEARED, recorded so it is not re-checked:** `support/realtime.ts`
+  `msg.data as TicketUpdatedPayload`/`MessageCreatedPayload` match
+  `support-realtime.service.ts:68,75` exactly; `use-huddle-events.ts` `msg.data as {userId}`
+  matches `chat-huddles.service.ts:423,493`; all 25 statically-checkable `db.execute<T>` row
+  types are supported by their SQL; the three cursor decoders and `razorpay.adapter.ts` are
+  guard-then-cast and sound (category (c), not (b)); the `columns: {}` signature that produced
+  the huddles bug has exactly ONE occurrence repo-wide and it is correct usage.
+  **CATEGORY (c):** the bulk of the 1,819 single casts, dominated by the backend guard-then-cast
+  idiom `typeof (parsed as { f?: unknown }).f !== "string"`. Sound but replaceable by a zod parse
+  or a type guard. Large, low-risk, low-value — recorded, NOT attempted. One worth naming because
+  it is one step from (b): `features/timesheets/my-time/week-grid.tsx:144,158` does
+  `JSON.parse(dataset.row ?? "{}") as GridRow`, and the `"{}"` fallback is by construction not a
+  `GridRow` — if it fired, a manual timesheet entry would be created unattached to any project.
+  `data-row` is always written at line 280 so it does not fire today. Left alone: another lane.
+  **NEW GATE RULES, both bite-proved HERMETICALLY in a `git archive HEAD` temp tree — nothing was
+  ever planted in the shared working tree.**
+  Backend rule 3 (`1dfc844a`): a per-file zero-growth ledger for the 28 `db.execute<T>` sites,
+  PLUS rule 3b, a static cross-check that every property a type literal declares is actually
+  selected by the `sql` template beside it and that a camelCase property does not rely on an
+  UNQUOTED alias (Postgres folds it to lower case, so `AS relationAvailable` returns
+  `relationavailable` and every read of the declared key is undefined). 25 of 28 checkable; all
+  25 pass. Self-test 14 -> **27 assertions**. Bite-proof: off-ledger site -> exit 1; a key the
+  SQL does not select -> exit 1 `MISSING`; unquoting a camelCase alias -> exit 1 `CASEFOLD`;
+  off-ledger `as unknown as` -> exit 1; each removed -> exit 0.
+  Frontend rule 3 (`16941905`): a per-file ledger of the 13 raw-`fetch` `.json() as T` sites,
+  whose invariants the self-test REQUIRES to state their envelope handling, plus rule 3b, a HARD
+  ZERO on `.json() as Promise<T>` — casting the promise rather than the awaited body can only be
+  a success-payload read that skips both the envelope and any contract. It was 3, it is 0.
+  Self-test 16 -> **31 assertions**.
+  **A BLIND SPOT IN THIS TICKET'S OWN FRONTEND GATE, found and fixed.** `SKIP_DIRS` contained
+  `"build"` and matched by NAME AT ANY DEPTH, so `features/build/` (**456 files — the product's
+  largest module**), `app/(authenticated)/build/`, `hooks/api/build/` and `lib/build/` were
+  excluded from EVERY rule in the file. The gate reported "4,260 application files, 0 escapes"
+  over a tree whose largest module it never opened; `public`, `dist` and `out` had the same latent
+  bug. Skipping is now depth-aware and pinned in both directions by self-test (j1)/(j2)/(j3).
+  **Files scanned 4,279 -> 4,982 (+703, +16.4%).** The verdicts survive — the hidden tree holds 0
+  further `as unknown as` and 0 further escapes — but the SCOPE CLAIM did not, and this is the
+  same "green over a set it cannot see" failure this release keeps finding. Proved directly: an
+  `as unknown as` planted inside `features/build/` is named and counted 7 -> 8 by the fixed
+  walker, and is completely invisible (count stays 7) under the old one.
+  **THE NEGATIVE TEST IS REAL, not decorative.**
+  `features/build/forms/public-form-envelope.test.ts`, 16 tests. It first proves the wire body is
+  genuinely a different shape from the declared type (so nothing after it can pass vacuously),
+  reproduces the exact `TypeError` the page threw, then drives all three REAL functions through a
+  stubbed `fetch`. Bite-proved hermetically: control 16/16; revert `fetchPublicForm` to the cast
+  -> 2 red; revert both submit seams -> 2 red; delete `unwrapEnvelope`'s envelope branch -> 6 red;
+  make `applyContract` skip the parse -> 5 red; all restored -> 16/16.
+  **Gates at head.** BE `pnpm typecheck` exit 0 · `pnpm check:spec-typecheck` exit 0 ·
+  `pnpm check:type-assertions` exit 0 (3,577 files, 30 `as unknown as` in 17 files, 22 external /
+  8 narrow-me, 28 raw-row generics in 20 files with 25 cross-checked, escapes 0/0/0/0) ·
+  self-test exit 0 (27 assertions, 35 ledgered invariants) · eslint on the changed file exit 0.
+  FE `pnpm type-check` exit 0 · `pnpm check:type-assertions` exit 0 (4,982 files, 7 `as unknown
+  as` in 6 files, 13 raw JSON casts in 8 files, `.json() as Promise<T>` 0, escapes 0/0/0/0) ·
+  self-test exit 0 (31 assertions, 14 ledgered invariants) · `pnpm check:response-contracts`
+  exit 0 · `pnpm check:dead-code` exit 0 · eslint on 7 changed files exit 0 · focused jest
+  6 suites / **82 tests** exit 0. **NOT RUN:** no backend jest (no backend SOURCE changed — only
+  the gate script — so a focused suite would have proved nothing); no `next build` / `nest build`
+  (nothing deleted, no module registration or side-effect import touched).
+  **WHY THE BOX STILL DOES NOT CLOSE.** R-8 (13 `narrow-me`) and R-8b (17 of 20 `external`) are
+  untouched for the reasons already recorded above. On top of those: "zero-growth ledger" is now
+  true of the 33 original sites AND of the two seams added this pass, but it is NOT true of the
+  **1,819 single `as X` casts**, the **407 non-null assertions**, or the **2,603 unparsed
+  response reads** — those are counted here and enforced only by `check:response-contracts`'
+  ceiling. A per-site negative test cannot be the bar for a population that size; the box needs
+  the amendment R-8 already asks for, extended: a per-site negative test for each `external`
+  site, a scheduled deletion for each `narrow-me` site, and a ratchet for the generic-parameter
+  population.
+  **Cross-territory, reported not touched:** (1) `src/scripts/check-declaration-column-drift.ts`
+  arrived UNTRACKED in the backend tree during this session carrying 4 `as unknown as`, which made
+  `check:type-assertions` exit 1 for every agent until I ledgered it — its invariant says so, and
+  if that lane drops the file the entry goes stale and the gate says so. (2)
+  `contracts/openapi.json` describes **1 response schema across 3,613 operations**, which is why
+  contracts cannot be generated and why `check:contract-drift` is hand-scoped to two timesheets
+  directories. (3) `lib/api-contract-coverage.test.ts` scans `hooks/` only and is blind to the
+  157 seam calls elsewhere; `check:response-contracts` is the wider instrument and the two must
+  not be quoted as if they measured the same thing.
+
   **RESIDUAL R-8b — 17 of the 20 `external` sites. Blocker: territory (another lane's harnesses), a compile-time-
   only invariant no runtime test can reach (the Drizzle-instantiation seam), and one vendored file. Owner:
   per-lane owners. Deadline: 2026-09-17.**
