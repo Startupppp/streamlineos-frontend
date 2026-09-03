@@ -4,7 +4,14 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** 6 of 8 closed. 2026-09-03 S15: box 2 is CLOSED. The openapi-permission gate S14 left
+**Status:** 6 of 8 closed; the 7th checkbox was an audit-trail artefact and is no longer one.
+2026-09-03 S16: box "(superseded)" was never an open box — it is the predecessor of the closed
+gated-reads box and its marker is removed (verified live, `check:gated-reads` exit 0). Boxes 6
+(states) and 8 (runtime parsing) stay `[~]`, both with re-measured residues. Box 8 gained the
+ratchet the register asked for (`pnpm check:response-contracts`), a named parse-failure policy,
+and a fix for three risk-list routes that were read uncontracted through the SSR prefetch seam.
+Report `reports/28d-runtime-parsing-ratchet.md`.
+2026-09-03 S15: box 2 is CLOSED. The openapi-permission gate S14 left
 unwritten now exists as `frontend/scripts/check-gated-reads.mjs` / `pnpm check:gated-reads`, is
 bite-proven in 8 directions hermetically, and the permissioned residue is **0** — 79 reads converted,
 12 CRM/Inventory reads held back by name. Report `reports/28c-the-gated-reads-gate.md`.
@@ -71,7 +78,14 @@ per-screen number is now measured; box 7 was not moved. Box 2's blocker is GONE 
       `npx eslint` on all 44 changed files exit 0, 0 errors (24 warnings, all pre-existing — the same
       44 files at HEAD~2 produce the identical count in a hermetic tree).
       PREVIOUS STATE, kept for the audit trail:
-- [~] (superseded) Queries are gated by effective access and required identifiers.
+      SUPERSEDED — NOT AN OPEN BOX. Re-verified 2026-09-03 S16 against a live run, not a
+      transcript: `pnpm -s check:gated-reads` exit 0 — 720 read sites, 50 ungated (21 universal,
+      11 public, 6 in-service, 12 permissioned and all 12 held back by name), permissioned
+      residue 0, unresolvable 0. Everything below this line is the predecessor of the `[x]` box
+      above and is kept only for the audit trail. It was left carrying a `- [~]` marker, which
+      made a closed box read as an open one in every subsequent scan; the marker is removed.
+      Nothing here needs re-implementing.
+      (previous text follows) Queries are gated by effective access and required identifiers.
       **S13 — the blocker dissolved.** The note below said this was blocked on "per-route backend reading".
       It is not: `contracts/openapi.json` carries `x-exposure` and `x-permission` per operation, generated
       from the controllers' own `@RequirePermission`. Re-scanned at head with the TS compiler API:
@@ -161,6 +175,29 @@ per-screen number is now measured; box 7 was not moved. Box 2's blocker is GONE 
       Evidence: AST audit of all 33 `useInfiniteQuery` call sites. One derives its own cursor (`notifications-inbox.ts`) and took `page[page.length-1].id`, which is only correct if rows arrive in sort order — replaced with the page minimum, matching the backend's `orderBy(desc(id))` + `lt(id, cursor)`. New `hooks/api/cursor-pagination-contract.test.tsx` (6 tests) exercises disagreeing ids `[90,12,41]`, a falsy `id: 0` cursor round trip, and a filter change; reverting the hook fix turns 2 of the 6 red.
 
 - [~] Loading, background-refresh, empty, partial-error, full-error, offline, permission-denied and revoked-access states are each covered.
+      **S16 — RE-MEASURED AT HEAD. The data-layer half is still closed; two of the three recorded
+      residues were WRONG in the direction that made them look unbounded, and both are now a
+      countable adoption number in `app/**` / `features/**`.**
+      (1) CONFIRMED unchanged. `grep -rn fetchStatus app features components hooks lib`, non-test:
+      **0** real occurrences (3 hits, all the variable `refetchStatus` in
+      `features/hr/onboarding/onboarding-detail-page.tsx`). No surface reads the query's own
+      pause signal; the three shared components read `useOnlineStatus()` instead. Which signal is
+      canonical is still an open design choice. **A-25 stands.**
+      (2) **CORRECTED — the register's "zero in-scope screens consume the gate" is false.**
+      `components/ui/empty-state.tsx:108` takes an `access` prop and renders `NoPermissionState`
+      from it, so the shared mechanism for consuming a read's own gate EXISTS. Measured with the
+      TS compiler API over `app features components` (non-test .tsx): **706 `<EmptyState>` render
+      sites in 585 files, of which 40 (in 40 files) pass `access=`.** So 40 surfaces take the
+      refusal from the read; 666 do not. `useGatedQuery` call sites re-counted: **237 across 104
+      files**, matching the register and superseding the older 180/83. The residue is adoption of
+      an existing prop at 666 sites, not a component that needs building. **A-26 stands, resized.**
+      (3) **CORRECTED — also already built.** The same component takes `filtersActive`,
+      `filteredTitle` and `onClearFilters`, i.e. filter-empty vs data-empty is a distinction the
+      shared empty state already draws. Adopted at **91 of 706** render sites (90 files).
+      Residue: 615 sites. **A-27 stands, resized.**
+      Still not closable from `hooks/api/**`: all three residues are per-screen prop adoption.
+      **Owner: the release owner must re-route — ticket 30's box 1 is `[x]` CLOSED, so as written
+      these three are addressed to nobody.** Deadline unchanged: 2026-09-17.
       **RESIDUAL-RISK REGISTER 2026-09-03 — THIS BOX IS ROUTED TO A BOX THAT IS ALREADY TICKED.**
       Its remainder is assigned to "ticket 30 (per-screen states) for (1) and (2); ticket 27 for (3)". **Ticket
       30's corresponding box is its box 1 — "Loading, empty, error, offline and permission-denied states are
@@ -211,6 +248,60 @@ per-screen number is now measured; box 7 was not moved. Box 2's blocker is GONE 
       PARTIAL: the per-screen half stays open for ticket 30 — the data layer can only make a state renderable, it cannot make a page render it. What remains, precisely: (1) no surface reads `fetchStatus === "paused"`, so every screen renders an offline read as an indefinite skeleton (`useOnlineStatus` has 3 consumers: the shell banner, the notifications inbox, and a private copy inside `features/inventory/components/tools/barcode-client.tsx:26` that duplicates `hooks/common/use-online-status.ts`); (2) 66 of ~70 gated reads carry the `access` gate but the page-level audit of which ones render `NoPermissionState` vs an empty state is an `app/**`/`features/**` count; (3) filter-empty vs data-empty is a per-page distinction the hook cannot make.
 
 - [~] Runtime parsing rejects a backend contract change rather than silently accepting it; client types mirror the backend schema exactly.
+      **S16 — the ratchet the register asked for now exists, and the recorded fraction was
+      measured over too small a tree. STILL PARTIAL, and the box still cannot be met as worded.**
+      **The honest fraction is 59 of 2,662 seam calls — 2.2% — across `hooks/ app/ features/
+      components/ lib/`.** The previously recorded 55/2,502 counted `hooks/` only and was blind
+      to **161 seam calls elsewhere**, of which exactly 1 was parsed. 49 risk-list routes hold a
+      contract; 1,963 distinct routes are reachable and 49 of them are parsed somewhere.
+      **Why it cannot be finished by generation, measured not assumed:** `contracts/openapi.json`
+      carries **1 response schema across 3,613 operations**. Every contract has to be derived from
+      the backend's Drizzle columns and service projection, because one written from the
+      frontend's own type encodes the drift instead of catching it. Per-route work; unchanged.
+      **A live hole was found and fixed.** `/payroll/runs`, `/roles` and `/directory/workers` are
+      all on this ticket's own money/permissions/PII risk list and all three had an UNCONTRACTED
+      second read in `lib/prefetch/**`. The SSR read wins on first paint — its snapshot is
+      hydrated into the app cache, so the contracted client `queryFn` never runs until something
+      invalidates the key — so the contract was bypassed for the render that matters. The old
+      guard could not see it twice over: it scanned `hooks/` only, and its leak rule matched
+      `method === "get"`, never `serverGet`. Proven, not argued: on the pre-fix tree
+      `lib/api-contract-coverage.test.ts` is **7/7 green** while `check:response-contracts` names
+      all three. `lib/prefetch/payroll.ts` was additionally typed from `types/payroll/runs.ts`,
+      which disagrees with `payrollRunsPageContract` on six fields — `gross_total`, `net_total`,
+      `employee_count`, `exception_count` are `.notNull()` columns
+      (`src/db/schema/payroll/runs.ts:30-35`), so the hand-written `| null` was never reachable.
+      No new contract was authored: all three already existed and were already verified.
+      **The parse-failure policy is now a decision in the code, not an implicit branch.**
+      `rejectContractViolation` in `lib/api-envelope.ts`, typed `never`: a violation THROWS on
+      reads and writes, in dev and production, with no severity dial and no environment switch.
+      Justification and the rejected alternative are on the function. The alternative that looks
+      right and is not: fail reads, let a drifted WRITE response through because the mutation
+      already committed and throwing invites a duplicate retry — `POST /organization/switch`
+      kills it, since its response is what the session's active org is set from.
+      **THE RATCHET:** `frontend/scripts/check-response-contracts.mjs`, wired as
+      `pnpm check:response-contracts` / `:self-test`. Six rules: a new unparsed seam call fails
+      (baseline 2603), a risk-list route losing its contract fails, a risk-list route read
+      uncontracted through ANY read seam fails, a new unresolvable route fails (18 sites in 15
+      files are named and frozen — including `hooks/api/chat-core-read.ts`, the
+      `drainChannelPages(path)` call site the `members[].membership.user` defect shipped
+      through, which no route rule can see), a stale exception entry fails, and a scan that
+      finds too little fails instead of reading green.
+      **One scanner now, not two.** `lib/api-contract-coverage.test.ts` carried its own copy with
+      the two holes above; it consumes the gate's `--json` instead. This release has already paid
+      for two implementations of one definition disagreeing (81 / 84 / 86 on box 2).
+      **What this does NOT claim:** the gate certifies that a call site PASSES a contract, not
+      that the contract is true. A contract copied from a wrong frontend type passes and catches
+      nothing. Only reading the backend column makes one true.
+      **Recommendation unchanged and now costed:** amend the box to "every money / permissions /
+      tenancy / PII route parses at runtime, enforced by a ratchet; the remainder is scheduled",
+      and set a per-release quota against the 2,603 residue. **Owner: per-module frontend owners;
+      release owner sets the quota and decides the amendment. Quota by 2026-09-17.**
+      Evidence: `pnpm -s check:response-contracts` exit 0 — 2662 scanned / 59 parsed / 2603
+      unparsed / 18 unresolvable / 49 risk-list routes held; `:self-test` exit 0, 12 assertions;
+      `lib/prefetch/prefetch-contract.test.ts` 9 tests, 5 red against the pre-fix tree;
+      `lib/api-envelope-policy.test.ts` 8 tests, 6 red when the policy is reversed to
+      log-and-continue; `lib/api-contract-coverage.test.ts` 7 tests, 4 red on the pre-fix tree
+      where its old self-contained copy was 7/7 green.
       **RESIDUAL-RISK REGISTER 2026-09-03 — R-20 (ACCEPTED RESIDUAL · SCALE), and this box CANNOT BE MET AS
       WORDED.** The honest fraction is this ticket's own: **55 of 2,502** seam call sites under `hooks/` carry a
       runtime contract (**52 of 1,012** GETs) across 49 routes — **2.2%**. Each conversion needs the backend
@@ -242,6 +333,46 @@ per-screen number is now measured; box 7 was not moved. Box 2's blocker is GONE 
       Evidence: AST scan found **291 under-supplied call sites over 82 factories** producing keys such as `["streamlineos","inventory","stockLevels",undefined]` while every reader keys on `stockLevels(filters)` — 25 mutation sites alone could never refresh a stock list. Verified against `partialMatchKey` in `@tanstack/query-core@5.90.12`. Fixed by making the optional tail conditional in **211 factories** across 14 files plus 12 hand-fixed sentinel/interior cases; re-scan reports 0. Guarded permanently by `lib/query-keys/key-factory-contract.test.ts`, which fails on any factory or call site that reintroduces the shape. `hooks/api/mail.test.ts` previously *asserted the broken behaviour* ("finds ZERO — proves the trailing-undefined trap") and is rewritten as a positive regression test.
 
 ## Verification run for this ticket
+
+Session S16 (2026-09-03) — box 8's ratchet, the SSR prefetch hole, and the parse-failure policy.
+Every number below was produced by a command run in this session and read, with the exit code
+captured by `$?` (`${PIPESTATUS[0]}` does not work in this zsh).
+
+- `pnpm -C frontend type-check` → **exit 0, 0 errors**. (An earlier run in the same session showed
+  6 errors, all in `features/build/whiteboard/`, `features/org-setup/` and `features/sign/` —
+  another lane's in-flight work, fixed by them before the final run. None were in these paths.)
+- `npx eslint lib/prefetch/{payroll,roles,directory}.ts lib/prefetch/prefetch-contract.test.ts
+  lib/api-envelope.ts lib/api-envelope-policy.test.ts lib/api-contract-coverage.test.ts
+  scripts/check-response-contracts.mjs` → **exit 0, 0 errors, 0 warnings**.
+- `npx jest --maxWorkers=2 --testPathPattern="(lib/api-|lib/prefetch|lib/query-|hooks/api/response-contracts|hooks/api/read-state|hooks/api/cursor-pagination|hooks/api/gated-read)"`
+  → **exit 0, 29 suites / 292 tests**.
+- `pnpm -s check:response-contracts` → **exit 0** — 2662 seam calls scanned, 59 parsed (2.2%),
+  2603 unparsed (baseline 2603), 18 unresolvable sites in 15 files, 49 risk-list routes held.
+- `pnpm -s check:response-contracts:self-test` → **exit 0, 12/12 assertions**.
+- `pnpm -s check:gated-reads` → **exit 0** (720 read sites, permissioned residue 0).
+- `check:query-signal` 0 · `check:query-scope` 0 · `check:over-300` 0 · `check:dead-code` 0 ·
+  `check:cycles` 0 (no circular dependency).
+
+Bite proofs — all planted in `git archive` temp trees; the shared working tree was never modified.
+
+- New gate, 6 directions: clean **0** · self-test **0** · a new UNPARSED endpoint **1** · the same
+  endpoint WITH a contract **0** · `/me/access` losing its contract **1** · restored **0**.
+- The hole the old guard could not see: on the pre-fix tree (`9ba5373ad^`),
+  `lib/api-contract-coverage.test.ts` is **7/7 green** while `check:response-contracts` exits **1**
+  naming `lib/prefetch/directory.ts:18`, `payroll.ts:18` and `roles.ts:27`.
+- `lib/prefetch/prefetch-contract.test.ts`: **9/9** against the fix, **5 of 9 red** against the
+  pre-fix tree — every drift-rejection case, none of the happy paths.
+- `lib/api-envelope-policy.test.ts`: **8/8** as written, **6 of 8 red** when
+  `rejectContractViolation` is reversed to log-and-continue.
+- Rewritten `lib/api-contract-coverage.test.ts`: **7/7** at head, **4 of 7 red** on the pre-fix tree.
+
+Red gates that are **not** this ticket's, re-verified this session:
+
+- `check:file-sizes` exit 1 — `hooks/api/notifications-inbox.ts` (534) and its test (663), both
+  already that size at the S12 starting commit. `features/hr/cases/cases-page-content.tsx` has since
+  been fixed by another lane and no longer appears. `scripts/check-response-contracts.mjs` (528) is
+  not in the gate's scan set.
+
 
 Session S12 (resumed after the watchdog killed S11 mid-sweep):
 
