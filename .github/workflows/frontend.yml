@@ -295,6 +295,17 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm run check:colors:self-test && pnpm run check:colors
 
+      # BLOCKING AND NEWLY RED, deliberately. 2026-09-03 (ticket 35) bite-proved
+      # this gate and it did not bite: it reported "No useEffect-driven API
+      # fetches found (5,278 files scanned)" over a real one, because both of
+      # its rules needed a shape the common case does not have. With rule 3
+      # added it measures ONE violation —
+      # components/layout/command-palette.tsx:177, a debounced search calling
+      # apiClient.get("/search") inside useEffect with a hand-rolled `cancelled`
+      # flag instead of useQuery. Frontend component territory, not a gate
+      # defect. The step is left blocking and red rather than muted: the code is
+      # what is wrong, and `if: !cancelled()` above means a red step no longer
+      # hides the ones after it.
       - name: No useEffect-driven API fetches
         if: ${{ !cancelled() }}
         run: pnpm run check:effect-fetches:self-test && pnpm run check:effect-fetches
