@@ -1,6 +1,7 @@
 "use client";
 
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
@@ -106,7 +107,7 @@ export function useAllOffers(params?: AllOffersParams) {
 }
 
 export function useOfferVersions(candidateId: number, offerId: number) {
-  return useQuery({
+  return useGatedQuery("hr:offers:view", {
     queryKey: [...queryKeys.hr.all, "offerVersions", offerId] as const,
     queryFn: ({ signal }) =>
       apiClient.get<OfferVersion[]>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/versions`, undefined, signal),
@@ -116,7 +117,7 @@ export function useOfferVersions(candidateId: number, offerId: number) {
 }
 
 export function useOfferNegotiations(candidateId: number, offerId: number) {
-  return useQuery({
+  return useGatedQuery("hr:offers:view", {
     queryKey: [...queryKeys.hr.all, "offerNegotiations", offerId] as const,
     queryFn: ({ signal }) =>
       apiClient.get<OfferNegotiation[]>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/negotiations`, undefined, signal),

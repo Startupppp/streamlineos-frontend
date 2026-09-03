@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -80,7 +80,7 @@ export const useInvoice = (
     "queryKey" | "queryFn" | "enabled"
   >
 ) => {
-  return useQuery<Invoice, Error>({
+  return useGatedQuery<Invoice, Error>("accounting:read", {
     queryKey: queryKeys.invoice.detail(id),
     queryFn: ({ signal }) => apiClient.get(`/invoices/${id}`, undefined, signal, invoiceContract),
     enabled: id > 0,

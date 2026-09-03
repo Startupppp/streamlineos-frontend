@@ -13,6 +13,7 @@ import {
 import { formatChannelTime } from "./chat-helpers";
 import type { Channel } from "./chat-types";
 import { ChannelAvatar } from "./channel-avatar";
+import { resolveDirectPartner } from "./channel-member-lookup";
 import { ChannelItemMenu } from "./channel-item-menu";
 import { useMarkChannelUnread } from "@/hooks/api";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -37,9 +38,7 @@ export function ChannelItem({
   onOpenSettings?: (channelId: number) => void;
 }) {
   const otherMember =
-    channel.type === "DIRECT"
-      ? channel.members?.find((m) => m.user?.id !== currentUserId)?.user
-      : null;
+    channel.type === "DIRECT" ? resolveDirectPartner(channel.members, currentUserId) : null;
 
   const displayName =
     channel.type === "DIRECT" ? otherMember?.name ?? "Unknown" : channel.name;

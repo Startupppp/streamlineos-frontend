@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -163,7 +163,7 @@ export function useGoals(params?: GoalsParams) {
 }
 
 export function useGoal(id: number) {
-  return useQuery({
+  return useGatedQuery("build:goals:view", {
     queryKey: queryKeys.goals.detail(id),
     queryFn: ({ signal }) => apiClient.get<GoalDetail>(`/goals/${id}`, undefined, signal),
     enabled: id > 0,

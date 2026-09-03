@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -167,7 +167,7 @@ function invalidateSuggestions(qc: ReturnType<typeof useQueryClient>, ticketId: 
 }
 
 export function useTicketAiSuggestions(ticketId: number) {
-  return useQuery({
+  return useGatedQuery("support:tickets:view", {
     queryKey: queryKeys.supportAiSuggestions.list(ticketId),
     queryFn: ({ signal }) => apiClient.get<AiSuggestion[]>(`/support/${ticketId}/ai/suggestions`, undefined, signal),
     enabled: Number.isFinite(ticketId) && ticketId > 0,

@@ -1,6 +1,6 @@
 "use client";
 
-import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -148,7 +148,7 @@ export interface WellnessPulse {
 }
 
 export function useWellnessPulse(enabled = true) {
-  return useQuery({
+  return useGatedQuery("hr:safety:manage", {
     queryKey: queryKeys.hrSafety.wellnessPulse,
     queryFn: ({ signal }) => apiClient.get<WellnessPulse>("/hr/safety/wellness/pulse", undefined, signal),
     staleTime: 120_000,

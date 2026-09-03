@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -19,7 +20,7 @@ export interface SupportTicketExternalLink {
 }
 
 export function useSupportTicketExternalLinks(ticketId: number) {
-  return useQuery({
+  return useGatedQuery("support:tickets:view", {
     queryKey: [...queryKeys.support.detail(ticketId), "external-links"] as const,
     queryFn: ({ signal }) => apiClient.get<SupportTicketExternalLink[]>(`/support/${ticketId}/external-links`, undefined, signal),
     enabled: Number.isFinite(ticketId) && ticketId > 0,

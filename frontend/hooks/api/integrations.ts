@@ -1,6 +1,7 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -19,7 +20,7 @@ export interface IntegrationConnection {
 }
 
 export function useIntegrationConnections(options?: { enabled?: boolean }) {
-  return useQuery({
+  return useGatedQuery("integrations:connections:view", {
     queryKey: queryKeys.integrations.connections(),
     queryFn: ({ signal }) => apiClient.get<IntegrationConnection[]>("/integrations/connections", undefined, signal),
     staleTime: 60_000,

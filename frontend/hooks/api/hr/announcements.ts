@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -34,7 +35,7 @@ export function useHrAnnouncements() {
 }
 
 export function useAllHrAnnouncements(options?: { enabled?: boolean }) {
-  return useQuery<HrAnnouncement[]>({
+  return useGatedQuery<HrAnnouncement[]>("hr:announcements:manage", {
     queryKey: queryKeys.hr.announcementsAll(),
     queryFn: ({ signal }) => apiClient.get<HrAnnouncement[]>("/org/announcements/all", undefined, signal),
     staleTime: 30_000,

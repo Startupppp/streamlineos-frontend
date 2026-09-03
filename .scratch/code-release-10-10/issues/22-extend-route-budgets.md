@@ -4,15 +4,88 @@
 
 **Blocked by:** 21.
 
-**Status:** **4 of 6 closed**, unchanged — but `check:route-budgets` is no longer the only perf gate CI names: `check:benchmark-manifest`, the regression policy and the three perf self-tests were wired in `package.json` and named by **no** workflow step in either repository (`grep -c 'benchmark\|perf:' .github/workflows/*.yml` → **0** in both). Four hermetic steps added to backend `ci.yml`'s `gates` job, each carrying `if: ${{ !cancelled() }}`; the seeded HTTP capture named separately in `tenant-isolation` with its prerequisites. Commit `07295b18`. Report: `reports/23b-ci-wiring-and-calendar-recheck.md`. Historic status — but the gate now fails on the right route for the right reason. `contracts/route-budgets.json` pointed `GET /calendar/events` at `dashboard-personal-calendar-events`, whose SQL is `DashboardPersonalService`; the calendar route runs `CalendarEventSourceLoader` and **had never been measured**. Re-linked, measured for the first time at **7,072 blocks against a 2,000 ceiling** — the stale 1,139 it carried fitted under that ceiling, so the gate had been reporting PARTIAL over an unmeasured route. `check:route-budgets` is exit 1 on that one real breach; **zero declared ceilings changed** (`git diff` touches no `max*` key). A **fourth vacuous budget** was caught: `dashboard-team-attendance` anchored its fixture to wall-clock `today` against a static seed, so it goes vacuous one day after any rebuild while the manifest keeps the last non-vacuous number — now anchored to the seed's own latest attendance day and measured on all four tenants. 108/570 declared ceilings measured (18.9%), coverage 82/3613 (2.3%). Reports: `reports/22-route-budgets.md`, `reports/22c-budget-drift-and-remeasure.md`, `reports/22d-calendar-lateral-and-budget-relink.md`.
+**Status:** **4 of 6 closed.** **A-14 and A-15 each advanced by one route (2026-09-03, commit `90e2d097`)** — `GET /clients`, the only route in the clients territory, is now `counted-call-path` with `measuredDbCalls: 5` measured on all four tenants as `streamline_app` under RLS. DbCalls **2/82 -> 3/82**, basis **12 -> 13 counted**, measured ceilings **386/570 -> 387/570**, zero `max*` keys changed. A cross-territory defect found doing it: the `clients-list` read-cost budget measures the `clients` table while the route reads `client_accounts`, and the vacuous guard cannot see it because `client_accounts` is EMPTY on the seed. `measuredBatchSize`/`measuredDurationMs` untouched at 0/12. Report: `reports/47-a4-a5-clients-n1-and-negative-tests.md` §3. Otherwise unchanged — but `check:route-budgets` is no longer the only perf gate CI names: `check:benchmark-manifest`, the regression policy and the three perf self-tests were wired in `package.json` and named by **no** workflow step in either repository (`grep -c 'benchmark\|perf:' .github/workflows/*.yml` → **0** in both). Four hermetic steps added to backend `ci.yml`'s `gates` job, each carrying `if: ${{ !cancelled() }}`; the seeded HTTP capture named separately in `tenant-isolation` with its prerequisites. Commit `07295b18`. Report: `reports/23b-ci-wiring-and-calendar-recheck.md`. Historic status — but the gate now fails on the right route for the right reason. `contracts/route-budgets.json` pointed `GET /calendar/events` at `dashboard-personal-calendar-events`, whose SQL is `DashboardPersonalService`; the calendar route runs `CalendarEventSourceLoader` and **had never been measured**. Re-linked, measured for the first time at **7,072 blocks against a 2,000 ceiling** — the stale 1,139 it carried fitted under that ceiling, so the gate had been reporting PARTIAL over an unmeasured route. `check:route-budgets` is exit 1 on that one real breach; **zero declared ceilings changed** (`git diff` touches no `max*` key). A **fourth vacuous budget** was caught: `dashboard-team-attendance` anchored its fixture to wall-clock `today` against a static seed, so it goes vacuous one day after any rebuild while the manifest keeps the last non-vacuous number — now anchored to the seed's own latest attendance day and measured on all four tenants. 108/570 declared ceilings measured (18.9%), coverage 82/3613 (2.3%). Reports: `reports/22-route-budgets.md`, `reports/22c-budget-drift-and-remeasure.md`, `reports/22d-calendar-lateral-and-budget-relink.md`.
+
+**Residual-risk disposition (2026-09-03):** every open box below now carries an ASSIGNABLE-or-ACCEPTED verdict, a named owner and a date, recorded inline under the box and in `reports/residual-risk-register-19-30.md`. Blockers were re-verified against source, a live gate run or a committed artifact rather than transcribed; where a stated blocker did not survive, the correction is inline.
 
 - [ ] Every critical route and worker batch declares a maximum database-call count, downstream-call count, application latency, response-byte and memory budget.
+  - **RESIDUAL-RISK REGISTER 2026-09-03 — verified against the live gate, not this ticket.**
+    `pnpm -s check:route-budgets` → **exit 1**, and its own summary reproduces every figure below:
+    82 budgets · 386/570 ceilings measured (67.7%) · `maxDbCalls basis: 12 counted · 14 estimate · 56 default · 0
+    undeclared`. Independently re-derived from `contracts/route-budgets.json`: 82 entries,
+    `{counted-call-path: 12, declared-estimate: 14, default-ceiling: 56}`.
+    **A-14 (ASSIGNABLE).** The 56 defaults are one call-path read each. `countDbCalls` already exists
+    (`src/scripts/route-budget-db-calls.ts:76`), is general and has its own spec. **Owner: per-module owners; the
+    4 KB routes named below are unowned inside ticket 29's own territory. Deadline: 2026-09-17.**
+    **A-14 PROGRESS — 1 of the 56 done (2026-09-03, commit `90e2d097`, backend). `GET /clients`, the only route in
+    the clients territory: `dbCallBasis` `default-ceiling` -> `counted-call-path`.** Read statement by statement
+    out of `ClientAccountsService.getClientAccounts`: the read is **2** (one relational `findMany` over
+    `client_accounts` with the salesRep/assignedCrm column joins, plus one `count()` over the same predicate, in
+    one `Promise.all`); `tryBackfill` — which `registerAfterCommit` defers past commit but still inside the
+    request — adds 1 insert + 2 assignment probes + `ceil(unassigned / BULK_UPDATE_CHUNK 500)` bulk updates, the
+    last two skipped once nothing is unassigned. `resolveClientsReadScope` and `membersWithPermission` are access
+    reads, not counted, matching the `GET /dashboard/personal` convention.
+    **The ceiling was NOT tightened from 10 to the counted 5, and the reason is written into the note:** the chunk
+    term is unbounded in the number of unassigned accounts, so tightening would declare a ceiling the cold path
+    can exceed on data alone. Zero `max*` keys changed (`git diff | grep '^[-+].*"max'` -> 0). Basis split
+    **12 counted -> 13 · 14 estimate · 56 default -> 55**. Report:
+    `reports/47-a4-a5-clients-n1-and-negative-tests.md` §3. **55 defaults remain, still per-module owners.**
+    **R-13 (ACCEPTED RESIDUAL · TOOL).** The critical set being asserted rather than derived is a real instrument
+    absence — nothing in either repository records request volume, so 3,613 operations cannot be ranked by
+    traffic. **Owner: release owner. Review: 2027-03-03**, unless traffic telemetry is built.
   - 82 budgets (70 routes + 12 worker batches, up from 19), each declaring all five ceilings plus `maxReadPathP95Ms`, and `maxBatchSize`/`maxDurationMs` on worker batches. Every key validated against `openapi.json`.
   - PARTIAL: **63 of 82 `maxDbCalls` values are the manifest default (10), not a counted call path** — 5 are counted query-by-query, 14 are reasoned estimates. Each entry declares which in `dbCallBasis` and the gate prints the split, so a placeholder is labelled rather than indistinguishable from a measurement. Closing this is one call-path read per route and belongs with each module's owner.
     PARTIAL (S12): **7 of the 63 defaults were in reach and are now counted** — every dashboard route in this territory, read statement-by-statement out of its service, and **every one tightened**, 10 down to 1-4: announcements 1, leaves-today 2, team-attendance 2, my-issues 2, active-sprint 3, recent-projects 3 (worst branch), stats 4. Access and module resolution are not counted, matching the convention `GET /dashboard/personal` set. Basis split is now **12 counted / 14 estimated / 56 default**. Every note says the count is read from the call path, not from a live statement count.
     PARTIAL: the remaining 56 defaults are in other modules' territories, plus 4 KB routes in this one (`GET /kb/spaces`, `/kb/spaces/{spaceId}`, `/kb/pages/recent`, `/kb/pages/search`) whose call paths were not read this pass. The instrument is general and live coverage is 2 of 82 routes; extending it is one `countDbCalls` call per service. Not a mechanism gap — it needs each module's owner, and this pass owned calendar/mail/kb/settings/rbac/module-access/dashboard only.
   - PARTIAL: the critical set is asserted in `surface.criticalSelection`, not derived — there is no request-volume telemetry in the repo to rank 3,613 operations by traffic.
 - [ ] p50/p95/p99 are recorded at the release commit for each declared budget, with measured fields populated.
+  - **RESIDUAL-RISK REGISTER 2026-09-03 — one blocker is real, one is overstated, and a THIRD one is not in this
+    box's text at all and is the largest item in this ticket.**
+    Live: `DbCalls 2/82 · LatencyP95Ms 69/82 · DownstreamCalls 69/82 · ResponseBytes 69/82 · MemoryMb 69/82 ·
+    BufferBlocks 54/54 · ReadPathP95Ms 54/82 · BatchSize 0/12 · DurationMs 0/12`.
+    **A-15 (ASSIGNABLE).** `measuredDbCalls` 2/82 is one `countDbCalls` per service. The mechanism is complete and
+    already applied to two routes in `test/perf/route-db-call-budget.e2e-spec.ts`. **Owner: per-module owners.
+    Deadline: 2026-09-17.**
+    **A-15 PROGRESS — 1 of the 80 done (2026-09-03, commit `90e2d097`). `measuredDbCalls` 2/82 -> 3/82.**
+    `GET /clients` measured with `countDbCalls` around the real `ClientAccountsService` over `scratch_t21_clients`
+    (a copy of `scratch_perf_seed` at head — the route WRITES, so the seed itself was not measured on) as
+    `streamline_app`, `rolbypassrls=false`, RLS live, tenant GUC set, Redis null so the cache always misses.
+    **Steady state 5 on ALL FOUR tenants** (89.93 / 9.00 / 0.90 / 0.18). The first request per tenant also runs
+    the deferred backfill: **6** on the three smaller tenants (1 chunk) and **9** on the 89.93% one (1,600
+    accounts = 4 chunks of 500). That cold branch is recorded in `dbCallMeasurement.coldBranch` and deliberately
+    NOT recorded as the measurement, because its chunk term grows with the data and a ratchet on it would be
+    data-dependent. `check:route-budgets` measured ceilings **386/570 (67.7%) -> 387/570 (67.9%)**; still exit 1
+    on the same two pre-existing breaches (`GET /calendar/events`, `GET /cron/storage-sweep`), neither of them
+    this route, neither moved; `--self-test` exit 0.
+    **NOT DONE and named: `GET /clients` has no `assertNoDbCallRegression` ratchet.** Nothing enforces the
+    recorded 5 — the only vehicle is `test/perf/route-db-call-budget.e2e-spec.ts`, which was another lane's
+    territory this session. It is three lines beside the two `GET /notifications` cases. **Owner: perf-harness
+    owner.**
+    **NEW FINDING, cross-territory — the `clients-list` read-cost budget measures a DIFFERENT TABLE from the
+    route it is linked to.** Its SQL is `SELECT id, name, status, account_manager_id … FROM clients`;
+    `GET /clients` reads **`client_accounts`** (different table, different columns — `client_name`,
+    `assigned_crm_id`). Same defect shape as the eight caught in 22c and the `GET /calendar/events` relink in 22d.
+    The mislink is what hides it: **`client_accounts` holds 0 rows on `scratch_perf_seed` at head** while
+    `clients` holds 25 on the majority tenant and 0 on the other three — so the budget reports
+    `resultRows: 25, tenantRows: 25`, clears the vacuous guard, and `GET /clients`' recorded
+    `measuredBufferBlocks: 4` describes a statement the route never issues. **Owner: read-cost / perf-harness
+    owner (`src/scripts/read-cost-budgets.mjs`).**
+    **A-16 (ASSIGNABLE) — "NOT reachable from any HTTP instrument" is too strong.** For the storage sweep the batch
+    size is **already on the wire**: `CronStorageSweepService` declares `organizations: number`
+    (`cron-storage-sweep.service.ts:43`, assigned at `:83`) and `cron-storage.controller.ts:44` returns
+    `{ success: true, ...outcome.result }`. The harness times the endpoint, so `durationMs` is a figure it already
+    holds. This is an **unwritten instrument, not an unreachable measurement**. *Caveat: proved for 1 of the 12
+    batches; the other eleven were not opened.* **Owner: cron/worker owner + perf-harness owner. Deadline:
+    2026-09-17.**
+    **A-17 (ASSIGNABLE) — THE STALE CAPTURE, and it is why two gates are red.** `contracts/route-budgets.json`
+    still carries `measuredLatencyP95Ms: 915.944` and `measuredBufferBlocks: 7072` for `GET /calendar/events`,
+    the S13 numbers, while tickets 22, 23 and 29 all record the route as fixed at 305.746 ms / 706 blocks. Measured
+    at head: `pnpm check:route-budgets` **exit 1** (`measuredBufferBlocks=7072 exceeds maxBufferBlocks=2000`) and
+    `pnpm check:benchmark-manifest` **exit 1** (`request p95 915.944 ms > 800 ms PRD §12.1 ceiling`). Report 23b §4
+    names the remedy exactly — one uninterrupted full 164-slot capture plus `perf:merge-route-budgets --write`,
+    and separately a re-run of the read-cost writer. It is a **re-run, not an investigation**, and it is unowned.
+    **Owner: perf-harness owner. Deadline: 2026-09-08.** Full reasoning:
+    `reports/residual-risk-register-19-30.md` §1.1 and §3.3.
   - **S13 (2026-09-03) — the four HTTP-level fields are POPULATED, 0/82 → 70/82 each.** `test/perf/merge-http-route-budgets.mjs` folds this release's own HTTP capture (recorded in `contracts/benchmark-manifest.json` under `requestLevel`: `scratch_t23_http`, 666/666 at head, `streamline_app` with `rolbypassrls=false`, Redis off, both control probes held on both tenants) into the contract. `measuredLatencyP95Ms`, `measuredDownstreamCalls`, `measuredResponseBytes` and `measuredMemoryMb` are now real numbers on the 70 budgets the capture reached; the other 12 keep `null` plus an `httpMeasurement` block naming the reason (4 routes answered 500, 2 answered 402 on both tenants, 6 are provider-backed mail routes with no connected account). **Zero `max*` keys changed** — `git diff` touches no ceiling line. `check:route-budgets` coverage **110/570 (19.3%) → 390/570 (68.4%)**, and it now fails on 3 measured breaches instead of 1. Self-test 27/27.
   - The merger refuses a capture whose control probe did not hold, whose role had BYPASSRLS, that was off journal head, or that recorded heap without `--expose-gc`; it refuses **per route** when the declared ceiling moved after the capture (the capture records `declared*` beside every measurement for exactly this); and a route that stopped being measurable has its stale number **cleared**, never carried forward.
   - **S14 (2026-09-03) — DECISION on the two remaining `measured*` gaps, both of which are OWNED ELSEWHERE, stated plainly rather than left as an open PARTIAL.**

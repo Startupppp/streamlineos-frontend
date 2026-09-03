@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
@@ -34,7 +35,7 @@ export function usePortfolios(filters?: ListFilters) {
 }
 
 export function usePortfolio(id: number) {
-  return useQuery<PortfolioDetail>({
+  return useGatedQuery<PortfolioDetail>("build:portfolios:view", {
     queryKey: queryKeys.projects.portfolios.detail(id),
     queryFn: ({ signal }) => apiClient.get<PortfolioDetail>(`/build/portfolios/${id}`, undefined, signal),
     enabled: !!id,

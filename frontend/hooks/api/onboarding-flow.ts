@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -66,7 +67,7 @@ export type ModuleChecklist = {
 };
 
 export function useModuleChecklists(enabled = true) {
-  return useQuery({
+  return useGatedQuery("onboarding:module-checklists:view", {
     queryKey: queryKeys.onboardingFlow.moduleChecklists(),
     queryFn: ({ signal }) => apiClient.get<ModuleChecklist[]>("/onboarding/module-checklists", undefined, signal),
     staleTime: 30_000,
@@ -116,7 +117,7 @@ export type GuidedTour = {
 };
 
 export function useGuidedTours(enabled = true) {
-  return useQuery({
+  return useGatedQuery("onboarding:tours:view", {
     queryKey: queryKeys.onboardingFlow.tours(),
     queryFn: ({ signal }) => apiClient.get<GuidedTour[]>("/onboarding/tours", undefined, signal),
     staleTime: 30_000,

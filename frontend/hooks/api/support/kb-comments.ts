@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -17,7 +18,7 @@ interface KbArticleComment {
 }
 
 export function useSupportKbComments(articleId: number) {
-  return useQuery({
+  return useGatedQuery("support:kb:view", {
     queryKey: queryKeys.kbComments.list(articleId),
     queryFn: ({ signal }) =>
       apiClient.get<KbArticleComment[]>(

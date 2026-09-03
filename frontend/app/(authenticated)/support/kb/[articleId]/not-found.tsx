@@ -25,9 +25,9 @@ export default function KbArticleNotFound() {
       </motion.div>
 
       <motion.div variants={fadeUp} className="max-w-md space-y-2">
-        <h2 className="text-2xl font-bold text-foreground tracking-tight">
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">
           Article not found
-        </h2>
+        </h1>
         <p className="text-muted-foreground text-sm leading-relaxed">
           This article may have been removed, moved, or the link is no longer
           valid. Browse the knowledge base or search for what you need.

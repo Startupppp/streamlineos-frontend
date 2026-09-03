@@ -107,6 +107,15 @@ pass."* Verified at head that all three sites and all three spec files exist:
 Three tests in three files that already have a spec neighbour. This does not close the box on its own
 (see R-8), but it is the whole of the box's in-scope remainder and it is unowned.
 
+**CLOSED 2026-09-03 — A-4 and A-5 are both done; see `reports/47-a4-a5-clients-n1-and-negative-tests.md`.**
+A-4 (`5bdacef8`): `reassignAccounts` is one `bulkUpdateFromValues`. Measured as `streamline_app` under RLS on
+all four tenants — statements **505 -> 9 / 65 -> 6 / 13 -> 6 / 8 -> 6**, buffers **41,958 -> 32,936 (-21.5%)**
+on the majority tenant with the sign holding on every other. `check:db-call-count` exit 0, ACTIONABLE 40 -> 39.
+A-5 (`15c4d926`): all three negative tests written and bite-proved with six planted defects (control 59/59).
+Box 7 still does not close — R-8 and R-8b are untouched by design; 3 of 20 `external` sites now covered.
+Also done off the back of these: **A-14 and A-15 each advanced by one route** (`90e2d097`) — `GET /clients` is
+`counted-call-path` with `measuredDbCalls: 5`, DbCalls 2/82 -> 3/82, zero `max*` keys changed.
+
 ### 1.5 Ticket 11 box 1 — `/ai/meetings/follow-up` still has no `/stream` sibling
 
 S8 added `POST /ai/meetings/prep/stream` and the calendar prep panel now opens it. Verified at head:
@@ -138,8 +147,8 @@ Blocker classes: **SCOPE** (CRM/inventory excluded from this release) · **DECIS
 | **A-1** | 15 · box 1 — 468 unprobed-for-lack-of-body | **ASSIGNABLE** | — | security/BOLA harness owner | 2026-09-08 |
 | **A-2** | 15 · box 1 — 88 own-tenant 500s | **ASSIGNABLE** (triage) | — | release owner to route per module | 2026-09-08 |
 | **A-3** | 15 · box 1 — 3 e-sign no-404 routes | **ASSIGNABLE** | — | e-sign module owner | 2026-09-08 |
-| **A-4** | 21 · box 2 — `client-accounts.reassignAccounts` | **ASSIGNABLE** | — | clients module owner | 2026-09-08 |
-| **A-5** | 36 · box 7 — 3 in-scope negative tests | **ASSIGNABLE** | — | observability / platform / db owner | 2026-09-08 |
+| **A-4** | 21 · box 2 — `client-accounts.reassignAccounts` | **DONE 2026-09-03** (`5bdacef8`) | — | clients module owner | closed |
+| **A-5** | 36 · box 7 — 3 in-scope negative tests | **DONE 2026-09-03** (`15c4d926`) | — | observability / platform / db owner | closed |
 | **A-6** | 11 · box 1 — `/ai/meetings/follow-up/stream` | **ASSIGNABLE** | — | `src/modules/ai/**` owner | 2026-09-08 |
 | **R-1** | 33 · box 7 — R2 bucket policy | ACCEPTED RESIDUAL | INFRA | infrastructure operator | **2026-09-08, before cutover** |
 | **R-2** | 33 · box 7 — owner-DSN backfill `--apply` | ACCEPTED RESIDUAL | INFRA | infrastructure operator | **2026-09-08, before cutover** |
@@ -416,3 +425,52 @@ Ticket 41 box 7 has two halves. This pass addresses only the second.
 them directly: R-1 and R-2.** Until the R2 buckets are made private, every object already sitting at a
 public r2.dev address stays fetchable by anyone who ever copied one, whatever the database columns now
 say. That is a live exposure, not a code-quality residual, and no code change substitutes for it.
+
+---
+
+# EXTENSION — part 2, tickets 19, 22, 23, 26, 28, 29 and 30 (2026-09-03)
+
+The nine tickets above are not all of them. Seven more each hold open boxes, eighteen in total, and until
+today none of those carried an owner or a deadline either. They are covered in the companion file
+**`reports/residual-risk-register-19-30.md`**, written to the same contract: ASSIGNABLE or ACCEPTED
+RESIDUAL, every blocker verified against source, a live gate run or a committed artifact rather than
+transcribed from the ticket. Part 2 adds **20 ASSIGNABLE items and 15 accepted residuals**. Nothing above
+this line was changed.
+
+Four of part 2's findings belong in front of anyone reading only this file:
+
+1. **A-17 — two release gates are red on numbers the product no longer produces.** Tickets 22, 23 and 29
+   all record `GET /calendar/events` as fixed (915.944 → 305.746 ms p95, 7,063 → 706 buffer blocks). At
+   head, `pnpm check:route-budgets` → **exit 1** (`measuredBufferBlocks=7072 exceeds maxBufferBlocks=2000`)
+   and `pnpm check:benchmark-manifest` → **exit 1** (`request p95 915.944 ms > 800 ms`). The contract still
+   carries the old capture because the replacement run stopped at ~81 of 164 slots. It is a **re-run**, not
+   an investigation, and it is unowned.
+2. **A-12 — `pnpm openapi:check` is not database-coupled and the ticket's reason for deferring it is
+   wrong.** Ticket 19 box 3 says regenerating "would write grants into the shared Neon database". Backend
+   CI runs the same command against `postgres://ci:ci@127.0.0.1:5432/ci`, and it was reproduced locally
+   today with that placeholder: **exit 1, artifact STALE, 55 operations adrift**, no database contacted.
+   What actually defers it is sequencing across six lanes, i.e. the release commit. Separately,
+   `pnpm check:contract-vendor` is **already exit 1** on one operation (`POST /gdpr/rectification/me`).
+3. **A-22 — a live user-visible regression is shipping.** Ticket 23's chat payload fix replaced the full
+   member list with a bounded preview of 8 plus a true `memberCount`;
+   `features/chat/use-message-panel-data.ts:326` still reads `channel?.members?.length ?? 0`, so every
+   channel header reports at most 8 members. The field is on the wire and in the frontend type.
+4. **A-28 / §1.4 — two items are addressed to owners who cannot act.** Ticket 29 box 1's last clause ("No
+   module-specific calendar page exists") is **false at head** —
+   `features/hr/recruitment/interviews-page.tsx:249` still renders `BigCalendarWrapper`, reported and
+   re-routed in three consecutive passes. And ticket 28 box 6 routes its whole remainder to **ticket 30
+   box 1, which is already `[x]` closed**, so nobody will pick it up.
+
+Two boxes in part 2 cannot be met as worded and should be **amended** rather than left to fail — the same
+shape as R-8 above: **28 box 7** ("client types mirror the backend schema exactly", at 2.2% coverage over
+2,502 seam calls) and **29 box 2** (it asks for two features the release has decided not to build).
+
+**Added after the fact, because it landed while part 2 was being written:** **ticket 30 box 1 is ticked over
+evidence that names a mechanism which is not in the code.** It was rewritten on 2026-09-03 to close its
+offline clause with "`components/shared/loading-state.tsx` and `components/ui/data-table.tsx` … both read
+`fetchStatus === "paused"`". Measured at head, twice: a non-test grep for `fetchStatus` across
+`app features components hooks lib` returns **zero** occurrences, and both files read `useOnlineStatus()`
+(`navigator.onLine`) instead. The clause's substance may still hold, so the box was **not** unticked — but
+ticket 28 box 6 and ticket 30 box 1 now assert opposite things in writing about the same two files, which is
+the second instance in this release of the two-files-two-conclusions failure recorded at §4.2 above.
+`reports/residual-risk-register-19-30.md` §1.5.

@@ -1379,3 +1379,95 @@ anything: `:3000` is `next dev` against backend `:1501` on `scratch_t30_browser`
 `pg_stat_activity`. The repo `.env`'s 36-char `NEXTAUTH_SECRET` does NOT match the running server —
 a cookie minted with it 307s to `/signin`, while the 64-char process-only secret reaches
 `/dashboard` 200. A stale `next start` on `:1000` from the previous day was identified and not used.
+
+## CORRECTION — the merge was not a Claude agent. A second AI tool is committing to these repos.
+
+I recorded the seventh attribution incident as "another agent ran a `git merge` mid-session".
+**That was wrong, and the truth matters more than the incident.** Verified by trailer, last 72 hours:
+
+```
+336  Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+  6  Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+  3  Co-authored-by: Cursor <cursoragent@cursor.com>
+```
+
+The three Cursor commits are `4ade571fa`, `c07d71c1d`, and **`6ab1c0fb8` — the merge itself**. So the
+merge that reverted one agent's uncommitted edits and swallowed another's report was run by
+**Cursor**, a different tool operating in the same working tree.
+
+(Note for anyone re-checking this: `git log --grep=cursor` is USELESS here. It matches every commit
+about *cursor pagination*, of which this release has many. Grep the commit body for the trailer
+address instead.)
+
+**Why this changes the mitigation.** Every rule in AGENT-BRIEF.md — the pathspec discipline, the
+"never merge", the "commit by explicit file path", the territory assignments — binds Claude agents
+because they read the brief. **Cursor is bound by none of it.** A ninth incident was then observed
+directly: at 08:06:37 a Cursor agent ran a bare commit over the shared git index and swallowed four
+of another agent's staged files into `4ade571fa` under its own message. The diff was verified line
+by line: content byte-correct, nothing lost, attribution wrong.
+
+So the shared-index hazard is **not** something this brief can close. It is a property of two tools
+editing one tree. The only real mitigations are external: run the second tool in a separate
+worktree, or stop it while a batch is in flight. **This belongs to the user, not to the brief.**
+
+Also worth recording: content has survived every one of the nine incidents. Nothing has been lost
+to date — the damage has been attribution and, once, a silent revert that its author noticed and
+re-applied. The risk is that the next one is not noticed.
+
+## A budget that measures a different table than the route reads — 2026-09-03
+
+A new vacuity class, and the most deceptive one yet. The `clients-list` read-cost budget's SQL is
+`FROM clients`. **`GET /clients` reads `client_accounts`.** The budget has never measured the route
+it is named for.
+
+It survived the anti-vacuous guard by luck: `client_accounts` holds **0 rows** on `scratch_perf_seed`
+at head while `clients` holds 25 on the majority tenant, so the budget reports `resultRows: 25`,
+looks healthy, and clears the "did this assert anything" check. `GET /clients`' recorded
+`measuredBufferBlocks: 4` describes **a statement the route never issues.**
+
+Every previous vacuity found here was a budget that asserted nothing. This one asserts something
+real about the wrong subject, which no guard we have can catch — the only detection is reading the
+SQL against the handler.
+
+## `GET /clients` performs unbounded WRITES — the third write-on-a-GET this release
+
+1,600 inserts plus 1,600 assignments on a single request on the majority tenant, serialised behind
+a Redis lock **that is absent whenever Redis is** (Redis here is a shared remote Upstash REST
+client, not a local server). Batching took it from 500 statements to 4 — measured on all four
+tenants, sign holding on every one:
+
+| tenant | statements | buffers |
+|---|---|---|
+| 89.93% | **505 → 9** | 41,958 → 32,936 (−21.5%) |
+| 9.00% | 65 → 6 | 3,752 → 2,881 |
+| 0.90% | 13 → 6 | 138 → 76 |
+| 0.18% | 8 → 6 | 41 → 24 |
+
+The buffer win is far smaller than the statement win, and the agent explained why rather than
+claiming the bigger number: the batched form touches the same heap pages: what it saves is the
+per-statement index descent and RLS predicate, paid 500 times.
+
+**Batching is not the fix.** The work belongs in a worker; the route is already
+`@Deprecated(sunset 2026-10-25)`. The three write-on-a-GET instances so far —
+`GET /surveys/:id/builder`, `GET /clients`, and the org-purge verify path — suggest looking for
+more, and no static gate we have can see any of them.
+
+Also corrected: **`bulkUpdateFromValues` is `ceil(n/500)` statements, not one.** Every note in this
+release calling it "one statement" is wrong above 500 rows.
+
+## The SSR blocker was a dependency override, not a broken install
+
+`/build/workspaces/<w>/<projectId>` 500ed 3/3 on `Cannot find module
+'undici/lib/handler/wrap-handler.js'`. Root cause measured, not guessed: `pnpm-workspace.yaml`
+carried a global override `undici: ">=8.9.0"`, forcing `jsdom@29.1.1` (which declares `^7.25.0`)
+onto **8.10.0** — one major up, where `lib/handler/` has 6 files and neither `wrap-handler.js` nor
+`unwrap-handler.js`. `7.29.0` ships 8 and has both.
+
+**The "two jsdom copies" clue was a red herring** — the second copy (`jsdom@20.0.3`, via
+`jest-environment-jsdom`) has no `undici` dependency at all. Fixed with a scoped override
+`"jsdom>undici": ">=7.29.0 <8"`; security is not lowered, because every advisory the `>=8.9.0`
+floor fixes is published as a pair and all five are equally fixed in `7.29.0`. Board root now 200.
+
+**A trap worth propagating:** Next 16 loads jsdom as a Turbopack external module and **memoises the
+failed load for the worker's lifetime**. The dev server kept 500ing after the fix landed. Anyone
+testing this without restarting the server will wrongly conclude the fix did not work.

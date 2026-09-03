@@ -103,12 +103,12 @@ export function streamMeetingPrep({
     path: MEETING_PREP_STREAM_PATH,
     body: input,
     onToken,
-    onHeaders: onSources ? (headers) => onSources(readMeetingPrepSources(headers)) : undefined,
+    onHeaders: onSources ? (headers) => onSources(readMeetingSources(headers)) : undefined,
     signal,
   });
 }
 
-export function readMeetingPrepSources(headers: Headers): AgendaCitation[] {
+export function readMeetingSources(headers: Headers): AgendaCitation[] {
   const raw = headers.get(MEETING_SOURCES_HEADER);
   if (!raw) return [];
   try {
@@ -121,6 +121,41 @@ export function readMeetingPrepSources(headers: Headers): AgendaCitation[] {
   } catch {
     return [];
   }
+}
+
+export interface MeetingFollowUpStreamRequest extends MeetingFollowUpInput {
+  onToken?: (token: string) => void;
+  onSources?: (sources: AgendaCitation[]) => void;
+  signal?: AbortSignal;
+}
+
+export const MEETING_FOLLOW_UP_STREAM_PATH = "/ai/meetings/follow-up/stream";
+
+/**
+ * Streams `POST /ai/meetings/follow-up/stream`. Same shape as
+ * `streamMeetingPrep` deliberately: one wire format, one client, one place the
+ * abort signal can go wrong. `useMeetingFollowUp` below is NOT deleted — the
+ * buffered route's product is a Zod-validated record and other callers may still
+ * want one; a previous pass removed a buffered hook before its surface had moved
+ * and broke the live panel.
+ *
+ * The real sources ride on `x-ai-sources` ahead of the body, so `onSources`
+ * fires before the first token and a stream the user stops halfway keeps its
+ * citations.
+ */
+export function streamMeetingFollowUp({
+  onToken,
+  onSources,
+  signal,
+  ...input
+}: MeetingFollowUpStreamRequest): Promise<AiTextStreamResult> {
+  return streamAiText({
+    path: MEETING_FOLLOW_UP_STREAM_PATH,
+    body: input,
+    onToken,
+    onHeaders: onSources ? (headers) => onSources(readMeetingSources(headers)) : undefined,
+    signal,
+  });
 }
 
 export function useMeetingFollowUp() {

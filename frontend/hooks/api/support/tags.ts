@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -23,7 +23,7 @@ export function useSupportTags() {
 }
 
 export function useTicketTags(ticketId: number) {
-  return useQuery({
+  return useGatedQuery("support:tickets:view", {
     queryKey: [...queryKeys.support.detail(ticketId), "tags"] as const,
     queryFn: ({ signal }) => apiClient.get<SupportTag[]>(`/support/${ticketId}/tags`, undefined, signal),
     enabled: Number.isFinite(ticketId) && ticketId > 0,

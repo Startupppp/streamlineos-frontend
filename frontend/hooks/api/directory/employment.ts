@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -22,7 +22,7 @@ interface EmploymentFactsResponse {
 export const useEmploymentFacts = (userIds: readonly string[]) => {
   const wanted = [...new Set(userIds.filter(Boolean))].slice(0, 100);
 
-  const query = useQuery<EmploymentFactsResponse, Error>({
+  const query = useGatedQuery<EmploymentFactsResponse, Error>("settings:view", {
     queryKey: queryKeys.directory.employment(wanted),
     queryFn: ({ signal }) =>
       apiClient.get<EmploymentFactsResponse>("/directory/employment", {

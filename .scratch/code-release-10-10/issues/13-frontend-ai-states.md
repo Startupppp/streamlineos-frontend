@@ -4,7 +4,7 @@
 
 **Blocked by:** 11.
 
-**Status:** 5 of 6 boxes closed · 1 still PARTIAL. 2026-09-03 S9: the last 4 unthreaded metered AI
+**Status:** 5 of 6 boxes closed · 1 still PARTIAL. 2026-09-03 S10: the streaming half of box 3 gains its **fourth** live route — `features/calendar/meeting-follow-up-panel.tsx` now runs on `POST /ai/meetings/follow-up/stream`, which did not exist until this session and was the blocker recorded as ticket 11's A-6. The buffered residue is re-measured below and still contains nothing this release may thread. 2026-09-03 S9: the last 4 unthreaded metered AI
 mutations are threaded, so the buffered half of box 3 has **no residue that this release may thread** —
 the remaining 14 are 8 in excluded modules and 6 that are not metered generation.
 2026-09-03: **24 more AI mutation families thread the abort signal** (population 40 → 18), proven by 17 tests driving
@@ -289,3 +289,75 @@ The assertion now `waitFor`s the outgoing signal instead, and fails in ~1 s insi
   `support/ai.ts` resolve-suggestion 1, `ai.ts` accept-candidate-score 1 (the control).
 The streaming half's residue is unchanged from S8: 6 of the 9 `/stream` routes have no frontend surface
 at all and the 7th is CRM.
+
+
+---
+
+## Session S10 addendum (2026-09-03) — the calendar follow-up surface, and an honest recount of the residue
+
+**Box 3, streaming half: the fourth live route.** `features/calendar/meeting-follow-up-panel.tsx` called the
+buffered `useMeetingFollowUp`, so it had **no Stop at all** — the user watched a skeleton for the whole
+answer — and its only failure handling was `toast.error(getErrorMessage(error))`, which made a 402 and a 503
+the same red toast. It could not be converted from the frontend at any point before now, because
+`/ai/meetings/follow-up` had **no `/stream` sibling**; that route was added in the backend this session
+(ticket 11, A-6). The panel now uses `useAiTextStream().run` + `streamMeetingFollowUp`, giving it
+single-flight, a Stop that aborts the outgoing request, an unmount abort, partial output kept on cancel, and
+`AiFailureBody` for the failure branch — with a **non-retryable** failure (quota, denied) getting no dispatch
+control at all.
+
+**Streaming into a structured renderer was the actual work.** The panel renders a `FollowUpDraft`, not prose,
+and it must hand that same draft to `POST /ai/meetings/follow-up/propose-send`.
+`features/calendar/meeting-follow-up-stream-parse.ts` reuses the approach
+`meeting-prep-stream-parse.ts` established rather than inventing a second parser: a pure function of the text
+received so far, folding the arriving markdown into subject / email / action items / next meeting on every
+token. Two consequences that are tested, not hoped:
+· the send posts the **reconstructed** draft, including `{ item, assignee, dueDate }` per action item;
+· a stream stopped before the email arrived is **not sendable** (its `propose-send` body would 400), so the
+  send control is disabled rather than offered a click that cannot succeed.
+Placeholders the model emits (`owner: unassigned`, `due: none`) are read as **absent**, so no action item ever
+renders an owner literally named "unassigned".
+
+**Proof.** `jest --runInBand --testPathPattern="meeting-follow-up"` -> **exit 0, 2 suites / 23 tests**, driving
+the real `lib/api-client` with only `global.fetch` mocked. `pnpm type-check` -> **exit 0, 0 errors**;
+`npx eslint` on all 7 changed/added files -> exit 0; `check:dead-code` **exit 1 -> exit 0**;
+`check:over-300` **519/519 OK**; `check:query-signal`, `check:empty-states`, `check:colors`,
+`check:icon-labels`, `check:effect-fetches` all exit 0. `check:file-sizes` stays exit 1 on
+`hooks/api/notifications-inbox.{ts,test.ts}` — another territory, unchanged by this work.
+
+**Four bite proofs, hermetic `git archive HEAD` tree, live tree never modified** (baseline there: 23 passed):
+· transport pointed back at the buffered `/ai/meetings/follow-up` -> **2 failed / 21 passed**
+  ("posts to the /stream route and never to the buffered sibling", "never serialises the abort signal…")
+· `signal` dropped from the transport -> **4 failed / 19 passed** ("Stop aborts the outgoing request…",
+  "aborts the stream when the panel unmounts", "does not open a second paid stream while one is running",
+  "does not offer a send for a draft stopped before the email arrived")
+· `onHeaders` dropped -> **2 failed / 21 passed** ("renders citations from x-ai-sources before the body
+  finishes", "Stop aborts…")
+· action items read by position instead of by label -> **5 failed / 18 passed**
+Restored: 23 passed, `hooks/api/meetings-ai.ts` sha256 `a4aaacf6…` identical to the live tree.
+
+**`useMeetingFollowUp` was NOT deleted.** The buffered route's product is a Zod-validated record and a
+previous pass removed a buffered hook before its surface had moved and broke the live panel. Its last caller
+moving to the stream turned `check:dead-code` red, so it is now recorded there as an explicit **KEEP** verdict
+with that reason — which is the honest way to keep a deliberately unwired export, rather than deleting it or
+leaving a gate failing.
+
+**The buffered residue, re-measured at head rather than copied forward.** Method: walk `hooks/api/**`
+(non-test), split each file at `^export (function|const) <name>`, and for every hook body containing a
+`mutationFn` **and** a literal `/ai/…` path, check whether the body threads `signal`.
+**46 AI mutation hooks · 40 threaded · 6 not.** This is a different key from the S9 census (which counted
+`mutationFn`s brace-balanced, and reported 14), so the two numbers are not directly comparable — but the
+**classification is the same, and nothing in it is threadable by this release**:
+· **4 are in excluded modules** — `crm/ai.ts` `useDealSummary` / `useLeadSummary` / `useSummarizeNotes`, and
+  `ai.ts` `useAIBatchScoreLeads`, whose only caller is `features/crm/leads/ai-bulk-score-button.tsx` (its
+  `TVariables` is a bare `number[]`, which `AiAbortableScalar<T extends string | number>` does not cover).
+· **2 are not metered generation** — `ai.ts` `useAcceptCandidateScore` (the deliberate, kept anti-vacuous
+  control in `ai-mutation-signal-threading.test.tsx`; threading it turns that suite red on purpose) and
+  `ai-summaries.ts` `useSaveSnapshot`, which POSTs an already-generated summary as a record
+  (`ai:summaries:create`). Cancelling either stops no spend.
+**Box 3 therefore stays PARTIAL and its residue is recorded, not threaded.** Threading a call whose
+cancellation buys nothing would add a signal for the count's sake and make the next census harder to read.
+
+**Streaming half's residue, unchanged in substance:** of the now-**11** `/stream` routes the backend exposes,
+4 reach a real user (generate-jd, survey summarize-responses, meetings prep, meetings follow-up). Of the rest,
+6 have no frontend surface of any kind — neither the streaming route nor its buffered sibling is referenced —
+which is a product decision, and `/ai/crm/meeting-follow-up/stream` is CRM, excluded.

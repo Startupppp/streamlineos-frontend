@@ -1,0 +1,115 @@
+{
+  "generatedAt": "2026-09-03T02:52:54.255Z",
+  "authoritative": false,
+  "reason": "one or both trees were dirty; this record does not describe a single commit",
+  "repos": {
+    "backend": {
+      "name": "backend",
+      "cwd": "/Users/tarunchintakunta/Personal/streamline/streamlineos-backend",
+      "sha": "c2e0416a34f0666b4df60886d784ecc465c22de3",
+      "branch": "main",
+      "clean": false,
+      "dirtyCount": 9,
+      "dirtyFiles": [
+        "M src/common/observability/tracing.spec.ts",
+        " M src/db/query-telemetry.spec.ts",
+        " M src/modules/hr/core/hr-sensitive.service.ts",
+        " M src/modules/platform/operator-session.guard.spec.ts",
+        " M test/security/bola/bola-live-cross-tenant.seeded-e2e-spec.ts",
+        "?? src/scripts/_clean-scratch.mjs",
+        "?? src/scripts/_interrupt-bootstrap.mjs",
+        "?? src/scripts/_run-bootstrap-scratch.mjs",
+        "?? tmp-apply-migrations.mjs"
+      ]
+    },
+    "frontend": {
+      "name": "frontend",
+      "cwd": "/Users/tarunchintakunta/Personal/streamline/streamlineos-frontend",
+      "sha": "795629abc8a1873df91263e785db757dc5bc85ef",
+      "branch": "main",
+      "clean": false,
+      "dirtyCount": 4,
+      "dirtyFiles": [
+        "M frontend/contracts/route-bundle-manifest.json",
+        " M frontend/next.config.ts",
+        "?? .scratch/code-release-10-10/reports/release-verification/release-verify-2026-09-03T02-41-31-348Z.json",
+        "?? .scratch/code-release-10-10/reports/release-verification/release-verify-2026-09-03T02-41-31-348Z.md"
+      ]
+    }
+  },
+  "heavyGatesRun": false,
+  "results": {
+    "backend": [
+      {
+        "script": "db:verify-rls",
+        "status": "PASS",
+        "exitCode": 0,
+        "signal": null,
+        "crashSignature": null,
+        "durationMs": 703,
+        "prerequisite": null,
+        "note": null,
+        "tail": "  EXCLUDED: CRM:       0\n  EXCLUDED: INVENTORY: 0\n  skip      public.noisy_neighbour_reviews — registered platform-global\n  skip      public.organization_lifecycle_sagas — registered platform-global\n  skip      public.organization_placement — registered platform-global\n  skip      public.organization_relocations — registered platform-global\n  skip      public.organization_reservations — registered platform-global\n  skip      public.placement_decisions — registered platform-global\nSKIP  public.organization_relocation_checksums — PLATFORM-GLOBAL\nSKIP  public.organization_saga_steps — PLATFORM-GLOBAL\n\nADVISORY  797 table(s) have RLS enabled but FORCE ROW LEVEL SECURITY is not set.\n          FORCE binds only the table owner, not the app role (streamline_app is a non-owner).\n          neondb_owner has BYPASSRLS which overrides FORCE anyway, so this is benign\n          under the current connection topology.\n          Escalate to a hard failure if a table-owner connection enters the request path.\n  advisory  build.bugs\n  advisory  build.change_requests\n  advisory  build.changelog_entries\n  advisory  build.comment_drafts\n  advisory  build.cycles\n  advisory  build.feedback_posts\n  advisory  build.feedback_votes\n  advisory  build.feedbucket_attachments\n  advisory  build.feedbucket_submissions\n  advisory  build.feedbucket_widgets\n  advisory  build.form_submissions\n  advisory  build.git_connections\n  advisory  build.git_ticket_links\n  advisory  build.git_webhook_seen_deliveries\n  advisory  build.incident_updates\n  advisory  build.intake_items\n  advisory  build.managed_product_releases\n  advisory  build.managed_products\n  advisory  build.meeting_action_items\n  advisory  build.meeting_attendees\n  … and 777 more (not shown)\n\nRESULT: RLS VERIFIED\n"
+      },
+      {
+        "script": "check:lifecycle-predicates",
+        "status": "FAIL",
+        "exitCode": 1,
+        "signal": null,
+        "crashSignature": null,
+        "durationMs": 1023,
+        "prerequisite": null,
+        "note": null,
+        "tail": "\n> streamlineos-api@0.1.0 check:lifecycle-predicates /Users/tarunchintakunta/Personal/streamline/streamlineos-backend\n> node src/scripts/check-lifecycle-predicates.mjs\n\nTables 788  ·  with a lifecycle column 81  ·  read sites 1710 across 3232 files\n  predicate in statement 762  ·  built elsewhere in file 251  ·  dormant column 111  ·  primary-read candidates 75  ·  join candidates 336\n\nNOTE — 111 read(s) omit a predicate on a lifecycle column no code path ever writes. A dormant trap, not a live defect.\nNOTE — 175 read(s) of a global identity or tenant-root table are outside this rule by design: users, organizations, accounts, sessions.\n ELIFECYCLE  Command failed with exit code 1.\n\nFAIL — 336 joins onto a lifecycle table carry no predicate, 1 above the recorded baseline of 335. Four of ticket 06's eleven defects were exactly this shape — an ON condition on an aliased self-join, which no statement scanner can see. Run with --list.\n"
+      },
+      {
+        "script": "check:module-lifecycle",
+        "status": "PASS",
+        "exitCode": 0,
+        "signal": null,
+        "crashSignature": null,
+        "durationMs": 555,
+        "prerequisite": null,
+        "note": null,
+        "tail": "◇ injected env (55) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }\nModule: timesheets  (schemaFolder: timesheets)\nTables discovered: 11\n  timesheet_audit_events  (1 declared index(es))\n  timesheet_budgets  (3 declared index(es))\n  timesheets  (11 declared index(es))\n  timesheet_exceptions  (4 declared index(es))\n  timesheet_exports  (2 declared index(es))\n  timesheet_periods  (4 declared index(es))\n  timesheet_rate_cards  (1 declared index(es))\n  timesheet_rates  (4 declared index(es))\n  timesheet_settings_history  (1 declared index(es))\n  timesheet_settings  (0 declared index(es))\n  timer_sessions  (4 declared index(es))\n\nGate 1: Tenant isolation (RLS policies in pg_policies)\nPASS  All 11 tables have tenant-predicated RLS policies\n\nGate 2: Cold migration (tables in pg_catalog + journaled migration)\nPASS  All 11 tables exist in pg_catalog with journaled migrations\n\nGate 3: Restore (declared PK, org_id FK, named indexes present in pg_catalog)\nPASS  All 11 tables pass restore check\n\nGate 4: Removal (org_id NOT NULL with FK whose ON DELETE is defined)\nPASS  All 11 tables have non-nullable org_id with FK\n  org_id ON DELETE SET NULL  — timer_sessions\n  org_id ON DELETE SET NULL  — timesheet_audit_events\n  org_id ON DELETE CASCADE  — timesheet_budgets\n  org_id ON DELETE SET NULL  — timesheet_exceptions\n  org_id ON DELETE SET NULL  — timesheet_exports\n  org_id ON DELETE SET NULL  — timesheet_periods\n  org_id ON DELETE CASCADE  — timesheet_rate_cards\n  org_id ON DELETE SET NULL  — timesheet_rates\n  org_id ON DELETE CASCADE  — timesheet_settings\n  org_id ON DELETE SET NULL  — timesheet_settings_history\n  org_id ON DELETE SET NULL  — timesheets\n\nRESULT: ALL GATES PASSED  (timesheets, 11 tables)\n"
+      },
+      {
+        "script": "check:audit-log-privileges",
+        "status": "PASS",
+        "exitCode": 0,
+        "signal": null,
+        "crashSignature": null,
+        "durationMs": 399,
+        "prerequisite": null,
+        "note": null,
+        "tail": "\n> streamlineos-api@0.1.0 check:audit-log-privileges /Users/tarunchintakunta/Personal/streamline/streamlineos-backend\n> node src/scripts/verify-audit-log-privileges.mjs\n\n{\"role\":\"streamline_app\",\"isAppRole\":true,\"updateRevoked\":true,\"deleteRevoked\":true,\"triggerPresent\":true}\n"
+      },
+      {
+        "script": "check:vulnerabilities",
+        "status": "PASS",
+        "exitCode": 0,
+        "signal": null,
+        "crashSignature": null,
+        "durationMs": 1843,
+        "prerequisite": null,
+        "note": null,
+        "tail": "\n> streamlineos-api@0.1.0 check:vulnerabilities /Users/tarunchintakunta/Personal/streamline/streamlineos-backend\n> node src/scripts/check-vulnerabilities.mjs\n\n[check:vulnerabilities] Running pnpm audit --prod --audit-level=high ...\n[check:vulnerabilities] OK — no high/critical vulnerabilities in production dependencies.\n"
+      },
+      {
+        "script": "check:licenses",
+        "status": "FAIL",
+        "exitCode": 1,
+        "signal": null,
+        "crashSignature": null,
+        "durationMs": 674,
+        "prerequisite": null,
+        "note": null,
+        "tail": "\n> streamlineos-api@0.1.0 check:licenses /Users/tarunchintakunta/Personal/streamline/streamlineos-backend\n> node src/scripts/check-licenses.mjs\n\n[check:licenses] Scanning production dependency licenses...\n[check:licenses] 1 reviewed exception(s):\n  [LGPL-2.1] @ffmpeg-installer/ffmpeg: LGPL-2.1 — FFmpeg binary invoked via child_process (subprocess call, not library linking); LGPL copyleft does not extend to the calling application. Reviewed 2026-09-01.\n ELIFECYCLE  Command failed with exit code 1.\n[check:licenses] FAIL — 1 disallowed license(s) found:\n  [LGPL-3.0-or-later] @img/sharp-libvips-darwin-arm64@1.3.2\n\nDisallowed pattern: GPL, AGPL, LGPL, SSPL, BUSL, Commons Clause, Proprietary.\nEither remove the dependency or add a legal exception with documented justification.\n"
+      }
+    ]
+  },
+  "tally": {
+    "PASS": 4,
+    "FAIL": 2
+  }
+}

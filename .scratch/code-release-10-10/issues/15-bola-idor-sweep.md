@@ -4,8 +4,13 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** 5 of 6 boxes closed; the sixth is PARTIAL with its fraction recorded, not blocked on infrastructure any
-more. The live sweep ran: **1,921 routes probed, 666 return the required 404, 116 measurably do not, 1,138 were
+**Status:** 5 of 6 boxes closed; the sixth is still PARTIAL, but **A-1 and A-3 are now DONE** (2026-09-03,
+report `reports/15e-esign-404-and-bola-body-synthesis.md`). A-3's three e-sign no-404 routes return 404,
+plus a P1 within-tenant leak found beside them (`GET /sign/documents/:documentId/preview` served any
+envelope's source PDF in the org). A-1's harness gap is closed: the sweep now derives a minimal valid
+body AND the required query parameters per route from `openapi.json` (1,362/1,362 JSON-bodied operations,
+911/911 of the operations that reject `{}`), and the 468 were re-probed live. The sixth box stays open on
+what the re-probe does not reach. The live sweep ran: **1,921 routes probed, 666 return the required 404, 116 measurably do not, 1,138 were
 unprobeable and are covered statically only, and 1 real cross-tenant leak was found and fixed.** What remains is
 per-module contract work in held or excluded territory (register #165–#167).
 
@@ -62,25 +67,34 @@ whoever lands that schema change.
       type · **149** the path segment is not an object (`:moduleKey`, `:token`, `:providerKey`) and is permanently
       unprobeable · **135** control 404 · **88** own-tenant control **500 INTERNAL_ERROR** · 48/32/24/14/8/4 control
       403/402/409/503/401/timeout.
-      **ASSIGNABLE A-1 — recover the 468. Owner: security/BOLA harness owner. Deadline: 2026-09-08.** 41% of the
-      unprobeable set and 24% of the whole surface are unprobed only because the probe sends no body, and the input
-      needed already exists: `pnpm check:openapi-coverage` is **exit 0 at 1,371/1,371 mutating operations carrying a
-      body schema**. Generating a minimal valid body per route from `contracts/openapi.json` is a bounded change to
-      `test/security/bola/bola-live-cross-tenant.seeded-e2e-spec.ts`. This is not infrastructure and nobody has been
-      asked to do it.
+      **A-1 — DONE 2026-09-03.** `test/security/bola/live/body-synthesis.ts` derives a minimal valid body and the
+      required query parameters per route from the committed contract, and the sweep sends them; every outcome
+      records `bodySource`, so a route probed with a derived body cannot be confused with one probed with `{}`.
+      Offline: `jest --testPathPattern=bola-body-synthesis` exit 0, 20/20 — **1,362/1,362** JSON-bodied operations
+      get a body (the other 9 are multipart, named individually), **0** derived bodies violate their own schema
+      under an independently written reader, and `{}` is rejected by **911** operations of which the derived body
+      is accepted by **911**. Live: a new harness proof sends both requests to the same route and the control moves
+      400 -> 200. **Two corrections to this item's own text.** The contract is at `openapi.json`, NOT
+      `contracts/openapi.json` (that path does not exist). And only **418** of the 468 are body-shaped: 34 GET and
+      16 DELETE control-400 on a missing required QUERY parameter, so query is synthesised too. Six mutating
+      object-addressable routes are absent from `openapi.json` altogether and are pinned by name — a
+      cross-territory contract gap, not a harness one.
       **ASSIGNABLE A-2 — triage the 88 own-tenant 500s. Owner: release owner to route per module. Deadline:
       2026-09-08.** These return `INTERNAL_ERROR` to a **valid same-tenant** request on the seeded database — hr 37,
       build 10, finance 9, inventory 6, crm 5, accounting 4, party 3, payroll 3, support 3, +8 more. Two routes of
       exactly this shape (`GET /surveys/:surveyId/builder`, `/logic`) turned out to be a **write on a GET** violating
       a composite FK. Nothing says the other 88 are benign; nothing has looked. Full list in the companion JSON.
-      **ASSIGNABLE A-3 — 3 e-sign no-404 routes, not 4. Owner: e-sign module owner. Deadline: 2026-09-08.**
-      `GET /sign/envelopes/:envelopeId/audit` is **already fixed** — `SignAuditService.listForEnvelope`
-      (`sign-audit.service.ts:111`) calls `mustGetVisibleEnvelope`. The other three are a bare `findMany` on
-      `(orgId, envelopeId)` returning `[]` (HTTP 200) for another organisation's envelope:
-      `sign-fields.service.ts:156`, `sign-recipients.service.ts:150`, `sign-documents.service.ts:118`. The remedy is
-      in the same module — `src/modules/e-sign/sign-envelope-scope.ts::mustGetVisibleEnvelope`, whose docstring
-      already says "Out of scope and out of tenant answer the same 404 a missing envelope answers." Three call
-      sites, three lines each.
+      **A-3 — DONE 2026-09-03.** The audit route was indeed already fixed; the other three now resolve the envelope
+      through `mustGetVisibleEnvelope` before their `findMany`, so a cross-tenant id and an absent id answer the
+      SAME 404 — asserted by comparing the two exception bodies, not just their status. The scope is a REQUIRED
+      parameter (an optional one with a permissive default is the fail-open shape), and the seven internal callers
+      name `SYSTEM_ENVELOPE_SCOPE`. Proof: `jest --testPathPattern=bola-esign-envelope-children-404` exit 0, 34/34;
+      with the guard removed from all three services, exit 1, **18 failed / 12 passed**.
+      **P1 FOUND BESIDE THEM AND FIXED — `GET /sign/documents/:documentId/preview`.** Not in this register.
+      `sign:documents:view` is not scopable, so every holder resolved "all" and could mint a signed URL for the
+      SOURCE PDF of any envelope in the organisation by walking `documentId` — the register #15 shape, missed
+      because it reads `sign_documents` rather than `sign_certificates`. Now bound to `sign:envelope:view` and
+      reusing the missing-document message.
       **RESIDUAL R-4 — 17 excluded-scope no-404 routes (crm/leads/deals/contacts/inventory), 7 of them write verbs
       answering 204 on nothing. Blocker: SCOPE. Owner: CRM/inventory release owner. Deadline: 2026-12-01 review.**
       **RESIDUAL R-4b — whatever of the 1,138 survives A-1 and A-2 (at minimum the ~149 not-an-object routes, which

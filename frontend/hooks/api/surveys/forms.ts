@@ -1,6 +1,6 @@
 "use client";
 
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -91,7 +91,7 @@ export function useSurveys(params?: ListSurveysParams) {
 }
 
 export function useSurvey(surveyId: number | undefined) {
-  return useQuery({
+  return useGatedQuery("surveys:view", {
     queryKey: queryKeys.surveys.detail(surveyId ?? -1),
     queryFn: ({ signal }) => apiClient.get<SurveyForm>(`/surveys/${surveyId}`, undefined, signal),
     enabled: typeof surveyId === "number",

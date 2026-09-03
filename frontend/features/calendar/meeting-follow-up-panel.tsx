@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { Sparkles, Send, CheckCircle2, AlertCircle } from "lucide-react";
+import { useState, useCallback, useMemo } from "react";
+import { Sparkles, Send, CheckCircle2, AlertCircle, StopCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -17,17 +16,21 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { AiDraftCard } from "@/components/ai/ai-draft-card";
+import { AiFailureBody } from "@/components/ai/ai-failure-body";
+import { classifyAiError, isRetryableAiFailure } from "@/components/ai/ai-error-state";
 import { AiPermissionDenied } from "@/components/ai/ai-permission-denied";
 import { CalendarConnectInline } from "@/features/calendar/calendar-connect-inline";
 import { useCan } from "@/hooks/api/access";
+import { useAiTextStream } from "@/hooks/api/ai-text-stream";
 import {
-  useMeetingFollowUp,
+  streamMeetingFollowUp,
   useProposeMeetingSend,
   useConfirmMeetingSend,
-  type FollowUpDraft,
-  type ActionItem,
+  type AgendaCitation,
 } from "@/hooks/api/meetings-ai";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { parseFollowUpStream, isSendableFollowUp } from "./meeting-follow-up-stream-parse";
+import { FollowUpDraftBody } from "./meeting-follow-up-draft";
 
 interface MeetingFollowUpPanelProps {
   eventId: string;
@@ -36,15 +39,12 @@ interface MeetingFollowUpPanelProps {
 
 const MAX_ACTION_ITEMS = 20;
 
-function FollowUpSkeleton() {
-  return (
-    <div className="space-y-3">
-      <Skeleton className="h-4 w-full" />
-      <Skeleton className="h-4 w-3/4" />
-      <Skeleton className="h-4 w-5/6" />
-    </div>
-  );
-}
+type FollowUpState =
+  | { status: "idle" }
+  | { status: "streaming"; text: string }
+  | { status: "cancelled"; text: string }
+  | { status: "done"; text: string }
+  | { status: "failed"; error: unknown };
 
 interface ActionItemRowProps {
   value: string;
@@ -87,42 +87,32 @@ function ActionItemRow({ value, index, onChange, onRemove }: ActionItemRowProps)
   );
 }
 
-interface DraftedActionItemProps {
-  item: ActionItem;
-  index: number;
-}
-
-function DraftedActionItem({ item, index }: DraftedActionItemProps) {
-  return (
-    <div className="flex items-start gap-1.5 text-xs">
-      <span className="text-muted-foreground shrink-0 tabular-nums mt-0.5">{index + 1}.</span>
-      <div className="flex-1 min-w-0">
-        <p className="text-foreground">{item.item}</p>
-        {(item.assignee ?? item.dueDate) && (
-          <p className="text-muted-foreground text-micro mt-0.5">
-            {item.assignee && <span>→ {item.assignee}</span>}
-            {item.assignee && item.dueDate && <span className="mx-1">·</span>}
-            {item.dueDate && <span>{item.dueDate}</span>}
-          </p>
-        )}
-      </div>
-    </div>
-  );
-}
-
+/**
+ * The follow-up streams. The panel still renders the four structured affordances
+ * the user had before — subject, email body, action items and a suggested next
+ * meeting — but reconstructs them from the text received so far
+ * (`parseFollowUpStream`) instead of waiting for a whole buffered record, and
+ * hands that same reconstruction to `propose-send`. Stopping keeps everything
+ * that arrived, and the citations come off `x-ai-sources` before the first token
+ * so a stopped draft still cites what it rests on.
+ */
 export function MeetingFollowUpPanel({ eventId, onClose }: MeetingFollowUpPanelProps) {
   const canUse = useCan("calendar:ai:use");
 
   const [meetingNotes, setMeetingNotes] = useState("");
   const [actionItems, setActionItems] = useState<string[]>([""]);
-  const [draft, setDraft] = useState<FollowUpDraft | null>(null);
+  const [state, setState] = useState<FollowUpState>({ status: "idle" });
+  const [citations, setCitations] = useState<AgendaCitation[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [proposalToken, setProposalToken] = useState<string | null>(null);
   const [needsReauth, setNeedsReauth] = useState(false);
 
-  const { mutate: runFollowUp, isPending: followUpPending } = useMeetingFollowUp();
+  const { run, stop, isStreaming } = useAiTextStream();
   const { mutate: proposeSend, isPending: proposePending } = useProposeMeetingSend();
   const { mutate: confirmSend, isPending: confirmPending } = useConfirmMeetingSend();
+
+  const streamedText = "text" in state ? state.text : "";
+  const draft = useMemo(() => parseFollowUpStream(streamedText), [streamedText]);
 
   const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMeetingNotes(e.target.value);
@@ -149,25 +139,44 @@ export function MeetingFollowUpPanel({ eventId, onClose }: MeetingFollowUpPanelP
 
   const handleDraftFollowUp = useCallback(() => {
     const filledItems = actionItems.filter((item) => item.trim().length > 0);
-    runFollowUp(
-      {
+    setState({ status: "streaming", text: "" });
+    setCitations([]);
+
+    const appendToken = (token: string) => {
+      setState((prev) =>
+        prev.status === "streaming" ? { status: "streaming", text: prev.text + token } : prev,
+      );
+    };
+
+    void run((signal) =>
+      streamMeetingFollowUp({
         eventId,
         meetingNotes: meetingNotes.trim() || undefined,
         actionItems: filledItems.length > 0 ? filledItems : undefined,
-      },
-      {
-        onSuccess: (data) => setDraft(data.followUp),
-        onError: (error) => toast.error(getErrorMessage(error)),
-      },
-    );
-  }, [runFollowUp, eventId, meetingNotes, actionItems]);
+        onToken: appendToken,
+        onSources: setCitations,
+        signal,
+      }),
+    )
+      .then((outcome) => {
+        if (outcome.status === "busy") return;
+        setState({
+          status: outcome.status === "cancelled" ? "cancelled" : "done",
+          text: outcome.text,
+        });
+      })
+      .catch((error: unknown) => {
+        setState({ status: "failed", error });
+      });
+  }, [run, eventId, meetingNotes, actionItems]);
 
   const handleDiscard = useCallback(() => {
-    setDraft(null);
+    setState({ status: "idle" });
+    setCitations([]);
   }, []);
 
   const handleSendViaCalendar = useCallback(() => {
-    if (!draft) return;
+    if (!isSendableFollowUp(draft)) return;
     proposeSend(
       { eventId, followUpDraft: draft, channel: "calendar" },
       {
@@ -234,6 +243,17 @@ export function MeetingFollowUpPanel({ eventId, onClose }: MeetingFollowUpPanelP
     );
   }
 
+  /**
+   * Exhausted credits and a revoked permission do not get a dispatch control.
+   * `AiFailureBody` already renders the affordance that can help — the top-up
+   * link, or the denial reason — and a "Try again" beside it would spend another
+   * click on a call that cannot succeed.
+   */
+  const canDispatch =
+    state.status !== "failed" || isRetryableAiFailure(classifyAiError(state.error).status);
+  const showForm = (state.status === "idle" || state.status === "failed") && canDispatch;
+  const showDraft = state.status !== "idle" && state.status !== "failed";
+
   return (
     <>
       <div className="space-y-4">
@@ -242,7 +262,11 @@ export function MeetingFollowUpPanel({ eventId, onClose }: MeetingFollowUpPanelP
           <p className="text-sm font-medium text-foreground">Follow-up Draft</p>
         </div>
 
-        {!draft && (
+        {state.status === "failed" && (
+          <AiFailureBody error={state.error} onRetry={handleDraftFollowUp} />
+        )}
+
+        {showForm && (
           <div className="space-y-3">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide" htmlFor="meeting-notes">
@@ -285,83 +309,70 @@ export function MeetingFollowUpPanel({ eventId, onClose }: MeetingFollowUpPanelP
               )}
             </div>
 
-            {followUpPending ? (
-              <FollowUpSkeleton />
-            ) : (
-              <LoadingButton
-                size="sm"
-                isPending={followUpPending}
-                loadingText="Drafting follow-up…"
-                onClick={handleDraftFollowUp}
-                className="w-full h-8 text-xs gap-1.5"
-              >
-                <Sparkles className="h-3.5 w-3.5" aria-hidden />
-                Draft Follow-up
-              </LoadingButton>
-            )}
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleDraftFollowUp}
+              className="w-full h-8 text-xs gap-1.5"
+            >
+              <Sparkles className="h-3.5 w-3.5" aria-hidden />
+              Draft Follow-up
+            </Button>
           </div>
         )}
 
-        {draft && (
+        {showDraft && (
           <div className="space-y-3">
-            <AiDraftCard title="Follow-up Email" onDiscard={handleDiscard}>
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-foreground">
-                  Subject: <span className="font-normal">{draft.subject}</span>
-                </p>
-                <Separator />
-                <p className="text-xs text-foreground whitespace-pre-line leading-relaxed">
-                  {draft.body}
-                </p>
+            {state.status === "cancelled" && (
+              <Badge variant="outline" className="gap-1 text-micro h-5 px-1.5">
+                <StopCircle className="h-3 w-3" aria-hidden />
+                Stopped — partial draft kept
+              </Badge>
+            )}
 
-                {draft.actionItems.length > 0 && (
-                  <>
-                    <Separator />
-                    <div className="space-y-1.5">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        Action items
-                      </p>
-                      <div className="space-y-1.5">
-                        {draft.actionItems.map((item, i) => (
-                          <DraftedActionItem key={i} item={item} index={i} />
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {draft.nextMeetingDate && (
-                  <>
-                    <Separator />
-                    <p className="text-xs text-muted-foreground">
-                      Next meeting suggested:{" "}
-                      <span className="font-medium text-foreground">{draft.nextMeetingDate}</span>
-                    </p>
-                  </>
-                )}
-              </div>
+            <AiDraftCard
+              title="Follow-up Email"
+              citations={citations.map((c) => ({ id: c.id, title: c.title, snippet: c.snippet }))}
+              citationsPending={isStreaming && citations.length === 0}
+              onDiscard={handleDiscard}
+            >
+              <FollowUpDraftBody draft={draft} isStreaming={isStreaming} />
             </AiDraftCard>
 
-            <div className="flex gap-2">
-              <LoadingButton
-                size="sm"
-                isPending={proposePending}
-                loadingText="Preparing…"
-                onClick={handleSendViaCalendar}
-                className="flex-1 h-8 text-xs gap-1.5"
-              >
-                <Send className="h-3.5 w-3.5" aria-hidden />
-                Send via Calendar
-              </LoadingButton>
+            {isStreaming ? (
               <Button
+                type="button"
                 variant="outline"
                 size="sm"
-                onClick={handleDoneNoSend}
-                className="flex-1 h-8 text-xs"
+                onClick={stop}
+                className="w-full h-8 text-xs gap-1.5"
               >
-                Done (no send)
+                <StopCircle className="h-3.5 w-3.5" aria-hidden />
+                Stop
               </Button>
-            </div>
+            ) : (
+              <div className="flex gap-2">
+                <LoadingButton
+                  size="sm"
+                  isPending={proposePending}
+                  loadingText="Preparing…"
+                  onClick={handleSendViaCalendar}
+                  disabled={!isSendableFollowUp(draft)}
+                  className="flex-1 h-8 text-xs gap-1.5"
+                >
+                  <Send className="h-3.5 w-3.5" aria-hidden />
+                  Send via Calendar
+                </LoadingButton>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDoneNoSend}
+                  className="flex-1 h-8 text-xs"
+                >
+                  Done (no send)
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>

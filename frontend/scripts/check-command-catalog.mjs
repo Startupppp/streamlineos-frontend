@@ -119,6 +119,10 @@ const OFF_CLIENT_HOOKS = new Map([
     "useUploadFile",
     "IN-SERVICE — the request lives in the module-local uploadFileRequest helper (POST /storage/upload), which is in-service: the upload is authorized by the feature that consumes the returned key.",
   ],
+  [
+    "useGenerateJobDescription",
+    "PERMISSIONED hr:interviews:manage — the request goes through streamAiText (POST /ai/generate-jd/stream), an SSE transport that never touches apiClient. The contract snapshot carries no /stream operations at all, so the key was checked against the decorator at head: hr-ai.controller.ts generateJdStream is @Post(\"generate-jd/stream\") @RequirePermission(\"hr:interviews:manage\"), the same key as the buffered /ai/generate-jd the snapshot does hold.",
+  ],
 ]);
 
 /**

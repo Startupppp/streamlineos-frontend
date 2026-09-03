@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SupportTicketStatus, SupportTicketPriority, SupportMessageAttachment } from "@/types/support";
@@ -76,7 +76,7 @@ export function useCreatePortalTicket() {
 }
 
 export function usePortalTicket(ticketId: number) {
-  return useQuery({
+  return useGatedQuery("support:portal:tickets:view", {
     queryKey: queryKeys.supportPortalTickets.detail(ticketId),
     queryFn: ({ signal }) => apiClient.get<PortalTicketDetail>(`/support/portal/tickets/${ticketId}`, undefined, signal),
     enabled: Number.isFinite(ticketId) && ticketId > 0,

@@ -1,13 +1,14 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SignDocument } from "@/types/sign";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useSignDocumentPreview(documentId: number | undefined) {
-  return useQuery({
+  return useGatedQuery("sign:documents:view", {
     queryKey: queryKeys.signDocuments.preview(documentId ?? 0),
     queryFn: ({ signal }) => apiClient.get<{ url: string; expiresInSeconds: number }>(`/sign/documents/${documentId}/preview`, undefined, signal),
     enabled: documentId !== undefined,

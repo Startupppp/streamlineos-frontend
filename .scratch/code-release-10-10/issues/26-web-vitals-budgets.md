@@ -16,6 +16,8 @@ third-party and server payload all met). **The recorded cause is corrected this 
 importers are **261 authenticated feature files and only 22 landing/public**, so the frozen landing animations do
 not pin it into the authenticated shell — the decision is who replaces it across 261 files in every feature lane.
 
+**Residual-risk disposition (2026-09-03):** every open box below now carries an ASSIGNABLE-or-ACCEPTED verdict, a named owner and a date, recorded inline under the box and in `reports/residual-risk-register-19-30.md`. Blockers were re-verified against source, a live gate run or a committed artifact rather than transcribed; where a stated blocker did not survive, the correction is inline.
+
 - [x] LCP, INP and CLS meet their targets on production builds for in-scope authenticated routes at the defined reference viewport and device profile.
     All six pass. Desktop LCP p75 **888 ms** (≤1500), INP p75 **48 ms** (≤200), CLS p75 **0.0008** (≤0.1); mobile LCP p75 **1002 ms** (≤2500), INP p75 **96 ms** (≤200), CLS p75 **0.000** (≤0.1). Measured on `node scripts/measure-web-vitals.mjs --base-url=http://localhost:1043 --routes=<12> --repeat=8` (exit 0): production build `qlh_3k7hMskrlYGND5MMp`, `serverMode` derived from `.next/BUILD_ID`, **192 samples**, `authorization.verdict` = "every measured sample rendered an authorized shell" (0 unauthorized), `contentAssertion.verdict` = "every measured sample rendered real page content" (0 unusable, 0 off-route), `routeFailures: 0`. The previous pass's numbers were void — no session, so every route painted an access-failure shell; that run is superseded, not averaged in.
 - [x] The six currently breached metrics are each brought inside budget, or an exception is recorded with a named owner and a concrete reason.
@@ -27,6 +29,28 @@ not pin it into the authenticated shell — the decision is who replaces it acro
 - [x] Navigation, skeleton, optimistic or queued feedback appears within the perceived-responsiveness target of user intent; no action looks unresponsive while work runs.
     Measured, fixed and now gated. Ticket 27 turned sidebar viewport prefetch off (correctly — 354 speculative RSC requests), which left a nav tap producing **no DOM change for up to 1739 ms**. `components/layout/nav-pending-indicator.tsx` uses Next 16's `useLinkStatus` in every sidebar item (expanded and collapsed) and every mobile bottom-nav and overflow item; it is absolutely positioned and present in both states so appearing costs no layout shift, and `aria-hidden` because the route change is the announcement. Measured click → first DOM mutation on the same in-page clock: **desktop p75 1 ms** (12 navigations, max 3), **mobile p75 5 ms** (11 navigations, max 52), target 100 ms. `checkPerceivedResponsiveness` now enforces that p75 per profile and **fails a profile that was never measured** rather than passing it by absence; 4 self-test fixtures. `pnpm exec jest --testPathPattern="components/layout"` → **exit 0, 17 suites / 122 tests**.
 - [ ] Route-level JavaScript, CSS, server payload, image/font and third-party budgets are recorded and met.
+    **RESIDUAL-RISK REGISTER 2026-09-03 — R-19 (ACCEPTED RESIDUAL · DECISION). The decision holds; three of the
+    numbers under it have moved, and one clause of the priced conclusion is wrong.**
+    Re-run at head: `node scripts/check-route-bundle-budget.mjs` → **exit 1, 13 routes, 13 measured, 0 pending,
+    17 breaches, every one JavaScript**, overages spanning **26,993 → 325,756 B**.
+    **The narrative above is one capture behind S9's `--write`.** `/chat` first-load is **+109,462** (recorded:
+    +101,313), `/chat`'s page chunk **+26,993** (recorded: +20,085), `/crm/leads` first-load **+63,798** (recorded:
+    +59,598). So **"the smallest open breach is 59,598 B" is wrong twice** — the smallest breach is `/chat`'s page
+    chunk at +26,993, and the smallest first-load breach is +63,798.
+    **The conclusion survives, and the arithmetic was checked rather than transcribed.** The comparison is apples
+    to apples: `measuredFirstLoadJsBytes` is gzip(9) over the client-reference manifest
+    (`measure-route-bundles.mjs:80-122`) and `measuredScriptBytes` is over-the-wire transfer, which is compressed.
+    Subtracting the full ~75 kB gzip both levers together would buy from every route's first load closes **at most
+    2 of the 17** (`/crm/leads` +63,798 and `/build/my-work` +73,324); it does not touch `/chat`'s page chunk,
+    because framer-motion and `@animateicons` sit in shared first-load chunks rather than a route's own page chunk.
+    Twelve of the seventeen have an overage above 100 kB. *"Neither closes 17 breaches alone"* is correct and, if
+    anything, understated. **Owner: frontend platform/shell owner, plus a dependency decision on
+    `@animateicons/react/lucide`. Deadline: 2026-09-17 for the decision.**
+    **A-24 (ASSIGNABLE) — something this box does not record.** The breach is **growing while the release runs**:
+    `/chat` first load moved +8 kB in a day. `check-route-bundle-budget.mjs` compares against a fixed ceiling that
+    14 routes already breach, with **no ratchet on the last measured value**, so growth is invisible until someone
+    re-measures. A ratchet would make growth fail even while the absolute ceiling stays unreachable. **Owner:
+    frontend perf owner. Deadline: 2026-09-17.** Full reasoning: `reports/residual-risk-register-19-30.md` §3.5.
     PARTIAL: recorded on 12 routes, and everything except JavaScript is met — CSS 58 244 B (ceiling 65 536), fonts 55 206 B (131 072), images 2 907–14 480 B (524 288), third-party **0 B**, server payload 19 466–25 682 B (40 960). JavaScript is not: `node scripts/check-route-bundle-budget.mjs` → **exit 1**, 13 routes, 12 measured, 1 pending, **17 breaches, all JS** — 13 × `measuredScriptBytes` (610 108–850 044 B vs 524 288), 3 × `measuredFirstLoadJsBytes` (`/chat` +101 kB, `/build/my-work` +68 kB, `/crm/leads` +60 kB) and `/chat`'s page chunk (+20 kB). It is not one missing lazy boundary: `/dashboard`'s largest first-load scripts are 74 672 · 58 371 · 54 829 · 43 894 · 32 187 B then a long tail of ~14 kB chunks — the shared authenticated shell. The largest identifiable library in it is framer-motion (224 kB raw / 71 kB gzip, 278 importers), pinned there by the public landing's animations, which box 7 escalates rather than works around. Bringing this inside budget is a shell-composition project, not a fix this ticket can land.
 
     **2026-09-03 — re-measured at head, and the recorded REASON for the blockage is corrected.**

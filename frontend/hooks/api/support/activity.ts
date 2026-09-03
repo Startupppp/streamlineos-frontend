@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -29,7 +29,7 @@ export interface SupportActivityEntry {
 }
 
 export function useSupportActivity(ticketId: number) {
-  return useQuery({
+  return useGatedQuery("support:tickets:view", {
     queryKey: queryKeys.supportActivity.list(ticketId),
     queryFn: ({ signal }) =>
       apiClient.get<SupportActivityEntry[]>(`/support/${ticketId}/activity`, undefined, signal),

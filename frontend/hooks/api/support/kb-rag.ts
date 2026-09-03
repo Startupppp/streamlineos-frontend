@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -51,7 +52,7 @@ export function usePublicAskSupportKb() {
 }
 
 export function useSupportKbIndexStatus(id: number) {
-  return useQuery({
+  return useGatedQuery("support:kb:view", {
     queryKey: [...queryKeys.supportKb.article(id), "index-status"] as const,
     queryFn: ({ signal }) =>
       apiClient.get<KbIndexStatus>(`/support/kb/articles/${id}/index-status`, undefined, signal),

@@ -71,7 +71,7 @@ const SLA_REPORT_KEY = queryKeys.hr.slaReport();
 const INTERVIEW_STATS_KEY = [...queryKeys.hr.all, "interviewStats"] as const;
 
 export function useInterviewStats(options?: { enabled?: boolean }) {
-  return useQuery({
+  return useGatedQuery("hr:interviews:view", {
     enabled: options?.enabled ?? true,
     queryKey: INTERVIEW_STATS_KEY,
     queryFn: ({ signal }) => apiClient.get<InterviewStats>("/hr/recruitment/interviews/stats", undefined, signal),
@@ -92,7 +92,7 @@ export function useInterviews(
   if (params?.upcoming != null) queryParams.upcoming = params.upcoming ? "true" : "false";
   if (params?.relevant != null) queryParams.relevant = params.relevant ? "true" : "false";
 
-  return useQuery({
+  return useGatedQuery("hr:interviews:view", {
     enabled: options?.enabled ?? true,
     queryKey: queryKeys.hr.interviews(queryParams),
     queryFn: async ({ signal }): Promise<Interview[]> => {
@@ -343,7 +343,7 @@ export function useInterviewerAvailability(
   date: string | null
 ) {
   const enabled = interviewerIds.length > 0 && !!date;
-  return useQuery<InterviewerAvailabilityResponse>({
+  return useGatedQuery<InterviewerAvailabilityResponse>("hr:interviews:view", {
     queryKey: [...queryKeys.hr.all, "interviewerAvailability", date, interviewerIds],
     queryFn: ({ signal }) =>
       apiClient.get<InterviewerAvailabilityResponse>(
