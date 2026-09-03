@@ -4,7 +4,7 @@
 
 **Blocked by:** 28.
 
-**Status:** 5 of 7 closed. **S14 reached a kanban board and ran every planned step.** The `page`-vs-cursor drift that blocked boxes 4 and 5 for the whole release was fixed and committed (`f75797ae1`); this session verified it from a real browser, resolved `projectId = 20` by clicking the first row of `/build/all`, and measured the board at 375/768/1280. The run went **57 of 63 planned steps to 63 of 63** — the first whole denominator this ticket has had. **Box 4 is CLOSED.** Box 5 stays open on flows-not-routes, not on reachability. Box 2 stays open on 9 named CRM/inventory targets now recorded as an accepted scope exclusion. Reports: `reports/30-ux-accessibility.md` (S8), `reports/30b-states-a11y-and-journeys.md` (S11), `reports/30c-a11y-residue-and-query-gating.md` (S13), `reports/30d-boards-reached.md` (S14).
+**Status:** 5 of 7 closed. **S15 closed A-29 and A-30, the two assignable remainders, and found a defect neither instrument could see.** Box 2 now has a corpus-wide screen-reader census (`aria-semantics.contract`, 3,652 files / 26,719 elements / 7 defect classes) that found **20 real defects, 19 fixed**; and **every controlled dialog and sheet in the product dropped focus onto `<body>` on close** — Radix restores only to its own `DialogTrigger`, which none of the four shared shells has — now fixed in the primitives and pinned. Box 5's run **asserted a write for the first time**: `63 of 63 planned steps · 1 of 1 writes asserted`, and the created ticket is a row in `scratch_t30_browser` (`build.tickets` id 20573). Both boxes stay open for stated, narrower reasons. Report: `reports/30e-aria-census-focus-restore-and-the-first-asserted-write.md`. **S14 reached a kanban board and ran every planned step.** The `page`-vs-cursor drift that blocked boxes 4 and 5 for the whole release was fixed and committed (`f75797ae1`); this session verified it from a real browser, resolved `projectId = 20` by clicking the first row of `/build/all`, and measured the board at 375/768/1280. The run went **57 of 63 planned steps to 63 of 63** — the first whole denominator this ticket has had. **Box 4 is CLOSED.** Box 5 stays open on flows-not-routes, not on reachability. Box 2 stays open on 9 named CRM/inventory targets now recorded as an accepted scope exclusion. Reports: `reports/30-ux-accessibility.md` (S8), `reports/30b-states-a11y-and-journeys.md` (S11), `reports/30c-a11y-residue-and-query-gating.md` (S13), `reports/30d-boards-reached.md` (S14).
 
 **Residual-risk disposition (2026-09-03):** every open box below now carries an ASSIGNABLE-or-ACCEPTED verdict, a named owner and a date, recorded inline under the box and in `reports/residual-risk-register-19-30.md`. Blockers were re-verified against source, a live gate run or a committed artifact rather than transcribed; where a stated blocker did not survive, the correction is inline.
 
@@ -55,6 +55,57 @@
   organization…" for ever with nothing telling the reader the workspace was not coming. It now falls to
   `AppLoadingStalled` after 20s (`components/ui/app-loading-screen.test.tsx`, 3 cases pinning it).
 - [ ] Keyboard navigation and screen-reader semantics work on every interactive surface; focus is managed across dialogs, drawers and route transitions.
+  **S15 — A-29 IS CLOSED. The second clause now has an instrument, it bites seven ways, and it found
+  and fixed 19 real defects. The box stays open on R-24 and on what a static walk cannot see.**
+  `npx jest --runInBand --testPathPattern="aria-semantics.contract"` -> exit 0, **36/36**.
+  `components/__tests__/aria-semantics.contract.test.ts` + `test-utils/aria-semantics-analysis.ts` walk the
+  same corpus as the keyboard scan and judge the naming/role layer over a denominator:
+  **3,652 files · 26,719 lowercase JSX elements · 807 `aria-*` attributes · 209 roles · 103 form controls.**
+  Measured at the start of the session: invalid role **0** · invalid `aria-*` name **0** ·
+  **dangling `aria-labelledby`/`describedby`/`controls` 4** · `aria-hidden` on a tabbable element **0**
+  (8 raw hits, all `display:none` or `tabIndex={-1}`) · redundant role **0** · positive `tabIndex` **0** ·
+  **form control with no accessible name 16**. **20 real defects; 19 fixed.**
+  The four dangling references were all `<section aria-labelledby="…-heading">` in
+  `features/portal/components/portal-project-detail.tsx` pointing at ids that exist nowhere, so each
+  landmark's intended name was silently dropped; `SectionHeader` now takes `titleId`. The 15 named
+  controls were genuinely nameless — a screen reader said "edit, blank" — across assistant, plate,
+  accounting/planning, build/ticket-details (x2), chat, hr (x3), settings/organization, support/ai-report
+  (x2), timesheets/my-time and wiki. Named natively where a `<label>` was adjacent, by `aria-label`
+  elsewhere, carrying real context. **The one that remains is pinned by route as well as by count**:
+  `features/crm/import/bulk-import-section.tsx:185`, CRM, out of release scope.
+  **Bite-proved both ways, hermetically, in a `git archive HEAD` temp tree — never in the shared tree.**
+  Clean -> exit 0, 36/36. Seven defects planted in real product files, one per class -> **exit 1, 8 failures**
+  (all seven classes plus the by-route pin). Removed -> exit 0, 36/36. The shared tree was `git status`
+  clean for every named file afterwards.
+  **What the census CANNOT see, written into the module header rather than only into a report:** whether a
+  name is CORRECT (`aria-label="Button"` on a delete control passes here and is a defect); focus traps and
+  restoration; whether an `aria-live` region actually announces; reading order; anything inside a
+  PascalCase component; a name computed at runtime; and an id threaded through a prop, which is honoured
+  by NAME rather than by proof. An axe-style pass has the same shape of blind spot for a different reason
+  — it judges only what a fixture mounted. **The two together are a floor, not coverage.**
+  **AND A DEFECT NEITHER INSTRUMENT COULD SEE, FOUND BY HAND AND FIXED.** Radix's `DialogContentModal`
+  does `event.preventDefault()` — cancelling FocusScope's natural restore — and then
+  `context.triggerRef.current?.focus()`. `AppSheet`, `AppDialog`, `EntityFormSheet` and `EntityFormDialog`
+  are **all controlled shells with no `DialogTrigger`**, so that ref is null on every one of them and
+  **closing any dialog or sheet in this product left focus on `<body>`**: the next Tab restarts at the top
+  of the document and a screen reader announces nothing. WCAG 2.4.3.
+  `components/ui/__tests__/overlay-focus.a11y.test.tsx` passes 12/12 and could not see it, because both its
+  cases build a trigger — the one case where Radix is correct.
+  `lib/restore-focus-on-close.ts` captures the opener in `onOpenAutoFocus` (the one moment FocusScope
+  leaves it as `document.activeElement`) and returns focus there on close, deferring to Radix when the
+  opener has left the document; `SheetContent` and `DialogContent` use it and a caller's own handler still
+  wins. `features/__tests__/menu-driven-sheet-focus.a11y.test.tsx` -> **5/5**, and bite-proved: reverting
+  the two primitives in a temp tree (keeping the epic-card refactor, so the failure is the primitive's)
+  -> **exit 1, 2 failures**; restored -> exit 0.
+  `features/build/epics/epic-card.tsx` was the shape that surfaced it — a menu item clicked an
+  `sr-only aria-hidden tabIndex={-1}` proxy button which `EditEpicDialog` wrapped in an `activationProps`
+  span, i.e. **a tabbable `role="button"` with no accessible name** in the card's action row.
+  `EditEpicDialog` now takes `open`/`onOpenChange` and the proxy is gone.
+  **STILL OPEN, and only for these reasons:** R-24 is unchanged — 9 of 633 click targets unreachable, 7
+  under `features/crm/**` and 2 in `app/(authenticated)/inventory/purchase-orders/page.tsx`, all out of
+  release scope; 624 of 633 is not 633 of 633. And everything in the "cannot see" list above is still
+  measured by nothing. Ticking this on an exclusion plus a static scan is the exact move this release
+  exists to stop.
   **RESIDUAL-RISK REGISTER 2026-09-03 — the scope exclusion is sound; the box's SECOND clause has no instrument
   at all, and that half is assignable work rather than a blocker.**
   **R-24 (ACCEPTED RESIDUAL · SCOPE).** 9 of 633 click targets unreachable (624/633, 98.6%), ratchet pinned at 9,
@@ -191,6 +242,55 @@
   `/crm/leads` still fails on the `lead_party_map`/`business_parties` grouping error — CRM is excluded
   from this release; recorded and moved past.
 - [ ] Representative browser end-to-end journeys cover the main module flows.
+  **S15 — A-30 IS CLOSED. The run asserts a write, and the write is a row in Postgres, not a claim.**
+  `node scripts/browser-journeys.mjs --base-url=http://localhost:3130 --cookie-file=<minted>
+  --widths=375,768,1280 --settle-ms=6000 --allow-cross-origin-api` -> exit 1,
+  **`63 of 63 planned steps run · 1 of 1 writes asserted · 31 findings`** (contrast 27, never-settled 4).
+  `--self-test` -> **exit 0, 48 passed** (was 39; nine new, three of them bite proofs).
+  `WRITE_JOURNEYS` drives the kanban column composer to create a ticket and asserts the row **survives a
+  reload** — away to `/dashboard`, back, look again — which is the only way a browser distinguishes a
+  server write from the optimistic cache entry the mutation wrote locally. The subject is unique per run
+  and asserted **absent** before the write, so an earlier run's row can never pass for this one's.
+  `writesIncomplete()` is the mirror of `stepsIncomplete()`: a run whose write never landed exits 1
+  rather than reporting a clean read-only sweep, and both checks are required to name `{subject}` so
+  neither can degrade into a constant `true`.
+  **Proved in the database, not in the DOM:**
+  `select id,title,status,project_id from build.tickets where title like 'journey-write-%'` on
+  `scratch_t30_browser` -> `20573 | journey-write-1788415461072-a9fe35 | TODO | 20`.
+  Real Chrome -> real `next dev` -> real Nest backend -> real Postgres. **Nothing in that path is mocked.**
+  Other numbers, all three widths: **`scrollWidth - innerWidth` = 0 on every one of the 63 steps** ·
+  **one `h1` on 63 of 63** · **a NAMED `main` on 63 of 63** (S14 had 60; the three misses were
+  `/build/20/backlog` 404ing for a PM-workspace project, which now answers 200) · 0 unauthenticated ·
+  3 error-boundary steps, all `/crm/leads`, CRM excluded (R-26 unchanged) · contrast 4,485 sampled /
+  **0 unresolved** / 369 failing.
+  **The 4 never-settled were investigated, not reported raw.** `/accounting/coa` shows 0 busy regions and
+  0 skeletons at 6s/14s/30s when re-probed — it was a cold Turbopack compile. `/dashboard` shows **15
+  visible skeletons and 0 `aria-busy` at 30s**, every time: `features/dashboard/dashboard-deferred-body.tsx`
+  gates every read on `deferredVisible`, which `DeferredDashboardContent` only flips `onVisible`, and a
+  headless viewport never scrolls. That is a deliberate below-the-fold deferral (ticket 27), **not** a
+  stuck read — but its fallback paints skeletons with no `aria-busy` and no live region, so a sighted
+  user sees "loading" and a screen-reader user is told nothing. Handed to ticket 27/28.
+  **ENVIRONMENT — the stale-server trap was real and two of three running servers were traps.** :1043 was
+  a 14h37m `next-server` whose cwd is a scratchpad `t26/frontend`; :1000 is `next start` over a `BUILD_ID`
+  stamped 08:27; **:3000 is a `next dev` whose `INTERNAL_API_SECRET` does not match the backend's, so
+  `/api/auth/session` carries no `backendJwt`, every client read 401s and `lib/api-client.ts:202` calls
+  `signOut({callbackUrl:"/signin"})` — while `curl /dashboard` still answers 200.** Anyone screenshotting
+  :3000 today is screenshotting a signed-out app. This session ran instead against **its own
+  `git archive HEAD` tree** at `/Users/.../streamline/.t30-live`, `next dev -p 3130`, secrets verified by
+  sha256 against the running backend's process env, pointed at the existing backend on :1501 over
+  `scratch_t30_browser`; `/api/auth/session` -> `backendJwt: true, enabledModules: 13` before the run.
+  **`--allow-cross-origin-api` was used and is declared.** The backend's `CORS_ORIGINS` is
+  `http://localhost:1000,http://localhost:3000` and both ports were occupied by other agents, so the
+  BROWSER's CORS check was turned off for :3130. The flag prints a warning line and is recorded as
+  `crossOriginApiAllowed: true` in the results JSON. **A run that used it is not evidence CORS is
+  configured**, and nothing here claims it is.
+  **STILL OPEN, on two narrower remainders:**
+  (1) **One module has a write.** Build. HR, accounting, settings, calendar, workflows, knowledge and
+  notifications are covered as routes at three widths, not as flows with a mutation. "Cover the main
+  module flows" is not yet true. The mechanism is generic now — a route, an `absent` check, actions, a
+  `present` check — so each further write is bounded work, not new design. **Owner: ticket 30.**
+  (2) **R-25 unchanged and not in this territory.** No frontend CI job boots the app;
+  `.github/workflows/frontend.yml` has five jobs and none starts a server or a database. **Owner: CI.**
   **RESIDUAL-RISK REGISTER 2026-09-03 — three separable remainders are presented here as one, and only the CI
   half is actually blocked.**
   **A-30 (ASSIGNABLE) — in this ticket's OWN territory.** "Nothing asserts a write" is work inside
