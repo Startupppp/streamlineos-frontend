@@ -779,6 +779,17 @@ opposite of a bulk write. Recorded, not done.
 | `jest --runInBand --testPathPattern="module-checklist-seed-sync"` | 0 | 3 passed |
 | `node src/scripts/check-db-call-count.mjs` | **1** | ACTIONABLE 44 -> **40**; stale verdicts 10 -> **5** vs a ratchet of 2 |
 | `node src/scripts/check-db-call-count.mjs --self-test` | 0 | — |
+| `jest --runInBand --testPathPattern="src/(common/db\|modules/(hr\|support\|notifications\|workflows\|chat\|timesheets\|accounting\|finance\|billing\|storage\|build\|invoices))/"` | 0 | **675 suites / 4,679 tests passed**, 1 suite + 2 tests skipped |
+| `pnpm check:unbounded-reads` | 1 | 0 actionable; the 2 violations are another agent's in-flight `settings` -> `crm/custom-fields` move |
+| `pnpm check:transaction-callbacks` / `check:scope-application` / `check:record-access` / `check:file-sizes` / `check:kebab-case` | 0 each | — |
+
+**Two suites went red mid-pass and both were mock-surface gaps, repaired rather than worked around.**
+`hr-core-tenant-isolation`'s audit double carried `log` and not `logMany`; `module-checklist`'s db
+double carried `update` and not `execute`. The second one also pinned the old mechanism —
+`updateSetCalls` captured the `set` payload of a per-item UPDATE that no longer exists — so its
+assertions now read the bound parameters of the statement actually issued, which additionally proves
+there is exactly one statement and that `org_id` is bound. `update` is left on the double on purpose:
+a regression to the per-item shape leaves `executed` empty and fails every assertion.
 
 **Bite proof.** `projects-write-reassign.spec.ts` was run against a hermetic
 `git archive HEAD src test` tree in the scratchpad with only the spec copied in: **both assertions
@@ -821,7 +832,7 @@ implied: `scratch_perf_seed` was **not** used.
 - `check:unbounded-reads` is **red**, and it is **not this ticket's**: the failures are one stale entry
   and one unclassified path from another agent's in-flight move of
   `settings/settings-custom-fields.service.ts` to `crm/custom-fields/`.
-- The repo-wide jest run over the eleven modules was **not run** this pass; the focused runs above were.
+- The seeded e2e suite was **not run**. `check:route-budgets` was **not run**.
 - Lint was **not run**. `next build` was **not run**. No seeded e2e was **not run**.
 - The 79 remaining no-`org_id` write sites in this territory are a **candidate list**. Five were verified
   and fixed; the rest were classified by eye from a scan, not read one by one.
