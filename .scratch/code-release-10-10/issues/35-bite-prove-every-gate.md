@@ -4,7 +4,27 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** 7 of 8 closed; 1 PARTIAL, **and the partial is BLOCKED on release scope, not unfinished.**
+**Status:** 7 of 8 closed; 1 PARTIAL (release scope). **S12 REOPENED AND RE-CLOSED THE CI HALF OF
+BOX 7 — the gates still had never run, for two reasons neither of which 35b addressed.**
+See `reports/35d-gate-execution-and-bite-proofs-s12.md`.
+
+**S12 headline, measured 2026-09-03:** (1) NOTHING IS PUSHED — `git rev-list --count
+origin/main..HEAD` is **129 backend / 131 frontend**, so 35b's `gates` job has never reached
+GitHub; the newest real runs (BE 33622305895, FE 33622293615) are both on the PRE-35b workflow and
+their STEP LISTS show `Lint FAILURE` then every gate `skipped`. Routed to the orchestrator: agents
+may not push. (2) Even once pushed, **both `gates` jobs aborted at their first or second step**:
+`check:repo-paths:self-test` asserted that the SIBLING repository is checked out, which is an
+environment fact CI does not satisfy, so GitHub skipped everything after it — **FE executed 0 of 27
+gates, BE 1 of 76.** The job-level fix 35b made was undone at step level. Both are now closed:
+every gate step carries `if: ${{ !cancelled() }}`, and the cross-repository self-test reports
+INCONCLUSIVE/PARTIAL instead of failing. After the change all 76 BE and all 27 FE steps execute.
+
+**A BLIND GATE was found by bite proof and fixed: `check:effect-fetches`.** It printed "No
+useEffect-driven API fetches found (5,278 files scanned)" over a real one, because rule 1 needs an
+`async` effect and rule 2 needs both a `useCallback` and a `void` call. Rule 3 (brace-matched effect
+bodies) added; sites 0 -> 1; self-test 20 -> 25. The one site is
+`components/layout/command-palette.tsx:177` — FE component territory, reported not fixed, step left
+blocking and red.
 Re-verified at head 2026-09-03: both gates exit 0 at their ratchets, and the entire residue — 6 quarantined
 `describe.skip` blocks in `modules/ai/core/crm-copilot.service.phase2.spec.ts` (all CRM subject matter) and 2 VOID
 transaction specs in `modules/inventory` and `modules/leads` — sits in modules this release excludes. Nothing here
@@ -12,6 +32,20 @@ is blocked on another agent, on infrastructure or on a measurement.
 
 - [x] Every gate in both repositories has a self-test that constructs a known-bad fixture and confirms the gate rejects it for the right reason.
       Measured by mutation testing, not by reading: every named detector each self-test executes was neutered and the self-test re-run. 89 gates, 349 detector mutants, 341 killed. All 85 registered self-tests exit 0.
+      **S12 — this box's evidence is DOWNGRADED to unre-verified, by measurement.** The one gate
+      re-bite-proved this session that a prior session had counted as proven, `check:effect-fetches`,
+      was BLIND: it reported "No useEffect-driven API fetches found (5,278 files scanned)" while
+      `components/layout/command-palette.tsx:177` held the canonical shape
+      (`useEffect(() => { apiClient.get(...).then(setState); }, [dep])`). Rule 1 required an `async`
+      effect; rule 2 required both a `useCallback` and a `void` call, and its `[^}]*` window stopped
+      at the first brace in the body. Rule 3 added (brace-matched effect bodies, which is also what
+      stops the scan running past the effect into an unrelated `useQuery`); sites 0 -> 1, self-test
+      20 -> 25, bite-proven both directions in a hermetic tree. Eight gates were bite-proven this
+      session (both `check:repo-paths`, FE `check:colors` / `check:formatters` /
+      `check:type-assertions` / `check:over-300` / `check:import-direction` / `check:icon-labels`,
+      plus the repaired `check:effect-fetches`); **the other ~90 were NOT REACHED and are not
+      claimed.** One in nine of a random sample being blind means the S8 mutation corpus should be
+      re-run, not cited.
       PARTIAL: 5 gates on disk are wired to no package script at all and so can never run — BE `check-cache-key-shapes`, `check-hr-pagination-gate`, `check-namespace-coverage`, `check-replay-ledger`; FE `check-import-direction` (reports 222 violations, exit 1). Registering them is a release-management decision, not a gate repair.
 - [x] Gates whose self-test only asserts their own constants are rewritten to actually run the scan.
       No survivor of this exact shape remained after S8. The live variant found this session is worse and is fixed: `FE check:query-scope` ran the real detectors but scored them with `result !== null`, so a detector returning nothing counted as a detection, and rule 4's failures were recorded after the only place the failure array was read. 4/7 mutants killed → 7/7.
@@ -71,6 +105,32 @@ is blocked on another agent, on infrastructure or on a measurement.
 - [x] Text-based scans are validated against a known defect before being trusted.
       `check:db-call-count` reported ACTIONABLE 0 sitting over a confirmed N+1 at `payroll/runs/inputs.service.ts:187`. Two blind spots: a Drizzle chain split across lines (patterns tested one line at a time) and a helper receiving the db handle as an ARGUMENT (patterns only matched it as a receiver). Both fixed, both fixtured from that real code. Detected files 41 → 147; that line now reports REGRESSED. `check:hardcoded-secrets` was validated the other way — it flagged `calendar-webhook-secret.ts` where the only match was a header NAME; fixed and re-proven against four planted credential classes and two negatives.
 - [x] Coverage counts are honest: a path-filtered run that reports green while suites outside the filter are red is a false pass.
+      **S12 RE-AUDIT — the wiring was right and the SEQUENCING was not, so the answer was still "no gate has run".**
+      Measured by executing every step of both `gates` jobs against a `git archive HEAD` tree in two
+      layouts: with the sibling repository present, and in the single-repository layout
+      `actions/checkout` actually produces. `check:repo-paths:self-test` is step **1** of the FE job
+      and step **2** of the BE job, and it exits 1 in a single-repo checkout (FE "3 failed, 15
+      passed"; BE "5 failed, 4 passed"), so GitHub skipped every step below it: **FE 0 of 27 gates,
+      BE 1 of 76.** Four more BE steps and two more FE steps exit 2 INCONCLUSIVE on a cross-repo
+      prerequisite and would each have aborted the job in turn (`check:permission-keys`,
+      `check:navigation-permissions`, `check:evidence-seal`, `check:s05-artifact-contract`;
+      `check:module-manifest`, `check:home-manifest`). Fixed three ways: every gate step now carries
+      `if: ${{ !cancelled() }}` so a red gate stops hiding the rest; `check:repo-paths` separates the
+      environment fact from the resolver defect and reports INCONCLUSIVE (exit 2) / labelled PARTIAL
+      (exit 0 under an opt-in) instead of failing, staying BLOCKING because the opt-in cannot mask a
+      defect (bite-proved with 5 planted resolver defects — all exit 1 WITH the opt-in set); the six
+      cross-repository gates are allow-failure with the prerequisite and both measured exit codes in
+      the step comment, and deliberately NOT given the opt-in.
+      After the change **all 76 BE and all 27 FE steps execute** in the CI layout: FE 20 green / 1
+      blocking-red / 6 allow-failure-red; BE 57 green / 12 blocking-red / 6 allow-failure. All 18 red
+      blocking gates name a specific defect in another territory — none is a blind gate.
+      Three allow-failure comments named numbers that are no longer true and were re-measured
+      (FE `check:dead-code` 3 -> 1 unclassified; `check:route-bundle-budget` "6 never measured" -> 17
+      measured breaches; `check:web-vitals-budget` 5 -> 2). `check:import-direction` is green at its
+      ratchet (182/182, 19/19) so its `continue-on-error` was deleted and it now blocks.
+      **BLOCKED, and routed to the orchestrator, not to a territory: NOTHING IS PUSHED.** 129 backend
+      / 131 frontend commits ahead of `origin/main`. Until someone pushes, every gate claim in this
+      release rests on local measurement only. Agents may not push.
       **The "44 of 89 gates are never invoked" number is STALE and was re-derived from the workflow files on disk, not copied.** At HEAD: 96 gate scripts (`check-*.mjs`) across both repos, **7 never referenced by any workflow**, every one with a stated reason — 3 are `db:check-*` seeded-database benchmark instruments (BE/CLAUDE.md §7 calls `db:check-build-reads` a measurement tool, not a gate), 1 is the `cell:load` capacity instrument, and 2 (`check-benchmark-manifest.mjs`, no package script; another agent's) appeared during this session. Of the 97 `check:*` package gates, 3 are never invoked: FE `check:cycles` and `check:properties` (`check:properties` is a legacy superset whose four constituent scripts are each already wired individually; `check:cycles` is madge — a real gap, see below) and BE `check:alert-ack` (its self-test IS now wired; the live half needs a nonce a human types back from the alert channel, which no CI job can fabricate). Newly wired this session: BE `check:repo-paths:self-test` — the last gate script in that repo no workflow named — and BE `check:dead-code` (measured rc=0: knip 0 unused files / 36 other findings, 9,795-file importer graph, 35 verdicts none stale), plus `check:replay-ledger` into `db-gates.yml`, the only job with a cold database (both halves exit 2 without `COLD_DATABASE_URL`, so there is no hermetic half).
       **The real false pass was one level below the one 35b fixed, and it is now closed.** 35b moved the GATES out from under a red `Lint`. It left `Test` where it was: `pnpm test` sat below `Lint` inside BE `verify` and FE `frontend`, and lint is red in both — measured this session, **BE `pnpm lint` rc=1 with 267 errors, FE `pnpm lint` rc=1 with 2,375 errors**. So neither repository's unit suite had ever executed in CI either. Both now run in a `tests` job with no `needs:`, unfiltered — which is also the direct answer to the box: `jest --testPathPattern=<x>` reports green while every suite outside the filter is red, and CI now runs no filter at all.
       **Frontend coverage MEASURED so the decision rests on a number, not an absence** — `jest --coverage --runInBand`, 303 suites / 2,911 tests: **statements 51.90% (13,052/25,147) · branches 45.53% (4,632/10,172) · functions 36.63% (2,996/8,177) · lines 53.34% (12,126/22,731)**. Backend coverage NOT run — a `--coverage` pass over 1,963 spec files is not something this session could execute honestly under the shared-CPU mutex, and an unmeasured floor is the defect this ticket exists to remove.
