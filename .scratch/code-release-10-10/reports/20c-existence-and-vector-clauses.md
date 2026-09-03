@@ -175,6 +175,11 @@ detector that covered one.
   `test/security/appsec/session-revocation-enforced.spec.ts`** — 7 of 13 tests. Bisected: the spec passes
   at `be3eb03e` (13/13) and fails at `96674525`. It asserts on the source text of the redis tombstone
   writer, which that commit rewrote. Not a projection issue; routed to the sessions lane.
+- **`check:body-binding` is unwired and `check:gate-wiring` is now RED because of it** (landed by the
+  `@Body()`-typing lane in `66b0640b`, after this work). It is absent from the workflows entirely — not
+  even in a comment — so this is **not** a consequence of the comment-stripping change here: the
+  *unmodified* gate-wiring script, run against current HEAD, fails with the identical single finding.
+  Routed to that lane to wire or to add to `UNWIRED_BY_DESIGN` with a reason.
 - **`check-gate-wiring`'s substring matcher is a general false-green mechanism.** Fixed for comments and
   for unparseable step names, but it still decides "wired" by substring over concatenated YAML — a gate
   named in a `#`-free string anywhere (an `env:` value, an unrelated `run:`) would still count. A real
