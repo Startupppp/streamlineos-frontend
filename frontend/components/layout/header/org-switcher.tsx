@@ -22,15 +22,10 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { useGetOrganizations, useSwitchOrg } from "@/hooks/common/auth-hooks";
 import { useAccess } from "@/hooks/api/access";
 import { CreateWorkspaceDialog } from "@/components/layout/header/create-workspace-dialog";
-import { LeaveOrganizationMenuItem } from "@/features/settings/organization/leave-organization-control";
-
-const LeaveOrganizationDialog = dynamic(
-  () =>
-    import("@/features/settings/organization/leave-organization-control").then(
-      (m) => m.LeaveOrganizationDialog,
-    ),
-  { ssr: false },
-);
+import {
+  LeaveOrganizationDialog,
+  LeaveOrganizationMenuItem,
+} from "@/features/settings/organization/leave-organization-control";
 
 const ArchivedOrgsRestore = dynamic(
   () =>
