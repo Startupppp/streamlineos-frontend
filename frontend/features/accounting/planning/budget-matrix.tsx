@@ -17,13 +17,14 @@ interface BudgetMatrixProps {
 
 interface MatrixCellProps {
   accountId: number;
+  accountName: string;
   periodKey: string;
   value: string;
   readOnly: boolean;
   onChange: (accountId: number, periodKey: string, value: string) => void;
 }
 
-function MatrixCell({ accountId, periodKey, value, readOnly, onChange }: MatrixCellProps) {
+function MatrixCell({ accountId, accountName, periodKey, value, readOnly, onChange }: MatrixCellProps) {
   function handleChange(e: ChangeEvent<HTMLInputElement>): void {
     onChange(accountId, periodKey, e.target.value);
   }
@@ -31,6 +32,7 @@ function MatrixCell({ accountId, periodKey, value, readOnly, onChange }: MatrixC
     <input
       type="number"
       step="0.01"
+      aria-label={`${accountName} — ${periodKey} budget amount`}
       value={value}
       disabled={readOnly}
       onChange={handleChange}
@@ -180,6 +182,7 @@ export function BudgetMatrix({ budget, readOnly = false }: BudgetMatrixProps) {
                       <td key={period} className="border border-border/40 p-0">
                         <MatrixCell
                           accountId={acc.accountId}
+                          accountName={acc.accountName}
                           periodKey={period}
                           value={cells[cellKey] ?? ""}
                           readOnly={readOnly}

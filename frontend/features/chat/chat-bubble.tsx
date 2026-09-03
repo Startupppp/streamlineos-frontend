@@ -220,6 +220,7 @@ export function ChatBubble({
           <div className="mx-1">
             <div className="rounded-xl border border-primary/40 bg-background overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-ring/50">
               <textarea
+                aria-label="Edit message"
                 value={editInput}
                 onChange={handleEditInputChange}
                 onKeyDown={handleEditKeyDown}

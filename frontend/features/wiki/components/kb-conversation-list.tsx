@@ -235,6 +235,7 @@ export function KbConversationList({
                     {renamingId === conv.id ? (
                       <input
                         type="text"
+                        aria-label="Rename conversation"
                         value={renameValue}
                         onChange={handleRenameInputChange}
                         onKeyDown={handleRenameKeyDown}

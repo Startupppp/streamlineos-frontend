@@ -161,6 +161,7 @@ const ChecklistItemRow = memo(function ChecklistItemRow({
       {editing ? (
         <input
           ref={inputRef}
+          aria-label="Checklist item text"
           value={text}
           onChange={(e) => setText(e.target.value)}
           onBlur={handleTextSave}
@@ -287,6 +288,7 @@ function ChecklistSection({
         <CheckSquare className="h-4 w-4 text-muted-foreground shrink-0" />
         {editingTitle ? (
           <input
+            aria-label="Checklist title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onBlur={handleTitleSave}

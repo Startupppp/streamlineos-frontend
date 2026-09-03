@@ -78,6 +78,7 @@ function ColorField({
       <div className="flex items-center gap-2">
         <input
           type="color"
+          aria-label={`${label} colour picker`}
           value={HEX_COLOR.test(value) ? value : "#0b1220"}
           onChange={(e) => onChange(e.target.value)}
           className="h-8 w-8 rounded border border-border cursor-pointer p-0.5 bg-card"

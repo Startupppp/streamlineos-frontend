@@ -88,6 +88,7 @@ export function PayrollSimulator() {
                 <Input placeholder="Name" value={newName} onChange={(e) => setNewName(e.target.value)} className="flex-1" />
                 <Input type="number" placeholder="Amount" value={newAmount} onChange={(e) => setNewAmount(e.target.value)} className="w-24" />
                 <select
+                  aria-label="Component type"
                   className="rounded-md border border-border bg-background px-2 text-sm"
                   value={newType}
                   onChange={(e) => setNewType(e.target.value as typeof newType)}

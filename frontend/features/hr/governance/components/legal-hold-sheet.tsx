@@ -145,6 +145,7 @@ export function LegalHoldSheet({ open, onClose, hold }: LegalHoldSheetProps) {
                 <div className="border rounded-lg p-3 space-y-2 mb-3">
                   <div className="flex gap-2">
                     <select
+                      aria-label="Item type"
                       value={itemType}
                       onChange={(e) => setItemType(e.target.value as typeof itemType)}
                       className="text-sm border rounded px-2 py-1 bg-background"

@@ -89,6 +89,7 @@ function TodoListItemElement({
       <span className="mr-2 shrink-0 mt-1" contentEditable={false}>
         <input
           type="checkbox"
+          aria-label="Toggle task item"
           checked={checkboxProps.checked ?? false}
           onChange={handleCheckedChange}
           onMouseDown={checkboxProps.onMouseDown}

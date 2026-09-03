@@ -43,15 +43,17 @@ export function AiReportClient() {
     >
       <div className="flex flex-1 min-h-0 flex-col gap-4">
         <div className={FILTER_TOOLBAR_ROW}>
-          <label className="text-xs text-muted-foreground shrink-0">From</label>
+          <label htmlFor="ai-report-date-from" className="text-xs text-muted-foreground shrink-0">From</label>
           <input
+            id="ai-report-date-from"
             type="date"
             value={filters.dateFrom ?? ""}
             onChange={handleDateFrom}
             className="h-9 rounded-md border border-input bg-card px-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           />
-          <label className="text-xs text-muted-foreground shrink-0">To</label>
+          <label htmlFor="ai-report-date-to" className="text-xs text-muted-foreground shrink-0">To</label>
           <input
+            id="ai-report-date-to"
             type="date"
             value={filters.dateTo ?? ""}
             onChange={handleDateTo}
