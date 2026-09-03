@@ -19,10 +19,18 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 // were gated on build:tickets:view, a Build key on Support routes, so the links
 // tracked Build access instead of Support access. Repointed to
 // dashboard:support:view and support:tickets:view to match what those pages read.
+// Moved 2026-09-03: the Build "Settings" route (/build/settings/integrations)
+// and the Build group's admission list were gated on settings:manage, a global
+// key, for a surface Build owns. The four git-connection routes moved to
+// /integrations/git/connections behind integrations:git:view|manage, and
+// MODULE_ADMIN_EXTRA_KEYS.build now grants that pair, so a BUILD_MODULE_ADMIN
+// holds the key but could not see the link. Repointed to integrations:git:view.
+// Strictly widening: OWNER and ORG_ADMIN are ALL_PERMISSION_NAMES and no role
+// template carries settings:manage, so nobody who saw the item loses it.
 // The digest exists so a route or its permission cannot change without somebody
 // saying why.
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "34dfd289d338da34e1dea1e283cd7e0e44b66464c1b5bb205709ac17a7cfd744";
+  "3f26f8481b2bb67e31e6f6152ff0105943047b01c41503ab88291765c28a7527";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {
