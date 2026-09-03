@@ -11,6 +11,20 @@ its blindness is now ratcheted in both directions and bite-proved hermetically. 
 recorded ACTIONABLE with their exact batched form, deliberately not fixed (owners/scope stated in the report).
 Box 2 and box 3 remain open. Report: `reports/21b-n-plus-one-gate-blind-spot.md`.
 
+**Session status 2026-09-03 (SIXTH PASS — three boxes touched, NONE closed, and none of them can honestly be).**
+Five growing-loop N+1s and one read-then-write tenant gap fixed, each bite-proved against a hermetic
+`git archive 09c01de8` tree with nothing planted in the shared working tree. `check:n1-growing-loops`
+**106 -> 102 sites / 78 -> 76 files**, ratchet lowered to 102 in the same commit; `check:db-call-count`
+**ACTIONABLE 35 -> 34 files, 57 -> 54 call sites**, both gates exit 0 before and after. Box 3's per-row-write
+population re-derived from the gate's own list: **39 -> 36**. Two conflict/tenant semantics were EXECUTED
+against a database rather than reasoned about (multi-row `ON CONFLICT DO NOTHING` with an intra-statement
+duplicate; the `bulkUpdateFromValues` statement whose org column is `last_active_org_id`). The personal
+dashboard's duplicate membership read was measured on `scratch_perf_seed` as `streamline_app` under RLS on all
+four tenants — **3 buffers, uniform; cold planning 7.816 ms against 0.584 ms of execution**, which is the honest
+shape of that win. **Boxes 1, 2 and 3 remain open**: 102 growing-loop sites, 36 per-row writes, and a box-2
+candidate list of 178 id-only writes that was NOT adjudicated. Report:
+`reports/21d-sixth-pass-bounded-calls.md`.
+
 **Session status 2026-09-03 (fifth pass):** the three open boxes were RE-MEASURED from scratch with an
 AST scan rather than inherited from the gate, and the gate was found to have **four** more detector gaps —
 one of them total: **every `this.cache.*` call was invisible, so the entire cache half of box 1's clause had
@@ -19,7 +33,7 @@ missing-tenant-predicate defects (two on an unauthenticated public e-sign route)
 `check:n1-growing-loops`, **explicitly ratcheted at 106** — that is a ratchet, not a clean bill.
 Report: `reports/21c-ast-denominator-and-gate-blindness.md`.
 
-**Status:** partial — 6 of 9 closed, 3 partial. **A-4 IS DONE (2026-09-03, commit `5bdacef8`)** — `clients/client-accounts.service.ts` `reassignAccounts` is one `bulkUpdateFromValues` instead of one UPDATE per assignee. Measured as `streamline_app` under RLS on all four tenants: **505 -> 9 statements** on the 89.93% tenant (65 -> 6, 13 -> 6, 8 -> 6 on the others) and **41,958 -> 32,936 buffer blocks (-21.5%)**, with the sign holding on every tenant. `check:db-call-count` exit 0, ACTIONABLE 40 -> 39 files. Box 2 does NOT close on it — R-6 / R-6b / R-6c remain. Report: `reports/47-a4-a5-clients-n1-and-negative-tests.md`. FOURTH PASS (2026-09-03) did not close a box; it repaired the GATE, which had been red at HEAD and, more importantly, blind. `check:db-call-count` skipped **2,417 of 4,765 loop openers (50.7%), across 753 files**, with no body inspection at all — every braceless loop body, which is the shape CLAUDE.md §6 mandates, plus `Promise.all(xs.map((x) => this.db...))`, whose opener leaves a paren open so `parenBalance >= 0` counted it as closed. It now inspects 2,739 and ratchets that number. Gate rc 1 -> **rc 0**. Report: `reports/21-db-call-contract.md`. Third pass (2026-09-03) batched three more per-row call sites, deleted a per-candidate probe that could never match a row, converted two more write paths to `bulkUpdateFromValues`, gave five more read-then-write pairs their tenant predicate, reconciled the N+1 baseline with what the source now does (ACTIONABLE 44 -> 40), and **recorded the four decisions** boxes 1, 4, 7 and 8 were waiting on. Boxes 1, 4, 7 and 8 are closed as RECORDED DECISIONS — the decision and its consequences are written below; no code was guessed at for them.
+**Status:** partial — 6 of 9 closed, 3 partial (unchanged by the sixth pass: it moved all three forward and closed none). **A-4 IS DONE (2026-09-03, commit `5bdacef8`)** — `clients/client-accounts.service.ts` `reassignAccounts` is one `bulkUpdateFromValues` instead of one UPDATE per assignee. Measured as `streamline_app` under RLS on all four tenants: **505 -> 9 statements** on the 89.93% tenant (65 -> 6, 13 -> 6, 8 -> 6 on the others) and **41,958 -> 32,936 buffer blocks (-21.5%)**, with the sign holding on every tenant. `check:db-call-count` exit 0, ACTIONABLE 40 -> 39 files. Box 2 does NOT close on it — R-6 / R-6b / R-6c remain. Report: `reports/47-a4-a5-clients-n1-and-negative-tests.md`. FOURTH PASS (2026-09-03) did not close a box; it repaired the GATE, which had been red at HEAD and, more importantly, blind. `check:db-call-count` skipped **2,417 of 4,765 loop openers (50.7%), across 753 files**, with no body inspection at all — every braceless loop body, which is the shape CLAUDE.md §6 mandates, plus `Promise.all(xs.map((x) => this.db...))`, whose opener leaves a paren open so `parenBalance >= 0` counted it as closed. It now inspects 2,739 and ratchets that number. Gate rc 1 -> **rc 0**. Report: `reports/21-db-call-contract.md`. Third pass (2026-09-03) batched three more per-row call sites, deleted a per-candidate probe that could never match a row, converted two more write paths to `bulkUpdateFromValues`, gave five more read-then-write pairs their tenant predicate, reconciled the N+1 baseline with what the source now does (ACTIONABLE 44 -> 40), and **recorded the four decisions** boxes 1, 4, 7 and 8 were waiting on. Boxes 1, 4, 7 and 8 are closed as RECORDED DECISIONS — the decision and its consequences are written below; no code was guessed at for them.
 
 **2026-09-03 residual-risk register: one of the three recorded N+1s is NO LONGER BLOCKED.** `clients/client-accounts.service.ts:483` is **A-4 ASSIGNABLE** (the lane that held it has committed; last commit `9d840a1f`; batched form already written down). Boxes 2/3/5 otherwise carry residuals **R-6 / R-6b / R-6c / R-7 / R-7b / R-7c**, each with an owner and a deadline. See `reports/residual-risk-register.md` §1.3, §3.5.
 
@@ -48,7 +62,52 @@ Report: `reports/21c-ast-denominator-and-gate-blindness.md`.
    ticket's, and not fixable in service code at all.
 
 - [ ] Relationship, permission, unread, attachment, assignee and metadata lookups are batched with joins, CTEs or bounded multi-key queries. No database or cache call inside a growing loop.
-   PARTIAL (FIFTH PASS, 2026-09-03) — DENOMINATOR RE-DERIVED, NOT INHERITED. Report:
+   PARTIAL (SIXTH PASS, 2026-09-03) — **STILL OPEN, AND IT CANNOT BE TICKED: 102 growing-loop sites remain.**
+   Report: `reports/21d-sixth-pass-bounded-calls.md`.
+   PRE-STATE MEASURED HERMETICALLY, NOT INHERITED (`git archive 09c01de8` into a temp dir, nothing planted in
+   the shared tree): `check:n1-growing-loops` exit 0, **GROWING 106 sites / 78 files**; `check:db-call-count`
+   exit 0, **ACTIONABLE 35 files / 57 call sites**. The ticket's own "ACTIONABLE 40 -> 39 files" line was
+   already stale by other lanes' commits — the true head figure when this pass began was 35/57.
+   AFTER THIS PASS: `check:n1-growing-loops` exit 0, **GROWING 102 sites / 76 files**, ratchet lowered
+   106 -> 102 in the same commit as the fixes. `check:db-call-count` exit 0, **ACTIONABLE 34 files / 54 sites**.
+   FIXED HERE, five sites, each with a measured or executed proof and each bite-proved against the pre-fix tree:
+   (1) **The personal dashboard read `organization_members WHERE (org_id, user_id)` TWICE per request** — once in
+   `dashboard-personal.service.ts` and again inside `DashboardProjectService.getMyIssues`, which it delegates to —
+   and awaited module availability and that membership row SERIALLY before its `Promise.all` fan-out. The two
+   awaits now overlap and `getMyIssues` accepts the already-resolved id (`null` = resolved and absent, `undefined`
+   = resolve it yourself), so `/dashboard/my-issues` is unchanged. **The existing criterion could not see this**:
+   `dashboard-section-isolation.spec.ts` asserts "membership resolved once" while mocking `projectService`, so the
+   second read happened inside a double — it now asserts the resolved id is what gets delegated.
+   MEASURED on `scratch_perf_seed` (at head, 665/665) as `streamline_app`, `rolbypassrls=f`, RLS live, tenant GUC
+   set, all four tenants: the probe is an Index Scan on `uniq_org_members_org_user` costing **3 shared buffers on
+   every tenant** (89.93% / 9.00% / 0.90% / 0.18%), so the saving is **one statement and 3 buffers per personal
+   dashboard load**. Stated honestly: the buffer number is small. The number that is not small is the ratio —
+   cold **planning 7.816 ms against execution 0.584 ms**, warm 0.043 ms against 0.012 ms. For a probe like this
+   the cost of a round trip is the plan and the network, not the pages, and a buffer ceiling would not have seen it.
+   (2) `webhooks-dispatch.service.ts` — verified: `run()` read **every column of every active endpoint** with no
+   projection, then opened one outbound call per endpoint through an **unbounded `Promise.allSettled`**, each
+   writing **its own `webhook_logs` INSERT**. Now waves of `WEBHOOK_DISPATCH_CHUNK = 8`: the wave caps concurrent
+   sockets (each lives up to `WEBHOOK_MAX_ATTEMPTS x WEBHOOK_TIMEOUT_MS` = 50 s) and flushes ONE multi-row insert,
+   so the crash window is one chunk rather than the whole fan-out. Endpoint read projected to four columns.
+   (3) `sessions.service.ts` `tombstone()` — two Redis commands per session id through an unbounded
+   `Promise.allSettled`. Revoking 500 sessions cost **1,000 round trips; it now costs 4** (one `MSET` + one variadic
+   `ZADD` per 256 ids). `MSET` cannot carry a TTL at all, which makes the "a tombstone must never expire" property
+   structural instead of a convention.
+   (4) `payroll/setup/policy-mutation.service.ts` — one INSERT per salary component inside the activation
+   transaction, over a **caller-controlled** array (a tenant template's `defaultComponents` JSON). Now one
+   multi-row INSERT per 200.
+   (5) `organization/core/org-lifecycle.service.ts` and `org-purge.service.ts` carried a **byte-identical**
+   `repairLastActiveOrgIds` issuing **two UPDATEs per member**; archiving a 500-member org cost 1,000 statements.
+   One shared helper now: `bulkUpdateFromValues` for the per-row `last_active_org_id` and one `inArray` UPDATE
+   per 500 for the uniform ARCHIVED stamp.
+   BITE-PROVED HERMETICALLY (`git archive 09c01de8` into `/tmp/t21-bite-0kAu`, specs copied in over the PRE-FIX
+   services, **nothing planted in the shared tree**): **15 of the 22 new/changed cases FAIL there and pass at
+   head**, plus 3 of 4 on the org helper when the pre-fix per-row body is planted as the helper. The cases that
+   pass on both are the unchanged paths (membership resolved when the argument is omitted; zero components; an
+   empty replacement map), which is what they should do.
+   WHY THIS BOX STILL CANNOT BE TICKED: 102 real growing-loop sites remain across 76 files, listed by
+   `pnpm check:n1-growing-loops:list`. A green gate here means "no NEW N+1", not "there are none".
+   PRIOR PASS (FIFTH, 2026-09-03) — DENOMINATOR RE-DERIVED, NOT INHERITED. Report:
    `reports/21c-ast-denominator-and-gate-blindness.md`.
    MY OWN NUMBER, AND THE METHOD. An AST pass (`typescript` parser) over 2,109 service files: **5,058 loop
    nodes; 251 loops contain a db/cache call; 37 in excluded CRM/inventory.** In release scope, before fixing
@@ -189,7 +248,30 @@ Report: `reports/21c-ast-denominator-and-gate-blindness.md`.
    `approvals-bulk`). Blocker: TOOL (the per-row work is a service call, unmatchable by any pattern detector).
    Owner: hr and timesheets owners. Deadline: 2026-09-17.**
 - [ ] Existence and authorization probes use tenant-correlated indexed predicates with `LIMIT 1` — never a fetch or a count when only existence is needed.
-   PARTIAL (FIFTH PASS, 2026-09-03) — POPULATIONS RE-MEASURED BY AST, and one prior number does not reproduce.
+   PARTIAL (SIXTH PASS, 2026-09-03) — **STILL OPEN, AND THIS PASS MOVED IT LEAST.** Report:
+   `reports/21d-sixth-pass-bounded-calls.md`.
+   FIXED HERE, one read-then-write pair, verified individually against its preceding read rather than swept:
+   `cron/cron-projects.service.ts` `spawnDueRecurringTickets` reads its due templates under
+   `eq(tickets.orgId, orgId)` and then wrote back with `eq(tickets.id, template.id)` **alone, twice** — the
+   past-end-date stop at `:56` and the `nextRunAt` advance at `:122`. Both discarded the authorization the read
+   had performed and leaned entirely on RLS to re-supply it. Both now carry `eq(tickets.orgId, template.orgId)`.
+   Pinned by a spec asserting the bound parameters of the real WHERE; bite-proved on the pre-fix tree, where the
+   rendered predicate is `"build"."tickets"."id" = $1` and nothing else.
+   ALSO, as a by-product of box 1: `webhooks-dispatch.service.ts` now projects its endpoint read to the four
+   columns delivery uses instead of selecting every column including `secret` and `description`.
+   WHAT I DID NOT DO, AND WHY THE BOX STAYS OPEN. I re-scanned the dominant shape myself rather than inheriting
+   it: **178 single-predicate `UPDATE <table> ... WHERE eq(<table>.id, x)` sites outside CRM/inventory** at head, with
+   no second predicate in the same WHERE (180 before the `cron-projects` fix above removed two). **That is a
+   CANDIDATE LIST, NOT A DEFECT LIST** and I say so rather than
+   quoting it as a finding — a large share of it is `users` / `organizations` / platform tables that have no
+   `org_id` at all, and the cross-org `notification-delivery-worker` claiming its own rows by id under a status
+   CAS (16 of the 178 are that one file, and 9 more are `email-outbox.service.ts`, a per-row send-state machine
+   of the same kind). Adjudicating 178 sites one at a time is the work this box needs and it is not done. The fifth pass's other populations — 58 fetch-for-existence, 280 projected reads with no
+   `limit(1)`, 216 probes naming no org column — were NOT independently recounted by me; I could not reproduce
+   the "count-for-existence: 1" figure cheaply either, because a text scan finds **571** `count()` uses in
+   `src/modules` and only an AST pass can tell which are presence-only. Those numbers stand as the fifth pass
+   measured them, attributed to it, not re-asserted by me.
+   PRIOR PASS (FIFTH, 2026-09-03) — POPULATIONS RE-MEASURED BY AST, and one prior number does not reproduce.
    Over 2,109 files: **4,759 select/find chains, 2,148 probes** (`limit(1)` or `findFirst`).
    **count-for-existence: 1** (the ticket previously said 10 — that does not reproduce).
    **fetch-for-existence: 58 sites / 44 files** (`findFirst` with no `columns:` projection whose result is only
@@ -263,7 +345,45 @@ Report: `reports/21c-ast-denominator-and-gate-blindness.md`.
    regression and no measured win. Reopen with a route-budget measurement, not with a preference.
 
 - [ ] Bulk insert/update/upsert is used instead of one write per row, with conflict-safe unique keys and batches under documented lock and payload limits.
-   PARTIAL (FIFTH PASS, 2026-09-03) — MEASURED: of the 106 growing-loop sites that remain, **39 are per-row
+   PARTIAL (SIXTH PASS, 2026-09-03) — **STILL OPEN: 36 per-row write sites remain.** Report:
+   `reports/21d-sixth-pass-bounded-calls.md`.
+   POPULATION RE-DERIVED FROM THE GATE'S OWN LIST, not inherited: of the 102 growing-loop sites now remaining,
+   **36 are per-row writes** (`handle.insert` / `handle.update` / `handle.delete` in
+   `pnpm check:n1-growing-loops:list`), down from the 39 the fifth pass measured. The three removed are the three
+   converted here.
+   CONVERTED HERE, with the conflict and tenant semantics EXECUTED against a database rather than reasoned about:
+   * `payroll/setup/policy-mutation.service.ts` — one INSERT per salary component -> one multi-row INSERT per
+     `SALARY_COMPONENT_INSERT_CHUNK = 200`. **The duplicate-key question was settled on a database**
+     (`scratch_t21f`): a multi-row `INSERT ... ON CONFLICT (org_id, code) DO NOTHING` carrying BOTH a row that
+     conflicts with a pre-existing one AND an intra-statement duplicate of another row reports `INSERT 0 2`,
+     keeps the pre-existing row and keeps the FIRST of the duplicates — identical to the per-row loop. (Only
+     `DO UPDATE` raises "cannot affect row a second time"; `DO NOTHING` does not, and that is the whole reason
+     this conversion is safe where the survey-reorder one needed a de-duplication step first.)
+   * `organization/core/lifecycle/last-active-org-repair.ts` (new, replacing a byte-identical private method in
+     BOTH `org-lifecycle.service.ts` and `org-purge.service.ts`) — two UPDATEs per member -> one
+     `bulkUpdateFromValues` plus one `inArray` UPDATE per 500. **`users` has no `org_id`**, and the trap that
+     matters is that the tenant correlation on that table is `last_active_org_id` itself, which is ALSO the
+     compare-and-set the per-row form used to avoid stamping a member who had already moved on. It is passed as
+     the helper's `orgColumn`, so one predicate carries both meanings. **The rendered SQL was executed**
+     (`scratch_t21f`): four rows, three replacements -> `UPDATE 2`, returns exactly the two keys it changed,
+     writes a real NULL for the member with no next org, and leaves untouched both the member already pointing
+     elsewhere and the member not in the set.
+   * `webhooks-dispatch.service.ts` — one `webhook_logs` INSERT per endpoint -> one multi-row insert per wave of 8.
+   DOCUMENTED BATCH LIMITS, new: `WEBHOOK_DISPATCH_CHUNK = 8` (one wave is both the socket cap and the insert
+   payload; each socket lives up to 50 s, and flushing per wave keeps the crash window at one chunk),
+   `SALARY_COMPONENT_INSERT_CHUNK = 200`, `REVOCATION_WRITE_CHUNK = 256` (the Upstash REST transport puts the
+   whole command in one request body, so an unbounded id list is an unbounded payload),
+   `ARCHIVE_INDEX_CHUNK = 500`.
+   NOT CONVERTED, deliberately, and recorded rather than forced: `e-sign/sign-envelope-sweeps.service.ts`
+   `runExpirationSweep` issues two uniform UPDATEs per expiring envelope (`sign_recipients` by `envelope_id`,
+   `sign_envelopes` by `id`) and both are trivially `inArray`-able — **but the per-envelope
+   `this.audit.record(...)` sits between them and the next envelope's writes.** Hoisting the two UPDATEs out of
+   the loop widens an existing lost-audit window from one envelope to the whole batch: a crash after the batched
+   status flip but mid-audit leaves every envelope `expired`, so the retry's `findMany` no longer selects them
+   and the missing `envelope_expired` rows are lost permanently. The right fix is a `SignAuditService.recordMany`
+   (or auditing before the flip and accepting duplicates), which is e-sign's call to make. **Owner: e-sign module
+   owner.** The exact batched form and the ordering hazard are in the report.
+   PRIOR PASS (FIFTH, 2026-09-03) — MEASURED: of the 106 growing-loop sites that remain, **39 are per-row
    writes** (`insert`/`update`/`delete`). That is the box-3 population, derived from the same AST pass as box 1.
    CONVERTED HERE: `surveys/survey-builder.reorder` (one UPDATE per section and one per question of the request
    payload -> two `bulkUpdateFromValues`, org_id mandatory in the helper and survey_id in `extraWhere`);
