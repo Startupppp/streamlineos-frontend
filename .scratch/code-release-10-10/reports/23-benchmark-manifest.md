@@ -1,8 +1,8 @@
 # 23 — The benchmark manifest, and which regression gates are actually armed
 
 **Status:** **2 of 8 boxes closed** — boxes 1 and 8. The other six are stated as fractions, not as
-passes. (An earlier draft of this line said "4 of 8"; its own §5 marked only two with a tick. The
-count is corrected rather than the ticks.)
+passes. The single thing that had blocked three of them — no authenticated request-level harness —
+is now resolved, and §9 is the whole story of what that took and what it found.
 
 Captured at **`ef3c1960`**, `2026-09-02T17:31:51Z`, load average 4.0.
 
@@ -634,3 +634,228 @@ Stated as gaps, not as passes. "Not run" appears wherever something was not run.
   over the 500-line review threshold. The repo's `check:file-sizes` gate scans `.ts` only and passes
   (exit 0, 3565 files). The runner is already split four ways; splitting further would separate each
   self-test from the thing it tests.
+
+---
+
+## 9. The request level, measured
+
+Three of this ticket's six open boxes were blocked on one thing: **nothing had ever timed a route
+over HTTP.** `measuredLatencyP95Ms`, `measuredDownstreamCalls`, `measuredResponseBytes` and
+`measuredMemoryMb` were `null` for all 100 benchmarks, and two prior passes refused to fill them
+from a database-side proxy. That refusal was right — a 5.7 ms statement inside a 300 ms end-to-end
+ceiling reports "within budget" for a route nobody has timed. This section is what it took to make
+the real measurement possible, and what the real measurement said.
+
+### 9.1 Two seed defects, both wearing someone else's error
+
+The harness existed (`route-budget-http-harness.ts` + `route-budget-http.seeded-e2e-spec.ts`,
+committed by a previous agent in `0defe4c4` / `92f1d96f` / `853add95`, sound and reused as-is). It
+did not work, and the reason was not the harness.
+
+**1. Every authenticated request answered `403 ORG_MEMBERSHIP_INACTIVE`.** Not an auth defect. The
+chain is: `withTenant` resolves an organisation's placement before opening a tenant transaction →
+`RegionRegistry.resolvePlacement` **throws** when the organisation has no `organization_placement`
+row → `MembershipStateService.fetchMembershipState` catches *every* throw into `UNKNOWN` →
+`JwtAuthGuard` turns `UNKNOWN` into `403 ORG_MEMBERSHIP_INACTIVE`. Measured on the seed:
+**8 organisations, 0 placement rows, `organizations.region` NULL on all 8.** A placement defect
+wearing an authorization error's clothes, and invisible to every database-side instrument in this
+release — which is precisely why 100 benchmarks could be captured against this database while no
+route had ever been served.
+
+**2. With that fixed, 36 of 82 route pairs answered `402 PAYMENT_REQUIRED`.** `org_modules` held
+**zero rows**, so `ModuleGuard` refused HR, CRM, inventory, payroll, timesheets, support, invoices
+and accounting. An organisation with no enabled module is not production-shaped, and a benchmark
+against it measures the guard rather than the route.
+
+`test/perf/prepare-perf-http-seed.mjs` fixes both — placement rows matching exactly what
+`placeOrganization()` writes (region `primary`, cell `legacy-1`, ACTIVE, a fresh fence lease, because
+`resolvePlacement` refuses a placement whose cell differs from the configured one), and one enabled
+`org_modules` row per organisation per catalog key. It refuses any database whose name lacks
+`scratch`, refuses `cornerstone_*` outright, is `ON CONFLICT DO NOTHING`, and self-tests 10/10.
+Both are now **preconditions in the spec**, each naming the fix, so the next reader sees the cause
+instead of a wall of refusals.
+
+Measured coverage as each was fixed: **33 → 67 → 68** of 82 route pairs on the reference tenant.
+
+### 9.2 What was measured, and on what
+
+| | |
+|---|---|
+| instrument | `test/perf/route-budget-http.seeded-e2e-spec.ts` (harness + plan by a previous agent, reused) |
+| database | **`scratch_t23_http`** — an isolated `pg_dump`/`pg_restore` copy of `scratch_perf_seed`, `VACUUM ANALYZE`d after restore (a restore carries no planner statistics) |
+| at head | **yes — 666 applied of 666 journal entries.** `1042_t29_kb_page_attachments` was applied to the copy only |
+| role | `streamline_app`, `rolbypassrls = false`, asserted against `pg_roles` at `beforeAll`; RLS live on 899 relations |
+| cache | **Redis OFF — every count is the cache-MISS ceiling**, and this is *asserted*: the spec fails unless the `REDIS` provider is `null`, and the artifact's `cache` field is derived from that same read rather than written by hand |
+| tenants | reference (89.93%) and minority (0.90%) |
+| samples | 40 per read route, 12 per write, 3 warm-ups, plus a **separate** 5-sample post-GC heap pass |
+| credentials | a throwaway Ed25519 keyring minted in the test process. **Nothing was written to either repository**, and no value was read from any deployment |
+| commit | `06b9d725`, working tree dirty (recorded, not hidden) |
+
+**Why a copy.** The harness's write entries insert on purpose, and several reports in this release
+quote `scratch_perf_seed`'s row counts to the unit. A template `createdb -T` was impossible for
+nine minutes — five to thirteen other agent sessions held the source open the whole time — so the
+copy went through `pg_dump`/`pg_restore` instead. A read-only mode was added in the meantime
+(`ROUTE_BUDGET_HTTP_SKIP_WRITES=1`) which turns the write entries into **declared refusals with a
+stated reason** rather than silent absences; the final capture did not need it.
+
+### 9.3 The result
+
+```
+node src/scripts/check-benchmark-manifest.mjs        exit 1   STATUS FAIL
+  Request level (http-harness, scratch_t23_http, at head):
+    137/164 (83.5%) of route×tenant slots measured · 27 refused · 0 failed
+    22 recorded but excluded from the request ceiling
+    no scored route is over its PRD request ceiling
+    3 DECLARED BUDGET BREACHES
+```
+
+**115 scored route×tenant slots, 0 over the PRD §12.1 request ceiling** (ordinary 300 ms, approved
+complex 800 ms). Both control probes held on both tenants — authenticated `GET /me/access` → 200,
+anonymous → **401** — and the subject hash was stable on every table the harness does not declare it
+writes.
+
+The slowest scored routes, and the numbers a statement could never have produced:
+
+| route | tenant | p95 | request db calls | response bytes | post-GC heap |
+|---|---|---|---|---|---|
+| `GET /calendar/events` | reference | **583.8 ms** (ceiling 800) | **79** | 197,493 | **64.2 MB** |
+| `GET /contacts` | reference | 106.7 ms (ceiling 300) | 28 | 24,285 | 3.5 MB |
+| `GET /calendar/events` | minority | 47.8 ms | 42 | 177,513 | 11.8 MB |
+| `POST /leads` | minority | 35.0 ms | 31 | 955 | 5.2 MB |
+| `GET /chat/channels` | reference | 27.1 ms | 31 | **436,371** | 8.1 MB |
+| `GET /dashboard/personal` | reference | 20.0 ms | 17 | 1,830 | 3.7 MB |
+| `GET /notifications` | reference | 19.1 ms | 12 | 15,353 | 3.0 MB |
+| `GET /me/access` | reference | 6.0 ms | 6 | 21,596 | 2.4 MB |
+
+**Three declared-budget breaches — the gate fails on these, and they are the point of the ticket:**
+
+1. `GET /chat/channels@reference` — **436,371 response bytes against a declared 131,072**, 3.3×.
+   A payload regression that no statement-level instrument can see, because the bytes are produced
+   by serialisation, not by the query.
+2. `GET /cron/storage-sweep@reference` and `@minority` — **8 downstream calls against a declared
+   ceiling of 0**. The only route in the entire capture that leaves the process.
+
+**Four routes answer HTTP 500 on both tenants** and are recorded as refusals, never as latencies:
+
+| route | note |
+|---|---|
+| `GET /clients` | SQLSTATE **`25P02`** — the transaction was *already aborted*. An earlier statement in the same request transaction failed and was swallowed, and the logged failure is the innocent query that ran afterwards. No earlier error is logged at all. → CRM owner |
+| `POST /build/{projectId}/tickets` | 500 on both tenants |
+| `POST /chat/channels/{channelId}/messages` | 500 on both tenants |
+| `GET /cron/notifications-retention-sweep` | 500; the log carries `Failed query: update "email_outbox" …` |
+
+**Four write paths answer 402 on the majority tenant** (`POST /leads`, `/deals`, `/invoices`,
+`/support`) because its plan limit is already reached, and are measured on the minority tenant
+instead. That is the application behaving correctly, recorded rather than worked around.
+
+**The request count is a strict superset of the handler count, and is kept in its own field.**
+`GET /notifications` issues 3 statements at the service level and **12 at the request level** —
+authentication, permission resolution and module entitlement are the other nine. Writing the
+superset into `maxDbCalls` would silently raise every service-level ceiling, so it is recorded as
+`requestDbCalls` and the two instruments stay distinguishable. Tenant-GUC statements are counted
+separately again (`gucCalls`), so arming the GUC never inflates a route's count: `GET /chat/channels`
+opens **11 tenant transactions** in one request, which is itself worth knowing.
+
+### 9.4 What the gate now refuses
+
+`evaluateRequestLevel` in `check-benchmark-manifest.mjs` keeps three severities apart, because
+conflating them is how a gate becomes an alarm.
+
+| severity | what triggers it |
+|---|---|
+| **violation** | a tenant whose control probe did not hold — the run is refused, not scored · a route recorded as measured with no p95 · a heap figure recorded while the capture ran without `--expose-gc` · a capture recorded as a BYPASSRLS role · a capture with no reproduction command |
+| **over ceiling** | a scored route's p95 above its PRD §12.1 class ceiling |
+| **breach** | a measured latency, downstream count, byte count or heap figure above the ceiling `contracts/route-budgets.json` already declares |
+| **warning** | not at journal head · a read-only capture (no mutation has a request-level number) · a dirty working tree |
+
+Two exclusions are deliberate and named in the artifact rather than implied. `/cron/*` sweeps are
+`class: "worker"`: an all-organisation sweep is not an authenticated user request, so it is
+**recorded and not scored** — its numbers are still there, and `GET /cron/storage-sweep`'s 8
+downstream calls still breach its declared budget. And the 12 mail slots are declined because no
+provider account is connected, which is how "excluding provider time" is honoured structurally
+rather than by subtraction.
+
+Twenty-three new self-test cases cover all of it (**47/47** for the gate as a whole), including the
+three negatives that matter: a worker route at 5 s does **not** fail a request ceiling, an approved
+complex aggregate at 301 ms does **not** fail, and a tenant whose control probe failed contributes
+**zero** routes rather than a partial table.
+
+### 9.5 Honest limits of this measurement
+
+- **Serial by construction.** The telemetry tracker is a module-level singleton and the heap
+  baseline is process-wide, so two concurrent requests would each count the other's work. These are
+  single-request costs, not a load test, and box 7's exhaustion question is still unanswered.
+- **Loopback, one process, cold cache.** No pooler, no network, no CDN, no compression — the byte
+  figure is the uncompressed payload the application produced, deliberately, because a gzip ratio is
+  a property of the deployment.
+- **Two tenants, not four.** The plan's fixtures resolve per tenant; the 9.00% and 0.18% tenants
+  were not run for time.
+- **27 of 164 slots are unmeasured**, each with a stated reason, and the count is printed on every
+  gate run so an unmeasured route is visibly unmeasured.
+- **`contracts/route-budgets.json` still holds `null` in all five `measured*` fields.** That file is
+  ticket 22's. This capture is exactly what fills them, and the artifact records a content hash of
+  the file it read the ceilings from.
+
+### 9.6 Cross-territory findings from this pass
+
+1. **`GET /clients` 500s on every tenant, SQLSTATE `25P02`** — a swallowed statement failure leaves
+   the request transaction aborted, and the logged error is the next innocent query. → CRM owner.
+2. **`POST /build/{projectId}/tickets` and `POST /chat/channels/{channelId}/messages` 500** on both
+   tenants. → Build / Chat owners.
+3. **`GET /cron/notifications-retention-sweep` 500**, with `Failed query: update "email_outbox" …`
+   in the log. → notifications owner.
+4. **`GET /chat/channels` returns 436 KB against a 131 KB budget** and opens 11 tenant transactions
+   in one request. → Chat owner.
+5. **`GET /cron/storage-sweep` makes 8 downstream calls against a declared 0.** → storage owner.
+6. **`GET /calendar/events` costs 79 statements and 64 MB of heap** for one request on the majority
+   tenant. Inside its ceilings, but it is the most expensive request in the product. → calendar owner.
+7. **The perf seed cannot serve an authenticated request as built** — no `organization_placement`
+   rows and no `org_modules` rows. Fixed for measurement by `test/perf/prepare-perf-http-seed.mjs`;
+   the seed script itself still produces neither. → infra / seed scripts.
+8. **`test/perf/**` is outside jest's configured `roots`** (`src`, `evals`, `test/security`), so
+   `route-budget-http-harness.spec.ts` is never collected by `pnpm test` and its 20 cases have never
+   run in CI. Run explicitly they pass 20/20. → whoever owns `package.json`'s jest block.
+9. **`src/scripts/apply-journalled-migration.mjs` hardcodes `ssl: "require"`**, so it cannot apply a
+   migration to a local scratch database — it dies with a TLS handshake error that reads like a
+   network fault. → scripts owner.
+
+### 9.7 Commands run in this pass, with exit codes
+
+Every line was executed and its output read.
+
+```
+node test/perf/prepare-perf-http-seed.mjs --self-test                       exit 0   10/10
+DATABASE_URL=<scratch_perf_seed> node test/perf/prepare-perf-http-seed.mjs --write
+                                                                            exit 0   8 placements, 160 module rows
+DATABASE_URL=<scratch_t23_http>   node test/perf/prepare-perf-http-seed.mjs --write
+                                                                            exit 0   0 placements, 160 module rows
+node test/perf/merge-http-measurement.mjs --self-test                        exit 0   19/19
+node src/scripts/check-benchmark-manifest.mjs --self-test                    exit 0   47/47 (24 pre-existing + 23 new)
+node src/scripts/benchmark-regression.mjs --self-test                        exit 0   25/25
+
+# the capture itself — 3 runs, each read in full
+AUTH_SIGNING_KEYS=<local placeholder Ed25519, minted in-process, never written to disk> \
+DATABASE_URL=<owner@scratch_t23_http> APP_DATABASE_URL=<streamline_app@scratch_t23_http> \
+UPSTASH_REDIS_REST_TOKEN= PGSSLMODE=disable \
+node --expose-gc ./node_modules/jest/bin/jest.js --config ./jest-e2e-seeded.json \
+  --runInBand --forceExit --testPathPattern=route-budget-http
+                                exit 0   9/9 tests passed · reference 68 measured / 14 refused / 0 failed
+                                         minority 69 measured / 13 refused / 0 failed · both subjects STABLE
+
+node test/perf/merge-http-measurement.mjs --artifact=<capture> --write       exit 0   137 measured / 27 refused / 0 failed of 164
+node src/scripts/check-benchmark-manifest.mjs                                exit 1   FAIL · 3 declared-budget breaches
+node src/scripts/check-benchmark-manifest.mjs --strict                       exit 2
+
+pnpm -C streamlineos-backend check:spec-typecheck                            exit 0
+pnpm -C streamlineos-backend typecheck                                       exit 0
+pnpm exec jest --runInBand --roots '<rootDir>/test/perf' \
+  --testPathPattern=route-budget-http-harness                                exit 0   20/20
+psql -d scratch_t23_http -c 'VACUUM ANALYZE'                                 exit 0   8.1 s
+```
+
+`pnpm lint` — **not run**. The backend jest suite — **not run**. `pnpm test:e2e` — **not run**.
+The 9.00% and 0.18% tenants — **not run** at request level.
+
+**The gate exits 1 on purpose.** It fails on three measured figures above ceilings the contract
+already declares, not on a placeholder. Raising one of those ceilings to turn it green would be the
+defect this whole ticket exists to prevent.
