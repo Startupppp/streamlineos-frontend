@@ -7,15 +7,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { NotificationListSkeleton } from "@/features/notifications/notification-list-skeleton";
-import dynamic from "next/dynamic";
-
-const NotificationDetailDrawer = dynamic(
-  () =>
-    import("@/features/notifications/notification-detail-drawer").then((m) => ({
-      default: m.NotificationDetailDrawer,
-    })),
-  { ssr: false },
-);
+import { NotificationDetailDrawerLazy } from "@/features/notifications/notification-detail-drawer-lazy";
 import { useUnifiedInbox } from "@/hooks/api/inbox";
 import { InboxVirtualList } from "./inbox-virtual-list";
 import { useInboxActions } from "./use-inbox-actions";
@@ -277,18 +269,20 @@ export function InboxShell() {
         )}
       </div>
 
-      <NotificationDetailDrawer
-        open={drawerOpen}
-        notification={selectedNotification}
-        onOpenChange={setDrawerOpen}
-        onOpenLink={handleOpenLink}
-        onMarkRead={handleMarkRead}
-        onArchive={handleArchive}
-        onUnarchive={handleUnarchive}
-        onPin={handlePin}
-        onSnooze={handleSnooze}
-        onDelete={handleDelete}
-      />
+      {drawerOpen && (
+        <NotificationDetailDrawerLazy
+          open
+          notification={selectedNotification}
+          onOpenChange={setDrawerOpen}
+          onOpenLink={handleOpenLink}
+          onMarkRead={handleMarkRead}
+          onArchive={handleArchive}
+          onUnarchive={handleUnarchive}
+          onPin={handlePin}
+          onSnooze={handleSnooze}
+          onDelete={handleDelete}
+        />
+      )}
     </PageWrapper>
   );
 }

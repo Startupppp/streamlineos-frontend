@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback } from "react";
 import {
   Sheet,
   SheetContent,
@@ -12,30 +11,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AiDraftCard } from "@/components/ai/ai-draft-card";
 import { AiQuotaEmptyState } from "@/components/ai/ai-quota-empty-state";
 import { AiPermissionDenied } from "@/components/ai/ai-permission-denied";
-import { isApiError } from "@/lib/api-client";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { useMailInboxSummary } from "@/hooks/api/mail";
 import { AlertCircle } from "lucide-react";
-import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
-
-type SummaryState =
-  | { status: "idle" }
-  | { status: "loading" }
-  | { status: "quota" }
-  | { status: "denied"; reason: string }
-  | { status: "error"; message: string }
-  | {
-      status: "ready";
-      summary: string;
-      highlights: { subject: string; fromEmail: string; reason: string }[];
-      actionItems: string[];
-      aiUsage?: AiUsageMeta | null;
-    };
+import type { MailInboxSummaryState } from "./use-mail-inbox-summary";
 
 interface MailInboxSummarySheetProps {
   open: boolean;
   onClose: () => void;
-  summaryState: SummaryState;
+  summaryState: MailInboxSummaryState;
 }
 
 export function MailInboxSummarySheet({
@@ -137,57 +119,4 @@ export function MailInboxSummarySheet({
       </SheetContent>
     </Sheet>
   );
-}
-
-interface UseMailInboxSummarySheetReturn {
-  summaryState: SummaryState;
-  triggerSummary: (accountId: number | "all") => void;
-}
-
-export function useMailInboxSummarySheet(): UseMailInboxSummarySheetReturn {
-  const inboxSummaryMutation = useMailInboxSummary();
-
-  const triggerSummary = useCallback(
-    async (accountId: number | "all") => {
-      inboxSummaryMutation.reset();
-      try {
-        await inboxSummaryMutation.mutateAsync(
-          accountId === "all" ? {} : { accountId },
-        );
-      } catch {
-      }
-    },
-    [inboxSummaryMutation],
-  );
-
-  const handleTrigger = useCallback(
-    (accountId: number | "all") => {
-      void triggerSummary(accountId);
-    },
-    [triggerSummary],
-  );
-
-  const summaryState: SummaryState = (() => {
-    if (inboxSummaryMutation.isPending) return { status: "loading" };
-    if (inboxSummaryMutation.isError) {
-      const err = inboxSummaryMutation.error;
-      if (isApiError(err) && err.status === 402) return { status: "quota" };
-      if (isApiError(err) && err.status === 403)
-        return { status: "denied", reason: getErrorMessage(err) };
-      return { status: "error", message: getErrorMessage(err) };
-    }
-    if (inboxSummaryMutation.isSuccess && inboxSummaryMutation.data) {
-      const d = inboxSummaryMutation.data;
-      return {
-        status: "ready",
-        summary: d.summary,
-        highlights: d.highlights,
-        actionItems: d.actionItems,
-        aiUsage: d.aiUsage,
-      };
-    }
-    return { status: "idle" };
-  })();
-
-  return { summaryState, triggerSummary: handleTrigger };
 }

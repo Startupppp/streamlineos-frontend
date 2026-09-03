@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
@@ -10,19 +11,40 @@ import { useMailAccounts, useMailAction } from "@/hooks/api/mail";
 import { useFinalizeIntegrationConnection } from "@/hooks/api/integrations";
 import { useCan } from "@/hooks/api/access";
 import { MailListPane } from "./mail-list-pane";
-import { MailAccountsSheet } from "./mail-accounts-sheet";
-import { MailReadingPane } from "./mail-reading-pane";
-import { MailComposeSheet } from "./mail-compose-sheet";
-import {
-  MailInboxSummarySheet,
-  useMailInboxSummarySheet,
-} from "./mail-inbox-summary-sheet";
 import { MailEmptyPane } from "./mail-empty-pane";
 import { MailHeader, MAIL_ACCOUNT_SENTINEL } from "./mail-header";
 import { seedMailDetailFromSummary } from "./mail-thread-seed";
+import { useMailInboxSummarySheet } from "./use-mail-inbox-summary";
+import {
+  MailReadingPaneSkeleton,
+  MailSheetSkeleton,
+} from "./mail-shell-skeletons";
 import type { MailMessageSummary } from "@/types/mail";
 import type { MailComposeMode } from "./mail-compose-schema";
 import type { MailReplyParams } from "./mail-reading-ai-actions";
+
+const MailReadingPane = dynamic(
+  () => import("./mail-reading-pane").then((m) => ({ default: m.MailReadingPane })),
+  { ssr: false, loading: () => <MailReadingPaneSkeleton /> },
+);
+
+const MailAccountsSheet = dynamic(
+  () => import("./mail-accounts-sheet").then((m) => ({ default: m.MailAccountsSheet })),
+  { ssr: false, loading: () => <MailSheetSkeleton /> },
+);
+
+const MailComposeSheet = dynamic(
+  () => import("./mail-compose-sheet").then((m) => ({ default: m.MailComposeSheet })),
+  { ssr: false, loading: () => <MailSheetSkeleton /> },
+);
+
+const MailInboxSummarySheet = dynamic(
+  () =>
+    import("./mail-inbox-summary-sheet").then((m) => ({
+      default: m.MailInboxSummarySheet,
+    })),
+  { ssr: false, loading: () => <MailSheetSkeleton /> },
+);
 
 export function MailShell() {
   const router = useRouter();
@@ -221,23 +243,29 @@ export function MailShell() {
         </div>
       </div>
 
-      <MailAccountsSheet
-        open={accountsSheetOpen}
-        onClose={handleCloseAccountsSheet}
-      />
+      {accountsSheetOpen && (
+        <MailAccountsSheet
+          open={accountsSheetOpen}
+          onClose={handleCloseAccountsSheet}
+        />
+      )}
 
-      <MailComposeSheet
-        open={composeOpen}
-        onClose={handleCloseCompose}
-        mode={composeMode}
-        accounts={accounts}
-      />
+      {composeOpen && (
+        <MailComposeSheet
+          open={composeOpen}
+          onClose={handleCloseCompose}
+          mode={composeMode}
+          accounts={accounts}
+        />
+      )}
 
-      <MailInboxSummarySheet
-        open={summarySheetOpen}
-        onClose={handleCloseSummary}
-        summaryState={summaryState}
-      />
+      {summarySheetOpen && (
+        <MailInboxSummarySheet
+          open={summarySheetOpen}
+          onClose={handleCloseSummary}
+          summaryState={summaryState}
+        />
+      )}
     </div>
   );
 }

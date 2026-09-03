@@ -14,9 +14,9 @@ import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { NotificationDetailDrawer } from "@/features/notifications/notification-detail-drawer";
 import { NotificationFilterBar } from "@/features/notifications/notification-filter-bar";
 import { NotificationListSkeleton } from "@/features/notifications/notification-list-skeleton";
+import { NotificationDetailDrawerLazy } from "@/features/notifications/notification-detail-drawer-lazy";
 import { NotificationVirtualList } from "@/features/notifications/notification-virtual-list";
 import { ErrorState } from "@/components/shared/error-state";
 import { useNotificationInbox } from "@/features/notifications/use-notification-inbox";
@@ -275,18 +275,20 @@ export function NotificationsInboxPage() {
 
       </div>
 
-      <NotificationDetailDrawer
-        notification={detailNotif}
-        open={detailNotif !== null}
-        onOpenChange={handleDrawerOpenChange}
-        onOpenLink={handleOpenLink}
-        onMarkRead={handleMarkReadOne}
-        onArchive={handleArchive}
-        onUnarchive={handleUnarchive}
-        onPin={handlePin}
-        onSnooze={handleSnooze}
-        onDelete={handleDelete}
-      />
+      {detailNotif !== null && (
+        <NotificationDetailDrawerLazy
+          notification={detailNotif}
+          open
+          onOpenChange={handleDrawerOpenChange}
+          onOpenLink={handleOpenLink}
+          onMarkRead={handleMarkReadOne}
+          onArchive={handleArchive}
+          onUnarchive={handleUnarchive}
+          onPin={handlePin}
+          onSnooze={handleSnooze}
+          onDelete={handleDelete}
+        />
+      )}
     </PageWrapper>
   );
 }

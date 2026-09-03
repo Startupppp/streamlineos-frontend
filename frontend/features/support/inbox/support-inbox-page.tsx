@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useSupportTickets, useSupportStats } from "@/hooks/api/support";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -19,14 +20,63 @@ import { EmptyTicketIllustration } from "@/components/illustrations";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import type { SupportTicketStatus, SupportTicketPriority } from "@/types/support";
 import { ErrorState } from "@/components/shared/error-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { TicketList } from "@/features/support/inbox/ticket-list";
-import { TicketDetailSheet } from "@/features/support/inbox/ticket-detail-sheet";
-import { CreateTicketDialog } from "@/features/support/inbox/create-ticket-dialog";
 import { QueueViewRail } from "@/features/support/inbox/queue-view-rail";
 import { SupportAblyProvider } from "@/features/support/inbox/support-ably-provider";
 import { useInboxShortcuts } from "@/features/support/inbox/use-inbox-shortcuts";
 import { AgentAvailabilityToggle } from "@/features/support/inbox/agent-availability-toggle";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
+
+function TicketDetailSkeleton() {
+  return (
+    <div role="status" aria-label="Loading ticket" className="flex flex-1 min-h-0 flex-col gap-3 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <Skeleton className="h-5 w-2/3 rounded" />
+        <Skeleton className="h-8 w-24 rounded" />
+      </div>
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-5 w-20 rounded-md" />
+        <Skeleton className="h-5 w-16 rounded-md" />
+        <Skeleton className="h-5 w-24 rounded-md" />
+      </div>
+      <Skeleton className="h-32 w-full rounded-lg" />
+      <Skeleton className="h-24 w-full rounded-lg" />
+      <Skeleton className="h-28 w-full rounded-lg" />
+    </div>
+  );
+}
+
+function CreateTicketSkeleton() {
+  return (
+    <div
+      role="status"
+      aria-label="Loading"
+      className="fixed left-1/2 top-1/2 z-50 flex w-full max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col gap-3 rounded-lg border border-border bg-background p-6"
+    >
+      <Skeleton className="h-5 w-40 rounded" />
+      <Skeleton className="h-10 w-full rounded" />
+      <Skeleton className="h-10 w-full rounded" />
+      <Skeleton className="h-24 w-full rounded" />
+    </div>
+  );
+}
+
+const TicketDetailSheet = dynamic(
+  () =>
+    import("@/features/support/inbox/ticket-detail-sheet").then((m) => ({
+      default: m.TicketDetailSheet,
+    })),
+  { ssr: false, loading: () => <TicketDetailSkeleton /> },
+);
+
+const CreateTicketDialog = dynamic(
+  () =>
+    import("@/features/support/inbox/create-ticket-dialog").then((m) => ({
+      default: m.CreateTicketDialog,
+    })),
+  { ssr: false, loading: () => <CreateTicketSkeleton /> },
+);
 
 const TICKET_STATUSES: readonly SupportTicketStatus[] = ["OPEN", "IN_PROGRESS", "WAITING", "RESOLVED", "CLOSED"];
 const TICKET_PRIORITIES: readonly SupportTicketPriority[] = ["LOW", "MEDIUM", "HIGH", "URGENT"];
@@ -223,7 +273,7 @@ function InboxContent() {
         </div>
       </PageWrapper>
 
-      <CreateTicketDialog open={createOpen} onOpenChange={setCreateOpen} />
+      {createOpen && <CreateTicketDialog open onOpenChange={setCreateOpen} />}
     </>
   );
 }
