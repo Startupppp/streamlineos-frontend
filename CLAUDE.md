@@ -69,6 +69,17 @@ Identify from the real codebase: module · entities · existing schema, APIs, ca
   half-migrated; a half-enabled strictness flag is worse than an honest absent one. Tracked as a NEW
   REQUIREMENT needing an owner, not as a passing rule. Do not turn it on without owning the migration
   and stating what it does not cover.
+- **Unused-symbol enforcement is NOT on, and the underscore escape is why.** `noUnusedLocals`/`noUnusedParameters` are
+  absent from both tsconfigs and `@typescript-eslint/no-unused-vars` is `warn` with `argsIgnorePattern`,
+  `varsIgnorePattern` and `caughtErrorsIgnorePattern` all `^_`. Measured 2026-09-03: at
+  `no-unused-vars: ["error", {args:"all", caughtErrors:"all"}]` the two repos hold **4,186 violations across 1,896
+  files** (backend 2,087/900, frontend 2,099/996), and **2,912 of them — 69.6% — name an identifier beginning with
+  `_`**, i.e. they exist only because the escape does. tsc cannot replace ESLint here: **`--noUnusedParameters` exempts
+  `_`-prefixed parameters by construction and has no off switch**, and neither flag sees a catch binding (bite-proved).
+  The tsc floors are 289 errors/194 files on `tsconfig.build.json` and 475/318 on `tsconfig.json`. Deliberately left
+  off for the 10/10 code release: the flags cannot enforce the rule, and turning them on would report "on" over a set
+  they cannot see. Tracked as a NEW REQUIREMENT needing an owner. Do not turn it on without owning the migration and
+  deleting the three `^_` patterns in the same change.
 - **Never force types.** No `as X` / `as unknown as X`. Raw `db.execute(sql\`…\`)` rows are `Record<string, unknown>` — convert at the use site (`Number(row.count)`, `row?.field ?? fallback`). If a cast feels necessary, fix the source type or the projection.
 - **Discriminated unions** for state machines and API responses; exhaustive `switch` + `assertNever`.
 - **Zod-validate every untrusted boundary** (bodies, params, env); types are compile-time only. **Schemas live in `*-schema.ts`** beside the feature (frontend) or the module's `dto/` (backend) — never inline in a controller, route, component or hook. Type via `z.infer`, never a parallel `interface`. Trivial single-field guards may stay inline.
