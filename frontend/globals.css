@@ -815,6 +815,22 @@ button.goal-everything-chip[aria-checked="true"]::before {
   background: transparent;
 }
 
+/* The all-day band is sized by its content, so it grows from 40px to 125px the
+   moment the events query answers and pushes the whole time grid down 85px —
+   measured as 0.10 of /calendar's desktop CLS on a populated org. Pinned to two
+   rows and scrolled beyond, the band is the same height before and after the
+   data lands. */
+.calendar-container .rbc-time-view .rbc-allday-cell {
+  height: 82px;
+  max-height: 82px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.calendar-container .rbc-time-view .rbc-allday-cell::-webkit-scrollbar {
+  display: none;
+}
+
 .calendar-container .rbc-header {
   display: flex;
   align-items: center;

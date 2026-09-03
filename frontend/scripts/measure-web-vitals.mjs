@@ -448,7 +448,7 @@ async function cdpSession(wsUrl) {
 
 const VITALS_SCRIPT = `(() => {
   if (window.__slVitals) return;
-  const state = { lcp: null, cls: 0, inp: null, longTaskMs: 0, shifts: [] };
+  const state = { lcp: null, cls: 0, inp: null, longTaskMs: 0, shifts: [], lastMutationMs: 0 };
   const describe = (node) => {
     if (!node || node.nodeType !== 1) return 'unknown';
     const id = node.id ? '#' + node.id : '';
@@ -456,6 +456,11 @@ const VITALS_SCRIPT = `(() => {
     return (node.tagName || '?').toLowerCase() + id + cls;
   };
   Object.defineProperty(window, '__slVitals', { value: state });
+  try {
+    new MutationObserver(() => { state.lastMutationMs = performance.now(); }).observe(document.documentElement, {
+      subtree: true, childList: true, characterData: true, attributes: true,
+    });
+  } catch {}
   try {
     new PerformanceObserver((l) => {
       const e = l.getEntries();
@@ -505,6 +510,43 @@ async function applyProfile(cdp, profile) {
     uploadThroughput: MOBILE_PROFILE.uploadBps,
     connectionType: "cellular4g",
   });
+}
+
+/**
+ * A capture that samples before the app's data arrives cannot see what that data
+ * does to the layout. The 2026-09-02 pass recorded a `/dashboard` of 140 words
+ * and a CLS of 0.000; the 2026-09-03 pass recorded 990 words on the same route
+ * and 0.175-0.233 per sample. Same build, same budget, opposite verdict — the
+ * difference was whether the page had finished arriving when the sample was
+ * taken. A fixed sleep decides that by luck and by host load.
+ *
+ * So the driver waits for the DOM to go quiet instead: `quietMs` with no
+ * mutation, and never longer than `capMs`, which keeps a page that animates
+ * forever from parking the run. Whether the cap was hit is recorded on the
+ * sample rather than hidden, because a capped sample is one that may not have
+ * finished.
+ */
+export function shouldKeepWaitingForQuiet({ sinceLastMutationMs, elapsedMs, quietMs, capMs }) {
+  if (elapsedMs >= capMs) return false;
+  return sinceLastMutationMs < quietMs;
+}
+
+async function settle(cdp, quietMs, capMs) {
+  const startedAt = Date.now();
+  let sinceLastMutationMs = 0;
+  for (;;) {
+    const elapsedMs = Date.now() - startedAt;
+    sinceLastMutationMs = Number(
+      (await evaluate(
+        cdp,
+        "(() => { const s = window.__slVitals; return s && s.lastMutationMs ? performance.now() - s.lastMutationMs : 1e9; })()",
+      )) ?? 0,
+    );
+    if (!shouldKeepWaitingForQuiet({ sinceLastMutationMs, elapsedMs, quietMs, capMs })) {
+      return { ms: Date.now() - startedAt, capped: elapsedMs >= capMs, quietMs, capMs };
+    }
+    await sleep(100);
+  }
 }
 
 async function navigate(cdp, url, timeoutMs) {
@@ -721,6 +763,8 @@ async function run() {
   const repeat = Number(flag("repeat", "10"));
   const out = resolve(process.cwd(), flag("out", join(ROOT, ".browser-driver-results.json")));
   const timeoutMs = Number(flag("timeout", "30000"));
+  const settleQuietMs = Number(flag("settle-quiet", "500"));
+  const settleCapMs = Number(flag("settle-cap", "6000"));
   const debugPort = Number(flag("debug-port", "9224"));
   const cookieFile = flag("cookie-file", "");
   const cookieName = flag("cookie-name", "authjs.session-token");
@@ -787,6 +831,7 @@ async function run() {
   const allSamples = [];
   const hydrationFindings = [];
   const routeFailures = [];
+  const cappedSettles = [];
 
   try {
     await waitForDevTools(debugPort, 15_000);
@@ -843,11 +888,12 @@ async function run() {
             // land on /signin through no fault of the route. Restore the session
             // and re-measure rather than record the sign-in page as this route —
             // bounded, and every remaining off-route sample still fails the run.
+            let settled = null;
             for (let attempt = 1; attempt <= OFF_ROUTE_RETRIES; attempt++) {
               consoleLog.reset();
               await cdp.send("Network.setCookie", { name: cookieName, value: cookieValue, url: baseUrl, httpOnly: true, path: "/" });
               await navigate(cdp, url, timeoutMs);
-              await sleep(900);
+              settled = await settle(cdp, settleQuietMs, settleCapMs);
               probeInteraction = await interact(cdp);
               sample = await collectSample(cdp);
               sample.requestedRoute = route;
@@ -855,6 +901,8 @@ async function run() {
               if (findOffRouteSamples([sample]).length === 0) break;
             }
             sample.interaction = probeInteraction;
+            sample.settle = settled;
+            if (settled?.capped) cappedSettles.push({ route, profile, sample: i });
             const mismatches = consoleLog.hydrationMismatches();
             if (mismatches.length > 0) hydrationFindings.push({ route, profile, sample: i, messages: mismatches.slice(0, 3) });
             routeSamples.push(sample);
@@ -863,7 +911,8 @@ async function run() {
             log(
               `[${profile}] ${route} ${i + 1}/${repeat} ttfb=${sample.ttfbMs?.toFixed(0) ?? "n/a"} fcp=${sample.fcpMs?.toFixed(0) ?? "n/a"} ` +
                 `lcp=${sample.lcpMs?.toFixed(0) ?? "n/a"} inp=${sample.inpMs?.toFixed(0) ?? "n/a"} cls=${sample.cls?.toFixed(3) ?? "n/a"} ` +
-                `words=${sample.content?.words ?? "?"} loader=${sample.content?.brandedLoader ?? "?"}`,
+                `words=${sample.content?.words ?? "?"} loader=${sample.content?.brandedLoader ?? "?"} ` +
+                `settle=${settled ? `${settled.ms}ms${settled.capped ? " CAPPED" : ""}` : "n/a"}`,
             );
             await sleep(300);
           }
@@ -970,6 +1019,23 @@ async function run() {
       offRouteSamples: offRoute,
       unusableSamples: unusable,
       verdict: unusable.length === 0 ? "every measured sample rendered real page content" : "capture is NOT usable evidence",
+    },
+    settle: {
+      quietMs: settleQuietMs,
+      capMs: settleCapMs,
+      samplesMeasured: allSamples.length,
+      cappedSamples: cappedSettles.length,
+      capped: cappedSettles.slice(0, 20),
+      wordsByRoute: Object.fromEntries(
+        Object.entries(byRoute).map(([route, entry]) => [
+          route,
+          { desktop: entry.desktopContent?.words ?? null, mobile: entry.mobileContent?.words ?? null },
+        ]),
+      ),
+      verdict:
+        cappedSettles.length === 0
+          ? "every sample was taken after the DOM went quiet, so late-arriving data is inside the measurement"
+          : "some samples hit the settle cap and may have been taken before the page finished arriving — read their CLS as a floor",
     },
     conditions: {
       driver: "frontend/scripts/measure-web-vitals.mjs",
@@ -1280,11 +1346,32 @@ async function selfTest() {
   check("server-side TTFB is summarised per route at p50/p75/p95", Object.keys(server["/dashboard"]).sort(), ["count", "p50_ms", "p75_ms", "p95_ms", "statuses"]);
   check("server-side TTFB records the status it saw, so a 307 to /signin cannot pass as a measured page", server["/dashboard"].statuses, [200]);
 
+  check(
+    "a sample keeps waiting while the DOM is still mutating",
+    shouldKeepWaitingForQuiet({ sinceLastMutationMs: 40, elapsedMs: 300, quietMs: 500, capMs: 6000 }),
+    true,
+  );
+  check(
+    "a sample is taken once the DOM has been quiet for the quiet window",
+    shouldKeepWaitingForQuiet({ sinceLastMutationMs: 520, elapsedMs: 900, quietMs: 500, capMs: 6000 }),
+    false,
+  );
+  check(
+    "a page that never goes quiet is capped rather than parking the run",
+    shouldKeepWaitingForQuiet({ sinceLastMutationMs: 0, elapsedMs: 6000, quietMs: 500, capMs: 6000 }),
+    false,
+  );
+  check(
+    "the cap wins over the quiet window, so the wait is bounded either way",
+    shouldKeepWaitingForQuiet({ sinceLastMutationMs: 10, elapsedMs: 9999, quietMs: 500, capMs: 6000 }),
+    false,
+  );
+
   if (failed) {
     console.error("\nSELF-TEST FAILED");
     process.exit(1);
   }
-  console.log("\nSELF-TEST PASSED — percentiles, server-mode derivation, resource classification and byte accounting all behave");
+  console.log("\nSELF-TEST PASSED — percentiles, server-mode derivation, resource classification, byte accounting and the settle wait all behave");
 }
 
 if (SELF_TEST)
