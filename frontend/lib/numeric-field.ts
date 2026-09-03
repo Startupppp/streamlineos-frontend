@@ -31,3 +31,39 @@ export function numericFieldChange(
     onChange(numericFieldValue(event.target.value));
   };
 }
+
+/**
+ * The same rule for a field that must stay a number rather than go absent —
+ * a score, a scale bound, a page size. It was written as
+ * `Number(v) || 0`, `parseFloat(v) || 0`, `parseInt(v, 10) || 0` and
+ * `v === "" ? 0 : Number(v)`, which agree on an emptied box and disagree on
+ * everything else: the `parseInt` spellings silently truncate `1.5` to `1`
+ * instead of letting a `z.number().int()` field say so, and the bare
+ * `Number(v)` spelling lets `NaN` through.
+ */
+export function numericFieldValueOr(raw: string, fallback: number): number {
+  return numericFieldValue(raw) ?? fallback;
+}
+
+export function numericFieldChangeOr(
+  onChange: (value: number) => void,
+  fallback: number,
+): (event: ChangeEvent<HTMLInputElement>) => void {
+  return function handleNumericFieldChangeOr(event) {
+    onChange(numericFieldValueOr(event.target.value, fallback));
+  };
+}
+
+/**
+ * A `<Select>` hands back a string it was given, so the empty case cannot
+ * arise — but the value still has to be widened back to the number the state
+ * holds. `Number(v)` inline in `onValueChange` is the same rule in a second
+ * spelling; this keeps the JSX prop holding a call.
+ */
+export function numericSelectChange(
+  onChange: (value: number) => void,
+): (value: string) => void {
+  return function handleNumericSelectChange(value) {
+    onChange(Number(value));
+  };
+}
