@@ -29,6 +29,22 @@ function makeWrapper(client: QueryClient) {
   };
 }
 
+/**
+ * The wire shape `/notifications` actually returns. The service builds it with
+ * `buildIdCursorPage` and answers `{ data, hasMore, nextCursor }`; the hooks unwrap
+ * `.data` and deliberately derive the continuation from the page's own lowest id
+ * rather than trusting the server's `nextCursor` — which is the contract asserted
+ * below. Mocking a bare array made every hook resolve `undefined`, so all five waits
+ * timed out against an empty render rather than failing on an assertion.
+ */
+function page(items: Notification[]): {
+  data: Notification[];
+  hasMore: boolean;
+  nextCursor: string | null;
+} {
+  return { data: items, hasMore: items.length > 0, nextCursor: null };
+}
+
 function makeNotification(id: number): Notification {
   return {
     id,
@@ -79,9 +95,9 @@ describe("id-derived cursors survive a page whose ids disagree with its order", 
     // keyset-safe move under `id < cursor`.
     const firstPage = [makeNotification(90), makeNotification(12), makeNotification(41)];
     apiClient.get.mockImplementation((url: string, params?: Record<string, string>) => {
-      if (url !== "/notifications") return Promise.resolve([]);
-      if (params?.["cursor"] === undefined) return Promise.resolve(firstPage);
-      return Promise.resolve([makeNotification(9)]);
+      if (url !== "/notifications") return Promise.resolve(page([]));
+      if (params?.["cursor"] === undefined) return Promise.resolve(page(firstPage));
+      return Promise.resolve(page([makeNotification(9)]));
     });
 
     const client = makeClient();
@@ -104,10 +120,10 @@ describe("id-derived cursors survive a page whose ids disagree with its order", 
     const firstPage = [makeNotification(90), makeNotification(12), makeNotification(41)];
     const secondPage = [makeNotification(9), makeNotification(4), makeNotification(7)];
     apiClient.get.mockImplementation((url: string, params?: Record<string, string>) => {
-      if (url !== "/notifications") return Promise.resolve([]);
-      if (params?.["cursor"] === undefined) return Promise.resolve(firstPage);
-      if (params?.["cursor"] === "12") return Promise.resolve(secondPage);
-      return Promise.resolve([]);
+      if (url !== "/notifications") return Promise.resolve(page([]));
+      if (params?.["cursor"] === undefined) return Promise.resolve(page(firstPage));
+      if (params?.["cursor"] === "12") return Promise.resolve(page(secondPage));
+      return Promise.resolve(page([]));
     });
 
     const client = makeClient();
@@ -131,8 +147,8 @@ describe("id-derived cursors survive a page whose ids disagree with its order", 
   it("stops when the page is short, so a partial page never asks for a third", async () => {
     apiClient.get.mockImplementation((url: string) =>
       url === "/notifications"
-        ? Promise.resolve([makeNotification(5)])
-        : Promise.resolve([]),
+        ? Promise.resolve(page([makeNotification(5)]))
+        : Promise.resolve(page([])),
     );
 
     const client = makeClient();
@@ -152,9 +168,9 @@ describe("a cursor survives the round trip into the request", () => {
     // replays page one forever.
     const firstPage = [makeNotification(2), makeNotification(1), makeNotification(0)];
     apiClient.get.mockImplementation((url: string, params?: Record<string, string>) => {
-      if (url !== "/notifications") return Promise.resolve([]);
-      if (params?.["cursor"] === undefined) return Promise.resolve(firstPage);
-      return Promise.resolve([]);
+      if (url !== "/notifications") return Promise.resolve(page([]));
+      if (params?.["cursor"] === undefined) return Promise.resolve(page(firstPage));
+      return Promise.resolve(page([]));
     });
 
     const client = makeClient();
@@ -177,11 +193,13 @@ describe("a cursor survives the round trip into the request", () => {
 describe("changing a filter resets pagination", () => {
   it("gives an unread-only read its own key and its own first page", async () => {
     apiClient.get.mockImplementation((url: string, params?: Record<string, string>) => {
-      if (url !== "/notifications") return Promise.resolve([]);
+      if (url !== "/notifications") return Promise.resolve(page([]));
       return Promise.resolve(
-        params?.["section"] === "UNREAD"
-          ? [makeNotification(70)]
-          : [makeNotification(90), makeNotification(80), makeNotification(70)],
+          page(
+            params?.["section"] === "UNREAD"
+            ? [makeNotification(70)]
+            : [makeNotification(90), makeNotification(80), makeNotification(70)],
+          ),
       );
     });
 

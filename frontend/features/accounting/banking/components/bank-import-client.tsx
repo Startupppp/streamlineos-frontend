@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useBankAccounts, useCreateBankImport } from "@/hooks/api/accounting/banking";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { BankImportResult, CreateBankImportInput } from "@/hooks/api/accounting/banking";
@@ -265,26 +266,49 @@ export function BankImportClient() {
               >
                 <h2 className="text-sm font-semibold">Account & File</h2>
 
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Bank Account</Label>
-                  <Select value={selectedAccountId} onValueChange={handleAccountChange}>
-                    <SelectTrigger className="text-sm">
-                      <SelectValue placeholder="Select account" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {accounts.map((a) => (
-                        <SelectItem key={a.id} value={String(a.id)}>
-                          {a.name}{a.bankName ? ` — ${a.bankName}` : ""}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {accountsQuery.isError && (
-                    <p className="text-xs text-destructive" role="alert">
-                      Couldn&apos;t load bank accounts: {getErrorMessage(accountsQuery.error)}
-                    </p>
-                  )}
-                </div>
+                {!accountsQuery.isLoading &&
+                !accountsQuery.isError &&
+                accounts.length === 0 ? (
+                  // An import needs an account to import INTO. With none, the select
+                  // below renders an empty dropdown and the wizard is a dead end with
+                  // nothing on screen saying why — so say why, and offer the way out.
+                  <EmptyState
+                    compact
+                    // Declared, not defaulted. This wizard has no filters — its
+                    // `useSearchParams` reads a `bankAccountId` deep link — so this
+                    // emptiness can only ever mean "the org has no accounts", never
+                    // "your filters matched nothing". Saying so is the distinction
+                    // check-filter-empty-conflation exists to make someone make.
+                    filtersActive={false}
+                    title="No bank accounts yet"
+                    description="A statement import needs an account to import into. Add your first bank account, then come back here."
+                    action={{
+                      label: "Add a bank account",
+                      href: "/accounting/banking/accounts",
+                    }}
+                  />
+                ) : (
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Bank Account</Label>
+                    <Select value={selectedAccountId} onValueChange={handleAccountChange}>
+                      <SelectTrigger className="text-sm">
+                        <SelectValue placeholder="Select account" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {accounts.map((a) => (
+                          <SelectItem key={a.id} value={String(a.id)}>
+                            {a.name}{a.bankName ? ` — ${a.bankName}` : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {accountsQuery.isError && (
+                      <p className="text-xs text-destructive" role="alert">
+                        Couldn&apos;t load bank accounts: {getErrorMessage(accountsQuery.error)}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <div className="space-y-1.5">
                   <Label className="text-xs">CSV File</Label>
