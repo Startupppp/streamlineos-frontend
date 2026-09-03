@@ -4,7 +4,25 @@
 
 **Blocked by:** 28.
 
-**Status:** **7 of 9 boxes closed, 2 open** — unchanged in count. S14 did not close either, and decomposed both into their named clauses instead: Calendar is **6 of 10 clauses holding**, Inbox/mail **2 of 10**. Full per-clause verdicts with evidence in `reports/29d-calendar-mail-clause-audit.md`. Two defects fixed and bite-proved this pass (calendar `recurrenceEnd`/`UNTIL`; mail send/reply unified-inbox invalidation). **Two clauses this ticket recorded as closed are actually PARTIAL** — mail keyset ordering and indexed search are real, journalled and correct but sit behind a `singleAcc` gate the default request never satisfies — and **R-23's stated premise is false at head**: an inbound mail path and bounce handling both exist, in `src/modules/ingress/` and `src/modules/email/`. S13 did not close either, and says why below. S13 did the thing this ticket's Calendar box was *measured but unfixed* on: `GET /calendar/events` is redesigned and its read-cost gate is **green at 706 blocks against an untouched 2,000 ceiling** (it was 7,063 and deliberately red), the statement count for that source is now **bounded at 19** where it used to grow with the tenant, and both cross-territory asks report 22d handed over — the `forbid-hashed-subplan` assertion kind and the private-upcoming seed anchor — are delivered and bite-proved. Full write-up in `reports/29c-calendar-read-path-and-plan-assertion.md`. **p95 over HTTP was NOT re-measured by me** and somebody must re-run the harness before the route is called closed.
+**Status:** **7 of 9 boxes closed, 2 open** — unchanged in count. **S15 closed neither, and says so.** Calendar is
+**6 of 10 clauses holding** (unchanged in count; C6 DST was re-verified and turned out to be *wrong in a way its own
+spec could not see*, and is now genuinely fixed) and Inbox/mail **3 of 10** (was 2; M2 conversation ordering closes).
+Two real defects fixed and bite-proved this pass, plus one pre-existing spec fragility:
+**(1) recurrence expansion tracked the HOST's timezone, not the event's** — `expandRecurring` fed `rrule` a Date built
+by `toZonedTime`, and the two disagree on whether a Date's UTC or system-local getters are the wall clock. They
+coincide only at `TZ=UTC`. Measured at `TZ=Asia/Calcutta`: an all-day weekly **Monday** series expanded onto
+**Tuesday** and `BYMONTHDAY=1` onto the **2nd**. Nothing pins TZ for the test run, so **43 suites / 406 tests were
+green** while the behaviour was wrong in every non-UTC deployment; `calendar-dst-edge.spec.ts` missed it because every
+case it pins is at 09:00 local, far enough from midnight that the rotation preserves the weekday. Now **44 / 423,
+exit 0 under six host zones**. **(2) `getThread` returned whatever order the provider chose** — Gmail sorts not at
+all, Outlook pushes `receivedDateTime asc`, so one conversation had two orders, and both AI callers were treating an
+unordered transcript's last element as the newest message.
+**Neither box can tick.** Calendar's C10 is still ❌ and the fence added by `fa05e4ad9` **does not detect what
+remains**: it bans importing `features/calendar/**`, but all three outstanding surfaces hand-roll their own
+`grid-cols-7` month grid and import nothing. They are now asserted with `toEqual` so a fourth fails and a fix must
+delete its entry. Mail's M1/M3 widening was left undone **deliberately** — the data layer already supports it, but it
+needs a measured read cost and no benchmark is trustworthy with other agents live. **p95 over HTTP was NOT re-measured
+by me either** — unchanged from S13/S14, and somebody must still run the harness. Earlier: S14 did not close either, and decomposed both into their named clauses instead: Calendar is **6 of 10 clauses holding**, Inbox/mail **2 of 10**. Full per-clause verdicts with evidence in `reports/29d-calendar-mail-clause-audit.md`. Two defects fixed and bite-proved this pass (calendar `recurrenceEnd`/`UNTIL`; mail send/reply unified-inbox invalidation). **Two clauses this ticket recorded as closed are actually PARTIAL** — mail keyset ordering and indexed search are real, journalled and correct but sit behind a `singleAcc` gate the default request never satisfies — and **R-23's stated premise is false at head**: an inbound mail path and bounce handling both exist, in `src/modules/ingress/` and `src/modules/email/`. S13 did not close either, and says why below. S13 did the thing this ticket's Calendar box was *measured but unfixed* on: `GET /calendar/events` is redesigned and its read-cost gate is **green at 706 blocks against an untouched 2,000 ceiling** (it was 7,063 and deliberately red), the statement count for that source is now **bounded at 19** where it used to grow with the tenant, and both cross-territory asks report 22d handed over — the `forbid-hashed-subplan` assertion kind and the private-upcoming seed anchor — are delivered and bite-proved. Full write-up in `reports/29c-calendar-read-path-and-plan-assertion.md`. **p95 over HTTP was NOT re-measured by me** and somebody must re-run the harness before the route is called closed.
 
 **Residual-risk disposition (2026-09-03):** every open box below now carries an ASSIGNABLE-or-ACCEPTED verdict, a named owner and a date, recorded inline under the box and in `reports/residual-risk-register-19-30.md`. Blockers were re-verified against source, a live gate run or a committed artifact rather than transcribed; where a stated blocker did not survive, the correction is inline.
 
@@ -36,6 +54,60 @@ Earlier status: S12 closed the **Knowledge queries/workers** box: all three rema
   post-split exceptions and cancellations re-parent; recorded as having a *wrong* answer rather than a trade-off)
   in `reports/29b-open-decisions.md` §1. **Owner: release owner (product). Deadline: 2026-09-10.** *Taken from
   this ticket, not re-read at source: the five questions and the two service method names.*
+  S15 — **the DST clause was covered for the case it tested and WRONG for the case it did not: the whole
+  expansion tracked the HOST's timezone.** `expandRecurring` converted `dtstart`, both window bounds and `UNTIL`
+  with `toZonedTime`, then handed the result to `rrule`. Those two disagree on what a Date means: `rrule` reads a
+  `dtstart`'s **UTC** getters as the wall clock, while `toZonedTime` builds the representation whose
+  **system-local** getters read as the wall clock. They coincide only at `TZ=UTC`. Off UTC every occurrence was
+  rotated by the host's own offset *before* `BYDAY`/`BYMONTHDAY` were applied, so it landed on the wrong DAY.
+  Measured on this machine (`TZ=Asia/Calcutta`, +05:30): a weekly **all-day Monday** series in America/New_York
+  expanded onto **Tuesday** (`2024-03-05` for `2024-03-04`), and `FREQ=MONTHLY;BYMONTHDAY=1` onto the **2nd**.
+  Any event whose local time is within the host offset of midnight is hit — every all-day recurring event on a
+  positive-offset host, every late-evening one on a negative-offset host. Holidays, leave and interview series
+  are exactly that shape, and the same `expandToOccurrences` feeds conflicts, ICS export and the reminder sweep.
+  **Nothing pins TZ for the test run** — not `src/test/jest-setup.ts`, not the jest block in `package.json` — so
+  the suite inherited the host zone and **43 suites / 406 tests were green** while the behaviour was wrong in any
+  non-UTC deployment. `calendar-dst-edge.spec.ts` is genuinely good and did not catch this: every case it pins is
+  at 09:00 local, which is far enough from midnight that the rotation preserves the weekday. That is the whole
+  reason C6 read as closed.
+  `getTimezoneOffset` is **not** the fix — measured, it resolves an offset per calendar DAY, answering −04:00 for
+  every instant of 2024-03-10 including those before the 07:00Z transition. The conversion is now built on `Intl`,
+  accurate to the instant, and consults the host zone nowhere.
+  Proof: new `calendar-host-timezone-independence.spec.ts` — **17 tests**, green under `TZ=UTC`, `Asia/Calcutta`,
+  `America/New_York`, `Pacific/Auckland`, `Europe/Berlin` and `Australia/Adelaide` (half-hour offset). Its BITE
+  cases make the host offset an explicit parameter instead of ambient, so they reproduce the defect under **every**
+  host zone; at offset 0 the old mechanism agrees with the fix, which is precisely why a UTC runner hid it.
+  Whole module `jest src/modules/calendar` → **44 suites / 423 tests, exit 0** (was 43 / 406), and now **exit 0
+  under all six host zones**. `tsc --noEmit` exit 0. Commit `d01b3c41`.
+  Also fixed, pre-existing and reproduced at HEAD in a `git archive HEAD` tree before any change of mine:
+  `dto/calendar-span.spec.ts` asserted a flat `<= 92` day worst case, but `clientWindow` builds host-local Dates
+  exactly as the browser does, so a three-month window straddling a fall-back really is 92d 1h — the spec failed
+  under every DST-observing host and passed only at UTC. Commit `68171169`.
+  **C10 re-swept, and the fence added by `fa05e4ad9` does not catch what remains.** That scan bans importing
+  `features/calendar/**` or `react-big-calendar` from another feature. The interviews fix is real and verified —
+  `interviews-page.tsx` no longer references `BigCalendarWrapper`, and `/calendar?source=hr-interviews` is a
+  registered source. But a module that hand-rolls a month grid out of `date-fns` and `grid-cols-7` imports nothing
+  from `features/calendar` and passes cleanly, which is the shape of **every surface still outstanding**. Swept
+  `features/`, `components/` and `app/` for `grid-cols-7` paired with a calendar-day signal — **three remain**:
+  `features/build/views/calendar-view.tsx` (month grid of tickets by `dueDate`, prev/next/today, month+year
+  selects; duplicates the registered `build` source, but is scoped **per project**, which `/calendar` cannot
+  express today) · `features/hr/holidays/components/calendar-view.tsx` (month grid, prev/next; the holidays page's
+  **default** view; duplicates `hr-holidays`) · `features/hr/leaves/components/leave-calendar-widget.tsx`
+  ("Who's Out This Week" avatar strip; read-only, no navigation or view switch, so it reads as a dashboard widget).
+  Registered sources confirmed at head: `build`, `hr`, `hr-leaves`, `hr-interviews`, `hr-attendance`,
+  `hr-holidays`, `tasks`. Timesheets team/billing and `hr/work-logs` were checked and are **not** calendar grids.
+  `unified-calendar-surface-boundary.test.ts` now scans for the hand-rolled shape too and asserts the outstanding
+  set with `toEqual`, so it bites in BOTH directions — a new surface fails, and so does a fixed one until its entry
+  is deleted. `jest features/calendar` → **19 suites / 154 tests, exit 0** (was 19 / 151); frontend `tsc --noEmit`
+  exit 0. Frontend commit `c0f5c0560`.
+  BLOCKED: **C10 stays ❌.** Removing the Build grid loses per-project due-date scoping that `/calendar` has no way
+  to express, so it is a product decision, not a cleanup; the holidays grid is HR / ticket 25 territory and is that
+  page's default view. Both are now on record in a test that fails if anyone adds a fourth. **Owner: Build owner
+  and HR / ticket 25 owner.** Not fixed by me deliberately — deleting either would remove shipped functionality on
+  my own judgement.
+  PARTIAL: **C4, C5 and C7 are unchanged from S14** and I did not re-open them; the S14 verdicts stand.
+  PARTIAL: **p95 over HTTP still NOT re-measured** — I did not run `test/perf/route-budget-http.seeded-e2e-spec.ts`
+  either. Unchanged from S13/S14.
   S14 — **decomposed into 10 clauses; 6 hold. One defect fixed, one found and reproduced, one new product gap.**
   Per-clause: C1 one `/calendar` ✅ · C2 toggleable sources ✅ · C3 timezone ✅ · C4 series-vs-instance **PARTIAL** ·
   C5 cursor/range keys **PARTIAL** · C6 DST ✅ · C7 exceptions **PARTIAL** · C8 conflicts ✅ · C9 reminders ✅ ·
@@ -137,6 +209,55 @@ Earlier status: S12 closed the **Knowledge queries/workers** box: all three rema
   build. Same amendment case as ticket 28 box 7; **the release owner should amend it rather than leave it to
   fail.** *Taken on trust: the "zero webhook/inbound/bounce/DLQ references under `src/modules/mail/`" scan was
   not re-run.*
+  S15 — **M2 conversation ordering is FIXED; the rest of the box is unchanged and still cannot tick.**
+  Re-verified S14's claims against source rather than transcribing them, and two of its file paths have drifted:
+  `unified-inbox.service.ts` is in **`src/modules/notifications/`**, not `src/modules/mail/`, and the
+  `skipCache = Boolean(query)` line is **`mail.service.ts:90` in the backend**, not `mail-shell.tsx:90` in the
+  frontend. The substance of both claims survives the correction. Everything else S14 asserts checked out:
+  `accountId: z.string().default("all")` (`dto/mail-schemas.ts:15`), `singleAcc` undefined at
+  `mail.service.ts:69` gating the whole metadata branch at `:75`, `mail-shell.tsx:39-41` initialising to `"all"`,
+  and all three internal callers passing `"all"` (`unified-inbox.service.ts:322,405`,
+  `ai/core/mail-copilot-tools.ts:56`).
+  ✅ **M2 FIXED — the conversation was the unindexed half, and it was also unordered.** `getThread`
+  (`mail.service.ts:318-333`) returned the provider's own order untouched: Gmail's
+  `GMAIL_FETCH_MESSAGE_BY_THREAD_ID` path (`providers/gmail-mail.provider.ts:92-113`) maps and filters and **never
+  sorts**, while Outlook (`:210-238`) pushes `receivedDateTime asc` to Graph. The same conversation therefore
+  rendered in two different orders depending on which account it was read through. Ordering now happens once in
+  the service, so it covers every caller — the controller and **both AI paths**
+  (`mail-ai.service.ts:90` thread summarisation, `:130` reply drafting), which were reading an unordered
+  transcript and treating its last element as the newest message; a Gmail reply draft could answer the wrong turn.
+  The comparator parses instants rather than comparing the raw strings `mergeMessagesByDate` compares: Gmail
+  normalises through `toISOString()` but Outlook passes Graph's `receivedDateTime` through untouched, and for the
+  same second `...30Z` and `...30.5000000Z` sort **backwards** as text ('.' is below 'Z') — measured, the later
+  instant compares as the earlier string. An unparseable date sorts last rather than returning `NaN`, which would
+  leave the whole comparator and therefore the whole order undefined. Oldest-first, matching Outlook's existing
+  contract, so Outlook is unchanged and Gmail is brought into line.
+  Proof: new `mail-thread-ordering.spec.ts` — **10 tests** driving the real `MailService` with provider doubles
+  answering in the providers' own shapes (brief rule 11). Reverting the fix in a throwaway `git archive` tree
+  turns exactly **3 red** — cross-provider agreement, the Gmail unordered case, and newest-is-last — while the
+  pure-helper tests and the BITE control stay green. Whole module `jest src/modules/mail` → **13 suites / 108
+  tests, exit 0** (was 12 / 98). `tsc --noEmit` exit 0; `check:spec-typecheck` exit 0. Commit `30fee448`.
+  Note: `idx_mail_metadata_thread` still has **no reader** — the fix orders the provider's answer rather than
+  reading the mirror, because the mirror holds only what has been listed and a thread is routinely not fully in
+  it. Making the index live is the same delta-sync prerequisite as R-22, not a separate item.
+  BLOCKED: **M1/M3 not widened to the multi-account case, deliberately.** `mail-metadata.service.ts:197`
+  `listCached` already takes `accountId: number | null` and already skips the equality predicate when it is null
+  (`:211`), so the data layer supports it and only `mail.service.ts:69/75` refuses — this is a smaller change than
+  S14 implied. I still did not make it: it needs cross-account freshness semantics (`isFreshForAccount` is
+  per-account), an equivalence run against the provider merge, and a **measured** read cost. This is the hottest
+  mail read path, it has already produced one p95 regression this release, and no benchmark is trustworthy with
+  other agents live on the box. Doing it unmeasured is exactly how the last regression happened.
+  **Owner: mail owner + perf-harness owner.** Still the highest-value residue in this box.
+  BLOCKED: **M4, M5, M7, M8 unchanged** — the two NEW REQUIREMENTs (R-22 unread + incremental sync, R-23
+  idempotent receive + bounce/retry/DLQ). S14's correction to R-23 stands: an inbound path and bounce handling do
+  exist, in `src/modules/ingress/` and `src/modules/email/`, and `src/modules/ingress/**` is CRM territory and
+  excluded this session.
+  ❌ **M10 re-confirmed inert, not fixed.** `queryKeys.inbox.count()` (`lib/query-keys/platform-core.ts:144`) has
+  zero consumers; `/me/inbox/unified/count` (`src/me/inbox.controller.ts:41-45` — note `src/me/`, not
+  `src/modules/me/`, which does not exist) has no client hook. There is nothing to invalidate. Not a defect;
+  M4's unread work is its consumer.
+  **This box still cannot tick.** M2 closes; M9 was already closed; M1/M3 remain PARTIAL and M4/M5/M6/M7/M8/M10
+  remain open. **3 of 10 clauses hold** (was 2).
   S14 — **decomposed into 10 clauses; 2 hold. Two clauses recorded as closed are PARTIAL, and R-23's premise is false.**
   Per-clause: M1 indexed list ordering **PARTIAL** · M2 thread ordering ❌ · M3 search **PARTIAL** · M4 unread ❌ ·
   M5 incremental sync ❌ · M6 idempotent send **PARTIAL** · M7 idempotent receive ❌ · M8 bounce/retry/DLQ ❌ ·
