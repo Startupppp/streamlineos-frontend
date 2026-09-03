@@ -64,8 +64,14 @@ section heading) from checkboxes used inside session/findings logs.
 | Findings-log boxes (tickets 29, 35) | 6 | 0 | 0 | 6 |
 | Raw grep over the whole files | 235 | 58 | 3 | 296 |
 
-**Recomputed release position: 229 of 290 acceptance boxes closed (79.0%); 22 of 42 tickets fully
-closed.**
+**Recomputed release position at the START of this pass: 229 of 290 acceptance boxes closed (79.0%);
+22 of 42 tickets fully closed.**
+
+**At the END of this pass: 239 of 290 (82.4%); 23 of 42 tickets.** The tree moved underneath the
+measurement, which is the point of the box that asked for it: ticket 40 closed its own 7, and ticket
+36 went 7×`[x]`/4 open → **10×`[x]`/1 open** while this ran. No other ticket changed. Both numbers are
+given because a single figure would be false within the hour it was written — cite the head, not the
+number.
 
 The figure carried into this ticket — *235 of 293 closed, 23 of 42 tickets* — is wrong in three
 independent ways, all in the same direction (flattering):
