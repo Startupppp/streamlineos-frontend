@@ -4,7 +4,12 @@
 
 **Blocked by:** 25 — route composition drives most of these numbers, so measuring before the thinning lands wastes the run. (25 is done; this is no longer a blocker.)
 
-**Status:** 6 of 7 closed. Box 6 still open, but for a smaller reason than before. Session S10 (2026-09-03) pulled the
+**Status:** 6 of 7 closed. **S11 (2026-09-03) reopened and re-closed box 1 on a non-vacuous measurement.** The CLS
+budget had been green for a reason unrelated to `/dashboard` being stable: the gate compared only the profile-wide
+p75, which twelve near-zero routes diluted to 0.0065 while a populated `/dashboard` measured 0.175-0.176 per sample
+and `/calendar` 0.126. Both are fixed (0.0024 / 0.0022 on cold build `iTIKVvc-wqpbkjxEiy548`) and the gate now
+judges every route separately, so one bad route fails by itself; it exits 1 today on `/crm/inbox` mobile CLS 0.109,
+which is out of release scope and carries a named owner. Box 6 is untouched and unchanged. Previous status follows. Box 6 still open, but for a smaller reason than before. Session S10 (2026-09-03) pulled the
 lever S9 identified: `@animateicons/react/lucide` is patched to tree-shake and to stop vendoring a second framer-motion, so
 it ships **90 icons (147,629 B raw / 14,273 B gzip)** instead of **248 (481,691 / 55,886)**. Every governed route lost
 36,103-36,660 B gzip of first load, and the total governed overage fell **2,525,139 -> 1,952,364 B (-22.7%)** — the breach
@@ -27,6 +32,21 @@ not pin it into the authenticated shell — the decision is who replaces it acro
 
 - [x] LCP, INP and CLS meet their targets on production builds for in-scope authenticated routes at the defined reference viewport and device profile.
     All six pass. Desktop LCP p75 **888 ms** (≤1500), INP p75 **48 ms** (≤200), CLS p75 **0.0008** (≤0.1); mobile LCP p75 **1002 ms** (≤2500), INP p75 **96 ms** (≤200), CLS p75 **0.000** (≤0.1). Measured on `node scripts/measure-web-vitals.mjs --base-url=http://localhost:1043 --routes=<12> --repeat=8` (exit 0): production build `qlh_3k7hMskrlYGND5MMp`, `serverMode` derived from `.next/BUILD_ID`, **192 samples**, `authorization.verdict` = "every measured sample rendered an authorized shell" (0 unauthorized), `contentAssertion.verdict` = "every measured sample rendered real page content" (0 unusable, 0 off-route), `routeFailures: 0`. The previous pass's numbers were void — no session, so every route painted an access-failure shell; that run is superseded, not averaged in.
+    **2026-09-03 S11 — this box was ticked on a measurement that could not see the route it governs, and is
+    re-ticked on one that can.** The profile-wide desktop CLS p75 of 0.0065 was inside budget because twelve
+    near-zero routes diluted it: across 13 routes x 8 repetitions there are 104 desktop samples, and the 16 bad
+    ones sat above the 75th percentile. Reproduced independently on build `sDZBsbi1qW6Z9JlIhCg68`: **`/dashboard`
+    desktop CLS 0.175-0.176 on all eight samples (990 words) and `/calendar` 0.126 on all eight (415 words)**, and
+    a third breach the same aggregate hid, `/crm/inbox` desktop TTFB p95 660 ms against 400.
+    Both in-scope breaches are fixed and re-measured on cold production build `iTIKVvc-wqpbkjxEiy548`
+    (208 samples, 208/208 authorized, 0 off-route, 0 route failures, 0 hydration mismatches, 0 settle-capped):
+    **`/dashboard` desktop CLS 0.1798 -> 0.0024, `/calendar` 0.1258 -> 0.0022**, and every one of the 11 in-scope
+    routes is inside all five budgets on both profiles. `node scripts/check-web-vitals-budget.mjs` now judges each
+    route on its own and exits **1** with a single violation, `/crm/inbox` mobile CLS 0.109 — a CRM route, out of
+    release scope, recorded as a route-scoped `budgetException` with a named owner and a measured cause that
+    annotates the failure without removing it. Against the same capture with the two CRM routes removed the gate
+    is **exit 0, all budgets measured and met**. Full evidence, including the layout-shift rects, the two capture
+    defects that let this hide, and the LCP cost of the fix, in `reports/26-web-vitals.md` section S11.
 - [x] The six currently breached metrics are each brought inside budget, or an exception is recorded with a named owner and a concrete reason.
     Four brought inside budget: mobile INP 392 → **96 ms**, mobile FCP 2188 → **758 ms**, desktop LCP 2578 → **888 ms**, desktop FCP 2432 → **865 ms**. Two remain and carry an exception with a named owner and a measured cause: desktop TTFB p95 **1669 ms** and mobile TTFB p95 **932 ms**, both owned by `streamlineos-backend`'s `GET /me/access` — `lib/rbac/get-server-access.ts` issues it on every authenticated server render (React `cache()` dedupes within a render, never across them) and it measures **p50 503 ms / max 1004 ms** while the same server returns the public landing in 9–13 ms. The earlier attribution (`/auth/session-data` at 588–757 ms, issued twice) was measured on the failing path and is corrected: authenticated, that call is 100 ms. `node scripts/check-web-vitals-budget.mjs` → **exit 1, 2 violations**, each printing its owner; annotation never removes a failure and the self-test asserts it. **UPDATED 2026-09-03 S10: `node scripts/check-web-vitals-budget.mjs` → exit 0, all budgets measured and met** on a 208-sample capture of build `sDZBsbi1qW6Z9JlIhCg68` (desktop LCP p75 384 ms / INP 48 / CLS 0.0065 / FCP 104 / TTFB p95 173; mobile 565 / 120 / 0.0024 / 273 / 39). The two TTFB exceptions no longer fire — **but read that with its cause**: this capture reached a backend running on a LOCAL Postgres, where server-side TTFB measured p50 20-25 ms / p95 21-36 ms on all 13 routes against 500-602 / 569-1218 ms on 2026-09-02. The pass is a property of the database it measured, not a change to the app, and `GET /me/access` has not been retested against a remote instance. The exceptions are left in the manifest for that reason.
 - [x] The capture is a real production build at the stated repetition count, not a development-mode run.

@@ -617,3 +617,254 @@ already red for JS and the gate stops distinguishing the two problems. Not tight
 4. **The repo `.env` points `NEXT_PUBLIC_API_URL` at `http://localhost:1500`, where nothing listens**, while the
    backend runs on 1501 and answers CORS for `:1000` and `:3000` only. Every locally-built frontend therefore
    has a dead client API target unless the builder knows to override it. Owner: environment.
+
+---
+
+## Session S11 (2026-09-03) — the CLS budget was green for a reason unrelated to /dashboard being stable
+
+**The finding reproduced, was attributed to named components, is fixed, and the gate that could not see it now
+fails on one bad route by itself.** Every number below came from a command run here and read.
+
+### 0. What was actually running before anything was measured
+
+The handed-down warning about stale servers was checked first, not assumed:
+
+| | before | |
+|---|---|---|
+| `next start -p 1000` (pid 39111) | served build `sDZBsbi1qW6Z9JlIhCg68` | **matched `.next/BUILD_ID`** — current |
+| `next start -p 1043` (pid 20230) | its HTML did not contain `sDZBsbi1qW6Z9JlIhCg68` | **stale**, left running, not measured against |
+| `next dev -p 3000` (pid 41610) | another lane's dev server | not measured against |
+| backend (pid 20193) | `PORT=1501`, `DATABASE_URL=…/scratch_t30_browser` (local Postgres), `CORS_ORIGINS=:1000,:3000` | |
+
+`.next` held the harness-env build (`localhost:1501` is baked into the client chunks; `localhost:1500` appears in
+none). Six `features/chat/*` files were newer than `.next/BUILD_ID`; nothing on `/dashboard` or `/calendar` was.
+
+The session cookie was minted the way `.scratch/t26-mint-session.mjs` does it, for the seeded owner
+`bbbbbbbb-0001-…-0001` of org `aaaaaaaa-1111-…-0001` in `scratch_t30_browser`, using the **local placeholder**
+`NEXTAUTH_SECRET` the running backend was started with. No real credential was read, written or committed.
+
+### 1. Reproduced — and it is two routes, not one
+
+`node scripts/measure-web-vitals.mjs --base-url=http://localhost:1000 --routes=/dashboard,/calendar --repeat=8`
+against that build, exit 0:
+
+| | desktop CLS, per sample | words | budget |
+|---|---|---|---|
+| `/dashboard` | **0.175, 0.175, 0.176, 0.176, 0.176, 0.176, 0.175, 0.175** | 990 | 0.1 |
+| `/calendar` | **0.126 × 8** | 415 | 0.1 |
+
+The recorded capture agrees: `byRoute./dashboard.desktop.cls.p75 = 0.1798`, `./calendar = 0.1258`. The
+handed-down "0.175–0.233" is right about `/dashboard` and **silent about `/calendar`**, which was breaching the
+same budget by 26% in the same capture. A third route was hiding in the same aggregate: `/crm/inbox` desktop
+**TTFB p95 660 ms** against a 400 ms budget, while the profile-wide p95 read 173 ms.
+
+Mobile was never the problem: `/dashboard` mobile CLS p75 0.0056, with two outlier samples at 0.500 and 0.322.
+
+### 2. What shifts, with rects rather than guesses
+
+A layout-shift observer that records each source's `previousRect`/`currentRect` and a 40 ms height timeline of
+the page body's direct children (both run at a 9 s settle, so the page is fully arrived):
+
+**`/dashboard` — total 0.1956 over 5 shifts, of which one is 87%.**
+
+| t | what changed | shift |
+|---|---|---|
+| 390 ms | `DashboardStatsSkeleton` 60px → real `StatCardGrid` 68px, and `ExecutiveKpiWidget`'s `dynamic()` fallback `WidgetSkeleton rows={2}` 142px → the widget's own 60px loading state | **0.0226** |
+| 470 ms | `ModuleSetupBanners` renders `null` until `useModuleChecklists` answers, then inserts a **520px** `space-y-2` stack (8 banners × 58px + 7 × 8px gaps) *above* the widget grid. Its sibling moved y 330 → 866; the deferred body at y 398 h 478 left the viewport | **0.1706** |
+
+**`/calendar` — total 0.1258, and it was two causes in one frame.**
+`features/calendar/calendar-view.tsx` inserts the truncation notice ("Too many events in this period…", 31px +
+12px gap) between the toolbar and the full-height calendar body, moving the body y 171 → 214 and shrinking it
+705 → 663. Underneath that, react-big-calendar's all-day band grows **40px → 125px** when the events land,
+pushing `.rbc-time-content` y 265 → 350.
+
+### 3. Fixed, each with a measured before/after on the same probe
+
+| fix | file | before | after |
+|---|---|---|---|
+| `StatCardSkeleton` now mirrors `StatCard`'s box exactly — `px-3.5 py-3 rounded-xl border-border/80`, `mt-0.5 h-9 w-9` icon well, two `h-5` lines with `space-y-0.5`. Both are 68px by construction | `components/ui/stat-card.tsx` | 60px | 68px |
+| `ExecutiveKpiWidget`'s `dynamic()` fallback is the same `StatCardGridSkeleton cols={4}` the widget renders while loading | `features/dashboard/dashboard-client.tsx` | 142px | 68px |
+| The page holds its own skeleton until the module-checklist read settles, with a 1500 ms deadline, so the banners are in the **first painted layout** instead of arriving into it. Their height is only knowable from the response, so no skeleton can reserve it | `features/dashboard/{dashboard-hydration.ts,module-setup-banners.tsx,dashboard-client.tsx}` | 0.1706 | — |
+| The three calendar notices move **below** the calendar body. Proved before changing anything: injecting an equivalent 31px block *above* the body on the live page shifts 0.0168, injecting it *below* shifts **0.00000** | `features/calendar/calendar-view.tsx` | — | — |
+| The all-day band is pinned to two rows and scrolls beyond, so it is the same height before and after the data lands | `globals.css` | 40→125px | fixed 82px |
+
+**Measured with the same 9 s-settle probe, same machine:**
+
+| route | before | after |
+|---|---|---|
+| `/dashboard` desktop CLS (1440×900) | **0.1956** | **0.00236** |
+| `/dashboard` desktop CLS at 1440×1800, where the whole widget grid is in view | not measured | **0.0459** |
+| `/calendar` desktop CLS | **0.1258** | 0.1024 after the notice move alone, **0.00224** with the band pinned |
+
+The intermediate 0.1024 is worth recording: moving the notice bought only 0.023, because the all-day band was
+the larger half of a shift the observer had attributed to a single outer container. Attribution to one element
+is not attribution to one cause.
+
+### 4. The gate — a profile-wide p75 that twelve quiet routes dilute is not a guard
+
+`check-web-vitals-budget.mjs` compared only `results[profile]`. Across 13 routes × 8 repetitions there are 104
+desktop samples; the 16 bad ones (`/dashboard` and `/calendar`) sit above the 75th percentile, so the aggregate
+read **0.0065** and the gate exited **0**.
+
+`checkPerRouteBudgets` compares the same five budgets against each route and profile on its own. It also fails a
+capture with no `byRoute` block, and records a route the capture declares but does not carry as not measured —
+an unmeasured per-route budget is not a met one.
+
+**Bite-proved in both directions, on real captures rather than planted defects:**
+
+```
+node scripts/check-web-vitals-budget.mjs --results=<pre-fix capture sDZBsbi1qW6Z9JlIhCg68>   -> exit 1
+    BUDGET BREACH [desktop] /dashboard CLS p75 0.180 > budget 0.100
+    BUDGET BREACH [desktop] /calendar  CLS p75 0.126 > budget 0.100
+    BUDGET BREACH [desktop] /crm/inbox TTFB p95 660ms > budget 400ms
+node scripts/check-web-vitals-budget.mjs                                                     -> see §6
+node scripts/check-web-vitals-budget.mjs --self-test                                         -> exit 0
+```
+
+The self-test carries the vacuity itself as a fixture: the same diluted capture returns **0** failures from
+`checkBudgets` and **2** from `checkPerRouteBudgets`. Six more fixtures cover a clean capture, an absent
+`byRoute`, a declared-but-absent route, a missing metric, and the two INP cases in §5.
+
+### 5. Two capture defects the new check exposed, both fixed
+
+Neither is an app defect. Both are why a bad route could look green.
+
+1. **The driver slept a fixed 900 ms and then sampled.** That decides by host load whether the app's data has
+   arrived — and it is the whole reason this class hid: the 2026-09-02 capture recorded `/dashboard` at 140 words
+   and CLS 0.000, the 2026-09-03 capture at 990 words and 0.18, same build, opposite verdict. It now waits for
+   **500 ms with no DOM mutation, capped at 6000 ms**, and records `settle.ms` / `settle.capped` per sample plus a
+   per-route word count. On the final capture `cappedSamples: 0`.
+2. **The probe click on mobile `/chat` opened a second browser tab.** `interact()` finds
+   `button[aria-label="Search conversations"]` at y=812 of a 390×844 viewport; clicking it left a
+   `chrome://settings/help` target in front, the measured tab reported `visibilityState: "hidden"`, and **a hidden
+   document emits no paint timing at all**. From that sample on, six routes recorded `ttfb` with `fcp` and `lcp`
+   null — 55 samples across two consecutive runs, deterministic, starting at mobile `/chat` sample 2 both times.
+   Reproduced in isolation (`paints: 2` → `paints: 0` after the click) and fixed with `Page.bringToFront`
+   (`paints: 2` again). Three anti-throttling launch flags were added first and did **not** fix it; they are kept
+   because they are correct, but they are not the fix, and this report says so rather than claiming them.
+
+   The per-route check is what turned that into a visible failure: 19 unmeasured mobile budgets and exit 1, where
+   the profile-wide p75 had simply averaged the samples that survived.
+
+   A third, smaller distinction fell out of it. INP is the one budget whose absence can be good news — the entry
+   observer records at `durationThreshold: 16`, so a route the probe clicked that produced no entry had nothing
+   slow enough to record, while a route the probe could not click at all has no measurement. The capture now
+   records `interactions.performed` per route and profile and the check reads it; only the first is a pass.
+
+### 6. The post-fix capture
+
+`node scripts/measure-web-vitals.mjs --base-url=http://localhost:1000 --cookie-file=<local> --routes=<13>
+--repeat=8 --first-party-origins=http://localhost:1501` → **exit 1** (16 of 208 samples refused: all `/crm/leads`
+desktop, client error boundary — §7). Build **`iTIKVvc-wqpbkjxEiy548`**, `serverMode` **derived** production,
+**208 samples**, 208/208 authorized, 0 off-route, **0 route failures**, **0 hydration mismatches**, **0
+settle-capped samples**.
+
+| | desktop | budget | mobile | budget |
+|---|---|---|---|---|
+| LCP p75 | 388 ms | 1500 | 1442 ms | 2500 |
+| INP p75 | 32 ms | 200 | 96 ms | 200 |
+| CLS p75 | 0.0024 | 0.1 | 0.0024 | 0.1 |
+| FCP p75 | 88 ms | 1200 | 273 ms | 1800 |
+| TTFB p95 | 71 ms | 400 | 89 ms | 600 |
+
+Per route, which is the number that matters now:
+
+| route | desktop CLS | mobile CLS | | route | desktop CLS | mobile CLS |
+|---|---|---|---|---|---|---|
+| **/dashboard** | **0.0024** (was 0.1798) | 0.0567 | | /chat | 0.0008 | 0.0003 |
+| /mail | 0.0012 | 0.0024 | | /parties | 0.0018 | 0.0003 |
+| /inbox | 0.0008 | 0.0003 | | **/crm/inbox** | 0.0008 | **0.1089 — BREACH** |
+| /notifications | 0.0008 | 0.0003 | | /support/inbox | 0.0065 | 0.0003 |
+| /settings | 0.0084 | 0.0067 | | /build/inbox | 0.0137 | 0.0007 |
+| **/calendar** | **0.0022** (was 0.1258) | 0.0008 | | /build/my-work | 0.0011 | 0.0003 |
+| | | | | /crm/leads | 0.0008 | 0.0003 |
+
+`node scripts/check-web-vitals-budget.mjs` → **exit 1, 1 violation**: `/crm/inbox` mobile CLS 0.109. It is
+recorded as a route-scoped `budgetException` with a named owner and a measured cause (§7), which annotates it and
+does **not** remove it. Against the same capture with the two CRM routes removed — the routes this release is
+allowed to touch — the gate is **exit 0, all budgets measured and met** (`--results=<11-route copy>`).
+
+### 6a. What the /dashboard fix costs, stated rather than buried
+
+Holding the page skeleton until the checklist read settles moves the desktop LCP on `/dashboard` from **~360 ms
+to ~710 ms** (budget 1500). That is the real price of not painting a layout the page is about to rearrange, and
+it is paid on a cold load only — the query's `staleTime` is 30 s.
+
+Two things it is **not**:
+
+- The mobile LCP moving from ~660 ms to ~1590 ms is **a measurement change, not a regression**. It comes from
+  §5's settle wait: the sample is now collected after the DOM goes quiet rather than 900 ms after load, so a
+  later, larger LCP candidate is inside the window. Desktop LCP is unchanged between the two windows (~705 ms
+  both ways), which is how the two effects were separated.
+- The deadline is not what makes the fix work here — the checklist query settles well inside it. The deadline
+  exists so a hung or retrying read hands the page back rather than holding it, i.e. so the worst case is the
+  behaviour that shipped before.
+
+**One honest side effect.** With the banners in the first painted layout, the deferred widget grid starts at
+y≈934 on a 1440×900 desktop, i.e. below the fold, so `DeferredDashboardContent`'s IntersectionObserver no longer
+fires on load and the widgets wait for a scroll. That is what the component is named for and what it does; before
+this change it loaded eagerly only because the banners had not arrived yet. Measured at 1440×1800, where the whole
+grid is in view, `/dashboard` desktop CLS is **0.0459** — inside budget, and made of widgets resizing as their own
+data lands, not of one 520px insertion.
+
+The alternative considered and not taken: appending `ModuleSetupBanners` after `DashboardDeferredBody` removes
+the shift unconditionally (a last child displaces nothing, at any viewport or speed), costs no LCP and keeps the
+widgets eager — at the price of moving onboarding guidance to the bottom of the dashboard. That is a product
+call, not an engineering one, so it is recorded here rather than made.
+
+### 7. The two findings this ticket was asked to triage
+
+1. **`/crm/leads` renders a client error boundary.** Still true on this build: 16 of 208 samples refused, all
+   `/crm/leads`, desktop, `errorBoundary: true`, 85 words. **CRM is excluded from the 10/10 release scope**, so it
+   is recorded and not fixed. Owner: CRM lane. It is a live route failing against a seeded local backend.
+2. **`NEXT_PUBLIC_API_URL` pointing at a dead `:1500`** — checked, and it is **local drift, not a committed
+   defect. No file was changed.**
+   - `frontend/.env` is **not tracked** (`frontend/.gitignore` lines 43-49; `git ls-files` returns only
+     `.env.example`), so "the repo `.env`" is this machine's file, not the repository's.
+   - The committed configuration is internally consistent: `frontend/.env.example` has
+     `NEXT_PUBLIC_API_URL=http://localhost:1500` and `NEXTAUTH_URL=http://localhost:1000`, `frontend/package.json`
+     has `"dev": "next dev -p 1000"`, and `streamlineos-backend/.env.example` has `PORT=1500` and
+     `CORS_ORIGINS=http://localhost:1000`. Client target, server port and CORS origin all agree.
+   - The dead target is a running-process fact: the backend on this machine was started with `PORT=1501` in its
+     process environment while its own `.env` says `1500`. Nothing in either repository is wrong, so nothing was
+     changed. No credential was read into a committed file.
+
+### 8. Gates run this session
+
+| command | exit | number |
+|---|---|---|
+| `NEXTAUTH_SECRET=<64-char local placeholder> NODE_ENV=production npx next build` (warm) | **0** | build `PrF1r_acQ5Wpnd3TcJz2r`, 601 routes |
+| same, after `rm -rf .next` (cold) | **0** | build `iTIKVvc-wqpbkjxEiy548`, 601 routes |
+| `pnpm -C frontend type-check` (`tsc --noEmit`) | **0** | clean |
+| `npx eslint <8 changed files>` | **0** | 0 errors, 2 warnings, both pre-existing |
+| `npx jest --runInBand --testPathPattern='(features/dashboard\|features/calendar\|components/ui/.*stat)'` | **0** | 28 suites / 253 tests |
+| `node scripts/measure-web-vitals.mjs --self-test` | **0** | SELF-TEST PASSED, incl. 4 settle fixtures |
+| `node scripts/check-web-vitals-budget.mjs --self-test` | **0** | SELF-TEST PASS, incl. 8 per-route fixtures |
+| `node scripts/check-web-vitals-budget.mjs --results=<pre-fix capture>` | **1** | 3 per-route violations the aggregate could not see |
+| `node scripts/check-web-vitals-budget.mjs` | **1** | 1 violation, `/crm/inbox` mobile CLS 0.109, owned |
+| `node scripts/check-web-vitals-budget.mjs --results=<same capture, CRM removed>` | **0** | all budgets measured and met |
+| `node scripts/check-route-bundle-budget.mjs` | **1** | **17 breaches — the same 17 as S10, not made worse** |
+| `node scripts/check-route-bundle-budget.mjs --self-test` | **0** | SELF-TEST PASSED |
+| `node scripts/measure-route-bundles.mjs` (no `--write`) | **0** | first load **+868 to +1388 B gzip** per route vs recorded |
+
+The +868–1388 B is this session's cost: `StatCardGridSkeleton` entering the dashboard's first-load chunk, the
+setup-slot predicate and its deadline hook, and 16 lines of CSS. The same 3 routes are over on
+`measuredFirstLoadJsBytes` and the same 17 breaches stand. The manifest was **not** rewritten with these figures
+(`--write` was not run), so its byte provenance is unchanged.
+
+### 9. Honest gaps
+
+- **The machine was loaded throughout.** `loadAverage1mAtStart` 3.1 on 15 CPUs with ~12 other agents working.
+  **CLS is the load-insensitive part** and is what this session's conclusions rest on: layout shift is about
+  reserved space, not speed. **The LCP, INP, FCP and TTFB figures in §6 should not be quoted as release evidence
+  for a quiet machine** — they belong with the quiescing pass the orchestrator is holding tickets 22/23 for.
+- **TTFB is still measured against a local Postgres**, as in S10. `GET /me/access` has not been retested against a
+  remote instance, and the two 2026-09-02 TTFB exceptions remain in the manifest for that reason.
+- **The route-bundle manifest's byte figures are from S10's build**, not this one. `measure-route-bundles.mjs`
+  reports the delta (§8) but nothing was written.
+- **Box 6 (route-level JavaScript budget) was not worked on** and is unchanged: 17 breaches, still blocked on the
+  cross-lane shell-thinning decision S10 priced.
+- **`/crm/inbox` mobile CLS and `/crm/leads`' error boundary are recorded, not fixed** — CRM is out of scope.
+- `features/calendar/calendar-view.tsx` still imports `useState` without using it. It was already unused before
+  this session (`git show fc7429b18~1` has zero `useState(` call sites) and it is a lint warning, not an error;
+  left alone rather than churn another lane's file.
