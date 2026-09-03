@@ -4,7 +4,7 @@
 
 **Blocked by:** 03 — plans taken against an empty or partially bootstrapped database measure nothing.
 
-**Status:** measured; one box open by design and **BLOCKED on a product decision**, re-confirmed at head
+**Status:** measured; one box open by design and **BLOCKED on a product decision** — but as of 2026-09-03 its two decision-free clauses are ENFORCED by a new gate (`pnpm check:query-projections`, rc 0, count-path allowance 0) and the blocked clause is RATCHETED at 1,441 unprojected reads rather than merely described. Re-confirmed at head
 2026-09-03 by an independent recount (296 `findMany` / 550 `findFirst` / 599 bare `.select()` without a projection,
 **79–80% of it in held or excluded territory**). The list/count/existence clauses that need no contract decision are
 closed and the global-users clause is locked by a spec; the residue is "which list endpoints may return less", which
@@ -77,6 +77,37 @@ Harness: `BE/test/perf/{heavy-query-fixtures,seed-heavy-query-load,heavy-query-c
     **369 held · 109 excluded · 121 open** = 478/599 (**79.8%**) unreachable. By module, `findMany`: hr 84 ·
     inventory 40 · e-sign 26 · surveys 26 · support 20 · build 12 · chat 11 · billing 10 · crm 7. Bare `.select()`:
     hr 190 · finance 55 · crm 50 · build 39 · inventory 38 · payroll 37 · billing 31 · party 20 · timesheets 20.
+  - **2026-09-03 — the two closed clauses are now ENFORCED and the blocked one is RATCHETED. New gate
+    `pnpm check:query-projections` (`BE/src/scripts/check-query-projections.mjs`, baseline
+    `BE/src/scripts/baselines/query-projection-baseline.json`).** The count and existence clauses were closed by hand
+    and **nothing was left enforcing them** — the pass that closed them found `survey_participants.accessTokenHash`, the
+    hashed bearer token granting access to a survey response, hydrated into the Node heap to answer a `.length`, and
+    there was no reason that could not come back the next day. The gate HARD-FAILS on any unprojected read whose every
+    use is `.length`: measured **0** today, allowance **0**. A top-level `columns:` is told apart from one nested inside
+    `with:` by brace depth, not by regex. The count rule is deliberately narrow — allowing a bare use as a truthiness
+    test measured **211** findings against the hand-scan's 4, because `return rows;` is a bare use too, and a gate that
+    fires on 211 sites of which 207 are wrong does not get fixed, it gets an allowance.
+    **The blocked clause is ratcheted rather than enforced**, which is the honest thing to do with a clause no
+    measurement can close: unprojected reads may not climb while the product decision is outstanding.
+    **Independently re-measured for this gate, and it corroborates the recount rather than copying it**: `findMany`
+    without a top-level `columns:` **295**, `findFirst` **547**, bare `.select()` **599** (the ticket's own recount:
+    296 / 550 / 599), total **1,441**.
+    Two defects in the ceiling were found by running it, and both are recorded because they generalise:
+    (a) the baseline was first measured on the shared WORKING TREE and read 294/547/600 against HEAD's 295/547/599,
+    because two concurrent lanes held uncommitted edits in opposite directions — **a ceiling taken from a dirty shared
+    tree is not the number the gate will see**, so it is taken from `git archive HEAD src`;
+    (b) three independent per-shape ceilings are unusable in a shared tree for the same reason — one lane projecting
+    `chat/chat-channel-list.service.ts` (findMany 295 -> 294) while another adds a bare `.select()` in a new file
+    (599 -> 600) trips a per-shape gate while the total is 1,441 either way, **and it is 1,441 because nothing got
+    worse**. Enforced on the total, reported per shape so the composition is never hidden; a per-shape gate would have
+    been raised by the next person to hit it.
+    Bite-proved hermetically — `git archive HEAD src test package.json` into a temp dir, defect planted THERE, never in
+    the shared working tree: clean archive **rc 0**; planted unprojected count path **rc 1** naming the site; adding
+    `columns:` to that same planted read **rc 0**; removing it **rc 0**; a planted bare `.select()` **rc 1** on the
+    total ratchet. `--self-test` 10/10.
+    **This does not close the box.** The residue is still "which list endpoints may return less than they return
+    today", and no gate can answer that. What changed is that the two clauses needing no decision can no longer
+    silently regress, and the one that does is now a measured number with a ceiling instead of a paragraph.
   - **Decision re-affirmed, honestly: this stays BLOCKED and it is not a measurement gap.** Every instrument the
     box could want already exists and already discriminates — `measure-projection-bytes.mjs` (`--self-test` 8/8)
     separates `kb-chunks-page-50` at **22.07x** from `dashboard-recent-activity` at **1.44x** where

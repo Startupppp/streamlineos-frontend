@@ -4,7 +4,7 @@
 
 **Blocked by:** 20.
 
-**Status:** partial — 6 of 9 closed, 3 partial. Report: `reports/21-db-call-contract.md`. Third pass (2026-09-03) batched three more per-row call sites, deleted a per-candidate probe that could never match a row, converted two more write paths to `bulkUpdateFromValues`, gave five more read-then-write pairs their tenant predicate, reconciled the N+1 baseline with what the source now does (ACTIONABLE 44 -> 40), and **recorded the four decisions** boxes 1, 4, 7 and 8 were waiting on. Boxes 1, 4, 7 and 8 are closed as RECORDED DECISIONS — the decision and its consequences are written below; no code was guessed at for them.
+**Status:** partial — 6 of 9 closed, 3 partial. FOURTH PASS (2026-09-03) did not close a box; it repaired the GATE, which had been red at HEAD and, more importantly, blind. `check:db-call-count` skipped **2,417 of 4,765 loop openers (50.7%), across 753 files**, with no body inspection at all — every braceless loop body, which is the shape CLAUDE.md §6 mandates, plus `Promise.all(xs.map((x) => this.db...))`, whose opener leaves a paren open so `parenBalance >= 0` counted it as closed. It now inspects 2,739 and ratchets that number. Gate rc 1 -> **rc 0**. Report: `reports/21-db-call-contract.md`. Third pass (2026-09-03) batched three more per-row call sites, deleted a per-candidate probe that could never match a row, converted two more write paths to `bulkUpdateFromValues`, gave five more read-then-write pairs their tenant predicate, reconciled the N+1 baseline with what the source now does (ACTIONABLE 44 -> 40), and **recorded the four decisions** boxes 1, 4, 7 and 8 were waiting on. Boxes 1, 4, 7 and 8 are closed as RECORDED DECISIONS — the decision and its consequences are written below; no code was guessed at for them.
 
 - [x] Tenant-owned request work runs inside the minimum correct tenant transaction, reusing one handle. No nested or per-row transactions; no borrowing a committed request transaction.
    CLOSED AS A RECORDED DECISION (architectural). Every per-row-transaction sweep that could be fixed in service
@@ -31,7 +31,41 @@
    ticket's, and not fixable in service code at all.
 
 - [ ] Relationship, permission, unread, attachment, assignee and metadata lookups are batched with joins, CTEs or bounded multi-key queries. No database or cache call inside a growing loop.
-   PARTIAL: 13 N+1s removed in total. THIRD PASS added four — `HrAuditService.logMany` (one membership
+   PARTIAL (fourth pass, 2026-09-03): 14 N+1s removed in total, and — more consequentially — **the gate that scores this box was measured and was blind to half of it**.
+   THE BLIND SPOT, MEASURED AND FIXED. The third pass routed a "line-scoped matching" defect citing 397 vs 566 files.
+   That figure measures the PATTERNS standalone, not the gate, and window-joining already existed (`bodySoFar`). The real
+   defect is different and larger: `detectLoopDbCalls` discarded any loop opener with no `{` on its line via one
+   `continue`, on the reasoning "no brace, no body". That holds only when the opener's whole STATEMENT ends on that line.
+   **Measured at HEAD: 2,417 of 4,765 loop openers (50.7%), spread over 753 files, were discarded with no body inspection
+   at all.** Two shapes dominate, and both are shapes this repo prefers: the braceless single-statement `for` body that
+   CLAUDE.md §6 *mandates*, and `await Promise.all(ids.map((id) => this.db.update(...)))`, whose opener line leaves a
+   paren open — and `loopParensBalanced` returns `parenBalance >= 0`, so an UNCLOSED opener counted as closed.
+   `scanBracelessBody` now scans the following statement until every delimiter the opener left open closes again;
+   `for await (` is a loop opener (13 sites were invisible for that alone); inspected openers went **2,127 -> 2,739** and
+   are ratcheted at `MIN_INSPECTED_LOOPS`, because counting *detections* cannot catch a narrowing detector — a narrower
+   one detects less and reads as cleaner. Bite-proved hermetically (`git archive HEAD src test` into a temp dir, defect
+   planted there, never in the shared tree): the planted braceless N+1 scores **0 violations on the pre-change detector
+   (267af62e) and 1 on the new one**; gate rc 1 with it, rc 0 without it; re-narrowing the detector drops inspection to
+   2,135 and reds the gate.
+   WHAT IT FOUND: **14 files the gate had never seen once**, all classified by reading each site. Four are real per-row or
+   per-group writes — `clients/client-accounts.service.ts:487` (one UPDATE per assignee), `party/party-legacy-employer.ts:213`
+   (one UPDATE, each with its own correlated subselect, per distinct legacy employer), `party/party-legacy-writer.ts:252`
+   (`claimIdentifiers` per moved row) and, in excluded CRM, `crm-rules`/`crm-metadata` reorder-by-`Promise.all`.
+   FIXED HERE: `kb/wiki/kb-spaces.service.ts` emitted **one outbox INSERT per article and per page** when a space was
+   deleted — one write per piece of content in the space — now a single `OutboxWriter.emitMany`. The other three are
+   recorded ACTIONABLE with their exact batched form; `party-legacy-employer` writes CRM's `contacts` table and CRM is out
+   of release scope, and `client-accounts.service.ts` was being edited by another lane while this ran.
+   THE INVISIBLE SET IS NOW NAMED, NOT RATCHETED AWAY. Three files carried a real residual N+1 whose per-row work is a
+   SERVICE call (`applyOne`, `approveSinglePeriod`) — unmatchable by any pattern detector. They were marked ACTIONABLE,
+   which asserts "the detector still matches me"; it does not, so each read as a stale verdict, and the response had been
+   to raise `UNDETECTED_CLAIM_BASELINE`. **That ratchet was absorbing real findings — the gate's own escape hatch for its
+   own blindness.** New verdict `ACTIONABLE-UNDETECTED`: inert to both directional checks, printed on every run, ratcheted
+   at 3, downward only. `UNDETECTED_CLAIM_BASELINE` is now **0**; both files it named were obsolete FALSE-POSITIVE excuses
+   and are deleted rather than carried.
+   Five files the widened scanner re-matched were NOT regressions — they are the batched fixes themselves (chunked
+   `inArray` loops, `sql` fragment builders feeding one statement) and are re-verdicted `BATCHED`, which is what that
+   verdict exists for. ACTIONABLE 40 files / **64** call sites.
+   PRIOR PASS: 13 N+1s removed in total. THIRD PASS added four — `HrAuditService.logMany` (one membership
    resolution and one multi-row INSERT; the effective-dated change applier issued one of each per due change),
    `ApprovalsService.activeDelegationsToActor` (one indexed multi-key read over `user_delegations` for a whole
    page, replacing a delegation probe per candidate in `bulkReject`), `module-checklist`'s seed reconciliation
