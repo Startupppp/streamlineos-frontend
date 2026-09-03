@@ -4,9 +4,18 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** 7 of 8 closed; 1 PARTIAL (release scope). **S12 REOPENED AND RE-CLOSED THE CI HALF OF
-BOX 7 — the gates still had never run, for two reasons neither of which 35b addressed.**
-See `reports/35d-gate-execution-and-bite-proofs-s12.md`.
+**Status:** 7 of 8 closed; 1 PARTIAL. **S13 REOPENED BOX 5 AND FOUND THE RESIDUE CLAIM WAS WRONG:
+the residue was NOT confined to excluded modules. Seven tests were live, green, counted as coverage
+and could not fail, FOUR of them naming cross-tenant isolation in their own title — in finance/tax,
+organization/setup, invoices, calendar, notifications, chat and payroll, all in scope. One was
+concealing a production defect; a second instance of the already-shipped purge defect was found in
+the same sweep.** See `reports/35e-vacuity-sweep-s13.md`.
+
+**S13 also built the gate that keeps the class out: `check:vacuous-assertions` (NEW).**
+`check:test-suppressions` owns the honest skip; this owns the opposite and more dangerous shape — a
+test that RUNS and cannot fail. Measured 1,921 spec files · 14,773 test callbacks · 55,380 `expect()`
+calls -> no_assertion 1 · tautology 2 · cond_assert 1 · floating_assert 0 · focused 0, rc=0, all four
+registered with a named owner. Bite-proved six ways; self-test 16/16.
 
 **2026-09-03 residual-risk register:** the last box = **R-9**, ACCEPTED RESIDUAL, blocker SCOPE, owner CRM/inventory release owner, deadline 2026-12-01 review. Both gates re-verified exit 0 at their ratchets. See `reports/residual-risk-register.md` §3.7.
 
@@ -104,6 +113,42 @@ is blocked on another agent, on infrastructure or on a measurement.
       items become actionable the moment CRM and inventory enter scope and not before; touching them now would
       edit modules the release excludes. Both ratchets are capped at the current numbers, so the residue can only
       shrink, and neither can grow back silently. Left untouched, deliberately.
+      **2026-09-03 S13 — THE "RESIDUE IS ENTIRELY IN EXCLUDED MODULES" CLAIM ABOVE WAS FALSE, and it was false
+      because both gates measure a shape that these tests do not have.** `check:test-suppressions` counts
+      suppressions; `check:transaction-callbacks` counts `db.transaction` doubles. **A test that RUNS, is GREEN,
+      is counted as coverage and cannot fail is neither**, so all four re-verifications above were true statements
+      about the wrong population. An AST sweep of both repositories (method and misses in
+      `reports/35e-vacuity-sweep-s13.md` §1) found **seven such tests live and in scope, four naming cross-tenant
+      isolation in their own title**. They were not read into that verdict — the two decisive classes were
+      EXECUTED: a throwing sentinel planted in the vacuous branch of all 9 conditional sites (2 of 9 proved
+      vacuous), and every bare `.toThrow()` in the isolation suite rewritten to `.toThrow(TypeError)` (44 sites,
+      42 went red, **2 stayed green — asserting a crash, not a refusal**).
+      All seven are repaired, each bite-proven in a hermetic tree in BOTH directions — the new spec reds on a
+      planted defect and **the HEAD spec passes the same mutation**, which is this box in one measurement:
+      - `finance/tax/tax-compliance-tenant-isolation.spec.ts` — both tests vacuous. The guard was false because
+        **`checkTaxDue` returns [] before touching the database on every day of the year** (deadlines computed a
+        month late; min `daysUntilGstr1` 11 vs `DUE_WARNING_DAYS` 5; simulated 0 of 730 days). `cron-finance.
+        service.ts:108` calls it, so the GST due-date notification is unreachable in production. The sibling
+        `tax-compliance.service.spec.ts` stubs `daysBetween` to **3**, a value the real arithmetic cannot produce
+        — five green tests over an impossible value, the ticket's own "mock the real dependency never produces".
+        Spec fixed; the production defect is REPORTED, not fixed — owner finance/accounting.
+      - `organization/setup/org-setup-tenant-isolation.spec.ts` — the db double answered `select().from().where()`
+        while the service calls `.leftJoin()`, so `skipSetup` died on a TypeError that a bare `catch {}` swallowed
+        under the comment `// expected - missing membership`. Both tests green without reaching an authorization
+        decision.
+      - `invoices/invoices-payment-tenant-isolation.spec.ts` — the same-tenant control named "proceeds for invoice
+        in the owning org" asserted `.rejects.toThrow()` and passed on
+        `TypeError: this.posting.seedChartOfAccountsForOrg is not a function`.
+      - `calendar/calendar-conflict.service.spec.ts` (no assertion at all), `notifications/time-sweeps/…`
+        (`toBeGreaterThanOrEqual(0)`, plus `forEachOrg` left real so the per-org callback never ran),
+        `chat/__tests__/chat-saved-departed-actor.spec.ts` and 4 payroll/workflows contract notes
+        (`expect(true).toBe(true)`).
+      **A production defect of the exact class this ticket exists to remove was found and FIXED:**
+      `storage/storage-key-catalog.ts` swallowed every db error and returned `[]`, starving BOTH `FAILED`
+      handlers the purge adapter already had, so a failed enumeration reported `CONFIRMED "nothing to delete"`
+      and a failed post-delete check reported `CONFIRMED "deleted and verified absent"` — the release's shipped
+      purge defect (delete the wrong place, verify the wrong place, report success) reproduced on a GDPR erasure
+      path.
       **DISPOSITION 2026-09-03 — ACCEPTED RESIDUAL R-9. Blocker: SCOPE (CRM and inventory are excluded from this
       release). Owner: CRM/inventory release owner. Deadline: 2026-12-01 review.** Recorded for ticket 41 box 7;
       register: `reports/residual-risk-register.md` §3.7.
@@ -113,6 +158,30 @@ is blocked on another agent, on infrastructure or on a measurement.
       placeholder 13 · **quarantine 6 (ratchet 6)**. `pnpm check:transaction-callbacks` -> **exit 0**, **2,014 spec
       files** · 264 files with a transaction double · 464 doubles -> invokes 255 · declared-unreached 7 · rejects 0
       · **VOID 2 (ratchet 2)**. Both ratchets may only go down, so the residue cannot grow back silently.
+      **S13 DISPOSITION — the box stays OPEN, under a stated interpretation, because "zero" as written is not
+      true.** Closed as: *zero tests in either repository that run, are green and cannot fail, outside 4 registered
+      sites each with a named owner, held by a gate that is bite-proven in six directions and reports INCONCLUSIVE
+      rather than clean when it cannot measure.* What remains, and why it is not closed:
+      PARTIAL: **`BARE_THROW` — 333 backend sites / 125 files, 132 of them on a risk path, UN-TRIAGED and with NO
+      OWNER.** This is now the largest vacuity surface in the repository. It is deliberately not gated: the probe
+      showed 2 of 44 in the isolation suite were asserting a crash, but most of the 333 are legitimate, and
+      baselining them would bank detector noise as debt — the mistake `check:transaction-callbacks` avoided by
+      removing three false-positive classes BEFORE baselining. **Needs an owner.**
+      PARTIAL: **the frontend has no equivalent gate.** It measures 0 in every class today (0 suppressions, 0
+      no-assertion, 0 tautologies, 0 focused, 0 floating), so there is nothing to ratchet — but nothing stops the
+      first one either.
+      PARTIAL: **`check:over-300` is red at 403 vs baseline 394 (exit 1)**, and `c3f0b73d` had raised that baseline
+      to 394 when the count was 395 — sized to that day's breach with no headroom. Re-measured, not inherited.
+      Release management, already routed; the baseline was deliberately NOT raised again.
+      PARTIAL: **14 swallowed-failure sites in production code are named and NOT fixed** (report §8), several on
+      money and auth paths — the AI credit debit, a revoked session authenticating, payroll loan/leave status
+      writes, FX gain/loss journalling, the idempotency fence, the NextAuth session enrichment, and leave/overtime
+      approval workflows. Owners named per item.
+      PARTIAL: **`FIN-TAX-WINDOW`** — the GST due-date sweep is unreachable in production. Owner:
+      finance/accounting release owner. Changing when a tax notification fires is a product decision.
+      PARTIAL: **a net baseline raise carried across an identifier rename is invisible** to per-identifier history
+      (`c0daca5b`: `UNDETECTED_CLAIM_BASELINE` 2 -> 0 while introducing `ACTIONABLE_UNDETECTED_BASELINE` = 3, net
+      2 -> 3). The verdict on that commit stands, but the auditing method has the hole.
 - [x] Text-based scans are validated against a known defect before being trusted.
       `check:db-call-count` reported ACTIONABLE 0 sitting over a confirmed N+1 at `payroll/runs/inputs.service.ts:187`. Two blind spots: a Drizzle chain split across lines (patterns tested one line at a time) and a helper receiving the db handle as an ARGUMENT (patterns only matched it as a receiver). Both fixed, both fixtured from that real code. Detected files 41 → 147; that line now reports REGRESSED. `check:hardcoded-secrets` was validated the other way — it flagged `calendar-webhook-secret.ts` where the only match was a header NAME; fixed and re-proven against four planted credential classes and two negatives.
 - [x] Coverage counts are honest: a path-filtered run that reports green while suites outside the filter are red is a false pass.
