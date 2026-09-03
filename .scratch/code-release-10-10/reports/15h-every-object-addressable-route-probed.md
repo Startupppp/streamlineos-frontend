@@ -150,16 +150,211 @@ already reports. They are listed in §7 as named residual harness reach, not as 
 
 ---
 
-## 4. RESULTS_PLACEHOLDER
+## 4. The result — and the three numbers, kept apart
+
+**The whole surface was attempted: 1,929 of 1,929 object-addressable routes.** Artifact:
+`scratchpad/t15j/bola-head-full.json`, 1,929 outcomes, commit `d30a1c52`, generated
+2026-09-03T07:54:21Z, 3,649 s of wall clock against a booted API.
+
+```
+BOLA_DB=scratch_t15r2 BOLA_LIVE_ARTIFACT=.../bola-head-full.json BOLA_LIVE_MIN_SCORED=400 \
+  node ./node_modules/jest/bin/jest.js --config ./jest-e2e-seeded.json --forceExit --runInBand \
+  --testPathPattern=bola-live-cross-tenant --testPathIgnorePatterns "/.claude/worktrees/"
+```
+
+| verdict | as measured | after the non-object-segment correction (§3, `b05f3387`) |
+|---|---:|---:|
+| PASS — cross-tenant id answered 404 | 682 | **681** |
+| NO-404 | 35 | 29 |
+| SERVER-ERROR | 6 | 6 |
+| LEAK | 4 | 4 |
+| INCONCLUSIVE | 1 | 1 |
+| UNPROBEABLE | 1,201 | **1,208** |
+| **total** | **1,929** | **1,929** |
+
+The correction is not a re-run: `planRoutes` decides "is this segment an object" from the parameter
+NAME alone, so the artifact was re-scored offline against the new rule. Seven outcomes move, six of
+them findings — the two `/crm/options/:optionType` verbs, the three `POST /onboarding/tours/:tourKey/*`
+and `PUT /calendar/sources/:sourceKey`. Read in source, every one of those parameters names a
+per-user preference key or an enum discriminator, not a tenant object, and the handler answers the
+caller's own data whatever is in the segment. Counting them as defects would have been six false
+findings; counting them as passes would have been six false greens. They are unprobeable.
+
+### The three numbers the ticket asks for, and they are never folded together
+
+| | routes | share of 1,929 |
+|---|---:|---:|
+| **probed and correct** — an id from the other organisation was sent and the answer was 404 | **681** | **35.3%** |
+| **probed and defective** — the question was asked and the answer was wrong | **40** | 2.1% |
+| **could not be probed** — the question was never asked | **1,208** | 62.6% |
+
+**A route is counted as probed only if its OWN-TENANT control answered 2xx.** Without that control a
+404 proves nothing: an unrouteable path, a rejected id format, a missing permission, a module the
+org has not enabled and a correctly bound tenant all answer 404 identically. `score()` refuses to
+grade an ungraded control, and the 1,208 are named individually in the artifact with the reason each
+could not be asked.
+
+**What was actually sent, for the 721 that were scored.** 698 were handed a real primary key
+belonging to the other organisation, read out of the table the parameter names. The other 23 have no
+object parameter at all — their only path segments are the tenant selector (5) or the actor (18) —
+so the sweep sent the SOURCE organisation's own org/user id from a token belonging to the prober.
+For an authenticated route that is still a genuine cross-tenant probe. For the **3** that are
+`@Public()` it is not: the `:orgId` in the path IS the authorization decision, the sweep binds it to
+the source org for the control, the probe and the absent-id request alike, so all three answers are
+identical by construction and nothing was asked. Those three are pinned as not-a-probe, not as
+passes; the surface they belong to is asserted by `bola-public-org-selector.spec.ts`.
+
+### Why 1,208 could not be probed
+
+Bucketed from each outcome's own `detail` field (raw run; the correction above moves 24 routes into
+the fourth row):
+
+| routes | why |
+|---:|---|
+| 355 | own-tenant control **404** — the borrowed id did not resolve for its own owner |
+| 334 | the seed holds no object of that type, or the pool for it ran out |
+| 195 | own-tenant control **400** — the request could not be made valid |
+| 108 | the path segment is not an object (`:moduleKey`, `:token`, `:providerKey`, …) |
+| 51 | own-tenant control **500** |
+| 43 | own-tenant control **403** |
+| 41 | no table resolves the parameter |
+| 30 | own-tenant control **409** — the object is in a state the handler refuses |
+| 30 | own-tenant control **402** — a plan gate still refused, even on ENTERPRISE |
+| 12 | own-tenant control **401** — `/agent/v1/*` and `/portal/v1/*` take a different credential, not a user JWT |
+| 2 | own-tenant control **503** — AI is not configured |
+
+**The most important line in this report is the first one, and it is a regression against the
+previous run.** Control-404 went 135 → 355 and "no object of that type" 168 → 334, while control-400
+fell 468 → 195. The direction is not noise and the cause is the sweep itself: with a body derived
+per route, ~270 POST/PATCH routes that used to bounce off the validation interceptor now **execute**,
+and a sweep of 1,929 real mutations against one database consumes and re-states the very objects its
+later routes borrow. The borrow pool is snapshotted once, before the first request, so an id deleted
+or transitioned at route 400 is still offered at route 1,600 and its control answers 404 or 409.
+
+**So 681 is a floor, not a ceiling, and the honest reading of this box is that reach is now limited
+by the sweep's own destructiveness rather than by its request shape.** The fix is structural — a
+database restored per route family, or a dependency-ordered run that creates its own fixture
+immediately before borrowing it — and it is recorded as residual R-4c below rather than claimed.
+
+### The run's own anti-vacuity proofs, from the artifact
+
+| proof | measured |
+|---|---|
+| `sameTenantLeakDetection` | the same request made by the object's OWN tenant is scored LEAK on **12 of 12** routes checked — the classifier can see a served object |
+| `mutationTest` | `ProjectsQueryService.getProject` replaced with a read by id alone: bound **404/PASS**, unbound **200/LEAK**, restored **404/PASS** |
+| `synthesizedBodies` | **619** routes carried a contract-derived body; **0** schemas were unsatisfiable |
+| `bodyUnlocksControl` | 8 controls that reject `{}`; 4 unlocked outright, the rest moved from a validation 400 to a semantic answer |
+| `tokenRetries` | 96 re-mints fired; **12** controls still 401 — the `/agent/v1` and `/portal/v1` credential surface, not an expiry |
 
 ---
 
-## 5. BITE_PLACEHOLDER
+## 5. Bite proof — the probe fails against a route deliberately broken in a temp tree
+
+**Never in the shared working tree.** `git archive HEAD src test … | tar -x -C <scratchpad>/bite`,
+`node_modules` and `.env` symlinked, run against `scratch_t15j`.
+
+Target `GET /accounting/journal/:entryId`, chosen because it PASSes at head. The planted defect is
+the exact one this box exists to forbid — `AccountingLedgerService.getJournalEntry` throws
+`ForbiddenException` instead of `NotFoundException` when the tenant-bound lookup finds nothing:
+
+```
+before   exit 0    1 route scored, PASS,   9/9 tests green
+after    exit 1    1 route scored, NO-404, "GET /accounting/journal/:entryId -> 403"
+                   1 failed / 8 passed
+```
+
+RLS is live in both runs, so the 403 is the only thing that changed. Two things this proves that the
+in-process `mutationTest` does not: the failure survives a real process boundary, and the sweep
+detects the *status-class* defect (403 where 404 belongs) and not only a served body.
 
 ---
 
-## 6. FIXES_PLACEHOLDER
+## 6. The 40 defects, and the 10 repaired here
+
+Every fix follows the same three steps: the object the route ADDRESSES is resolved under the
+caller's organisation, the refusal is `NotFoundException` and never `ForbiddenException`, and a
+regression spec is mutation-tested by removing the guard and watching it go red.
+
+| route | was | commit |
+|---|---|---|
+| `GET /finance/reconciliation/:bankAccountId/rules` | 200 for any bank account id; `fin_reconciliation_rules` has no `bank_account_id`, so the path parameter was passed into the query object and never read, while `createRule`/`deleteRule` on the same controller already asserted it | `165cdd0e` |
+| `GET /payroll/people/:organizationPersonId/eligibility` | 200 `{"reason":"unknown-person"}` — the seam resolved correctly and the boundary returned the soft answer backend/CLAUDE.md §1 forbids | `ada26b47` |
+| `PATCH /hr/analytics-plus/workforce/plans/:planId` | 200 with an empty body: a tenant-bound UPDATE that matched nothing, returned unchecked | `bc496709` |
+| `GET` + `POST /chat/channels/:channelId/typing` | **403** for another organisation's channel — the existence oracle §4 forbids. `ChatTypingService` went straight to `chat_channel_members` while two sibling services in the same module already resolved the channel first | `4a299fa3` |
+| `POST` + `DELETE /organization/:orgId/purge…` | 200: both declared `:orgId`, ignored it and acted on `u.orgId`. Dangerous in the other direction — the caller believes they addressed the organisation in the URL and the server purges a different one | `1b791a68` |
+| `POST /payroll/runs/:runId/approvals/:approvalId/reject` | **500**: the controller opens a command receipt before the service runs, and the composite tenant FK `(org_id, run_id)` refuses the insert with an uncaught 23503. Fixed in `begin()`, which all **fourteen** payroll commands funnel through | `df25fdc1` |
+| `POST /kb/pages/:pageId/reindex` | 200 `{"reindexed":true}` for any page id — `indexPage` treats a missing page as nothing to index, which is right internally and wrong at the boundary | `d30a1c52` |
+| `POST /surveys/:surveyId/collectors` | **500**: `create` inserted with the survey id from the path while `list` on the same service already called `assertSurveyInOrg` | `f919ad7b` |
+
+**Two of the ten are proved live, end to end.** Re-probed against a booted app built from the fixed
+tree: `GET /finance/reconciliation/:bankAccountId/rules` and
+`GET /payroll/people/:organizationPersonId/eligibility` both move NO-404 → **PASS** (control 200 /
+cross-tenant 404), together with the three `/directory/people/:organizationPersonId` routes the
+harness alias fix unlocked. Exit 0, 9/9. The other eight are proved by mutation-tested unit specs;
+the full live re-run that would prove all ten in one artifact is another hour of wall clock and is
+named as residual R-4d rather than claimed.
+
+**Two mutation tests worth recording because they nearly did not bite.**
+`command-receipts.service.spec.ts` took the run row as an optional third argument, and a default
+parameter is applied to `undefined` — so the cross-tenant case would have been handed a run it owns
+and passed vacuously. The sentinel is `null`. And `chat-typing.isolation.spec.ts`, three tests
+titled "cross-org isolation", made the caller a NON-MEMBER of the organisation in their own token —
+an auth-state failure, not a cross-tenant probe. A real prober is active in their own organisation,
+the membership lookup SUCCEEDS, and the old code fell through to the 403. The tests asserted the
+refusal class on a path the attacker never takes, and the path the attacker does take was
+unasserted. Both specs are rewritten.
+
+### The 30 not repaired, pinned by name with a reason each
+
+`test/security/bola/live/known-no-404.json` now carries `no404` (23), `serverErrors` (4), `leaks`
+(2) and `inconclusive` (1), **and a `_reasons` entry for every one**. The spec asserts that a pinned
+route without a reason of at least 20 characters fails the suite, so the cheapest way to make this
+gate green — appending a route — is visible in the diff and cannot be done silently. An unpinned
+finding of any class still turns the suite red.
+
+- **11 build** — 5 GETs and 2 POSTs that never assert `:projectId`, and 4 POSTs that answer a
+  cross-tenant `:projectId` with a **500**. Owner: build module owner.
+- **17 crm / leads / deals / contacts / inventory** — excluded from this release. 4 are DELETEs
+  answering 204 whether the object existed or not.
+- **1 LEAK, `POST /crm/consent/contacts/:contactId`** — reproduced exactly as 15e described it.
+  No cross-tenant row is read; the consent row that lands carries the prober's own org. It stays a
+  leak rather than a NO-404 because the answer is a cross-**platform** existence oracle: a contact
+  id that exists somewhere answers 200 and one that exists nowhere answers **500**, because
+  `crm_contact_channel_consent.contact_id` carries a BARE foreign key where its sibling
+  `contact_party_id` is correctly composite. Excluded scope; the fix is two lines.
+- **1 LEAK, `POST /public/intake/:projectId`** — a deliberately public intake form, so "cross-tenant"
+  is not the finding. What is: a project id that exists answers **201** and one that does not
+  answers **400**, so the endpoint enumerates project ids across the whole platform, unauthenticated,
+  behind one rate limit. The fix is to address the form by an unguessable token instead of a
+  sequential integer project id. **Cross-territory — public-surface owner.**
+- **3 `@Public()` org-selector routes** — not a cross-tenant probe at all (§4). `GET /public/org/:orgId`
+  was read in source and does 404 an organisation that does not exist.
 
 ---
 
-## 7. RESIDUAL_PLACEHOLDER
+## 7. Residual, and what this box still cannot say
+
+- **R-4c — the sweep consumes what it measures. NEW, and it is now the binding constraint.**
+  With bodies derived per route the run performs ~1,900 real requests including hundreds of
+  successful mutations against a single database, and the borrow pool is snapshotted once before
+  the first of them. Control-404 rose 135 → 355 and "no object of that type" 168 → 334 between the
+  previous run and this one for that reason. Fix is structural: restore per route family, or create
+  the fixture immediately before borrowing it. **Owner: security/BOLA harness owner.**
+- **R-4d — eight of the ten repairs are proved by mutation-tested unit specs, not by a live
+  re-probe.** Two are proved live. A full re-run is ~1 hour of wall clock.
+- **R-4 — 17 excluded-scope defects (crm/leads/deals/contacts/inventory), 4 of them write verbs
+  answering 204 on nothing.** Blocker: SCOPE. Owner: CRM/inventory release owner.
+- **R-4e — 11 build defects, 4 of them 500s.** Blocker: territory. Owner: build module owner.
+- **R-4f — the public intake enumeration oracle.** Owner: public-surface owner.
+- **Permanently unprobeable by this method:** the 132 routes with a non-object path segment, and the
+  12 `/agent/v1` + `/portal/v1` routes, which take an API-key credential rather than a user JWT and
+  need a second harness identity.
+- **The 30 control-402s did not clear even on ENTERPRISE**, so the plan is not the only gate on
+  them; not investigated further.
+- **A mis-binding costs coverage, not correctness — except when the handler answers 200 regardless.**
+  A static scan of all 271 distinct `param -> table` bindings flags 32 whose table name does not
+  contain the parameter stem. Most are correct. They are named residual harness reach.
+
+**What this box may honestly claim today: 681 of 1,929 object-addressable routes (35.3%) were probed
+with an id belonging to another organisation and answered 404; 40 were probed and did not; 1,208
+were never asked.** It is not ticked.
