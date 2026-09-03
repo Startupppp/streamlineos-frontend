@@ -1,9 +1,17 @@
 
 
+const CALENDAR_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+const SHORT_DATE_PARTS: Intl.DateTimeFormatOptions = {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+};
+
 export function formatDateOnly(date: Date | string | null | undefined): string {
   if (!date) return "";
   if (typeof date === "string") {
-    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    if (CALENDAR_DATE.test(date)) {
       return date;
     }
     date = new Date(date);
@@ -18,15 +26,25 @@ export function getTodayString(): string {
   return formatDateOnly(new Date());
 }
 
+/**
+ * A `YYYY-MM-DD` from the API is a CALENDAR DATE, not an instant — `date` columns
+ * (order date, expiry date, expected delivery) carry no time and no zone. Parsing
+ * one with `new Date()` invents midnight UTC, and projecting that instant into the
+ * reader's zone moves the day: an expiry of `2026-07-12` read as "11 Jul 2026" for
+ * every reader west of UTC. A calendar date is therefore rendered in UTC, where the
+ * invented instant and the intended day agree; a real instant still renders in the
+ * reader's own zone, which is what a timestamp means to them.
+ */
 export function formatShortDate(value: string | Date | null | undefined): string {
   if (!value) return "";
+  if (typeof value === "string" && CALENDAR_DATE.test(value)) {
+    const calendar = new Date(`${value}T00:00:00.000Z`);
+    if (Number.isNaN(calendar.getTime())) return "";
+    return new Intl.DateTimeFormat("en-IN", { ...SHORT_DATE_PARTS, timeZone: "UTC" }).format(calendar);
+  }
   const d = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  return d.toLocaleDateString("en-IN", SHORT_DATE_PARTS);
 }
 
 

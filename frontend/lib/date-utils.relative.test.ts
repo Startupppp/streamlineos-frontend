@@ -1,6 +1,10 @@
 import { formatRelativeTime } from "./date-utils";
 
-const NOW = new Date("2026-08-24T12:00:00.000Z");
+// The fallback beyond a week renders an INSTANT in the reader's own zone, which is
+// what a timestamp means to them. Anchoring NOW at midday LOCAL rather than at
+// midday UTC keeps the assertion honest about that: a UTC anchor asserts the UTC
+// reading and only passes on a UTC runner, which is the blind spot d01b3c41 found.
+const NOW = new Date(2026, 7, 24, 12, 0, 0, 0);
 const ago = (ms: number) => new Date(NOW.getTime() - ms);
 
 describe("formatRelativeTime", () => {
