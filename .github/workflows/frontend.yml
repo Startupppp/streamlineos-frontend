@@ -194,7 +194,23 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      # 2026-09-03 (ticket 35) — MEASURED: this step exited 1 in a frontend-only
+      # checkout ("3 failed, 15 passed"), and as the FIRST step of this job it
+      # would have skipped all 26 gate steps below it. 35b moved the gates out
+      # from under a red Lint; this was the same masking defect one step lower,
+      # and it made the whole `gates` job a badge over nothing.
+      # Four of its 18 assertions need the backend repository checked out
+      # beside this one, which this job deliberately does not do (see the
+      # header). Those four are now reported NOT RUN and the run ends
+      # INCONCLUSIVE (exit 2); the opt-in below downgrades that to a labelled
+      # PARTIAL (exit 0). The step stays BLOCKING because the opt-in does not
+      # mask a defect — bite-proved in a hermetic tree: neutering the marker
+      # test, making `backendPath` compose onto a null root, or narrowing the
+      # dot-directory scan exclusion each exits 1 WITH the opt-in set and names
+      # the failing assertion.
       - name: Repo path resolvers still resolve
+        env:
+          STREAMLINE_ALLOW_FRONTEND_ONLY: "1"
         run: pnpm run check:repo-paths:self-test
 
       # Root CLAUDE.md §9 says both repos are at zero circular dependencies and
@@ -214,15 +230,41 @@ jobs:
       - name: Client contract has not drifted from the API (timesheets)
         run: pnpm run check:contract-drift:self-test && pnpm run check:contract-drift
 
+      # CANNOT RUN IN CI — named prerequisite: a checkout of
+      # Startupppp/streamlineos-backend beside this repository. Rule 1 of this
+      # gate compares the manifest against the BACKEND module registry, so a
+      # frontend-only half proves nothing about the rule the gate exists for.
+      # MEASURED 2026-09-03: frontend-only checkout exit 2, "INCONCLUSIVE —
+      # rule-1 (backend registry agreement) could not run"; two-repo layout at
+      # the same commit exit 0. Allow-failure so the INCONCLUSIVE is visible in
+      # the step list instead of skipping the 21 gates below it. It is
+      # deliberately NOT given STREAMLINE_ALLOW_FRONTEND_ONLY=1: that would turn
+      # a comparison that never happened into a green tick, which is the exact
+      # defect this ticket exists to remove. To make it blocking, add a checkout
+      # of the backend repository and set STREAMLINE_BACKEND_ROOT to it.
       - name: Module manifest agrees with the sidebar and vocabulary
+        continue-on-error: true
         run: pnpm run check:module-manifest:self-test && pnpm run check:module-manifest
 
+      # CANNOT RUN IN CI — same named prerequisite as the step above. MEASURED
+      # 2026-09-03: frontend-only checkout exit 2, "INCONCLUSIVE — the
+      # manifest-vs-controller comparison — the entire point of this gate could
+      # not run"; two-repo layout exit 0.
       - name: Home manifest agrees with the dashboard controller
+        continue-on-error: true
         run: pnpm run check:home-manifest:self-test && pnpm run check:home-manifest
 
       - name: Every route-access permission names a real endpoint
         run: pnpm run check:route-access-contract:self-test && pnpm run check:route-access-contract
 
+      # BLOCKING AND CURRENTLY RED, deliberately. MEASURED 2026-09-03 at head in
+      # both layouts: exit 1, 1,504 mutation hooks scanned, 4 above a baseline of
+      # 0 — hooks/api/ai.ts:175 useGenerateJobDescription (UNCLASSIFIED, no
+      # apiClient call in the hook body) and hooks/api/git-integration.ts:59/69/79
+      # (WRONG-KEY: they declare "integrations:git:manage" where the contract
+      # requires "settings:manage"). Those are real defects in frontend hook
+      # territory, not gate noise; the gate is left blocking so they cannot be
+      # merged past, and the baseline is deliberately NOT raised to absorb them.
       - name: Every mutation is classified as permissioned or self
         run: pnpm run check:command-catalog:self-test && pnpm run check:command-catalog
 
