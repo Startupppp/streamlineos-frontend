@@ -2,6 +2,7 @@
 
 import { apiClient } from "@/lib/api-client";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { AiAbortInput } from "@/hooks/api/ai-abort";
 import { queryKeyBase } from "@/lib/query-keys/base";
 
 export interface VarianceExplainBody {
@@ -80,23 +81,23 @@ export interface ExtractDocumentResult {
 export function useExplainVariance() {
   return useAuthorizedMutation("accounting:ai:use", {
     mutationKey: [...queryKeyBase, "accounting", "ai", "variance-explain"] as const,
-    mutationFn: (body: VarianceExplainBody) =>
-      apiClient.post<VarianceExplainResult>("/finance/ai/variance-explain", body),
+    mutationFn: ({ signal, ...body }: VarianceExplainBody & AiAbortInput) =>
+      apiClient.post<VarianceExplainResult>("/finance/ai/variance-explain", body, { signal }),
   });
 }
 
 export function useExplainReconciliation() {
   return useAuthorizedMutation("accounting:ai:use", {
     mutationKey: [...queryKeyBase, "accounting", "ai", "reconciliation-explain"] as const,
-    mutationFn: (body: ReconciliationExplainBody) =>
-      apiClient.post<ReconciliationExplainResult>("/finance/ai/reconciliation-explain", body),
+    mutationFn: ({ signal, ...body }: ReconciliationExplainBody & AiAbortInput) =>
+      apiClient.post<ReconciliationExplainResult>("/finance/ai/reconciliation-explain", body, { signal }),
   });
 }
 
 export function useExtractDocument() {
   return useAuthorizedMutation("accounting:ai:use", {
     mutationKey: [...queryKeyBase, "accounting", "ai", "extract-document"] as const,
-    mutationFn: (body: ExtractDocumentBody) =>
-      apiClient.post<ExtractDocumentResult>("/finance/ai/extract-document", body),
+    mutationFn: ({ signal, ...body }: ExtractDocumentBody & AiAbortInput) =>
+      apiClient.post<ExtractDocumentResult>("/finance/ai/extract-document", body, { signal }),
   });
 }

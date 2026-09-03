@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { AiAbortInput } from "@/hooks/api/ai-abort";
 
 export type AiSuggestionStatus = "pending" | "accepted" | "rejected";
 export type AiSuggestionFeedback = "helpful" | "not_helpful";
@@ -175,63 +176,70 @@ export function useTicketAiSuggestions(ticketId: number) {
 
 export function useAnalyzeTicket(ticketId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("support:tickets:view", {
+  return useAuthorizedMutation<AiSuggestion[], Error, AiAbortInput | void>("support:tickets:view", {
     mutationKey: ["supportAiSuggestions", "analyze", ticketId],
-    mutationFn: () => apiClient.post<AiSuggestion[]>(`/support/${ticketId}/ai/analyze`),
+    mutationFn: (input) =>
+      apiClient.post<AiSuggestion[]>(`/support/${ticketId}/ai/analyze`, undefined, { signal: input?.signal }),
     onSuccess: () => invalidateSuggestions(qc, ticketId),
   });
 }
 
 export function useFindDuplicates(ticketId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("support:tickets:view", {
+  return useAuthorizedMutation<AiSuggestion | null, Error, AiAbortInput | void>("support:tickets:view", {
     mutationKey: ["supportAiSuggestions", "find-duplicates", ticketId],
-    mutationFn: () => apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/find-duplicates`),
+    mutationFn: (input) =>
+      apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/find-duplicates`, undefined, { signal: input?.signal }),
     onSuccess: () => invalidateSuggestions(qc, ticketId),
   });
 }
 
 export function useSuggestKbArticles(ticketId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("support:tickets:view", {
+  return useAuthorizedMutation<AiSuggestion | null, Error, AiAbortInput | void>("support:tickets:view", {
     mutationKey: ["supportAiSuggestions", "suggest-kb-articles", ticketId],
-    mutationFn: () => apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/suggest-kb-articles`),
+    mutationFn: (input) =>
+      apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/suggest-kb-articles`, undefined, { signal: input?.signal }),
     onSuccess: () => invalidateSuggestions(qc, ticketId),
   });
 }
 
 export function useSuggestReply(ticketId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("support:tickets:reply", {
+  return useAuthorizedMutation<AiSuggestion | null, Error, AiAbortInput | void>("support:tickets:reply", {
     mutationKey: ["supportAiSuggestions", "suggest-reply", ticketId],
-    mutationFn: () => apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/suggest-reply`),
+    mutationFn: (input) =>
+      apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/suggest-reply`, undefined, { signal: input?.signal }),
     onSuccess: () => invalidateSuggestions(qc, ticketId),
   });
 }
 
 export function useSuggestMacro(ticketId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("support:tickets:reply", {
+  return useAuthorizedMutation<AiSuggestion | null, Error, AiAbortInput | void>("support:tickets:reply", {
     mutationKey: ["supportAiSuggestions", "suggest-macro", ticketId],
-    mutationFn: () => apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/suggest-macro`),
+    mutationFn: (input) =>
+      apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/suggest-macro`, undefined, { signal: input?.signal }),
     onSuccess: () => invalidateSuggestions(qc, ticketId),
   });
 }
 
 export function useGenerateHandoffSummary(ticketId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("support:tickets:view", {
+  return useAuthorizedMutation<AiSuggestion | null, Error, AiAbortInput | void>("support:tickets:view", {
     mutationKey: ["supportAiSuggestions", "handoff-summary", ticketId],
-    mutationFn: () => apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/handoff-summary`),
+    mutationFn: (input) =>
+      apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/handoff-summary`, undefined, { signal: input?.signal }),
     onSuccess: () => invalidateSuggestions(qc, ticketId),
   });
 }
 
 export function useFindRootCauseCluster(ticketId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("support:tickets:view", {
+  return useAuthorizedMutation<AiSuggestion | null, Error, AiAbortInput | void>("support:tickets:view", {
     mutationKey: ["supportAiSuggestions", "root-cause-cluster", ticketId],
-    mutationFn: () => apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/root-cause-cluster`),
+    mutationFn: (input) =>
+      apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/root-cause-cluster`, undefined, { signal: input?.signal }),
     onSuccess: () => invalidateSuggestions(qc, ticketId),
   });
 }
@@ -239,11 +247,12 @@ export function useFindRootCauseCluster(ticketId: number) {
 export function useTranslateMessage(ticketId: number) {
   return useAuthorizedMutation("support:tickets:view", {
     mutationKey: ["supportAi", "translate", ticketId],
-    mutationFn: ({ messageId, targetLanguage }: { messageId: number; targetLanguage: string }) =>
-      apiClient.post<TranslateMessageResult | null>(`/support/${ticketId}/ai/translate`, {
-        messageId,
-        targetLanguage,
-      }),
+    mutationFn: ({ signal, ...body }: { messageId: number; targetLanguage: string } & AiAbortInput) =>
+      apiClient.post<TranslateMessageResult | null>(
+        `/support/${ticketId}/ai/translate`,
+        body,
+        { signal },
+      ),
   });
 }
 
@@ -300,16 +309,16 @@ export interface SupportAiReportResult {
 export function useImproveReply(ticketId: number) {
   return useAuthorizedMutation("support:ai:invoke", {
     mutationKey: ["supportAi", "improve-reply", ticketId],
-    mutationFn: (input: ImproveReplyInput) =>
-      apiClient.post<ImproveReplyResult>(`/support/ai/improve-reply`, { ticketId, ...input }),
+    mutationFn: ({ signal, ...input }: ImproveReplyInput & AiAbortInput) =>
+      apiClient.post<ImproveReplyResult>(`/support/ai/improve-reply`, { ticketId, ...input }, { signal }),
   });
 }
 
 export function useTranslateDraft(ticketId: number) {
   return useAuthorizedMutation("support:ai:invoke", {
     mutationKey: ["supportAi", "translate-draft", ticketId],
-    mutationFn: (input: TranslateDraftInput) =>
-      apiClient.post<TranslateDraftResult>(`/support/ai/translate-draft`, { ticketId, ...input }),
+    mutationFn: ({ signal, ...input }: TranslateDraftInput & AiAbortInput) =>
+      apiClient.post<TranslateDraftResult>(`/support/ai/translate-draft`, { ticketId, ...input }, { signal }),
   });
 }
 

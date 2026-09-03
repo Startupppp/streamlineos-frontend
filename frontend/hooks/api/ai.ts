@@ -58,8 +58,8 @@ interface GenerateEmailInput {
 export function useGenerateEmail() {
   return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["generate", "email"],
-    mutationFn: (input: GenerateEmailInput) =>
-      apiClient.post<GeneratedEmail>("/ai/generate-email", input),
+    mutationFn: ({ signal, ...input }: GenerateEmailInput & AiAbortInput) =>
+      apiClient.post<GeneratedEmail>("/ai/generate-email", input, { signal }),
   });
 }
 
@@ -87,8 +87,11 @@ export function useNextBestAction() {
 export function useEnrichLead() {
   return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["enrich", "lead"],
-    mutationFn: (input: { name: string; company?: string; email?: string; designation?: string; city?: string }) =>
-      apiClient.post<LeadEnrichmentResult>("/ai/enrich-lead", input),
+    mutationFn: ({
+      signal,
+      ...input
+    }: { name: string; company?: string; email?: string; designation?: string; city?: string } & AiAbortInput) =>
+      apiClient.post<LeadEnrichmentResult>("/ai/enrich-lead", input, { signal }),
   });
 }
 
@@ -110,8 +113,11 @@ export function useAIScoreCandidate() {
 export function useAIGenerateReview() {
   return useAuthorizedMutation("hr:performance:manage", {
     mutationKey: ["a", "i", "generate", "review"],
-    mutationFn: (input: { userId: string; periodStart: string; periodEnd: string }) =>
-      apiClient.post<ReviewDraftResult>("/ai/generate-review", input),
+    mutationFn: ({
+      signal,
+      ...input
+    }: { userId: string; periodStart: string; periodEnd: string } & AiAbortInput) =>
+      apiClient.post<ReviewDraftResult>("/ai/generate-review", input, { signal }),
   });
 }
 

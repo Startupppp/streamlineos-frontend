@@ -25,6 +25,7 @@ import type {
 import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 import type { UnifiedInboxItem, UnifiedInboxResponse } from "@/types/inbox";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { AiAbortInput } from "@/hooks/api/ai-abort";
 
 export function useMailAccounts() {
   const can = useCan("mail:inbox:view");
@@ -145,28 +146,31 @@ interface MailAiDraftResult {
 export function useMailInboxSummary() {
   return useAuthorizedMutation("mail:ai:use", {
     mutationKey: ["mail", "ai", "inbox-summary"],
-    mutationFn: (params: { accountId?: number | "all" }) =>
-      apiClient.post<MailInboxSummaryResult>("/mail/ai/inbox-summary", params),
+    mutationFn: ({ signal, ...params }: { accountId?: number | "all" } & AiAbortInput) =>
+      apiClient.post<MailInboxSummaryResult>("/mail/ai/inbox-summary", params, { signal }),
   });
 }
 
 export function useMailThreadSummary() {
   return useAuthorizedMutation("mail:ai:use", {
     mutationKey: ["mail", "ai", "thread-summary"],
-    mutationFn: (params: { accountId: number; threadId: string }) =>
-      apiClient.post<MailThreadSummaryResult>("/mail/ai/thread-summary", params),
+    mutationFn: ({ signal, ...params }: { accountId: number; threadId: string } & AiAbortInput) =>
+      apiClient.post<MailThreadSummaryResult>("/mail/ai/thread-summary", params, { signal }),
   });
 }
 
 export function useMailAiDraft() {
   return useAuthorizedMutation("mail:ai:use", {
     mutationKey: ["mail", "ai", "draft"],
-    mutationFn: (params: {
+    mutationFn: ({
+      signal,
+      ...params
+    }: {
       mode: "compose" | "reply";
       instruction: string;
       accountId?: number;
       threadId?: string;
-    }) => apiClient.post<MailAiDraftResult>("/mail/ai/draft", params),
+    } & AiAbortInput) => apiClient.post<MailAiDraftResult>("/mail/ai/draft", params, { signal }),
   });
 }
 

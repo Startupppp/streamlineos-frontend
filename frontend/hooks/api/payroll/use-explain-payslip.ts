@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { AiAbortInput } from "@/hooks/api/ai-abort";
 import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 
 export interface PayslipEvidenceCitation {
@@ -27,12 +28,13 @@ export interface PayslipExplanationResult {
 }
 
 export function useExplainPayslip(publicationId: number) {
-  return useAuthorizedMutation("self:payslips", {
+  return useAuthorizedMutation<PayslipExplanationResult, Error, AiAbortInput | void>("self:payslips", {
     mutationKey: ["payroll", "ess", "payslips", publicationId, "ai-explain"],
-    mutationFn: () =>
+    mutationFn: (input) =>
       apiClient.post<PayslipExplanationResult>(
         `/payroll/me/payslips/${publicationId}/ai/explain`,
         {},
+        { signal: input?.signal },
       ),
     onError: (error) => {
       toast.error(getErrorMessage(error));
