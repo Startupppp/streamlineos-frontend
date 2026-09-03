@@ -186,6 +186,18 @@ export function contrastRatio(fg, bg) {
 }
 
 /**
+ * The probe reads a colour only when it can parse it. Tailwind 4 serialises its
+ * palette as `oklch()` and some tokens as `color(srgb …)`, neither of which this
+ * parser reads — and treating an unreadable ground as "keep looking" is what
+ * produced a white-on-near-white 1.05:1 "failure" on a red button.
+ */
+export function parseCssRgb(value) {
+  const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/.exec(value || "");
+  if (!m) return null;
+  return { r: +m[1], g: +m[2], b: +m[3], a: m[4] === undefined ? 1 : +m[4] };
+}
+
+/**
  * A sample whose foreground and background resolve to the same colour did not
  * resolve: no shipped page renders invisible text, and `getComputedStyle` cannot
  * see a background painted by a pseudo-element, an overlapping sibling, or a
@@ -253,8 +265,18 @@ const PAGE_PROBE = `(() => {
     while (node && node !== document.documentElement.parentNode) {
       const style = getComputedStyle(node);
       if (style.backgroundImage && style.backgroundImage !== "none") return null;
-      const c = rgb(style.backgroundColor);
-      if (c && c.a >= 0.95) return hex(c);
+      /**
+       * An unparseable background colour is unmeasurable, not absent. Tailwind 4
+       * emits its palette as oklch(), which this parser does not read, so
+       * walking past it reported the page ground behind a red button and scored
+       * its white label as 1.05:1 — invisible text that no shipped page has.
+       */
+      const raw = style.backgroundColor;
+      if (raw && raw !== "transparent") {
+        const c = rgb(raw);
+        if (!c) return null;
+        if (c.a >= 0.95) return hex(c);
+      }
       node = node.parentElement;
     }
     const body = rgb(getComputedStyle(document.body).backgroundColor);
@@ -434,6 +456,20 @@ function runSelfTest() {
     "BITE — a genuinely low-contrast pair is still a failure, not written off as unresolved",
     !isUnresolvedSample({ fg: "#cb7006", bg: "#f8fafc" }) &&
       contrastRatio("#cb7006", "#f8fafc") < WCAG_AA_NORMAL,
+  );
+  assert("an rgb() ground parses", parseCssRgb("rgb(248, 250, 252)")?.r === 248);
+  assert("a translucent ground keeps its alpha", parseCssRgb("rgba(0, 0, 0, 0)")?.a === 0);
+  assert(
+    "an oklch() ground does not parse, so it must be treated as unmeasurable",
+    parseCssRgb("oklch(0.637 0.237 25.331)") === null,
+  );
+  assert(
+    "a color(srgb ...) ground does not parse either",
+    parseCssRgb("color(srgb 0.2 0.3 0.4)") === null,
+  );
+  assert(
+    "BITE — the probe returns null on an unparseable ground instead of walking past it",
+    /if \(!c\) return null;/.test(PAGE_PROBE),
   );
   assert("every journey names at least two steps", JOURNEYS.every((j) => j.steps.length >= 2));
   assert("no journey step is a write route", JOURNEYS.every((j) => j.steps.every((s) => !/\/(new|create|edit)(\/|$)/.test(s))));
