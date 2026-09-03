@@ -7,7 +7,7 @@ import { PlusIcon } from "@animateicons/react/lucide";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { EmployeePicker } from "@/features/hr/shared/employee-picker";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";

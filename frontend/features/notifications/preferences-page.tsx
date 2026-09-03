@@ -39,18 +39,6 @@ const CHANNELS = [
   { key: "soundEnabled" as const, label: "Sound", description: "Play sound for new notifications", icon: Volume2 },
 ];
 
-const TIMEZONES = [
-  { value: "UTC", label: "UTC" },
-  { value: "Asia/Kolkata", label: "India (IST)" },
-  { value: "America/New_York", label: "US Eastern (ET)" },
-  { value: "America/Los_Angeles", label: "US Pacific (PT)" },
-  { value: "Europe/London", label: "UK (GMT/BST)" },
-  { value: "Europe/Paris", label: "Central Europe (CET)" },
-  { value: "Asia/Singapore", label: "Singapore (SGT)" },
-  { value: "Asia/Tokyo", label: "Japan (JST)" },
-  { value: "Australia/Sydney", label: "Australia Eastern (AEST)" },
-];
-
 const DIGEST_OPTIONS: Array<{ value: DigestMode; label: string }> = [
   { value: "disabled", label: "Off — deliver immediately" },
   { value: "hourly", label: "Hourly digest" },
@@ -97,16 +85,6 @@ export function NotificationPreferencesPage() {
     (field: "quietHoursStart" | "quietHoursEnd", value: string) => {
       updatePreferences.mutate(
         { [field]: value || null },
-        { onError: () => toast.error("Failed to save") },
-      );
-    },
-    [updatePreferences],
-  );
-
-  const handleTimezone = useCallback(
-    (value: string) => {
-      updatePreferences.mutate(
-        { quietHoursTimezone: value },
         { onError: () => toast.error("Failed to save") },
       );
     },
@@ -222,7 +200,7 @@ export function NotificationPreferencesPage() {
                   Suppress non-critical notifications during this window. Critical security alerts always go through.
                 </p>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">Start time</Label>
                   <Input
@@ -239,20 +217,11 @@ export function NotificationPreferencesPage() {
                     onBlur={(e) => handleQuietHours("quietHoursEnd", e.target.value)}
                   />
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Timezone</Label>
-                  <Select value={prefs?.quietHoursTimezone ?? "UTC"} onValueChange={handleTimezone}>
-                    <SelectTrigger className="text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TIMEZONES.map((tz) => (
-                        <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Times are read in your account timezone. Quiet hours resolve against it on the
+                server, not against a timezone stored with this setting.
+              </p>
             </div>
           </div>
         </section>

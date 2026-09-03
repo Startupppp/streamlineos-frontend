@@ -29,12 +29,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { AppDialog } from "@/components/shared/app-dialog";
 import { CARD_ACTIVATOR_CLASS } from "@/lib/keyboard-activation";
-import { Money } from "@/features/accounting/shared";
+import { AccountListNotice, Money } from "@/features/accounting/shared";
 import { BankTxnStatusBadge } from "./bank-txn-status-badge";
 import { useConfirmMatch, useUnmatch, useIgnoreTransaction } from "@/hooks/api/accounting/banking";
 import { ReconciliationExplainPanel } from "@/features/accounting/ai";
 import type { ReconciliationTxn, MatchType } from "@/hooks/api/accounting/banking";
-import { useAccounts } from "@/hooks/api/accounting";
+import { useAllAccounts } from "@/hooks/api/accounting";
 
 interface Props {
   txn: ReconciliationTxn;
@@ -58,7 +58,7 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
   const confirmMatch = useConfirmMatch(bankAccountId);
   const unmatch = useUnmatch(bankAccountId);
   const ignoreTransaction = useIgnoreTransaction(bankAccountId);
-  const accountsQuery = useAccounts({ limit: 100 });
+  const accountsQuery = useAllAccounts();
   const ledgerAccounts = accountsQuery.data?.data ?? [];
 
   const amount = parseFloat(txn.amount);
@@ -341,6 +341,7 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
                 ))}
               </SelectContent>
             </Select>
+            <AccountListNotice query={accountsQuery} />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs">Memo (optional)</Label>

@@ -35,7 +35,7 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { useCan } from "@/hooks/api/access";
 import {
-  useAccounts,
+  useAllAccounts,
   useCreateJournalEntry,
   type CreateJournalEntryInput,
 } from "@/hooks/api/accounting";
@@ -187,10 +187,7 @@ function buildLineColumns(_: LineRowContext[]): DataTableColumn<LineRowContext>[
 export function NewJournalEntryPage() {
   const canCreate = useCan("accounting:journal:create");
   const router = useRouter();
-  const accountsQuery = useAccounts({
-    activeOnly: true,
-    limit: 100,
-  });
+  const accountsQuery = useAllAccounts({ activeOnly: true });
   const createMutation = useCreateJournalEntry();
 
   const form = useForm<FormValues>({

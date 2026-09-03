@@ -35,8 +35,8 @@ import {
   ChatInlineFallback,
   ChatOverlayFallback,
 } from "./chat-lazy-fallbacks";
-import { getStatusBadgeClass } from "@/features/build/shared/status-badge";
-import { formatTicketKey } from "@/features/build/shared/format-ticket-key";
+import { getStatusBadgeClass } from "@/components/shared/ticket-status-badge";
+import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import { renderFormattedContent } from "./formatted-message-content";
 import { TicketPill, CommentPill } from "./chat-entity-pills";
 import { MessageActions } from "./chat-message-actions";

@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { ErrorState } from "@/components/shared";
 import {
   Select,
   SelectContent,
@@ -56,6 +57,10 @@ export function ApplyCreditNoteDialog({
 
   const remaining = Number(creditNote.total) - Number(creditNote.appliedAmount);
 
+  function handleRetryInvoices(): void {
+    void invoicesQuery.refetch();
+  }
+
   const form = useForm<ApplyFormValues>({
     resolver: zodResolver(applySchema),
     defaultValues: { invoiceId: "", amount: "" },
@@ -89,6 +94,19 @@ export function ApplyCreditNoteDialog({
             Apply this credit note to an outstanding invoice. Available: ₹{remaining.toFixed(2)}
           </DialogDescription>
         </DialogHeader>
+        {/*
+          Without this branch a failed invoice read rendered an empty selector,
+          which reads as "this customer has no outstanding invoices" — a claim
+          about the AR subledger produced by an unanswered request.
+        */}
+        {invoicesQuery.isError ? (
+          <ErrorState
+            compact
+            title="Couldn't load invoices"
+            description={getErrorMessage(invoicesQuery.error)}
+            onRetry={handleRetryInvoices}
+          />
+        ) : (
         <form className="flex flex-col gap-4" onSubmit={form.handleSubmit(handleSubmit)}>
           <div className="space-y-1.5">
             <Label className="text-xs">Invoice <span className="text-destructive">*</span></Label>
@@ -132,18 +150,21 @@ export function ApplyCreditNoteDialog({
             )}
           </div>
         </form>
+        )}
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={handleCancel}>
             Cancel
           </Button>
-          <LoadingButton
-            size="sm"
-            isPending={applyMutation.isPending}
-            loadingText="Applying…"
-            onClick={form.handleSubmit(handleSubmit)}
-          >
-            Apply
-          </LoadingButton>
+          {!invoicesQuery.isError && (
+            <LoadingButton
+              size="sm"
+              isPending={applyMutation.isPending}
+              loadingText="Applying…"
+              onClick={form.handleSubmit(handleSubmit)}
+            >
+              Apply
+            </LoadingButton>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

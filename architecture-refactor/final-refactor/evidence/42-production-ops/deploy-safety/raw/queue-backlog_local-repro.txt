@@ -1,0 +1,15 @@
+{
+  "drill": "queue-backlog",
+  "outcome": "pass",
+  "detail": {
+    "insertedEventId": "ebd892c3-2d28-44a6-bf6b-25971b4cd3f8",
+    "ageSecs": 600,
+    "rowCount": 1,
+    "thresholdSecs": 300,
+    "rowsLeftAfterRollback": {
+      "organizations": 0,
+      "outboxEvents": 0
+    },
+    "rollbackClean": true
+  }
+}

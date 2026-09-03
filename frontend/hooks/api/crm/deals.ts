@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import type {
   Deal,
   DealActivity,
@@ -69,7 +70,8 @@ interface AgingResponse {
 export function useDeals(filters?: DealFilters) {
   return useGatedQuery("crm:deals:read", {
     queryKey: queryKeys.deals.list(filters as Record<string, unknown>),
-    queryFn: ({ signal }) => apiClient.get<Deal[]>("/deals", filters as Record<string, unknown>, signal),
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<OffsetPage<Deal>>("/deals", filters as Record<string, unknown>, signal)).items,
     staleTime: 2 * 60_000,
   });
 }

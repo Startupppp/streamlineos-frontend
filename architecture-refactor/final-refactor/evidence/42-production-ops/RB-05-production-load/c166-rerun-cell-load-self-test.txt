@@ -1,0 +1,10 @@
+$ npm run --silent cell:load:self-test
+--- started: 2026-09-03T16:38:07Z ---
+--- stdout+stderr ---
+FAIL   p95-simple-db-roundtrip                      headroom=39.0% < 40% floor measured=12.2 target=20
+
+RESULT: HEADROOM FAIL measured=1 skipped=0 breached=1 floor=40%
+
+SELF-TEST PASS: 39% headroom (12.2ms against 20ms target) is correctly reported as FAIL — the guard can bite
+--- exit code: 0 ---
+--- finished: 2026-09-03T16:38:07Z ---

@@ -158,8 +158,10 @@ interface CreditNoteFormSheetProps {
 
 export function CreditNoteFormSheet({ open, onOpenChange }: CreditNoteFormSheetProps) {
   const createMutation = useCreateCreditNote();
-  const { data: customersData } = useCustomersOutstanding();
-  const { data: invoicesData } = useInvoices();
+  const customersQuery = useCustomersOutstanding();
+  const invoicesQuery = useInvoices();
+  const customersData = customersQuery.data;
+  const invoicesData = invoicesQuery.data;
 
   const customerOptions: ComboboxOption[] = (customersData?.data ?? []).map((c) => ({
     value: String(c.clientId),
@@ -264,6 +266,11 @@ export function CreditNoteFormSheet({ open, onOpenChange }: CreditNoteFormSheetP
               placeholder="Select customer…"
               searchPlaceholder="Search customers…"
             />
+            {customersQuery.isError && (
+              <p className="text-xs text-destructive" role="alert">
+                Couldn&apos;t load customers: {getErrorMessage(customersQuery.error)}
+              </p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">
@@ -276,6 +283,11 @@ export function CreditNoteFormSheet({ open, onOpenChange }: CreditNoteFormSheetP
               placeholder="Select invoice…"
               searchPlaceholder="Search invoices…"
             />
+            {invoicesQuery.isError && (
+              <p className="text-xs text-destructive" role="alert">
+                Couldn&apos;t load invoices: {getErrorMessage(invoicesQuery.error)}
+              </p>
+            )}
           </div>
         </div>
 

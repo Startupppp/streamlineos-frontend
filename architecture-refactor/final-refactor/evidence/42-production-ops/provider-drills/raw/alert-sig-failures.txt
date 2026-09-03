@@ -1,0 +1,3 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+{"fired":false,"count":0,"threshold":{"maxFailingEndpointsInWindow":0,"windowHours":24},"destination":"CONFIGURE_ME — wire exit-code 1 to your oncall system","rows":[],"note":"git-webhook signature failures are level=warn in structured logs — configure log aggregator separately"}
+EXIT=0

@@ -1,0 +1,160 @@
+PASS src/common/ratelimit/rate-limit-coverage.spec.ts
+  rate limiting is targeted, not ambient — and the targeting is enforced
+    ✓ finds enough handlers that a broken scan cannot pass vacuously (2 ms)
+    ✓ RateLimitGuard is deliberately not an APP_GUARD, and admission is the ambient layer (1 ms)
+    ✓ every unauthenticated write is rate-limited, or is a named gap with an owner
+    ✓ names no gap that has since been closed or moved
+    ✓ declares no tier that no route can reach, beyond the recorded ones (196 ms)
+
+PASS test/security/appsec/transport-hardening.spec.ts
+  CORS is registered BEFORE the body parser
+    ✓ rejects an oversized body with 413 in both orderings — the status alone cannot tell them apart (11 ms)
+    ✓ BITE: body parser first — the 413 carries no CORS header, so the browser reports an unexplained network error (1 ms)
+    ✓ CORS first — the 413 still carries the CORS header, so the client can read the real status (1 ms)
+    ✓ main.ts registers enableCors before every useBodyParser call
+    ✓ main.ts creates the app with bodyParser:false so no implicit parser can precede CORS
+  CORS origin allowlist
+    ✓ echoes the allowlisted origin back with credentials enabled (4 ms)
+    ✓ BITE: a hostile origin gets no allow-origin header (2 ms)
+    ✓ a preflight from a hostile origin is not approved (1 ms)
+    ✓ main.ts never configures a wildcard origin, and credentials + wildcard never co-exist
+  Security response headers
+    ✓ helmet sets CSP, nosniff, frame denial and referrer policy, and strips x-powered-by (2 ms)
+    ✓ BITE: without helmet the same app leaks x-powered-by and sets no CSP (2 ms)
+    ✓ main.ts installs helmet and a Permissions-Policy that denies camera, microphone and geolocation
+  Payload limits
+    ✓ accepts a body under the limit and rejects one over it (2 ms)
+    ✓ the admission config supplies a bounded default body cap (1 ms)
+    ✓ an explicit ADMISSION_MAX_BODY_BYTES is honoured and a non-numeric value fails closed at boot (6 ms)
+    ✓ main.ts caps both the json and the urlencoded parser from that config
+
+[31m[Nest] 96667  - [39m09/03/2026, 9:53:02 PM [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39mPayloadTooLargeError: request entity too large
+    at readStream [90m(/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/raw-body@3.0.2/node_modules/[4mraw-body[24m/index.js:163:17[90m)[39m
+    at getRawBody [90m(/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/raw-body@3.0.2/node_modules/[4mraw-body[24m/index.js:116:12[90m)[39m
+    at read [90m(/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/body-parser@2.3.0/node_modules/[4mbody-parser[24m/lib/read.js:113:3[90m)[39m
+    at jsonParser [90m(/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/body-parser@2.3.0/node_modules/[4mbody-parser[24m/lib/types/json.js:60:5[90m)[39m
+    at Layer.handleRequest [90m(/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/router@2.2.0/node_modules/[4mrouter[24m/lib/layer.js:152:17[90m)[39m
+    at trimPrefix [90m(/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/router@2.2.0/node_modules/[4mrouter[24m/index.js:342:13[90m)[39m
+    at [90m/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/router@2.2.0/node_modules/[4mrouter[24m/index.js:297:9
+    at processParams [90m(/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/router@2.2.0/node_modules/[4mrouter[24m/index.js:582:12[90m)[39m
+    at next [90m(/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/router@2.2.0/node_modules/[4mrouter[24m/index.js:291:5[90m)[39m
+    at cors [90m(/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/cors@2.8.6/node_modules/[4mcors[24m/lib/index.js:188:7[90m)[39m
+    at [90m/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/cors@2.8.6/node_modules/[4mcors[24m/lib/index.js:224:17
+    at originCallback [90m(/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/cors@2.8.6/node_modules/[4mcors[24m/lib/index.js:214:15[90m)[39m
+    at [90m/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/cors@2.8.6/node_modules/[4mcors[24m/lib/index.js:219:13
+    at optionsCallback [90m(/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/cors@2.8.6/node_modules/[4mcors[24m/lib/index.js:199:9[90m)[39m
+    at corsMiddleware [90m(/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/cors@2.8.6/node_modules/[4mcors[24m/lib/index.js:204:7[90m)[39m
+    at Layer.handleRequest [90m(/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/router@2.2.0/node_modules/[4mrouter[24m/lib/layer.js:152:17[90m)[39m
+    at trimPrefix [90m(/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/router@2.2.0/node_modules/[4mrouter[24m/index.js:342:13[90m)[39m
+    at [90m/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/router@2.2.0/node_modules/[4mrouter[24m/index.js:297:9
+    at processParams [90m(/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/router@2.2.0/node_modules/[4mrouter[24m/index.js:582:12[90m)[39m
+    at next [90m(/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/router@2.2.0/node_modules/[4mrouter[24m/index.js:291:5[90m)[39m
+    at [90m/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/@nestjs+platform-express@11.1.28_@nestjs+common@11.1.28_reflect-metadata@0.2.2_rxjs@7.8.2__@nestjs+core@11.1.28/node_modules/[4m@nestjs/platform-express[24m/adapters/express-adapter.js:34:17
+    at Layer.handleRequest [90m(/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/router@2.2.0/node_modules/[4mrouter[24m/lib/layer.js:152:17[90m)[39m
+    at trimPrefix [90m(/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/router@2.2.0/node_modules/[4mrouter[24m/index.js:342:13[90m)[39m
+    at [90m/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/router@2.2.0/node_modules/[4mrouter[24m/index.js:297:9
+    at processParams [90m(/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/router@2.2.0/node_modules/[4mrouter[24m/index.js:582:12[90m)[39m
+    at next [90m(/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/router@2.2.0/node_modules/[4mrouter[24m/index.js:291:5[90m)[39m
+    at router.handle [90m(/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/router@2.2.0/node_modules/[4mrouter[24m/index.js:186:3[90m)[39m
+    at app.handle [90m(/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/express@5.2.1/node_modules/[4mexpress[24m/lib/application.js:177:15[90m)[39m
+    at Server.app [90m(/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/[39mnode_modules/[4m.pnpm[24m/express@5.2.1/node_modules/[4mexpress[24m/lib/express.js:38:9[90m)[39m
+[90m    at Server.emit (node:events:509:20)[39m
+[90m    at parserOnIncoming (node:_http_server:1216:12)[39m
+[90m    at HTTPParser.parserOnHeadersComplete (node:_http_common:125:17)[39m {
+  expected: [33m4107[39m,
+  length: [33m4107[39m,
+  limit: [33m1024[39m,
+  type: [32m'entity.too.large'[39m
+}
+PASS src/common/admission/admission-boot.spec.ts
+  admission control resolves through real Nest DI and serves real HTTP
+    ✓ boots, which is what proves the guard and interceptor are constructible
+    ✓ admits an ordinary request and returns the handler's response (6 ms)
+    ✓ returns the in-flight count to zero after a served request (1 ms)
+    ✓ answers an oversized body with 413 that still carries its CORS header (4 ms)
+    ✓ leaks no in-flight slot when the body parser rejects before the guard
+    ✓ consumes no capacity for /auth/nothing-is-mounted-here, which reaches no handler (1 ms)
+    ✓ consumes no capacity for /../auth/login, which reaches no handler (1 ms)
+    ✓ consumes no capacity for //auth/login, which reaches no handler (1 ms)
+    ✓ resolves a traversal to the handler it really reaches (1 ms)
+  admission control sheds over real HTTP
+    ✓ refuses a sheddable route with 503 and retry information once saturated (2 ms)
+    ✓ refuses a traversal that only looks reserved, so a crafted path cannot jump the queue (1 ms)
+    ✓ serves the reserved route again as soon as capacity is released (1 ms)
+  admission control buckets a public route by its declared tenant hint over real HTTP
+    ✓ charges a resolvable token to its own namespaced bucket (2 ms)
+    ✓ charges a forged token to the public bucket (1 ms)
+    ✓ charges a request with no token to the public bucket (1 ms)
+    ✓ leaves an undecorated public route in the public bucket (1 ms)
+    ✓ keeps a hinted stream admitted while the shared public bucket is exhausted (3 ms)
+
+PASS src/common/security/application-security.spec.ts
+  SSRF guard — unsafe redirect and path traversal prevention
+    ✓ blocks the AWS metadata endpoint (cloud SSRF target) (4 ms)
+    ✓ blocks GCP metadata endpoint via numeric IP
+    ✓ blocks IPv4-mapped loopback in packed hex form (regression: ::ffff:7f00:1) (3 ms)
+    ✓ blocks IPv4-mapped private class-C in packed hex form
+    ✓ allows a legitimate webhook URL without DNS lookup (1 ms)
+    ✓ blocks a file:// scheme that could expose local filesystem paths
+    ✓ blocks a javascript: scheme (XSS vector via redirect)
+  Sensitive field codec — PII redaction and key rotation
+    ✓ fails closed when ENCRYPTION_KEY is absent — refuses to encrypt or decrypt (2 ms)
+    ✓ produces ciphertext that does not contain the plaintext value
+    ✓ round-trips without data loss after key rotation (re-seal)
+    ✓ rejects a plaintext string that was never encrypted (5 ms)
+  SQL injection prevention — parameterized query contract
+    ✓ all Drizzle ORM query sites use parameterized binds — raw sql`` values are not concatenated
+  Audit log PII — no raw sensitive data in log metadata
+    ✓ gdpr-rectification service hashes the value, never logging the plaintext
+  Session and cookie security — secure-by-default contract
+    ✓ session cookie configuration enforces httpOnly and Secure
+    ✓ session revocation uses Redis tombstone — JwtAuthGuard reads the revoked:session: key
+  CORS and headers contract
+    ✓ main.ts registers helmet and CORS before any business route
+    ✓ cors is configured with explicit allowed origins, not wildcard *
+  Payload limits — unbounded request body prevention
+    ✓ main.ts configures a bodyParser limit or Fastify body limit
+  Brute-force and credential stuffing — rate limit contract
+    ✓ login and auth-related endpoints use @UseRateLimit or equivalent guard
+
+PASS src/common/ratelimit/rate-limit.guard.spec.ts
+  RateLimitGuard
+    ✓ returns true when no tier metadata is set
+    ✓ returns true when under the limit (authenticated user keyed by userId)
+    ✓ throws 429 and sets Retry-After header when over the limit (authenticated user) (2 ms)
+    ✓ keys by client IP when no authenticated user (public route) (1 ms)
+    ✓ reads tier from metadata via Reflector
+  TIERS — rate-limit key registration
+    ✓ search:global resolves to a real tier so the guard is not silently disabled
+    ✓ an unknown key returns 0 (deny), not a positive limit
+
+[31m[Nest] 96667  - [39m09/03/2026, 9:53:03 PM [31m  ERROR[39m [38;5;3m[RateLimitService] [39m[31mUnknown rate-limit tier "unknown-tier" — denying. Add it to TIERS in rate-limit.service.ts.[39m
+PASS src/common/ratelimit/rate-limit.service.spec.ts
+  RateLimitService (in-memory fallback, no redis)
+    ✓ allows up to the limit then blocks within the window (1 ms)
+    ✓ isolates different identifiers
+    ✓ limits attendance report delivery requests to five per hour
+    ✓ enforces the hr:employee-backfill command tier
+    ✓ enforces the hr:employee-bulk-onboard command tier
+    ✓ enforces the hr:effective-changes-apply command tier (1 ms)
+    ✓ enforces the hr:onboarding-reminders command tier
+    ✓ denies an unknown tier rather than failing open
+
+PASS src/degradation/ingress-bounds.spec.ts
+  Ingress body-size limit — CORS registered BEFORE body parser (correct ordering, matches main.ts)
+    ✓ a valid-size payload returns 200 with ACAO (10 ms)
+    ✓ an oversized payload returns 413 AND carries ACAO — browser sees a 413, not a network error (2 ms)
+  Ingress body-size limit — body parser BEFORE CORS (wrong ordering — regression guard, must NOT match main.ts)
+    ✓ a valid-size payload returns 200 with ACAO (2 ms)
+    ✓ an oversized payload loses ACAO on the 413 — browser sees 'Network error' not a 413 (1 ms)
+  main.ts CORS ordering — the defect is NOT present in the current codebase
+    ✓ enableCors is present in main.ts
+    ✓ enableCors line appears before the json body-parser line
+    ✓ body-parser limit is sourced from resolveAdmissionConfig (not hardcoded)
+
+Test Suites: 7 passed, 7 total
+Tests:       79 passed, 79 total
+Snapshots:   0 total
+Time:        1.382 s
+Ran all test suites matching /(common\/security\/application-security|appsec\/transport-hardening|degradation\/ingress-bounds|common\/admission\/admission-boot|common\/ratelimit\/)/i.
+EXIT=0

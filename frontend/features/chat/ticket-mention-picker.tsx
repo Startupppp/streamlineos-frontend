@@ -5,7 +5,7 @@ import { Clock, Loader2, Search, Ticket } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTicketSearch } from "@/hooks/api/build";
 import type { TicketSearchResult } from "@/hooks/api/build";
-import { getStatusDotClass } from "@/features/build/shared/status-badge";
+import { getStatusDotClass } from "@/components/shared/ticket-status-badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface TicketMentionPickerProps {

@@ -1,6 +1,7 @@
 "use client";
 
 import { apiClient } from "@/lib/api-client";
+import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
@@ -32,7 +33,8 @@ export interface SurveyCertificate {
 export function useAssessmentAttempts(surveyId: number, params?: { status?: AssessmentAttemptStatus; page?: number; pageSize?: number }) {
   return useGatedQuery("surveys:assessments:manage", {
     queryKey: queryKeys.surveys.assessmentAttempts(surveyId, params as Record<string, unknown>),
-    queryFn: ({ signal }) => apiClient.get<SurveyAssessmentAttempt[]>(`/surveys/${surveyId}/assessment/attempts`, params as Record<string, unknown>, signal),
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<OffsetPage<SurveyAssessmentAttempt>>(`/surveys/${surveyId}/assessment/attempts`, params as Record<string, unknown>, signal)).items,
     staleTime: 15_000,
   });
 }

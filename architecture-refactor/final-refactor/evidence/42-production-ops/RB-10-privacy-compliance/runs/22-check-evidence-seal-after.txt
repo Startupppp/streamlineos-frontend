@@ -1,0 +1,13 @@
+# Captured AFTER the first sealing of this bundle and BEFORE the final re-seal that added this
+# file itself. The '67/67' below is therefore the generation without this transcript; the
+# committed runs/ seal covers 23 files. Re-run the command to see the current number.
+OK      evidence/42-production-ops/RB-10-privacy-compliance/artifact-hashes.json — 3/3 files match
+OK      evidence/42-production-ops/RB-10-privacy-compliance/probes/artifact-hashes.json — 1/1 files match
+BROKEN  evidence/42-production-ops/RB-10-privacy-compliance/runs/artifact-hashes.json — 22/22 match
+  UNSEALED 22-check-evidence-seal-after.txt — added to a sealed directory after the seal was written
+OK      evidence/artifact-hashes.json — 13/13 files match, 3 declared-unsealed
+OK      evidence/bootstrap-head-637/artifact-hashes.json — 28/28 files match
+
+5 seal(s) verified · 67/67 sealed files match · 1 broken
+A broken seal means the evidence no longer is what it was attested to be. Re-run the sealer only after establishing why it changed.
+EXIT_CODE=1

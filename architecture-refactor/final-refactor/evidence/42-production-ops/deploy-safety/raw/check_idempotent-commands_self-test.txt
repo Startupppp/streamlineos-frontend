@@ -1,0 +1,12 @@
+{
+  "selfTest": true,
+  "pass": true,
+  "checks": {
+    "fencedHandlerNotReported": true,
+    "unfencedPublishIsDetected": true,
+    "unfencedHandlerHasCorrectRoute": true,
+    "publicRouteIsSkipped": true,
+    "alreadyFencedIsClean": true,
+    "bespokeHandlerIsDetected": true
+  }
+}

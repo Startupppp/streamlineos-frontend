@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { apiClient } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import type { DocumentType, OnboardingDoc } from "./onboarding-document-checklist-row";

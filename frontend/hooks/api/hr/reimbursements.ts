@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 
 export interface Reimbursement {
   id: number;
@@ -30,7 +31,8 @@ export function useReimbursements() {
   const payrollEnabled = useModuleEnabled("payroll");
   return useQuery({
     queryKey: reimbursementKeys.list(),
-    queryFn: ({ signal }) => apiClient.get<Reimbursement[]>("/hr/reimbursements", undefined, signal),
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<OffsetPage<Reimbursement>>("/hr/reimbursements", undefined, signal)).items,
     staleTime: 2 * 60_000,
     enabled: canPayroll && payrollEnabled,
   });

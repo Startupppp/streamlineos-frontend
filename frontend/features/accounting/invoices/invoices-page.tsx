@@ -95,7 +95,8 @@ interface InvoiceRowActionsProps {
 function InvoiceRowActions({ invoice, onRecordPayment }: InvoiceRowActionsProps) {
   const router = useRouter();
   const voidMutation = useVoidInvoice();
-  const canManage = useCan("accounting:receivables:manage");
+  // The key `POST /invoices/{invoiceId}/void` declares and `useVoidInvoice` carries.
+  const canManage = useCan("accounting:manage");
   const amountPaid = Number(invoice.amountPaid ?? "0");
 
   function handleViewDetail(): void {

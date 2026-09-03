@@ -2,6 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { apiClient, authedFetch, buildUrl } from "@/lib/api-client";
+import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
@@ -83,7 +84,8 @@ export function useQuestionAnalytics(surveyId: number) {
 export function useSurveyResponses(surveyId: number, params?: ListResponsesParams) {
   return useGatedQuery("surveys:responses:view", {
     queryKey: queryKeys.surveys.responses(surveyId, params as Record<string, unknown>),
-    queryFn: ({ signal }) => apiClient.get<SurveyResponseSession[]>(`/surveys/${surveyId}/responses`, params as Record<string, unknown>, signal),
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<OffsetPage<SurveyResponseSession>>(`/surveys/${surveyId}/responses`, params as Record<string, unknown>, signal)).items,
     staleTime: 15_000,
   });
 }

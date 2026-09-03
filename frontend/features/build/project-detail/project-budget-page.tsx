@@ -164,6 +164,12 @@ export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPage
   }
 
   const overBudget = (budget?.remaining ?? 0) < 0;
+  // Hours the API could not put a price on: no rate was stamped on the entry, or
+  // the entry was rated in a currency other than the budget's. Actual Cost omits
+  // them, so saying only "under budget" beside them would understate the spend.
+  const uncostedHours =
+    (budget?.unratedHours ?? 0) + (budget?.excludedCurrencyHours ?? 0);
+  const billableHoursLabel = `${(budget?.totalHours ?? 0).toFixed(1)} billable hours`;
 
   return (
     <PageWrapper
@@ -185,14 +191,24 @@ export function ProjectBudgetPage({ projectId: projectIdStr }: ProjectBudgetPage
               label="Actual Cost"
               value={formatMoneyCompact(budget?.actualCost ?? 0, display)}
               icon={TrendingUp}
-              hint={`${(budget?.totalHours ?? 0).toFixed(1)} billable hours`}
+              hint={
+                uncostedHours > 0
+                  ? `${billableHoursLabel} · ${uncostedHours.toFixed(1)} not yet costed`
+                  : billableHoursLabel
+              }
               tone={overBudget ? "red" : "default"}
             />
             <StatCard
               label="Remaining"
               value={formatMoneyCompact(Math.abs(budget?.remaining ?? 0), display)}
               icon={IndianRupee}
-              hint={overBudget ? "Over budget" : "Available"}
+              hint={
+                overBudget
+                  ? "Over budget"
+                  : uncostedHours > 0
+                    ? "Before uncosted hours"
+                    : "Available"
+              }
               tone={overBudget ? "red" : "emerald"}
             />
           </StatCardGrid>

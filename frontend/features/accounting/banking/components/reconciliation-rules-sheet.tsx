@@ -37,6 +37,8 @@ import type {
   ReconciliationRuleAction,
 } from "@/hooks/api/accounting/banking";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const FIELD_OPTIONS: Array<{ value: ReconciliationRuleCondition["field"]; label: string }> = [
   { value: "description", label: "Description" },
@@ -88,6 +90,10 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
   const deleteRule = useDeleteReconciliationRule(bankAccountId);
 
   const rules = rulesQuery.data?.data ?? [];
+
+  function handleRetryRules(): void {
+    void rulesQuery.refetch();
+  }
 
   function handleAddCondition() {
     setForm((prev) => ({
@@ -190,6 +196,19 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
               <Skeleton key={i} className="h-20 w-full rounded-lg" />
             ))}
           </>
+        ) : rulesQuery.isError ? (
+          /*
+            Before this branch a failed read fell through to "No rules yet",
+            telling the user their auto-match rules are absent when the truth is
+            that the list did not load — and they would then re-create rules
+            that already exist.
+          */
+          <ErrorState
+            compact
+            title="Couldn't load matching rules"
+            description={getErrorMessage(rulesQuery.error)}
+            onRetry={handleRetryRules}
+          />
         ) : rules.length === 0 && !addingRule ? (
           <div className="flex flex-col items-center justify-center py-10 text-center">
             <AlertCircle className="w-8 text-muted-foreground mb-2" />

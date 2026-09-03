@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import { queryKeys } from "@/lib/query-keys";
 import type {
   NotificationTemplate,
@@ -23,11 +24,11 @@ export const useNotificationTemplates = (
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<NotificationTemplate[], Error>({
     queryKey: queryKeys.notifications.templates(params),
-    queryFn: ({ signal }) =>
-      apiClient.get<NotificationTemplate[]>(
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<OffsetPage<NotificationTemplate>>(
         "/notification-templates",
         params ? toStringParams(params) : undefined, signal,
-      ),
+      )).items,
     staleTime: 60_000,
     ...restOptions,
     enabled: canView && (enabledOption ?? true),

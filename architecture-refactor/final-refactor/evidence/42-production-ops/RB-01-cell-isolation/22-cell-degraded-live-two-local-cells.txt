@@ -1,0 +1,31 @@
+COMMAND         : npm run --silent cell:degraded -- --region=cell-2 --org=d3049d54-8e04-42ea-b83f-0d0040f9ee9e
+CWD             : /Users/tarunchintakunta/Personal/streamline/streamlineos-backend
+STARTED  (UTC)  : 2026-09-03T16:40:30Z
+FINISHED (UTC)  : 2026-09-03T16:40:35Z
+HOST            : Taruns-MBP / macOS 26.6.2 / node v25.9.0
+BACKEND SHA     : 45f8a2e99494483526e357e27f18c76961ebf266 (release/code-10-10-v2)
+PG SERVER       : PostgreSQL 18.4 (Homebrew) on aarch64-apple-darwin25.4.0, compiled by Apple clang version 21.0.0 (clang-2100.0.123.102), 64-bit
+DATABASE_URL          (control plane owner) : postgresql://tarunchintakunta@localhost:5432/scratch_head_1010
+DIRECT_DATABASE_URL   (control plane owner) : postgresql://tarunchintakunta@localhost:5432/scratch_head_1010
+APP_DATABASE_URL      (control plane app)   : postgresql://streamline_app:***@localhost:5432/scratch_head_1010
+REGION_CELL_2_DATABASE_URL     (cell owner) : postgresql://tarunchintakunta@localhost:5432/scratch_cold_1010
+REGION_CELL_2_APP_DATABASE_URL (cell app)   : postgresql://streamline_app:***@localhost:5432/scratch_cold_1010
+REGION_KEYS / PRIMARY_REGION / CELL_ID      : primary,cell-2 / primary / <unset>
+EXIT CODE       : 0
+NOTE            : RB-01 / PRD-C169 routing half, LIVE, using the organization placed by run 21 (d3049d54-8e04-42ea-b83f-0d0040f9ee9e). Resolves the org to cell-2, serves it from cell-2 as the app role, signs the placement, then simulates the control plane going away and checks that (a) the placed org keeps being served from the signed cache, (b) the cell still answers without a control-plane read, (c) an UNKNOWN org is refused rather than guessed onto the primary, and (d) a tampered placement token is rejected. This is the live counterpart to the self-test in run 19.
+---------------- FULL OUTPUT ----------------
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+cell: cell-2
+org : d3049d54-8e04-42ea-b83f-0d0040f9ee9e
+
+PASS  the organization resolves to the second cell                   region=cell-2 cell=cell-2 v1
+PASS  the second cell serves the organization while the control plane is healthy queried cell-2 as the application role with the tenant GUC
+PASS  the cached placement is signed                                 token pl1.cp-1.eyJvIjo…
+PASS  a placed organization keeps working with the control plane down served from the signed cache: cell=cell-2 v1
+PASS  the second cell still answers with the control plane down      the cell database is reached without a control-plane read
+PASS  an unknown organization is refused rather than guessed         ControlPlaneUnavailableError
+PASS  a tampered placement token is rejected                         The presented placement could not be trusted: BAD_SIGNATURE.
+
+RESULT: DEGRADED CONTROL PLANE EXERCISED checks=7 failed=0
+---------------- END OUTPUT -----------------
+EXIT CODE       : 0

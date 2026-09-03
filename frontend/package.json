@@ -13,6 +13,8 @@
     "test": "jest",
     "build:widget": "node feedbucket-widget/build.mjs",
     "check:cycles": "npx --yes madge@8 --circular --ts-config tsconfig.json --extensions ts,tsx --exclude \"node_modules|\\.next|feedbucket-widget\" .",
+    "check:feature-cycles": "node scripts/check-feature-cycles.mjs",
+    "check:feature-cycles:self-test": "node scripts/check-feature-cycles.mjs --self-test",
     "check:colors": "node scripts/check-no-arbitrary-colors.mjs",
     "check:colors:self-test": "node scripts/check-no-arbitrary-colors.mjs --self-test",
     "check:effect-fetches": "node scripts/check-no-effect-fetches.mjs",

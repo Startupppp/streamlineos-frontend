@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { safeConnect, safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
+import { huddleChannelName } from "@/lib/ably-channels";
 import { useAblyConnection } from "./use-ably-connection";
 
 const HUDDLE_EVENTS = [
@@ -44,7 +45,7 @@ export function useHuddleRealtime(channelId: number | null): {
 
     if (!isConnected && connectionState !== "connected") return;
 
-    const channel = ably.channels.get(`huddle:${orgId}:${channelId}`);
+    const channel = ably.channels.get(huddleChannelName(orgId, channelId));
     let cancelled = false;
     const subscribed: HuddleEvent[] = [];
 

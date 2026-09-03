@@ -19,7 +19,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EntityFormDialog } from "@/components/shared/entity-form-dialog";
-import { useAccounts } from "@/hooks/api/accounting";
+import { useAllAccounts } from "@/hooks/api/accounting";
+import { AccountListNotice } from "@/features/accounting/shared";
 import {
   useCreateAssetCategory,
   useUpdateAssetCategory,
@@ -60,7 +61,7 @@ interface CategoryDialogProps {
 export function CategoryDialog({ open, onOpenChange, editing }: CategoryDialogProps) {
   const createMutation = useCreateAssetCategory();
   const updateMutation = useUpdateAssetCategory(editing?.id ?? 0);
-  const accountsQuery = useAccounts({ activeOnly: true, limit: 100 });
+  const accountsQuery = useAllAccounts({ activeOnly: true });
   const accounts = accountsQuery.data?.data ?? [];
 
   const defaultValues: CategoryFormValues = {
@@ -125,6 +126,8 @@ export function CategoryDialog({ open, onOpenChange, editing }: CategoryDialogPr
               </FormItem>
             )}
           />
+          {/* One notice for all three GL mappings below — they share one read. */}
+          <AccountListNotice query={accountsQuery} />
           <FormField
             control={form.control}
             name="assetAccountId"

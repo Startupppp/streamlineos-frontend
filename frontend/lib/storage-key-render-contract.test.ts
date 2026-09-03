@@ -45,7 +45,7 @@ const NOT_A_STORAGE_KEY: Readonly<Record<string, string>> = {
 
 const SRC_ATTRIBUTE = /src=\{([^}]*)\}/g;
 const LOOKS_LIKE_A_STORED_REFERENCE = /[Uu]rl|[Kk]ey|[Ii]mage|[Aa]vatar/;
-const RESOLVED = /resolveImageUrl|resolveFileUrl|storageObjectUrl/;
+const RESOLVED = /resolveImageUrl|storageObjectUrl/;
 
 function sourceFiles(): string[] {
   return filesUnder(["features", "components"], [".tsx"])

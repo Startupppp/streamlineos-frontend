@@ -1,0 +1,65 @@
+SET
+=== 1. SEARCH INDEX: insert a page carrying a unique token ===
+INSERT 0 1
+--- plan must be an index scan on idx_kb_pages_fts:
+                       QUERY PLAN                       
+--------------------------------------------------------
+ Bitmap Heap Scan on kb_pages
+   Recheck Cond: (fts @@ '''zqxwvutsrp'''::tsquery)
+   ->  Bitmap Index Scan on idx_kb_pages_fts
+         Index Cond: (fts @@ '''zqxwvutsrp'''::tsquery)
+(4 rows)
+
+--- rows found BEFORE delete (expect 1):
+ rows_before 
+-------------
+           1
+(1 row)
+
+=== 2. SEARCH INDEX: delete the row, re-query THROUGH THE INDEX ===
+DELETE 1
+--- rows found AFTER delete (expect 0):
+ rows_after 
+------------
+          0
+(1 row)
+
+=== 3. VECTOR STORE: insert a chunk with a known embedding ===
+INSERT 0 1
+--- plan must use idx_kb_chunks_embedding_hnsw:
+                                         QUERY PLAN                                          
+---------------------------------------------------------------------------------------------
+ Limit
+   InitPlan 1
+     ->  Aggregate
+           ->  Function Scan on generate_series g
+   ->  Index Scan using idx_kb_chunks_embedding_hnsw on kb_article_chunks
+         Order By: (embedding <=> ((('['::text || (InitPlan 1).col1) || ']'::text))::vector)
+(6 rows)
+
+--- nearest-neighbour hit BEFORE delete (expect the probe chunk):
+ id |            content            
+----+-------------------------------
+  1 | zqxwvutsrp vector probe chunk
+(1 row)
+
+=== 4. VECTOR STORE: delete the chunk, re-query THROUGH THE HNSW INDEX ===
+DELETE 1
+--- nearest-neighbour hits AFTER delete (expect 0 rows):
+ chunks_after 
+--------------
+            0
+(1 row)
+
+=== 5. Confirm no EXTERNAL search or vector engine exists in this deployment ===
+ tsvector_columns 
+------------------
+                2
+(1 row)
+
+ vector_columns 
+----------------
+              4
+(1 row)
+
+EXIT_CODE=0

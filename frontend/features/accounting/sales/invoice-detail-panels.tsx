@@ -6,7 +6,9 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { ErrorState } from "@/components/shared";
 import { FinanceStatusBadge, Money } from "@/features/accounting/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreditNotes } from "@/hooks/api/accounting/ar";
 import { useCan } from "@/hooks/api/access";
 import { AiActionsMenu, type AiAction } from "@/components/ai";
@@ -147,7 +149,27 @@ export function LinkedCreditNotes({ clientId, invoiceId }: LinkedCreditNotesProp
     (cn) => cn.invoiceId === invoiceId,
   );
 
+  function handleRetry(): void {
+    void creditNotesQuery.refetch();
+  }
+
   if (creditNotesQuery.isLoading) return <Skeleton className="h-4 w-full" />;
+
+  /*
+    The error branch has to come BEFORE the empty branch: without it a failed
+    read fell through to "No credit notes linked to this invoice", which asserts
+    that the invoice is uncredited — the opposite of what an unanswered request
+    justifies, and the number a user reconciles against.
+  */
+  if (creditNotesQuery.isError)
+    return (
+      <ErrorState
+        compact
+        title="Couldn't load credit notes"
+        description={getErrorMessage(creditNotesQuery.error)}
+        onRetry={handleRetry}
+      />
+    );
 
   if (linked.length === 0)
     return (

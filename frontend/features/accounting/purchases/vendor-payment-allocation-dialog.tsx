@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePurchaseBills } from "@/hooks/api/accounting";
 import { useCreateVendorPaymentAllocation } from "@/hooks/api/accounting/ap";
@@ -71,6 +72,10 @@ export function VendorPaymentAllocationDialog({
 
   const bills = billsQuery.data?.data ?? [];
 
+  function handleRetryBills(): void {
+    void billsQuery.refetch();
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -79,6 +84,20 @@ export function VendorPaymentAllocationDialog({
           <DialogDescription>Link an existing vendor payment to a bill</DialogDescription>
         </DialogHeader>
 
+        {/*
+          The bill list is this dialog's whole subject, so a failed read is shown
+          instead of the form: an empty, enabled selector reads as "this vendor
+          has no posted bills", which is a claim about the ledger rather than
+          about the request.
+        */}
+        {billsQuery.isError ? (
+          <ErrorState
+            compact
+            title="Couldn't load bills"
+            description={getErrorMessage(billsQuery.error)}
+            onRetry={handleRetryBills}
+          />
+        ) : (
         <form onSubmit={form.handleSubmit(handleAllocate)} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="vendorPaymentId" className="text-xs font-medium">
@@ -154,6 +173,7 @@ export function VendorPaymentAllocationDialog({
             </LoadingButton>
           </DialogFooter>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );

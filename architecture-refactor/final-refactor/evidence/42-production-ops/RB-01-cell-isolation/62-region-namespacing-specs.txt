@@ -1,0 +1,9 @@
+PASS src/common/region/cell-admission.spec.ts
+PASS src/common/region/region.config.spec.ts
+PASS src/common/region/cross-cell-events.spec.ts
+
+Test Suites: 3 passed, 3 total
+Tests:       33 passed, 33 total
+Snapshots:   0 total
+Time:        1.176 s
+Ran all test suites matching /common\/region\/(region.config|cell-admission|cross-cell-events)/i.

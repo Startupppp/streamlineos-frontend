@@ -2,7 +2,7 @@
 
 import { memo, useMemo } from "react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { formatTicketKey } from "../shared/format-ticket-key";
+import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import { cn } from "@/lib/utils";
 import { TicketQuickActions } from "./ticket-quick-actions";
 import { InlineStatus, InlinePriority, InlineAssignee, InlineEstimate, InlineFieldWrapper, InlineFieldCell } from "./card-inline-fields";

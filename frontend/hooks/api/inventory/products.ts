@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -195,10 +196,10 @@ export function useProductVariants(filters?: ProductVariantFilters) {
   const canView = useCan("inventory:products:read");
   return useQuery<ProductVariantFlat[], Error>({
     queryKey: queryKeys.inventory.productVariants(filters),
-    queryFn: ({ signal }) =>
-      apiClient.get<ProductVariantFlat[]>("/inventory/products/variants", {
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<OffsetPage<ProductVariantFlat>>("/inventory/products/variants", {
         ...(filters?.activeOnly ? { activeOnly: "true" } : {}),
-      }, signal),
+      }, signal)).items,
     staleTime: 2 * 60_000,
     enabled: canView,
   });

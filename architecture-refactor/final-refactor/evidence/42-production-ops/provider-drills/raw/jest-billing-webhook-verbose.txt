@@ -1,0 +1,79 @@
+{"timestamp":"2026-09-03T16:35:00.278Z","level":"warn","message":"[billing:razorpay] invalid webhook signature"}
+{"timestamp":"2026-09-03T16:35:00.280Z","level":"warn","message":"[billing:razorpay] invalid webhook signature"}
+{"timestamp":"2026-09-03T16:35:00.288Z","level":"warn","message":"[billing:razorpay] duplicate event ignored","meta":{"orgId":"org1","providerKey":"razorpay","providerEventId":"pay_test_002"}}
+{"timestamp":"2026-09-03T16:35:00.289Z","level":"warn","message":"[billing:razorpay] duplicate event ignored","meta":{"orgId":"org1","providerKey":"razorpay","providerEventId":"pay_test_002"}}
+{"timestamp":"2026-09-03T16:35:00.290Z","level":"error","message":"[billing:razorpay] event id already recorded against another tenant","meta":{"orgId":"org1","providerKey":"razorpay","providerEventId":"pay_test_002"}}
+{"timestamp":"2026-09-03T16:35:00.291Z","level":"warn","message":"[billing:razorpay] invalid webhook signature"}
+{"timestamp":"2026-09-03T16:35:00.292Z","level":"warn","message":"[billing] no payment provider registered for webhook verification"}
+{"timestamp":"2026-09-03T16:35:00.296Z","level":"error","message":"[billing:razorpay] failed to acknowledge the provider event","meta":{"error":{"name":"Error","message":"connection reset","stack":"Error: connection reset\n    at Object.where (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/modules/billing/core/billing-webhook.spec.ts:486:51)\n    at ProviderEventLedger.acknowledge (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/modules/billing/core/provider-event-ledger.ts:79:8)\n    at /Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/modules/billing/core/billing-webhook.handler.ts:176:27\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at BillingWebhookHandler.settle (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/modules/billing/core/billing-webhook.handler.ts:174:7)\n    at Object.<anonymous> (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/modules/billing/core/billing-webhook.spec.ts:490:22)"},"orgId":"org1","providerKey":"razorpay","providerEventId":"pay_test_002"}}
+{"timestamp":"2026-09-03T16:35:00.308Z","level":"error","message":"[billing:razorpay] ai pack credit grant failed","meta":{"orgId":"org1","packId":1,"paymentId":"pay_test_002","err":{"name":"Error","message":"db unavailable","stack":"Error: db unavailable\n    at Object.<anonymous> (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/modules/billing/core/billing-webhook.spec.ts:499:65)\n    at Promise.then.completed (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at _runTest (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescr… [truncated 24 chars]"}}}
+{"timestamp":"2026-09-03T16:35:00.309Z","level":"error","message":"[billing:razorpay] ai pack credit grant failed","meta":{"orgId":"org1","packId":1,"paymentId":"pay_test_002","err":{"name":"Error","message":"db unavailable","stack":"Error: db unavailable\n    at Object.<anonymous> (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/modules/billing/core/billing-webhook.spec.ts:520:65)\n    at Promise.then.completed (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at _runTest (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescr… [truncated 24 chars]"}}}
+{"timestamp":"2026-09-03T16:35:00.310Z","level":"error","message":"[billing:razorpay] ai pack credit grant failed","meta":{"orgId":"org1","packId":1,"paymentId":"pay_test_002","err":{"name":"Error","message":"db unavailable","stack":"Error: db unavailable\n    at Object.<anonymous> (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/modules/billing/core/billing-webhook.spec.ts:531:65)\n    at Promise.then.completed (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at _runTest (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescr… [truncated 24 chars]"}}}
+{"timestamp":"2026-09-03T16:35:00.312Z","level":"error","message":"[billing:razorpay] ai pack credit grant failed","meta":{"orgId":"org1","packId":1,"paymentId":"pay_test_002","err":{"name":"Error","message":"db unavailable","stack":"Error: db unavailable\n    at Object.<anonymous> (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/modules/billing/core/billing-webhook.spec.ts:554:69)\n    at Promise.then.completed (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at _runTest (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescr… [truncated 24 chars]"}}}
+{"timestamp":"2026-09-03T16:35:00.315Z","level":"error","message":"[billing:razorpay] ai pack credit grant failed","meta":{"orgId":"org1","packId":1,"paymentId":"pay_test_002","err":{"name":"Error","message":"db unavailable","stack":"Error: db unavailable\n    at Object.<anonymous> (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/modules/billing/core/billing-webhook.spec.ts:605:65)\n    at Promise.then.completed (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at _runTest (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescr… [truncated 24 chars]"}}}
+{"timestamp":"2026-09-03T16:35:00.316Z","level":"error","message":"[billing:razorpay] ai pack credit grant failed","meta":{"orgId":"org1","packId":1,"paymentId":"pay_test_002","err":{"name":"Error","message":"db unavailable","stack":"Error: db unavailable\n    at Object.<anonymous> (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/modules/billing/core/billing-webhook.spec.ts:627:65)\n    at Promise.then.completed (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at _runTest (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescr… [truncated 24 chars]"}}}
+{"timestamp":"2026-09-03T16:35:00.316Z","level":"error","message":"[billing] could not tell the organisation about a provisioning failure","meta":{"orgId":"org1","paymentId":"pay_test_002","err":{"name":"Error","message":"notifications down","stack":"Error: notifications down\n    at Object.<anonymous> (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/modules/billing/core/billing-webhook.spec.ts:630:82)\n    at /Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-mock@29.7.0/node_modules/jest-mock/build/index.js:397:39\n    at Object.<anonymous> (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-mock@29.7.0/node_modules/jest-mock/build/index.js:404:13)\n    at Object.mockConstructor [as execute] (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/node_modules/.pnpm/jest-mock@29.7.0/node_modules/jest-mock/build/index.js:148:19)\n    at BillingWebhookEffects.notifyProvisioningFailure (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/modules/billing/core/billing-webhook-effects.ts:131:44)\n    at BillingWebhookEffects.apply (/Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/modules/billing/core/… [truncated 23 chars]"}}}
+PASS src/modules/billing/core/billing-webhook.spec.ts
+  c17-01 — a provider event is recorded before it is acted on
+    the signature is verified before any side effect, including before the ledger write
+      ✓ records nothing at all when the signature does not match (8 ms)
+      ✓ records nothing when the secret itself is wrong (2 ms)
+      ✓ records the event before it persists the payment (2 ms)
+    every provider event is stored with the provider's event id, unique
+      ✓ stores the provider, its event id, the event type and the raw payload (1 ms)
+      ✓ keys the ledger on the provider's own id, not one this service invents (3 ms)
+    a duplicate event short-circuits and changes nothing
+      ✓ answers duplicate and touches nothing when the event already finished (1 ms)
+      ✓ grants once across a replay of the same completed event (2 ms)
+      ✓ refuses an event id already held by another tenant instead of reporting success
+    a forged event changes nothing and is reported
+      ✓ reports the rejected signature through the provider's endpoint health (1 ms)
+      ✓ does not report a rejected signature when the signature was in fact valid (1 ms)
+      ✓ leaks neither key nor secret in the rejection body
+    out-of-order arrival does not corrupt state
+      ✓ guards the payment upsert so a stale status cannot overwrite a later one (1 ms)
+      ✓ carries the stored capture time forward rather than nulling it on a later event (1 ms)
+  c17-02 — a webhook acknowledges only durable work
+    success is returned only after the work has committed
+      ✓ acknowledges the event after the grant, never before
+      ✓ returns a failure when acknowledging the event does not commit (12 ms)
+    forcing the credit grant to fail makes the endpoint return a failure
+      ✓ returns 500 so the provider retries (1 ms)
+      ✓ returns 503 while a concurrent attempt holds the grant lease (1 ms)
+    no partial state persists after a failed attempt
+      ✓ leaves the event unacknowledged when the grant fails (1 ms)
+      ✓ enqueues no revenue event when the grant fails
+    a retry after failure re-drives the work rather than being waved through
+      ✓ re-runs the grant when the recorded event was never acknowledged (1 ms)
+      ✓ a failed attempt followed by a retry ends with the credits granted (1 ms)
+      ✓ a retry does not double-credit once the effect has already succeeded (1 ms)
+    failed provisioning is visible in a queue rather than lost
+      ✓ lists the events whose effects never completed, without their raw payload (1 ms)
+      ✓ reports an empty queue when nothing is stuck
+    a customer whose payment succeeded but provisioning did not is informed
+      ✓ tells the organisation when the credit grant fails (1 ms)
+      ✓ says nothing when provisioning succeeded
+      ✓ does not let a failed notification mask the failure that caused it (1 ms)
+  c17-05 — the webhook's billing state changes enqueue their revenue events
+    ✓ enqueues an addon purchase for a completed AI pack payment (1 ms)
+    ✓ enqueues a refund when the provider reports the payment refunded
+    ✓ enqueues nothing for an event that moves no money (1 ms)
+    ✓ enqueues the revenue event in the same commit that acknowledges the webhook (1 ms)
+  provider substitution — same billing flow, different adapter
+    ✓ resolves the provider named by the route and produces the same domain outcome (1 ms)
+  stuck provider events are re-driven after the provider stops retrying
+    ✓ applies the effects of a recorded-but-unfinished event and acknowledges it (1 ms)
+    ✓ does not re-verify a signature, because the stored row is the proof it was verified (1 ms)
+    ✓ counts an unresolvable provider as failed rather than reporting success
+    ✓ bounds the claim window at both ends, so an event past the dead-letter age is left alone (1 ms)
+  legacy Razorpay webhook compatibility route
+    ✓ preserves the old URL contract while delegating to the provider-neutral handler
+  c17-04 — delayed arrival cannot regress payment state
+    ✓ two events for the same payment each get a distinct ledger entry and both carry the ordering guard (1 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       38 passed, 38 total
+Snapshots:   0 total
+Time:        1.228 s
+Ran all test suites matching /src\/modules\/billing\/core\/billing-webhook\.spec\.ts$/i.
+EXIT=0

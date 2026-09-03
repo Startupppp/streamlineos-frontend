@@ -246,6 +246,11 @@ export function StepChartOfAccounts({ onComplete, onSkip }: StepProps) {
         <CardTitle className="text-sm font-semibold">Chart of Accounts</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {templatesQuery.isError && (
+          <p className="text-xs text-destructive" role="alert">
+            Couldn&apos;t load chart-of-accounts templates: {getErrorMessage(templatesQuery.error)}
+          </p>
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {templates.map((t: CoaTemplate) => (
             <button
@@ -306,6 +311,11 @@ export function StepSystemAccounts({ onComplete, onSkip }: StepProps) {
           <CardTitle className="text-sm font-semibold">System Accounts</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
+          {systemAccountsQuery.isError && (
+            <p className="text-xs text-destructive" role="alert">
+              Couldn&apos;t load system account mappings: {getErrorMessage(systemAccountsQuery.error)}
+            </p>
+          )}
           <div className="divide-y divide-border rounded-lg border overflow-hidden">
             {accounts.map((m) => (
               <div key={m.purpose} className="flex items-center justify-between px-3 py-2 hover:bg-muted/30">

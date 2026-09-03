@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { refineDateOrder, refineNotBeforeToday } from "@/lib/date-constraints";
+import { refineDateOrder, refineNotBeforeToday } from "@/lib/date-refinements";
 
 export function buildCycleSchema(options?: { enforceFutureDates?: boolean }) {
   const enforceFutureDates = options?.enforceFutureDates ?? true;

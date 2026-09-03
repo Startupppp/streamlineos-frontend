@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Plus, Check, Trash2 } from "lucide-react";
+import { Plus, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
@@ -21,19 +21,32 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useUpdateInvoice } from "@/hooks/api/invoice";
-
-function fmt(amount: string | number) {
-  return `₹${Number(amount).toLocaleString("en-IN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
+import { roundInvoiceAmount } from "./invoice-money";
+import { formatInvoiceAmount as fmt } from "./invoice-detail-utils";
+import { EditLineItemRow } from "./invoice-edit-line-row";
 
 interface LineItem {
   description: string;
   quantity: number | string;
   rate: number | string;
   amount: number | string;
+  /**
+   * The line's own GST rate and HSN/SAC code, as the detail route returns them.
+   * They are the statutory content of the line and the server's only tax basis,
+   * so the edit below has to hand them back or they are lost.
+   */
+  gstRate?: number | string | null;
+  hsnSacCode?: string | null;
+}
+
+/** A line as the edit dialog holds it. Amounts and rates are rupees. */
+interface EditableLineItem {
+  description: string;
+  quantity: number;
+  rate: number;
+  amount: number;
+  gstRate: number;
+  hsnSacCode?: string;
 }
 
 interface InvoiceLineItemsProps {
@@ -104,9 +117,7 @@ export function InvoiceLineItems({
 }: InvoiceLineItemsProps) {
   const updateInvoice = useUpdateInvoice();
 
-  const [editLineItems, setEditLineItems] = useState<
-    { description: string; quantity: number; rate: number; amount: number }[]
-  >([]);
+  const [editLineItems, setEditLineItems] = useState<EditableLineItem[]>([]);
   const [editTaxRate, setEditTaxRate] = useState(0);
   const [editDiscount, setEditDiscount] = useState(0);
   const [editDueDate, setEditDueDate] = useState("");
@@ -121,6 +132,8 @@ export function InvoiceLineItems({
           quantity: Number(i.quantity),
           rate: Number(i.rate),
           amount: Number(i.amount),
+          gstRate: Number(i.gstRate ?? 0),
+          hsnSacCode: i.hsnSacCode ?? undefined,
         })),
       );
       setEditTaxRate(Number(taxRate ?? 0));
@@ -162,9 +175,11 @@ export function InvoiceLineItems({
   }
 
   function handleAddItem() {
+    // A brand-new line has no tax basis to inherit; 0 is the honest default and
+    // the user can reclassify it from the create screen.
     setEditLineItems((p) => [
       ...p,
-      { description: "", quantity: 1, rate: 0, amount: 0 },
+      { description: "", quantity: 1, rate: 0, amount: 0, gstRate: 0 },
     ]);
   }
 
@@ -199,7 +214,16 @@ export function InvoiceLineItems({
     updateInvoice.mutate(
       {
         id: invoiceId,
-        lineItems: validItems,
+        // gstRate and hsnSacCode travel with the line. Without them the server
+        // has no tax basis for the replacement rows and writes 0.00 / NULL.
+        lineItems: validItems.map((i) => ({
+          description: i.description,
+          quantity: i.quantity,
+          rate: i.rate,
+          amount: i.amount,
+          gstRate: i.gstRate,
+          ...(i.hsnSacCode ? { hsnSacCode: i.hsnSacCode } : {}),
+        })),
         taxRate: editTaxRate,
         discount: editDiscount,
         currency: editCurrency,
@@ -216,8 +240,18 @@ export function InvoiceLineItems({
     );
   }
 
+  // Rupees. Per-line GST is the server's tax basis whenever any line carries a
+  // rate; the blended taxRate only applies to an invoice with none, which is
+  // the rule invoices-update.service.ts follows. Rounding each line then
+  // summing is what the server does, so the preview is the stored figure.
   const editSub = editLineItems.reduce((s, i) => s + i.amount, 0);
-  const editTax = editSub * (editTaxRate / 100);
+  const hasPerLineGst = editLineItems.some((i) => i.gstRate > 0);
+  const editTax = hasPerLineGst
+    ? editLineItems.reduce(
+        (s, i) => s + roundInvoiceAmount(i.amount * (i.gstRate / 100)),
+        0,
+      )
+    : editSub * (editTaxRate / 100);
   const editTotal = editSub + editTax - editDiscount;
 
   return (
@@ -312,7 +346,7 @@ export function InvoiceLineItems({
                   <span>{fmt(editSub)}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Tax ({editTaxRate}%)</span>
+                  <span>{hasPerLineGst ? "GST" : `Tax (${editTaxRate}%)`}</span>
                   <span>{fmt(editTax)}</span>
                 </div>
                 {editDiscount > 0 && (
@@ -333,12 +367,15 @@ export function InvoiceLineItems({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Tax Rate (%)</Label>
+                {/* A blended rate cannot override per-line GST — the server
+                    ignores it there — so it is not offered as if it could. */}
                 <Input
                   type="number"
                   min={0}
                   max={100}
                   value={editTaxRate}
                   onChange={handleTaxRateChange}
+                  disabled={hasPerLineGst}
                   className="text-sm"
                 />
               </div>
@@ -396,78 +433,5 @@ export function InvoiceLineItems({
         </DialogContent>
       </Dialog>
     </>
-  );
-}
-
-interface EditLineItemRowProps {
-  item: { description: string; quantity: number; rate: number; amount: number };
-  idx: number;
-  isOnly: boolean;
-  onDescriptionChange: (idx: number, value: string) => void;
-  onQuantityChange: (idx: number, value: string) => void;
-  onRateChange: (idx: number, value: string) => void;
-  onRemove: (idx: number) => void;
-}
-
-function EditLineItemRow({
-  item,
-  idx,
-  isOnly,
-  onDescriptionChange,
-  onQuantityChange,
-  onRateChange,
-  onRemove,
-}: EditLineItemRowProps) {
-  function handleDescChange(e: React.ChangeEvent<HTMLInputElement>) {
-    onDescriptionChange(idx, e.target.value);
-  }
-  function handleQtyChange(e: React.ChangeEvent<HTMLInputElement>) {
-    onQuantityChange(idx, e.target.value);
-  }
-  function handleRateFieldChange(e: React.ChangeEvent<HTMLInputElement>) {
-    onRateChange(idx, e.target.value);
-  }
-  function handleRemoveClick() {
-    onRemove(idx);
-  }
-
-  return (
-    <div className="grid grid-cols-12 gap-2 items-center">
-      <Input
-        className="col-span-5"
-        placeholder="Description"
-        value={item.description}
-        onChange={handleDescChange}
-      />
-      <Input
-        className="col-span-2 text-right"
-        type="number"
-        min={1}
-        value={item.quantity || ""}
-        onChange={handleQtyChange}
-        aria-label={`Quantity for item ${idx + 1}`}
-      />
-      <Input
-        className="col-span-2 text-right"
-        type="number"
-        min={0}
-        value={item.rate || ""}
-        onChange={handleRateFieldChange}
-        aria-label={`Rate for item ${idx + 1}`}
-      />
-      <div className="col-span-2 text-sm font-medium text-right pr-1">
-        {fmt(item.amount)}
-      </div>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="col-span-1 h-8 w-8 text-muted-foreground hover:text-destructive"
-        onClick={handleRemoveClick}
-        disabled={isOnly}
-        aria-label={`Remove item ${idx + 1}`}
-      >
-        <Trash2 className="h-3.5 w-3.5" />
-      </Button>
-    </div>
   );
 }

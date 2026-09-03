@@ -32,7 +32,8 @@ import {
   useUpdateApprovalPolicy,
   useUpsertExchangeRate,
 } from "@/hooks/api/accounting/settings";
-import { useAccounts } from "@/hooks/api/accounting";
+import { useAllAccounts } from "@/hooks/api/accounting";
+import { AccountListNotice } from "@/features/accounting/shared";
 import type { NumberSequence, SystemAccountMapping, PaymentTerm } from "@/types/accounting/fin-settings";
 import type { ApprovalPolicy, ApprovalRecordType } from "@/types/accounting/taxes";
 import { PURPOSE_LABELS } from "./fin-settings-labels";
@@ -163,7 +164,7 @@ export function SystemAccountMapDialog({
   onOpenChange: (v: boolean) => void;
 }) {
   const upsert = useUpsertSystemAccount(mapping.purpose);
-  const accountsQuery = useAccounts({ limit: 100 });
+  const accountsQuery = useAllAccounts();
   const accounts = accountsQuery.data?.data ?? [];
 
   function handleSubmit(values: SystemAccountFormValues) {
@@ -210,6 +211,7 @@ export function SystemAccountMapDialog({
               ))}
             </SelectContent>
           </Select>
+          <AccountListNotice query={accountsQuery} />
           {form.formState.errors.accountId && (
             <p className="text-xs text-destructive">{form.formState.errors.accountId.message}</p>
           )}

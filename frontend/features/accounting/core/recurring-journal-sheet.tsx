@@ -29,7 +29,8 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { cn } from "@/lib/utils";
-import { useAccounts } from "@/hooks/api/accounting";
+import { useAllAccounts } from "@/hooks/api/accounting";
+import { AccountListNotice } from "@/features/accounting/shared";
 import {
   useCreateRecurringJournal,
   useUpdateRecurringJournal,
@@ -119,7 +120,7 @@ export function RecurringJournalSheet({
   mode,
   template,
 }: RecurringJournalSheetProps) {
-  const accountsQuery = useAccounts({ activeOnly: true, limit: 100 });
+  const accountsQuery = useAllAccounts({ activeOnly: true });
   const accounts = accountsQuery.data?.data ?? [];
 
   const createMutation = useCreateRecurringJournal();
@@ -436,6 +437,9 @@ export function RecurringJournalSheet({
                   : `Unbalanced (Dr ${totalDebit.toFixed(2)} / Cr ${totalCredit.toFixed(2)})`}
               </span>
             </div>
+
+            {/* One notice for every line's account dropdown — they share one read. */}
+            <AccountListNotice query={accountsQuery} />
 
             <DataTable
               data={lineRows}

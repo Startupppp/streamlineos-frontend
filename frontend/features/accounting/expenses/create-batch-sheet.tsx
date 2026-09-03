@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { AppSheet } from "@/components/shared";
+import { AppSheet, ErrorState } from "@/components/shared";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -94,6 +94,10 @@ export function CreateBatchSheet({ open, onOpenChange, onCreated }: CreateBatchS
     [mutation, selectedIds, form, onOpenChange, onCreated],
   );
 
+  function handleRetryPending(): void {
+    void pendingQuery.refetch();
+  }
+
   const handleCancel = useCallback(() => {
     onOpenChange(false);
     setSelectedIds(new Set());
@@ -162,7 +166,22 @@ export function CreateBatchSheet({ open, onOpenChange, onCreated }: CreateBatchS
             <p className="text-xs text-muted-foreground py-4 text-center">Loading...</p>
           )}
 
-          {!pendingQuery.isLoading && pendingExpenses.length === 0 && (
+          {/*
+            The error branch precedes the empty one: without it a failed read
+            fell through to "No expenses in REIMBURSEMENT_PENDING status", which
+            asserts that nothing is awaiting reimbursement — a statement about
+            the ledger derived from an unanswered request.
+          */}
+          {pendingQuery.isError && (
+            <ErrorState
+              compact
+              title="Couldn't load pending expenses"
+              description={getErrorMessage(pendingQuery.error)}
+              onRetry={handleRetryPending}
+            />
+          )}
+
+          {!pendingQuery.isLoading && !pendingQuery.isError && pendingExpenses.length === 0 && (
             <p className="text-xs text-muted-foreground py-4 text-center">
               No expenses in REIMBURSEMENT_PENDING status.
             </p>

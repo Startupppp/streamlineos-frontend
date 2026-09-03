@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { useChatChannels } from "@/hooks/api";
+import { useChatChannels } from "@/hooks/api/chat-core-read";
 import { useChatGlobalNotifications } from "@/hooks/api/chat-notifications";
 import { ChannelSidebar } from "@/features/chat/channel-sidebar";
 import { MessagePanel } from "@/features/chat/message-panel";

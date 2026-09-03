@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { join, dirname, relative, resolve as pathResolve, basename, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { isExcludedScanDir } from "./check-repo-paths.mjs";
+import { reportCorpus } from "./gate-corpus.mjs";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(SCRIPT_DIR, "..");
@@ -61,8 +62,29 @@ const SCAN_FLOOR = { knipTotal: 5, graphFiles: 100, graphEdges: 300 };
  * Hand-written verdicts are now the exception. Every data-layer type that used
  * to need one is answered structurally by DATA_LAYER_CONTRACT_RE above; what is
  * left is the handful outside `hooks/api/`.
+ *
+ * TWO KEY SPACES:
+ *   `<relative path>:<symbol>`  a file-scoped export or type
+ *   `dep:<package name>`        a package.json finding — an unused, unlisted, unresolved
+ *                               dependency or binary. Added 2026-09-03: this gate read only
+ *                               knip's `files`, `exports` and `types` groups, so the frontend's
+ *                               114 declared dependencies were classified by NO wired gate at
+ *                               all, and knip's `binaries` finding on this very package.json
+ *                               went unread. The backend twin has iterated all nine groups since
+ *                               its own version of this defect was found.
+ *
+ * A `dep:` verdict is subject to the same staleness check as every other: when the package stops
+ * being reported (someone imports it, or it is removed), the verdict goes stale and the gate bites,
+ * so a suppression cannot outlive its reason. That is what makes this a ledger rather than an
+ * ignore list — knip.json's `ignoreDependencies` held these three with no recorded reason and no
+ * expiry, which is the unexplained-suppression shape PRD-C036 forbids.
  */
 const EXPORT_VERDICTS = new Map([
+
+  ["dep:sharp", { verdict: "KEEP", reason: "Next.js's image optimiser loads sharp itself at runtime, by name, from the server bundle — there is no import of it in this repo and there must not be one. Removing it makes next/image fall back to the slow unoptimised path in production. Stale the day next/image is no longer used or Next bundles its own encoder" }],
+  ["dep:tailwindcss", { verdict: "KEEP", reason: "loaded by CSS, not by the module graph: globals.css line 1 is `@import \"tailwindcss\"`, resolved by @tailwindcss/postcss at build time. knip reads TypeScript imports and cannot see a CSS @import. Stale the day the project stops importing tailwind from CSS" }],
+  ["dep:@tailwindcss/typography", { verdict: "KEEP", reason: "same shape one line further down: globals.css line 3 is `@plugin \"@tailwindcss/typography\"`, a Tailwind 4 CSS-first plugin registration with no JS import anywhere. Stale the day that @plugin line is removed" }],
+  ["dep:feedbucket-widget", { verdict: "KEEP", reason: "not a binary. knip parses package.json script strings as shell, and `check:cycles` passes madge `--exclude \"node_modules|\\.next|feedbucket-widget\"`; the `|` characters read as pipeline separators, so the last alternative of the regex is reported as a command being run. It is a directory name inside a regex. Stale the day that --exclude pattern changes shape" }],
 
   ["lib/command-catalog.ts:NotificationCommandName", { verdict: "KEEP", reason: "keyof typeof NOTIFICATION_COMMANDS — available for consumers that need a typed command-name union without importing the full catalog" }],
   ["lib/command-catalog.ts:ChatCommandName", { verdict: "KEEP", reason: "keyof typeof CHAT_COMMANDS — available for consumers that need a typed command-name union without importing the full catalog" }],
@@ -74,6 +96,8 @@ const EXPORT_VERDICTS = new Map([
   ["hooks/api/kb/article-ai.ts:useKbArticleAsk", { verdict: "KEEP", reason: "the buffered POST /kb/articles/:id/ai/ask client, kept beside streamKbDocAi now that the KB article AI panel streams; the buffered route is still live and still published in the API contract, and this release does not delete a documented client the moment its own surface moves off it" }],
   ["hooks/api/kb/article-ai.ts:useKbArticleImprove", { verdict: "KEEP", reason: "the buffered POST /kb/articles/:id/ai/improve client, kept beside streamKbDocAi now that the KB article AI panel streams; the buffered route is still live and still published in the API contract, and this release does not delete a documented client the moment its own surface moves off it" }],
   ["hooks/api/kb/article-ai.ts:useKbArticleSuggestRelated", { verdict: "KEEP", reason: "the buffered POST /kb/articles/:id/ai/suggest-related client, kept beside streamKbDocAi now that the KB article AI panel streams; the buffered route is still live and still published in the API contract, and this release does not delete a documented client the moment its own surface moves off it" }],
+
+  ["hooks/api/offset-page-schema.ts:offsetPageContract", { verdict: "KEEP", reason: "the runtime Zod validator for the counted offset envelope, deliberately ahead of its callers and NOT yet wired to one. Its sibling TYPE, OffsetPage<T>, is consumed by 20+ hooks as the generic on apiClient.get<OffsetPage<T>>(...).items -- so the shape is asserted at COMPILE time everywhere and validated at RUNTIME nowhere, which is the same unarbitrated-response gap that lets a backend shape change reach a component as undefined. Wiring it means switching those hooks from apiClient.get<T> to a contract-parsing read, which changes runtime behaviour on live data (a drifted field would begin throwing where it currently renders blank) and is not a merge-eve change. Delete this entry the day a hook parses with it, or the day the offset envelope is retired -- either makes it stale and this gate will say so."}],
 ]);
 
 function checkStaleVerdicts(verdicts, processedKeys) {
@@ -126,7 +150,14 @@ function* walkTs(dir) {
   }
 }
 
-function buildImporterMap(root) {
+/**
+ * `stats` is filled in place rather than returned, so the corpus line can report how much of the
+ * tree the graph actually read without changing this function's return type (the self-test drives
+ * it directly). `walked` counts every TS/TSX file offered; `read` counts the ones whose source was
+ * parsed for imports — a file that fails to read contributes no edges and is silently absent from
+ * the graph, which is precisely the kind of gap a gate must name rather than absorb.
+ */
+function buildImporterMap(root, stats = { walked: 0, read: 0 }) {
   const map = new Map();
 
   function record(target, importer, kind) {
@@ -138,8 +169,10 @@ function buildImporterMap(root) {
   }
 
   for (const file of walkTs(root)) {
+    stats.walked++;
     let src;
     try { src = readFileSync(file, "utf8"); } catch { continue; }
+    stats.read++;
     const fromDir = dirname(file);
 
     for (const line of src.split("\n")) {
@@ -210,7 +243,46 @@ function classifyFile(relPath, knipDeadSet, importerMap, root) {
   return { cls: "DEAD", reason: "no live importers found in module graph" };
 }
 
-function classifyExport(filePath, name, verdicts = EXPORT_VERDICTS, kind = "export", knipDeadSet = new Set()) {
+/**
+ * The knip issue groups this gate reads, and the key space each one lands in.
+ *
+ * It used to read three of them. `dependencies`, `devDependencies`, `optionalPeerDependencies`,
+ * `unlisted`, `unresolved` and `binaries` were never looked at, so no wired gate classified a
+ * single one of the 114 declared dependencies — an unused dependency landing tomorrow would ship,
+ * inflate the install and the lockfile, and nothing would object. `enumMembers`, `namespaceMembers`
+ * and `duplicates` were unread for the same reason; they are empty today, which is a fact this
+ * gate should be able to assert rather than a fact it cannot see.
+ */
+const DEPENDENCY_GROUPS = ["unlisted", "dependencies", "devDependencies", "optionalPeerDependencies", "unresolved", "binaries"];
+const SYMBOL_GROUPS = ["exports", "types", "enumMembers", "namespaceMembers", "duplicates"];
+
+/** The ledger key for a finding: dependencies are package-scoped, everything else file-scoped. */
+function verdictKey(item) {
+  return item.depKey ? `dep:${item.name}` : `${item.file}:${item.name}`;
+}
+
+/** How many packages the dependency half of this gate is answerable for. Narrative, never a gate. */
+function declaredDependencyCount(root) {
+  try {
+    const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+    return Object.keys(pkg.dependencies ?? {}).length + Object.keys(pkg.devDependencies ?? {}).length;
+  } catch {
+    return 0;
+  }
+}
+
+function classifyExport(filePath, name, verdicts = EXPORT_VERDICTS, kind = "export", knipDeadSet = new Set(), depKey = false) {
+  if (depKey) {
+    // A package finding has no source path to classify by — package.json matches none of the
+    // path rules below, and letting it fall through them would be classification by accident.
+    // The ledger is the only thing that can answer it.
+    const entry = verdicts.get(`dep:${name}`);
+    if (entry) return { cls: entry.verdict, reason: entry.reason };
+    return {
+      cls: "UNCLASSIFIED",
+      reason: `no verdict recorded for dep:${name}; add a WIRE/KEEP entry to EXPORT_VERDICTS with a written reason, or remove the dependency`,
+    };
+  }
   if (CONTRACT_BARRELS.has(filePath)) {
     return { cls: "RETAINED-BY-CONTRACT", reason: "named intentional barrel" };
   }
@@ -332,6 +404,72 @@ function runSelfTest() {
   assert(stale.length === 1 && stale[0] === "hooks/api/ghost.ts:useGhost",
     `(l) stale verdict detection → expected [hooks/api/ghost.ts:useGhost], got [${stale.join(",")}]`);
 
+  /*
+   * THE DEPENDENCY HALF (2026-09-03).
+   *
+   * This gate read three of knip's issue groups and none of the six that carry package findings,
+   * so 114 declared dependencies were classified by nothing. Measured before the fix: knip already
+   * reported `binaries: feedbucket-widget` on this repo's own package.json and the gate printed
+   * that finding nowhere. These pin both directions — a package with no verdict must bite, and a
+   * package finding must NOT be answered by the path rules that classify source files.
+   */
+  const depUnknown = classifyExport("package.json", "left-pad", EXPORT_VERDICTS, "dependencies", new Set(), true);
+  assert(depUnknown.cls === "UNCLASSIFIED",
+    `(s) BITE: an unused dependency with no verdict → expected UNCLASSIFIED, got ${depUnknown.cls}`);
+  assert(depUnknown.reason.includes("dep:left-pad"),
+    `(t) the unclassified reason names the dep: key to add, got "${depUnknown.reason}"`);
+
+  const depKnown = classifyExport("package.json", "sharp", EXPORT_VERDICTS, "dependencies", new Set(), true);
+  assert(depKnown.cls === "KEEP",
+    `(u) a dependency with a recorded verdict → expected KEEP, got ${depKnown.cls}`);
+  assert(depKnown.reason.length > 40,
+    `(v) a dependency verdict carries a WRITTEN reason, not a bare suppression (got ${depKnown.reason.length} chars)`);
+
+  const depBinary = classifyExport("package.json", "feedbucket-widget", EXPORT_VERDICTS, "binaries", new Set(), true);
+  assert(depBinary.cls === "KEEP",
+    `(w) the binaries finding this gate never read → expected KEEP, got ${depBinary.cls}`);
+
+  // Same name, source key space: the path rules must still answer it, and must not be reachable
+  // from a package finding. `test-utils/x.ts` is RETAINED-BY-CONVENTION as a file path, but the
+  // identical name under `dep:` has no verdict and must bite.
+  const depNotPathClassified = classifyExport("test-utils/index.ts", "makeQueryClient", EXPORT_VERDICTS, "dependencies", new Set(), true);
+  assert(depNotPathClassified.cls === "UNCLASSIFIED",
+    `(x) a package finding must NOT be answered by a source-path rule → expected UNCLASSIFIED, got ${depNotPathClassified.cls}`);
+
+  assert(verdictKey({ file: "package.json", name: "sharp", depKey: true }) === "dep:sharp",
+    "(y) a dependency finding keys into the dep: space");
+  assert(verdictKey({ file: "hooks/api/x.ts", name: "useX" }) === "hooks/api/x.ts:useX",
+    "(z) a source finding keys into the file:symbol space");
+
+  const staleDep = checkStaleVerdicts(new Map([["dep:sharp", { verdict: "KEEP", reason: "r" }]]), new Set());
+  assert(staleDep.length === 1 && staleDep[0] === "dep:sharp",
+    `(aa) BITE: a dep: verdict knip no longer reports goes stale → expected [dep:sharp], got [${staleDep.join(",")}]`);
+
+  // Every group the gate claims to read must land somewhere. A group added to one list and not the
+  // other would be silently unread again.
+  assert(DEPENDENCY_GROUPS.length === 6 && SYMBOL_GROUPS.length === 5,
+    `(ab) all nine knip issue groups plus files are wired (${DEPENDENCY_GROUPS.length}+${SYMBOL_GROUPS.length})`);
+  for (const group of ["dependencies", "devDependencies", "optionalPeerDependencies", "unlisted", "unresolved", "binaries"])
+    assert(DEPENDENCY_GROUPS.includes(group), `(ac) knip group ${group} is read by this gate`);
+
+  // The three suppressions that used to live in knip.json with no recorded reason now live here
+  // WITH one, and a suppression without a reason is not a suppression this gate accepts.
+  for (const dep of ["sharp", "tailwindcss", "@tailwindcss/typography"]) {
+    const entry = EXPORT_VERDICTS.get(`dep:${dep}`);
+    assert(entry !== undefined, `(ad) ${dep} moved out of knip.json ignoreDependencies into the ledger`);
+    assert(entry !== undefined && entry.reason.length > 40,
+      `(ae) the ${dep} verdict records WHY, which ignoreDependencies could not`);
+  }
+  const knipConfig = JSON.parse(readFileSync(join(ROOT, "knip.json"), "utf8"));
+  assert(knipConfig.ignoreDependencies === undefined,
+    "(af) knip.json declares no unexplained ignoreDependencies — the ledger owns them, and a ledger entry goes stale when its reason expires");
+
+  // The graph stats the corpus line reports must actually be filled.
+  const statProbe = { walked: 0, read: 0 };
+  buildImporterMap(join(ROOT, "test-utils"), statProbe);
+  assert(statProbe.walked > 0 && statProbe.read === statProbe.walked,
+    `(ag) the module-graph corpus counts every file walked and read (${statProbe.read}/${statProbe.walked})`);
+
   const rScratch = classifyFile(".scratch/mint-session.mjs", new Set([".scratch/mint-session.mjs"]), new Map(), synthRoot);
   assert(rScratch.cls === "OUT-OF-SCOPE",
     `(m0) a scratch path → expected OUT-OF-SCOPE, got ${rScratch.cls}`);
@@ -396,6 +534,12 @@ function runSelfTest() {
   console.log("  (p) data-layer VALUE nothing imports                  → UNCLASSIFIED (gate bites)");
   console.log("  (q) TYPE in a module no live file imports             → UNCLASSIFIED (gate bites)");
   console.log("  (r) a TYPE outside hooks/api                          → UNCLASSIFIED (rule is scoped)");
+  console.log("  (s) unused dependency with no verdict                 → UNCLASSIFIED (gate bites)");
+  console.log("  (u) dependency with a written verdict                 → KEEP");
+  console.log("  (w) the knip `binaries` finding, previously unread    → KEEP");
+  console.log("  (x) a package finding is not answered by a path rule  → UNCLASSIFIED");
+  console.log("  (aa) a dep: verdict knip no longer reports            → stale (gate bites)");
+  console.log("  (af) knip.json carries no unexplained ignoreDependencies");
 }
 
 async function runMain() {
@@ -421,10 +565,24 @@ async function runMain() {
   const deadFileRels = [];
   const deadExportItems = [];
 
+  // Every array-valued group knip emits, so a group added upstream shows up as an unread corpus
+  // gap in the corpus line rather than as silence.
+  const groupsSeen = new Map();
   for (const issue of issues) {
-    for (const f of issue.files ?? []) deadFileRels.push(f.name);
-    for (const ex of issue.exports ?? []) deadExportItems.push({ file: issue.file, name: ex.name, kind: "export" });
-    for (const ty of issue.types ?? []) deadExportItems.push({ file: issue.file, name: ty.name, kind: "type" });
+    for (const [group, value] of Object.entries(issue))
+      if (Array.isArray(value)) groupsSeen.set(group, (groupsSeen.get(group) ?? 0) + value.length);
+
+    for (const f of issue.files ?? []) deadFileRels.push(f.name ?? f);
+    for (const group of SYMBOL_GROUPS)
+      for (const item of issue[group] ?? [])
+        deadExportItems.push({
+          file: issue.file,
+          name: item.name ?? String(item),
+          kind: group === "exports" ? "export" : group === "types" ? "type" : group.replace(/s$/, ""),
+        });
+    for (const group of DEPENDENCY_GROUPS)
+      for (const item of issue[group] ?? [])
+        deadExportItems.push({ file: issue.file, name: item.name ?? String(item), kind: group, depKey: true });
   }
 
   const knipDeadSet = new Set(deadFileRels);
@@ -439,7 +597,8 @@ async function runMain() {
   }
 
   console.log("Building import graph (scanning all TS/TSX files)...");
-  const importerMap = buildImporterMap(ROOT);
+  const graphStats = { walked: 0, read: 0 };
+  const importerMap = buildImporterMap(ROOT, graphStats);
 
   const graphFileCount = importerMap.size;
   let graphEdgeCount = 0;
@@ -474,9 +633,9 @@ async function runMain() {
   const processedVerdictKeys = new Set();
 
   for (const ex of deadExportItems) {
-    const r = classifyExport(ex.file, ex.name, EXPORT_VERDICTS, ex.kind, knipDeadSet);
+    const r = classifyExport(ex.file, ex.name, EXPORT_VERDICTS, ex.kind, knipDeadSet, ex.depKey === true);
     if (r.cls === "WIRE" || r.cls === "DEFERRED" || r.cls === "KEEP") {
-      processedVerdictKeys.add(`${ex.file}:${ex.name}`);
+      processedVerdictKeys.add(verdictKey(ex));
     }
     buckets[r.cls].push({ type: ex.kind, path: ex.file, name: ex.name, reason: r.reason });
   }
@@ -484,10 +643,24 @@ async function runMain() {
   const staleVerdicts = checkStaleVerdicts(EXPORT_VERDICTS, processedVerdictKeys);
 
   console.log("\n=== Dead Code Classification ===\n");
+
+  /*
+   * Say how much of knip's report was read before saying what was in it. The gate read three of
+   * knip's groups and printed "knip raw: files=… exports=… types=…", a denominator made of its own
+   * filtered subset — the exact shape gate-corpus.mjs exists to stop. `total` here is every finding
+   * knip emitted, in every array-valued group; `scanned` is the ones this gate classified. They
+   * are equal only because the six dependency groups were wired in.
+   */
+  const knipReported = [...groupsSeen.values()].reduce((a, b) => a + b, 0);
+  const knipRead = deadFileRels.length + deadExportItems.length;
+  reportCorpus({ gate: "check-dead-code (knip findings)", scanned: knipRead, total: knipReported, unit: "finding" });
+  reportCorpus({ gate: "check-dead-code (module graph)", scanned: graphStats.read, total: graphStats.walked, unit: "file" });
+
+  const byGroup = [...groupsSeen.entries()].filter(([, n]) => n > 0).map(([g, n]) => `${g}=${n}`);
+  console.log(`knip raw: ${byGroup.join(" ") || "(no findings)"}`);
   console.log(
-    `knip raw: files=${deadFileRels.length}` +
-    ` exports=${deadExportItems.filter((e) => e.kind === "export").length}` +
-    ` types=${deadExportItems.filter((e) => e.kind === "type").length}`
+    `dependency groups read: ${DEPENDENCY_GROUPS.join(", ")} — ` +
+      `${deadExportItems.filter((e) => e.depKey).length} finding(s) over ${declaredDependencyCount(ROOT)} declared dependencies`,
   );
 
   for (const [label, items] of Object.entries(buckets)) {

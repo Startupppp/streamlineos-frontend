@@ -252,6 +252,15 @@ export interface SendMessageInput {
   replyToId?: number;
   attachments?: AttachmentInput[];
   metadata?: MessageMetadata;
+  /**
+   * Per-logical-send idempotency key, matching `clientKey` in the backend's
+   * `chat.schemas.ts`. The send path pre-checks it, arbitrates on the partial
+   * unique index `uniq_chat_messages_client_key` and replays the winner of a
+   * race — but only when the client actually sends one. Minted by
+   * `use-message-composer.ts` and held stable while the draft is unchanged, so a
+   * send re-issued after a timeout replays instead of inserting a second row.
+   */
+  clientKey?: string;
 }
 
 export interface EditMessageInput {

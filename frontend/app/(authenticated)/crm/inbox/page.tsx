@@ -3,17 +3,16 @@
 import { useCallback, Suspense } from "react";
 import { motion, AnimatePresence, useReducedMotion, type Variants } from "framer-motion";
 import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyInboxIllustration } from "@/components/illustrations";
-import { ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { useInbox, useInboxCounts, useSnoozeCrmTask, useCompleteCrmTask } from "@/hooks/api/crm/inbox";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InboxStatCards } from "@/features/crm/inbox/inbox-stat-cards";
-import { InboxSectionCard } from "@/features/crm/inbox/inbox-section-card";
+import { InboxSectionCard, InboxSectionCardSkeleton } from "@/features/crm/inbox/inbox-section-card";
 import { AiActionsSection } from "@/features/crm/inbox/ai-actions-section";
 
 const SECTION_ORDER = [
@@ -37,14 +36,22 @@ const itemVariants: Variants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" } },
 };
 
+function InboxSectionListSkeleton() {
+  return (
+    <div className="space-y-2" role="status" aria-label="Loading inbox">
+      {SECTION_ORDER.map((key) => (
+        <InboxSectionCardSkeleton key={key} />
+      ))}
+    </div>
+  );
+}
+
 function InboxSkeleton() {
   return (
     <PageWrapper title="Sales Inbox" subtitle="Your daily command center">
-      <div className="space-y-3">
-        <StatCardGridSkeleton cols={4} count={4} className="mb-4" />
-        {Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton key={i} className="h-10 w-full rounded-lg" />
-        ))}
+      <div className="flex flex-1 min-h-0 flex-col space-y-3">
+        <StatCardGridSkeleton cols={4} count={4} />
+        <InboxSectionListSkeleton />
       </div>
     </PageWrapper>
   );
@@ -95,6 +102,8 @@ function InboxContent() {
       <div className="flex flex-1 min-h-0 flex-col space-y-3">
         <InboxStatCards counts={counts} isLoading={countsLoading} />
 
+        {inboxLoading && <InboxSectionListSkeleton />}
+
         {!inboxError && aiActions.length > 0 && (
           <motion.div variants={shouldReduceMotion ? undefined : itemVariants} initial="hidden" animate="visible">
             <AiActionsSection actions={aiActions} />
@@ -120,7 +129,7 @@ function InboxContent() {
           />
         )}
 
-        {!inboxError && !isInboxZero && (
+        {!inboxLoading && !inboxError && !isInboxZero && (
           <AnimatePresence>
             <motion.div
               variants={shouldReduceMotion ? undefined : containerVariants}

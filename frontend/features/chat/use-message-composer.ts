@@ -8,7 +8,21 @@ import type { TicketSearchResult } from "@/hooks/api/build";
 import type { AttachmentInput, EditMessageInput, SendMessageInput } from "@/types/chat";
 
 type Attachment = AttachmentInput;
-type QueuedMessage = { content: string; replyToId?: number; metadata?: MessageMetadata; attachments?: Attachment[] };
+type QueuedMessage = { content: string; replyToId?: number; metadata?: MessageMetadata; attachments?: Attachment[]; clientKey: string };
+
+/**
+ * Identity of one logical send: the draft the user can still see and change.
+ * Derived fields (mentions, ticket entities) are deliberately excluded — they
+ * are cleared on send and not restored on failure, so including them would mint
+ * a fresh key for an unchanged draft and reintroduce the duplicate.
+ */
+function sendSignature(
+  content: string,
+  replyToId: number | undefined,
+  attachments: Attachment[],
+): string {
+  return JSON.stringify([content, replyToId ?? null, attachments.map((a) => a.fileKey)]);
+}
 
 export function useMessageComposer({
   channelId, draftKey, isOnline, sendMessage, editMessage, markRead, scrollToBottom,
@@ -39,6 +53,15 @@ export function useMessageComposer({
   const emojiRef = useRef<HTMLDivElement>(null);
   const lastTypingSent = useRef(0);
   const messageQueue = useRef<QueuedMessage[]>([]);
+  /**
+   * The in-flight send's idempotency key, held past a failure. The composer
+   * restores the draft when a send throws, so pressing send again on the
+   * unchanged draft is a RETRY of a request that may already have committed —
+   * the same key lets the server replay the winner instead of inserting a
+   * second row. Edit the draft and the signature changes, so a genuinely
+   * different message gets a genuinely different key.
+   */
+  const pendingSendRef = useRef<{ signature: string; clientKey: string } | null>(null);
   const pendingEntitiesRef = useRef<TicketEntityRef[]>([]);
   const pendingMentionsRef = useRef<Map<string, string>>(new Map());
   const filteredMentionsRef = useRef(filteredMentions);
@@ -88,8 +111,11 @@ export function useMessageComposer({
     const metadata = entities.length ? { entities } : undefined;
     const mentionedUserIds = [...new Set([...pendingMentionsRef.current].filter(([name]) => content.includes(`@${name}`)).map(([, id]) => id))];
     setMessageInput(""); localStorage.removeItem(draftKey); setReplyTo(null); setPendingAttachments([]); pendingEntitiesRef.current = []; pendingMentionsRef.current.clear();
-    if (!isOnline) { messageQueue.current.push({ content, replyToId, attachments: attachments.length ? attachments : undefined, metadata }); toast.info("You're offline — message will be sent when you reconnect"); return; }
-    try { await sendMessage.mutateAsync({ channelId, content: content || undefined, replyToId, attachments: attachments.length ? attachments : undefined, metadata, mentionedUserIds: mentionedUserIds.length ? mentionedUserIds : undefined }); markRead.mutate({ channelId }); scrollToBottom("smooth"); }
+    const signature = sendSignature(content, replyToId, attachments);
+    const clientKey = pendingSendRef.current?.signature === signature ? pendingSendRef.current.clientKey : crypto.randomUUID();
+    pendingSendRef.current = { signature, clientKey };
+    if (!isOnline) { messageQueue.current.push({ content, replyToId, attachments: attachments.length ? attachments : undefined, metadata, clientKey }); pendingSendRef.current = null; toast.info("You're offline — message will be sent when you reconnect"); return; }
+    try { await sendMessage.mutateAsync({ channelId, clientKey, content: content || undefined, replyToId, attachments: attachments.length ? attachments : undefined, metadata, mentionedUserIds: mentionedUserIds.length ? mentionedUserIds : undefined }); pendingSendRef.current = null; markRead.mutate({ channelId }); scrollToBottom("smooth"); }
     catch (error) { setMessageInput(content); setPendingAttachments(attachments); toast.error(getErrorMessage(error)); }
   }, [messageInput, pendingAttachments, replyTo, draftKey, isOnline, sendMessage, channelId, markRead, scrollToBottom]);
   const handleEdit = useCallback(async (messageId: number) => { const content = editInput.trim(); if (!content) return; try { await editMessage.mutateAsync({ channelId, messageId, content }); setEditingMessage(null); setEditInput(""); } catch (error) { toast.error(getErrorMessage(error)); } }, [editInput, editMessage, channelId]);

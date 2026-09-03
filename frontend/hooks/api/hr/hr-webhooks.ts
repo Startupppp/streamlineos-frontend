@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import type {
   HrWebhookSubscription,
   HrWebhookDelivery,
@@ -27,8 +28,8 @@ export function useHrWebhooks(params?: { page?: number; limit?: number }) {
   const canManage = useCan("hr:integrations:manage");
   return useQuery({
     queryKey: hrWebhookKeys.list(params),
-    queryFn: ({ signal }) =>
-      apiClient.get<HrWebhookSubscription[]>("/hr/webhooks", params as Record<string, unknown>, signal),
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<OffsetPage<HrWebhookSubscription>>("/hr/webhooks", params as Record<string, unknown>, signal)).items,
     staleTime: 30_000,
     enabled: canManage,
   });
@@ -48,11 +49,11 @@ export function useHrWebhookDeliveries(subscriptionId: number, page = 1, limit =
   const canManage = useCan("hr:integrations:manage");
   return useQuery({
     queryKey: hrWebhookKeys.deliveries(subscriptionId, page),
-    queryFn: ({ signal }) =>
-      apiClient.get<HrWebhookDelivery[]>(`/hr/webhooks/${subscriptionId}/deliveries`, {
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<OffsetPage<HrWebhookDelivery>>(`/hr/webhooks/${subscriptionId}/deliveries`, {
         page: String(page),
         limit: String(limit),
-      }, signal),
+      }, signal)).items,
     enabled: canManage && subscriptionId > 0,
     staleTime: 15_000,
   });

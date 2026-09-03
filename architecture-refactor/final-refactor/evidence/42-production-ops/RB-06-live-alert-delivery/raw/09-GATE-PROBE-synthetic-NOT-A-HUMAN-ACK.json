@@ -1,0 +1,11 @@
+{
+  "_WARNING": "SYNTHETIC GATE-BEHAVIOUR PROBE. NOT AN ACKNOWLEDGEMENT. No human acked anything.",
+  "_why": "Proves check-alert-ack.mjs CAN reach exit 0, i.e. it is not an unconditional-fail gate.",
+  "_authored_by": "agent (34-alerts), hand-written, never produced by drill-alert-system.mjs",
+  "_must_not_be": "copied to ${TMPDIR}/alert-drill-ack.json or cited as PRD-C174 evidence",
+  "delivered": true,
+  "acked": true,
+  "nonce": "SYNTHETIC-NOT-A-REAL-NONCE",
+  "sentAt": "2026-09-03T16:24:09.201Z",
+  "ackedAt": "2026-09-03T16:24:09.201Z"
+}

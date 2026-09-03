@@ -50,7 +50,11 @@ function BuilderCanvas({ workflow, workflowId }: BuilderCanvasProps) {
   }
   function handlePublish() {
     publishWorkflow.mutate(
-      { id: workflowId, definitionJson: definition },
+      // `expectedVersion` is the version this editor loaded. Without it the
+      // backend can only serialise two simultaneous publishes; it cannot tell
+      // that THIS canvas has been open since before someone else published, so
+      // the 409 branch below — the message the user is shown — could never fire.
+      { id: workflowId, definitionJson: definition, expectedVersion: workflow.version },
       {
         onSuccess: () => toast.success("Workflow published"),
         onError: (error) => {

@@ -1,0 +1,81 @@
+cell:compare-schema — proving a restored database holds the same catalog as the source.
+run_at: 2026-09-03T16:28:42Z
+
+SELF-TEST FIRST:
+$ node src/scripts/compare-cell-schema.mjs --self-test
+---
+◇ injected env (55) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+SELF-TEST PASS: diff, zero-migration vacuity, same-count hash-drift, and control-plane orphan isolation all verified
+--- exit code: 0
+
+RUN A — control plane = scratch_head_1010 (source), cell = scratch_drill_1010
+(a pg_restore copy of head that then had a full cell:backup TRUNCATE+restore cycle run
+against it, including dropping and re-adding 18 cycle-breaking FK constraints).
+Expected: identical catalog. This proves the restore AND the drill left the schema intact.
+$ node src/scripts/compare-cell-schema.mjs --region=drill
+---
+◇ injected env (55) from .env // tip: ⌘ override existing { override: true }
+control plane : postgresql://tarunchintakunta:***@localhost:5432/scratch_head_1010
+cell          : postgresql://tarunchintakunta:***@localhost:5432/scratch_drill_1010
+journal hashes: 677
+
+PASS  tables           control=  1027 cell=  1027
+PASS  columns          control= 13536 cell= 13536
+PASS  indexes          control=  4764 cell=  4764
+PASS  constraints      control= 14037 cell= 14037
+PASS  enums            control=  2325 cell=  2325
+PASS  functions        control=   468 cell=   468
+PASS  policies         control=   983 cell=   983
+PASS  rlsEnabled       control=   983 cell=   983
+PASS  triggers         control=   169 cell=   169
+FAIL  migrationHashes  journal=   677 cell=   677 missing=1 extra-in-cell=1 control-orphans=1(not-required)
+        MISSING IN CELL  63b1e114626dc014adc5868d51fe623c15b3fbd475a8634c3f9882e7d45c8ba2
+        NOTE: 1 cell hash(es) not in journal (may be orphans from prior bootstrap)
+        EXTRA IN CELL    2f5709e78dd9ac9cd55c5bc7d9a5aa473faa8f3740af7609ecaf0090b6e459ba
+
+RESULT: SCHEMAS DIFFER cell=drill differences=1 migrations=677/677 control-orphans=1
+--- exit code: 1
+
+The single migrationHashes FAIL above is NOT caused by the restore. It is a pre-existing
+drift between scratch_head_1010's migration rows and the repo journal, which the restore
+reproduced faithfully. Proof — md5 over all 677 migration hashes, sorted:
+  scratch_head_1010          677 rows  488ca85e8718e2fb9427aabb7ed2a3c7
+  scratch_drill_1010         677 rows  488ca85e8718e2fb9427aabb7ed2a3c7
+  scratch_pitr_restore_1010  677 rows  488ca85e8718e2fb9427aabb7ed2a3c7
+Source and both restored databases hold exactly the same migration set.
+
+RUN B — ANTI-VACUITY CONTROL. Same tool, cell = scratch_pitr_restore_1010, which has one
+extra table (public.pitr_drill_marker, the PITR before/after marker). If the tool reported
+PASS here, RUN A's nine PASS lines would mean nothing.
+$ node src/scripts/compare-cell-schema.mjs --region=pitr
+---
+◇ injected env (55) from .env // tip: ⌘ enable debugging { debug: true }
+control plane : postgresql://tarunchintakunta:***@localhost:5432/scratch_head_1010
+cell          : postgresql://tarunchintakunta:***@localhost:5432/scratch_pitr_restore_1010
+journal hashes: 677
+
+FAIL  tables           control=  1027 cell=  1028  missing=0 extra=1
+        ONLY IN CELL     public.pitr_drill_marker
+FAIL  columns          control= 13536 cell= 13539  missing=0 extra=3
+        ONLY IN CELL     public.pitr_drill_marker.id:text:true
+        ONLY IN CELL     public.pitr_drill_marker.phase:text:true
+        ONLY IN CELL     public.pitr_drill_marker.written_at:timestamp with time zone:true
+FAIL  indexes          control=  4764 cell=  4765  missing=0 extra=1
+        ONLY IN CELL     public.pitr_drill_marker_pkey
+FAIL  constraints      control= 14037 cell= 14041  missing=0 extra=4
+        ONLY IN CELL     public.pitr_drill_marker.pitr_drill_marker_id_not_null:n
+        ONLY IN CELL     public.pitr_drill_marker.pitr_drill_marker_phase_not_null:n
+        ONLY IN CELL     public.pitr_drill_marker.pitr_drill_marker_pkey:p
+        ONLY IN CELL     public.pitr_drill_marker.pitr_drill_marker_written_at_not_null:n
+PASS  enums            control=  2325 cell=  2325
+PASS  functions        control=   468 cell=   468
+PASS  policies         control=   983 cell=   983
+PASS  rlsEnabled       control=   983 cell=   983
+PASS  triggers         control=   169 cell=   169
+FAIL  migrationHashes  journal=   677 cell=   677 missing=1 extra-in-cell=1 control-orphans=1(not-required)
+        MISSING IN CELL  63b1e114626dc014adc5868d51fe623c15b3fbd475a8634c3f9882e7d45c8ba2
+        NOTE: 1 cell hash(es) not in journal (may be orphans from prior bootstrap)
+        EXTRA IN CELL    2f5709e78dd9ac9cd55c5bc7d9a5aa473faa8f3740af7609ecaf0090b6e459ba
+
+RESULT: SCHEMAS DIFFER cell=pitr differences=10 migrations=677/677 control-orphans=1
+--- exit code: 1

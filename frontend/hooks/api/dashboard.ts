@@ -312,12 +312,21 @@ export interface Announcement {
   authorLastName: string | null;
 }
 
+/**
+ * `leaveBalance` and `unreadNotifications` used to be here and are gone.
+ *
+ * Neither was ever read: they appeared exactly once each in this repository —
+ * on this interface — while `usePersonalDashboard`'s three consumers
+ * (my-tasks-widget, timesheet-widget, upcoming-events-widget) read `myTasks`,
+ * `timesheetStatus` and `upcomingEvents`. The leave balance Home renders comes
+ * from `useMyLeaveBalance` -> GET /dashboard/my-leave-balance, a different
+ * route. The backend no longer computes either; the unread count was the most
+ * expensive query on the Home surface.
+ */
 interface PersonalDashboard {
   myTasks: { id: number; title: string; status: string; priority: string | null; dueDate: string | null; projectName: string | null }[];
   timesheetStatus: { submitted: boolean; weekLabel: string; hoursLogged: number };
-  leaveBalance: { type: string; remaining: number; total: number }[];
   upcomingEvents: { id: number; title: string; startTime: Date; endTime: Date; type: string }[];
-  unreadNotifications: number;
   degraded?: string[];
 }
 

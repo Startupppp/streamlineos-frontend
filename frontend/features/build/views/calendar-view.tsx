@@ -13,7 +13,7 @@ import {
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ChevronLeftIcon, ChevronRightIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
-import { getStatusDotClass } from "../shared/status-badge";
+import { getStatusDotClass } from "@/components/shared/ticket-status-badge";
 import { TicketQuickActions } from "./ticket-quick-actions";
 import { stopEvent } from "./card-inline-fields";
 

@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { ResponseContract } from "@/lib/api-envelope";
 import { dataScopeContract } from "@/hooks/api/access-schema";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
+import { idCursorPageContract } from "@/hooks/api/id-cursor-page-schema";
 import type {
   AuditCursorPage,
   AuditLogEntry,
@@ -105,24 +106,6 @@ export const moduleGroupMembersContract: ResponseContract<ModuleGroupMember[]> =
       avatarUrl: z.string().nullable(),
     }),
   );
-
-/**
- * The id-keyed page the roster reads emit (`buildIdCursorPage`). It is a flat
- * `{ data, hasMore, nextCursor }` — NOT the `{ data, pagination }` envelope the
- * groups and audit-log routes use, and the two are not interchangeable:
- * `getNextPageParam` reads `lastPage.nextCursor` on one and
- * `lastPage.pagination.nextCursor` on the other, so a swap ends pagination at
- * page one with no error anywhere.
- */
-function idCursorPageContract<T>(
-  item: ResponseContract<T>,
-): ResponseContract<CursorPaginatedResult<T>> {
-  return z.object({
-    data: z.array(item),
-    hasMore: z.boolean(),
-    nextCursor: z.number().nullable(),
-  });
-}
 
 export const moduleMemberContract: ResponseContract<ModuleMember> = z.object({
   membershipId: z.number(),

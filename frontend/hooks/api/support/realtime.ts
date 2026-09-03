@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { queryKeys } from "@/lib/query-keys";
 import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
+import { supportChannelName } from "@/lib/ably-channels";
 
 interface TicketUpdatedPayload {
   ticketId: number;
@@ -49,7 +50,7 @@ export function useSupportRealtime(ticketId: number | null): { isConnected: bool
   useEffect(() => {
     if (!orgId || !ticketId || ticketId <= 0) return;
 
-    const channelName = `support:${orgId}:${ticketId}`;
+    const channelName = supportChannelName(orgId, ticketId);
     const channel = ably.channels.get(channelName);
 
     const ticketUpdatedHandler = (msg: InboundMessage) => {

@@ -22,7 +22,11 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import React from "react";
 import { useRouter } from "next/navigation";
-import { useChatChannels, useArchivedChannels, useChatOnlineUsers } from "@/hooks/api";
+import {
+  useChatChannels,
+  useArchivedChannels,
+  useChatOnlineUsers,
+} from "@/hooks/api/chat-core-read";
 import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import { ChannelSidebarSection } from "./channel-sidebar-section";

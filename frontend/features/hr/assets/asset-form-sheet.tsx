@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/form";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DatePicker } from "@/components/ui/date-picker";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { assetFormSchema, type AssetFormValues } from "./asset-schema";
 import { ASSET_TYPES } from "./asset-constants";
 import type { Asset } from "@/types/hr";

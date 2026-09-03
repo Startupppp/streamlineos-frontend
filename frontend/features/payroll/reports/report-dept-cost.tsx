@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { usePayrollDeptCost } from "@/hooks/api/payroll/reports";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
@@ -65,7 +67,8 @@ export function ReportDeptCost({ month, department, workerType }: ReportDeptCost
     [month, department, workerType],
   );
 
-  const { data, isLoading } = usePayrollDeptCost(params);
+  const { data, isLoading, isError, error, refetch } = usePayrollDeptCost(params);
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   const totals = useMemo(() => {
     if (!data?.rows.length) return null;
@@ -84,6 +87,17 @@ export function ReportDeptCost({ month, department, workerType }: ReportDeptCost
       <span className="font-mono">{formatMoney(totals.employer)}</span>
     </span>
   ) : undefined;
+
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load department cost"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
+  }
 
   return (
     <DataTable

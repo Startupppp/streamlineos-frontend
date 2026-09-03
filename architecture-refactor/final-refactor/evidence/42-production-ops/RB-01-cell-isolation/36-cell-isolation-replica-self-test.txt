@@ -1,0 +1,39 @@
+COMMAND         : nice -n 10 npm run --silent cell:isolation:replica:self-test
+CWD             : /Users/tarunchintakunta/Personal/streamline/streamlineos-backend
+STARTED  (UTC)  : 2026-09-03T17:02:00Z
+FINISHED (UTC)  : 2026-09-03T17:02:00Z
+HOST            : Taruns-MBP / macOS 26.6.2 / node v25.9.0
+BACKEND SHA     : 66f09164f7056b377331bcc1fff5f128ada06b95 (release/code-10-10-v2)
+PG SERVER       : PostgreSQL 18.4 (Homebrew) on aarch64-apple-darwin25.4.0, compiled by Apple clang version 21.0.0 (clang-2100.0.123.102), 64-bit
+DATABASE_URL          (control plane owner) : postgresql://tarunchintakunta@localhost:5432/scratch_head_1010
+DIRECT_DATABASE_URL   (control plane owner) : postgresql://tarunchintakunta@localhost:5432/scratch_head_1010
+APP_DATABASE_URL      (control plane app)   : postgresql://streamline_app:***@localhost:5432/scratch_head_1010
+REGION_CELL_2_DATABASE_URL     (cell owner) : <unset>
+REGION_CELL_2_APP_DATABASE_URL (cell app)   : <unset>
+DB_REPLICA_URL                 (replica)    : <unset>
+REGION_KEYS / PRIMARY_REGION / CELL_ID      : primary,cell-2 / primary / <unset>
+EXIT CODE       : 0
+NOTE            : cell:isolation:replica:self-test — the 16-case guard self-test for verify-replica-routing.mjs, re-run at SHA 66f09164. It proves the classifiers: a missing DB_REPLICA_URL or APP_DATABASE_URL is a named prerequisite failure and never a vacuous pass; identical replica/primary hosts are rejected; 42501 is fails-closed while any other SQLSTATE is flagged; a null replay timestamp is 'not-a-replica'; lag over 10s and LSN distance over 64MB are rejected. After the cases it re-checks the live environment and reports that the live half cannot run because DB_REPLICA_URL is absent — no physical replica exists on this machine.
+---------------- FULL OUTPUT ----------------
+◇ injected env (55) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+  [pass] prereq-missing-replica-url
+  [pass] prereq-missing-app-url
+  [pass] prereq-both-present
+  [pass] distinct-endpoints-accepted
+  [pass] same-endpoint-rejected
+  [pass] rls-42501-is-fails-closed
+  [pass] rls-other-sqlstate-flagged
+  [pass] rls-no-error-is-a-leak
+  [pass] watermark-match
+  [pass] watermark-drift-flagged
+  [pass] lag-null-is-not-replica
+  [pass] lag-within-threshold
+  [pass] lag-exceeds-threshold
+  [pass] lsn-null-is-not-receiving
+  [pass] lsn-within-threshold
+  [pass] lsn-exceeds-threshold
+
+SELF-TEST PASSED — 16 cases
+Live checks not run: DB_REPLICA_URL is absent. The prerequisite path above is proven to exit 2 (prerequisite missing) and name the missing variable; the replica itself is not verified until an operator provisions it.
+---------------- END OUTPUT -----------------
+EXIT CODE       : 0

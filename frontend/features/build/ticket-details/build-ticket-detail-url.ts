@@ -1,4 +1,4 @@
-﻿import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";
+﻿import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 
 interface TicketNavRef {
   id: number;

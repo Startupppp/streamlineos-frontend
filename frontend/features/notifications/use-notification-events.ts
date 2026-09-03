@@ -9,7 +9,15 @@ import { queryKeys } from "@/lib/query-keys";
 import { consumeNotificationStream, type IncomingNotification } from "./notification-event-stream";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
-const MAX_RETRIES = 5;
+/**
+ * The attempt at which the exponential backoff reaches its ceiling — NOT a point
+ * at which reconnecting stops. It used to be the latter, so five transient
+ * failures over a long-lived tab permanently ended live notifications for that
+ * session with nothing on screen to say so. An SSE consumer that gives up is
+ * indistinguishable to the user from a backend that has stopped sending.
+ */
+const BACKOFF_CEILING_ATTEMPT = 5;
+const MAX_BACKOFF_MS = 30_000;
 
 async function fetchStreamToken(): Promise<string | null> {
   try {
@@ -61,31 +69,63 @@ export function useNotificationEvents(): void {
     };
 
     const scheduleRetry = () => {
-      if (controller.signal.aborted || retryCount >= MAX_RETRIES) return;
+      if (controller.signal.aborted) return;
+      if (retryTimer) clearTimeout(retryTimer);
       retryCount += 1;
-      const delay = Math.min(30_000, 1_000 * 2 ** retryCount) + Math.floor(Math.random() * 500);
+      const attempt = Math.min(retryCount, BACKOFF_CEILING_ATTEMPT);
+      const delay = Math.min(MAX_BACKOFF_MS, 1_000 * 2 ** attempt) + Math.floor(Math.random() * 500);
       retryTimer = setTimeout(() => void connect(), delay);
     };
 
     const connect = async (): Promise<void> => {
-      if (controller.signal.aborted || retryCount > MAX_RETRIES) return;
+      if (controller.signal.aborted) return;
       const token = await fetchStreamToken();
-      if (!token || controller.signal.aborted) return;
+      if (controller.signal.aborted) return;
+      // `fetchStreamToken` swallows every failure into null — a 502 from
+      // /api/auth/session, a network blip, a rate-limited POST to the token route.
+      // Returning here without arming a retry is what made ONE such failure end the
+      // stream for the life of the page.
+      if (!token) {
+        scheduleRetry();
+        return;
+      }
       try {
-        await consumeNotificationStream(`${BACKEND_URL}/notifications/events`, token, controller.signal, (notification) => {
-          retryCount = 0;
-          invalidate();
-          showIncoming(notification, router);
-        });
+        await consumeNotificationStream(
+          `${BACKEND_URL}/notifications/events`,
+          token,
+          controller.signal,
+          (notification) => {
+            invalidate();
+            showIncoming(notification, router);
+          },
+          // Reset on CONNECT, not on the first notification: a healthy stream is
+          // quiet most of the time, so resetting on arrival carried old failures
+          // forward across reconnects that had all succeeded.
+          () => {
+            retryCount = 0;
+          },
+        );
         scheduleRetry();
       } catch {
         scheduleRetry();
       }
     };
 
+    // Coming back from an offline stretch is the one moment a reconnect is both
+    // free and certain to be needed; without it the tab waits out whatever backoff
+    // it had reached when the network went away.
+    const reconnectNow = () => {
+      if (controller.signal.aborted) return;
+      retryCount = 0;
+      if (retryTimer) clearTimeout(retryTimer);
+      void connect();
+    };
+    window.addEventListener("online", reconnectNow);
+
     void connect();
     return () => {
       controller.abort();
+      window.removeEventListener("online", reconnectNow);
       if (retryTimer) clearTimeout(retryTimer);
     };
   }, [orgId, queryClient, router, status]);

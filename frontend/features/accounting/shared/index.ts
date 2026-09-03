@@ -10,3 +10,5 @@ export { Money } from "./money";
 export * from "./finance-page-icons";
 
 export { downloadCsv } from "./download-csv";
+
+export { AccountListNotice } from "./account-list-notice";

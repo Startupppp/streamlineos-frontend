@@ -10,7 +10,11 @@ export function usePortalGuard(): { isReady: boolean } {
 
   useEffect(() => {
     if (!token) {
-      router.replace("/portal/accept-invitation?reason=no_token");
+      // `(portal)` is a route group and adds no URL segment, so the invitation page at
+      // app/(portal)/accept-invitation answers `/accept-invitation`. `/portal/accept-invitation`
+      // matched app/(authenticated)/portal/[projectId] instead and dumped the client on
+      // /signin?session=expired.
+      router.replace("/accept-invitation?reason=no_token");
     }
   }, [token, router]);
 

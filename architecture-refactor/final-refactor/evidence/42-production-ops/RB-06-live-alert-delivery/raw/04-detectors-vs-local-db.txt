@@ -1,0 +1,44 @@
+# Alert detectors run against the LOCAL owner database, not the shared remote Neon branch.
+# DATABASE_URL=postgresql://tarunchintakunta@localhost:5432/scratch_head_1010  (REACHED_HEAD 677/677, 944 public tables)
+# run 2026-09-03T16:20:44Z  backend SHA=2f37e1bb035006e5c03680497298ad62031e79d6  node=v25.9.0
+# NOTE: these scripts call dotenv.config() with override:false, so this exported DATABASE_URL
+#       takes precedence over the .env value (which points at the SHARED REMOTE Neon branch).
+#       Proof: dotenv's banner reports 'injected env (55)' rather than (56) — the one variable
+#       it declined to overwrite is DATABASE_URL.
+# Exit convention: 0 = clear, 1 = alert fires, 2 = configuration/prerequisite error.
+
+===== $ DATABASE_URL=<local owner> node src/scripts/alert-dead-outbox.mjs =====
+◇ injected env (55) from .env // tip: ⌘ suppress logs { quiet: true }
+{"fired":false,"count":0,"threshold":{"maxDeadRowsInWindow":0,"windowHours":24},"destination":"CONFIGURE_ME — wire exit-code 1 to your oncall system (PagerDuty, Slack webhook, etc.)","rows":[]}
+EXIT=0
+
+===== $ DATABASE_URL=<local owner> node src/scripts/alert-dead-delivery.mjs =====
+◇ injected env (55) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+{"fired":false,"count":0,"threshold":{"maxDeadRowsInWindow":0,"windowHours":24},"destination":"CONFIGURE_ME — wire exit-code 1 to your oncall system (PagerDuty, Slack webhook, etc.)","rows":[]}
+EXIT=0
+
+===== $ DATABASE_URL=<local owner> node src/scripts/alert-sig-failures.mjs =====
+◇ injected env (55) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+{"fired":false,"count":0,"threshold":{"maxFailingEndpointsInWindow":0,"windowHours":24},"destination":"CONFIGURE_ME — wire exit-code 1 to your oncall system","rows":[],"note":"git-webhook signature failures are level=warn in structured logs — configure log aggregator separately"}
+EXIT=0
+
+===== $ DATABASE_URL=<local owner> node src/scripts/alert-queue-age.mjs =====
+◇ injected env (55) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+{"fired":false,"ageBreached":false,"retryBreached":false,"threshold":{"thresholdSecs":300,"retryPressureThreshold":500},"globalMaxAgeSecs":0,"globalTotalRetries":0,"destination":"CONFIGURE_ME — wire exit-code 1 to your oncall system (PagerDuty, Slack webhook, etc.)","worstOrgs":[]}
+EXIT=0
+
+===== $ DATABASE_URL=<local owner> node src/scripts/alert-job-queue-age.mjs =====
+◇ injected env (55) from .env // tip: ⌘ override existing { override: true }
+{"fired":false,"threshold":{"thresholdSecs":900},"destination":"CONFIGURE_ME — wire exit-code 1 to your oncall system (PagerDuty, Slack webhook, etc.)","breached":[],"clear":[{"queue":"ai_jobs","owner":"platform-reliability","unfinished_count":0,"oldest_queued_at":null,"oldest_age_secs":0},{"queue":"payroll_jobs","owner":"people-team","unfinished_count":0,"oldest_queued_at":null,"oldest_age_secs":0},{"queue":"payroll_run_export_jobs","owner":"people-team","unfinished_count":0,"oldest_queued_at":null,"oldest_age_secs":0},{"queue":"expense_export_jobs","owner":"finance-team","unfinished_count":0,"oldest_queued_at":null,"oldest_age_secs":0},{"queue":"finance_report_export_jobs","owner":"finance-team","unfinished_count":0,"oldest_queued_at":null,"oldest_age_secs":0},{"queue":"hr_export_jobs","owner":"people-team","unfinished_count":0,"oldest_queued_at":null,"oldest_age_secs":0},{"queue":"gdpr_export_jobs","owner":"platform-reliability","unfinished_count":0,"oldest_queued_at":null,"oldest_age_secs":0},{"queue":"kb_export_jobs","owner":"knowledge-team","unfinished_count":0,"oldest_queued_at":null,"oldest_age_secs":0}]}
+EXIT=0
+
+===== $ DATABASE_URL=<local owner> node src/scripts/alert-tenant-cost.mjs =====
+◇ injected env (55) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+{"fired":false,"windowHours":24,"threshold":{"multiplier":3,"minOrgs":3},"medianCredits":null,"thresholdCredits":null,"orgCount":0,"reason":"fewer-than-min-orgs: 0 < 3","destination":"CONFIGURE_ME — wire exit-code 1 to your oncall system (PagerDuty, Slack webhook, etc.)","noisy":[]}
+EXIT=0
+
+===== $ DATABASE_URL=<local owner> node src/scripts/alert-workflow-stranded.mjs =====
+◇ injected env (55) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+{"fired":false,"count":0,"threshold":{"maxGroupsInWindow":0,"windowHours":24},"destination":"CONFIGURE_ME — wire exit-code 1 to your oncall system (PagerDuty, Slack webhook, etc.)","rows":[]}
+EXIT=0
+

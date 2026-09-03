@@ -1,0 +1,212 @@
+PRODUCTION-OPS EVIDENCE READINESS
+This is a pre-flight index, NOT a manifest and NOT evidence of a deployed run.
+
+RB-01  files=7  admissible-as-deployed-artifact=7
+      required assertions: independent-resource-identity, cross-cell-credential-boundary
+      - RB-01-cell-isolation/01-cell-isolation-self-test.txt  1130B  sha256=2228b0b90690e39a…
+      - RB-01-cell-isolation/02-cell-compare-schema-self-test.txt  1140B  sha256=04a76ce2078463a5…
+      - RB-01-cell-isolation/03-cell-admission-self-test.txt  1095B  sha256=f2f7bbc787c09f63…
+      - RB-01-cell-isolation/04-cell-degraded-self-test.txt  1109B  sha256=cea4e028d4ec8cb0…
+      - RB-01-cell-isolation/05-cell-isolation-replica-self-test.txt  1795B  sha256=c0e5c69f33815991…
+      - RB-01-cell-isolation/06-cell-isolation-live-two-local-cells.txt  5539B  sha256=128d24abfde4897a…
+      - RB-01-cell-isolation/07-cell-compare-schema-head-vs-cold.txt  1344B  sha256=3a5b5b4237ef6e97…
+
+RB-02  files=4  admissible-as-deployed-artifact=1
+      required assertions: pitr-retention, restore-rpo
+      - RB-02-pitr-backup/cell-backup-live-run.txt  1698B  sha256=cf1d99e50c28e37f…
+      - RB-02-pitr-backup/cell-backup-self-test.txt  1604B  sha256=7cbfb417b110061c…
+          REFUSED: self-test/dry-run/mock/fixture/fake/simulation wording
+      - RB-02-pitr-backup/compare-schema-restored-vs-head.txt  2001B  sha256=60f3676f845ec596…
+          REFUSED: self-test/dry-run/mock/fixture/fake/simulation wording
+      - RB-02-pitr-backup/drill-pitr-self-test.txt  2543B  sha256=d018b6812aebee45…
+          REFUSED: self-test/dry-run/mock/fixture/fake/simulation wording
+
+RB-03  files=3  admissible-as-deployed-artifact=2
+      required assertions: physical-replica, measured-replica-lag, primary-fallback
+      - RB-03-read-replica/cell-replica-live-run.txt  975B  sha256=1509e774756c3e5a…
+      - RB-03-read-replica/cell-replica-negative-control.txt  4266B  sha256=908c39e184369fec…
+      - RB-03-read-replica/cell-replica-self-test.txt  1001B  sha256=43bb5f302a25218e…
+          REFUSED: self-test/dry-run/mock/fixture/fake/simulation wording
+
+RB-04  files=4  admissible-as-deployed-artifact=0
+      required assertions: cell-recovery-rto-rpo, regional-recovery, organization-relocation
+      - RB-04-recovery-drill/cell-drill-self-test.txt  292B  sha256=321be1a44056f50e…
+          REFUSED: self-test/dry-run/mock/fixture/fake/simulation wording
+      - RB-04-recovery-drill/cell-relocate-self-test.txt  222B  sha256=6796b0ee6dad3d88…
+          REFUSED: self-test/dry-run/mock/fixture/fake/simulation wording
+      - RB-04-recovery-drill/recovery-drill-dry-run.json  2441B  sha256=c79569cc9d9eaaca…
+          REFUSED: self-test/dry-run/mock/fixture/fake/simulation wording
+          BREAKS ops:evidence:check: bare .json is parsed as a manifest
+      - RB-04-recovery-drill/recovery-drill-dry-run.txt  7696B  sha256=46c473025c674526…
+          REFUSED: self-test/dry-run/mock/fixture/fake/simulation wording
+
+RB-05  files=5  admissible-as-deployed-artifact=5
+      required assertions: production-shaped-load, tenant-isolation-under-load, headroom-40-percent
+      - RB-05-production-load/browser-measure-self-test.txt  232B  sha256=296af673fbed6eec…
+      - RB-05-production-load/cell-load-self-test.txt  362B  sha256=a924da72537c740f…
+      - RB-05-production-load/cell-load.txt  349B  sha256=4fd0c846b5ced1b8…
+      - RB-05-production-load/load-drive-self-test.txt  286B  sha256=ac6f7c6d05dd4ce7…
+      - RB-05-production-load/load-drive-verify.txt  1095B  sha256=255fbe1e43306d93…
+
+RB-06  files=14  admissible-as-deployed-artifact=11
+      required assertions: live-alert-delivery, human-acknowledgement, release-observability
+      - RB-06-live-alert-delivery/raw/01-self-tests.txt  6875B  sha256=30ee743aac877797…
+      - RB-06-live-alert-delivery/raw/02-check-alert-system.txt  6434B  sha256=74bdcfda64b97ad9…
+      - RB-06-live-alert-delivery/raw/03-gate-coverage-gap.txt  2220B  sha256=b4a05d942de8d538…
+          REFUSED: self-test/dry-run/mock/fixture/fake/simulation wording
+      - RB-06-live-alert-delivery/raw/04-detectors-vs-local-db.txt  4502B  sha256=69c5bbcd60dc30a3…
+      - RB-06-live-alert-delivery/raw/05-real-row-fires-and-dispatches.txt  2886B  sha256=247c2788268615c6…
+      - RB-06-live-alert-delivery/raw/06-webhook-receiver.jsonl  1884B  sha256=353dbde1ac7534bc…
+      - RB-06-live-alert-delivery/raw/07-check-alert-ack-exit-matrix.txt  4714B  sha256=508d9bcdd9dee54d…
+      - RB-06-live-alert-delivery/raw/08-drill-alert-ack-state.json  94B  sha256=ca80bd7473a91f53…
+          BREAKS ops:evidence:check: bare .json is parsed as a manifest
+      - RB-06-live-alert-delivery/raw/09-GATE-PROBE-synthetic-NOT-A-HUMAN-ACK.json  549B  sha256=c06b97830d1e8434…
+          BREAKS ops:evidence:check: bare .json is parsed as a manifest
+      - RB-06-live-alert-delivery/raw/10-GATE-PROBE-synthetic-STALE-NOT-A-HUMAN-ACK.json  357B  sha256=ee62593d991a6ebd…
+          BREAKS ops:evidence:check: bare .json is parsed as a manifest
+      - RB-06-live-alert-delivery/raw/11-parity-specs.txt  5260B  sha256=dcf4d8e4aa1afe2a…
+          REFUSED: self-test/dry-run/mock/fixture/fake/simulation wording
+      - RB-06-live-alert-delivery/raw/12-log-backed-detectors-no-stream.txt  1856B  sha256=2641d6240a72455e…
+      - RB-06-live-alert-delivery/raw/13-coverage-of-the-alert-gates.txt  3131B  sha256=aaaf1222d3953717…
+          REFUSED: self-test/dry-run/mock/fixture/fake/simulation wording
+      - RB-06-live-alert-delivery/raw/14-vacuity-defect-tenant-ctx-errors.txt  2503B  sha256=514dda87272fc915…
+
+RB-07  files=7  admissible-as-deployed-artifact=7
+      required assertions: invoice-derived-cell-cost, seven-day-cost-trend, operator-capacity-approval
+      - RB-07-per-cell-cost/cell-capacity-json.txt  291B  sha256=a1e6d188c752e149…
+      - RB-07-per-cell-cost/cell-capacity-self-test.txt  218B  sha256=6a4ebb7d9edc581a…
+      - RB-07-per-cell-cost/cell-capacity-verify.txt  2215B  sha256=1b93eb610be3890c…
+      - RB-07-per-cell-cost/cell-capacity.txt  2005B  sha256=0cac87cfbc875c24…
+      - RB-07-per-cell-cost/cell-unit-cost-self-test.txt  242B  sha256=512a68b34840eeb0…
+      - RB-07-per-cell-cost/cell-unit-cost-verify.txt  2172B  sha256=ff88dd33e7abdf4b…
+      - RB-07-per-cell-cost/cell-unit-cost.txt  3829B  sha256=14ba7a28432e8e1a…
+
+RB-08  files=2  admissible-as-deployed-artifact=2
+      required assertions: separate-resource-accounts, per-cell-credentials, separate-worker-deployment
+      - RB-08-cell-resource-accounts/01-cell-bootstrap-cold-cell2.txt  1473B  sha256=c3a9515c5906ba29…
+      - RB-08-cell-resource-accounts/02-cell-bootstrap-cold-cell2-explicit-database.txt  1556B  sha256=c637fbab1858fc81…
+
+Not attributable to any RB-01..RB-08 directory:
+      - RB-10-privacy-compliance/probes/search-vector-deletion-probe.sql
+      - RB-10-privacy-compliance/runs/01-compliance-drill-execute.txt
+      - RB-10-privacy-compliance/runs/02-drill-export.txt
+      - RB-10-privacy-compliance/runs/03-drill-legal-hold.txt
+      - RB-10-privacy-compliance/runs/04-drill-erasure-dryrun.txt
+      - RB-10-privacy-compliance/runs/05-check-retention-coverage.txt
+      - RB-10-privacy-compliance/runs/05b-check-retention-coverage-threshold-0.001.txt
+      - RB-10-privacy-compliance/runs/06-check-retention-coverage-self-test.txt
+      - RB-10-privacy-compliance/runs/07-drill-erasure-self-test.txt
+      - RB-10-privacy-compliance/runs/08-drill-export-self-test.txt
+      - RB-10-privacy-compliance/runs/09-drill-legal-hold-self-test.txt
+      - RB-10-privacy-compliance/runs/10-drill-storage-purge-self-test.txt
+      - RB-10-privacy-compliance/runs/11-purge-user-dryrun.txt
+      - RB-10-privacy-compliance/runs/12-check-evidence-seal-before.txt
+      - RB-10-privacy-compliance/runs/13-compliance-drill-e2e-self-test.txt  [would be REFUSED by capture]
+      - RB-10-privacy-compliance/runs/14-compliance-drill-e2e-dryrun.txt  [would be REFUSED by capture]
+      - RB-10-privacy-compliance/runs/15-drill-erasure-nonowner-no-audit-rows.txt  [would be REFUSED by capture]
+      - RB-10-privacy-compliance/runs/16-drill-erasure-nonowner-one-audit-row.txt
+      - RB-10-privacy-compliance/runs/17-search-vector-deletion-probe.txt
+      - RB-10-privacy-compliance/runs/18-check-audit-log-privileges.txt
+      - RB-10-privacy-compliance/runs/19-check-audit-log-privileges-self-test.txt
+      - RB-10-privacy-compliance/runs/20-jest-audit-log-immutability.txt
+      - break-glass/probe-breakglass-audit-mutability.sql
+      - break-glass/runs/01-check-audit-log-privileges.txt
+      - break-glass/runs/02-check-audit-log-privileges-self-test.txt
+      - break-glass/runs/03-drill-c181-rejections.txt
+      - break-glass/runs/04-probe-breakglass-audit-mutability.txt
+      - break-glass/runs/05-probe-default-active-unapproved-grant.txt
+      - break-glass/runs/06-jest-breakglass-specs.txt
+      - deploy-safety/kill-switch-readpath-drill.ts
+      - deploy-safety/raw/cell_degraded_self-test.err.txt
+      - deploy-safety/raw/cell_degraded_self-test.txt
+      - deploy-safety/raw/cell_rollout_regressed-canary.txt
+      - deploy-safety/raw/cell_rollout_self-test.txt
+      - deploy-safety/raw/check_feature-flag-governance.txt
+      - deploy-safety/raw/check_feature-flag-governance_self-test.err.txt
+      - deploy-safety/raw/check_feature-flag-governance_self-test.txt
+      - deploy-safety/raw/check_idempotent-commands.txt
+      - deploy-safety/raw/check_idempotent-commands_self-test.err.txt
+      - deploy-safety/raw/check_idempotent-commands_self-test.txt
+      - deploy-safety/raw/check_outbox-consumers.txt
+      - deploy-safety/raw/check_outbox-consumers_self-test.err.txt
+      - deploy-safety/raw/check_outbox-consumers_self-test.txt
+      - deploy-safety/raw/failure-drill_execute.txt
+      - deploy-safety/raw/failure-drill_self-test.err.txt
+      - deploy-safety/raw/failure-drill_self-test.txt
+      - deploy-safety/raw/jest_degraded-breaker.txt
+      - deploy-safety/raw/jest_probes-drain-lease.txt
+      - deploy-safety/raw/jest_rollout-killswitch-fences.txt
+      - deploy-safety/raw/kill-switch-readpath-drill.txt
+      - deploy-safety/raw/lease-recovery-drill.txt
+      - deploy-safety/raw/queue-backlog_local-repro.txt
+      - edge-security/commands/backend-check-body-binding.txt
+      - edge-security/commands/backend-check-bulk-id-limits-self-test.txt  [would be REFUSED by capture]
+      - edge-security/commands/backend-check-bulk-id-limits.txt
+      - edge-security/commands/backend-check-hardcoded-secrets-self-test.txt  [would be REFUSED by capture]
+      - edge-security/commands/backend-check-hardcoded-secrets.txt
+      - edge-security/commands/backend-check-log-secrets-self-test.txt  [would be REFUSED by capture]
+      - edge-security/commands/backend-check-log-secrets.txt
+      - edge-security/commands/backend-check-public-object-urls.txt
+      - edge-security/commands/backend-check-vulnerabilities-self-test.txt  [would be REFUSED by capture]
+      - edge-security/commands/backend-check-vulnerabilities.txt
+      - edge-security/commands/backend-edge-security-specs.txt
+      - edge-security/commands/backend-encryption-specs.txt
+      - edge-security/commands/backend-env-validation-specs.txt
+      - edge-security/commands/backend-header-probe-output.txt
+      - edge-security/commands/backend-pnpm-audit-all-severities.json  [BREAKS ops:evidence:check]
+      - edge-security/commands/backend-pnpm-audit-all-severities.stderr
+      - edge-security/commands/backend-validate-env-self-test.txt  [would be REFUSED by capture]
+      - edge-security/commands/frontend-csp-contract-spec.txt
+      - edge-security/commands/frontend-csp-derived-nextconfig.txt
+      - edge-security/commands/frontend-localhost-1000-headers.txt
+      - edge-security/commands/frontend-localhost-1000-static-headers.txt
+      - edge-security/commands/frontend-pnpm-audit-all-severities.json  [BREAKS ops:evidence:check]
+      - edge-security/commands/frontend-pnpm-audit-all-severities.stderr
+      - edge-security/commands/frontend-pnpm-audit-prod.json  [BREAKS ops:evidence:check]
+      - observability-c173/raw/00-provenance.txt
+      - observability-c173/raw/01-check-log-secrets.txt
+      - observability-c173/raw/02-check-log-secrets-self-test.txt
+      - observability-c173/raw/03-ops-evidence-self-test.txt
+      - observability-c173/raw/04-hot-path-runtime-probe.txt
+      - observability-c173/raw/05-observability-specs.txt
+      - observability-c173/raw/06-failure-drill-self-test.txt
+      - observability-c173/raw/07-ops-evidence-check-FAILS-BY-DESIGN.txt
+      - observability-c173/raw/08-manifest-readiness.txt
+      - provider-drills/drills/provider-drills.sql  [would be REFUSED by capture]
+      - provider-drills/raw/alert-dead-delivery-self-test.txt
+      - provider-drills/raw/alert-dead-delivery.txt
+      - provider-drills/raw/alert-dead-outbox-self-test.txt
+      - provider-drills/raw/alert-dead-outbox.txt
+      - provider-drills/raw/alert-dlq-e2e-fire-and-clear.txt
+      - provider-drills/raw/alert-sig-failures-e2e-fire-and-clear.txt
+      - provider-drills/raw/alert-sig-failures-self-test.txt
+      - provider-drills/raw/alert-sig-failures.txt
+      - provider-drills/raw/check-outbox-consumers-self-test.txt
+      - provider-drills/raw/check-outbox-consumers.txt
+      - provider-drills/raw/failure-drill-dryrun.txt  [would be REFUSED by capture]
+      - provider-drills/raw/failure-drill-provider-outage-execute.txt
+      - provider-drills/raw/failure-drill-queue-backlog-execute.txt
+      - provider-drills/raw/failure-drill-self-test.txt
+      - provider-drills/raw/jest-degradation-realtime-email-verbose.txt  [would be REFUSED by capture]
+      - provider-drills/raw/jest-degradation.txt
+      - provider-drills/raw/jest-email-realtime-push.txt
+      - provider-drills/raw/jest-outbox.txt
+      - provider-drills/raw/jest-payment-webhooks.txt  [would be REFUSED by capture]
+      - provider-drills/raw/provider-drills-sql.txt
+
+PRD-C175 field readiness (per runbook, all eight required):
+  content hashes ......... COMPUTABLE HERE (sha256/bytes above)
+  exit code .............. COMPUTABLE HERE only for a command actually run here
+  timestamps ............. COMPUTABLE HERE only for a command actually run here
+  release SHA ............ BLOCKED: needs the SHA of a deployed build
+  topology sha256 ........ BLOCKED: needs a deployed topology export
+  identity (env/region/cell/https target) ... BLOCKED: needs a deployed cell
+  operator ............... BLOCKED: needs a named human's attestation
+
+Files present: 152. Admissible as deployed artifacts today: 35.
+Bare .json files that will fail ops:evidence:check: 7.
+
+Local drill and self-test output is refused by capture on purpose. It is real evidence of the
+gate's and the drill's logic, but it is not evidence of a deployed cell, and PRD-C175 asks for
+the latter. Do not attempt to launder one into the other.
+manifest-readiness EXIT=1

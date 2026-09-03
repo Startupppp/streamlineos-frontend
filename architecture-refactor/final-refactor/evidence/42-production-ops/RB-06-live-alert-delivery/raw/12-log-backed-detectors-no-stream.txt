@@ -1,0 +1,25 @@
+# The five log-backed detectors read a structured JSON log stream on stdin.
+# There is NO production log stream on this machine and no running API emitting SPAN lines,
+# so each is run against an empty stream to record exactly how it reports the absence.
+# run 2026-09-03T16:25:06Z  backend SHA=138709f35befcd558c86ab04f65edf8344f6a545
+
+===== $ node src/scripts/alert-p95.mjs < /dev/null =====
+{"fired":false,"error":"No lines with message=\"SPAN\" in the input. Either the window is empty or the span exporter is unwired — check that main.ts calls setSpanExporter(new LogSpanExporter()).","linesRead":0}
+EXIT=2
+
+===== $ node src/scripts/alert-seam-latency.mjs < /dev/null =====
+{"fired":false,"error":"No seam span lines found in the input. Either the window is empty or the seam instrumentation is unwired — check that spans carry the \"seam\" attribute and that main.ts calls setSpanExporter(new LogSpanExporter()).","linesRead":0}
+EXIT=2
+
+===== $ node src/scripts/alert-pool-saturation.mjs < /dev/null =====
+{"fired":false,"error":"No db.pool.wait span lines or pool-saturation warn lines found. Either the window is empty, or the pool telemetry is unwired — check that pool-telemetry.ts is active and main.ts calls setSpanExporter(new LogSpanExporter()).","linesRead":0}
+EXIT=2
+
+===== $ node src/scripts/alert-tenant-ctx-errors.mjs < /dev/null =====
+{"fired":false,"count":0,"threshold":{"maxOccurrences":0,"windowHours":1},"destination":"CONFIGURE_ME — wire exit-code 1 to your oncall system","matches":[]}
+EXIT=0
+
+===== $ node src/scripts/alert-cell-recovery.mjs < /dev/null =====
+{"fired":false,"cellId":"cell-2","restoredAt":"2026-09-01T16:03:25.587Z","rtoMet":true,"recoveredCellHealthy":true,"threshold":{"windowHours":24},"destination":"CONFIGURE_ME — wire exit-code 1 to your oncall system (PagerDuty, Slack webhook, etc.)"}
+EXIT=0
+

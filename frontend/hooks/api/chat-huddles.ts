@@ -7,11 +7,20 @@ import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useCan } from "@/hooks/api/access";
-import {
-  chatActiveHuddleContract,
-  chatHuddleContract,
-} from "@/hooks/api/chat-schema";
+import { lazyContract } from "@/lib/api-envelope";
 import type { Huddle, HuddleSignalInput } from "@/types/chat";
+
+/**
+ * `hooks/api/index.ts` re-exports this module, so a value import of
+ * `chat-schema` put Zod's whole runtime into the first load of every route that
+ * touches the barrel. Resolved when a huddle read or write actually runs.
+ */
+const activeHuddleContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatActiveHuddleContract),
+);
+const huddleContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatHuddleContract),
+);
 
 export function useActiveHuddle(channelId: number) {
   const canRead = useCan("chat:channels:read");
@@ -22,7 +31,7 @@ export function useActiveHuddle(channelId: number) {
         `/chat/channels/${channelId}/huddle`,
         undefined,
         signal,
-        chatActiveHuddleContract,
+        activeHuddleContract,
       ),
     staleTime: 10_000,
     enabled: canRead && channelId > 0,
@@ -38,7 +47,7 @@ export function useStartHuddle() {
         `/chat/channels/${channelId}/huddle/start`,
         undefined,
         undefined,
-        chatHuddleContract,
+        huddleContract,
       ),
     onSuccess: (_, channelId) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(channelId) });

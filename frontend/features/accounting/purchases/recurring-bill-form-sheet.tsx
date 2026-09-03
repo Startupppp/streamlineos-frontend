@@ -188,6 +188,11 @@ export function RecurringBillFormSheet({
                 ))}
               </SelectContent>
             </Select>
+            {vendorsQuery.isError && (
+              <p className="text-xs text-destructive" role="alert">
+                Couldn&apos;t load vendors: {getErrorMessage(vendorsQuery.error)}
+              </p>
+            )}
             {form.formState.errors.vendorId && (
               <p className="text-xs text-destructive">{form.formState.errors.vendorId.message}</p>
             )}

@@ -2,14 +2,14 @@
 
 import { useState, useMemo, useCallback } from "react";
 import type { DropResult } from "@hello-pangea/dnd";
-import { Plus } from "lucide-react";
+import { Download, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { ErrorState } from "@/components/shared";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared/error-state";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { ImportLinkButton } from "@/features/crm/import/import-link-button";
-import { LeadExportDialog } from "@/features/crm/leads/lead-export-dialog";
 import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
 import { useLeadBoard, useLeadStats, useUpdateLeadStatus, useLeads } from "@/hooks/api/leads";
 import { useCrmOptions, resolveOption } from "@/hooks/api/crm/metadata";
@@ -20,11 +20,14 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LeadsStatsBar } from "@/features/crm/leads/leads-stats-bar";
 import { LeadsToolbar } from "@/features/crm/leads/leads-toolbar";
-import { LeadsKanban } from "@/features/crm/leads/leads-kanban";
-import { LeadsFunnelView } from "@/features/crm/leads/leads-funnel-view";
-import { LeadDetailSheet } from "@/features/crm/leads/lead-detail-sheet";
 import { LeadListView } from "@/features/crm/leads/lead-list-view";
-import { CreateLeadSheet } from "@/features/crm/leads/create-lead-sheet";
+import {
+  CreateLeadSheet,
+  LeadDetailSheet,
+  LeadExportDialog,
+  LeadsFunnelView,
+  LeadsKanban,
+} from "@/features/crm/leads/leads-lazy";
 import { LEAD_STATUSES, type BoardLead } from "@/features/crm/leads/leads-types";
 import type { LeadFilters } from "@/types/leads";
 
@@ -93,6 +96,7 @@ export default function LeadsPipelinePage() {
   const { data: stats, isLoading: statsLoading, isError: statsError } = useLeadStats();
   const { open: createOpen, onOpenChange: setCreateOpen } = useQueryParamOpen("create");
   const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
   const [density, setDensity] = useDensity();
 
   const {
@@ -157,6 +161,7 @@ export default function LeadsPipelinePage() {
   const updateStatus = useUpdateLeadStatus();
 
   const handleOpenCreateLead = useCallback(() => setCreateOpen(true), [setCreateOpen]);
+  const handleOpenExport = useCallback(() => setExportOpen(true), []);
   const handleCloseDetail = useCallback(() => setSelectedLeadId(null), []);
   const handleRetryTable = useCallback(() => void refetchTable(), [refetchTable]);
   const handleRetryBoard = useCallback(() => void refetchBoard(), [refetchBoard]);
@@ -258,7 +263,9 @@ export default function LeadsPipelinePage() {
       noInternalScroll
       actions={
         <div className="flex items-center gap-2">
-          <LeadExportDialog />
+          <Button variant="outline" size="sm" onClick={handleOpenExport}>
+            <Download className="mr-1 h-4 w-4" /> Export
+          </Button>
           {canCreate ? (
             <>
               <ImportLinkButton entity="leads" label="Import Leads" />
@@ -350,16 +357,19 @@ export default function LeadsPipelinePage() {
           </div>
         )}
 
-        <LeadDetailSheet
-          leadId={selectedLeadId}
-          open={!!selectedLeadId}
-          onClose={handleCloseDetail}
-          onMoveStatus={handleMoveStatus}
-          canUpdate={canUpdate}
-        />
+        {selectedLeadId !== null && (
+          <LeadDetailSheet
+            leadId={selectedLeadId}
+            open
+            onClose={handleCloseDetail}
+            onMoveStatus={handleMoveStatus}
+            canUpdate={canUpdate}
+          />
+        )}
       </div>
 
-      <CreateLeadSheet open={createOpen} onOpenChange={setCreateOpen} />
+      {createOpen && <CreateLeadSheet open onOpenChange={setCreateOpen} />}
+      {exportOpen && <LeadExportDialog open onOpenChange={setExportOpen} />}
     </PageWrapper>
   );
 }

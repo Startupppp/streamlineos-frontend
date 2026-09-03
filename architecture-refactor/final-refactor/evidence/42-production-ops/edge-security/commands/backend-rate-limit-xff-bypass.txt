@@ -1,0 +1,15 @@
+# real modules loaded from /Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/common/ratelimit/
+NODE_ENV=production
+tier=auth:login  RATE_LIMIT_TIER key=rate_limit_tier
+
+CONTROL  — 50 requests, X-Forwarded-For fixed at 198.51.100.7
+           allowed: 5 / 50   (throttled after the tier limit)
+
+BYPASS   — 50 requests, same socket peer, X-Forwarded-For rotated per request
+           allowed: 49 / 50
+
+CONTROL  — 50 requests, no X-Forwarded-For at all (falls back to req.ip)
+           allowed: 5 / 50
+
+VERDICT: BYPASSED — rotating the header let 44 extra request(s) through that the fixed-IP client could not send.
+EXIT=1

@@ -113,12 +113,16 @@ const NON_BLOCKING_BY_DESIGN = Object.freeze({
     "bytes over declared budgets, not gate noise. Owner: tickets 22/26 (route bundle work). " +
     "Delete this entry when the breach count is zero.",
   "check:web-vitals-budget":
-    "rc=1 at head, ONE budget violation -- mobile /crm/inbox CLS p75 0.109 over 0.100, from the " +
-    "three summary cards reflowing when their counts arrive. It carries a written ticket-26 " +
-    "exception and the gate STILL COUNTS IT AS A FAILURE, which is the honest arrangement: the " +
-    "exception explains the number, it does not erase it. Owner: the CRM lane. Note the " +
+    "rc=1 at head. RE-MEASURED 2026-09-03 after the gate was taught to read the capture's own " +
+    "verdicts: it no longer reaches the budget comparison at all, because the committed capture " +
+    "is REFUSED as evidence. `contentAssertion.verdict` reads \"capture is NOT usable evidence\" " +
+    "-- 16 of 208 samples rendered an error boundary, every desktop and mobile sample of " +
+    "/crm/leads -- and the recorded buildId no longer matches .next/BUILD_ID, so every number in " +
+    "it describes a build this checkout does not hold. The gate previously read none of the five " +
+    "verdict blocks and published that error page's LCP as a budget met. Owner: the CRM lane for " +
+    "the error boundary, whoever re-runs `pnpm measure:web-vitals` for the staleness. Note the " +
     "hermetic half, `check:web-vitals-budget:self-test`, is a SEPARATE step and is BLOCKING. " +
-    "Delete this entry when the violation count is zero.",
+    "Delete this entry when a fresh capture passes its own five verdicts.",
 });
 
 

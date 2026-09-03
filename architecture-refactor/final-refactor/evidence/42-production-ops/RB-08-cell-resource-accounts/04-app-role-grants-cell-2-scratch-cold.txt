@@ -1,0 +1,56 @@
+COMMAND         : node src/scripts/db-bootstrap-app-role.mjs
+CWD             : /Users/tarunchintakunta/Personal/streamline/streamlineos-backend
+STARTED  (UTC)  : 2026-09-03T16:40:01Z
+FINISHED (UTC)  : 2026-09-03T16:40:03Z
+HOST            : Taruns-MBP / macOS 26.6.2 / node v25.9.0
+BACKEND SHA     : 45f8a2e99494483526e357e27f18c76961ebf266 (release/code-10-10-v2)
+PG SERVER       : PostgreSQL 18.4 (Homebrew) on aarch64-apple-darwin25.4.0, compiled by Apple clang version 21.0.0 (clang-2100.0.123.102), 64-bit
+DATABASE_URL          (control plane owner) : postgresql://tarunchintakunta@localhost:5432/scratch_cold_1010
+DIRECT_DATABASE_URL   (control plane owner) : postgresql://tarunchintakunta@localhost:5432/scratch_cold_1010
+APP_DATABASE_URL      (control plane app)   : postgresql://streamline_app:***@localhost:5432/scratch_cold_1010
+REGION_CELL_2_DATABASE_URL     (cell owner) : postgresql://tarunchintakunta@localhost:5432/scratch_cold_1010
+REGION_CELL_2_APP_DATABASE_URL (cell app)   : postgresql://streamline_app:***@localhost:5432/scratch_cold_1010
+REGION_KEYS / PRIMARY_REGION / CELL_ID      : primary,cell-2 / primary / <unset>
+EXIT CODE       : 0
+NOTE            : RB-08 Step 1, LIVE. cell:bootstrap's app-role step run directly against cell-2 (scratch_cold_1010). It was needed because scratch_cold_1010 was built by replay:chain-cold, which applies the migration chain but never runs the app-role grant step: cell:place-org had just failed with 'permission denied for table organizations' when reading back as streamline_app. APP_DB_PASSWORD is deliberately unset so the cluster-wide role password is not touched.
+---------------- FULL OUTPUT ----------------
+◇ injected env (55) from .env // tip: ⌘ suppress logs { quiet: true }
+Granting role : streamline_app
+Object owner  : tarunchintakunta
+Schemas       : public, build, build_events
+
+OK    role streamline_app already exists
+OK    role attributes already safe (no superuser / createdb / createrole / bypassrls)
+SKIP  set password (APP_DB_PASSWORD not set — use the provider console)
+OK    revoke object creation in public
+OK    revoke object creation from PUBLIC in public
+OK    grant usage on public
+OK    grant DML on existing tables in public
+OK    grant sequence usage in public
+OK    default privileges for future tables in public
+OK    default privileges for future sequences in public
+OK    revoke object creation in build
+OK    revoke object creation from PUBLIC in build
+OK    grant usage on build
+OK    grant DML on existing tables in build
+OK    grant sequence usage in build
+OK    default privileges for future tables in build
+OK    default privileges for future sequences in build
+OK    revoke object creation in build_events
+OK    revoke object creation from PUBLIC in build_events
+OK    grant usage on build_events
+OK    grant DML on existing tables in build_events
+OK    grant sequence usage in build_events
+OK    default privileges for future tables in build_events
+OK    default privileges for future sequences in build_events
+OK    re-revoke UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER on public.audit_logs (append-only)
+
+--- verification ---
+superuser=false createdb=false createrole=false bypassrls=false login=true
+tables granted: 1027/1027
+can create objects in: (none) (must be none)
+append-only public.audit_logs: update=revoked delete=revoked
+
+RESULT: READY — point APP_DATABASE_URL at streamline_app to run the app under RLS.
+---------------- END OUTPUT -----------------
+EXIT CODE       : 0

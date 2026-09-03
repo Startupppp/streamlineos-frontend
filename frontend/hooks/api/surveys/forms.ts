@@ -2,6 +2,7 @@
 
 import { keepPreviousData, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
@@ -84,7 +85,8 @@ function invalidateSurveyLists(qc: ReturnType<typeof useQueryClient>) {
 export function useSurveys(params?: ListSurveysParams) {
   return useGatedQuery("surveys:view", {
     queryKey: queryKeys.surveys.list(params as Record<string, unknown>),
-    queryFn: ({ signal }) => apiClient.get<SurveyForm[]>("/surveys", params as Record<string, unknown>, signal),
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<OffsetPage<SurveyForm>>("/surveys", params as Record<string, unknown>, signal)).items,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
   });

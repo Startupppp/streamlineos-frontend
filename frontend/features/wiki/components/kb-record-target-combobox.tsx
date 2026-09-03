@@ -10,7 +10,7 @@ import { useDeals, useDealDetail } from "@/hooks/api/crm/deals";
 import { useContacts, useContactDetail } from "@/hooks/api/crm/contacts";
 import { useHrEmployees } from "@/hooks/api/hr/employees";
 import { useTicketSearch } from "@/hooks/api/build/ticket-search";
-import { formatTicketKey } from "@/features/build/shared/format-ticket-key";
+import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import type { Employee } from "@/types/hr";
 
 export type KbRecordTargetType =

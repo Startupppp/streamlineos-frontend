@@ -1,6 +1,5 @@
 export type {
   InvoiceStatus,
-  InvoiceItem,
   Payment,
   Invoice,
   InvoiceStats,

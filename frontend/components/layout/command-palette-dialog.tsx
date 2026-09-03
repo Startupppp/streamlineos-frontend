@@ -44,21 +44,42 @@ import {
   type GlobalSearchResult,
 } from "@/components/command-palette/hooks/use-global-search";
 
-const ENTITY_ICONS = {
+/**
+ * The entity kinds a global-search hit can carry, in the order their groups render.
+ *
+ * Iterating this instead of `Object.entries(entityGroups)` is what lets the icon and label
+ * lookups below be plain indexed reads: `Object.entries` widens its key back to `string`, and
+ * recovering the union from that needs a cast. Driving the render from the union itself keeps
+ * the type and also makes group order deterministic rather than first-hit-wins.
+ */
+const ENTITY_TYPES = [
+  "lead",
+  "deal",
+  "contact",
+  "client",
+  "ticket",
+] as const satisfies readonly GlobalSearchResult["type"][];
+
+type EntityType = (typeof ENTITY_TYPES)[number];
+
+const ENTITY_ICONS: Record<
+  EntityType,
+  React.ComponentType<{ className?: string }>
+> = {
   lead: Contact2,
   deal: Handshake,
   contact: UserCheck,
   client: Briefcase,
   ticket: Ticket,
-} as const;
+};
 
-const ENTITY_LABELS = {
+const ENTITY_LABELS: Record<EntityType, string> = {
   lead: "Leads",
   deal: "Deals",
   contact: "Contacts",
   client: "Clients",
   ticket: "Tickets",
-} as const;
+};
 
 function ItemIcon({
   icon: Icon,
@@ -203,7 +224,9 @@ export function CommandPaletteDialogBody() {
 
   const entityGroups = useMemo(
     () =>
-      entityResults.reduce<Record<string, GlobalSearchResult[]>>((acc, r) => {
+      entityResults.reduce<
+        Partial<Record<EntityType, GlobalSearchResult[]>>
+      >((acc, r) => {
         (acc[r.type] ??= []).push(r);
         return acc;
       }, {}),
@@ -257,11 +280,11 @@ export function CommandPaletteDialogBody() {
           </CommandEmpty>
         )}
 
-        {Object.entries(entityGroups).map(([type, items]) => {
-          const Icon =
-            ENTITY_ICONS[type as keyof typeof ENTITY_ICONS] ?? Search;
-          const label =
-            ENTITY_LABELS[type as keyof typeof ENTITY_LABELS] ?? type;
+        {ENTITY_TYPES.map((type) => {
+          const items = entityGroups[type];
+          if (!items?.length) return null;
+          const Icon = ENTITY_ICONS[type];
+          const label = ENTITY_LABELS[type];
           return (
             <CommandGroup
               key={`entity-${type}`}

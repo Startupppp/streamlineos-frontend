@@ -1,0 +1,70 @@
+PASS src/modules/notifications/notification-delivery-class.spec.ts
+  delivery class registry
+    ✓ defines exactly the five expected classes (1 ms)
+    ✓ has a policy entry for every declared class (1 ms)
+    ✓ each policy matches its own deliveryClass key
+    ✓ every policy has at least one retry attempt and a positive deadLetter window
+    ✓ every policy requires audit
+    ✓ OPERATOR_ALERT escalates faster than PRODUCT_EVENT (1 ms)
+  MARKETING consent requirement
+    ✓ MARKETING has requiresConsent = true
+    ✓ MARKETING has requiresUnsubscribeLink = true
+    ✓ no non-MARKETING class requires consent
+    ✓ no non-MARKETING class requires an unsubscribe link
+    ✓ requireConsentProofForMarketing throws when called for MARKETING without a proof (5 ms)
+    ✓ requireConsentProofForMarketing throws when proof has consentVerified = false
+    ✓ requireConsentProofForMarketing passes when a valid proof is supplied
+    ✓ requireConsentProofForMarketing is a no-op for non-MARKETING classes regardless of proof
+    ✓ MARKETING authorization rule is verified-consent
+    ✓ MARKETING retry policy is non-retryable
+  direct email caller inventory
+    ✓ has at least one entry
+    ✓ lists every file on disk that reaches EmailService directly (118 ms)
+    ✓ lists no file that has stopped reaching EmailService (102 ms)
+    ✓ every entry has a deliveryClass that exists in the registry
+    ✓ every entry has a migrationStatus of PENDING_MIGRATION or EXEMPT
+    ✓ EXEMPT entries are a class that does not need the dispatch seam
+    ✓ classifies the CRM outbound path as MARKETING and exempts it, because it is the consent seam (1 ms)
+    ✓ no two entries share the same file path
+    ✓ public/contact.service is EXEMPT and OPERATOR_ALERT
+    ✓ public/waitlist.service is EXEMPT and OPERATOR_ALERT
+    ✓ all interview services are WORKFLOW_EXTERNAL — they reach external candidates
+  member marketing is unrepresentable
+    ✓ refuses a member recipient outright, whatever proof is offered
+    ✓ allows a CRM contact only when the consent seam has already filtered it
+    ✓ leaves non-marketing classes alone (1 ms)
+  MARKETING delivery class enforcement at the seam
+    ✓ org-member marketing consent infrastructure does not exist: MARKETING class enforces at the seam
+  retry policy is the registry's, not a worker constant
+    ✓ exposes the backoff step for an attempt, clamped at the last step
+    ✓ clamps past the end rather than returning undefined
+    ✓ treats a zero or negative attempt as the first step
+    ✓ gives each class its own curve, so the seam is not decorative
+    ✓ resolves the product-event class for any catalog-driven delivery
+
+[33m[Nest] 8131  - [39m09/03/2026, 10:00:19 PM [33m   WARN[39m [38;5;3m[NotificationDeliveryWorker] [39m[33mProvider EMAIL in org org-a returned an invalid response shape; treating as retryable failure[39m
+[33m[Nest] 8131  - [39m09/03/2026, 10:00:19 PM [33m   WARN[39m [38;5;3m[NotificationDeliveryWorker] [39m[33mProvider EMAIL in org org-a returned an invalid response shape; treating as retryable failure[39m
+PASS src/modules/notifications/notification-delivery-worker-provider-validation.spec.ts
+  NotificationDeliveryWorker — provider response validation
+    ✓ treats an empty provider response ({}) as retryable failure — delivery not SENT, queue requeued (2 ms)
+    ✓ treats a provider response with wrong status type ({status: 123}) as retryable failure
+  NotificationDeliveryWorker — per-org fairness cap
+    ✓ still claims the small org's rows in the same tick even when the large org has far more rows than BATCH_SIZE (1 ms)
+
+PASS src/modules/notifications/notification-circuit-breaker.spec.ts
+  NotificationCircuitBreaker
+    ✓ stays closed below the threshold
+    ✓ opens on the threshold failure and reports when to retry
+    ✓ reports a shrinking retry delay as the cooldown elapses
+    ✓ lets a single probe through once the cooldown expires
+    ✓ re-opens immediately when the probe fails, without a fresh threshold
+    ✓ closes and resets after a successful probe
+    ✓ isolates the breaker per organization and per channel
+    ✓ does not re-open an already-open breaker on further failures
+
+Test Suites: 3 passed, 3 total
+Tests:       47 passed, 47 total
+Snapshots:   0 total
+Time:        0.995 s, estimated 1 s
+Ran all test suites matching /src\/modules\/notifications\/(notification-circuit-breaker|notification-delivery-class|notification-delivery-worker-provider-validation)\.spec\.ts$/i.
+EXIT=0

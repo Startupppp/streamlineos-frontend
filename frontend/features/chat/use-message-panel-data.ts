@@ -52,6 +52,12 @@ export function useMessagePanelData({
   const {
     data: messagesData,
     isLoading,
+    // A 500 or a 403 on the history read used to reach the list as `isLoading
+    // false, messages []`, which the timeline rendered as an ordinary empty
+    // channel. The verdict has to travel with the data.
+    isError: messagesError,
+    error: messagesErrorValue,
+    refetch: refetchMessages,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -163,6 +169,10 @@ export function useMessagePanelData({
         try {
           await sendMessage.mutateAsync({
             channelId,
+            // Minted when the message was queued, so two `online` events — or a
+            // reconnect that races the send — replay the winner rather than
+            // inserting the message twice.
+            clientKey: msg.clientKey,
             content: msg.content,
             replyToId: msg.replyToId,
             attachments: msg.attachments,
@@ -209,7 +219,10 @@ export function useMessagePanelData({
     setRenderPages(1);
   }, [channelId]);
 
-  const { data: pollResult } = useChatPoll(channelId, lastPollTime, !ablyConnected && messages.length > 0);
+  // Gated on the realtime verdict alone. `messages.length > 0` used to be the
+  // second half, which switched the fallback off for exactly the channel that
+  // needs it most — one whose first message never arrived.
+  const { data: pollResult } = useChatPoll(channelId, lastPollTime, !ablyConnected);
 
   useEffect(() => {
     if (pollResult && pollResult.messages.length > 0) {
@@ -411,10 +424,14 @@ export function useMessagePanelData({
     inputRef.current?.focus();
   }, [setReplyTo, inputRef]);
 
+  const handleRetryMessages = useCallback(() => {
+    void refetchMessages();
+  }, [refetchMessages]);
+
   return {
     header: { onBack, displayName, channel, otherMember, isOtherOnline, memberCount, activeHuddle, isInHuddle, onHuddle: handleHuddle, huddleStartPending: startHuddle.isPending, huddleJoinPending: joinHuddle.isPending, canUseAi, summarizeAction, channelId, onToggleFiles: handleToggleFiles, onToggleSaved: handleToggleSaved, showFilesPanel, showSavedPanel, onToggleInfo, showInfoPanel, isSidebarCollapsed, onToggleSidebar },
     workspace: {
-      messageList: { groupedMessages, messages, isLoading, hasNextPage: hasNextPage || hasOlderHeld, isFetchingNextPage, fetchNextPage: handleLoadOlder, currentUserId, channelId, displayName, channelType: channel?.type, editingMessage, editInput, pinnedMessageIds, savedMessageIds, replyCountMap, firstUnreadMessageId, onEditInputChange: setEditInput, onStartEdit: handleStartEdit, onCancelEdit: handleCancelEdit, onSaveEdit: handleEdit, onReply: handleReply, onOpenThread: handleOpenThread, onDelete: handleDelete, onReact: handleReact, onPin: handlePin, onUnpin: handleUnpin, onSave: handleSave, onUnsaveMsg: handleUnsaveMsg, onForward: handleForward, resolveUserName, showScrollBtn, scrollToBottom: handleScrollToBottom, messagesEndRef, scrollContainerRef, onScroll: handleScroll },
+      messageList: { groupedMessages, messages, isLoading, isError: messagesError, errorMessage: messagesError ? getErrorMessage(messagesErrorValue) : undefined, onRetry: handleRetryMessages, hasNextPage: hasNextPage || hasOlderHeld, isFetchingNextPage, fetchNextPage: handleLoadOlder, currentUserId, channelId, displayName, channelType: channel?.type, editingMessage, editInput, pinnedMessageIds, savedMessageIds, replyCountMap, firstUnreadMessageId, onEditInputChange: setEditInput, onStartEdit: handleStartEdit, onCancelEdit: handleCancelEdit, onSaveEdit: handleEdit, onReply: handleReply, onOpenThread: handleOpenThread, onDelete: handleDelete, onReact: handleReact, onPin: handlePin, onUnpin: handleUnpin, onSave: handleSave, onUnsaveMsg: handleUnsaveMsg, onForward: handleForward, resolveUserName, showScrollBtn, scrollToBottom: handleScrollToBottom, messagesEndRef, scrollContainerRef, onScroll: handleScroll },
       messageInput: { channelId, displayName, channelType: channel?.type, messageInput, setMessageInput, inputRef, fileInputRef, replyTo, setReplyTo, pendingAttachments, setPendingAttachments, uploading, onFileSelect: handleFileSelect, showEmojiPicker, setShowEmojiPicker, emojiRef, insertEmoji, showMentions, setShowMentions, mentionQuery, mentionIndex, setMentionIndex, filteredMentions, insertMention, showTicketPicker, ticketQuery, ticketSelectedIndex, onTicketSelect: insertTicket, typingText, sendMessage, onSend: handleSend, onKeyDown: handleKeyDown, onInputChange: handleInputChange, onFilesSelected: handlePastedFiles },
       huddle: activeHuddle && isInHuddle ? { huddle: activeHuddle, channelId, currentUserId } : undefined,
     },

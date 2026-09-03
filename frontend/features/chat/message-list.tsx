@@ -9,6 +9,7 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import type { Message } from "./chat-types";
 import { ChatBubble } from "./chat-bubble";
+import { ErrorState } from "@/components/shared/error-state";
 import { EntityActionsProvider } from "./entity-actions-context";
 
 interface GroupedMessages {
@@ -114,6 +115,14 @@ interface MessageListProps {
   groupedMessages: GroupedMessages[];
   messages: Message[];
   isLoading: boolean;
+  /**
+   * The history read failed. Without this the list fell through to its empty
+   * layout, so a 500 or a 403 on `GET /chat/channels/:id/messages` was
+   * indistinguishable from a channel nobody has written in yet.
+   */
+  isError?: boolean;
+  errorMessage?: string;
+  onRetry?: () => void;
   hasNextPage: boolean | undefined;
   isFetchingNextPage: boolean;
   fetchNextPage: () => void;
@@ -167,6 +176,9 @@ export function MessageList({
   groupedMessages,
   messages,
   isLoading,
+  isError,
+  errorMessage,
+  onRetry,
   hasNextPage,
   isFetchingNextPage,
   fetchNextPage,
@@ -201,6 +213,30 @@ export function MessageList({
   onScroll,
 }: MessageListProps) {
   const handleFetchNextPage = useCallback(() => fetchNextPage(), [fetchNextPage]);
+  const handleRetry = useCallback(() => onRetry?.(), [onRetry]);
+
+  /*
+   * Before the empty layout, and before the entity-action provider mounts a
+   * query of its own: a channel whose history could not be read has nothing to
+   * resolve references against. The four sibling chat surfaces
+   * (channel-sidebar, channels-discovery-page, saved-messages-panel,
+   * shared-files-panel) already branch here; the timeline was the one that
+   * rendered a failure as an ordinary empty conversation.
+   */
+  if (isError) {
+    return (
+      <div className="flex-1 min-h-0 min-w-0 flex flex-col justify-center p-4">
+        <ErrorState
+          compact
+          title="Couldn't load this conversation"
+          description={
+            errorMessage ?? "The message history could not be read. Please try again."
+          }
+          onRetry={handleRetry}
+        />
+      </div>
+    );
+  }
 
   return (
     <EntityActionsProvider channelId={channelId} messages={messages}>

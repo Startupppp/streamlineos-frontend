@@ -8,7 +8,7 @@ import { Upload, FileText, FileSpreadsheet, FileImage, File } from "lucide-react
 import { XIcon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";

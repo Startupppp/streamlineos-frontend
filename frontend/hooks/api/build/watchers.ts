@@ -5,9 +5,14 @@ import type { UseQueryOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { buildTicketWatchersContract } from "@/hooks/api/watchers-schema";
+import { lazyContract } from "@/lib/api-envelope";
 import type { TicketWatcher } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+
+/** Deferred: `hooks/api/index.ts` re-exports this, and the schema pulls Zod. */
+const watchersContract = lazyContract(() =>
+  import("@/hooks/api/watchers-schema").then((m) => m.buildTicketWatchersContract),
+);
 
 export function useWatchers(
   projectId: number,
@@ -22,7 +27,7 @@ export function useWatchers(
         `/build/${projectId}/tickets/${ticketId}/watchers`,
         undefined,
         signal,
-        buildTicketWatchersContract,
+        watchersContract,
       ),
     enabled: canView && !!ticketId && !!projectId,
     staleTime: 30_000,

@@ -1,0 +1,14 @@
+  console.log
+    EMITTED RECORD: {"timestamp":"2026-09-03T16:29:31.621Z","level":"info","message":"user signed in","correlationId":"corr-1","release":"deadbeef1234567","cellId":"cell-x","orgId":"org-1","meta":{"context":"AuthService","params":"[redacted]"}}
+
+      at Object.<anonymous> (../../../../../private/tmp/claude-501/-Users-tarunchintakunta-Personal-streamline/2c7d1c33-300a-4a77-82f6-04ae8f24aa3a/scratchpad/c173-probe/c173hotpath.spec.ts:16:11)
+
+PASS ../../../../../private/tmp/claude-501/-Users-tarunchintakunta-Personal-streamline/2c7d1c33-300a-4a77-82f6-04ae8f24aa3a/scratchpad/c173-probe/c173hotpath.spec.ts
+  ✓ PRD-C173 hot path: Nest logger -> structured logger -> redact + release stamp (15 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.474 s
+Ran all test suites matching /c173hotpath/i.
+probe EXIT=0

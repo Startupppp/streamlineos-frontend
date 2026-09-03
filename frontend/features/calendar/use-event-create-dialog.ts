@@ -16,6 +16,7 @@ import { useCalendarConnections } from "./use-calendar-connections";
 import { toast } from "sonner";
 import type { TicketSearchResult } from "@/hooks/api/build";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { describeEventConflicts } from "./event-conflict-notice";
 import {
   getDateTimeError,
   isValidUrl,
@@ -239,6 +240,11 @@ export function useEventCreateDialog({
         if (res.syncError) toast.warning(`Event created, but calendar sync failed: ${res.syncError}`);
         else if (res.meetingUrl) toast.success("Event created — meeting link added");
         else toast.success("Event created");
+        // The server scans for overlapping occurrences and approved leave on every
+        // create; before this the result was discarded and a double-booking read
+        // as plain success. A second toast so a sync failure is not displaced.
+        const conflictNotice = describeEventConflicts(res);
+        if (conflictNotice) toast.warning(`Event created, but ${conflictNotice}.`);
       }
       handleClose();
     } catch (error) {

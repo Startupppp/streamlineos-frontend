@@ -8,8 +8,9 @@ import { KbAlertCircleIcon } from "@/features/wiki/lib/kb-icons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { isApiError } from "@/lib/api-envelope";
 import { KbPageNotFound } from "./kb-page-not-found";
+import { usePageAutosave, type PageAutosavePatch } from "./use-page-autosave";
+import { Button } from "@/components/ui/button";
 import { uploadKbMedia } from "@/features/wiki/lib/upload-kb-media";
 import {
   useKbPage,
@@ -69,14 +70,30 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
     pageId: number;
     value: string;
   } | null>(null);
-  const [saveState, setSaveState] = useState<
-    "idle" | "pending" | "saving" | "saved"
-  >("idle");
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const visitedRef = useRef<number | null>(null);
   const titleRef = useRef<HTMLTextAreaElement>(null);
-  const contentRevisionRef = useRef<number | undefined>(undefined);
-  const conflictRef = useRef(false);
+
+  const handleSavePage = useCallback(
+    (payload: PageAutosavePatch & { pageId: number; expectedContentRevision?: number }) =>
+      updatePage.mutateAsync(payload),
+    [updatePage],
+  );
+  const handleConflict = useCallback(() => {
+    toast.error("Page edited by someone else", {
+      description: "Your unsaved changes were not applied. Reload to see the latest version.",
+    });
+  }, []);
+  const handleSaveFailure = useCallback((error: unknown) => {
+    toast.error("Failed to save page", { description: getErrorMessage(error) });
+  }, []);
+
+  const { saveState, conflict, schedule, resolveConflict } = usePageAutosave({
+    pageId,
+    contentRevision: page?.contentRevision,
+    save: handleSavePage,
+    onConflict: handleConflict,
+    onSaveError: handleSaveFailure,
+  });
 
   const localTitle =
     titleDraft?.pageId === pageId ? titleDraft.value : (page?.title ?? "");
@@ -89,26 +106,10 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
   }, [localTitle]);
 
   useEffect(() => {
-    conflictRef.current = false;
-    contentRevisionRef.current = undefined;
-  }, [pageId]);
-
-  useEffect(() => {
-    if (page?.contentRevision !== undefined)
-      contentRevisionRef.current = page.contentRevision;
-  }, [page?.contentRevision]);
-
-  useEffect(() => {
     if (visitedRef.current === pageId) return;
     visitedRef.current = pageId;
     recordVisit.mutate(pageId);
   }, [pageId, recordVisit]);
-
-  useEffect(() => {
-    return () => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    };
-  }, []);
 
   const handleNavigateToPage = useCallback(
     (targetPageId: number) => {
@@ -122,61 +123,18 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
   );
 
   const handleReload = useCallback(() => {
-    conflictRef.current = false;
+    resolveConflict();
     void refetch();
-  }, [refetch]);
+  }, [resolveConflict, refetch]);
 
   const handleUploadFile = useCallback(
     (file: File) => uploadKbMedia(file, pageId),
     [pageId]
   );
 
-  function scheduleAutosave(patch: {
-    title?: string;
-    content?: unknown;
-    contentText?: string;
-  }) {
-    if (conflictRef.current) {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-      return;
-    }
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    setSaveState("pending");
-    const revisionSnapshot = contentRevisionRef.current;
-    saveTimerRef.current = setTimeout(() => {
-      setSaveState("saving");
-      const payload = revisionSnapshot !== undefined
-        ? { pageId, ...patch, expectedContentRevision: revisionSnapshot }
-        : { pageId, ...patch };
-      updatePage.mutate(
-        payload,
-        {
-          onSuccess: (data) => {
-            contentRevisionRef.current = data.contentRevision;
-            setSaveState("saved");
-          },
-          onError: (error) => {
-            setSaveState("idle");
-            if (isApiError(error) && error.status === 409) {
-              conflictRef.current = true;
-              toast.error("Page edited by someone else", {
-                description: "Your unsaved changes were not applied. Reload to see the latest version.",
-                action: { label: "Reload", onClick: handleReload },
-              });
-            } else {
-              toast.error("Failed to save page", {
-                description: getErrorMessage(error),
-              });
-            }
-          },
-        }
-      );
-    }, 1500);
-  }
-
   function handleTitleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     setTitleDraft({ pageId, value: e.target.value });
-    scheduleAutosave({ title: e.target.value });
+    schedule({ title: e.target.value });
   }
 
   function handleTitleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -184,7 +142,7 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
   }
 
   function handleEditorChange(value: unknown, plainText: string) {
-    scheduleAutosave({ content: value, contentText: plainText });
+    schedule({ content: value, contentText: plainText });
   }
 
   function handleApplyImprovement(text: string) {
@@ -264,6 +222,27 @@ export default function PageDocument({ pageId, onNavigateToPage }: PageDocumentP
               readOnly={!isEditable}
             />
           </div>
+
+          {/*
+            The 409 latch blocks every further autosave, so the editor keeps
+            accepting keystrokes while saving nothing. A toast is dismissible and
+            the state is not — this banner stands for as long as the latch does.
+          */}
+          {conflict && (
+            <div
+              role="alert"
+              className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-status-danger-rule bg-status-danger-surface px-3 py-2.5"
+            >
+              <KbAlertCircleIcon className="h-4 w-4 shrink-0 text-status-danger-ink" />
+              <span className="text-sm text-status-danger-ink">
+                Someone else edited this page. Autosave is paused — reload to
+                continue editing the latest version.
+              </span>
+              <Button size="sm" variant="outline" className="h-7" onClick={handleReload}>
+                Reload
+              </Button>
+            </div>
+          )}
 
           {page.isLocked && !canManage && (
             <div className="mb-4 flex items-center gap-2 rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">

@@ -17,7 +17,7 @@ import type { MyWorkItem } from "@/types/projects/my-work";
 
 import { cn } from "@/lib/utils";
 import { PriorityBadge } from "@/features/build/shared/priority-badge";
-import { StatusBadge } from "@/features/build/shared/status-badge";
+import { StatusBadge } from "@/components/shared/ticket-status-badge";
 import { PmPanel, PM_ROW } from "@/features/build/shared/pm-chrome";
 import {
   listItem,
@@ -28,7 +28,7 @@ import {
   FLEX_TITLE_SLOT,
   TEXT_ONE_LINE,
 } from "@/lib/text-overflow";
-import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";
+import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 
 export type DueBucket = "overdue" | "today" | "upcoming" | "none";
 

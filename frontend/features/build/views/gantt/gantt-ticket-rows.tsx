@@ -1,7 +1,7 @@
 "use client";
 
 import { type KeyboardEvent, type MouseEvent } from "react";
-import { getStatusHexColor } from "../../shared/status-badge";
+import { getStatusHexColor } from "@/components/shared/ticket-status-badge";
 import type { BarGeometry } from "./gantt-geometry";
 import type { GanttRowBand } from "./gantt-row-window";
 

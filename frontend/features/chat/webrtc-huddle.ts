@@ -8,6 +8,7 @@ import { useSendHuddleSignal } from "@/hooks/api/chat-huddles";
 import type { HuddleParticipant } from "@/types/chat";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
+import { huddleSignalChannelName } from "@/lib/ably-channels";
 import { useAblyConnection } from "./use-ably-connection";
 import {
   FALLBACK_ICE_SERVERS,
@@ -250,7 +251,7 @@ export function useWebRTCHuddle(
     if (!orgId || !channelId || channelId <= 0 || !huddleId) return;
     if (sessionStatus !== "authenticated" || !isAblyConnected) return;
 
-    const signalChannelName = `huddle-signal:${orgId}:${channelId}:${currentUserId}`;
+    const signalChannelName = huddleSignalChannelName(orgId, channelId, currentUserId);
     const ablyChannel = ably.channels.get(signalChannelName);
 
     const handleSignal = async (msg: InboundMessage) => {

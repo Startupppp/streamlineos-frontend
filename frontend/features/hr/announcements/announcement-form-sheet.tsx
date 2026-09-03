@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { AnnouncementTargetPicker } from "@/features/hr/announcements/announcement-target-picker";
 import { buildAnnouncementSchema, zodFieldErrors } from "@/features/hr/announcements/announcement-schema";
 import { getErrorMessage } from "@/lib/get-error-message";

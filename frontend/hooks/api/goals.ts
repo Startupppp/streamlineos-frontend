@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 
 export type GoalLevel = "company" | "team" | "individual";
 export type GoalStatus = "not_started" | "on_track" | "at_risk" | "off_track" | "completed";
@@ -156,7 +157,8 @@ export function useGoals(params?: GoalsParams) {
   const queryParams = toQueryParams(params);
   return useGatedQuery("build:goals:view", {
     queryKey: queryKeys.goals.list(queryParams),
-    queryFn: ({ signal }) => apiClient.get<GoalListItem[]>("/goals", queryParams, signal),
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<OffsetPage<GoalListItem>>("/goals", queryParams, signal)).items,
     staleTime: 30_000,
     placeholderData: keepPreviousData,
   });

@@ -4,7 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { DEFAULT_MONEY_DISPLAY, type MoneyDisplay } from "@/lib/format-utils";
-import { orgDisplayContract } from "@/hooks/api/org-display-schema";
+import { lazyContract } from "@/lib/api-envelope";
+
+/** Deferred: every money-rendering surface imports this, and the schema pulls Zod. */
+const displayContract = lazyContract(() =>
+  import("@/hooks/api/org-display-schema").then((m) => m.orgDisplayContract),
+);
 
 /**
  * The currency this organisation's money renders in.
@@ -21,7 +26,7 @@ export function useOrgDisplay(): MoneyDisplay {
   const { data } = useQuery<MoneyDisplay, Error>({
     queryKey: queryKeys.organization.display(),
     queryFn: ({ signal }) =>
-      apiClient.get("/me/org-display", undefined, signal, orgDisplayContract),
+      apiClient.get("/me/org-display", undefined, signal, displayContract),
     staleTime: 30 * 60_000,
   });
 

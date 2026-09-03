@@ -1,0 +1,4 @@
+$ APP_DATABASE_URL=postgresql://streamline_app:***@localhost:5432/scratch_head_1010 npm run check:audit-log-privileges
+# run 2026-09-03T16:30:36Z  backend 45f8a2e99 branch release/code-10-10-v2
+{"role":"streamline_app","isAppRole":true,"updateRevoked":true,"deleteRevoked":true,"triggerPresent":true}
+exit=0

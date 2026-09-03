@@ -1,0 +1,22 @@
+$ npm run --silent load:drive:verify
+--- started: 2026-09-03T16:39:00Z ---
+--- stdout+stderr ---
+PASS  percentile interpolates between neighbouring samples
+PASS  percentile of an empty set is null, not zero
+PASS  summarise reports every percentile the report prints
+PASS  summarise sorts before computing, so sample order cannot change the answer
+PASS  summarise drops non-finite samples rather than poisoning the percentiles
+PASS  an empty summary reports null percentiles, never 0ms
+PASS  an objective with no samples is NOT_DRIVEN, not MET
+PASS  a measurement over target is BREACHED
+PASS  a measurement at exactly the target is MET, not BREACHED
+PASS  achievedRate converts a count and a window into requests per second
+PASS  achievedRate refuses to divide by a zero-length window
+PASS  every PRD latency objective is either driven or has a written reason
+PASS  every special-cased objective is actually handled by the runner
+PASS  every driven workload names the percentile it is judged on
+PASS  every not-driven reason says what would be needed, not just that it was skipped
+
+All load-driver tests passed.
+--- exit code: 0 ---
+--- finished: 2026-09-03T16:39:00Z ---

@@ -18,6 +18,7 @@ import {
   useSnoozeNotification,
   useUnarchiveNotification,
 } from "@/hooks/api/notifications";
+import { useRunWhenOnline } from "@/hooks/common/use-run-when-online";
 import type { NotificationSection } from "./notification-types";
 
 interface Params {
@@ -39,6 +40,14 @@ export function useNotificationInbox({
 }: Params) {
   const router = useRouter();
   const prefersReducedMotion = useReducedMotion();
+  /**
+   * Every mutation below goes through this. All fourteen used to fire regardless
+   * of connectivity, underneath this page's own offline banner: the request
+   * failed, the optimistic patch applied and rolled back, and the row visibly
+   * flickered back to where it started. The sibling /inbox surface has guarded
+   * its eight since it was written.
+   */
+  const { isOnline, runWhenOnline } = useRunWhenOnline();
 
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();
@@ -57,9 +66,11 @@ export function useNotificationInbox({
   const handleNotificationClick = useCallback(
     (notification: { id: number; isRead: boolean; link: string | null }) => {
       setDetailId(notification.id);
-      if (!notification.isRead) markRead.mutate(notification.id);
+      // Opening a row is not a command, so this one stays silent offline rather
+      // than toasting at someone who only wanted to read.
+      if (!notification.isRead && isOnline) markRead.mutate(notification.id);
     },
-    [markRead, setDetailId],
+    [isOnline, markRead, setDetailId],
   );
 
   const handleDrawerOpenChange = useCallback(
@@ -78,28 +89,28 @@ export function useNotificationInbox({
 
   const handleMarkReadOne = useCallback(
     (id: number) => {
-      markRead.mutate(id);
+      runWhenOnline(() => markRead.mutate(id));
     },
-    [markRead],
+    [markRead, runWhenOnline],
   );
 
   const handleUnarchive = useCallback(
     (id: number) => {
-      unarchive.mutate(id);
+      runWhenOnline(() => unarchive.mutate(id));
     },
-    [unarchive],
+    [runWhenOnline, unarchive],
   );
 
   const handleSnooze = useCallback(
     (id: number, snoozedUntil: string) => {
-      snooze.mutate({ id, snoozedUntil });
+      runWhenOnline(() => snooze.mutate({ id, snoozedUntil }));
     },
-    [snooze],
+    [runWhenOnline, snooze],
   );
 
   const handleMarkAllRead = useCallback(() => {
-    markAllRead.mutate(undefined);
-  }, [markAllRead]);
+    runWhenOnline(() => markAllRead.mutate(undefined));
+  }, [markAllRead, runWhenOnline]);
 
   const handleSelect = useCallback(
     (id: number) => {
@@ -123,58 +134,70 @@ export function useNotificationInbox({
 
   const handleArchive = useCallback(
     (id: number) => {
-      archive.mutate(id);
+      runWhenOnline(() => archive.mutate(id));
     },
-    [archive],
+    [archive, runWhenOnline],
   );
 
   const handlePin = useCallback(
     (id: number, isPinned: boolean) => {
-      if (isPinned) unpin.mutate(id);
-      else pin.mutate(id);
+      runWhenOnline(() => {
+        if (isPinned) unpin.mutate(id);
+        else pin.mutate(id);
+      });
     },
-    [pin, unpin],
+    [pin, runWhenOnline, unpin],
   );
 
   const handleDelete = useCallback(
     (id: number) => {
-      deleteMutation.mutate(id);
-      setSelectedIds((prev) => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
+      runWhenOnline(() => {
+        deleteMutation.mutate(id);
+        // The selection is cleared inside the guard: clearing it for a delete that
+        // never dispatched loses the user's selection for nothing.
+        setSelectedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
       });
     },
-    [deleteMutation, setSelectedIds],
+    [deleteMutation, runWhenOnline, setSelectedIds],
   );
 
   const handleBulkMarkRead = useCallback(() => {
-    bulkMarkRead.mutate(Array.from(selectedIds));
-    setSelectedIds(new Set());
-  }, [bulkMarkRead, selectedIds, setSelectedIds]);
+    runWhenOnline(() => {
+      bulkMarkRead.mutate(Array.from(selectedIds));
+      setSelectedIds(new Set());
+    });
+  }, [bulkMarkRead, runWhenOnline, selectedIds, setSelectedIds]);
 
   const handleBulkArchive = useCallback(() => {
-    bulkArchive.mutate(Array.from(selectedIds));
-    setSelectedIds(new Set());
-  }, [bulkArchive, selectedIds, setSelectedIds]);
+    runWhenOnline(() => {
+      bulkArchive.mutate(Array.from(selectedIds));
+      setSelectedIds(new Set());
+    });
+  }, [bulkArchive, runWhenOnline, selectedIds, setSelectedIds]);
 
   const handleBulkDelete = useCallback(() => {
-    bulkDelete.mutate(Array.from(selectedIds));
-    setSelectedIds(new Set());
-  }, [bulkDelete, selectedIds, setSelectedIds]);
+    runWhenOnline(() => {
+      bulkDelete.mutate(Array.from(selectedIds));
+      setSelectedIds(new Set());
+    });
+  }, [bulkDelete, runWhenOnline, selectedIds, setSelectedIds]);
 
   const handleApprove = useCallback(
     (id: number) => {
-      approve.mutate(id);
+      runWhenOnline(() => approve.mutate(id));
     },
-    [approve],
+    [approve, runWhenOnline],
   );
 
   const handleReject = useCallback(
     (id: number) => {
-      reject.mutate(id);
+      runWhenOnline(() => reject.mutate(id));
     },
-    [reject],
+    [reject, runWhenOnline],
   );
 
   const emptyTitle = useMemo(() => {

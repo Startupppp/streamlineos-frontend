@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useTicket } from "@/hooks/api";
 import { cn } from "@/lib/utils";
-import { getTicketDetailHref } from "../shared/format-ticket-key";
+import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 
 interface TicketParentLinkProps {
   parentTicketId: number | null;

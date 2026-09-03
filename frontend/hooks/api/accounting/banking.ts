@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import {
+  bankAccountContract,
   bankAccountsPageContract,
   type BankAccountRecord,
   type BankAccountsPage,
@@ -154,7 +155,8 @@ export function useBankAccount(id: number) {
   const can = useCan("accounting:banking:read");
   return useQuery<BankAccountRecord, Error>({
     queryKey: bankingKeys.account(id),
-    queryFn: ({ signal }) => apiClient.get<BankAccountRecord>(`/finance/bank-accounts/${id}`, undefined, signal),
+    queryFn: ({ signal }) =>
+      apiClient.get(`/finance/bank-accounts/${id}`, undefined, signal, bankAccountContract),
     staleTime: 60_000,
     enabled: can,
   });

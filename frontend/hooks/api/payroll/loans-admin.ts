@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 
 export type LoanStatus = "PENDING" | "APPROVED" | "ACTIVE" | "REPAID" | "REJECTED";
 
@@ -35,7 +36,8 @@ export function useAdminLoans() {
   const canView = useCan("hr:payroll:view");
   return useQuery({
     queryKey: queryKeys.payroll.loansAdmin(),
-    queryFn: ({ signal }) => apiClient.get<LoanAdminItem[]>("/hr/loans", undefined, signal),
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<OffsetPage<LoanAdminItem>>("/hr/loans", undefined, signal)).items,
     staleTime: 30_000,
     enabled: canView,
   });

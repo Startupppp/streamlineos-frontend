@@ -24,7 +24,7 @@ import { EntityFormDialog } from "@/components/shared";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
-  useAccounts,
+  useAllAccounts,
   useJournal,
   useUpdateAccount,
 } from "@/hooks/api/accounting";
@@ -171,7 +171,7 @@ export function AccountDetailPage({ accountId }: AccountDetailPageProps) {
 
   const [editOpen, setEditOpen] = useState(false);
 
-  const accountsQuery = useAccounts({ limit: 100 });
+  const accountsQuery = useAllAccounts();
   const journalQuery = useJournal({ limit: 20 });
 
   const account = Number.isInteger(accountId)

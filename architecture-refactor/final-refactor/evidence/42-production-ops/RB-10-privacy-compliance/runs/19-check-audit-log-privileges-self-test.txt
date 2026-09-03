@@ -1,0 +1,2 @@
+{"selfTest":true,"pass":true,"safe":{"role":"streamline_app","isAppRole":true,"updateRevoked":true,"deleteRevoked":true,"triggerPresent":true},"unsafe":{"role":"streamline_app","isAppRole":true,"updateRevoked":false,"deleteRevoked":true,"triggerPresent":true},"wrongRole":{"role":"neon_superuser","isAppRole":false,"updateRevoked":true,"deleteRevoked":true,"triggerPresent":true}}
+EXIT_CODE=0

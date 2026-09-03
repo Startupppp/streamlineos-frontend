@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
 import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
+import { chatChannelName, notificationsChannelName } from "@/lib/ably-channels";
 import { reauthorizeAblyClients } from "@/lib/ably";
 import type { Channel } from "@/types/chat";
 
@@ -44,6 +45,9 @@ export function useChatGlobalNotifications(
   useEffect(() => {
     if (!orgId || !channels?.length) return;
 
+    // Captured after the guard: the narrowing does not reach into the hoisted
+    // `setup` declaration below, and the channel name builder takes a string.
+    const org = orgId;
     const channelList = channels;
     let cancelled = false;
     const subs: Array<{
@@ -55,7 +59,7 @@ export function useChatGlobalNotifications(
       for (const channel of channelList) {
         if (cancelled) return;
 
-        const ablyChannel = ably.channels.get(`chat:${orgId}:${channel.id}`);
+        const ablyChannel = ably.channels.get(chatChannelName(org, channel.id));
         const channelId = channel.id;
         const channelType = channel.type;
         const channelDisplayName = channel.name;
@@ -115,7 +119,7 @@ export function useChatGlobalNotifications(
   useEffect(() => {
     if (!orgId || !currentUserId) return;
 
-    const notifChannel = ably.channels.get(`notifications:${orgId}:${currentUserId}`);
+    const notifChannel = ably.channels.get(notificationsChannelName(orgId, currentUserId));
     let cancelled = false;
     let subscribed = false;
 

@@ -5,8 +5,6 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type {
-  Account,
-  AccountType,
   AgedPayablesReport,
   AgedReceivablesReport,
   BalanceSheetReport,
@@ -26,6 +24,23 @@ import type {
 } from "@/types/accounting";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { toQuery, type CursorPage } from "@/hooks/api/accounting/cursor-page";
+
+/**
+ * The chart-of-accounts reads and writes moved to `accounting/chart-of-accounts.ts`
+ * when this module passed the 500-line review limit; they are re-exported so the
+ * ~30 call sites that import them from `@/hooks/api/accounting` keep working.
+ */
+export {
+  useAccounts,
+  useAllAccounts,
+  useCreateAccount,
+  useUpdateAccount,
+  type ListAccountsParams,
+} from "@/hooks/api/accounting/chart-of-accounts";
+export type { CursorPage };
+
+type CursorResponse<T> = CursorPage<T>;
 
 interface ListResponse<T> {
   items: T[];
@@ -35,84 +50,12 @@ interface ListResponse<T> {
   totalPages: number;
 }
 
-export interface CursorPage<T> {
-  data: T[];
-  pagination: {
-    limit: number;
-    nextCursor: string | null;
-    hasMore: boolean;
-  };
-}
-
-type CursorResponse<T> = CursorPage<T>;
-
 interface TrialBalanceResponse {
   asOf: string;
   rows: TrialBalanceRow[];
   totalDebit: string;
   totalCredit: string;
   balanced: boolean;
-}
-
-interface ListAccountsParams {
-  cursor?: string;
-  limit?: number;
-  q?: string;
-  type?: AccountType;
-  activeOnly?: boolean;
-}
-
-function toQuery<P extends object>(params: P): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const [k, v] of Object.entries(params)) {
-    if (v === undefined || v === null || v === "") continue;
-    out[k] = String(v);
-  }
-  return out;
-}
-
-export function useAccounts(params: ListAccountsParams = {}) {
-  return useGatedQuery<CursorResponse<Account>, Error>("accounting:accounts:read", {
-    queryKey: queryKeys.accounting.accounts(params),
-    queryFn: ({ signal }) =>
-      apiClient.get<CursorResponse<Account>>("/accounting/accounts", toQuery(params), signal),
-    staleTime: 60_000,
-  });
-}
-
-interface CreateAccountInput {
-  code: string;
-  name: string;
-  accountType: AccountType;
-  description?: string;
-}
-
-export function useCreateAccount() {
-  const queryClient = useQueryClient();
-  return useAuthorizedMutation<Account, Error, CreateAccountInput>("accounting:accounts:create", {
-    mutationKey: ["create", "account"],
-    mutationFn: (data) => apiClient.post<Account>("/accounting/accounts", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
-    },
-  });
-}
-
-interface UpdateAccountInput {
-  name?: string;
-  isActive?: boolean;
-  description?: string;
-}
-
-export function useUpdateAccount(accountId: number) {
-  const queryClient = useQueryClient();
-  return useAuthorizedMutation<Account, Error, UpdateAccountInput>("accounting:accounts:update", {
-    mutationKey: ["update", "account"],
-    mutationFn: (data) => apiClient.patch<Account>(`/accounting/accounts/${accountId}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
-    },
-  });
 }
 
 interface ListJournalParams {

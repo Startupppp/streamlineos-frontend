@@ -1,9 +1,12 @@
 "use client";
 
+import { useCallback } from "react";
 import { Users, TrendingUp, Wallet, Building2, TrendingDown, AlertTriangle } from "lucide-react";
 
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { usePayrollSummary } from "@/hooks/api/payroll/reports";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
@@ -16,9 +19,23 @@ interface ReportSummaryProps {
 }
 
 export function ReportSummary({ month, department, costCenter, workerType }: ReportSummaryProps) {
-  const { data, isLoading } = usePayrollSummary({ month, department, costCenter, workerType });
+  const { data, isLoading, isError, error, refetch } = usePayrollSummary({ month, department, costCenter, workerType });
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   if (isLoading) return <StatCardGridSkeleton cols={4} count={7} />;
+
+  // "No payroll run for this period — run payroll for this month" is an
+  // instruction, and a 500 must never issue it: the run may already exist.
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load the payroll summary"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
+  }
 
   if (!data?.run) {
     return (

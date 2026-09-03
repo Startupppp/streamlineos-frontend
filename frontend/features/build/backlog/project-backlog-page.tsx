@@ -10,6 +10,8 @@ import { TicketFilterBar } from "@/features/build/shared/ticket-filter-bar";
 import { buildTicketDetailUrl } from "@/features/build/ticket-details/build-ticket-detail-url";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { ProjectLoadFallback } from "@/features/build/shared/project-load-fallback";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
@@ -18,8 +20,8 @@ import { BulkActionBar } from "@/features/build/backlog/bulk-action-bar";
 import type { Ticket } from "@/types/projects";
 import { TicketTypeIcon } from "@/features/build/shared/ticket-type-icon";
 import { PriorityBadge } from "@/features/build/shared/priority-badge";
-import { StatusBadge } from "@/features/build/shared/status-badge";
-import { formatTicketKey } from "@/features/build/shared/format-ticket-key";
+import { StatusBadge } from "@/components/shared/ticket-status-badge";
+import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { PmPageShell, PM_TOOLBAR, PmPanel } from "@/features/build/shared/pm-chrome";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
@@ -48,9 +50,23 @@ interface ProjectBacklogPageProps {
 
 export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPageProps) {
   const projectId = parseInt(projectIdStr);
-  const { data, isLoading: projectLoading } = useProject(projectId);
-  const { data: boardTickets, isLoading: ticketsLoading } = useProjectBoardTickets(projectId);
+  const {
+    data,
+    isLoading: projectLoading,
+    isError: projectError,
+    error: projectErrorValue,
+    refetch: refetchProject,
+  } = useProject(projectId);
+  const {
+    data: boardTickets,
+    isLoading: ticketsLoading,
+    isError: ticketsError,
+    error: ticketsErrorValue,
+    refetch: refetchTickets,
+  } = useProjectBoardTickets(projectId);
   const isLoading = projectLoading || ticketsLoading;
+  const handleRetryProject = useCallback(() => void refetchProject(), [refetchProject]);
+  const handleRetryTickets = useCallback(() => void refetchTickets(), [refetchTickets]);
   const { data: sprints } = useSprints(projectId);
   const bulkUpdate = useBulkUpdateTickets(projectId);
   const searchParams = useSearchParams();
@@ -245,6 +261,18 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
     );
   }
 
+  // A failure to READ the project is not a project that is gone: only the
+  // fallback's resolved 404 reaches notFound().
+  if (projectError) {
+    return (
+      <ProjectLoadFallback
+        title="Backlog"
+        error={projectErrorValue}
+        onRetry={handleRetryProject}
+      />
+    );
+  }
+
   if (!data) return notFound();
 
   return (
@@ -279,6 +307,19 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
           />
         ) : null}
 
+        {/*
+          A 500 on GET /build/:id/tickets flattens to `[]` here, so the table
+          used to render "No tickets yet" over a project with thousands and
+          people created duplicates.
+        */}
+        {ticketsError ? (
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load this project's tickets"
+            description={getErrorMessage(ticketsErrorValue)}
+            onRetry={handleRetryTickets}
+          />
+        ) : (
         <PmPanel className="min-w-0 flex-1 min-h-0 flex flex-col">
           <DataTable
             data={filteredTickets}
@@ -305,6 +346,7 @@ export function ProjectBacklogPage({ projectId: projectIdStr }: ProjectBacklogPa
             }
           />
         </PmPanel>
+        )}
       </PmPageShell>
     </PageWrapper>
   );

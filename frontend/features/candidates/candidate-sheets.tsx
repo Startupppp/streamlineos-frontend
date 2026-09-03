@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import type { InterviewType } from "@/types/hr";
 
 const INTERVIEW_TYPES: InterviewType[] = ["PHONE", "VIDEO", "ONSITE", "TECHNICAL", "HR", "FINAL"];

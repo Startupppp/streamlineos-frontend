@@ -58,9 +58,12 @@ export function grossTotal(items: InvoiceFormValues["items"]): number {
   }, 0);
 }
 
-export function roundInvoiceAmount(value: number): number {
-  return Math.round(value * 100) / 100;
-}
+/**
+ * Re-exported so this module stays the form's single import surface. The rule
+ * itself lives in ../invoice-money because the invoice detail screen's edit
+ * dialog needs the same rounding and must not pull Zod in to get it.
+ */
+export { roundInvoiceAmount } from "../invoice-money";
 
 export function formatInvoiceAmount(value: number): string {
   return `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
