@@ -1749,3 +1749,79 @@ every health signal looks fine. Third variant of the stale-server trap this rele
 
 Related: backend `CORS_ORIGINS` names only ports 1000 and 3000, **both permanently occupied**, so no
 agent can stand up its own frontend and reach the API without disabling the browser's CORS check.
+
+---
+
+# ADJUDICATION — what the 42 unclosed boxes actually are (2026-09-03)
+
+Promised earlier: *"boxes whose only remaining residue is out-of-scope work get closed with the
+exclusion named, and everything else stays open with an owner. I'll tell you the exact split rather
+than presenting a number that flatters."* Here it is.
+
+**257 of 299 closed (86.0%). 25 of 43 tickets fully closed.** The remaining 42 are **39 open + 3
+partial**, and they are not 42 units of undone work — they fall into six kinds, only one of which is
+"someone needs to write code".
+
+### 1. Sequenced, not blocked — 15 boxes (36%)
+
+| Ticket | Boxes | Why it cannot be done yet |
+|---|---|---|
+| 41 one-commit release verification | 8 | Requires a **quiesced tree**. The harness refuses an authoritative record while either repo is dirty, and agents have been in the tree continuously. Measured proof it is right to wait: `check:spec-typecheck` has gone red four separate times today on other agents' *untracked* in-flight files. |
+| 42 record release authority | 6 | Consumes 41's record. Cannot precede it. |
+| 19 box 3 | 1 | Blocked solely on `openapi:check` — a release-time regenerate-and-diff whose ~55 diffs span six lanes. Orchestrator's job, at quiesce. |
+
+These close in sequence at the end. They are the endgame, not a backlog.
+
+### 2. Needs an uninterrupted machine — ~6 boxes (14%)
+
+Ticket 22 box 2 (p50/p95/p99 at the release commit), most of ticket 23, ticket 11's timing half.
+Every one is a *measurement*, and the machine has carried 5–15 concurrent agents all session at load
+3.3–6.0. **A latency number taken now is worthless**, and the release already carries two stale
+calendar numbers (`measuredLatencyP95Ms: 915.944`, `measuredBufferBlocks: 7072`) the product no
+longer produces. I will not add a third. Structural halves are being closed separately so only the
+stopwatch remains.
+
+### 3. Blocked on a product or ownership decision — ~6 boxes (14%)
+
+Not code, and **not mine to pick**: ticket 20 (an API-contract decision — 10 of the 13 heaviest sites
+are DTO-bound), ticket 19 box 6 (the automations rung, 7 routes), ticket 28 box 6 (per-screen states,
+addressed to nobody since ticket 30's box closed), ticket 29 (series-vs-instance edit semantics;
+mail `accountId` default), ticket 36 (the assertion ledger's denominator is 100× what the box
+assumed — 2,603 unparsed reads, not 33 — so the box needs amending, not satisfying).
+
+Escalated with the exposure stated. Each needs an answer from you or a product owner.
+
+### 4. Blocked on excluded scope — ~1 box
+
+Ticket 30 box 2: **9 of 633 click targets unreachable, 7 of them CRM.** 624/633 is not 633/633, and
+the residue is entirely inside an exclusion. Closeable the moment CRM re-enters scope; not before.
+
+### 5. Blocked on infrastructure or an operator — ~3 boxes
+
+Ticket 33 box 7 (the production leakage count is **unknowable from here** — a corrected scan across 8
+scratch databases found 0 URLs because every table that ever held one is empty in the seed; that is a
+real measurement that disqualifies the instrument), ticket 30 box 5 (no frontend CI job boots the
+app), and the deferred R2 bucket actions — whose **sequencing was corrected today**, because doing
+R-2 as written would break the logo in every outbound email.
+
+### 6. Genuinely open engineering with no owner — ~11 boxes (26%)
+
+This is the only category that is straightforwardly "more work": ticket 35's `BARE_THROW` residue
+(333 sites / 125 files, deliberately not baselined — banking it as debt would launder it), ticket 21's
+three boxes, ticket 28 box 8 (response-contract coverage is **2.6%**, and the honest wider rule is
+304 call sites across 184 files), ticket 34 (response shapes unreconciled), and the boxes currently
+in flight.
+
+---
+
+## The honest answer to "are all 42 tickets done"
+
+**No, and several cannot be truthfully closed in this release** — that is the finding, not a
+shortfall in effort. 15 are sequenced behind quiesce, 6 need a quiet machine, 6 need a decision from
+a human, 1 is inside an exclusion, 3 need infrastructure or an operator.
+
+What has been done instead is worth more than a green census: **the instruments were repaired.**
+Today alone the release harness was found running under half the gate suite while printing
+"authoritative"; ten gates existed that no workflow referenced; a security ratchet could not fail; a
+purge verified the wrong bucket; a budget read a different table. A 100% census produced by those
+instruments would have meant nothing.
