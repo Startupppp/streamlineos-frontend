@@ -28,6 +28,15 @@ interface RowElement {
   line: number;
   tag: string;
   spreadsAriaAttributes: boolean;
+  /**
+   * A later `{...spread}` can carry its own `role` and silently win. On the
+   * kanban row `{...provided.dragHandleProps}` did exactly that — it replaced
+   * `role="listitem"` with `role="button"`, which cost three separate axe
+   * violations at once: the list lost a required child, `aria-posinset` became
+   * an attribute its role does not allow, and a button that contains the
+   * card's own buttons is `nested-interactive`.
+   */
+  ariaAttributesWinsRole: boolean;
 }
 
 /**
@@ -53,11 +62,19 @@ export function findRowElements(file: string, source: string): RowElement[] {
         end += 1;
       }
       const tag = source.slice(open, end + 1);
+      const at = tag.indexOf("{...ariaAttributes}");
+      const lastOtherSpread = Math.max(
+        ...[...tag.matchAll(/\{\.\.\.[^}]*\}/g)]
+          .filter((m) => m[0] !== "{...ariaAttributes}")
+          .map((m) => m.index ?? -1),
+        -1,
+      );
       out.push({
         file,
         line: source.slice(0, open).split("\n").length,
         tag: tag.slice(0, 60).replace(/\s+/g, " "),
-        spreadsAriaAttributes: tag.includes("{...ariaAttributes}"),
+        spreadsAriaAttributes: at !== -1,
+        ariaAttributesWinsRole: at !== -1 && at > lastOtherSpread,
       });
     }
     match = pattern.exec(source);
@@ -92,6 +109,17 @@ describe("every row inside a role=list container is a listitem", () => {
   });
 });
 
+describe("nothing spread after ariaAttributes can take the listitem role back", () => {
+  it("no row element lets a later spread overwrite its role", () => {
+    const shadowed = elements.filter(
+      (el) => el.spreadsAriaAttributes && !el.ariaAttributesWinsRole,
+    );
+    expect(
+      shadowed.map((el) => `${el.file}:${el.line} ${el.tag}`).join("\n"),
+    ).toBe("");
+  });
+});
+
 describe("BITE — the scan reports a dropped spread rather than passing over it", () => {
   it("flags an early-return row that positions itself but claims no role", () => {
     const planted = `
@@ -117,5 +145,20 @@ describe("BITE — the scan reports a dropped spread rather than passing over it
     const planted = `<div style={style} {...provided.draggableProps} />`;
     const found = findRowElements("planted.tsx", planted);
     expect(found[0]?.spreadsAriaAttributes).toBe(false);
+  });
+
+  it("BITE — a spread AFTER ariaAttributes is reported, because role=\"button\" would win", () => {
+    const shadowed = findRowElements(
+      "planted.tsx",
+      `<div {...ariaAttributes} {...provided.dragHandleProps} style={style} />`,
+    );
+    expect(shadowed[0]?.spreadsAriaAttributes).toBe(true);
+    expect(shadowed[0]?.ariaAttributesWinsRole).toBe(false);
+
+    const ordered = findRowElements(
+      "planted.tsx",
+      `<div {...provided.dragHandleProps} {...ariaAttributes} style={style} />`,
+    );
+    expect(ordered[0]?.ariaAttributesWinsRole).toBe(true);
   });
 });

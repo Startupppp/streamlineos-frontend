@@ -148,6 +148,42 @@ function setFieldValue(selector, valueExpression) {
   })()`;
 }
 
+function clickSelector(selector) {
+  return `(() => {
+    const el = document.querySelector(${JSON.stringify(selector)});
+    if (!el) return false;
+    el.click();
+    return true;
+  })()`;
+}
+
+/**
+ * Picks a day in the open calendar by walking `span` cells forward from the
+ * one already selected, rather than by typing a date the control does not
+ * accept or by hunting for a day number that may be an adjacent month's.
+ *
+ * The offset comes from the run's own subject because the surface this drives
+ * refuses a second record on a date that already has one — a journey that
+ * always took the default date could write exactly once per environment and
+ * would report every later run as a product failure. Two runs on the same day
+ * therefore choose different dates, and on the rare collision the run fails
+ * loudly rather than reporting a write it did not make.
+ */
+function pickCalendarDayFromSubject(span) {
+  return `(() => {
+    const grid = document.querySelector('[role="grid"]');
+    if (!grid) return false;
+    const cells = Array.from(grid.querySelectorAll('button[name="day"]'));
+    const from = cells.findIndex((c) => c.getAttribute("aria-selected") === "true");
+    if (from === -1) return false;
+    const digits = "{subject}".replace(/\\D/g, "").slice(-4);
+    const target = cells[from + 1 + (Number(digits) % ${span})];
+    if (!target || target.disabled) return false;
+    target.click();
+    return true;
+  })()`;
+}
+
 function submitDialogForm() {
   return `(() => {
     const dialog = document.querySelector('div[role="dialog"]');
@@ -285,6 +321,12 @@ const WRITE_JOURNEYS = [
     present: `document.body.innerText.includes("{subject}")`,
     actions: [
       { label: "type the holiday name", expression: setFieldValue("#holiday-name", `"{subject}"`) },
+      { label: "open the date picker", expression: clickSelector("#holiday-date") },
+      /**
+       * 25 days forward of the selected one, which is today. September has 30,
+       * so the window never leaves the month the list is filtered to.
+       */
+      { label: "choose a date this run has to itself", expression: pickCalendarDayFromSubject(25) },
       { label: "submit the holiday form", expression: clickByName("Add Holiday") },
       /**
        * Submitting only opens a confirmation. A run that stopped at the first
@@ -940,6 +982,19 @@ function runSelfTest() {
     clickByName("Add", 'div[role="alertdialog"]').includes(
       'document.querySelector("div[role=\\"alertdialog\\"]")',
     ),
+  );
+  assert(
+    "a calendar day is chosen relative to the selected cell, never by matching a bare number",
+    /aria-selected/.test(pickCalendarDayFromSubject(25)) &&
+      !/textContent/.test(pickCalendarDayFromSubject(25)),
+  );
+  assert(
+    "BITE — the chosen date varies with the subject, so a surface that refuses duplicates can still be written twice",
+    pickCalendarDayFromSubject(25).includes("{subject}"),
+  );
+  assert(
+    "BITE — a calendar with no selected cell fails the step rather than clicking the first day it sees",
+    /if \(from === -1\) return false;/.test(pickCalendarDayFromSubject(25)),
   );
 
   const axeSample = {

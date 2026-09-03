@@ -108,8 +108,8 @@ function KanbanVirtualRow({
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
-          {...ariaAttributes}
           {...provided.dragHandleProps}
+          {...ariaAttributes}
           style={mergeRowStyle(style, provided.draggableProps.style)}
           className={cn(snapshot.isDragging && "z-20")}
           aria-label={ticket.title}
