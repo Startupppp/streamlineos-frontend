@@ -1105,3 +1105,62 @@ in a repo where `drizzle-kit generate` is unusable and all 500+ migrations are h
 independent agents reported it. Withdrawn in `9db6371a` and replaced with the rule that is actually
 load-bearing: register the `.sql` in `_journal.json`, because a file absent from the journal never
 runs while `db:migrate` still prints success.
+
+## RESUME POINT — 2026-09-03, written at 15% battery
+
+Census at this point: **251 of 296 boxes closed (84.8%)**, 3 partial, 42 open, 23 of 42 tickets
+fully closed. Boxes remaining by ticket:
+`08:1 11:1 13:1 15:1 19:2 20:1 21:3 22:2 23:6 26:1 28:3 29:2 30:3 33:1 35:1 36:1 38:1 41:8 42:6`
+
+**41 and 42 (14 boxes) are the endgame and cannot start until the tree stops moving.**
+`release-verify.mjs` in this directory is the ticket 41 machinery and is committed. It refuses to
+produce an authoritative record unless BOTH trees are clean, so the first step next session is to
+quiesce every agent, commit, and run it with `--with-heavy`.
+
+### Landed this round
+- All **three P1 product defects fixed**: the `/build` project list (the `page`-vs-`.strict()`
+  drift AND a wrong response shape — dropping `page` alone would have been a wrong fix that looked
+  right), the `/calendar` 62-day window (clamped the `/hr/calendar` caller, deliberately NOT the
+  shared `CALENDAR_MAX_SPAN_DAYS = 120` which is pinned by a backend spec), and `GET /clients`
+  25P02 (root cause: `'ACCOUNT_OPENING'::text` into an enum column, which dies at PARSE with 42804
+  — hence both tenants regardless of data — fired as `void` into the request's own tenant
+  transaction, aborting it).
+- **`storage_pending_purge` was a write-only table** — two services opened a row before each object
+  delete and NOTHING anywhere ever read it. Every object whose delete failed was a permanent
+  orphan. Now drained by `CronStorageSweepService.drainPendingPurge`.
+- **Two composite FKs were unenforceable**, reproduced before fixing: with `org_id` set the FK
+  refused another tenant's row (23503); with `org_id` NULL the same row was accepted, as was a
+  member id existing nowhere. Migration `1043` forbids only the combination that disables the FK.
+- **Ticket 36 to 10/11.** Two of my own relayed claims were corrected by measurement:
+  `getTenantAbortSignal` is NOT dead (the interceptor sets `TenantContext.abortSignal` on every
+  request and it is the only reader — deleting it would have made a live cancellation signal
+  unreachable), and the GDPR shim forwards two dead names, not four.
+
+### Three gate-honesty fixes (mine)
+1. **`check:import-direction` was red at HEAD for a counting artefact.** 20 vs baseline 19,
+   reported REGRESSED. `org-switcher.tsx` references one module twice — statically and inside
+   `dynamic(() => import(...))` — and when `2ae7122de` taught the detector to see dynamic imports,
+   one architectural violation became two. Distinct edge set was and is 19. Now deduplicated by
+   `(rule, file, specifier)`; bite-proved both directions. Cross-feature baseline tightened
+   194 → 182, with the commit saying plainly those 12 were re-counted, not fixed.
+2. **`check:tenant-relationships` reported a stale target as 627 violations.** It printed "TARGET
+   IS MID-BOOTSTRAP — this number is not release evidence" and then exited 1 anyway, making a stale
+   target indistinguishable from a real regression. Now exits 2 ("cannot determine"). Against a
+   database at head it is unchanged: 0 actionable, exit 0. **Someone still owns advancing
+   `scratch_boot_a` from 573/667 to head.**
+3. `release-verify.mjs` classifies exit 2 + a prerequisite signature as SKIP, on evidence — never
+   on the exit code alone.
+
+### The one hard blocker still open
+`pnpm check:spec-typecheck` is **RED at HEAD**, 2 errors, both
+`src/modules/kb/wiki/kb-page-attachment-purge.spec.ts` TS2493 — `mockUpdateSet` is a bare
+`jest.fn()` so its parameter tuple infers as `[]` and `call[0]` is out of range. The fix belongs at
+the mock declaration, not the call sites. Routed to the kb owner; **if it did not land, do this
+first next session** — ticket 41 cannot pass with it red. Note this gate exists precisely because
+the backend build config EXCLUDES specs, so a clean `pnpm typecheck` does not prove specs compile.
+
+### Deferred operator actions (cannot be done from code — do not tick as closed)
+Make the R2 buckets private (`R2_BUCKET_NAME`, `R2_KB_BUCKET_NAME`); rotate the leaked DB
+credential; the support-channel `rotateInboundSecret` rotation owed after the hashing migration;
+the owner-DSN backfill `--apply`. Also: objects orphaned BEFORE the purge-drain fix leave no row,
+so recovering them needs a bucket listing — an operator action, recorded as owed.
