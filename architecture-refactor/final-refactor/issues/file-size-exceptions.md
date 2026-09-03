@@ -54,3 +54,80 @@ are still listed individually below — the scope decision is a reason, never a 
   - **Two files had grown past their recorded figure** — `membership-artifacts.ts` (registered 2496, measured 3216: the catalog grew by 720 lines under an exception nobody re-measured) and `chat-channel-members-implementation.ts` (506 → 522). Both re-measured and re-justified.
   - Four unregistered files over the limit were **split by cohesive responsibility rather than registered**: `gdpr-subject-erasure.service.ts` 653 → 244, `ai-gateway-runner.helper.ts` 527 → 211, `storage.service.ts` 509 → 389 and `cron-hr-retention.service.ts` 504 → 317. See `reports/37-file-cohesion.md` for the extraction seams and the before/after spec runs.
   - Every surviving row was rewritten to the nine-column record §7 asks for: exact path, measured lines, category, owner, public interface, a concrete cohesion argument, alternatives considered, review date and removal trigger.
+
+---
+
+## The over-300 ratchet (backend) — 2026-09-03
+
+`src/scripts/check-over-300.mjs` is a **separate** gate from the 500-line registry above and reads
+**nothing** from this document. Its `## Exceptions` table cannot hold an over-300 file: the table
+fails closed on any registered path measuring 500 lines or fewer ("exception no longer needed"), so
+a 301-line file added there would red `check:file-sizes`. Everything in this section is therefore
+prose on purpose, and the parser ignores it — `check-file-sizes.mjs`'s own self-test asserts that a
+path mentioned only in prose grants nothing.
+
+### What was actually wrong, measured rather than assumed
+
+The gate was red at head: **406 files over 300 against a baseline of 394 (rc=1)**. It had been
+characterised elsewhere as "the one unjustified historical raise". Measured against the history,
+that characterisation is **wrong in both halves**, and the truth is worse in one way and better in
+another:
+
+- There is exactly **one** raise in the gate's history, `c3f0b73d` (392 → 394), and it **is**
+  justified: the commit message names the three crossings with before/after line counts, and the
+  audit trail above records them. It is not an unjustified raise.
+- It **undershot**. Measured hermetically with `git archive c3f0b73d src` into a scratch tree and
+  running that commit's own gate against it: **395 files over 300, baseline 394, rc=1**. The commit
+  that "fixed" the gate shipped it red by one. The gate was last genuinely green at `f613bb3d`,
+  where it was created at 392 against a measured 392 (rc=0).
+- So the 12-file gap decomposes as **1 undershoot + 11 net new crossings**, not "12 unjustified
+  baseline points". The churn underneath is much larger than the net: **42 files crossed 300 and 31
+  fell back below it** between `c3f0b73d` and head. There is no identifiable set of "the twelve
+  files" to fix — any twelve-plus reductions are equally valid.
+
+### How it was made green — downward only
+
+The baseline moved **394 → 392**, and the count moved **406 → 392** to meet it. Fourteen files were
+split along a responsibility seam. Every extraction is a move of exported plain functions (or, for
+the fence store, a second implementation class), so no Nest provider, module registration, DI
+constructor or public method signature changed; `check:module-di` stays clean and no importer of
+any of the fourteen services needed an edit.
+
+- `src/common/idempotency/command-fence-store.ts` 304 → 212 — the in-memory store implementation left for `command-fence-store-memory.ts`; the file held two independent implementations of one interface.
+- `src/modules/gdpr/gdpr.service.ts` 301 → 160 — six inline per-source queries sharing one cap/truncation protocol left for `gdpr-sync-export-fetchers.ts`, matching the pattern the module already uses for its async export (`gdpr-export-fetchers-*.ts`). This is the 301-line service the review flagged, and it was the right call: it was orchestration, authorization and table-shape knowledge in one file.
+- `src/modules/activities/activities.service.ts` 302 → 249 — keyset timeline read to `activities-timeline.ts`, away from the write lifecycle.
+- `src/modules/hr/lifecycle/hr-dashboard-reports.service.ts` 303 → 140 — attendance analytics to `hr-dashboard-attendance.ts`; headcount, time-to-fill and attendance were three unrelated reports in one service.
+- `src/modules/hr/workflows/hr-workflow-engine.service.ts` 305 → 239 — the scheduled overdue sweep to `hr-workflow-overdue-sweep.ts`, away from the request-path start/act lifecycle.
+- `src/modules/hr/time/work-logs.service.ts` 311 → 246 — CSV serialisation to `work-logs-export.ts`.
+- `src/modules/email/email-outbox.service.ts` 307 → 214 — the retry/dead-letter drain to `email-outbox-retry.ts`, away from request-path enqueue.
+- `src/modules/module-access/user-permission-grants.service.ts` 302 → 246 — membership resolution to `user-permission-grants.helpers.ts`, beside the existing `module-access.helpers.ts`.
+- `src/modules/ai/core/services/chat-history.service.ts` 304 → 242 — conversation-scoped message paging to `chat-conversation-messages.ts`; the file carried two persistence grains.
+- `src/modules/inventory/quality/quality-inspections.service.ts` 309 → 207 — stock disposition to `quality-disposition.ts`, away from inspection state.
+- `src/modules/inventory/purchase-orders/po.service.ts` 305 → 233 — the PO state machine to `po-lifecycle.ts`, away from CRUD.
+- `src/modules/billing/core/billing-payment-activation.ts` 309 → 209 — the three post-activation bookkeeping recorders to `billing-activation-recorders.ts`.
+- `src/modules/hr/governance/labor/labor.service.ts` 308 → 248 — labor cases to `labor-cases.ts`; one service owned three entities, against §7's "name the entity service for the entity".
+- `src/modules/timesheets/core/timer.service.ts` 317 → 258 — pause/resume/stop/discard to `timer-transitions.ts`, away from the read path.
+
+Proof: `node src/scripts/check-over-300.mjs --self-test` rc=0 (15 passed);
+`node src/scripts/check-over-300.mjs` rc=0, **392 of 3606**, baseline 392.
+`pnpm check:spec-typecheck` rc=0 · `pnpm typecheck` rc=0 · `pnpm check:cycles` rc=0 (5,647 files,
+no cycle) · `pnpm check:module-di` rc=0 · `pnpm check:kebab-case` rc=0 ·
+`pnpm check:import-direction` rc=0 · `pnpm check:db-call-count` rc=0.
+
+### Files over 300 that were deliberately NOT split, and why
+
+§7 allows a cohesive catalogue to stay whole rather than fragment. These four are the strongest
+cases in the current over-300 set, and each has **already been split by domain** — splitting further
+would produce numbered fragments behind a re-export shell, which §7 calls out as worse than one
+honest file. They stay counted in the 392; recording them here is a decision, not an exemption, and
+the gate has no exemption mechanism to abuse.
+
+- `src/modules/notifications/notification-events.catalog.ts` (301) — one flat `NotificationEventDefinition[]` plus the derived `NOTIFICATION_EVENT_MAP`, `EVENT_KEY_SET` and `isNotificationEventKey`, which are meaningless apart from it. Seven per-domain catalogues (chat, build, accounting, hr, ownership, knowledge, security-support) have **already** been extracted into siblings; what remains is CRM plus the derivation tail. The next split would be by letter range.
+- `src/common/cache/cache-invalidation-matrix.ts` (301) — the same shape: four per-domain entry arrays (finance, inventory, rbac-auth, crm) are already siblings, and the file is the remaining namespace rows plus the concatenation. Consumers iterate the whole array.
+- `src/modules/rbac/role-templates-crm-hr.constants.ts` (312) — a permission catalogue, which §7 names explicitly as allowed to exceed even 500 rather than split artificially.
+- `src/modules/crm/import/import-entities.ts` (302) — an entity/field mapping table behind eight one-line accessors, already re-exporting `./import-fields`; there is no logic to separate, only data.
+
+### Left open
+
+- The **frontend** twin is also red and was not in this pass's scope: `pnpm -C frontend check:over-300` reports **520 against a baseline of 519, rc=1** — one file above. Same ticket-41 blocking shape, different territory.
+- `pnpm check:file-sizes` is red at head on two files neither split nor owned here — `src/modules/support/core/support-tickets.service.ts` (520) and `src/scripts/check-declaration-column-drift.ts` (534). Both measured identically at the commit before this pass, so they are pre-existing: either register them with the nine-column record or bring them under 500.
