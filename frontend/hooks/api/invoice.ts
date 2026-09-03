@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import type { Invoice, InvoiceItem, InvoiceStats, InvoiceStatus, PatchableInvoiceStatus, Payment, PaymentMethod } from "@/types/invoice";
+import type { Invoice, InvoiceStats, InvoiceStatus, PatchableInvoiceStatus, Payment, PaymentMethod } from "@/types/invoice";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import {
   invoiceContract,
@@ -29,10 +29,18 @@ interface CreateInvoiceItemInput {
   gstRate: number;
 }
 
+// The write shape the backend's createInvoiceSchema accepts — numbers, unlike the persisted row.
+interface LegacyLineItemInput {
+  description: string;
+  quantity: number;
+  rate: number;
+  amount: number;
+}
+
 interface CreateInvoiceInput {
   clientId?: number;
   projectId?: number;
-  lineItems?: InvoiceItem[];
+  lineItems?: LegacyLineItemInput[];
   items?: CreateInvoiceItemInput[];
   taxRate?: number;
   discount?: number;

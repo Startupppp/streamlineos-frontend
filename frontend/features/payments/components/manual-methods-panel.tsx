@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { useCan } from "@/hooks/api/access";
 import { Landmark, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +28,7 @@ const METHOD_TYPES: { value: ManualMethodType; label: string }[] = [
 ];
 
 function MethodEditor({ methodType, label, existing }: { methodType: ManualMethodType; label: string; existing: PaymentManualMethod | undefined }) {
+  const canManage = useCan("payments:manual-methods:manage");
   const save = useSaveManualMethod();
   const disable = useDisableManualMethod();
   const [form, setForm] = useState({
@@ -135,10 +137,12 @@ function MethodEditor({ methodType, label, existing }: { methodType: ManualMetho
       </label>
 
       <div className="flex items-center gap-2">
-        <Button size="sm" className="text-xs gap-1.5" onClick={handleSave} disabled={save.isPending}>
-          <Save className="h-3 w-3" /> Save
-        </Button>
-        {existing && existing.status !== "disabled" && (
+        {canManage ? (
+          <Button size="sm" className="text-xs gap-1.5" onClick={handleSave} disabled={save.isPending}>
+            <Save className="h-3 w-3" /> Save
+          </Button>
+        ) : null}
+        {canManage && existing && existing.status !== "disabled" && (
           <Button
             size="sm"
             variant="ghost"

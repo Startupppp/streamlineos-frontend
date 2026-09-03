@@ -87,7 +87,7 @@ export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
         header: "Qty",
         headerClassName: "text-right w-20",
         className: "text-right w-20",
-        cell: (item) => <span className="text-xs tabular-nums">{item.quantity}</span>,
+        cell: (item) => <span className="text-xs tabular-nums">{Number(item.quantity)}</span>,
       },
       {
         key: "rate",
@@ -96,7 +96,7 @@ export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
         className: "text-right w-28",
         cell: (item) => (
           <span className="text-xs tabular-nums">
-            <Money value={item.rate} currency={invoice?.currency} compact />
+            <Money value={Number(item.rate)} currency={invoice?.currency} compact />
           </span>
         ),
       },
@@ -107,7 +107,7 @@ export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
         className: "text-right w-28 font-medium",
         cell: (item) => (
           <span className="text-xs tabular-nums">
-            <Money value={item.amount} currency={invoice?.currency} compact />
+            <Money value={Number(item.amount)} currency={invoice?.currency} compact />
           </span>
         ),
       },

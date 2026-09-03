@@ -4,6 +4,7 @@ import { Building2, CreditCard, Wallet } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useCan } from "@/hooks/api/access";
 import type { PaymentProvider, PaymentProviderCatalogEntry } from "@/hooks/api/payments";
 import { ProviderStatusBadge } from "./provider-status-badge";
 
@@ -23,6 +24,7 @@ type ProviderCardProps = {
 };
 
 export function ProviderCard({ catalogEntry, provider, selected, onSelect, onConnect, isConnecting }: ProviderCardProps) {
+  const canConnect = useCan("payments:providers:manage");
   const Icon = PROVIDER_ICONS[catalogEntry.key] ?? Wallet;
   const isManual = catalogEntry.key === "manual";
   const canSelect = isManual || !!provider;
@@ -64,7 +66,7 @@ export function ProviderCard({ catalogEntry, provider, selected, onSelect, onCon
         <p className="text-dense text-muted-foreground">
           {provider.environment === "live" ? "Live environment" : "Test environment"}
         </p>
-      ) : (
+      ) : canConnect ? (
         <Button
           type="button"
           size="sm"
@@ -75,7 +77,7 @@ export function ProviderCard({ catalogEntry, provider, selected, onSelect, onCon
         >
           Connect
         </Button>
-      )}
+      ) : null}
     </button>
   );
 }

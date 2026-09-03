@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Script from "next/script";
 import { toast } from "sonner";
+import { useCan } from "@/hooks/api/access";
 import { Check, Loader2, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,7 @@ export function TestPaymentTab({ providerKey }: { providerKey: string }) {
     setRazorpayLoaded(true);
   }
 
+  const canRunTest = useCan("payments:test:run");
   const createTransaction = useCreateTestTransaction(providerKey);
   const verifyTransaction = useVerifyTestTransaction(providerKey);
   const { data: transactions } = useTestTransactions(providerKey);
@@ -110,14 +112,16 @@ export function TestPaymentTab({ providerKey }: { providerKey: string }) {
             className="text-sm w-32"
           />
         </div>
-        <Button
-          size="sm"
-          className="h-9 text-xs gap-1.5"
-          onClick={runTestPayment}
-          disabled={createTransaction.isPending || verifyTransaction.isPending}
-        >
-          <PlayCircle className="h-3.5 w-3.5" /> Run test payment
-        </Button>
+        {canRunTest ? (
+          <Button
+            size="sm"
+            className="h-9 text-xs gap-1.5"
+            onClick={runTestPayment}
+            disabled={createTransaction.isPending || verifyTransaction.isPending}
+          >
+            <PlayCircle className="h-3.5 w-3.5" /> Run test payment
+          </Button>
+        ) : null}
       </div>
 
       {(createTransaction.isPending || timelineStep > 0) && (

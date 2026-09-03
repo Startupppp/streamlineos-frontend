@@ -10,6 +10,7 @@ import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components
 import { EmptyState } from "@/components/ui/empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
+import { useCan } from "@/hooks/api/access";
 import {
   useGenerateWebhook,
   useWebhookEvents,
@@ -38,7 +39,7 @@ function RetryEventButton({ eventId, retry }: { eventId: number; retry: RetryMut
   );
 }
 
-function buildWebhookColumns(retry: RetryMutation): DataTableColumn<PaymentWebhookEvent>[] {
+function buildWebhookColumns(retry: RetryMutation, canManage: boolean): DataTableColumn<PaymentWebhookEvent>[] {
   return [
     {
       key: "eventType",
@@ -72,7 +73,7 @@ function buildWebhookColumns(retry: RetryMutation): DataTableColumn<PaymentWebho
       headerClassName: "text-right",
       className: "text-right",
       cell: (row) =>
-        row.processingStatus === "failed" ? (
+        canManage && row.processingStatus === "failed" ? (
           <RetryEventButton eventId={row.id} retry={retry} />
         ) : null,
     },
@@ -80,6 +81,7 @@ function buildWebhookColumns(retry: RetryMutation): DataTableColumn<PaymentWebho
 }
 
 export function WebhooksTab({ providerKey, environment }: { providerKey: string; environment: PaymentEnvironment }) {
+  const canManage = useCan("payments:webhooks:manage");
   const { data: providers } = usePaymentProviders();
   const provider = providers?.find((p) => p.providerKey === providerKey);
   const generate = useGenerateWebhook(providerKey);
@@ -103,7 +105,7 @@ export function WebhooksTab({ providerKey, environment }: { providerKey: string;
   }
 
   const environmentEvents: PaymentWebhookEvent[] = (events ?? []).filter((e) => e.environment === environment);
-  const columns = buildWebhookColumns(retry);
+  const columns = buildWebhookColumns(retry, canManage);
 
   return (
     <div className="space-y-4">
@@ -124,9 +126,11 @@ export function WebhooksTab({ providerKey, environment }: { providerKey: string;
             Credentials. Verification happens automatically the first time a real event arrives.
           </p>
         )}
-        <AnimatedIconButton icon={ShieldCheckIcon} iconSize={12} iconClassName="mr-1.5" size="sm" variant="outline" className="text-xs" onClick={handleGenerate} disabled={generate.isPending}>
-          {generatedUrl ? "Regenerate" : "Generate endpoint"}
-        </AnimatedIconButton>
+        {canManage ? (
+          <AnimatedIconButton icon={ShieldCheckIcon} iconSize={12} iconClassName="mr-1.5" size="sm" variant="outline" className="text-xs" onClick={handleGenerate} disabled={generate.isPending}>
+            {generatedUrl ? "Regenerate" : "Generate endpoint"}
+          </AnimatedIconButton>
+        ) : null}
         {provider && (
           <p className="text-dense text-muted-foreground">
             Expected events: card/UPI payments authorized, captured, failed; refunds; subscription charges.

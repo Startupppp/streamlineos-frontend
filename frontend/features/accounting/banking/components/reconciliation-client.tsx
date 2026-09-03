@@ -24,6 +24,8 @@ import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/conte
 import { useCan } from "@/hooks/api/access";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { ReconciliationTxn } from "@/hooks/api/accounting/banking";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
@@ -56,6 +58,11 @@ export function ReconciliationClient() {
     displayedTxns.find((t) => t.id === selectedTxnId) ??
     workspace?.unmatched.find((t) => t.id === selectedTxnId) ??
     workspace?.suggested.find((t) => t.id === selectedTxnId);
+
+  function handleRetry() {
+    void workspaceQuery.refetch();
+    void accountsQuery.refetch();
+  }
 
   const ledgerBalance = parseFloat(workspace?.ledgerBalance ?? "0");
   const bankBalance = parseFloat(workspace?.bankBalance ?? "0");
@@ -162,6 +169,13 @@ export function ReconciliationClient() {
             title="Select an account"
             description="Choose a bank account above to begin reconciliation."
             compact
+          />
+        ) : workspaceQuery.isError || accountsQuery.isError ? (
+          <ErrorState
+            className="flex-1"
+            title="Couldn't load this reconciliation"
+            description={getErrorMessage(workspaceQuery.error ?? accountsQuery.error)}
+            onRetry={handleRetry}
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 min-h-0">

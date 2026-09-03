@@ -64,7 +64,7 @@ const lineItemColumns: DataTableColumn<LineItem>[] = [
     header: "Qty",
     headerClassName: "text-right w-20",
     className: "text-right text-sm",
-    cell: (row) => row.quantity,
+    cell: (row) => Number(row.quantity),
   },
   {
     key: "rate",

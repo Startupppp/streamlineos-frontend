@@ -19,15 +19,17 @@ import {
 } from "@/components/ui/alert-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePaymentReadiness, useActivateLivePayments } from "@/hooks/api/payments";
+import { useCan } from "@/hooks/api/access";
 
 const CONFIRM_PHRASE = "ACTIVATE LIVE";
 
 export function LiveActivationPanel({ providerKey }: { providerKey: string }) {
+  const canActivate = useCan("payments:live:activate");
   const { data: readiness } = usePaymentReadiness(providerKey);
   const activate = useActivateLivePayments(providerKey);
   const [confirmText, setConfirmText] = useState("");
 
-  if (!readiness) return null;
+  if (!canActivate || !readiness) return null;
 
   function handleConfirmTextChange(e: React.ChangeEvent<HTMLInputElement>) {
     setConfirmText(e.target.value);
