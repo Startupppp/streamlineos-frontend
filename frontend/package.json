@@ -33,6 +33,8 @@
     "check:query-signal:self-test": "node scripts/check-query-signal.mjs --self-test",
     "check:command-catalog": "node scripts/check-command-catalog.mjs",
     "check:command-catalog:self-test": "node scripts/check-command-catalog.mjs --self-test",
+    "check:gated-reads": "node scripts/check-gated-reads.mjs",
+    "check:gated-reads:self-test": "node scripts/check-gated-reads.mjs --self-test",
     "check:dead-code": "node scripts/check-dead-code.mjs",
     "check:dead-code:self-test": "node scripts/check-dead-code.mjs --self-test",
     "check:type-assertions": "node scripts/check-type-assertions.mjs",
