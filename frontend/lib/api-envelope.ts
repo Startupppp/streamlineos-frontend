@@ -110,6 +110,62 @@ function assertUnchecked<T>(payload: unknown): T {
   return payload as T;
 }
 
+/**
+ * THE POLICY: a contract violation THROWS. Every time — reads and writes,
+ * development and production. The alternative, reporting it and handing the
+ * payload through, is today's default behaviour with a log line attached, and
+ * today's default behaviour is what shipped the two chat defects. It was
+ * considered and rejected. The `never` return type is the policy in the type
+ * system; this comment is the policy in prose, and both are here so that
+ * changing it means changing something named rather than editing a branch.
+ *
+ * 1. A contract cannot fail cosmetically. `ResponseContract` is deliberately
+ *    NOT `.strict()`, so an ADDED backend field passes — that is the
+ *    backward-compatible deploy, and it is allowed. The only remaining ways to
+ *    fail are a field removed, renamed or retyped: one this client declared and
+ *    reads, which no longer arrives as declared. There is no benign case here
+ *    to let through.
+ *
+ * 2. Wrong-but-plausible only beats an error state for whoever does not have to
+ *    act on it. Both shipped defects rendered a normal-looking screen — an
+ *    empty Favourites list, a huddle roster of "Unknown". Nobody files a bug
+ *    against a page that looks fine, which is exactly why both survived clean
+ *    typechecks on both sides for as long as they did. An error state is
+ *    discoverable; a plausible wrong one is not.
+ *
+ * 3. The blast radius is already one query, not the app. The throw lands in
+ *    that read's `error`; `readErrorReachesBoundary` then decides boundary or
+ *    inline, the same as for any 500.
+ *
+ * THE ASYMMETRY THAT LOOKS RIGHT AND IS NOT: fail reads, but let a drifted
+ * WRITE response through, since the mutation already committed and a thrown
+ * error invites a duplicate retry and rolls back optimistic state the server
+ * accepted. Sound in general, wrong here: the highest-consequence contracted
+ * write in the product is `POST /organization/switch`, whose response is what
+ * the session's active org is set from. Failing that one open is a cross-tenant
+ * outcome, and one such route is enough to kill the rule.
+ *
+ * NO SEVERITY DIAL AND NO ENVIRONMENT SWITCH. Either one puts the silent path
+ * back, one route at a time, with nothing to say which routes took it. A route
+ * that genuinely cannot afford to fail closed should lose its contract instead,
+ * where `check:response-contracts` counts it as unparsed and prints it.
+ */
+function rejectContractViolation(
+  resource: string,
+  status: number,
+  zodIssues: ReadonlyArray<{ path: ReadonlyArray<PropertyKey>; message: string }>,
+): never {
+  const issues: ContractIssue[] = zodIssues
+    .slice(0, MAX_REPORTED_ISSUES)
+    .map((issue) => ({
+      path: issuePath(issue.path),
+      message: issue.message,
+    }));
+  const error = new ApiContractError(resource, status, issues);
+  reportError(error, { resource, status, issues });
+  throw error;
+}
+
 function applyContract<T>(
   payload: unknown,
   contract: ResponseContract<T> | undefined,
@@ -119,15 +175,7 @@ function applyContract<T>(
   if (contract === undefined) return assertUnchecked<T>(payload);
   const result = contract.safeParse(payload);
   if (result.success) return result.data;
-  const issues: ContractIssue[] = result.error.issues
-    .slice(0, MAX_REPORTED_ISSUES)
-    .map((issue) => ({
-      path: issuePath(issue.path),
-      message: issue.message,
-    }));
-  const error = new ApiContractError(resource, status, issues);
-  reportError(error, { resource, status, issues });
-  throw error;
+  return rejectContractViolation(resource, status, result.error.issues);
 }
 
 async function readErrorBody(res: ApiResponseLike): Promise<ApiError> {

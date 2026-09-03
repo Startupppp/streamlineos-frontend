@@ -1,104 +1,31 @@
 /**
  * @jest-environment node
  */
-import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
-import ts from "typescript";
+import { execFileSync } from "node:child_process";
+import { join } from "node:path";
 
 /**
  * Runtime response validation is opt-in per call site, which means the
  * un-validated path is the default and therefore invisible. This makes it
- * visible: it counts every call through the fetch seam, prints the covered
- * fraction, and — the part that bites — fails when a route carrying money,
- * permissions, tenancy or PII loses the contract it had.
- * `CONTRACTED_ROUTES` is the policy, not a snapshot: a route joins it when its
- * contract lands and can only leave deliberately.
+ * visible and holds the line: no route carrying money, permissions, tenancy or
+ * PII may lose its contract, and no new endpoint may arrive without one.
+ *
+ * The scan itself lives in `scripts/check-response-contracts.mjs` and this
+ * suite consumes its `--json`. That is deliberate. This file USED to carry its
+ * own copy of the scanner, and the copy had two holes the gate does not: it
+ * read `hooks/` only, so it could not see the 161 seam calls in `app/`,
+ * `features/`, `components/` and `lib/`; and its leak rule matched
+ * `method === "get"`, so a `serverGet` on a contracted route was invisible.
+ * Three SSR prefetches of routes on its own risk list — `/payroll/runs`,
+ * `/roles`, `/directory/workers` — sat uncontracted underneath a green run.
+ *
+ * Two implementations of one definition disagree; this release has already paid
+ * for that once (a read count reported as 81, 84 and 86 by three scanners of
+ * the same thing). There is one scanner now, and this asserts against it.
  */
 
 const FE_ROOT = join(__dirname, "..");
-/** The whole hook tree: the org-switch seam lives in `hooks/common`, not `hooks/api`. */
-const HOOKS_DIR = join(FE_ROOT, "hooks");
-
-/** Where the contract sits in each seam function's argument list. */
-const SEAM_METHODS: Readonly<Record<string, number>> = {
-  get: 3,
-  post: 3,
-  put: 3,
-  patch: 3,
-  delete: 3,
-  upload: 2,
-};
-
-const SEAM_FUNCTIONS: Readonly<Record<string, number>> = {
-  serverGet: 1,
-  publicGet: 2,
-  publicGetNoStore: 2,
-};
-
-/**
- * Every route whose body decides what someone may do, who they are, what they
- * are owed or what they may see. A contract violation on one of these is a
- * lockout, a wrong number or a leak — never a cosmetic gap.
- */
-const CONTRACTED_ROUTES: readonly string[] = [
-  // money — platform billing
-  "/billing",
-  "/billing/plans",
-  "/billing/profile",
-  "/billing/seats",
-  "/billing/coupons/validate",
-  "/billing/entitlements",
-  "/billing/ai-credits",
-  "/billing/ai-credits/transactions",
-  "/billing/ai-credits/usage",
-  // money — customer invoicing
-  "/invoices",
-  "/invoices/:p",
-  "/invoices/stats",
-  // money — accounting
-  "/accounting/ar-payments",
-  "/accounting/credit-notes",
-  "/accounting/coa/tree",
-  "/accounting/settings/setup-status",
-  "/accounting/reports/tax-summary",
-  "/accounting/reports/expense-by-category",
-  "/accounting/general-ledger",
-  "/accounting/general-ledger/accounts",
-  "/finance/bank-accounts",
-  // money — payroll
-  "/payroll/runs",
-  "/payroll/runs/:p",
-  "/payroll/reports/summary",
-  "/payroll/me/payslips",
-  "/payroll/me/bank",
-  "/payroll/me/salary-structure",
-  "/payroll/me/loans",
-  "/payroll/me/reimbursements",
-  // permissions and tenancy
-  "/me/access",
-  "/me/org-display",
-  "/rbac/permissions",
-  "/rbac/discovery/grantable",
-  "/rbac/discovery/members",
-  "/module-access/:p/catalog",
-  "/module-access/:p/me/permissions",
-  "/organization",
-  "/organization/switch",
-  "/organization/members",
-  "/roles",
-  "/roles/:p",
-  "/roles/simulate/candidates",
-  "/roles/simulate/:p",
-  "/access/org-modules",
-  "/access/user-module-access/:p",
-  // PII
-  "/directory/people",
-  "/directory/people/:p",
-  "/directory/workers",
-  "/users/stats",
-];
-
-const MIN_SCANNED_CALLS = 1500;
+const GATE = join(FE_ROOT, "scripts", "check-response-contracts.mjs");
 
 interface SeamCall {
   readonly file: string;
@@ -108,193 +35,79 @@ interface SeamCall {
   readonly validated: boolean;
 }
 
-function sourceFiles(dir: string, out: string[] = []): string[] {
-  for (const entry of readdirSync(dir)) {
-    const full = join(dir, entry);
-    if (statSync(full).isDirectory()) {
-      sourceFiles(full, out);
-      continue;
-    }
-    if (!/\.tsx?$/.test(entry)) continue;
-    if (/\.(test|spec)\.tsx?$/.test(entry)) continue;
-    out.push(full);
-  }
-  return out;
+interface GateReport {
+  readonly scanned: number;
+  readonly validated: number;
+  readonly unvalidated: number;
+  readonly unresolvedSites: number;
+  readonly distinctRoutes: number;
+  readonly validatedRoutes: number;
+  readonly contractedRoutes: readonly string[];
+  readonly missingContract: readonly string[];
+  readonly leaks: readonly string[];
+  readonly baseline: { readonly unvalidatedCalls: number; readonly minScannedCalls: number };
+  readonly calls: readonly SeamCall[];
 }
 
-function routeOf(node: ts.Expression | undefined): string | null {
-  if (node === undefined) return null;
-  if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node))
-    return node.text.split("?")[0] ?? null;
-  if (ts.isTemplateExpression(node)) {
-    let text = node.head.text;
-    for (const span of node.templateSpans) text += `:p${span.literal.text}`;
-    return text.split("?")[0] ?? null;
-  }
-  return null;
-}
-
-function contractIndexFor(
-  node: ts.CallExpression,
-  src: ts.SourceFile,
-): { method: string; index: number } | null {
-  if (
-    ts.isPropertyAccessExpression(node.expression) &&
-    node.expression.expression.getText(src) === "apiClient"
-  ) {
-    const method = node.expression.name.getText(src);
-    const index = SEAM_METHODS[method];
-    return index === undefined ? null : { method, index };
-  }
-  if (ts.isIdentifier(node.expression)) {
-    const method = node.expression.getText(src);
-    const index = SEAM_FUNCTIONS[method];
-    return index === undefined ? null : { method, index };
-  }
-  return null;
-}
-
-function scanSeamCalls(): SeamCall[] {
-  const calls: SeamCall[] = [];
-  for (const file of sourceFiles(HOOKS_DIR)) {
-    const src = ts.createSourceFile(
-      file,
-      readFileSync(file, "utf8"),
-      ts.ScriptTarget.ESNext,
-      true,
-    );
-    const visit = (node: ts.Node): void => {
-      if (ts.isCallExpression(node)) {
-        const seam = contractIndexFor(node, src);
-        if (seam !== null) {
-          const { line } = src.getLineAndCharacterOfPosition(node.getStart(src));
-          calls.push({
-            file: relative(FE_ROOT, file),
-            line: line + 1,
-            method: seam.method,
-            route: routeOf(node.arguments[0]),
-            validated: node.arguments.length > seam.index,
-          });
-        }
-      }
-      ts.forEachChild(node, visit);
+function runGate(...args: string[]): { stdout: string; status: number } {
+  try {
+    return {
+      stdout: execFileSync("node", [GATE, ...args], {
+        cwd: FE_ROOT,
+        encoding: "utf8",
+        maxBuffer: 64 * 1024 * 1024,
+      }),
+      status: 0,
     };
-    visit(src);
+  } catch (error) {
+    const failure = error as { stdout?: string; stderr?: string; status?: number };
+    return { stdout: `${failure.stdout ?? ""}${failure.stderr ?? ""}`, status: failure.status ?? 1 };
   }
-  return calls;
 }
 
-const CALLS = scanSeamCalls();
+const REPORT: GateReport = JSON.parse(runGate("--json").stdout) as GateReport;
 
 describe("response contract coverage", () => {
-  it("scanned the data layer rather than an empty tree", () => {
-    expect(CALLS.length).toBeGreaterThan(MIN_SCANNED_CALLS);
+  it("scanned the whole client tree rather than an empty one", () => {
+    expect(REPORT.scanned).toBeGreaterThan(REPORT.baseline.minScannedCalls);
+    expect(new Set(REPORT.calls.map((call) => call.file.split("/")[0]))).toEqual(
+      new Set(["hooks", "app", "features", "components", "lib"]),
+    );
   });
 
   it("keeps a contract on every route carrying money, permissions, tenancy or PII", () => {
-    const validatedRoutes = new Set(
-      CALLS.filter((call) => call.validated).map((call) => call.route),
-    );
-    const missing = CONTRACTED_ROUTES.filter(
-      (route) => !validatedRoutes.has(route),
-    );
-
-    expect(missing).toEqual([]);
+    expect(REPORT.missingContract).toEqual([]);
   });
 
-  it("never leaves a contracted route with an unvalidated second call site", () => {
-    const contracted = new Set(CONTRACTED_ROUTES);
-    const leaks = CALLS.filter(
-      (call) =>
-        call.route !== null &&
-        contracted.has(call.route) &&
-        !call.validated &&
-        call.method === "get",
-    ).map((call) => `${call.file}:${call.line} ${call.route}`);
+  it("never leaves a contracted route readable without its contract, through any read seam", () => {
+    expect(REPORT.leaks).toEqual([]);
+  });
 
-    expect(leaks).toEqual([]);
+  it("sees the SSR prefetch seam, not only the client hooks", () => {
+    const prefetch = REPORT.calls.filter((call) => call.file.startsWith("lib/prefetch/"));
+
+    expect(prefetch.length).toBeGreaterThan(0);
+    expect(
+      prefetch.filter((call) => !call.validated).map((call) => call.file),
+    ).not.toContain("lib/prefetch/payroll.ts");
   });
 
   it("reports the un-validated remainder as a number rather than hiding it", () => {
-    const validated = CALLS.filter((call) => call.validated).length;
-    const coverage = `${validated}/${CALLS.length} seam calls under hooks/ carry a response contract`;
+    expect(REPORT.validated + REPORT.unvalidated).toBe(REPORT.scanned);
+    expect(REPORT.unvalidated).toBeLessThanOrEqual(REPORT.baseline.unvalidatedCalls);
+    expect(REPORT.validated).toBeGreaterThanOrEqual(REPORT.contractedRoutes.length);
+  });
 
-    expect(coverage).toContain("seam calls");
-    expect(validated).toBeGreaterThanOrEqual(CONTRACTED_ROUTES.length);
-    expect(validated).toBeLessThanOrEqual(CALLS.length);
+  it("holds the ratchet: the tree at head passes its own gate", () => {
+    expect(runGate().status).toBe(0);
   });
 });
 
 describe("the scanner itself", () => {
-  it("finds the contract argument only when one is actually passed", () => {
-    const src = ts.createSourceFile(
-      "probe.ts",
-      [
-        'apiClient.get("/a", undefined, signal, aContract);',
-        'apiClient.get("/b", undefined, signal);',
-        'apiClient.post("/c", body, undefined, cContract);',
-        'apiClient.post("/d", body);',
-        'serverGet("/e", eContract);',
-        'serverGet("/f");',
-      ].join("\n"),
-      ts.ScriptTarget.ESNext,
-      true,
-    );
-    const seen: Array<{ route: string | null; validated: boolean }> = [];
-    const visit = (node: ts.Node): void => {
-      if (ts.isCallExpression(node)) {
-        const seam = contractIndexFor(node, src);
-        if (seam !== null)
-          seen.push({
-            route: routeOf(node.arguments[0]),
-            validated: node.arguments.length > seam.index,
-          });
-      }
-      ts.forEachChild(node, visit);
-    };
-    visit(src);
+  it("passes its own self-test, so the numbers above mean what they say", () => {
+    const result = runGate("--self-test");
 
-    expect(seen).toEqual([
-      { route: "/a", validated: true },
-      { route: "/b", validated: false },
-      { route: "/c", validated: true },
-      { route: "/d", validated: false },
-      { route: "/e", validated: true },
-      { route: "/f", validated: false },
-    ]);
-  });
-
-  it("normalises an interpolated path segment so a detail route is one route", () => {
-    const src = ts.createSourceFile(
-      "probe.ts",
-      "apiClient.get(`/directory/people/${id}`, undefined, signal, c);",
-      ts.ScriptTarget.ESNext,
-      true,
-    );
-    let route: string | null = null;
-    const visit = (node: ts.Node): void => {
-      if (ts.isCallExpression(node)) route = routeOf(node.arguments[0]);
-      ts.forEachChild(node, visit);
-    };
-    visit(src);
-
-    expect(route).toBe("/directory/people/:p");
-  });
-
-  it("strips a query string so one route is not counted as many", () => {
-    const src = ts.createSourceFile(
-      "probe.ts",
-      "apiClient.get(`/directory/people?${qs}`, undefined, signal, c);",
-      ts.ScriptTarget.ESNext,
-      true,
-    );
-    let route: string | null = null;
-    const visit = (node: ts.Node): void => {
-      if (ts.isCallExpression(node)) route = routeOf(node.arguments[0]);
-      ts.forEachChild(node, visit);
-    };
-    visit(src);
-
-    expect(route).toBe("/directory/people");
+    expect(result.status).toBe(0);
+    expect(result.stdout).toMatch(/^(\d+)\/\1 self-test assertions passed\.$/m);
   });
 });

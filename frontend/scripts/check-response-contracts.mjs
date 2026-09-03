@@ -474,24 +474,20 @@ function main() {
   const result = evaluate(calls);
 
   if (args.includes("--json")) {
-    console.log(
-      JSON.stringify(
-        {
-          scanned: result.scanned,
-          validated: result.validated,
-          unvalidated: result.unvalidated,
-          unresolvedSites: result.unresolvedSites,
-          distinctRoutes: result.distinctRoutes,
-          validatedRoutes: result.validatedRoutes,
-          contractedRoutes: CONTRACTED_ROUTES,
-          missingContract: result.missingContract,
-          leaks: result.leaks,
-          baseline: BASELINE,
-          calls,
-        },
-        null,
-        2,
-      ),
+    process.stdout.write(
+      JSON.stringify({
+        scanned: result.scanned,
+        validated: result.validated,
+        unvalidated: result.unvalidated,
+        unresolvedSites: result.unresolvedSites,
+        distinctRoutes: result.distinctRoutes,
+        validatedRoutes: result.validatedRoutes,
+        contractedRoutes: CONTRACTED_ROUTES,
+        missingContract: result.missingContract,
+        leaks: result.leaks,
+        baseline: BASELINE,
+        calls,
+      }),
     );
     return result.failures.length === 0 ? 0 : 1;
   }
@@ -525,4 +521,9 @@ function main() {
   return 1;
 }
 
-process.exit(main());
+/**
+ * `process.exit()` truncates a stdout write that is still pending, which a pipe
+ * always makes it — `--json` came back cut at exactly 65536 bytes. Setting the
+ * code and letting node drain is the fix.
+ */
+process.exitCode = main();
