@@ -1379,3 +1379,37 @@ anything: `:3000` is `next dev` against backend `:1501` on `scratch_t30_browser`
 `pg_stat_activity`. The repo `.env`'s 36-char `NEXTAUTH_SECRET` does NOT match the running server —
 a cookie minted with it 307s to `/signin`, while the 64-char process-only secret reaches
 `/dashboard` 200. A stale `next start` on `:1000` from the previous day was identified and not used.
+
+## CORRECTION — the merge was not a Claude agent. A second AI tool is committing to these repos.
+
+I recorded the seventh attribution incident as "another agent ran a `git merge` mid-session".
+**That was wrong, and the truth matters more than the incident.** Verified by trailer, last 72 hours:
+
+```
+336  Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+  6  Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+  3  Co-authored-by: Cursor <cursoragent@cursor.com>
+```
+
+The three Cursor commits are `4ade571fa`, `c07d71c1d`, and **`6ab1c0fb8` — the merge itself**. So the
+merge that reverted one agent's uncommitted edits and swallowed another's report was run by
+**Cursor**, a different tool operating in the same working tree.
+
+(Note for anyone re-checking this: `git log --grep=cursor` is USELESS here. It matches every commit
+about *cursor pagination*, of which this release has many. Grep the commit body for the trailer
+address instead.)
+
+**Why this changes the mitigation.** Every rule in AGENT-BRIEF.md — the pathspec discipline, the
+"never merge", the "commit by explicit file path", the territory assignments — binds Claude agents
+because they read the brief. **Cursor is bound by none of it.** A ninth incident was then observed
+directly: at 08:06:37 a Cursor agent ran a bare commit over the shared git index and swallowed four
+of another agent's staged files into `4ade571fa` under its own message. The diff was verified line
+by line: content byte-correct, nothing lost, attribution wrong.
+
+So the shared-index hazard is **not** something this brief can close. It is a property of two tools
+editing one tree. The only real mitigations are external: run the second tool in a separate
+worktree, or stop it while a batch is in flight. **This belongs to the user, not to the brief.**
+
+Also worth recording: content has survived every one of the nine incidents. Nothing has been lost
+to date — the damage has been attribution and, once, a silent revert that its author noticed and
+re-applied. The risk is that the next one is not noticed.
