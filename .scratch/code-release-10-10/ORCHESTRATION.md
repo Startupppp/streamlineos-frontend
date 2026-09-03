@@ -1974,3 +1974,42 @@ code: it built the db as a bare `drizzle(client)` instead of `createTenantAwareD
 `processMonthlyPlanGrants` reaches through `this.db` rather than the `tx` that `forEachOrg` hands it,
 so its GUC comes from that proxy and nowhere else. **Anyone probing a sweep at service level needs
 the proxy or they will measure a false failure** — and would have concluded a working job was broken.
+
+---
+
+## The sampled authorization check was an authorization BYPASS, not merely nondeterminism
+
+I described `assertMayAssignRole`'s unordered `.limit(500)` as "the answer depends on which rows the
+planner returned". That understated it. **Grants past the 500-row window were never checked at all**,
+so an unconferrable permission sitting beyond the window was **silently authorised**. The bite proof
+is unambiguous: against the unfixed code the test reports `Received promise resolved instead of
+rejected` — it granted an assignment it should have refused.
+
+Fixed by ordering the read and bounding it above a ceiling that **refuses outright** rather than
+deciding on a slice. `.limit()` was kept deliberately so `check:unbounded-reads` stays satisfied — the
+fix is "refuse when the set is too large to evaluate", not "read everything".
+
+The general lesson is worth keeping: **a `LIMIT` inside an authorization predicate is not a
+performance detail.** Any check that reads a bounded sample of the facts and then answers as if it
+read all of them is an accept-by-omission.
+
+### Three more corrections to the orchestrator's relayed claims
+
+1. **`settings:email-templates:manage` is on `BRANCH_HR`, NOT `HR_ADMIN`.** I relayed `HR_ADMIN`.
+   Line 221 sits inside `BRANCH_HR` (starts 175); `HR_ADMIN` spans 80–174 and does not carry it.
+   Anyone re-deriving the exposure from `HR_ADMIN` would have concluded the finding was FALSE and
+   dropped a real defect.
+2. **`settings:view` is held by 7 principals** (4 seeded rungs + 3 templates, including
+   `HR_MODULE_MEMBER`, the lowest HR rung) against 1 for `settings:rbac:manage` — wider than recorded.
+3. **`backend/CLAUDE.md`'s rate-limit rule was stale and is now corrected in that file.** It said an
+   unknown tier "silently disables the limit"; SEC-004 changed `check()` to deny and log. That file is
+   read by every agent, and a stale claim about a **security control** is the kind that gets designed
+   around — an agent told the limiter fails open may build scaffolding for a failure mode that no
+   longer exists, or distrust a control that now works.
+
+### A deliberate behaviour change, recorded because it removes something
+
+The email template test route no longer sends to an arbitrary address — the caller's own account
+address only. Justified: the route has no frontend caller and `GET .../preview` covers on-screen use.
+**Side effect worth naming:** `scripts/functional/int-email.test.mjs` was the repository's only real
+external email send, and no longer is.
