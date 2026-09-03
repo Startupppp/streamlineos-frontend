@@ -125,18 +125,14 @@ export function runScanDirSelfTest(assert) {
 function runSelfTest() {
   let passed = 0;
   const failures = [];
+  const notRun = [];
   const assert = (label, condition) => {
     if (condition) passed++;
     else failures.push(label);
   };
 
-  assert("the backend repository resolves in this checkout", backendAvailable);
-  assert(
-    "the resolved backend root actually carries the marker",
-    backendAvailable && existsSync(join(BACKEND_ROOT, MARKER)),
-  );
-  assert("backendPath composes onto the resolved root", backendAvailable && backendPath("src").endsWith(join("src")));
-  assert("no override was needed on this layout", backendRootWasOverridden === false);
+  // Layout-independent. These prove the RESOLVER and hold in any checkout,
+  // including the frontend-only checkout CI actually performs.
   assert(
     "the unreachable reason names the marker it searched for",
     backendUnreachableReason().includes(MARKER),
@@ -151,11 +147,64 @@ function runSelfTest() {
   );
   runScanDirSelfTest(assert);
 
+  // Cross-repository. Whether the backend is CHECKED OUT is an environment
+  // fact, not a defect in the resolver, and asserting it unconditionally made
+  // this self-test exit 1 in every frontend-only checkout -- which, as the
+  // first blocking step of the `gates` job, skipped all 26 gates below it. When
+  // the sibling is absent the ABSENCE CONTRACT is asserted instead, and the run
+  // ends INCONCLUSIVE (exit 2) rather than OK, so a partial run can never be
+  // read as a clean one.
+  if (backendAvailable) {
+    assert("the backend repository resolves in this checkout", backendAvailable);
+    assert("the resolved backend root actually carries the marker", existsSync(join(BACKEND_ROOT, MARKER)));
+    assert("backendPath composes onto the resolved root", backendPath("src").endsWith(join("src")));
+    if (process.env.STREAMLINE_BACKEND_ROOT === undefined)
+      assert("no override was needed on this layout", backendRootWasOverridden === false);
+    else assert("an explicit STREAMLINE_BACKEND_ROOT is honoured as authoritative", backendRootWasOverridden === true);
+  } else {
+    notRun.push(
+      "the backend repository resolves in this checkout",
+      "the resolved backend root actually carries the marker",
+      "backendPath composes onto the resolved root",
+      "no override was needed on this layout",
+    );
+    assert("an absent backend resolves to null rather than a wrong directory", BACKEND_ROOT === null);
+    assert("an absent backend is reported as unavailable", backendAvailable === false);
+    assert(
+      "backendPath throws and names the marker instead of composing onto a null root",
+      (() => {
+        try {
+          backendPath("src");
+          return false;
+        } catch (error) {
+          return String(error.message).includes(MARKER);
+        }
+      })(),
+    );
+  }
+
   if (failures.length > 0) {
     for (const f of failures) console.error(`  FAIL: ${f}`);
     console.error(`check-repo-paths self-tests: ${failures.length} failed, ${passed} passed`);
     process.exit(1);
   }
+
+  if (notRun.length > 0) {
+    const allowed = process.env.STREAMLINE_ALLOW_FRONTEND_ONLY === "1";
+    const stream = allowed ? console.warn : console.error;
+    stream(
+      `${allowed ? "PARTIAL" : "INCONCLUSIVE"} — check-repo-paths: ${passed} passed, ${notRun.length} cross-repository assertion(s) NOT RUN in this checkout.`,
+    );
+    for (const label of notRun) stream(`  NOT RUN: ${label}`);
+    stream(`  ${backendUnreachableReason()}`);
+    if (allowed) {
+      console.warn("  STREAMLINE_ALLOW_FRONTEND_ONLY=1 — this run proves the resolver, and proves nothing about the sibling layout.");
+      process.exit(0);
+    }
+    console.error("  Set STREAMLINE_BACKEND_ROOT, or set STREAMLINE_ALLOW_FRONTEND_ONLY=1 to accept a PARTIAL run.");
+    process.exit(2);
+  }
+
   console.log(`check-repo-paths self-tests: ${passed} passed`);
   process.exit(0);
 }
