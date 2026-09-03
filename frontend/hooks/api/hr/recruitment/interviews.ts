@@ -146,7 +146,7 @@ export function useCreateScorecardTemplate() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "scorecard-templates", "create"],
-    mutationFn: (data: { name: string; criteria: ScorecardCriterion[]; isBlindMode?: boolean }) =>
+    mutationFn: (data: { name: string; criteria: ScorecardCriterion[] }) =>
       apiClient.post<ScorecardTemplate>("/hr/recruitment/scorecard-templates", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.scorecardTemplates() }),
   });
