@@ -20,6 +20,24 @@
   - Also fixed: `/settings/api-keys*` create **organisation-wide** keys but were gated on `settings:api-tokens:*`, which `ROLE_DEFAULT_PERMISSIONS` grants to `MEMBER`; only an in-service admin check stood in the way. Re-gated on `settings:manage` (no frontend caller exists). `revokeApiKey` now re-asserts `org_id` on the `UPDATE`.
   - **Module-access CLOSED in pass 4** (the path moved into this ticket's territory). `setModuleRolePermissionsSchema`'s `items[]` was strict at the boundary and open one level in, so a misspelt key inside an item parsed clean and `scpe` silently became the `"all"` default — a scoped grant stored **wider** than it was asked for. `POST :moduleKey/groups` now carries `@Idempotent("module-access.group.create")`; without it a retried submit hit the name check and got a 409 for a group the caller never saw created. `module-access.schemas.ts` is now 19 `.strict()` of 19 `z.object(`. Bite-proved in a `git archive HEAD` tree: schemas **2 failed / 4**, command safety **1 failed / 3**; live tree **10 passed / 10**.
   - PARTIAL (widened in pass 3): `pnpm openapi:check` — the regenerate-and-diff freshness gate — is **not run**, and the document is now provably stale: five routes moved paths this pass, so `openapi.json` still advertises `/settings/integrations/git` and `/settings/ai-usage` and carries neither canonical path. Regeneration is a release-time step for the orchestrator, not a per-agent one — it boots the app and would sweep every other agent's in-flight routes into one 7 MB artifact diff spanning two repos. The six gates that read the committed document all still exit 0. It boots the app, and boot now runs `PermissionCatalogSyncService.onModuleInit`, which would write grants into the shared Neon database. My changes cannot drift the document anyway (`x-exposure` records the class, not the key; `@Idempotent` is not stamped).
+  - **RESIDUAL-RISK REGISTER 2026-09-03 — A-12 / A-12b. ASSIGNABLE, and the recorded blocker above is WRONG.**
+    `pnpm openapi:check` is **not** database-coupled. Backend CI has run this exact command since it was wired
+    (`.github/workflows/ci.yml:204-215`) against `DATABASE_URL: postgres://ci:ci@127.0.0.1:5432/ci` — a DSN pointing
+    at nothing — and it was reproduced locally today with the same six placeholder variables: **exit 1**,
+    `openapi.json is STALE`, 50 differences printed plus "and 5 more" = **55 operations**, no database contacted,
+    clean `Shutdown drain complete`. So `PermissionCatalogSyncService.onModuleInit` writing into the shared Neon
+    instance is not what defers this; nothing forces the real `DATABASE_URL` to be used.
+    What genuinely defers it is **sequencing**: the 55 differences already span at least six lanes (nine
+    `/ai/**/stream` routes, `/crm/settings/custom-fields`, `/integrations/git/connections`, `/ai/usage`,
+    `/payroll/filings/export/jobs/{jobId}`, `/cron/gdpr-export-artifact-retention`, `/storage/download`,
+    `/storage/image`), so it belongs at the release commit rather than in any agent's pass. That is a scheduled
+    mechanical task with a named moment, not an accepted residual.
+    **Owner: release orchestrator, at the release commit. Deadline: 2026-09-08.**
+    **A-12b — a second, independent staleness nobody has recorded.** `pnpm check:contract-vendor` (frontend) is
+    **already exit 1 at head**. The two documents agree on all 3,613 operations except one:
+    `POST /gdpr/rectification/me`, a `oneOf` request body in the backend artifact and a flat object in
+    `frontend/contracts/openapi.json`. The CI step is `continue-on-error`, so it will never surface there. One `cp`,
+    same change as A-12. Full reasoning: `reports/residual-risk-register-19-30.md` §1.2 and §3.1.
 - [x] Effective-permission resolution is batched and cached; scope expansion is bounded; indexes cover subject, role, permission, module and tenant paths.
   - Both pass-1 failures are now repaired, verified here. Scope expansion ✅ — the unordered `.limit(500)` at `access-permission.resolver.ts:283` is gone, replaced by `drainRolePermissionGrants`, a keyset drain ordered by `id`. Permission-path index ✅ — `idx_role_permission_grants_org_key (org_id, permission_key)` created by migration `0997`, confirmed present in `pg_indexes` on a head database. Batched + cached ✅; subject/role/module/tenant indexes ✅ (`check:tenant-indexes` 745/745).
   - **Pass 3: the last defect is repaired and the box closes.** The pass-2 PARTIAL was `access-permission.resolver.ts:230` reading `user_permission_grants` for one membership under an unordered `.limit(500)`. The access owner took the hand-off: `drainUserPermissionGrants` in the new `src/modules/access/access-grant-drains.ts` is a keyset drain ordered by `id`, wired at `access-permission.resolver.ts:189`, and no `user_permission_grants` read outside it remains. Verified by reading the source, not the report. `jest src/modules/access` → **40 suites / 398 tests passed**. The resolver is also down from 507 lines to **404**, so the `check:file-sizes` red named in the brief is gone — `pnpm -s check:file-sizes` → exit 0, 3565 files, all within 500.
@@ -36,6 +54,17 @@
     PARTIAL: **the 6 `/settings/automations[…]` routes stay**, and the four options for their rung — leave it global; derive the module from `triggerEvent` and gate per row; a first-class `automations` module key; split by ownership — are written up with costs and hazards in `reports/19b-automations-rung-decision.md`. Counted from the source: **48 triggers across four modules** (HR 27, CRM 8, Support 7, Accounting 6) plus four `support_*` actions, so no single module rung fits and a rung was not invented. This is a product decision.
     Verified after the move: `pnpm -s check:tenant-isolation` -> **929 / 929 (100%), exit 0** — the renamed `crm-custom-fields-tenant-isolation.spec.ts` still maps its service. `openapi.json` does need a regenerate (the four paths moved); that is release-time, see box 3.
     PARTIAL: `components/layout/sidebar/sidebar-nav-groups-work-management.ts` still gates `/build/settings/integrations` on `settings:manage`, so a `BUILD_MODULE_ADMIN` who now holds the key still does not see the sidebar item (the page works by URL). Flipping it to `integrations:git:view` is one line, but `check:route-access-contract` reads `frontend/contracts/openapi.json` — a vendored copy of the backend document — and fails on a nav key no *generated* operation carries. The one-line flip must land in the same change as `openapi:generate` + `check:contract-vendor`. Measured both ways: with the flip exit 1, reverted exit 0.
+  - **RESIDUAL-RISK REGISTER 2026-09-03 — this box has TWO halves and only one is a product decision.**
+    **R-12 (ACCEPTED RESIDUAL · DECISION).** The 6 `/settings/automations[…]` routes' rung is a genuine product
+    decision — 48 triggers across HR 27 / CRM 8 / Support 7 / Accounting 6, four options costed in
+    `reports/19b-automations-rung-decision.md`, no single module rung fits. **Owner: release owner (product).
+    Deadline: 2026-09-10.**
+    **A-13 (ASSIGNABLE).** The sidebar one-liner is mechanical and its coupling was verified rather than taken
+    on trust: `sidebar-nav-groups-work-management.ts:215` still reads `requiredPermission: "settings:manage"`, and
+    `integrations:git:view` occurs **0 times in `streamlineos-backend/openapi.json` and 0 times in
+    `frontend/contracts/openapi.json`**, so the flip really would fail `check:route-access-contract` (re-run at
+    head: **exit 0**, 203 keys checked, 627 `x-permission` entries). The coupling dissolves the moment A-12 lands.
+    **Owner: whoever lands A-12, in the same change. Deadline: 2026-09-08.**
 - [x] Workspace and onboarding gates, organization-switch state, query-key tenant isolation and auth error states are covered by allow/deny/cross-tenant tests.
   - Evidence: FE `jest lib/query-scope-isolation lib/prefetch/access lib/wizard-gate lib/membership-lifecycle-route hooks/api/access` → **8 suites / 44 tests passed**. BE `jest src/modules/organization` → **57 suites / 393 tests passed**, including 14 tenant-isolation specs and `org-switch-revalidation.spec.ts`. Query-key isolation is structural: `QueryProvider` remounts a new `QueryClient` keyed on `authenticated:<orgId>:<userId>`.
 - [x] A permission-key addition to a role template is accompanied by a backfill migration, or it is inert for every organization that already exists.
