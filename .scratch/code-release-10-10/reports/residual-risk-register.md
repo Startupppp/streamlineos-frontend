@@ -11,19 +11,19 @@ of them. This register gives every remaining open box exactly one of two disposi
 
 **Every blocker below was re-verified against source, artifacts or a live gate run on 2026-09-03.** Where
 a ticket's claim turned out to be stale or wrong, the correction is recorded and the ticket was edited.
-Three items previously filed as blocked are **not blocked** and are moved to ASSIGNABLE. Section 1 states
-those first, because they are worth more than the register.
+**Six items previously filed as blocked are not blocked at all** and are moved to ASSIGNABLE. Section 1
+states those first, because they are worth more than the register.
 
 **Deadlines are proposed by this pass.** They are concrete dates rather than "TBD" so that ticket 41 box 7
 has something checkable; the release owner confirms or moves each one at sign-off, and a moved date is a
 decision on the record rather than a silent slip.
 
 No source file in either repository was edited by this pass. Only ticket files under `issues/`, this
-report and its companion data file were written.
+report and its two companion data files were written.
 
 ---
 
-## 1. LOUD — five things filed as blocked that are actually closable work
+## 1. LOUD — six items filed as blocked that are actually closable work
 
 ### 1.1 Ticket 15 — 468 of the 1,138 "unprobeable" routes are a harness gap, not infrastructure
 
@@ -31,7 +31,8 @@ This is the largest single item in the register and it was not previously record
 
 The ticket, and `reports/cross-tenant-404-contract.md`, both cite the raw probe as
 `scratchpad/bola-live-offline.json` and both stop at the four-way split. **The artifact was located and
-re-read** (see §4 — it is not in either repo). Its 1,921 outcomes reproduce the ticket's numbers exactly:
+re-read** (see §4 — it was in neither repo; it is now committed beside this report). Its 1,921 outcomes
+reproduce the ticket's numbers exactly:
 `PASS 666 · UNPROBEABLE 1138 · NO-404 113 · SERVER-ERROR 2 · LEAK 1 · INCONCLUSIVE 1`, taken at backend
 commit `ca4ec171` on 2026-09-02T20:19:47Z.
 
