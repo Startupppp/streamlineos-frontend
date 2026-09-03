@@ -4,7 +4,7 @@
 
 **Blocked by:** 28.
 
-**Status:** 4 of 7 closed. Box 2 moved 608/632 -> 623/633 this session (S13): all 14 unreachable click targets in this territory are fixed and the 10 that remain are features/build (1), features/crm (7) and inventory (2), none of them touchable here. Boxes 4 and 5 were NOT worked this session — no browser or dev server was started; they carry S11's numbers unchanged. Reports: `reports/30-ux-accessibility.md` (S8), `reports/30b-states-a11y-and-journeys.md` (S11), `reports/30c-a11y-residue-and-query-gating.md` (S13).
+**Status:** 5 of 7 closed. **S14 reached a kanban board and ran every planned step.** The `page`-vs-cursor drift that blocked boxes 4 and 5 for the whole release was fixed and committed (`f75797ae1`); this session verified it from a real browser, resolved `projectId = 20` by clicking the first row of `/build/all`, and measured the board at 375/768/1280. The run went **57 of 63 planned steps to 63 of 63** — the first whole denominator this ticket has had. **Box 4 is CLOSED.** Box 5 stays open on flows-not-routes, not on reachability. Box 2 stays open on 9 named CRM/inventory targets now recorded as an accepted scope exclusion. Reports: `reports/30-ux-accessibility.md` (S8), `reports/30b-states-a11y-and-journeys.md` (S11), `reports/30c-a11y-residue-and-query-gating.md` (S13), `reports/30d-boards-reached.md` (S14).
 
 - [x] Loading, empty, error, offline and permission-denied states are present on every authenticated surface, not only the common paths.
   CLOSED. `npx jest --runInBand --testPathPattern="authenticated-surface-states.contract"` → exit 0, **22/22**
@@ -83,7 +83,30 @@
   **Not ticked on a sample:** 608/632 is a census, not a sample, but it is not 632/632.
 - [x] Contrast meets the standard and is verified rather than assumed.
   VERIFIED against **WCAG 2.2 AA — 4.5:1 normal text, 3:1 large text (≥24px, or ≥18.66px bold) and non-text UI boundaries (SC 1.4.11)**. `npx jest --runInBand --testPathPattern="contrast-tokens"` → **41/41**. The token layer is correct: `-ink-strong` clears 4.5:1 on every light surface (success 5.21, warning 4.84, danger 5.91) and `-ink` clears the 3:1 non-text floor it was tuned for. Additionally the browser sampled **4251 painted text nodes against the colour actually behind them and found 90 AA failures — exactly the pairs the token test predicted**, on `/dashboard`, `/inbox`, `/hr/attendance` and `/accounting/coa`: `--status-warning-ink` at 3.43 on `--status-neutral-surface` and 3.58 on `--card`, and `--muted-foreground` at 4.34 on `--muted`. Predicted from the tokens, then observed in the running product. The remaining failures are **call sites handing the icon ink to text**, not tokens: `--status-success-ink` 3.58, `--status-warning-ink` 3.07, `--status-danger-ink` 4.41, `--muted-foreground`-on-`--muted` 4.34, across **2234 `text-status-*-ink` occurrences**. Recorded in the suite and handed up as a token-layer decision.
-- [ ] Layout is correct at 375, 768 and 1280.
+- [x] Layout is correct at 375, 768 and 1280.
+  **CLOSED by S14.** `node scripts/browser-journeys.mjs --base-url=http://localhost:3000 --cookie-file=<minted>
+  --widths=375,768,1280 --settle-ms=6000` -> exit 1 (39 findings), **63 of 63 planned steps run** — the first
+  whole denominator. **`scrollWidth - innerWidth` = 0 on every one of the 63 steps at all three widths**
+  (max over the whole run: 0), **0 never-settled**, **one `h1` on 63 of 63**, 0 unauthenticated.
+  **The kanban board was reached and measured**, which is what this box was actually waiting for.
+  `/build/20` (resolved by the harness clicking the first row of `/build/all`) redirects to
+  `/build/workspaces/31510333-.../20` and renders **content** with a named `main` and one `h1` at every width.
+  The board's own containment was then measured directly, because a document that does not scroll is a weak
+  result over a surface that is supposed to: `.kanban-scroll-container` is **1,496px wide against a client
+  width of 343 / 448 / 944**, holds **5 droppable columns and 4 draggable cards**, and its right edge sits at
+  **359 / 744 / 1248 inside viewports of 375 / 768 / 1280**. The board scrolls; the document does not. At 375
+  and 768 the project toolbar is a second contained scroller (464/375 and 645/496), also inside the viewport.
+  **No horizontal overflow defect exists on the widest screen in the product.**
+  Error boundaries fell from 12 steps to 3: `/crm/leads` only (CRM excluded from this release).
+  **`/calendar` no longer errors** — S11's 62-day-window finding is gone.
+  One NEW defect this box's board journey found, written up in `reports/30d-boards-reached.md` S4 and not
+  fixed here: `/build/<id>/backlog` **404s for any project that belongs to a PM workspace**. The
+  `[projectId]` layout redirects the whole path through `withPmWorkspacePath`, but
+  `build/[projectId]/` has 39 entries and `build/workspaces/[pmWorkspaceId]/[projectId]/` has 6 — measured,
+  `/build/workspaces/<w>/20/epics` -> 200, `/build/workspaces/<w>/20/backlog` -> 404. That 404 page renders
+  with no `main` landmark, which is the run's only 3 non-contrast findings. Route ownership + `not-found.tsx`,
+  both other territories.
+  --- superseded S13 text, kept for the record ---
   S13: NOT WORKED. No browser, dev server or database was started this session; every number below is S11's.
   The blocker S11 named — `/build/all` failing on the `page` vs cursor drift — was not fixed here either; it is `types/**` plus the backend schema.
   PARTIAL, but the result is stronger than S8's and the gap has moved from "the run errored" to one
