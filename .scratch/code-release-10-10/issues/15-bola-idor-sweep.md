@@ -14,6 +14,13 @@ what the re-probe does not reach. The live sweep ran: **1,921 routes probed, 666
 unprobeable and are covered statically only, and 1 real cross-tenant leak was found and fixed.** What remains is
 per-module contract work in held or excluded territory (register #165–#167).
 
+**A-2 CLOSED 2026-09-03 — `reports/15f-own-tenant-500-triage.md`.** The 88 own-tenant 500s were triaged to
+**four** causes and **62 are fixed** (88 -> 26 measured on the sweep's own database). No write-on-GET among them;
+the one 25P02 was a shadow that had been replacing the real error since it was written. 26 remain: **18** in
+build/crm/inventory (other territory or excluded), **7** reachable only through rows the harness inserted directly,
+and **1 real defect blocked on `migrations/`** — `POST /support/:supportTicketId/follow` 500s for every caller at
+head because `support_ticket_watchers.user_id` is `NOT NULL` in the database and absent from the Drizzle schema.
+
 **2026-09-03 residual-risk register: THIS TICKET'S RECORDED BLOCKER IS STALE.** The 113 + 2 + 1 are fully closed (84 fixed / 17 excluded / 4 territory / 8 n-a / **0 open**). The box stays open on the **1,138 never-asked** routes — and those are not one blocker: **468 are a harness gap (no request body sent; the OpenAPI bodies already exist at 1,371/1,371)**, 168 a seed gap, **88 are routes returning 500 to a VALID same-tenant request**, ~149 permanently unprobeable. **A-1 / A-2 / A-3 ASSIGNABLE**, **R-4 / R-4b** residual. See `reports/residual-risk-register.md` §1.1, §1.2, §3.3.
 
 Full reports: `.scratch/code-release-10-10/reports/15-bola-sweep.md` (sweep),
@@ -79,11 +86,55 @@ whoever lands that schema change.
       16 DELETE control-400 on a missing required QUERY parameter, so query is synthesised too. Six mutating
       object-addressable routes are absent from `openapi.json` altogether and are pinned by name — a
       cross-territory contract gap, not a harness one.
-      **ASSIGNABLE A-2 — triage the 88 own-tenant 500s. Owner: release owner to route per module. Deadline:
-      2026-09-08.** These return `INTERNAL_ERROR` to a **valid same-tenant** request on the seeded database — hr 37,
-      build 10, finance 9, inventory 6, crm 5, accounting 4, party 3, payroll 3, support 3, +8 more. Two routes of
-      exactly this shape (`GET /surveys/:surveyId/builder`, `/logic`) turned out to be a **write on a GET** violating
-      a composite FK. Nothing says the other 88 are benign; nothing has looked. Full list in the companion JSON.
+      **A-2 — DONE 2026-09-03 for everything in reach; 88 -> 26. Report `reports/15f-own-tenant-500-triage.md`.**
+      Each of the 88 was replayed against the sweep's OWN database (a `TEMPLATE scratch_t15` copy) with
+      `process.stderr.write` intercepted, so every 500 is attributed to a message, SQLSTATE, table and stack frame
+      rather than to a status code. Harness + the 88-route list are committed:
+      `test/security/bola/t15-own-tenant-500.seeded-e2e-spec.ts` and `live/own-tenant-500-routes.json`.
+      **Four causes, not eighty-eight.** RC-1 **56 routes** — an empty PATCH body reaches an all-conditional change
+      set and Drizzle's `mapUpdateSet` throws `No values to set` (`drizzle-orm/utils.js:92`); the DTO is all-optional
+      so `{}` validates and then cannot be written. RC-2 **19** — a path parameter declared `z.string().min(1)`
+      addressing a `uuid` column, so the id reaches Postgres and raises **22P02**. RC-3 **1** — declared-vs-live
+      schema drift. RC-4 **7** — rows the harness inserted directly with placeholder values.
+      **No route in the 88 writes inside a GET.** All 13 GETs are reads: 11 failed on the SELECT (RC-2), 2 on a
+      fixture row's shape. **25P02 appeared exactly once and was a shadow, as predicted** —
+      `PayrollInputsService.buildPeriod` compensated a failed build from inside its `catch`, that write hit the
+      connection the build had already aborted, threw 25P02 **before `throw err`**, and so REPLACED the original
+      error. Every failed build reported "current transaction is aborted" and lost its cause. Guarded; the real
+      fault behind it is `Invalid time value`.
+      **62 fixed** across hr / finance / accounting / payroll / support / sales / surveys / expenses / gdpr
+      (`425f930a`, `5cda9874`, `40b4367b`, `4722a208`). A central "empty PATCH is a 400" rule in the validation
+      interceptor was considered and **rejected**: measured from the artifact, `{}` already answers **200 on 174 of
+      431 PATCH routes**, and a central rule would break every action-shaped PATCH (`…/tickets/:ticketId/rank`,
+      `/crm/automations/:ruleId/enable`, `/chat/huddles/:huddleId/heartbeat`). The fix is what the 174 already do —
+      stamp `updated_at`, or where the table has none, read the object back under the same tenant predicate.
+      **Two defects found beside the 88.** `EngagementService.updateSurvey` returned `{ success: true }` for ANY
+      survey id including another organisation's — a silent no-404 on a write verb, now a `NotFoundException` on the
+      tenant-bound row. `HrBenefitPlansService.deletePlan` let a **23503** out as a 500; it is a 409.
+      **BLOCKED — 1 real defect, owner `migrations/` (ticket 08).** `POST /support/:supportTicketId/follow` **500s
+      for every caller at head**: `support_ticket_watchers.user_id` is `NOT NULL` with no default in the database and
+      absent from `src/db/schema/support/support-workspace.ts`, so every insert omits it (**23502**). `0865` expanded
+      onto `user_membership_id` and `0866` validated the FK, but **no migration ever contracted the pair** — the four
+      `*_actor_drop` migrations do not name this table. Scanned repo-wide: 73 tables sit in the same expanded state
+      and this is the **only** one whose declaration dropped `user_id`; `reports/07b-declaration-drift.md` misses it.
+      Exact DDL in `reports/15f-own-tenant-500-triage.md` §2c.
+      **NOT FIXED — 18, other territory / out of scope.** build 7 (all RC-1, one line each at
+      `approvals.service.ts:283`, `projects-releases.service.ts:67`, `sprints.service.ts:111`,
+      `meetings.service.ts:294`, `projects-ticket-links.service.ts:168`, plus labels and pm-workspaces) — **owner:
+      build module owner**; crm 5 and inventory 6 — **excluded from the release**.
+      **NOT FIXED — 7, harness-fixture rows, not production-reachable.** Each creating endpoint validates the shape
+      the fixture violates: `hr_polls.options='{}'` (`GET /hr/engagement/polls/:pollId/results`, hr/performance),
+      `hr_form_submissions.form_schema_snapshot='{}'` (`GET /hr/forms/:formId/submissions`, hr/forms),
+      `period_key='bola-fixture'` (`POST /hr/payroll-inputs/periods/:periodId/build`, hr/payroll-inputs),
+      `start_month='bola-fixture'` -> 22007 (`POST /payroll/policies/:policyId/activate`, payroll/setup),
+      `payload='{}'` (`POST /accounting/recurring-invoices/:templateId/run-now`, finance/ar), a zero-amount note
+      (`POST /accounting/credit-notes/:creditNoteId/post`, finance/ar) and an empty merge snapshot behind an
+      `as unknown as MergeSnapshot` cast (`POST /party/merges/:partyMergeId/revert`, party).
+      **What this returns to this box:** of the 88, `500` 88 -> **26**, `200` 3 -> **22**, `400` 1 -> **21**. The 21
+      are RC-2 rejecting the literal `1` the sweep sent for a uuid parameter — with a correctly-shaped borrowed id
+      their controls now succeed, so the fix removes the reason the sweep could not ask, not just the status code.
+      Gates: backend `typecheck` exit 0; `check:spec-typecheck` exit 0; `jest --testPathPattern=test/security/bola`
+      exit 0 (**18 suites / 263 tests**); the 30-module focused jest exit 0 (**114 suites / 808 tests**).
       **A-3 — DONE 2026-09-03.** The audit route was indeed already fixed; the other three now resolve the envelope
       through `mustGetVisibleEnvelope` before their `findMany`, so a cross-tenant id and an absent id answer the
       SAME 404 — asserted by comparing the two exception bodies, not just their status. The scope is a REQUIRED
