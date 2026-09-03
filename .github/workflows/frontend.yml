@@ -124,6 +124,10 @@ jobs:
       - name: Build
         run: pnpm run build
         env:
+          # 2026-09-03 — `next build` died with "Ineffective mark-compacts near
+          # heap limit" on run 33718207435. The runner's default heap is ~2GB and
+          # the build reached it; ubuntu-latest has 16GB of RAM, so 8GB is safe.
+          NODE_OPTIONS: --max-old-space-size=8192
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'ci-build-only-placeholder-not-a-real-secret-abc123' }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'http://localhost:1500' }}
@@ -162,8 +166,18 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      # 2026-09-03 — the `tests` job had NO env at all, while `build` has carried
+      # NEXTAUTH_SECRET/NEXT_PUBLIC_API_URL since it was split out. Five suites
+      # therefore failed at MODULE LOAD, not on an assertion:
+      # `components/ai/ai-error-state.ts:19` throws "NEXT_PUBLIC_API_URL is not
+      # set" when it is imported. Measured on run 33718207435. The placeholder
+      # is local-only and is never a real credential; NEXTAUTH_SECRET must be
+      # >= 44 chars or `lib/env.ts` rejects it.
       - name: Run Tests
         run: pnpm test --runInBand
+        env:
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'ci-test-only-placeholder-not-a-real-secret-abc123' }}
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'http://localhost:1500' }}
 
   # Every static gate in the frontend package. Hermetic: no database, no
   # network, no sibling checkout. A step marked `continue-on-error` names the
