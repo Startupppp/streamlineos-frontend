@@ -4,7 +4,7 @@
 
 **Blocked by:** Sessions 1–8 substantially complete.
 
-**Status:** **10 of 11 closed.** **2026-09-03 (second pass, report `reports/51-assertion-census-and-the-envelope-cast.md`): the box is still open, and the reason is now sharper — the ledger's DENOMINATOR was wrong.** An AST census of both repos (two passes: a directory walk, and a `ts.createProgram` + TypeChecker pass, no regex anywhere) found the forced-typing population is not 33 sites. It is **2,603 unparsed `apiClient` response reads · 28 backend `db.execute<T>` raw-SQL row generics · 13 frontend raw-`fetch` `.json() as T` reads · 1,819 single `as X` casts · 407 non-null `!`** — plus the 33 already ledgered. A generic type parameter on a fetch or driver helper is a type assertion with no `as` in it, and no gate in either repo could see one. **One of the newly visible casts was a live user-visible defect and is FIXED** (`9e01f3d5`): `app/(public)/forms/[token]/page.tsx` read `res.json() as Promise<PublicFormDefinition>`, skipping the global `ResponseTransformInterceptor`'s `{ success, data }` envelope, so a public form link showed a header stuck on "Loading form…" and threw `TypeError` on `form.fields.length`; two sibling submit seams carried the same cast. Two gate rules added and bite-proved hermetically (`1dfc844a` backend, `16941905` frontend), and **a blind spot fixed in this ticket's own frontend gate**: `SKIP_DIRS` matched `build` by NAME at any depth, so `features/build/` (456 files, the product's largest module) plus three more `build/` trees were excluded from every rule — files scanned 4,279 -> 4,982. **A-5 IS DONE (2026-09-03, commit `15c4d926`)** — the three in-scope negative tests are written and bite-proved (six planted defects, control 59/59). Box 7 still does not close: **3 of 20 `external` sites** now carry one; R-8 (13 `narrow-me`) and R-8b (17 `external`) remain, unchanged and for the reasons already recorded. `check:type-assertions` exit 0, ledger counts unmoved. Report: `reports/47-a4-a5-clients-n1-and-negative-tests.md`. Box 3 is discharged in code — 31 of the 32 ledgered dead backend exports deleted, the
+**Status:** **10 of 11 closed.** **2026-09-03 (third pass, report `reports/57-assertion-ceiling-and-ledger-bite-proof.md`): box 7 remains OPEN, but its ledger clause is now closed over the whole population rather than over 3.4% of it — rule 4 puts the previously-ungated 1,804 plain `as X` and 407 non-null `!` under a per-file zero-growth ceiling in both repos (BE 1,210 in 466 files, FE 1,001 in 511 files), bite-proved in BOTH directions hermetically, with the self-tests' hard-coded assertion counts replaced by measured, floored ones and the backend walker made depth-aware.** **2026-09-03 (second pass, report `reports/51-assertion-census-and-the-envelope-cast.md`): the box is still open, and the reason is now sharper — the ledger's DENOMINATOR was wrong.** An AST census of both repos (two passes: a directory walk, and a `ts.createProgram` + TypeChecker pass, no regex anywhere) found the forced-typing population is not 33 sites. It is **2,603 unparsed `apiClient` response reads · 28 backend `db.execute<T>` raw-SQL row generics · 13 frontend raw-`fetch` `.json() as T` reads · 1,819 single `as X` casts · 407 non-null `!`** — plus the 33 already ledgered. A generic type parameter on a fetch or driver helper is a type assertion with no `as` in it, and no gate in either repo could see one. **One of the newly visible casts was a live user-visible defect and is FIXED** (`9e01f3d5`): `app/(public)/forms/[token]/page.tsx` read `res.json() as Promise<PublicFormDefinition>`, skipping the global `ResponseTransformInterceptor`'s `{ success, data }` envelope, so a public form link showed a header stuck on "Loading form…" and threw `TypeError` on `form.fields.length`; two sibling submit seams carried the same cast. Two gate rules added and bite-proved hermetically (`1dfc844a` backend, `16941905` frontend), and **a blind spot fixed in this ticket's own frontend gate**: `SKIP_DIRS` matched `build` by NAME at any depth, so `features/build/` (456 files, the product's largest module) plus three more `build/` trees were excluded from every rule — files scanned 4,279 -> 4,982. **A-5 IS DONE (2026-09-03, commit `15c4d926`)** — the three in-scope negative tests are written and bite-proved (six planted defects, control 59/59). Box 7 still does not close: **3 of 20 `external` sites** now carry one; R-8 (13 `narrow-me`) and R-8b (17 `external`) remain, unchanged and for the reasons already recorded. `check:type-assertions` exit 0, ledger counts unmoved. Report: `reports/47-a4-a5-clients-n1-and-negative-tests.md`. Box 3 is discharged in code — 31 of the 32 ledgered dead backend exports deleted, the
 32nd reclassified `WIRE` because deleting it would have made a live cancellation signal unreachable — with knip findings
 38 → 7 and the ledger 34 verdicts → 5, proven by `check:dead-code` exit 0, `typecheck` exit 0, `check:spec-typecheck`
 exit 0 and a real `nest build` exit 0. Boxes 2 and 6 are closed as **recorded decisions with their numbers**, on the
@@ -316,6 +316,78 @@ remedy. See `reports/36-repo-hygiene.md`.
   directories. (3) `lib/api-contract-coverage.test.ts` scans `hooks/` only and is blind to the
   157 seam calls elsewhere; `check:response-contracts` is the wider instrument and the two must
   not be quoted as if they measured the same thing.
+
+  **THIRD PASS 2026-09-03 — the ledger clause is now closed for the WHOLE population; the box still
+  does not close. Report: `reports/57-assertion-ceiling-and-ledger-bite-proof.md`.**
+  **The denominator was wrong one more level down, and this pass fixes it.** The previous passes
+  closed "zero-growth ledger" over the population the gate could SEE. Measured at head, that was
+  **78 of 2,289 application-code assertions — 3.4%** — and it reported PASS. The uncovered 2,211 are
+  **1,804 plain `as X`** and **407 non-null `!`**, and a plain `as X` is a type assertion in the
+  plain meaning of shared CLAUDE.md §6 ("Never force types. No `as X`"). Nothing in either repository
+  could see one.
+  **RULE 4, both repos — a per-file ZERO-GROWTH CEILING, seeded at head, stored as
+  `assertion-ceiling-ledger.json` beside each gate.** Backend **1,210** assertions (880 `as X` + 330
+  `!`) across **466** files (`8eec439f`, `dd168661`); frontend **1,001** (924 + 77) across **511**
+  files (`32e9c80aa`). Counted with the TypeScript AST, never a regex. `--update-ledger` **REFUSES
+  to raise a number** — without that refusal the escape hatch would be one command wide.
+  **`as const` is EXCLUDED BY DECISION and the decision is pinned by self-test**, because the box's
+  own wording does not settle it: a const assertion NARROWS a literal to its own type and cannot
+  force one value to be a different one. It is also the most common `as` in both trees — **793**
+  backend, **2,309** frontend — so folding it in would bury the signal under a safe idiom. The gate
+  PRINTS the count every run, so the exclusion is visible rather than silent. `satisfies` excluded
+  (a check); the angle-bracket `<T>x` form INCLUDED (0 today, counted so it cannot become the escape
+  hatch); definite-assignment `let x!: T` excluded (a declaration flag).
+  **TWO ANTI-VACUITY HOLES FOUND IN THIS TICKET'S OWN GATES AND FIXED.** (1) Both self-tests printed
+  a HARD-CODED assertion count — backend `27` while its own printed list named **30**, frontend `31`
+  while its list named **33**. Both were already wrong, and neither would have changed if half the
+  assertions were deleted. Now measured and floored at **43** each. (2) The backend walker's
+  `SKIP_DIRS` matched `dist`/`coverage` **by name at any depth** — the identical latent form of the
+  bug that hid `features/build/` (456 files) from every frontend rule last pass. Now depth-aware.
+  Nothing was hidden at head (files scanned stays **3,584**), so this is hardening, not a fix with an
+  inflated claim — but the backend already holds `src/modules/build`, `src/modules/public` and
+  `src/db/schema/build`.
+  **BITE-PROVED IN BOTH DIRECTIONS, HERMETICALLY** (`git archive HEAD | tar -x -C <tmpdir>`,
+  node_modules symlinked; **nothing planted in the shared tree** — `git status` on my paths verified
+  empty). Backend, each defect reverted to exit 0 before the next: control **0** · unledgered file
+  with a cast **1** · ledgered file grows (`bounded-map.ts: 1 -> 2`) **1** · ledger names a file that
+  does not exist **1** · a real file LOSES its cast **1** · ledger JSON deleted **1** · one self-test
+  check deleted **1** (`only 39 … below the floor of 40`) · **counter stubbed to return 0 → 1**
+  (`counted only 0 … below the floor of 1000` — the anti-vacuity floor, so a scanner that suddenly
+  matches nothing fails loudly instead of reporting zero violations) · `--update-ledger` on growth
+  **1** (`REFUSED: only ever LOWERS`) · a new `as const` file **0** with the count moving 793 → **794**
+  (proving the decision is deliberate, not an accident of the pattern). Frontend: control **0** ·
+  a cast planted **inside `features/build/`** **1** · ledgered file grows **1** · stale entry **1** ·
+  ledger deleted **1** · self-test check deleted **1**.
+  **The depth-aware walker proved against its own predecessor:** the same cast at
+  `src/modules/probe/dist/bite.ts` is named and counted 3,584 → **3,585** by the new walker and is
+  **completely invisible (exit 0, count unmoved)** under the old one.
+  **WHY THE BOX STILL DOES NOT CLOSE — the arithmetic, of 2,289 application-code assertions:**
+  clause 5 (enforced zero-growth ledger) **2,289 / 100%** — closed this pass, up from 3.4%;
+  clause 3 (written invariant) **78 / 3.4%**; clause 1 (proven external seam) 24 claimed `external`,
+  13 explicitly NOT (`narrow-me`), **2,211 unclassified**; clause 4 (negative test) **5 sites /
+  0.2%** — `tracing.ts` ×1, `operator-session.guard.ts` ×1, `query-telemetry.ts` ×3. A per-site
+  negative test cannot be the bar for 2,211 sites: that is a category error, not a workload, and the
+  amendment R-8 already requests must be extended to say so. R-8 and R-8b are untouched for the
+  reasons already recorded.
+  **Scanner reach, restated because a silent gate is worthless without it:** backend **3,584** files
+  (`src/` only, minus the spec suite; **`test/` and `evals/` are siblings of `src/` and outside the
+  gate entirely**), frontend **4,989**. Both reproduced independently by a separate AST walk before
+  either gate was trusted. **The named hole:** ~1,930 spec files are outside both gates, ts-jest runs
+  `isolatedModules` so no spec is typechecked by anything, and the **2,756 backend + 19 frontend
+  spec-side `as unknown as` are enforced NOWHERE.**
+  **Cross-territory:** the brief's `actor-classification-allowlist.json` framing is out of date in a
+  good way — the file has been corrected in place and now states that
+  `architecture-refactor/ACTOR-CLASSIFICATION.md` does not exist (re-verified: absent from both
+  trees) and that its **249** entries are "accepted exclusions with no recorded justification". The
+  stale citation is fixed; the 249 unjustified exclusions remain and `scan-legacy-org-actors.mjs`
+  still honours all of them. Separately, the 2 raw-`db.execute` `narrow-me` casts
+  (`notification-retention.service.ts:111`, `record-layouts.service.ts:211`) are the cheapest real
+  deletions left on this box — both already guard every field with `Number(...)`/`?? fallback`
+  immediately after the cast — but both are other lanes'.
+  **NOT RUN, stated plainly:** no `typecheck`, no `nest build` / `next build`, no jest. This pass
+  changed two `.mjs` gate scripts and added two JSON ledgers — zero TypeScript source, zero module
+  registration, zero side-effect imports — so a typecheck would have proved nothing about a change
+  TypeScript never reads.
 
   **RESIDUAL R-8b — 17 of the 20 `external` sites. Blocker: territory (another lane's harnesses), a compile-time-
   only invariant no runtime test can reach (the Drizzle-instantiation seam), and one vendored file. Owner:
