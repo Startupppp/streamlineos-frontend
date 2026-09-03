@@ -8,8 +8,38 @@
 
 - [x] Every published operation is versioned or has a stated deprecation window with a date.
   Evidence: `node src/scripts/check-api-contract-registry.mjs` → exit 0, "all 101 published operations carry a version or dated deprecation window, a named consumer, an idempotency/replay rule and a parameter baseline". `findPublishedContractGaps` is new and fails an entry with no version and no `deprecation.sunsetAt`, and fails a version that disagrees with its own `/vN/` path segment; self-test 25/25 pass.
-- [x] REST/OpenAPI, webhooks, realtime events, exports and SDK-facing schemas are reconciled against consumer evidence.
+- [~] REST/OpenAPI, webhooks, realtime events, exports and SDK-facing schemas are reconciled against consumer evidence.
   Evidence: 3,613 OpenAPI operations reconciled (`check-openapi-coverage` exit 0, 3613/3613 exposure-stamped); 24 outbox events; **23 outbound customer webhook event names newly catalogued** — before this ticket `registry.webhooks` was `{}` and no gate read them. The frontend's vendored copy is byte-identical to the backend artifact (`check-contract-vendor` exit 0, sha256 ae149514fa2887b8…). Each of the 58 published mutating operations names the handler file its rule was read from.
+
+  **Downgraded `[x]` → `[~]` on 2026-09-03 by the orchestrator, with the measurement.** The work
+  above is real and stands — it reconciled *exposure stamping*, the webhook catalogue and vendoring
+  integrity. It did not reconcile **response shapes**, which is the half of this box's wording that
+  says "SDK-facing schemas … against consumer evidence."
+
+  Measured directly on `frontend/contracts/openapi.json`: **3,613 operations, 2 carrying any
+  response schema, 6 `components.schemas` in total.** An independent sweep measured the same artifact
+  as carrying a 2xx response schema for **1 of 3,613**. So there are effectively no response shapes
+  in the published contract for a consumer to be reconciled against.
+
+  This is not academic. **Seven user-visible bugs shipped through exactly that gap**, each one a
+  backend emission shape disagreeing with the frontend type that reads it, with both repos
+  typechecking clean throughout: chat channel members (Favourites permanently empty), huddle
+  participants (every tile "Unknown", WebRTC mesh with no peer ids), **`Message.senderId` emitted by
+  no read path at all** (your own messages render as someone else's; Edit and Delete never appear),
+  saved messages ("Unknown" on every card), support watchers (unfollow unreachable), build watchers
+  (un-watching unreachable), HR internal openings (department badge never rendered). Details in
+  `reports/49-api-shape-divergence-sweep.md`.
+
+  Contributing cause, also measured: **Drizzle's `with:` is not type-checked on this schema** —
+  `findMany({ with: { x }, columns: { id: true } })` infers `{ id: number }[]`, the `with`
+  contributing nothing. The backend does not infer the shape and the frontend casts, so nothing
+  between them arbitrates.
+
+  **Residue and owner:** response shapes are unreconciled. The instrument that works is `apiClient`'s
+  `contract` option with `check:response-contracts`, at **59 of 2,662 seam calls (2.2%)** — every
+  route in all seven findings was unvalidated. Adoption on identity-bearing reads is assigned and in
+  flight. `openapi:check` cannot close this: it diffs the backend against itself.
+
 - [x] Idempotency and replay rules are documented per published operation.
   Evidence: all 101 published operations carry an `idempotency {mode,key,replay,source}` block — 43 safe, 20 at-least-once-unfenced, 7 replayable-write, 6 natural-key-upsert, 6 advisory-dedup-unfenced, 6 single-use-token, 3 provider-signature-and-event-id, 3 single-use-token-racy, 3 no-persistence-rate-limited, 2 provider-signature-idempotent-effect, 1 optimistic-concurrency, 1 captcha-single-use. Declarations live in the hand-authored `contracts/published-contract-terms.json`; the gate fails any published mutating operation with no rule.
 - [x] Removed-operation records are retained for breaking-change enforcement rather than deleted.
