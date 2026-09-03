@@ -44,6 +44,19 @@ Constitution files to obey: `streamlineos-frontend/CLAUDE.md` (shared),
    `git add -- <your paths>` first and then still pass the pathspec to `git commit`, which
    keeps the commit limited to your paths regardless of what else is staged. Verify with
    `git show --stat HEAD` that the file count is yours before moving on.
+2b. **A pathspec containing `[` is a GLOB, and it silently matches nothing.
+
+**2c. A DIRECTORY pathspec is still a net.** Rule 2b is necessary but not sufficient. Commit `8504acf04` put its pathspec on `git commit` correctly and *still* swallowed another agent's uncommitted `reports/p1-admission-slot-leak.md` (+242 lines), because the pathspec named a **directory**. That is the sixth attribution incident and the first of this shape. **Prefer explicit file paths.** Treat any directory pathspec as a commit you have not actually scoped, and run `git status --short -- <dir>` before committing one.**
+   Git reads `[jobId]` as a character class, so
+   ```
+   git commit -m "..." -- app/build/jobs/[jobId]/page.tsx     # matches NOTHING, commits NOTHING
+   git commit -m "..." -- ':(literal)app/build/jobs/[jobId]/page.tsx'   # correct
+   ```
+   Next.js dynamic segments (`[id]`, `[slug]`, `[...rest]`) are everywhere in `app/`, so this hits
+   frontend work constantly. It fails **silently** — git reports success having committed nothing of
+   yours, and your work then gets swept into the next agent's commit. Always `git show --stat HEAD`
+   and confirm your files are actually listed. This has already cost work in this release.
+
 3. **Never `git stash`, `reset`, `checkout`, `pull`, `rebase`, `push`, `branch` or `merge`.**
    `git add <explicit paths>` and `git commit` are the only git verbs you may use.
    A stash takes every agent's uncommitted work and the loss is silent.
@@ -63,6 +76,17 @@ Constitution files to obey: `streamlineos-frontend/CLAUDE.md` (shared),
    `reports/00-seeded-perf-database.md`. Make your own `scratch_<ticket>` copy if you intend
    to write to it. Do NOT use `scratch_boot_b/c/d` — they are cited bootstrap-parity evidence
    and destroying them destroys the evidence bundle.
+   **`scratch_perf_seed` was REBUILT 2026-09-02 and is now at head — the earlier "it is stale"
+   warning in this brief is withdrawn.** Verified after the swap: journal head **665/665**, 1,720 MB,
+   90 non-empty tables, 8 organizations at 89.93 / 9.00 / 0.90 / 0.18, ticket statuses now
+   `TODO/IN_PROGRESS/IN_REVIEW/DONE` (they were title-case before, which made status-filtered queries
+   look vacuous), `streamline_app` confirmed `rolbypassrls=f rolsuper=f`, 899 RLS relations.
+   The party seam is populated for the first time: `lead_party_map` / `contact_party_map` 0 -> 8,896
+   each and `business_parties.owner_user_id` 0 -> 17,792, so the ~20 services importing
+   `PARTY_OF_LEAD` / `PARTY_OF_CONTACT` finally read rows. The pre-rebuild database is preserved as
+   `scratch_perf_seed_stale_20260902` because report 22c cites it — **do not drop it**.
+   Still state in your report which database you measured and whether it was at head.
+
    **Benchmark as `streamline_app` with the tenant GUC set, never as the owner** — the owner
    has BYPASSRLS, so its plans omit the RLS predicate that costs the most. Measure in
    **buffers, not milliseconds**; wall clock lies on a warm cache. `VACUUM ANALYZE` after any
