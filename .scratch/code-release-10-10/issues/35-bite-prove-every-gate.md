@@ -4,7 +4,23 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** 7 of 8 closed; 1 PARTIAL. **S13 REOPENED BOX 5 AND FOUND THE RESIDUE CLAIM WAS WRONG:
+**Status:** 7 of 8 closed; box 5 still PARTIAL but ONE OF ITS FOUR PARTIALS IS NOW CLOSED.
+
+**2026-09-03 S14 — the `BARE_THROW` residue is triaged, and it was triaged by RUNNING it.** The
+333/125 figure is not reproducible (the 35e scanner was ephemeral); re-derived by AST + grep it is
+**370 sites / 150 files**, of which 150 are `.not.toThrow()` and cannot be satisfied by a crash.
+All 207 in-scope positive sites were EXECUTED through a `Symbol.hasInstance` recorder that captured
+the real constructor, status and message. **4 of 220 were real** — a test literally named "BITE
+PROOF" that passed on a `TypeError` while its other assertion named a `jest.fn()` wired to nothing;
+two cross-tenant tests green over a 500 the double produced, one of them a same-tenant control
+asserting the opposite of its own title; and a payments control that never reached the write it
+exists to cover, which is 35e's R4 reproduced at a second point. All four fixed, each bite-proved in
+both directions. A 5th was found while tightening. **60 more sites now name their refusal**, which
+makes 404-never-403 enforceable by the tests that claim it. **New gate `check:bare-throw`**, rc=0 at
+ACTIONABLE 2, self-test 16/16, bite-proved nine ways including three INCONCLUSIVE floors. Residue: 2
+registered sites with named owners. See `reports/35g-bare-throw-triage.md`.
+
+**S13 REOPENED BOX 5 AND FOUND THE RESIDUE CLAIM WAS WRONG:
 the residue was NOT confined to excluded modules. Seven tests were live, green, counted as coverage
 and could not fail, FOUR of them naming cross-tenant isolation in their own title — in finance/tax,
 organization/setup, invoices, calendar, notifications, chat and payroll, all in scope. One was
@@ -162,17 +178,74 @@ is blocked on another agent, on infrastructure or on a measurement.
       true.** Closed as: *zero tests in either repository that run, are green and cannot fail, outside 4 registered
       sites each with a named owner, held by a gate that is bite-proven in six directions and reports INCONCLUSIVE
       rather than clean when it cannot measure.* What remains, and why it is not closed:
-      PARTIAL: **`BARE_THROW` — 333 backend sites / 125 files, 132 of them on a risk path, UN-TRIAGED and with NO
-      OWNER.** This is now the largest vacuity surface in the repository. It is deliberately not gated: the probe
-      showed 2 of 44 in the isolation suite were asserting a crash, but most of the 333 are legitimate, and
-      baselining them would bank detector noise as debt — the mistake `check:transaction-callbacks` avoided by
-      removing three false-positive classes BEFORE baselining. **Needs an owner.**
+      [x] **`BARE_THROW` — TRIAGED BY EXECUTION, 4 REAL FINDINGS FIXED, 60 TIGHTENED, AND NOW GATED
+      (`check:bare-throw`, NEW). This PARTIAL is closed; the box stays open on the others below.** Report
+      `reports/35g-bare-throw-triage.md`. The 333/125 figure is NOT reproducible — the 35e scanner was ephemeral
+      and nothing named BARE_THROW is on disk — so the population was re-derived: an AST scan over
+      `git archive HEAD src test`, cross-checked against grep to the site, gives **370 sites / 150 files**, of
+      which **150 are `.not.toThrow()`** (class rule NEGATED: it fails on ANY throw, so it cannot be satisfied by
+      a crash) and **220 are positive**. 207 of those are in scope, and **all 207 were EXECUTED, not read**: each
+      rewritten to `.toThrow(__rec(id))` where `__rec` returns a class whose `Symbol.hasInstance` records the real
+      error's constructor, status and message and returns true. 205 produced an observed class; the 2 that did not
+      are the `APP_DATABASE_URL`-gated integration describes, already registered conditional suppressions.
+      **4 of 220 were real, and all four are fixed with two-directional bite proofs:**
+      - `calendar/calendar-series-exception-scope.spec.ts:404` — a test **named "BITE PROOF"** that could not
+        bite. `transaction: jest.fn().mockResolvedValue(undefined)` makes `const [row] = await
+        this.db.transaction(...)` throw `TypeError: (intermediate value) is not iterable`, which the bare matcher
+        accepted; and its only other assertion named a `jest.fn()` **wired to nothing**. Mutation (move the outbox
+        kill out of the transaction): HEAD spec **rc=0**, new spec **rc=1** naming `notification_outbox`.
+      - `hr/directory/employee-onboarding-tenant-isolation.spec.ts:143` and `:204` — both satisfied by
+        `InternalServerErrorException: Failed to link user record.`, a 500 the double produced, with no
+        authorization decision reached. `:204` is titled "control — same-tenant access works" and was asserting
+        that same-tenant onboarding **rejects**. Mutation (the refusal degrades to a 500): HEAD spec **rc=0 4/4**,
+        new spec **rc=1** naming the constructor swap.
+      - `billing/payments/payment-test-transaction-tenant-isolation.spec.ts:45` — **R4 of 35e reproduced at a
+        second point.** The control "proceeds for the owning org" asserted `.rejects.toThrow()` over a facade whose
+        `isReady()` was false, so it stopped at the credential check and never reached the insert, the provider
+        order or the status update. Mutation (drop `eq(paymentTestTransactions.orgId, orgId)` from the post-order
+        update, letting an order be stamped onto another org's row): HEAD spec **rc=0 2/2**, new spec **rc=1**.
+      **A 5th was found while tightening:** `hrms-partition-planner/partition-security.spec.ts:40` is an `it.each`
+      over four different security gates whose four cases all asserted one message, so a drifted ACL or sequence
+      ACL was satisfied by the public-grants error — the test could not tell which gate fired.
+      **60 more sites were tightened to name the refusal**, class taken from the RECORDED constructor and never
+      guessed. Cross-tenant refusals are pinned to `NotFoundException`, which makes **404-never-403** enforceable
+      rather than merely described: mutating payroll setup to answer 403 on a cross-tenant template id passes the
+      pre-fix spec **rc=0 17/17** and reds the tightened one **rc=1**. Four more discriminating mutations (module
+      gate class, run-lock 409->404, dashboard message, and the period-lock transaction losing its SQLSTATE — read
+      through `common/db/postgres-error.ts`, not off a `{code}` shape postgres-js never produces) all show
+      **pre-fix rc=0 / tightened rc=1**. Two further mutations are reported as NOT discriminating because the
+      files' other assertions already bite.
+      **Genuinely fine, by class rather than one by one:** NEGATED (150 sites); SCHEMA_PARSE — the subject's chain
+      ends in `.parse()`/`.safeParse()`, so the only reachable throw is the schema's own (21 risk-path sites, and
+      execution recorded ZodError at every one); OFF-RISK (139) — counted and printed as INFO, **never ratcheted**,
+      because banking them would record noise as debt. All 113 in-scope off-risk sites were executed anyway and
+      none was satisfied by a crash.
+      **`check:bare-throw` (NEW)** fails only on a bare throw under a title claiming a refusal. Measured
+      **1,946 spec files · 1,473 `.toThrow()` matchers · 6,801 risk-titled tests -> 146 bare, 7 on a risk path,
+      5 exempt SCHEMA_PARSE, ACTIONABLE 2, rc=0**; self-test **16/16**, five of them risky-direction cases
+      asserted NOT caught. Bite-proved **nine ways**: an unregistered planted site (rc=1, names it and the
+      ratchet), the three pre-fix specs restored (rc=1, names them by title), the whole 33-file batch reverted
+      (rc=1, "62 actionable, 60 above the ratchet of 2"), walker / matcher-reader / risk-classifier each neutered
+      (**rc=2 INCONCLUSIVE**), a stale registration, a short reason, and a missing owner (all rc=1). Wired into
+      `.github/workflows/ci.yml` beside `check:vacuous-assertions`.
+      **Its own blind spot is recorded in its header, not inferred from a green:** the calendar finding carries no
+      risk word in its title or describe, so the classifier would NOT have caught it — it was found by execution.
+      That classifier is what keeps 139 sites out of the ratchet, so the miss is the price of the scoping.
+      **RESIDUE: 2 sites, ratchet 2, each with a named owner** (`src/scripts/baselines/bare-throw.json`):
+      `degradation/search-index.spec.ts:231` (owner degradation/platform DB — the ONE site of 220 the triage could
+      not reach, inside the `APP_DATABASE_URL`-gated describe; naming a class there would be a guess, which is the
+      defect this gate exists to remove) and `inventory/inv-engine-misc-isolation-stock.spec.ts:194` (owner
+      CRM/inventory release owner, blocker SCOPE — one of the two sites 35e MEASURED as satisfied by a crash; its
+      sibling was repaired, this one is in a module the release excludes, residual R-9).
       PARTIAL: **the frontend has no equivalent gate.** It measures 0 in every class today (0 suppressions, 0
       no-assertion, 0 tautologies, 0 focused, 0 floating), so there is nothing to ratchet — but nothing stops the
-      first one either.
-      PARTIAL: **`check:over-300` is red at 403 vs baseline 394 (exit 1)**, and `c3f0b73d` had raised that baseline
-      to 394 when the count was 395 — sized to that day's breach with no headroom. Re-measured, not inherited.
-      Release management, already routed; the baseline was deliberately NOT raised again.
+      first one either. **35g did NOT extend to the frontend**: its 18 bare-throw sites / 10 files are still the
+      inherited 35e figure, unmeasured and un-triaged, and `check:bare-throw` scans the backend only. Frontend
+      territory.
+      PARTIAL: **`check:over-300` is red at 406 vs baseline 394 (exit 1)** — re-measured 2026-09-03 by 35g and it
+      has drifted a further 3 since 35e read 403. `c3f0b73d` had raised that baseline to 394 when the count was 395
+      — sized to that day's breach with no headroom. Release management, already routed; the baseline was
+      deliberately NOT raised again.
       PARTIAL: **the swallowed-failure sites are TRIAGED, 4 of them fixed, 6 escalated** (report
       `35f-swallowed-failure-triage.md`). Split of the 10 sites §8 actually names: (a) accidental and FIXED —
       payroll-inputs `:201`/`:221`, leaves-write `:387`, overtime `:188` (backend `7ac66b9d`, `0314ac4d`, both
