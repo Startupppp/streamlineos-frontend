@@ -96,12 +96,35 @@ const DISCOVERIES = [
   {
     token: "projectId",
     from: "/build/all",
+    /**
+     * A project id is numeric. Matching any segment instead picked up
+     * /build/command-center — a static sibling route — and the run then
+     * measured /build/command-center/backlog, a 404, as a real error state.
+     */
     extract: `(() => {
       for (const a of document.querySelectorAll('a[href^="/build/"]')) {
-        const m = /^\\/build\\/([^/]+)(?:\\/|$)/.exec(a.getAttribute("href") || "");
-        if (m && m[1] !== "all" && m[1] !== "new") return m[1];
+        const m = /^\\/build\\/(\\d+)(?:[/?#]|$)/.exec(a.getAttribute("href") || "");
+        if (m) return m[1];
       }
       return null;
+    })()`,
+    /**
+     * The project list navigates with router.push from a row click, so there is
+     * no href to read. Clicking the first row and reading where it landed is
+     * the only honest way to reach a board — and it is a real click-through,
+     * which is what this run was missing.
+     */
+    click: `(() => {
+      const row = document.querySelector("main tbody tr");
+      const card = document.querySelector('main [class*="cursor-pointer"]');
+      const target = row || card;
+      if (!target) return false;
+      target.click();
+      return true;
+    })()`,
+    read: `(() => {
+      const m = /^\\/build\\/(\\d+)(?:[/?#]|$)/.exec(location.pathname);
+      return m ? m[1] : null;
     })()`,
   },
 ];
@@ -548,15 +571,27 @@ async function main() {
       }
       await cdp.send("Page.navigate", { url: `${baseUrl}${discovery.from}` });
       await sleep(settleMs);
-      const found = await cdp.send("Runtime.evaluate", {
-        expression: discovery.extract,
-        returnByValue: true,
-        awaitPromise: false,
-      });
-      const value = found.result?.value;
+      const evaluate = async (expression) => {
+        const r = await cdp.send("Runtime.evaluate", {
+          expression,
+          returnByValue: true,
+          awaitPromise: false,
+        });
+        return r.result?.value;
+      };
+      let value = await evaluate(discovery.extract);
+      let how = "link";
+      if ((typeof value !== "string" || value.length === 0) && discovery.click) {
+        const clicked = await evaluate(discovery.click);
+        if (clicked === true) {
+          await sleep(settleMs);
+          value = await evaluate(discovery.read);
+          how = "click-through";
+        }
+      }
       if (typeof value === "string" && value.length > 0) {
         tokens[discovery.token] = value;
-        log(`token ${discovery.token} = ${value} (from ${discovery.from})`);
+        log(`token ${discovery.token} = ${value} (${how} from ${discovery.from})`);
       } else {
         log(`token ${discovery.token} UNRESOLVED from ${discovery.from}`);
       }
