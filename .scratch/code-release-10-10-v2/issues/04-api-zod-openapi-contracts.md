@@ -2,7 +2,7 @@
 
 **What to build:** Users and integrations receive one validated, versioned API contract whose backend, frontend, and OpenAPI representations agree.
 
-**Blocked by:** 01 — PRD traceability manifest
+**Blocked by:** 02 — Schema and executable-key minimization
 
 **Status:** ready-for-agent
 

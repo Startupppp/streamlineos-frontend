@@ -2,7 +2,7 @@
 
 **What to build:** Authored files remain cohesive, justified exceptions fail closed, and non-trivial events use named typed handlers without meaningless wrapper chains.
 
-**Blocked by:** 25 — Backend cleanup and decomposition; 26 — Frontend cleanup and decomposition
+**Blocked by:** 27 — Cleanup contraction and dependency proof
 
 **Status:** ready-for-agent
 
@@ -20,6 +20,7 @@
 - [ ] **PRD-C044** — Use named, typed handler functions for non-trivial UI events and form actions instead of embedding business logic, multi-step mutations or long anonymous closures in JSX. Names express the user intent (`handleSubmit`, `handleMemberRemove`, `handleRetrySync`), and handlers delegate validation/state-independent rules to domain-owned functions.
 - [ ] **PRD-C045** — Keep NestJS controller handlers, queue/event consumers, cron entry points and server actions thin: validate and authorize at the correct seam, construct the command/query context, invoke one cohesive implementation and map its typed result/error. Do not duplicate business rules, database orchestration or response shaping across handlers.
 - [ ] **PRD-C046** — Use named event handlers only; JSX event props must not contain inline arrow/function expressions. Do not create meaningless handler-to-handler chains: the named handler performs event orchestration and delegates reusable rules to explicitly named domain functions. Use `useCallback` only when referential identity affects memoization, subscription or effect correctness, and verify every dependency.
+- [ ] **PRD-C108** — Verify each file has one cohesive responsibility, stays within size policy or a documented exception, exposes the smallest useful interface and contains no pass-through/dead/commented/debug implementation.
 
 ## Completion evidence
 

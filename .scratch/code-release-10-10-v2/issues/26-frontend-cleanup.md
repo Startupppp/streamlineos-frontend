@@ -1,8 +1,8 @@
-# 26: Frontend cleanup and decomposition
+# 26: Dead-code and dependency-cycle contraction
 
-**What to build:** Frontend dead surface, duplicate hooks/forms/types, unsafe typing, inline orchestration, and oversized components are safely contracted without changing the landing page.
+**What to build:** Dead files, exports and symbols plus compile-time, barrel and NestJS dependency cycles are removed across both repositories with runtime-registration proof.
 
-**Blocked by:** 24 — Repository-cleanup detection foundation
+**Blocked by:** 25 — Type integrity and assertion contraction
 
 **Status:** ready-for-agent
 

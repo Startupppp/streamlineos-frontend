@@ -1,8 +1,8 @@
-# 25: Backend cleanup and decomposition
+# 25: Type integrity and assertion contraction
 
-**What to build:** Backend dead surface, unsafe typing, mixed services, and unnecessary public interfaces are safely contracted without breaking DI, authorization, or workers.
+**What to build:** Unsafe forced typing is removed across both repositories while narrow framework/external assertions remain documented, runtime-validated and regression-tested.
 
-**Blocked by:** 24 — Repository-cleanup detection foundation
+**Blocked by:** 24 — Module ownership and cleanup inventory
 
 **Status:** ready-for-agent
 

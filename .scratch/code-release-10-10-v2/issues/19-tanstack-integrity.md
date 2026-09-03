@@ -2,7 +2,7 @@
 
 **What to build:** Frontend queries use canonical scoped keys, runtime parsing, cancellation, invalidation, pagination, and concurrency-safe optimistic behavior.
 
-**Blocked by:** 04 — API, Zod and OpenAPI contracts
+**Blocked by:** 06–17 — all product-domain slices
 
 **Status:** ready-for-agent
 

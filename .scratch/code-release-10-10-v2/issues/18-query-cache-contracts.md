@@ -10,7 +10,6 @@
 
 ## Acceptance criteria
 
-- [ ] **PRD-C005** — **Query/database cost:** complete v2 ticket 18's bounded projection, N+1, tenant-predicate, index, pagination, cache and invalidation criteria, then retain performance evidence in v2 ticket 29.
 - [ ] **PRD-C065** — Prove explicit projections, tenant-leading/access-pattern indexes and no required full tenant/table scan or avoidable sort.
 - [ ] **PRD-C066** — Exercise reminder, export, fanout, unread, free/busy, recurrence, search/vector and dashboard queries against seeded data.
 - [ ] **PRD-C067** — Verify cache keys include tenant, subject, permission and resource dimensions where applicable.
