@@ -1,0 +1,3 @@
+◇ injected env (56) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+{"selfTest":true,"pass":true,"case1FiresOnDeadRow":true,"case2ClearsOnStaleRow":true}
+EXIT=0

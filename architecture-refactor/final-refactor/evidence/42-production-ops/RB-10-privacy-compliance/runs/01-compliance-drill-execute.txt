@@ -1,0 +1,54 @@
+EXECUTE mode — drill will commit real rows.
+
+
+Drill org  drill-4373b133
+Drill user drill-user-4373b133
+Dry run    false
+
+Step 0 — create synthetic user and organisation
+  synthetic org ready  membershipId=12
+
+Step 1 — data export request
+  export request id=4
+
+Step 2 — legal hold placed on subject
+  hold id=2
+
+Step 3 — erasure refused while hold is active
+  subject is under 1 active hold(s) — delete request correctly blocked
+  delete request correctly rejected while hold active (request id=5)
+
+Step 4 — legal hold released
+  hold 2 released
+
+Step 5 — retention policy applied
+  retention policy id=2
+
+Step 6 — deletion/erasure request (hold released)
+  erasure request id=6
+
+Step 7 — org purge path
+  org drill-4373b133 marked PURGE_SCHEDULED
+
+─── Audit evidence ───────────────────────────────────────
+  7 audit row(s) for org drill-4373b133:
+    [8]  hr_data_request.created  2026-09-03T16:20:30.418Z
+    [9]  hr_legal_hold.placed  2026-09-03T16:20:30.418Z
+    [10]  hr_data_request.rejected_legal_hold  2026-09-03T16:20:30.418Z
+    [11]  hr_legal_hold.released  2026-09-03T16:20:30.418Z
+    [12]  hr_retention_policy.created  2026-09-03T16:20:30.418Z
+    [13]  hr_data_request.created  2026-09-03T16:20:30.418Z
+    [14]  org.purge_scheduled  2026-09-03T16:20:30.418Z
+  All required audit actions present.
+
+─── Known gaps (honest report) ────────────────────────────
+  INCOMPLETE: Export pipeline — hr_data_requests tracks requests; no export worker produces an actual data file.
+  INCOMPLETE: object_storage purge adapter — returns FAILED ('not yet implemented, manual cleanup required').
+  INCOMPLETE: database_rows adapter — marks statusV2=PURGED but does NOT physically delete tenant data rows.
+
+─── Cleanup ──────────────────────────────────────────────
+  Synthetic org drill-4373b133 and user drill-user-4373b133 retained with audit evidence for the executed drill.
+
+Drill complete.  org=drill-4373b133  user=drill-user-4373b133  run=4373b133-64b4-43ec-ac69-1b1f25ae1225
+7 audit rows verified and retained for the executed drill.
+EXIT_CODE=0

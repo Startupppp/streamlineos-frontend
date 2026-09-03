@@ -1,0 +1,6 @@
+$ npm run --silent cell:load -- --results=/private/tmp/claude-501/-Users-tarunchintakunta-Personal-streamline/2c7d1c33-300a-4a77-82f6-04ae8f24aa3a/scratchpad/t34/vacuity-probe-input.json
+--- started: 2026-09-03T16:38:52Z ---
+--- stdout+stderr ---
+VACUITY GUARD: results were produced with 2 members but the cell envelope requires 100000. Seed the fixture first: pnpm -C backend seed:envelope
+--- exit code: 1 ---
+--- finished: 2026-09-03T16:38:52Z ---

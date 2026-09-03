@@ -1,0 +1,16 @@
+$ npx jest --runInBand --testPathPattern="src/modules/platform/(operator-session.guard|platform-operator-access*|platform-operator-customer.controller|audit-log-immutability).spec.ts$"
+# run 2026-09-03T16:30:36Z  backend 45f8a2e99 branch release/code-10-10-v2
+PASS src/modules/platform/platform-operator-customer.controller.spec.ts
+PASS src/modules/platform/audit-log-immutability.spec.ts
+PASS src/modules/platform/platform-operator-access.spec.ts
+PASS src/modules/platform/platform-operator-access-tenant-isolation.spec.ts
+PASS src/modules/platform/platform-operator-access.controller.spec.ts
+PASS src/modules/platform/platform-operator-access-policy.spec.ts
+PASS src/modules/platform/operator-session.guard.spec.ts
+
+Test Suites: 7 passed, 7 total
+Tests:       77 passed, 77 total
+Snapshots:   0 total
+Time:        2.067 s
+Ran all test suites matching /src\/modules\/platform\/(operator-session\.guard|platform-operator-access|platform-operator-access-policy|platform-operator-access-tenant-isolation|platform-operator-access\.controller|platform-operator-customer\.controller|audit-log-immutability)\.spec\.ts$/i.
+exit=0

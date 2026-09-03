@@ -1,0 +1,54 @@
+[32m[Nest] 13418  - [39m09/03/2026, 10:03:50 PM [32m    LOG[39m [38;5;3m[WorkflowOutboxRelayService] [39m[32mRelay started 1 workflow run(s)[39m
+[32m[Nest] 13418  - [39m09/03/2026, 10:03:50 PM [32m    LOG[39m [38;5;3m[WorkflowOutboxRelayService] [39m[32mRelay started 2 workflow run(s)[39m
+PASS src/common/workflow/workflow-runtime-rls.spec.ts
+  the workflow runtime under row-level security
+    the relay
+      ✓ reads the outbox inside a tenant scope, so the tick is not denied (3 ms)
+      ✓ is denied when the read escapes its tenant scope — the shipped defect (5 ms)
+      ✓ keeps a separate cursor per organisation
+    the claim
+      ✓ claims due runs inside a tenant scope
+      ✓ is denied when the claim escapes its tenant scope — the shipped defect (2 ms)
+      ✓ spends the batch limit across organisations rather than per organisation
+    starting a run
+      ✓ inserts inside the run's own tenant scope
+    the run's own writes
+      ✓ records a terminal status inside a tenant scope
+      ✓ records a step inside a tenant scope
+
+[32m[Nest] 13418  - [39m09/03/2026, 10:03:50 PM [32m    LOG[39m [38;5;3m[WorkflowOutboxRelayService] [39m[32mRelay started 1 workflow run(s)[39m
+[32m[Nest] 13418  - [39m09/03/2026, 10:03:50 PM [32m    LOG[39m [38;5;3m[WorkflowOutboxRelayService] [39m[32mRelay started 2 workflow run(s)[39m
+[32m[Nest] 13418  - [39m09/03/2026, 10:03:50 PM [32m    LOG[39m [38;5;3m[WorkflowOutboxRelayService] [39m[32mRelay started 1 workflow run(s)[39m
+[32m[Nest] 13418  - [39m09/03/2026, 10:03:50 PM [32m    LOG[39m [38;5;3m[WorkflowOutboxRelayService] [39m[32mRelay started 1 workflow run(s)[39m
+[31m[Nest] 13418  - [39m09/03/2026, 10:03:50 PM [31m  ERROR[39m [38;5;3m[WorkflowOutboxRelayService] [39m[31mRelay failed for party.created → onboard: insert failed[39m
+[32m[Nest] 13418  - [39m09/03/2026, 10:03:50 PM [32m    LOG[39m [38;5;3m[WorkflowOutboxRelayService] [39m[32mRelay started 1 workflow run(s)[39m
+[32m[Nest] 13418  - [39m09/03/2026, 10:03:50 PM [32m    LOG[39m [38;5;3m[WorkflowOutboxRelayService] [39m[32mRelay started 1 workflow run(s)[39m
+[32m[Nest] 13418  - [39m09/03/2026, 10:03:50 PM [32m    LOG[39m [38;5;3m[WorkflowOutboxRelayService] [39m[32mRelay started 1 workflow run(s)[39m
+PASS src/common/workflow/workflow-outbox-relay.spec.ts
+  WorkflowOutboxRelayService
+    ✓ starts a run for an event a workflow listens to (1 ms)
+    ✓ ignores an event no workflow listens to
+    ✓ starts every workflow listening to the same event
+    ✓ carries the event id, so a redelivery resumes rather than duplicating
+    ✓ counts a deduplicated redelivery as scanned but not started
+    ✓ advances past events it has considered (1 ms)
+    ✓ advances past an event nobody listens to, rather than rescanning it forever
+    ✓ keeps going when one event fails to start, so one tenant cannot stall the rest
+    ✓ can be rewound, for a replay after a bad deploy
+    ✓ still reads an event that committed after a higher-numbered one
+
+PASS src/common/workflow/drain-backlog.spec.ts
+  drainBacklog
+    ✓ sums the backlog across organisations and reports the oldest wait of any
+    ✓ ignores the age reported by an organisation with nothing due
+    ✓ reports nothing due when the queue is empty
+    ✓ distinguishes an empty queue from a run that just came due
+    ✓ reports how long the oldest due run has been waiting
+    ✓ survives the driver returning its numbers as strings
+    ✓ treats a row with nothing in it as an empty queue rather than throwing
+
+Test Suites: 3 passed, 3 total
+Tests:       26 passed, 26 total
+Snapshots:   0 total
+Time:        0.827 s, estimated 1 s
+Ran all test suites matching /(workflow-runtime-rls|drain-backlog|workflow-outbox-relay)\.spec\.ts/i.

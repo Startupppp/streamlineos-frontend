@@ -1,0 +1,56 @@
+COMMAND         : npm run --silent cell:isolation -- --region=cell-2
+CWD             : /Users/tarunchintakunta/Personal/streamline/streamlineos-backend
+STARTED  (UTC)  : 2026-09-03T16:38:38Z
+FINISHED (UTC)  : 2026-09-03T16:38:39Z
+HOST            : Taruns-MBP / macOS 26.6.2 / node v25.9.0
+BACKEND SHA     : 45f8a2e99494483526e357e27f18c76961ebf266 (release/code-10-10-v2)
+PG SERVER       : PostgreSQL 18.4 (Homebrew) on aarch64-apple-darwin25.4.0, compiled by Apple clang version 21.0.0 (clang-2100.0.123.102), 64-bit
+DATABASE_URL          (control plane owner) : postgresql://tarunchintakunta@localhost:5432/scratch_head_1010
+DIRECT_DATABASE_URL   (control plane owner) : postgresql://tarunchintakunta@localhost:5432/scratch_head_1010
+APP_DATABASE_URL      (control plane app)   : postgresql://streamline_app:***@localhost:5432/scratch_head_1010
+REGION_CELL_2_DATABASE_URL     (cell owner) : postgresql://tarunchintakunta@localhost:5432/scratch_head_1010
+REGION_CELL_2_APP_DATABASE_URL (cell app)   : postgresql://streamline_app:***@localhost:5432/scratch_head_1010
+REGION_KEYS / PRIMARY_REGION / CELL_ID      : primary,cell-2 / primary / <unset>
+EXIT CODE       : 1
+NOTE            : NEGATIVE CONTROL for RB-01. The cell is deliberately pointed at the SAME database as the control plane (scratch_head_1010 on both sides). If the isolation check were vacuous it would still print DATA ISOLATION PROVED. It must instead print DATA ISOLATION FAILED and exit non-zero. This is the live counterpart to run 10's self-test and is what makes run 11's pass non-vacuous.
+---------------- FULL OUTPUT ----------------
+◇ injected env (55) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+cell        : cell-2
+cell app url: postgresql://streamline_app:***@localhost:5432/scratch_head_1010
+control app : postgresql://streamline_app:***@localhost:5432/scratch_head_1010
+
+SHARED     database identity                          cell=scratch_head_1010 control-plane=scratch_head_1010 as streamline_app
+                                                      would be isolated by: a separate database per cell
+ISOLATED   application role privilege                 streamline_app bypassrls=false in scratch_head_1010
+ISOLATED   cell application schema                    1027 application table(s) confirm pnpm cell:bootstrap ran in scratch_head_1010
+SHARED     control-plane rows visible from the cell   probe isolation-probe-d73857fb-fd3f-4773-9e8a-e3169e255ff3 written in scratch_head_1010; rows visible in scratch_head_1010: 1
+                                                      would be isolated by: a separate database per cell
+SHARED     cell rows visible from the control plane   probe isolation-probe-d73857fb-fd3f-4773-9e8a-e3169e255ff3-cell written in scratch_head_1010; rows visible in scratch_head_1010: 1
+                                                      would be isolated by: a separate database per cell
+ISOLATED   cross-database bridge                      neither dblink nor postgres_fdw is installed in the cell
+ISOLATED   foreign servers                            0 foreign server(s) defined in scratch_head_1010
+ISOLATED   row-level security in the cell             983 tables have row-level security enabled in scratch_head_1010
+SHARED     cache (Redis)                              the cell inherits the control plane's Redis (no REGION_CELL_2_CACHE_KEY_PREFIX or REGION_CELL_2_UPSTASH_REDIS_REST_URL override)
+                                                      would be isolated by: set REGION_CELL_2_CACHE_KEY_PREFIX=<cellId> for namespace isolation, or REGION_CELL_2_UPSTASH_REDIS_REST_URL for instance isolation
+SHARED     object storage bucket                      the cell inherits the control plane's bucket (no REGION_CELL_2_R2_BUCKET_NAME or REGION_CELL_2_R2_KEY_PREFIX override)
+                                                      would be isolated by: set REGION_CELL_2_R2_KEY_PREFIX=<cellId> for namespace isolation, or REGION_CELL_2_R2_BUCKET_NAME for instance isolation
+SHARED     object storage endpoint                    the cell inherits the control plane's R2 endpoint (no REGION_CELL_2_R2_ENDPOINT override)
+                                                      would be isolated by: set REGION_CELL_2_R2_ENDPOINT to the cell's own endpoint
+SHARED     realtime broker                            the cell inherits the control plane's realtime broker (no REGION_CELL_2_… override)
+                                                      would be isolated by: an Ably application per cell, so channel namespaces cannot collide
+SHARED     search index                               the cell inherits the control plane's search cluster; no search cluster is deployed
+                                                      would be isolated by: set REGION_CELL_2_SEARCH_CLUSTER and REGION_CELL_2_SEARCH_API_KEY per cell
+ISOLATED   queues and dead letters                    outbox and delivery tables live in the cell's own database, so a queue row cannot cross cells
+NAMESPACED worker pools                               cron and outbox relay lease keys are scoped to cell "cell-2" (cron:lease:cell-2:<job>). A cell-2 process started with CELL_ID=cell-2 runs its own job slots and cannot steal a legacy-1 lease. NAMESPACED: job slots are separated by lease key; both cells still share the same Upstash instance for the lease store — set REGION_CELL_2_UPSTASH_REDIS_REST_URL to fully isolate.
+                                                      would be isolated by: a worker process per cell, each with its own CELL_ID and ideally its own Redis
+NAMESPACED monitoring                                 every log line emitted by this process carries cellId="cell-2"; read-cell-logs.mjs reads those lines from stdin and prints a per-cell breakdown. NAMESPACED: log lines are tagged; a cross-cell aggregated view requires shipping logs to a collector and querying by the cellId field.
+                                                      would be isolated by: a per-cell log stream routed to a dedicated dashboard in the log collector
+ISOLATED   secrets                                    the cell's database credentials are declared under REGION_CELL_2_*; search and cache credentials follow the same per-cell env-key pattern
+
+RESULT: DATA ISOLATION FAILED cell=cell-2 isolated=7 namespaced=2 shared=8 unproved=0
+NOTE: NAMESPACED resources use key/prefix separation within a shared instance. An attacker holding the master credential of that instance can read all cells' data.
+  FAIL: database identity — cell=scratch_head_1010 control-plane=scratch_head_1010 as streamline_app
+  FAIL: control-plane rows visible from the cell — probe isolation-probe-d73857fb-fd3f-4773-9e8a-e3169e255ff3 written in scratch_head_1010; rows visible in scratch_head_1010: 1
+  FAIL: cell rows visible from the control plane — probe isolation-probe-d73857fb-fd3f-4773-9e8a-e3169e255ff3-cell written in scratch_head_1010; rows visible in scratch_head_1010: 1
+---------------- END OUTPUT -----------------
+EXIT CODE       : 1

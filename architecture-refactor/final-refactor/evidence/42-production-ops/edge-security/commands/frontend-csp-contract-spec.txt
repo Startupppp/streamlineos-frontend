@@ -1,0 +1,23 @@
+PASS lib/image-delivery-csp-contract.test.ts
+  the img-src checker actually discriminates
+    ✓ permits a same-origin path only through 'self' (1 ms)
+    ✓ refuses a cross-origin URL whose origin is absent
+    ✓ permits a cross-origin URL once its origin is listed
+    ✓ honours a wildcard host source (1 ms)
+    ✓ finds an img-src directive in both live policies
+  every URL resolveImageUrl emits is loadable under the configured img-src
+    ✓ next.config.ts permits every emitted image URL
+    ✓ proxy.ts permits every emitted image URL
+    ✓ emits the same origin the two policies agree on
+    ✓ routes an object key through the app's own origin, not the API's
+  the pre-fix delivery path is exactly what img-src rejects
+    ✓ next.config.ts does not list the API origin in img-src (2 ms)
+    ✓ proxy.ts does not list the API origin in img-src
+    ✓ the API origin is reachable by fetch but not by an image
+
+Test Suites: 1 passed, 1 total
+Tests:       12 passed, 12 total
+Snapshots:   0 total
+Time:        0.349 s
+Ran all test suites matching /image-delivery-csp-contract/i.
+EXIT=0

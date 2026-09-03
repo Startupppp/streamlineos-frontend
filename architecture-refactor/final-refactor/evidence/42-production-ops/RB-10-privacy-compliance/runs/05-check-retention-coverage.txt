@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+{
+  "measuredAt": "2026-09-03T16:21:07.704Z",
+  "thresholdMb": 1,
+  "summary": {
+    "highGrowthTables": 0,
+    "covered": 0,
+    "keepForever": 0,
+    "uncovered": 0
+  },
+  "uncovered": [],
+  "covered": [],
+  "keepForever": [],
+  "allHighGrowth": []
+}
+EXIT_CODE=0

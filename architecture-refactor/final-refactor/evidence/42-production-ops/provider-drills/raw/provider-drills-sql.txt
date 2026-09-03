@@ -1,0 +1,157 @@
+Timing is off.
+BEGIN
+SET CONSTRAINTS
+INSERT 0 2
+INSERT 0 2
+INSERT 0 2
+INSERT 0 2
+INSERT 0 1
+
+### DRILL 1 — PAYMENT REPLAY. Same provider_event_id delivered twice is a no-op.
+### The app writes ON CONFLICT DO NOTHING against uq_payment_webhook_events_provider_env_event
+### (payment-webhook-receiver.service.ts:245-252) and returns {ok:true,duplicate:true} when
+### RETURNING yields no row. This runs that exact insert against the live constraint.
+EXPECT: first delivery -> 1 row returned
+        observed         | id 
+-------------------------+----
+ first-delivery-inserted |  5
+(1 row)
+
+INSERT 0 1
+EXPECT: replayed delivery -> 0 rows returned (the fence bit)
+ observed | id 
+----------+----
+(0 rows)
+
+INSERT 0 0
+EXPECT: exactly 1 stored row for that event id
+ stored_rows_for_replayed_event 
+--------------------------------
+                              1
+(1 row)
+
+
+### DRILL 1b — the fence is scoped per (provider, environment). A test-mode event id
+### must not silently swallow the live-mode event of the same name.
+EXPECT: 1 row (live is a distinct fence slot)
+     observed      | environment 
+-------------------+-------------
+ live-env-inserted | live
+(1 row)
+
+INSERT 0 1
+
+### DRILL 1c — CROSS-TENANT REPLAY. Tenant B replaying tenant A's event id lands on
+### a different provider_id, so the DB fence does NOT block it. The tenant check that
+### does block it is in the application: provider-event-ledger / billing-webhook.handler
+### logs "event id already recorded against another tenant". This drill shows the DB
+### layer alone is not the tenant fence.
+EXPECT: 1 row inserted under org-b (DB fence is per provider, not global)
+       observed        |      org_id      
+-----------------------+------------------
+ cross-tenant-inserted | drill-c162-org-b
+(1 row)
+
+INSERT 0 1
+
+### DRILL 2 — PAYMENT FORGERY. A bad HMAC makes the receiver call
+### recordSignatureFailure() (payment-webhook-receiver.service.ts:191-198), which flips
+### the endpoint to status=failing / failure_reason=Invalid signature and returns 401
+### BEFORE any ledger insert. This drill writes that exact end state and then runs the
+### VERBATIM predicate from src/scripts/alert-sig-failures.mjs against it.
+UPDATE 1
+EXPECT: alert-sig-failures predicate returns 1 row -> fired=true, exit 1
+      org_id      | provider_key | environment | status  |      last_failure_at       |  failure_reason   
+------------------+--------------+-------------+---------+----------------------------+-------------------
+ drill-c162-org-a | razorpay     | test        | failing | 2026-09-03 21:54:52.958376 | Invalid signature
+(1 row)
+
+EXPECT: 0 rows once the failure ages out of the 24h window (the alert clears, no flap)
+UPDATE 1
+ rows_outside_window 
+---------------------
+                   0
+(1 row)
+
+
+### DRILL 3 — EMAIL SUPPRESSION. A provider bounce webhook writes the suppression row
+### (email-webhook.service.ts:66-73 -> EmailSuppressionService.suppress). Every outbound
+### email passes EmailOutboxService.applySuppression, whose predicate is reproduced
+### verbatim below from email-suppression.service.ts:42-54.
+          observed          |          email          |   reason    
+----------------------------+-------------------------+-------------
+ bounce-suppression-written | bounced@example.invalid | HARD_BOUNCE
+(1 row)
+
+INSERT 0 1
+EXPECT: 0 rows — a redelivered bounce is idempotent, not a second suppression row
+ observed 
+----------
+(0 rows)
+
+INSERT 0 0
+INSERT 0 1
+INSERT 0 1
+EXPECT: findSuppressed(org-a) returns ONLY bounced@example.invalid.
+        clean@ is deliverable; expired@ has aged out; org-b-only@ belongs to another tenant.
+  suppressed_for_org_a   
+-------------------------
+ bounced@example.invalid
+(1 row)
+
+EXPECT: findSuppressed(org-b) additionally returns org-b-only@example.invalid
+    suppressed_for_org_b    
+----------------------------
+ bounced@example.invalid
+ org-b-only@example.invalid
+(2 rows)
+
+
+### DRILL 4 — RETRY EXHAUSTION / DEAD LETTER. OUTBOX_MAX_RETRIES = 8
+### (outbox-envelope.ts:8). outbox-publisher.service.ts:208-233 flips the row to
+### delivery_state=DEAD + dead_lettered_at once shouldDeadLetter(retryCount) is true.
+### This writes retry_count=8/DEAD and one still-retrying row at 7, then runs the
+### VERBATIM predicate from src/scripts/alert-dead-outbox.mjs.
+INSERT 0 2
+EXPECT: exactly 1 DEAD row -> alert-dead-outbox fires. The retry_count=7 row is still
+        being retried and must NOT appear.
+      org_id      |     event_type     |      dead_lettered_at      |          last_error           | retry_count 
+------------------+--------------------+----------------------------+-------------------------------+-------------
+ drill-c162-org-a | invitation.created | 2026-09-03 21:54:52.958376 | provider outage: ECONNREFUSED |           8
+(1 row)
+
+
+### DRILL 5 — PUSH / EMAIL CHANNEL RETRY EXHAUSTION. notification_deliveries carries
+### its own ceiling (max_attempts, default 5). Rows at the ceiling go status=DEAD and
+### are picked up by the VERBATIM predicate from src/scripts/alert-dead-delivery.mjs.
+INSERT 0 3
+EXPECT: 2 DEAD rows (one PUSH, one EMAIL). The PENDING attempt 3/5 must NOT appear.
+      org_id      |     event_key      | channel |            failed_at             |                 failure_message                 | attempt_count 
+------------------+--------------------+---------+----------------------------------+-------------------------------------------------+---------------
+ drill-c162-org-a | chat.message       | PUSH    | 2026-09-03 21:54:52.958376+05:30 | web-push: provider unreachable after 5 attempts |             5
+ drill-c162-org-a | invitation.created | EMAIL   | 2026-09-03 21:54:52.958376+05:30 | resend: 503 after 5 attempts                    |             5
+(2 rows)
+
+
+### DRILL 6 — RECOVERY. After the provider comes back, the same rows transition to a
+### healthy end state and every alert predicate clears. This is the recovery half of
+### the outage scenario: proving the alert de-asserts is as important as proving it fires.
+UPDATE 1
+UPDATE 2
+UPDATE 3
+EXPECT: all three post-recovery counts are 0 — every alert clears.
+ sig_failure_alert_rows | dead_outbox_alert_rows | dead_delivery_alert_rows 
+------------------------+------------------------+--------------------------
+                      0 |                      0 |                        0
+(1 row)
+
+ROLLBACK
+
+### POST-ROLLBACK — the database must be exactly as it was.
+EXPECT: every count is 0.
+ orgs_left | webhook_events_left | suppressions_left | outbox_left | deliveries_left 
+-----------+---------------------+-------------------+-------------+-----------------
+         0 |                   0 |                 0 |           0 |               0
+(1 row)
+
+EXIT=0

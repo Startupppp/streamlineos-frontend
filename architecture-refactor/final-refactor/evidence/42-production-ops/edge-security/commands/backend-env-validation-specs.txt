@@ -1,0 +1,91 @@
+FAIL src/config/env-coverage.spec.ts
+  every variable the application reads is a variable the schema validates
+    ✓ finds the environment reads it is meant to be checking (2 ms)
+    ✕ validates every variable read in application code (1 ms)
+    ✓ gives every exception a reason
+  the operator-facing contract lists every variable
+    ✕ documents every variable the schema validates (1 ms)
+  a bad environment stops the boot
+    ✓ accepts an environment that satisfies the schema (2 ms)
+    ✓ names the variable that is missing (3 ms)
+    ✓ names the variable that is malformed
+    ✓ refuses a short unsubscribe secret rather than minting weak tokens (1 ms)
+
+  ● every variable the application reads is a variable the schema validates › validates every variable read in application code
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 6
+
+    - Array []
+    + Array [
+    +   "CALENDAR_PROVIDER_WEBHOOK_SECRET (1 read(s), e.g. /Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/modules/calendar/calendar-webhook-secret.ts)",
+    +   "REDIS_COMMAND_TIMEOUT_MS (1 read(s), e.g. /Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/common/cache/cache.module.ts)",
+    +   "RETENTION_SCHEDULER_ENABLED (1 read(s), e.g. /Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/modules/cron/cron-retention-scheduler.service.ts)",
+    +   "RETENTION_SCHEDULER_TICK_MS (1 read(s), e.g. /Users/tarunchintakunta/Personal/streamline/streamlineos-backend/src/modules/cron/cron-retention-scheduler.service.ts)",
+    + ]
+
+      75 |       .sort();
+      76 |
+    > 77 |     expect(unvalidated).toEqual([]);
+         |                         ^
+      78 |   });
+      79 |
+      80 |   it("gives every exception a reason", () => {
+
+      at Object.<anonymous> (src/config/env-coverage.spec.ts:77:25)
+
+  ● the operator-facing contract lists every variable › documents every variable the schema validates
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 5
+
+    - Array []
+    + Array [
+    +   "DB_POOL_ACQUIRE_TIMEOUT_MS",
+    +   "DB_POOL_ADMISSION_ENABLED",
+    +   "DB_POOL_QUEUE_DEPTH",
+    + ]
+
+      100 |     ).sort();
+      101 |
+    > 102 |     expect(undocumented).toEqual([]);
+          |                          ^
+      103 |   });
+      104 | });
+      105 |
+
+      at Object.<anonymous> (src/config/env-coverage.spec.ts:102:26)
+
+PASS src/config/env.validation.spec.ts
+  validateEnv
+    ✓ parses a valid environment (2 ms)
+    ✓ throws when ENCRYPTION_KEY is missing (4 ms)
+    ✓ throws when ENCRYPTION_KEY is too short to protect PII at rest (1 ms)
+    ✓ throws when BACKEND_JWT_SECRET is too short
+    ✓ throws when DATABASE_URL is missing (4 ms)
+    ✓ requires CRON_SECRET in production
+    ✓ requires INTERNAL_API_SECRET in production (1 ms)
+    ✓ allows deployment-only secrets to be omitted outside production
+    ✓ requires APP_DATABASE_URL in production so the app cannot run as the owner (1 ms)
+    ✓ rejects APP_DATABASE_URL pointing at the same role as DATABASE_URL
+    ✓ accepts a distinct APP_DATABASE_URL in production
+    ✓ rejects entitlement degradation mode in production
+    ✓ allows explicit entitlement degradation mode outside production
+    ✓ does not require APP_DATABASE_URL outside production
+    ✓ requires CONTACT_NOTIFICATION_EMAIL in production
+    ✓ rejects an invalid CONTACT_NOTIFICATION_EMAIL
+    ✓ accepts a valid email provider configuration
+    ✓ treats empty email provider vars as unset (1 ms)
+    ✓ rejects a retired EMAIL_PROVIDER value
+    ✓ rejects a truncated ZEPTOMAIL_TOKEN
+
+Test Suites: 1 failed, 1 passed, 2 total
+Tests:       2 failed, 26 passed, 28 total
+Snapshots:   0 total
+Time:        0.648 s, estimated 1 s
+Ran all test suites matching /config\/(env-coverage|env.validation)/i.
+EXIT=1

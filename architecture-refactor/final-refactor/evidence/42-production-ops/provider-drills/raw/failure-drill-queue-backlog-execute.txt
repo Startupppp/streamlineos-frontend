@@ -1,0 +1,14 @@
+### DATABASE_URL=scratch_head_1010 (schema-only, 0 organizations)
+◇ injected env (55) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+{"drill":"queue-backlog","outcome":"fail","detail":{"error":"null value in column \"organization_id\" of relation \"outbox_events\" violates not-null constraint"}}
+EXIT=1
+
+### DATABASE_URL=cornerstone_e2e_audit (12 organizations)
+◇ injected env (55) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+{"drill":"queue-backlog","outcome":"fail","detail":{"error":"relation \"outbox_events\" does not exist"}}
+EXIT=1
+### re-run at 2026-09-03T16:27:28Z — scratch_head_1010 now has 1 organization row
+1 organizations
+◇ injected env (55) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+{"drill":"queue-backlog","outcome":"pass","detail":{"insertedEventId":"d78b0320-3bc6-423a-900b-08eb9bc2c303","ageSecs":600,"rowCount":1}}
+EXIT=0

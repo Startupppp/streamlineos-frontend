@@ -1,0 +1,2 @@
+SELF-TEST PASS: legal-hold blocking and release contract is correct
+EXIT_CODE=0

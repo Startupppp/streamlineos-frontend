@@ -1,0 +1,23 @@
+Why no manifest was captured for RB-02/RB-03/RB-04.
+run_at: 2026-09-03T16:35:38Z
+
+The evidence root README says to run 'ops:evidence:capture' after a run. That was
+deliberately NOT done, because the gate is built to refuse exactly this kind of evidence,
+and it is right to. From src/scripts/production-ops-evidence.mjs:
+
+  line 60:  const FORBIDDEN = /(?:--self-test|--dry-run|mock|fixture|fake|simulat(?:e|ed|ion))/i;
+  line 119: environment.name must not match /(local|dev|test|ci|mock|fake)/
+  line 122: environment.target must be https:// and must NOT be localhost/127.0.0.1
+  line 130: a named operator is required
+  line 155: an artifact whose TEXT contains self-test or dry-run wording is rejected
+
+Every artifact in these three directories was produced by a --self-test, a --dry-run, or a
+run against localhost. Capturing a manifest would have required inventing a deployed
+environment name, an https target that does not exist, and the name of an operator who
+approved nothing. That is a forged record, not evidence.
+
+The gate's own self-test is runnable and is real evidence that the refusal bites:
+$ node src/scripts/production-ops-evidence.mjs --self-test
+---
+{"selfTest":true,"pass":true,"checks":{"validDeployedShapePasses":true,"alteredArtifactBlocked":true,"selfTestClaimBlocked":true}}
+--- exit code: 0

@@ -1,0 +1,25 @@
+{
+  "generated": "2026-09-03",
+  "producer": "ticket-35 PRD-C183/C184/C185",
+  "backend_commit": "45f8a2e99",
+  "frontend_commit": "7469d2789",
+  "note": "pd-columns.csv is regenerated in place by pd-column-scan.sql; re-hash after any re-run",
+  "artifacts": [
+    {
+      "file": "pd-column-scan.sql",
+      "sha256": "7a3092df47288ef7a1714271462c43a13a92fe510dc59eaca65f24d4331eea19"
+    },
+    {
+      "file": "ai-redaction-probe.mjs",
+      "sha256": "d8638e42b434552d74a3886b857e2b91d20e5a38626bf6121be69b357ce5c405"
+    },
+    {
+      "file": "ai-redaction-probe.txt",
+      "sha256": "8b687a70b17b6068924ac2139ca1dc2c1d1c2d51fa08cd56e80ee25cbac0ac18"
+    },
+    {
+      "file": "pd-columns.csv",
+      "sha256": "90acef8002225544e6b75f5f797e14425713abd247168e4cdcde0f703abdd593"
+    }
+  ]
+}

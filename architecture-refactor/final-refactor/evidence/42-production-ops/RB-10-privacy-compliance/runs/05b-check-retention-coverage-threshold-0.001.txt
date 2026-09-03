@@ -1,0 +1,17 @@
+# threshold lowered to 0.001 MB to defeat the empty-DB vacuity of the default 1 MB gate
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+{
+  "measuredAt": "2026-09-03T16:21:32.372Z",
+  "thresholdMb": 0.001,
+  "summary": {
+    "highGrowthTables": 0,
+    "covered": 0,
+    "keepForever": 0,
+    "uncovered": 0
+  },
+  "uncovered": [],
+  "covered": [],
+  "keepForever": [],
+  "allHighGrowth": []
+}
+EXIT_CODE=0

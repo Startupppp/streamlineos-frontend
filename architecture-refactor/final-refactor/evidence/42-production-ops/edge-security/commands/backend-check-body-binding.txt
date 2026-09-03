@@ -1,0 +1,11 @@
+
+> streamlineos-api@0.1.0 check:body-binding
+> node --max-old-space-size=8192 src/scripts/check-body-binding.mjs
+
+check-body-binding: 1941 validated body/query slots on controller routes
+  BOUND      1932
+  NO-FIELDS  3  (z.record / empty z.object — no property to bind)
+  no-param   6  (handler declares no @Body()/@Query() parameter)
+  UNBOUND    0
+check-body-binding: every validated slot is typed from its own schema.
+EXIT=0

@@ -1,0 +1,31 @@
+COMMAND         : npm run --silent cell:bootstrap -- --region=cell-2 --database=scratch_t33_mismatch_created
+CWD             : /Users/tarunchintakunta/Personal/streamline/streamlineos-backend
+STARTED  (UTC)  : 2026-09-03T16:42:50Z
+FINISHED (UTC)  : 2026-09-03T16:42:54Z
+HOST            : Taruns-MBP / macOS 26.6.2 / node v25.9.0
+BACKEND SHA     : 45f8a2e99494483526e357e27f18c76961ebf266 (release/code-10-10-v2)
+PG SERVER       : PostgreSQL 18.4 (Homebrew) on aarch64-apple-darwin25.4.0, compiled by Apple clang version 21.0.0 (clang-2100.0.123.102), 64-bit
+DATABASE_URL          (control plane owner) : postgresql://tarunchintakunta@localhost:5432/scratch_head_1010
+DIRECT_DATABASE_URL   (control plane owner) : postgresql://tarunchintakunta@localhost:5432/scratch_head_1010
+APP_DATABASE_URL      (control plane app)   : postgresql://streamline_app:***@localhost:5432/scratch_head_1010
+REGION_CELL_2_DATABASE_URL     (cell owner) : postgresql://tarunchintakunta@localhost:5432/scratch_t33_mismatch_target
+REGION_CELL_2_APP_DATABASE_URL (cell app)   : postgresql://streamline_app:***@localhost:5432/scratch_t33_mismatch_target
+REGION_KEYS / PRIMARY_REGION / CELL_ID      : primary,cell-2 / primary / <unset>
+EXIT CODE       : 1
+NOTE            : RB-08 Step 1 DEFECT REPRODUCTION. cell:bootstrap derives the database it CREATEs from the --database flag (default: the region key with dashes removed, i.e. 'cell2'), but derives the URL it migrates into from REGION_CELL_2_DATABASE_URL when that is set. src/scripts/cell-topology.mjs:44 and :68 — 'database' comes from the flag, 'owner' from the configured URL, and nothing reconciles them. RB-08 Step 1 tells the operator to set REGION_CELL_2_DATABASE_URL and then run cell:bootstrap --region=cell-2 with no --database, which is exactly this configuration. Here the flag names scratch_t33_mismatch_created and the URL names scratch_t33_mismatch_target: the run creates the first and then fails migrating into the second. Both names are throwaways; scratch_t33_mismatch_created is dropped immediately after this run.
+---------------- FULL OUTPUT ----------------
+◇ injected env (55) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+cell      : cell-2
+region key: cell-2
+database  : scratch_t33_mismatch_created
+owner url : postgresql://tarunchintakunta:***@localhost:5432/scratch_t33_mismatch_target
+app url   : postgresql://streamline_app:***@localhost:5432/scratch_t33_mismatch_target
+
+[3.6s] created database scratch_t33_mismatch_created
+[3.6s] migrate …
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+COLD CHAIN FAILED: database "scratch_t33_mismatch_target" does not exist
+
+RESULT: FAILED at migrate (exit 1)
+---------------- END OUTPUT -----------------
+EXIT CODE       : 1

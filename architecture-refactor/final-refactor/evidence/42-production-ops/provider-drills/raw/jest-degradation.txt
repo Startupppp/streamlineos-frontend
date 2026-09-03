@@ -1,0 +1,260 @@
+FAIL src/degradation/read-replica.spec.ts
+  ● replica staleness — a lagging snapshot is real, and routing respects it › a replica-safe read served from a lagging snapshot misses a committed write, while the same read on the primary sees it — the staleness is real, not asserted
+
+    Client network socket disconnected before secure TLS connection was established
+
+
+
+  ● replica staleness — a lagging snapshot is real, and routing respects it › routing a read-after-write class to the lagging snapshot would lose its own write — which is why billing-ledger is primary-required, demonstrated rather than asserted
+
+    Client network socket disconnected before secure TLS connection was established
+
+
+
+
+  ● Test suite failed to run
+
+    Client network socket disconnected before secure TLS connection was established
+
+
+
+PASS src/degradation/cell-resource-isolation.spec.ts
+PASS src/degradation/search-index.spec.ts
+PASS src/degradation/ai-provider.spec.ts
+[31m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [31m  ERROR[39m [38;5;3m[CacheService] [39m[31mcache.invalidation.dropped invalidate target=invalidated-during-outage attempts=3[39m
+[31m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [31m  ERROR[39m [38;5;3m[CacheService] [39m[TypeError: fetch failed] {
+  [cause]: Error: connect ECONNREFUSED 127.0.0.1:64123
+  [90m    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1705:16)[39m {
+    errno: [33m-61[39m,
+    code: [32m'ECONNREFUSED'[39m,
+    syscall: [32m'connect'[39m,
+    address: [32m'127.0.0.1'[39m,
+    port: [33m64123[39m
+  }
+}
+[31m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [31m  ERROR[39m [38;5;3m[RateLimitService] [39m[31mUnknown rate-limit tier "unknown-tier-that-does-not-exist" — denying. Add it to TIERS in rate-limit.service.ts.[39m
+[31m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [31m  ERROR[39m [38;5;3m[RateLimitService] [39m[31mUnknown rate-limit tier "not-in-TIERS-at-all" — denying. Add it to TIERS in rate-limit.service.ts.[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:test-user-1788452460823, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:register:allow-user-1788452460860, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-A-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:00 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:user-B-1788452460873, falling back to in-memory: TypeError: fetch failed[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:01 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:01 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:01 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:01 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:01 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:01 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:01 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:02 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:02 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:02 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:02 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:02 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:02 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:03 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:03 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:03 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:03 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:03 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:03 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:03 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:04 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:04 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:04 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:04 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:04 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:04 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:04 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:05 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:05 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:05 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:05 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:05 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:05 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:06 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:06 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:06 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:06 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:06 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:06 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:06 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:07 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:07 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:07 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:07 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:07 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:07 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:08 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:08 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:08 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:08 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+PASS src/degradation/redis.spec.ts (7.901 s)
+[33m[Nest] 93148  - [39m09/03/2026, 9:51:08 PM [33m   WARN[39m [38;5;3m[RateLimitService] [39m[33mRedis rate-limit failed for auth:login:blackhole-user-1788452460893, falling back to in-memory: TimeoutError: The operation was aborted due to timeout[39m
+PASS src/degradation/realtime-adapter.spec.ts
+  ● Console
+
+    console.warn
+      21:51:08.807 Ably: Deprecation warning - The `restHost` client option is deprecated and will be removed in a future version. Use the `endpoint` client option instead.
+
+      149 |         `;
+      150 |
+    > 151 |         const rest = new Ably.Rest({
+          |                      ^
+      152 |           key: "test.abc:secretkey",
+      153 |           restHost: "127.0.0.1",
+      154 |           port: server.port,
+
+      at errorLogger (node_modules/.pnpm/ably@2.23.0/node_modules/ably/src/common/lib/util/logger.ts:58:24)
+      at _Logger.logErrorHandler (node_modules/.pnpm/ably@2.23.0/node_modules/ably/src/common/lib/util/logger.ts:29:9)
+      at _Logger.deprecationWarning (node_modules/.pnpm/ably@2.23.0/node_modules/ably/src/common/lib/util/logger.ts:144:12)
+      at _Logger.deprecated (node_modules/.pnpm/ably@2.23.0/node_modules/ably/src/common/lib/util/logger.ts:127:10)
+      at Object.normaliseOptions (node_modules/.pnpm/ably@2.23.0/node_modules/ably/src/common/lib/util/defaults.ts:284:17)
+      at new BaseClient (node_modules/.pnpm/ably@2.23.0/node_modules/ably/src/common/lib/client/baseclient.ts:71:52)
+      at new BaseRest (node_modules/.pnpm/ably@2.23.0/node_modules/ably/src/common/lib/client/baserest.ts:22:5)
+      at new _DefaultRest (node_modules/.pnpm/ably@2.23.0/node_modules/ably/src/common/lib/client/defaultrest.ts:27:5)
+      at src/degradation/realtime-adapter.spec.ts:151:22
+      at scope (node_modules/.pnpm/postgres@3.4.9/node_modules/postgres/cjs/src/index.js:260:18)
+      at sql.begin (node_modules/.pnpm/postgres@3.4.9/node_modules/postgres/cjs/src/index.js:243:14)
+      at Object.<anonymous> (src/degradation/realtime-adapter.spec.ts:136:5)
+
+PASS src/degradation/object-storage.spec.ts
+PASS src/degradation/email-provider.spec.ts
+PASS src/degradation/ingress-bounds.spec.ts
+PASS src/degradation/control-plane.spec.ts
+PASS src/degradation/fault-server.spec.ts
+
+Test Suites: 1 failed, 10 passed, 11 total
+Tests:       2 failed, 12 skipped, 111 passed, 125 total
+Snapshots:   0 total
+Time:        11.666 s
+Ran all test suites matching /src\/degradation\/.*\.spec\.ts$/i.
+EXIT=1

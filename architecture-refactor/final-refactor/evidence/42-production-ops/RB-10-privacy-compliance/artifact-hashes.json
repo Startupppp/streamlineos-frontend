@@ -1,0 +1,16 @@
+{
+  "generatedAt": "2026-09-03",
+  "generatedBy": "code-release-10-10-v2 ticket 35 (35-erasure-drills) — PRD-C186/C187/C188 drill evidence",
+  "sourceDir": "architecture-refactor/final-refactor/evidence/42-production-ops/RB-10-privacy-compliance",
+  "covers": "the three narrative documents at the top level of this bundle only. runs/ and probes/ carry their own seals; this seal says nothing about them.",
+  "redaction": "Every subject is synthetic and addressed on the reserved .invalid TLD. Before sealing, the tree was scanned for the local scratch password, the remote Neon host, the Upstash host and AWS-style key prefixes: zero matches. The words 'secret'/'key' appear only as environment-variable NAMES a drill prints when reporting what is absent.",
+  "algorithm": "sha256 over the exact bytes on disk. No transform of any kind is applied before hashing.",
+  "recompute": "node -e 'const{createHash}=require(\"crypto\"),fs=require(\"fs\");const s=JSON.parse(fs.readFileSync(\"artifact-hashes.json\",\"utf8\"));let m=0,x=0;for(const[f,h]of Object.entries(s.hashes)){const a=createHash(\"sha256\").update(fs.readFileSync(f)).digest(\"hex\");a===h?m++:(x++,console.log(\"MISMATCH\",f))}console.log(`match=${m} mismatch=${x} of ${Object.keys(s.hashes).length}`)'",
+  "verifiedBy": "cd streamlineos-backend && npm run check:evidence-seal",
+  "fileCount": 3,
+  "hashes": {
+    "C187-downstream-store-trace.md": "c075e551b13b5b3756241e3244961a023ed3e86b78694fe4e621686c7244bd33",
+    "FINDINGS.md": "cb8593ff76c253012d90b3a2921201ce7e45fd8c52d1edfc2a20e29d04c142e1",
+    "README.md": "061d71c25447965fa80e0883472b64100403873c7e2525b18b951d74afe50cf0"
+  }
+}
