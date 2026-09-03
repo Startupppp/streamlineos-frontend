@@ -23,7 +23,8 @@
  *     --widths=375,768,1280
  *
  * Budgets govern authenticated surfaces, so an unauthenticated run is refused
- * rather than reported as a pass.
+ * rather than reported as a pass — and so is a run that reached fewer steps
+ * than it planned, or one where most steps rendered the error page.
  */
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
@@ -58,17 +59,83 @@ const WCAG_AA_LARGE = 3;
  * Representative flows, one per product area. Each step is a route plus an
  * optional inert interaction — none of these writes, so a failing run never
  * leaves data behind.
+ *
+ * A `{token}` segment is resolved from the running product before the run
+ * (see DISCOVERIES). Boards and per-record tables live behind an id, so a
+ * static route list structurally cannot reach them — and horizontal overflow,
+ * the thing the three reference widths exist to catch, lives on exactly those
+ * screens. A run that could not resolve a token records the step as not
+ * reached rather than quietly shrinking its own denominator.
  */
 const JOURNEYS = [
   { name: "home", steps: ["/dashboard", "/inbox", "/notifications"] },
   { name: "crm", steps: ["/crm/leads", "/crm/deals", "/parties"] },
   { name: "inventory", steps: ["/inventory/products", "/inventory/stock"] },
   { name: "hr", steps: ["/hr/employees", "/hr/attendance"] },
-  { name: "build", steps: ["/build", "/build/all"] },
+  {
+    name: "build",
+    steps: [
+      "/build",
+      "/build/all",
+      "/build/{projectId}",
+      "/build/{projectId}/backlog",
+    ],
+  },
   { name: "accounting", steps: ["/accounting", "/accounting/coa"] },
   { name: "workspace", steps: ["/directory/workers", "/calendar", "/workflows"] },
   { name: "settings", steps: ["/settings", "/settings/roles"] },
 ];
+
+/**
+ * How each token is obtained: open a listing the product already renders and
+ * read an id out of it. That is a click-through, not a guess — an id supplied
+ * on the command line can be stale or belong to another tenant, and the run
+ * would then measure a 404 while reporting a route name that sounds right.
+ */
+const DISCOVERIES = [
+  {
+    token: "projectId",
+    from: "/build/all",
+    extract: `(() => {
+      for (const a of document.querySelectorAll('a[href^="/build/"]')) {
+        const m = /^\\/build\\/([^/]+)(?:\\/|$)/.exec(a.getAttribute("href") || "");
+        if (m && m[1] !== "all" && m[1] !== "new") return m[1];
+      }
+      return null;
+    })()`,
+  },
+];
+
+const TOKEN_PATTERN = /\{(\w+)\}/g;
+
+export function templateTokens(path) {
+  TOKEN_PATTERN.lastIndex = 0;
+  const out = [];
+  let m = TOKEN_PATTERN.exec(path);
+  while (m) {
+    out.push(m[1]);
+    m = TOKEN_PATTERN.exec(path);
+  }
+  return out;
+}
+
+/**
+ * Returns the concrete path, or the tokens that stopped it being one. Never a
+ * half-substituted path: `/build/{projectId}` requested literally is a 404 that
+ * would be scored as a real error state.
+ */
+export function expandStep(path, tokens) {
+  const missing = templateTokens(path).filter(
+    (t) => tokens[t] === undefined || tokens[t] === null || tokens[t] === "",
+  );
+  if (missing.length > 0) return { path: null, missing };
+  return { path: path.replace(TOKEN_PATTERN, (_, t) => tokens[t]), missing: [] };
+}
+
+/** Steps the run intended to visit, before anything is skipped. */
+export function plannedStepCount(journeys, widths) {
+  return journeys.reduce((n, j) => n + j.steps.length, 0) * widths.length;
+}
 
 export function relativeLuminance(hex) {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
@@ -113,6 +180,16 @@ export function requiredRatio(fontSizePx, fontWeight) {
 /** A run is only evidence if most of it reached the product rather than an error page. */
 export function tooManyErrors(errored, total) {
   return total > 0 && errored > total / 2;
+}
+
+/**
+ * A step that was never visited must not shrink the denominator. Otherwise a
+ * run that could not resolve an id reports "0 findings over 51 steps" and reads
+ * as cleaner than the 57-step run it failed to be — the same false pass an
+ * all-error run used to produce.
+ */
+export function stepsIncomplete(ran, planned) {
+  return ran < planned;
 }
 
 export function overflowVerdict({ scrollWidth, innerWidth }) {
@@ -335,6 +412,56 @@ function runSelfTest() {
   assert("every journey names at least two steps", JOURNEYS.every((j) => j.steps.length >= 2));
   assert("no journey step is a write route", JOURNEYS.every((j) => j.steps.every((s) => !/\/(new|create|edit)(\/|$)/.test(s))));
 
+  const allSteps = JOURNEYS.flatMap((j) => j.steps);
+  assert(
+    "a resolved token becomes a concrete path",
+    expandStep("/build/{projectId}/backlog", { projectId: "42" }).path ===
+      "/build/42/backlog",
+  );
+  assert(
+    "BITE — an unresolved token yields no path at all, never a literal {token} URL",
+    expandStep("/build/{projectId}", {}).path === null &&
+      expandStep("/build/{projectId}", {}).missing.join() === "projectId",
+  );
+  assert(
+    "an empty-string token counts as unresolved, not as a valid id",
+    expandStep("/build/{projectId}", { projectId: "" }).path === null,
+  );
+  assert(
+    "a plain route passes through untouched",
+    expandStep("/dashboard", {}).path === "/dashboard",
+  );
+  assert(
+    "every templated token has a discovery that can resolve it",
+    allSteps
+      .flatMap(templateTokens)
+      .every((t) => DISCOVERIES.some((d) => d.token === t)),
+  );
+  assert(
+    "every discovery is actually used by a step, so the run never navigates for nothing",
+    DISCOVERIES.every((d) => allSteps.some((s) => templateTokens(s).includes(d.token))),
+  );
+  assert(
+    "no discovery reads its id from a route that is itself templated",
+    DISCOVERIES.every((d) => templateTokens(d.from).length === 0),
+  );
+  assert(
+    "the journeys reach a kanban board, which is where horizontal overflow lives",
+    allSteps.includes("/build/{projectId}"),
+  );
+  assert(
+    "the planned denominator counts every step at every width",
+    plannedStepCount([{ steps: ["/a", "/b"] }, { steps: ["/c"] }], [375, 768, 1280]) === 9,
+  );
+  assert(
+    "a run that reached every planned step is complete",
+    stepsIncomplete(9, 9) === false,
+  );
+  assert(
+    "BITE — a run that skipped a step is incomplete, not a smaller clean run",
+    stepsIncomplete(8, 9),
+  );
+
   for (const f of failures) console.error(`✖  self-test FAILED: ${f}`);
   if (failures.length > 0) {
     console.error(`browser-journeys self-tests: ${failures.length} failed, ${passed} passed`);
@@ -386,6 +513,7 @@ async function main() {
   const log = (m) => console.log(`[${((Date.now() - started) / 1000).toFixed(1)}s] ${m}`);
   const findings = [];
   const steps = [];
+  const tokens = {};
 
   try {
     await waitForDevTools(debugPort, 20000);
@@ -405,6 +533,35 @@ async function main() {
     });
     log(`browser ${browserPath} · base ${baseUrl} · widths ${widths.join("/")}`);
 
+    await cdp.send("Emulation.setDeviceMetricsOverride", {
+      width: 1280,
+      height: 900,
+      deviceScaleFactor: 1,
+      mobile: false,
+    });
+    for (const discovery of DISCOVERIES) {
+      const override = flag(discovery.token, "");
+      if (override) {
+        tokens[discovery.token] = override;
+        log(`token ${discovery.token} = ${override} (given)`);
+        continue;
+      }
+      await cdp.send("Page.navigate", { url: `${baseUrl}${discovery.from}` });
+      await sleep(settleMs);
+      const found = await cdp.send("Runtime.evaluate", {
+        expression: discovery.extract,
+        returnByValue: true,
+        awaitPromise: false,
+      });
+      const value = found.result?.value;
+      if (typeof value === "string" && value.length > 0) {
+        tokens[discovery.token] = value;
+        log(`token ${discovery.token} = ${value} (from ${discovery.from})`);
+      } else {
+        log(`token ${discovery.token} UNRESOLVED from ${discovery.from}`);
+      }
+    }
+
     for (const width of widths) {
       await cdp.send("Emulation.setDeviceMetricsOverride", {
         width,
@@ -414,7 +571,19 @@ async function main() {
       });
 
       for (const journey of JOURNEYS) {
-        for (const route of journey.steps) {
+        for (const template of journey.steps) {
+          const expanded = expandStep(template, tokens);
+          if (expanded.path === null) {
+            findings.push({
+              width,
+              journey: journey.name,
+              route: template,
+              kind: "step-not-reached",
+              unresolved: expanded.missing,
+            });
+            continue;
+          }
+          const route = expanded.path;
           const url = `${baseUrl}${route}`;
           await cdp.send("Page.navigate", { url });
           await sleep(settleMs);
@@ -444,6 +613,7 @@ async function main() {
             width,
             journey: journey.name,
             route,
+            template,
             landed: probe.url,
             state,
             h1Count: probe.h1Count,
@@ -499,11 +669,14 @@ async function main() {
 
   const unauthenticated = findings.filter((f) => f.kind === "unauthenticated").length;
   const errored = steps.filter((step) => step.state === "error").length;
+  const planned = plannedStepCount(JOURNEYS, widths);
   const summary = {
     generatedAt: new Date().toISOString(),
     baseUrl,
     widths,
     journeys: JOURNEYS.map((j) => j.name),
+    tokens,
+    stepsPlanned: planned,
     stepsRun: steps.length,
     findings,
     steps,
@@ -512,7 +685,7 @@ async function main() {
 
   const byKind = {};
   for (const f of findings) byKind[f.kind] = (byKind[f.kind] ?? 0) + 1;
-  log(`${steps.length} steps run · ${findings.length} findings`);
+  log(`${steps.length} of ${planned} planned steps run · ${findings.length} findings`);
   for (const [kind, count] of Object.entries(byKind).sort()) console.log(`   ${kind}: ${count}`);
   console.log(`results -> ${outPath}`);
 
@@ -529,6 +702,18 @@ async function main() {
     console.error(
       `✖  ${errored} of ${steps.length} steps rendered an error state — the environment is broken, ` +
         "so this run measured the error page, not the product",
+    );
+    process.exit(1);
+  }
+  /**
+   * The same refusal from the other side: a step that never ran cannot count as
+   * a step that passed, so a run missing any of its planned steps is reported as
+   * incomplete rather than as a smaller clean run.
+   */
+  if (stepsIncomplete(steps.length, planned)) {
+    console.error(
+      `✖  only ${steps.length} of ${planned} planned steps were reached — ` +
+        "this run is incomplete, not clean",
     );
     process.exit(1);
   }
