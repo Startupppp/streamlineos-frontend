@@ -294,3 +294,177 @@ the count is where they are — **none is in in-scope production code**:
   recorded, not fixed.
 
 Lint is reported here because it was executed. It is not claimed as passing: it **exits 1**.
+
+---
+
+## 9. Module checklist table — recomputed, and its provenance found
+
+The table's **Proven** column cannot be re-derived from the current PRD, because the header records
+that completed checkboxes were deleted from the file. It can be re-derived from git, and this pass
+did so.
+
+**Provenance, verified.** The table was added by `731d688ab` ("docs: collapse completed architecture
+sessions", −1,187 lines from the PRD). Its 18 rows are a verbatim per-subsection count of §10 at the
+pre-collapse commit **`10c06d01c`**, whose §10 holds **18 subsections and 124 boxes** — confirmed by
+`git show 10c06d01c:architecture-refactor/PRD-10-10-CODE-RELEASE-TODO.md`. Today's §10 holds **27**
+boxes (26 open, 1 ticked). So the table is auditable *only* against that commit, and every citation
+of it is a citation of a **2026-09-02-or-earlier former head**.
+
+### 9.1 Rows re-derivable from disk
+
+| Row | Carried P/O/Cov | Recomputed | Why |
+|---|---|---|---|
+| Authentication/identity/organization | 5 / 2 / 71% | **6 / 1 / 86%** | PRD:306 is closed by ticket 19 box 34 `[x]` |
+| Organization and module RBAC | 3 / 2 / 60% | **4 / 1 / 80%** | PRD:311 closed by ticket 19 box 21 `[x]` |
+| Settings | 3 / 2 / 60% | **3 / 2 / 60%** (unchanged) | PRD:315 genuinely open; PRD:316 has **no owning ticket box** |
+| **Payroll** | **3 / 3 / 50%** | **6 / 0 / 100%** | ticket 24 is **8 of 8 `[x]`** and covers all three PRD lines |
+| Calendar | 6 / 2 / 75% | 6 / 2 / 75% (unchanged) | PRD:326 open by product decision; PRD:327 **unowned** |
+| Inbox/mail | 3 / 2 / 60% | **4 / 1 / 80%** | PRD:332 closed by ticket 29 box 65 `[x]` |
+| **Notifications** | 7 / 1 / 88% | **8 / 0 / 100%** | see 9.3 — the open box is satisfied in source |
+| Knowledge/Wiki/Chatbot | 5 / 3 / 62% | **6 / 2 / 75%** | PRD:340 closed by ticket 29 box 81 `[x]` |
+| **Frontend system-wide** | **2 / 4 / 33%** | **3 / 3 / 50%** | arithmetically stale: §10.18's ceiling box flipped to `[x]` in `e5fed52a8` and the table was never updated |
+
+### 9.2 Rows that cannot be re-derived from disk at all
+
+**Home (9), Directory/Me (5), HRMS (6), Build/PM (7), Workflows (5), Billing/payments (7),
+Accounting/finance (5), Chat (10), Shared adapters (6)** — 60 "Proven" boxes.
+
+For each: no remaining §10.x subsection in the PRD, **no ticket** in `issues/`, and **no report** in
+`reports/`. Module-matrix tickets exist only for 19 (auth/RBAC/settings), 24 (payroll) and 29
+(calendar/inbox/knowledge). Their `Open = 0` is trivially consistent; their `Proven` count rests
+entirely on text that was deleted.
+
+**What it would take:** either restore the removed `[x]` blocks from
+`git show 10c06d01c:...` (which reproduces every carried number exactly and is the only reason the
+table is auditable at all), or write a per-module ticket carrying box-level acceptance state as
+tickets 19/24/29 do. Until then these nine rows are **NOT-VERIFIED**, not proven.
+
+### 9.3 A PRD box that source contradicts
+
+PRD:336 (Notifications) asks to *"Give the notification lifecycle mutations an `onError` and a
+rollback."* `frontend/hooks/api/notifications-inbox.ts` carries **11 `onMutate` and 11 `onError`**
+occurrences — a rollback pair for every optimistic mutation. The two mutations without `onError`
+(approve/reject) are non-optimistic and only invalidate in `onSettled`, so they have nothing to roll
+back. Ticket 29 box 78 asserts the same. Classified **VERIFIED DONE**; the PRD box is stale.
+
+### 9.4 Structural defects in the table itself
+
+1. **Five open PRD boxes have no owning ticket box**: PRD:316 (Settings queries/cache), PRD:327
+   (Calendar provider-sync), PRD:336 (Notifications), PRD:342 (Knowledge frontend), and the six
+   §10-preamble boxes PRD:296–301, which belong to **no table row and are counted nowhere**.
+2. **Four ticket `[x]` boxes have no PRD counterpart**, so closing them can never move a row:
+   ticket 19 box 36, ticket 29 boxes 122, 127, 132.
+3. **`[~]` has no representation.** Ticket 28's three partial boxes cannot be expressed in a
+   Proven/Open row at all.
+4. **Rounding is inconsistent** — Notifications 7/8 → 88% (half-up), Knowledge 5/8 → 62% (floor).
+5. **One gate, four recorded values.** Tenant-isolation coverage appears as `921/923` (PRD:44),
+   `924/924` (ticket 29:137), `926/926` (ticket 19:7) and `928/928` (`reports/43-last-open-boxes.md`).
+   **Measured this pass: `929/929` (100%), exit 0.** All five are honest readings at different
+   minutes; only the last was executed today.
+
+---
+
+## 10. Classification of every PRD criterion
+
+**Method, stated so it can be checked.** The PRD holds **205** checkboxes: **171 immediate**
+(sections 1–12.3 = 165, plus the 6-box "Immediate code-level final gate") and **34 deferred**. Each
+immediate criterion is classified from (a) a gate this pass executed, (b) the acceptance-box state of
+the owning ticket counted from disk, and (c) direct artifact inspection. **PRD boxes and ticket boxes
+are not 1:1** — §9.4 shows five PRD boxes with no ticket and four ticket boxes with no PRD box — so
+where one ticket covers several PRD lines the allocation is judgment, and it is recorded as such
+rather than presented as measurement.
+
+| Class | Count | Share of 171 |
+|---|---:|---:|
+| **VERIFIED DONE** | **74** | 43.3% |
+| **REGRESSED** | **14** | 8.2% |
+| **STILL PENDING** | **76** | 44.4% |
+| **NOT-VERIFIED** | **6** | 3.5% |
+| **DEFERRED-OPERATOR** | **1** | 0.6% |
+| Deferred production-readiness (untouched) | 34 | — |
+
+### 10.1 Per-section breakdown
+
+| PRD section | Boxes | Owner ticket(s) | DONE | REGR | PEND | N-V | DEF |
+|---|---:|---|---:|---:|---:|---:|---:|
+| 1. One-commit release verification | 4 | 41 (0/8) | 0 | 0 | 4 | 0 | 0 |
+| 2. Module and folder architecture | 5 | 25, 29, 39 | 2 | 2 | 1 | 0 | 0 |
+| 2.1 Repository hygiene | 15 | 36 (7/11) | 3 | 2 | 10 | 0 | 0 |
+| 2.2 File cohesion / 500-line | 6 | 37 (8/8) | 4 | 2 | 0 | 0 | 0 |
+| 2.3 Handler responsibility | 3 | 38 (5/6) | 2 | 0 | 1 | 0 | 0 |
+| 3. TypeScript, Zod, contracts | 5 | 34, 36 | 1 | 3 | 1 | 0 | 0 |
+| 4. Schema and migration quality | 8 | 01–06 | 5 | 0 | 3 | 0 | 0 |
+| 4.1 Schema/key minimization | 8 | 07 (6/6), 08 (6/7) | 6 | 0 | 1 | 1 | 0 |
+| 5. Query/pagination/cache | 4 | 20 (6/7) | 3 | 0 | 1 | 0 | 0 |
+| 5.1 Efficient DB-call contract | 12 | 21 (**2/9**) | 2 | 2 | 8 | 0 | 0 |
+| 6. Organization and module RBAC | 1 | 15 (5/6) | 0 | 0 | 0 | 1 | 0 |
+| 7. NestJS route and worker | 6 | 19, 31, 38 | 3 | 0 | 3 | 0 | 0 |
+| 7.1 Optimized route/transport | 13 | 22 (4/6), 34 (7/7) | 7 | 0 | 6 | 0 | 0 |
+| 8. TanStack and Next.js data layer | 9 | 28 (5×`[x]`, 3×`[~]`) | 4 | 1 | 4 | 0 | 0 |
+| 9. Operability/upload/verification | 5 | 31,32,33,34,35 | 3 | 0 | 1 | 0 | 1 |
+| 10. Module matrix preamble | 6 | **none** | 0 | 0 | 6 | 0 | 0 |
+| 10.1 Auth/identity/sessions/org | 2 | 19 | 1 | 0 | 1 | 0 | 0 |
+| 10.2 Organization/module RBAC | 2 | 19 | 1 | 0 | 1 | 0 | 0 |
+| 10.4 Settings and module access | 2 | 19 (partial) | 0 | 0 | 1 | 1 | 0 |
+| 10.7 Payroll | 3 | 24 (**8/8**) | 3 | 0 | 0 | 0 | 0 |
+| 10.13 Calendar | 2 | 29 (partial) | 0 | 0 | 1 | 1 | 0 |
+| 10.14 Inbox and mail | 2 | 29 | 1 | 0 | 1 | 0 | 0 |
+| 10.15 Notifications, email, push | 1 | **none** | 1 | 0 | 0 | 0 | 0 |
+| 10.16 Knowledge Base/Wiki/Chatbot | 3 | 29 | 1 | 0 | 1 | 1 | 0 |
+| 10.18 Frontend system-wide | 4 | 26,27,28,30 | 1 | 0 | 3 | 0 | 0 |
+| 11. Application security and privacy | 8 | 14,15,17,18 | 6 | 0 | 1 | 1 | 0 |
+| 12.1 Backend/database/cache budgets | 9 | 22, 23 (**2/8**) | 3 | 0 | 6 | 0 | 0 |
+| 12.2 Next.js and perceived speed | 7 | 26 (6/7), 27 (7/7) | 4 | 2 | 1 | 0 | 0 |
+| 12.3 AI gateway, retrieval, streaming | 10 | 09,10,11,12,13 | 7 | 0 | 3 | 0 | 0 |
+| Immediate code-level final gate | 6 | 41, 42 | 0 | 0 | 6 | 0 | 0 |
+| **Total** | **171** | | **74** | **14** | **76** | **6** | **1** |
+
+### 10.2 The 14 REGRESSED items, named
+
+| # | PRD criterion | Evidence |
+|---|---|---|
+| 1 | §2 zero cycles / import direction (**ticked**) | frontend `check:import-direction` **exit 1** — `shared-imports-feature: 20 (baseline 19) REGRESSED`. Cycles themselves are clean in both repos |
+| 2 | §2 every frontend route has one canonical owner (**ticked**) | frontend `check:routes` **exit 1** |
+| 3 | §2.1 dead-code analysis, zero unclassified | backend `check:dead-code` exit 1 (2 unclassified) |
+| 4 | §2.1 remove unused files/exports | frontend `check:dead-code` exit 1 (2 unclassified) |
+| 5 | §2.2 300-line ratchet | backend `check:over-300` **400 / baseline 394** |
+| 6 | §2.2 hard-500 gate | frontend `check:file-sizes` exit 1 (3 files) |
+| 7 | §3 strict TypeScript, no new `any` | frontend `type-check` **exit 2, 12 errors** (working tree, §1) |
+| 8 | §3 reconcile backend/frontend contracts | `check:command-catalog` exit 1 — 4 vs baseline 0 |
+| 9 | §3 no frontend `app/api` business logic (**ticked**) | `check:routes` exit 1 on `api/media/image/route.ts` |
+| 10 | §5.1 max DB-call count per route | `check:db-call-count` exit 1 — 10 stale verdicts vs ratchet 2 |
+| 11 | §5.1 no unbounded reads | `check:unbounded-reads` exit 1 (counters still 0/0; classification stale) |
+| 12 | §8 gate queries by effective access | `check:command-catalog` — 3 WRONG-KEY in `git-integration.ts` |
+| 13 | §12.2 route-level JS/payload budgets | `check:route-bundle-budget` exit 1 — **17 breaches**, 10 in-scope |
+| 14 | §12.2 Core Web Vitals targets | `check:web-vitals-budget` exit 1 — 2 TTFB breaches (down from 6) |
+
+Also **REGRESSED but not a PRD box**: `check:lifecycle-predicates` is **76 / baseline 75, exit 1**,
+against ticket 35's record that it was "fixed at source in S10, rc=1 → rc=0".
+
+### 10.3 The 6 NOT-VERIFIED items, and what each needs
+
+| PRD criterion | What it would take |
+|---|---|
+| §4.1 catalog-side key/constraint minimization proof | a database at head. `check:set-null-column-lists` reports **INCONCLUSIVE**, 274 constraints unverified; needs `SET_NULL_GATE_DATABASE` |
+| §6 BOLA/IDOR executable proof | the declaration half is green (**929/929**); the executable half is `check:tenant-isolation:run` + a booted API — **not run** |
+| §10.4 Settings queries/cache (PRD:316) | no owning ticket box exists; needs an owner before it can be measured |
+| §10.13 Calendar provider-sync/drift (PRD:327) | a **product decision** (local wins / provider wins / user-visible resolution), then implementation |
+| §10.16 Knowledge frontend/TanStack/tests (PRD:342) | no owning ticket box exists; needs an owner |
+| §11 signing/encryption-key rotation behaviour | deployed-key evidence; code-level half only |
+
+Plus the **nine module rows in §9.2** (60 carried "Proven" boxes) which are NOT-VERIFIED as a set.
+
+### 10.4 NEW findings — recorded, not fixed (not my territory)
+
+| # | Finding | Severity | Territory |
+|---|---|---|---|
+| N1 | `frontend/hooks/api/meetings-ai.ts` uncommitted and inconsistent with its two consumers; frontend `type-check` **exit 2, 12 errors** | **P1 — blocks ticket 41** | AI streaming (11/13) |
+| N2 | `check:benchmark-manifest` (backend) is defined but **wired to no CI workflow** — has never run in CI | P2 | ticket 23 / CI |
+| N3 | `check:properties` (frontend) is defined but **wired to no CI workflow**, and is currently **red** | P2 | CI |
+| N4 | `check:lifecycle-predicates` 76/75 exit 1, contradicting ticket 35's closure record | P2 | ticket 06 |
+| N5 | `check:placement-bypass` — 2 of 76 bypass sites unallowlisted (`audit-log.controller.ts:36`, `contacts.controller.ts:93`) | P2 | audit-log / contacts |
+| N6 | `check:licenses` exit 1 on `LGPL-3.0-or-later` in `@img/sharp-libvips-darwin-arm64` — a darwin-arm64 binary that would not resolve in Linux CI, so CI and local disagree | P3 | dependencies |
+| N7 | `check:vulnerabilities` exit 1 — HIGH advisories including `fast-uri` GHSA-jqff-g426-hqxp | P2 | dependencies |
+| N8 | Six §10-preamble PRD boxes (296–301) belong to no table row and no ticket — counted nowhere | P3 | PRD ownership |
+| N9 | The module table's nine 100% rows rest on deleted text (§9.2) | P2 | PRD ownership |
+| N10 | Ticket 21's `**Status:**` line says "3 of 9 closed"; its boxes say **2** | P3 | ticket 21 |
