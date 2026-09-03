@@ -173,10 +173,6 @@
       "as": 1,
       "nonNull": 0
     },
-    "components/layout/command-palette.tsx": {
-      "as": 2,
-      "nonNull": 0
-    },
     "components/layout/header/org-switcher.tsx": {
       "as": 1,
       "nonNull": 0

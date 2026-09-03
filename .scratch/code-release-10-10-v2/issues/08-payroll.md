@@ -10,7 +10,7 @@
 
 ## Acceptance criteria
 
-- [x] **PRD-C120** — Architecture/schema: verify payroll runs, components, assignments, calculations, payslips, taxes, deductions and payment/reconciliation history are normalized, tenant-safe and immutable where financial.
+- [ ] **PRD-C120** — Architecture/schema: verify payroll runs, components, assignments, calculations, payslips, taxes, deductions and payment/reconciliation history are normalized, tenant-safe and immutable where financial.
       Money: 0 float columns across every payroll/payslip/salary table; integer paise end to end; floats only for rates, rounded back at the boundary. Immutability: 8 BEFORE UPDATE OR DELETE triggers verified present in pg_trigger (0445/1001/1030, all journalled). RLS on 30/31 tables (payroll_scheduler_state is a global job lease). Two missing natural keys fixed by migrations 1049 and 1050, both verified in pg_catalog and bite-proved.
 - [ ] **PRD-C121** — Queries/cache/workers: verify bounded run/item reads, indexed employee/period/status paths, no N+1 calculations, asynchronous exports and correct invalidation after lock/publish/reversal.
       PARTIAL: bounded reads, projections and N+1 are proved by gates (check:unbounded-reads / check:query-projections / check:n1-growing-loops, all exit 0, no payroll findings). Cache invalidation after lock/publish/reversal could NOT be verified server-side: `src/modules/payroll/**` uses NO Redis cache at all — zero CacheService / cachedVersioned / invalidateNamespace call sites — so there is nothing to invalidate and the criterion resolves entirely to the frontend Query cache, which is ticket 19's `hooks/api/**`.

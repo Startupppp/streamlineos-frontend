@@ -101,17 +101,6 @@ export function isImageMime(mime: string) {
   return mime.startsWith("image/");
 }
 
-export function resolveFileUrl(url: string, mime?: string): string {
-  if (!url) return "";
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
-  if (url.startsWith("/") && !isStorageObjectKey(url)) return url;
-  const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "";
-  if (mime && !mime.startsWith("image/")) {
-    return `${apiBase}/storage/download?key=${encodeURIComponent(url)}&attachment=1`;
-  }
-  return `${apiBase}/storage/image?key=${encodeURIComponent(url)}`;
-}
-
 export function getDateLabel(date: Date | string | null) {
   const d = toDate(date);
   if (!d) return "";
