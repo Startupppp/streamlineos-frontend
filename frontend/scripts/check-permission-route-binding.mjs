@@ -662,20 +662,66 @@ function enclosingFunction(node) {
   return node.getSourceFile();
 }
 
-/** The `enabled` property of an options object literal, or undefined. */
+/**
+ * The `enabled` property of an options object literal, or undefined.
+ *
+ * The SHORTHAND form counts. `useProjectRoster` computes
+ * `const enabled = canView && !!projectId && …` and passes `{ enabled }`, which
+ * is a ShorthandPropertyAssignment, not a PropertyAssignment — reading only the
+ * latter scored that read ungated when it is correctly gated on `build:view`.
+ */
 function enabledExpression(node) {
   if (!ts.isObjectLiteralExpression(node)) return undefined;
-  for (const p of node.properties)
+  for (const p of node.properties) {
     if (ts.isPropertyAssignment(p) && p.name.getText().replace(/"/g, "") === "enabled")
       return p.initializer;
+    if (ts.isShorthandPropertyAssignment(p) && p.name.text === "enabled") return p.name;
+  }
   return undefined;
 }
 
-/** Keys an `enabled` expression consults, whether via a local or inline. */
-function keysGating(expr, locals, consts) {
-  const keys = new Set();
+/**
+ * Plain `const NAME = <expr>` initialisers in one function, so an `enabled`
+ * that names an intermediate can still be traced to its gate.
+ *
+ * `useProjectRoster` writes `const enabled = canView && !!projectId && …` and
+ * passes `enabled`. Stopping at the identifier scored that read UNGATED when
+ * it is correctly gated on `build:view` — a false negative that would have put
+ * a compliant hook on the ungated list.
+ */
+function plainLocalsIn(fnNode) {
+  const aliases = new Map();
   const visit = (n) => {
-    if (ts.isIdentifier(n) && locals.has(n.text)) keys.add(locals.get(n.text));
+    if (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name) && n.initializer)
+      aliases.set(n.name.text, n.initializer);
+    ts.forEachChild(n, visit);
+  };
+  ts.forEachChild(fnNode, visit);
+  return aliases;
+}
+
+/**
+ * Keys an `enabled` expression consults, and whether any `||` sits on the path.
+ * Local aliases are followed to a bounded depth; a cycle cannot loop because
+ * every name is visited at most once.
+ */
+function keysGating(expr, locals, aliases, consts) {
+  const keys = new Set();
+  let disjunctive = false;
+  const seen = new Set();
+  const visit = (n, depth) => {
+    if (
+      ts.isBinaryExpression(n) &&
+      n.operatorToken.kind === ts.SyntaxKind.BarBarToken
+    )
+      disjunctive = true;
+    if (ts.isIdentifier(n)) {
+      if (locals.has(n.text)) keys.add(locals.get(n.text));
+      else if (depth < 3 && aliases.has(n.text) && !seen.has(n.text)) {
+        seen.add(n.text);
+        visit(aliases.get(n.text), depth + 1);
+      }
+    }
     if (
       ts.isCallExpression(n) &&
       ts.isIdentifier(n.expression) &&
@@ -685,10 +731,10 @@ function keysGating(expr, locals, consts) {
       const key = permissionLiteral(n.arguments[0], consts);
       if (key !== null) keys.add(key);
     }
-    ts.forEachChild(n, visit);
+    ts.forEachChild(n, (c) => visit(c, depth));
   };
-  visit(expr);
-  return keys;
+  visit(expr, 0);
+  return { keys, disjunctive };
 }
 
 export function scanFrontendFile(relPath, sf) {
@@ -730,10 +776,14 @@ export function scanFrontendFile(relPath, sf) {
       const calls = callsIn(options, consts, fns);
       if (calls.length > 0) {
         const enabled = enabledExpression(options);
-        const locals = gateLocalsIn(enclosingFunction(n), consts);
-        const keys = enabled === undefined ? new Set() : keysGating(enabled, locals, consts);
+        const fn = enclosingFunction(n);
+        const gate =
+          enabled === undefined
+            ? { keys: new Set(), disjunctive: false }
+            : keysGating(enabled, gateLocalsIn(fn, consts), plainLocalsIn(fn), consts);
+        const keys = gate.keys;
         if (keys.size === 1) {
-          const disjunctive = /\|\|/.test(enabled.getText());
+          const disjunctive = gate.disjunctive;
           scope.push({
             file: relPath,
             line: lineOf(sf, n),
@@ -1076,6 +1126,35 @@ function runSelfTest() {
     assert(
       "(h3b) two same-named gate locals in one file keep their own keys",
       byHook.get("useA") === "support:tickets:view" && byHook.get("useB") === "support:tickets:create",
+    );
+  }
+
+  // (h3c) SHORTHAND + ALIAS. `const enabled = canView && …; useQuery({ enabled })`
+  // is the dominant shape in hooks/api; reading only PropertyAssignment and
+  // stopping at the identifier scored 5 correctly-gated reads as ungated.
+  {
+    const { scope, ungated } = scan(`export function useRoster(projectId) {
+      const canView = useCan("support:tickets:view");
+      const enabled = canView && !!projectId;
+      return useQuery({ enabled, queryKey: ["r"], queryFn: () => apiClient.get("/support/tickets") });
+    }`);
+    assert(
+      "(h3c) a shorthand `enabled` aliasing a gate local still binds",
+      scope.length === 1 && scope[0].permission === "support:tickets:view" && ungated.length === 0,
+    );
+  }
+
+  // (h3d) a `||` reached THROUGH an alias still marks the read ambiguous
+  {
+    const { scope } = scan(`export function useEither(selfService) {
+      const can = useCan("hr:expenses:view");
+      const enabled = selfService || can;
+      return useQuery({ enabled, queryKey: ["x"], queryFn: () => apiClient.get("/me/expenses") });
+    }`);
+    const { tally, mismatches } = classify(scope, bySegments);
+    assert(
+      "(h3d) a disjunction behind an alias is still ambiguous",
+      mismatches.length === 0 && tally.ambiguous === 1,
     );
   }
 
