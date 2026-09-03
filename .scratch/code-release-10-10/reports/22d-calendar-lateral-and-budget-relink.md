@@ -134,7 +134,8 @@ reports a pass over an empty result set.
 
 Fixed by anchoring the date to the seed's own latest attendance day as an InitPlan constant; the
 predicate the route issues (`a.date = <one day>`) is unchanged. Now measured on **all four** tenants:
-44 / 23 / 9 / 9 blocks against a 2,000 ceiling. The refusal path in `measure-route-budgets.mjs`
+44 / 23 / 9 / 9 blocks against a 2,000 ceiling. Reference-tenant coverage goes **70/71 to 71/71
+(100%), 0 vacuous**, and the manifest is regenerated with 54 read-path values written, 0 refused. The refusal path in `measure-route-budgets.mjs`
 already clears a stale number when the instrument refuses (`applyMeasurement` nulls all four
 read-path fields), so the manifest never carried the 41 forward once the run refused it.
 
@@ -149,7 +150,9 @@ read-path fields), so the manifest never carried the 41 forward once the run ref
 | `measure-route-budgets --self-test` | **0** | 8 checks |
 | `measure-route-budgets … --write` | **0** | 53 written / 1 refused / 28 unlinked; **0 ceilings changed** |
 | `check:route-budgets` | 1 | **1 breach: `GET /calendar/events` 7,072 > 2,000** |
-| `jest --testPathPattern=dashboard` | **0** | 22 suites / 168 tests |
+| `jest` over dashboard/kb/calendar/mail/settings/module-access/rbac/crm-custom-fields | **0** | **221 suites / 1,736 passed**, 1 suite + 4 tests skipped |
+| `pnpm -s check:tenant-isolation` | **0** | **929 / 929 (100%)** |
+| `pnpm -s check:owner-authority` / `check:file-sizes` / `check:migration-discipline` | **0** | |
 | `pnpm typecheck` | **0** | backend |
 | `pnpm check:spec-typecheck` | **0** | backend |
 | `pnpm type-check` (frontend) | **0** | |
@@ -158,10 +161,17 @@ read-path fields), so the manifest never carried the 41 forward once the run ref
 
 ## Open, and why
 
-- **Box 1 (`maxDbCalls`)**: still 5 counted / 14 estimated / **63 default**. Unchanged by this pass.
-  The instrument exists (`route-budget-db-calls.ts` counting through `QueryTelemetryTracker`) and
-  live coverage is 2 of 82 routes; extending it is one `countDbCalls` per service and belongs with
-  each module's owner. Not a mechanism gap.
+- **Box 1 (`maxDbCalls`)**: moved from 5 counted / 14 estimated / 63 default to
+  **12 / 14 / 56**. The seven dashboard routes in this territory were read statement-by-statement out
+  of their services and **every one tightened** — 10 down to 1-4: announcements 1, leaves-today 2,
+  team-attendance 2, my-issues 2 (the same 2 `GET /dashboard/personal` already charges for that
+  source), active-sprint 3, recent-projects 3 on its worst branch, stats 4. Access and module
+  resolution are not counted, matching the convention `GET /dashboard/personal` set, and every note
+  says so. **These are read from the call path, not from a live statement count** — the live counter
+  is driven from `test/perf/route-db-call-budget.e2e-spec.ts`, which is not this territory, so its
+  coverage stays at 2 of 82. The remaining 56 are other modules' routes plus four KB reads
+  (`GET /kb/spaces`, `/kb/spaces/{spaceId}`, `/kb/pages/recent`, `/kb/pages/search`) whose call paths
+  were not read this pass. Not a mechanism gap.
 - **Box 2 (p50/p95/p99 over HTTP)**: `measuredLatencyP95Ms`, `measuredDownstreamCalls`,
   `measuredResponseBytes` and `measuredMemoryMb` are **null for all 82**. The HTTP harness another
   agent was building has landed and is committed (`test/perf/route-budget-http-harness.ts`,
