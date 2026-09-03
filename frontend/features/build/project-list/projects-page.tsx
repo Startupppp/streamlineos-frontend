@@ -3,17 +3,17 @@
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { PlusIcon } from "@animateicons/react/lucide";
-import { useProjects } from "@/hooks/api/build";
+import { useInfiniteProjects } from "@/hooks/api/build";
 import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { Button } from "@/components/ui/button";
 import { RequireModule } from "@/components/auth/require-module";
 import { NewProjectDialog } from "@/features/build/project-list/new-project-dialog";
 import { ResumeLastProjectAction } from "@/features/build/project-list/resume-last-project-action";
 import { ProjectCard } from "@/features/build/project-list/project-card";
 import { ProjectTable } from "@/features/build/project-list/project-table";
 import { ProjectFilterBar } from "@/features/build/project-list/project-filter-bar";
-import { TablePagination } from "@/components/ui/table-pagination";
 import { ProjectsEmptyState } from "@/features/build/project-list/projects-empty-state";
 import { GroupingSidebar } from "@/features/build/project-list/grouping-sidebar";
 import { getUserDisplayName } from "@/lib/person-display";
@@ -215,7 +215,6 @@ export function ProjectsPage({ pmWorkspaceId }: ProjectsPageProps) {
   }, []);
 
   const search = searchParams.get("q") || "";
-  const page = Number(searchParams.get("page")) || 1;
   const viewMode =
     VIEW_MODES.find((v) => v === searchParams.get("view")) ?? "list";
 
@@ -249,7 +248,7 @@ export function ProjectsPage({ pmWorkspaceId }: ProjectsPageProps) {
   );
 
   const handleSearchChange = useCallback(
-    (value: string) => updateParams({ q: value || null, page: null }),
+    (value: string) => updateParams({ q: value || null }),
     [updateParams],
   );
 
@@ -259,18 +258,12 @@ export function ProjectsPage({ pmWorkspaceId }: ProjectsPageProps) {
     [updateParams],
   );
 
-  const setPage = useCallback(
-    (p: number) => updateParams({ page: p === 1 ? null : String(p) }),
-    [updateParams],
-  );
-
   const handleFiltersChange = useCallback(
     (next: ProjectActiveFilters) => {
       updateParams({
         filterStatus: next.status ?? null,
         filterHealth: next.health ?? null,
         filterLead: next.lead ?? null,
-        page: null,
       });
     },
     [updateParams],
@@ -280,7 +273,6 @@ export function ProjectsPage({ pmWorkspaceId }: ProjectsPageProps) {
     setActiveGroup(null);
     updateParams({
       q: null,
-      page: null,
       filterLead: null,
       filterStatus: null,
       filterHealth: null,
@@ -290,8 +282,16 @@ export function ProjectsPage({ pmWorkspaceId }: ProjectsPageProps) {
   const apiStatus =
     activeFilters.status ?? (prefs.showClosed ? undefined : undefined);
 
-  const { data, isLoading, isError, error, refetch } = useProjects({
-    page,
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useInfiniteProjects({
     limit: viewMode === "grid" ? 12 : 25,
     search: debouncedSearch || undefined,
     status: apiStatus as
@@ -307,9 +307,16 @@ export function ProjectsPage({ pmWorkspaceId }: ProjectsPageProps) {
     refetch();
   }, [refetch]);
 
-  const rawProjects = data?.data;
+  const handleLoadMore = useCallback(() => {
+    void fetchNextPage();
+  }, [fetchNextPage]);
 
-  const allProjects = useMemo(() => rawProjects ?? [], [rawProjects]);
+  const pages = data?.pages;
+
+  const allProjects = useMemo(
+    () => (pages ?? []).flatMap((p) => p.data),
+    [pages],
+  );
 
   const leadName = useMemo(() => {
     if (!activeFilters.lead) return undefined;
@@ -331,10 +338,6 @@ export function ProjectsPage({ pmWorkspaceId }: ProjectsPageProps) {
     result = sortProjects(result, prefs.orderBy, prefs.orderDir);
     return result;
   }, [allProjects, activeFilters.status, prefs, activeGroup]);
-
-  const pagination = data
-    ? { page: data.page, total: data.total, totalPages: data.totalPages }
-    : undefined;
 
   const hasFiltersOrSearch =
     Boolean(debouncedSearch) || Object.values(activeFilters).some(Boolean);
@@ -449,13 +452,17 @@ export function ProjectsPage({ pmWorkspaceId }: ProjectsPageProps) {
             </div>
           )}
 
-          {pagination && pagination.totalPages > 1 ? (
-            <TablePagination
-              page={pagination.page}
-              pageSize={viewMode === "grid" ? 12 : 25}
-              total={pagination.total}
-              onPageChange={setPage}
-            />
+          {hasNextPage ? (
+            <div className="flex shrink-0 justify-center border-t border-border/60 py-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLoadMore}
+                disabled={isFetchingNextPage}
+              >
+                {isFetchingNextPage ? "Loading…" : "Load more"}
+              </Button>
+            </div>
           ) : null}
         </PmPageShell>
       </PageWrapper>

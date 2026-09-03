@@ -1,7 +1,14 @@
 ﻿"use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import type {
+  InfiniteData,
+  UseInfiniteQueryOptions,
   UseQueryOptions,
   UseMutationOptions,
 } from "@tanstack/react-query";
@@ -15,8 +22,8 @@ import type {
   ProjectMember,
   ProjectMemberRecord,
   TicketLabel,
-  PaginatedResponse,
   ProjectFilters,
+  ProjectListResponse,
   CreateProjectInput,
   UpdateProjectInput,
   AddProjectMemberInput,
@@ -113,22 +120,59 @@ function getWorkspaceUsersFromCache(
 
 export function useProjects(
   filters?: ProjectFilters,
-  options?: Omit<
-    UseQueryOptions<PaginatedResponse<ProjectListItem>>,
-    "queryKey" | "queryFn"
-  >,
+  options?: Omit<UseQueryOptions<ProjectListResponse>, "queryKey" | "queryFn">,
 ) {
   const canView = useCan("build:view");
-  return useQuery<PaginatedResponse<ProjectListItem>>({
+  return useQuery<ProjectListResponse>({
     queryKey: queryKeys.projects.list(filters ? { ...filters } : undefined),
     queryFn: ({ signal }) =>
-      apiClient.get<PaginatedResponse<ProjectListItem>>(
+      apiClient.get<ProjectListResponse>(
         "/build",
         filters ? { ...filters } : undefined, signal,
       ),
     staleTime: 30_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),
+  });
+}
+
+/**
+ * The keyset walk over `GET /build`.
+ *
+ * The endpoint orders by descending id and takes `afterId`, and answers
+ * `{ data, hasMore, nextCursor }` — no total and no page count, so a numbered
+ * pager cannot be built over it and must not be faked. `limit` is fixed by the
+ * caller and the cursor is the only thing that moves between pages.
+ */
+export function useInfiniteProjects(
+  filters: ProjectFilters,
+  options?: Omit<
+    UseInfiniteQueryOptions<
+      ProjectListResponse,
+      Error,
+      InfiniteData<ProjectListResponse>,
+      readonly unknown[],
+      number | undefined
+    >,
+    "queryKey" | "queryFn" | "initialPageParam" | "getNextPageParam"
+  >,
+) {
+  const canView = useCan("build:view");
+  const { enabled: enabledOption, ...restOptions } = options ?? {};
+  return useInfiniteQuery({
+    queryKey: queryKeys.projects.listInfinite({ ...filters }),
+    queryFn: ({ pageParam, signal }) =>
+      apiClient.get<ProjectListResponse>(
+        "/build",
+        { ...filters, ...(pageParam === undefined ? {} : { afterId: pageParam }) },
+        signal,
+      ),
+    initialPageParam: undefined as number | undefined,
+    getNextPageParam: (lastPage: ProjectListResponse) =>
+      lastPage.nextCursor ?? undefined,
+    staleTime: 30_000,
+    ...restOptions,
+    enabled: canView && (enabledOption ?? true),
   });
 }
 
@@ -169,11 +213,16 @@ export function useCreateProject(
 
 type ProjectPatch = Omit<UpdateProjectInput, "projectId">;
 
+/**
+ * `/build` is keyset, so the list page reads it through `useInfiniteQuery` and
+ * its cache is `InfiniteData`, not a single envelope. An optimistic patch that
+ * only knows the flat shape leaves that page showing stale rows until a
+ * refetch, so both shapes are patched and both are snapshotted.
+ */
+type ProjectListCache = ProjectListResponse | InfiniteData<ProjectListResponse>;
+
 interface UpdateProjectContext {
-  listSnapshots: [
-    readonly unknown[],
-    PaginatedResponse<ProjectListItem> | undefined,
-  ][];
+  listSnapshots: [readonly unknown[], ProjectListCache | undefined][];
   detailKey: ReturnType<typeof queryKeys.projects.detail>;
   previousDetail: ProjectWithDetails | null | undefined;
 }
@@ -200,6 +249,26 @@ function applyProjectListPatch(
     next.members = resolveListMembers(patch.memberIds, project, workspaceUsers);
   }
   return next;
+}
+
+function patchProjectListCache(
+  old: ProjectListCache | undefined,
+  projectId: number,
+  patch: ProjectPatch,
+  workspaceUsers: WorkspaceUser[],
+): ProjectListCache | undefined {
+  if (!old) return old;
+  const mapRows = (rows: ProjectListItem[]): ProjectListItem[] =>
+    rows.map((p) =>
+      p.id === projectId ? applyProjectListPatch(p, patch, workspaceUsers) : p,
+    );
+  if ("pages" in old)
+    return {
+      ...old,
+      pages: old.pages.map((page) => ({ ...page, data: mapRows(page.data) })),
+    };
+  if (!old.data) return old;
+  return { ...old, data: mapRows(old.data) };
 }
 
 function applyProjectDetailPatch(
@@ -242,24 +311,12 @@ export function useUpdateProject(
       const { projectId, ...patch } = variables;
       await queryClient.cancelQueries({ queryKey: queryKeys.projects.all });
       const workspaceUsers = getWorkspaceUsersFromCache(queryClient);
-      const listSnapshots = queryClient.getQueriesData<
-        PaginatedResponse<ProjectListItem>
-      >({
+      const listSnapshots = queryClient.getQueriesData<ProjectListCache>({
         queryKey: queryKeys.projects.all,
       });
-      queryClient.setQueriesData<PaginatedResponse<ProjectListItem>>(
+      queryClient.setQueriesData<ProjectListCache>(
         { queryKey: queryKeys.projects.all },
-        (old) => {
-          if (!old?.data) return old;
-          return {
-            ...old,
-            data: old.data.map((p) =>
-              p.id === projectId
-                ? applyProjectListPatch(p, patch, workspaceUsers)
-                : p,
-            ),
-          };
-        },
+        (old) => patchProjectListCache(old, projectId, patch, workspaceUsers),
       );
       const detailKey = queryKeys.projects.detail(projectId);
       const previousDetail =

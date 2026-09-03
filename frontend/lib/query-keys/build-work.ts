@@ -7,6 +7,8 @@ export const buildWorkQueryKeys = {
       filters === undefined
         ? ([...base, "projects", "list"] as const)
         : ([...base, "projects", "list", filters] as const),
+    listInfinite: (filters: Record<string, unknown>) =>
+      [...base, "projects", "list", filters, "infinite"] as const,
     detail: (projectId: number) =>
       [...base, "projects", "detail", projectId] as const,
     sprints: (projectId?: number) =>
