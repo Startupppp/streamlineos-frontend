@@ -4,7 +4,15 @@
 
 **Blocked by:** 14.
 
-**Status:** pass 7 — **5 of 7 closed, 2 PARTIAL, unchanged.** Pass 7 did not work the boxes: it worked the
+**Status:** pass 8 — **6 of 7 closed, 1 PARTIAL.** Box 3 was closed by the orchestrator on 2026-09-03 when
+`pnpm openapi:check` went green. Pass 8 worked the one remaining box (6, Settings placement) and **closed one of
+its two PARTIALs**: A-13, the Build sidebar gate, whose blocker really had dissolved with A-12 — verified, flipped,
+gate-proved (`check:route-access-contract` 203 → **204** keys, exit 0), commit `3c45e63bb` (frontend).
+Box 6 itself stays OPEN: **9 backend routes still sit at a global `/settings/*` path** (7 automations, 2 email
+templates). Two substantive corrections landed instead of a tick — see the box. Report:
+`reports/19e-settings-placement-a13-and-r12-prerequisite.md`. Pass 7 status follows.
+
+**Status (pass 7):** pass 7 — **5 of 7 closed, 2 PARTIAL, unchanged.** Pass 7 did not work the boxes: it worked the
 cross-territory hand-off list of pass 6, and **fixed 4 of the 6 items**, all bite-proved. The two boxes stay
 PARTIAL on the same blockers (R-12 product decision; `pnpm openapi:check` A-12). Reports:
 `reports/19c-grant-escalation-and-settings-census.md` (pass 6),
@@ -164,6 +172,67 @@ Pass 5 status follows.
     search alone.
     PARTIAL stands: R-12 remains a product decision, now over 7 routes, and the email-templates pair is assignable
     to another territory.
+  - **PASS 8 — A-13 CLOSED; R-12 narrowed to a measured prerequisite; the email-templates verdict was WRONG and is corrected.**
+    **A-13 is closed.** Its blocker was verified rather than transcribed and had genuinely dissolved: `integrations:git:view`
+    now occurs **4 times in `streamlineos-backend/openapi.json` and 4 times in `frontend/contracts/openapi.json`**, and
+    `pnpm -s check:contract-vendor` is **exit 0**. Flipped both sites in
+    `components/layout/sidebar/sidebar-nav-groups-work-management.ts` — the route (`:215`) and the Build group's admission
+    list (`:160`, whose `settings:manage` entry existed only to admit that one child).
+    **Strictly widening, checked not assumed:** `ROLE_DEFAULT_PERMISSIONS` gives `OWNER` and `ORG_ADMIN`
+    `ALL_PERMISSION_NAMES`, and **no role template carries `settings:manage` at all**, so nobody who saw the item loses it
+    while `BUILD_MODULE_ADMIN` gains it. Proof: `check:route-access-contract` **exit 0, 204 keys checked (was 203)** — the
+    key is now contract-backed; `check:contract-vendor` exit 0; `jest --testPathPattern="components/layout"` **18 suites /
+    126 tests, exit 0**; frontend `type-check` **exit 0**. `sidebar-nav-inventory.test.ts`, a sha256 lock over the whole nav
+    graph, bit on the first run (1 failed / 126) and its digest was updated with the dated reason its convention requires.
+    Commit `3c45e63bb` (frontend).
+    **R-12 is NOT adoptable as written, and this is new.** Report 19b recommends Option 2 (derive the module from
+    `triggerEvent`, gate per row) and warns its map must **fail closed**. The map already exists — in the frontend,
+    `components/automations/automation-trigger-data.ts` — and it ends `?? "hr"`. Counted from source, three vocabularies:
+    engine enum `AUTOMATION_TRIGGERS` **55**, write schema `automationTriggerSchema` **48**, frontend `TRIGGER_META` **33**.
+    **19 of the 48 accepted triggers do not resolve to their owning module**: 15 are unmapped and fall to the default, and
+    **4 more are explicitly mapped to `hr`** (`sla.breached`, `expense.submitted`, `reimbursement.approved`,
+    `reimbursement.rejected`), so the map is partly *wrong*, not merely short. Conservatively (leaving the arguable
+    `expense.*`/`reimbursement.*` out): 6 `lead.*`/`deal.*`, 3 `ticket.*`, `sla.breached` and `invoice.paid` all resolve to
+    `hr`. **This is already user-visible**, because
+    `features/shared/automations/module-automations-settings.tsx:224-228` filters both the list and the create picker on
+    that map: `/support/settings/automations` shows **3 of Support's 7** triggers, `/accounting/settings/automations` shows
+    **1 of finance's 6**, and the rest appear on no screen at all (`sectionModule` is only ever `support` or `finance` —
+    `/hr` and `/crm` use their own tables). Adopting Option 2 on this map would gate `ticket.escalated` and `deal.won` on
+    the **HR** rung: a wrong-module key traded for a too-high one. **R-12 therefore has a prerequisite — close the map
+    first** — which is mechanical and compiler-enforceable (a total `Record<AutomationTrigger, TriggerModule>` once the
+    union is the real 48). Not fixed here: `components/automations/**`, `features/shared/automations/**` and
+    `hooks/api/automations.ts` are outside this ticket's territory (`ORCHESTRATION.md:31`; `frontend/hooks/` is ticket 28).
+    **The census's email-templates verdict was wrong.** It said `why: "owner: modules/email …"`, which reads as a
+    mechanical hand-off a next pass would go looking for. Measured: `TEMPLATE_MAP` is **65 templates across 12 categories**
+    from 12 registry files; `getTemplatePreviews()` takes **no `orgId`** and renders static entries; **neither route has any
+    frontend caller**, while CRM and HR each already have their own template surfaces on their own module keys
+    (`crm:email-templates:manage`, `hr:email-templates:manage`) — so the global pair is a third, API-only door beside two
+    module-owned ones. `modules/email` is where the code lives, not a module that owns a surface. The pair has **R-12's
+    shape**, and differs only in that its subject is not the organisation at all, so the answer is probably platform
+    administration rather than a module rung — the same class of product decision, and not invented here. Exposure
+    re-measured and pass 7's correction holds: `settings:email-templates:manage` is on the shipped **`BRANCH_HR`** template
+    (`role-templates-crm-hr.constants.ts:221`, inside `BRANCH_HR` 175–279). Corrected in source with a new falsifiable
+    assertion — *the email-template catalogue is cross-module, so OWNERSHIP cannot resolve that pair* — so if the registry
+    ever collapses to one category the move becomes mechanical and the test says so. `jest settings-surface-census` →
+    **exit 0, 9 tests** (was 8); `pnpm -s check:spec-typecheck` → **exit 0**. Bite-proved in a `git archive HEAD` tree,
+    never the shared tree: every `category:` collapsed to one value → **exit 1**, `Expected: > 1`; 36 of 65 templates
+    hidden → **exit 1**, `Expected: >= 60 / Received: 29`; restored → **exit 0, 9/9**. Commit `05e9ec60` (backend).
+    **Re-verified rather than transcribed:** the frontend is still **23 `/settings/*` pages**, all org configuration or
+    access governance (`/settings/incoming-transfer` is ownership transfer on `ownership:transfer:respond`;
+    `/settings/webhooks` is org-wide on `settings:webhooks:manage`) — but the earlier flat "Frontend: PASS" is
+    **over-stated**, and the paragraph above is the correction. Also checked before reasoning about it: the global
+    automation engine is **live and genuinely cross-module** (`runAutomationsForEvent` is called from `leads`, `deals`,
+    `expenses`, `support`, `hr/*`, `payroll` and the `workflows` engine), and is not a duplicate of `crmAutomationRules`
+    or `/hr/automations`, which are separate tables — so 19b's premise survives.
+    **PARTIAL stands.** Box 6 needs 9 routes moved off `/settings/*`. R-12 (7) is a product decision now carrying a
+    measured, assignable prerequisite; the email pair (2) is a platform-administration decision. Full detail:
+    `reports/19e-settings-placement-a13-and-r12-prerequisite.md`.
+  - PARTIAL: 9 backend routes remain at a global `/settings/*` path. **R-12** (7 automations routes) is a product
+    decision on the rung, and now also blocked on a mechanical, cross-territory prerequisite — the trigger->module map
+    is 33 of 48 and fails open to `hr`, with 4 entries explicitly wrong, so gating rows on it would be worse than the
+    defect. **The email-templates pair** (2 routes) is a platform-administration decision, not the `modules/email`
+    hand-off the census used to claim. A-13, this box's other PARTIAL, is CLOSED. Nothing here is blocked on effort or
+    on infrastructure.
 - [x] Workspace and onboarding gates, organization-switch state, query-key tenant isolation and auth error states are covered by allow/deny/cross-tenant tests.
   - Evidence: FE `jest lib/query-scope-isolation lib/prefetch/access lib/wizard-gate lib/membership-lifecycle-route hooks/api/access` → **8 suites / 44 tests passed**. BE `jest src/modules/organization` → **57 suites / 393 tests passed**, including 14 tenant-isolation specs and `org-switch-revalidation.spec.ts`. Query-key isolation is structural: `QueryProvider` remounts a new `QueryClient` keyed on `authenticated:<orgId>:<userId>`.
 - [x] A permission-key addition to a role template is accompanied by a backfill migration, or it is inert for every organization that already exists.
