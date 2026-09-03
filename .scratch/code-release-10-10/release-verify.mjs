@@ -24,7 +24,8 @@
  *   node release-verify.mjs --gate=check:tenant-isolation   # a single gate, repeatable
  */
 import { execFileSync, spawnSync } from "node:child_process";
-import { writeFileSync, mkdirSync } from "node:fs";
+import { writeFileSync, mkdirSync, readFileSync } from "node:fs";
+import { join as joinPath } from "node:path";
 import { resolve, join } from "node:path";
 
 const BACKEND = "/Users/tarunchintakunta/Personal/streamline/streamlineos-backend";
@@ -65,6 +66,11 @@ const BACKEND_GATES = [
   ["check:file-sizes", {}],
   ["check:dead-code", {}],
   ["check:tenant-isolation", {}],
+  // NOT a duplicate of the line above: `check:tenant-isolation` is a coverage SCANNER, while
+  // `:run` actually executes the tenant-isolation jest suites. Filtering `:run` off as a helper
+  // suffix would have dropped the gate that runs the cross-tenant tests -- the more important
+  // of the two. Classified deliberately.
+  ["check:tenant-isolation:run", { heavy: true, note: "runs the isolation jest suites, not a scan" }],
   ["check:tenant-indexes", {}],
   ["check:tenant-relationships", {}],
   // WRITES to whatever DATABASE_URL points at: it CREATEs rls_probe / rls_probe_nullable
@@ -91,6 +97,68 @@ const BACKEND_GATES = [
   ["check:vulnerabilities", { net: true }],
   ["check:licenses", { net: true }],
   ["sbom:generate", { net: true }],
+  // --- Added 2026-09-03 by the discovery guard below. ---
+  // The hand-written list above classified 37 backend gates. package.json had 59 MORE, so this
+  // harness would have run under half the suite and still printed an AUTHORITATIVE record saying
+  // the release passed. Green by omission, in the instrument every other verdict is read through.
+  ["check:db-generate-guard", {}],
+  ["check:s05-artifact-contract", {}],
+  ["check:alert-system", {}],
+  ["check:alert-ack", {}],
+  ["check:type-assertions", {}],
+  ["check:route-classification", {}],
+  ["check:unbounded-reads", {}],
+  ["check:benchmark-manifest", { live: true }],
+  ["check:route-budgets-http", { live: true }],
+  ["check:db-call-count", {}],
+  ["check:query-projections", {}],
+  ["check:relation-keys", {}],
+  ["check:n1-growing-loops", {}],
+  ["check:scope-application", {}],
+  ["check:record-access", {}],
+  ["check:module-entitlement", {}],
+  ["check:over-300", {}],
+  ["check:log-secrets", {}],
+  ["check:drop-column-safety", { live: true }],
+  ["check:mock-surface", {}],
+  ["check:module-di", {}],
+  ["check:bodyless-conflicts", {}],
+  ["check:restrict-fks", {}],
+  ["check:multipart-contracts", {}],
+  ["check:hr-table-freeze", {}],
+  ["check:placement-bypass", {}],
+  ["check:owner-authority", {}],
+  ["check:test-typecheck", { heavy: true }],
+  ["check:module-gate", {}],
+  ["check:ai-charge", {}],
+  ["check:retention-coverage", {}],
+  ["check:operation-ids", {}],
+  ["check:feature-flag-governance", {}],
+  ["check:fire-and-forget", {}],
+  ["check:contract-registry", {}],
+  ["check:contract-breaking-change", {}],
+  ["check:route-duplicates", {}],
+  ["check:bounded-contracts", {}],
+  ["check:envelope-consistency", {}],
+  ["check:compression", {}],
+  ["check:route-budgets", {}],
+  ["check:bulk-id-limits", {}],
+  ["check:unjoined-table-refs", {}],
+  ["check:kebab-case", {}],
+  ["check:import-direction", {}],
+  ["check:module-registration", {}],
+  ["check:hardcoded-secrets", {}],
+  ["check:set-null-column-lists", {}],
+  ["check:declaration-column-drift", { live: true }],
+  ["check:declaration-constraint-drift", { live: true }],
+  ["check:vacuous-assertions", {}],
+  ["check:test-suppressions", {}],
+  ["check:transaction-callbacks", {}],
+  ["check:authz-deny", {}],
+  ["check:evidence-seal", { live: true }],
+  ["check:hr-pagination", {}],
+  ["check:namespace-coverage", {}],
+  ["check:replay-ledger", { live: true }],
 ];
 
 const FRONTEND_GATES = [
@@ -121,7 +189,49 @@ const FRONTEND_GATES = [
   ["check:routes", {}],
   ["check:web-vitals-budget", { needsBuild: true }],
   ["check:route-bundle-budget", { needsBuild: true }],
+  // --- Added 2026-09-03 by the discovery guard. ---
+  ["check:gated-reads", {}],
+  ["check:response-contracts", {}],
+  ["check:permission-binding", {}],
+  ["check:properties", {}],
+  ["check:named-handlers", {}],
+  ["check:permission-catalog", {}],
+  ["check:test-typecheck", {}],
 ];
+
+/**
+ * The two lists above are CLASSIFICATIONS, not the gate inventory.
+ *
+ * They were written by hand on 2026-09-02 and were already stale by the next morning: agents
+ * added check:declaration-constraint-drift, check:test-typecheck, check:vacuous-assertions,
+ * check:n1-growing-loops, check:mock-surface, check:named-handlers, check:permission-binding,
+ * check:permission-catalog, check:response-contracts and more, and a hand-maintained list runs
+ * none of them while still printing a clean record.
+ *
+ * That is GREEN BY OMISSION, and it is the exact defect class this release has spent itself
+ * finding elsewhere: a wrong-table budget, a wrong-bucket verification, a scanner that never
+ * inspected half its inputs. A release harness that silently skips a third of the gates is the
+ * worst instance of it, because everything else is read through it.
+ *
+ * So: discover every `check:*` script from each package.json, union with the named non-`check:`
+ * gates above, and REFUSE TO RUN if any discovered gate is unclassified. A new gate must be
+ * classified deliberately -- the failure mode is a loud stop, never a quiet skip.
+ */
+function discoverGates(cwd, classified) {
+  const pkg = JSON.parse(readFileSync(joinPath(cwd, "package.json"), "utf8"));
+  const known = new Map(classified);
+  const discovered = Object.keys(pkg.scripts ?? {}).filter(
+    (name) =>
+      name.startsWith("check:") &&
+      // helper sub-commands, not gates: they emit or list rather than assert.
+      !/:(self-test|fix|emit|list|baseline|write|report)$/.test(name),
+  );
+  const unclassified = discovered.filter((name) => !known.has(name));
+  const missing = [...known.keys()].filter(
+    (name) => !(name in (pkg.scripts ?? {})),
+  );
+  return { gates: classified, discovered, unclassified, missing };
+}
 
 const git = (cwd, args) =>
   execFileSync("git", args, { cwd, encoding: "utf8", maxBuffer: 32 * 1024 * 1024 }).trim();
@@ -206,6 +316,27 @@ if (!authoritative && !ALLOW_DIRTY) {
   console.error("Quiesce the agents and commit, or pass --allow-dirty for a NON-AUTHORITATIVE dry run.");
   process.exit(2);
 }
+
+// Refuse to run at all if either repo has a `check:*` script this harness does not classify.
+// A gate the harness has never heard of contributes a silent PASS to the record, which is the
+// same "green by omission" defect the release found in a wrong-table budget and a wrong-bucket
+// verification. Loud stop, never a quiet skip.
+const discovery = [
+  ["backend", discoverGates(BACKEND, BACKEND_GATES)],
+  ["frontend", discoverGates(FRONTEND, FRONTEND_GATES)],
+];
+const unclassified = discovery.filter(([, d]) => d.unclassified.length > 0);
+if (unclassified.length && !ONLY_GATES.length) {
+  process.stderr.write("\nREFUSING TO RUN — gates exist that this harness does not classify.\n");
+  process.stderr.write("Each one must be added to BACKEND_GATES/FRONTEND_GATES with its flags,\n");
+  process.stderr.write("so that a new gate is skipped only by an explicit decision:\n\n");
+  for (const [name, d] of unclassified)
+    for (const g of d.unclassified) process.stderr.write(`  ${name}: ${g}\n`);
+  process.exit(2);
+}
+for (const [name, d] of discovery)
+  if (d.missing.length)
+    process.stderr.write(`  note: ${name} classifies ${d.missing.length} gate(s) absent from package.json: ${d.missing.join(", ")}\n`);
 
 process.stderr.write(`Release verification ${authoritative ? "(AUTHORITATIVE)" : "(DRY RUN -- NOT AUTHORITATIVE)"}\n`);
 const record = {
