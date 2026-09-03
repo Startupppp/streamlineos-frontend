@@ -11,7 +11,11 @@ import type {
   InterviewKitResult, InterviewNotesSummaryResult,
 } from "@/lib/ai/schemas";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import type { AiAbortInput } from "@/hooks/api/ai-abort";
+import {
+  readAiAbortableScalar,
+  type AiAbortInput,
+  type AiAbortableScalar,
+} from "@/hooks/api/ai-abort";
 import { streamAiText, type AiTextStreamResult } from "@/hooks/api/ai-text-stream";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
@@ -19,9 +23,12 @@ export function useAIScoreLead() {
   const qc = useQueryClient();
   return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["a", "i", "score", "lead"],
-    mutationFn: (leadId: number) =>
-      apiClient.post<LeadScoreResult>("/ai/score-lead", { leadId }),
-    onSuccess: (_, leadId) => {
+    mutationFn: (input: AiAbortableScalar<number>) => {
+      const { value: leadId, signal } = readAiAbortableScalar(input);
+      return apiClient.post<LeadScoreResult>("/ai/score-lead", { leadId }, { signal });
+    },
+    onSuccess: (_, input) => {
+      const { value: leadId } = readAiAbortableScalar(input);
       qc.invalidateQueries({ queryKey: queryKeys.leads.detail(leadId) });
       qc.invalidateQueries({ queryKey: queryKeys.leads.all });
     },
@@ -125,8 +132,10 @@ export function useAIGenerateReview() {
 export function useAIAttritionRisk() {
   return useAuthorizedMutation("hr:employees:manage", {
     mutationKey: ["a", "i", "attrition", "risk"],
-    mutationFn: (userId: string) =>
-      apiClient.post<AttritionRiskResult>("/ai/attrition-risk", { userId }),
+    mutationFn: (input: AiAbortableScalar<string>) => {
+      const { value: userId, signal } = readAiAbortableScalar(input);
+      return apiClient.post<AttritionRiskResult>("/ai/attrition-risk", { userId }, { signal });
+    },
   });
 }
 
@@ -153,8 +162,10 @@ export interface NLSearchResult {
 export function useNLSearch() {
   return useAuthorizedMutation("crm:ai:use", {
     mutationKey: ["n", "l", "search"],
-    mutationFn: (query: string) =>
-      apiClient.post<NLSearchResult>("/ai/nl-search", { query }),
+    mutationFn: (input: AiAbortableScalar<string>) => {
+      const { value: query, signal } = readAiAbortableScalar(input);
+      return apiClient.post<NLSearchResult>("/ai/nl-search", { query }, { signal });
+    },
   });
 }
 

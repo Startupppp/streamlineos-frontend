@@ -3,7 +3,11 @@
 import { apiClient } from "@/lib/api-client";
 import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import type { AiAbortInput } from "@/hooks/api/ai-abort";
+import {
+  readAiAbortableScalar,
+  type AiAbortInput,
+  type AiAbortableScalar,
+} from "@/hooks/api/ai-abort";
 
 type PageAiTextResult = { text: string; aiUsage?: AiUsageMeta | null };
 
@@ -18,8 +22,10 @@ export function useKbPageSummarize(pageId: number) {
 export function useKbPageAsk(pageId: number) {
   return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "pages", pageId, "ai", "ask"],
-    mutationFn: (question: string) =>
-      apiClient.post<PageAiTextResult>(`/kb/pages/${pageId}/ai/ask`, { question }),
+    mutationFn: (input: AiAbortableScalar<string>) => {
+      const { value: question, signal } = readAiAbortableScalar(input);
+      return apiClient.post<PageAiTextResult>(`/kb/pages/${pageId}/ai/ask`, { question }, { signal });
+    },
   });
 }
 
