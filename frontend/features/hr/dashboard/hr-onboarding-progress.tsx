@@ -60,7 +60,7 @@ export function HrOnboardingProgress() {
         <div className="p-4 space-y-4">
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[13px] font-medium text-muted-foreground">
+              <span className="text-label font-medium text-muted-foreground">
                 Overall completion
               </span>
               <span className="text-sm font-semibold tabular-nums">

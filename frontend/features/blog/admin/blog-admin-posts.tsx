@@ -145,7 +145,7 @@ const COLUMNS: DataTableColumn<AdminBlogPost>[] = [
     cell: (row) => (
       <Badge
         variant="outline"
-        className={`h-5 px-2 py-0.5 text-[10px] ${STATUS_VARIANTS[row.status]}`}
+        className={`h-5 px-2 py-0.5 text-micro ${STATUS_VARIANTS[row.status]}`}
       >
         {STATUS_LABELS[row.status]}
       </Badge>

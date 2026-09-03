@@ -147,6 +147,7 @@ describe("RolesPage server-prefetch seam", () => {
       "/roles",
       expect.anything(),
       expect.anything(),
+      expect.anything(),
     );
   });
 
@@ -161,6 +162,7 @@ describe("RolesPage server-prefetch seam", () => {
 
     expect(apiClient.get).toHaveBeenCalledWith(
       "/roles",
+      expect.anything(),
       expect.anything(),
       expect.anything(),
     );

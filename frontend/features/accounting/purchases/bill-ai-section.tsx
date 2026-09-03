@@ -62,7 +62,7 @@ function buildBillActions(bill: PurchaseBill): AiAction[] {
       key: "explain-bill",
       label: "Explain bill spend",
       description: "AI narrates bill composition and tax evidence",
-      run: async () => {
+      run: async (signal) => {
         const result = await apiClient.post<VarianceExplainResult>(
           "/finance/ai/variance-explain",
           {
@@ -75,6 +75,7 @@ function buildBillActions(bill: PurchaseBill): AiAction[] {
             variancePct: subtotal > 0 ? (taxTotal / subtotal) * 100 : 0,
             notes: bill.notes ?? undefined,
           },
+          { signal },
         );
         return { text: narrationToText(result) };
       },

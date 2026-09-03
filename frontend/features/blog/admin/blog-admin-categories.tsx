@@ -85,7 +85,7 @@ const COLUMNS: DataTableColumn<AdminBlogCategory>[] = [
             style={{ backgroundColor: row.color }}
             aria-hidden="true"
           />
-          <span className="font-mono text-[11px] text-muted-foreground">{row.color}</span>
+          <span className="font-mono text-dense text-muted-foreground">{row.color}</span>
         </div>
       ) : (
         <span className="text-muted-foreground">—</span>
@@ -95,7 +95,7 @@ const COLUMNS: DataTableColumn<AdminBlogCategory>[] = [
     key: "postCount",
     header: "Posts",
     cell: (row) => (
-      <Badge variant="outline" className="font-mono text-[10px]">
+      <Badge variant="outline" className="font-mono text-micro">
         {row.postCount}
       </Badge>
     ),

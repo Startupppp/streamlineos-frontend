@@ -81,7 +81,7 @@ function ActiveTourPanel({ tour, onDismiss }: ActiveTourPanelProps) {
     >
       <div className="flex items-start gap-2">
         <div className="flex-1 min-w-0">
-          <p className="text-[11px] font-medium tracking-wider uppercase text-muted-foreground">
+          <p className="text-dense font-medium tracking-wider uppercase text-muted-foreground">
             Step {currentStep + 1} of {totalSteps}
           </p>
           {stepTitle && (
@@ -102,7 +102,7 @@ function ActiveTourPanel({ tour, onDismiss }: ActiveTourPanelProps) {
       <Progress value={progress} className="h-1.5" aria-label={`Tour progress: ${progress}%`} />
 
       {stepDescription && (
-        <p className="text-[13px] text-muted-foreground leading-relaxed">
+        <p className="text-label text-muted-foreground leading-relaxed">
           {stepDescription}
         </p>
       )}

@@ -4,7 +4,9 @@
 
 **Blocked by:** 11.
 
-**Status:** 5 of 6 boxes closed · 1 still PARTIAL, and the residue is now 4 hooks rather than 55.
+**Status:** 5 of 6 boxes closed · 1 still PARTIAL. 2026-09-03 S9: the last 4 unthreaded metered AI
+mutations are threaded, so the buffered half of box 3 has **no residue that this release may thread** —
+the remaining 14 are 8 in excluded modules and 6 that are not metered generation.
 2026-09-03: **24 more AI mutation families thread the abort signal** (population 40 → 18), proven by 17 tests driving
 the real `lib/api-client` plus an anti-vacuous control that fails on an unthreaded hook, with `pnpm type-check`
 exit 0 and no call-site edit needed. Of the 18 left, 8 are in excluded modules, 6 are not metered generation, and
@@ -225,3 +227,65 @@ succeed. A 503 still gets both a retry and the form.
 bare-scalar `TVariables` were NOT threaded this session — see the cross-territory note in report 11b: a union
 `TVariables` (`T | ({ value: T } & AiAbortInput)`) would widen them with **zero** call-site edits, so this is not
 in fact blocked on another territory, but it was not implemented and must not be counted as done.
+
+
+---
+
+## Session S9 addendum (2026-09-03) — the last 4 bare-scalar AI mutations are threaded
+
+**Box 3, buffered half: the "blocked on another territory" note was wrong and is now closed.**
+`useAIScoreLead`, `useAIAttritionRisk`, `useNLSearch` (`hooks/api/ai.ts`) and `useKbPageAsk`
+(`hooks/api/kb/page-ai.ts`) took a bare scalar as `TVariables`. Report 11b recorded that a union
+`TVariables` would thread them with zero call-site edits and then reverted the draft unbuilt. It is
+now built:
+
+```ts
+export type AiAbortableScalar<T extends string | number> = T | ({ value: T } & AiAbortInput);
+export function readAiAbortableScalar<T extends string | number>(input: AiAbortableScalar<T>):
+  { value: T; signal?: AbortSignal }
+```
+
+`T extends string | number` is what makes the discrimination sound rather than a cast — a bare `T` can
+never be an object, so `typeof input === "object"` narrows without `as`.
+
+**Zero call-site edits, measured not hoped.** The four live call sites
+(`features/crm/leads/ai-score-button.tsx:48`, `features/hr/employees/detail/employee-details-view.tsx:202`,
+`app/(authenticated)/crm/leads/smart-search/page.tsx:144,150`,
+`features/wiki/components/kb-page-ai-actions.tsx:125`) all still pass a bare scalar and were not touched.
+`pnpm -C frontend type-check` → **exit 0, 0 errors**.
+
+**Proof.** `hooks/api/ai-mutation-signal-threading.test.tsx` grew from 10 to 18 tests: the four families
+added to the signal-forwarding matrix, one assertion that the carrier never leaks `value`/`signal` into
+the JSON body, two that `mutate(scalar)` still works and sends the identical body, and a **kept**
+anti-vacuous control. `jest --runInBand --testPathPattern="ai-mutation-signal"` → **exit 0, 2 suites /
+25 tests**.
+
+**The anti-vacuous control is now permanent, not a one-off.** `useAcceptCandidateScore` deliberately does
+not forward a signal (accepting a score is CRUD, not a metered generation, so cancelling it stops no
+spend). The control passes it a signal, aborts, and asserts the outgoing request is **not** cancelled —
+so the 18 positive assertions cannot be vacuous, and threading that hook without moving the control turns
+the suite red on purpose.
+
+**Bite proofs — hermetic `git archive HEAD` tree, live tree never modified.** Baseline 18 passed.
+
+| Mutation | Result |
+|---|---|
+| `useAIScoreLead` drops the signal | **1 failed / 17 passed** — its own case only |
+| `useKbPageAsk` drops the signal | **1 failed / 17 passed** |
+| the carrier leaks into the request body | **2 failed / 16 passed** |
+| `useAcceptCandidateScore` IS threaded (control inverted) | **1 failed / 17 passed** — the control |
+
+Restored: 18 passed.
+
+**One test-harness defect fixed on the way.** The matrix awaited the mutation promise after aborting. On
+an unthreaded hook that promise never settles, so the case timed out at 5 s and every later case in the
+file failed with it — 9 failed / 9 passed for a one-hook defect, which makes a bite proof unreadable.
+The assertion now `waitFor`s the outgoing signal instead, and fails in ~1 s inside its own case.
+
+**Box 3 stays PARTIAL, and the residue no longer contains anything this release may thread.**
+14 unthreaded AI `mutationFn`s remain:
+· **8 in excluded modules** — `crm/ai.ts` 3, `inv-ai-explain.ts` 3, `inventory/ai.ts` 2.
+· **6 are not metered generation** — `ai-credits.ts` 3 (credit CRUD), `kb/ask.ts` feedback 1,
+  `support/ai.ts` resolve-suggestion 1, `ai.ts` accept-candidate-score 1 (the control).
+The streaming half's residue is unchanged from S8: 6 of the 9 `/stream` routes have no frontend surface
+at all and the 7th is CRM.

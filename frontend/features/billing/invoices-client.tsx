@@ -64,6 +64,9 @@ const STATUS_CONFIG: Record<
   PAID: { label: "Paid", variant: "default", icon: Check },
   FAILED: { label: "Failed", variant: "destructive", icon: XCircle },
   VOIDED: { label: "Voided", variant: "outline", icon: Ban },
+  SENT: { label: "Sent", variant: "default", icon: Send },
+  PARTIALLY_PAID: { label: "Partially paid", variant: "secondary", icon: Check },
+  OVERDUE: { label: "Overdue", variant: "destructive", icon: XCircle },
 };
 
 interface InvoiceActionsCellProps {

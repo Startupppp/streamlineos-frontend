@@ -121,6 +121,7 @@ describe("WorkersPage server-prefetch seam", () => {
       expect.stringContaining("/directory/workers"),
       undefined,
       expect.any(AbortSignal),
+      expect.anything(),
     );
   });
 });

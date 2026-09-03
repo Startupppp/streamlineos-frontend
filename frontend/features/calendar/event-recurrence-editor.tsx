@@ -160,7 +160,7 @@ export function RecurrenceEditor({ state, onChange, startDate }: RecurrenceEdito
                   type="button"
                   onClick={() => toggleDay(day)}
                   className={cn(
-                    "h-6 w-9 rounded text-[10px] font-medium border transition-colors",
+                    "h-6 w-9 rounded text-micro font-medium border transition-colors",
                     state.byDay.includes(day)
                       ? "bg-primary text-primary-foreground border-primary"
                       : "bg-transparent text-muted-foreground border-border hover:border-primary/40",
