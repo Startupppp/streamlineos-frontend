@@ -11,7 +11,7 @@ its blindness is now ratcheted in both directions and bite-proved hermetically. 
 recorded ACTIONABLE with their exact batched form, deliberately not fixed (owners/scope stated in the report).
 Box 2 and box 3 remain open. Report: `reports/21b-n-plus-one-gate-blind-spot.md`.
 
-**Status:** partial — 6 of 9 closed, 3 partial. FOURTH PASS (2026-09-03) did not close a box; it repaired the GATE, which had been red at HEAD and, more importantly, blind. `check:db-call-count` skipped **2,417 of 4,765 loop openers (50.7%), across 753 files**, with no body inspection at all — every braceless loop body, which is the shape CLAUDE.md §6 mandates, plus `Promise.all(xs.map((x) => this.db...))`, whose opener leaves a paren open so `parenBalance >= 0` counted it as closed. It now inspects 2,739 and ratchets that number. Gate rc 1 -> **rc 0**. Report: `reports/21-db-call-contract.md`. Third pass (2026-09-03) batched three more per-row call sites, deleted a per-candidate probe that could never match a row, converted two more write paths to `bulkUpdateFromValues`, gave five more read-then-write pairs their tenant predicate, reconciled the N+1 baseline with what the source now does (ACTIONABLE 44 -> 40), and **recorded the four decisions** boxes 1, 4, 7 and 8 were waiting on. Boxes 1, 4, 7 and 8 are closed as RECORDED DECISIONS — the decision and its consequences are written below; no code was guessed at for them.
+**Status:** partial — 6 of 9 closed, 3 partial. **A-4 IS DONE (2026-09-03, commit `5bdacef8`)** — `clients/client-accounts.service.ts` `reassignAccounts` is one `bulkUpdateFromValues` instead of one UPDATE per assignee. Measured as `streamline_app` under RLS on all four tenants: **505 -> 9 statements** on the 89.93% tenant (65 -> 6, 13 -> 6, 8 -> 6 on the others) and **41,958 -> 32,936 buffer blocks (-21.5%)**, with the sign holding on every tenant. `check:db-call-count` exit 0, ACTIONABLE 40 -> 39 files. Box 2 does NOT close on it — R-6 / R-6b / R-6c remain. Report: `reports/47-a4-a5-clients-n1-and-negative-tests.md`. FOURTH PASS (2026-09-03) did not close a box; it repaired the GATE, which had been red at HEAD and, more importantly, blind. `check:db-call-count` skipped **2,417 of 4,765 loop openers (50.7%), across 753 files**, with no body inspection at all — every braceless loop body, which is the shape CLAUDE.md §6 mandates, plus `Promise.all(xs.map((x) => this.db...))`, whose opener leaves a paren open so `parenBalance >= 0` counted it as closed. It now inspects 2,739 and ratchets that number. Gate rc 1 -> **rc 0**. Report: `reports/21-db-call-contract.md`. Third pass (2026-09-03) batched three more per-row call sites, deleted a per-candidate probe that could never match a row, converted two more write paths to `bulkUpdateFromValues`, gave five more read-then-write pairs their tenant predicate, reconciled the N+1 baseline with what the source now does (ACTIONABLE 44 -> 40), and **recorded the four decisions** boxes 1, 4, 7 and 8 were waiting on. Boxes 1, 4, 7 and 8 are closed as RECORDED DECISIONS — the decision and its consequences are written below; no code was guessed at for them.
 
 **2026-09-03 residual-risk register: one of the three recorded N+1s is NO LONGER BLOCKED.** `clients/client-accounts.service.ts:483` is **A-4 ASSIGNABLE** (the lane that held it has committed; last commit `9d840a1f`; batched form already written down). Boxes 2/3/5 otherwise carry residuals **R-6 / R-6b / R-6c / R-7 / R-7b / R-7c**, each with an owner and a deadline. See `reports/residual-risk-register.md` §1.3, §3.5.
 
@@ -104,6 +104,35 @@ Box 2 and box 3 remain open. Report: `reports/21b-n-plus-one-gate-blind-spot.md`
    and the batched form is already written down in `db-call-count-classification.json`: one `bulkUpdateFromValues`
    keyed on id with `assignedCrmId` per row. `src/common/db/bulk-update.ts` exists, is chunked, makes the tenant
    predicate mandatory, refuses a repeated key, and has its own spec.
+   **A-4 IS DONE (2026-09-03, commit `5bdacef8`, backend). Report: `reports/47-a4-a5-clients-n1-and-negative-tests.md` §1.**
+   `reassignAccounts` now issues one `bulkUpdateFromValues` keyed on id with `assigned_crm_id` per row and
+   `touch: ["updated_at"]` — exactly the batched form the baseline had written down. Measured on
+   `scratch_t21_clients` (a copy of `scratch_perf_seed` at head; the route writes, so the seed itself was not
+   measured on) as `streamline_app`, `rolbypassrls=false`, RLS live, tenant GUC set, Redis null, with
+   `countDbCalls` around the real service. Pre-fix numbers taken from a hermetic `git archive 5bdacef8^` tree
+   against a freshly recreated copy, so both shapes met the identical starting state.
+   **Statements, all four tenants: 505 -> 9 (89.93%, 500 CS members / 1,600 accounts) · 65 -> 6 (9.00%) ·
+   13 -> 6 (0.90%) · 8 -> 6 (0.18%).** Steady state is 5 on every tenant under both shapes, because the
+   assignment branch is skipped once nothing is unassigned. The model is exact both ways: before is
+   `1 + 2 + (distinct assignees) + 2`, after is `1 + 2 + ceil(accounts/500) + 2`.
+   **Buffers** (`EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)` summed over every statement of each shape, inside a
+   rolled-back transaction, `VACUUM ANALYZE` first, as `streamline_app` with the GUC): **41,958 -> 32,936
+   blocks (-21.5%)** on the 89.93% tenant, **3,752 -> 2,881 (-23.2%)** at 9.00%, **138 -> 76 (-44.9%)** at
+   0.90%, **41 -> 24 (-41.5%)** at 0.18%. **The sign does not reverse on any tenant.** The buffer win is much
+   smaller than the statement win and that is the honest shape of it — the batched form touches the same heap
+   pages; what it saves is the per-statement index descent and RLS predicate paid 500 times.
+   Pinned by two new cases in `src/db/__tests__/db-call-count-contract.spec.ts`
+   (`ClientAccountsService.runCrmAssignments`): statement count EQUAL at 1 and 50 rows, `countOf("update") === 0`,
+   `countOf("execute") === 1`, and all five assignees present in the bindings of the ONE statement.
+   **Bite-proved hermetically** (`git archive HEAD` into a temp dir, the new spec copied in over the PRE-FIX
+   service, nothing planted in the shared tree): both cases fail there and pass against the fix.
+   `pnpm check:db-call-count` -> **exit 0**, ACTIONABLE **40 -> 39 files**; the verdict moved
+   `ACTIONABLE -> N+1-FIXED` in the SAME commit as the code, because the gate's stale-verdict check exits 1 on a
+   verdict the detector no longer matches — it did, and that is what turned it green. `pnpm typecheck` exit 0,
+   `pnpm check:spec-typecheck` exit 0.
+   **CORRECTION carried out of this work:** `bulkUpdateFromValues` is `ceil(n / 500)` statements, not one.
+   Every note in this release describing it as "one statement" is right about the shape and wrong about the
+   count above 500 rows. Bounded per row, which is what §5.1 asks; not constant.
    **RESIDUAL R-6 — `party/party-legacy-employer.ts:213`. Blocker: SCOPE (it writes CRM's `contacts` table).
    Owner: CRM/inventory release owner. Deadline: 2026-12-01 review.** Verified still true at head.
    **RESIDUAL R-6b — `party/party-legacy-writer.ts:252` (`claimIdentifiers` per moved row). Blocker: DECISION

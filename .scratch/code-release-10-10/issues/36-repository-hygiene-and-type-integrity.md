@@ -4,7 +4,7 @@
 
 **Blocked by:** Sessions 1–8 substantially complete.
 
-**Status:** **10 of 11 closed.** Box 3 is discharged in code — 31 of the 32 ledgered dead backend exports deleted, the
+**Status:** **10 of 11 closed.** **A-5 IS DONE (2026-09-03, commit `15c4d926`)** — the three in-scope negative tests are written and bite-proved (six planted defects, control 59/59). Box 7 still does not close: **3 of 20 `external` sites** now carry one; R-8 (13 `narrow-me`) and R-8b (17 `external`) remain, unchanged and for the reasons already recorded. `check:type-assertions` exit 0, ledger counts unmoved. Report: `reports/47-a4-a5-clients-n1-and-negative-tests.md`. Box 3 is discharged in code — 31 of the 32 ledgered dead backend exports deleted, the
 32nd reclassified `WIRE` because deleting it would have made a live cancellation signal unreachable — with knip findings
 38 → 7 and the ledger 34 verdicts → 5, proven by `check:dead-code` exit 0, `typecheck` exit 0, `check:spec-typecheck`
 exit 0 and a real `nest build` exit 0. Boxes 2 and 6 are closed as **recorded decisions with their numbers**, on the
@@ -167,6 +167,35 @@ remedy. See `reports/36-repo-hygiene.md`.
   `operator-session.guard.spec.ts` · `src/db/query-telemetry.ts:137,152,156` (the proxy reaches the thenable
   branch only after checking `.then`) beside `query-telemetry.spec.ts`. Three tests in three files that already
   have a spec neighbour.
+  **A-5 IS DONE (2026-09-03, commit `15c4d926`, backend). Report: `reports/47-a4-a5-clients-n1-and-negative-tests.md` §2.**
+  All three are written, and each cast's claim is pinned by an OBSERVABLE CONSEQUENCE of the claim being true
+  rather than by re-asserting the cast — because every one of these fails silently.
+  `tracing.ts:93` (**arity**): the flags group is proved read by `-03`/`-ff` sampling and `-02`/`-fe` not (lose it
+  and `Number.parseInt(undefined,16) & 1` makes EVERY trace read unsampled); the id groups by their exact hex
+  shape (lose one and the all-zero guard stops rejecting, because `String(undefined)` does not match `/^0+$/`, so
+  an invalid header is ACCEPTED carrying nothing); a 13-header corpus in which no accepted result may contain
+  `undefined`; and the null-check that PRECEDES the cast, pinned separately.
+  `operator-session.guard.ts:46` (**degradation**): absent key · `{}` · `null` · a string · a number · an object
+  whose `path` is not a string — all six degrade to `req.url` and all still call `authorizeRequest` with the right
+  user, org and scope. Every one is a shape the cast's own type says cannot happen, which is the point. The
+  route-template case is kept as the CONTROL so the fallback assertions cannot pass vacuously.
+  `query-telemetry.ts:137,152,156` (**reachability**): `.catch()` and `.finally()` re-enter the PROXY's own `then`
+  so a statement settles exactly once; the same pending query consumed twice counts once; and a non-thenable
+  target fails LOUDLY with a `TypeError` naming `then` while recording NOTHING — a seam that counted a phantom
+  successful statement here would be worse than one that threw, since every downstream call-count budget would
+  inherit it.
+  **Bite-proved hermetically** (`git archive HEAD` into a temp dir, specs copied in, sources at HEAD, nothing
+  planted in the shared tree). Control **59/59 pass**. Six defects planted one at a time: drop the 4th capture
+  group -> 3 red · drop the null-check -> 3 · drop `?? req.url` -> 4 · route `.catch` at `raw` -> 1 · remove the
+  settle-once guard -> 1 · record on wrap instead of on settle -> 9.
+  `pnpm check:type-assertions` **exit 0** at head — 3,574 application files, 26 `as unknown as` in 16 files,
+  18 external / 8 narrow-me, escapes 0/0/0/0. Ledger counts UNCHANGED, which is the correct outcome: a negative
+  test does not move them. `pnpm check:spec-typecheck` exit 0.
+  **THE BOX STILL DOES NOT CLOSE, and the register is right about why.** **3 of the 20 `external` sites now carry
+  a negative test.** R-8 (13 `narrow-me`) is untouched ON PURPOSE — their recorded remedy is to DELETE the cast,
+  and a negative test on one would certify a cast the ledger says must not exist. R-8b (17 of 20 `external`) is
+  untouched: other lanes' harnesses, the Drizzle-instantiation seam whose invariant is compile-time and
+  unreachable from any runtime test, and one vendored file.
   **RESIDUAL R-8 — the 13 `narrow-me` sites. Blocker: the requirement as written is WRONG for them, and that is
   an amendment only the release owner can make. Owner: release owner. Deadline: 2026-09-10.** Their recorded
   remedy is to DELETE the cast; a per-site negative test would certify a cast the ledger already says must not
