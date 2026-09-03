@@ -28,10 +28,24 @@ import {
   splitFromTemplate,
 } from "@/lib/salary-split";
 import { formatINR } from "@/lib/format-utils";
+import { codeFieldChange } from "@/lib/code-field";
+import { numericFieldChange, numericFieldValue } from "@/lib/numeric-field";
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
 const DEFAULT_TEMPLATE_VALUE = "default";
+
+/**
+ * The select's sentinel row means "no template", which is `undefined` rather
+ * than a number. Everything else is a numeric id.
+ */
+function makeTemplateChange(
+  onChange: (value: number | undefined) => void,
+): (value: string) => void {
+  return function handleTemplateChange(value) {
+    onChange(value === DEFAULT_TEMPLATE_VALUE ? undefined : numericFieldValue(value));
+  };
+}
 
 function formatRoundedInr(value: number): string {
   return formatINR(Math.round(value));
@@ -74,10 +88,7 @@ export function StepSkillsPay({ form }: StepSkillsPayProps) {
                 placeholder="ABCDE1234F"
                 maxLength={10}
                 {...field}
-                onChange={(e) => {
-                  const v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-                  field.onChange(v.slice(0, 10));
-                }}
+                onChange={codeFieldChange(field.onChange, 10)}
               />
             </FormControl>
             <FormMessage />
@@ -100,7 +111,7 @@ export function StepSkillsPay({ form }: StepSkillsPayProps) {
                     type="number"
                     placeholder="25000"
                     value={field.value ?? ""}
-                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                    onChange={numericFieldChange(field.onChange)}
                     onBlur={field.onBlur}
                     name={field.name}
                     ref={field.ref}
@@ -122,11 +133,7 @@ export function StepSkillsPay({ form }: StepSkillsPayProps) {
                 <FormLabel>Salary Structure</FormLabel>
                 <Select
                   value={field.value ? String(field.value) : DEFAULT_TEMPLATE_VALUE}
-                  onValueChange={(value) =>
-                    field.onChange(
-                      value === DEFAULT_TEMPLATE_VALUE ? undefined : Number(value),
-                    )
-                  }
+                  onValueChange={makeTemplateChange(field.onChange)}
                 >
                   <FormControl>
                     <SelectTrigger>

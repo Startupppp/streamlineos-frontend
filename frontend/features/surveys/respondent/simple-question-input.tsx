@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { DatePicker } from "@/components/ui/date-picker";
 import type { QuestionInputProps } from "./answer-value";
+import { numericFieldChange } from "@/lib/numeric-field";
 
 const fieldClass = "h-11 rounded-xl text-sm";
 
@@ -33,14 +34,16 @@ export function LongTextInput({ value, onChange }: QuestionInputProps) {
 }
 
 export function NumberInput({ value, onChange }: QuestionInputProps) {
+  function handleAnswerValueChange(answerValue: number | undefined): void {
+    onChange({ answerValue });
+  }
+
   return (
     <Input
       type="number"
       className={fieldClass}
       value={typeof value?.answerValue === "number" ? value.answerValue : ""}
-      onChange={(e) =>
-        onChange({ answerValue: e.target.value === "" ? undefined : Number(e.target.value) })
-      }
+      onChange={numericFieldChange(handleAnswerValueChange)}
       placeholder="Enter a number"
     />
   );

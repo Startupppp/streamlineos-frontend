@@ -1,8 +1,10 @@
 "use client";
 
+import type { ChangeEvent } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { onboardEmployeeInputSchema } from "../../../lib/validation/hr";
+import { codeFieldChange, digitsFieldChange } from "@/lib/code-field";
 
 import { Input } from "../../ui/input";
 import {
@@ -14,6 +16,22 @@ import {
 } from "../../ui/form";
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
+
+const ESI_NUMBER_MAX_LENGTH = 20;
+
+/**
+ * An ESI number is free text with a length cap rather than a code, so it keeps
+ * its own rule. Truncating a long paste is the point: the previous test
+ * rejected the whole edit, and a controlled input then put the old value back
+ * with nothing said about why.
+ */
+function esiNumberChange(
+  onChange: (value: string) => void,
+): (event: ChangeEvent<HTMLInputElement>) => void {
+  return function handleEsiNumberChange(event) {
+    onChange(event.target.value.trim().slice(0, ESI_NUMBER_MAX_LENGTH));
+  };
+}
 
 interface StepBankingProps {
   form: UseFormReturn<FormValues>;
@@ -90,10 +108,12 @@ export function StepBanking({ form }: StepBankingProps) {
             <FormItem>
               <FormLabel>Routing / IFSC Code</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. SBIN0001234" {...field} onChange={(e) => {
-                  const v = e.target.value.toUpperCase();
-                  if (/^[A-Z0-9]*$/.test(v) && v.length <= 11) field.onChange(v);
-                }} maxLength={11} />
+                <Input
+                  placeholder="e.g. SBIN0001234"
+                  {...field}
+                  onChange={codeFieldChange(field.onChange, 11)}
+                  maxLength={11}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -113,10 +133,7 @@ export function StepBanking({ form }: StepBankingProps) {
                 <Input
                   placeholder="e.g. 100123456789"
                   {...field}
-                  onChange={(e) => {
-                    const v = e.target.value.replace(/\D/g, "");
-                    if (v.length <= 12) field.onChange(v);
-                  }}
+                  onChange={digitsFieldChange(field.onChange, 12)}
                   maxLength={12}
                 />
               </FormControl>
@@ -137,10 +154,7 @@ export function StepBanking({ form }: StepBankingProps) {
                 <Input
                   placeholder="ESIC Insurance Person number"
                   {...field}
-                  onChange={(e) => {
-                    const v = e.target.value.trim();
-                    if (v.length <= 20) field.onChange(v);
-                  }}
+                  onChange={esiNumberChange(field.onChange)}
                   maxLength={20}
                 />
               </FormControl>

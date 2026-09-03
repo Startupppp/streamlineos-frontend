@@ -17,6 +17,8 @@ import { Sparkles, Plus, Trash2, Info } from "lucide-react";
 import type { AutomationAction } from "@/hooks/api/automations";
 import type { AiAutomationAction, AiExtractField } from "@/hooks/api/automation-ai-nodes";
 import { useSupportTags } from "@/hooks/api/support/tags";
+import { commaListChange } from "@/lib/comma-list";
+import { numericFieldChange } from "@/lib/numeric-field";
 
 interface FormProps {
   config: Record<string, unknown>;
@@ -286,6 +288,14 @@ export function StandardActionConfigRenderer({
   action: AutomationAction;
   onChange: (patch: Record<string, unknown>) => void;
 }) {
+  function handleRolesChange(roles: string[]): void {
+    onChange({ roles });
+  }
+
+  function handleDueInDaysChange(dueInDays: number | undefined): void {
+    onChange({ dueInDays });
+  }
+
   switch (action.type) {
     case "notify_roles":
       return (
@@ -293,9 +303,7 @@ export function StandardActionConfigRenderer({
           <Input
             placeholder="Roles (comma separated, e.g. CEO, SALES)"
             value={action.config.roles.join(", ")}
-            onChange={(e) =>
-              onChange({ roles: e.target.value.split(",").map((r) => r.trim()).filter(Boolean) })
-            }
+            onChange={commaListChange(handleRolesChange)}
           />
           <Input
             placeholder="Notification title"
@@ -377,9 +385,7 @@ export function StandardActionConfigRenderer({
             min={0}
             placeholder="Due in days (optional)"
             value={action.config.dueInDays === undefined ? "" : String(action.config.dueInDays)}
-            onChange={(e) =>
-              onChange({ dueInDays: e.target.value === "" ? undefined : Number(e.target.value) })
-            }
+            onChange={numericFieldChange(handleDueInDaysChange)}
           />
         </div>
       );

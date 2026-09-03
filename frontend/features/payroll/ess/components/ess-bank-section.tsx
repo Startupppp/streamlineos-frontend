@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -19,6 +19,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PAGE_BODY_EMPTY_CLASS, PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
 import { useEssBank, useUpdateBank } from "@/hooks/api/payroll/ess";
 import { cn } from "@/lib/utils";
+import { codeFieldChange } from "@/lib/code-field";
 
 type BankScheme = "IFSC" | "ABA_ROUTING" | "SORT_CODE" | "IBAN" | "BSB" | "SWIFT_ACCOUNT" | "GENERIC";
 
@@ -30,6 +31,8 @@ const COUNTRY_SCHEME: Record<string, BankScheme> = {
   AE: "IBAN",
   SG: "SWIFT_ACCOUNT",
 };
+
+const IFSC_LENGTH = 11;
 
 function detectScheme(country: string): BankScheme {
   return COUNTRY_SCHEME[country] ?? "GENERIC";
@@ -142,7 +145,23 @@ function BankSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   });
 
   const watchedCountry = form.watch("bankCountry");
-  const schemeConf = SCHEME_CONFIG[detectScheme(watchedCountry)];
+  const scheme = detectScheme(watchedCountry);
+  const schemeConf = SCHEME_CONFIG[scheme];
+
+  /**
+   * An IFSC is uppercase alphanumeric; every other scheme's code is taken as
+   * typed. Normalising rather than merely upper-casing is what makes a code
+   * pasted from a bank statement — spaces and hyphens included — land as a
+   * valid one instead of as an invalid string the resolver then rejects.
+   */
+  function makeBankCodeChange(
+    onChange: (value: string) => void,
+  ): (event: ChangeEvent<HTMLInputElement>) => void {
+    if (scheme === "IFSC") return codeFieldChange(onChange, IFSC_LENGTH);
+    return function handleBankCodeChange(event) {
+      onChange(event.target.value);
+    };
+  }
 
   const handleSubmit = async (values: BankFormValues) => {
     try {
@@ -251,15 +270,9 @@ function BankSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
                   <FormControl>
                     <Input
                       placeholder={schemeConf.placeholder}
-                      className={detectScheme(watchedCountry) === "IFSC" ? "uppercase" : ""}
+                      className={scheme === "IFSC" ? "uppercase" : ""}
                       {...field}
-                      onChange={(e) =>
-                        field.onChange(
-                          detectScheme(watchedCountry) === "IFSC"
-                            ? e.target.value.toUpperCase()
-                            : e.target.value,
-                        )
-                      }
+                      onChange={makeBankCodeChange(field.onChange)}
                     />
                   </FormControl>
                   <p className="text-dense text-muted-foreground mt-1">{schemeConf.hint}</p>

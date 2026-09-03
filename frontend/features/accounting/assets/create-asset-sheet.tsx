@@ -1,3 +1,4 @@
+import type { UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
@@ -15,6 +16,7 @@ import {
   isDepreciationMethod,
 } from "@/features/accounting/assets/asset-constants";
 import type { AssetCategory, DepreciationMethod } from "@/types/accounting/assets";
+import { numericFieldValue } from "@/lib/numeric-field";
 
 const createAssetSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -40,6 +42,27 @@ interface CreateAssetSheetProps {
   categories: AssetCategory[];
   isSubmitting: boolean;
   onSubmit: (values: CreateAssetFormValues) => void;
+}
+
+/**
+ * The select's option values are stringified ids. `Number("")` is `0`, which is
+ * a valid-looking category id, so an unparseable value has to become the
+ * schema's own "not chosen" sentinel rather than a silent zero.
+ */
+function makeCategoryChange(
+  form: UseFormReturn<CreateAssetFormValues>,
+): (value: string) => void {
+  return function handleCategoryChange(value) {
+    form.setValue("categoryId", numericFieldValue(value) ?? 0, { shouldValidate: true });
+  };
+}
+
+function makeDepreciationMethodChange(
+  form: UseFormReturn<CreateAssetFormValues>,
+): (value: DepreciationMethod) => void {
+  return function handleDepreciationMethodChange(value) {
+    form.setValue("depreciationMethod", value, { shouldValidate: true });
+  };
 }
 
 export function CreateAssetSheet({
@@ -89,9 +112,7 @@ export function CreateAssetSheet({
             <Label>Category</Label>
             <Select
               value={String(form.watch("categoryId") || "")}
-              onValueChange={(value) =>
-                form.setValue("categoryId", Number(value))
-              }
+              onValueChange={makeCategoryChange(form)}
             >
               <SelectTrigger className="text-sm">
                 <SelectValue placeholder="Select category" />
@@ -170,7 +191,7 @@ export function CreateAssetSheet({
             </div>
             <DepreciationMethodField
               value={form.watch("depreciationMethod")}
-              onValueChange={(value) => form.setValue("depreciationMethod", value)}
+              onValueChange={makeDepreciationMethodChange(form)}
             />
           </div>
         </>

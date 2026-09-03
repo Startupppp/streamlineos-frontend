@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { SurveyQuestion } from "@/types/hr/templates";
+import { parseCommaList } from "@/lib/comma-list";
 
 const QUESTION_TYPES = [
   { value: "rating", label: "Rating (1–5)" },
@@ -34,13 +35,6 @@ function isSurveyQuestionType(value: string): value is SurveyQuestion["type"] {
 }
 
 /** "a, b, ,c" is three options, not four, and never an empty one. */
-function parseOptionList(raw: string): string[] {
-  return raw
-    .split(",")
-    .map((option) => option.trim())
-    .filter(Boolean);
-}
-
 interface SurveyEditorProps {
   questions: SurveyQuestion[];
   onChange: (questions: SurveyQuestion[]) => void;
@@ -87,7 +81,7 @@ export function SurveyEditor({ questions, onChange }: SurveyEditorProps) {
     questionId: string,
   ): (event: React.ChangeEvent<HTMLInputElement>) => void {
     return function handleOptionListChange(event) {
-      handleChange(questionId, { options: parseOptionList(event.target.value) });
+      handleChange(questionId, { options: parseCommaList(event.target.value) });
     };
   }
 

@@ -344,6 +344,9 @@ export function GlobalAskOs() {
     setActiveConversationId(id);
     setView("chat");
   }
+  function handleRenameConversation(id: number, title: string) {
+    renameConversation.mutate({ id, title });
+  }
   function handleDeleteActive() {
     if (
       activeConversationId === null ||
@@ -418,9 +421,7 @@ export function GlobalAskOs() {
                       onLoadMore={() => void fetchNextConversations()}
                       onSelect={handleSelectConversation}
                       onNewChat={handleNewChat}
-                      onRename={(id, title) =>
-                        renameConversation.mutate({ id, title })
-                      }
+                      onRename={handleRenameConversation}
                       onDelete={handleDeleteConversation}
                       search={convSearch}
                       onSearchChange={setConvSearch}
