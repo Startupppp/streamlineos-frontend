@@ -194,7 +194,7 @@ in `DELIBERATE`, with both keys and the reason — not silently tolerated.**
 
 ### 4.9 Deliberately stricter than the route (2 findings) — NOT fixed
 
-> **CORRECTION 2026-09-03 — the backend conclusion below is WRONG. See report 55 §A.**
+> **CORRECTION 2026-09-03 — the backend conclusion below is WRONG. See report 56 §A.**
 > `GET /payroll/reports/*` and `GET /payroll/reports/journal` DO enforce
 > `payroll:reports:export` on the CSV branch, and have since `4855b581`
 > (2026-07-05). Every one of the eleven `if (q.format === "csv")` branches calls

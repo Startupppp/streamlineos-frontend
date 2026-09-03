@@ -1,4 +1,4 @@
-# 55 — The payroll CSV export key, 48 ungated permissioned reads, and a vacuous gate
+# 56 — The payroll CSV export key, 48 ungated permissioned reads, and a vacuous gate
 
 **Status:** DONE for A (as a correction + coverage), B (35 of 35 in-scope fixed) and C.
 **Date:** 2026-09-03.
