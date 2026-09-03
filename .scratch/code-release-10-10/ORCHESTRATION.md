@@ -2071,3 +2071,42 @@ that documents what it cannot see is the opposite of the failure this release ke
   at 3/hr and **wired to nothing**), `/csat/:surveyId/responses`, `/crm/mailboxes/push`.
 * **`auth:login` names no route** — login is magic-link + Google, both limited. Do not delete the tier:
   `check-log-secrets.mjs:279` asserts it exists.
+
+---
+
+## The payroll preview: my hint was wrong, and following it would have been worse than the bug
+
+I routed this as "the correct shape already exists next door — `computeTemplatePreview`; the template
+preview sheet uses it, the policy preview never calls it", while telling the agent to verify before
+assuming. It verified, and the hint is **false**:
+
+* `policyPreviewSchema` is `.strict()` and carries **no `annualCtc`**.
+* `SetupDraft` has no CTC, and **no wizard step collects one** — the client cannot send a basis.
+* `computeTemplatePreview(components, annualCtc)` requires one; the seed's `BASIC` is `ctc * 0.40`.
+* **Measured**: `computeTemplatePreview(INDIAN_STANDARD_SEED, 0)` returns every EARNING at `0.00`,
+  gross `0.00`, and **net take-home `-200.00`** — the fixed professional tax survives the zero.
+
+**So the "obvious" fix would have replaced a visible "—" with a fabricated salary sheet showing
+negative take-home.** A wrong number that looks like a number is far worse than a dash that admits it
+knows nothing.
+
+The two previews legitimately differ. The **template** preview takes a CTC from the user and simulates
+a payslip; the **policy** preview takes none and can only describe what each component *is*. Declaring
+one client type over both was the actual bug. Fixed on the FRONTEND — `describeComponentBasis` now
+renders what the route supplies (`ctc * 0.40`, `50% of Basic`, `₹200.00/mo`, `Attendance-linked`) —
+plus a backend projection to a declared total wire shape, and a `ResponseContract` on both seams so it
+cannot drift silently again.
+
+**A ninth instance found in passing**: `POST /payroll/templates/:id/preview` also disagreed — the
+client declared `template: TemplateRow` (18 fields) where a 3-field stub arrives, and
+`annualCtc`/`monthlyCtc` as `string` where the service sends `number`. Latent only because
+`formatMoney` accepts both. Fixed in the same commit.
+
+Note the ratchet moved the right way: `check:response-contracts` unparsed **2,596 → 2,594**, the
+baseline **lowered rather than banked**.
+
+**The general lesson, and it applies to every hint in every brief I write:** a plausible fix suggested
+by an orchestrator who has not read the code is a hypothesis, not an instruction. This one was stated
+with a "verify before assuming" caveat and the agent honoured it. Had it not, the release would have
+shipped negative payroll figures to a review screen whose entire purpose is to be checked before
+payroll runs.
