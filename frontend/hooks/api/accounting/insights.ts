@@ -30,7 +30,6 @@ export interface InsightsDigest {
 
 export interface CategorizeSuggestInput {
   merchant: string;
-  amount?: number;
 }
 
 export interface CategorizeSuggestResult {
