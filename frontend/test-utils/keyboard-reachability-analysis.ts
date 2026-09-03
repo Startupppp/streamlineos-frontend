@@ -84,18 +84,18 @@ function readAttributes(source: string, from: number): { attributes: string; end
   return null;
 }
 
-function baseTag(tag: string): string {
+export function baseTag(tag: string): string {
   const parts = tag.split(".");
   return parts[parts.length - 1] ?? tag;
 }
 
-interface RawSite {
+export interface RawSite {
   index: number;
   tag: string;
   attributes: string;
 }
 
-function openingTags(source: string): RawSite[] {
+export function openingTags(source: string): RawSite[] {
   const sites: RawSite[] = [];
   TAG_START.lastIndex = 0;
   let match = TAG_START.exec(source);
@@ -145,7 +145,7 @@ export function countClickSites(source: string): number {
   return total;
 }
 
-function collectSourceFiles(dir: string, out: string[] = []): string[] {
+export function collectSourceFiles(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     if (SKIP_DIRECTORIES.has(entry.name)) continue;
     const full = join(dir, entry.name);
