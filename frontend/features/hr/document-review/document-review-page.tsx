@@ -36,11 +36,13 @@ function useDocReviewSummary(cursor: string | undefined, search: string, status:
   const params: Record<string, unknown> = { cursor, limit: PAGE_SIZE };
   if (search.trim()) params.search = search.trim();
   if (status !== "ALL") params.status = status;
+  const canReviewDocs = useCan("hr:onboarding:manage");
   return useQuery<DocReviewSummaryResponse>({
     queryKey: queryKeys.hr.onboardingDocsSummary(params),
     queryFn: ({ signal }) => apiClient.get<DocReviewSummaryResponse>("/hr/onboarding-docs/summary", params, signal),
     placeholderData: keepPreviousData,
     staleTime: 30_000,
+    enabled: canReviewDocs,
   });
 }
 

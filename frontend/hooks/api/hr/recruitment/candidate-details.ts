@@ -144,21 +144,23 @@ export interface CandidateActivityEvent {
 }
 
 export function useCandidateActivity(candidateId: number) {
+  const canView = useCan("hr:employees:view");
   return useQuery({
     queryKey: [...queryKeys.hr.candidate(candidateId), "activity"],
     queryFn: ({ signal }) => apiClient.get<CandidateActivityEvent[]>(`/hr/recruitment/candidates/${candidateId}/activity`, undefined, signal),
     staleTime: 60_000,
-    enabled: !!candidateId,
+    enabled: canView && !!candidateId,
   });
 }
 
 export function useCandidateVault(candidateId: number) {
+  const canViewVault = useCan("hr:employees:manage");
   return useQuery({
     queryKey: queryKeys.hr.candidateVault(candidateId),
     queryFn: ({ signal }) =>
       apiClient.get<VaultDocument[]>(`/hr/recruitment/candidates/${candidateId}/vault`, undefined, signal),
     staleTime: 2 * 60_000,
-    enabled: !!candidateId,
+    enabled: canViewVault && !!candidateId,
   });
 }
 
@@ -255,11 +257,12 @@ export function useBgvComplianceDashboard() {
 }
 
 export function useCandidateReferrals(candidateId: number) {
+  const canView = useCan("hr:employees:view");
   return useQuery<CandidateReferral[]>({
     queryKey: [...queryKeys.hr.candidate(candidateId), "referrals"],
     queryFn: ({ signal }) =>
       apiClient.get<CandidateReferral[]>(`/hr/recruitment/candidates/${candidateId}/referral`, undefined, signal),
-    enabled: candidateId > 0,
+    enabled: canView && candidateId > 0,
     staleTime: 2 * 60_000,
   });
 }

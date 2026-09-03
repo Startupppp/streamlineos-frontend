@@ -203,7 +203,8 @@ export function useBulkShortlistCandidates() {
 }
 
 export function useCandidate(id: number) {
-  const enabled = Number.isFinite(id) && id > 0;
+  const canView = useCan("hr:employees:view");
+  const enabled = canView && Number.isFinite(id) && id > 0;
   return useQuery({
     queryKey: queryKeys.hr.candidate(id),
     queryFn: ({ signal }) =>

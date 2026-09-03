@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
-import { useCanManageOrganizationMembership } from "@/hooks/api/access";
+import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { invalidatePersonAccountAccess } from "./cache";
@@ -70,7 +70,7 @@ export const useInvitations = (
   },
   options?: Omit<UseQueryOptions<InvitationsResponse, Error>, "queryKey" | "queryFn">,
 ) => {
-  const canView = useCanManageOrganizationMembership();
+  const canView = useCan("settings:organization:manage");
   return useQuery<InvitationsResponse, Error>({
     queryKey: queryKeys.users.invitations(params as Record<string, unknown> | undefined),
     queryFn: ({ signal }) =>

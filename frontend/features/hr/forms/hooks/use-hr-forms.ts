@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 import { queryKeys } from "@/lib/query-keys";
 import type {
   CreateHrFormPayload,
@@ -18,6 +19,7 @@ function formKeys(params?: Record<string, unknown>) {
 }
 
 export function useHrForms(params?: { status?: string; audience?: string; cursor?: string; limit?: number }) {
+  const canViewForms = useCan("hr:forms:view");
   return useQuery<HrFormListResponse>({
     queryKey: formKeys(params),
     queryFn: ({ signal }) => {
@@ -29,14 +31,16 @@ export function useHrForms(params?: { status?: string; audience?: string; cursor
       return apiClient.get<HrFormListResponse>("/hr/forms", p, signal);
     },
     staleTime: 30_000,
+    enabled: canViewForms,
   });
 }
 
 export function useHrForm(formId: number | undefined) {
+  const canViewForms = useCan("hr:forms:view");
   return useQuery<HrForm>({
     queryKey: [...queryKeys.hr.hrFormsAll, formId],
     queryFn: ({ signal }) => apiClient.get<HrForm>(`/hr/forms/${formId}`, undefined, signal),
-    enabled: formId !== undefined,
+    enabled: canViewForms && formId !== undefined,
     staleTime: 30_000,
   });
 }

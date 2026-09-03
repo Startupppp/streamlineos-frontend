@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -42,6 +43,7 @@ export interface LegalHoldsListResponse {
 const HOLDS_KEY = ["hr", "governance", "legal-holds"] as const;
 
 export function useLegalHolds(params?: { status?: string; subjectUserId?: string; page?: number; limit?: number }) {
+  const canViewHolds = useCan("hr:legalhold:view");
   return useQuery<LegalHoldsListResponse>({
     queryKey: [...queryKeys.hr.hrLegalHoldsBase, params],
     queryFn: ({ signal }) => {
@@ -53,14 +55,16 @@ export function useLegalHolds(params?: { status?: string; subjectUserId?: string
       return apiClient.get<LegalHoldsListResponse>("/hr/governance/legal-holds", p, signal);
     },
     staleTime: 30_000,
+    enabled: canViewHolds,
   });
 }
 
 export function useHoldItems(holdId: number | undefined) {
+  const canViewHolds = useCan("hr:legalhold:view");
   return useQuery<HoldItem[]>({
     queryKey: [...queryKeys.hr.hrLegalHoldsBase, holdId, "items"],
     queryFn: ({ signal }) => apiClient.get<HoldItem[]>(`/hr/governance/legal-holds/${holdId}/items`, undefined, signal),
-    enabled: holdId !== undefined,
+    enabled: canViewHolds && holdId !== undefined,
     staleTime: 30_000,
   });
 }

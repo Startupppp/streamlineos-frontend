@@ -31,6 +31,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { format, parseISO } from "date-fns";
@@ -54,9 +55,11 @@ const addHolidaySchema = z.object({
 type AddHolidayValues = z.infer<typeof addHolidaySchema>;
 
 function useOrgHolidays() {
+  const canViewSettings = useCan("settings:view");
   return useQuery<OrgHoliday[]>({
     queryKey: queryKeys.organization.holidays,
     queryFn: ({ signal }) => apiClient.get<OrgHoliday[]>("/organization/holidays", undefined, signal),
+    enabled: canViewSettings,
   });
 }
 

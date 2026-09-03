@@ -8,9 +8,11 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import { queryKeys } from "@/lib/query-keys";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 import { formatFileSize, getFileColor, getFileExt, isImageMime } from "./chat-helpers";
 
 function useAttachmentUrl(channelId: number, attachmentId: number) {
+  const canRead = useCan("chat:messages:read");
   return useQuery({
     queryKey: queryKeys.chat.attachment(channelId, attachmentId),
     queryFn: ({ signal }) =>
@@ -22,6 +24,7 @@ function useAttachmentUrl(channelId: number, attachmentId: number) {
     staleTime: 55 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
     retry: 1,
+    enabled: canRead,
   });
 }
 

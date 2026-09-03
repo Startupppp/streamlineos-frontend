@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 import type {
   CreateCustomFieldPayload,
   HrCustomFieldDefinition,
@@ -17,12 +18,13 @@ export function useHrCustomFields(
   entityType: string = "employee",
   options?: { enabled?: boolean },
 ) {
+  const canManage = useCan("hr:custom-fields:manage");
   return useQuery<HrCustomFieldDefinition[]>({
     queryKey: cfDefsKey(entityType),
     queryFn: ({ signal }) =>
       apiClient.get<HrCustomFieldDefinition[]>("/hr/custom-fields/definitions", { entityType }, signal),
     staleTime: 60_000,
-    enabled: options?.enabled ?? true,
+    enabled: canManage && (options?.enabled ?? true),
   });
 }
 

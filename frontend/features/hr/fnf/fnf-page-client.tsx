@@ -4,6 +4,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 import { queryKeys } from "@/lib/query-keys";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -170,9 +171,11 @@ function FnfCard({ item, onMarkPaid, isPending }: FnfCardProps) {
 
 export function FnfPageClient() {
   const qc = useQueryClient();
+  const canViewFnf = useCan("hr:payroll:view");
   const { data: items, isLoading, isError, refetch } = useQuery({
     queryKey: fnfKeys.list(),
     queryFn: ({ signal }) => apiClient.get<FnfSettlement[]>("/hr/fnf", undefined, signal),
+    enabled: canViewFnf,
   });
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 

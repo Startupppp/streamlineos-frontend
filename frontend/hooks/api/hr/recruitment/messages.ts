@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
@@ -46,6 +47,7 @@ export interface SendCandidateMessageInput {
 }
 
 export function useCandidateMessages(candidateId?: number) {
+  const canView = useCan("hr:employees:view");
   return useQuery({
     queryKey: queryKeys.hr.candidateMessages(candidateId),
     queryFn: ({ signal }) => {
@@ -53,7 +55,7 @@ export function useCandidateMessages(candidateId?: number) {
       return apiClient.get<CandidateMessage[]>(`/hr/recruitment/messages${params}`, undefined, signal);
     },
     staleTime: 30_000,
-    enabled: candidateId !== undefined,
+    enabled: canView && candidateId !== undefined,
   });
 }
 

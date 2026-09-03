@@ -6,6 +6,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 import { queryKeys } from "@/lib/query-keys";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -112,10 +113,11 @@ export function EmailTemplatesPageClient() {
   const orgId = session?.orgId ?? "";
   const qc = useQueryClient();
 
+  const canManageTemplates = useCan("hr:email-templates:manage");
   const { data: templates, isLoading, isError, refetch } = useQuery({
     queryKey: etKeys.list(),
     queryFn: ({ signal }) => apiClient.get<EmailTemplate[]>("/hr/email-templates", undefined, signal),
-    enabled: !!orgId,
+    enabled: canManageTemplates && !!orgId,
     staleTime: 60 * 1000,
   });
 

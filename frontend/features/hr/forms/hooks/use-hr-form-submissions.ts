@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 import type {
   HrFormSubmission,
   HrFormSubmissionListResponse,
@@ -19,6 +20,7 @@ export function useHrFormSubmissions(
   formId: number,
   params?: { cursor?: string; limit?: number; status?: HrFormSubmissionStatus },
 ) {
+  const canViewForms = useCan("hr:forms:view");
   return useQuery<HrFormSubmissionListResponse>({
     queryKey: submissionsKey(formId, params),
     queryFn: ({ signal }) => {
@@ -29,6 +31,7 @@ export function useHrFormSubmissions(
       return apiClient.get<HrFormSubmissionListResponse>(`/hr/forms/${formId}/submissions`, p, signal);
     },
     staleTime: 15_000,
+    enabled: canViewForms,
   });
 }
 

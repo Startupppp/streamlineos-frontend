@@ -317,10 +317,13 @@ export function HeadcountPage() {
   const qc = useQueryClient();
   const isHr = useCan("hr:employees:manage");
 
+  const canViewHeadcount = useCan("hr:employees:view");
+
   const { data: requests = [], isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.hr.headcountRequests(),
     queryFn: ({ signal }) => apiClient.get<HeadcountRequest[]>("/hr/recruitment/headcount", undefined, signal),
     staleTime: 2 * 60_000,
+    enabled: canViewHeadcount,
   });
 
   const [sheetOpen, setSheetOpen] = useState(false);

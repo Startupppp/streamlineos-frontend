@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -62,6 +63,7 @@ const POSITIONS_KEY = ["hr", "governance", "positions"] as const;
 const SCENARIOS_KEY = ["hr", "governance", "scenarios"] as const;
 
 export function usePositions(params?: { status?: string; departmentId?: number; page?: number; limit?: number }) {
+  const canViewPositions = useCan("hr:positions:view");
   return useQuery<PositionsListResponse>({
     queryKey: [...queryKeys.hr.hrPositionsAll, params],
     queryFn: ({ signal }) => {
@@ -73,10 +75,12 @@ export function usePositions(params?: { status?: string; departmentId?: number; 
       return apiClient.get<PositionsListResponse>("/hr/governance/positions", p, signal);
     },
     staleTime: 30_000,
+    enabled: canViewPositions,
   });
 }
 
 export function useReorgScenarios(params?: { status?: string; page?: number; limit?: number }) {
+  const canViewPositions = useCan("hr:positions:view");
   return useQuery<ScenariosListResponse>({
     queryKey: [...queryKeys.hr.hrScenariosAll, params],
     queryFn: ({ signal }) => {
@@ -87,14 +91,16 @@ export function useReorgScenarios(params?: { status?: string; page?: number; lim
       return apiClient.get<ScenariosListResponse>("/hr/governance/scenarios", p, signal);
     },
     staleTime: 30_000,
+    enabled: canViewPositions,
   });
 }
 
 export function useSimulateScenario(scenarioId: number | undefined) {
+  const canViewPositions = useCan("hr:positions:view");
   return useQuery<SimulationResult>({
     queryKey: [...queryKeys.hr.hrScenariosAll, scenarioId, "simulate"],
     queryFn: ({ signal }) => apiClient.get<SimulationResult>(`/hr/governance/scenarios/${scenarioId}/simulate`, undefined, signal),
-    enabled: scenarioId !== undefined,
+    enabled: canViewPositions && scenarioId !== undefined,
     staleTime: 0,
   });
 }

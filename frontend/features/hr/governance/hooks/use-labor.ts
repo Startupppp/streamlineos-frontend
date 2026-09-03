@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -50,6 +51,7 @@ export interface LaborListResponse<T> {
 const LABOR_KEY = ["hr", "governance", "labor"] as const;
 
 export function useUnionMemberships(params?: { unionName?: string; status?: string; page?: number; limit?: number }) {
+  const canViewLabor = useCan("hr:labor:view");
   return useQuery<LaborListResponse<UnionMembership>>({
     queryKey: [...queryKeys.hr.hrLaborMembershipsAll, params],
     queryFn: ({ signal }) => {
@@ -61,10 +63,12 @@ export function useUnionMemberships(params?: { unionName?: string; status?: stri
       return apiClient.get<LaborListResponse<UnionMembership>>("/hr/governance/labor/memberships", p, signal);
     },
     staleTime: 30_000,
+    enabled: canViewLabor,
   });
 }
 
 export function useCollectiveAgreements(params?: { status?: string; unionName?: string; page?: number; limit?: number }) {
+  const canViewLabor = useCan("hr:labor:view");
   return useQuery<LaborListResponse<CollectiveAgreement>>({
     queryKey: [...queryKeys.hr.hrLaborAgreementsAll, params],
     queryFn: ({ signal }) => {
@@ -76,19 +80,23 @@ export function useCollectiveAgreements(params?: { status?: string; unionName?: 
       return apiClient.get<LaborListResponse<CollectiveAgreement>>("/hr/governance/labor/agreements", p, signal);
     },
     staleTime: 30_000,
+    enabled: canViewLabor,
   });
 }
 
 export function useExpiringAgreements(days = 30) {
+  const canViewLabor = useCan("hr:labor:view");
   return useQuery<{ data: CollectiveAgreement[]; daysWindow: number }>({
     queryKey: queryKeys.hr.hrLaborAgreementsExpiring(days),
     queryFn: ({ signal }) =>
       apiClient.get<{ data: CollectiveAgreement[]; daysWindow: number }>("/hr/governance/labor/agreements/expiring", { days }, signal),
     staleTime: 60_000,
+    enabled: canViewLabor,
   });
 }
 
 export function useLaborCases(params?: { status?: string; unionName?: string; page?: number; limit?: number }) {
+  const canViewLabor = useCan("hr:labor:view");
   return useQuery<LaborListResponse<LaborCase>>({
     queryKey: [...queryKeys.hr.hrLaborCasesAll, params],
     queryFn: ({ signal }) => {
@@ -100,6 +108,7 @@ export function useLaborCases(params?: { status?: string; unionName?: string; pa
       return apiClient.get<LaborListResponse<LaborCase>>("/hr/governance/labor/cases", p, signal);
     },
     staleTime: 30_000,
+    enabled: canViewLabor,
   });
 }
 

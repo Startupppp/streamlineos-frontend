@@ -66,9 +66,7 @@ export function useInitiateOrgTransfer() {
 }
 
 export function usePendingOrgTransfers() {
-  const { data: access } = useAccess();
-  const isOwner =
-    (access?.isOrgOwner ?? false);
+  const canView = useCan("ownership:modules:view");
 
   return useQuery<OrgTransfersResponse, Error>({
     queryKey: queryKeys.ownership.orgTransfers(),
@@ -78,7 +76,7 @@ export function usePendingOrgTransfers() {
         status: "PENDING",
         limit: "5",
       }, signal),
-    enabled: isOwner,
+    enabled: canView,
     staleTime: 30_000,
   });
 }

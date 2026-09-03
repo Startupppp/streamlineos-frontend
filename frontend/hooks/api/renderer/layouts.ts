@@ -137,7 +137,7 @@ export function useResetLayoutAdjustment(layoutKey: string) {
 
 export function useLayoutUsage(layoutKey: string, options?: { enabled?: boolean }) {
   const orgId = useLayoutTenant();
-  const canAdjust = useCanAdjustLayouts();
+  const canReadUsage = useCan("settings:record-layouts:manage");
 
   return useQuery({
     queryKey: queryKeys.recordLayouts.usage(orgId, layoutKey),
@@ -146,6 +146,6 @@ export function useLayoutUsage(layoutKey: string, options?: { enabled?: boolean 
         `/renderer/layouts/${encodeURIComponent(layoutKey)}/usage`, undefined, signal,
       ),
     staleTime: 10 * 60_000,
-    enabled: !!orgId && !!layoutKey && canAdjust && (options?.enabled ?? true),
+    enabled: !!orgId && !!layoutKey && canReadUsage && (options?.enabled ?? true),
   });
 }

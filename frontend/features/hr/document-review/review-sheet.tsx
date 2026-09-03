@@ -25,6 +25,7 @@ import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { DocCard, type OnboardingDoc } from "./doc-card";
@@ -41,6 +42,7 @@ function useEmployeeOnboardingDocs(
   userId: string | null,
   cursor: string | undefined,
 ) {
+  const canReviewDocs = useCan("hr:onboarding:manage");
   return useQuery<OnboardingDocsResponse>({
     queryKey: queryKeys.hr.onboardingDocs({ userId: userId ?? undefined, cursor, limit: DOCS_PAGE_SIZE }),
     queryFn: ({ signal }) =>
@@ -49,7 +51,7 @@ function useEmployeeOnboardingDocs(
         cursor,
         limit: DOCS_PAGE_SIZE,
       }, signal),
-    enabled: !!userId,
+    enabled: canReviewDocs && !!userId,
     staleTime: 30_000,
   });
 }

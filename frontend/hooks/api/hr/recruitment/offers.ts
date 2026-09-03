@@ -153,12 +153,13 @@ export function useRespondToNegotiation(candidateId: number) {
 }
 
 export function useCandidateOffers(candidateId: number) {
+  const canView = useCan("hr:offers:view");
   return useQuery({
     queryKey: [...queryKeys.hr.all, "candidateOffers", candidateId] as const,
     queryFn: ({ signal }) =>
       apiClient.get<CandidateOffer[]>(`/hr/recruitment/candidates/${candidateId}/offers`, undefined, signal),
     staleTime: 2 * 60_000,
-    enabled: candidateId > 0,
+    enabled: canView && candidateId > 0,
   });
 }
 

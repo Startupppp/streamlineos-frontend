@@ -27,6 +27,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useHrDocumentTypes } from "@/hooks/api/hr/document-types";
+import { useCan } from "@/hooks/api/access";
 
 import {
   DocumentChecklistRow,
@@ -41,13 +42,15 @@ interface OnboardingDocsResponse {
 }
 
 function useMyOnboardingDocs() {
+  const canViewOwnDocs = useCan("self:onboarding-docs");
   return useQuery<OnboardingDoc[]>({
     queryKey: queryKeys.hr.myOnboardingDocs(),
     queryFn: async ({ signal }) => {
-      const res = await apiClient.get<OnboardingDocsResponse>("/hr/onboarding-docs", { limit: 100 }, signal);
+      const res = await apiClient.get<OnboardingDocsResponse>("/hr/onboarding-docs/me", { limit: 100 }, signal);
       return res.data;
     },
     staleTime: 60_000,
+    enabled: canViewOwnDocs,
   });
 }
 
@@ -56,7 +59,7 @@ function useSubmitOnboardingDoc() {
   return useMutation({
     mutationKey: ["hr", "onboarding-doc", "submit"],
     mutationFn: (body: { documentTypeId: number; fileUrl: string; fileName: string }) =>
-      apiClient.post("/hr/onboarding-docs", body),
+      apiClient.post("/hr/onboarding-docs/me", body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.myOnboardingDocs() });
     },
@@ -184,7 +187,7 @@ export const EmployeeDocumentsTab = forwardRef<
       fd.append("file", file);
       fd.append("folder", "onboarding-docs");
       const uploadResult = await apiClient.upload<{ key: string }>("/storage/upload", fd);
-      await apiClient.post("/hr/onboarding-docs", {
+      await apiClient.post("/hr/onboarding-docs/me", {
         documentTypeId,
         fileUrl: uploadResult.key,
         fileName: file.name,

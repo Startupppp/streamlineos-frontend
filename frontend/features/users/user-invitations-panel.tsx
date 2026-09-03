@@ -9,7 +9,7 @@ import { MailIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { useCanManageOrganizationMembership } from "@/hooks/api/access";
+import { useCan, useCanManageOrganizationMembership } from "@/hooks/api/access";
 import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
@@ -62,7 +62,7 @@ export function UserInvitationsPanel() {
   } = useQueryParamOpen("create");
   const [cancellationInvitationId, setCancellationInvitationId] = useState<string | null>(null);
   const canManageMembership = useCanManageOrganizationMembership();
-  const canViewInvitations = canManageMembership;
+  const canViewInvitations = useCan("settings:organization:manage");
   const canInvite = canManageMembership;
   const canCancelInvitation = canManageMembership;
 

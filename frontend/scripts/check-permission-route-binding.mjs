@@ -219,7 +219,7 @@ const DELIBERATE = new Map([
       hookKey: "payroll:reports:export",
       routeKey: "payroll:reports:view",
       reason:
-        "The hook gates the CSV download more strictly than the route does, deliberately. payroll:reports:export is a real key guarding five other export routes, but the ?format=csv variants of /payroll/reports/* are served by the same handler as the on-screen report and require only :view. Loosening the hook would remove the only check that exists. The route is the wrong side and is raised as a backend finding in report 50 section 4.9: a :view holder can already fetch the CSV directly, so the export key is enforced nowhere but the client.",
+        "The hook gates the CSV download on payroll:reports:export while the route DECLARES payroll:reports:view, and that gap is real but not a hole. Every /payroll/reports/* handler serves the on-screen report and its CSV from one route, so the class-level decorator can only declare the weaker key; each handler then calls assertExport() -> authorize(access, u, \"payroll:reports:export\") inside the format === \"csv\" branch (src/modules/payroll/insights/reports.controller.ts:47 and journal.controller.ts:49). A :view-only holder passing ?format=csv gets a 403 from the backend, proved in both directions on all 11 CSV routes by payroll-insights.controller.e2e-spec.ts. This check reads decorators, so it cannot see a conditional raise; the hook is correct and matches what the backend actually enforces.",
     },
   ],
   [
@@ -228,7 +228,7 @@ const DELIBERATE = new Map([
       hookKey: "payroll:reports:export",
       routeKey: "payroll:reports:view",
       reason:
-        "Same under-declared route as useExportPayrollReport: GET /payroll/reports/journal serves both the on-screen journal and its CSV under payroll:reports:view. Held stricter on the client until the backend distinguishes the export, which is raised as a cross-territory finding rather than papered over from here.",
+        "Same conditional raise as useExportPayrollReport: GET /payroll/reports/journal declares payroll:reports:view for the on-screen journal and enforces payroll:reports:export in-handler for the CSV (src/modules/payroll/insights/journal.controller.ts:49). The hook naming payroll:reports:export therefore agrees with the backend, not with the decorator this check can read.",
     },
   ],
 ]);

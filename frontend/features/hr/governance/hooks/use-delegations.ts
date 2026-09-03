@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -36,6 +37,7 @@ export function useOrgDelegations(params?: {
   page?: number;
   limit?: number;
 }) {
+  const canManageDelegations = useCan("hr:workflows:manage");
   return useQuery<DelegationsListResponse>({
     queryKey: [...queryKeys.hr.hrDelegationsAll, "org", params],
     queryFn: ({ signal }) => {
@@ -51,6 +53,7 @@ export function useOrgDelegations(params?: {
       );
     },
     staleTime: 30_000,
+    enabled: canManageDelegations,
   });
 }
 

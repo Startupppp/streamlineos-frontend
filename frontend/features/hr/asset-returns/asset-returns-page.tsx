@@ -83,10 +83,12 @@ export function AssetReturnsPage() {
     [employees, resolvedUserId],
   );
 
+  const canViewReturns = useCan("hr:assets:view");
   const { data: items, isLoading, isError, refetch } = useQuery({
     queryKey: arKeys.list(),
     queryFn: ({ signal }) => apiClient.get<AssetReturn[]>("/hr/asset-returns", undefined, signal),
     staleTime: 60_000,
+    enabled: canViewReturns,
   });
 
   const create = useMutation({
