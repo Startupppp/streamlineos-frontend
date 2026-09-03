@@ -6,7 +6,14 @@
 
 **Status:** 6 of 7 closed · **1 PARTIAL** (box 4) · reports at
 `reports/08-execute-schema-key-minimization.md`, `reports/08b-close-schema-key-minimization.md`,
-`reports/07b-declaration-drift.md` and **`reports/08c-unread-request-fields.md`**.
+`reports/07b-declaration-drift.md`, **`reports/08c-unread-request-fields.md`** and
+**`reports/08d-field-intent-honoured-or-removed.md`**.
+
+**2026-09-03 — box 4's SECOND blocker is CLEARED.** 08c held the box open on two independent
+grounds: the 35 unbound routes, and the section-5 residue of six fields the client sends and the
+server drops. All six are now resolved — two honoured, four removed — in
+`reports/08d-field-intent-honoured-or-removed.md`. **The first blocker (35 unbound routes) still
+stands, so the box stays open.**
 
 **2026-09-03 — the box-4 blocker as written is WITHDRAWN.** The earlier finding, that neither
 `tsc --noUnusedLocals` nor `knip` reports a never-read DTO field, is correct about those two tools
@@ -166,6 +173,32 @@ purge path was run, not reasoned about — **5/5** assertions including `DELETE 
       attaching to the first message silently does not. Also `simulateApprovalRoutingSchema.employeeId`
       (required, sent, ignored), `policyPreviewSchema.currency`, `sectionQuerySchema.preview`,
       `attachmentSchema.fileKey`, `kbAskSchema.articleId`. Routed to their lanes in report 08c section 5.
+      **CLEARED 2026-09-03 (report 08d).** All six triaged and closed, none by text search:
+      **HONOURED** — `createPortalTicketSchema.attachments` now writes the opening message and its
+      attachment rows inside the ticket transaction (NOT via `addMessage`, which would flip a brand-new
+      ticket `OPEN -> IN_PROGRESS`, stamp a `replied` activity and send a reply email); and
+      `simulateApprovalRoutingSchema.employeeId` now selects the definition the engine selects
+      (`active AND is_default AND deleted_at IS NULL`, where the handler previously flattened EVERY
+      active definition) and resolves each step through `HrWorkflowApproverService` for that employee.
+      **REMOVED** as one contract change (Zod -> regenerated `openapi.json` -> vendored copy -> frontend
+      type and sender) — `policyPreviewSchema.currency` (the preview computes nothing in a currency; the
+      only currency in the response belongs to the country's statutory pack), `sectionQuerySchema.preview`
+      (no preview mode exists), `attachmentSchema.fileKey` (no column; build stores the key in `fileUrl`),
+      `kbAskSchema.articleId` (article-scoped ask already exists at `POST /kb/articles/:articleId/ai/ask`).
+      All four schemas are `.strict()`, so each field is now rejected rather than stripped, pinned by
+      `src/test/removed-speculative-request-fields.spec.ts` — which fails 4/4 against the HEAD schemas.
+      **Two 08c claims corrected by re-reading the callers:** nothing in the frontend sends
+      `sectionQuerySchema.preview` (line 172 is a dead conditional; the four call sites pass only
+      `{cursor, limit}`), and nothing populates `attachmentSchema.fileKey` (the hook forwards it, the one
+      caller never sets it). `policyPreviewSchema.currency` WAS genuinely sent and its send is removed in
+      the same change, or `.strict()` would have 400'd every preview call.
+      **Gates** (08d): BE `typecheck` **0** · `check:spec-typecheck` **0** · `openapi:generate` **0**
+      (3,642 ops) · `openapi:check` **0** · `check:contract-breaking-change` **0** ·
+      `check:contract-registry` **0** · `check:module-di` **0** · `madge --circular` **0** · BE jest
+      137 suites / 924 tests **0** · FE `type-check` **0** · `check:contract-vendor` **0** ·
+      `check:contract-drift` **0** · `check:response-contracts` **0** · FE jest 30 suites / 375 tests **0**.
+      **R-11 should now read** "blocked on the 35 unbound routes" alone — both the tool blocker and the
+      section-5 defect-triage blocker are struck.
       **Removed** (backend Zod + regenerated `openapi.json` + vendored frontend copy + frontend type,
       one contract change): `surveys createAttemptSchema.accessToken` (copy-paste from the public
       schema; handler passes `participantId` alone) · `payroll listJobsQuerySchema.failedOnly` (the
