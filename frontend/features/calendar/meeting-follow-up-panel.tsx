@@ -24,7 +24,7 @@ import {
   useMeetingFollowUp,
   useProposeMeetingSend,
   useConfirmMeetingSend,
-  type MeetingFollowUpResult,
+  type FollowUpDraft,
   type ActionItem,
 } from "@/hooks/api/meetings-ai";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -115,7 +115,7 @@ export function MeetingFollowUpPanel({ eventId, onClose }: MeetingFollowUpPanelP
 
   const [meetingNotes, setMeetingNotes] = useState("");
   const [actionItems, setActionItems] = useState<string[]>([""]);
-  const [draft, setDraft] = useState<MeetingFollowUpResult | null>(null);
+  const [draft, setDraft] = useState<FollowUpDraft | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [proposalToken, setProposalToken] = useState<string | null>(null);
   const [needsReauth, setNeedsReauth] = useState(false);
@@ -156,7 +156,7 @@ export function MeetingFollowUpPanel({ eventId, onClose }: MeetingFollowUpPanelP
         actionItems: filledItems.length > 0 ? filledItems : undefined,
       },
       {
-        onSuccess: (data) => setDraft(data),
+        onSuccess: (data) => setDraft(data.followUp),
         onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
