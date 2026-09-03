@@ -4,18 +4,24 @@ import { dehydrate } from "@tanstack/react-query";
 import { createServerQueryClient } from "./server-query-client";
 import { queryKeys } from "@/lib/query-keys";
 import { serverGet } from "@/lib/server-fetch";
-import type { PayrollRunListItem } from "@/types/payroll/runs";
+import { payrollRunsPageContract } from "@/hooks/api/payroll/runs-schema";
 
-interface RunsPage {
-  data: PayrollRunListItem[];
-  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
-}
-
+/**
+ * The SSR half of a contracted route has to carry the SAME contract as the
+ * client half, or the contract is bypassed on first paint: this snapshot is
+ * hydrated into the app's cache, so the client `queryFn` — and its contract —
+ * never runs until something invalidates the key.
+ *
+ * This one was reading its shape from `@/types/payroll/runs`, which disagrees
+ * with `payrollRunsPageContract` on six fields (`grossTotal`, `netTotal`,
+ * `employeeCount` and `exceptionCount` are `notNull()` columns the hand-written
+ * type declared nullable; `runType` and `statutoryRuleVersion` were optional).
+ */
 export async function prefetchPayrollRuns() {
   const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
     queryKey: queryKeys.payroll.runs({ cursor: undefined, limit: 20 }),
-    queryFn: () => serverGet<RunsPage>("/payroll/runs?limit=20"),
+    queryFn: () => serverGet("/payroll/runs?limit=20", payrollRunsPageContract),
     staleTime: 60_000,
   });
   return dehydrate(queryClient);
