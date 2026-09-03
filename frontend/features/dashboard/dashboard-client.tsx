@@ -19,7 +19,11 @@ const ClockInWidget = dynamic(
 );
 import { DashboardStatsSkeleton } from "@/components/ui/dashboard-skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import {
+  StatCard,
+  StatCardGrid,
+  StatCardGridSkeleton,
+} from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
@@ -28,7 +32,10 @@ import { useMotionVariants } from "@/lib/motion-variants";
 import { getGreeting, getFirstName } from "@/lib/format-utils";
 import { QuickActions } from "@/features/dashboard/quick-actions";
 import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
-import { ModuleSetupBanners } from "@/features/dashboard/module-setup-banners";
+import {
+  ModuleSetupBanners,
+  useModuleSetupBannersPending,
+} from "@/features/dashboard/module-setup-banners";
 import { useDashboardAccess } from "@/features/dashboard/use-dashboard-access";
 import { useDashboardStatCards } from "@/features/dashboard/use-dashboard-stat-cards";
 import { useHomeCacheSync } from "./use-home-cache-sync";
@@ -42,12 +49,17 @@ const GuidedTourOverlay = dynamic(
   { ssr: false },
 );
 
+/**
+ * The fallback is the same one row of stat cards the widget itself renders
+ * while its query is in flight. `WidgetSkeleton rows={2}` was 142px against the
+ * widget's 68px, so the chunk landing collapsed the page by 74px.
+ */
 const ExecutiveKpiWidget = dynamic(
   () =>
     import("@/components/dashboard/executive-kpi-widget").then((m) => ({
       default: m.ExecutiveKpiWidget,
     })),
-  { loading: () => <WidgetSkeleton rows={2} /> },
+  { loading: () => <StatCardGridSkeleton cols={4} /> },
 );
 
 export function DashboardClient() {
@@ -55,6 +67,7 @@ export function DashboardClient() {
   const { data: session } = useSession();
   const firstName = getFirstName(session);
   const access = useDashboardAccess();
+  const setupBannersPending = useModuleSetupBannersPending();
   useHomeCacheSync();
   const { hrEnabled, canViewExecutive } = access;
 
@@ -101,6 +114,7 @@ export function DashboardClient() {
     shouldRenderDashboardLoading({
       accessLoading: access.accessLoading,
       mounted,
+      setupBannersPending,
     })
   ) {
     return (

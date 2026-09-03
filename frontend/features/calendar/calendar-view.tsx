@@ -243,6 +243,43 @@ export function CalendarView() {
           hidePrimaryActions
         />
 
+        <div className="flex min-h-0 flex-1 gap-4">
+          <div className="flex min-w-0 flex-1 flex-col">
+            <div
+              ref={calContainerRef}
+              className={cn(
+                "calendar-container flex min-h-0 flex-1 flex-col rounded-lg border border-border bg-card",
+                viewMode === "calendar" && view === "month"
+                  ? "overflow-y-scroll"
+                  : "overflow-hidden",
+              )}
+            >
+              {viewMode === "calendar" ? (
+                <BigCalendarWrapper
+                  events={allCalEvents}
+                  date={currentDate}
+                  view={view}
+                  calHeight={calHeight}
+                  onView={setView}
+                  onNavigate={setCurrentDate}
+                  onSelectSlot={
+                    isCalendarOverlayOpen ? undefined : guardedSelectSlot
+                  }
+                  onSelectEvent={handleSelectEvent}
+                  eventPropGetter={eventPropGetter}
+                />
+              ) : (
+                <CalendarEventsPanel
+                  mode={viewMode}
+                  events={visibleEvents}
+                  range={viewMode === "list" ? visibleRange : undefined}
+                  onSelectEvent={handleSelectEventById}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+
         {eventsIsError && (
           <div className="flex shrink-0 flex-col gap-2 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-1.5 sm:flex-row sm:items-center">
             <span className="min-w-0 flex-1 text-dense text-status-warning-ink">
@@ -282,43 +319,6 @@ export function CalendarView() {
             </button>
           </div>
         )}
-
-        <div className="flex min-h-0 flex-1 gap-4">
-          <div className="flex min-w-0 flex-1 flex-col">
-            <div
-              ref={calContainerRef}
-              className={cn(
-                "calendar-container flex min-h-0 flex-1 flex-col rounded-lg border border-border bg-card",
-                viewMode === "calendar" && view === "month"
-                  ? "overflow-y-scroll"
-                  : "overflow-hidden",
-              )}
-            >
-              {viewMode === "calendar" ? (
-                <BigCalendarWrapper
-                  events={allCalEvents}
-                  date={currentDate}
-                  view={view}
-                  calHeight={calHeight}
-                  onView={setView}
-                  onNavigate={setCurrentDate}
-                  onSelectSlot={
-                    isCalendarOverlayOpen ? undefined : guardedSelectSlot
-                  }
-                  onSelectEvent={handleSelectEvent}
-                  eventPropGetter={eventPropGetter}
-                />
-              ) : (
-                <CalendarEventsPanel
-                  mode={viewMode}
-                  events={visibleEvents}
-                  range={viewMode === "list" ? visibleRange : undefined}
-                  onSelectEvent={handleSelectEventById}
-                />
-              )}
-            </div>
-          </div>
-        </div>
 
         <EventCreateDialog
           open={isCreateOpen}

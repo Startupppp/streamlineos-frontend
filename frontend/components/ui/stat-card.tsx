@@ -162,18 +162,24 @@ export function StatCardGrid({
   );
 }
 
+/**
+ * Mirrors `StatCard`'s box exactly — same padding, radius, gap, icon well and
+ * two 20px text lines — so the swap from skeleton to card moves nothing. The
+ * previous shape was 8px shorter, which pushed every row below the stat grid
+ * down the moment the data landed.
+ */
 export function StatCardSkeleton({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "flex h-full items-center gap-2.5 rounded-lg border border-border bg-card px-3 py-2.5 shadow-sm",
+        "flex h-full items-start gap-3 rounded-xl border border-border/80 bg-card px-3.5 py-3 shadow-sm",
         className,
       )}
     >
-      <Skeleton className="h-8 w-8 rounded-md shrink-0" />
-      <div className="min-w-0 flex-1 space-y-1.5">
-        <Skeleton className="h-3 w-14" />
-        <Skeleton className="h-5 w-10" />
+      <Skeleton className="mt-0.5 h-9 w-9 shrink-0 rounded-lg" />
+      <div className="min-w-0 flex-1 space-y-0.5">
+        <Skeleton className="h-5 w-20" />
+        <Skeleton className="h-5 w-12" />
       </div>
     </div>
   );

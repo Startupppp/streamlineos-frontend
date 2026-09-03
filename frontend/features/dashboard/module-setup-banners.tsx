@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   CheckCircle2,
@@ -30,6 +30,37 @@ import {
   type ModuleChecklist,
 } from "@/hooks/api/onboarding-flow";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isSetupBannerSlotPending } from "./dashboard-hydration";
+
+const SETUP_BANNER_SETTLE_DEADLINE_MS = 1500;
+
+function useSettleDeadline(ms: number): boolean {
+  const [elapsed, setElapsed] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setElapsed(true), ms);
+    return () => clearTimeout(timer);
+  }, [ms]);
+  return elapsed;
+}
+
+/**
+ * These banners are a variable-height stack rendered above the dashboard's
+ * widget grid, and they are `null` until their query answers — measured at 520px
+ * arriving 150ms after first content paint, which moved every row below them and
+ * was 0.17 of the route's desktop CLS on a populated dashboard. Their height is
+ * only knowable from the response, so no skeleton can reserve it; the page holds
+ * its own skeleton instead and paints the banners in the first real layout.
+ */
+export function useModuleSetupBannersPending(): boolean {
+  const canView = useCan("onboarding:module-checklists:view");
+  const { isLoading } = useModuleChecklists(canView);
+  const deadlineElapsed = useSettleDeadline(SETUP_BANNER_SETTLE_DEADLINE_MS);
+  return isSetupBannerSlotPending({
+    denied: !canView,
+    isLoading,
+    deadlineElapsed,
+  });
+}
 
 const MODULE_LABELS: Record<string, string> = {
   crm: "Set up CRM",
