@@ -34,6 +34,7 @@ This file contains only remaining acceptance work. Completed checklist items and
 - [ ] **Current P0/P1 audit:** resolve or formally disposition the recorded Payroll TDS/natural-key and bank-return gaps, the `email.send` permission mismatch, internal-auth secret comparison/rate-limit findings, and any still-reproducible same-tenant 500s before ticket 41.
 - [ ] **Release harness:** remove the absolute macOS repository paths from `.scratch/code-release-10-10/release-verify.mjs`; resolve both repositories from the script/workspace or explicit validated arguments. The current Windows run fails before any gate with `spawnSync git ENOENT`, so it cannot produce current-head evidence here.
 - [ ] **Final integration:** complete ticket 41 at one clean pair of frontend/backend commits, then complete ticket 42's release-authority record. Do not infer a pass for any interrupted, skipped or prerequisite-blocked gate.
+- [ ] **PRD-to-ticket traceability:** restore or generate a checked-in manifest that maps every PRD checkbox (including module-specific criteria and deferred gates) to exactly one ticket/acceptance box, with no orphan criteria or ticket-only work. The ticket files exist under `.scratch/code-release-10-10/issues/`, but ticket 40 records five PRD boxes without an owning ticket box and four ticket boxes without a PRD counterpart; nine historical module rows also lack recoverable box-level evidence.
 
 ### Module checklist history from ticket 40
 
