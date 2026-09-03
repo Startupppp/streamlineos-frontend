@@ -1337,3 +1337,45 @@ outright; it rewrote both. A partial commit is refused mid-merge, so the rewrite
 another agent's merge commit. Content is correct in HEAD; attribution is not. Combined with the
 seventh incident, the lesson is the same one twice: **anything that rewrites or merges a shared
 tree is orchestrator-only**, because it silently destroys work no pathspec discipline can protect.
+
+## NEW P1 — ~30 build sub-routes 404 for any project in a PM workspace
+
+Found by the browser sweep, measured not inferred: `/build/workspaces/<w>/20/epics` → **200**,
+`/build/workspaces/<w>/20/backlog` → **404**.
+
+The `[projectId]` layout redirects the whole path through `withPmWorkspacePath`, but the two route
+trees are not mirrors: `build/[projectId]/` has **39** entries while
+`build/workspaces/[pmWorkspaceId]/[projectId]/` has **6**. Every one of the ~33 missing entries —
+backlog, sprints, bugs, qa, timeline, analytics and the rest — is unreachable for any project that
+lives in a PM workspace. The redirect sends users to a path that was never built.
+
+This is a route-ownership / product decision (mirror the tree, or stop redirecting paths that have
+no mirror), not a bug in one file. It is also invisible to every static gate we have, because both
+trees are individually valid — only walking them against a real project exposes it. Two of the
+three non-contrast findings in the whole sweep are the resulting 404 page rendering with **no
+`<main>` landmark** (`app/**/not-found.tsx`).
+
+## Ticket 30 box 4 closed — the board was finally reachable
+
+Blocked the entire release until the project list was fixed, because no row could be clicked.
+Now measured: **63 of 63 planned steps ran** (was 57), token resolved by clicking through
+`/build/all` to `projectId = 20`. **0 horizontal overflow** — max `scrollWidth − innerWidth` = 0
+across all 63 steps at 375/768/1280 — **0 never-settled**, and one `h1` on 63/63. The kanban
+containment probe is the part that matters: `.kanban-scroll-container` is 1496px against a client
+width of 343/448/944, with its right edge at 359/744/1248 — **inside** the viewport at every width.
+The board scrolls; the document does not. That is the correct behaviour and it had never been
+verified.
+
+The journeys harness kept its honesty property: a step never reached still reports `n of m planned`
+and exits 1 rather than shrinking its denominator, and the keyboard contract's denominator held at
+633 → 633 while unreachable targets went 10 → 9.
+
+Two independent confirmations of earlier fixes, from the live app: **`/calendar` no longer errors**
+(the 62-day window is gone), and route error boundaries fell from **12 steps to 3** — all three
+`/crm/leads`, which is excluded from release scope.
+
+**The environment was probed before it was trusted**, which is the only reason these numbers mean
+anything: `:3000` is `next dev` against backend `:1501` on `scratch_t30_browser`, confirmed via
+`pg_stat_activity`. The repo `.env`'s 36-char `NEXTAUTH_SECRET` does NOT match the running server —
+a cookie minted with it 307s to `/signin`, while the 64-char process-only secret reaches
+`/dashboard` 200. A stale `next start` on `:1000` from the previous day was identified and not used.
