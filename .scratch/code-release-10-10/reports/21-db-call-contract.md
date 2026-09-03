@@ -675,3 +675,153 @@ genuinely tenant-less traffic.
   DB call inside any loop (I read it), so the detector losing sight of it is a possible detector
   regression, not a fix — and `src/scripts/check-*.mjs` is not mine to investigate. → **ticket 35.**
 - **`test:e2e` and `lint` — not run.**
+
+---
+
+# Third pass — 2026-09-03
+
+Boxes: **6 of 9 closed, 3 partial** (was 3 of 9). Boxes 1, 4, 7 and 8 close as **recorded decisions** —
+the decision and its consequences are in the ticket; no code was guessed at for any of them.
+
+## The two defects worth reading
+
+### `leave-approver` ran up to 100 queries per leave request that could never return a row
+
+`LeaveApproverService.resolve` looped over candidate approvers and, for a `team` scope, asked the
+database whether the candidate's scope covered the subject:
+
+```
+.where(and(
+  eq(organizationMembers.orgId, orgId),
+  eq(organizationMembers.userId, subjectUserId),      // <- subject
+  eq(organizationMembers.status, "ACTIVE"),
+  applyScope(scope, orgId, candidateId, { ownerColumn: organizationMembers.userId }),
+))
+```
+
+`applyScope` was handed **no team column**, so its `team` branch falls through to
+`eq(cols.ownerColumn, userId)` — `member.user_id = candidate`. The same WHERE already pins
+`member.user_id = subject`. Contradictory for every candidate, and the loop `continue`s on the only
+case where they are equal. So:
+
+- a `team`-scoped approver could **never** be selected — the feature did not work;
+- and the product paid one guaranteed-empty round trip per candidate (bounded at
+  `APPROVER_CANDIDATE_LIMIT = 100`) to learn that.
+
+Fixed by deciding it in memory, which says exactly the same thing. **What `team` should mean here is
+left as a product question** and written into the ticket: `EmploymentFacts` already carries
+`departmentId` and `managerUserId` and is already batched at that point, so implementing it costs no
+extra query — but choosing between "reports to me" and "shares my department" widens who may approve
+leave, and that is not an engineering call.
+
+The spec that covered this asserted `applyScope` was called with `"team"` and that a **mocked** third
+`select` returning `[{ id: 11 }]` decided the outcome. That row cannot exist. The assertion pinned the
+defective mechanism, not an invariant, so it was replaced by two that assert the candidate scan issues
+no per-candidate `select`, with a comment in the spec saying why.
+
+### `check:db-call-count` has been red at HEAD, and the detector is why
+
+The gate reported **10 STALE VERDICTs against a ratchet of 2** before this pass. Cause: commit
+`149ae939` and this ticket's own earlier passes batched loops and did not reclassify them.
+
+But reclassifying only got it to 5, and the residual is a detector defect. `check-db-call-count.mjs`
+tests its DB-call patterns **one line at a time**. This repository's prettier wrapping puts
+`await this.db` on one line and `.select(` / `.update(` on the next, so the pattern
+`/\b(?:this\.)?db\s*\.\s*(?:select|…)\s*\(/` never matches. Measured with the detector's own pattern
+list, over its own corpus and exclusions:
+
+| Matching | Files detected |
+|---|---|
+| line-scoped (today) | **397** |
+| 30-line window joined and whitespace-collapsed | **566** |
+| files the gate cannot currently see | **169** |
+
+**So `ACTIONABLE: 40` is a floor, not a population.** Routed to whoever owns `src/scripts/**`: join the
+loop window before matching (and expect the false-positive rate to move, which is a tuning call, not
+mine). Three files stay `ACTIONABLE` with corrected notes because their residual is real and no verdict
+in the vocabulary is both true and green:
+
+| File | Residual | Why it cannot be relabelled |
+|---|---|---|
+| `hr/core/hr-effective-change-applier` | `applyOne` per change | writes a different table per change type |
+| `hr/time/leave-approver` | one `resolveUserPermissions` per candidate | needs a batched scope resolver on `AccessService` — **access territory**; `membersWithPermission` returns `{userId, membershipId}` and drops the scope the loop is asking for |
+| `timesheets/core/approvals-bulk` | `approveSinglePeriod` per period | one rejected period may not roll back the rest |
+
+## What else changed
+
+| Box | Change |
+|---|---|
+| 2 | `HrAuditService.logMany` — one membership resolution + one multi-row INSERT chunked under `HR_AUDIT_LOG_CHUNK`; the effective-dated applier issued one of each per due change |
+| 2 | `ApprovalsService.activeDelegationsToActor` — one indexed multi-key read over `user_delegations` for a page of approvers; `bulkReject` probed per candidate. `hasActiveDelegation` deleted: the single-period path asks the batch for one id, so there is one query shape instead of two |
+| 2+3+5 | `module-checklist.syncItemMetadataFromSeed` — one UPDATE per stale item **with no tenant predicate**, on a path that runs for every module on every checklist read; now one `bulkUpdateFromValues` per organisation |
+| 5 | `projects-write.updateProject` reassignment — one `bulkUpdateFromValues` instead of one UPDATE per target assignee |
+| 5 | `src/common/db/bulk-update.spec.ts` — the helper's **first** spec. Four properties nothing was checking |
+| 3 | `hr-document-templates.setDefault` / `.updateVersion`, `hr-interviewers.cancelBookingLink`, `projects-ticket-checklists.updateChecklistItem` / `.deleteChecklistItem` — read-then-write pairs given their tenant predicate |
+
+**Not converted, deliberately.** `accounting/gl/recurring-journals` and `finance/ap/recurring-bills`
+each spawn a document per template and then advance that template's dates. The obvious bulk conversion
+(collect the advances, one `UPDATE … FROM (VALUES …)` after the loop) widens the crash window from one
+template to up to 1,000, and every template whose document already spawned would spawn a **duplicate**
+on the next run. The right fix is one transaction per template covering spawn *and* advance — the
+opposite of a bulk write. Recorded, not done.
+
+## Commands run — third pass
+
+| Command | Exit | Number |
+|---|---|---|
+| `pnpm typecheck` (backend, twice: after the batching commit and after the box-3 commit) | **0**, **0** | 0 errors |
+| `pnpm check:spec-typecheck` | **0** | — |
+| `jest --runInBand --testPathPattern="(leave-approver\|hr-audit\|approvals\|effective-change)"` | 0 | 9 suites / 37 tests passed |
+| `jest --runInBand --testPathPattern="common/db/bulk-update"` | 0 | 5 passed |
+| `jest --runInBand --testPathPattern="projects-write-reassign"` | 0 | 2 passed |
+| `jest --runInBand --testPathPattern="(projects-ticket-checklists-tenant-write\|hr-interviewers-tenant-write)"` | 0 | 3 passed |
+| `jest --runInBand --testPathPattern="hr-document-templates-tenant-write"` | 0 | 2 passed |
+| `jest --runInBand --testPathPattern="module-checklist-seed-sync"` | 0 | 3 passed |
+| `node src/scripts/check-db-call-count.mjs` | **1** | ACTIONABLE 44 -> **40**; stale verdicts 10 -> **5** vs a ratchet of 2 |
+| `node src/scripts/check-db-call-count.mjs --self-test` | 0 | — |
+
+**Bite proof.** `projects-write-reassign.spec.ts` was run against a hermetic
+`git archive HEAD src test` tree in the scratchpad with only the spec copied in: **both assertions
+fail there** (the grouped shape issues zero `execute()` calls and two `tx.update(tickets)` calls) and
+pass against the fix. Tree deleted.
+
+**No database was touched this pass.** Nothing here needed one: every change is a statement-shape
+change provable by `sqlToQuery` on the real WHERE, and the two SQL-string shapes involved
+(`bulkUpdateFromValues` against a schema-qualified table, and against a `text`/`boolean`/`integer`
+column set) were already executed against a database by the second pass. Said plainly rather than
+implied: `scratch_perf_seed` was **not** used.
+
+## Cross-territory findings — route these
+
+1. **`check-db-call-count.mjs` is line-scoped and misses 169 files** (`src/scripts/**`). Numbers above.
+   Until it is fixed, the gate's ACTIONABLE count understates the work and its stale-verdict ratchet of
+   2 is unreachable.
+2. **`AccessService` has no batched scope resolver** (`src/modules/access/**`). `membersWithPermission`
+   returns `{userId, membershipId}`; every caller that needs the *scope* for a set of members has to
+   call `resolveUserPermissions` once per member. `leave-approver` is the instance measured here; a
+   `resolveScopesForUsers(orgId, userIds, permissionKey)` would close it and serve any other caller with
+   the same shape.
+3. **`calendar/calendar-conflict.service.ts`** — unbounded accumulation on an interactive path. Product
+   decision, written up under box 7.
+4. **RLS policy `0383`** admits `organization_members` rows only for the principal in `app.user_id`,
+   which forces `org-lifecycle` / `org-purge` into one transaction per member. Migration territory.
+5. **`storage.controller.ts` upload holds a transaction across a 90 s poll.** `VirustotalAvScanner`
+   polls `MAX_POLLS = 6` × `POLL_INTERVAL_MS = 15_000`; `with-tenant.ts` sets
+   `idle_in_transaction_session_timeout` to 60 s. The arithmetic says the session is killed mid-upload.
+   The file is in this ticket's territory but the fix is not a one-liner — `@NoTenantTransaction()` means
+   every `this.db` call in the handler needs its own `runInTenantTransaction`, and a wrong wrap is an RLS
+   42501 on the upload path. Named here with the exact constants rather than half-done.
+
+## Honest gaps
+
+- `check:db-call-count` is **still red** (exit 1): 5 stale verdicts against a ratchet of 2. Three of the
+  five are truthful `ACTIONABLE` entries the detector cannot see; two are the pre-existing pair the
+  ratchet was set for. It cannot be made green without either fixing the detector or writing a false
+  verdict.
+- `check:unbounded-reads` is **red**, and it is **not this ticket's**: the failures are one stale entry
+  and one unclassified path from another agent's in-flight move of
+  `settings/settings-custom-fields.service.ts` to `crm/custom-fields/`.
+- The repo-wide jest run over the eleven modules was **not run** this pass; the focused runs above were.
+- Lint was **not run**. `next build` was **not run**. No seeded e2e was **not run**.
+- The 79 remaining no-`org_id` write sites in this territory are a **candidate list**. Five were verified
+  and fixed; the rest were classified by eye from a scan, not read one by one.

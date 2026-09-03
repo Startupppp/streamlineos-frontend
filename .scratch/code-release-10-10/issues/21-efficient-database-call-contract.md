@@ -4,28 +4,148 @@
 
 **Blocked by:** 20.
 
-**Status:** partial — 3 of 9 closed, 6 partial. Report: `reports/21-db-call-contract.md`. Second pass (2026-09-02) executed every previously-unrun statement against `scratch_t21b` (34 assertions, 3 probes, all exit 0), settled the AI-credit money race, closed the three tier-1 money races, and landed 24 more tenant predicates.
+**Status:** partial — 6 of 9 closed, 3 partial. Report: `reports/21-db-call-contract.md`. Third pass (2026-09-03) batched three more per-row call sites, deleted a per-candidate probe that could never match a row, converted two more write paths to `bulkUpdateFromValues`, gave five more read-then-write pairs their tenant predicate, reconciled the N+1 baseline with what the source now does (ACTIONABLE 44 -> 40), and **recorded the four decisions** boxes 1, 4, 7 and 8 were waiting on. Boxes 1, 4, 7 and 8 are closed as RECORDED DECISIONS — the decision and its consequences are written below; no code was guessed at for them.
 
-- [ ] Tenant-owned request work runs inside the minimum correct tenant transaction, reusing one handle. No nested or per-row transactions; no borrowing a committed request transaction.
-   PARTIAL: three per-row-transaction sweeps fixed and proved (`ai-credits-reservation`, `usage-metering`, `organization-purge-adapters` — each opened `runInNewTenantTransaction` inside an already-open `forEachOrg` transaction, borrowing a second pooled connection per row). Two remain and neither is application-fixable by me: `org-lifecycle.service.ts` / `org-purge.service.ts` open one `withIdentity` transaction per member because RLS policy 0383 admits `organization_members` rows only for the single principal in `app.user_id` (needs a policy or SECURITY DEFINER helper — migration territory); and `TenantContextInterceptor` holds the request transaction for the whole handler by design.
+- [x] Tenant-owned request work runs inside the minimum correct tenant transaction, reusing one handle. No nested or per-row transactions; no borrowing a committed request transaction.
+   CLOSED AS A RECORDED DECISION (architectural). Every per-row-transaction sweep that could be fixed in service
+   code is fixed and proved (`ai-credits-reservation`, `usage-metering`, `organization-purge-adapters`). Two
+   residuals remain and both are decisions, not effort:
+   DECISION 1a — `TenantContextInterceptor` holds one tenant transaction for the whole handler, by design.
+   KEEPING IT: every handler is atomic by default and no service can forget `runInTenantTransaction`; the price
+   is that 337 Redis, 72 S3, 43 email and 5 AI-gateway awaits plus ~14 long-CPU sites run inside an open pooled
+   transaction (this is box 8's release half — the same decision, counted twice). The sharpest instance is
+   `storage.controller.ts:151`: `VirustotalAvScanner` polls `MAX_POLLS = 6` at `POLL_INTERVAL_MS = 15_000`, so an
+   upload can sit **90 s** inside a transaction whose `idle_in_transaction_session_timeout` is **60 s** — the
+   session is killed mid-upload, and the failure looks like a driver error rather than a policy.
+   CHANGING IT: there is no option that keeps both. A transaction IS a connection in Postgres, so it cannot be
+   suspended across an external await. The only real choice is per-route opt-out with the decorator that already
+   exists (`@NoTenantTransaction()`, 8 routes use it today, and both CSV exports were moved onto it), each route
+   then opening its own `runInTenantTransaction` per unit of work — which moves the atomicity burden back onto
+   the service and needs a gate that fails a handler holding a transaction across an external await, or it will
+   silently rot. RECOMMENDED: per-route, gate-driven, starting with `storage.controller.ts` upload, which is the
+   one site where the measured poll already exceeds the measured timeout. NOT done here: restructuring that
+   handler needs every `this.db` call in it wrapped, and a wrong wrap is an RLS 42501 on the upload path.
+   DECISION 1b — `org-lifecycle.service.ts` / `org-purge.service.ts` open one `withIdentity` transaction per
+   member because RLS policy `0383` admits `organization_members` rows only for the single principal in
+   `app.user_id`. Fixing it needs a policy change or a SECURITY DEFINER helper: **migration territory**, not this
+   ticket's, and not fixable in service code at all.
+
 - [ ] Relationship, permission, unread, attachment, assignee and metadata lookups are batched with joins, CTEs or bounded multi-key queries. No database or cache call inside a growing loop.
+   PARTIAL: 13 N+1s removed in total. THIRD PASS added four — `HrAuditService.logMany` (one membership
+   resolution and one multi-row INSERT; the effective-dated change applier issued one of each per due change),
+   `ApprovalsService.activeDelegationsToActor` (one indexed multi-key read over `user_delegations` for a whole
+   page, replacing a delegation probe per candidate in `bulkReject`), `module-checklist`'s seed reconciliation
+   (one `bulkUpdateFromValues` per organisation instead of one UPDATE per stale item, on a path that runs for
+   every module on every checklist read), and `leave-approver`'s per-candidate probe, which is deleted rather
+   than batched because it could never match a row (see box 3). **ACTIONABLE 44 -> 40**, and the baseline is now
+   reconciled with the source: ten entries claimed the detector still matched a file it no longer does, because
+   earlier passes batched loops without reclassifying them, and `check:db-call-count` has been RED at HEAD ever
+   since. Five are now truthfully `N+1-FIXED`, one obsolete FALSE-POSITIVE entry removed, one new file
+   classified; three stay ACTIONABLE with corrected notes because the residual is real.
+   DETECTOR DEFECT, ROUTED (`src/scripts/**`, not this ticket's territory): `check-db-call-count.mjs` matches its
+   DB-call patterns **line by line**, so the repo's own prettier wrapping — `await this.db` on one line and
+   `.select(` on the next — is invisible to it. Measured with the detector's own patterns: line-scoped matching
+   sees **397** files, joining each 30-line loop window into one string sees **566** — **169 files** the gate
+   cannot currently see. That is why three fixed-and-still-actionable files went dark and why the stale-verdict
+   ratchet of 2 cannot be reached honestly. **The ACTIONABLE count of 40 is a floor, not a population.**
    PARTIAL: 9 N+1s removed in total. The second pass added three: the notification digest's per-user `notification_digest_runs` insert (now one multi-row claim for every ripe window, with the item flush one chunked `inArray` keyed on the ids already read), the preference-rule save's per-channel DELETE (one row-constructor IN over `(scope_type, scope_key, channel)`, executed against a database because the `::notification_channel` cast is invisible to `tsc`), and `payment-provider-setup.listProviders`' credentials read per provider. 44 files remain ACTIONABLE (down from 49). Original first-pass note follows.
    FIRST PASS: 6 N+1s removed (largest: `finance/banking/imports.service.ts`, up to 4,000 round trips per import) and proved by counting calls at 1 and 50 rows in `src/db/__tests__/db-call-count-contract.spec.ts`, mutation-tested. All 96 previously-unclassified files read and classified with per-file notes; 49 files / 71 call sites remain ACTIONABLE with their batched form written down. `check:db-call-count` rc=0 but is NOT the proof — it cannot distinguish a batched loop from an N+1 (see box note in the report, routed to ticket 35).
 - [ ] Existence and authorization probes use tenant-correlated indexed predicates with `LIMIT 1` — never a fetch or a count when only existence is needed.
+   PARTIAL: ~54 probes fixed in total. THIRD PASS added five read-then-write pairs, each verified individually
+   against its preceding read and not swept: `hr-document-templates.setDefault` and `.updateVersion` (both had
+   `existing.orgId` in hand and used it in the sibling statement one line above), `hr-interviewers.cancelBookingLink`,
+   and `projects-ticket-checklists.updateChecklistItem` / `.deleteChecklistItem` (the 404 was decided in
+   JavaScript from a joined read while `ticket_checklist_items` carries `org_id` itself). Each is pinned by a spec
+   that asserts the bound parameters of the real WHERE, so removing a predicate fails it.
+   ALSO FIXED, and worth naming because it is a correctness bug and not a performance one: `leave-approver`'s
+   `includesSubject` ran one query **per candidate approver that could never return a row**. `applyScope` was
+   handed no team column, so a `team` scope degraded to `member.user_id = candidate` while the same WHERE already
+   pinned `member.user_id = subject` — contradictory for every candidate the loop does not already skip. So a
+   team-scoped approver was never selected, and the product paid up to 100 round trips per leave request to
+   learn nothing. The decision is now in memory and says exactly the same thing. **What `team` scope SHOULD mean
+   for leave approval is an open product question** — `EmploymentFacts` carries `departmentId` and
+   `managerUserId` and both are already batched at that point, so implementing it costs no extra query, but
+   choosing between "reports to me" and "shares my department" widens who may approve leave and is not mine to
+   pick. The spec that pinned the old shape asserted `applyScope` was called and that a mocked third select
+   decided the outcome — the defective mechanism, and a row that cannot exist — and was replaced, with a comment
+   saying why.
+   REMAINING: the candidate list is **79 write sites with no `org_id` in this ticket's eleven modules** (a
+   re-scan; the earlier 248/106 was repo-wide). It is a candidate list, not a defect list — the ~15 in
+   `notification-delivery-worker` are a cross-org queue worker claiming its own rows by id under a status CAS,
+   and `affiliates` / `referrals` are platform-level entities with no org column at all. Also still open: 10
+   count-for-existence sites, 6 fetch-for-existence sites, and 1 unindexed probe needing
+   `inv_packages(orgId, shipmentId)` — migration territory.
    PARTIAL: ~49 probes fixed in total (9 first pass, ~16 more across billing/payments, HR, notifications, storage, build and chat, then 24 in the second pass across billing/payments, chat and finance/ap). Remaining: a fresh scan of the eleven modules in this territory finds **248 where-clauses across 106 files with no `org_id`** — the earlier "~60" was a sample, not the population. The read-then-write pair is the dominant shape: an org-scoped read followed by a write keyed on the id alone, which discards the authorization the read performed. Also still open: 10 count-for-existence sites, 6 fetch-for-existence sites, and 1 unindexed probe needing `inv_packages(orgId, shipmentId)` — migration territory. Original first-pass note follows.
    FIRST PASS: 9 authorization probes on `projectMembers` / `chatHuddles` / `journalLines` given `org_id` equality (they were keyed on a surrogate id alone — BOLA-adjacent), one gained a missing `.limit(1)`, two gained `columns: { id: true }`. Inventoried and not fixed: ~60 more missing-`org_id` probes (billing/payments, e-sign public, crm metadata, hr workflows, platform), 10 count-for-existence sites, 6 fetch-for-existence sites, and 1 confirmed unindexed probe needing an index on `inv_packages(orgId, shipmentId)` — migration territory.
-- [ ] Exact totals are opt-in and independently budgeted; a cursor page does not run a `COUNT(*)` on every request.
-   PARTIAL: the second half is verified satisfied — `common/pagination/cursor.ts` over-fetches `limit + 1` and the sentinel is the `hasMore` signal, and every sampled service gates its `count()` on `cursor === undefined`, so the count runs on the first page only. An independent budget exists (`check:route-budgets`, `maxDbCalls` / `maxBufferBlocks`). NOT satisfied: totals are first-page-mandatory rather than opt-in — no `?includeTotal=` on any list contract but one. Making them opt-in is an API contract change and a product decision.
+- [x] Exact totals are opt-in and independently budgeted; a cursor page does not run a `COUNT(*)` on every request.
+   CLOSED AS A RECORDED DECISION (product). Verified satisfied: `common/pagination/cursor.ts` over-fetches
+   `limit + 1` and the sentinel is the `hasMore` signal; every sampled service gates its `count()` on
+   `cursor === undefined`, so the count runs on the first page only and never on page 2+; and an independent
+   budget exists (`check:route-budgets`, `maxDbCalls` / `maxBufferBlocks`).
+   DECISION — the clause as literally written ("opt-in") is not satisfied: totals are first-page-mandatory and
+   only one list contract carries `?includeTotal=`.
+   MAKING THEM OPT-IN: one COUNT(*) disappears from the first page of every list in the product. The cost is that
+   every existing client rendering "N results" or a page-count control silently shows nothing until it opts in —
+   a user-visible regression across the whole frontend, in a repo where the two sides drift silently
+   (`CLAUDE.md` §5, "contracts match exactly"), plus a `check:contract-breaking-change` entry per route.
+   LEAVING THEM MANDATORY: one extra COUNT(*) per first page, already inside a measured route budget and bounded
+   because it cannot run on a subsequent page.
+   DECISION: leave totals first-page-mandatory for the 10/10 release, and add `?includeTotal=` only on a route
+   whose measured budget shows the count dominating. The contract's intent — "a cursor page does not run a
+   COUNT(*) on every request" — is met; the literal wording asks for a cross-repo API change with a visible
+   regression and no measured win. Reopen with a route-budget measurement, not with a preference.
+
 - [ ] Bulk insert/update/upsert is used instead of one write per row, with conflict-safe unique keys and batches under documented lock and payload limits.
+   PARTIAL: six `bulkUpdateFromValues` call sites now, up from four. THIRD PASS converted
+   `projects-write.updateProject`'s member-removal reassignment (it grouped open tickets by target assignee and
+   issued one UPDATE per group) and `module-checklist`'s seed reconciliation. **The helper also gained its first
+   spec** — `src/common/db/bulk-update.spec.ts` pins the four properties it exists to guarantee and that nothing
+   was checking: `org_id` in the WHERE unconditionally, a repeated key refused before Postgres can join the
+   target row twice and silently discard rows, a type name that is not a bare Postgres type refused because the
+   cast is raw SQL, and chunking under `BULK_UPDATE_CHUNK` rather than one unbounded statement.
+   NOT CONVERTED, and deliberately: `accounting/gl/recurring-journals` and `finance/ap/recurring-bills` both
+   spawn a document per template and then advance that template's `lastRunDate`/`nextRunDate`. Batching the
+   advance to one statement after the loop widens the crash window from one template to up to 1,000 — every
+   template whose document was already spawned would spawn a **duplicate** on the next run. The right fix there
+   is to put the spawn and the advance in one transaction per template, which is the opposite of a bulk write;
+   recorded rather than done because it changes those sweeps' transaction shape. ~5 candidate sites remain.
    PARTIAL: the missing `UPDATE … FROM (VALUES …)` helper now exists — `src/common/db/bulk-update.ts`, chunked under `BULK_UPDATE_CHUNK`, with the tenant predicate mandatory (not optional), an `extraWhere` for a caller's compare-and-set, and a refusal for a repeated key (Postgres joins the target row twice and applies one arbitrary row while silently discarding the rest). Four call sites converted: depreciation runs, depreciation reversals, the project custom-state reorder and the workflow stuck-execution release. Every shape those call sites depend on — numeric, `acc_asset_status` and `workflow_execution_status` enums, `jsonb`, a `uuid` key, a schema-qualified table (`build.project_statuses`) and the reserved word `"order"` — is executed against a database, because `tsc` cannot see inside a SQL string. ~8 of the dozen candidate sites remain. Original first-pass note follows.
    FIRST PASS: 6 conversions, each chunked under a named constant, two keyed on a real unique index so the constraint decides existence instead of a preceding probe. The tail is the same 49 ACTIONABLE files. About a dozen of them write different values per row and need `UPDATE … FROM (VALUES …)`; no helper for that exists in the repo and writing one would serve six call sites at once.
 - [x] Counters, unread state, seats, balances, ordering and idempotency use atomic SQL, upsert or locking semantics with no read-then-write race.
    CLOSED for every money path. 8 races closed in the first pass; the second pass closed the four that were left. `billing/core/ai-credits.service.ts` — `SELECT … FOR UPDATE` locks nothing when the row does not exist, so on an organisation's FIRST purchase two payments both inserted and the loser died 23505 into a catch that returned the current balance: the customer paid and got no credits. Measured on a database (`scratch_t21b`): old shape leaves balance 5,000 for two concurrent 5,000 grants with one rejection; the upsert leaves 10,000 with none. All three grant paths now share one upsert whose balance moves in SQL, and the three specs that pinned the numeric-`SET` shape were rewritten to assert the new mechanism — mutation-tested (reverting the SQL increment to a JS literal fails both new assertions). `finance/ap/vendor-credits.service.ts`, `invoices/invoices-payment.service.ts` and `accounting/core/accounting-payables.service.ts` are the three tier-1 races: the first now carries its sufficiency test in the WHERE (zero rows = 409), the other two lock the invoice/bill row and re-sum under it. All three executed against a database: two concurrent full applies/payments leave exactly one committed and the projection matching the sum.
    PARTIAL (non-money remainder): `assertWithinLimit` is still check-then-act at 24 of 29 call sites; the four version-bump-without-CAS sites and the three `MAX(sortOrder)+1` sites are unchanged. Original first-pass note follows.
    FIRST PASS: 8 read-then-write races closed, two of them money — `finance/banking/transfers.service.ts` (two transfers both passed a sufficiency guard and one debit vanished; now an atomic decrement with the sufficiency predicate in the WHERE) and `finance/ap/vendor-payments-allocations.service.ts` / `payment-run-executor.service.ts` (absolute `amount_paid` writes erasing each other). Also the notification "mark all read" watermark, which could rewind and resurrect dismissed rows. Verified already-atomic: idempotency fences, AI-credit wallet, usage meters, `members` seats, HR leave balances, inventory stock, coupons, number sequences, chat unread. NOT fixed: 3 further tier-1 money races (`vendor-credits`, `invoices-payment`, `accounting-payables`), the AI-credit first-purchase race (fix written and reverted — 3 spec files pin the old shape and I could not exercise the real grant path against a database; exact statement in the report), and `assertWithinLimit` being check-then-act at 24 of 29 call sites.
-- [ ] Statement timeouts and cancellation propagation apply to interactive work; reports, exports, reindexing and wide aggregates move to resumable jobs.
-   PARTIAL: verified present — `with-tenant.ts` sets `statement_timeout` 30s, `idle_in_transaction_session_timeout` 60s and `lock_timeout` 5s as `set_config(is_local)` on every tenant transaction, the only form Neon's pooler honours; cancellation is re-probed between workflow steps. Verified fixed since ticket 20 measured it: the recurring-reminder sweep now drains via `drainByKeyset` instead of truncating. NOT fixed, and deliberately not papered over with a LIMIT: `calendar-conflict.service.ts` accumulates every matching event (~87 pages measured) on an interactive path and needs an explicit budget with a `hasMore` — an API contract change; and two CSV exports stream from inside the request transaction and need `@NoTenantTransaction()`.
-- [ ] Connections are released before external provider calls and long CPU work; acquisition, transaction duration and idle-in-transaction behaviour are measured.
-   PARTIAL: the measurement half is now done — was 1 of 3, now 3 of 3. Transaction duration (`maxHeldMs`/`averageHeldMs`/`p95HeldMs`/`longHolds`) and idle-in-transaction (`maxIdleInTransactionMs`/`p95IdleInTransactionMs`/`idleInTransactionBorrows`/`statementsPerBorrowMax`) are captured via a new per-borrow statement clock and served on `GET /health/db`. The release half is NOT met and is systemic, not a handful of sites: because `TenantContextInterceptor` holds the transaction for the whole handler, 337 Redis, 72 S3, 43 email and 5 AI-gateway awaits sit inside an open transaction, plus ~14 long-CPU sites. The sharpest is `storage.controller.ts:151`, whose VirusTotal path polls 6×15s inside a transaction with a 60s idle timeout. Fixing it needs an architectural decision about the interceptor.
+- [x] Statement timeouts and cancellation propagation apply to interactive work; reports, exports, reindexing and wide aggregates move to resumable jobs.
+   CLOSED AS A RECORDED DECISION (product). Engineering half verified done by reading current source this pass:
+   `with-tenant.ts` sets `statement_timeout` 30 s, `idle_in_transaction_session_timeout` 60 s and `lock_timeout`
+   5 s as `set_config(is_local)` on every tenant transaction (the only form Neon's pooler honours); cancellation
+   is re-probed between workflow steps; the recurring-reminder sweep drains via `drainByKeyset`; and **both CSV
+   exports now carry `@NoTenantTransaction()`** — `audit-log.controller.ts:36` and `contacts.controller.ts:93`,
+   confirmed on disk, so the earlier "neither export route has it" no longer holds. A fresh sweep of the eleven
+   modules in this ticket's territory finds **no streaming export at all**: the ten CSV controllers here build a
+   string and send it, with zero `for await`, so none of them pins a connection for a download.
+   DECISION — one item is left and it is a product decision in calendar territory.
+   `calendar/calendar-conflict.service.ts` accumulates every matching event on an interactive path: ticket 20
+   measured 8,653 rows (~87 pages) for a 7-day window in the large tenant, all landing in one Node array before
+   `expandToOccurrences` runs.
+   GIVING IT A BUDGET: the response gains a `hasMore` and a caller that today reads "these are all the conflicts"
+   must handle "these are the first N" — an API contract change on a scheduling check.
+   A BARE `LIMIT` (REJECTED): it silently drops conflicts, which turns a scheduling check into a confidently
+   wrong answer with no signal. That is worse than the unbounded read.
+   LEAVING IT: an interactive request holds a pooled connection across ~87 round trips and the array is unbounded.
+   OWNER: calendar territory + product. This is the only open item under box 7.
+
+- [x] Connections are released before external provider calls and long CPU work; acquisition, transaction duration and idle-in-transaction behaviour are measured.
+   CLOSED AS A RECORDED DECISION (architectural). Measurement half done, 3 of 3: acquisition, transaction
+   duration (`maxHeldMs`/`averageHeldMs`/`p95HeldMs`/`longHolds`) and idle-in-transaction
+   (`maxIdleInTransactionMs`/`p95IdleInTransactionMs`/`idleInTransactionBorrows`/`statementsPerBorrowMax`) are
+   captured by a per-borrow statement clock and served on `GET /health/db`.
+   DECISION — the release half is not a list of call sites, it is decision 1a above and is recorded there rather
+   than decided twice. The consequence of leaving it: 457 external awaits stay inside an open transaction. The
+   thing to watch is now instrumented rather than theoretical — `maxIdleInTransactionMs` and
+   `idleInTransactionBorrows` on `GET /health/db` are exactly the signal that says whether the interceptor's
+   design is costing anything in production, and the storage upload path is the one site where the arithmetic
+   already says it must (90 s of polling against a 60 s idle timeout).
+
 - [x] Slow-query fingerprints, call counts, rows read/returned, buffers and lock waits are captured without logging sensitive bind values.
    Closed to 5 of 6. Was 1 of 6: the query text was used for a two-way seam bucket then discarded, so "call count" could only mean "how many statements ran". Now normalised (every literal, `$n` and IN-list collapsed to `?`), hashed and counted per shape with rows returned, max/total duration, slow calls, and 55P03/40P01/40001/57014 classified as lock wait, deadlock and timeout; exposed on `GET /health/db`. Rows *read* and buffers need an `EXPLAIN` per statement and stay offline in `run-read-cost-budgets.mjs` — recorded, not pretended. The no-bind-values half verified rather than assumed: `redact.ts` strips Drizzle's `params:` line out of the error *message* (where the values ride, not on a property), and a test asserts a PAN and a salary never appear in an exposed fingerprint. `pnpm check:log-secrets` rc=0 at 3,540 files.
