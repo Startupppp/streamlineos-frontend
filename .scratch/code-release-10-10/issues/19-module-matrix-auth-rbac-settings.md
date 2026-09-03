@@ -4,7 +4,15 @@
 
 **Blocked by:** 14.
 
-**Status:** pass 8 — **6 of 7 closed, 1 PARTIAL.** Box 3 was closed by the orchestrator on 2026-09-03 when
+**Status:** pass 9 — **6 of 7 closed, 1 PARTIAL.** Box 6 is still open (9 routes at a global `/settings/*` path),
+but **R-12's measured prerequisite is closed**: the automation trigger->module map is now total, compile-enforced and
+fail-closed, one vocabulary across both repos, gated in both and bite-proved nine ways. Two of pass 8's numbers were
+wrong and are corrected — only 1 of the "4 explicitly wrong" is actually contested, and **finance owns 2 automation
+triggers, not 6**, so `/accounting/settings/automations` is 2 of 2. Two ownership questions are named as product
+decisions (D-1, D-2) rather than guessed. The `/accounting` page's gate is fixed and its reported diagnosis corrected.
+Report: `reports/19f-automation-trigger-map-total-and-fail-closed.md`. Pass 8 status follows.
+
+**Status (pass 8):** pass 8 — **6 of 7 closed, 1 PARTIAL.** Box 3 was closed by the orchestrator on 2026-09-03 when
 `pnpm openapi:check` went green. Pass 8 worked the one remaining box (6, Settings placement) and **closed one of
 its two PARTIALs**: A-13, the Build sidebar gate, whose blocker really had dissolved with A-12 — verified, flipped,
 gate-proved (`check:route-access-contract` 203 → **204** keys, exit 0), commit `3c45e63bb` (frontend).
@@ -250,12 +258,79 @@ Pass 5 status follows.
     changes. Only `/settings/ai-usage` → `/ai/usage` is a clean swap (the alias delegates straight through on the same
     `ai:usage:view`). **Not fixed: `hooks/api/**` is ticket 28's territory and two of the three need the owning screen
     re-tested, not a string replaced. Owner: whoever holds `frontend/hooks/`, before 2027-03-31.**
+  - **PASS 9 — R-12's PREREQUISITE IS CLOSED. The map is total, compile-enforced and fail-closed, and two of
+    pass 8's numbers were wrong.** Report: `reports/19f-automation-trigger-map-total-and-fail-closed.md`.
+    Backend `e049d065`, `99709108`, `c7951d71`. Frontend `404ce244a`, `c332ee492`, `69982c282`, `1e09df665`.
+    **Reproduced before acting, not transcribed.** `?? "hr"` confirmed at `automation-trigger-data.ts:23`.
+    Three vocabularies confirmed **55 / 48 / 33**. 19 of 48 confirmed (15 unmapped + 4 mapped `hr`).
+    `/support` **3 of 7** confirmed. A **fourth** vocabulary pass 8 did not name is why the compiler never saw
+    the hole: `AutomationTrigger` in `hooks/api/automations.ts` was its own 33-member union, so the map was
+    total over a *truncated* union, reached through `apiClient.get<T>` — a cast, AGENT-BRIEF rule 11.
+    **Closed:** `AUTOMATION_TRIGGER_MODULE` is `Record<AutomationTriggerEvent, AutomationTriggerModule>` in
+    `backend/src/modules/automation/automation-trigger-modules.ts` — a trigger with no owner is `error TS2741`,
+    proved by bite. `automationTriggerSchema` is `z.enum(AUTOMATION_TRIGGERS)` (**48 -> 55**; the seven `sign.*`
+    events 19e §6 found were unreachable from the API). The frontend mirrors both from one file; `TRIGGER_META`
+    covers all 55 (crm 2->8, support 3->7, finance 1->2, hr 27->31, sign 0->7); the list filter uses
+    `resolveTriggerModule`, which returns **null** for an unknown trigger so it lands on no module's screen.
+    **`/support/settings/automations` is 7 of 7.**
+    **TWO OF PASS 8's NUMBERS ARE WRONG, and the correction changes a rung.** Of the "4 explicitly wrong",
+    only `sla.breached` is contested; `expense.submitted`, `reimbursement.approved` and `reimbursement.rejected`
+    were **correctly** `hr`. `expense.*` dispatches from `modules/expenses`, which mounts at **`hr/expenses`** on
+    **`hr:expenses:*`**, and the frontend's `/accounting/expenses` page calls those same `hr/expenses` routes
+    (`hooks/api/accounting/expenses.ts:68`) — one table, one gate, HR's. `reimbursement.*` dispatches from
+    `payroll/hr-payroll/reimbursements.service.ts:116` on **`hr:payroll:view`**; `/accounting/reimbursements` is a
+    different entity (batches). So **finance owns 2, not 6** — `/accounting/settings/automations` is **2 of 2**,
+    not the 6 of 6 report 19b's name-family grouping implied. Assigning those four to finance would put an
+    `accounting:*` rung over `hr:*`-gated rows, which is the defect R-12 exists to avoid.
+    **Two product decisions remain, recorded in source** as `AUTOMATION_TRIGGER_OWNERSHIP_DECISIONS` with the
+    dispatch site and gate behind each, gate-asserted so resolving one means deleting it:
+    **D-1** `sla.breached` — support (current) vs hr recruitment; nothing dispatches it, Support owns the only
+    live SLA-breach engine, but the frontend labelled it "Recruitment SLA breached" and recruitment runs a
+    separate engine already carrying `SLA_BREACHED`. **D-2** the four `expense.*`/`reimbursement.*` — hr (current)
+    vs finance; a ruling of finance is legitimate only if the underlying `hr/expenses` and `hr/reimbursements`
+    surfaces move too.
+    **R-12 Option 2 is now adoptable on the map, and blocked only on what 19b already named:** the rung itself
+    (now **five** key pairs, since `sign` is a fifth owning module), the re-trigger `PATCH` requiring `manage` on
+    both modules (already reachable in the UI — `module-automations-settings.tsx:335` offers cross-module
+    re-targeting in the edit sheet), the four `support_*` actions, and the fact that `crm` and `sign` rules have
+    no screen on this surface.
+    **Gates, bite-proved nine ways in `git archive HEAD` temp trees, never the shared tree.**
+    `automation-trigger-vocabulary.spec.ts` (7 tests, floors: >=55 triggers, >=20 dispatch sites — 29 found) and
+    `lib/automations/__tests__/automation-trigger-mirror.test.ts` (7 tests, reads the backend repo, floors >=55
+    and >=5). Bites: engine trigger with no owner -> jest 2/6 **and** `tsc` exit 2 `TS2741`; write schema restated
+    at 48 -> 1/6; dead module value -> 1/6; dispatch scan renamed away -> `Expected: >= 20 / Received: 0`;
+    frontend drops a trigger -> 5/7; frontend disagrees on an owner -> `Expected: "support" / Received: "hr"`;
+    `?? "hr"` reintroduced -> 1/7; metadata removed -> 2/7; stub backend -> `Expected: >= 55 / Received: 0`;
+    all restored -> 7/7 and 7/7, exit 0. **Bite D did not bite on the first attempt** — the rename hit the spec's
+    own regex too — recorded because that is the shape of a gate that looks proved and is not.
+    Commands: backend `tsc --noEmit` **exit 0, 0 lines**; `jest src/modules/(automation|settings)` **exit 0,
+    14 suites / 180 tests**; `check:spec-typecheck` **exit 0**; `check:cycles` **exit 0**; frontend `type-check`
+    **exit 0**; `jest (route-access|lib/automations|sidebar)` **exit 0, 14 suites / 184 tests**;
+    `check:route-access-contract` **exit 0, 204 keys**; `check:contract-vendor` **exit 0**; eslint on changed
+    files **exit 0**.
+    **`pnpm openapi:check` is exit 1 and was ALREADY stale before this pass.** It names four operations:
+    `POST /settings/automations` + `PATCH /settings/automations/{ruleId}` (mine — the request enum went 48->55)
+    and `POST|GET /build/{projectId}/labels` (**not mine**). Regeneration is box 3's release-time step and would
+    sweep another agent's contract change into my commit. **Not run. Owner: the orchestrator, once.**
+  - **PASS 9, SECOND ITEM — the `/accounting` automations page gate is fixed, and the reported diagnosis was
+    half wrong.** The page did hold only `requireSession()`, but it was **not ungated**:
+    `app/(authenticated)/accounting/layout.tsx` calls `enforceRouteAccess("/accounting")`, which resolves the
+    **live** request path, and `routeOwnsPath` matches by prefix — so the longest matching nav entry
+    (`/accounting/settings`) gated it on **`accounting:settings:read`**. Not a leak (the backend routes carry
+    `@RequirePermission("settings:automations:view|manage")`), but the **wrong key**: a finance admin reached a
+    page whose every request then 403s. `route-access-keys.test.ts` proved it by rejecting a registry extension
+    with `nav accounting:settings:read vs registry settings:automations:view` — the screen was missing from
+    **navigation**, not from the registry. Added the `Automations` child to the Finance Settings group on
+    `settings:automations:view`, exactly what `/support/settings/automations` has, and switched the page to
+    `enforceRouteAccess`. Strictly narrowing for the page, additive for the sidebar: only OWNER/ORG_ADMIN hold
+    `settings:automations:view` (`ALL_PERMISSION_NAMES`; no role template carries it) and they already saw the
+    group. Nav digest updated with the dated reason. Frontend `69982c282`.
   - PARTIAL: 9 backend routes remain at a global `/settings/*` path. **R-12** (7 automations routes) is a product
-    decision on the rung, and now also blocked on a mechanical, cross-territory prerequisite — the trigger->module map
-    is 33 of 48 and fails open to `hr`, with 4 entries explicitly wrong, so gating rows on it would be worse than the
-    defect. **The email-templates pair** (2 routes) is a platform-administration decision, not the `modules/email`
-    hand-off the census used to claim. A-13, this box's other PARTIAL, is CLOSED. Nothing here is blocked on effort or
-    on infrastructure.
+    decision on the rung. Its mechanical prerequisite is **CLOSED** as of pass 9: the trigger->module map is total,
+    compile-enforced, fail-closed and mirrored in both repos, with two named ownership decisions (D-1 `sla.breached`,
+    D-2 the four `expense.*`/`reimbursement.*`) recorded in source rather than guessed. **The email-templates pair**
+    (2 routes) is a platform-administration decision, not the `modules/email` hand-off the census used to claim.
+    A-13, this box's other PARTIAL, is CLOSED. Nothing here is blocked on effort or on infrastructure.
 - [x] Workspace and onboarding gates, organization-switch state, query-key tenant isolation and auth error states are covered by allow/deny/cross-tenant tests.
   - Evidence: FE `jest lib/query-scope-isolation lib/prefetch/access lib/wizard-gate lib/membership-lifecycle-route hooks/api/access` → **8 suites / 44 tests passed**. BE `jest src/modules/organization` → **57 suites / 393 tests passed**, including 14 tenant-isolation specs and `org-switch-revalidation.spec.ts`. Query-key isolation is structural: `QueryProvider` remounts a new `QueryClient` keyed on `authenticated:<orgId>:<userId>`.
 - [x] A permission-key addition to a role template is accompanied by a backfill migration, or it is inert for every organization that already exists.
