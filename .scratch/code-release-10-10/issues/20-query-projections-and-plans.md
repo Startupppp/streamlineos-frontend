@@ -4,6 +4,12 @@
 
 **Blocked by:** 03 — plans taken against an empty or partially bootstrapped database measure nothing.
 
+**Session status 2026-09-03 (COMPLETE — nothing left half-finished):** box 1 stays OPEN and BLOCKED on the same
+product decision; no measurement can close it. What changed is that its two decision-free clauses (count paths,
+existence paths) are now ENFORCED by a new gate `pnpm check:query-projections` (rc 0, allowance 0) instead of
+resting on a hand-scan, and the blocked clause is RATCHETED at 1,441 unprojected reads. Report:
+`reports/21b-n-plus-one-gate-blind-spot.md` §5.
+
 **Status:** measured; one box open by design and **BLOCKED on a product decision** — but as of 2026-09-03 its two decision-free clauses are ENFORCED by a new gate (`pnpm check:query-projections`, rc 0, count-path allowance 0) and the blocked clause is RATCHETED at 1,441 unprojected reads rather than merely described. Re-confirmed at head
 2026-09-03 by an independent recount (296 `findMany` / 550 `findFirst` / 599 bare `.select()` without a projection,
 **79–80% of it in held or excluded territory**). The list/count/existence clauses that need no contract decision are

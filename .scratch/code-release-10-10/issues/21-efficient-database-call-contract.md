@@ -4,6 +4,13 @@
 
 **Blocked by:** 20.
 
+**Session status 2026-09-03 (fourth pass, COMPLETE — nothing left half-finished):** the gate was repaired,
+not a box closed — `check:db-call-count` went rc 1 -> rc 0, its loop inspection 2,127 -> 2,739 openers, and
+its blindness is now ratcheted in both directions and bite-proved hermetically. One N+1 fixed
+(`kb/wiki/kb-spaces.service.ts`, one outbox INSERT per article and page -> `emitMany`); three more found and
+recorded ACTIONABLE with their exact batched form, deliberately not fixed (owners/scope stated in the report).
+Box 2 and box 3 remain open. Report: `reports/21b-n-plus-one-gate-blind-spot.md`.
+
 **Status:** partial — 6 of 9 closed, 3 partial. FOURTH PASS (2026-09-03) did not close a box; it repaired the GATE, which had been red at HEAD and, more importantly, blind. `check:db-call-count` skipped **2,417 of 4,765 loop openers (50.7%), across 753 files**, with no body inspection at all — every braceless loop body, which is the shape CLAUDE.md §6 mandates, plus `Promise.all(xs.map((x) => this.db...))`, whose opener leaves a paren open so `parenBalance >= 0` counted it as closed. It now inspects 2,739 and ratchets that number. Gate rc 1 -> **rc 0**. Report: `reports/21-db-call-contract.md`. Third pass (2026-09-03) batched three more per-row call sites, deleted a per-candidate probe that could never match a row, converted two more write paths to `bulkUpdateFromValues`, gave five more read-then-write pairs their tenant predicate, reconciled the N+1 baseline with what the source now does (ACTIONABLE 44 -> 40), and **recorded the four decisions** boxes 1, 4, 7 and 8 were waiting on. Boxes 1, 4, 7 and 8 are closed as RECORDED DECISIONS — the decision and its consequences are written below; no code was guessed at for them.
 
 - [x] Tenant-owned request work runs inside the minimum correct tenant transaction, reusing one handle. No nested or per-row transactions; no borrowing a committed request transaction.
