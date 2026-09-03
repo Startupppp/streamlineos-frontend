@@ -183,6 +183,30 @@ RESULT_PLACEHOLDER
 
 ---
 
+## `POST /crm/consent/contacts/:contactId` accepts another organisation's contact id
+
+Scored **LEAK** by the probe. Read in source and in `pg_constraint` before believing it, and the
+honest classification is narrower than LEAK but wider than nothing.
+
+`CrmConsentService.record` never resolves the contact. It inserts
+`(org_id = caller's own, contact_id = whatever the path said, channel, status, …)`. So:
+
+- **No cross-tenant row is read or returned.** The response is `{"success":true}` and the row that
+  lands carries the **prober's** `org_id`. It is not a read leak.
+- **A cross-tenant WRITE does land.** The new consent row references another organisation's
+  contact, because `crm_contact_channel_consent.contact_id` carries a **bare, non-composite** FK —
+  `FOREIGN KEY (contact_id) REFERENCES contacts(id)` — while the sibling `contact_party_id` on the
+  same table is correctly composite, `(org_id, contact_party_id) -> business_parties(organization_id, party_id)`.
+  One column on one table missed the rule backend/CLAUDE.md §3 states.
+- **The answer is a cross-platform existence oracle.** Cross-tenant id → 200. Id belonging to no
+  organisation → **500**, because the bare FK is then violated. So the response distinguishes "a
+  contact with this id exists somewhere on the platform" from "it does not" — which is precisely
+  what the 404 contract exists to prevent, and precisely why the three-way control is worth paying
+  for: the two answers differ, so the verdict could not be demoted to NO-404.
+
+**CRM is excluded from this release, so this is recorded, not fixed.** The fix is two lines: resolve
+the contact under the caller's `org_id` first (404 on a miss), and make the FK composite.
+
 ## 31 build routes answer 400 to EVERY caller — found by the re-probe, turned into a gate
 
 `req.params` holds the parameters of the **whole** path, the `@Controller` prefix included. A

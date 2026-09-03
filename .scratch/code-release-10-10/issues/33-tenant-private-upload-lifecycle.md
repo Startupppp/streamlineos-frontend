@@ -39,6 +39,18 @@ Fixed in commit `a6902e5e`. The two halves compose — reason A's fix writes the
 - [x] Cancellation, failed transforms, replacement and GDPR/retention deletion each clean both the database row and the object, with no orphan and no surviving public URL.
   - **2026-09-03 — this box was FALSELY TICKED on two independent counts. Both are now closed; the history stays
     here because a box that was wrong once should not read as though it was always right.**
+  - **Count C (found 2026-09-03 by a fourth agent, now fixed): the organisation purge deleted KB objects from the
+    WRONG BUCKET and then VERIFIED the wrong bucket, reporting success.** `organization-purge-adapters.ts:206`
+    called `deleteFile(orgId, key)` and then `fileExists(orgId, key)` with **no bucket override on either**, while
+    its keys came from `enumerateFileKeyColumns`, whose `attname LIKE '%\_key'` predicate sweeps in KB columns. So a
+    KB object was deleted from the default bucket (deleting nothing — an S3 delete of a missing key returns
+    success), then confirmed absent from the default bucket (it was never there), and reported "deleted and
+    verified absent". **The verification step is what made it convincing.** The object survived an organisation
+    purge — a data-retention failure, not merely an orphan. A fourth KB column was found that the earlier report
+    had not named: `kb_sources.file_url` holds the object *key*, not a URL. Fixed by migration `1045` (a nullable,
+    CHECK-constrained `bucket` role on the pending row) plus passing the same override to BOTH the delete and the
+    verification. Bite-proved: dropping the override from the delete+verify alone makes the object survive
+    (`holds("kb-files", key)` returns `true`) while the adapter still answers CONFIRMED.
   - **Count B (found and fixed this pass, in this territory): `storage_pending_purge` was a WRITE-ONLY table.**
     `organization-purge-adapters.ts` and `sign-documents.service.ts` both open a row on it BEFORE attempting the
     object delete — deliberately, and the code says so: *"The pending row must exist before its object is deleted,
