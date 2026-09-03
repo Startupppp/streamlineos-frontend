@@ -64,6 +64,85 @@ export function annotate(failures, exceptions) {
   });
 }
 
+/**
+ * The five budgets in one table, read the same way per profile and per route.
+ * `format` is how the number prints; `read` is where it lives on a metric block.
+ */
+const METRICS = [
+  { metric: "lcp_p75_ms", label: "LCP p75", block: "lcp", field: "p75_ms", budget: "lcp_p75_ms", format: (v) => `${v.toFixed(0)}ms` },
+  { metric: "inp_p75_ms", label: "INP p75", block: "inp", field: "p75_ms", budget: "inp_p75_ms", format: (v) => `${v.toFixed(0)}ms` },
+  { metric: "cls_p75", label: "CLS p75", block: "cls", field: "p75", budget: "cls_p75", format: (v) => v.toFixed(3) },
+  { metric: "fcp_p75_ms", label: "FCP p75", block: "fcp", field: "p75_ms", budget: "fcp_p75_ms", format: (v) => `${v.toFixed(0)}ms` },
+  { metric: "ttfb_p95_ms", label: "TTFB p95", block: "ttfb", field: "p95_ms", budget: "ttfb_p95_ms", format: (v) => `${v.toFixed(0)}ms` },
+];
+
+/**
+ * A profile-wide p75 cannot see one bad route.
+ *
+ * The 2026-09-03 capture passed every CLS budget at desktop p75 0.0065 while a
+ * populated `/dashboard` measured 0.175-0.233 on every one of its eight samples
+ * and `/calendar` 0.126 — twelve near-zero routes held the aggregate down, and
+ * the percentile of 104 samples never reached the 16 bad ones. That is the same
+ * vacuity as a budget whose query reads a different table than the route it
+ * claims to govern: green for a reason unrelated to the thing being green.
+ *
+ * This compares the SAME five budgets against each route and profile on its
+ * own, so one bad route fails by itself. A route the capture declares but does
+ * not carry, and a capture with no per-route block at all, are failures rather
+ * than silent passes — an unmeasured per-route budget is not a met one.
+ */
+export function checkPerRouteBudgets(results, budgets = BUDGETS) {
+  const failures = [];
+  const notMeasured = [];
+  const worst = {};
+  const byRoute = results?.byRoute;
+
+  if (!byRoute || typeof byRoute !== "object" || Object.keys(byRoute).length === 0) {
+    failures.push({
+      profile: "all",
+      metric: "per_route",
+      message:
+        "BUDGET BREACH [all] the capture carries no per-route block, so no per-route budget was measured." +
+        "\n      A profile-wide p75 is diluted by every quiet route and cannot fail on one bad one.",
+    });
+    return { failures, notMeasured, worst, routeCount: 0 };
+  }
+
+  const declared = Array.isArray(results?.authenticatedRoutes) ? results.authenticatedRoutes : [];
+  for (const route of declared)
+    if (!byRoute[route]) notMeasured.push(`${route} (declared measured, absent from byRoute)`);
+
+  const routes = Object.keys(byRoute).sort();
+  for (const route of routes) {
+    for (const profile of ["mobile", "desktop"]) {
+      const data = byRoute[route]?.[profile];
+      if (!data || typeof data !== "object") {
+        notMeasured.push(`${route} ${profile}`);
+        continue;
+      }
+      for (const m of METRICS) {
+        const value = data[m.block]?.[m.field] ?? null;
+        if (value === null || !Number.isFinite(value)) {
+          notMeasured.push(`${route} ${profile}.${m.block}.${m.field}`);
+          continue;
+        }
+        const key = `${profile}.${m.metric}`;
+        if (!worst[key] || value > worst[key].value) worst[key] = { route, value, format: m.format };
+        const budget = budgets[profile][m.budget];
+        if (value > budget)
+          failures.push({
+            profile,
+            metric: m.metric,
+            route,
+            message: `BUDGET BREACH [${profile}] ${route} ${m.label} ${m.format(value)} > budget ${m.format(budget)}`,
+          });
+      }
+    }
+  }
+
+  return { failures, notMeasured, worst, routeCount: routes.length };
+}
+
 function checkBudgets(results) {
   const failures = [];
   const notMeasured = [];
@@ -346,6 +425,86 @@ async function selfTest() {
   );
   for (const f of perceivedBreaching.failures) console.log("  " + f.message);
 
+  /*
+   * The per-route bite proof, on the shape that actually shipped.
+   *
+   * `diluted` carries the 2026-09-03 capture's own profile aggregates — every
+   * one inside budget — over routes where /dashboard measured 0.1798 and
+   * /calendar 0.1258. `checkBudgets` must call that green (it did, for a
+   * fortnight) and `checkPerRouteBudgets` must call it red.
+   */
+  const routeVitals = ({ lcp, inp, cls, fcp, ttfb }) => ({
+    lcp: { p75_ms: lcp },
+    inp: { p75_ms: inp },
+    cls: { p75: cls },
+    fcp: { p75_ms: fcp },
+    ttfb: { p95_ms: ttfb },
+  });
+  const quietDesktop = routeVitals({ lcp: 360, inp: 48, cls: 0.0008, fcp: 99, ttfb: 45 });
+  const quietMobile = routeVitals({ lcp: 660, inp: 120, cls: 0.0003, fcp: 250, ttfb: 30 });
+  const dilutedAggregates = {
+    desktop: { lcp: { p75_ms: 384 }, inp: { p75_ms: 48 }, cls: { p75: 0.0065 }, fcp: { p75_ms: 104 }, ttfb: { p95_ms: 173 } },
+    mobile: { lcp: { p75_ms: 565 }, inp: { p75_ms: 120 }, cls: { p75: 0.0024 }, fcp: { p75_ms: 273 }, ttfb: { p95_ms: 39 } },
+  };
+  const diluted = {
+    ...dilutedAggregates,
+    authenticatedRoutes: ["/inbox", "/mail", "/settings", "/dashboard", "/calendar"],
+    byRoute: {
+      "/inbox": { desktop: quietDesktop, mobile: quietMobile },
+      "/mail": { desktop: quietDesktop, mobile: quietMobile },
+      "/settings": { desktop: quietDesktop, mobile: quietMobile },
+      "/dashboard": { desktop: routeVitals({ lcp: 360, inp: 56, cls: 0.1798, fcp: 99, ttfb: 45 }), mobile: quietMobile },
+      "/calendar": { desktop: routeVitals({ lcp: 740, inp: 40, cls: 0.1258, fcp: 72, ttfb: 30 }), mobile: quietMobile },
+    },
+  };
+  const dilutedAggregate = checkBudgets(diluted);
+  const dilutedPerRoute = checkPerRouteBudgets(diluted);
+
+  const perRouteClean = checkPerRouteBudgets({
+    ...dilutedAggregates,
+    authenticatedRoutes: ["/inbox", "/dashboard"],
+    byRoute: {
+      "/inbox": { desktop: quietDesktop, mobile: quietMobile },
+      "/dashboard": { desktop: quietDesktop, mobile: quietMobile },
+    },
+  });
+  const perRouteAbsent = checkPerRouteBudgets({ ...dilutedAggregates, authenticatedRoutes: ["/inbox"] });
+  const perRouteMissingRoute = checkPerRouteBudgets({
+    ...dilutedAggregates,
+    authenticatedRoutes: ["/inbox", "/dashboard"],
+    byRoute: { "/inbox": { desktop: quietDesktop, mobile: quietMobile } },
+  });
+  const perRouteMissingMetric = checkPerRouteBudgets({
+    ...dilutedAggregates,
+    authenticatedRoutes: ["/inbox"],
+    byRoute: { "/inbox": { desktop: { ...quietDesktop, cls: {} }, mobile: quietMobile } },
+  });
+
+  const perRouteOk =
+    dilutedAggregate.failures.length === 0 &&
+    dilutedPerRoute.failures.length === 2 &&
+    dilutedPerRoute.failures.every((f) => f.metric === "cls_p75" && f.profile === "desktop") &&
+    dilutedPerRoute.failures.some((f) => f.route === "/dashboard") &&
+    dilutedPerRoute.failures.some((f) => f.route === "/calendar") &&
+    dilutedPerRoute.notMeasured.length === 0 &&
+    perRouteClean.failures.length === 0 &&
+    perRouteClean.notMeasured.length === 0 &&
+    perRouteAbsent.failures.length === 1 &&
+    perRouteMissingRoute.failures.length === 0 &&
+    perRouteMissingRoute.notMeasured.length === 1 &&
+    perRouteMissingMetric.failures.length === 0 &&
+    perRouteMissingMetric.notMeasured.length === 1;
+
+  console.log(
+    `\nPer-route budgets: the diluted capture -> profile-wide check ${dilutedAggregate.failures.length} failure(s) ` +
+      `(expected 0 — this is the vacuity), per-route check ${dilutedPerRoute.failures.length} (expected 2). ` +
+      `Clean capture -> ${perRouteClean.failures.length} (expected 0). No byRoute block -> ` +
+      `${perRouteAbsent.failures.length} (expected 1). Declared route absent -> ` +
+      `${perRouteMissingRoute.notMeasured.length} not-measured (expected 1). Missing metric -> ` +
+      `${perRouteMissingMetric.notMeasured.length} (expected 1).`,
+  );
+  for (const f of dilutedPerRoute.failures) console.log("  " + f.message);
+
   const expectedBreaches = 6;
   const breachesOk =
     failures.length === expectedBreaches &&
@@ -361,11 +520,12 @@ async function selfTest() {
       `(expected 1 — this is a FAIL without --allow-unmeasured)`,
   );
 
-  if (breachesOk && unmeasuredOk && perceivedOk) {
+  if (breachesOk && unmeasuredOk && perceivedOk && perRouteOk) {
     console.log(
     "SELF-TEST PASS: breach detection fires, an unmeasured budget is not reported as met, a recorded " +
-      "exception annotates a failure without removing it, and the perceived-responsiveness target is " +
-      "enforced rather than narrated",
+      "exception annotates a failure without removing it, the perceived-responsiveness target is " +
+      "enforced rather than narrated, and a single bad route fails on its own even when the " +
+      "profile-wide p75 that twelve quiet routes dilute is inside every budget",
   );
     process.exitCode = 0;
   } else {
@@ -385,6 +545,14 @@ async function selfTest() {
         `SELF-TEST FAIL: perceived-responsiveness fixtures — breaching ${perceivedBreaching.failures.length}/1, ` +
           `inside-target ${perceivedGood.failures.length}/0, absent ${perceivedAbsent.failures.length}/1, ` +
           `unmeasured-profile ${perceivedUnmeasuredProfile.failures.length}/1`,
+      );
+    if (!perRouteOk)
+      console.error(
+        `SELF-TEST FAIL: per-route fixtures — diluted capture profile-wide ${dilutedAggregate.failures.length}/0 ` +
+          `and per-route ${dilutedPerRoute.failures.length}/2 (${dilutedPerRoute.failures.map((f) => `${f.profile} ${f.route} ${f.metric}`).join(", ") || "none"}), ` +
+          `clean ${perRouteClean.failures.length}/0 + ${perRouteClean.notMeasured.length}/0 not-measured, ` +
+          `absent block ${perRouteAbsent.failures.length}/1, missing route ${perRouteMissingRoute.notMeasured.length}/1, ` +
+          `missing metric ${perRouteMissingMetric.notMeasured.length}/1`,
       );
     process.exitCode = 1;
   }
@@ -439,8 +607,23 @@ function main() {
   console.log(`\nMeasured authenticated routes: ${measuredRoutes.join(", ")}`);
 
   const { failures: vitalsFailures, notMeasured } = checkBudgets(results);
+  const perRoute = checkPerRouteBudgets(results);
   const perceived = checkPerceivedResponsiveness(results);
-  const failures = [...vitalsFailures, ...perceived.failures];
+  const failures = [...vitalsFailures, ...perRoute.failures, ...perceived.failures];
+  notMeasured.push(...perRoute.notMeasured);
+
+  console.log(`\nPer-route budgets (${perRoute.routeCount} route(s), each judged on its own):`);
+  for (const profile of ["desktop", "mobile"]) {
+    for (const m of METRICS) {
+      const hit = perRoute.worst[`${profile}.${m.metric}`];
+      if (!hit) continue;
+      const budget = BUDGETS[profile][m.budget];
+      console.log(
+        `  [${profile}] worst ${m.label.padEnd(8)} ${hit.format(hit.value).padStart(9)} on ${hit.route}` +
+          `  (budget ${hit.format(budget)}${hit.value > budget ? " — BREACH" : ""})`,
+      );
+    }
+  }
 
   console.log(
     `\nPerceived responsiveness (intent -> first DOM mutation, target ${String(perceived.target ?? 100)}ms):`,
