@@ -165,8 +165,8 @@ collision lands on the **third** request — the absent-id control, the one `dis
 tell a leak from a miss. `build.ticket_labels` carries `uniq_ticket_labels_org_name (org_id, name)`;
 verified in `pg_indexes` and by the two surviving rows, one per org. Order of requests for a
 mutating verb is probe → control → absent, and probe and absent are both sent as the **prober**, so
-the third request re-inserted a name the first had just created, raised 23503/23505 and answered
-500. 201 ≠ 500, so the LEAK could not be demoted to NO-404.
+the third request re-inserted a name the first had just created, raised 23505 and answered 500.
+201 ≠ 500, so the LEAK could not be demoted to NO-404.
 
 **The bias is systematic and always toward LEAK**, because the cross-tenant probe is the first of
 the three and therefore the one that succeeds. A sweep that reports false P1s is worse than one that
@@ -175,9 +175,16 @@ reports none.
 Fixed: each of the three requests now carries its own nonce, applied **only where the schema
 constrains nothing** — an enum, a const, a format or a pattern still wins, so a patterned unique
 column remains a named residual rather than a wrong verdict. With no nonce the output is unchanged,
-so the offline numbers stay reproducible. Four tests pin it. The database was then **recreated from
-the pristine template** and the run restarted, so no result below is contaminated by the first
-attempt's writes.
+so the offline numbers stay reproducible. Four tests pin it.
+
+**The fix is confirmed by the thing it was supposed to change.** On the next run the same route
+scored **NO-404** — control 201 / cross-tenant 201 / absent-id **201** — with three distinct
+generated names (`bola-9d96ae46`, …). The absent-id request stopped colliding, `disambiguate()`
+could see the three answers were identical, and the verdict fell from LEAK to what it always
+should have been.
+
+Every run after this one was started against a database **recreated from the pristine template**,
+so no number below is contaminated by an earlier attempt's writes.
 
 RESULT_PLACEHOLDER
 
