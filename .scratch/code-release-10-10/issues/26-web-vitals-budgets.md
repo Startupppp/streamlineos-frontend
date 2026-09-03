@@ -4,7 +4,14 @@
 
 **Blocked by:** 25 — route composition drives most of these numbers, so measuring before the thinning lands wastes the run. (25 is done; this is no longer a blocker.)
 
-**Status:** 6 of 7 closed (unchanged). Re-measured 2026-09-03 on a COMPLETED production build
+**Status:** 6 of 7 closed. Box 6 still open, but for a smaller reason than before. Session S10 (2026-09-03) pulled the
+lever S9 identified: `@animateicons/react/lucide` is patched to tree-shake and to stop vendoring a second framer-motion, so
+it ships **90 icons (147,629 B raw / 14,273 B gzip)** instead of **248 (481,691 / 55,886)**. Every governed route lost
+36,103-36,660 B gzip of first load, and the total governed overage fell **2,525,139 -> 1,952,364 B (-22.7%)** — the breach
+COUNT stays 17 because every route was already over by more than the icon chunk was worth. The two Web Vitals scripts that
+had never been run were run: `check-web-vitals-budget.mjs` is now **exit 0, all budgets measured and met** on a 208-sample
+authenticated capture of build `sDZBsbi1qW6Z9JlIhCg68` — read the TTFB pass with the caveat in S10, it ran against a local
+Postgres. Previous status follows. Re-measured 2026-09-03 on a COMPLETED production build
 `pRoNmQpD1X5_6lTUEhSv9` (exit 0, 601 routes). Box 6 still open and still blocked on a cross-lane decision, but the
 recorded cause is corrected a second time: the largest identifiable library in the authenticated shell is
 **`@animateicons/react/lucide` (481,691 B raw / 55,869 B gzip, 559 of 601 routes, 248 icons shipped for 90 used)**,
@@ -21,7 +28,7 @@ not pin it into the authenticated shell — the decision is who replaces it acro
 - [x] LCP, INP and CLS meet their targets on production builds for in-scope authenticated routes at the defined reference viewport and device profile.
     All six pass. Desktop LCP p75 **888 ms** (≤1500), INP p75 **48 ms** (≤200), CLS p75 **0.0008** (≤0.1); mobile LCP p75 **1002 ms** (≤2500), INP p75 **96 ms** (≤200), CLS p75 **0.000** (≤0.1). Measured on `node scripts/measure-web-vitals.mjs --base-url=http://localhost:1043 --routes=<12> --repeat=8` (exit 0): production build `qlh_3k7hMskrlYGND5MMp`, `serverMode` derived from `.next/BUILD_ID`, **192 samples**, `authorization.verdict` = "every measured sample rendered an authorized shell" (0 unauthorized), `contentAssertion.verdict` = "every measured sample rendered real page content" (0 unusable, 0 off-route), `routeFailures: 0`. The previous pass's numbers were void — no session, so every route painted an access-failure shell; that run is superseded, not averaged in.
 - [x] The six currently breached metrics are each brought inside budget, or an exception is recorded with a named owner and a concrete reason.
-    Four brought inside budget: mobile INP 392 → **96 ms**, mobile FCP 2188 → **758 ms**, desktop LCP 2578 → **888 ms**, desktop FCP 2432 → **865 ms**. Two remain and carry an exception with a named owner and a measured cause: desktop TTFB p95 **1669 ms** and mobile TTFB p95 **932 ms**, both owned by `streamlineos-backend`'s `GET /me/access` — `lib/rbac/get-server-access.ts` issues it on every authenticated server render (React `cache()` dedupes within a render, never across them) and it measures **p50 503 ms / max 1004 ms** while the same server returns the public landing in 9–13 ms. The earlier attribution (`/auth/session-data` at 588–757 ms, issued twice) was measured on the failing path and is corrected: authenticated, that call is 100 ms. `node scripts/check-web-vitals-budget.mjs` → **exit 1, 2 violations**, each printing its owner; annotation never removes a failure and the self-test asserts it.
+    Four brought inside budget: mobile INP 392 → **96 ms**, mobile FCP 2188 → **758 ms**, desktop LCP 2578 → **888 ms**, desktop FCP 2432 → **865 ms**. Two remain and carry an exception with a named owner and a measured cause: desktop TTFB p95 **1669 ms** and mobile TTFB p95 **932 ms**, both owned by `streamlineos-backend`'s `GET /me/access` — `lib/rbac/get-server-access.ts` issues it on every authenticated server render (React `cache()` dedupes within a render, never across them) and it measures **p50 503 ms / max 1004 ms** while the same server returns the public landing in 9–13 ms. The earlier attribution (`/auth/session-data` at 588–757 ms, issued twice) was measured on the failing path and is corrected: authenticated, that call is 100 ms. `node scripts/check-web-vitals-budget.mjs` → **exit 1, 2 violations**, each printing its owner; annotation never removes a failure and the self-test asserts it. **UPDATED 2026-09-03 S10: `node scripts/check-web-vitals-budget.mjs` → exit 0, all budgets measured and met** on a 208-sample capture of build `sDZBsbi1qW6Z9JlIhCg68` (desktop LCP p75 384 ms / INP 48 / CLS 0.0065 / FCP 104 / TTFB p95 173; mobile 565 / 120 / 0.0024 / 273 / 39). The two TTFB exceptions no longer fire — **but read that with its cause**: this capture reached a backend running on a LOCAL Postgres, where server-side TTFB measured p50 20-25 ms / p95 21-36 ms on all 13 routes against 500-602 / 569-1218 ms on 2026-09-02. The pass is a property of the database it measured, not a change to the app, and `GET /me/access` has not been retested against a remote instance. The exceptions are left in the manifest for that reason.
 - [x] The capture is a real production build at the stated repetition count, not a development-mode run.
     `npx next build` exit 0, build id `qlh_3k7hMskrlYGND5MMp`; `serverMode` **derived** as "production" by comparing the build id in the served HTML against `.next/BUILD_ID`, not asserted. 8 repetitions per route per profile across **12 routes × 2 profiles = 192 samples** (the previous pass was 12 × 3 routes × 2 = 72). The build wall was reproduced first and is one line: `lib/env.ts:40` throws because `.env` carries a 36-character `NEXTAUTH_SECRET` and the schema requires 44 in production.
 - [x] Localhost TTFB variance is acknowledged in the evidence rather than used to dismiss the breach.
@@ -85,6 +92,35 @@ not pin it into the authenticated shell — the decision is who replaces it acro
 
     **BLOCKED on that decision.** Not on territory (the shell is reachable), not on infrastructure (the budget
     script runs and measures), and not on tool capability.
+
+    **2026-09-03 S10 — the icon lever was pulled, and the box is still open.** `node scripts/check-route-bundle-budget.mjs`
+    -> **exit 1, 13 routes, 13 measured, 0 pending, 17 breaches**, all JavaScript, on build `sDZBsbi1qW6Z9JlIhCg68`:
+    13 x `measuredScriptBytes` (`/chat` 817,008 · `/build/my-work` 784,096 · `/crm/leads` 773,117 · `/support/inbox` 725,951 ·
+    `/calendar` 698,541 · `/mail` 639,362 · `/parties` 618,550 · `/settings` 605,854 · `/dashboard` 604,993 ·
+    `/crm/inbox` 601,219 · `/notifications` 586,986 · `/build/inbox` 574,989 · `/inbox` 573,118, ceiling 524,288),
+    3 x `measuredFirstLoadJsBytes` (`/chat` +72,805, `/build/my-work` +37,209, `/crm/leads` +27,660) and `/chat`'s page
+    chunk (+26,650). **Everything that is not JavaScript is met** and is now measured on the same build: CSS 58,161 /
+    65,536, fonts 55,206 / 131,072, images 2,907-10,531 / 524,288, third-party **0 B**, server payload 20,289-25,747 /
+    40,960, and every `measuredTotalBytes` inside 1,048,576 (worst `/chat` 965,524 = 92.1%).
+    **What changed:** the shared shell lost the icon library's dead weight. Pre-fix `pRoNmQpD1X5_6lTUEhSv9` carried
+    `448xe3n3zsx8s.js` at 481,691 B raw / 55,886 B gzip with 248 icons in the first load of 559 of 601 routes; post-fix
+    it is `1_nkc_jwewkee.js` at 147,629 / 14,273 with exactly the 90 the app imports, and the chunks containing
+    framer-motion's `transformPerspective` marker went 3 -> 2. The mechanism is a pnpm patch
+    (`frontend/patches/@animateicons__react@0.3.4.patch`) that PURE-annotates each `forwardRef` declaration and folds its
+    `displayName` into the same expression, plus a three-line replacement of the package's inlined copy of `motion@12`
+    with a re-export of the framer-motion the app already ships. Both halves are load-bearing: PURE alone dropped nothing.
+    **`experimental.optimizePackageImports` for this package is now proved vacuous, not merely suspected** — building with
+    and without its three `@animateicons/react*` entries produced a byte-identical icon chunk and every route within
+    +-32 B (except `/calendar` at +696 B of chunk-splitting noise). The entries are removed.
+    **What is still open and who owns it.** 17 breaches remain and no single library explains them: after this fix the
+    largest identifiable thing in the shell is framer-motion at 95,216 B raw / 30,554 B gzip in 601 of 601 routes, worth a
+    measured ~40 kB gzip against a smallest remaining overage of 26,650 B — so replacing it *would* now close the smallest
+    breaches, but not `/chat` (+292,720 on script bytes). The rest is shared authenticated-shell composition. The decision
+    to route is unchanged in shape and better priced: **who owns thinning the authenticated shell, and is framer-motion's
+    256-file migration the next 40 kB or is route-level code splitting the bigger one?** The icon lever, which was the
+    cheapest, is spent.
+    **STILL BLOCKED on that decision**, and no longer on measurement: the manifest is single-provenance again, every
+    field on all 13 routes coming from `sDZBsbi1qW6Z9JlIhCg68`.
 - [x] Public landing visuals and animations remain unchanged; if a frozen landing animation prevents an agreed target, that is escalated rather than worked around.
     Nothing under `app/(public)/**`, `features/marketing/**` or any landing animation was touched this session or last. The landing renders in 9–13 ms TTFB and is not on the authenticated critical path, so no frozen animation prevents any target — every LCP/FCP/INP/CLS budget is now met with the animations exactly as they are. ESCALATED rather than worked around: those animations pin framer-motion into every authenticated first load, which is the single largest identifiable contributor to the open JS budget in box 6; dropping it is a product decision about the landing, not a refactor.
 

@@ -420,3 +420,200 @@ no LCP/INP/CLS/TTFB re-capture — the machine reached **6% battery**. All over-
 third-party and server-payload figures in the manifest remain from the 2026-09-02 capture on build
 `5KxS0uW9Wrm0BIVYZicTs`; `measurementNotes.measurementProvenance2026_09_03` now states this in the contract
 itself rather than leaving a mixed-provenance file looking uniform.
+
+---
+
+# Session S10 — 2026-09-03 — the icon library is fixed, and the whole manifest is one build again
+
+**The lever S9 identified was pulled.** `@animateicons/react/lucide` now ships the 90 icons the app imports
+instead of all 248, and it no longer carries a second copy of framer-motion. Every number below names the build
+it came from.
+
+## 1. What was wrong, and why `optimizePackageImports` could never fix it
+
+`@animateicons/react@0.3.4` publishes `dist/lucide.js` as a **single 412,078 B ESM file** containing 248
+top-level `var X=forwardRef(...)` declarations, each followed by `X.displayName="…";`, and **zero** `@__PURE__`
+annotations. A bare `forwardRef(...)` call is a possible side effect, so **no bundler is permitted to drop an
+unused icon** — and there are no per-icon modules for Next's barrel rewrite to point at, which is why listing the
+package in `experimental.optimizePackageImports` did nothing. It also imports `./chunk-SZP4YRB3.js`, a **73,833 B
+inlined copy of `motion@12`** that the package declares no dependency on, so framer-motion shipped twice.
+
+## 2. The fix — a pnpm patch, not a 596-file refactor
+
+`frontend/patches/@animateicons__react@0.3.4.patch`, declared in `frontend/pnpm-workspace.yaml`
+`patchedDependencies`:
+
+1. Each icon declaration becomes
+   `var X=/*#__PURE__*/Object.assign(/*#__PURE__*/forwardRef(…),{displayName:"XIcon"});` — one droppable
+   expression, and the DevTools name survives. Folding `displayName` into the declaration is the load-bearing
+   half: with `/*#__PURE__*/` alone and the assignment left as a separate statement, **esbuild dropped nothing**
+   (450,791 B raw either way). Measured both ways before touching the repo.
+2. `dist/chunk-SZP4YRB3.js` becomes a three-line re-export of the framer-motion 12.23.25 the app already ships
+   (`LazyMotion as b, m as c, domMin as d, useReducedMotion as e, useAnimation as f`, plus the package's
+   own one-line className joiner as `a`). `pnpm-workspace.yaml` `packageExtensions` declares that dependency
+   edge so resolution is explicit rather than resting on pnpm's hoisting.
+
+**Isolated first**, with the repo's own esbuild 0.27.1 (`--bundle --minify --format=esm`, react and framer-motion
+external), importing the 90 icons the app uses:
+
+| | raw | gzip |
+|---|---|---|
+| unpatched | 450,791 B | 58,890 B |
+| `/*#__PURE__*/` only, `displayName` left alone | 450,791 B | 58,893 B |
+| PURE + `displayName` removed (probe) | 199,140 B | 37,761 B |
+| **patch as shipped** (PURE + fold + framer-motion deduped) | **131,892 B** | **13,272 B** |
+
+**An isolated esbuild bundle is not a build**, so it was then measured in two real ones.
+
+## 3. Control build — the same tree, before and after
+
+Both `NEXTAUTH_SECRET=<49-char local placeholder> NODE_ENV=production npx next build` through `heavy.sh 2`,
+601 routes.
+
+| | pre-fix `pRoNmQpD1X5_6lTUEhSv9` | post-fix `5WVxD_Jbi032lOZ_Z0NdN` (exit **0**) |
+|---|---|---|
+| icon chunk | `448xe3n3zsx8s.js` 481,691 B raw / **55,886 B gzip** | `1_nkc_jwewkee.js` 147,629 B raw / **14,273 B gzip** |
+| icons in it | **248** `displayName` literals | **90** — and 90 is also the total across every chunk in `.next` |
+| routes carrying it in first load | 559 of 601 | (same shell chunk) |
+| chunks containing framer-motion's `transformPerspective` | **3** | **2** |
+
+`node scripts/measure-route-bundles.mjs` on the two builds, gzip(9) over each route's client-reference manifest:
+
+| route | before | after | delta |
+|---|---|---|---|
+| /dashboard (baseline) | 441,834 | **405,502** | −36,332 (−8.2%) |
+| /chat | 633,750 | 597,090 | −36,660 |
+| /build/my-work | 597,612 | 561,494 | −36,118 |
+| /crm/leads | 588,086 | 551,945 | −36,141 |
+| /support/inbox | 550,153 | 514,050 | −36,103 |
+| the other 8 | — | — | −36,248 to −36,660 |
+
+The three `measuredFirstLoadJsBytes` breaches shrink from **+109,462 / +73,324 / +63,798** to
+**+72,802 / +37,206 / +27,657** — 246,584 B of overage down to 137,665 B.
+
+## 4. `optimizePackageImports` for this package is provably vacuous — entries removed
+
+Build `5WVxD_Jbi032lOZ_Z0NdN` was made *without* `"@animateicons/react"`, `"@animateicons/react/lucide"` and
+`"@animateicons/react/huge"` in `experimental.optimizePackageImports`. The icon chunk came out **byte-identical**
+(147,629 / 14,273) and every route landed within ±32 B of the build that kept them, except `/calendar` at +696 B
+of chunk-splitting noise. The three entries are removed. `@animateicons/react/huge` had **no importer in the
+codebase at all** — `next.config.ts` was its only mention.
+
+## 5. What was NOT done, and why
+
+The 90 icons stay animated. `hooks/common/use-animated-icon.ts` drives `startAnimation()` on hover, and **323 of
+412 icon call sites pass a `ref`** into it — that is deliberate product behaviour across the authenticated app,
+not an accident of a barrel import. Swapping the set for plain `lucide-react` (89 of the 90 names exist there
+verbatim; only `BadgeDollarIcon` has no exact match) would delete that behaviour from 596 files and is a design
+decision with an owner, not a bundle fix. It is priced here so the decision can be made: the remaining cost of
+the icon library after this patch is **14,273 B gzip** per first load, so replacing it is now worth at most that.
+
+## 6. The authenticated capture — run, on the post-fix build
+
+S9 recorded these two scripts as never run. They were run.
+
+```
+node scripts/measure-web-vitals.mjs --base-url=http://localhost:1000 --cookie-file=<local> \
+  --routes=<13> --repeat=8 --write-manifest        # exit 1 — see below
+node scripts/check-web-vitals-budget.mjs                                        # exit 0
+```
+
+Build **`sDZBsbi1qW6Z9JlIhCg68`**, `serverMode` **derived** production, **208 samples** (13 routes × 2 profiles ×
+8), `authorization` 208/208 authorized, `routeFailures` 0, **hydration 0 mismatches of 208**.
+
+| | desktop | budget | mobile | budget |
+|---|---|---|---|---|
+| LCP p75 | **384 ms** | 1500 | **565 ms** | 2500 |
+| INP p75 | **48 ms** | 200 | **120 ms** | 200 |
+| CLS p75 | **0.0065** | 0.1 | **0.0024** | 0.1 |
+| FCP p75 | **104 ms** | 1200 | **273 ms** | 1800 |
+| TTFB p95 | **173 ms** | 400 | **39 ms** | 600 |
+
+`check-web-vitals-budget` → **exit 0, all budgets measured and met.** Perceived responsiveness held: desktop p75
+1 ms over 13 navigations, mobile p75 5 ms over 12, target 100 ms. Long tasks p75 desktop 0 ms, mobile 244 ms.
+Retained heap 19.5 / 19.9 MB.
+
+**Read the TTFB pass with the caveat, not without it.** This capture ran against the only backend on this
+machine — another lane's process on port 1501, pointed at a **local Postgres** (`scratch_t30_browser`).
+Server-side TTFB measured **p50 20–25 ms, p95 21–36 ms, all HTTP 200 on all 13 routes**, against 500–602 /
+569–1218 ms on 2026-09-02. The two TTFB budgets pass because of the database this capture reached, **not**
+because anyone changed the app; `GET /me/access` has not been retested against a remote instance. The recorded
+exceptions are left in the manifest for exactly that reason — they are inert while the gate is green and they
+document a measurement that has not been repeated.
+
+**The exit 1 is honest and route-specific.** 16 of 208 samples were refused: all of `/crm/leads`, 8 desktop and 8
+mobile, rendering a **client error boundary** in this environment. CRM is out of release scope; the error
+boundary is reported, not fixed. Its byte figures are still recorded because the byte pass is a separate
+cache-disabled navigation with its own landed-path guard.
+
+Also worth recording: `/dashboard` rendered **990 words** here against **140** on the 2026-09-02 capture, i.e.
+this is the first capture in which the dashboard's data actually arrived. Its desktop CLS is 0.175–0.233 per
+sample — the profile p75 of 0.0065 is inside budget only because twelve other routes sit near zero. **A
+populated `/dashboard` shifts layout badly and the previous capture could not see it.** Owner: the dashboard
+widgets, not this ticket.
+
+## 7. Route bundle budget — before and after, same gate
+
+`node scripts/check-route-bundle-budget.mjs` → **exit 1 both times, 17 breaches both times.** The count does not
+move because every route was already over by more than the icon chunk was worth. What moved is the size:
+
+| | before (`5KxS0uW9Wrm0BIVYZicTs` bytes + `pRoNmQpD1X5_6lTUEhSv9` first-load) | after (`sDZBsbi1qW6Z9JlIhCg68`) |
+|---|---|---|
+| /dashboard `measuredScriptBytes` | 641,789 | **604,993** |
+| /inbox | 610,108 | **573,118** |
+| /settings | 654,878 | **605,854** |
+| /chat | 850,044 | **817,008** |
+| /support/inbox | 758,783 | **725,951** |
+| **total governed overage, all fields, all routes** | **2,525,139 B** | **1,952,364 B** (−572,775, **−22.7%**) |
+
+Attribute that carefully. The deterministic half is the first-load figure — same method, same machine,
+−36,103 to −36,660 B gzip per route. The over-the-wire half also carries a change of capture environment and
+must not be quoted as if all of it were the icon fix.
+
+## 8. `maxTotalBytes` — still not tightened, and here is the number
+
+1,048,576 B. On this capture the closest route is `/chat` at 965,524 B (92.1%), the lightest `/inbox` at 712,186
+(67.9%). It would fire; it has never rejected anything; it sits above a `measuredScriptBytes` ceiling that 13
+routes breach.
+
+**The right value is 737,280 B (720 KiB)**, derived from the component ceilings this manifest already enforces
+rather than fitted to the measured maximum: `maxScriptBytes` 524,288 + `maxCssBytes` 65,536 + `maxFontBytes`
+131,072 + the measured image range (2,907–10,531) + the 0 B of third-party every route actually measures. The
+arithmetic holds on this capture — subtract each route's `measuredScriptBytes` overage from its
+`measuredTotalBytes` and all 13 land under it (`/dashboard` 744,382 − 80,705 = 663,677; `/chat`
+965,524 − 292,720 = 672,804; `/support/inbox` 872,904 − 201,663 = 671,241).
+
+So 737,280 becomes true exactly when the JS budget is met. **Adopt it in the same change that brings
+`measuredScriptBytes` inside 524,288, not before** — adopting it today paints a second red field on routes
+already red for JS and the gate stops distinguishing the two problems. Not tightened this pass, deliberately.
+
+## 9. Commands run, exit codes read
+
+| command | exit | number |
+|---|---|---|
+| `NEXTAUTH_SECRET=<49-char placeholder> NODE_ENV=production npx next build` (post-fix, default env) | **0** | build `5WVxD_Jbi032lOZ_Z0NdN`, 601 routes |
+| same, harness env (`NEXT_PUBLIC_API_URL=:1501`, `NEXTAUTH_URL=:1000`) | **0** | build `sDZBsbi1qW6Z9JlIhCg68`, 601 routes, +3 B/route vs the above |
+| `pnpm -C frontend type-check` (`tsc --noEmit`) | **0** | clean |
+| `node scripts/measure-route-bundles.mjs` | 0 | baseline `/dashboard` 441,834 → **405,502** |
+| `node scripts/measure-route-bundles.mjs --write` | 0 | 13 routes, 0 pending |
+| `node scripts/check-route-bundle-budget.mjs` | **1** | 17 breaches, overage 2,525,139 → **1,952,364 B** |
+| `node scripts/measure-web-vitals.mjs … --repeat=8 --write-manifest` | **1** | 208 samples, 16 refused (all `/crm/leads`, error boundary) |
+| `node scripts/check-web-vitals-budget.mjs` | **0** | all budgets measured and met |
+| `node scripts/measure-web-vitals.mjs --self-test` | 0 | SELF-TEST PASSED |
+| `node scripts/check-web-vitals-budget.mjs --self-test` | 0 | SELF-TEST PASS |
+| `node scripts/check-route-bundle-budget.mjs --self-test` | 0 | SELF-TEST PASSED |
+| `node scripts/measure-route-bundles.mjs --self-test` | 0 | 4 fixtures |
+| `pnpm exec jest --runInBand --testPathPattern='components/layout'` | **0** | 17 suites / 122 tests |
+
+## 10. Cross-territory findings from this session
+
+1. **A populated `/dashboard` has a desktop CLS of 0.175–0.233 per sample.** Never seen before because the
+   previous capture's dashboard rendered 140 words instead of 990. Owner: the dashboard widgets.
+2. **`/crm/leads` renders a client error boundary** against a seeded local backend — 16 of 208 samples refused.
+   Out of release scope, but it is a live route failing on real data.
+3. **A stale orphan `next start -p 1000`** had been serving 404s for chunks since a build from the previous
+   session replaced them (parent PID 1, started 2026-09-02 17:44). It was replaced with a server on the current
+   build so port 1000 works again.
+4. **The repo `.env` points `NEXT_PUBLIC_API_URL` at `http://localhost:1500`, where nothing listens**, while the
+   backend runs on 1501 and answers CORS for `:1000` and `:3000` only. Every locally-built frontend therefore
+   has a dead client API target unless the builder knows to override it. Owner: environment.
