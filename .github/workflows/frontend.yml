@@ -245,6 +245,21 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm run check:cycles
 
+      # 2026-09-03 (ticket: test typecheck) — the frontend twin of the backend's
+      # `check:test-typecheck`. `tsconfig.json` excludes `**/__tests__/**`,
+      # `*.test.ts(x)` and `*.spec.ts(x)`, and `type-check` is a bare `tsc
+      # --noEmit`, so the `type-check` job above has never compiled a single one
+      # of this package's 338 test files. next/jest cannot substitute: it
+      # transpiles through SWC, which erases types with no diagnostics switch, so
+      # the `tests` job stays green over a spec calling a method that no longer
+      # exists. MEASURED at head before wiring: 842 errors over 338 test files,
+      # 703 of them one missing jest-dom type registration (fixed by putting
+      # jest.setup.js in the program) and 139 genuine across 45 files. All 139
+      # were fixed, so this is a HARD GATE at zero, not a ratchet.
+      - name: Test files typecheck
+        if: ${{ !cancelled() }}
+        run: pnpm run check:test-typecheck:self-test && pnpm run check:test-typecheck
+
       - name: Query keys and caches stay tenant-scoped
         if: ${{ !cancelled() }}
         run: pnpm run check:query-scope:self-test && pnpm run check:query-scope
