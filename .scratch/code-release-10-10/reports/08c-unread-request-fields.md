@@ -256,6 +256,15 @@ it together with the UI that sends it.
   customer contract*. `registry:generate` is bookkeeping (classification derives from the
   `x-exposure` already stamped on all 3,643); diff verified as 31 added, 0 removed, 0 existing
   entries reclassified.
+- **The artifact goes stale again within minutes, and no lane owns regenerating it.** Re-checked
+  after this ticket's commits: `openapi:check` is **exit 1** again — `removed GET
+  /settings/permissions`, from commit `8634cba3` (settings lane), landed after my regeneration.
+  `check:contract-vendor` stays **exit 0** (both copies still match each other). Not chased: a
+  route deletion is precisely what `check:contract-breaking-change` exists to catch, and it can
+  only see it once the deleting lane regenerates. **Recommendation: make `openapi:generate` part
+  of the commit that changes a route, or wire `openapi:check` into CI so a stale artifact cannot
+  reach head — it hid 31 operations from two fail-closed gates for the whole of this release.**
+
 - **`POST /webhooks/calendar/provider` was published with no declared replay rule.** Declared as
   `advisory-dedup-unfenced` from reading the handler: sequential redeliveries are refused twice
   (the `updatedAt >= providerUpdatedAt` watermark, then the PENDING/IN_FLIGHT queue check), but
