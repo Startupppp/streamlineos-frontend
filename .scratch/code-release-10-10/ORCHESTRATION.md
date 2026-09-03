@@ -1249,3 +1249,45 @@ budget alone.** The scope decision can now be made on numbers instead of a guess
 **The org-switcher `dynamic()` deferred nothing** — settled by measurement, not by my assumption.
 The dialog sits in a **first-load chunk of 556 of 601 routes** and **no async chunk carrying the
 module exists** anywhere under `.next/static/chunks`. Collapsed to a static import.
+
+## The permission gate almost nothing reads — 2026-09-03
+
+**179 of 180 `useGatedQuery` reads have their `access` gate ignored by every screen that uses
+them.** Exactly one file reads it (`features/crm/timeline/my-tasks-panel.tsx:59`). Forty files
+render `NoPermissionState` from a SEPARATE `useCan` call instead.
+
+So the codebase carries two parallel permission mechanisms where one was intended: the gate the
+data layer computes and hands up, and the independent check each screen makes for itself. The
+data-layer gate is very nearly write-only. This is the same shape as `storage_pending_purge` (a
+write-ahead log nothing read) and the memory note about two live ticket-26 gate designs — a
+mechanism built, wired, and then not consumed. It is ticket 30's to resolve; recorded here because
+it is an architectural fact about the release, not a defect in one file.
+
+Related and worth pairing with it: **84 permissioned ungated reads remain**, every key resolved
+and blocked on nothing but mechanical volume. The scanner that produced those numbers lives only
+in a session scratchpad — **the `check:gated-reads` gate was NOT written**, so this number is
+currently unprotected by anything. Whoever writes it starts from 84, not 0.
+
+## Seventh attribution incident — now a MERGE, not a pathspec
+
+The first five were a file pathspec catching a neighbour; the sixth was a directory pathspec. This
+one is different again: **another agent ran a `git merge` mid-session that silently reverted a
+second agent's uncommitted edits**, and swept a third agent's into an unrelated commit. The victim
+re-applied and re-committed its own work, and the merge left a stale `UU` index entry on
+`issues/28-tanstack-data-layer-completion.md` whose working-tree content was already clean.
+
+Two rules follow, and both are now in the brief:
+- **Agents must never merge.** Merge, like push, is orchestrator-only. It was already forbidden;
+  this is the first time the cost has been measured.
+- A stale `UU` with no `MERGE_HEAD` is a *resolved* conflict the index has not been told about.
+  Check for conflict markers before assuming work is lost — here there were none, and the fix was
+  a plain `git add`, not a reconstruction.
+
+## Corrections to prior notes, from the agent that verified them
+- "`access.ts` ×3" was a DOUBLE COUNT: 2 are gateable, the 3rd (`/rbac/discovery/grantable`) is
+  `@AuthorizedInService` and was already listed as needing no gate.
+- The "10 BASE-const routes" are **16** reads, every key verified against the controller decorator
+  rather than a snapshot — and `sign/public.ts` is among them and must **NOT** be gated.
+- Ticket 28 box 6's "this note is stale" claim was ITSELF wrong: **zero** non-test files read
+  `fetchStatus`; the three surfaces read `useOnlineStatus()`, a different signal entirely.
+- Two `queryFn`s destructured `signal` and never passed it — a silently non-abortable query.
