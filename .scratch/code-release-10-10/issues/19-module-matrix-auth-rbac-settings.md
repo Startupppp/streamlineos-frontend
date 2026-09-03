@@ -4,7 +4,15 @@
 
 **Blocked by:** 14.
 
-**Status:** pass 5 — **5 of 7 closed, 2 PARTIAL, and pass 5 did NOT advance either of them.** The session that held this ticket spent its whole pass on ticket 29's calendar read path plus two defects the orchestrator assigned mid-pass (the KB page-attachment storage orphan, and a `check:spec-typecheck` red). Neither remaining box was worked on and neither was re-verified this pass: box 3's remainder is `pnpm openapi:check`, a release-time regenerate-and-diff for the orchestrator, and box 6's remainder is the automations rung, a product decision written up in `reports/19b-automations-rung-decision.md`. Recorded as *not advanced*, not as blocked on anything new. Pass 4 status follows.
+**Status:** pass 6 — **5 of 7 closed, 2 PARTIAL. Neither closed; both materially narrowed, and one defect fixed that neither box had recorded.** Full report: `reports/19c-grant-escalation-and-settings-census.md`.
+
+- **Box 3.** The escalation clause was proved by driving the real writers rather than the shared predicate, and that found a hole. There are two writers over `role_permission_grants`; `RbacService.assignRolePermission` / `revokeRolePermission` (`POST|DELETE /rbac/role-permissions`) **never loaded the role at all**, so a foreign role id 500'd on the composite FK instead of 404-ing, `isImmutableSystemRole` was never consulted (the org-level `ORG_ADMIN`/`MEMBER` rows that `setRolePermissions` refuses were writable here), and `assertPermissionsGrantable` ran with `target` and `permissionMeta` undefined — i.e. with the rank and module-boundary rules skipped. `resolveRoleInOrg` closes all three on both verbs. New `grant-escalation.spec.ts`: **16 tests**, bite-proved at **6 failed / 10 passed** against the pre-fix writer, plus 2 further planted defects on the bulk writer (2 failed, then 1 failed). Reachability bound honestly: `settings:rbac:manage` **and** `isStructuralOrgAdmin`, and **no frontend caller exists**. Idempotency re-checked to the brief's caveat — the grant is *naturally* idempotent (`onConflictDoUpdate` on `uniq_role_permission_grants_role_key`), not merely fenced. Remainder is still only `pnpm openapi:check` (A-12).
+- **Box 6.** The criterion is now written in source with three falsifiable corollaries (OWNERSHIP / RUNG / OPERATION) at the top of the new `settings-surface-census.spec.ts`, which walks all of `src/` and reflects real Nest metadata instead of importing controllers by name. That found **three global-settings routes no earlier pass had counted**, because every pass enumerated `SettingsController` and stopped: `POST /settings/automations/:ruleId/test` (`modules/automation`) and `GET /settings/email-templates/preview` + `POST /settings/email-templates/test` (`modules/email`). **26 routes across 4 controllers**, each with an explicit verdict; the automations surface is **seven** routes, not the six report 19b costed. Frontend re-enumerated: 23 `/settings/*` pages, all PASS.
+- **Inherited findings verified before acting — two were wrong.** `ACCESS_MANAGED_MODULES` really was 10 against 14 (fixed), but the role editor reads `GET /rbac/permissions`, not that constant, so `blog`/`directory`/`workflows` were always grantable and only `feedbucket` had no surface at all. And `hr:contracts:view|manage` are held by **3 seeded rungs** (`HR_MODULE_ADMIN|OWNER|MEMBER`), measured by executing `buildSeededRoleSpecs` — not owner-only. The real, narrower exposure is that **0 of the 13 role templates** carry them.
+
+Pass 5 status follows.
+
+**Status (pass 5):** pass 5 — **5 of 7 closed, 2 PARTIAL, and pass 5 did NOT advance either of them.** The session that held this ticket spent its whole pass on ticket 29's calendar read path plus two defects the orchestrator assigned mid-pass (the KB page-attachment storage orphan, and a `check:spec-typecheck` red). Neither remaining box was worked on and neither was re-verified this pass: box 3's remainder is `pnpm openapi:check`, a release-time regenerate-and-diff for the orchestrator, and box 6's remainder is the automations rung, a product decision written up in `reports/19b-automations-rung-decision.md`. Recorded as *not advanced*, not as blocked on anything new. Pass 4 status follows.
 
 **Residual-risk disposition (2026-09-03):** every open box below now carries an ASSIGNABLE-or-ACCEPTED verdict, a named owner and a date, recorded inline under the box and in `reports/residual-risk-register-19-30.md`. Blockers were re-verified against source, a live gate run or a committed artifact rather than transcribed; where a stated blocker did not survive, the correction is inline.
 
@@ -40,6 +48,45 @@
     `POST /gdpr/rectification/me`, a `oneOf` request body in the backend artifact and a flat object in
     `frontend/contracts/openapi.json`. The CI step is `continue-on-error`, so it will never surface there. One `cp`,
     same change as A-12. Full reasoning: `reports/residual-risk-register-19-30.md` §1.2 and §3.1.
+  - **PASS 6 — "exhaustive owner/descendant protection" was asserted, not proved, and proving it found a hole.**
+    `grantability.spec.ts` exercises `assertPermissionsGrantable` as a pure function exhaustively; what it
+    structurally cannot see is whether each writer CALLS it, and with what. There are two writers over
+    `role_permission_grants`. `RolePermissionService.setRolePermissions` passes actor rank, actor modules, target
+    `{rank, moduleKey}` and the permission module map. `RbacService.assignRolePermission` / `revokeRolePermission`
+    passed the grantable set and **nothing else, and never loaded the role at all**. Three consequences, each
+    measured by driving the real service: a role id from another tenant reached the insert and surfaced as a **500**
+    from the composite `(org_id, role_id)` FK rather than the **404** a cross-tenant miss owes; `isImmutableSystemRole`
+    was never consulted, so the org-level `ORG_ADMIN` and `MEMBER` rows `setRolePermissions` refuses (for the owner
+    too) were writable through this door — a structural org admin could push `settings:manage` / `settings:rbac:manage`
+    onto the `MEMBER` role and hand it to every member; and the rank + module-boundary rules never ran, because
+    `target`/`permissionMeta` undefined is their documented backward-compat skip. `RbacService.resolveRoleInOrg`
+    closes all three on both verbs. Severity bound honestly: `@RequirePermission("settings:rbac:manage")` **and**
+    `isStructuralOrgAdmin`, and **no frontend code calls either route** — an API-only surface.
+    Proof: `src/modules/rbac/__tests__/grant-escalation.spec.ts`, **16 tests**, every one driving a real service.
+    Bite-proved in a `git archive HEAD` tree: `rbac.service.ts` reverted to `HEAD~1` → **6 failed / 10 passed**
+    (the 10 that stay green are the pre-existing behaviours, so it is not failing everything);
+    `assertGrantable(…, undefined, undefined)` on the bulk writer → **2 failed**; the bulk writer's
+    `isImmutableSystemRole` refusal deleted → **1 failed**; all restored → **0**. Two cases are deliberate ALLOWs
+    (a module admin configuring a peer in their **own** module; a held key on a lower-rank role) so the deny is not
+    a wall.
+    Idempotency re-checked against the brief's caveat that `command-fence-store.ts` swallows a failed completion
+    write: the grant is **naturally** idempotent, not merely fenced — `onConflictDoUpdate` on
+    `uniq_role_permission_grants_role_key` `(org_id, role_id, permission_key)`, so re-granting an already-granted
+    permission is a no-op with no duplicate row and no 409; revoke is a predicated DELETE; `UserPermissionGrantsService.setGrants`
+    is a delete-then-insert over one `(membership, module)` partition. `setRolePermissions` is deliberately NOT
+    replay-safe (CAS on `roles.version` → 409), which is correct for a bulk replace.
+    Also fixed this pass, in the frontend catalogue: `ACCESS_MANAGED_MODULES` was **10 against the backend's 14**
+    delegable modules and `feedbucket:access:view|manage` were absent from the `PermissionKey` union.
+    `catalog-sync.test.ts` had been arranged around exactly that — it subtracted the generated `<module>:access:*`
+    keys from BOTH sides and its ghost check carried an `!/^[a-z0-9-]+:access:(view|manage)$/` exemption, which is
+    what stopped its phantom, union-coverage and ghost assertions from seeing any of it. Subtraction and exemption
+    removed, two equality assertions added against the vendored `delegableModuleIds()`. Bite-proved three ways.
+    **Correction to `reports/50-permission-route-binding.md`:** its claim that the four modules therefore have
+    "no grantable access keys in the role editor" is **false for three of them**. `permission-matrix.tsx:58` calls
+    `usePermissionCatalog()` = `GET /rbac/permissions`, the live backend catalogue with all 28 access keys; the
+    frontend `PERMISSIONS` constant has no UI consumer at all. `blog`, `directory` and `workflows` were always
+    grantable and have conforming `/<module>/access` pages. Only **feedbucket** had no surface anywhere.
+    PARTIAL is unchanged in substance: the remainder is still `pnpm openapi:check` (A-12) alone.
 - [x] Effective-permission resolution is batched and cached; scope expansion is bounded; indexes cover subject, role, permission, module and tenant paths.
   - Both pass-1 failures are now repaired, verified here. Scope expansion ✅ — the unordered `.limit(500)` at `access-permission.resolver.ts:283` is gone, replaced by `drainRolePermissionGrants`, a keyset drain ordered by `id`. Permission-path index ✅ — `idx_role_permission_grants_org_key (org_id, permission_key)` created by migration `0997`, confirmed present in `pg_indexes` on a head database. Batched + cached ✅; subject/role/module/tenant indexes ✅ (`check:tenant-indexes` 745/745).
   - **Pass 3: the last defect is repaired and the box closes.** The pass-2 PARTIAL was `access-permission.resolver.ts:230` reading `user_permission_grants` for one membership under an unordered `.limit(500)`. The access owner took the hand-off: `drainUserPermissionGrants` in the new `src/modules/access/access-grant-drains.ts` is a keyset drain ordered by `id`, wired at `access-permission.resolver.ts:189`, and no `user_permission_grants` read outside it remains. Verified by reading the source, not the report. `jest src/modules/access` → **40 suites / 398 tests passed**. The resolver is also down from 507 lines to **404**, so the `check:file-sizes` red named in the brief is gone — `pnpm -s check:file-sizes` → exit 0, 3565 files, all within 500.
@@ -67,6 +114,49 @@
     `frontend/contracts/openapi.json`**, so the flip really would fail `check:route-access-contract` (re-run at
     head: **exit 0**, 203 keys checked, 627 `x-permission` entries). The coupling dissolves the moment A-12 lands.
     **Owner: whoever lands A-12, in the same change. Deadline: 2026-09-08.**
+  - **PASS 6 — the criterion is now stated in source, and the inventory this box has run three times was short by three routes.**
+    An unstated criterion makes this box unfalsifiable, so it is written at the top of the new
+    `src/modules/settings/settings-surface-census.spec.ts`: a route belongs at a global `/settings/*` path iff
+    **(a)** its subject is the organisation itself, the access graph over it, or the viewer's own principal
+    (`frontend/CLAUDE.md` §17 names `/settings` My Account as universal), **and (b)** it is configuration or
+    governance rather than the work itself — with three falsifiable corollaries, OWNERSHIP (one module owns the
+    rows → the route is that module's), RUNG (the intended user needing a `settings:*` key for their own module's
+    surface means both key and path are misnamed) and OPERATION (content that changes as work happens, not as
+    policy changes, is operational). Each has already caught something: custom fields and git connections moved on
+    OWNERSHIP, `BUILD_MODULE_ADMIN` on RUNG, `/settings/ai-usage` on OPERATION.
+    **Why the count was wrong.** `settings-route-gates.spec.ts` is a strong file — it runs the real `PermissionGuard`
+    over real metadata in both directions — but it can only see controllers it **imports by name**, so it is
+    structurally blind to a controller mounted at `settings/*` from elsewhere in the tree, and every pass of this
+    box enumerated `SettingsController` and stopped. The census instead walks all of `src/` for `*.controller.ts`,
+    pre-filters on the text `@Controller("settings…")` and reflects real Nest metadata (`PATH_METADATA`,
+    `METHOD_METADATA`, `REQUIRE_PERMISSION`) rather than parsing source. **26 routes across 4 controllers**, each
+    requiring an explicit verdict. Three had never been counted:
+    `POST /settings/automations/:ruleId/test` (`modules/automation/automation.controller.ts`) and
+    `GET /settings/email-templates/preview` + `POST /settings/email-templates/test`
+    (`modules/email/controllers/email-templates.controller.ts`).
+    **So R-12 is SEVEN routes, not the six `reports/19b` costed.** Verdicts: 6 ORG-CONFIG, 1 ACCESS-GOVERNANCE,
+    10 SUNSET-ALIAS (pass 3's and pass 4's moves verified by artifact), 9 PENDING-MOVE (automations ×7 + email
+    templates ×2). Frontend re-enumerated from disk: **23 `/settings/*` pages, all PASS** — no global page owns a
+    module surface, and the automations screens already live at `/crm|/support|/accounting|/hr .../settings/automations`,
+    so only the backend path and key are global.
+    Bite-proved four ways in a `git archive HEAD` tree: a brand-new `@Controller("settings/data-hub")` added
+    elsewhere in `src/` → **exit 1**, naming the route AND its file; `email-templates.controller.ts` removed →
+    exit 1 on the stale-inventory assertion; `@RequirePermission` stripped off `GET /settings/feature-flags` →
+    exit 1 on "the census is not a bypass"; all restored → exit 0. `jest settings-surface-census` → **8/8**.
+    **NEW, cross-territory, NOT fixed — `POST /settings/email-templates/test` has no tenant scoping at all.**
+    `EmailTemplatesController.test()` takes `@Body()` only — no `@CurrentUser()`, no `orgId` — and
+    `EmailRoutesService.sendTemplateTest` renders a static `TEMPLATE_MAP` entry and sends it to an arbitrary
+    address from the platform's sender, with no `@UseRateLimit` and no audit. `settings:email-templates:manage` is
+    carried by the **`HR_ADMIN` role template** (`role-templates-crm-hr.constants.ts:221`), so it is reachable from
+    a shipped template rather than only by an owner. No tenant data crosses (the templates are static), so it is an
+    **abusable send**, not a BOLA. **Owner: the email module.**
+    **NEW — `GET /settings/permissions` is a duplicate door with a weaker key.** `SettingsService.getPermissions()`
+    returns the same `PERMISSIONS` constant `GET /rbac/permissions` returns, but behind `settings:view` (three role
+    templates plus `MODULE_ADMIN_EXTRA_KEYS.hr`) rather than `settings:rbac:manage`, and nothing calls it. Static
+    product data, so no tenant leak; recorded rather than deleted, since §10 forbids a dead-code claim from text
+    search alone.
+    PARTIAL stands: R-12 remains a product decision, now over 7 routes, and the email-templates pair is assignable
+    to another territory.
 - [x] Workspace and onboarding gates, organization-switch state, query-key tenant isolation and auth error states are covered by allow/deny/cross-tenant tests.
   - Evidence: FE `jest lib/query-scope-isolation lib/prefetch/access lib/wizard-gate lib/membership-lifecycle-route hooks/api/access` → **8 suites / 44 tests passed**. BE `jest src/modules/organization` → **57 suites / 393 tests passed**, including 14 tenant-isolation specs and `org-switch-revalidation.spec.ts`. Query-key isolation is structural: `QueryProvider` remounts a new `QueryClient` keyed on `authenticated:<orgId>:<userId>`.
 - [x] A permission-key addition to a role template is accompanied by a backfill migration, or it is inert for every organization that already exists.
@@ -76,6 +166,15 @@
   - `jest backfill-slugs-exist.spec.ts` → **8/8 passed** (was 1 failed / 5). `0990` is recorded in a new, separate `SUPERSEDED_BY_RECONCILER` list — **`KNOWN_INERT_BACKFILLS` was not touched and still holds 9** — and that list carries a proof obligation: a new test asserts every key the superseded migration named is one `buildDesiredGrants` actually grants for the slug it named. Bite-proved: removing `support:tickets:view` from the template → **1 failed / 7**, file restored, sha verified. A third test pins that the reconciler still reads `ROLE_TEMPLATES`.
   - Deliberate limit, stated rather than hidden: a role an administrator has written (`version > 1`) is never reconciled, so an owner's revocation is never resurrected — the invariant `seed-system-roles.spec.ts` protects.
   - Follow-up handed off, not blocking: `backend/CLAUDE.md` §5 still instructs "must ship a backfill migration too", which now produces a dead migration every time it is followed. Replacement wording in report P2.0.
+
+## Found in pass 6 and handed off (not part of the seven boxes)
+
+- **`POST /settings/email-templates/test` sends with no tenant scope.** No `@CurrentUser()`, no `orgId`, no rate limit, no audit; reachable from the `HR_ADMIN` role template. Abusable send from the platform's mail identity, not a BOLA (the templates render from static input). **Owner: the email module** — `src/modules/email/controllers/email-templates.controller.ts` + `email-routes.service.ts:99`.
+- **`GET /settings/permissions` duplicates `GET /rbac/permissions` behind `settings:view`.** Same `PERMISSIONS` constant, much wider key, no caller. Deletion candidate but needs knip + a build; recorded, not removed.
+- **`hr:contracts:view|manage` — the product decision, stated with the exposure MEASURED, not transcribed.** Executing `buildSeededRoleSpecs(new Set(ALL_PERMISSION_NAMES))` gives: `hr:contracts:view` on **3 seeded rungs** (`HR_MODULE_ADMIN`, `HR_MODULE_OWNER`, `HR_MODULE_MEMBER`) and **0 of 13 role templates**; `hr:contracts:manage` on **2 rungs** (`HR_MODULE_ADMIN`, `HR_MODULE_OWNER`) and **0 templates**; 44 seeded rungs in total. `moduleScopedPermissions("hr")` returns every `hr:*` key, so every newly seeded organisation can already delegate contracts. Report 50's "only org owners can use contracts" is therefore **wrong** — it read the 13 templates and not the 44 rungs. The real exposure is narrower: a person given `HR_ADMIN` / `BRANCH_HR` / `RECRUITER` rather than an HR module rung cannot use contracts. Whether those three templates should carry `hr:contracts:*` is **a product decision and no answer was picked here**.
+- **`feedbucket` is delegable and administrable with `route: null`.** The backend seeds `FEEDBUCKET_MODULE_ADMIN|OWNER|MEMBER` and generates `feedbucket:access:view|manage`, but the module owns no product surface (it renders inside `/build/[projectId]/feedbucket`), so there is nowhere to hang an access screen and none exists. The two keys are now in the `PermissionKey` union and the frontend catalogue, and `module-access-route-invariants.test.ts` records the missing page as the single named exemption with its reason — so the gap is written down rather than invisible. **Where the screen belongs is a product decision.**
+- **`RbacService.getDiscoveryGrantable` recomputes `assignableRanks` as a raw `rank > bestRank`** instead of calling `canGrantToRank`, so it omits the peer-`MODULE_ADMIN` exception the writer allows. The read is *stricter* than the write, so it under-advertises rather than over-advertises — but `canGrantToRank`'s own comment says both sides must import it and one side does not.
+- **`assertMayAssignRole` authorises a role on a sample.** `assert-role-assignment.ts:27` reads the target role's grants under an unordered `.limit(500)` before checking them, reachable from `role-member.service.ts:200` and `principal-groups.service.ts:285`. No seeded role reaches the cap (largest namespace is `hr` at 135 keys), but a custom role can hold up to 704 and `setRolePermissionsSchema` caps `items` at 500 **per write**, not per role. Same shape as the unordered-limit drains box 4 closed in `access-permission.resolver.ts`.
 
 ## Found in pass 3 and handed off (not part of the seven boxes)
 
