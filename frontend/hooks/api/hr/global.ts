@@ -274,7 +274,7 @@ export function useSeedCountryPack() {
 }
 
 export function useContracts(params?: ContractsParams) {
-  const canView = useCan("hr:employees:view");
+  const canView = useCan("hr:contracts:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<CursorResult<HrContract>>({
     queryKey: queryKeys.hr.contracts(params as Record<string, unknown>),
@@ -286,7 +286,7 @@ export function useContracts(params?: ContractsParams) {
 
 export function useCreateContract() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:compliance:manage", {
+  return useAuthorizedMutation("hr:contracts:manage", {
     mutationKey: ["hr", "global", "contracts", "create"],
     mutationFn: (body: Record<string, unknown>) => apiClient.post("/hr/global/contracts", body),
     onSuccess: () => {
@@ -299,7 +299,7 @@ export function useCreateContract() {
 
 export function useUpdateContract(id: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:compliance:manage", {
+  return useAuthorizedMutation("hr:contracts:manage", {
     mutationKey: ["hr", "global", "contracts", "update", id],
     mutationFn: (body: Record<string, unknown>) => apiClient.patch(`/hr/global/contracts/${id}`, body),
     onSuccess: () => {
@@ -313,7 +313,7 @@ export function useUpdateContract(id: number) {
 
 export function useEndContract() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:compliance:manage", {
+  return useAuthorizedMutation("hr:contracts:manage", {
     mutationKey: ["hr", "global", "contracts", "end"],
     mutationFn: ({ contractId, notes }: { contractId: number; notes?: string }) =>
       apiClient.post(`/hr/global/contracts/${contractId}/end`, { notes }),
@@ -327,7 +327,7 @@ export function useEndContract() {
 
 export function useConvertToEmployee() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:compliance:manage", {
+  return useAuthorizedMutation("hr:contracts:manage", {
     mutationKey: ["hr", "global", "contracts", "convert"],
     mutationFn: ({ contractId, ...body }: { contractId: number; effectiveDate?: string; notes?: string }) =>
       apiClient.post(`/hr/global/contracts/${contractId}/convert-to-employee`, body),
@@ -340,7 +340,7 @@ export function useConvertToEmployee() {
 }
 
 export function useInternshipCertificate(contractId: number, enabled = false) {
-  const canView = useCan("hr:employees:view");
+  const canView = useCan("hr:contracts:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<{ html: string; templateId: number | null }>({
     queryKey: queryKeys.hr.internshipCertificate(contractId),

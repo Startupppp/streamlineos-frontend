@@ -194,7 +194,44 @@ const OUT_OF_RELEASE_SCOPE = [
  * Key: "<file>::<hook>::<METHOD> <path>"
  */
 const MIN_REASON_LENGTH = 60;
-const DELIBERATE = new Map([]);
+const DELIBERATE = new Map([
+  [
+    "hooks/api/accounting/expenses.ts::useTeamExpenses::GET /hr/expenses/page-data",
+    {
+      hookKey: "accounting:reimbursements:read",
+      routeKey: "hr:expenses:view",
+      reason:
+        "The accounting reimbursement surface reads an HR-owned route. Loosening the hook to hr:expenses:view would put the accounting screen in front of Sales Representatives and Recruiters, who hold that key; tightening the route would take the HR expenses page away from them. Neither is a client fix — accounting needs its own endpoint, which is the accounting rewrite's territory (feat/accounting-module). Today only the org owner holds accounting:reimbursements:read and the owner also passes hr:expenses:view, so nothing is broken until a custom role is granted one and not the other.",
+    },
+  ],
+  [
+    "hooks/api/accounting/expenses.ts::usePendingForBatch::GET /hr/expenses/page-data",
+    {
+      hookKey: "accounting:reimbursements:manage",
+      routeKey: "hr:expenses:view",
+      reason:
+        "Same cross-module read as useTeamExpenses: the reimbursement batch builder pulls pending rows from the HR expenses page-data route. The fix is an accounting-owned endpoint, not a client key change — see the useTeamExpenses entry above for the full reasoning and the population it affects.",
+    },
+  ],
+  [
+    "hooks/api/payroll/reports.ts::useExportPayrollReport::GET /payroll/reports/*",
+    {
+      hookKey: "payroll:reports:export",
+      routeKey: "payroll:reports:view",
+      reason:
+        "The hook gates the CSV download more strictly than the route does, deliberately. payroll:reports:export is a real key guarding five other export routes, but the ?format=csv variants of /payroll/reports/* are served by the same handler as the on-screen report and require only :view. Loosening the hook would remove the only check that exists. The route is the wrong side and is raised as a backend finding in report 50 section 4.9: a :view holder can already fetch the CSV directly, so the export key is enforced nowhere but the client.",
+    },
+  ],
+  [
+    "hooks/api/payroll/reports.ts::useExportJournal::GET /payroll/reports/journal",
+    {
+      hookKey: "payroll:reports:export",
+      routeKey: "payroll:reports:view",
+      reason:
+        "Same under-declared route as useExportPayrollReport: GET /payroll/reports/journal serves both the on-screen journal and its CSV under payroll:reports:view. Held stricter on the client until the backend distinguishes the export, which is raised as a cross-territory finding rather than papered over from here.",
+    },
+  ],
+]);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Filesystem walk

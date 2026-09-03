@@ -334,7 +334,7 @@ export function useUpsertWorkLog(
   >,
 ) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:attendance:manage", {
+  return useAuthorizedMutation("hr:attendance:view", {
     ...options,
     mutationKey: ["hr", "work-logs", "upsert"],
     mutationFn: (data: UpsertWorkLogInput) =>

@@ -93,7 +93,7 @@ export function useCreatePolicy() {
 }
 
 export function usePreviewPolicy() {
-  return useAuthorizedMutation("payroll:policies:manage", {
+  return useAuthorizedMutation("payroll:policies:view", {
     mutationKey: ["payroll", "policies", "preview"],
     mutationFn: (data: PolicyPreviewInput) =>
       apiClient.post<PolicyPreviewResult>("/payroll/policies/preview", data),

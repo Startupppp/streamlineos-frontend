@@ -27,7 +27,7 @@ export function useEpics(
   projectId: number,
   options?: Omit<UseQueryOptions<Epic[]>, "queryKey" | "queryFn" | "enabled">
 ) {
-  const canView = useCan("build:view");
+  const canView = useCan("build:tickets:view");
   return useQuery<Epic[]>({
     queryKey: queryKeys.projects.epics(projectId),
     queryFn: ({ signal }) => apiClient.get<Epic[]>(`/build/${projectId}/epics`, undefined, signal),

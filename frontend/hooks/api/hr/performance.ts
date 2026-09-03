@@ -73,7 +73,7 @@ export function useCreatePerformanceReview() {
 
 export function useUpdatePerformanceReview() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:performance:manage", {
+  return useAuthorizedMutation("hr:performance:view", {
     mutationKey: ["hr", "performance", "reviews", "update"],
     mutationFn: ({ id, ...data }: UpdatePerformanceReviewInput & { id: number; periodStart?: string; periodEnd?: string; cycleId?: number }) =>
       apiClient.patch<{ success: boolean }>(`/hr/performance/reviews/${id}`, data),
@@ -93,7 +93,7 @@ export function useDeletePerformanceReview() {
 
 export function useUpdateGoal() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("hr:performance:manage", {
+  return useAuthorizedMutation("hr:performance:view", {
     mutationKey: ["hr", "performance", "goals", "update"],
     mutationFn: ({ goalId, ...data }: { goalId: number; title?: string; description?: string; targetValue?: number; currentValue?: number; status?: string; progress?: number; startDate?: string; endDate?: string }) =>
       apiClient.patch<{ success: boolean }>(`/hr/performance/goals/${goalId}`, data),

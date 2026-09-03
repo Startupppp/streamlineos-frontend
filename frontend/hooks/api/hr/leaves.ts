@@ -207,7 +207,7 @@ export function useRevertLeave() {
   const qc = useQueryClient();
   const identity = useLeaveQueryIdentity();
   const invalidateLeaveDashboard = useInvalidateLeaveDashboard();
-  return useAuthorizedMutation("hr:leaves:manage", {
+  return useAuthorizedMutation("hr:leaves:approve", {
     mutationKey: ["hr", "leaves", "revert"],
     mutationFn: (leaveId: number) =>
       apiClient.patch<{ success: boolean }>(`/hr/leaves/${leaveId}`, {

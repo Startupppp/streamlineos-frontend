@@ -84,7 +84,7 @@ export function useUpdateNumberSequence(entityType: string) {
 }
 
 export function useSystemAccounts() {
-  const can = useCan("accounting:settings:manage");
+  const can = useCan("accounting:settings:read");
   return useQuery<{ items: SystemAccountMapping[] }, Error>({
     queryKey: finSettingsKeys.systemAccounts(),
     queryFn: ({ signal }) =>

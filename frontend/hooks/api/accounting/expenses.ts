@@ -188,7 +188,7 @@ export function usePendingForBatch() {
 }
 
 export function useExpensePolicies() {
-  const can = useCan("accounting:reimbursements:manage");
+  const can = useCan("accounting:reimbursements:read");
   return useQuery<FinExpensePolicy[], Error>({
     queryKey: expenseKeys.policies(),
     queryFn: ({ signal }) => apiClient.get<FinExpensePolicy[]>("/accounting/expenses/policies", undefined, signal),

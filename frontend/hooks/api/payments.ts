@@ -208,7 +208,7 @@ export type PaymentWebhookEvent = {
 };
 
 export function useWebhookEvents(providerKey: string, enabled = true) {
-  const canView = useCan("payments:providers:view");
+  const canView = useCan("payments:webhooks:view");
   return useQuery({
     queryKey: queryKeys.payments.webhookEvents(providerKey),
     queryFn: ({ signal }) => apiClient.get<PaymentWebhookEvent[]>(`/payments/providers/${providerKey}/webhooks/events`, undefined, signal),
@@ -268,7 +268,7 @@ export type PaymentAuditEvent = {
 };
 
 export function usePaymentAudit(providerKey: string, enabled = true) {
-  const canView = useCan("payments:providers:view");
+  const canView = useCan("payments:audit:view");
   return useQuery({
     queryKey: queryKeys.payments.audit(providerKey),
     queryFn: ({ signal }) => apiClient.get<PaymentAuditEvent[]>(`/payments/providers/${providerKey}/audit`, undefined, signal),

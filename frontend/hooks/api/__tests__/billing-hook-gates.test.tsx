@@ -91,7 +91,7 @@ describe("billing hook gates — idle without permission", () => {
     expect(mockedGet).not.toHaveBeenCalled();
   });
 
-  it("useWebhookEvents — idle when payments:providers:view denied", async () => {
+  it("useWebhookEvents — idle when payments:webhooks:view denied", async () => {
     const { useWebhookEvents } = await import("@/hooks/api/payments");
     const client = freshClient();
     const { result } = renderHook(() => useWebhookEvents("razorpay"), {
@@ -111,7 +111,7 @@ describe("billing hook gates — idle without permission", () => {
     expect(mockedGet).not.toHaveBeenCalled();
   });
 
-  it("usePaymentAudit — idle when payments:providers:view denied", async () => {
+  it("usePaymentAudit — idle when payments:audit:view denied", async () => {
     const { usePaymentAudit } = await import("@/hooks/api/payments");
     const client = freshClient();
     const { result } = renderHook(() => usePaymentAudit("razorpay"), {
@@ -174,7 +174,7 @@ describe("billing hook gates — fire when permission granted", () => {
     );
   });
 
-  it("useWebhookEvents — calls webhooks/events URL when payments:providers:view granted", async () => {
+  it("useWebhookEvents — calls webhooks/events URL when payments:webhooks:view granted", async () => {
     useCan.mockReturnValue(true);
     const { useWebhookEvents } = await import("@/hooks/api/payments");
     const client = freshClient();
@@ -198,7 +198,7 @@ describe("billing hook gates — fire when permission granted", () => {
     );
   });
 
-  it("usePaymentAudit — calls audit URL when payments:providers:view granted", async () => {
+  it("usePaymentAudit — calls audit URL when payments:audit:view granted", async () => {
     useCan.mockReturnValue(true);
     const { usePaymentAudit } = await import("@/hooks/api/payments");
     const client = freshClient();

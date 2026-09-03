@@ -56,7 +56,7 @@ export function useCreateLiveSession(surveyId: number) {
 }
 
 export function useLiveSession(sessionId: number) {
-  return useGatedQuery("surveys:automations:manage", {
+  return useGatedQuery("surveys:live:host", {
     queryKey: queryKeys.surveys.liveSession(sessionId),
     queryFn: ({ signal }) => apiClient.get<SurveyLiveSession>(`/surveys/live-sessions/${sessionId}`, undefined, signal),
     refetchInterval: LIVE_POLL_INTERVAL,
@@ -64,7 +64,7 @@ export function useLiveSession(sessionId: number) {
 }
 
 export function useLiveSessionResults(sessionId: number) {
-  return useGatedQuery("surveys:responses:view", {
+  return useGatedQuery("surveys:live:host", {
     queryKey: [...queryKeys.surveys.liveSession(sessionId), "results"],
     queryFn: ({ signal }) => apiClient.get<LiveSessionResults>(`/surveys/live-sessions/${sessionId}/results`, undefined, signal),
     refetchInterval: LIVE_POLL_INTERVAL,

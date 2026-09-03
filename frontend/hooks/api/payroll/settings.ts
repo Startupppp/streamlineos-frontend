@@ -13,7 +13,7 @@ type UpdateFxRatesInput = {
 
 export function useUpdateFxRates() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("payroll:settings:manage", {
+  return useAuthorizedMutation("payroll:policies:manage", {
     mutationKey: ["payroll", "policies", "fx-rates"],
     mutationFn: ({ policyId, fxRates }: UpdateFxRatesInput) =>
       apiClient.patch<PolicyRow>(`/payroll/policies/${policyId}`, { fxRates }),

@@ -55,7 +55,7 @@ export interface CreateRunInput {
 
 export function useCreateRun() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("payroll:runs:manage", {
+  return useAuthorizedMutation("payroll:runs:create", {
     mutationKey: ["payroll", "runs", "create"],
     mutationFn: (input: string | CreateRunInput) => {
       const body: CreateRunInput =

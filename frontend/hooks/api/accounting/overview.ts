@@ -52,7 +52,7 @@ function toQuery(params: OverviewParams): Record<string, string> {
 }
 
 export function useAccountingOverview(params: OverviewParams = {}) {
-  const can = useCan("accounting:read");
+  const can = useCan("accounting:reports:read");
   return useQuery<AccountingOverview, Error>({
     queryKey: [...queryKeys.accounting.all, "overview", params],
     queryFn: ({ signal }) =>

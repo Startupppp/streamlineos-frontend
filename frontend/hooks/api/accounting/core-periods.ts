@@ -88,7 +88,7 @@ export function useGeneratePeriods() {
 }
 
 export function usePeriodChecklist(periodId: number, enabled: boolean) {
-  const can = useCan("accounting:periods:manage");
+  const can = useCan("accounting:periods:read");
   return useQuery<PeriodChecklist, Error>({
     queryKey: coreKeys.periodChecklist(periodId),
     queryFn: ({ signal }) =>
@@ -138,7 +138,7 @@ export function useReopenPeriod(periodId: number) {
 }
 
 export function useOpeningBalance() {
-  const can = useCan("accounting:accounts:read");
+  const can = useCan("accounting:journal:read");
   return useQuery<OpeningBalanceResponse, Error>({
     queryKey: coreKeys.openingBalance(),
     queryFn: ({ signal }) => apiClient.get<OpeningBalanceResponse>("/accounting/opening-balances", undefined, signal),
