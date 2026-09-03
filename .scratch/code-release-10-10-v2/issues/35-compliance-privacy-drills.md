@@ -2,7 +2,7 @@
 
 **What to build:** Operator access, data governance, residency, providers, retention, legal hold, export, correction, and erasure decisions are approved and exercised.
 
-**Blocked by:** 31 — One-commit code-release verification
+**Blocked by:** 32 — Provider and deployed-security drills; 33 — Cell isolation, replicas and recovery; 34 — Production operations, alerts and cost
 
 **Status:** ready-for-agent
 

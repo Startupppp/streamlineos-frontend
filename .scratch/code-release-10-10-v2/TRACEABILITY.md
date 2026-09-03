@@ -2,7 +2,7 @@
 
 Source: `architecture-refactor/PRD-10-10-CODE-RELEASE-TODO.md`
 
-Exactly **195** unchecked PRD criteria are assigned to **36** execution tickets. Existing `.scratch/code-release-10-10/issues/` tickets remain historical evidence and do not own unfinished work.
+Exactly **195** unchecked PRD criteria are assigned to **36** execution tickets. Existing .scratch/code-release-10-10/issues/ tickets remain historical evidence and do not own unfinished work.
 
 - Every unchecked source criterion has one stable ID and exactly one owner below.
 - Ticket criteria quote the source criterion verbatim.
@@ -11,31 +11,31 @@ Exactly **195** unchecked PRD criteria are assigned to **36** execution tickets.
 
 | PRD criterion | Ticket | PRD section |
 |---|---:|---|
-| PRD-C001 | 02 | Current remaining execution list |
+| PRD-C001 | 03 | Current remaining execution list |
 | PRD-C002 | 17 | Current remaining execution list |
 | PRD-C003 | 22 | Current remaining execution list |
 | PRD-C004 | 05 | Current remaining execution list |
-| PRD-C005 | 18 | Current remaining execution list |
+| PRD-C005 | 29 | Current remaining execution list |
 | PRD-C006 | 29 | Current remaining execution list |
 | PRD-C007 | 19 | Current remaining execution list |
-| PRD-C008 | 13 | Current remaining execution list |
+| PRD-C008 | 31 | Current remaining execution list |
 | PRD-C009 | 20 | Current remaining execution list |
-| PRD-C010 | 21 | Current remaining execution list |
+| PRD-C010 | 34 | Current remaining execution list |
 | PRD-C011 | 30 | Current remaining execution list |
 | PRD-C012 | 27 | Current remaining execution list |
 | PRD-C013 | 28 | Current remaining execution list |
 | PRD-C014 | 31 | Current remaining execution list |
 | PRD-C015 | 30 | Current remaining execution list |
-| PRD-C016 | 31 | Current remaining execution list |
+| PRD-C016 | 36 | Current remaining execution list |
 | PRD-C017 | 01 | Current remaining execution list |
 | PRD-C018 | 31 | 1. One-commit release verification |
 | PRD-C019 | 31 | 1. One-commit release verification |
 | PRD-C020 | 31 | 1. One-commit release verification |
 | PRD-C021 | 31 | 1. One-commit release verification |
-| PRD-C022 | 24 | 2. Module and folder architecture |
+| PRD-C022 | 27 | 2. Module and folder architecture |
 | PRD-C023 | 26 | 2.1 Repository hygiene, dead code and type integrity |
 | PRD-C024 | 26 | 2.1 Repository hygiene, dead code and type integrity |
-| PRD-C025 | 27 | 2.1 Repository hygiene, dead code and type integrity |
+| PRD-C025 | 24 | 2.1 Repository hygiene, dead code and type integrity |
 | PRD-C026 | 26 | 2.1 Repository hygiene, dead code and type integrity |
 | PRD-C027 | 27 | 2.1 Repository hygiene, dead code and type integrity |
 | PRD-C028 | 26 | 2.1 Repository hygiene, dead code and type integrity |
@@ -45,9 +45,9 @@ Exactly **195** unchecked PRD criteria are assigned to **36** execution tickets.
 | PRD-C032 | 27 | 2.1 Repository hygiene, dead code and type integrity |
 | PRD-C033 | 27 | 2.1 Repository hygiene, dead code and type integrity |
 | PRD-C034 | 27 | 2.1 Repository hygiene, dead code and type integrity |
-| PRD-C035 | 24 | 2.1 Repository hygiene, dead code and type integrity |
+| PRD-C035 | 27 | 2.1 Repository hygiene, dead code and type integrity |
 | PRD-C036 | 27 | 2.1 Repository hygiene, dead code and type integrity |
-| PRD-C037 | 24 | 2.1 Repository hygiene, dead code and type integrity |
+| PRD-C037 | 27 | 2.1 Repository hygiene, dead code and type integrity |
 | PRD-C038 | 28 | 2.2 File cohesion and 500-line policy |
 | PRD-C039 | 28 | 2.2 File cohesion and 500-line policy |
 | PRD-C040 | 28 | 2.2 File cohesion and 500-line policy |
@@ -70,11 +70,11 @@ Exactly **195** unchecked PRD criteria are assigned to **36** execution tickets.
 | PRD-C057 | 02 | 4.1 Schema and executable-key minimization |
 | PRD-C058 | 02 | 4.1 Schema and executable-key minimization |
 | PRD-C059 | 02 | 4.1 Schema and executable-key minimization |
-| PRD-C060 | 02 | 4.1 Schema and executable-key minimization |
+| PRD-C060 | 03 | 4.1 Schema and executable-key minimization |
 | PRD-C061 | 02 | 4.1 Schema and executable-key minimization |
 | PRD-C062 | 02 | 4.1 Schema and executable-key minimization |
 | PRD-C063 | 02 | 4.1 Schema and executable-key minimization |
-| PRD-C064 | 02 | 4.1 Schema and executable-key minimization |
+| PRD-C064 | 30 | 4.1 Schema and executable-key minimization |
 | PRD-C065 | 18 | 5. Query, pagination and cache correctness |
 | PRD-C066 | 18 | 5. Query, pagination and cache correctness |
 | PRD-C067 | 18 | 5. Query, pagination and cache correctness |
@@ -114,13 +114,13 @@ Exactly **195** unchecked PRD criteria are assigned to **36** execution tickets.
 | PRD-C101 | 19 | 8. TanStack Query and Next.js data layer |
 | PRD-C102 | 23 | 9. Operability, upload lifecycle and verification integrity |
 | PRD-C103 | 21 | 9. Operability, upload lifecycle and verification integrity |
-| PRD-C104 | 21 | 9. Operability, upload lifecycle and verification integrity |
+| PRD-C104 | 30 | 9. Operability, upload lifecycle and verification integrity |
 | PRD-C105 | 24 | 10. Module release matrix |
 | PRD-C106 | 24 | 10. Module release matrix |
 | PRD-C107 | 24 | 10. Module release matrix |
-| PRD-C108 | 24 | 10. Module release matrix |
-| PRD-C109 | 24 | 10. Module release matrix |
-| PRD-C110 | 24 | 10. Module release matrix |
+| PRD-C108 | 28 | 10. Module release matrix |
+| PRD-C109 | 27 | 10. Module release matrix |
+| PRD-C110 | 27 | 10. Module release matrix |
 | PRD-C111 | 05 | 10.1 Authentication, identity, sessions and organization |
 | PRD-C112 | 05 | 10.1 Authentication, identity, sessions and organization |
 | PRD-C113 | 05 | 10.2 Organization RBAC and module RBAC |
@@ -175,19 +175,19 @@ Exactly **195** unchecked PRD criteria are assigned to **36** execution tickets.
 | PRD-C162 | 32 | Deployed security, provider and performance |
 | PRD-C163 | 32 | Deployed security, provider and performance |
 | PRD-C164 | 32 | Deployed security, provider and performance |
-| PRD-C165 | 32 | Deployed security, provider and performance |
-| PRD-C166 | 32 | Deployed security, provider and performance |
-| PRD-C167 | 32 | Deployed security, provider and performance |
+| PRD-C165 | 34 | Deployed security, provider and performance |
+| PRD-C166 | 34 | Deployed security, provider and performance |
+| PRD-C167 | 34 | Deployed security, provider and performance |
 | PRD-C168 | 33 | Cloud, recovery and operations |
 | PRD-C169 | 33 | Cloud, recovery and operations |
 | PRD-C170 | 33 | Cloud, recovery and operations |
 | PRD-C171 | 33 | Cloud, recovery and operations |
-| PRD-C172 | 33 | Cloud, recovery and operations |
+| PRD-C172 | 34 | Cloud, recovery and operations |
 | PRD-C173 | 34 | Cloud, recovery and operations |
 | PRD-C174 | 34 | Cloud, recovery and operations |
 | PRD-C175 | 34 | Cloud, recovery and operations |
 | PRD-C176 | 34 | Cloud, recovery and operations |
-| PRD-C177 | 33 | Cloud, recovery and operations |
+| PRD-C177 | 34 | Cloud, recovery and operations |
 | PRD-C178 | 34 | Cloud, recovery and operations |
 | PRD-C179 | 33 | Cloud, recovery and operations |
 | PRD-C180 | 35 | Compliance and approvals |
@@ -210,8 +210,8 @@ Exactly **195** unchecked PRD criteria are assigned to **36** execution tickets.
 ## Coverage totals
 
 - Ticket 01: 1
-- Ticket 02: 12
-- Ticket 03: 4
+- Ticket 02: 9
+- Ticket 03: 6
 - Ticket 04: 13
 - Ticket 05: 8
 - Ticket 06: 2
@@ -221,27 +221,27 @@ Exactly **195** unchecked PRD criteria are assigned to **36** execution tickets.
 - Ticket 10: 1
 - Ticket 11: 1
 - Ticket 12: 1
-- Ticket 13: 3
+- Ticket 13: 2
 - Ticket 14: 2
 - Ticket 15: 1
 - Ticket 16: 3
 - Ticket 17: 5
-- Ticket 18: 17
+- Ticket 18: 16
 - Ticket 19: 9
 - Ticket 20: 3
-- Ticket 21: 3
+- Ticket 21: 1
 - Ticket 22: 1
 - Ticket 23: 7
-- Ticket 24: 9
+- Ticket 24: 4
 - Ticket 25: 2
 - Ticket 26: 4
-- Ticket 27: 8
-- Ticket 28: 10
-- Ticket 29: 10
-- Ticket 30: 2
+- Ticket 27: 12
+- Ticket 28: 11
+- Ticket 29: 11
+- Ticket 30: 4
 - Ticket 31: 12
-- Ticket 32: 6
-- Ticket 33: 7
-- Ticket 34: 5
+- Ticket 32: 3
+- Ticket 33: 5
+- Ticket 34: 11
 - Ticket 35: 10
-- Ticket 36: 6
+- Ticket 36: 7

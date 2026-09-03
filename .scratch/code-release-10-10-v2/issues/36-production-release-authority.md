@@ -10,6 +10,7 @@
 
 ## Acceptance criteria
 
+- [ ] **PRD-C016** — **Final integration:** complete v2 ticket 31 at one clean frontend/backend commit pair, then v2 ticket 36's deployed release-authority record; interrupted, skipped and prerequisite-blocked gates never count as passing.
 - [ ] **PRD-C190** — Immediate code-level gate remains green at the deployed commit.
 - [ ] **PRD-C191** — Every deferred checkbox is complete with current evidence.
 - [ ] **PRD-C192** — Production evidence proves isolation, recovery, SLO/headroom, unit cost, live alerts and acknowledgement.
