@@ -1693,3 +1693,59 @@ half-finished file reds it for everyone.
 Not a regression, and not fixable by the agent who reports it. **It is, however, proof that ticket 41
 cannot run against a working tree with agents in it** — the release verification needs a quiesced
 tree, which is exactly why it is being held.
+
+---
+
+## Adjudication: the frontend lint gate CANNOT be green this release, and that is a scope decision
+
+Measured at head: `pnpm run lint` reports **967 problems — 949 of them warnings**, not errors. The
+script carries no `--max-warnings`, and the warning text of `set-state-in-effect` and the refs rules
+literally begins "Error:", so the raw output reads as ~967 errors to anyone skimming. Counted by
+`severity` out of `eslint --format json`, it is **4 errors**, down from 16.
+
+**All four remaining errors are blocked by a release constraint, not by difficulty:**
+
+| file | why it is blocked |
+|---|---|
+| `features/crm/leads/leads-funnel-view.tsx:73` | **CRM — excluded from release scope.** And it is a REAL conditional-hook bug, the same shape as the one fixed in `mail-reading-pane.tsx` |
+| `features/crm/leads/leads-toolbar.tsx:119` | CRM — excluded |
+| `hooks/api/crm/__tests__/quotes-cursor-pagination.test.ts:39` | CRM — excluded |
+| `features/landing/components/included-apps-grid.tsx:67` | `hover:border-slate-300` vs `no-raw-visual-values` |
+
+**The landing one is a genuine conflict between two rules in force**, adjudicated here rather than
+resolved by fiat:
+- `no-raw-visual-values` requires a token.
+- Public landing visuals must remain UNCHANGED.
+
+There is no token equal to `slate-300`. `--border` is `#e2e8f0` (slate-200), so the obvious swap
+would visibly change the card hover border on the public page. Two tokens do carry `#cbd5e1`
+(`--status-neutral-ink-strong`, `--category-slate-ink`) but both are semantically wrong for a border
+and using one would be a lie that happens to render correctly.
+
+A correctly-named new token (`--border-strong: #cbd5e1`) would satisfy both rules with zero visual
+delta — but it is a design-system addition for **one** occurrence (only 3 raw `slate-300` exist
+repo-wide, 1 in landing), and **it would not make lint green anyway**, because the other three errors
+are CRM. Left open deliberately with this reasoning recorded. Owner: design system, if it is ever
+worth a token.
+
+**Consequence to state plainly in the release record: a red frontend lint is the EXPECTED state
+while CRM is out of scope. It is not unfinished work.**
+
+### 🔴 A live crash bug in CRM that we are not fixing
+
+`features/crm/leads/leads-funnel-view.tsx:73` calls a hook below a conditional return — the identical
+defect that made `mail-reading-pane.tsx` throw *"Rendered more hooks than during the previous render"*
+the first time the pane finished loading. That one was fixed because mail is in scope. This one is
+CRM, so it stays. **The CRM leads funnel view will crash on the same transition.** Recorded so the
+exclusion is a decision rather than an oversight — this is the second live CRM defect found and left
+this session, after the import that reports success and writes nothing.
+
+### The `next dev` server on :3000 signs its users out
+
+Its `INTERNAL_API_SECRET` does not match the backend's, so `/api/auth/session` returns no
+`backendJwt`, every client read 401s, and `api-client.ts:202` calls `signOut`. **`curl /dashboard`
+still answers 200**, so anyone screenshotting :3000 is screenshotting a signed-out application while
+every health signal looks fine. Third variant of the stale-server trap this release.
+
+Related: backend `CORS_ORIGINS` names only ports 1000 and 3000, **both permanently occupied**, so no
+agent can stand up its own frontend and reach the API without disabling the browser's CORS check.
