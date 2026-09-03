@@ -145,7 +145,7 @@ describe("the member row renders the identity it is given", () => {
         />
       </TooltipProvider>,
     );
-    expect(screen.getByText("Ada Lovelace")).toBeInTheDocument();
-    expect(screen.getByText("ada@test.com")).toBeInTheDocument();
+    expect(screen.getByText("Ada Lovelace")).not.toBeNull();
+    expect(screen.getByText("ada@test.com")).not.toBeNull();
   });
 });
