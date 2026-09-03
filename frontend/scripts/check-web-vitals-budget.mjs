@@ -94,6 +94,7 @@ const METRICS = [
 export function checkPerRouteBudgets(results, budgets = BUDGETS) {
   const failures = [];
   const notMeasured = [];
+  const interactionsTooFast = [];
   const worst = {};
   const byRoute = results?.byRoute;
 
@@ -105,7 +106,7 @@ export function checkPerRouteBudgets(results, budgets = BUDGETS) {
         "BUDGET BREACH [all] the capture carries no per-route block, so no per-route budget was measured." +
         "\n      A profile-wide p75 is diluted by every quiet route and cannot fail on one bad one.",
     });
-    return { failures, notMeasured, worst, routeCount: 0 };
+    return { failures, notMeasured, interactionsTooFast, worst, routeCount: 0 };
   }
 
   const declared = Array.isArray(results?.authenticatedRoutes) ? results.authenticatedRoutes : [];
@@ -123,6 +124,18 @@ export function checkPerRouteBudgets(results, budgets = BUDGETS) {
       for (const m of METRICS) {
         const value = data[m.block]?.[m.field] ?? null;
         if (value === null || !Number.isFinite(value)) {
+          /*
+           * INP is the one budget whose absence can be good news. It exists only
+           * when an interaction was recorded, and the capture's observer records
+           * at durationThreshold 16ms — so on a route the probe DID interact
+           * with, no entry means nothing there took 16ms. On a route the probe
+           * could not interact with at all, it means nobody measured. The
+           * capture records which, and only the first is a pass.
+           */
+          if (m.metric === "inp_p75_ms" && (data.interactions?.performed ?? 0) > 0) {
+            interactionsTooFast.push(`${route} ${profile} (${data.interactions.performed} interaction(s), none reached 16ms)`);
+            continue;
+          }
           notMeasured.push(`${route} ${profile}.${m.block}.${m.field}`);
           continue;
         }
@@ -140,7 +153,7 @@ export function checkPerRouteBudgets(results, budgets = BUDGETS) {
     }
   }
 
-  return { failures, notMeasured, worst, routeCount: routes.length };
+  return { failures, notMeasured, interactionsTooFast, worst, routeCount: routes.length };
 }
 
 function checkBudgets(results) {
@@ -479,6 +492,26 @@ async function selfTest() {
     authenticatedRoutes: ["/inbox"],
     byRoute: { "/inbox": { desktop: { ...quietDesktop, cls: {} }, mobile: quietMobile } },
   });
+  const perRouteFastInteraction = checkPerRouteBudgets({
+    ...dilutedAggregates,
+    authenticatedRoutes: ["/chat"],
+    byRoute: {
+      "/chat": {
+        desktop: quietDesktop,
+        mobile: { ...quietMobile, inp: { p75_ms: null }, interactions: { samples: 8, performed: 8 } },
+      },
+    },
+  });
+  const perRouteNoInteraction = checkPerRouteBudgets({
+    ...dilutedAggregates,
+    authenticatedRoutes: ["/chat"],
+    byRoute: {
+      "/chat": {
+        desktop: quietDesktop,
+        mobile: { ...quietMobile, inp: { p75_ms: null }, interactions: { samples: 8, performed: 0 } },
+      },
+    },
+  });
 
   const perRouteOk =
     dilutedAggregate.failures.length === 0 &&
@@ -493,7 +526,11 @@ async function selfTest() {
     perRouteMissingRoute.failures.length === 0 &&
     perRouteMissingRoute.notMeasured.length === 1 &&
     perRouteMissingMetric.failures.length === 0 &&
-    perRouteMissingMetric.notMeasured.length === 1;
+    perRouteMissingMetric.notMeasured.length === 1 &&
+    perRouteFastInteraction.notMeasured.length === 0 &&
+    perRouteFastInteraction.interactionsTooFast.length === 1 &&
+    perRouteNoInteraction.notMeasured.length === 1 &&
+    perRouteNoInteraction.interactionsTooFast.length === 0;
 
   console.log(
     `\nPer-route budgets: the diluted capture -> profile-wide check ${dilutedAggregate.failures.length} failure(s) ` +
@@ -501,7 +538,10 @@ async function selfTest() {
       `Clean capture -> ${perRouteClean.failures.length} (expected 0). No byRoute block -> ` +
       `${perRouteAbsent.failures.length} (expected 1). Declared route absent -> ` +
       `${perRouteMissingRoute.notMeasured.length} not-measured (expected 1). Missing metric -> ` +
-      `${perRouteMissingMetric.notMeasured.length} (expected 1).`,
+      `${perRouteMissingMetric.notMeasured.length} (expected 1). Null INP after ` +
+      `${perRouteFastInteraction.interactionsTooFast.length} recorded interaction(s) -> ` +
+      `${perRouteFastInteraction.notMeasured.length} not-measured (expected 0); null INP with no interaction -> ` +
+      `${perRouteNoInteraction.notMeasured.length} (expected 1).`,
   );
   for (const f of dilutedPerRoute.failures) console.log("  " + f.message);
 
@@ -638,6 +678,9 @@ function main() {
   }
   for (const u of perceived.unmeasured)
     console.log(`  not measured: ${u.profile} ${u.route} — ${u.reason} (no navigation there to be slow)`);
+
+  for (const line of perRoute.interactionsTooFast)
+    console.log(`  INP not recorded: ${line} — an interaction that never reached the threshold is fast, not unmeasured`);
 
   if (notMeasured.length > 0) {
     console.log(`\nNot measured:`);

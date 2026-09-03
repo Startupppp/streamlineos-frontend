@@ -942,7 +942,20 @@ async function run() {
           log(`[${profile}] ${route} intent->first paint change ${intent.measured ? `${Math.round(intent.ms)}ms via ${intent.href}` : `not measured (${intent.reason ?? "no link"})`}`);
 
           byRoute[route] ??= {};
-          byRoute[route][profile] = buildProfileSummary(routeSamples);
+          byRoute[route][profile] = {
+            ...buildProfileSummary(routeSamples),
+            /*
+             * INP only exists when an interaction was recorded, and the observer's
+             * durationThreshold is 16ms. A null INP on a route the probe DID click
+             * means nothing there was slow enough to record; a null INP on a route
+             * the probe could not click at all is an unmeasured budget. Only the
+             * capture knows which, so it says.
+             */
+            interactions: {
+              samples: routeSamples.length,
+              performed: routeSamples.filter((sample) => sample.interaction?.interacted === true).length,
+            },
+          };
           byRoute[route][`${profile}Content`] = routeSamples.at(-1)?.content ?? null;
           const worstShift = routeSamples.flatMap((s) => s.shifts).sort((a, b) => b.value - a.value).slice(0, 5);
           if (worstShift.length > 0) byRoute[route][`${profile}LayoutShifts`] = worstShift;
