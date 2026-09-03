@@ -43,6 +43,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import ts from "typescript";
 
 const ROOT = fileURLToPath(new URL("../", import.meta.url));
 
@@ -88,11 +89,28 @@ const DOUBLE_CAST = /\bas\s+unknown\s+as\b/g;
  * alternate distDir, and it is the second one that produced the phantom 661
  * `@ts-ignore`. A future alternate distDir is caught by the same prefix.
  */
+/**
+ * Skipped ANYWHERE in the tree: these names never denote source.
+ */
 const SKIP_DIRS = new Set([
-  "node_modules", "coverage", "dist", "build", "public", "out",
-  ".git", ".turbo", ".vercel", ".scratch", ".scan",
+  "node_modules", "coverage", ".git", ".turbo", ".vercel", ".scratch", ".scan",
   "__tests__", "__mocks__",
 ]);
+
+/**
+ * Skipped ONLY at the package root, because these are build output *there* and
+ * ordinary source everywhere else.
+ *
+ * This distinction is a correction, and it is the exact failure mode this
+ * release keeps finding: a gate reporting green over a set it cannot see.
+ * `build` was previously matched by NAME at any depth, which silently excluded
+ * `features/build/` (456 files — the Build module is the product's largest),
+ * `app/(authenticated)/build/`, `hooks/api/build/` and `lib/build/` from every
+ * rule in this file. The gate said "4,260 application files, 0 escapes" over a
+ * tree whose largest module was never opened. `public` and `dist` had the same
+ * latent problem. The self-test pins the distinction in both directions.
+ */
+const SKIP_ROOT_DIRS = new Set(["dist", "build", "public", "out"]);
 const SKIP_FILE = /(\.spec\.tsx?|\.test\.tsx?|\.d\.ts)$/;
 
 /**
@@ -121,7 +139,97 @@ const DOUBLE_CAST_LEDGER = new Map([
   ["hooks/api/hr/employees.ts", { count: 1, seam: "narrow-me", invariant: "`FindExpertParams` is an interface of string and optional-string fields handed to apiClient.get's `Record<string, string>` query-parameter argument. An interface has no implicit index signature, and `department?: string` is `string | undefined`, so it cannot satisfy `Record<string, string>` either way. The honest fix is for the client to accept `Record<string, string | undefined>` and drop undefined keys when building the query string. Owned by the response-contracts lane, which holds hooks/api/**." }],
 ]);
 
-function* walk(dir) {
+/**
+ * ---------------------------------------------------------------------------
+ * Rule 3: the raw-`fetch` JSON cast.
+ * ---------------------------------------------------------------------------
+ *
+ * `check:response-contracts` (a separate gate, and the right home for it)
+ * ratchets the 2,603 unparsed `apiClient` / `serverGet` / `publicGet` call
+ * sites. It cannot see a raw `fetch`. A handful of surfaces deliberately do not
+ * use `apiClient` — unauthenticated public pages that must not drag the token
+ * cache or the auto-sign-out behaviour onto a page a stranger opens, the
+ * NextAuth bridge, the customer portal client — and each of those reads its
+ * body with `res.json()` and a cast. That cast is invisible to every gate in
+ * either repository.
+ *
+ * It is not hypothetical. `app/(public)/forms/[token]/page.tsx` ended its read
+ * with `return res.json() as Promise<PublicFormDefinition>`. The backend's
+ * global ResponseTransformInterceptor wraps EVERY handler return as
+ * `{ success: true, data }`, so the value that resolved was the envelope:
+ * `form.name` was undefined, the header stayed on "Loading form…", and
+ * `form.fields.length` threw. Two sibling sites carried the same cast. All
+ * three now read through `parseApiResponse` with a Zod contract, pinned by
+ * `features/build/forms/public-form-envelope.test.ts`.
+ *
+ * Two rules, and 3b is the one that bites:
+ *
+ *   3a. a per-file zero-growth ledger of every `x.json() as T`, each naming
+ *       how that site handles the envelope. A new raw-`fetch` seam must be
+ *       declared rather than added quietly.
+ *   3b. HARD ZERO on `x.json() as Promise<T>`. `res.json()` already returns a
+ *       promise, so casting the PROMISE — rather than the awaited body — can
+ *       only be a success-payload read that skips both `unwrapEnvelope` and any
+ *       contract. There is no legitimate form of it here. It was 3 before the
+ *       fix above and is 0 now; no ledger, no permitted count.
+ */
+const RAW_JSON_LEDGER = new Map([
+  ["features/build/forms/public-form-api.ts", { count: 1, seam: "external", invariant: "the error branch only: a failed public-form response is read for its `message` before being thrown as an Error. Read as `Record<string, unknown>` and every field is typeof-guarded before use. The SUCCESS branch of this file goes through `parseApiResponse` with `publicFormDefinitionContract`, which is what unwraps the envelope." }],
+  ["features/build/intake/public-intake-api.ts", { count: 1, seam: "external", invariant: "the error branch only, same shape as public-form-api.ts: `Record<string, unknown>` with a typeof guard on every read. The success branch goes through `parseApiResponse` with `intakeSubmitResponseContract`." }],
+  ["features/landing/contact-form.tsx", { count: 1, seam: "external", invariant: "an error-body probe on the public contact form. Errors are produced by the backend's exception filter, which does NOT pass through the response envelope, so there is nothing to unwrap; both fields are optional and fall back to a generic message. The success branch reads no body at all." }],
+  ["hooks/api/ai-text-stream.ts", { count: 1, seam: "external", invariant: "an error-body probe on an SSE endpoint whose success path is a byte stream, not JSON — there is no envelope on the failure side and no body to parse on the success side. Every field is optional and defaults to the status line." }],
+  ["hooks/api/sign/public.ts", { count: 2, seam: "external", invariant: "an unauthenticated e-sign surface that deliberately avoids apiClient so a signer's browser never touches the token cache. One site is the error-body probe; the other reads the success body as `unknown` and hands it to this file's own `unwrap()`, which checks `success === true && \"data\" in body` before returning `data`. The envelope IS handled; what is missing is a contract on the unwrapped value, which is `check:response-contracts` territory." }],
+  ["lib/api-client.ts", { count: 2, seam: "external", invariant: "neither site talks to the backend API. One reads a 403 body for an ORG_MEMBERSHIP_* code, guarding `typeof body.code !== \"string\"` before use; the other reads Next's own `/api/auth/session` route, which is NextAuth's shape and carries no StreamlineOS envelope. Every backend response in this file goes through parseApiResponse instead." }],
+  ["lib/auth-session.ts", { count: 3, seam: "external", invariant: "the server-side NextAuth bridge. Two sites read the body as `unknown` and pass it to this file's exported `unwrapBackend<T>()`, which checks `success === true && \"data\" in body` — the envelope is handled. The third reads the Google auth result with BOTH shapes declared optional (`data?.userId ?? userId`) precisely because it tolerates enveloped and bare bodies, and returns null when neither yields a userId." }],
+  ["lib/portal-api-client.ts", { count: 2, seam: "external", invariant: "the customer-portal client, a second fetch seam with its own token store. Both sites are inside `parsePortalResponse`, which is this file's local equivalent of parseApiResponse: it reads the error body for message/code/details, and on success checks `success === true && \"data\" in body` before returning `data`. The envelope is handled; the value is not contracted." }],
+]);
+
+/**
+ * Finds `<expr>.json() as T`, unwrapping parentheses and `await` so
+ * `(await res.json()) as T` and `res.json() as Promise<T>` are both seen. A
+ * regex cannot do this: the asserted type spans lines and nests angle brackets,
+ * and the `.json()` sits behind an arbitrary receiver expression.
+ */
+export function findRawJsonCasts(fileName, source) {
+  if (!source.includes(".json()")) return [];
+  const sf = ts.createSourceFile(
+    fileName, source, ts.ScriptTarget.Latest, true,
+    /\.tsx$/.test(fileName) ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+  );
+  const found = [];
+  const visit = (node) => {
+    if (ts.isAsExpression(node)) {
+      let inner = node.expression;
+      while (ts.isParenthesizedExpression(inner) || ts.isAwaitExpression(inner))
+        inner = inner.expression;
+      if (
+        ts.isCallExpression(inner) &&
+        ts.isPropertyAccessExpression(inner.expression) &&
+        inner.expression.name.getText(sf) === "json" &&
+        inner.arguments.length === 0
+      ) {
+        const target = node.type.getText(sf).replace(/\s+/g, " ");
+        found.push({
+          line: sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1,
+          target,
+          /** A cast of the PROMISE, not the awaited body. See rule 3b. */
+          promiseCast: ts.isTypeReferenceNode(node.type)
+            && node.type.typeName.getText(sf) === "Promise",
+        });
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  ts.forEachChild(sf, visit);
+  return found;
+}
+
+export function isSkippedDir(name, depth) {
+  if (SKIP_DIRS.has(name) || name.startsWith(".next")) return true;
+  return depth === 0 && SKIP_ROOT_DIRS.has(name);
+}
+
+function* walk(dir, depth = 0) {
   let entries;
   try {
     entries = readdirSync(dir, { withFileTypes: true });
@@ -130,8 +238,8 @@ function* walk(dir) {
   }
   for (const entry of entries) {
     if (entry.isDirectory()) {
-      if (SKIP_DIRS.has(entry.name) || entry.name.startsWith(".next")) continue;
-      yield* walk(join(dir, entry.name));
+      if (isSkippedDir(entry.name, depth)) continue;
+      yield* walk(join(dir, entry.name), depth + 1);
     } else if (/\.tsx?$/.test(entry.name) && !SKIP_FILE.test(entry.name)) {
       yield join(dir, entry.name);
     }
@@ -153,6 +261,8 @@ export function countOutsideComments(source, pattern) {
 function scan(root) {
   const banned = new Map();
   const doubleCasts = new Map();
+  const rawJson = new Map();
+  const promiseCasts = [];
   let files = 0;
 
   for (const file of walk(root)) {
@@ -174,9 +284,14 @@ function scan(root) {
     }
     const casts = countOutsideComments(source, DOUBLE_CAST);
     if (casts) doubleCasts.set(rel, casts);
+
+    const jsonCasts = findRawJsonCasts(file, source);
+    if (jsonCasts.length) rawJson.set(rel, jsonCasts.length);
+    for (const site of jsonCasts)
+      if (site.promiseCast) promiseCasts.push(`${rel}:${site.line} as ${site.target}`);
   }
 
-  return { banned, doubleCasts, files };
+  return { banned, doubleCasts, rawJson, promiseCasts, files };
 }
 
 export function diffLedger(actual, ledger) {
@@ -234,6 +349,12 @@ function runSelfTest() {
     "(i) prose mentioning a directive is not a directive — TypeScript only honours one that begins the comment");
   assert(".next-buildmart".startsWith(".next"),
     "(j) the generated-output skip must match an alternate distDir, not just `.next`");
+  assert(isSkippedDir("build", 0) && isSkippedDir("public", 0) && isSkippedDir("dist", 0),
+    "(j1) `build`/`public`/`dist` at the PACKAGE ROOT are output and must be skipped");
+  assert(!isSkippedDir("build", 1) && !isSkippedDir("build", 2) && !isSkippedDir("public", 1),
+    "(j2) a nested `build`/`public` is SOURCE and must be scanned — skipping it by name hid `features/build/` (456 files, the product's largest module) from every rule in this gate");
+  assert(isSkippedDir("node_modules", 3) && isSkippedDir("__tests__", 4),
+    "(j3) the always-skipped names stay skipped at every depth");
 
   const ledger = new Map([
     ["a.ts", { count: 2, seam: "external", invariant: "x" }],
@@ -259,8 +380,41 @@ function runSelfTest() {
       `(q) ${file}: every entry needs a written invariant, not a placeholder`);
   }
 
-  console.log("PASS: self-test (16 assertions + a written invariant on all "
-    + `${DOUBLE_CAST_LEDGER.size} ledger entries)\n`);
+  // ---- rule 3: the raw-`fetch` JSON cast --------------------------------
+  const json = (src, name = "probe.ts") => findRawJsonCasts(name, src);
+
+  assert(json("const b = (await res.json()) as Body;").length === 1,
+    "(r) `(await res.json()) as T` must be found — parentheses and await are unwrapped");
+  assert(json("const b = res.json() as Promise<Body>;").length === 1,
+    "(s) `res.json() as Promise<T>` must be found");
+  assert(json("const b = (await res.json()) as Body;")[0].promiseCast === false,
+    "(t) casting the AWAITED body is ledgerable, not banned");
+  assert(json("const b = res.json() as Promise<Body>;")[0].promiseCast === true,
+    "(u) casting the PROMISE must be flagged — this is the public-form defect shape (gate bites)");
+  assert(json("const b = await res.json();").length === 0,
+    "(v) reading the body with NO cast is not a forced type and must not be counted");
+  assert(json("const b = parseApiResponse(res, contract, path);").length === 0,
+    "(w) the contracted read must not be counted — the fix must not look like the defect");
+  assert(json("// const b = res.json() as Promise<Body>;\n").length === 0,
+    "(x) a commented-out cast is not a cast — the AST does not see comments");
+  assert(json("const b = json() as Body;").length === 0,
+    "(y) a bare `json()` that is not a property access must not match");
+  assert(json("const b = res.json(init) as Body;").length === 0,
+    "(z) `.json(arg)` is somebody else's method, not Response.json()");
+  assert(json("const b = (await res.json()) as {\n  a?: string;\n  b?: string;\n} ;")[0].target.includes("a?: string"),
+    "(aa) a multi-line asserted type is read whole — the reason this rule is an AST and not a regex");
+
+  for (const [file, entry] of RAW_JSON_LEDGER) {
+    assert(entry.seam === "external" || entry.seam === "narrow-me",
+      `(ab) ${file}: raw-JSON seam must be "external" or "narrow-me", got "${entry.seam}"`);
+    assert(typeof entry.invariant === "string" && entry.invariant.length > 40,
+      `(ac) ${file}: every raw-JSON entry needs a written invariant, not a placeholder`);
+    assert(/envelope|success|Envelope/.test(entry.invariant),
+      `(ad) ${file}: a raw-fetch invariant MUST say how the site handles the { success, data } envelope — that is the whole defect this rule exists for`);
+  }
+
+  console.log("PASS: self-test (31 assertions + a written invariant on all "
+    + `${DOUBLE_CAST_LEDGER.size + RAW_JSON_LEDGER.size} ledger entries)\n`);
   for (const line of [
     "  (a) a real double cast                        -> counted",
     "  (b) a line comment describing one             -> not counted",
@@ -272,6 +426,9 @@ function runSelfTest() {
     "  (h) a real @ts-ignore/-expect-error/-nocheck  -> caught (gate bites)",
     "  (i) prose mentioning a directive              -> not a directive",
     "  (j) `.next-buildmart` skipped like `.next`    -> generated output cannot enter the count",
+    "  (j1) root `build`/`public`/`dist`              -> skipped (output)",
+    "  (j2) NESTED `build`/`public`                   -> scanned (source; this was the blind spot)",
+    "  (j3) node_modules/__tests__ at any depth       -> skipped",
     "  (k) a file gaining a cast                     -> growth (gate bites)",
     "  (l) a file absent from the ledger             -> new (gate bites)",
     "  (m) a ledgered file with no casts left        -> stale (gate bites)",
@@ -279,11 +436,24 @@ function runSelfTest() {
     "  (o) an unchanged file                         -> silent",
     "  (p) every ledger entry names a seam kind",
     "  (q) every ledger entry carries a written invariant",
+    "  (r) `(await res.json()) as T`                 -> found",
+    "  (s) `res.json() as Promise<T>`                -> found",
+    "  (t) casting the AWAITED body                  -> ledgerable",
+    "  (u) casting the PROMISE                       -> banned (gate bites)",
+    "  (v) reading the body with no cast             -> not counted",
+    "  (w) `parseApiResponse(res, contract, path)`   -> not counted (the fix is not the defect)",
+    "  (x) a commented-out cast                      -> not counted",
+    "  (y) a bare `json()`                           -> not matched",
+    "  (z) `.json(arg)`                              -> somebody else's method",
+    "  (aa) a multi-line asserted type               -> read whole (why this rule is an AST)",
+    "  (ab) every raw-JSON entry names a seam kind",
+    "  (ac) every raw-JSON entry carries a written invariant",
+    "  (ad) every raw-JSON invariant states its envelope handling",
   ]) console.log(line);
 }
 
 function main() {
-  const { banned, doubleCasts, files } = scan(ROOT);
+  const { banned, doubleCasts, rawJson, promiseCasts, files } = scan(ROOT);
 
   if (files < SCAN_FLOOR_FILES) {
     console.error(`FAIL: scanned only ${files} file(s), below the floor of ${SCAN_FLOOR_FILES}. The scan is broken, not the tree clean.`);
@@ -292,9 +462,14 @@ function main() {
 
   const total = [...doubleCasts.values()].reduce((a, b) => a + b, 0);
 
+  const rawJsonTotal = [...rawJson.values()].reduce((a, b) => a + b, 0);
+
   if (process.argv.includes("--list")) {
     for (const [file, count] of [...doubleCasts].sort()) console.log(`${count}\t${file}`);
     console.log(`\n${files} application files, ${doubleCasts.size} with a double cast, ${total} sites.`);
+    console.log("\n--- rule 3: raw `fetch` JSON casts ---");
+    for (const [file, count] of [...rawJson].sort()) console.log(`${count}\t${file}`);
+    console.log(`\n${rawJson.size} file(s), ${rawJsonTotal} site(s), ${promiseCasts.length} of them a banned Promise cast.`);
     return;
   }
 
@@ -304,6 +479,7 @@ function main() {
   console.log(`=== application files scanned: ${files} ===`);
   console.log(`=== \`as unknown as\`: ${total} site(s) in ${doubleCasts.size} file(s) ===`);
   console.log(`=== ledger: ${external} at a proven external seam, ${narrowMe} owed a narrowing ===`);
+  console.log(`=== raw \`fetch\` JSON casts: ${rawJsonTotal} site(s) in ${rawJson.size} file(s) ===`);
 
   let failed = false;
 
@@ -334,8 +510,34 @@ function main() {
     failed = true;
   }
 
+  const raw = diffLedger(rawJson, RAW_JSON_LEDGER);
+  if (raw.added.length) {
+    console.error(`\nFAIL: ${raw.added.length} file(s) cast a raw \`fetch\` JSON body and are not in RAW_JSON_LEDGER. Read through \`parseApiResponse\` with a contract, or add an entry saying how this site handles the { success, data } envelope:`);
+    for (const { file, count } of raw.added) console.error(`  ${file} (${count} site(s))`);
+    failed = true;
+  }
+  if (raw.grown.length) {
+    console.error(`\nFAIL: ${raw.grown.length} file(s) gained a raw JSON cast. The ledger does not grow:`);
+    for (const { file, was, now } of raw.grown) console.error(`  ${file}: ${was} -> ${now}`);
+    failed = true;
+  }
+  if (raw.shrunk.length || raw.gone.length) {
+    console.error(`\nFAIL: ${raw.shrunk.length + raw.gone.length} raw-JSON ledger entr(ies) are out of date — write the new number:`);
+    for (const { file, was, now } of raw.shrunk) console.error(`  ${file}: ledger says ${was}, tree has ${now} — lower the entry`);
+    for (const file of raw.gone) console.error(`  ${file}: no raw JSON cast left — delete the entry`);
+    failed = true;
+  }
+
+  if (promiseCasts.length) {
+    console.error(`\nFAIL: ${promiseCasts.length} site(s) cast the PROMISE returned by .json() instead of the awaited body. That can only be a success-payload read that skips both the { success, data } envelope and any contract — it is exactly what left the public form page rendering "Loading form…" and throwing on \`form.fields.length\`. There is no ledger for this:`);
+    for (const where of promiseCasts) console.error(`  ${where}`);
+    failed = true;
+  } else {
+    console.log("=== `.json() as Promise<T>` (the public-form defect shape): 0 ===");
+  }
+
   if (failed) process.exit(1);
-  console.log("\nPASS: no forced-typing escape in application code, and every double cast is ledgered at its recorded count.");
+  console.log("\nPASS: no forced-typing escape in application code, every double cast is ledgered at its recorded count, and every raw `fetch` JSON body is either read through parseApiResponse or ledgered with how it handles the envelope.");
 }
 
 if (process.argv.includes("--self-test")) runSelfTest();
