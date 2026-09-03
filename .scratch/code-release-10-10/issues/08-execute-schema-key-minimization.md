@@ -4,12 +4,20 @@
 
 **Blocked by:** 07, 03.
 
-**Status:** 6 of 7 closed · **1 BLOCKED — permanently, on tool capability** (box 4) · reports at
-`reports/08-execute-schema-key-minimization.md`, `reports/08b-close-schema-key-minimization.md`
-and `reports/07b-declaration-drift.md`. The blocker was re-tested at head 2026-09-03 and is now
-bite-proved, not inferred: neither `tsc --noUnusedLocals` nor `knip` reports a never-read DTO field
-(both exit 0 on a hermetic probe built to contain one), so the only evidence a field-level removal
-could rest on is the text search this box forbids.
+**Status:** 6 of 7 closed · **1 PARTIAL** (box 4) · reports at
+`reports/08-execute-schema-key-minimization.md`, `reports/08b-close-schema-key-minimization.md`,
+`reports/07b-declaration-drift.md` and **`reports/08c-unread-request-fields.md`**.
+
+**2026-09-03 — the box-4 blocker as written is WITHDRAWN.** The earlier finding, that neither
+`tsc --noUnusedLocals` nor `knip` reports a never-read DTO field, is correct about those two tools
+and wrong about the conclusion drawn from it. The type checker underneath them DOES resolve a
+field: `getSymbolAtLocation` on the `name` of a property access whose object is
+`z.infer<typeof schema>` returns a symbol whose `declarations` are the original
+`PropertyAssignment` inside the `z.object({ ... })` literal, with file and offset. Verified on a
+three-file probe against this repository's own zod before the analysis was written. The instrument
+is built, self-tests, and lives at `reports/08c-field-reach/`. Five request fields were removed on
+its evidence plus a compiler bite; the box stays open for a different and better-founded reason,
+recorded under the box itself.
 
 **2026-09-03 residual-risk register:** box 4 = **R-11**, ACCEPTED RESIDUAL, blocker TOOL (permanent), owner release owner, deadline 2027-03-03 review. Bite proof rebuilt with anti-vacuous controls on both instruments. See `reports/residual-risk-register.md` §3.1.
 
@@ -115,6 +123,78 @@ purge path was run, not reasoned about — **5/5** assertions including `DELETE 
 - [x] Redundant single-column foreign keys are removed only after all callers and migrations target the composite relationship.
       Closed for every module in this release. Re-measured at head: **169**, not 171 (same definition applied to `pg_constraint`). Of those, **16 were outside CRM/inventory and all 16 are gone** via migration `1006` — 8 dropped outright where single and composite already carried the same action, 8 with the action first MOVED onto the composite (1 CASCADE, 7 `SET NULL (col)` with explicit column lists) so no parent delete changes behaviour. Every pair was verified LIVE in `pg_catalog` per table before removal. A further **17 dead `.references()` covered by an existing composite** were removed as declaration-only changes. **HR needed nothing**: `hr_*` (130) and `payroll_*` (48) tenant→tenant FKs are already 100% composite. FKs 3,150 → **3,134**; remaining 153 are CRM 53 / inventory 100, both out of release scope.
 - [ ] Unused request/response/DTO/Zod fields are removed across backend, OpenAPI and frontend hooks/forms as one contract change. Server-controlled tenant/actor fields, idempotency/version fields, authorization dimensions and audit fields are never removed.
+      PARTIAL: five fields removed as one contract change (backend Zod -> `openapi.json` ->
+      frontend type); the box does not close because 35 routes are structurally unmeasurable and
+      the residue on the measurable ones is unimplemented intent, not dead weight. Full method,
+      numbers and misses in `reports/08c-unread-request-fields.md`.
+      **Measured** (`field-reach.mjs`, exit 0, 5,708 program files, 410,074 property references
+      resolved): **10,277** top-level `z.object` fields · **8,452 READ** · 1,825 with zero resolved
+      references, of which **186** are CRM/inventory, **99 RETAINED BY RULE** (tenant/actor 32,
+      idempotency/version 13, authorization dimension 34, audit 20) and 1,540 CANDIDATE. Candidates
+      are NOT verdicts: 694 are route-`params` schemas read through `@Param("x")` string literals,
+      79 are AI model contracts whose reader is a language model, 407 are bound to no route, 264
+      are nested/anonymous literals. **96 are route-bound (70 body, 26 query).**
+      **Proved by deletion, never by text search.** A hermetic copy of the tree (shared working
+      tree never mutated, baseline `tsc -p tsconfig.test.json` exit 0) with the candidate fields
+      deleted, driven to a fixed point: 96 -> 61 -> 53, round 3 **exit 0 with 33 deleted**, plus a
+      sentinel round that rejected 6 more. **47 bite-clean; 18 after excluding routes no instrument
+      can see.**
+      **Four blind spots were found and closed before anything was cut.** (1) Emptying a `z.object`
+      leaves `Record<string, never>`, whose string index signature makes every read type-check — a
+      single-shot bite over 364 fields reported 90 errors while a strict SUBSET of 138 then reported
+      **30 errors the first pass had not**, including a whole `platform.service.ts` contact form. The
+      driver now keeps one field back and sentinel-renames instead. (2) A hand-written mirror type in
+      a service signature severs the symbol link — `entities.service.create` declares
+      `{ legalName; pan?; tan?; pfEstablishmentCode?; ... }` and reads `body.pan`, so eight payroll
+      statutory identifiers, all 9 of `updateEventPolicySchema`, 7 travel-request fields and 8
+      leave-policy fields read as dead and are not. (3) An `as` cast at the seam
+      (`ingress.accept(body as InboundCommunicationEvent)`) hides the whole inbound webhook payload.
+      (4) Three full runs of the checker returned 97,832 / 136,730 / 129,558 reached sites and the
+      third is not a superset of the second, so the **union** was used.
+      BLOCKED (the real blocker, replacing the tool one): **35 of 1,941 validated body/query slots
+      are UNBOUND** — `@Validate({ body: S })` beside a hand-written `@Body() body: { ... }`, so the
+      runtime and compile-time contracts are unlinked and NO instrument can see a read there. 9 of
+      the 35 type the body `unknown` or `Record<string, unknown>`. 29 of the 47 bite-clean fields were
+      dropped for this reason alone (`resendVerificationSchema.email`, `kbAiAskBodySchema.question`,
+      all ten of `auditEntrySchema`, ...). List: `reports/08c-field-reach/unbound-routes.json`.
+      A cheap ratchet exists — 1,900/1,941 slots already bind correctly.
+      BLOCKED (second, independent): the residue is **not dead weight**. Seven of the 18 survivors are
+      fields the FRONTEND SENDS and the backend drops, so removing them deletes a feature and hides a
+      bug. Highest: `POST /support/portal/tickets` accepts `attachments` (uploaded by
+      `new-ticket-sheet.tsx:151`) and `SupportPortalService.createTicket` picks four other fields and
+      discards them — while the sibling `addMessage` forwards them, so attaching to a reply works and
+      attaching to the first message silently does not. Also `simulateApprovalRoutingSchema.employeeId`
+      (required, sent, ignored), `policyPreviewSchema.currency`, `sectionQuerySchema.preview`,
+      `attachmentSchema.fileKey`, `kbAskSchema.articleId`. Routed to their lanes in report 08c section 5.
+      **Removed** (backend Zod + regenerated `openapi.json` + vendored frontend copy + frontend type,
+      one contract change): `surveys createAttemptSchema.accessToken` (copy-paste from the public
+      schema; handler passes `participantId` alone) · `payroll listJobsQuerySchema.failedOnly` (the
+      handler calls `listFailed()` unconditionally) · `ai/blog suggestTitleSchema.excerpt` (the prompt
+      reads `draft.content` and falls back to the stored post) · `finance categorizeSuggestSchema.amount`
+      (dead on both sides; also removed from `CategorizeSuggestInput`) · `finance
+      budgetVsActualQuerySchema.format` (the csv branch was never built). Every one verified against the
+      frontend by hand as well as by the bite.
+      **Retained with the reason:** `approveLeaveSchema.forceApprove` is bite-clean and unsent, but its
+      sibling `justification` is unread AND an audit field, so the rule retains it — removing
+      `forceApprove` alone would orphan a justification for an override no longer in the contract. Both
+      kept; the pair is unimplemented HR work, not minimisation debt.
+      **Responses are not measurable at all.** `contracts/openapi.json` carries a 2xx response schema
+      for **1 of 3,613** operations (1,379 carry a request-body schema), so there is no response contract
+      to minimise against; a response field's only definition is the Drizzle projection.
+      **Gates**, exit codes read directly: BE `typecheck` **0** · `check:spec-typecheck` **0** ·
+      `openapi:generate` **0** (3,643 ops) · `openapi:check` **0** · `check:contract-breaking-change`
+      **0** · `check:contract-registry` **0** (3,656 classified) · `check:openapi-coverage`,
+      `check:openapi-path-params`, `check:operation-ids`, `check:bounded-contracts`,
+      `check:envelope-consistency` **0** each · BE jest 41 suites / 207 tests **0** · FE `type-check`
+      **0** · `check:contract-vendor` **0** · `check:contract-drift` **0** ·
+      `check:response-contracts` **0** · FE jest 28 suites / 347 tests **0**.
+      **Found red at head, not caused here:** `openapi.json` was **31 operations stale** (3,613
+      committed vs 3,643 declared), so `openapi:check` AND `check:contract-vendor` were both already
+      failing; regenerating then exposed 31 operations never classified in the fail-closed contract
+      registry, and one published route (`POST /webhooks/calendar/provider`) with no declared replay
+      rule. All three fixed in their own commits so other lanes' work is not filed under this ticket.
+      **R-11 should be rewritten** from "blocked on tool capability, permanent" to "blocked on the 35
+      unbound routes and on section-5 defect triage"; the tool blocker is struck.
       **BLOCKED — permanently, on tool capability. Re-confirmed 2026-09-03 and NOT re-litigated: the coordinator
       directed that the bite proof below stands and that no run should be spent trying to build the missing
       instrument. No field was removed on text-search evidence this pass, and none should be.**
