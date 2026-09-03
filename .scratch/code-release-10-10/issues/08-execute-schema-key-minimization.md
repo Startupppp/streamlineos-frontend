@@ -4,9 +4,12 @@
 
 **Blocked by:** 07, 03.
 
-**Status:** 6 of 7 closed · **1 BLOCKED** (box 4) · reports at
+**Status:** 6 of 7 closed · **1 BLOCKED — permanently, on tool capability** (box 4) · reports at
 `reports/08-execute-schema-key-minimization.md`, `reports/08b-close-schema-key-minimization.md`
-and `reports/07b-declaration-drift.md`
+and `reports/07b-declaration-drift.md`. The blocker was re-tested at head 2026-09-03 and is now
+bite-proved, not inferred: neither `tsc --noUnusedLocals` nor `knip` reports a never-read DTO field
+(both exit 0 on a hermetic probe built to contain one), so the only evidence a field-level removal
+could rest on is the text search this box forbids.
 
 **Follow-up 07b executed the third population 08b handed on, and corrected its cause.** Re-measured
 on a database cold-built from zero to head: the "70 declared `.references()` with neither a live
@@ -73,32 +76,33 @@ purge path was run, not reasoned about — **5/5** assertions including `DELETE 
 - [x] Redundant single-column foreign keys are removed only after all callers and migrations target the composite relationship.
       Closed for every module in this release. Re-measured at head: **169**, not 171 (same definition applied to `pg_constraint`). Of those, **16 were outside CRM/inventory and all 16 are gone** via migration `1006` — 8 dropped outright where single and composite already carried the same action, 8 with the action first MOVED onto the composite (1 CASCADE, 7 `SET NULL (col)` with explicit column lists) so no parent delete changes behaviour. Every pair was verified LIVE in `pg_catalog` per table before removal. A further **17 dead `.references()` covered by an existing composite** were removed as declaration-only changes. **HR needed nothing**: `hr_*` (130) and `payroll_*` (48) tenant→tenant FKs are already 100% composite. FKs 3,150 → **3,134**; remaining 153 are CRM 53 / inventory 100, both out of release scope.
 - [ ] Unused request/response/DTO/Zod fields are removed across backend, OpenAPI and frontend hooks/forms as one contract change. Server-controlled tenant/actor fields, idempotency/version fields, authorization dimensions and audit fields are never removed.
-      BLOCKED on territory: no DTO or Zod schema lives under `src/db/schema/**` or `migrations/**`. `check:openapi-coverage` and `check:contract-breaking-change` both exit 0 — nothing regressed, nothing was executed here.
-      08b: still BLOCKED on the same territory boundary, and re-confirmed — declaring `org_id` on ten tables changed no DTO, no Zod schema and no response shape; `org_id` is a server-controlled tenant field, which this box explicitly excludes from removal.
-      **2026-09-02 — third pass RE-VERIFIED whether this is now actionable, since response contracts have been
-      worked extensively since 08b. It is not, and the reason is stronger than the territory one both earlier
-      passes gave: BLOCKED ON INSTRUMENTATION.** The box's own bar is a module graph plus a real build, never a
-      text search. Run at head:
-      - FE `pnpm exec knip --no-progress` → exit 1: **1 unused file, 38 unused exports, 65 unused exported types**.
-      - FE `pnpm check:dead-code` → exit 1, **1 unclassified** (`lib/keyboard-activation.ts:nestedActivationProps`).
-      - BE `pnpm check:dead-code` → exit 1, **1 unclassified** (`src/common/admission/admission-tenant-hint.ts:UseAdmissionTenantHint`), over a 9,813-file / 68,271-edge importer graph, knip 0 unused files / 36 other findings.
-      - BE `pnpm check:openapi-coverage` exit 0 (1,371/1,371 mutating ops carry a body schema) · BE `pnpm check:contract-breaking-change` exit 0 (101 published operations, 3,524 internal, 23 published webhook event names).
-      **Every one of those instruments resolves at the granularity of a file, an export or a type alias. None of
-      them resolves a FIELD.** This box asks for unused *fields inside* request/response/DTO/Zod schemas, and
-      neither knip, nor the dead-code ledger, nor `tsc` (`noUnusedLocals` does not reach object or interface
-      members) can say whether a property of a live, imported, exported type is read anywhere. So the only
-      available evidence for a field-level removal here is a text search — which this box's own wording, and
-      AGENT-BRIEF rule 8, forbid as sole grounds for deletion. Closing it needs an instrument that does not exist
-      yet (a cross-repo property-reachability analysis over the OpenAPI schema and the frontend hooks), not more
-      reading.
-      Confirmatory detail that this is not merely a naming problem: of the 65 unused exported *types* knip does
-      report, **62 sit in `frontend/hooks/api/**` and `frontend/types/**`** — and those are unused *aliases*, not
-      unused fields, so removing them would not satisfy this box even if they were in reach.
-      The territory bar is unchanged and independent: the removal must land "as one contract change" across
-      backend, OpenAPI **and** frontend hooks/forms, and `frontend/hooks/api/**` and `frontend/types/**` are another
-      agent's, while the DTO-dense backend modules (hr, support, notifications, workflows, chat, timesheets,
-      accounting, finance, billing, storage, build, invoices) are another agent's and crm/inventory are excluded
-      from the release. Two independent blockers, either of which alone keeps the box open.
+      **BLOCKED — permanently, on tool capability, and the reading is now bite-proved rather than argued.**
+      Two independent blockers, either of which alone keeps this box open. Neither is unfinished work.
+      **(1) No instrument in either repository resolves a FIELD.** The box asks for unused fields *inside*
+      request/response/DTO/Zod schemas. knip, both dead-code ledgers and `tsc` all resolve at the granularity of a
+      file, an export or a type alias. Proved in a hermetic scratch tree, not asserted: a `probe.ts` declaring
+      `CreateThingInput.neverReadRequestField?` and `ThingResponse.neverReadResponseField`, both exported, both
+      never read anywhere, gives
+      `tsc --noEmit --strict --noUnusedLocals --noUnusedParameters --esModuleInterop probe.ts` → **exit 0, zero
+      diagnostics** (`noUnusedLocals` does not reach object or interface members), and
+      `knip --no-progress` with `probe.ts` as the entry → **exit 0, zero findings** (the types are reachable; knip
+      has no opinion about their members). So the only available evidence for a field-level removal is a text
+      search — which this box's own wording, and AGENT-BRIEF rule 8, forbid as sole grounds for deletion. Closing
+      this needs an instrument that does not exist: a cross-repo property-reachability analysis over the OpenAPI
+      schema and the frontend hooks. That is a build, not a reading, and it is not this ticket's scope.
+      **(2) Territory, independently.** The removal must land "as one contract change" across backend, OpenAPI and
+      frontend hooks/forms. `frontend/hooks/api/**` and `frontend/types/**` are another agent's; the DTO-dense
+      backend modules (hr, support, notifications, workflows, chat, timesheets, accounting, finance, billing,
+      storage, build, invoices) are another agent's; crm/inventory are excluded from the release.
+      **Re-verified at head 2026-09-03, so the numbers are current and not carried forward:**
+      BE `pnpm check:dead-code` → **exit 0** (0 unclassified; it was exit 1 last pass on
+      `admission-tenant-hint.ts`, since resolved) · BE `pnpm check:openapi-coverage` and
+      `pnpm check:contract-breaking-change` → both **exit 0** · FE `pnpm exec knip --no-progress` → **exit 1**:
+      1 unused file, **39 unused exports, 65 unused exported types** · FE `pnpm check:dead-code` → **exit 1**, 2
+      unclassified, both `hooks/api/meetings-ai.ts` (`streamMeetingPrep`, `readMeetingPrepSources`) — a different
+      lane's in-flight work, reported not touched. Note the shape of the 65: they are unused *aliases*, not unused
+      *fields*, so removing every one of them would not satisfy this box.
+      **Explicitly not half-satisfied.** No field was removed on text-search evidence, and none should be.
 - [x] A removed field is proven removed at the boundary too — a bare `z.object({})` strips silently rather than rejecting, which turns a dropped field into a wrong-subject write rather than an error.
       `support_ticket_tags.orgId` is `notNull()`, so both insert sites are compile-enforced; the write is tenant-scoped in code instead of by the `trg_set_org_id` trigger.
       08b: the same argument now covers 10 more tables. `org_id` is declared `notNull()` on `hr_workflow_steps`, `email_sequence_steps`, `email_sequence_enrollments`, `vendor_candidate_submissions`, `onboarding_template_steps`, `key_results`, `competencies`, `hr_import_rows`, `support_ticket_messages` and `sign_bulk_send_rows`, so all 12 insert sites are compile-enforced. The composite FK now *refuses* a cross-tenant parent id instead of letting the trigger write the row into the parent's organisation — proven: an automation `support_internal_note` carrying another tenant's `ticketId` is refused with `23503`, where it previously succeeded.

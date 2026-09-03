@@ -4,10 +4,11 @@
 
 **Blocked by:** 03 — plans taken against an empty or partially bootstrapped database measure nothing.
 
-**Status:** measured; one box open by design. 2026-09-02: its global-users and vector clauses are closed and the
-users clause is locked by a spec. **Re-read and re-measured at head 2026-09-02 (third pass).** The count clause
-yielded three more concrete fixes (below); the residue is confirmed to be a product/API-contract decision, and the
-box is now BLOCKED on that decision rather than PARTIAL on more measurement.
+**Status:** measured; one box open by design and **BLOCKED on a product decision**, re-confirmed at head
+2026-09-03 by an independent recount (296 `findMany` / 550 `findFirst` / 599 bare `.select()` without a projection,
+**79–80% of it in held or excluded territory**). The list/count/existence clauses that need no contract decision are
+closed and the global-users clause is locked by a spec; the residue is "which list endpoints may return less", which
+no further measurement can answer.
 
 Report: `reports/20-query-plans.md`. Raw plan trees: `reports/20-query-plans/plans-{large,mid,small}.{json,txt}`.
 Harness: `BE/test/perf/{heavy-query-fixtures,seed-heavy-query-load,heavy-query-catalog,heavy-query-catalog-{calendar,notifications,search,dashboard},heavy-query-plan-analysis,measure-heavy-query-plans}.mjs`.
@@ -63,6 +64,30 @@ Harness: `BE/test/perf/{heavy-query-fixtures,seed-heavy-query-load,heavy-query-c
       `dashboard-recent-activity` 1.44x where buffers say 417/417). What is missing is a product owner deciding
       which list endpoints may return less than they return today. Recorded as BLOCKED so it is routed as a decision
       rather than left looking like unfinished measurement.
+  - **2026-09-03 — re-counted at head and the BLOCKED verdict is confirmed, not carried forward.** An independent
+    recount over the same corpus definition (all non-spec `.ts` under `streamlineos-backend/src`, 3,575 files;
+    `findMany`/`findFirst` matched by brace-balanced top-level object literal, so a nested `columns:` inside a
+    `with:` does not count as a projection): **`findMany` without a top-level `columns:` 296** (was 290),
+    **`findFirst` without one 550** (was 499), **bare `.select()` 599** (was 600). Nothing regressed; the drift is
+    new code arriving from other lanes during the release, and the `findFirst` delta is the largest because
+    existence reads are the cheapest thing to add.
+  - **The "roughly 80% is unreachable" claim is now an exact split rather than an estimate.** Bucketing every site
+    by owning module: `findMany` **181 in another agent's held territory · 53 in excluded modules (crm, leads,
+    deals, contacts, inventory) · 62 open** = 234/296 (**79.1%**) unreachable from this session. Bare `.select()`
+    **369 held · 109 excluded · 121 open** = 478/599 (**79.8%**) unreachable. By module, `findMany`: hr 84 ·
+    inventory 40 · e-sign 26 · surveys 26 · support 20 · build 12 · chat 11 · billing 10 · crm 7. Bare `.select()`:
+    hr 190 · finance 55 · crm 50 · build 39 · inventory 38 · payroll 37 · billing 31 · party 20 · timesheets 20.
+  - **Decision re-affirmed, honestly: this stays BLOCKED and it is not a measurement gap.** Every instrument the
+    box could want already exists and already discriminates — `measure-projection-bytes.mjs` (`--self-test` 8/8)
+    separates `kb-chunks-page-50` at **22.07x** from `dashboard-recent-activity` at **1.44x** where
+    `EXPLAIN (BUFFERS)` reports 417 either way. Running it over another 846 sites would produce a longer list, not
+    a closed box. What is missing is a product owner deciding **which list endpoints may return less than they
+    return today**, because narrowing the bulk of the residue changes a response DTO: `formSchemaSnapshot` is what
+    `maskSensitiveData` reads, the audit jsonb *is* the diff the UI renders, `survey_questions.settings` and
+    `automation_rules.conditions` *are* the payload the endpoint exists to return. The three clauses that need no
+    such decision — count paths, existence paths, and global-`users`/vector hydration — are **closed**, and the
+    last pass proved the point by finding a count path that hydrated `survey_participants.accessTokenHash` to
+    answer a `.length`.
 - [x] The named heavy queries run against a production-shaped seed with plans captured.
   - `node test/perf/measure-heavy-query-plans.mjs --org={large,mid,small}` → **36 queries × 3 tenant sizes**, all eight named categories covered. Seed: 3 orgs, 66,613 calendar events (9,507 recurring), 140,360 event attendees, 266,400 notifications, 13,320 kb chunks, 18,500 `build.tickets`.
 - [x] Plans are taken as the application role with tenant context set, never as the database owner, so real authorization predicates are included.

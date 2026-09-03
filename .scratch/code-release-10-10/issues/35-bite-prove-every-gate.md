@@ -4,7 +4,11 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** 7 of 8 closed; 1 partial, **and the partial is scope-blocked, not unfinished**. Session S11 built and bite-proved the authorization-deny gate (the box-4 gap S10 named but did not write) and repaired all seven in-scope VOID transaction doubles, VOID 9 -> 2. Re-verified 2026-09-02: `check:test-suppressions` exit 0 (quarantine 6 / ratchet 6) and `check:transaction-callbacks` exit 0 (VOID 2 / ratchet 2); all 8 remaining items are inventory or CRM, both excluded from this release, and none was edited.
+**Status:** 7 of 8 closed; 1 PARTIAL, **and the partial is BLOCKED on release scope, not unfinished.**
+Re-verified at head 2026-09-03: both gates exit 0 at their ratchets, and the entire residue — 6 quarantined
+`describe.skip` blocks in `modules/ai/core/crm-copilot.service.phase2.spec.ts` (all CRM subject matter) and 2 VOID
+transaction specs in `modules/inventory` and `modules/leads` — sits in modules this release excludes. Nothing here
+is blocked on another agent, on infrastructure or on a measurement.
 
 - [x] Every gate in both repositories has a self-test that constructs a known-bad fixture and confirms the gate rejects it for the right reason.
       Measured by mutation testing, not by reading: every named detector each self-test executes was neutered and the self-test re-run. 89 gates, 349 detector mutants, 341 killed. All 85 registered self-tests exit 0.
@@ -42,6 +46,28 @@
       checkable.
       Nothing in this residue is blocked on another agent, on infrastructure or on a decision: it is blocked on
       release scope, and it will stay open until CRM and inventory are in scope. The 8 stale `N+1-FIXED` entries were closed by S9b (5 ACTIONABLE / 2 FALSE-POSITIVE, REGRESSIONS 7 → 0).
+      **2026-09-03 — RE-VERIFIED at head for the third time, and the answer is unchanged: the residue is entirely
+      in modules this release excludes, both gates are green at their ratchets, and nothing here is mine to fix.**
+      `pnpm check:test-suppressions` → **exit 0**: **2,013 spec files** (up from 1,993 — the corpus grew, the
+      residue did not) · 20 suppression sites · 27 conditional aliases → conditional 28 (ratchet 28) · placeholder
+      13 · **quarantine 6 (ratchet 6)**.
+      `pnpm check:transaction-callbacks` → **exit 0**: **1,998 spec files** · 260 files with a transaction double ·
+      459 doubles → invokes 251 · declared-unreached 7 · rejects 0 · **VOID 2 (ratchet 2)**.
+      Both residues enumerated by the gates themselves (`--list`), not by grep:
+      - **All 6 quarantines are `describe.skip` blocks in one file**,
+        `src/modules/ai/core/crm-copilot.service.phase2.spec.ts`, at lines 174 (`stalePipelineDigest`), 246
+        (`dataQualityCopilot`), 313 (`nextBestActionWithEvidence`, CrmScoringService), 405
+        (`leadSummaryWithCitations`), 435 (`predictDeal`), 478 (`meetingFollowUpDraft`, CrmBriefService). The file
+        lives under `modules/ai/` but every skipped assertion targets `CrmScoringService`/`CrmBriefService` — CRM,
+        **excluded**. A reader grepping `modules/crm` for the residue finds nothing; the path is recorded here so
+        the claim stays checkable.
+      - **Both VOID transaction specs are excluded modules**:
+        `src/modules/inventory/replenishment/inv-replenishment.service.spec.ts` (verdict `22:BARE`) and
+        `src/modules/leads/lead-status-tenant-isolation.spec.ts` (verdict `36:RESOLVES-WITHOUT-INVOKING`).
+      **BLOCKED on release scope — a product decision, not territory, infrastructure or tool capability.** These 8
+      items become actionable the moment CRM and inventory enter scope and not before; touching them now would
+      edit modules the release excludes. Both ratchets are capped at the current numbers, so the residue can only
+      shrink, and neither can grow back silently. Left untouched, deliberately.
 - [x] Text-based scans are validated against a known defect before being trusted.
       `check:db-call-count` reported ACTIONABLE 0 sitting over a confirmed N+1 at `payroll/runs/inputs.service.ts:187`. Two blind spots: a Drizzle chain split across lines (patterns tested one line at a time) and a helper receiving the db handle as an ARGUMENT (patterns only matched it as a receiver). Both fixed, both fixtured from that real code. Detected files 41 → 147; that line now reports REGRESSED. `check:hardcoded-secrets` was validated the other way — it flagged `calendar-webhook-secret.ts` where the only match was a header NAME; fixed and re-proven against four planted credential classes and two negatives.
 - [x] Coverage counts are honest: a path-filtered run that reports green while suites outside the filter are red is a false pass.

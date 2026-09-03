@@ -4,7 +4,10 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** fixed — 5 of 6 boxes closed; the remaining box needs a booted API, not a code change
+**Status:** 5 of 6 boxes closed; the sixth is PARTIAL with its fraction recorded, not blocked on infrastructure any
+more. The live sweep ran: **1,921 routes probed, 666 return the required 404, 116 measurably do not, 1,138 were
+unprobeable and are covered statically only, and 1 real cross-tenant leak was found and fixed.** What remains is
+per-module contract work in held or excluded territory (register #165–#167).
 
 Full reports: `.scratch/code-release-10-10/reports/15-bola-sweep.md` (sweep),
 `reports/15b-authorization-fixes.md` (first fix pass), `reports/15c-bola-defect-fixes.md` (second pass),
@@ -17,8 +20,30 @@ Harness: `backend/test/security/bola/**` — `jest --runInBand --testPathPattern
 whoever lands that schema change.
 
 - [ ] Every object-addressable route is probed with an id belonging to another organization and returns 404.
-      PARTIAL: 1,912+/1,912 (100%) of object-addressable routes swept statically to the data layer; 99.16% bind a tenant, and every one that does not is now named with a reason (10 are `@Public()` routes where the path token IS the tenant selector, 5 are the vendor's global blog, which has no tenant to bind and is closed at the gate instead). Live HTTP probing still covers only a handful of routes.
-      BLOCKED: full live probing needs a booted API against a seeded two-org database. This is infrastructure, not a code change — every behavioural property the ticket names is now asserted by executing the real services against recording stubs (40 executable assertions across `bola-cross-tenant-404`, `bola-bulk-fail-whole` and `bola-realtime-grant-time`), but that is not 1,912 HTTP requests and is not claimed as such.
+      PARTIAL — and the honest fraction is now recorded instead of a sample. The infrastructure blocker the
+      previous pass named is **gone**: the sweep WAS run live, against a booted API on a seeded two-org database.
+      **1,921 routes probed live** (`scratchpad/bola-live-offline.json`), and the four-way split is:
+      **PASS 666 · UNPROBEABLE 1,138 · NO-404 113 · SERVER-ERROR 2 · LEAK 1 · INCONCLUSIVE 1.**
+      Read against this box's literal requirement ("probed with an id belonging to another organization **and
+      returns 404**"):
+      - **666 routes (34.7%) probed live AND satisfy it.**
+      - **116 routes (6.0%) probed live and FAIL it** — 113 return no 404 for a cross-tenant id (not leaks: an id
+        belonging to no organisation answers identically, so the object is never resolved, but the contract 404 is
+        absent and **32 of the 113 are write verbs** answering 204 whether the object exists or not); 2 return 500
+        (`GET /surveys/:surveyId/builder`, `/logic`); 1 is INCONCLUSIVE (`POST
+        /organization/custom-domains/:domainId/verify`, 400 against a 201 control) and needs a handler read.
+      - **1,138 routes (59.2%) could not be probed live at all** and are covered **statically only** — swept to
+        the data layer with a tenant predicate, which is a weaker proof than an HTTP 404.
+      - **1 LEAK found and fixed** (`AnnouncementsController.markRead`), which is the return on running it live:
+        the static sweep did not find it, and the probe did — by comparing the cross-tenant answer against an id
+        belonging to no organisation at all (control 201 / cross-tenant 201 / absent-org 500).
+      **Not ticked, and deliberately not ticked on the 666.** The box says *every* object-addressable route, and
+      116 measured routes do not return 404 while 1,138 were never asked. Ticking it on 34.7% would be exactly the
+      false green this release keeps finding.
+      **BLOCKED on other territory for the actionable remainder:** the 113 + 2 + 1 are per-module contract fixes
+      (contacts, deals, leads, hr rich-documents, surveys, organization) in modules this session does not hold, and
+      crm/leads/deals/contacts are excluded from the release outright. The fix shape is the repo's own template,
+      `build/core/projects-tickets-query.service.ts:155`. Tracked as register items #165–#167.
 - [x] Bulk endpoints are probed with a mixed-tenant id list; the whole request fails rather than silently processing the subset the caller owns.
       10 confirmed silent-subset sites repaired (notifications ×3, recruitment ×2, surveys ×2, kb tags, timesheets approvals ×2 counting `bulkApprove`, data-quality) plus `enrollSequence`. Each fetches under the tenant predicate, compares the row count with the requested id count, and throws `NotFoundException` for the WHOLE request. Detector: `no-count-check` 51 → 45 while the scan itself got stronger (46 → 66 visible sites); `fail-whole` 4 → 21. Behavioural proof in `bola-bulk-fail-whole.spec.ts` (14 assertions incl. no-write-on-miss and no-email-on-miss), mutation-tested.
       PARTIAL: `DealsCrudService.bulkDelete|bulkUpdate` are CRM and excluded from this release. They are unchanged, still detected as `no-count-check`, and pinned by name in `bola-bulk-mixed-tenant.spec.ts` so the finding is not lost.
