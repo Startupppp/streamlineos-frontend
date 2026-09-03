@@ -6,6 +6,7 @@ RED-first proof, one recorded deliberately unchanged.
 | Item | Register | Verdict | Commit |
 |---|---|---|---|
 | 1 | #15 | FIXED | `cdaf636d` |
+| 1b | #15, sibling key — named by the coordinator after the first pass | FIXED | `47085372` |
 | 2 | #23 / #242 | FIXED (2 of 3 sub-fixes; the third is not applicable — see below) | `e335c065` |
 | 3 | #48 | FIXED | `54dd1f2c` |
 | 4 | #241 | RECORDED, not changed | `02e01cfa` |
@@ -55,6 +56,47 @@ the whole e-sign + chat pattern is 12 suites / 108 tests green.
 aside and back), so **2 handlers**. Ratchet lowered **2443 -> 2441** in the same commit — my
 measured delta only, not the tree's live number, because concurrent agents move it (it read 2411
 by the end of the session).
+
+## Item 1b — the same defect on `GET /sign/envelopes/:envelopeId/audit` (`47085372`)
+
+Named by the coordinator after the first pass; I had flagged it and declined to take it unasked.
+
+**Scopability checked first, because it was the load-bearing detail in #15.** At runtime,
+`isScopable("sign:audit:view")` is **false** — the same property as
+`sign:certificate:download`, and unlike `sign:envelope:view` which is `true`. So the audit key's
+own grant can only ever resolve `all`, and the scope has to come from `sign:envelope:view`. The two
+routes do not differ for any real reason, so they now read the same source.
+
+The route bound only `orgId`, so a member scoped `own` on `sign:envelope:view` holding
+`sign:audit:view` could read the signing trail of every envelope in the organisation — who opened,
+signed, declined and downloaded what, and when.
+
+**Changed**
+
+- `mustGetVisibleEnvelope` moved out of `SignFinalizationService` (where it was private) into
+  `sign-envelope-scope.ts`, so all three routes refuse an invisible envelope through **one**
+  implementation rather than three copies.
+- `SignAuditService.listForEnvelope` now **requires** the scope. Missing, cross-tenant and
+  out-of-scope all answer 404 with the identical message, and a spec asserts the two messages are
+  *equal* rather than merely both being 404s.
+- The finalization pipeline's own two audit reads pass `SYSTEM_ENVELOPE_SCOPE`, which names them as
+  system reads instead of leaving them looking unscoped by omission. The two e2e call sites were
+  updated with it.
+
+**Test that fails without it** — the same spec extended to the third handler, now 25 tests. Bite
+against a tree carrying the item-1 fix but not this one: **7 failed / 18 passed / 25 total**, and
+the 7 failures are exactly the audit tests, which isolates the new defect from the already-proven
+ones. With the fix: **25 passed**; the e-sign module is 11 suites / 109 tests green.
+
+**`check:authz-deny` ratchet deliberately NOT lowered, delta 0.** `--why "GET
+/sign/envelopes/*/audit"` reports `COVERED  DELEGATE SignAuditService.listForEnvelope  by
+e-sign-signing-flow.e2e-spec.ts` — **both before and after my change**. The gate called this
+handler covered the whole time the route had no scope gate at all, on a delegate symbol link to a
+file that asserts a deny somewhere else in it. That is the looseness the gate's own header admits
+("attribution is per spec FILE, not per `it()` block") showing up on a live P1. Measured with the
+spec moved aside and back: 2411 -> 2409, i.e. still the same **2** handlers banked in `cdaf636d`.
+The tree reads 2409 against the ratchet of 2441, but that 32 of improvement is other agents' and is
+not mine to bank.
 
 ## Item 2 — three `@Public()` auth routes with no rate limit (#23 / #242, P1)
 
@@ -207,6 +249,8 @@ why it is not resolved here.
 | `pnpm check:file-sizes` | 0 | 3575 files, all under 500 |
 | `pnpm check:hardcoded-secrets` | 0 | 0 files |
 | `jest --testPathPattern="sign-certificate-download-scope\|…\|e-sign"` | 0 | 12 suites / 108 tests |
+| `jest --testPathPattern="modules/e-sign/"` (after item 1b) | 0 | 11 suites / 109 tests |
+| `check:import-direction` (after item 1b) | 0 | — |
 | `jest --testPathPattern="modules/auth/\|rate-limit"` | 0 | 15 suites / 153 tests |
 | `jest --testPathPattern="modules/access/"` | 0 | 41 suites / 408 tests |
 | `jest --testPathPattern="rbac\|permission\|module-access\|entitlement"` | 0 | 74 suites / 893 tests |
@@ -221,9 +265,12 @@ why it is not resolved here.
   (`organization/core/organization-settings.service.ts` missing a `NotFoundException` import;
   `chat/chat-cross-tenant-404.spec.ts` importing a not-yet-written `./chat-entity-actor`). Both
   cleared on re-run / are not in my paths. The final run against my committed state is exit 0.
-- `GET /sign/envelopes/:envelopeId/audit` (key `sign:audit:view`, not scopable) still binds only
-  `orgId`. Same shape as #15 one key over. Not changed, because #15 names the certificate key and
-  scoping a route the finding does not name is a behaviour change without a mandate.
+- ~~`GET /sign/envelopes/:envelopeId/audit` still binds only `orgId`.~~ **RESOLVED** — the
+  coordinator named it and it is fixed in `47085372`; see Item 1b.
+- `check:authz-deny`'s DELEGATE symbol link can report a handler COVERED on the strength of a spec
+  file that asserts a deny about something else in the same file. It did exactly that for
+  `GET /sign/envelopes/*/audit` throughout the period the route had no scope gate. The gate is a
+  floor, not a signal — worth a register line for whoever owns it.
 
 ## Not run
 
