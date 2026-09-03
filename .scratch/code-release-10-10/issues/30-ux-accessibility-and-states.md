@@ -6,6 +6,8 @@
 
 **Status:** 5 of 7 closed. **S14 reached a kanban board and ran every planned step.** The `page`-vs-cursor drift that blocked boxes 4 and 5 for the whole release was fixed and committed (`f75797ae1`); this session verified it from a real browser, resolved `projectId = 20` by clicking the first row of `/build/all`, and measured the board at 375/768/1280. The run went **57 of 63 planned steps to 63 of 63** — the first whole denominator this ticket has had. **Box 4 is CLOSED.** Box 5 stays open on flows-not-routes, not on reachability. Box 2 stays open on 9 named CRM/inventory targets now recorded as an accepted scope exclusion. Reports: `reports/30-ux-accessibility.md` (S8), `reports/30b-states-a11y-and-journeys.md` (S11), `reports/30c-a11y-residue-and-query-gating.md` (S13), `reports/30d-boards-reached.md` (S14).
 
+**Residual-risk disposition (2026-09-03):** every open box below now carries an ASSIGNABLE-or-ACCEPTED verdict, a named owner and a date, recorded inline under the box and in `reports/residual-risk-register-19-30.md`. Blockers were re-verified against source, a live gate run or a committed artifact rather than transcribed; where a stated blocker did not survive, the correction is inline.
+
 - [x] Loading, empty, error, offline and permission-denied states are present on every authenticated surface, not only the common paths.
   CLOSED. `npx jest --runInBand --testPathPattern="authenticated-surface-states.contract"` → exit 0, **22/22**
   over **556 authenticated route modules, 539 of them reading server state**. Measured now:

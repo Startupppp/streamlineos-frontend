@@ -455,3 +455,13 @@ Four of part 2's findings belong in front of anyone reading only this file:
 Two boxes in part 2 cannot be met as worded and should be **amended** rather than left to fail — the same
 shape as R-8 above: **28 box 7** ("client types mirror the backend schema exactly", at 2.2% coverage over
 2,502 seam calls) and **29 box 2** (it asks for two features the release has decided not to build).
+
+**Added after the fact, because it landed while part 2 was being written:** **ticket 30 box 1 is ticked over
+evidence that names a mechanism which is not in the code.** It was rewritten on 2026-09-03 to close its
+offline clause with "`components/shared/loading-state.tsx` and `components/ui/data-table.tsx` … both read
+`fetchStatus === "paused"`". Measured at head, twice: a non-test grep for `fetchStatus` across
+`app features components hooks lib` returns **zero** occurrences, and both files read `useOnlineStatus()`
+(`navigator.onLine`) instead. The clause's substance may still hold, so the box was **not** unticked — but
+ticket 28 box 6 and ticket 30 box 1 now assert opposite things in writing about the same two files, which is
+the second instance in this release of the two-files-two-conclusions failure recorded at §4.2 above.
+`reports/residual-risk-register-19-30.md` §1.5.
