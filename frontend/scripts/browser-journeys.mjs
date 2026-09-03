@@ -355,6 +355,12 @@ export function axeExpression(tags, rulesOff, timeoutMs) {
           impact: v.impact,
           nodes: v.nodes.length,
           targets: v.nodes.slice(0, 2).map((n) => String(n.target)),
+          /**
+           * A Tailwind class chain is not a location. Without the element's own
+           * markup a finding names something nobody can find in the source, and
+           * an unlocatable finding is one nobody fixes.
+           */
+          html: v.nodes.slice(0, 2).map((n) => String(n.html).slice(0, 200)),
         })),
       }))
       .catch((e) => ({ ran: false, reason: String((e && e.message) || e) }));
@@ -1227,6 +1233,7 @@ async function main() {
               impact: v.impact,
               nodes: v.nodes,
               targets: v.targets,
+              html: v.html,
             });
 
           if (probe.signIn)
