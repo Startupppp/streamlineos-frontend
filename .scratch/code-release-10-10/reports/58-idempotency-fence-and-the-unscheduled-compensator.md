@@ -287,12 +287,194 @@ Each verified with `git show --stat HEAD`; file counts 3, 1, 7 and 1, all mine.
    `node_modules` (created 2026-08-29, before this session), and dies `ELOOP`. Nothing to do with
    the code it tests. Either the walk needs to skip symlinks and `.claude/`, or the stale worktree
    should go. I touched neither — deleting another agent's worktree is not mine to do.
-2. **The whole billing cron controller is unscheduled.** `ai-reservations-sweep` was one of six
-   routes on `CronBillingController`; `trial-expiry`, `monthly-plan-grants`, `auto-topup-flush`,
-   `provider-webhook-redrive` and `ai-jobs-flush` are all still reachable only by an external POST
-   that the README's five-job table does not name. Trial expiry and monthly plan grants in
-   particular are revenue-affecting. I scheduled only the one I was asked to and could prove.
-   Owner: billing.
+2. **The whole billing cron controller is unscheduled.** ~~I scheduled only the one I was asked
+   to.~~ **Taken and resolved in §9 below** at the coordinator's direction.
 3. **`UsageMeteringService.sweepExpiredReservations` has no caller** — §5a.
 4. **The 28 harmful `@Idempotent` routes still have no natural key of their own** — §2.
 5. **`check:file-sizes` is red on `main`** for five files in other territories.
+
+
+---
+
+# 9. Follow-on — the other five billing cron routes
+
+Taken at the coordinator's direction after §8 item 2. Two are now scheduled, three are recorded
+as deliberately not, each with the single thing that would have to change first.
+
+## 9.1 Is the in-repo scheduler really the only mechanism?
+
+Nothing in **either** repository schedules any of the six routes on `CronBillingController`:
+
+| Checked | Result |
+|---|---|
+| `@nestjs/schedule` in `package.json` / `node_modules` | **absent** — the package is not installed, so `@Cron` does not exist to have been forgotten |
+| `grep -rn "@Cron(" src` (non-spec) | **0** |
+| `streamlineos-frontend/frontend/vercel.json` | present, but declares **no `crons` key** — only framework/build settings |
+| `render.yaml` · `fly.toml` · `Procfile` · `app.yaml` · `cloudbuild.yaml` · `crontab` | **none exist** in either repo |
+| GitHub workflows with a `schedule:` trigger | 6 — `alerts`, `cell-backup`, `cell-cold-bootstrap`, `cell-daily-samples`, `db-gates`, `ci`. `grep -rn "cron/\|CRON_SECRET" .github/` across both repos returns **one hit, a comment in `ci.yml:754`**. None POSTs a cron route. |
+| Frontend `app/api/cron/**/route.ts` | **none exist** |
+| The five job keys anywhere in either repo | only `cron-billing.controller.ts`, its own specs, the generated `openapi.json` / `api-contract-registry.json`, and this release's scratch reports |
+
+**Stated explicitly, as asked: an out-of-repo scheduler cannot be ruled out from source.** A
+platform-dashboard cron, an Upstash QStash schedule or a cloud scheduler would leave no trace in
+either repository, and I have no production credentials to check.
+
+**The decisive check, for whoever does have them:** `CronLeaseService.withLease` writes
+`cron:heartbeat:<jobKey>` to Redis with a 7-day TTL on **every** successful run, from either entry
+point. If `cron:heartbeat:monthly-plan-grants` and `cron:heartbeat:trial-expiry` are absent from the
+production Redis, nothing has run them in at least a week. That is one `GET` per key and it settles
+the question. `alert-retention-dead-man.mjs` already reads exactly these keys.
+
+**Why a duplicate schedule would not double-grant anyway** — which is the risk the coordinator
+rightly flagged. Two independent protections, in order of strength:
+
+1. **The jobs are idempotent in the database** (§9.2). This holds regardless of how many schedulers
+   exist, and it is the reason I was willing to schedule them at all.
+2. The two mechanisms compose: `isDue()` reads the same `cron:heartbeat:<jobKey>` key an external
+   POST refreshes, so the in-process scheduler stands down for the rest of the interval, and
+   `withLease` is a distributed lock on top of that.
+
+Protection 2 is **not** something to rely on: `withLease` runs **without dedup** when Redis is
+absent or erroring (`cron-lease.service.ts:41,54`) and `isDue()` returns `true` with no Redis. So
+the lease reduces duplicate *runs*; only the job's own natural key prevents a duplicate *effect*.
+That distinction is now written into `retention-schedule.ts`'s doc comment, because it is the rule
+that decides what may join the list.
+
+## 9.2 Scheduled: `monthly-plan-grants` and `trial-expiry`
+
+**`monthly-plan-grants` — daily, 300s lease.** Idempotent per calendar month at three layers:
+`getMonthlyGrantedOrgIds` skips an org that already holds a `PLAN_GRANT` this month;
+`grantPlanCredits` re-checks the `${plan}-monthly-YYYY-MM` reference *inside its own transaction*;
+and `uq_ai_credit_txns_plan_grant_ref` — `UNIQUE (org_id, reference_id) WHERE type = 'PLAN_GRANT'
+AND reference_id IS NOT NULL`, confirmed in `pg_index` — refuses the duplicate in the database,
+with `isUniqueViolation` returning cleanly.
+
+*Daily, not monthly, deliberately.* The coordinator's caution was right in general and the evidence
+answers it: because the grant is idempotent **per calendar month**, a daily cadence grants once and
+skips for the rest of the month, and self-heals if the process was down on the 1st. A monthly
+cadence would make one missed run cost a customer a month of credits.
+
+**`trial-expiry` — daily, 300s lease.** Idempotent by construction: the expiry is a single
+conditional `UPDATE ... WHERE status = 'TRIAL' AND trial_ends_at < now ... RETURNING`, so a second
+run matches no rows and emits no second churn event; the reminders carry
+`dedupeKey = trial-expiry:<date>:<days>` against `uniq_notification_outbox_dedupe (org_id,
+dedupe_key)`, a unique index rather than a cache TTL.
+
+### Proved on a real database, as the application role
+
+`scratch_idem_sweep`, schema head, RLS live, connected as `streamline_app`
+(`rolbypassrls = f, rolsuper = f`). 8 organisations: 3 seeded `TRIAL` with `trial_ends_at` two days
+past, 5 seeded `ACTIVE` on `PROFESSIONAL`.
+
+```
+role: {"role":"streamline_app","bypass":false}
+trial-expiry run 1: {"expired":3,"reminded":0}
+trial-expiry run 2: {"expired":0,"reminded":0}
+churn events emitted across both runs: 3
+monthly-plan-grants run 1: {"granted":5,"skipped":3}
+monthly-plan-grants run 2: {"granted":0,"skipped":8}
+monthly-plan-grants run 3: {"granted":0,"skipped":8}
+```
+After: `TRIAL 3 → EXPIRED 3`; **5 `PLAN_GRANT` rows under 1 distinct reference**; wallet sum
+10,000,000 milli-credits. Three runs, one grant each.
+
+### Bite proof — the guards are load-bearing
+
+In a hermetic `git archive HEAD` tree (never the shared working tree), with both application
+guards removed, against my own scratch copy:
+
+| Tree / database | Three runs produced |
+|---|---|
+| both guards removed **and** `uq_ai_credit_txns_plan_grant_ref` dropped | **15 `PLAN_GRANT` rows, 30,000,000 milli-credits** — a 3× over-grant where 5 rows and 10,000,000 were owed |
+| both guards removed, **index restored** | **5 rows, 10,000,000** — the partial unique index alone is sufficient |
+| unmodified | **5 rows, 10,000,000** |
+
+The middle row is the one that justifies the cadence: even if both application pre-checks were
+bypassed — by concurrency, a lost lease, or two schedulers — the database refuses the second grant.
+The index was recreated immediately afterwards and verified present.
+
+**A harness correction worth recording.** My first run of this probe reported `42501 no tenant
+context` for every organisation with an `ACTIVE` subscription. That was my harness, not the code: I
+built the db as a bare `drizzle(client)` instead of `createTenantAwareDb(...)`, which is what the
+`DRIZZLE` provider actually is. `processMonthlyPlanGrants` reaches `getMonthlyGrantedOrgIds` through
+`this.db` rather than the `tx` that `forEachOrg` hands it, so **its GUC comes from the proxy and
+from nowhere else**. Worth knowing generally: any service method reached via `this.db` inside a
+sweep depends entirely on that proxy. The earlier `sweepExpiredReservations` probe was unaffected
+because it uses the `tx` directly.
+
+## 9.3 Not scheduled, and why — `UNSCHEDULED_BILLING_JOBS`
+
+Recorded in `retention-schedule.ts` and enforced by `billing-lifecycle-scheduling.spec.ts`, which
+asserts every leased route on the controller is either scheduled or excluded with a reason — the
+same shape as `UNSCHEDULED_PURGE_JOBS`. Both blocking claims below were **verified by me directly**,
+not accepted from the analysis that surfaced them.
+
+**`ai-jobs-flush` — it cannot run at all as the application role.** `AiJobsService.claimBatch` is a
+cross-tenant `UPDATE ai_jobs` with **no `org_id` predicate**, issued outside any tenant transaction
+(`flush()` contains no `forEachOrg`, `withTenant` or `runInNewTenantTransaction` — verified by
+grep), and `ai_jobs` carries RLS. Running that exact statement as `streamline_app`:
+
+```
+ERROR:  no tenant context: app.organization_id is not set for this transaction
+CONTEXT:  PL/pgSQL function current_org_id() line 7 at RAISE
+```
+
+**This is the trap the coordinator warned me about, and it does bite — just not the job we first
+suspected.** Scheduling it would register a job that fails silently forever. `releaseStaleLocks` has
+the same shape. A second defect would then bite on the first *successful* tick: `crm.stale-pipeline`
+is enqueued but no handler registers that type, the no-handler branch writes `status='DEAD'` with
+`attempts = maxAttempts`, and `enqueue` returns the existing row whatever its status — so the first
+run permanently poisons that idempotency key for every organisation.
+
+**`provider-webhook-redrive` — it double-counts revenue on an overlapping run.**
+`BillingWebhookEffects.apply` pushes the `addon_purchase` revenue entry *after*
+`externalEffectLedger.execute(...)` **without reading its outcome**, so a grant that returns
+`ALREADY_SUCCEEDED` still emits a second revenue event; and the `payment.status === "refunded"`
+branch pushes a `refund` entry with **no ledger guard at all** (both read directly at
+`billing-webhook-effects.ts:70-77` and `:109-117`). `revenue_events` has no natural key and each
+emit mints a fresh `randomUUID()`, so neither the outbox dedupe nor the database catches it. The
+credit grant itself is safe — `uq_ai_credit_txns_purchase_ref` plus the effect ledger's token-fenced
+compare-and-set. Fix the revenue push, then a 5-minute cadence matches `REDRIVE_MIN_AGE_MS`.
+
+**`auto-topup-flush` — the payment leg does not exist.** `purchaseCreditsDirectly(orgId, null,
+packId, true)` credits the wallet and writes a `PURCHASE` transaction, and **nothing in
+`ai-credits.service.ts` calls a payment provider**. Putting it on a timer issues credit packs for
+free to every org under its auto-top-up threshold. Note the distinction, because it changes who owns
+it: its double-run protection is actually sound (`auto-<packId>-<UTC date>` under
+`uq_ai_credit_txns_purchase_ref`, with an in-transaction pre-check), so this is **not** an
+idempotency gap — it is a missing charge, and a product decision rather than a cadence.
+
+*A latent inconsistency in the same path, not blocking:* `hasSameDayTopUpIst` uses the **IST** day
+while the reference key uses the **UTC** day. They disagree for 5½ hours daily; both directions
+resolve to "no double credit" (one skips, the other hits the in-transaction check), so it is a
+correctness smell rather than a defect.
+
+## 9.4 `UsageMeteringService.sweepExpiredReservations` — left, as instructed
+
+Still no caller outside `db/__tests__/db-call-count-contract.spec.ts`. Not scheduled: expiring an
+`ACTIVE` usage reservation writes `settled_quantity: 0`, which decides what a customer is billed for
+work that may have happened. That is a billing decision, not a cadence. Owner: billing.
+
+## 9.5 Gates for §9
+
+| Gate | Exit | Number |
+|---|---|---|
+| `pnpm typecheck` | **0** | |
+| `pnpm check:spec-typecheck` | **0** | spec-inclusive typecheck passed |
+| `pnpm check:vacuous-assertions` | **0** | 4 registered, all within ratchet |
+| `pnpm check:idempotent-commands` | **0** | |
+| `node src/scripts/alert-retention-dead-man.mjs --self-test` | **0** | 23 passed, **16** monitored sweeps |
+| `jest --testPathPattern="(billing-lifecycle-scheduling\|cron-retention-scheduler\|retention-schedule-parity\|ai-reservation-compensator\|s05-retention\|cron-dead-man\|cron-billing)"` | **0** | 75 passed / 7 suites |
+| `jest --testPathPattern="(common/idempotency\|modules/cron\|modules/billing\|modules/finance/banking\|modules/ai/jobs)"` | **1** | **930 tests passed, 0 failed**; 96/97 suites. The one suite failure is the same pre-existing `ELOOP` in §8 item 1. |
+| `pnpm check:file-sizes` | **1** | unchanged, other territories |
+
+**Commit:** `119ec277` (7 files, all mine).
+
+## 9.6 What I did not do
+
+- No production Redis or database was touched; the heartbeat check in §9.1 is left for whoever holds
+  those credentials, and it is the only thing that can rule out an out-of-repo scheduler.
+- I did not fix the three excluded jobs. Each is a real defect with a named owner, and two of them
+  (the unguarded revenue emit, the cross-tenant `ai_jobs` claim) are worth tickets of their own.
+- No e2e run of the newly scheduled jobs through their HTTP routes; the proof is at the service
+  level against a real database, plus the scheduler tick in unit tests.
