@@ -245,4 +245,3 @@ Exactly **195** unchecked PRD criteria are assigned to **36** execution tickets.
 - Ticket 34: 5
 - Ticket 35: 10
 - Ticket 36: 6
-

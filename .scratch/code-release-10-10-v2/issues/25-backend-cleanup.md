@@ -17,4 +17,3 @@
 
 - Record applicable frontend/root and backend commit SHAs, commands, pass/fail/skip counts, and artifact locations.
 - Update the source PRD checkbox states and the traceability manifest in the same completion commit.
-
