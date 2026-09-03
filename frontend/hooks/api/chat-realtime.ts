@@ -42,14 +42,12 @@ function payloadToMessage(payload: MessagePayload): Message {
     actionStatus: null,
     createdAt: payload.createdAt,
     updatedAt: payload.createdAt,
-    sender: payload.senderName
-      ? { id: payload.senderId, name: payload.senderName, image: payload.senderImage ?? null }
-      : null,
-    attachments: (payload.attachments ?? []).map((a) => ({
-      ...a,
-      messageId: payload.id,
-      createdAt: null,
-    })),
+    sender: {
+      id: payload.senderId,
+      name: payload.senderName ?? null,
+      image: payload.senderImage ?? null,
+    },
+    attachments: payload.attachments ?? [],
     replyTo: null,
   };
 }

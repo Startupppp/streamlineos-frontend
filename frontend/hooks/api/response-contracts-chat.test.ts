@@ -5,6 +5,8 @@ import {
   chatChannelMemberPreviewContract,
   chatChannelPageContract,
   chatHuddleContract,
+  chatMessagesPageContract,
+  chatPollPageContract,
   chatPublicChannelContract,
 } from "@/hooks/api/chat-schema";
 
@@ -249,5 +251,149 @@ describe("BITE — the huddle payload that actually shipped is rejected", () => 
   it("rejects a participant carrying the membership id the wire keys exclude", () => {
     const shipped = { ...HUDDLE, participants: [{ ...HUDDLE_PARTICIPANT, membershipId: 41 }] };
     expect(chatHuddleContract.safeParse(shipped).success).toBe(false);
+  });
+});
+
+const ATTACHMENT = {
+  id: 2,
+  fileName: "spec.pdf",
+  fileUrl: "org_1/chat/spec.pdf",
+  fileKey: "org_1/chat/spec.pdf",
+  fileSize: 1024,
+  mimeType: "application/pdf",
+};
+
+const MESSAGE = {
+  id: 900,
+  orgId: "org_1",
+  channelId: 7,
+  senderMembershipId: 41,
+  senderId: "usr_alice",
+  sender: { id: "usr_alice", name: "Alice", image: null },
+  content: "ship it",
+  replyToId: null,
+  isEdited: false,
+  isDeleted: false,
+  messageType: "text",
+  metadata: null,
+  actionStatus: null,
+  clientKey: null,
+  channelPosition: 12,
+  createdAt: "2026-09-02T12:00:00.000Z",
+  updatedAt: "2026-09-02T12:00:00.000Z",
+  attachments: [ATTACHMENT],
+  replyTo: null,
+};
+
+describe("the message contract accepts what the timeline actually builds", () => {
+  it("accepts a page of messages", () => {
+    expect(
+      chatMessagesPageContract.safeParse({ messages: [MESSAGE], nextCursor: null }).success,
+    ).toBe(true);
+    expect(
+      chatMessagesPageContract.safeParse({ messages: [MESSAGE], nextCursor: 12 }).success,
+    ).toBe(true);
+  });
+
+  it("accepts the poll page, which adds hasMore", () => {
+    expect(
+      chatPollPageContract.safeParse({ messages: [MESSAGE], nextCursor: null, hasMore: false })
+        .success,
+    ).toBe(true);
+  });
+
+  /**
+   * `orgId`, `clientKey`, `channelPosition` and `senderMembershipId` are on the
+   * wire because the timeline selects no `columns:`. The contract is deliberately
+   * NOT `.strict()` there: "every column of the table" is a set that grows with a
+   * migration, and failing closed on it would take the timeline down.
+   */
+  it("accepts the columns the client does not read, and a column added later", () => {
+    expect(chatMessagesPageContract.safeParse({ messages: [{ ...MESSAGE, aNewColumn: 1 }], nextCursor: null }).success).toBe(true);
+  });
+
+  it("accepts a message whose sender membership is gone — senderId null, sender all-null", () => {
+    const orphan = {
+      ...MESSAGE,
+      senderMembershipId: null,
+      senderId: null,
+      sender: { id: null, name: null, image: null },
+    };
+    expect(chatMessagesPageContract.safeParse({ messages: [orphan], nextCursor: null }).success).toBe(true);
+  });
+
+  it("accepts a reply, which is a PARTIAL message with no attachments of its own", () => {
+    const withReply = {
+      ...MESSAGE,
+      replyToId: 899,
+      replyTo: { id: 899, content: "before", sender: { id: "usr_bob", name: "Bob", image: null } },
+    };
+    expect(chatMessagesPageContract.safeParse({ messages: [withReply], nextCursor: null }).success).toBe(true);
+  });
+
+  it("accepts the two entity-reference shapes the send DTO permits", () => {
+    const withEntities = {
+      ...MESSAGE,
+      metadata: {
+        forwardCount: 2,
+        entities: [
+          { type: "ticket", id: "12", projectId: 3, card: null },
+          { type: "comment", id: "88", ticketId: 12, projectId: 3 },
+        ],
+      },
+    };
+    expect(chatMessagesPageContract.safeParse({ messages: [withEntities], nextCursor: null }).success).toBe(true);
+  });
+});
+
+describe("BITE — the message payload that actually shipped is rejected", () => {
+  /**
+   * The worst of the seven. `chat_messages` has no `sender_id` column, so the
+   * read path shipped `senderMembership` and `senderId` was on NO payload.
+   * `isOwn = msg.senderId === currentUserId` was therefore always false: your own
+   * messages rendered as somebody else's, Edit and Delete never appeared, and
+   * `undefined === undefined` collapsed different senders under one header.
+   */
+  it("rejects a message with the identity left under senderMembership", () => {
+    const { senderId: _senderId, sender: _sender, ...rest } = MESSAGE;
+    const shipped = {
+      ...rest,
+      senderMembership: { userId: "usr_alice", user: { id: "usr_alice", name: "Alice" } },
+    };
+    const result = chatMessagesPageContract.safeParse({ messages: [shipped], nextCursor: null });
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    const paths = result.error.issues.map((i) => i.path.join("."));
+    expect(paths).toEqual(expect.arrayContaining(["messages.0.senderId", "messages.0.sender"]));
+  });
+
+  /**
+   * The ninth instance, found by writing this contract. The timeline projected
+   * five attachment columns and not `fileUrl`, while `forward-message-dialog`
+   * re-posts `fileUrl` into a send DTO that requires `z.string()` — so every
+   * forward of a message with an attachment came back 400.
+   */
+  it("rejects an attachment with no fileUrl, which is what forwarding posted", () => {
+    const { fileUrl: _fileUrl, ...withoutUrl } = ATTACHMENT;
+    const result = chatMessagesPageContract.safeParse({
+      messages: [{ ...MESSAGE, attachments: [withoutUrl] }],
+      nextCursor: null,
+    });
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues.map((i) => i.path.join("."))).toContain(
+      "messages.0.attachments.0.fileUrl",
+    );
+  });
+
+  it("rejects a sender emitted as null, which the read path never does", () => {
+    expect(
+      chatMessagesPageContract.safeParse({ messages: [{ ...MESSAGE, sender: null }], nextCursor: null })
+        .success,
+    ).toBe(false);
+  });
+
+  it("rejects a page whose cursor was dropped rather than nulled", () => {
+    expect(chatMessagesPageContract.safeParse({ messages: [MESSAGE] }).success).toBe(false);
   });
 });

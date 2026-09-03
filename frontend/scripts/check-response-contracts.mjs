@@ -100,7 +100,7 @@ const READ_METHODS = new Set([
  * ratchet becomes a comment.
  */
 const BASELINE = {
-  unvalidatedCalls: 2598,
+  unvalidatedCalls: 2596,
   minScannedCalls: 2400,
 };
 
@@ -206,6 +206,8 @@ const CONTRACTED_ROUTES = [
   "/chat/channels/public",
   "/chat/channels/:p/huddle",
   "/chat/channels/:p/huddle/start",
+  "/chat/channels/:p/messages",
+  "/chat/channels/:p/messages/poll",
   "/support/:p/watchers",
   "/build/:p/tickets/:p/watchers",
 ];

@@ -70,7 +70,7 @@ export function ThreadPanel({
   const chatUserMap = useMemo(() => buildChatUserMap(orgUsers), [orgUsers]);
   const resolveUserName = useCallback(
     (
-      userId: string,
+      userId: string | null,
       embedded?: { name?: string | null; email?: string | null } | null,
     ) => resolveChatUserName(userId, embedded, chatUserMap),
     [chatUserMap],

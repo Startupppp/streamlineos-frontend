@@ -87,7 +87,7 @@ export function ChatBubble({
   onUnsaveMsg?: () => void;
   onForward?: () => void;
   resolveUserName?: (
-    userId: string,
+    userId: string | null,
     embedded?: { name?: string | null; email?: string | null } | null,
   ) => string;
 }) {

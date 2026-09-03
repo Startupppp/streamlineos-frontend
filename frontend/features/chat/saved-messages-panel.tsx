@@ -38,7 +38,7 @@ function SavedMessageCard({
   onUnsave: (messageId: number) => void;
   onJump: (channelId: number) => void;
   resolveUserName: (
-    userId: string,
+    userId: string | null,
     embedded?: { name?: string | null; email?: string | null } | null,
   ) => string;
 }) {
@@ -117,7 +117,7 @@ export function SavedMessagesPanel({
   const chatUserMap = useMemo(() => buildChatUserMap(orgUsers), [orgUsers]);
   const resolveUserName = useCallback(
     (
-      userId: string,
+      userId: string | null,
       embedded?: { name?: string | null; email?: string | null } | null,
     ) => resolveChatUserName(userId, embedded, chatUserMap),
     [chatUserMap],

@@ -40,7 +40,7 @@ interface MessageItemProps {
   onUnsaveMsg: (messageId: number) => void;
   onForward: (msg: Message) => void;
   resolveUserName?: (
-    userId: string,
+    userId: string | null,
     embedded?: { name?: string | null; email?: string | null } | null,
   ) => string;
 }
@@ -141,7 +141,7 @@ interface MessageListProps {
   onUnsaveMsg: (messageId: number) => void;
   onForward: (msg: Message) => void;
   resolveUserName?: (
-    userId: string,
+    userId: string | null,
     embedded?: { name?: string | null; email?: string | null } | null,
   ) => string;
   showScrollBtn: boolean;

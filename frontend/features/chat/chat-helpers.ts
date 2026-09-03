@@ -25,13 +25,18 @@ export function buildChatUserMap(
   return map;
 }
 
+/**
+ * `userId` is nullable because a message whose `organization_members` row is gone
+ * arrives with `senderId: null`. Declared non-nullable, this signature forced
+ * every caller to lie about a value the wire has always been able to omit.
+ */
 export function resolveChatUserName(
-  userId: string,
+  userId: string | null,
   embedded: { name?: string | null; email?: string | null } | null | undefined,
   userMap: Map<string, NamedUser>,
 ): string {
   if (embedded?.name?.trim()) return embedded.name.trim();
-  const mapped = userMap.get(userId);
+  const mapped = userId === null ? undefined : userMap.get(userId);
   if (mapped) return getUserDisplayName(mapped);
   return "Unknown";
 }

@@ -11,7 +11,7 @@ interface ThreadMessageProps {
   currentUserId: string;
   isParent?: boolean;
   resolveUserName: (
-    userId: string,
+    userId: string | null,
     embedded?: { name?: string | null; email?: string | null } | null,
   ) => string;
 }

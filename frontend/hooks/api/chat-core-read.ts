@@ -10,6 +10,8 @@ import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import {
   chatChannelContract,
   chatChannelPageContract,
+  chatMessagesPageContract,
+  chatPollPageContract,
   chatPublicChannelContract,
 } from "@/hooks/api/chat-schema";
 import type {
@@ -137,7 +139,9 @@ export function useChatMessages(channelId: number) {
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<MessagesPage>(
         `/chat/channels/${channelId}/messages`,
-        pageParam ? { cursor: pageParam } : undefined, signal,
+        pageParam ? { cursor: pageParam } : undefined,
+        signal,
+        chatMessagesPageContract,
       ),
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     initialPageParam: undefined as number | undefined,
@@ -163,9 +167,12 @@ export function useChatPoll(
   return useQuery({
     queryKey: queryKeys.chat.poll(channelId, since),
     queryFn: ({ signal }) =>
-      apiClient.get<PollPage>(`/chat/channels/${channelId}/messages/poll`, {
-        since,
-      }, signal),
+      apiClient.get<PollPage>(
+        `/chat/channels/${channelId}/messages/poll`,
+        { since },
+        signal,
+        chatPollPageContract,
+      ),
     staleTime: 2 * 60_000,
     enabled: enabled && canRead && channelId > 0,
     refetchInterval: enabled && canRead ? CHAT_POLL_FALLBACK_INTERVAL_MS : false,

@@ -29,7 +29,7 @@ export function useSendMessage() {
       const optimisticMsg: Message = {
         id: -Date.now(),
         channelId: variables.channelId,
-        senderId: session?.user?.id ?? "__optimistic__",
+        senderId: session?.user?.id ?? null,
         content: variables.content ?? null,
         replyToId: variables.replyToId ?? null,
         isEdited: false,
@@ -39,13 +39,11 @@ export function useSendMessage() {
         actionStatus: null,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        sender: session?.user
-          ? {
-              id: session.user.id,
-              name: session.user.name ?? null,
-              image: session.user.image ?? null,
-            }
-          : null,
+        sender: {
+          id: session?.user?.id ?? null,
+          name: session?.user?.name ?? null,
+          image: session?.user?.image ?? null,
+        },
         attachments: [],
         replyTo: null,
       };

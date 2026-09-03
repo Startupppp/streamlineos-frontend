@@ -123,27 +123,38 @@ export interface PublicChannel {
   lastMessageAt: Date | string | null;
 }
 
+/**
+ * The six keys the timeline projects. `messageId` and `createdAt` were declared
+ * and never emitted by that read path; `fileUrl` was declared, never emitted, and
+ * READ — forwarding a message re-posts its attachments and the send DTO requires
+ * `fileUrl`, so every forward of a message with an attachment came back 400.
+ * `fileUrl` is now in the projection; the two nobody reads are gone.
+ */
 export interface MessageAttachment {
   id: number;
-  messageId: number;
   fileName: string;
   fileUrl: string;
   fileKey: string;
   fileSize: number;
   mimeType: string;
-  createdAt: Date | string | null;
 }
 
 export interface MessageReplyTo {
   id: number;
   content: string | null;
-  sender: { id: string; name: string | null } | null;
+  sender: { id: string | null; name: string | null; image: string | null };
 }
 
+/**
+ * `senderId` is NULLABLE — `sender_membership_id` is `ON DELETE SET NULL` — and
+ * `sender` is the opposite: the read path always builds the object, with all
+ * three fields null when the identity is gone. Declared the other way round,
+ * these were the half of the `isOwn` defect a typecheck could not see.
+ */
 export interface Message {
   id: number;
   channelId: number;
-  senderId: string;
+  senderId: string | null;
   content: string | null;
   replyToId: number | null;
   isEdited: boolean;
@@ -153,7 +164,7 @@ export interface Message {
   actionStatus: string | null;
   createdAt: Date | string | null;
   updatedAt: Date | string | null;
-  sender: { id: string; name: string | null; image: string | null } | null;
+  sender: { id: string | null; name: string | null; image: string | null };
   attachments: MessageAttachment[];
   replyTo: MessageReplyTo | null;
   reactions?: Record<string, string[]>;
@@ -182,7 +193,7 @@ export interface OrgUser {
 
 export interface MessagesPage {
   messages: Message[];
-  nextCursor?: number;
+  nextCursor: number | null;
 }
 
 export interface ChannelsPage {

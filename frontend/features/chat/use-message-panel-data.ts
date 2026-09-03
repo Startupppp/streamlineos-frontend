@@ -127,7 +127,7 @@ export function useMessagePanelData({
   const { data: orgUsers } = useChatOrgUsers();
   const chatUserMap = useMemo(() => buildChatUserMap(orgUsers), [orgUsers]);
   const resolveUserName = useCallback(
-    (userId: string, embedded?: { name?: string | null; email?: string | null } | null) =>
+    (userId: string | null, embedded?: { name?: string | null; email?: string | null } | null) =>
       resolveChatUserName(userId, embedded, chatUserMap),
     [chatUserMap],
   );
