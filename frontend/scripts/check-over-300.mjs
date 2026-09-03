@@ -1,7 +1,18 @@
 #!/usr/bin/env node
 /**
  * Ratchet gate: count of frontend production TypeScript/TSX files over 300 lines
- * must not increase beyond the baseline set on 2026-08-31.
+ * must not increase beyond the baseline.
+ *
+ * BASELINE HISTORY. Seeded at 519 on 2026-08-31. That seeding carried slack —
+ * the measured count on 2026-09-02 was 509 — and eleven files crossed 300 into
+ * the gap unremarked before the count reached 520 and the gate finally bit.
+ * Lowered to 516 on 2026-09-03 by splitting five of those crossings by
+ * responsibility (mail cache patching, three column sets, the salary-profile
+ * presentation), leaving the number equal to the measured count with no slack.
+ *
+ * THE BASELINE MAY ONLY EVER MOVE DOWN, and only because files got shorter.
+ * Raising it to absorb a new crossing is the failure mode this gate exists to
+ * catch; a red run means split the file the run names.
  *
  * Scans: all *.ts and *.tsx under the project root, excluding:
  *   node_modules, .next, feedbucket-widget (a separate bundled widget),
@@ -21,7 +32,7 @@ import { fileURLToPath } from "node:url";
 import { isExcludedScanDir, runScanDirSelfTest } from "./check-repo-paths.mjs";
 
 const LIMIT = 300;
-const BASELINE = 519;
+const BASELINE = 516;
 const MIN_FILES = 100;
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
