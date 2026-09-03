@@ -354,9 +354,6 @@ jobs:
         continue-on-error: true
         run: pnpm run check:file-sizes:self-test && pnpm run check:file-sizes
 
-      # Measured rc=1: 3 unclassified exports — features/build/analytics/project-charts.tsx
-      # CHART_COLORS, features/mail/mail-compose-sheet.tsx MailComposeMode,
-      # app/api/media/image/media-image-schema.ts MediaImageQuery.
       # Ticket 36. The frontend half of the backend's `check:type-assertions`.
       # Hard zero for `as any` / `@ts-ignore` / `@ts-expect-error` / `@ts-nocheck`
       # in application code, and a zero-GROWTH ledger for `as unknown as` where
@@ -369,14 +366,26 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm run check:type-assertions:self-test && pnpm run check:type-assertions
 
+      # RE-MEASURED 2026-09-03 (ticket 35), hermetically at head in a
+      # frontend-only checkout: rc=1, ONE unclassified export —
+      # types/projects/shared.ts:PaginatedResponse. Baseline files=0 exports=0
+      # and current files=0 exports=0, so the ratchet itself is clean; the
+      # failure is the missing WIRE/KEEP verdict. The previous note here named
+      # three exports (project-charts CHART_COLORS, mail-compose-sheet
+      # MailComposeMode, media-image-schema MediaImageQuery) and all three are
+      # gone — the number is one, and the step comment now says one.
       - name: Every export is classified and no classification is stale
         if: ${{ !cancelled() }}
         continue-on-error: true
         run: pnpm run check:dead-code:self-test && pnpm run check:dead-code
 
-      # Measured rc=1: 6 routes declare a budget and were never measured
-      # (/calendar, /notifications, /settings, /build/my-work, /crm/leads, +1).
-      # It needs a production build measurement, which no job here produces.
+      # RE-MEASURED 2026-09-03 (ticket 35): rc=1, 17 BREACHES — not the "6 routes
+      # never measured" the previous note claimed. The measurement set landed
+      # since, so these are measured bytes over declared ceilings, e.g.
+      # /build/my-work measuredScriptBytes=817721 over 524288, /crm/leads
+      # 807617 over 524288, /calendar 728786 over 524288, /chat
+      # measuredPageChunkBytes=224885 over 204800. Real findings, ticket 22/26
+      # territory. Still allow-failure because 17 is not zero.
       - name: Route bundle bytes stay within their declared ceiling
         if: ${{ !cancelled() }}
         continue-on-error: true
@@ -389,33 +398,29 @@ jobs:
         continue-on-error: true
         run: pnpm run check:routes:self-test && pnpm run check:routes
 
-      # The LIVE budget check, against the committed measurement set. Measured
-      # rc=1: 5 breaches — mobile FCP p75 2646ms > 1800, mobile TTFB p95 3727ms
-      # > 600, desktop TTFB p95 1430ms > 400, +2. Real findings, ticket 26. The
-      # self-test above stays blocking; this reports the numbers.
+      # The LIVE budget check, against the committed measurement set.
+      # RE-MEASURED 2026-09-03 (ticket 35): rc=1, TWO breaches, both TTFB and
+      # both carrying a recorded ticket-26 exception that the gate still counts
+      # as a failure — mobile TTFB p95 932ms > 600 (was 3727) and desktop TTFB
+      # p95 1669ms > 400 (was 1430). The mobile FCP breach the previous note
+      # named is gone. Real findings, ticket 26/28. The self-test above stays
+      # blocking; this reports the numbers.
       - name: Web Vitals budgets (measured)
         if: ${{ !cancelled() }}
         continue-on-error: true
         run: pnpm run check:web-vitals-budget
 
-      # NEWLY RUNNABLE (ticket 35b added the package script; the gate script has
-      # existed unwired). Measured rc=1 at HEAD: cross-feature-import 222 against
-      # a recorded baseline of 210, shared-imports-feature 20 against 19.
-      #
-      # The cross-feature delta is fully attributable: 28 of the 222 come from the
-      # `features/__tests__/*-a11y.test.tsx` module-sweep harness added on
-      # 2026-09-01 (e03fe10e6, 1698b2bff). Excluding *.test.ts(x) — the same
-      # exemption check:query-scope already carries for that harness — gives 194,
-      # which is BELOW the baseline, and this step becomes blocking. That one-line
-      # walker change lives in scripts/check-import-direction.mjs (ticket 35).
-      #
-      # The shared delta is a genuine new violation: 398359abe (2026-09-02) added a
-      # static `LeaveOrganizationMenuItem` import from
-      # @/features/settings/organization/leave-organization-control into
-      # components/layout/header/org-switcher.tsx.
+      # BLOCKING as of 2026-09-03 (ticket 35). The note here recorded rc=1 at
+      # cross-feature-import 222/210 and shared-imports-feature 20/19. Both are
+      # closed: S10 narrowed the corpus and lowered the cross-feature baseline
+      # 210 -> 194 in the same change, and the org-switcher violation that made
+      # the shared count 20 is gone. RE-MEASURED hermetically at head in a
+      # frontend-only checkout: rc=0, shared-imports-feature 19/19 and
+      # cross-feature-import 182/182, both AT the ratchet with no headroom.
+      # This file's own rule is to delete continue-on-error when the number is no
+      # longer above the line, so it is deleted.
       - name: Import direction (features -> shared, never the reverse)
         if: ${{ !cancelled() }}
-        continue-on-error: true
         run: pnpm run check:import-direction:self-test && pnpm run check:import-direction
 
       # Compares frontend/contracts/openapi.json byte-for-byte against the
