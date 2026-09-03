@@ -20,6 +20,13 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
       "The organization's own customer invoicing is an Accounting surface even though the route sits under /billing. Navigation has no entry for it.",
   },
   {
+    prefix: "/accounting/settings/automations",
+    product: "finance",
+    permission: "settings:automations:view",
+    reason:
+      "The finance automations screen reads the same global /settings/automations surface as its /support sibling, and the backend gates that surface on settings:automations:view. Accounting navigation has no entry for the screen, so without this the longest matching nav prefix (/accounting/settings) would admit anyone holding accounting:settings:read to a page every request behind it then denies.",
+  },
+  {
     prefix: "/portal",
     product: "build",
     permission: "build:portal:view",
