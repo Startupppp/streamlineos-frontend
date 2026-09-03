@@ -9,17 +9,35 @@ import {
 
 /**
  * A ratchet, not a target. Every number here was measured; lowering one is a
- * deliberate edit and raising one fails review. Loading and permission gates
- * are at zero, so any surface that loses one now fails immediately.
+ * deliberate edit and raising one fails review. Loading, read-error and
+ * permission gates are all at zero, so any surface that loses one fails
+ * immediately rather than after a slide.
  */
 const BASELINE = {
   minimumSurfaces: 540,
   missingLoading: 0,
-  missingEmpty: 8,
-  missingError: 1,
+  missingEmpty: 7,
+  missingError: 0,
   missingPermissionDenied: 0,
-  filterEmptyConflation: 56,
+  filterEmptyConflation: 55,
 } as const;
+
+/**
+ * A count alone lets one surface lose its empty state while another gains one
+ * and the ratchet never moves. These seven are the whole residue, and every one
+ * of them was read: none renders a server collection that can come back with
+ * zero rows, so an EmptyState here would be decoration that never appears.
+ * Adding a route to this list is the same weight as lowering a number.
+ */
+const EMPTY_STATE_NOT_APPLICABLE = [
+  "/crm/import",
+  "/hr/recruitment/sla",
+  "/inventory/operations",
+  "/inventory/products/new",
+  "/notifications/policy",
+  "/settings/organization/structure",
+  "/surveys/new",
+] as const;
 
 const surfaces = analyzeAuthenticatedSurfaces();
 const dataSurfaces = surfaces.filter((surface) => surface.readsServerState);
@@ -78,6 +96,14 @@ describe("state coverage ratchet — loading / empty / error / permission-denied
     expect(
       verdict((surface) => !surface.permissionDenied, BASELINE.missingPermissionDenied),
     ).toBe(WITHIN_BASELINE);
+  });
+
+  it("the surfaces without an empty state are exactly the ones recorded as not needing one", () => {
+    const missing = dataSurfaces
+      .filter((surface) => !surface.empty)
+      .map((surface) => surface.route)
+      .sort();
+    expect(missing).toEqual([...EMPTY_STATE_NOT_APPLICABLE]);
   });
 
   it("prints the current numbers so a lowered baseline is a deliberate edit", () => {
