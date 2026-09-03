@@ -4,7 +4,7 @@
 
 **Blocked by:** 11.
 
-**Status:** 5 of 6 boxes closed · 1 still PARTIAL. 2026-09-03 S10: the streaming half of box 3 gains its **fourth** live route — `features/calendar/meeting-follow-up-panel.tsx` now runs on `POST /ai/meetings/follow-up/stream`, which did not exist until this session and was the blocker recorded as ticket 11's A-6. The buffered residue is re-measured below and still contains nothing this release may thread. 2026-09-03 S9: the last 4 unthreaded metered AI
+**Status:** 6 of 6 boxes closed. 2026-09-03 S11 closed box 3 — cancellation was traced end to end and was broken in TWO places, neither of them where the notes below said the residue was: 19 metered backend controllers handed the provider no abort signal at all (fixed, backend `56a71268`), and the frontend capped every AI stream at 30 s while the backend serves for up to 120 s (fixed, frontend `b956db76e`). Proof asserts on the credit ledger, not on rendered text. 2026-09-03 S10: the streaming half of box 3 gains its **fourth** live route — `features/calendar/meeting-follow-up-panel.tsx` now runs on `POST /ai/meetings/follow-up/stream`, which did not exist until this session and was the blocker recorded as ticket 11's A-6. The buffered residue is re-measured below and still contains nothing this release may thread. 2026-09-03 S9: the last 4 unthreaded metered AI
 mutations are threaded, so the buffered half of box 3 has **no residue that this release may thread** —
 the remaining 14 are 8 in excluded modules and 6 that are not metered generation.
 2026-09-03: **24 more AI mutation families thread the abort signal** (population 40 → 18), proven by 17 tests driving
@@ -39,8 +39,13 @@ cannot carry a signal.
   "charges once under StrictMode's double-invoked lifecycle" and
   "counts a retry as a second attempt rather than a fresh first load".
 
-- [ ] Cancellation from the UI reaches the backend and stops the spend; an abandoned stream is not left running.
-  PARTIAL. **Stream: closed, and it was broken.** `useAskAI` put its controller's signal in
+- [x] Cancellation from the UI reaches the backend and stops the spend; an abandoned stream is not left running.
+  CLOSED 2026-09-03 S11 — see the S11 addendum at the foot of this file for the end-to-end trace, the
+  three cases tested separately, the two defects found on the spend path, and the ledger assertions.
+  Residue, named and out of release scope: 4 buffered AI mutation hooks in `crm/ai.ts` and `ai.ts`
+  (`useAIBatchScoreLeads`) still do not thread a Stop signal, so on those CRM surfaces a Stop press
+  ends the UI and not the spend. A tab close or navigation still stops them, via the backend fix below.
+  **Stream: closed, and it was broken.** `useAskAI` put its controller's signal in
   `authedFetch`'s `init`; `authedFetch` does `fetch(url, {...init, headers, signal: combinedSignal})`,
   so `init.signal` was overwritten by a timeout-only signal built from the FOURTH argument the hook
   never passed. `stop()` and the unmount teardown were both no-ops — the stream ran on and kept
@@ -361,3 +366,98 @@ cancellation buys nothing would add a signal for the count's sake and make the n
 4 reach a real user (generate-jd, survey summarize-responses, meetings prep, meetings follow-up). Of the rest,
 6 have no frontend surface of any kind — neither the streaming route nor its buffered sibling is referenced —
 which is a product decision, and `/ai/crm/meeting-follow-up/stream` is CRM, excluded.
+
+
+---
+
+## Session S11 addendum (2026-09-03) — box 3 closed, and it was broken in two places
+
+**Traced first, changed second.** The whole path was walked before anything was edited: Stop /
+unmount / tab close -> `AbortController` -> `authedFetch`'s signal slot -> socket teardown ->
+Node `res 'close'` with `writableEnded === false` -> `createStreamAbortSignal` -> the gateway's
+`resolveSignal` -> `streamText({abortSignal})` / `ChatOpenAI.invoke(_, {signal})` -> provider stops
+-> `finishReason` rejects -> reservation released. Two links in that chain were dead.
+
+**Defect A — 19 metered controllers outside `modules/ai/**` handed the provider NO signal at all.**
+`AiRequestAbortInterceptor` is the AI module's own convention and 11 controllers carry it; the other
+19 that reach a metered gateway call never adopted it, so `resolveSignal` produced `undefined` and
+the provider call opened with no `abortSignal`. On those routes Stop, unmount and a closed tab
+stopped nothing, the completion ran to the end, and because it completed `settle` **debited the org
+for an answer nobody received**. Named in report 13 §2:
+`mail`, `payroll/insights`, `accounting/ai`, `timesheets`, `e-sign`, `chat-summarize`, `autonomy-review`,
+`hr/config/hr-email-templates`, `hr/recruitment/recruitment-candidate-records`, `inventory/ai`,
+`kb/{help-centre×3, retrieval×2, wiki}`, `support/{core, kb-gap}`, plus `cron` (`@Public()`, unaffected).
+Fixed by reading a signal that already existed and had **zero** production readers:
+`TenantContextInterceptor` builds one on every authenticated request and stores it as
+`TenantContext.abortSignal`; the gateway now resolves `explicit ?? AI-interceptor ?? tenant` through
+one new `getAmbientAiAbortSignal()`. All 19 run inside the tenant transaction, so one change closes
+all of them. `embedBatchWithCredit` is excluded on purpose — its product is a durable index, and a
+hang-up that cancels it mid-batch leaves a half-indexed document.
+
+**Defect B — the frontend aborted streams the backend was still serving.** `lib/api-client.ts` armed
+`AbortSignal.timeout(30_000)` on every `authedFetch`, `streamAiText` included, against backend
+deadlines of **120 s** (chat), **60 s** (the other stream routes) and **120 s** (buffered AI). Any
+answer over 30 s was killed **by the client**, rendered as `cancelled` with partial text —
+indistinguishable from a Stop — and the retry that invites reserves and spends a second time.
+No existing test could see it: `test-utils/abort-signal-polyfill.ts` stubs `AbortSignal.timeout` to
+a signal that never fires. `authedFetch` now takes `{ timeoutMs }` and `streamAiText` passes
+`AI_STREAM_TIMEOUT_MS = 180_000`, above every server deadline.
+
+**The three cases, tested separately.** Stop and unmount are one event on the wire (both abort the
+same controller); they are separated on the frontend, where they differ, and joined on the backend,
+where they cannot be told apart. The third — socket destroyed with **no** client-side abort — is
+backend-only and is driven with a raw `http.request` whose socket is destroyed, because `fetch`
+always cancels cleanly and cannot express it.
+
+**The spend is asserted on the ledger, not on rendered text.**
+`src/modules/ai/core/streaming/__tests__/ai-cancellation-stops-the-spend.spec.ts` boots a real Nest
+server over a real socket and drives the real route helper -> real `AiGatewayStreamHelper` -> real
+`streamText`, doubling only the provider adapter (which honours the signal the SDK hands `doStream`
+and **counts the deltas it produced**) and the ledger. Measured: client abort **9 deltas, still 9
+after 600 ms**, `reserve` 1 / `settle` 0 / `release(4242,"stream_aborted_no_settle")`; socket
+destroyed **14, still 14**, same ledger outcome; healthy control **200/200**, `settle` at
+`computeTokenCharge(model,120,200)` and no release.
+`ai-ambient-abort-covers-metered-routes.spec.ts` does the same for defect A with the **real
+`TenantContextInterceptor`**: `release(77,"cancelled","org_probe")`, `settle` never called, and an
+anti-vacuous control that a healthy request is not cancelled and does settle.
+
+**A vacuous test already present, named as asked.** `ai-stream-surface.integration.spec.ts`'s
+"a real client hang-up aborts the provider call, so the spend stops with the response" asserts
+`provider[0].released === true` — a boolean the fake provider sets **on itself**. No ledger appears
+anywhere in that file. It proves the producer stopped, which is worth keeping; it is not evidence
+about the spend.
+
+**Bite proofs, hermetic `git archive HEAD` tree, live tree never modified.**
+· both backend specs against pre-fix source -> **exit 1, 4 failed / 4 passed**, and the 4 failures are
+exactly `ai-ambient-abort-covers-metered-routes` while `ai-cancellation-stops-the-spend` passes —
+confirming the stream path already worked and only the metered-route path was broken; post-fix
+**exit 0, 8 passed**.
+· `ai-text-stream-deadline.test.tsx` pre-fix -> **exit 1, 1 failed / 2 passed**
+(`Expected: >= 120000, Received: 30000`); post-fix **exit 0, 3 passed**.
+
+**Verified against the installed SDK rather than assumed.** `ai@7.0.51`, aborted mid-stream:
+`onFinish` does not fire, `onAbort` does, `finishReason` **rejects** — which is exactly what the
+gateway's `void Promise.resolve(stream.finishReason).catch(...)` relies on.
+
+**Two things NOT fixed, deliberately, with owners.**
+· **An aborted stream settles nothing and releases the whole reservation.** This cannot be closed by
+coding: an aborted stream never receives the provider's terminal `finish` part, so **no token usage
+exists to settle with**. Charging an estimate from the partial text would contradict the
+token-metered rule. Releasing under-charges by construction. **Owner: AI billing / pricing — a
+product decision.**
+· **A `settle` that throws still leaves the reservation for the 15-minute sweep**, and the exposure is
+**larger than previously recorded**: `sweepExpiredReservations` sets `RELEASED` with `reason:"expired"`
+and credits the wallet back, so the org pays **zero** for a fully delivered turn — and because
+`settleStream` awaits `ledger.settle` before `usageSvc.track`, a failed settle also writes **no
+`ai_usage_logs` row**, so the turn is invisible to analytics as well as to billing. A durable
+settlement retry (outbox + relay) is the fix and remains out of scope. **Owner: the AI credit ledger
+lane** (`modules/billing/core/ai-credits-reservation.service.ts` + `ai-gateway-credit.helper.ts`);
+note that the workflow relay is recorded broken under RLS, so an outbox retry needs that first.
+
+**Cross-territory finding.** The 30 s client timeout still caps every **buffered** metered AI call
+where the backend allows 120 s. Raising it for streams was this box's seam; raising it for
+`apiClient` generally affects all 601 routes and is a platform decision. After defect A's fix the
+money outcome of hitting it is a release rather than a debit, so it is now a UX defect (a long
+generation is unreachable) rather than a billing one. **Owner: `lib/api-client.ts` / platform.**
+
+**Commits.** backend `56a71268` + `0c559448` · frontend `b956db76e`.

@@ -489,3 +489,182 @@ it either way.
 | `jest --runInBand --testPathPattern="(components/ai\|hooks/api/ai-text-stream\|hooks/api/chat-ai-assistant\|hooks/api/ai-mutation-signal\|lib/api-client-cancellation\|features/surveys)"` | **exit 0 — 12 suites / 120 tests passed** |
 | frontend `pnpm lint` (repo-wide) | **not run** — baseline was exit 1 with 14 pre-existing errors; the 3 changed files were linted individually and are clean |
 | `next build` | **not run** — no bundle or Web Vitals question in this box |
+
+---
+
+# Session S11 (2026-09-03) — box 3 traced end to end, and two live defects on the spend path
+
+The task was to trace cancellation from the Stop control to the credit ledger, test the three
+cases separately, and prove the SPEND stops rather than the UI. It was traced, it was measured,
+and it was broken in two places — neither of them where the ticket's own notes said the residue
+was. Both are fixed and bite-proved.
+
+## 1. The path, as it actually runs
+
+```
+Stop / unmount / tab close
+  -> AbortController.abort()               components/ai/{ai-actions-menu,use-ai-inline-action,use-ai-popover-action}
+                                           hooks/api/ai-text-stream.ts (useAiTextStream)
+  -> authedFetch(url, init, path, signal)  lib/api-client.ts  — signal in the SIGNAL slot,
+                                           linked with the request timeout by linkAbortSignals
+  -> fetch aborts -> socket torn down
+  -> Node emits res 'close' with writableEnded === false
+  -> createStreamAbortSignal aborts        src/common/http/stream-abort.ts
+       armed by AiRequestAbortInterceptor  on the 11 @NoTenantTransaction AI-module controllers
+       armed by TenantContextInterceptor   on every other authenticated route
+  -> gateway resolveSignal picks it up     ai-gateway-runner-call.ts / ai-gateway.service.ts
+  -> streamText({ abortSignal }) / ChatOpenAI.invoke(_, { signal })
+  -> provider adapter stops producing
+  -> stream.finishReason REJECTS with AbortError
+  -> releaseReservation("stream_aborted_no_settle") / release(id, "cancelled", orgId)
+```
+
+Verified against the installed SDK rather than assumed. `ai@7.0.51`, aborted mid-stream:
+`onFinish` does **not** fire, `onAbort` does, and `finishReason` **rejects** — which is what the
+gateway's `void Promise.resolve(stream.finishReason).catch(...)` depends on. Measured in a
+hermetic tree with a probe spec driving the real `streamText`.
+
+## 2. Defect A (backend) — 19 metered controllers handed the provider no signal at all
+
+`AiRequestAbortInterceptor` is the AI module's own convention, applied to 11 controllers under
+`modules/ai/**`. **19 controllers outside that module reach a metered gateway call and never
+adopted it**, so `getAiRequestAbortSignal()` returned `undefined`, `resolveSignal` produced
+`undefined`, and the provider call was opened with no `abortSignal`. A user pressing Stop, an
+unmounting surface and a closed tab all stopped nothing on those routes: the completion ran to the
+end and, because it completed, `settle` **debited the org for an answer nobody ever received**.
+
+Census (`grep`-driven, then read): controllers reaching `invokeText | invokeStructured |
+*WithUsage | streamTextWithUsage | embedQueryWithCredit` = **28**; with the interceptor **9**;
+without **19** —
+`accounting/ai`, `autonomy-review`, `chat-summarize`, `cron-hr-notifications`, `e-sign/sign-ai`,
+`hr/config/hr-email-templates`, `hr/recruitment/recruitment-candidate-records`,
+`inventory/ai/inv-ai-explain`, `kb/help-centre/{kb-article-ai,kb-authoring,kb-from-ticket}`,
+`kb/retrieval/{kb-ask,kb-search}`, `kb/wiki/kb-page-ai`, `mail`, `payroll/insights/payroll-ai-explain`,
+`support/core/support-kb`, `support/kb-gap`, `timesheets/core/timesheets-ai`.
+(`cron-hr-notifications` is `@Public()`, so it has no tenant context either and is unaffected by
+the fix — correctly, since a cron trigger hanging up should not cancel the recap.)
+
+**The fix reads a signal that already existed and had zero readers.** `TenantContextInterceptor`
+already calls `createStreamAbortSignal(req, res, null)` on every authenticated request and stores
+it as `TenantContext.abortSignal`; `getTenantAbortSignal()` had **no production call site**. The
+gateway now resolves `explicit ?? AI-interceptor ?? tenant` through one new
+`getAmbientAiAbortSignal()`. Every one of the 19 runs inside the tenant transaction (checked:
+none carries `@NoTenantTransaction`), so one change closes all of them and the next controller
+author cannot forget it.
+
+`embedBatchWithCredit` is deliberately excluded and says so in the source: its product is a
+durable index, not an answer someone is waiting for, so a hang-up that cancels it mid-batch
+leaves a half-indexed document. `embedQueryWithCredit` is included — all four call sites are
+query-side retrieval.
+
+## 3. Defect B (frontend) — the client aborted streams the backend was still serving
+
+`lib/api-client.ts` arms `AbortSignal.timeout(30_000)` on **every** `authedFetch`, including
+`streamAiText`. The backend's own deadlines are **120 s** (`CHAT_STREAM_DEADLINE_MS`), **60 s**
+(`AI_TEXT_STREAM_DEADLINE_MS`, `KB_STREAM_DEADLINE_MS`) and **120 s** for buffered AI
+(`AI_REQUEST_DEADLINE_MS`). The client was the tighter deadline by 2–4×, on a chat route whose
+model cap is 4,096 output tokens with up to 10 tool steps.
+
+Consequence: any answer longer than 30 s was aborted **by the client**, surfaced as
+`{status:"cancelled"}` with partial text — indistinguishable from the user pressing Stop — and the
+retry that invites reserves and spends a second time for the same answer. This is a client/server
+contract mismatch of exactly the shape rule 11 of the brief warns about, and both repos type-check
+clean over it.
+
+**No existing test could see it**: `test-utils/abort-signal-polyfill.ts` stubs
+`AbortSignal.timeout` to a signal that never fires, and says so in its own comment. The new spec
+installs a recording stub instead.
+
+Fix: `authedFetch` takes an optional `{ timeoutMs }`; `streamAiText` passes
+`AI_STREAM_TIMEOUT_MS = 180_000`, above every server deadline, so the **server's** deadline is what
+ends a stream and the client timeout is only a backstop for a socket that dies silently.
+
+## 4. The three cases, tested separately
+
+| Case | Where it is decided | Proof |
+|---|---|---|
+| Explicit **Stop** | frontend `AbortController` | `components/ai/ai-abort-reaches-request.test.tsx`, `hooks/api/chat-ai-assistant-abort.test.tsx` — assert the signal handed to `fetch`, not rendered text |
+| **Unmount / navigate away** | frontend unmount effect | same two files; all three action hooks abort on unmount |
+| **Socket dropped, no client-side abort** | backend only — nothing on the client runs | `ai-cancellation-stops-the-spend.spec.ts`, raw `http.request` + `res.socket.destroy()` |
+
+Stop and unmount are **one case on the wire** — both abort the same controller and tear the socket
+down, and the backend cannot tell them apart. They are separated on the frontend, where they differ,
+and joined on the backend, where they do not.
+
+## 5. The spend, asserted on the ledger
+
+`src/modules/ai/core/streaming/__tests__/ai-cancellation-stops-the-spend.spec.ts` boots a real Nest
+HTTP server and drives the **real** `respondWithAiTextStream` -> **real** `AiGatewayStreamHelper` ->
+**real** `streamText`, doubling only the provider adapter and the ledger. The provider double honours
+the abort signal the SDK hands `doStream`, exactly as a real adapter's `fetch` does, and **counts the
+deltas it produced** — that count is the spend, and it is invisible from the response body.
+
+Measured (numbers from the run):
+
+| | deltas at cancel | deltas 600 ms later | provider signal | reserve | settle | release |
+|---|---|---|---|---|---|---|
+| client abort | 9 | 9 | aborted | 1 | 0 | `(4242,"stream_aborted_no_settle","org_probe")` |
+| socket destroyed | 14 | 14 | aborted | 1 | 0 | same |
+| healthy (control) | 200 / 200 | — | not aborted | 1 | `actualMilli` = `computeTokenCharge(model,120,200)` | none |
+
+`ai-ambient-abort-covers-metered-routes.spec.ts` does the same for defect A over a real socket with
+the **real `TenantContextInterceptor`**: provider signal present and aborted, `settle` not called,
+`release(77,"cancelled","org_probe")`, and an anti-vacuous control proving a healthy request is not
+cancelled and does settle.
+
+**A vacuous test already present, named as asked:** `ai-stream-surface.integration.spec.ts`'s
+"a real client hang-up aborts the provider call, so the spend stops with the response" asserts
+`provider[0].released === true` — but `released` is a boolean the **fake provider sets on itself**.
+No ledger is involved anywhere in that file. It proves the provider stub stopped; it proves nothing
+about the spend. It is not wrong, and it is worth keeping for what it does prove (first-byte latency
+and the abort reaching the producer), but it must not be read as ledger evidence — which is the gap
+the two new specs fill.
+
+## 6. Bite proofs (hermetic `git archive HEAD src test` tree; the live tree was never modified)
+
+| Change | Result |
+|---|---|
+| both new backend specs against **pre-fix** source | **exit 1 — 4 failed / 4 passed**; the 4 failures are all of `ai-ambient-abort-covers-metered-routes`, and `ai-cancellation-stops-the-spend` passes, confirming the stream path already worked and only the metered-route path was broken |
+| both against post-fix source | **exit 0 — 8 passed** |
+| `ai-text-stream-deadline.test.tsx` against pre-fix frontend | **exit 1 — 1 failed / 2 passed**; `Expected: >= 120000, Received: 30000` |
+| the same after the fix | **exit 0 — 3 passed** |
+
+## 7. What is NOT fixed, deliberately
+
+- **An aborted stream settles nothing and releases the whole reservation, so tokens the provider
+  did produce before the abort are never billed.** This is not an oversight that can be closed:
+  measured against `ai@7.0.51`, an aborted stream never receives the provider's terminal `finish`
+  part, so **no token usage exists to settle with** — `onFinish` does not fire and `onAbort` carries
+  only the completed steps. Charging an estimate derived from the partial text would contradict
+  the token-metered rule in the shared constitution. Releasing is the only honest option and it
+  under-charges by construction. **Owner: AI billing / pricing — a product decision, not a bug.**
+- **A `settle` that throws still leaves the reservation for the 15-minute sweep.** Re-verified at
+  head, and the exposure is **larger than previously recorded**: `sweepExpiredReservations` sets
+  `status = "RELEASED"` with `reason: "expired"` and credits the wallet back, so the org pays
+  **zero** for a fully delivered turn — and because `settleStream` awaits `ledger.settle` *before*
+  `usageSvc.track`, a settle failure also means **no `ai_usage_logs` row is written at all**, so the
+  turn is invisible to usage analytics as well as to billing. A durable settlement retry (outbox +
+  relay) is the fix; it was explicitly out of scope for the ledger work and remains out of scope
+  here. **Owner: the AI credit ledger lane (`modules/billing/core/ai-credits-reservation.service.ts`
+  + `ai-gateway-credit.helper.ts`).** Note for that owner: the workflow relay is recorded as broken
+  under RLS, so an outbox-based retry needs that fixed first.
+- **The 30 s client timeout still caps every BUFFERED metered AI call**, where the backend allows
+  120 s. Raising it for streams was in this box's seam; raising it for `apiClient` generally is an
+  API-wide product decision affecting all 601 routes and is not mine to make unilaterally.
+  **Cross-territory finding — owner: `lib/api-client.ts` / platform.** After the backend fix the
+  money outcome of hitting it is now a release rather than a debit, so it is a UX defect (a long
+  generation is unreachable) rather than a billing one.
+
+## 8. Gates
+
+| Gate | Command | Result |
+|---|---|---|
+| backend typecheck | `heavy.sh 2 -- pnpm -C streamlineos-backend typecheck` | **exit 0** |
+| backend spec typecheck | `pnpm -C streamlineos-backend check:spec-typecheck` | **exit 0** (first run exit 2 — the v4 `finishReason` is `{unified,raw}`, fixed) |
+| frontend typecheck | `heavy.sh 2 -- pnpm -C frontend type-check` | **exit 0 — 0 errors** |
+| backend focused jest | `jest --runInBand --testPathPattern="modules/ai/core/(gateway\|streaming\|controllers)\|common/tenant\|common/http/stream-abort"` | **exit 0 — 29 suites / 271 tests** |
+| frontend focused jest | `jest --runInBand --testPathPattern="components/ai\|hooks/api/ai\|hooks/api/chat-ai\|lib/api-client\|features/calendar/meeting\|features/surveys/results\|features/accounting/purchases/bill-ai"` | **exit 0 — 19 suites / 188 tests** |
+| eslint on changed frontend files | `npx eslint hooks/api/ai-text-stream.ts hooks/api/ai-text-stream-deadline.test.tsx lib/api-client.ts` | **exit 0** |
+| frontend cheap gates | `check:query-signal`, `check:effect-fetches`, `check:empty-states`, `check:over-300`, `check:colors`, `check:dead-code` | **all exit 0** |
+| database | none touched — this box needs no database and none was opened |
+| real AI provider | never called; every proof is a local double |
