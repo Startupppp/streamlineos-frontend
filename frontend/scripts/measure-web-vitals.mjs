@@ -585,6 +585,15 @@ async function interact(cdp) {
   for (const type of ["keyDown", "keyUp"])
     await cdp.send("Input.dispatchKeyEvent", { type, key: "Escape", code: "Escape", windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27 });
   await sleep(400);
+  /*
+   * The probe click on mobile /chat lands on "Search conversations" at the very
+   * bottom of a 390x844 viewport and opens a second browser tab. The measured
+   * tab then reports visibilityState "hidden", and a hidden document emits no
+   * paint timing at all — so every navigation after it recorded ttfb but
+   * fcp/lcp null. Reproduced deterministically at mobile /chat sample 2 on two
+   * consecutive runs, and fixed by taking the tab back.
+   */
+  await cdp.send("Page.bringToFront").catch(() => {});
   return { interacted: true, selector: target.selector };
 }
 
@@ -644,6 +653,7 @@ async function collectSample(cdp) {
       `JSON.stringify({
         url: location.href,
         title: document.title,
+        visibilityState: document.visibilityState,
         words: (document.body?.innerText ?? '').trim().split(/\\s+/).filter(Boolean).length,
         brandedLoader: !!document.querySelector('[data-app-loading-screen]') || (document.body?.innerText ?? '').includes('Syncing organization'),
         errorBoundary: ${JSON.stringify(SHELL_FAILURE_COPY)}.some((needle) => (document.body?.innerText ?? '').includes(needle)),
