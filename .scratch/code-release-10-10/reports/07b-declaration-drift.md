@@ -617,3 +617,94 @@ is the cleanup in `src/modules/payroll/__tests__/payroll-db-integration.e2e-spec
 deletes runs before the ledger. It is safe because that spec reaches `LOCKED` by writing
 `status` directly (`:361`), never through `LockingService.commitLock`, so it never creates a ledger
 row. Organisation purge is covered by §6's P8.
+
+---
+
+## 12. The population this report did not have, and the scanner that now covers it
+
+**Added 2026-09-03 by the owner of migration `1046`. This section corrects a gap in §2 and §3,
+not a number in them.**
+
+`support_ticket_watchers.user_id` was `NOT NULL` with no default in the live database and absent
+from `src/db/schema/support/support-workspace.ts`. Every `POST /support/:supportTicketId/follow`
+therefore built an INSERT omitting a column Postgres required and raised **23502** — a 500 for
+every caller in every tenant, at head, since the declaration was trimmed. This report does not
+mention the table.
+
+### Why it fell between the two populations
+
+| population | granularity | direction | why this defect could not be a row |
+|---|---|---|---|
+| **A** — live tenant tables with no Drizzle declaration | table | live → declaration | `support_ticket_watchers` **is** declared. It was never a candidate. |
+| **B** — declared `.references()` with no constraint in the catalog | foreign key | declaration → live | `user_id` was not declared **at all**, so it is not one of the 1,385 `.references()` the parser read. |
+
+Neither population is **live → declaration at column granularity**, and that is the only one of
+the four combinations that breaks a write. §2 says as much in passing — "The 32 were columns
+missing from tables the runtime reads" — attributing the column-level population to report 08b and
+not re-deriving it here; whatever 08b's 32 were, this column was not among them, because it is
+still absent from the declaration today.
+
+`check:drop-column-safety` is the nearest existing gate and covers a different case: a column
+dropped by an **unapplied migration** that the schema still declares. It reads `migrations/`, so
+drift that never arrived through a `DROP COLUMN` statement — which is exactly this one, since no
+migration ever dropped anything from this table — is structurally invisible to it.
+
+### The detector
+
+`pnpm check:declaration-column-drift` (`src/scripts/check-declaration-column-drift.ts`, 25
+self-tests, backend commit `b828b751`). It compares Drizzle's own `getTableConfig` against
+`pg_attribute` and has two failing verdicts and two reporting ones:
+
+- **write-blocking** — a live column that is `NOT NULL`, has no default, is neither generated nor
+  an identity column, and is missing from the declaration. Every Drizzle INSERT raises 23502.
+- **read-blocking** — a declared column with no live counterpart. Every unprojected read raises
+  42703.
+- **trigger-supplied** and **invisible** (nullable or defaulted) — printed every run, never failed.
+
+It follows `check:set-null-column-lists`: the catalog half needs
+`COLUMN_DRIFT_GATE_DATABASE_URL`, and without it the gate exits **2 INCONCLUSIVE** rather than
+passing over nothing.
+
+### The discriminator, and why a naive NOT NULL scan is a broken scan
+
+The brief's rule 8 says a scan reporting "everything is dead" is a broken scan. The first real run
+of this gate hit the mirror image of that: **23 write-blocking columns, of which 22 were false
+positives.** All 22 were `org_id` on a child table — `invoice_items`, `quote_line_items`,
+`purchase_bill_items`, `crm_sequence_steps`, `task_sequence_steps`, `assignment_rule_state`,
+`client_account_activities` and fourteen `inv_*_lines`. Every one of them carries
+
+```
+CREATE TRIGGER trg_set_org_id BEFORE INSERT ON public.<table> FOR EACH ROW
+  EXECUTE FUNCTION set_org_id_from_parent('<parent>', 'id', 'org_id', '<fk>')
+```
+
+so the tenant column is derived from the parent and is **deliberately undeclared, precisely so the
+ORM cannot write it**. Postgres never demands a value. `support_ticket_watchers` carries no trigger
+at all, which is why it was the one that actually 500'd.
+
+So the rule the gate enforces is: a `NOT NULL`, no-default, undeclared live column is write-blocking
+**only when no `BEFORE INSERT … FOR EACH ROW` trigger on that table names it**; otherwise it is
+reported as trigger-supplied. Validated in both directions — the 22 downgrade and the one still
+fails, and removing the trigger from the fixture makes the same column fail again.
+
+### Measured
+
+| database | shape | write-blocking | read-blocking | trigger-supplied | invisible | exit |
+|---|---|---:|---:|---:|---:|---:|
+| `scratch_t15f_down` | head with `1046` rolled back (the pre-fix shape) | **1** (`support_ticket_watchers.user_id`) | 0 | 22 | 155 | **1** |
+| `scratch_t15f_follow` | head with `1046` applied | **0** | 0 | 22 | 155 | **0** |
+| — | no `COLUMN_DRIFT_GATE_DATABASE_URL` | — | — | — | — | **2** |
+
+873 declared tables / 10,611 declared columns against 12,267 live columns, 149 BEFORE INSERT row
+triggers. **0 read-blocking and 0 declared-but-absent tables at head** — that direction is clean,
+which is the first time it has been measured.
+
+### What the gate reports but does not fail, and who should look
+
+**107 live tables carry columns no declaration mentions** and **155 undeclared live columns are
+nullable or defaulted.** Both are harmless to writes and invisible to reads, so the gate prints
+them and moves on. That bucket is where the other **72 tables still in the expanded actor state**
+would land the moment any of their declarations is trimmed the way this one was — the same defect,
+one declaration edit away, on 72 tables. **Owner: whoever finishes the actor contraction.** This
+release closed one of the 73; the remaining 72 still declare their legacy column and are therefore
+correct today.

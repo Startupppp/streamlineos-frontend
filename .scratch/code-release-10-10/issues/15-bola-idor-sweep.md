@@ -111,13 +111,21 @@ whoever lands that schema change.
       **Two defects found beside the 88.** `EngagementService.updateSurvey` returned `{ success: true }` for ANY
       survey id including another organisation's — a silent no-404 on a write verb, now a `NotFoundException` on the
       tenant-bound row. `HrBenefitPlansService.deletePlan` let a **23503** out as a 500; it is a 409.
-      **BLOCKED — 1 real defect, owner `migrations/` (ticket 08).** `POST /support/:supportTicketId/follow` **500s
-      for every caller at head**: `support_ticket_watchers.user_id` is `NOT NULL` with no default in the database and
-      absent from `src/db/schema/support/support-workspace.ts`, so every insert omits it (**23502**). `0865` expanded
-      onto `user_membership_id` and `0866` validated the FK, but **no migration ever contracted the pair** — the four
-      `*_actor_drop` migrations do not name this table. Scanned repo-wide: 73 tables sit in the same expanded state
-      and this is the **only** one whose declaration dropped `user_id`; `reports/07b-declaration-drift.md` misses it.
-      Exact DDL in `reports/15f-own-tenant-500-triage.md` §2c.
+      **CLOSED 2026-09-03 by migration `1046` — was the 1 real defect blocked on `migrations/`.**
+      `POST /support/:supportTicketId/follow` 500'd for every caller at head: `support_ticket_watchers.user_id` was
+      `NOT NULL` with no default in the database and absent from `src/db/schema/support/support-workspace.ts`, so
+      every insert omitted it (**23502**). `0865` expanded onto `user_membership_id` and `0866` validated the FK, but
+      **no migration ever contracted the pair** — the four `*_actor_drop` migrations do not name this table.
+      `1046_t15f_support_ticket_watchers_actor_contract` finishes it: backfill, delete the rows whose watcher is no
+      longer a member (0 on both measured databases, announced with `RAISE NOTICE`), `SET NOT NULL` through the
+      `CHECK … NOT VALID` two-step, drop `user_id` with its legacy unique index and single-column FK. Proved on a
+      scratch copy: the same request that raised 23502 before now answers **200 `{"success":true}`**, and a
+      cross-tenant ticket id answers **404**. The diagnosis handed on in `reports/15f…` §2c was correct in every
+      particular; the DDL it proposed was followed with two changes — the unmappable rows are counted and announced
+      rather than deleted silently, and the legacy index/FK are named explicitly.
+      `reports/07b-declaration-drift.md` missed the table because neither of its two populations is column-level in
+      the live→declaration direction; the detector for that population now exists as
+      `pnpm check:declaration-column-drift`. See `reports/15g-support-follow-and-column-drift.md`.
       **NOT FIXED — 18, other territory / out of scope.** build 7 (all RC-1, one line each at
       `approvals.service.ts:283`, `projects-releases.service.ts:67`, `sprints.service.ts:111`,
       `meetings.service.ts:294`, `projects-ticket-links.service.ts:168`, plus labels and pm-workspaces) — **owner:
