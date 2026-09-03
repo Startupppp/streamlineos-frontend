@@ -4,19 +4,70 @@
 
 **Blocked by:** 09.
 
-**Status:** 6 of 7 boxes closed · box 1 still PARTIAL. **2026-09-03 (S10): ASSIGNABLE A-6 is CLOSED — `POST /ai/meetings/follow-up/stream` exists, is credit-metered through the same gateway and feature key as its buffered sibling, and `features/calendar/meeting-follow-up-panel.tsx` consumes it.** Box 1 still does not close: residuals R-3 / R-3b / R-3c are untouched and are a product decision and another territory. **2026-09-03 (S8): the meeting-prep surface named in the
-P2 finding below is now genuinely converted — `features/calendar/meeting-prep-panel.tsx` opens
-`POST /ai/meetings/prep/stream` and `useMeetingPrep` is deleted.** That closes the last `/stream` route in this
-release that had a real user surface to adopt it; the box stays open on the two things below, neither of which is
-this territory. Earlier status text, re-measured at
-head 2026-09-03: **3 of 10 `/stream` routes reach a user** (generate-jd, survey summarize-responses, meetings prep),
-6 of the remaining 7 have **zero frontend callers even for their buffered sibling** — an unbuilt product surface, a
-product decision — and the 7th is CRM, excluded. The 26 buffered text sites in 17 other modules are another
-territory. Neither blocker is a missing helper; both helpers exist and are adopted wherever a surface exists.
-
-**2026-09-03 residual-risk register:** box 1 splits into **A-6 ASSIGNABLE** (`/ai/meetings/follow-up/stream` does not exist — real backend work in `src/modules/ai/**`, owner that module, deadline 2026-09-08) plus residuals **R-3 / R-3b / R-3c** (product decisions and territory). See `reports/residual-risk-register.md` §1.5, §3.2.
+**Status:** 6 of 7 boxes closed · box 1 still PARTIAL, and now explicitly SPLIT.
+**2026-09-03 (S13): the box's STRUCTURAL half is done and reported; its TIMING half was deliberately NOT
+measured and is deferred to the quiescing pass.** Every non-chat AI surface was enumerated from the user
+inward (component -> hook -> route -> gateway call, not route-first) and given a per-surface verdict:
+`reports/11d-non-chat-ai-surface-census.md`. Eight buffered KB document surfaces were converted and
+bite-proved: `reports/11e-kb-document-surfaces-stream.md`. **Timing was not measured because ~8 agents were
+running and load averaged 3.5-5.5 on 15 CPUs all session; no contended number is quoted anywhere.**
 
 - [ ] Non-chat AI surfaces stream rather than buffering; first visible streamed state lands within the target and application overhead before provider dispatch stays inside its budget.
+  **PARTIAL — SPLIT 2026-09-03 (S13). STRUCTURAL: done. TIMING: not measured, deferred.**
+
+  **STRUCTURAL — every non-chat AI surface now has a per-surface verdict**
+  (`reports/11d-non-chat-ai-surface-census.md`). Enumerated from the user inward in three hops — 122
+  gateway call sites with their enclosing method across 54 files, method to controller route, then route
+  to a component under `app/ features/ components/`, taking the SECOND hop from the hook symbol because a
+  path grep counts the hook file and its own path string as two callers. Kinds: 70 `invokeStructured*`
+  (excluded on principle — a half-parsed object is not renderable partial state), 43 text, 10->12
+  streaming, 6 embedding.
+  · **4 surfaces streamed at session start**: generate-jd, survey summarize-responses, meeting prep,
+    meeting follow-up. **12 now** — the eight KB document actions were converted this session.
+  · **Every remaining buffered surface is named with a reason** in report 11d §3b/§3c. The reasons are:
+    `invokeStructured` (build/project AI's eight actions, accounting, mail, support improve-reply — the
+    largest AI output in the product, `pm.plan` at 1536 tokens, is structured, not prose), an HTML
+    fragment for a rich-text editor (build ticket improve-description ×2), a stored record whose product
+    is the snapshot (executive brief), an unreachable branch (`mode="public"` KB ask), or an excluded
+    module (CRM, inventory).
+
+  **THE FINDING THAT RESIZES RESIDUAL R-3c.** `components/ai/ai-actions-menu.tsx` already implements the
+  whole streaming UI — `run(signal, onToken)`, a `streaming` state, Stop that keeps the partial answer,
+  unmount abort, single-flight, retry. **20 surfaces use it; 26 `run` closures; exactly 2 passed
+  `onToken`** at session start (4 now). The other surfaces handed it a buffered `run`, so the streaming
+  state it renders was unreachable code. **R-3c is therefore not "26 sites in 17 modules each needing a
+  UI rewrite" — it is a `/stream` route plus ~6 lines in one `run` closure, per surface.** That is what
+  should be routed to the module owners.
+
+  **THE ARGUMENT FOR CONVERTING THE REST, with the surfaces named.** `lib/api-client.ts:14` still arms
+  `REQUEST_TIMEOUT_MS = 30_000` on every BUFFERED metered AI call, against backend deadlines of 60 s and
+  120 s. A buffered call shows nothing until the last token, so its wall clock is the whole generation.
+  The in-scope buffered surfaces declaring a **1024-token** ceiling are the ones that cross it:
+  `kb.page-improve` and `kb.article-improve` (**both converted this session**), and still open —
+  **`kb.ask`** (`features/wiki/components/knowledge-base-page.tsx`, `components/support/kb-ask-panel.tsx`)
+  and **`support.reply`** (`features/support/inbox/ticket-ai-panel.tsx`, `ticket-detail-header.tsx`). On
+  those two, a long generation is killed by the client and offered back as a retry that reserves and
+  spends a second time.
+
+  **THE GATE WAS BLIND, AND ITS FIRST REPAIR WAS VACUOUS.** `ai-stream-route-contract.spec.ts` scanned
+  `modules/ai` only; every streaming route happened to live there, so nothing would have caught one added
+  in the module that owns its data — which is what the KB routes are. It scans all of `src/modules` now
+  (ratchet 11 -> 19). A second assertion, "every streaming route opts out of the tenant transaction", was
+  added FILE-level and **did not bite**: deleting the decorator from one of four streaming handlers in a
+  controller left the gate at exit 0 / 40 passed. Rewritten per-route and re-bite-proved (1 failed / 40
+  passed, offender named with its line).
+
+  **TIMING — NOT MEASURED. `uptime` 3.50/4.01/4.53 at start, 5.43/3.85/3.68 mid-session, on 15 CPUs
+  shared with ~8 agents.** `ai.stream.first-byte.app` (150 ms p95 / 112 ms threshold) and
+  `ai.stream.dispatch.overhead` (50 ms p95 / 37 ms threshold) must be re-taken on a quiet machine; the S5
+  numbers were themselves taken under unknown load and should be re-taken, not trusted. Surfaces with no
+  timing number at all: the 8 KB routes added here, `/ai/meetings/prep/stream`,
+  `/ai/meetings/follow-up/stream`. Should ride along with tickets 22/23 in the quiescing pass. **No
+  contended number is quoted as release evidence.**
+
+  **STILL OPEN, unchanged in kind.** R-3 (6 `/stream` routes with no frontend surface of any kind — a
+  product decision), R-3b (whether the `MeetingsAiController` and `CrmAiController` meeting families are
+  duplicates — a product decision), R-3c (now correctly sized above — territory + ordering).
   PARTIAL — NOT CLOSED. **S5 converted six more surfaces and measured both numbers; the box stays open because
   ~33 buffered text surfaces remain, 26 of them outside this territory, and no frontend consumes any of the new
   routes.**
@@ -428,3 +479,52 @@ brand-new org both see no wallet and both INSERT. The recovery arm is
 resolving to the winner's wallet. Every streaming route reaches this, including the one added here. The fix
 belongs in `billing/core/` (an `ON CONFLICT (org_id) DO NOTHING` insert-then-reselect, or advisory-locking
 the org id before the select) and was not attempted from this territory.
+
+
+---
+
+## Session S13 addendum (2026-09-03) — the KB document surfaces stream; structural half closed, timing half deferred
+
+Full write-ups: `reports/11d-non-chat-ai-surface-census.md` (the per-surface census and how it was
+enumerated) and `reports/11e-kb-document-surfaces-stream.md` (the conversion, the bite proofs, the gates).
+
+**Converted.** 8 routes — `POST /kb/{pages/:pageId,articles/:articleId}/ai/{summarize,ask,improve,suggest-related}/stream`
+— all through the existing `respondWithAiTextStream`, no second mechanism, `@NoTenantTransaction()` per
+method, each service's stream method opening its own tenant transaction so RLS still covers the
+visibility check. Same feature keys, same prices, same `charge` flags as the buffered siblings, asserted
+pairwise. Each service now holds one row per action instead of four near-copies, so the two
+representations of an action share one prompt by construction; the eight prompts are byte-identical to
+the ones they replaced and are deliberately NOT shared between page and article, which word theirs
+differently.
+
+**Frontend.** `hooks/api/kb/doc-ai-stream.ts` is the transport; both panels now pass `onToken` into
+`AiActionsMenu`. The wiki panel had hand-rolled the menu, result sheet, in-flight guard and error
+classification `AiActionsMenu` already owns — it uses it now (299 -> 99 lines), the article panel went
+283 -> 92, and their two duplicated ask sheets are one shared streaming component. Net -627 / +650 across
+9 files, most of the addition being the new test.
+
+**Two honest costs of any conversion, neither new but neither previously recorded.** (a) A streamed
+surface loses its per-call `AiUsageChip` — usage is only known after the last token and the headers went
+out before the first; the spend is still on `ai_usage_logs`. (b) `streamTextWithUsage` is hard-wired to
+`resolveChatModel()` (Vercel AI SDK, gemini-1.5-pro / gpt-4o) while the buffered path uses `LlmService`'s
+`tier: "fast"` chain (LangChain, `AI_FAST_MODEL`) — **two different provider stacks, so converting a
+surface changes its price per token as well as its latency. True of all 19 streaming routes.** Fixable
+once by giving `streamTextWithUsage` a `tier`; that is `modules/ai/core/gateway/`, shared by every
+streaming route, and was not attempted from here.
+
+**Gates.** backend `typecheck` exit 0 / 0 errors · `check:spec-typecheck` exit 0 · frontend `type-check`
+exit 0 / 0 errors · backend jest `modules/ai|modules/kb` exit 0, **158 suites / 1186 passed** · frontend
+jest exit 0, **23 suites / 203 passed** · eslint on all 16 changed files exit 0 · 10 backend and 9
+frontend cheap gates all exit 0. Red and **not mine**: frontend `check:dead-code` (1 unclassified export,
+`chat-schema.ts:chatChannelMemberListContract`, from the chat commit at HEAD — my 5 newly-uncalled KB
+hooks carry KEEP verdicts on the S10 `useMeetingFollowUp` precedent), frontend `check:over-300` (520 vs
+baseline 519, none of my files in the list), backend `check:file-sizes` and `check:kebab-case` (chat,
+clients, e-sign, hr, scripts).
+
+**No real AI provider was called. No database was opened. No timing number was taken.**
+
+**Cross-territory, NOT fixed:** the streamed/buffered model split (AI gateway lane); the 30 s buffered
+client cap with `kb.ask` and `support.reply` still exposed (`lib/api-client.ts` / platform); a stale
+tracked `openapi.json` carrying 5 stream paths against 19 real ones, which `check:openapi-coverage`
+cannot see because it checks the contract's internal consistency rather than its currency (owner:
+`pnpm openapi:generate`); and S10's first-purchase AI-credit wallet race, now with 8 more callers.
