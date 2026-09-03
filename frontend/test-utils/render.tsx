@@ -1,6 +1,7 @@
 import React, { type ReactElement } from "react";
 import { render, type RenderResult, type RenderOptions } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 function makeQueryClient(): QueryClient {
   return new QueryClient({
@@ -18,7 +19,11 @@ interface WrapperProps {
 function AllProviders({ children }: WrapperProps): ReactElement {
   const queryClient = makeQueryClient();
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider delayDuration={200} skipDelayDuration={300}>
+        {children}
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 }
 

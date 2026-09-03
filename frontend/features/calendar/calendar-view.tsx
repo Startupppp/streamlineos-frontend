@@ -32,6 +32,7 @@ import { useCalendarAccountFilters } from "./use-calendar-account-filters";
 import { useHrCalendarEventsMapped, useHrEventsVisible } from "./use-hr-calendar-events";
 import { useCrmEventsVisible } from "./use-crm-calendar-events";
 import { useCalendarSourceVisibility } from "./use-calendar-source-visibility";
+import { useCalendarSourceDeepLink } from "./use-calendar-source-deeplink";
 import { useAttendanceCalendarEvents } from "./use-attendance-calendar-events";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useFinalizeIntegrationConnection } from "@/hooks/api/integrations";
@@ -125,6 +126,8 @@ export function CalendarView() {
     () => connections.filter((c) => c.status === "active").length,
     [connections],
   );
+
+  useCalendarSourceDeepLink();
 
   const { hiddenIds } = useCalendarAccountFilters();
   const { visible: hrEventsVisible, toggle: toggleHrEvents } = useHrEventsVisible();
