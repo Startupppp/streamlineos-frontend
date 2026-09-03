@@ -475,6 +475,18 @@ regression of the structure even when it cannot fail on the behaviour.
   immaterial, but `experience-letter.service.ts:193` and `hr-template-render.service.ts:50`
   stamp a **date onto a generated document**. Not audited case by case here. **Left open
   and named.**
+- **I destroyed two of another agent's scratch trees, and the scratchpad is not
+  agent-isolated.** Report 57 cites `/scratchpad/bite-be` and `/scratchpad/bite-fe` as where
+  its bite proofs ran. I built my own reproduction trees under those same two names — each
+  begins `rm -rf "$TMP"` — and later cleaned up every `scratchpad/bite-*` directory, so
+  another agent's `bite-gw`, `bite-gwfe`, `bite-rev` and four `bite-*.log` files went with
+  them. **Nothing in any report depended on their contents**: report 57 quotes its numbers
+  inline and names those paths only as the location, and every such tree is one
+  `git archive <sha> | tar -x` from being rebuilt. No repository file was touched. Recording
+  it because the hazard is not obvious — the scratchpad path is described as
+  session-isolated and is in fact shared, so `bite-<something>` is a colliding name and
+  `rm -rf scratchpad/bite-*` is a destructive glob. Namespace scratch directories per
+  ticket.
 - **`test:e2e` and `test:e2e:seeded` were not run at a non-UTC zone.** They need a database
   and were out of budget for this pass; the new CI job covers the unit suites only. If the
   seeded suite is ever added to the matrix, expect the calendar and attendance paths to be
