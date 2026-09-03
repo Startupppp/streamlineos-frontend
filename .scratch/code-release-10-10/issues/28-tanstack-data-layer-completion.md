@@ -4,7 +4,11 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** 5 of 8 closed. Box 2's blocker is GONE — the per-route permission was resolvable after all, from `contracts/openapi.json`'s `x-permission`, and 105 of the 133 ungated reads are converted (S13). It stays `[~]` only because 11 are deliberately held back and 10 could not be resolved. Boxes 6 and 7 were NOT worked in S13 and carry S12's state unchanged.
+**Status:** 5 of 8 closed. 2026-09-03 S14: box 2's three named residues are resolved or correctly
+recorded — the import cycle is broken and the 2 gateable rbac reads are gated, the 10 BASE-const routes
+resolved to 16 gated reads, and the 12 CRM/inventory ones are named below and deliberately NOT converted.
+Boxes 6 and 7 were re-audited against source: box 6's "this is stale" note was itself wrong and the honest
+per-screen number is now measured; box 7 was not moved. Box 2's blocker is GONE — the per-route permission was resolvable after all, from `contracts/openapi.json`'s `x-permission`, and 105 of the 133 ungated reads are converted (S13). It stays `[~]` only because 11 are deliberately held back and 10 could not be resolved. Boxes 6 and 7 were NOT worked in S13 and carry S12's state unchanged.
 
 - [x] One hierarchical key factory per domain, carrying organization, subject, scope, filters, sort and cursor dimensions as applicable.
       Evidence: 16 domain modules behind the single `queryKeys` facade; org/user live in the hash (`scopedQueryKeyHashFn`). Folded the last two out-of-registry key objects in (`hooks/api/hr/engagement.ts` 11 keys, `hooks/api/hr/succession.ts` 1 key) into new `lib/query-keys/hr-engagement.ts`; added the missing page-size dimension to `kb.researchBriefs` and `timesheets.payroll.exports`. `pnpm -s check:query-signal` exit 0; `lib/query-keys/key-factory-contract.test.ts` indexes 1119 registry entries (933 callable factories) and passes 8/8.
@@ -29,12 +33,52 @@
       on `git-integration`): support:macros:view, support:reports:view, surveys:analytics:view,
       hr:travel:view, hr:travel:manage, sign:envelope:view, crm:leads:view, tasks:read and
       settings:api-tokens:read each match their controller's decorator.
-      **STILL PARTIAL — exactly what remains, and why:**
-      (a) `access.ts` x3 — `gated-query.ts` imports `usePermissionGate` from `access.ts`, so gating there
-      is an import cycle and `check:cycles` would go red. Needs the gate helper split out of `access.ts`
-      first, or a local `useAccess()`-derived gate inside `access.ts`.
-      (b) `leads.ts` x7 (`crm:leads:view`) and `inv-ai-explain.ts` x1 (`inventory:reports:read`) — the keys
-      are known and the change is one line each; CRM and Inventory are out of release scope.
+      **S14 — (a) and (c) are CLOSED; (b) is recorded, not converted.**
+      (a) **DONE.** The cycle was real: `gated-query.ts` imports `usePermissionGate` from `access.ts`.
+      Broken by moving the *pure* `gated()` / `Gated<T>` wrapper down into the existing leaf
+      `lib/rbac/permission-gate.ts` (which imports only `PermissionKey`), so `access.ts` composes the
+      same gate itself without importing the hook module. `gated-query.ts` re-exports both, so all 88
+      importers are unchanged. `check:cycles` exit 0. `usePermissionGate` deliberately stayed in
+      `access.ts` — **71 test files** `jest.mock("@/hooks/api/access")` and moving it would silently
+      un-mock `useGatedQuery` in every one of them.
+      The three reads resolve to **two** gates, not three: `/rbac/permissions` and
+      `/rbac/discovery/members` are both `settings:rbac:manage` (verified against
+      `src/modules/rbac/rbac.controller.ts:36-38` and `:97-99`, not only the snapshot) and are now gated;
+      `/rbac/discovery/grantable` is `@AuthorizedInService` (`rbac.controller.ts:82`) — the service narrows
+      to what the caller may delegate — so it correctly carries no gate, and the file now says so. It was
+      already counted in (d) below; the "x3" was a double count.
+      (c) **DONE.** The 10 unresolved `BASE`-const sites were read and resolved. They are **16** reads,
+      not 10, and every one is `permissioned`. All keys verified against the controller decorator, not
+      only `openapi.json`: `hr:accommodations:view` x3 (accommodations.controller.ts:59,70,130),
+      `hr:emergency:manage` x3 (emergency.controller.ts:46,57,127), `hr:eventstream:view` x3
+      (event-stream.controller.ts:31,41,47), `hr:identity:view` x3 (identity.controller.ts:48,91,130),
+      `hr:policies:manage` x2 (simulator.controller.ts:94,104) and `hr:employees:view` x1 on
+      `/hr/interview-questions` (hr-interview-questions.controller.ts:43). All 6 keys exist verbatim in
+      the frontend catalog. `sign/public.ts:46,54` were in that same unresolved list and must NOT be
+      gated: `/public/sign/{token}/session` and `.../documents/{id}/preview` are `x-exposure: public`.
+      Two of those `queryFn`s also destructured `signal` and never passed it
+      (`enterprise-ops-emergency.ts` event status, `enterprise-ops-event-stream.ts` metric-definitions) —
+      a 30-second poll that could not be cancelled. Fixed in the same pass.
+      (b) **NAMED, NOT CONVERTED — out of release scope.** 12 permissioned ungated reads sit in CRM and
+      Inventory and are deliberately left alone: `hooks/api/leads.ts:32,43,52,60,69,79,90,257,266,288,303`
+      (11 reads, all `crm:leads:view`) and `hooks/api/inv-ai-explain.ts:97`
+      (`/inventory/ai/supplier-delay`, `inventory:reports:read`). Each is a one-line change once CRM and
+      Inventory re-enter scope. The earlier "leads.ts x7" undercounted by 4.
+      **STILL PARTIAL — what actually remains, measured at head with a fresh TS-compiler-API scan:**
+      the scan (`useQuery`/`useInfiniteQuery`/`useSuspenseQuery` under `hooks/api/**`, non-test, whose
+      enclosing hook mentions no `useCan`/`usePermissionGate`/`useAccess`/`useModuleEnabled`/`useScope`)
+      reports **155 ungated read call sites**, of which **100 resolve to `x-exposure: permissioned`** in
+      `contracts/openapi.json`, 22 universal, 9 public, 2 in-service and 22 absent from the snapshot.
+      That is a *wider* definition than S13's 133 — S13 did not count a hook whose only `enabled` is a
+      non-permission guard — so the two numbers are not comparable and the S13 "105 converted / 28 left"
+      arithmetic does not carry forward. After this pass the permissioned residue is **84**; the largest
+      clusters are `support/**` 18, `hr/recruitment/**` 17, `accounting.ts` 12, `leads.ts` 11 (excluded),
+      `timesheets-core/**` 7, `hr/hr-workflows.ts` 4. Every one has a resolved key already; this is
+      mechanical volume, not a blocker.
+      **The openapi-permission GATE was NOT written.** The scanner that produced every number above lives
+      in a session scratchpad, not in `frontend/scripts/`; there is no `check:gated-reads` script and no
+      bite proof. Whoever writes it should gate on `exposure === "permissioned"` from a recorded baseline
+      of 84, not 0.
       (c) 10 unresolved, all building their path from a `BASE` const:
       `hr/enterprise-ops-accommodations.ts:64`, `hr/enterprise-ops-emergency.ts:52`,
       `hr/enterprise-ops-event-stream.ts:52,60,68`, `hr/enterprise-ops-identity.ts:66,74`,
@@ -58,12 +102,38 @@
       Evidence: AST audit of all 33 `useInfiniteQuery` call sites. One derives its own cursor (`notifications-inbox.ts`) and took `page[page.length-1].id`, which is only correct if rows arrive in sort order — replaced with the page minimum, matching the backend's `orderBy(desc(id))` + `lt(id, cursor)`. New `hooks/api/cursor-pagination-contract.test.tsx` (6 tests) exercises disagreeing ids `[90,12,41]`, a falsy `id: 0` cursor round trip, and a filter change; reverting the hook fix turns 2 of the 6 red.
 
 - [~] Loading, background-refresh, empty, partial-error, full-error, offline, permission-denied and revoked-access states are each covered.
-      S13: NOT WORKED. Carries S12's state verbatim. Note for the next run: box 6's item (1) is now stale — `components/shared/loading-state.tsx` and `components/ui/data-table.tsx` both read `fetchStatus === "paused"` as of ticket 30's S11 pass, so "no surface reads paused" is no longer true; the private `useOnlineStatus` copy in `features/inventory/components/tools/barcode-client.tsx:26` is still there.
+      **S14 — worked. The "this note is stale" note was itself wrong, and item (1) is now measured.**
+      (1) **CORRECTED, and it cuts both ways.** Literally, "no surface reads `fetchStatus === paused`"
+      is **still true**: `grep -rn fetchStatus app features components hooks lib` finds **zero**
+      non-test occurrences. `components/shared/loading-state.tsx:121`, `components/ui/data-table.tsx:74`
+      and `components/ui/data-table-skeleton.tsx:33` read **`useOnlineStatus()`** — the browser's
+      `navigator.onLine` plus the window online/offline events — not the query's own `fetchStatus`.
+      Substantively the S11 pass DID land: an offline read renders "paused" copy on those three surfaces
+      instead of an indefinite skeleton. But the two signals are not the same thing. `useOnlineStatus`
+      is global and cannot say *this* read is paused, so a read paused by TanStack's `onlineManager`
+      while the browser believes it is online still renders as loading, and a screen using neither
+      shared component gets nothing. Whoever closes this must decide which signal is canonical.
+      `useOnlineStatus` now has 6 non-test consumers (shell banner, notifications inbox, inbox actions,
+      mail compose, `DataTable`, `DataTableSkeleton`, `LoadingState`), plus the private duplicate at
+      `features/inventory/components/tools/barcode-client.tsx:26`, still there and out of release scope.
+      (2) **MEASURED, and worse than "66 of ~70".** There are now **180 `useGatedQuery` call sites across
+      83 files** in `hooks/**`, so every one carries the `access` gate on its result. **Exactly one
+      surface in the entire app reads it** — `features/crm/timeline/my-tasks-panel.tsx:59`
+      (`tasks.access.denied`), and that file is CRM. 40 files render `NoPermissionState`, but they all
+      derive the decision from a separate `useCan` rather than from the read's own gate, so
+      denied-vs-empty is re-derived beside the read instead of taken from it. The data layer's half of
+      this box is done; the 179 unread gates are an `app/**` / `features/**` change.
+      (3) Unchanged: filter-empty vs data-empty is a per-page distinction the hook cannot make.
+      **OWNER: ticket 30 (per-screen states) for (1) and (2); ticket 27 for (3).** Nothing in items
+      (1)-(3) is in the data-layer territory, so this box cannot be closed from `hooks/api/**`.
       Evidence (data-layer half, CLOSED): `hooks/api/read-state-contract.test.tsx` (new, 14 tests, all pass) proves all eight states are produced and, crucially, *distinguishable* at the hook layer — a disabled v5 query reports `isPending: true, isFetching: false`, identical to a finished empty read, so empty-vs-denied is separated only by `useGatedQuery`'s `access` gate, and denied-vs-not-yet-known only by `PermissionGate.pending`. Offline is `fetchStatus === "paused"` (TanStack `onlineManager`), which the test shows resuming on reconnect; partial error is the explicit `INLINE_READ_ERROR` opt-out; full error is `readErrorReachesBoundary`, which a contract violation now reaches too.
       PARTIAL: the per-screen half stays open for ticket 30 — the data layer can only make a state renderable, it cannot make a page render it. What remains, precisely: (1) no surface reads `fetchStatus === "paused"`, so every screen renders an offline read as an indefinite skeleton (`useOnlineStatus` has 3 consumers: the shell banner, the notifications inbox, and a private copy inside `features/inventory/components/tools/barcode-client.tsx:26` that duplicates `hooks/common/use-online-status.ts`); (2) 66 of ~70 gated reads carry the `access` gate but the page-level audit of which ones render `NoPermissionState` vs an empty state is an `app/**`/`features/**` count; (3) filter-empty vs data-empty is a per-page distinction the hook cannot make.
 
 - [~] Runtime parsing rejects a backend contract change rather than silently accepting it; client types mirror the backend schema exactly.
-      S13: NOT WORKED. Carries S12's state verbatim. Note for the next run: box 6's item (1) is now stale — `components/shared/loading-state.tsx` and `components/ui/data-table.tsx` both read `fetchStatus === "paused"` as of ticket 30's S11 pass, so "no surface reads paused" is no longer true; the private `useOnlineStatus` copy in `features/inventory/components/tools/barcode-client.tsx:26` is still there.
+      **S14 — re-audited, NOT moved.** The "note for the next run" S13 filed here was a verbatim copy of
+      box 6's note and says nothing about runtime parsing; ignore it. No new contracts were written this
+      session — adding one requires verifying the backend response shape per route, and no route was
+      verified — so the fraction below is unchanged and is NOT claimed as progress.
       Evidence: runtime validation now exists at the one seam. `parseApiResponse<T>(res, contract?, resource?)` takes an optional Zod contract; `apiClient.get/post/put/patch/delete/upload`, `serverGet`, `publicGet` and `publicGetNoStore` all thread it. A violation throws `ApiContractError extends ApiError` (`code: "CONTRACT_VIOLATION"`, `resource`, `issues[]`, capped at 10), so it renders through the existing `getErrorMessage` + `readErrorReachesBoundary` path as an error state — never a raw `ZodError`, never a silent pass. It is also `reportError`ed with the resource and the issue paths. The single remaining cast lives in one named function, `assertUnchecked`, which is the un-validated path made explicit.
       Proof: `lib/api-envelope-contract.test.ts` (new, 26 tests) rejects a renamed field, a retyped field, a removed nested field, null/array-for-object, a missing envelope, an empty 204, a bad list element (named by index) and an out-of-enum permission scope — and asserts the same body passes silently *without* a contract, which is the defect being removed. `hooks/api/response-contracts.test.ts` (new, 29 tests) runs the 15 shipped contracts against the payloads the backend services actually build (verified against their controllers and Drizzle column types) and then against the specific drift each exists to catch.
       Guard: `lib/api-contract-coverage.test.ts` (new, 7 tests) parses all 2490 seam calls under `hooks/api/` with the TS compiler API and fails if any route on the money/permissions/tenancy/PII list loses its contract, or gains a second un-validated call site. Verified to bite: removing the `/billing/entitlements` contract turns 2 of its 7 red.
