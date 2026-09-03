@@ -9,6 +9,13 @@ import type { ResponseContract } from "@/lib/api-envelope";
  *
  * `nextCursor` is the id of the last row the page KEPT, so continuing with
  * `cursor=<nextCursor>` (`id < cursor`) can neither repeat nor skip a row.
+ *
+ * Getting the two shapes the wrong way round fails SILENTLY, which is why they
+ * are separate contracts rather than one permissive schema: `getNextPageParam`
+ * reads `lastPage.nextCursor` here and `lastPage.pagination.nextCursor` on the
+ * opaque-cursor page, so a swap simply ends pagination at page one with no error
+ * anywhere. `hooks/api/module-access/` kept a private byte-identical copy of this
+ * builder until 2026-09-04, which is exactly how a divergence would have started.
  */
 export interface IdCursorPage<T> {
   data: T[];
