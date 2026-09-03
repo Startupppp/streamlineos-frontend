@@ -67,7 +67,7 @@ describe("a kanban ticket card", () => {
           projectId={1}
           projectKey="ENG"
           onSelect={onSelect}
-          dragStartRef={{ current: null }}
+          isDragging={false}
         />,
       ),
     };

@@ -14,6 +14,7 @@ function person(
     organizationId: "org-1",
     userId: null,
     organizationMembershipId: null,
+    accountAccess: { state: "NONE" },
     firstName: "Jane",
     lastName: "Doe",
     displayName: null,
@@ -78,9 +79,12 @@ describe("person account access", () => {
     });
     const expired = person({
       accountAccess: {
-        ...pending.accountAccess!,
         state: "INVITED",
+        invitationId: "invite-1",
         invitationStatus: "EXPIRED",
+        email: "jane@example.com",
+        role: "MEMBER",
+        expiresAt: "2026-01-08T00:00:00.000Z",
       },
     });
 

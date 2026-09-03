@@ -19,7 +19,7 @@ const mockUseOnlineStatus = useOnlineStatus as jest.MockedFunction<
   typeof useOnlineStatus
 >;
 
-function retryPolicy(): (failureCount: number, error: unknown) => boolean {
+function retryPolicy(): (failureCount: number, error: Error) => boolean {
   const retry = createAppQueryClient("test").getDefaultOptions().queries?.retry;
   if (typeof retry !== "function")
     throw new Error("the query client no longer installs a retry predicate");

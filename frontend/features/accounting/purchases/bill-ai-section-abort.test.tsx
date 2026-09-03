@@ -62,7 +62,7 @@ const BILL: PurchaseBill = {
   vendorBillNumber: null,
   billDate: "2026-01-31",
   dueDate: null,
-  status: "OPEN",
+  status: "POSTED",
   subtotal: "1000.00",
   taxAmount: "180.00",
   cgstAmount: "90.00",

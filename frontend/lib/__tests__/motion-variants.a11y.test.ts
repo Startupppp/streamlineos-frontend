@@ -59,8 +59,8 @@ describe("useMotionVariants — respects prefers-reduced-motion", () => {
     useReducedMotion.mockReturnValue(true);
     const { result } = renderHook(() => useMotionVariants());
     const stagger = result.current.staggerContainer;
-    const visible = stagger.visible as Record<string, { transition?: { staggerChildren?: number } }>;
-    expect(visible?.transition?.staggerChildren).toBe(0);
+    const visible = stagger.visible as { transition?: { staggerChildren?: number } };
+    expect(visible.transition?.staggerChildren).toBe(0);
   });
 });
 

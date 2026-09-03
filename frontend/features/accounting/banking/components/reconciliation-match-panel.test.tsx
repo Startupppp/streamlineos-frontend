@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ReconciliationMatchPanel } from "./reconciliation-match-panel";
+import type { ReconciliationTxn } from "@/hooks/api/accounting/banking";
 
 function Wrapper({ children }: { children: React.ReactNode }) {
   return <TooltipProvider>{children}</TooltipProvider>;
@@ -28,26 +29,37 @@ jest.mock("./bank-txn-status-badge", () => ({
   BankTxnStatusBadge: () => null,
 }));
 
-const baseTxn = {
+const baseTxn: ReconciliationTxn = {
   id: 1,
+  bankAccountId: 1,
   txnDate: "2024-01-15",
   description: "Test transaction",
+  reference: null,
+  counterparty: null,
   amount: "1000",
-  status: "PENDING" as const,
+  status: "SUGGESTED",
+  matchType: null,
+  matchedRecordId: null,
+  createdAt: "2024-01-15T00:00:00.000Z",
   suggestedMatches: [],
 };
 
 describe("ReconciliationMatchPanel — confidence bar", () => {
   it("does not render a bar or percentage when confidence is NaN", () => {
-    const txn = {
+    const txn: ReconciliationTxn = {
       ...baseTxn,
       suggestedMatches: [
         {
           id: 42,
+          bankTransactionId: 1,
+          journalEntryId: null,
+          matchedType: "CUSTOMER_PAYMENT",
+          matchedRecordId: null,
           amount: "1000",
           confidence: "NaN",
-          matchedType: "CUSTOMER_PAYMENT" as const,
           isConfirmed: false,
+          confirmedBy: null,
+          confirmedAt: null,
         },
       ],
     };
@@ -60,15 +72,20 @@ describe("ReconciliationMatchPanel — confidence bar", () => {
   });
 
   it("renders the bar at the correct scale when confidence is a valid percentage", () => {
-    const txn = {
+    const txn: ReconciliationTxn = {
       ...baseTxn,
       suggestedMatches: [
         {
           id: 42,
+          bankTransactionId: 1,
+          journalEntryId: null,
+          matchedType: "CUSTOMER_PAYMENT",
+          matchedRecordId: null,
           amount: "1000",
           confidence: "85",
-          matchedType: "CUSTOMER_PAYMENT" as const,
           isConfirmed: false,
+          confirmedBy: null,
+          confirmedAt: null,
         },
       ],
     };
@@ -83,15 +100,20 @@ describe("ReconciliationMatchPanel — confidence bar", () => {
   });
 
   it("renders the bar at 0 scale when confidence is 0", () => {
-    const txn = {
+    const txn: ReconciliationTxn = {
       ...baseTxn,
       suggestedMatches: [
         {
           id: 42,
+          bankTransactionId: 1,
+          journalEntryId: null,
+          matchedType: "CUSTOMER_PAYMENT",
+          matchedRecordId: null,
           amount: "1000",
           confidence: "0",
-          matchedType: "CUSTOMER_PAYMENT" as const,
           isConfirmed: false,
+          confirmedBy: null,
+          confirmedAt: null,
         },
       ],
     };

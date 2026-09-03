@@ -24,7 +24,16 @@ function makeTickets(count: number): Ticket[] {
 const noop = () => undefined;
 
 function renderRows(count: number) {
-  return render(<GroupRows items={makeTickets(count)} onTicketClick={noop} />);
+  return render(
+    <GroupRows
+      items={makeTickets(count)}
+      projectKey="ENG"
+      projectId={1}
+      projectStatuses={[]}
+      displayOptions={undefined}
+      onTicketClick={noop}
+    />,
+  );
 }
 
 describe("GroupRows", () => {

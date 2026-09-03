@@ -146,12 +146,17 @@ describe("DataTable — permission-denied empty is a refusal, not a claim of emp
         <EmptyState
           title="No invoices yet"
           action={{ label: "New invoice", onClick: () => {} }}
-          access={{ denied: true, permission: "accounting:invoices:view" }}
+          access={{
+            permission: "accounting:receivables:read",
+            allowed: false,
+            denied: true,
+            pending: false,
+          }}
         />
       ),
     });
     expect(screen.getByRole("heading", { name: "Access Restricted" })).toBeInTheDocument();
-    expect(screen.getByText("accounting:invoices:view")).toBeInTheDocument();
+    expect(screen.getByText("accounting:receivables:read")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "New invoice" })).toBeNull();
   });
 });

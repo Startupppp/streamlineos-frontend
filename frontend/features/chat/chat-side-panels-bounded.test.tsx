@@ -70,7 +70,7 @@ function makeMessage(index: number): Message {
     replyToId: null,
     isEdited: false,
     isDeleted: false,
-    messageType: "TEXT",
+    messageType: "text",
     metadata: null,
     actionStatus: null,
     createdAt: "2026-01-01T00:00:00.000Z",

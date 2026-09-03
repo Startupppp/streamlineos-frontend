@@ -256,7 +256,7 @@ describe("the real call sites resolve the payload, not the envelope", () => {
     stubFetch({ success: true, data: { id: 9, message: "Request submitted" } });
 
     await expect(
-      submitIntake("1", { title: "Broken login" }),
+      submitIntake("1", { title: "Broken login", submitterEmail: undefined }),
     ).resolves.toEqual({ id: 9, message: "Request submitted" });
   });
 });

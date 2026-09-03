@@ -64,6 +64,7 @@ const accent: ModuleAccent = {
   bg: "bg-x",
   text: "text-x",
   indicator: "bg-y",
+  border: "border-x",
 };
 
 const group = {

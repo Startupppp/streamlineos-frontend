@@ -34,6 +34,7 @@ function makeMembers(count: number): ChannelMember[] {
     lastReadAt: null,
     joinedAt: null,
     mutedUntil: null,
+    archivedAt: null,
     isFavorite: false,
     notificationPreference: "ALL" as const,
     user: { id: `user-${i + 1}`, name: `Member ${i + 1}`, image: null },

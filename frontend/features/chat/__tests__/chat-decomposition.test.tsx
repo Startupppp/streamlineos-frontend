@@ -32,6 +32,8 @@ function makeMember(id: string, name: string): ChannelMember {
     lastReadAt: null,
     archivedAt: null,
     mutedUntil: null,
+    isFavorite: false,
+    notificationPreference: "ALL",
     user: { id, name, image: null },
   };
 }

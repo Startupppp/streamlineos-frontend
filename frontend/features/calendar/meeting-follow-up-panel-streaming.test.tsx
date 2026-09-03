@@ -1,6 +1,6 @@
 import { TextDecoder as NodeTextDecoder, TextEncoder as NodeTextEncoder } from "node:util";
 import { act, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import userEvent, { type UserEvent } from "@testing-library/user-event";
 import { installAbortSignalPolyfill } from "@/test-utils/abort-signal-polyfill";
 import { renderWithProviders } from "@/test-utils/render";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -98,7 +98,7 @@ function bodySentTo(path: string): Record<string, unknown> {
   return JSON.parse(net.bodies[url ?? ""] ?? "{}") as Record<string, unknown>;
 }
 
-async function stopAfter(user: userEvent.UserEvent): Promise<void> {
+async function stopAfter(user: UserEvent): Promise<void> {
   await user.click(screen.getByRole("button", { name: /^Stop$/ }));
   await waitFor(() => expect(net.signal()?.aborted).toBe(true));
 }

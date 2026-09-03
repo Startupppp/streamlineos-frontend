@@ -72,8 +72,8 @@ describe("mobile module nav items", () => {
 
     it("deduplicates routes with the same href across groups", () => {
       const dupNav: NavGroup[] = [
-        { label: "G1", routes: [{ label: "A", icon: LayoutDashboard, href: "/a" }] },
-        { label: "G2", routes: [{ label: "A-dup", icon: Inbox, href: "/a" }] },
+        { label: "G1", product: "build", routes: [{ label: "A", icon: LayoutDashboard, href: "/a" }] },
+        { label: "G2", product: "build", routes: [{ label: "A-dup", icon: Inbox, href: "/a" }] },
       ];
       expect(getAllMobileModuleTabs(dupNav)).toHaveLength(1);
     });

@@ -46,7 +46,7 @@ describe("query request policies", () => {
     ["access.simulate", () => queryKeys.access.simulate("user-1")],
     [
       "access.simulationCandidates",
-      () => queryKeys.access.simulationCandidates({ page: 1, limit: 100 }),
+      () => queryKeys.access.simulationCandidates({ limit: 100 }),
     ],
     ["hr.attendanceStatus", () => queryKeys.hr.attendanceStatus()],
     ["notifications.unreadCount", () => queryKeys.notifications.unreadCount()],

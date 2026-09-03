@@ -59,29 +59,32 @@ jest.mock("@/lib/query-request-policies", () => ({
   NOTIFICATION_FALLBACK_INTERVAL_MS: 30_000,
 }));
 
+/*
+ * This fixture was the pre-inbox wire shape behind an `as Notification`: it
+ * carried eight fields the type has not had for some time (isArchived, readAt,
+ * actionUrl, referenceType, referenceId, actorId, actorName, actorAvatar) and
+ * omitted five it requires (priority, category, sourceModule, link, channel).
+ * The cast is gone, so the compiler now holds it to the real shape.
+ */
 function makeNotif(id: number, isRead = false): Notification {
   return {
     id,
     orgId: "org-1",
     userId: "u-1",
     type: "INFO",
+    priority: "NORMAL",
+    category: "SYSTEM",
+    sourceModule: null,
     title: `Notification ${id}`,
     message: null,
+    link: null,
     isRead,
-    isArchived: false,
-    isPinned: false,
     pinned: false,
-    createdAt: new Date().toISOString(),
-    readAt: null,
+    channel: "IN_APP",
     archivedAt: null,
     snoozedUntil: null,
-    actionUrl: null,
-    referenceType: null,
-    referenceId: null,
-    actorId: null,
-    actorName: null,
-    actorAvatar: null,
-  } as Notification;
+    createdAt: new Date().toISOString(),
+  };
 }
 
 function makeInfiniteData(

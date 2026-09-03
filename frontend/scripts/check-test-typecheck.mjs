@@ -65,10 +65,11 @@ const PROJECT = "tsconfig.test.json";
  * ratchet that may only ever fall, and the script says so out loud on every run.
  *
  * Starting number when the gate was introduced: 139 errors across 45 files.
- * They are being fixed, not absorbed; this number may only ever fall.
- * Never raise this to absorb a new failure.
+ * Every one was fixed in the change that introduced this gate, and the tree was
+ * re-measured at 0 before the number below was set. Nothing is suppressed and
+ * nothing is baselined. Never raise this to absorb a new failure.
  */
-const BASELINE = 139;
+const BASELINE = 0;
 
 /** A diagnostic line, as tsc emits it: `path/to/file.ts(12,7): error TS1234: ...` */
 const DIAGNOSTIC = /^([^\s(][^(]*)\((\d+),(\d+)\): error (TS\d+): /;
@@ -316,6 +317,7 @@ function gate() {
         `${String(BASELINE)}. Lower BASELINE in scripts/check-test-typecheck.mjs to ` +
         `${String(owned.length)} so the ground you just gained cannot be given back.`,
     );
+    for (const line of owned) console.log("  " + line);
     reportForeign(foreign);
     process.exit(1);
   }

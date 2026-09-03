@@ -13,7 +13,7 @@ const EVERY_PRODUCT: ProductKey[] = PRODUCT_DEFINITIONS.map(
 const DECLARED_GROUPS: NavGroup[] = [...NAV_GROUPS, ...HOME_NAV_GROUPS];
 
 function groupsShownFor(product: ProductKey): NavGroup[] {
-  return getNavGroupsForProduct(product, "OWNER", [], EVERY_MODULE);
+  return getNavGroupsForProduct(product, "OWNER", {}, EVERY_MODULE);
 }
 
 describe("every navigation group is reachable from a product", () => {
