@@ -32,11 +32,40 @@
   "Paused — waiting for a connection" instead of showing an eternal skeleton.
   `components/__tests__/paused-reads-and-truncated-lists.test.tsx` → 12 cases with three bite proofs, one
   asserting an online table skeleton must never carry the offline copy.
+  **RESIDUAL-RISK REGISTER 2026-09-03 — CORRECTION. The sentence above names a mechanism that is not in the
+  code, and this box is ticked partly on it.** Measured at head, twice, minutes apart:
+  a non-test grep for `fetchStatus` across `app features components hooks lib` returns **zero** occurrences
+  (the only hits are a variable named `refetchStatus`), and both named files read the **global browser signal**
+  instead: `components/shared/loading-state.tsx:6,121,131` and `components/ui/data-table.tsx:19,74,269` import
+  and call `useOnlineStatus()` (`navigator.onLine` plus the window online/offline events) and set
+  `aria-busy={isOnline}`. **Neither reads `fetchStatus === "paused"`.**
+  The *substance* of the clause may still hold — `useOnlineStatus()` does render an offline state, and
+  `PAUSED_LABEL` is real — so this correction does NOT untick the box; the owner decides. But the two signals are
+  not interchangeable, and ticket 28 box 6 item (1) says why: `useOnlineStatus` is global and cannot say *this*
+  read is paused, so a read paused by TanStack's `onlineManager` while the browser believes it is online still
+  renders as an indefinite skeleton, and a screen using neither shared component gets nothing.
+  **Ticket 28 box 6 and this box now assert opposite things in writing.** Ticket 28 corrected this exact claim
+  once already ("the 'this note is stale' note was itself wrong"); it has now been re-introduced here in the other
+  direction and used to justify a closed box. **A-25 owns the resolution: decide which signal is canonical.** Two
+  agents reading these two files today reach opposite conclusions about whether offline is handled.
   **And the environment blocker recorded under box 5 was itself the missing error state, and is fixed.**
   `AppLoadingScreen` had no upper bound, so when `/auth/session-exchange` 503s the app sat on "Syncing
   organization…" for ever with nothing telling the reader the workspace was not coming. It now falls to
   `AppLoadingStalled` after 20s (`components/ui/app-loading-screen.test.tsx`, 3 cases pinning it).
 - [ ] Keyboard navigation and screen-reader semantics work on every interactive surface; focus is managed across dialogs, drawers and route transitions.
+  **RESIDUAL-RISK REGISTER 2026-09-03 — the scope exclusion is sound; the box's SECOND clause has no instrument
+  at all, and that half is assignable work rather than a blocker.**
+  **R-24 (ACCEPTED RESIDUAL · SCOPE).** 9 of 633 click targets unreachable (624/633, 98.6%), ratchet pinned at 9,
+  all nine named file-and-line — 7 under `features/crm/**`, 2 in
+  `app/(authenticated)/inventory/purchase-orders/page.tsx`. Actionable the moment CRM and inventory enter scope,
+  not before. **Owner: CRM/inventory release owner. Review: 2026-12-01.** *Not re-run here:
+  `keyboard-reachability.contract`; the counts are this ticket's.*
+  **A-29 (ASSIGNABLE) — an UNWRITTEN GATE, not a blocker.** This box also asks for screen-reader semantics, and
+  the note below says it plainly: "ARIA relationships and live-region correctness across 556 pages are still
+  established only by rendered suites, not by any corpus-wide measurement." The template sits in the same
+  directory — `keyboard-reachability.contract.test.ts` already walks 3,647 `.tsx` files and ratchets its finding.
+  A sibling contract over `aria-labelledby` / `aria-describedby` targets, `aria-live` on status regions and
+  control/label association is bounded, static and unowned. **Owner: frontend a11y owner. Deadline: 2026-09-17.**
   **S14 — the one target in this territory is fixed, and the other nine are recorded as an accepted scope
   exclusion instead of leaving this box silently open.**
   `npx jest --runInBand --testPathPattern="keyboard-reachability.contract"` now measures **633 click targets
@@ -160,6 +189,21 @@
   `/crm/leads` still fails on the `lead_party_map`/`business_parties` grouping error — CRM is excluded
   from this release; recorded and moved past.
 - [ ] Representative browser end-to-end journeys cover the main module flows.
+  **RESIDUAL-RISK REGISTER 2026-09-03 — three separable remainders are presented here as one, and only the CI
+  half is actually blocked.**
+  **A-30 (ASSIGNABLE) — in this ticket's OWN territory.** "Nothing asserts a write" is work inside
+  `frontend/scripts/browser-journeys.mjs`, whose own header says it: "Each step is a route plus an optional inert
+  interaction — none of these writes". Adding a write-and-assert journey is not blocked on anything and is not
+  owned. **Owner: ticket 30 owner. Deadline: 2026-09-17.**
+  **R-25 (ACCEPTED RESIDUAL · INFRA/CI).** "Cannot be a CI gate" is genuine, and the browser is **not** the
+  obstacle — the harness's candidate list already includes `/usr/bin/google-chrome` and `/usr/bin/chromium`. The
+  obstacle is that **no frontend CI job boots the app**: `.github/workflows/frontend.yml` has five jobs
+  (`frontend`, `type-check`, `build`, `tests`, `gates`) and none starts a server or a database. It needs
+  `--base-url` (a running app, both repos) and `--cookie-file` (a minted `authjs.session-token`). Backend CI
+  already runs a seeded job (`tenant-isolation`), so the pattern exists for one repo; a cross-repo job with a
+  minted session does not. **Owner: CI owner. Deadline: 2026-09-17.**
+  **R-26 (ACCEPTED RESIDUAL · SCOPE).** `/crm/leads` is the one route of 21 still reaching an error boundary.
+  **Owner: CRM/inventory release owner. Review: 2026-12-01.**
   **S14 — the journeys the broken project list made unreachable are now closed, and the honesty property is
   intact.** `node scripts/browser-journeys.mjs --self-test` -> **exit 0, 39 passed**, six bite proofs,
   unchanged. The full run -> **exit 1, `63 of 63 planned steps run`** — the first time this harness has

@@ -10,6 +10,30 @@ Earlier status: S12 closed the **Knowledge queries/workers** box: all three rema
 
 
 - [ ] **Calendar:** one `/calendar` serving everyone with module events as toggleable sources; timezone display, series-versus-instance edits, cursor/range keys, and DST, exception, conflict and reminder coverage. No module-specific calendar page exists.
+  **RESIDUAL-RISK REGISTER 2026-09-03 — THIS BOX'S LAST CLAUSE IS FALSE AT HEAD, and that alone keeps it open
+  whatever happens to (c).**
+  **A-28 (ASSIGNABLE).** "No module-specific calendar page exists" — it does.
+  `frontend/features/hr/recruitment/interviews-page.tsx:30-36` dynamically imports
+  `@/features/calendar/big-calendar-wrapper` and renders `<BigCalendarWrapper …>` at line **249**, at
+  `/hr/recruitment/interviews`. `BigCalendarWrapper` is referenced by exactly three files: its own definition,
+  `features/calendar/calendar-view.tsx`, and this one. Root `CLAUDE.md` §8 ("Never module-specific calendar
+  pages") and a feature→feature import under §9. `hr-interviews` is already a registered aggregate source, so
+  `/calendar` already shows these events and the remedy is a list plus a link. **Reported in three consecutive
+  passes (S8, S10, S11), routed to HR / ticket 25 each time, still there.** **Owner: HR / ticket 25 owner.
+  Deadline: 2026-09-10.**
+  **A-17 (ASSIGNABLE).** The "p95 over HTTP is NOT re-measured" PARTIAL is not just this box's: two release gates
+  are red on the stale number. `pnpm check:route-budgets` → **exit 1**
+  (`GET /calendar/events — measuredBufferBlocks=7072 exceeds maxBufferBlocks=2000`) and
+  `pnpm check:benchmark-manifest` → **exit 1** (`request p95 915.944 ms > 800 ms PRD §12.1 ceiling`).
+  `contracts/route-budgets.json` still carries `measuredLatencyP95Ms: 915.944`. Report 23b §4 names the remedy:
+  one uninterrupted full 164-slot capture plus `perf:merge-route-budgets --write`, and separately a re-run of the
+  read-cost writer to clear the 7,072. A **re-run, not an investigation**. **Owner: perf-harness owner. Deadline:
+  2026-09-08.**
+  **R-21 (ACCEPTED RESIDUAL · DECISION).** "This and following" is a genuine, well-posed product decision — Q1
+  (a second `calendar_events` row with `UNTIL` and a `series_parent_id`, versus an override table) and Q2 (do
+  post-split exceptions and cancellations re-parent; recorded as having a *wrong* answer rather than a trade-off)
+  in `reports/29b-open-decisions.md` §1. **Owner: release owner (product). Deadline: 2026-09-10.** *Taken from
+  this ticket, not re-read at source: the five questions and the two service method names.*
   S13 — **the read path is fixed; the box still turns on (c), which is still a product decision.**
   `CalendarEventSourceLoader.queryVisibleEvents` was one `OR`-of-two-branches query whose recurring arm had no lower bound on `start_date`, so the planner walked `idx_calendar_events_org_date` from the tenant's first event and heap-fetched every candidate before the window filter could reject it — 3,610 rows scanned to keep 517, **7,063 buffers per page**, four times a sequential scan of the table. It is now candidate-ids-then-fetch over two independently-bounded range branches, with the caller's RSVP as its own indexed read over the page's ids and the creator name resolved once per request instead of joined per page.
   The visibility test is a **scalar sublink, not an `EXISTS`**, and that is the load-bearing part: as an `EXISTS` the planner de-correlates it into a hashed SubPlan that materialises all **39,114** attendee rows of the fixture membership before the `OR` can short-circuit on `visibility = 'org'` — O(the caller's attendance), not O(page).
@@ -48,6 +72,22 @@ Earlier status: S12 closed the **Knowledge queries/workers** box: all three rema
   P2 fixed here: `calendar-reminder-sweep.service.ts` used three bare `.limit()` reads, so an org with >200 qualifying events in a 20-minute window silently lost reminders. Now keyset-drained. Proof: `calendar-reminder-sweep-event-paging.spec.ts` — 205 candidates across 2 pages; forcing the drain back to one page turns it red.
 
 - [ ] **Inbox/mail:** indexed conversation ordering, search and unread; incremental sync; idempotent send and receive; bounce/retry/DLQ; invalidation of list, thread and count keys.
+  **RESIDUAL-RISK REGISTER 2026-09-03 — R-22 / R-23 (ACCEPTED RESIDUAL ×2 · SCOPE). The decision is taken and
+  recorded; what was missing is an owner and a date, which is what blocked ticket 41 box 7 here.**
+  **R-22 — NEW REQUIREMENT (A), unread + incremental sync.** One requirement, not two: the count is withheld
+  deliberately because it would be *wrong* — the mirror holds only what has been listed, so a fresh account would
+  report "3 unread" for a 400-message mailbox and present it as authoritative. Needs delta-token semantics on
+  `mail_sync_checkpoints`, a `listChanges` on both provider wrappers (Gmail `historyId`, Outlook `deltaLink` —
+  neither wrapper asks for one) and a background sync worker that does not exist.
+  **R-23 — NEW REQUIREMENT (B), idempotent receive + bounce/retry/DLQ.** One requirement: there is **no inbound
+  mail path at all**, and a bounce arrives as an inbound DSN, so bounce handling cannot precede receiving.
+  Both are provider-integration designs with a worker and a schema change apiece, not defects in shipped
+  behaviour. **Owner (both): mail/integrations product owner. Release target to be set by 2026-09-17; review
+  2026-12-01.**
+  **This box cannot tick this release** — as worded it asks for two features the release has decided not to
+  build. Same amendment case as ticket 28 box 7; **the release owner should amend it rather than leave it to
+  fail.** *Taken on trust: the "zero webhook/inbound/bounce/DLQ references under `src/modules/mail/`" scan was
+  not re-run.*
   S12 — **the scope decision is made and recorded: neither NEW REQUIREMENT is in this release.** `reports/29b-open-decisions.md` §2. (A) unread + incremental sync is one requirement because the mirror is partial, so a count would be a wrong number presented as authoritative; it needs delta-token semantics on `mail_sync_checkpoints`, a `listChanges` on both provider wrappers (Gmail `historyId`, Outlook `deltaLink` — neither wrapper requests one) and a background sync worker that does not exist. (B) idempotent receive + bounce/DLQ is one requirement because there is no inbound path at all — zero webhook/inbound/bounce/DLQ references under `src/modules/mail/`, re-verified 2026-09-03 — and a bounce arrives as an inbound DSN. Both are provider-integration designs with a worker and a schema change apiece, not defects in shipped behaviour. What was in reach (ordering, database search) was fixed and measured in S10; idempotent send was already done.
   Recorded with the decision rather than removed: `mail.service.ts:284`'s write-only checkpoint upsert stays, because it is the row shape (A) will migrate and `mail-sync-checkpoint-isolation.spec.ts` supplies 4 of `check:tenant-isolation`'s 926 declarations.
   BLOCKED: **a product/scope decision, now taken and recorded.** Building either requirement is out of this release.

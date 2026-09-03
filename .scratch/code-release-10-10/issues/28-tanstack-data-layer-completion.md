@@ -159,6 +159,28 @@ per-screen number is now measured; box 7 was not moved. Box 2's blocker is GONE 
       Evidence: AST audit of all 33 `useInfiniteQuery` call sites. One derives its own cursor (`notifications-inbox.ts`) and took `page[page.length-1].id`, which is only correct if rows arrive in sort order — replaced with the page minimum, matching the backend's `orderBy(desc(id))` + `lt(id, cursor)`. New `hooks/api/cursor-pagination-contract.test.tsx` (6 tests) exercises disagreeing ids `[90,12,41]`, a falsy `id: 0` cursor round trip, and a filter change; reverting the hook fix turns 2 of the 6 red.
 
 - [~] Loading, background-refresh, empty, partial-error, full-error, offline, permission-denied and revoked-access states are each covered.
+      **RESIDUAL-RISK REGISTER 2026-09-03 — THIS BOX IS ROUTED TO A BOX THAT IS ALREADY TICKED.**
+      Its remainder is assigned to "ticket 30 (per-screen states) for (1) and (2); ticket 27 for (3)". **Ticket
+      30's corresponding box is its box 1 — "Loading, empty, error, offline and permission-denied states are
+      present on every authenticated surface" — and it is `[x]` CLOSED**, at 22/22 over 556 authenticated route
+      modules with 0 missing loading states, 0 missing read-error branches and 0 missing permission gates. Ticket
+      30's two open boxes are keyboard/screen-reader semantics and browser journeys; neither will pick this up.
+      Three items of real per-screen work are therefore addressed to nobody. **The register's ask is that the
+      release owner re-routes them, or re-opens ticket 30 box 1 for the per-screen half.**
+      None of the three is blocked:
+      **A-25 (ASSIGNABLE)** — item (1), which offline signal is canonical. The literal claim was re-verified: a
+      non-test grep for `fetchStatus` across `app features components hooks lib` returns **zero** real occurrences
+      at head (the only hits are a variable named `refetchStatus`). A design choice plus three shared files.
+      **Owner: frontend shared-components owner. Deadline: 2026-09-17.**
+      **A-26 (ASSIGNABLE)** — item (2), and it is **bigger than recorded**. Re-counted at head with a coarser grep
+      than this ticket's scanner: **237 `useGatedQuery` call sites across 104 files** under `hooks/**` (recorded:
+      180/83), and `access.denied` is read on **8 surfaces, every one of them under `crm/`**. This ticket says
+      "exactly one, and that file is CRM"; the honest number is eight, and the conclusion is stronger than drawn —
+      **zero in-scope screens consume the gate**, out of 237 gated reads. *My counts are coarse greps and should be
+      re-derived by whoever picks this up; the direction is not in doubt.* **Owner: per-screen owners, after
+      re-routing. Deadline: 2026-09-17.**
+      **A-27 (ASSIGNABLE)** — item (3), filter-empty vs data-empty, per page. **Owner: ticket 27 owner. Deadline:
+      2026-09-17.**
       **S14 — worked. The "this note is stale" note was itself wrong, and item (1) is now measured.**
       (1) **CORRECTED, and it cuts both ways.** Literally, "no surface reads `fetchStatus === paused`"
       is **still true**: `grep -rn fetchStatus app features components hooks lib` finds **zero**
@@ -187,6 +209,20 @@ per-screen number is now measured; box 7 was not moved. Box 2's blocker is GONE 
       PARTIAL: the per-screen half stays open for ticket 30 — the data layer can only make a state renderable, it cannot make a page render it. What remains, precisely: (1) no surface reads `fetchStatus === "paused"`, so every screen renders an offline read as an indefinite skeleton (`useOnlineStatus` has 3 consumers: the shell banner, the notifications inbox, and a private copy inside `features/inventory/components/tools/barcode-client.tsx:26` that duplicates `hooks/common/use-online-status.ts`); (2) 66 of ~70 gated reads carry the `access` gate but the page-level audit of which ones render `NoPermissionState` vs an empty state is an `app/**`/`features/**` count; (3) filter-empty vs data-empty is a per-page distinction the hook cannot make.
 
 - [~] Runtime parsing rejects a backend contract change rather than silently accepting it; client types mirror the backend schema exactly.
+      **RESIDUAL-RISK REGISTER 2026-09-03 — R-20 (ACCEPTED RESIDUAL · SCALE), and this box CANNOT BE MET AS
+      WORDED.** The honest fraction is this ticket's own: **55 of 2,502** seam call sites under `hooks/` carry a
+      runtime contract (**52 of 1,012** GETs) across 49 routes — **2.2%**. Each conversion needs the backend
+      response shape verified first, because a contract written from the frontend's own type would encode the drift
+      instead of catching it, so it is per-route work and cannot finish in this release.
+      What IS in place is a risk-weighted ratchet: `lib/api-contract-coverage.test.ts` fails if any
+      money / permissions / tenancy / PII route loses its contract or gains a second un-validated call site, and it
+      is bite-proved on `/billing/entitlements` and `POST /organization/switch`. That is the defensible position and
+      it is not what the box asks for.
+      **Recommendation: amend the box** to "every money/permissions/tenancy/PII route parses at runtime, enforced by
+      a ratchet; the remainder is scheduled" — the same shape as R-8 in `reports/residual-risk-register.md`.
+      Otherwise it fails for a reason nobody disagrees with. **Owner: per-module frontend owners, with the release
+      owner setting a per-release quota and deciding the amendment. Quota by 2026-09-17; review 2027-03-03.**
+      *Not independently recounted: the 55/2,502 and 52/1,012 figures are this ticket's.*
       **S14 — re-audited, NOT moved.** The "note for the next run" S13 filed here was a verbatim copy of
       box 6's note and says nothing about runtime parsing; ignore it. No new contracts were written this
       session — adding one requires verifying the backend response shape per route, and no route was
