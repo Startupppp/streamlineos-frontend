@@ -53,10 +53,20 @@ export function loadExceptions(manifestPath = MANIFEST_PATH) {
   }
 }
 
+/**
+ * An exception that names a route annotates only that route. Without that, a
+ * `mobile`/`cls_p75` exception recorded for one CRM surface would attach its
+ * owner to the next CLS breach on any other route — which is how an annotation
+ * mechanism turns into a blanket excuse. An exception with no `route` still
+ * matches profile+metric, which is what the two TTFB entries rely on.
+ */
 export function annotate(failures, exceptions) {
   return failures.map((failure) => {
     const hit = exceptions.find(
-      (e) => failure.profile === e.profile && failure.metric === e.metric,
+      (e) =>
+        failure.profile === e.profile &&
+        failure.metric === e.metric &&
+        (e.route === undefined || e.route === failure.route),
     );
     return hit
       ? `${failure.message}\n      EXCEPTION recorded by ${String(hit.recordedBy ?? "unknown")} on ${String(hit.recordedOn ?? "unknown")} — owner: ${String(hit.owner ?? "unnamed")}\n      reason: ${String(hit.reason ?? "none given")}\n      (still counted as a failure)`
@@ -386,12 +396,26 @@ async function selfTest() {
       recordedOn: "2026-09-02",
     },
   ]);
+  const routeScoped = [
+    { profile: "mobile", metric: "cls_p75", route: "/crm/inbox", owner: "crm", reason: "out of scope", recordedBy: "self-test", recordedOn: "2026-09-03" },
+  ];
+  const routeScopedAnnotation = annotate(
+    [
+      { profile: "mobile", metric: "cls_p75", route: "/crm/inbox", message: "BREACH a" },
+      { profile: "mobile", metric: "cls_p75", route: "/dashboard", message: "BREACH b" },
+    ],
+    routeScoped,
+  );
+  const routeScopedHitsItsOwnRoute = routeScopedAnnotation[0].includes("owner: crm");
+  const routeScopedSparesTheOther = routeScopedAnnotation[1].includes("NO EXCEPTION RECORDED");
+  const routeScopedKeepsBoth = routeScopedAnnotation.length === 2;
   const annotationKeepsEveryFailure = annotated.length === failures.length;
   const annotationNamesTheOwner = annotated.some((line) => line.includes("owner: somebody"));
   const unownedBreachIsMarked = annotated.some((line) => line.includes("NO EXCEPTION RECORDED"));
   console.log(
     `Exception annotation: ${annotated.length} line(s) for ${failures.length} failure(s) — ` +
-      `an exception must never remove one`,
+      `an exception must never remove one. A route-scoped exception annotated its own route ` +
+      `(${routeScopedHitsItsOwnRoute}) and left the other route unowned (${routeScopedSparesTheOther}).`,
   );
 
   const perceivedBreaching = checkPerceivedResponsiveness({
@@ -551,7 +575,10 @@ async function selfTest() {
     notMeasured.length === 0 &&
     annotationKeepsEveryFailure &&
     annotationNamesTheOwner &&
-    unownedBreachIsMarked;
+    unownedBreachIsMarked &&
+    routeScopedHitsItsOwnRoute &&
+    routeScopedSparesTheOther &&
+    routeScopedKeepsBoth;
   const unmeasuredOk =
     unmeasured.failures.length === 0 && unmeasured.notMeasured.length === 1;
 

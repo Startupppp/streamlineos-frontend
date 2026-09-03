@@ -331,6 +331,16 @@
       "evidence": "same capture; unthrottled server-side Node fetch to first byte over the same 12 routes measured p50 500-602 ms, p95 569-1218 ms, all HTTP 200",
       "recordedBy": "ticket 26",
       "recordedOn": "2026-09-02"
+    },
+    {
+      "profile": "mobile",
+      "metric": "cls_p75",
+      "route": "/crm/inbox",
+      "owner": "CRM lane — features/crm inbox summary cards; CRM is excluded from the 10/10 release scope, so ticket 26 recorded this rather than changing it",
+      "reason": "The route's three summary cards ('New Replies', 'Meetings Today', 'SLA Risk') render at 75px each and shrink to 45px when their counts arrive, which reflows the stack below them. It is mobile-only and profile-dependent: desktop measures 0.0008 and an unthrottled 390x844 window measures 0.00025, while the mobile profile's 4x CPU throttle and 150ms RTT delay the arrival to ~4.7s and produce a single 0.097 shift. Measured 0.0977 / 0.098 / 0.109 on three consecutive captures, so it straddles the 0.1 budget rather than sitting far over it.",
+      "evidence": "208-sample authenticated production capture, build id iTIKVvc-wqpbkjxEiy548, 13 routes x 2 profiles x 8 repetitions, 0 unauthorized, 0 off-route, 0 settle-capped; attribution reproduced in isolation under the same 390x844 / 4x CPU / 150ms RTT profile",
+      "recordedBy": "ticket 26 session S11",
+      "recordedOn": "2026-09-03"
     }
   ],
   "budgetExceptionsNote": "An exception records who owns a breach and why. It is annotation only: check-web-vitals-budget.mjs prints it next to the failure and still exits non-zero, and its self-test asserts that an exception never reduces the failure count. Nothing here makes a red budget green.",
