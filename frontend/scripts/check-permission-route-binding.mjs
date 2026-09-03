@@ -51,10 +51,23 @@
  *   WRAPPER — `useGatedQuery(key, options)` / `useAuthorizedMutation(key, options)`.
  *             The key is argument 0 and the HTTP calls are in argument 1's
  *             subtree, so the binding is structural and sound.
- *   SCOPE   — a function whose body holds exactly ONE literal `useCan` /
- *             `usePermissionGate` key and no unresolved one. The binding is
- *             lexical, not structural, so it is deliberately narrowed: see
- *             AMBIGUITY below.
+ *   ENABLED — a raw `useQuery` / `useInfiniteQuery` / `useSuspenseQuery` whose
+ *             `enabled` REFERENCES a local bound from `useCan(key)` or
+ *             `usePermissionGate(key)`. Only that reference makes the key the
+ *             gate on that read.
+ *
+ * WHY "ENABLED" AND NOT "ANY useCan IN THE FUNCTION"
+ * A lexical binding — one `useCan` anywhere in the function, applied to every
+ * request in it — is not sound, and it was measurably wrong here.
+ * `AssetReturnsPage` reads `const isAdmin = useCan("hr:employees:manage")` for
+ * rendering only, and its `useQuery` on `/hr/asset-returns` carries no
+ * `enabled` at all. A lexical rule reports three mismatches against
+ * `hr:assets:*` when the truth is that the read is not gated by anything. Those
+ * reads are a real defect of a DIFFERENT kind — an ungated permissioned read in
+ * `features/**`, which `check-gated-reads.mjs` does not see because it scans
+ * only `hooks/api` — and `--list` prints them so they are not lost.
+ * `useMutation` has no `enabled`, so a raw mutation is never bound here either:
+ * `useAuthorizedMutation` is the only sound binding for a write.
  *
  * AMBIGUITY — the false positive this gate refuses to report
  * `useExpensePageData` reads `options.selfService ? "/me/expenses" :
@@ -62,9 +75,9 @@
  * `selfService === true || (canExpenses && accountingEnabled)` — the gate is
  * bypassed on exactly the branch that takes the self-service route. A naive
  * binding calls that a mismatch (`hr:expenses:view` vs `self:expenses`) and it
- * is not one. So a call whose path argument is a conditional, or a SCOPE
- * function whose `enabled` contains a top-level `||`, is counted AMBIGUOUS and
- * never reported as a mismatch.
+ * is not one. So a call whose path argument is a conditional, or a read whose
+ * `enabled` contains a `||`, is counted AMBIGUOUS and never reported as a
+ * mismatch.
  *
  * WHAT THIS GATE DOES NOT SEE
  *   - a gate expressed as data (a permission read out of a config object or a
@@ -593,21 +606,89 @@ function enclosingName(node) {
   return "(module scope)";
 }
 
-/** True when a SCOPE function's `enabled` is a disjunction — the gate may be bypassed. */
-function hasDisjunctiveEnabled(body) {
-  let found = false;
+/** Raw read hooks. `useMutation` is absent on purpose: it has no `enabled`. */
+const READ_HOOKS = new Set(["useQuery", "useInfiniteQuery", "useSuspenseQuery"]);
+
+/**
+ * Locals bound to a permission gate: `const can = useCan("k")`,
+ * `const gate = usePermissionGate("k")`, and destructured forms.
+ *
+ * Collected PER ENCLOSING FUNCTION, never per file. A file-wide map was
+ * measurably wrong: `hooks/api/accounting/expenses.ts` declares `const can =
+ * useCan(...)` in five different hooks with five different keys, and a
+ * last-writer-wins map attributed all of them to whichever hook parsed last —
+ * which reported `useTeamExpenses` as gating on `accounting:banking:read` when
+ * it gates on `accounting:reimbursements:read`. A wrong key in the finding is
+ * worse than no finding.
+ */
+function gateLocalsIn(fnNode, consts) {
+  const locals = new Map();
   const visit = (n) => {
-    if (found) return;
     if (
-      ts.isPropertyAssignment(n) &&
-      n.name.getText().replace(/"/g, "") === "enabled" &&
-      /\|\|/.test(n.initializer.getText())
-    )
-      found = true;
+      ts.isVariableDeclaration(n) &&
+      n.initializer &&
+      ts.isCallExpression(n.initializer) &&
+      ts.isIdentifier(n.initializer.expression) &&
+      SCOPE_MARKERS.has(n.initializer.expression.text) &&
+      n.initializer.arguments.length >= 1
+    ) {
+      const key = permissionLiteral(n.initializer.arguments[0], consts);
+      if (key !== null) {
+        if (ts.isIdentifier(n.name)) locals.set(n.name.text, key);
+        else if (ts.isObjectBindingPattern(n.name))
+          for (const el of n.name.elements)
+            if (ts.isIdentifier(el.name)) locals.set(el.name.text, key);
+      }
+    }
     ts.forEachChild(n, visit);
   };
-  visit(body);
-  return found;
+  ts.forEachChild(fnNode, visit);
+  return locals;
+}
+
+/** The nearest enclosing function of a node, or the source file. */
+function enclosingFunction(node) {
+  let current = node.parent;
+  while (current) {
+    if (
+      ts.isFunctionDeclaration(current) ||
+      ts.isArrowFunction(current) ||
+      ts.isFunctionExpression(current) ||
+      ts.isMethodDeclaration(current)
+    )
+      return current;
+    current = current.parent;
+  }
+  return node.getSourceFile();
+}
+
+/** The `enabled` property of an options object literal, or undefined. */
+function enabledExpression(node) {
+  if (!ts.isObjectLiteralExpression(node)) return undefined;
+  for (const p of node.properties)
+    if (ts.isPropertyAssignment(p) && p.name.getText().replace(/"/g, "") === "enabled")
+      return p.initializer;
+  return undefined;
+}
+
+/** Keys an `enabled` expression consults, whether via a local or inline. */
+function keysGating(expr, locals, consts) {
+  const keys = new Set();
+  const visit = (n) => {
+    if (ts.isIdentifier(n) && locals.has(n.text)) keys.add(locals.get(n.text));
+    if (
+      ts.isCallExpression(n) &&
+      ts.isIdentifier(n.expression) &&
+      SCOPE_MARKERS.has(n.expression.text) &&
+      n.arguments.length >= 1
+    ) {
+      const key = permissionLiteral(n.arguments[0], consts);
+      if (key !== null) keys.add(key);
+    }
+    ts.forEachChild(n, visit);
+  };
+  visit(expr);
+  return keys;
 }
 
 export function scanFrontendFile(relPath, sf) {
@@ -615,6 +696,7 @@ export function scanFrontendFile(relPath, sf) {
   const fns = localFunctions(sf);
   const wrapper = [];
   const scope = [];
+  const ungated = [];
 
   const visitWrappers = (n) => {
     if (
@@ -637,92 +719,67 @@ export function scanFrontendFile(relPath, sf) {
   };
   ts.forEachChild(sf, visitWrappers);
 
-  const visitScopes = (n) => {
-    const isFunction =
-      ts.isFunctionDeclaration(n) || ts.isArrowFunction(n) || ts.isFunctionExpression(n);
-    if (isFunction && n.body) {
-      const keys = new Set();
-      let unresolved = 0;
-      const findKeys = (x) => {
-        if (ts.isCallExpression(x) && ts.isIdentifier(x.expression)) {
-          if (WRAPPERS.has(x.expression.text)) return;
-          if (SCOPE_MARKERS.has(x.expression.text) && x.arguments.length >= 1) {
-            const key = permissionLiteral(x.arguments[0], consts);
-            if (key === null) unresolved++;
-            else keys.add(key);
-          }
-        }
-        ts.forEachChild(x, findKeys);
-      };
-      ts.forEachChild(n.body, findKeys);
-
-      if (keys.size === 1 && unresolved === 0) {
-        const collected = [];
-        const findCalls = (x) => {
-          if (ts.isCallExpression(x) && ts.isIdentifier(x.expression) && WRAPPERS.has(x.expression.text)) return;
-          if (ts.isCallExpression(x)) {
-            const callee = x.expression;
-            if (ts.isPropertyAccessExpression(callee) && CLIENT_METHOD[callee.name.text] && x.arguments.length > 0) {
-              const candidates = pathCandidates(x.arguments[0], consts)
-                .map(normalizePath)
-                .filter((p) => p !== null);
-              for (const path of candidates)
-                collected.push({
-                  method: CLIENT_METHOD[callee.name.text],
-                  path,
-                  ambiguous: candidates.length > 1,
-                });
-            }
-          }
-          ts.forEachChild(x, findCalls);
-        };
-        ts.forEachChild(n.body, findCalls);
-
-        if (collected.length > 0) {
-          const disjunctive = hasDisjunctiveEnabled(n.body);
-          const unique = new Map();
-          for (const c of collected) {
-            const key = `${c.method} ${c.path}`;
-            const entry = { ...c, ambiguous: c.ambiguous || disjunctive };
-            if (!unique.has(key)) unique.set(key, entry);
-            else if (entry.ambiguous) unique.get(key).ambiguous = true;
-          }
+  const visitReads = (n) => {
+    if (
+      ts.isCallExpression(n) &&
+      ts.isIdentifier(n.expression) &&
+      READ_HOOKS.has(n.expression.text) &&
+      n.arguments.length >= 1
+    ) {
+      const options = n.arguments[0];
+      const calls = callsIn(options, consts, fns);
+      if (calls.length > 0) {
+        const enabled = enabledExpression(options);
+        const locals = gateLocalsIn(enclosingFunction(n), consts);
+        const keys = enabled === undefined ? new Set() : keysGating(enabled, locals, consts);
+        if (keys.size === 1) {
+          const disjunctive = /\|\|/.test(enabled.getText());
           scope.push({
             file: relPath,
             line: lineOf(sf, n),
-            hook: ts.isFunctionDeclaration(n) && n.name ? n.name.text : enclosingName(n),
-            via: "useCan/usePermissionGate",
-            kind: "scope",
+            hook: enclosingName(n),
+            via: `${n.expression.text} enabled:`,
+            kind: "read",
             permission: [...keys][0],
-            calls: [...unique.values()],
+            calls: calls.map((c) => ({ ...c, ambiguous: c.ambiguous || disjunctive })),
+          });
+        } else if (keys.size === 0) {
+          ungated.push({
+            file: relPath,
+            line: lineOf(sf, n),
+            hook: enclosingName(n),
+            via: n.expression.text,
+            calls,
           });
         }
       }
     }
-    ts.forEachChild(n, visitScopes);
+    ts.forEachChild(n, visitReads);
   };
-  ts.forEachChild(sf, visitScopes);
+  ts.forEachChild(sf, visitReads);
 
-  return { wrapper, scope };
+  return { wrapper, scope, ungated };
 }
 
 function collectSites(rootDir) {
   const wrapper = [];
   const scope = [];
+  const ungated = [];
   let scanned = 0;
   for (const dir of SCAN_DIRS) {
     for (const file of walk(join(rootDir, dir), isFrontendSource)) {
       const src = readFileSync(file, "utf8");
-      if (!/useGatedQuery|useAuthorizedMutation|usePermissionGate|useCan\s*[<(]/.test(src)) continue;
+      if (!/useGatedQuery|useAuthorizedMutation|use(?:Infinite|Suspense)?Query\s*[<(]/.test(src)) continue;
       scanned++;
       const sf = parseFile(file, file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
       const rel = relative(rootDir, file).replace(/\\/g, "/");
       const result = scanFrontendFile(rel, sf);
       wrapper.push(...result.wrapper);
       scope.push(...result.scope);
+      ungated.push(...result.ungated);
     }
   }
-  return { wrapper, scope, scanned };
+  return { wrapper, scope, ungated, scanned };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -955,7 +1012,7 @@ function runSelfTest() {
     );
   }
 
-  // (g) a SCOPE function with an unconditional gate is still checked
+  // (g) a read whose `enabled` consults the gate binds and is checked
   {
     const { scope } = scan(`export function useTeamExpenses() {
       const can = useCan("support:tickets:view");
@@ -963,19 +1020,73 @@ function runSelfTest() {
     }`);
     const { mismatches } = classify(scope, bySegments);
     assert(
-      "(g) an unconditional useCan scope binds and is checked",
+      "(g) a useCan local referenced by enabled binds that read",
       mismatches.length === 1 && mismatches[0].declared === "hr:expenses:view",
     );
   }
 
-  // (h) two gate keys in one scope is not a binding
+  // (h) two gate keys in one `enabled` is not a single binding
   {
     const { scope } = scan(`export function useTwo() {
       const a = useCan("support:tickets:view");
       const b = useCan("support:tickets:create");
       return useQuery({ enabled: a && b, queryKey: ["x"], queryFn: () => apiClient.get("/hr/expenses/page-data") });
     }`);
-    assert("(h) a scope with two gate keys is not bound at all", scope.length === 0);
+    assert("(h) a read gated on two keys is not bound to either", scope.length === 0);
+  }
+
+  // (h2) THE FALSE BINDING THIS RULE EXISTS TO REFUSE — AssetReturnsPage.
+  // A page-level `useCan` used only for rendering does not gate the read
+  // beside it, and a lexical rule reported three mismatches here.
+  {
+    const { scope, ungated } = scan(
+      `export function AssetReturnsPage() {
+        const isAdmin = useCan("hr:employees:manage");
+        const { data } = useQuery({ queryKey: ["ar"], queryFn: () => apiClient.get("/hr/expenses/page-data") });
+        return isAdmin ? data : null;
+      }`,
+      "features/hr/x.tsx",
+    );
+    assert("(h2) a useCan that never reaches `enabled` binds nothing", scope.length === 0);
+    assert("(h2) that read is reported as ungated instead", ungated.length === 1);
+  }
+
+  // (h3) a raw useMutation is never bound by a useCan in the same function
+  {
+    const { scope } = scan(`export function usePage() {
+      const can = useCan("support:tickets:view");
+      const m = useMutation({ mutationFn: (b) => apiClient.post("/support/tickets", b) });
+      return { can, m };
+    }`);
+    assert("(h3) useMutation has no `enabled`, so it is never scope-bound", scope.length === 0);
+  }
+
+  // (h3b) PER-FUNCTION SCOPING. Two hooks in one file each name their gate
+  // `can`; a file-wide map attributed both reads to the last key parsed.
+  {
+    const { scope } = scan(`export function useA() {
+      const can = useCan("support:tickets:view");
+      return useQuery({ enabled: can, queryKey: ["a"], queryFn: () => apiClient.get("/support/tickets") });
+    }
+    export function useB() {
+      const can = useCan("support:tickets:create");
+      return useQuery({ enabled: can, queryKey: ["b"], queryFn: () => apiClient.get("/support/tickets") });
+    }`);
+    const byHook = new Map(scope.map((s) => [s.hook, s.permission]));
+    assert(
+      "(h3b) two same-named gate locals in one file keep their own keys",
+      byHook.get("useA") === "support:tickets:view" && byHook.get("useB") === "support:tickets:create",
+    );
+  }
+
+  // (h4) usePermissionGate destructured into `enabled` still binds
+  {
+    const { scope } = scan(`export function useGated() {
+      const gate = usePermissionGate("support:tickets:view");
+      return useQuery({ enabled: gate.allowed, queryKey: ["x"], queryFn: () => apiClient.get("/hr/expenses/page-data") });
+    }`);
+    const { mismatches } = classify(scope, bySegments);
+    assert("(h4) a usePermissionGate local referenced by enabled binds", mismatches.length === 1);
   }
 
   // (i) a route with no declared permission is not a mismatch
@@ -1082,7 +1193,7 @@ if (!backendAvailable)
 
 const { routes: backendRoutes, stats: backendStats } = buildBackendIndex(BACKEND_ROOT);
 const bySegments = indexBySegments(backendRoutes);
-const { wrapper, scope, scanned } = collectSites(ROOT);
+const { wrapper, scope, ungated, scanned } = collectSites(ROOT);
 
 const wrapperResult = classify(wrapper, bySegments);
 const scopeResult = classify(scope, bySegments);
@@ -1103,7 +1214,8 @@ const floors = floorFailures({
 console.log(`Backend controllers indexed   ${backendStats.controllers} (${backendRoutes.size} routes, ${backendStats.unresolved} handler(s) unresolved)`);
 console.log(`Frontend files scanned        ${scanned}`);
 console.log(`WRAPPER gate sites            ${wrapper.length}  matched ${wrapperResult.tally.matched}  mismatch ${wrapperResult.mismatches.length}  ambiguous ${wrapperResult.tally.ambiguous}  unresolved-route ${wrapperResult.tally.unresolvedRoute}  no-path ${wrapperResult.tally.noPath}  route-unpermissioned ${wrapperResult.tally.unpermissionedRoute}`);
-console.log(`SCOPE gate sites              ${scope.length}  matched ${scopeResult.tally.matched}  mismatch ${scopeResult.mismatches.length}  ambiguous ${scopeResult.tally.ambiguous}  unresolved-route ${scopeResult.tally.unresolvedRoute}  route-unpermissioned ${scopeResult.tally.unpermissionedRoute}`);
+console.log(`ENABLED gate sites            ${scope.length}  matched ${scopeResult.tally.matched}  mismatch ${scopeResult.mismatches.length}  ambiguous ${scopeResult.tally.ambiguous}  unresolved-route ${scopeResult.tally.unresolvedRoute}  route-unpermissioned ${scopeResult.tally.unpermissionedRoute}`);
+console.log(`Reads with no permission in \`enabled\`  ${ungated.length}  (not this gate's failure — see --list)`);
 
 if (floors.length > 0) {
   console.error("");
@@ -1155,6 +1267,21 @@ if (process.argv.includes("--list")) {
   const unresolved = [...wrapperResult.unresolved, ...scopeResult.unresolved];
   console.log(`\n${unresolved.length} binding(s) whose route did not resolve against the controllers:`);
   for (const u of unresolved) console.log(`   ${u.file}:${u.line}  ${u.hook}  ${u.call}  (gates ${u.permission})`);
+
+  // Reads whose `enabled` consults no permission at all. This gate cannot fail
+  // on them — it checks WHICH key, not WHETHER there is one, and
+  // check-gated-reads.mjs owns that question for hooks/api. It is printed
+  // because that gate scans only hooks/api, so a permissioned read sitting in
+  // features/** or app/** is invisible to both without this line.
+  const permissionedUngated = [];
+  for (const u of ungated)
+    for (const c of u.calls) {
+      const hit = resolveRoute(bySegments, c.method, c.path);
+      if (hit && hit.route.value.permission !== null)
+        permissionedUngated.push(`   ${u.file}:${u.line}  ${u.hook}  ${c.method} ${c.path}  route requires ${hit.route.value.permission}`);
+    }
+  console.log(`\n${permissionedUngated.length} read(s) on a permissioned route whose \`enabled\` consults no permission:`);
+  for (const line of permissionedUngated) console.log(line);
 }
 
 let failed = false;
