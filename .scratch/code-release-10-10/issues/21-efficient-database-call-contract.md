@@ -11,6 +11,14 @@ its blindness is now ratcheted in both directions and bite-proved hermetically. 
 recorded ACTIONABLE with their exact batched form, deliberately not fixed (owners/scope stated in the report).
 Box 2 and box 3 remain open. Report: `reports/21b-n-plus-one-gate-blind-spot.md`.
 
+**Session status 2026-09-03 (fifth pass):** the three open boxes were RE-MEASURED from scratch with an
+AST scan rather than inherited from the gate, and the gate was found to have **four** more detector gaps —
+one of them total: **every `this.cache.*` call was invisible, so the entire cache half of box 1's clause had
+never been enforced at all** (188 call sites). 18 growing-loop N+1s fixed, 4 of which were also box-2
+missing-tenant-predicate defects (two on an unauthenticated public e-sign route). A second gate ships,
+`check:n1-growing-loops`, **explicitly ratcheted at 106** — that is a ratchet, not a clean bill.
+Report: `reports/21c-ast-denominator-and-gate-blindness.md`.
+
 **Status:** partial — 6 of 9 closed, 3 partial. **A-4 IS DONE (2026-09-03, commit `5bdacef8`)** — `clients/client-accounts.service.ts` `reassignAccounts` is one `bulkUpdateFromValues` instead of one UPDATE per assignee. Measured as `streamline_app` under RLS on all four tenants: **505 -> 9 statements** on the 89.93% tenant (65 -> 6, 13 -> 6, 8 -> 6 on the others) and **41,958 -> 32,936 buffer blocks (-21.5%)**, with the sign holding on every tenant. `check:db-call-count` exit 0, ACTIONABLE 40 -> 39 files. Box 2 does NOT close on it — R-6 / R-6b / R-6c remain. Report: `reports/47-a4-a5-clients-n1-and-negative-tests.md`. FOURTH PASS (2026-09-03) did not close a box; it repaired the GATE, which had been red at HEAD and, more importantly, blind. `check:db-call-count` skipped **2,417 of 4,765 loop openers (50.7%), across 753 files**, with no body inspection at all — every braceless loop body, which is the shape CLAUDE.md §6 mandates, plus `Promise.all(xs.map((x) => this.db...))`, whose opener leaves a paren open so `parenBalance >= 0` counted it as closed. It now inspects 2,739 and ratchets that number. Gate rc 1 -> **rc 0**. Report: `reports/21-db-call-contract.md`. Third pass (2026-09-03) batched three more per-row call sites, deleted a per-candidate probe that could never match a row, converted two more write paths to `bulkUpdateFromValues`, gave five more read-then-write pairs their tenant predicate, reconciled the N+1 baseline with what the source now does (ACTIONABLE 44 -> 40), and **recorded the four decisions** boxes 1, 4, 7 and 8 were waiting on. Boxes 1, 4, 7 and 8 are closed as RECORDED DECISIONS — the decision and its consequences are written below; no code was guessed at for them.
 
 **2026-09-03 residual-risk register: one of the three recorded N+1s is NO LONGER BLOCKED.** `clients/client-accounts.service.ts:483` is **A-4 ASSIGNABLE** (the lane that held it has committed; last commit `9d840a1f`; batched form already written down). Boxes 2/3/5 otherwise carry residuals **R-6 / R-6b / R-6c / R-7 / R-7b / R-7c**, each with an owner and a deadline. See `reports/residual-risk-register.md` §1.3, §3.5.
@@ -40,7 +48,46 @@ Box 2 and box 3 remain open. Report: `reports/21b-n-plus-one-gate-blind-spot.md`
    ticket's, and not fixable in service code at all.
 
 - [ ] Relationship, permission, unread, attachment, assignee and metadata lookups are batched with joins, CTEs or bounded multi-key queries. No database or cache call inside a growing loop.
-   PARTIAL (fourth pass, 2026-09-03): 14 N+1s removed in total, and — more consequentially — **the gate that scores this box was measured and was blind to half of it**.
+   PARTIAL (FIFTH PASS, 2026-09-03) — DENOMINATOR RE-DERIVED, NOT INHERITED. Report:
+   `reports/21c-ast-denominator-and-gate-blindness.md`.
+   MY OWN NUMBER, AND THE METHOD. An AST pass (`typescript` parser) over 2,109 service files: **5,058 loop
+   nodes; 251 loops contain a db/cache call; 37 in excluded CRM/inventory.** In release scope, before fixing
+   anything: **124 GROWING sites across 89 files**, 16 FIXED, 68 PAGING. GROWING vs FIXED is decided on the
+   iteration SOURCE expression, which is the distinction a line scanner cannot make and the one that wrecked
+   the earlier denominators: `for (const a of PURGE_ADAPTERS)` (9 adapters, forever 9 queries) and
+   `for (const row of rows)` (one query per tenant row) are the same shape to a regex. FIXED = pinned by a
+   literal reachable from the site (array/object literal, in-file OR IMPORTED const array, enum, `i < <number>`).
+   PAGING = no iteration source (`for(;;)`/`while`/`do`) or a chunked stride `i += CHUNK` — one PAGE per pass,
+   which is the bounded form §5.1 asks for. Three refinements each moved the number and are named in the report:
+   `const rows = []` + `rows.push(x)` is GROWING not "a literal of length 0" (ten real per-row loops read as
+   fixed-size-ZERO without it); a `...Cache` receiver that is a `new Map()` is not a round trip (five in-process
+   TTL sweeps were reported as N+1s); and `i += CHUNK` is the chunked bulk write box 3 ASKS for.
+   All 158 candidates were then READ ONE BY ONE: **70 REAL-N1, 88 not.** **After this pass: 106 across 78 files.**
+   THE GATE HAD FOUR MORE GAPS, one of them total. (1) **EVERY `this.cache.*` CALL WAS INVISIBLE** — the pattern
+   requires the literal `cacheService` and this repo writes `this.cache.…`, 188 call sites, so the cache half of
+   this clause had NEVER been enforced. (2) `db.selectDistinct(` never matched (the alternation matches `select`
+   then demands `\s*\(`, and the next char is `D`). (3) A helper receiving the handle with no directly preceding
+   `await` never matched — i.e. `ids.map((id) => helper(this.db, id))`, 56 sites/42 files. (4) Found while proving
+   1-3: a ONE-LINE loop whose body is on the opener line was inspected by NO path, since all of them start at
+   line i+1. All four fixed and pinned by self-tests; `--self-test` 37 -> 44 checks. Bite-proved hermetically
+   (`git archive HEAD src` into a temp dir, nothing planted in the shared tree): 5 planted defects score
+   **old=0 new=1**, 3 known-good shapes score 0 on both, and a cache N+1 planted into a file marked N+1-FIXED
+   reds the new gate while drawing **0 regressions** from the pre-change detector. Cost, stated: two false
+   positives where the identifier `cache` names an in-process Map, both classified with the reason.
+   NEW GATE, EXPLICITLY RATCHETED: `pnpm check:n1-growing-loops`, **MAX_GROWING_SITES = 106**. THIS IS A RATCHET,
+   NOT A CLEAN BILL — 106 real sites remain; green means "no new N+1", not "there are none". Its second ratchet
+   is the important one: `MIN_LOOP_NODES = 4800` counts loop nodes PARSED, because counting FINDINGS cannot catch
+   a detector that stops looking — proved by narrowing the iteration methods to `forEach`, which drops findings to
+   **94** (under the ratchet, reads as an improvement) and reds on coverage at 1,460 nodes.
+   FIXED HERE (18 sites): six cache fan-outs now one variadic DEL per chunk of 256 via new
+   `CacheService.invalidateMany` / `invalidateNamespaceMany` / `bustMembershipStatusCacheMany` (the widest,
+   `access/entitlements`, read members at `.limit(10000)`, so one module toggle could fan out to 10,000 Redis
+   commands); `cron-hr` x3 uniform-SET loops -> one `inArray` UPDATE; `kb-page-tree` and
+   `org-membership-access-revocation` outbox fan-outs -> `emitMany`; `build-due-sweep` one `selectDistinct` per
+   ending sprint -> one grouped read; `cron-organization` one inviter SELECT per expired invitation -> one
+   `inArray` read; `ownership-transfer-expiry` -> one `resolveMembershipUserIdMap`; `surveys/survey-builder.reorder`
+   -> two `bulkUpdateFromValues`; both `e-sign/sign-public` loops -> one tenant-scoped UPDATE each.
+   PRIOR PASS (fourth, 2026-09-03): 14 N+1s removed in total, and — more consequentially — **the gate that scores this box was measured and was blind to half of it**.
    THE BLIND SPOT, MEASURED AND FIXED. The third pass routed a "line-scoped matching" defect citing 397 vs 566 files.
    That figure measures the PATTERNS standalone, not the gate, and window-joining already existed (`bodySoFar`). The real
    defect is different and larger: `detectLoopDbCalls` discarded any loop opener with no `{` on its line via one
@@ -142,7 +189,27 @@ Box 2 and box 3 remain open. Report: `reports/21b-n-plus-one-gate-blind-spot.md`
    `approvals-bulk`). Blocker: TOOL (the per-row work is a service call, unmatchable by any pattern detector).
    Owner: hr and timesheets owners. Deadline: 2026-09-17.**
 - [ ] Existence and authorization probes use tenant-correlated indexed predicates with `LIMIT 1` — never a fetch or a count when only existence is needed.
-   PARTIAL: ~54 probes fixed in total. THIRD PASS added five read-then-write pairs, each verified individually
+   PARTIAL (FIFTH PASS, 2026-09-03) — POPULATIONS RE-MEASURED BY AST, and one prior number does not reproduce.
+   Over 2,109 files: **4,759 select/find chains, 2,148 probes** (`limit(1)` or `findFirst`).
+   **count-for-existence: 1** (the ticket previously said 10 — that does not reproduce).
+   **fetch-for-existence: 58 sites / 44 files** (`findFirst` with no `columns:` projection whose result is only
+   presence-tested — it reads every column to answer a yes/no).
+   **projected read with NO `limit(1)`, result only presence-tested: 280 sites / 178 files.**
+   **probe whose WHERE names no org column: 216 sites / 131 files** — this is a CANDIDATE LIST, NOT A DEFECT
+   LIST: platform tables, `@Public()` e-sign routes and user-level probes legitimately have no org column, and
+   RLS is live (899 relations), so a missing explicit predicate is defence-in-depth rather than automatically a
+   hole. It was not individually adjudicated.
+   FIXED HERE — four sites that were simultaneously a box-1 N+1 and a box-2 missing tenant predicate, i.e. an
+   UPDATE keyed on a surrogate id alone that discards the authorization the preceding read performed:
+   `e-sign/sign-public.ts` `adopt()` and `complete()` ran `UPDATE sign_fields WHERE id = ?` once per row **on an
+   unauthenticated public route**; both now collapse to ONE UPDATE carrying
+   `org_id + recipient_id + field_type + completed_at IS NULL`, which also deletes the `findMany` that existed
+   only to drive the loop. `cron-hr`'s certifications and documents sweeps gained `org_id`; its third sweep
+   writes `users`, which has NO `org_id` column, so that one stays keyed on id and the commit says so.
+   CHECKED, NOT ASSUMED (the composite-FK-NULL trap): `sign_fields.org_id` is NOT NULL and `(org_id, id)` is
+   unique, so the composite FKs there really are enforced. Repo-wide that does NOT hold — see the routed
+   FK-NULL finding under "cross-territory" below.
+   PRIOR PASS: ~54 probes fixed in total. THIRD PASS added five read-then-write pairs, each verified individually
    against its preceding read and not swept: `hr-document-templates.setDefault` and `.updateVersion` (both had
    `existing.orgId` in hand and used it in the sibling statement one line above), `hr-interviewers.cancelBookingLink`,
    and `projects-ticket-checklists.updateChecklistItem` / `.deleteChecklistItem` (the 404 was decided in
@@ -196,7 +263,22 @@ Box 2 and box 3 remain open. Report: `reports/21b-n-plus-one-gate-blind-spot.md`
    regression and no measured win. Reopen with a route-budget measurement, not with a preference.
 
 - [ ] Bulk insert/update/upsert is used instead of one write per row, with conflict-safe unique keys and batches under documented lock and payload limits.
-   PARTIAL: six `bulkUpdateFromValues` call sites now, up from four. THIRD PASS converted
+   PARTIAL (FIFTH PASS, 2026-09-03) — MEASURED: of the 106 growing-loop sites that remain, **39 are per-row
+   writes** (`insert`/`update`/`delete`). That is the box-3 population, derived from the same AST pass as box 1.
+   CONVERTED HERE: `surveys/survey-builder.reorder` (one UPDATE per section and one per question of the request
+   payload -> two `bulkUpdateFromValues`, org_id mandatory in the helper and survey_id in `extraWhere`);
+   `cron-hr` x3 (uniform SET -> one `inArray` UPDATE); two outbox fan-outs -> `OutboxWriter.emitMany`.
+   DOCUMENTED BATCH LIMITS, new: `CacheService.INVALIDATE_KEY_CHUNK = 256` keys per variadic `DEL`, chosen
+   because the Upstash REST transport puts the whole command in one request body, so an unbounded key list is an
+   unbounded payload — and a failed chunk then drops only its own keys.
+   A DUPLICATE-KEY TRAP, closed rather than inherited: `bulkUpdateFromValues` THROWS on a repeated key (a
+   duplicate joins the target row twice and Postgres applies one arbitrary row while silently discarding the
+   rest). The per-row reorder loop it replaced was last-write-wins, so `reorder` collapses duplicates to the LAST
+   occurrence first — without that, a payload repeating an id becomes a 500. Pinned by a spec.
+   NOT CONVERTED, deliberately: `workflows/engine/workflow-runner`'s dead-letter branch. Its per-row `duration_ms`
+   is computed from the TARGET row (`EXTRACT(EPOCH FROM (now() - started_at))`), which `bulkUpdateFromValues`
+   cannot express, and it fires at most 50 times per sweep. Recorded rather than forced.
+   PRIOR PASS: six `bulkUpdateFromValues` call sites now, up from four. THIRD PASS converted
    `projects-write.updateProject`'s member-removal reassignment (it grouped open tickets by target assignee and
    issued one UPDATE per group) and `module-checklist`'s seed reconciliation. **The helper also gained its first
    spec** — `src/common/db/bulk-update.spec.ts` pins the four properties it exists to guarantee and that nothing
@@ -253,6 +335,24 @@ Box 2 and box 3 remain open. Report: `reports/21b-n-plus-one-gate-blind-spot.md`
    `idleInTransactionBorrows` on `GET /health/db` are exactly the signal that says whether the interceptor's
    design is costing anything in production, and the storage upload path is the one site where the arithmetic
    already says it must (90 s of polling against a 60 s idle timeout).
+
+**CROSS-TERRITORY, ROUTED 2026-09-03 (fifth pass) — not fixable in this ticket's territory:**
+**FK-NULL — a composite FK is not enforced when any of its columns is NULL (Postgres MATCH SIMPLE).** Scanned
+every composite FK in `src/db/schema`, scoped per table: **827 composite FKs, 452 with at least one nullable
+referencing column, and 14 with a nullable `org_id`** — the sharp case, because the tenant half of the key then
+buys nothing. **BUT the declaration has drifted from the database:** checked read-only against
+`scratch_perf_seed` (at head, RLS live), all ten sampled tables have `org_id` **NOT NULL** in the live schema.
+So the FKs are enforced in production today and what exists is declared-vs-live drift — the Drizzle type is
+`string | null`, code is written against a nullable org, and a fresh bootstrap FROM THE DECLARATION would create
+a nullable column and silently unenforce 14 composite FKs at once. `audit_logs` is the one deliberate case and
+already defends it with two CHECK constraints including `actor_membership_id IS NULL OR org_id IS NOT NULL`;
+that is the pattern the other 13 lack. Blocker: **schema/migration territory**. Adding `.notNull()` to match the
+live DB is a pure declaration alignment with no migration, but it narrows `string | null -> string` across the
+codebase and would surface typecheck errors in other lanes' in-flight files mid-release. Owner: migration owner.
+**MOCK-SURFACE — `pnpm check:mock-surface` is RED at head and it is NOT this ticket's.** One phantom
+`delByPrefix()` on a `CacheService` double in `organization-custom-domains-404.spec.ts`, from commit `142db50b`
+(2026-09-03). Proved pre-existing: it fails identically on a clean `git archive HEAD` tree. Owner: organization
+module owner.
 
 - [x] Slow-query fingerprints, call counts, rows read/returned, buffers and lock waits are captured without logging sensitive bind values.
    Closed to 5 of 6. Was 1 of 6: the query text was used for a two-way seam bucket then discarded, so "call count" could only mean "how many statements ran". Now normalised (every literal, `$n` and IN-list collapsed to `?`), hashed and counted per shape with rows returned, max/total duration, slow calls, and 55P03/40P01/40001/57014 classified as lock wait, deadlock and timeout; exposed on `GET /health/db`. Rows *read* and buffers need an `EXPLAIN` per statement and stay offline in `run-read-cost-budgets.mjs` — recorded, not pretended. The no-bind-values half verified rather than assumed: `redact.ts` strips Drizzle's `params:` line out of the error *message* (where the values ride, not on a property), and a test asserts a PAN and a salary never appear in an exposed fingerprint. `pnpm check:log-secrets` rc=0 at 3,540 files.
