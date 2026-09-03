@@ -749,3 +749,102 @@ deleted after the counts were taken; neither repository carries one.
 | 9 | prove with a module-graph tool, confirm with a real build | **CLOSED (backend)** — `nest build` exit 0. Frontend build recorded in §6 |
 | 10 | before/after counts recorded | **CLOSED** — §1, §2, §3 |
 | 11 | no authorization, validation, cache, outbox, observability, a11y, SEO or error state removed | **CLOSED** — §5; two would-be violations caught and converted to `WIRE` |
+
+---
+
+## Pass 2026-09-03 — boxes 2, 3 and 6 closed; box 7 characterised
+
+### Box 3 — the 32 ledgered dead exports are discharged
+
+Backend commit `6c2377ef3`. **31 symbols removed, 1 reclassified `WIRE`**, and every ledger line in
+`src/scripts/check-dead-code.mjs` deleted in the same commit — the gate's stale-verdict check exits 1 on a
+verdict knip no longer reports, so the two halves cannot be split across commits.
+
+| measurement | before | after |
+|---|---|---|
+| `pnpm check:dead-code` | exit 1 (2 unclassified) | **exit 0** |
+| knip findings | 38 | **7** |
+| ledger verdicts | 34 (1 KEEP · 1 WIRE · 32 REMOVE) | **5** (1 KEEP · 2 WIRE · 2 REMOVE) |
+| importer graph | 9,818 files / 68,314 edges | 9,820 / 68,345 |
+
+Proof chain, in order: `pnpm exec knip --no-progress` (module graph, never a text search) ·
+`pnpm check:dead-code` exit 0 · self-test exit 0 · `pnpm typecheck` exit 0 · `pnpm check:spec-typecheck` exit 0 ·
+**`pnpm build` (`nest build`) exit 0** · focused jest over every touched module, `--runInBand
+--testPathPattern="(gdpr-export|notification-delivery|common/tenant|ai/core/streaming|crm-meeting-brief|async-hop|query-fingerprint)"`
+→ **24 suites / 231 tests, exit 0**.
+
+Removed: 4 barrel lines from `common/tenant/index.ts`, 2 from `common/observability/index.ts`, 2 re-exports from
+`db/query-telemetry.ts`, **16** from `ai/core/streaming/index.ts` (a 35-line barrel collapsed to 8), the 5-line
+GDPR chain, and 2 notification symbols. `knip.json` sets `ignoreExportsUsedInFile: true`, which is why removing a
+barrel line does not cascade: every source symbol behind one is either imported directly by its real consumers or
+used inside its own file. Verified per symbol before removing, not assumed.
+
+**Two corrections to the ticket's own text, both found by verifying first.**
+1. The GDPR shim forwards **two** dead names, not "four names nobody imports".
+   `GENERIC_GDPR_EXPORT_EXCLUDED_SOURCES`, `REQUIRED_GDPR_EXPORT_SOURCES`, `countExportRows` and
+   `drainExportPages` are all imported through that same barrel by `gdpr-export-worker-tenant-isolation.spec.ts:6`.
+   Only `GDPR_EXPORT_SOURCE_ADAPTERS` (dead at all three hops; the source `Set` deleted) and
+   `SUBJECT_SCOPED_GDPR_EXPORT_SOURCES` (dead as a re-export, alive at `gdpr-export-adapters.ts:261`) went.
+2. `common/tenant/tenant-context.ts:getTenantAbortSignal` is **not dead** and is now `WIRE`.
+   `tenant-context.interceptor.ts:107` puts an `AbortSignal` into every request's `TenantContext` and
+   `__tests__/tenant-context.abort.spec.ts` asserts it is there; this accessor is the only reader and nothing in
+   production calls it. **Deleting it would have made a live cancellation signal unreachable.** Cross-filed to
+   tickets 11 and 13, whose "client aborts propagate through … the database" box this contradicts.
+
+**Two new findings, ledgered rather than deleted, both in held territory:**
+`ai/core/services/crm-brief-loaders.ts:loadLeadProfile`, orphaned by another lane's `1cc7ded8` — its only
+remaining reference is a key in a `jest.mock` factory, which is not an import; and
+`notifications/dto/provider-result.schemas.ts:providerValidationResultSchema`, exposed when its only reader was
+removed. The second carries the larger finding: it is the Zod contract for `NotificationProvider.validateConfig()`,
+which is declared on the provider interface, implemented by **five** providers, and **called from nowhere in
+`src/`** — a whole seam with no caller, invisible to knip because interface members are not exports.
+
+### Box 2 — unused-symbol enforcement: a recorded decision, not a cleanup
+
+**The finding that settles it is tool capability.** `--noUnusedParameters` **cannot** enforce this box, because
+TypeScript exempts any identifier beginning with `_` and there is no switch. Bite-proved in a hermetic scratch file
+(`tsc --noEmit --strict --noUnusedLocals --noUnusedParameters probe.ts`, exit 2): `withUnderscore(_a, _b)` reported
+nothing while `withoutUnderscore(a, b)` reported two TS6133; the local `_hidden` **was** reported; and neither
+`catch (_e)` nor `catch (e)` was reported at all.
+
+Only ESLint can enforce it, and only with the three `^_` patterns deleted. Measured at head, both repos, with
+`--rule '{"@typescript-eslint/no-unused-vars":["error",{"args":"all","caughtErrors":"all"}]}' -f json`, exit 1 both:
+
+| repo | violations | files | begin with `_` | already visible today |
+|---|---|---|---|---|
+| backend (`src test evals`) | 2,087 | 900 | **1,623** | 464 |
+| frontend (`.`) | 2,099 | 996 | **1,289** | 810 |
+| **total** | **4,186** | **1,896** | **2,912 (69.6%)** | 1,274 |
+
+tsc floors, both exit 2: `-p tsconfig.build.json` → **289 errors / 194 files**; `-p tsconfig.json` (spec-inclusive)
+→ **475 / 318, 124 of them spec files**. The build config hides 186 errors and 124 files.
+
+**DECISION: not enabled**, and written into shared `CLAUDE.md` §6 beside the `noUncheckedIndexedAccess` entry so it
+is not re-decided a fourth time. Reasons: the flags cannot deliver the box's actual rule; enabling them in
+`tsconfig.build.json` would report "on" over a set that excludes `test/`, `evals/` and 1,930 specs; and reddening
+`pnpm typecheck` by 289 errors breaks the one gate every agent in this release runs.
+
+### Box 6 — `as unknown as` in specs: a mocking-strategy decision
+
+Application code is a hard zero and both ledgers are green: backend `pnpm check:type-assertions` exit 0 (3,569
+files, 26 double casts in 16 files, `as any` / `@ts-ignore` / `@ts-expect-error` / `@ts-nocheck` all **0**);
+frontend exit 0 (4,260 files, 7 sites in 6 files, same four at **0**).
+
+The spec population, measured rather than quoted: **2,756 `as unknown as` across 960 backend spec files** (the
+2,637 previously in circulation is stale — it grew by 119 as specs were added this release) and 19 across 15
+frontend test files. **1,337 of the 2,756 — 48.5% — are the single expression `as unknown as Db`**, followed by
+`AccessService` 140, `CacheService` 79, `AuditService` 72, `Redis` 50, `ExecutionContext` 44. One idiom used 2,756
+times, not 2,756 contract bypasses. Replacing it means adopting a typed partial-mock helper across ~1,930 spec
+files in modules every other lane holds. **Not attempted, deliberately**, and the caveat is on the record: the
+gates scan application code only, so the spec-side casts are counted here and enforced nowhere.
+
+### Box 7 — still open, and the box is wrong for 13 of the 33 sites
+
+Five of six clauses are closed and enforced. What is missing is the per-site negative test, blocked on two things:
+the 13 `narrow-me` sites (8 backend + 5 frontend) have a *recorded remedy of deleting the cast* — a Zod parse for
+the four jsonb round-trips, `Number(row.count)` for the two raw `db.execute` rows, a generic type parameter on the
+layout renderer for the four `RecordValue` sites — so a negative test there would certify a cast that must not
+survive; and most of the 20 `external` sites are in another lane's harnesses or are compile-time seams a runtime
+test cannot reach. The genuinely testable in-scope remainder is five casts in three files:
+`common/observability/tracing.ts`, `modules/platform/operator-session.guard.ts` and `db/query-telemetry.ts`.
+**Not run: no negative test was written this pass.**
