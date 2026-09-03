@@ -90,7 +90,6 @@ interface PaginatedAdjustments {
 interface SectionParams {
   cursor?: string;
   limit?: number;
-  preview?: boolean;
 }
 
 export function usePayrollInputPeriods(params?: { cursor?: string; limit?: number; status?: HrPayrollInputStatus }) {
@@ -169,7 +168,6 @@ function makeSectionHook(section: string) {
     const queryParams = {
       ...(params?.cursor !== undefined && { cursor: params.cursor }),
       ...(params?.limit !== undefined && { limit: params.limit }),
-      ...(params?.preview && { preview: "true" }),
     };
     return useQuery({
       queryKey: queryKeys.hrPayrollInputs.section(periodId, section, queryParams),

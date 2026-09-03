@@ -73,6 +73,7 @@ export function PortalTicketDetailPage({ portalTicketId }: PortalTicketDetailPag
 
   const isClosed = ticket.status === "RESOLVED" || ticket.status === "CLOSED";
   const currentUserId = session?.user?.id;
+  const descriptionIsOpeningMessage = ticket.messages[0]?.body === ticket.description;
 
   return (
     <PageWrapper
@@ -104,7 +105,7 @@ export function PortalTicketDetailPage({ portalTicketId }: PortalTicketDetailPag
 
         <ScrollArea hideScrollbar className="min-h-0 flex-1">
           <div className="overscroll-contain space-y-3 py-3">
-          {ticket.description && (
+          {ticket.description && !descriptionIsOpeningMessage && (
             <div className="bg-muted/30 rounded-lg p-3 text-sm whitespace-pre-wrap">{ticket.description}</div>
           )}
           {ticket.messages.length === 0 ? (

@@ -108,7 +108,6 @@ type AddAttachmentInput = {
   projectId?: number;
   fileName: string;
   fileUrl: string;
-  fileKey?: string;
   fileSize: number;
   mimeType: string;
 };
@@ -120,11 +119,10 @@ export function useAddAttachment(
   return useMutation<{ id: number }, Error, AddAttachmentInput>({
     ...options,
     mutationKey: ["projects", "tickets", "attachments", "add"],
-    mutationFn: ({ ticketId, projectId = 0, fileName, fileUrl, fileKey, fileSize, mimeType }) =>
+    mutationFn: ({ ticketId, projectId = 0, fileName, fileUrl, fileSize, mimeType }) =>
       apiClient.post<{ id: number }>(`/build/${projectId}/tickets/${ticketId}/attachments`, {
         fileName,
         fileUrl,
-        fileKey,
         fileSize,
         mimeType,
       }),

@@ -53,7 +53,6 @@ type PolicyPreviewInput = {
   templateId?: number;
   toggleOverrides?: Record<string, boolean>;
   country?: string;
-  currency?: string;
   payDay?: number;
   startMonth?: string;
 };

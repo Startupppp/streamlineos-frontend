@@ -64,11 +64,10 @@ export function StepReview({ draft, goNext, goBack }: StepReviewProps) {
       templateKey: draft.templateKey ?? undefined,
       toggleOverrides: toOverridesRecord(draft.toggleOverrides),
       country: draft.profile?.country,
-      currency: draft.profile?.currency,
       payDay: draft.profile?.payDay,
       startMonth: draft.profile?.startMonth,
     });
-  }, [draft.profile?.country, draft.profile?.currency, draft.profile?.payDay, draft.profile?.startMonth, draft.templateKey, draft.toggleOverrides, previewMutate]);
+  }, [draft.profile?.country, draft.profile?.payDay, draft.profile?.startMonth, draft.templateKey, draft.toggleOverrides, previewMutate]);
 
   function handleRetry() {
     calledRef.current = false;
@@ -76,7 +75,6 @@ export function StepReview({ draft, goNext, goBack }: StepReviewProps) {
       templateKey: draft.templateKey ?? undefined,
       toggleOverrides: toOverridesRecord(draft.toggleOverrides),
       country: draft.profile?.country,
-      currency: draft.profile?.currency,
       payDay: draft.profile?.payDay,
       startMonth: draft.profile?.startMonth,
     });
