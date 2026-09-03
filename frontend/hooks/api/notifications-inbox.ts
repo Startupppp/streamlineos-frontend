@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  useInfiniteQuery,
-  useQuery,
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useMutation } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
@@ -22,22 +17,22 @@ import {
 } from "./notifications-shared";
 import { NOTIFICATION_FALLBACK_INTERVAL_MS } from "@/lib/query-request-policies";
 import {
-  type NotifListSnapshot,
-  isInfiniteData,
-  isNotificationList,
   snapshotAndPatchLists,
-  restoreListSnapshots,
   snapshotAndRemoveFromLists,
   snapshotAndRemoveFromListsMulti,
   snapshotAndPatchUnified,
   snapshotAndRemoveFromUnified,
-  findInLists,
 } from "./notifications-inbox-cache";
-
-type NotifMutationContext = {
-  previousLists: NotifListSnapshot[];
-  previousCount: UnreadCount | undefined;
-};
+import {
+  type NotifMutationContext,
+  type NotificationAck,
+  applyUnreadDelta,
+  beginInboxPatch,
+  countUnreadAmong,
+  isUnreadNow,
+  restoreInboxSnapshot,
+  useNotificationRowPatch,
+} from "./notifications-inbox-optimistic";
 
 export const useNotifications = (
   params?: NotificationListParams,
@@ -146,389 +141,205 @@ export const useUnreadNotificationCount = (
 
 export const useMarkNotificationRead = () => {
   const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
-  return useMutation<{ success: boolean }, Error, number, NotifMutationContext>({
+  return useMutation<NotificationAck, Error, number, NotifMutationContext>({
     mutationKey: ["notifications", "mark-read"],
-    mutationFn: (id) => apiClient.patch<{ success: boolean }>(`/notifications/${id}/read`),
+    mutationFn: (id) => apiClient.patch<NotificationAck>(`/notifications/${id}/read`),
     onMutate: async (id) => {
-      const listKey = queryKeys.notifications.lists();
-      const unreadKey = queryKeys.notifications.unreadCount();
-      await queryClient.cancelQueries({ queryKey: listKey });
-      await queryClient.cancelQueries({ queryKey: unreadKey });
-      const previousCount = queryClient.getQueryData<UnreadCount>(unreadKey);
-      const found = findInLists(queryClient, listKey, (n) => n.id === id);
-      const wasUnread = found !== undefined && !found.isRead;
-      const previousLists = snapshotAndPatchLists(
-        queryClient,
-        listKey,
-        (n) => (n.id === id ? { ...n, isRead: true } : n),
-      );
-      const previousUnified = snapshotAndPatchUnified(
-        queryClient,
-        queryKeys.inbox.all,
-        (item) => (item.id === id ? { ...item, isRead: true } : item),
-      );
-      if (wasUnread)
-        queryClient.setQueryData<UnreadCount>(unreadKey, (old) =>
-          old ? { count: Math.max(0, old.count - 1) } : old,
-        );
-      return { previousLists: [...previousLists, ...previousUnified], previousCount };
+      const { listKey, unreadKey, previousCount } = await beginInboxPatch(queryClient);
+      const cleared = isUnreadNow(queryClient, listKey, id) ? 1 : 0;
+      const previousLists = [
+        ...snapshotAndPatchLists(queryClient, listKey, (n) =>
+          n.id === id ? { ...n, isRead: true } : n,
+        ),
+        ...snapshotAndPatchUnified(queryClient, queryKeys.inbox.all, (item) =>
+          item.id === id ? { ...item, isRead: true } : item,
+        ),
+      ];
+      applyUnreadDelta(queryClient, unreadKey, cleared);
+      return { previousLists, previousCount };
     },
-    onError: (_err, _id, context) => {
-      if (!context) return;
-      restoreListSnapshots(queryClient, context.previousLists);
-      if (context.previousCount !== undefined)
-        queryClient.setQueryData(queryKeys.notifications.unreadCount(), context.previousCount);
-    },
+    onError: (_err, _id, context) => restoreInboxSnapshot(queryClient, context),
     onSettled: () => invalidateInbox(),
   });
 };
 
 export const useMarkAllNotificationsRead = () => {
   const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
-  return useMutation<{ success: boolean }, Error, void, NotifMutationContext>({
+  return useMutation<NotificationAck, Error, void, NotifMutationContext>({
     mutationKey: ["notifications", "mark-all-read"],
-    mutationFn: () => apiClient.patch<{ success: boolean }>("/notifications/read-all"),
+    mutationFn: () => apiClient.patch<NotificationAck>("/notifications/read-all"),
     onMutate: async () => {
-      const listKey = queryKeys.notifications.lists();
-      const unreadKey = queryKeys.notifications.unreadCount();
-      await queryClient.cancelQueries({ queryKey: listKey });
-      await queryClient.cancelQueries({ queryKey: unreadKey });
-      const previousCount = queryClient.getQueryData<UnreadCount>(unreadKey);
-      const previousLists = snapshotAndPatchLists(
-        queryClient,
-        listKey,
-        (n) => ({ ...n, isRead: true }),
-      );
-      const previousUnified = snapshotAndPatchUnified(
-        queryClient,
-        queryKeys.inbox.all,
-        (item) => ({ ...item, isRead: true }),
-      );
+      const { listKey, unreadKey, previousCount } = await beginInboxPatch(queryClient);
+      const previousLists = [
+        ...snapshotAndPatchLists(queryClient, listKey, (n) => ({ ...n, isRead: true })),
+        ...snapshotAndPatchUnified(queryClient, queryKeys.inbox.all, (item) => ({
+          ...item,
+          isRead: true,
+        })),
+      ];
       queryClient.setQueryData<UnreadCount>(unreadKey, { count: 0 });
-      return { previousLists: [...previousLists, ...previousUnified], previousCount };
+      return { previousLists, previousCount };
     },
-    onError: (_err, _vars, context) => {
-      if (!context) return;
-      restoreListSnapshots(queryClient, context.previousLists);
-      if (context.previousCount !== undefined)
-        queryClient.setQueryData(queryKeys.notifications.unreadCount(), context.previousCount);
-    },
+    onError: (_err, _vars, context) => restoreInboxSnapshot(queryClient, context),
     onSettled: () => invalidateInbox(),
   });
 };
 
 export const useArchiveNotification = () => {
   const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
-  return useMutation<{ success: boolean }, Error, number, NotifMutationContext>({
+  return useMutation<NotificationAck, Error, number, NotifMutationContext>({
     mutationKey: ["notifications", "archive"],
-    mutationFn: (id) => apiClient.patch<{ success: boolean }>(`/notifications/${id}/archive`),
+    mutationFn: (id) => apiClient.patch<NotificationAck>(`/notifications/${id}/archive`),
     onMutate: async (id) => {
-      const listKey = queryKeys.notifications.lists();
-      const unreadKey = queryKeys.notifications.unreadCount();
-      await queryClient.cancelQueries({ queryKey: listKey });
-      await queryClient.cancelQueries({ queryKey: unreadKey });
-      const previousCount = queryClient.getQueryData<UnreadCount>(unreadKey);
-      const found = findInLists(queryClient, listKey, (n) => n.id === id);
-      const wasUnread = found !== undefined && !found.isRead;
-      const previousLists = snapshotAndPatchLists(
-        queryClient,
-        listKey,
-        (n) => (n.id === id ? { ...n, archivedAt: new Date().toISOString() } : n),
-      );
-      const previousUnified = snapshotAndRemoveFromUnified(
-        queryClient,
-        queryKeys.inbox.all,
-        new Set([id]),
-      );
-      if (wasUnread)
-        queryClient.setQueryData<UnreadCount>(unreadKey, (old) =>
-          old ? { count: Math.max(0, old.count - 1) } : old,
-        );
-      return { previousLists: [...previousLists, ...previousUnified], previousCount };
+      const { listKey, unreadKey, previousCount } = await beginInboxPatch(queryClient);
+      const cleared = isUnreadNow(queryClient, listKey, id) ? 1 : 0;
+      const previousLists = [
+        ...snapshotAndPatchLists(queryClient, listKey, (n) =>
+          n.id === id ? { ...n, archivedAt: new Date().toISOString() } : n,
+        ),
+        ...snapshotAndRemoveFromUnified(queryClient, queryKeys.inbox.all, new Set([id])),
+      ];
+      applyUnreadDelta(queryClient, unreadKey, cleared);
+      return { previousLists, previousCount };
     },
-    onError: (_err, _id, context) => {
-      if (!context) return;
-      restoreListSnapshots(queryClient, context.previousLists);
-      if (context.previousCount !== undefined)
-        queryClient.setQueryData(queryKeys.notifications.unreadCount(), context.previousCount);
-    },
-    onSettled: () => invalidateInbox(),
-  });
-};
-
-export const useUnarchiveNotification = () => {
-  const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
-  return useMutation<{ success: boolean }, Error, number, NotifMutationContext>({
-    mutationKey: ["notifications", "unarchive"],
-    mutationFn: (id) => apiClient.patch<{ success: boolean }>(`/notifications/${id}/unarchive`),
-    onMutate: async (id) => {
-      const listKey = queryKeys.notifications.lists();
-      await queryClient.cancelQueries({ queryKey: listKey });
-      const previousLists = snapshotAndPatchLists(queryClient, listKey,
-        (n) => (n.id === id ? { ...n, archivedAt: null } : n));
-      return { previousLists, previousCount: undefined };
-    },
-    onError: (_err, _id, context) => {
-      if (!context) return;
-      restoreListSnapshots(queryClient, context.previousLists);
-    },
+    onError: (_err, _id, context) => restoreInboxSnapshot(queryClient, context),
     onSettled: () => invalidateInbox(),
   });
 };
 
 export const useDeleteNotification = () => {
   const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
-  return useMutation<{ success: boolean }, Error, number, NotifMutationContext>({
+  return useMutation<NotificationAck, Error, number, NotifMutationContext>({
     mutationKey: ["notifications", "delete"],
-    mutationFn: (id) => apiClient.delete<{ success: boolean }>(`/notifications/${id}`),
+    mutationFn: (id) => apiClient.delete<NotificationAck>(`/notifications/${id}`),
     onMutate: async (id) => {
-      const listKey = queryKeys.notifications.lists();
-      const unreadKey = queryKeys.notifications.unreadCount();
-      await queryClient.cancelQueries({ queryKey: listKey });
-      await queryClient.cancelQueries({ queryKey: unreadKey });
-      const previousCount = queryClient.getQueryData<UnreadCount>(unreadKey);
-      const found = findInLists(queryClient, listKey, (n) => n.id === id);
-      const wasUnread = found !== undefined && !found.isRead;
+      const { listKey, unreadKey, previousCount } = await beginInboxPatch(queryClient);
+      const cleared = isUnreadNow(queryClient, listKey, id) ? 1 : 0;
       const previousLists = snapshotAndRemoveFromLists(queryClient, listKey, id);
-      if (wasUnread)
-        queryClient.setQueryData<UnreadCount>(unreadKey, (old) =>
-          old ? { count: Math.max(0, old.count - 1) } : old,
-        );
+      applyUnreadDelta(queryClient, unreadKey, cleared);
       return { previousLists, previousCount };
     },
-    onError: (_err, _id, context) => {
-      if (!context) return;
-      restoreListSnapshots(queryClient, context.previousLists);
-      if (context.previousCount !== undefined)
-        queryClient.setQueryData(queryKeys.notifications.unreadCount(), context.previousCount);
-    },
+    onError: (_err, _id, context) => restoreInboxSnapshot(queryClient, context),
     onSettled: () => invalidateInbox(),
   });
 };
 
-export const usePinNotification = () => {
-  const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
-  return useMutation<{ success: boolean }, Error, number, NotifMutationContext>({
+export const useUnarchiveNotification = () =>
+  useNotificationRowPatch<number>({
+    mutationKey: ["notifications", "unarchive"],
+    request: (id) => apiClient.patch<NotificationAck>(`/notifications/${id}/unarchive`),
+    patch: (id) => (n) => (n.id === id ? { ...n, archivedAt: null } : n),
+  });
+
+export const usePinNotification = () =>
+  useNotificationRowPatch<number>({
     mutationKey: ["notifications", "pin"],
-    mutationFn: (id) => apiClient.patch<{ success: boolean }>(`/notifications/${id}/pin`),
-    onMutate: async (id) => {
-      const listKey = queryKeys.notifications.lists();
-      await queryClient.cancelQueries({ queryKey: listKey });
-      const previousLists = snapshotAndPatchLists(queryClient, listKey,
-        (n) => (n.id === id ? { ...n, pinned: true } : n));
-      return { previousLists, previousCount: undefined };
-    },
-    onError: (_err, _id, context) => {
-      if (!context) return;
-      restoreListSnapshots(queryClient, context.previousLists);
-    },
-    onSettled: () => invalidateInbox(),
+    request: (id) => apiClient.patch<NotificationAck>(`/notifications/${id}/pin`),
+    patch: (id) => (n) => (n.id === id ? { ...n, pinned: true } : n),
   });
-};
 
-export const useUnpinNotification = () => {
-  const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
-  return useMutation<{ success: boolean }, Error, number, NotifMutationContext>({
+export const useUnpinNotification = () =>
+  useNotificationRowPatch<number>({
     mutationKey: ["notifications", "unpin"],
-    mutationFn: (id) => apiClient.patch<{ success: boolean }>(`/notifications/${id}/unpin`),
-    onMutate: async (id) => {
-      const listKey = queryKeys.notifications.lists();
-      await queryClient.cancelQueries({ queryKey: listKey });
-      const previousLists = snapshotAndPatchLists(queryClient, listKey,
-        (n) => (n.id === id ? { ...n, pinned: false } : n));
-      return { previousLists, previousCount: undefined };
-    },
-    onError: (_err, _id, context) => {
-      if (!context) return;
-      restoreListSnapshots(queryClient, context.previousLists);
-    },
-    onSettled: () => invalidateInbox(),
+    request: (id) => apiClient.patch<NotificationAck>(`/notifications/${id}/unpin`),
+    patch: (id) => (n) => (n.id === id ? { ...n, pinned: false } : n),
   });
-};
 
-export const useSnoozeNotification = () => {
-  const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
-  return useMutation<{ success: boolean }, Error, { id: number; snoozedUntil: string }, NotifMutationContext>({
+export const useSnoozeNotification = () =>
+  useNotificationRowPatch<{ id: number; snoozedUntil: string }>({
     mutationKey: ["notifications", "snooze"],
-    mutationFn: ({ id, snoozedUntil }) =>
-      apiClient.patch<{ success: boolean }>(`/notifications/${id}/snooze`, { snoozedUntil }),
-    onMutate: async ({ id, snoozedUntil }) => {
-      const listKey = queryKeys.notifications.lists();
-      await queryClient.cancelQueries({ queryKey: listKey });
-      const previousLists = snapshotAndPatchLists(queryClient, listKey,
-        (n) => (n.id === id ? { ...n, snoozedUntil } : n));
-      return { previousLists, previousCount: undefined };
-    },
-    onError: (_err, _vars, context) => {
-      if (!context) return;
-      restoreListSnapshots(queryClient, context.previousLists);
-    },
-    onSettled: () => invalidateInbox(),
+    request: ({ id, snoozedUntil }) =>
+      apiClient.patch<NotificationAck>(`/notifications/${id}/snooze`, { snoozedUntil }),
+    patch:
+      ({ id, snoozedUntil }) =>
+      (n) =>
+        n.id === id ? { ...n, snoozedUntil } : n,
   });
-};
 
 export const useBulkMarkRead = () => {
   const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
-  return useMutation<{ success: boolean }, Error, number[], NotifMutationContext>({
+  return useMutation<NotificationAck, Error, number[], NotifMutationContext>({
     mutationKey: ["notifications", "bulk-mark-read"],
     mutationFn: (ids) =>
-      apiClient.post<{ success: boolean }>("/notifications/bulk/read", { ids }),
+      apiClient.post<NotificationAck>("/notifications/bulk/read", { ids }),
     onMutate: async (ids) => {
       const idSet = new Set(ids);
-      const listKey = queryKeys.notifications.lists();
-      const unreadKey = queryKeys.notifications.unreadCount();
-      await queryClient.cancelQueries({ queryKey: listKey });
-      await queryClient.cancelQueries({ queryKey: unreadKey });
-      const previousCount = queryClient.getQueryData<UnreadCount>(unreadKey);
-      const unreadIds = new Set<number>();
-      const entries = queryClient.getQueriesData<unknown>({ queryKey: listKey });
-      for (const [, data] of entries) {
-        if (data === undefined) continue;
-        if (isInfiniteData<Notification[]>(data)) {
-          for (const page of data.pages)
-            for (const n of page)
-              if (idSet.has(n.id) && !n.isRead) unreadIds.add(n.id);
-        } else if (isNotificationList(data)) {
-          for (const n of data)
-            if (idSet.has(n.id) && !n.isRead) unreadIds.add(n.id);
-        }
-      }
-      const previousLists = snapshotAndPatchLists(
-        queryClient,
-        listKey,
-        (n) => (idSet.has(n.id) ? { ...n, isRead: true } : n),
-      );
-      const previousUnified = snapshotAndPatchUnified(
-        queryClient,
-        queryKeys.inbox.all,
-        (item) => (idSet.has(item.id) ? { ...item, isRead: true } : item),
-      );
-      if (unreadIds.size > 0)
-        queryClient.setQueryData<UnreadCount>(unreadKey, (old) =>
-          old ? { count: Math.max(0, old.count - unreadIds.size) } : old,
-        );
-      return { previousLists: [...previousLists, ...previousUnified], previousCount };
+      const { listKey, unreadKey, previousCount } = await beginInboxPatch(queryClient);
+      const cleared = countUnreadAmong(queryClient, listKey, idSet);
+      const previousLists = [
+        ...snapshotAndPatchLists(queryClient, listKey, (n) =>
+          idSet.has(n.id) ? { ...n, isRead: true } : n,
+        ),
+        ...snapshotAndPatchUnified(queryClient, queryKeys.inbox.all, (item) =>
+          idSet.has(item.id) ? { ...item, isRead: true } : item,
+        ),
+      ];
+      applyUnreadDelta(queryClient, unreadKey, cleared);
+      return { previousLists, previousCount };
     },
-    onError: (_err, _ids, context) => {
-      if (!context) return;
-      restoreListSnapshots(queryClient, context.previousLists);
-      if (context.previousCount !== undefined)
-        queryClient.setQueryData(queryKeys.notifications.unreadCount(), context.previousCount);
-    },
+    onError: (_err, _ids, context) => restoreInboxSnapshot(queryClient, context),
     onSettled: () => invalidateInbox(),
   });
 };
 
 export const useBulkArchive = () => {
   const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
-  return useMutation<{ success: boolean }, Error, number[], NotifMutationContext>({
+  return useMutation<NotificationAck, Error, number[], NotifMutationContext>({
     mutationKey: ["notifications", "bulk-archive"],
     mutationFn: (ids) =>
-      apiClient.post<{ success: boolean }>("/notifications/bulk/archive", { ids }),
+      apiClient.post<NotificationAck>("/notifications/bulk/archive", { ids }),
     onMutate: async (ids) => {
       const idSet = new Set(ids);
-      const listKey = queryKeys.notifications.lists();
-      const unreadKey = queryKeys.notifications.unreadCount();
-      await queryClient.cancelQueries({ queryKey: listKey });
-      await queryClient.cancelQueries({ queryKey: unreadKey });
-      const previousCount = queryClient.getQueryData<UnreadCount>(unreadKey);
-      const unreadIds = new Set<number>();
-      const entries = queryClient.getQueriesData<unknown>({ queryKey: listKey });
-      for (const [, data] of entries) {
-        if (data === undefined) continue;
-        if (isInfiniteData<Notification[]>(data)) {
-          for (const page of data.pages)
-            for (const n of page)
-              if (idSet.has(n.id) && !n.isRead) unreadIds.add(n.id);
-        } else if (isNotificationList(data)) {
-          for (const n of data)
-            if (idSet.has(n.id) && !n.isRead) unreadIds.add(n.id);
-        }
-      }
+      const { listKey, unreadKey, previousCount } = await beginInboxPatch(queryClient);
+      const cleared = countUnreadAmong(queryClient, listKey, idSet);
       const archivedAt = new Date().toISOString();
-      const previousLists = snapshotAndPatchLists(
-        queryClient,
-        listKey,
-        (n) => (idSet.has(n.id) ? { ...n, archivedAt } : n),
-      );
-      const previousUnified = snapshotAndRemoveFromUnified(
-        queryClient,
-        queryKeys.inbox.all,
-        idSet,
-      );
-      if (unreadIds.size > 0)
-        queryClient.setQueryData<UnreadCount>(unreadKey, (old) =>
-          old ? { count: Math.max(0, old.count - unreadIds.size) } : old,
-        );
-      return { previousLists: [...previousLists, ...previousUnified], previousCount };
+      const previousLists = [
+        ...snapshotAndPatchLists(queryClient, listKey, (n) =>
+          idSet.has(n.id) ? { ...n, archivedAt } : n,
+        ),
+        ...snapshotAndRemoveFromUnified(queryClient, queryKeys.inbox.all, idSet),
+      ];
+      applyUnreadDelta(queryClient, unreadKey, cleared);
+      return { previousLists, previousCount };
     },
-    onError: (_err, _ids, context) => {
-      if (!context) return;
-      restoreListSnapshots(queryClient, context.previousLists);
-      if (context.previousCount !== undefined)
-        queryClient.setQueryData(queryKeys.notifications.unreadCount(), context.previousCount);
-    },
+    onError: (_err, _ids, context) => restoreInboxSnapshot(queryClient, context),
     onSettled: () => invalidateInbox(),
   });
 };
 
 export const useBulkDelete = () => {
   const { invalidateInbox, queryClient } = useNotificationInboxInvalidation();
-  return useMutation<{ success: boolean }, Error, number[], NotifMutationContext>({
+  return useMutation<NotificationAck, Error, number[], NotifMutationContext>({
     mutationKey: ["notifications", "bulk-delete"],
     mutationFn: (ids) =>
-      apiClient.post<{ success: boolean }>("/notifications/bulk/delete", { ids }),
+      apiClient.post<NotificationAck>("/notifications/bulk/delete", { ids }),
     onMutate: async (ids) => {
       const idSet = new Set(ids);
-      const listKey = queryKeys.notifications.lists();
-      const unreadKey = queryKeys.notifications.unreadCount();
-      await queryClient.cancelQueries({ queryKey: listKey });
-      await queryClient.cancelQueries({ queryKey: unreadKey });
-      const previousCount = queryClient.getQueryData<UnreadCount>(unreadKey);
-      const unreadIds = new Set<number>();
-      const entries = queryClient.getQueriesData<unknown>({ queryKey: listKey });
-      for (const [, data] of entries) {
-        if (data === undefined) continue;
-        if (isInfiniteData<Notification[]>(data)) {
-          for (const page of data.pages)
-            for (const n of page)
-              if (idSet.has(n.id) && !n.isRead) unreadIds.add(n.id);
-        } else if (isNotificationList(data)) {
-          for (const n of data)
-            if (idSet.has(n.id) && !n.isRead) unreadIds.add(n.id);
-        }
-      }
+      const { listKey, unreadKey, previousCount } = await beginInboxPatch(queryClient);
+      const cleared = countUnreadAmong(queryClient, listKey, idSet);
       const previousLists = snapshotAndRemoveFromListsMulti(queryClient, listKey, idSet);
-      if (unreadIds.size > 0)
-        queryClient.setQueryData<UnreadCount>(unreadKey, (old) =>
-          old ? { count: Math.max(0, old.count - unreadIds.size) } : old,
-        );
+      applyUnreadDelta(queryClient, unreadKey, cleared);
       return { previousLists, previousCount };
     },
-    onError: (_err, _ids, context) => {
-      if (!context) return;
-      restoreListSnapshots(queryClient, context.previousLists);
-      if (context.previousCount !== undefined)
-        queryClient.setQueryData(queryKeys.notifications.unreadCount(), context.previousCount);
-    },
+    onError: (_err, _ids, context) => restoreInboxSnapshot(queryClient, context),
     onSettled: () => invalidateInbox(),
   });
 };
 
 export const useApproveNotification = () => {
   const { invalidateInbox } = useNotificationInboxInvalidation();
-  return useMutation<{ success: boolean }, Error, number>({
+  return useMutation<NotificationAck, Error, number>({
     mutationKey: ["notifications", "approve"],
-    mutationFn: (id) => apiClient.post<{ success: boolean }>(`/notifications/${id}/approve`),
+    mutationFn: (id) => apiClient.post<NotificationAck>(`/notifications/${id}/approve`),
     onSettled: () => invalidateInbox(),
   });
 };
 
 export const useRejectNotification = () => {
   const { invalidateInbox } = useNotificationInboxInvalidation();
-  return useMutation<{ success: boolean }, Error, number>({
+  return useMutation<NotificationAck, Error, number>({
     mutationKey: ["notifications", "reject"],
-    mutationFn: (id) => apiClient.post<{ success: boolean }>(`/notifications/${id}/reject`),
+    mutationFn: (id) => apiClient.post<NotificationAck>(`/notifications/${id}/reject`),
     onSettled: () => invalidateInbox(),
   });
 };
