@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { BACKEND_ROOT, backendAvailable, backendUnreachableReason } from "./check-repo-paths.mjs";
 
 const FRONTEND_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const REPO_ROOT = resolve(FRONTEND_ROOT, "..");
@@ -11,17 +12,23 @@ const FRONTEND_CONTRACT = join(FRONTEND_ROOT, "contracts", "openapi.json");
 
 /**
  * Where the backend's generated artifact lives depends on the checkout layout.
- * A monorepo checkout puts it at `<repo>/backend/`; two sibling clones put it at
- * `<repo>/../streamlineos-backend/`. Hardcoding only the first made this gate
- * exit 1 with "missing" on a sibling layout — loud, but still a gate that never
- * compared the two files. Resolve the candidates and report which one was used,
- * so a green result names the artifact it actually read.
+ * This gate used to guess relative depths of its own AND read a private env var
+ * `STREAMLINEOS_BACKEND_ROOT` -- one letter different from the
+ * `STREAMLINE_BACKEND_ROOT` every other frontend gate honours, so the documented
+ * override silently did nothing here while a hardcoded `../streamlineos-backend`
+ * guess answered instead. Measured 2026-09-03: with STREAMLINE_BACKEND_ROOT
+ * pointed at a nonexistent directory this gate still exited 0, comparing against
+ * a checkout the operator had explicitly overridden away from.
+ *
+ * The shared resolver in check-repo-paths.mjs is now the first and authoritative
+ * source, so a wrong override fails loudly rather than resolving elsewhere. The
+ * legacy env var and the monorepo layout stay as fallbacks so an existing
+ * invocation keeps working, and the resolved path is printed either way.
  */
 const BACKEND_CANDIDATES = [
+  backendAvailable ? join(BACKEND_ROOT, "openapi.json") : null,
   process.env.STREAMLINEOS_BACKEND_ROOT ? join(process.env.STREAMLINEOS_BACKEND_ROOT, "openapi.json") : null,
   join(REPO_ROOT, "backend", "openapi.json"),
-  join(REPO_ROOT, "..", "streamlineos-backend", "openapi.json"),
-  join(REPO_ROOT, "..", "backend", "openapi.json"),
 ].filter((p) => p !== null);
 
 export function resolveBackendArtifact(candidates, exists) {
@@ -119,13 +126,21 @@ if (!existsSync(FRONTEND_CONTRACT)) {
 }
 
 if (BACKEND_ARTIFACT === null) {
-  console.error("✖  the backend's openapi.json is missing — cannot verify vendored copy.");
-  console.error("   This check requires both repos to be checked out. Looked in:");
+  /**
+   * Exit 2, not 1. Every cross-repository gate here uses 2 for INCONCLUSIVE -- the rule could
+   * not be checked because a named prerequisite is absent -- and 1 only for a real violation.
+   * This gate used to exit 1 for both, so CI had to wrap it in `continue-on-error: true` to
+   * tolerate the frontend-only checkout, and that flag then also swallowed a genuinely STALE
+   * vendored contract. Splitting the codes is what lets the step block again.
+   */
+  console.error("INCONCLUSIVE — check-contract-vendor: the backend's openapi.json could not be located,");
+  console.error("   so the vendored copy was NOT compared against anything. Looked in:");
   for (const c of BACKEND_CANDIDATES) console.error(`     ${c}`);
-  console.error("   Set STREAMLINEOS_BACKEND_ROOT to point at the backend checkout, or");
-  console.error("   in a frontend-only CI checkout skip this check and run");
-  console.error("   check-contract-drift.mjs against the vendored copy instead.");
-  process.exit(1);
+  console.error(`   ${backendUnreachableReason()}`);
+  console.error("   Set STREAMLINE_BACKEND_ROOT to point at the backend checkout, or");
+  console.error("   in a frontend-only CI checkout rely on check:contract-drift, which is blocking");
+  console.error("   and reads the vendored copy directly.");
+  process.exit(2);
 }
 
 const result = compareFiles(FRONTEND_CONTRACT, BACKEND_ARTIFACT);

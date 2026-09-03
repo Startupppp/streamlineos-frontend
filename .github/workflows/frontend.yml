@@ -371,19 +371,30 @@ jobs:
       # a comparison that never happened into a green tick, which is the exact
       # defect this ticket exists to remove. To make it blocking, add a checkout
       # of the backend repository and set STREAMLINE_BACKEND_ROOT to it.
+      #
+      # 2026-09-03 (v2 ticket 30) — `continue-on-error: true` REMOVED. It swallowed exit 2
+      # (prerequisite absent) and exit 1 (rule-2/3 violated, which need no sibling) alike, so a
+      # real disagreement between the manifest and the sidebar could never fail this job.
+      # `run-gate.mjs` keeps the tolerance for the absent checkout and restores the bite.
+      # MEASURED 2026-09-03: two-repo layout exit 0; STREAMLINE_BACKEND_ROOT pointed at a
+      # nonexistent directory exit 2, and run-gate turns that into a warning annotation + exit 0.
       - name: Module manifest agrees with the sidebar and vocabulary
         if: ${{ !cancelled() }}
-        continue-on-error: true
-        run: pnpm run check:module-manifest:self-test && pnpm run check:module-manifest
+        run: >-
+          node scripts/run-gate.mjs check:module-manifest:self-test check:module-manifest
+          --prerequisite "a checkout of Startupppp/streamlineos-backend beside this repository (set STREAMLINE_BACKEND_ROOT)"
 
       # CANNOT RUN IN CI — same named prerequisite as the step above. MEASURED
       # 2026-09-03: frontend-only checkout exit 2, "INCONCLUSIVE — the
       # manifest-vs-controller comparison — the entire point of this gate could
       # not run"; two-repo layout exit 0.
+      # 2026-09-03 (v2 ticket 30) — `continue-on-error: true` REMOVED, same reasoning and same
+      # measurement as the step above: exit 0 in a two-repo layout, exit 2 with no sibling.
       - name: Home manifest agrees with the dashboard controller
         if: ${{ !cancelled() }}
-        continue-on-error: true
-        run: pnpm run check:home-manifest:self-test && pnpm run check:home-manifest
+        run: >-
+          node scripts/run-gate.mjs check:home-manifest:self-test check:home-manifest
+          --prerequisite "a checkout of Startupppp/streamlineos-backend beside this repository (set STREAMLINE_BACKEND_ROOT)"
 
       - name: Every route-access permission names a real endpoint
         if: ${{ !cancelled() }}
@@ -476,9 +487,14 @@ jobs:
       # getting shorter, which is a ratchet moved to make a number smaller.
       # Aligning by tightening costs exactly one new row. §7 lists its exceptions
       # and tests are not among them. All three are other tickets' files.
+      # BLOCKING as of 2026-09-03 (v2 ticket 30). The three files the note above named are all
+      # under the limit now. RE-MEASURED at head, hermetically (this gate reads no sibling
+      # repository): self-test exit 0, gate exit 0 — "5342 files scanned — all within 500 lines
+      # (0 exceptions registered)", plus two CRM/Inventory files reported informationally and
+      # excluded from the count by PRD scope. This file's own rule is to delete the
+      # continue-on-error when the number is no longer above the line, so it is deleted.
       - name: Files over 500 lines
         if: ${{ !cancelled() }}
-        continue-on-error: true
         run: pnpm run check:file-sizes:self-test && pnpm run check:file-sizes
 
       # v2 ticket 01 / PRD-C017. The traceability manifest, enforced rather than
@@ -520,6 +536,23 @@ jobs:
       # three exports (project-charts CHART_COLORS, mail-compose-sheet
       # MailComposeMode, media-image-schema MediaImageQuery) and all three are
       # gone — the number is one, and the step comment now says one.
+      # 2026-09-03 (v2 ticket 30) — TWO LAYERS OF "CANNOT FAIL" ARE STACKED HERE. This step is
+      # allow-failure, AND the knip run underneath it is blind: knip.json lists
+      # `**/*.test.{ts,tsx}`, `**/*.spec.{ts,tsx}` and `**/__tests__/**` as `entry`, so any
+      # production file kept alive only by its own test is reachable and cannot be reported.
+      # MEASURED at head: knip as configured reports 2 unused files; with the spec globs out of
+      # `entry`/`project` and `jest: false` it reports 8. Corrected config and the classified
+      # list: .scratch/code-release-10-10-v2/reports/30-knip-reach/.
+      # NOT FIXED HERE — the reach fix and the 8-file classification are one atomic change and
+      # the files belong to other lanes.
+      #
+      # RE-MEASURED and the flag KEPT. rc=1, still exactly ONE
+      # unclassified export, and it is the same one: features/chat/chat-helpers.ts:resolveFileUrl
+      # (types/projects/shared.ts:PaginatedResponse named above is resolved). Baseline files=0
+      # exports=0, current files=0 exports=0 — the ratchet is clean and was NOT raised to absorb
+      # this. OWNER: the chat feature lane; features/** is outside the gates territory, so
+      # ticket 30 may not record the verdict itself. Registered in NON_BLOCKING_BY_DESIGN in
+      # check-gate-wiring.mjs, which now fails if this entry outlives the failure.
       - name: Every export is classified and no classification is stale
         if: ${{ !cancelled() }}
         continue-on-error: true
@@ -532,6 +565,10 @@ jobs:
       # 807617 over 524288, /calendar 728786 over 524288, /chat
       # measuredPageChunkBytes=224885 over 204800. Real findings, ticket 22/26
       # territory. Still allow-failure because 17 is not zero.
+      # 2026-09-03 (v2 ticket 30) — RE-MEASURED and the flag KEPT. rc=1, 15 breaches (was 17),
+      # e.g. /crm/leads measuredScriptBytes=773117 over 524288, /parties 618550 over 524288.
+      # Measured bytes over declared budgets. OWNER: tickets 22/26. Registered in
+      # NON_BLOCKING_BY_DESIGN.
       - name: Route bundle bytes stay within their declared ceiling
         if: ${{ !cancelled() }}
         continue-on-error: true
@@ -539,9 +576,13 @@ jobs:
 
       # Measured rc=1: 1 business route handler, app/api/media/image/route.ts.
       # Root CLAUDE.md §5 permits only the NextAuth route. Real finding.
+      # BLOCKING as of 2026-09-03 (v2 ticket 30). The note above recorded one business route
+      # handler, app/api/media/image/route.ts; it is allowlisted now and the gate re-checks the
+      # allowlist rather than trusting it. RE-MEASURED at head, hermetically: self-test exit 0,
+      # gate exit 0 — "No business route handlers found (655 route directories walked, 2
+      # allowlisted handlers re-checked)". Deleted per this file's own rule.
       - name: The only route.ts is NextAuth
         if: ${{ !cancelled() }}
-        continue-on-error: true
         run: pnpm run check:routes:self-test && pnpm run check:routes
 
       # The LIVE budget check, against the committed measurement set.
@@ -551,6 +592,12 @@ jobs:
       # p95 1669ms > 400 (was 1430). The mobile FCP breach the previous note
       # named is gone. Real findings, ticket 26/28. The self-test above stays
       # blocking; this reports the numbers.
+      # 2026-09-03 (v2 ticket 30) — RE-MEASURED and the flag KEPT. rc=1, ONE violation now, not
+      # two: mobile /crm/inbox CLS p75 0.109 over 0.100. Both TTFB breaches named above are gone.
+      # The route carries a written ticket-26 exception and the gate still counts it as a
+      # failure, which is the honest arrangement. OWNER: the CRM lane. The hermetic half,
+      # "Web Vitals budgets are enforceable", is a separate step and is BLOCKING.
+      # Registered in NON_BLOCKING_BY_DESIGN.
       - name: Web Vitals budgets (measured)
         if: ${{ !cancelled() }}
         continue-on-error: true
@@ -595,9 +642,16 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm run check:properties
 
-      - name: Every check:* script is wired into a workflow
+      # 2026-09-03 (v2 ticket 30) — this gate now also fails on a gate that is wired but CANNOT
+      # FAIL: one whose every invocation sits under `continue-on-error` (step-level or
+      # job-level). It found 15 such gates across the two repositories on the day it was added.
+      # The self-test is new too: the gate that decides whether every other gate can run had
+      # none. 28 assertions, each naming a specific verdict; bite-proved by neutering the
+      # job-level rule and the conservative expression rule in a temp fixture, each exiting 1
+      # and naming the assertion.
+      - name: Every check:* script is wired into a workflow and can fail
         if: ${{ !cancelled() }}
-        run: pnpm run check:gate-wiring
+        run: pnpm run check:gate-wiring:self-test && pnpm run check:gate-wiring
 
       # 2026-09-03 — the permission catalogue is now VENDORED as
       # contracts/permission-catalog.json, the same way contracts/openapi.json
@@ -629,7 +683,18 @@ jobs:
       # text says to skip it here and rely on check:contract-drift, which is
       # blocking above. To make this blocking, add a checkout of
       # Startupppp/streamlineos-backend and set STREAMLINEOS_BACKEND_ROOT to it.
+      # 2026-09-03 (v2 ticket 30) — `continue-on-error: true` REMOVED. The gate used to exit 1
+      # both when the backend artifact was absent and when the vendored copy was genuinely
+      # STALE, so the flag had to swallow both and a stale contract could ship. It now exits 2
+      # for the absent artifact (INCONCLUSIVE) and 1 only for a real hash mismatch, and run-gate
+      # splits them. The same change replaced this gate's private `STREAMLINEOS_BACKEND_ROOT`
+      # override — one letter off from the STREAMLINE_BACKEND_ROOT every other gate honours, so
+      # the documented override did nothing here — with the shared resolver.
+      # MEASURED 2026-09-03: two-repo layout exit 0, hashes equal; STREAMLINE_BACKEND_ROOT
+      # pointed at a nonexistent directory exit 2 (was exit 0 before the resolver fix, silently
+      # comparing against a checkout the operator had overridden away from).
       - name: Vendored contract is byte-identical to the backend artifact
         if: ${{ !cancelled() }}
-        continue-on-error: true
-        run: pnpm run check:contract-vendor:self-test && pnpm run check:contract-vendor
+        run: >-
+          node scripts/run-gate.mjs check:contract-vendor:self-test check:contract-vendor
+          --prerequisite "a checkout of Startupppp/streamlineos-backend carrying a generated openapi.json (set STREAMLINE_BACKEND_ROOT)"

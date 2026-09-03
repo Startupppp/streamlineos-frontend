@@ -52,7 +52,9 @@ function selfTest() {
   if (!isLocalFormatterLine(positive))
     failures.push("(a) failed to detect a known local Intl.NumberFormat");
 
+  let checksRun = 1;
   const spaced = "const f = new   Intl.NumberFormat (opts);";
+  checksRun++;
   if (!isLocalFormatterLine(spaced))
     failures.push("(b) failed to detect a whitespace-padded form");
 
@@ -60,9 +62,11 @@ function selfTest() {
     'import { formatMoney } from "@/lib/format-utils";',
     "const d = new Intl.DateTimeFormat(locale);",
     "formatMoneyCompact(value, display)",
-  ])
+  ]) {
+    checksRun++;
     if (isLocalFormatterLine(benign))
       failures.push(`(c) false positive on: ${benign}`);
+  }
 
   const block = [
     "const a = 1;",
@@ -70,10 +74,12 @@ function selfTest() {
     "const b = 2;",
   ].join("\n");
   const found = findFormatterLines(block);
+  checksRun++;
   if (found.length !== 1 || found[0].line !== 2)
     failures.push("(d) line attribution is wrong");
 
   let scanned = 0;
+  checksRun++;
   for (const _file of walkFiles(ROOT)) scanned += 1;
   if (scanned < 500)
     failures.push(`(e) the walk found only ${scanned} files — it is not scanning the tree`);
@@ -84,7 +90,9 @@ function selfTest() {
     process.exit(1);
   }
 
-  console.log("PASS: self-test (5 assertions)\n");
+  // Counted, not narrated: the literal "(5 assertions)" that used to sit here undercounted the
+  // (c) loop, which is three checks of its own. See v2 ticket 30.
+  console.log(`PASS: self-test (${checksRun} assertions)\n`);
   console.log("  (a) detects a local Intl.NumberFormat");
   console.log("  (b) detects a whitespace-padded form");
   console.log("  (c) no false positive on imports, DateTimeFormat or canonical helpers");

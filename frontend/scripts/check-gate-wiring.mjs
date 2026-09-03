@@ -75,6 +75,54 @@ const HELPER = /:(self-test|fix|emit|list|baseline|write|report)$/;
 const UNWIRED_BY_DESIGN = Object.freeze({});
 
 /**
+ * gate -> the reason it is invoked ONLY from steps that cannot fail their job.
+ *
+ * Added 2026-09-03 (v2 ticket 30). Until now this gate answered one question — is the gate
+ * NAMED by a run: step of a reachable job — and treated that as "wired". It is not the same
+ * question. A step carrying `continue-on-error: true` runs, prints, and then reports success
+ * whatever it found: GitHub records the job as passing and the red is a grey annotation nobody
+ * reads. Measured at head across the two repositories: 18 gate steps carried that flag, and six
+ * of them exit 2 (INCONCLUSIVE, prerequisite absent) and 1 (a real defect) INDISTINGUISHABLY,
+ * so a genuine finding could never fail CI. A gate that cannot fail is exactly the defect class
+ * this file exists to close, and it was invisible to the file itself.
+ *
+ * `continue-on-error` on the JOB counts too: it makes every step in it non-blocking.
+ *
+ * An entry must name a MEASURED reason and an owner, the same discipline as UNWIRED_BY_DESIGN.
+ * "flaky" and "not yet" are not reasons. The correct fix for a prerequisite-blocked gate is
+ * usually not this list: it is to let the step distinguish exit 2 (prerequisite absent, warn)
+ * from exit 1 (real finding, fail), which keeps the bite and still tolerates a missing sibling
+ * checkout.
+ */
+const NON_BLOCKING_BY_DESIGN = Object.freeze({
+  // All three below were MEASURED at head on 2026-09-03 (v2 ticket 30) and are RED for real
+  // findings in another territory's source. A gate wired so that it always fails gets muted
+  // within a week, which is worse than not wiring it -- so each stays reported, each names the
+  // number that must reach zero, and none has had its baseline raised to absorb the failure.
+  // The five other frontend gates that carried the flag were re-measured green or split by exit
+  // code in the same change and are blocking now.
+  "check:dead-code":
+    "rc=1 at head, ONE unclassified export -- features/chat/chat-helpers.ts:resolveFileUrl, no " +
+    "WIRE/KEEP verdict in EXPORT_VERDICTS. The RATCHET itself is clean (baseline files=0 " +
+    "exports=0, current files=0 exports=0), so nothing was baselined away. Owner: the chat " +
+    "feature lane -- features/** is outside the gates territory. Delete this entry when the " +
+    "verdict is recorded.",
+  "check:route-bundle-budget":
+    "rc=1 at head, 15 measured breaches of declared ceilings -- e.g. /crm/leads " +
+    "measuredScriptBytes=773117 over 524288, /parties 618550 over 524288. These are measured " +
+    "bytes over declared budgets, not gate noise. Owner: tickets 22/26 (route bundle work). " +
+    "Delete this entry when the breach count is zero.",
+  "check:web-vitals-budget":
+    "rc=1 at head, ONE budget violation -- mobile /crm/inbox CLS p75 0.109 over 0.100, from the " +
+    "three summary cards reflowing when their counts arrive. It carries a written ticket-26 " +
+    "exception and the gate STILL COUNTS IT AS A FAILURE, which is the honest arrangement: the " +
+    "exception explains the number, it does not erase it. Owner: the CRM lane. Note the " +
+    "hermetic half, `check:web-vitals-budget:self-test`, is a SEPARATE step and is BLOCKING. " +
+    "Delete this entry when the violation count is zero.",
+});
+
+
+/**
  * Anti-vacuity floors. A matcher that suddenly resolves nothing must FAIL, not congratulate
  * itself on zero unwired gates. Re-measured 2026-09-03 with the reachability check in place:
  * 34 gates, 6 jobs, 47 run steps in the single workflow file, all 1 reachable. The floors sit
@@ -279,6 +327,22 @@ export function unquotedColonInName(file, text) {
   return out;
 }
 
+/**
+ * Does this `continue-on-error:` value stop the step from failing its job?
+ *
+ * `true` and the string "true" plainly do. An EXPRESSION (`${{ github.event_name == 'push' }}`)
+ * is answered conservatively as YES, because this gate must not certify a step as blocking on
+ * the strength of a condition it cannot evaluate — the safe direction here is to demand a
+ * registered reason, not to assume the step bites.
+ */
+export function isContinueOnError(value) {
+  if (value === undefined || value === null || value === false) return false;
+  if (value === true) return true;
+  if (typeof value !== "string") return false;
+  const inner = value.trim().replace(/^\$\{\{/, "").replace(/\}\}$/, "").trim().toLowerCase();
+  return inner !== "false";
+}
+
 /** Whole shell tokens of a `run:` block — `a && b`, `a | b`, `a; b`, newlines, all split. */
 export function shellTokens(run) {
   return run
@@ -361,7 +425,17 @@ export function collectRunSteps(files, knownBranches = new Set(["main"])) {
         if (typeof step.run !== "string") continue;
         // `if: false` is a step pinned off. It is in the file and it never executes.
         if (isAlwaysFalse(step.if)) continue;
-        runs.push({ file, job: jobId, name: typeof step.name === "string" ? step.name : "(unnamed)", run: step.run });
+        // A step that cannot fail its job is not a gate, however well it is wired. The job's
+        // own flag makes every step under it non-blocking, so both levels are consulted.
+        const nonBlocking =
+          isContinueOnError(step["continue-on-error"]) || isContinueOnError(job["continue-on-error"]);
+        runs.push({
+          file,
+          job: jobId,
+          name: typeof step.name === "string" ? step.name : "(unnamed)",
+          run: step.run,
+          nonBlocking,
+        });
       }
     }
   }
@@ -412,7 +486,12 @@ function main() {
   }
 
   const invoked = new Set();
-  for (const step of runs) for (const token of shellTokens(step.run)) invoked.add(token);
+  const blocking = new Set();
+  for (const step of runs)
+    for (const token of shellTokens(step.run)) {
+      invoked.add(token);
+      if (!step.nonBlocking) blocking.add(token);
+    }
 
   // Whole tokens per file, across every parsed workflow including the unreachable ones. An
   // exception that names a workflow is checked against this, not against prose.
@@ -424,6 +503,15 @@ function main() {
   }
 
   const unwired = gates.filter((g) => !invoked.has(g) && !(g in UNWIRED_BY_DESIGN));
+
+  // Wired, reachable, and unable to fail. Every invocation of the gate sits in a step (or a job)
+  // carrying `continue-on-error`, so CI runs it and then reports success regardless.
+  const nonBlocking = gates.filter(
+    (g) => invoked.has(g) && !blocking.has(g) && !(g in UNWIRED_BY_DESIGN) && !(g in NON_BLOCKING_BY_DESIGN),
+  );
+  const staleNonBlocking = Object.keys(NON_BLOCKING_BY_DESIGN).filter(
+    (g) => !gates.includes(g) || blocking.has(g) || !invoked.has(g),
+  );
   const staleExceptions = Object.keys(UNWIRED_BY_DESIGN).filter(
     (g) => !gates.includes(g) || invoked.has(g),
   );
@@ -466,10 +554,29 @@ function main() {
     console.error(`  STALE EXCEPTION: ${g} — it is wired now, or no longer exists. Remove the entry.`);
   for (const g of unwired)
     console.error(`  UNWIRED: ${g} — no run: step of any reachable job invokes it, so it can never run.`);
-
-  if (unwired.length || staleExceptions.length || unreachable.length || deadJobs.length || falseReasons.length) {
+  for (const g of nonBlocking)
     console.error(
-      `\ncheck-gate-wiring: ${unwired.length} unwired, ${staleExceptions.length} stale, ` +
+      `  CANNOT FAIL: ${g} — every step invoking it carries \`continue-on-error\`, so CI reports ` +
+        "success whatever it finds. Remove the flag, or split exit 2 (prerequisite absent) from " +
+        "exit 1 (real finding), or register it in NON_BLOCKING_BY_DESIGN with a measured reason.",
+    );
+  for (const g of staleNonBlocking)
+    console.error(
+      `  STALE NON-BLOCKING EXCEPTION: ${g} — it is blocking now, unwired, or no longer exists. Remove the entry.`,
+    );
+
+  if (
+    unwired.length ||
+    nonBlocking.length ||
+    staleNonBlocking.length ||
+    staleExceptions.length ||
+    unreachable.length ||
+    deadJobs.length ||
+    falseReasons.length
+  ) {
+    console.error(
+      `\ncheck-gate-wiring: ${unwired.length} unwired, ${nonBlocking.length} cannot-fail, ` +
+        `${staleNonBlocking.length} stale non-blocking, ${staleExceptions.length} stale, ` +
         `${falseReasons.length} false reason(s), ${unreachable.length} unreachable workflow(s), ` +
         `${deadJobs.length} dead job(s) ` +
         `(searched ${runs.length} run steps across ${jobIds.length} jobs in ${files.length} workflow files).\n` +
@@ -478,15 +585,182 @@ function main() {
     );
     process.exit(1);
   }
+  const blockingGates = gates.filter((g) => blocking.has(g)).length;
   console.log(
-    `check-gate-wiring: ${gates.length} gates, all invoked by a run: step of a reachable job ` +
+    `check-gate-wiring: ${gates.length} gates, ${blockingGates} of them able to FAIL the job ` +
+      `(${Object.keys(NON_BLOCKING_BY_DESIGN).length} registered non-blocking), ` +
+      `all invoked by a run: step of a reachable job ` +
       `(${runs.length} run steps across ${jobIds.length} jobs in ${files.length} workflow files, ` +
       `all ${files.length} reachable, ${Object.keys(UNWIRED_BY_DESIGN).length} deliberate exceptions).`,
   );
+}
+
+/**
+ * Self-test. Added 2026-09-03 (v2 ticket 30).
+ *
+ * This gate had none — the gate that decides whether every other gate can run was itself
+ * unproven, which is the recursion this file's own header spends forty lines warning about.
+ * Every case below plants a defect in a synthetic workflow document and asserts the SPECIFIC
+ * verdict, never merely a non-zero exit.
+ */
+export function runSelfTest() {
+  const failures = [];
+  let passed = 0;
+  const assert = (label, condition) => {
+    if (condition) passed++;
+    else failures.push(label);
+  };
+
+  const wf = (body) => [{ file: "t.yml", text: body }];
+  const REACHABLE = "on:\n  push:\n    branches: [main]\n";
+  const known = new Set(["main"]);
+
+  // --- the corpus is collected at all ---
+  const basic = collectRunSteps(
+    wf(`${REACHABLE}jobs:\n  a:\n    steps:\n      - run: pnpm run check:one\n`),
+    known,
+  );
+  assert("a reachable job's run step is collected", basic.runs.length === 1);
+  assert("the collected step is not marked non-blocking by default", basic.runs[0].nonBlocking === false);
+  assert("no spurious parse error on a well-formed file", basic.errors.length === 0);
+
+  // --- continue-on-error, the rule this self-test was written for ---
+  const stepFlag = collectRunSteps(
+    wf(`${REACHABLE}jobs:\n  a:\n    steps:\n      - run: pnpm run check:one\n        continue-on-error: true\n`),
+    known,
+  );
+  assert("a step-level continue-on-error marks the step non-blocking", stepFlag.runs[0].nonBlocking === true);
+
+  const jobFlag = collectRunSteps(
+    wf(`${REACHABLE}jobs:\n  a:\n    continue-on-error: true\n    steps:\n      - run: pnpm run check:one\n      - run: pnpm run check:two\n`),
+    known,
+  );
+  assert(
+    "a JOB-level continue-on-error marks EVERY step under it non-blocking",
+    jobFlag.runs.length === 2 && jobFlag.runs.every((r) => r.nonBlocking === true),
+  );
+
+  const falseFlag = collectRunSteps(
+    wf(`${REACHABLE}jobs:\n  a:\n    steps:\n      - run: pnpm run check:one\n        continue-on-error: false\n`),
+    known,
+  );
+  assert("an explicit continue-on-error: false stays BLOCKING", falseFlag.runs[0].nonBlocking === false);
+
+  assert("continue-on-error absent is blocking", isContinueOnError(undefined) === false);
+  assert("continue-on-error: false is blocking", isContinueOnError(false) === false);
+  assert('continue-on-error: "false" is blocking', isContinueOnError("false") === false);
+  assert('an expression ${{ false }} is blocking', isContinueOnError("${{ false }}") === false);
+  assert("continue-on-error: true is non-blocking", isContinueOnError(true) === true);
+  assert(
+    "an EXPRESSION this gate cannot evaluate is answered conservatively as non-blocking",
+    isContinueOnError("${{ github.event_name == 'push' }}") === true,
+  );
+
+  // --- the three historical defects named in this file's header ---
+  const comment = collectRunSteps(
+    wf(`${REACHABLE}jobs:\n  a:\n    steps:\n      # pnpm run check:ghost\n      - run: pnpm run check:one\n`),
+    known,
+  );
+  const commentTokens = new Set(comment.runs.flatMap((r) => shellTokens(r.run)));
+  assert("a gate named only in a COMMENT is not counted as wired", commentTokens.has("check:ghost") === false);
+
+  const unparseable = collectRunSteps(wf(`${REACHABLE}jobs:\n  a:\n    steps:\n      - name: A step: with a colon\n        run: pnpm run check:one\n`), known);
+  assert("an unparseable workflow is an ERROR, never an empty success", unparseable.errors.length === 1);
+  assert("an unparseable workflow contributes no run steps", unparseable.runs.length === 0);
+
+  const selfTestOnly = collectRunSteps(
+    wf(`${REACHABLE}jobs:\n  a:\n    steps:\n      - run: pnpm run check:one:self-test\n`),
+    known,
+  );
+  const stTokens = new Set(selfTestOnly.runs.flatMap((r) => shellTokens(r.run)));
+  assert(
+    "a gate whose ONLY invocation is its own :self-test is not counted as wired",
+    stTokens.has("check:one:self-test") === true && stTokens.has("check:one") === false,
+  );
+
+  // --- reachability and dead jobs ---
+  const dispatchOnly = collectRunSteps(
+    wf("on:\n  workflow_dispatch:\njobs:\n  a:\n    steps:\n      - run: pnpm run check:one\n"),
+    known,
+  );
+  assert("a workflow_dispatch-only workflow is UNREACHABLE", dispatchOnly.unreachable.length === 1);
+  assert("an unreachable workflow contributes no run steps", dispatchOnly.runs.length === 0);
+  assert(
+    "an unreachable workflow's steps are still recorded for exception-checking",
+    dispatchOnly.declaredRuns.length === 1,
+  );
+
+  const cronless = collectRunSteps(
+    wf("on:\n  schedule:\njobs:\n  a:\n    steps:\n      - run: pnpm run check:one\n"),
+    known,
+  );
+  assert("a schedule with no cron is UNREACHABLE", cronless.unreachable.length === 1);
+
+  const withCron = collectRunSteps(
+    wf('on:\n  schedule:\n    - cron: "0 3 * * *"\njobs:\n  a:\n    steps:\n      - run: pnpm run check:one\n'),
+    known,
+  );
+  assert("a schedule WITH a cron is reachable", withCron.runs.length === 1);
+
+  const deadJob = collectRunSteps(
+    wf(`${REACHABLE}jobs:\n  a:\n    if: \${{ false }}\n    steps:\n      - run: pnpm run check:one\n`),
+    known,
+  );
+  assert("a job pinned if: false is a DEAD JOB", deadJob.deadJobs.length === 1);
+  assert("a dead job contributes no run steps", deadJob.runs.length === 0);
+
+  const deadStep = collectRunSteps(
+    wf(`${REACHABLE}jobs:\n  a:\n    steps:\n      - if: false\n        run: pnpm run check:one\n      - run: pnpm run check:two\n`),
+    known,
+  );
+  assert("a step pinned if: false leaves the corpus", deadStep.runs.length === 1);
+
+  const noBranch = collectRunSteps(
+    wf("on:\n  push:\n    branches: [does-not-exist]\njobs:\n  a:\n    steps:\n      - run: pnpm run check:one\n"),
+    known,
+  );
+  assert("a branches: filter matching no branch is UNREACHABLE", noBranch.unreachable.length === 1);
+
+  // --- token splitting ---
+  assert(
+    "a && chain splits into whole tokens",
+    (() => {
+      const t = shellTokens("pnpm run check:a:self-test && pnpm run check:a");
+      return t.includes("check:a") && t.includes("check:a:self-test");
+    })(),
+  );
+  assert(
+    "a gate name that is a PREFIX of another does not match it",
+    shellTokens("pnpm run check:one-more").includes("check:one") === false,
+  );
+
+  // --- control: the real repository still passes, so a self-test cannot go green
+  //     on fixtures while the live corpus is broken ---
+  assert(
+    "the real workflow corpus parses with no errors",
+    (() => {
+      const real = readdirSync(WORKFLOWS)
+        .filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))
+        .map((f) => ({ file: f, text: readFileSync(join(WORKFLOWS, f), "utf8") }));
+      if (real.length === 0) return false;
+      return collectRunSteps(real, knownBranchNames(REPO)).errors.length === 0;
+    })(),
+  );
+
+  if (failures.length > 0) {
+    for (const f of failures) console.error(`  FAIL: ${f}`);
+    console.error(`check-gate-wiring self-tests: ${failures.length} failed, ${passed} passed`);
+    process.exit(1);
+  }
+  console.log(`check-gate-wiring self-tests: ${passed} passed`);
+  process.exit(0);
 }
 
 const invokedDirectly =
   process.argv[1] !== undefined &&
   import.meta.url === new URL(`file://${process.argv[1]}`).href;
 
-if (invokedDirectly) main();
+if (invokedDirectly) {
+  if (process.argv.includes("--self-test")) runSelfTest();
+  main();
+}

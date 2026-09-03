@@ -241,7 +241,14 @@ function classifyExport(filePath, name, verdicts = EXPORT_VERDICTS, kind = "expo
   return { cls: "UNCLASSIFIED", reason: "no verdict recorded in EXPORT_VERDICTS; add a WIRE/KEEP entry to resolve" };
 }
 
+/**
+ * Counted, not narrated. The PASS line used to print a hard-coded "(18 assertions)" while the
+ * body ran 21 — the exact shape v2 ticket 30 was asked to sweep for (a backend self-test once
+ * printed 27 while its own list named 30). A number that cannot move is not a measurement.
+ */
+let assertionsRun = 0;
 function assert(cond, msg) {
+  assertionsRun++;
   if (!cond) { console.error("SELF-TEST FAIL:", msg); process.exit(1); }
 }
 
@@ -370,7 +377,7 @@ function runSelfTest() {
     rmSync(fixtureDir, { recursive: true, force: true });
   }
 
-  console.log("PASS: self-test (18 assertions)\n");
+  console.log(`PASS: self-test (${assertionsRun} assertions)\n`);
   console.log("  (a) file with no live importers                       → DEAD");
   console.log("  (b) file reachable via side-effect import             → RETAINED-BY-CONTRACT");
   console.log("  (c) file reachable via re-export from live barrel     → RETAINED-BY-CONTRACT");
