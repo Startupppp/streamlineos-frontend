@@ -64,3 +64,69 @@ describe("unified calendar surface boundary", () => {
     expect(offenders).toEqual([]);
   });
 });
+
+/**
+ * The import scan above is necessary but NOT sufficient: it only catches a
+ * module that mounts OUR grid. A module that hand-rolls its own day grid out of
+ * `date-fns` and `grid-cols-7` imports nothing from `features/calendar/**` and
+ * sails straight through — which is exactly the shape of every surface still
+ * outstanding. This second scan closes that hole.
+ *
+ * The three below are recorded, not silently tolerated: each duplicates an
+ * aggregate source that `/calendar` already serves. Removing one is a product
+ * decision (the Build grid is per-project, which `/calendar` cannot express
+ * today), so this list is the handover, and `toEqual` makes it bite in BOTH
+ * directions — a new surface fails, and so does a fixed one until its entry is
+ * deleted here.
+ */
+const DAY_GRID_RE = /grid-cols-7/;
+const CALENDAR_DAY_SIGNAL_RE =
+  /eachDayOfInterval|startOfMonth|endOfMonth|startOfWeek|getDaysInMonth|daysInMonth|"Sun"|'Sun'|WEEKDAYS/;
+
+const KNOWN_MODULE_CALENDAR_SURFACES = [
+  // Month grid of tickets by dueDate, with prev/next/today and month+year
+  // selects. Duplicates the registered `build` source. Owner: Build.
+  "build/views/calendar-view.tsx",
+  // Month grid of holidays with prev/next; the holidays page's DEFAULT view.
+  // Duplicates the registered `hr-holidays` source. Owner: HR / ticket 25.
+  "hr/holidays/components/calendar-view.tsx",
+  // "Who's Out This Week" seven-day avatar strip. Read-only, no navigation and
+  // no view switch, so it reads as a dashboard widget rather than a calendar
+  // page; recorded here so the judgement is visible rather than assumed.
+  "hr/leaves/components/leave-calendar-widget.tsx",
+];
+
+describe("no module hand-rolls its own calendar grid", () => {
+  it("the scan detects a hand-rolled day grid, so a green result is meaningful", () => {
+    const knownBad = [
+      `<div className="grid grid-cols-7 gap-1">{eachDayOfInterval({ start, end }).map(...)}</div>`,
+      `const days = startOfMonth(viewDate); return <div className="grid grid-cols-7">…`,
+    ];
+
+    for (const src of knownBad)
+      expect(DAY_GRID_RE.test(src) && CALENDAR_DAY_SIGNAL_RE.test(src)).toBe(true);
+  });
+
+  it("the scan does not fire on a seven-column grid that is not a calendar", () => {
+    const benign = [
+      `<div className="grid grid-cols-7 gap-2 text-xs font-semibold">{agingBuckets.map(...)}</div>`,
+      `<div className="grid grid-cols-1 gap-4 lg:grid-cols-7">{widgets}</div>`,
+      `const start = startOfMonth(now); const end = endOfMonth(now); // a date-range filter`,
+    ];
+
+    for (const src of benign)
+      expect(DAY_GRID_RE.test(src) && CALENDAR_DAY_SIGNAL_RE.test(src)).toBe(false);
+  });
+
+  it("the outstanding module calendar surfaces are exactly the ones on record", () => {
+    const found = collectSourceFiles(FEATURES_DIR)
+      .filter((file) => {
+        const src = readFileSync(file, "utf8");
+        return DAY_GRID_RE.test(src) && CALENDAR_DAY_SIGNAL_RE.test(src);
+      })
+      .map((file) => relative(FEATURES_DIR, file).split(sep).join("/"))
+      .sort();
+
+    expect(found).toEqual([...KNOWN_MODULE_CALENDAR_SURFACES].sort());
+  });
+});
