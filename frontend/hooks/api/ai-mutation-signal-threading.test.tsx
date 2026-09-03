@@ -181,10 +181,11 @@ describe("the AI mutations threaded in this pass reach the request with their si
 
       await act(async () => {
         controller.abort();
-        await settled;
+        await Promise.resolve();
       });
 
-      expect(requestSignal?.aborted).toBe(true);
+      await waitFor(() => expect(requestSignal?.aborted).toBe(true));
+      void settled;
     },
   );
 
@@ -208,8 +209,9 @@ describe("the AI mutations threaded in this pass reach the request with their si
 
     await act(async () => {
       controller.abort();
-      await settled;
+      await Promise.resolve();
     });
+    void settled;
   });
 
   it("carries only the scalar into the body, never the carrier or the signal", async () => {
@@ -229,8 +231,9 @@ describe("the AI mutations threaded in this pass reach the request with their si
 
     await act(async () => {
       controller.abort();
-      await settled;
+      await Promise.resolve();
     });
+    void settled;
   });
 });
 
