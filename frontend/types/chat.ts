@@ -48,15 +48,25 @@ export type PresenceStatus = "ONLINE" | "AWAY" | "OFFLINE";
 
 export type ChatNotificationPreference = "DEFAULT" | "ALL" | "MENTIONS" | "NOTHING";
 
+/**
+ * Mirrors the backend's one member wire shape (`chat-channel-member-shape.ts`), which the detail
+ * route, the paginated member list, the entity-channel read and the bounded channel-list preview
+ * all emit. Until 2026-09-03 those shipped the identity nested as `membership.user`, this interface
+ * declared it flat, and `apiClient.get<Channel>` cast the difference away — so `user` was undefined
+ * on every member and every DIRECT header read "Unknown".
+ *
+ * `userId` is nullable because a member whose organization row is gone flattens to nulls rather
+ * than to missing keys. `email` is absent from the list preview and present on the detail route.
+ */
 export interface ChannelMember {
   id: number;
   channelId: number;
-  userId: string;
+  userId: string | null;
   role: ChannelMemberRole;
   lastReadAt: Date | string | null;
   joinedAt: Date | string | null;
   mutedUntil: Date | string | null;
-  archivedAt?: Date | string | null;
+  archivedAt: Date | string | null;
   isFavorite: boolean;
   notificationPreference: ChatNotificationPreference;
   user: {
@@ -64,7 +74,6 @@ export interface ChannelMember {
     name: string | null;
     image: string | null;
     email?: string | null;
-    role?: string | null;
   } | null;
 }
 
@@ -90,6 +99,9 @@ export interface Channel {
   createdAt: Date | string | null;
   updatedAt: Date | string | null;
   members: ChannelMember[];
+  /** List rows only: the TRUE roster size, which `members.length` is a bounded preview of. */
+  memberCount?: number;
+  membersTruncated?: boolean;
   unreadCount: number;
   lastMessage: LastMessage | null;
 }

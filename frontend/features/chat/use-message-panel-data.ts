@@ -27,6 +27,7 @@ import type { ForwardableMessage } from "./forward-message-dialog";
 import { useChatMentions } from "./use-chat-mentions";
 import { useChatTypingText } from "./use-chat-typing-text";
 import { useMessageComposer } from "./use-message-composer";
+import { findOwnMember, resolveDirectPartner } from "./channel-member-lookup";
 
 export interface MessagePanelProps {
   channelId: number;
@@ -320,10 +321,10 @@ export function useMessagePanelData({
   );
 
   const otherMember =
-    channel?.type === "DIRECT" ? channel.members?.find((m) => m.user?.id !== currentUserId)?.user : null;
+    channel?.type === "DIRECT" ? resolveDirectPartner(channel.members, currentUserId) : null;
   const displayName =
     channel?.type === "DIRECT" ? (otherMember?.name ?? "Unknown") : (channel?.name ?? "Chat");
-  const memberCount = channel?.members?.length ?? 0;
+  const memberCount = channel?.memberCount ?? channel?.members?.length ?? 0;
   const isOtherOnline = channel?.type === "DIRECT" && otherMember ? onlineUserIds.has(otherMember.id) : false;
 
   const replyCountMap = useMemo(() => {
@@ -345,7 +346,7 @@ export function useMessagePanelData({
   }, [activeHuddle, channelId, joinHuddle, startHuddle]);
 
   const firstUnreadIndex = useMemo(() => {
-    const currentMember = channel?.members?.find((m) => m.user?.id === currentUserId);
+    const currentMember = findOwnMember(channel?.members, currentUserId);
     const lastReadAt = currentMember?.lastReadAt;
     if (!lastReadAt) return -1;
     const lastReadTime = new Date(lastReadAt).getTime();

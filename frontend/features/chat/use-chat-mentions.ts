@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { Channel, OrgUser } from "@/types/chat";
+import { resolveDirectPartner } from "./channel-member-lookup";
 
 type ChatMentionsInput = {
   orgUsers: OrgUser[] | undefined;
@@ -17,7 +18,7 @@ export function useChatMentions({
   const candidates = useMemo(() => {
     if (!orgUsers) return [];
     if (channel?.type === "DIRECT") {
-      const otherId = channel.members?.find((member) => member.user?.id !== currentUserId)?.user?.id;
+      const otherId = resolveDirectPartner(channel.members, currentUserId)?.id;
       return orgUsers.filter((user) => user.id === otherId);
     }
     return orgUsers.filter((user) => user.id !== currentUserId);

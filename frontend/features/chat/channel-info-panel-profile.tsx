@@ -14,6 +14,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { resolveImageUrl } from "@/lib/utils";
 import type { Channel } from "@/types/chat";
 import { ChannelAvatar } from "./channel-avatar";
+import { resolveDirectPartner } from "./channel-member-lookup";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface ChannelInfoPanelProfileProps {
@@ -42,9 +43,7 @@ export function ChannelInfoPanelProfile({
   const quickAvatarRef = useRef<HTMLInputElement>(null);
   const wasEditingRef = useRef(false);
   const otherMember =
-    channel?.type === "DIRECT"
-      ? channel.members.find((member) => member.user?.id !== currentUserId)?.user
-      : null;
+    channel?.type === "DIRECT" ? resolveDirectPartner(channel.members, currentUserId) : null;
   const displayName =
     channel?.type === "DIRECT"
       ? (otherMember?.name ?? "Unknown")
