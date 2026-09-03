@@ -1,6 +1,6 @@
-import type { AutomationTrigger } from "@/hooks/api/automations";
+import type { AutomationTrigger, TriggerModule } from "@/lib/automations/automation-triggers";
 
-export type TriggerModule = "crm" | "support" | "finance" | "hr";
+export type { TriggerModule };
 
 export interface TriggerMeta {
   value: AutomationTrigger;

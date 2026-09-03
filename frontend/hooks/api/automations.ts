@@ -5,45 +5,13 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { AutomationTrigger } from "@/lib/automations/automation-triggers";
 
 function assertPermission(allowed: boolean): void {
   if (!allowed) throw new Error("You do not have permission to manage automations.");
 }
 
-export type AutomationTrigger =
-  | "lead.created"
-  | "deal.stage_changed"
-  | "ticket.created"
-  | "ticket.priority_changed"
-  | "ticket.message_received"
-  | "invoice.overdue"
-  | "candidate.application_created"
-  | "candidate.stage_changed"
-  | "interview.scheduled"
-  | "interview.completed"
-  | "scorecard.submitted"
-  | "offer.sent"
-  | "offer.accepted"
-  | "offer.rejected"
-  | "candidate.bgv_status_changed"
-  | "sla.breached"
-  | "onboarding.started"
-  | "onboarding.task_overdue"
-  | "onboarding.document_submitted"
-  | "onboarding.completed"
-  | "leave.requested"
-  | "leave.approved"
-  | "leave.rejected"
-  | "attendance.anomaly"
-  | "resignation.submitted"
-  | "resignation.approved"
-  | "employee.terminated"
-  | "certification.expiring"
-  | "document.review_requested"
-  | "performance.review_cycle_started"
-  | "expense.submitted"
-  | "reimbursement.approved"
-  | "reimbursement.rejected";
+export type { AutomationTrigger };
 
 export type AutomationConditionOp = "eq" | "neq" | "contains" | "gt" | "lt" | "exists";
 

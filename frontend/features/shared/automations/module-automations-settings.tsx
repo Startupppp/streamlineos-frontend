@@ -38,7 +38,7 @@ import {
 import {
   TRIGGER_META,
   NON_CRM_TRIGGER_META,
-  getModuleForTrigger,
+  resolveTriggerModule,
 } from "@/components/automations/automation-trigger-data";
 import { ACTION_TYPES } from "@/components/automations/automation-meta";
 import { AutomationBuilderSheet } from "@/components/automations/automation-builder-sheet";
@@ -222,7 +222,7 @@ export function ModuleAutomationsSettings({ config }: { config: ModuleAutomation
   const moduleEnabled = matchesOrgModule(enabledModules, moduleEnabledKey);
 
   const moduleRules = (automationsData?.data ?? []).filter(
-    (r) => getModuleForTrigger(r.triggerEvent) === sectionModule,
+    (r) => resolveTriggerModule(r.triggerEvent) === sectionModule,
   );
 
   const triggerOptions = NON_CRM_TRIGGER_META.filter((t) => t.module === sectionModule);
