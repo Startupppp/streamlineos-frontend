@@ -43,6 +43,11 @@ export function PublicFieldOverlay({ token, field, scale, isNextRequired }: Publ
     }
   }
 
+  function handleTextBlur(): void {
+    if (localValue === fieldValueString(field)) return;
+    void saveValue(localValue);
+  }
+
   const baseClass = `absolute flex items-center justify-center rounded border-2 text-xs font-medium transition-colors ${
     isFilled ? "border-status-success-rule bg-status-success-surface text-status-success-ink" : isNextRequired ? "border-primary bg-primary/10 animate-pulse" : "border-dashed border-muted-foreground/40 bg-muted/40 text-muted-foreground"
   }`;
@@ -135,9 +140,7 @@ export function PublicFieldOverlay({ token, field, scale, isNextRequired }: Publ
       value={localValue}
       placeholder={field.label ?? undefined}
       onChange={(e) => setLocalValue(e.target.value)}
-      onBlur={() => {
-        if (localValue !== fieldValueString(field)) void saveValue(localValue);
-      }}
+      onBlur={handleTextBlur}
     />
   );
 }

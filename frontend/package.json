@@ -9,7 +9,7 @@
     "start": "next start",
     "build": "next build",
     "verify:server-data-seam": "node scripts/verify-server-data-seam.mjs",
-    "type-check": "tsc --noEmit",
+    "type-check": "node --max-old-space-size=8192 ./node_modules/typescript/bin/tsc --noEmit",
     "test": "jest",
     "build:widget": "node feedbucket-widget/build.mjs",
     "check:cycles": "npx --yes madge@8 --circular --ts-config tsconfig.json --extensions ts,tsx --exclude \"node_modules|\\.next|feedbucket-widget\" .",
@@ -78,6 +78,8 @@
     "check:routes:self-test": "node scripts/check-no-business-routes.mjs --self-test",
     "check:icon-labels:self-test": "node scripts/check-no-unlabeled-icon-buttons.mjs --self-test",
     "check:repo-paths:self-test": "node scripts/check-repo-paths.mjs --self-test",
+    "check:named-handlers": "node scripts/check-named-handlers.mjs",
+    "check:named-handlers:self-test": "node scripts/check-named-handlers.mjs --self-test",
     "check:import-direction": "node scripts/check-import-direction.mjs",
     "check:import-direction:self-test": "node scripts/check-import-direction.mjs --self-test"
   },
