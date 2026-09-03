@@ -31,7 +31,6 @@ import {
   CommandShortcut,
 } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
-import { apiClient } from "@/lib/api-client";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import {
   flattenNavRoutes,
@@ -40,15 +39,10 @@ import {
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import { cn } from "@/lib/utils";
 import { useCommandPalette } from "@/features/command-palette";
-
-interface SearchResult {
-  id: number;
-  type: "lead" | "deal" | "contact" | "client" | "ticket";
-  title: string;
-  subtitle: string;
-  href: string;
-  status?: string;
-}
+import {
+  useGlobalSearch,
+  type GlobalSearchResult,
+} from "@/features/command-palette/hooks/use-global-search";
 
 const ENTITY_ICONS = {
   lead: Contact2,
@@ -123,8 +117,6 @@ const PROJECT_NAV_ITEMS: ProjectNavItem[] = [
 
 export function CommandPalette() {
   const [query, setQuery] = useState("");
-  const [entityResults, setEntityResults] = useState<SearchResult[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const { data: access } = useAccess();
@@ -172,36 +164,14 @@ export function CommandPalette() {
     return () => document.removeEventListener("keydown", handleDown);
   }, [paletteOpen, setPaletteOpen]);
 
-  const debouncedQuery = useDebouncedValue(query, 280);
-
-  useEffect(() => {
-    if (!debouncedQuery || debouncedQuery.length < 2) {
-      setEntityResults([]);
-      return;
-    }
-    let cancelled = false;
-    setIsSearching(true);
-    apiClient
-      .get<{ results: SearchResult[] }>("/search", { q: debouncedQuery })
-      .then((data) => {
-        if (!cancelled) setEntityResults(data.results);
-      })
-      .catch(() => {
-        if (!cancelled) setEntityResults([]);
-      })
-      .finally(() => {
-        if (!cancelled) setIsSearching(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [debouncedQuery]);
+  const debouncedQuery = useDebouncedValue(query, 300);
+  const { results: entityResults, isSearching } =
+    useGlobalSearch(debouncedQuery);
 
   const handleSelect = useCallback(
     (href: string) => {
       setPaletteOpen(false);
       setQuery("");
-      setEntityResults([]);
       router.push(href);
     },
     [router, setPaletteOpen],
@@ -210,10 +180,7 @@ export function CommandPalette() {
   const handleOpenChange = useCallback(
     (v: boolean) => {
       setPaletteOpen(v);
-      if (!v) {
-        setQuery("");
-        setEntityResults([]);
-      }
+      if (!v) setQuery("");
     },
     [setPaletteOpen],
   );
@@ -247,7 +214,7 @@ export function CommandPalette() {
 
   const entityGroups = useMemo(
     () =>
-      entityResults.reduce<Record<string, SearchResult[]>>((acc, r) => {
+      entityResults.reduce<Record<string, GlobalSearchResult[]>>((acc, r) => {
         (acc[r.type] ??= []).push(r);
         return acc;
       }, {}),

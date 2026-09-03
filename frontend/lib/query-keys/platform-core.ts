@@ -167,6 +167,11 @@ export const platformCoreQueryKeys = {
     token: (token: string) => [...base, "invitation", token] as const,
   },
 
+  globalSearch: {
+    all: [...base, "globalSearch"] as const,
+    query: (q: string) => [...base, "globalSearch", q] as const,
+  },
+
   attachmentSignedUrl: (fileUrl: string) =>
     [...base, "attachments", "signed-url", fileUrl] as const,
 
