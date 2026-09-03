@@ -129,6 +129,9 @@ const DISCOVERIES = [
   },
 ];
 
+/** A cold `next dev` route can take several settle windows to paint. */
+const DISCOVERY_ATTEMPTS = 4;
+
 const TOKEN_PATTERN = /\{(\w+)\}/g;
 
 export function templateTokens(path) {
@@ -469,6 +472,18 @@ function runSelfTest() {
     DISCOVERIES.every((d) => templateTokens(d.from).length === 0),
   );
   assert(
+    "every discovery declares where to look and what to read",
+    DISCOVERIES.every((d) => typeof d.from === "string" && typeof d.extract === "string"),
+  );
+  assert(
+    "a click-through discovery declares both the click and what to read after it",
+    DISCOVERIES.every((d) => (d.click === undefined) === (d.read === undefined)),
+  );
+  assert(
+    "discovery retries rather than believing one blank settle window",
+    DISCOVERY_ATTEMPTS > 1,
+  );
+  assert(
     "the journeys reach a kanban board, which is where horizontal overflow lives",
     allSteps.includes("/build/{projectId}"),
   );
@@ -569,8 +584,6 @@ async function main() {
         log(`token ${discovery.token} = ${override} (given)`);
         continue;
       }
-      await cdp.send("Page.navigate", { url: `${baseUrl}${discovery.from}` });
-      await sleep(settleMs);
       const evaluate = async (expression) => {
         const r = await cdp.send("Runtime.evaluate", {
           expression,
@@ -579,14 +592,28 @@ async function main() {
         });
         return r.result?.value;
       };
-      let value = await evaluate(discovery.extract);
+      const resolved = (v) => typeof v === "string" && v.length > 0;
+      let value = null;
       let how = "link";
-      if ((typeof value !== "string" || value.length === 0) && discovery.click) {
-        const clicked = await evaluate(discovery.click);
-        if (clicked === true) {
-          await sleep(settleMs);
-          value = await evaluate(discovery.read);
-          how = "click-through";
+      /**
+       * The listing this reads is usually the first route the run touches, so
+       * under `next dev` it is also the one being compiled from cold. Giving up
+       * after one settle window reported the id as unresolvable when the page
+       * simply had not painted yet. Each attempt reloads, because a click that
+       * navigated somewhere unexpected must not leave the next attempt looking
+       * at a different page.
+       */
+      for (let attempt = 1; attempt <= DISCOVERY_ATTEMPTS && !resolved(value); attempt += 1) {
+        await cdp.send("Page.navigate", { url: `${baseUrl}${discovery.from}` });
+        await sleep(settleMs);
+        value = await evaluate(discovery.extract);
+        if (!resolved(value) && discovery.click) {
+          const clicked = await evaluate(discovery.click);
+          if (clicked === true) {
+            await sleep(settleMs);
+            value = await evaluate(discovery.read);
+            how = "click-through";
+          }
         }
       }
       if (typeof value === "string" && value.length > 0) {
