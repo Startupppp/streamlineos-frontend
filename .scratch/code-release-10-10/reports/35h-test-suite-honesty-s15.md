@@ -230,6 +230,17 @@ floor — raising it makes the secret detector match fewer strings).
    rc=1. That is the designed behaviour; it was registered as what it actually is — a new class, 7
    sites measured, 2 fixed before baselining, 5 remaining.
 
+3. **It bit a third time, in the wild, minutes after landing — and the right answer was to leave it
+   red.** Another agent has `check-gate-wiring.mjs` **uncommitted** in the shared tree (144 insertions
+   / 59 deletions), adding `MIN_JOBS = 4` and `MIN_RUN_STEPS = 60` and raising `MIN_GATES` 60 → 90.
+   All three moves are in the safe direction. Registering them would have pinned the registry to a
+   **dirty tree** and turned CI red with two stale registrations the moment it ran against HEAD, which
+   is the S11 mistake `check:authz-deny` avoided when it stayed at 2,453. **The registry is pinned to
+   HEAD: rc=0 at HEAD, rc=1 in the working tree.** *Cross-territory: whoever lands that
+   `check-gate-wiring.mjs` change must add `MIN_JOBS` and `MIN_RUN_STEPS` to
+   `src/scripts/baselines/ratchets.json` and raise the registered `MIN_GATES` to 90 in the same
+   commit.*
+
 **And the gate's own blind spot was found and fixed before it was claimed:** the first version
 registered the 121 script constants and reported OK over 11 more ratchets living in
 `baselines/*.json`, including `authz-deny`'s `uncoveredRatchet`, `bare-throw`'s `ratchet` and all five
