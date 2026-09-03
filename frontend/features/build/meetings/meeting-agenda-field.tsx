@@ -25,6 +25,21 @@ interface MeetingAgendaFieldProps {
   hasActiveSprint?: boolean;
 }
 
+function generateAgendaFrom(
+  onChange: (agenda: string) => void,
+  generate: (sources: AgendaSource[]) => string,
+  sources: AgendaSource[],
+): () => void {
+  return function handleGenerateAgenda() {
+    onChange(generate(sources));
+  };
+}
+
+function everyAgendaSource(hasActiveSprint: boolean): AgendaSource[] {
+  const sprint: AgendaSource[] = hasActiveSprint ? ["sprint"] : [];
+  return [...sprint, "overdue", "blocked", "open_action_items"];
+}
+
 export function MeetingAgendaField({ onGenerateAgenda, hasActiveSprint }: MeetingAgendaFieldProps) {
   const { control } = useFormContext<MeetingFormValues>();
 
@@ -53,37 +68,32 @@ export function MeetingAgendaField({ onGenerateAgenda, hasActiveSprint }: Meetin
                 <DropdownMenuContent align="end" className="w-52 text-xs">
                   {hasActiveSprint && (
                     <DropdownMenuItem
-                      onClick={() => field.onChange(onGenerateAgenda(["sprint"]))}
+                      onClick={generateAgendaFrom(field.onChange, onGenerateAgenda, ["sprint"])}
                     >
                       From current sprint tickets
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem
-                    onClick={() => field.onChange(onGenerateAgenda(["overdue"]))}
+                    onClick={generateAgendaFrom(field.onChange, onGenerateAgenda, ["overdue"])}
                   >
                     Overdue tickets
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => field.onChange(onGenerateAgenda(["blocked"]))}
+                    onClick={generateAgendaFrom(field.onChange, onGenerateAgenda, ["blocked"])}
                   >
                     Blocked tickets
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => field.onChange(onGenerateAgenda(["recently_completed"]))}
+                    onClick={generateAgendaFrom(field.onChange, onGenerateAgenda, ["recently_completed"])}
                   >
                     Recently completed
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() =>
-                      field.onChange(
-                        onGenerateAgenda([
-                          ...(hasActiveSprint ? (["sprint"] as AgendaSource[]) : []),
-                          "overdue",
-                          "blocked",
-                          "open_action_items",
-                        ]),
-                      )
-                    }
+                    onClick={generateAgendaFrom(
+                      field.onChange,
+                      onGenerateAgenda,
+                      everyAgendaSource(hasActiveSprint ?? false),
+                    )}
                   >
                     All sources
                   </DropdownMenuItem>

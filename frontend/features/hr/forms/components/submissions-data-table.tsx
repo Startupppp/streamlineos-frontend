@@ -21,6 +21,8 @@ interface SubmissionsDataTableProps {
   canManage: boolean;
 }
 
+async function noSubmitInReadOnlyView(): Promise<void> {}
+
 export function SubmissionsDataTable({ formId, submissions, canManage }: SubmissionsDataTableProps) {
   const [viewSub, setViewSub] = useState<HrFormSubmission | null>(null);
   const updateStatus = useUpdateSubmissionStatus(formId);
@@ -115,7 +117,7 @@ export function SubmissionsDataTable({ formId, submissions, canManage }: Submiss
           {viewSub && (
             <FormRenderer
               fields={viewSub.formSchemaSnapshot}
-              onSubmit={async () => {}}
+              onSubmit={noSubmitInReadOnlyView}
               isPending={false}
               readOnly
               initialData={viewSub.data}

@@ -30,6 +30,7 @@ import {
   hasActiveEmployeeFilters,
   employeeFiltersToUrlUpdates,
   DEFAULT_PAGE_SIZE,
+  type EmployeeStatusFilter,
 } from "@/features/hr/employees/employee-list-filters";
 import { EmployeesGridSkeleton } from "@/features/hr/employees/employees-loading-skeleton";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
@@ -225,6 +226,30 @@ export function EmployeesListPage() {
     [searchParams, router, pathname],
   );
 
+  const handleDepartmentFilterChange = useCallback(
+    (departmentId: string | undefined) => {
+      updateParams(
+        employeeFiltersToUrlUpdates(
+          { departmentId },
+          { size: PAGE_SIZE, status: "all" },
+        ),
+      );
+    },
+    [updateParams],
+  );
+
+  const handleStatusFilterChange = useCallback(
+    (status: EmployeeStatusFilter) => {
+      updateParams(
+        employeeFiltersToUrlUpdates(
+          { status },
+          { size: PAGE_SIZE, status: "all" },
+        ),
+      );
+    },
+    [updateParams],
+  );
+
   useEffect(() => {
     const current = searchParams.get("q") || "";
     if (debouncedSearch === current) return;
@@ -316,22 +341,8 @@ export function EmployeesListPage() {
           departments={deptList}
           hasFilters={hasFilters}
           onSearchChange={updateSearch}
-          onDepartmentIdChange={(id) =>
-            updateParams(
-              employeeFiltersToUrlUpdates(
-                { departmentId: id },
-                { size: PAGE_SIZE, status: "all" },
-              ),
-            )
-          }
-          onStatusChange={(s) =>
-            updateParams(
-              employeeFiltersToUrlUpdates(
-                { status: s },
-                { size: PAGE_SIZE, status: "all" },
-              ),
-            )
-          }
+          onDepartmentIdChange={handleDepartmentFilterChange}
+          onStatusChange={handleStatusFilterChange}
           onClear={clearFilters}
         />
       }

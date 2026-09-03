@@ -51,6 +51,14 @@ export function PolicyScopesEditor({ value, onChange, disabled }: Props) {
     [value, onChange],
   );
 
+  const selectScopeType = useCallback(
+    (index: number) =>
+      function handleScopeTypeSelected(value: string): void {
+        if (isScopeType(value)) handleTypeChange(index, value);
+      },
+    [handleTypeChange],
+  );
+
   const handleValueChange = useCallback(
     (index: number, scopeValue: string) => {
       const next = value.map((row, i) =>
@@ -67,7 +75,7 @@ export function PolicyScopesEditor({ value, onChange, disabled }: Props) {
         <div key={index} className="flex items-center gap-2">
           <Select
             value={row.scopeType}
-            onValueChange={(v) => { if (isScopeType(v)) handleTypeChange(index, v); }}
+            onValueChange={selectScopeType(index)}
             disabled={disabled}
           >
             <SelectTrigger className="w-44 shrink-0">
