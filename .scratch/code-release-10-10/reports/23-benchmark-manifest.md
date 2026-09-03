@@ -859,3 +859,158 @@ The 9.00% and 0.18% tenants — **not run** at request level.
 **The gate exits 1 on purpose.** It fails on three measured figures above ceilings the contract
 already declares, not on a placeholder. Raising one of those ceilings to turn it green would be the
 defect this whole ticket exists to prevent.
+
+---
+
+## 10. S13 (2026-09-03) — the harness runs in CI, the chat payload is fixed, the budgets are filled
+
+Four things this pass, in the order they mattered.
+
+### 10.1 `test/perf/**` was outside jest's `roots`, so the harness had never run
+
+`package.json`'s jest block had `roots: [src, evals, test/security]`. CI's `tests` job runs
+`pnpm test` **unfiltered** — deliberately, per the workflow's own comment — and it had never
+collected `test/perf/route-budget-http-harness.spec.ts`. Twenty cases asserting the properties
+every number in this manifest depends on, none of them ever executed by CI. A harness nothing runs
+is not a gate.
+
+```
+jest --listTests --roots src --roots evals --roots test/security   1873 files, 0 under test/perf
+jest --listTests   (after adding <rootDir>/test/perf)              1874 files, delta exactly 1
+jest --runInBand --testPathPattern=route-budget-http-harness       exit 0   20/20
+```
+
+**Proved it bites.** A copy of the spec with ONE expectation flipped (`expect(probe.ok).toBe(true)`
+→ `toBe(false)`), run through the repository's own jest config — same transform, same
+`moduleNameMapper`, same `setupFiles` — with `--roots` pointed at a scratchpad directory:
+
+```
+jest --runInBand --roots <scratchpad>/perf-red --testPathPattern=route-budget-http-harness-red
+  exit 1   Tests: 1 failed, 19 passed
+```
+
+The defect went into a throwaway copy under the scratchpad, never into the shared tree. The two
+halves together are the proof: `--listTests` shows the file is in the set CI executes, and the red
+run shows a failing spec of that shape exits non-zero.
+
+### 10.2 `GET /chat/channels` — 436,371 → 6,876 bytes, at the payload
+
+`db.query.chatChannels.findMany` carried an unqualified `with: { members: … }`. Drizzle returns
+**every** row of `chat_channel_members` for **every** channel on the page, so the page size bounded
+the channels and nothing bounded the members inside them. Measured on the seed:
+
+```sql
+-- as streamline_app, app.organization_id = the 89.93% tenant
+channels 56 · member rows 1000 · members per channel min/avg/max = 500/500/500
+-- the members array as the route shaped it, per channel:
+channel 2  500 members  245,569 bytes
+channel 1  500 members  245,458 bytes
+```
+
+Two channels of 500 carried ~245 KB of JSON apiece. The declared 131,072-byte ceiling was right and
+the payload was wrong — column projection alone gets it to ~206 KB, so bounding was not optional.
+
+The fix (`src/modules/chat/chat-channel-member-preview.ts`) takes a bounded preview of 8 **plus the
+true member count in one statement**: `count(*) over (partition by channel_id)` is taken before the
+rank filter cuts the rows, so a truncated array never has to be counted to be reported.
+`row_number() over (partition by channel_id order by (membership_id = actor) desc, (role='ADMIN')
+desc, id asc)` puts the caller's own row first — the list row's controls read its `isFavorite`,
+`role` and `lastReadAt` and must never miss it — then admins, then oldest membership, so the preview
+is deterministic. Each member row keeps **exactly** the shape it had: this is fewer rows, not a new
+contract. `memberCount` and `membersTruncated` ride beside the array. The channel row is projected
+too (`message_count`, `is_pinned`, `linked_deal_id`, `created_by_membership_id` rode 50 rows of a
+list that renders none of them).
+
+Measured over HTTP at head, majority tenant:
+
+| | before | after |
+|---|---|---|
+| response bytes | 436,371 | **6,876** |
+| p95 | 27.10 ms | **18.49 ms** |
+| post-GC heap | 8.10 MB | **2.73 MB** |
+| request db calls | 14 | 15 |
+
+Minority tenant 12,152 → 10,448 bytes.
+
+**The first attempt shipped a 500, and only the HTTP harness caught it.** A subquery projection
+keeps each column's own name, so `chat_channel_members.id`, `organization_members.id` and
+`users.id` all arrived as `"id"` and the outer SELECT was ambiguous. `pnpm typecheck` was exit 0 and
+all 36 chat suites passed over it; the route answered `500 Failed to load channels`. That is the
+argument for a request-level instrument in one line.
+
+`src/modules/chat/__tests__/chat-channel-member-preview.spec.ts` — 11 cases — is the regression
+gate: the cap exists, the count is taken across the partition and not from the array, the caller's
+own row survives, one statement for the whole page, no statement at all for an empty page, and the
+member row shape is unchanged.
+
+### 10.3 `contracts/route-budgets.json` — four `measured*` fields, 0/82 → 69/82
+
+`test/perf/merge-http-route-budgets.mjs` folds this ticket's own capture into ticket 22's contract.
+It **never** writes `measuredDbCalls`: the capture's `requestDbCalls` is a strict superset of the
+handler statement count `maxDbCalls` describes (12 vs 3 on `GET /notifications`), so writing it
+would either fail a correct route or, once someone raised the ceiling to go green, widen every
+service-level ratchet in the file. It is recorded as `requestDbCalls` under `httpMeasurement`.
+
+It refuses a capture whose control probe did not hold, whose role had BYPASSRLS, that was off
+journal head, or that recorded heap without `--expose-gc`. It refuses **per route** when the
+declared ceiling moved after the capture — the capture records `declared*` beside every measurement
+for exactly that. A route that stopped being measurable has its stale number **cleared**, never
+carried forward (8 were cleared on the re-capture). Self-test **27/27**.
+
+```
+check-route-budgets   before  110/570 measured (19.3%)   FAIL on 1
+                      after   386/570 measured (67.7%)   FAIL on 2
+```
+
+Zero `max*` keys changed, across both commits: `git diff | grep '^[-+][^-+].*"max'` → **0**.
+
+### 10.4 `GET /cron/storage-sweep` — the 8 downstream calls, named
+
+`DownstreamCounter` now keeps a per-**origin** tally beside the count. Only scheme, host and port
+are recorded, because a pre-signed object-store URL carries its credential in the query string.
+
+```
+GET /cron/storage-sweep@reference  downstreamCalls 8
+  https://streamlineos.<bucket>.r2.cloudflarestorage.com : 8
+```
+
+All eight go to the Cloudflare R2 bucket the sweep exists to reconcile — one per organisation over
+the 8 in the seed. Not a stray provider call. **The ceiling of 0 is not raised.** `forEachOrg` makes
+this count O(organisations swept), so no fixed per-request integer describes the route on any
+deployment but this one; writing 8 would make the gate green here and meaningless in production.
+`maxDownstreamCalls: 0` is the wrong *unit*, not the wrong *magnitude*, and the entry now says so in
+`downstreamCallBasis` / `downstreamCallNote` while `check:route-budgets` stays red on it. The other
+11 worker batches genuinely measure 0, so the invariant the ceiling encodes — a worker batch does
+not leave the process — is worth keeping for them.
+
+### 10.5 A regression this pass found and did not fix
+
+`GET /calendar/events` moved **79 → 196 request statements** and **583.79 → 915.94 ms p95** between
+the `06b9d725` capture and this one, and is now the only route in the capture **over** a PRD §12.1
+ceiling (800 ms, approved complex). It holds **75.8 MB of heap in one request**. The statement count
+is deterministic, so this is not machine load. → calendar / dashboard owner.
+
+### 10.6 Commands run, exit codes, numbers
+
+```
+pnpm exec jest --listTests | wc -l                                       1874 (was 1873)
+pnpm exec jest --runInBand --testPathPattern=route-budget-http-harness   exit 0   20/20
+pnpm exec jest --runInBand --roots <scratchpad>/perf-red ...             exit 1   1 failed / 19 passed
+pnpm typecheck                                                           exit 0
+pnpm exec jest --runInBand --testPathPattern="modules/chat"              exit 0   37 suites / 319 tests
+node test/perf/merge-http-route-budgets.mjs --self-test                   exit 0   27/27
+node test/perf/merge-http-measurement.mjs --self-test                     exit 0   19/19
+node src/scripts/check-benchmark-manifest.mjs --self-test                 exit 0   47/47
+node src/scripts/benchmark-regression.mjs --self-test                     exit 0   25/25
+node test/perf/prepare-perf-http-seed.mjs --self-test                     exit 0   10/10
+DATABASE_URL=<owner@scratch_t23_http> node src/scripts/db-bootstrap.mjs   exit 0   REACHED_HEAD 667/667
+psql -U neondb_owner -d scratch_t23_http -c 'VACUUM ANALYZE'              exit 0
+<full HTTP capture, both tenants, 40 samples>                             exit 0   9/9 · 136/164 measured · 0 failed
+node test/perf/merge-http-measurement.mjs --artifact=<capture> --write    exit 0   136/164
+node test/perf/merge-http-route-budgets.mjs --write                       exit 0   69/82 · 143 written · 8 cleared
+node src/scripts/check-route-budgets.mjs                                  exit 1   386/570 · 2 breaches
+node src/scripts/check-benchmark-manifest.mjs                             exit 1   FAIL
+```
+
+**Not run:** `pnpm lint`, `pnpm test` in full, `pnpm test:e2e`, `pnpm check:spec-typecheck`. The
+9.00% and 0.18% tenants were not measured at request level.
