@@ -4,7 +4,7 @@
 
 **Blocked by:** 09.
 
-**Status:** 6 of 7 boxes closed · box 1 still PARTIAL. **2026-09-03 (S8): the meeting-prep surface named in the
+**Status:** 6 of 7 boxes closed · box 1 still PARTIAL. **2026-09-03 (S10): ASSIGNABLE A-6 is CLOSED — `POST /ai/meetings/follow-up/stream` exists, is credit-metered through the same gateway and feature key as its buffered sibling, and `features/calendar/meeting-follow-up-panel.tsx` consumes it.** Box 1 still does not close: residuals R-3 / R-3b / R-3c are untouched and are a product decision and another territory. **2026-09-03 (S8): the meeting-prep surface named in the
 P2 finding below is now genuinely converted — `features/calendar/meeting-prep-panel.tsx` opens
 `POST /ai/meetings/prep/stream` and `useMeetingPrep` is deleted.** That closes the last `/stream` route in this
 release that had a real user surface to adopt it; the box stays open on the two things below, neither of which is
@@ -159,7 +159,7 @@ territory. Neither blocker is a missing helper; both helpers exist and are adopt
 
   **DISPOSITION 2026-09-03 — this box holds one ASSIGNABLE item and three accepted residuals. Register:
   `reports/residual-risk-register.md` §3.2 and §1.5.**
-  **ASSIGNABLE A-6 — `/ai/meetings/follow-up` still has no `/stream` sibling. Owner: `src/modules/ai/**` owner.
+  **ASSIGNABLE A-6 — CLOSED 2026-09-03 (S10). Was: `/ai/meetings/follow-up` still has no `/stream` sibling. Owner: `src/modules/ai/**` owner.
   Deadline: 2026-09-08.** This is real, scoped backend work and it was buried above inside a paragraph headed
   "P2 FINDING", whose first sentence reads as an observation about S5 rather than as an open item. Verified at
   head by enumerating every `@Post("...stream...")` in `src/modules/ai`: **10 streaming routes**, and
@@ -341,3 +341,90 @@ failure now gets no dispatch control at all.
 **Box 1 still does not close, and the reason is unchanged by this work:** the 6 surface-less `/stream` routes are
 a product decision and the 26 buffered text sites in 17 other modules are another territory. What *has* changed is
 that there is no longer any `/stream` route with a live frontend surface that is not adopted.
+
+
+---
+
+## Session S10 addendum (2026-09-03) — A-6 closed: the meeting follow-up streams end to end
+
+**The route existed nowhere and now exists once.** Enumerated at head before touching anything:
+`grep -c '@Post("[^"]*stream' src/modules/ai/core/controllers/*.ts` -> **10** streaming routes, with
+`meetings-ai.controller.ts` carrying `prep/stream` and **no** `follow-up/stream`. It is now **11**, and
+`ai-stream-route-contract.spec.ts`'s ratchet moved 10 -> 11 in the same change so the count cannot silently
+regress.
+
+**It copies `prep/stream`, it does not invent a second convention.** Same controller, same
+`@RequirePermission("calendar:ai:use")` and `@UseRateLimit("ai:invoke")` inherited from the class, same
+`@NoTenantTransaction()`, same `AiRequestAbortInterceptor`, same `respondWithAiTextStream` helper, same
+`x-ai-sources` header name, same `@Validate({ body: meetingFollowUpBodySchema })` (`.strict()`), same
+`(signal) => service.streamX(..., signal)` producer shape.
+
+**Credit metering is the same call, not a similar one.** `MeetingsPrepService.streamFollowUp` goes through
+`AiGatewayService.streamTextWithUsage` with `charge: true` and `feature: "meetings.follow-up"` — the key the
+buffered `draftFollowUp` already uses, already priced at 1 milli-credit in `ai-cost-catalog.ts`. So the
+streamed route reserves, breaker-guards and concurrency-caps identically. A spec asserts the two keys and
+their `charge` flags are **equal to each other**, so the streamed route cannot start metering differently
+from the one beside it. `pnpm -s check:ai-charge` 127 -> **128 invocations, `streamTextWithUsage` 9 -> 10,
+all declare `charge` explicitly, exit 0.**
+
+**Cross-tenant is 404, asserted rather than assumed.** `loadFollowUpEvent` -> `loadEvent` filters on
+`orgId`, so another tenant's event id raises `NotFoundException`; the spec asserts the rejection is a
+`NotFoundException` and **not** a `ForbiddenException`, and that no paid call was dispatched.
+
+**The prompt asks for a shape a half-arrived line still parses.** `followUpStreamPrompt` requests
+`## Subject` / `## Email` / `## Action items` / `## Next meeting`, with each action item written as
+`- <task> | owner: <name or unassigned> | due: <date or none>`. Reading owner and due **by label** rather
+than by position is what lets the frontend refine an item in place while it is still arriving. Both
+follow-up prompts now share one `followUpContextBlock`, so the buffered and streamed drafts cannot drift
+onto different descriptions of the same meeting.
+
+**Sources are assembled, never asked of the model** — event, attendees, and (new for follow-up) the
+organizer's own notes and supplied action items, which are the inputs the draft is derived from. Long
+notes are capped to a 160-character snippet so one transcript cannot crowd the 4 KB citation header.
+
+**The buffered route and its hook were NOT deleted.** `POST /ai/meetings/follow-up` still returns its
+Zod-validated record, and `useMeetingFollowUp` still exists — recorded as a KEEP verdict in the frontend
+`check:dead-code` gate, which is what turned that gate red the moment its last caller moved to the stream.
+
+### Proof
+
+| Command | Result |
+|---|---|
+| `npx jest --runInBand --testPathPattern="meetings-follow-up-stream\|meetings-prep-stream\|ai-stream-route-contract"` | exit 0 — **3 suites / 25 tests** |
+| `npx jest --runInBand --testPathPattern="modules/ai"` | exit 0 — **60 suites passed / 1 skipped, 544 passed / 21 skipped** |
+| `pnpm typecheck` (8 GB heap, via `heavy.sh 2`) | exit 2 — **1 error, 0 under `src/modules/ai/`** (`hr/config/hr-handbook.service.ts:105`, another territory) |
+| `pnpm check:spec-typecheck` | exit 2 — **same 1 error, 0 under `src/modules/ai/`** |
+| `npx eslint` on the 5 changed/added backend files | exit 0 |
+| `pnpm -s check:ai-charge` | exit 0 — 128 invocations, all declare `charge` |
+| `check:route-classification` · `route-duplicates` · `authz-deny` · `contract-registry` · `openapi-coverage` · `operation-ids` | all exit 0 |
+| `pnpm -s check:file-sizes` | exit 1 — **not mine**: `clients/client-accounts.service.ts` at 505 lines, another agent's in-flight edit (this gate was exit 0 when S10 started) |
+
+**Bite proofs — hermetic `git archive HEAD` tree, the shared working tree never modified.** Baseline 25 passed.
+
+| Mutation | Result |
+|---|---|
+| `streamFollowUp` charges `false` | **2 failed / 23 passed** — "dispatches ONE paid streaming call…", "bills the same feature key as the buffered sibling…" |
+| the abort signal is not passed to `streamTextWithUsage` | **1 failed / 24 passed** — "hands the route's abort signal to the provider call…" |
+| the streamed route meters under `meetings.prep` instead | **2 failed / 23 passed** — the same two |
+| the `follow-up/stream` route is deleted from the controller | **1 failed / 24 passed** — "every streaming route goes through the one shared helper" |
+
+Restored: 25 passed; `meetings-prep.service.ts` sha256 `e9376788…` and `meetings-ai.controller.ts` sha256
+`a90aaef5…`, byte-identical to the live tree.
+
+**What A-6 does NOT close.** Box 1 stays open on exactly what it was already open on, unchanged by this
+work: **R-3** (6 `/stream` routes with no frontend surface of any kind — a product decision), **R-3b**
+(whether `MeetingsAiController` and `CrmAiController`'s meeting route families are duplicates — a product
+decision; note this session added the follow-up stream to `MeetingsAiController`, the family the live
+calendar surfaces actually call, so retiring the CRM family is now the cheaper half of that decision) and
+**R-3c** (26 buffered text sites in 17 other modules — another territory).
+
+**Cross-territory finding, NOT fixed, `src/modules/billing/core/` — the AI-credit first-purchase race is
+real and now has one more caller.** `AiCreditsReservationService.reserve` does
+`select().from(orgAiCredits).where(eq(orgId)).for("update")` and inserts the wallet when the row is
+missing. `FOR UPDATE` locks **nothing** when the row does not exist, so two concurrent first AI calls in a
+brand-new org both see no wallet and both INSERT. The recovery arm is
+`if (isUniqueViolation(err) && idempotencyKey)` — and `AiGatewayStreamHelper.run` reserves with **no**
+`idempotencyKey` (`{ orgId, userId, feature, credits }`), so the loser's 23505 escapes as a 500 rather than
+resolving to the winner's wallet. Every streaming route reaches this, including the one added here. The fix
+belongs in `billing/core/` (an `ON CONFLICT (org_id) DO NOTHING` insert-then-reselect, or advisory-locking
+the org id before the select) and was not attempted from this territory.
