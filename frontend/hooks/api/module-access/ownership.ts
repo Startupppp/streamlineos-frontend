@@ -6,7 +6,12 @@ import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { ModuleOwnership } from "./types";
 import { viewKey } from "./types";
-import { moduleOwnershipContract } from "./module-access-schema";
+import { lazyContract } from "@/lib/api-envelope";
+
+/** Deferred — see `catalog.ts`; the contract itself is unchanged. */
+const ownershipContract = lazyContract(() =>
+  import("./module-access-schema").then((m) => m.moduleOwnershipContract),
+);
 
 export function useModuleOwnership(moduleKey: string) {
   const canView = useCan(viewKey(moduleKey));
@@ -17,7 +22,7 @@ export function useModuleOwnership(moduleKey: string) {
         `/module-access/${moduleKey}/ownership`,
         undefined,
         signal,
-        moduleOwnershipContract,
+        ownershipContract,
       ),
     enabled: canView,
     staleTime: 2 * 60_000,

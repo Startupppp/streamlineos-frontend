@@ -7,11 +7,20 @@ import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { CursorPaginatedResult, DataScope, MemberGrant, ModuleMember, ModuleMemberCandidate } from "./types";
 import { viewKey, manageKey } from "./types";
-import {
-  moduleMemberCandidatePageContract,
-  moduleMemberGrantsContract,
-  moduleMemberPageContract,
-} from "./module-access-schema";
+import { lazyContract } from "@/lib/api-envelope";
+
+/** Deferred — see `catalog.ts`; the contracts themselves are unchanged. */
+const memberPageContract = lazyContract(() =>
+  import("./module-access-schema").then((m) => m.moduleMemberPageContract),
+);
+const memberCandidatePageContract = lazyContract(() =>
+  import("./module-access-schema").then(
+    (m) => m.moduleMemberCandidatePageContract,
+  ),
+);
+const memberGrantsContract = lazyContract(() =>
+  import("./module-access-schema").then((m) => m.moduleMemberGrantsContract),
+);
 
 export function useModuleMembersInfinite(
   moduleKey: string,
@@ -30,7 +39,7 @@ export function useModuleMembersInfinite(
         `/module-access/${moduleKey}/members?${params.toString()}`,
         undefined,
         signal,
-        moduleMemberPageContract,
+        memberPageContract,
       );
     },
     initialPageParam: undefined as number | undefined,
@@ -152,7 +161,7 @@ export function useModuleMemberCandidates(
         `/module-access/${moduleKey}/member-candidates?${params.toString()}`,
         undefined,
         signal,
-        moduleMemberCandidatePageContract,
+        memberCandidatePageContract,
       );
     },
     enabled: canManage && (options?.enabled ?? true),
@@ -174,7 +183,7 @@ export function useModuleMemberGrants(
         `/module-access/${moduleKey}/members/${membershipId}/grants`,
         undefined,
         signal,
-        moduleMemberGrantsContract,
+        memberGrantsContract,
       ),
     enabled: canManage && membershipId !== null && (options?.enabled ?? true),
     staleTime: 30_000,

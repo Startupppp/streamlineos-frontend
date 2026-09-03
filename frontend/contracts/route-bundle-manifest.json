@@ -59,8 +59,8 @@
       "maxCssBytes": 65536,
       "maxImageBytes": 8192,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 373384,
-      "measuredPageChunkBytes": 36690,
+      "measuredFirstLoadJsBytes": 315373,
+      "measuredPageChunkBytes": 36723,
       "lazyLoadedModules": [
         "mail-compose-sheet",
         "mail-ai-compose-toolbar",
@@ -85,7 +85,7 @@
       "maxCssBytes": 65536,
       "maxImageBytes": 8192,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 357528,
+      "measuredFirstLoadJsBytes": 299484,
       "measuredPageChunkBytes": 20834,
       "lazyLoadedModules": [
         "notification-detail-drawer"
@@ -109,8 +109,8 @@
       "maxCssBytes": 65536,
       "maxImageBytes": 8192,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 358518,
-      "measuredPageChunkBytes": 21824,
+      "measuredFirstLoadJsBytes": 300497,
+      "measuredPageChunkBytes": 21847,
       "lazyLoadedModules": [
         "inbox-ticket-preview"
       ],
@@ -134,8 +134,8 @@
       "maxCssBytes": 65536,
       "maxImageBytes": 8192,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 394868,
-      "measuredPageChunkBytes": 54028,
+      "measuredFirstLoadJsBytes": 336754,
+      "measuredPageChunkBytes": 53958,
       "lazyLoadedModules": [],
       "note": "CRM inbox — deals and contact conversations. PASSES: 487kB < 614kB ceiling",
       "measuredCssBytes": 58161,
@@ -156,8 +156,8 @@
       "maxCssBytes": 65536,
       "maxImageBytes": 8192,
       "maxThirdPartyBytes": 102400,
-      "measuredFirstLoadJsBytes": 417334,
-      "measuredPageChunkBytes": 76494,
+      "measuredFirstLoadJsBytes": 359314,
+      "measuredPageChunkBytes": 76518,
       "lazyLoadedModules": [],
       "note": "Support ticket inbox. PASSES: 542kB < 614kB ceiling",
       "measuredCssBytes": 58161,
@@ -180,7 +180,7 @@
       "maxFontBytes": 131072,
       "maxThirdPartyBytes": 102400,
       "maxServerPayloadBytes": 40960,
-      "measuredFirstLoadJsBytes": 365787,
+      "measuredFirstLoadJsBytes": 307800,
       "measuredPageChunkBytes": 0,
       "lazyLoadedModules": [
         "clock-in-widget",
@@ -203,8 +203,8 @@
     "/chat": {
       "lazyLoadedModules": [],
       "note": "Chat home — realtime surface; the widest client-state route in the shell. Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
-      "measuredFirstLoadJsBytes": 496196,
-      "measuredPageChunkBytes": 159502,
+      "measuredFirstLoadJsBytes": 497147,
+      "measuredPageChunkBytes": 218497,
       "measuredScriptBytes": 817008,
       "measuredTotalBytes": 965524,
       "measuredCssBytes": 58161,
@@ -219,8 +219,8 @@
     "/calendar": {
       "lazyLoadedModules": [],
       "note": "Unified calendar — one route serves every module's event sources. Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
-      "measuredFirstLoadJsBytes": 397871,
-      "measuredPageChunkBytes": 61177,
+      "measuredFirstLoadJsBytes": 339885,
+      "measuredPageChunkBytes": 61235,
       "byteCaptureNote": "No cold-cache byte pass in the 2026-09-02 capture: the navigation landed on /signin because the app signs itself out on a refused /me/access, and the driver discards byte totals for a page it did not ask for rather than recording another page's bytes as this route's.",
       "measuredScriptBytes": 698541,
       "measuredTotalBytes": 838841,
@@ -235,7 +235,7 @@
     "/notifications": {
       "lazyLoadedModules": [],
       "note": "Notification centre. Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
-      "measuredFirstLoadJsBytes": 368255,
+      "measuredFirstLoadJsBytes": 310211,
       "measuredPageChunkBytes": 31561,
       "measuredScriptBytes": 586986,
       "measuredTotalBytes": 727455,
@@ -251,8 +251,8 @@
     "/settings": {
       "lazyLoadedModules": [],
       "note": "Global administration landing. Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
-      "measuredFirstLoadJsBytes": 393852,
-      "measuredPageChunkBytes": 57158,
+      "measuredFirstLoadJsBytes": 393972,
+      "measuredPageChunkBytes": 115322,
       "byteCaptureNote": "No cold-cache byte pass in the 2026-09-02 capture: the navigation landed on /signin because the app signs itself out on a refused /me/access, and the driver discards byte totals for a page it did not ask for rather than recording another page's bytes as this route's.",
       "measuredScriptBytes": 605854,
       "measuredTotalBytes": 747216,
@@ -267,8 +267,8 @@
     "/build/my-work": {
       "lazyLoadedModules": [],
       "note": "Build my-work — one of the heaviest first-load routes in the build (3.02 MB uncompressed). Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
-      "measuredFirstLoadJsBytes": 548776,
-      "measuredPageChunkBytes": 212082,
+      "measuredFirstLoadJsBytes": 550153,
+      "measuredPageChunkBytes": 271503,
       "measuredScriptBytes": 784096,
       "measuredTotalBytes": 925772,
       "measuredCssBytes": 58161,
@@ -283,8 +283,8 @@
     "/crm/leads": {
       "lazyLoadedModules": [],
       "note": "CRM leads — one of the heaviest first-load routes in the build (3.00 MB uncompressed). Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
-      "measuredFirstLoadJsBytes": 550058,
-      "measuredPageChunkBytes": 209218,
+      "measuredFirstLoadJsBytes": 550951,
+      "measuredPageChunkBytes": 268155,
       "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition, and the measuredScriptBytes figure on this route is from the 2026-09-02 capture on build 5KxS0uW9Wrm0BIVYZicTs — it predates the @animateicons fix (see notes.animateIconsFixed2026_09_03) and therefore overstates. On post-fix build 5WVxD_Jbi032lOZ_Z0NdN the shell's largest identifiable library is framer-motion (95,216 B raw / 30,554 B gzip, first load of 601 of 601 routes); @animateicons/react/lucide is now 147,629 B raw / 14,273 B gzip carrying exactly the 90 icons the app imports, down from 481,691 / 55,886 carrying all 248. The still-open share of this breach has no single owner-chunk: /dashboard's largest first-load scripts are a long tail of shared authenticated shell, not one missing lazy boundary.",
       "byteCaptureNote": "No cold-cache byte pass in the 2026-09-02 capture: the navigation landed on /signin because the app signs itself out on a refused /me/access, and the driver discards byte totals for a page it did not ask for rather than recording another page's bytes as this route's.",
       "measuredScriptBytes": 773117,
@@ -309,8 +309,8 @@
       "measuredServerPayloadBytes": 23160,
       "measuredPostLoadScriptBytes": 205472,
       "measuredPostLoadTotalBytes": 274177,
-      "measuredFirstLoadJsBytes": 413932,
-      "measuredPageChunkBytes": 77238
+      "measuredFirstLoadJsBytes": 414075,
+      "measuredPageChunkBytes": 135425
     }
   },
   "budgetExceptions": [

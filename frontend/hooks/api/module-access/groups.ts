@@ -13,10 +13,15 @@ import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { AuditCursorPage, DataScope, ModuleGroupMember, ModuleRoleGroup } from "./types";
 import { viewKey } from "./types";
-import {
-  moduleGroupMembersContract,
-  moduleRoleGroupPageContract,
-} from "./module-access-schema";
+import { lazyContract } from "@/lib/api-envelope";
+
+/** Deferred — see `catalog.ts`; the contracts themselves are unchanged. */
+const roleGroupPageContract = lazyContract(() =>
+  import("./module-access-schema").then((m) => m.moduleRoleGroupPageContract),
+);
+const groupMembersContract = lazyContract(() =>
+  import("./module-access-schema").then((m) => m.moduleGroupMembersContract),
+);
 
 export function useModuleRoleGroups(moduleKey: string) {
   const canView = useCan(viewKey(moduleKey));
@@ -29,7 +34,7 @@ export function useModuleRoleGroups(moduleKey: string) {
         `/module-access/${moduleKey}/groups?${params.toString()}`,
         undefined,
         signal,
-        moduleRoleGroupPageContract,
+        roleGroupPageContract,
       );
     },
     initialPageParam: undefined as string | undefined,
@@ -134,7 +139,7 @@ export function useModuleGroupMembers(moduleKey: string, groupId: number | null)
         `/module-access/${moduleKey}/groups/${groupId}/members`,
         undefined,
         signal,
-        moduleGroupMembersContract,
+        groupMembersContract,
       ),
     enabled: canView && groupId !== null,
     staleTime: 2 * 60_000,

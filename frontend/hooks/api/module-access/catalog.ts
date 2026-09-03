@@ -6,11 +6,23 @@ import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { AuditCursorPage, AuditLogEntry, ModuleMyPermissions, ModulePermission } from "./types";
 import { viewKey } from "./types";
-import {
-  moduleAuditLogPageContract,
-  moduleCatalogContract,
-  moduleMyPermissionsContract,
-} from "./module-access-schema";
+import { lazyContract } from "@/lib/api-envelope";
+
+/**
+ * Deferred: `components/members/member-picker.tsx` reaches this module through
+ * the `hooks/api/module-access` barrel from route shells that never open a
+ * module-access screen, which put Zod in their first load. Each contract is
+ * still passed to the seam, so all three reads parse as before.
+ */
+const catalogContract = lazyContract(() =>
+  import("./module-access-schema").then((m) => m.moduleCatalogContract),
+);
+const myPermissionsContract = lazyContract(() =>
+  import("./module-access-schema").then((m) => m.moduleMyPermissionsContract),
+);
+const auditLogPageContract = lazyContract(() =>
+  import("./module-access-schema").then((m) => m.moduleAuditLogPageContract),
+);
 
 export function useModuleAccessCatalog(
   moduleKey: string,
@@ -24,7 +36,7 @@ export function useModuleAccessCatalog(
         `/module-access/${moduleKey}/catalog`,
         undefined,
         signal,
-        moduleCatalogContract,
+        catalogContract,
       ),
     enabled: canView && (options?.enabled ?? true),
     staleTime: 5 * 60_000,
@@ -40,7 +52,7 @@ export function useModuleMyPermissions(moduleKey: string) {
         `/module-access/${moduleKey}/me/permissions`,
         undefined,
         signal,
-        moduleMyPermissionsContract,
+        myPermissionsContract,
       ),
     enabled: canView,
     staleTime: 30_000,
@@ -62,7 +74,7 @@ export function useModuleAuditLog(
         `/module-access/${moduleKey}/audit-log?${params.toString()}`,
         undefined,
         signal,
-        moduleAuditLogPageContract,
+        auditLogPageContract,
       );
     },
     initialPageParam: undefined as string | undefined,

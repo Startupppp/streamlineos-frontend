@@ -49,6 +49,62 @@ export interface ContractIssue {
 export type ResponseContract<T> = ZodType<T>;
 
 /**
+ * A contract that has not been loaded yet.
+ *
+ * Every contract in the app is a Zod schema built at MODULE SCOPE, so importing
+ * one as a value drags Zod's whole runtime — 56,661 B gzip, and nothing in it
+ * tree-shakes, because `import { z } from "zod"` binds a namespace object —
+ * into whatever chunk the importer lands in. Six of the shell's boot-critical
+ * hooks did exactly that, which put Zod in the first load of EVERY
+ * authenticated route, including the ones that never call a contracted read.
+ *
+ * This defers WHEN the schema module loads. It does not defer WHETHER the
+ * contract is applied: the returned thunk is passed in the same argument slot,
+ * `api-client` starts resolving it in parallel with the request, and
+ * `parseApiResponse` still receives a real contract before it parses a byte.
+ * A route that calls the hook pays for Zod exactly as before — that is correct,
+ * and it is the point. A route that does not, no longer pays at all.
+ */
+export type LazyResponseContract<T> = () => Promise<ResponseContract<T>>;
+
+/** A contract, or the promise of one. Both validate; only the timing differs. */
+export type ContractSource<T> = ResponseContract<T> | LazyResponseContract<T>;
+
+/**
+ * Memoises the import so a composed contract — `chatChannelPageContract(row)`
+ * builds a NEW schema on every call — is constructed once per module instead of
+ * once per request. A rejected load is deliberately NOT cached: a chunk that
+ * failed to download is a transient network fault, and caching the rejection
+ * would make the query's retry re-throw the same error forever. `getErrorMessage`
+ * already renders a chunk-load failure as "a new version of the app is
+ * available", so the failure reaches the screen as a real error state.
+ */
+export function lazyContract<T>(
+  load: LazyResponseContract<T>,
+): LazyResponseContract<T> {
+  let pending: Promise<ResponseContract<T>> | undefined;
+  return () => {
+    if (pending === undefined)
+      pending = load().catch((error: unknown) => {
+        pending = undefined;
+        throw error;
+      });
+    return pending;
+  };
+}
+
+/**
+ * A Zod schema is an object in Zod 4, never callable, so a function in this slot
+ * is unambiguously a loader.
+ */
+export function resolveContract<T>(
+  source: ContractSource<T> | undefined,
+): Promise<ResponseContract<T> | undefined> {
+  if (typeof source === "function") return source();
+  return Promise.resolve(source);
+}
+
+/**
  * A backend response that did not match the contract the caller declared.
  * It is an `ApiError`, so `getErrorMessage`, `readErrorReachesBoundary` and
  * every existing error surface render it without a special case — a contract

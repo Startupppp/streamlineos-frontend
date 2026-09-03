@@ -3,17 +3,14 @@
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
-import type { ResponseContract } from "@/lib/api-envelope";
+import {
+  lazyContract,
+  type ContractSource,
+  type LazyResponseContract,
+} from "@/lib/api-envelope";
 import { queryKeys } from "@/lib/query-keys";
 import { reportError } from "@/lib/observability/error-reporter";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
-import {
-  chatChannelContract,
-  chatChannelPageContract,
-  chatMessagesPageContract,
-  chatPollPageContract,
-  chatPublicChannelContract,
-} from "@/hooks/api/chat-schema";
 import type {
   Channel,
   Message,
@@ -27,6 +24,40 @@ interface ChannelPage<TChannel> {
   channels: TChannel[];
   nextCursor: string | null;
 }
+
+/**
+ * `chat.ts` is a barrel the sidebar imports, so every eager value import in this
+ * file reached Zod from the dashboard shell — and therefore from every
+ * authenticated route, including the ones with no chat surface at all.
+ *
+ * The page contracts are COMPOSED (`chatChannelPageContract(row)` builds a new
+ * schema on each call), which is why these go through `lazyContract`: it
+ * memoises the load, so each schema is still constructed exactly once per
+ * module rather than once per request. The contract itself is unchanged and is
+ * still passed to the seam, so `/chat/channels` — the route the
+ * `members[].membership.user` defect shipped through — is parsed as before.
+ */
+const myChannelsContract: LazyResponseContract<ChannelPage<Channel>> =
+  lazyContract(() =>
+    import("@/hooks/api/chat-schema").then((m) =>
+      m.chatChannelPageContract(m.chatChannelContract),
+    ),
+  );
+
+const publicChannelsContract: LazyResponseContract<ChannelPage<PublicChannel>> =
+  lazyContract(() =>
+    import("@/hooks/api/chat-schema").then((m) =>
+      m.chatChannelPageContract(m.chatPublicChannelContract),
+    ),
+  );
+
+const messagesPageContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatMessagesPageContract),
+);
+
+const pollPageContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatPollPageContract),
+);
 
 /**
  * The route answers one keyset page of 50 and a `nextCursor`. Reading only the
@@ -47,7 +78,7 @@ export const MAX_CHANNEL_PAGES = 20;
 export async function drainChannelPages<TChannel>(
   path: string,
   signal: AbortSignal,
-  contract: ResponseContract<ChannelPage<TChannel>>,
+  contract: ContractSource<ChannelPage<TChannel>>,
 ): Promise<TChannel[]> {
   const channels: TChannel[] = [];
   const seenCursors = new Set<string>();
@@ -81,11 +112,7 @@ export function useChatChannels(enabled = true) {
   return useQuery({
     queryKey: queryKeys.chat.myChannels(),
     queryFn: ({ signal }) =>
-      drainChannelPages<Channel>(
-        "/chat/channels",
-        signal,
-        chatChannelPageContract(chatChannelContract),
-      ),
+      drainChannelPages<Channel>("/chat/channels", signal, myChannelsContract),
     staleTime: 300_000,
     refetchOnWindowFocus: true,
     enabled: !!orgId && enabled && chatEnabled && canRead,
@@ -100,7 +127,7 @@ export function useArchivedChannels(enabled = true) {
       drainChannelPages<Channel>(
         "/chat/channels/archived",
         signal,
-        chatChannelPageContract(chatChannelContract),
+        myChannelsContract,
       ),
     staleTime: 2 * 60_000,
     enabled: enabled && canRead,
@@ -115,7 +142,7 @@ export function usePublicChannels(enabled = true) {
       drainChannelPages<PublicChannel>(
         "/chat/channels/public",
         signal,
-        chatChannelPageContract(chatPublicChannelContract),
+        publicChannelsContract,
       ),
     staleTime: 2 * 60_000,
     enabled: enabled && canRead,
@@ -141,7 +168,7 @@ export function useChatMessages(channelId: number) {
         `/chat/channels/${channelId}/messages`,
         pageParam ? { cursor: pageParam } : undefined,
         signal,
-        chatMessagesPageContract,
+        messagesPageContract,
       ),
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     initialPageParam: undefined as number | undefined,
@@ -171,7 +198,7 @@ export function useChatPoll(
         `/chat/channels/${channelId}/messages/poll`,
         { since },
         signal,
-        chatPollPageContract,
+        pollPageContract,
       ),
     staleTime: 2 * 60_000,
     enabled: enabled && canRead && channelId > 0,

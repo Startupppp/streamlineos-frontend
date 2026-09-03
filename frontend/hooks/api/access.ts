@@ -5,15 +5,12 @@ import type { UseQueryOptions, UseQueryResult } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import {
-  accessResponseContract,
-  permissionCatalogContract,
-  rbacDiscoveryGrantableContract,
-  rbacDiscoveryMembersContract,
-  type AccessResponse,
-  type DataScope,
-  type RbacDiscoveryGrantable,
-  type RbacDiscoveryMember,
+import { lazyContract } from "@/lib/api-envelope";
+import type {
+  AccessResponse,
+  DataScope,
+  RbacDiscoveryGrantable,
+  RbacDiscoveryMember,
 } from "@/hooks/api/access-schema";
 import type { Permission, PermissionKey } from "@/lib/rbac/permissions";
 import { normalizeOrgModuleKey } from "@/lib/module-vocabulary";
@@ -25,6 +22,31 @@ import {
 } from "@/lib/rbac/permission-gate";
 
 export type { PermissionGate };
+
+/**
+ * `access-schema` is the shortest path from the dashboard shell to Zod, and the
+ * shell renders on every authenticated route — so importing these four as
+ * values put Zod's entire runtime in every route's first load, including the
+ * ones that never read an access endpoint. They are loaded when the read runs
+ * instead. Each is still handed to `apiClient.get` in the contract slot, so
+ * every one of these four routes is parsed exactly as before.
+ */
+const accessContract = lazyContract(() =>
+  import("@/hooks/api/access-schema").then((m) => m.accessResponseContract),
+);
+const catalogContract = lazyContract(() =>
+  import("@/hooks/api/access-schema").then((m) => m.permissionCatalogContract),
+);
+const grantableContract = lazyContract(() =>
+  import("@/hooks/api/access-schema").then(
+    (m) => m.rbacDiscoveryGrantableContract,
+  ),
+);
+const membersContract = lazyContract(() =>
+  import("@/hooks/api/access-schema").then(
+    (m) => m.rbacDiscoveryMembersContract,
+  ),
+);
 
 export const useAccess = (
   options?: Omit<
@@ -44,7 +66,7 @@ export const useAccess = (
     refetchOnReconnect: "always",
     queryKey: queryKeys.access.me(),
     queryFn: ({ signal }) =>
-      apiClient.get("/me/access", undefined, signal, accessResponseContract),
+      apiClient.get("/me/access", undefined, signal, accessContract),
     ...restOptions,
     enabled: !!orgId && !!userId && (enabledOption ?? true),
   });
@@ -103,7 +125,7 @@ export const usePermissionCatalog = (
   const query = useQuery<Permission[], Error>({
     queryKey: queryKeys.roles.permissionCatalog(),
     queryFn: ({ signal }) =>
-      apiClient.get("/rbac/permissions", undefined, signal, permissionCatalogContract),
+      apiClient.get("/rbac/permissions", undefined, signal, catalogContract),
     staleTime: 30 * 60_000,
     ...options,
     enabled: access.allowed && (options?.enabled ?? true),
@@ -129,7 +151,7 @@ export const useRbacDiscoveryGrantable = (
         "/rbac/discovery/grantable",
         undefined,
         signal,
-        rbacDiscoveryGrantableContract,
+        grantableContract,
       ),
     staleTime: 60_000,
     ...options,
@@ -149,7 +171,7 @@ export const useRbacDiscoveryMembers = (
         "/rbac/discovery/members",
         undefined,
         signal,
-        rbacDiscoveryMembersContract,
+        membersContract,
       ),
     staleTime: 5 * 60_000,
     ...options,

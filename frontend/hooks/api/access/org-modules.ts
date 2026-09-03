@@ -8,7 +8,14 @@ import { useAccess, useCan } from "@/hooks/api/access";
 import { ORG_MODULE_NAME, normalizeOrgModuleKey } from "@/lib/module-vocabulary";
 import type { AccessResponse } from "@/types/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import { orgModuleStatusesContract } from "@/hooks/api/access/module-status-schema";
+import { lazyContract } from "@/lib/api-envelope";
+
+/** Deferred so the sidebar, which imports this module, does not carry Zod. */
+const orgModulesContract = lazyContract(() =>
+  import("@/hooks/api/access/module-status-schema").then(
+    (m) => m.orgModuleStatusesContract,
+  ),
+);
 
 export interface OrgModule {
   moduleKey: string;
@@ -83,7 +90,7 @@ export function useOrgModules() {
     queryKey: queryKeys.access.orgModules(),
     queryFn: async ({ signal }) =>
       normalizeOrgModulesResponse(
-        await apiClient.get("/access/org-modules", undefined, signal, orgModuleStatusesContract),
+        await apiClient.get("/access/org-modules", undefined, signal, orgModulesContract),
       ),
     // Also protects an in-memory query cache created by an older hot-reloaded
     // bundle that stored the response envelope instead of the list.

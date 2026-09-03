@@ -16,12 +16,27 @@ import {
 import { clearGateCookies } from "@/lib/onboarding-gate";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { queryKeys } from "@/lib/query-keys";
-import {
-  switchOrgResultContract,
-  userOrganizationsContract,
-  type UserOrganization,
-} from "@/hooks/api/organization-schema";
+import { lazyContract } from "@/lib/api-envelope";
+import type { UserOrganization } from "@/hooks/api/organization-schema";
 import { toast } from "sonner";
+
+/**
+ * Deferred: the org switcher in the shell header imports this module, so a
+ * value import here reached Zod from every authenticated route. Both are still
+ * handed to the seam in the contract slot — `POST /organization/switch` in
+ * particular sets the session's active org, and failing it open is a
+ * cross-tenant outcome, so its contract is not optional.
+ */
+const organizationsContract = lazyContract(() =>
+  import("@/hooks/api/organization-schema").then(
+    (m) => m.userOrganizationsContract,
+  ),
+);
+const switchOrgContract = lazyContract(() =>
+  import("@/hooks/api/organization-schema").then(
+    (m) => m.switchOrgResultContract,
+  ),
+);
 
 async function attemptCredentialsSignIn(magicToken: string): Promise<boolean> {
   try {
@@ -123,7 +138,7 @@ export function useGetOrganizations(enabled = true) {
   return useQuery<UserOrganization[]>({
     queryKey: queryKeys.organization.all,
     queryFn: ({ signal }) =>
-      apiClient.get("/organization", undefined, signal, userOrganizationsContract),
+      apiClient.get("/organization", undefined, signal, organizationsContract),
     staleTime: 60_000,
     enabled: status === "authenticated" && enabled,
     placeholderData: keepPreviousData,
@@ -143,7 +158,7 @@ export function useSwitchOrg() {
         "/organization/switch",
         { orgId },
         undefined,
-        switchOrgResultContract,
+        switchOrgContract,
       ),
     onMutate: () => {
       setAutoSignOutSuppressed(true);

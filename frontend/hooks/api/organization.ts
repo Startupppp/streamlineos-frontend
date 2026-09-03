@@ -7,10 +7,21 @@ import { queryKeys } from "@/lib/query-keys";
 import type { OrgSettings } from "@/types/organization";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import {
-  orgMembersPageContract,
-  type OrgMembersPage as MembersResponse,
-} from "@/hooks/api/organization-schema";
+import { lazyContract } from "@/lib/api-envelope";
+import type { OrgMembersPage as MembersResponse } from "@/hooks/api/organization-schema";
+
+/**
+ * Deferred: `leave-organization-control.tsx` sits in the shell's org switcher,
+ * so this module is eager on every authenticated route. The contract is
+ * unchanged and still passed to the seam — `GET /organization/members` is
+ * keyset paginated and the client once declared `{ page, total, totalPages }`,
+ * a shape the server has never sent.
+ */
+const membersPageContract = lazyContract(() =>
+  import("@/hooks/api/organization-schema").then(
+    (m) => m.orgMembersPageContract,
+  ),
+);
 
 export type { OrgMember, OrgMembersPage } from "@/hooks/api/organization-schema";
 
@@ -56,7 +67,7 @@ export const useOrgMembers = (
       apiClient.get("/organization/members", {
         limit: String(safeLimit),
         ...(search ? { search } : {}),
-      }, signal, orgMembersPageContract),
+      }, signal, membersPageContract),
     staleTime: 30_000,
     ...restOptions,
     enabled: canViewMembers && (callerEnabled ?? true),
@@ -83,7 +94,7 @@ export const useOrgMembersByIds = (
         limit: String(Math.min(Math.max(ids.length, 1), 100)),
         userIds: ids.join(","),
         includeInactive: "true",
-      }, signal, orgMembersPageContract),
+      }, signal, membersPageContract),
     staleTime: 5 * 60_000,
     ...restOptions,
     enabled: canViewMembers && ids.length > 0 && (callerEnabled ?? true),

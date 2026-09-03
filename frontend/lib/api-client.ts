@@ -2,6 +2,8 @@ import { clearRegisteredQueryCache } from "@/lib/query-cache-control";
 import {
   ApiError,
   parseApiResponse,
+  resolveContract,
+  type ContractSource,
   type ResponseContract,
 } from "@/lib/api-envelope";
 import { newCorrelationId, noteCorrelationId } from "./observability";
@@ -269,23 +271,44 @@ export {
 } from "@/lib/api-envelope";
 
 /**
+ * Starts a lazy contract downloading in PARALLEL with the request instead of
+ * after it, so deferring the schema module costs the read nothing it would not
+ * already have paid — the chunk and the response race, and the body is parsed
+ * when both have landed.
+ *
+ * The `catch` is a no-op on purpose: it keeps a failed chunk download from
+ * becoming an unhandled rejection when the request itself throws first. The
+ * awaited read at each call site is still the one that reports the failure.
+ */
+function beginContract<T>(
+  contract?: ContractSource<T>,
+): Promise<ResponseContract<T> | undefined> {
+  const pending = resolveContract(contract);
+  void pending.catch(() => undefined);
+  return pending;
+}
+
+/**
  * Pass `contract` and the response body is validated at runtime, so a backend
  * rename fails the read instead of arriving as an undefined field. Omit it and
  * the body is cast unchecked — see `assertUnchecked` in `lib/api-envelope.ts`.
+ * A `ContractSource` may be the schema itself or a `lazyContract` thunk that
+ * loads it; both parse, and the thunk keeps Zod out of the importer's chunk.
  */
 async function get<T>(
   url: string,
   params?: QueryParams,
   signal?: AbortSignal,
-  contract?: ResponseContract<T>,
+  contract?: ContractSource<T>,
 ): Promise<T> {
+  const pendingContract = beginContract(contract);
   const res = await authedFetch(
     buildUrl(url, params),
     { method: "GET", headers: { "Content-Type": "application/json" } },
     url,
     signal,
   );
-  return parseApiResponse<T>(res, contract, url);
+  return parseApiResponse<T>(res, await pendingContract, url);
 }
 
 export interface RequestConfig {
@@ -297,8 +320,9 @@ async function post<T>(
   url: string,
   data?: unknown,
   config?: RequestConfig,
-  contract?: ResponseContract<T>,
+  contract?: ContractSource<T>,
 ): Promise<T> {
+  const pendingContract = beginContract(contract);
   const res = await authedFetch(
     buildUrl(url),
     {
@@ -312,7 +336,7 @@ async function post<T>(
     url,
     config?.signal,
   );
-  return parseApiResponse<T>(res, contract, url);
+  return parseApiResponse<T>(res, await pendingContract, url);
 }
 
 function toRequestConfig(config?: AbortSignal | RequestConfig): RequestConfig {
@@ -325,8 +349,9 @@ async function mutate<T>(
   url: string,
   data?: unknown,
   config?: AbortSignal | RequestConfig,
-  contract?: ResponseContract<T>,
+  contract?: ContractSource<T>,
 ): Promise<T> {
+  const pendingContract = beginContract(contract);
   const resolved = toRequestConfig(config);
   const res = await authedFetch(
     buildUrl(url),
@@ -341,14 +366,14 @@ async function mutate<T>(
     url,
     resolved.signal,
   );
-  return parseApiResponse<T>(res, contract, url);
+  return parseApiResponse<T>(res, await pendingContract, url);
 }
 
 async function put<T>(
   url: string,
   data?: unknown,
   config?: AbortSignal | RequestConfig,
-  contract?: ResponseContract<T>,
+  contract?: ContractSource<T>,
 ): Promise<T> {
   return mutate<T>("PUT", url, data, config, contract);
 }
@@ -357,7 +382,7 @@ async function patch<T>(
   url: string,
   data?: unknown,
   config?: AbortSignal | RequestConfig,
-  contract?: ResponseContract<T>,
+  contract?: ContractSource<T>,
 ): Promise<T> {
   return mutate<T>("PATCH", url, data, config, contract);
 }
@@ -366,7 +391,7 @@ async function del<T>(
   url: string,
   data?: unknown,
   config?: AbortSignal | RequestConfig,
-  contract?: ResponseContract<T>,
+  contract?: ContractSource<T>,
 ): Promise<T> {
   return mutate<T>("DELETE", url, data, config, contract);
 }
@@ -374,14 +399,15 @@ async function del<T>(
 async function upload<T>(
   url: string,
   formData: FormData,
-  contract?: ResponseContract<T>,
+  contract?: ContractSource<T>,
 ): Promise<T> {
+  const pendingContract = beginContract(contract);
   const res = await authedFetch(
     buildUrl(url),
     { method: "POST", body: formData },
     url,
   );
-  return parseApiResponse<T>(res, contract, url);
+  return parseApiResponse<T>(res, await pendingContract, url);
 }
 
 async function download(

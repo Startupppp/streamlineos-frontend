@@ -6,18 +6,14 @@ import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import {
-  billingPlansContract,
-  billingProfileContract,
-  couponValidationContract,
-  seatInfoContract,
-  subscriptionResponseContract,
-  type BillingPlansResponse,
-  type BillingProfile,
-  type CouponValidationResult,
-  type SeatInfo,
-  type SubscriptionPlan,
-  type SubscriptionResponse,
+import { lazyContract } from "@/lib/api-envelope";
+import type {
+  BillingPlansResponse,
+  BillingProfile,
+  CouponValidationResult,
+  SeatInfo,
+  SubscriptionPlan,
+  SubscriptionResponse,
 } from "@/hooks/api/subscription-schema";
 
 export type {
@@ -34,6 +30,34 @@ export type {
 } from "@/hooks/api/subscription-schema";
 
 export type BillingCycle = "monthly" | "annual";
+
+/**
+ * Deferred: `components/billing/trial-banner.tsx` renders inside the dashboard
+ * shell, so a value import of these five put the whole billing schema — and
+ * Zod — in front of every authenticated route. Every one is still passed in the
+ * contract slot, so all five reads parse as before.
+ */
+const subscriptionContractSource = lazyContract(() =>
+  import("@/hooks/api/subscription-schema").then(
+    (m) => m.subscriptionResponseContract,
+  ),
+);
+const plansContract = lazyContract(() =>
+  import("@/hooks/api/subscription-schema").then((m) => m.billingPlansContract),
+);
+const couponContract = lazyContract(() =>
+  import("@/hooks/api/subscription-schema").then(
+    (m) => m.couponValidationContract,
+  ),
+);
+const profileContract = lazyContract(() =>
+  import("@/hooks/api/subscription-schema").then(
+    (m) => m.billingProfileContract,
+  ),
+);
+const seatsContract = lazyContract(() =>
+  import("@/hooks/api/subscription-schema").then((m) => m.seatInfoContract),
+);
 
 interface CreateOrderResponse {
   orderId: string;
@@ -63,7 +87,7 @@ export function useSubscription() {
   const canViewSubscription = useCan("billing:subscription:view");
   return useQuery<SubscriptionResponse, Error>({
     queryKey: queryKeys.billing.subscription(),
-    queryFn: ({ signal }) => apiClient.get("/billing", undefined, signal, subscriptionResponseContract),
+    queryFn: ({ signal }) => apiClient.get("/billing", undefined, signal, subscriptionContractSource),
     staleTime: 5 * 60_000,
     enabled: !!orgId && canViewSubscription,
   });
@@ -93,7 +117,7 @@ export function useVerifySubscription() {
 export function useBillingPlans() {
   return useQuery<BillingPlansResponse, Error>({
     queryKey: queryKeys.billing.plans(),
-    queryFn: ({ signal }) => apiClient.get("/billing/plans", undefined, signal, billingPlansContract),
+    queryFn: ({ signal }) => apiClient.get("/billing/plans", undefined, signal, plansContract),
     staleTime: 60 * 60_000,
   });
 }
@@ -107,7 +131,7 @@ export function useValidateCoupon(code: string, plan: SubscriptionPlan | null) {
         `/billing/coupons/validate?code=${encodeURIComponent(code)}&plan=${plan ?? ""}`,
         undefined,
         signal,
-        couponValidationContract,
+        couponContract,
       ),
     enabled: canManage && code.trim().length >= 3 && plan !== null,
     staleTime: 30_000,
@@ -119,7 +143,7 @@ export function useBillingProfile() {
   const canViewProfile = useCan("billing:profile:view");
   return useQuery<BillingProfile>({
     queryKey: queryKeys.billing.profile(),
-    queryFn: ({ signal }) => apiClient.get("/billing/profile", undefined, signal, billingProfileContract),
+    queryFn: ({ signal }) => apiClient.get("/billing/profile", undefined, signal, profileContract),
     staleTime: 5 * 60 * 1000,
     enabled: canViewProfile,
   });
@@ -141,7 +165,7 @@ export function useSeatInfo() {
   const canViewSeats = useCan("billing:seats:view");
   return useQuery<SeatInfo>({
     queryKey: queryKeys.billing.seats(),
-    queryFn: ({ signal }) => apiClient.get("/billing/seats", undefined, signal, seatInfoContract),
+    queryFn: ({ signal }) => apiClient.get("/billing/seats", undefined, signal, seatsContract),
     staleTime: 2 * 60 * 1000,
     enabled: canViewSeats,
   });
