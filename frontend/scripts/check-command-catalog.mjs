@@ -71,20 +71,13 @@ const IN_SERVICE_HOOKS = new Map([
  * Hooks that deliberately declare a STRICTER key than the contract requires.
  * Loosening these to the contract key would widen the UI past the product rule,
  * so the difference is recorded rather than "fixed". The value is the contract
- * key, so the entry goes stale the moment the backend gate changes.
+ * key, so the entry goes stale the moment the backend gate changes — and an entry
+ * whose hook now declares the contract key exactly is stale by the same rule.
+ * 2a3e3523a re-gated 11 of these onto their route's own key (contracts, work-logs,
+ * leave revert, performance, payroll runs/policies/fx), so those entries were
+ * retired; only the two payroll exports still gate stricter than their route.
  */
 const STRICTER_KEYS = new Map([
-  ["useUpsertWorkLog", "hr:attendance:view"],
-  ["useCreateContract", "hr:contracts:manage"],
-  ["useUpdateContract", "hr:contracts:manage"],
-  ["useEndContract", "hr:contracts:manage"],
-  ["useConvertToEmployee", "hr:contracts:manage"],
-  ["useRevertLeave", "hr:leaves:approve"],
-  ["useUpdatePerformanceReview", "hr:performance:view"],
-  ["useUpdateGoal", "hr:performance:view"],
-  ["usePreviewPolicy", "payroll:policies:view"],
-  ["useCreateRun", "payroll:runs:create"],
-  ["useUpdateFxRates", "payroll:policies:manage"],
   // Both hooks always request format=csv, and the csv branch is gated in-service
   // on payroll:reports:export (reports.controller.ts assertExport,
   // journal.controller.ts getJournal). The route decorator is the read key.
