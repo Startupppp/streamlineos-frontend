@@ -4,11 +4,15 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** implemented — 8 of 9 boxes closed; **1 BLOCKED on operator action** (box 7), and the blocker is
-unchanged and OWED, not closed: running the written backfill against the real database, and making the R2 buckets
-private in the Cloudflare console (`R2_BUCKET_NAME`, `R2_KB_BUCKET_NAME`). Re-verified at head 2026-09-03:
-`pnpm check:public-object-urls` exit 0 (9 declared references, 0 upload-result `url` fields) and `:self-test`
-exit 0.
+**Status:** implemented — 8 of 9 boxes closed; **1 STILL OPEN** (box 7). Re-audited 2026-09-03 by a fifth
+agent, and the box does NOT close: the code half is clean and is now cleaner, but the stored-data half cannot be
+measured from any database this session may touch, and claiming otherwise would be the fourth falsification of
+this ticket. What changed this pass: the backfill is now a **journalled migration** (`1047`) that runs at deploy
+instead of an operator action nobody ever ran; the verification script was found to see only 1 of 6 planted leaks
+and was fixed; and one live endpoint that handed back a **stored** permanent URL was closed. Making the R2 buckets
+private (`R2_BUCKET_NAME`, `R2_KB_BUCKET_NAME`) is unchanged and OWED. Re-verified at head:
+`pnpm check:public-object-urls` exit 0 (3,584 files, 9 declared references, 0 upload-result `url` fields) and
+`:self-test` exit 0. Full audit: `reports/33c-stored-public-url-audit.md`.
 
 **2026-09-03 residual-risk register:** box 7 = **R-1 / R-2 / R-2b**, ACCEPTED RESIDUAL, blocker INFRA, owner infrastructure operator, deadline **2026-09-08 before cutover** (R-2b 2026-09-30). **R-1 and R-2 are the only items in the whole register that are a live data exposure rather than a code-quality residual.** See `reports/residual-risk-register.md` §3.6.
 
@@ -176,6 +180,96 @@ Fixed in commit `a6902e5e`. The two halves compose — reason A's fix writes the
          every object already sitting at a public r2.dev address stays fetchable by anyone who copied one, no
          matter what the database columns now say.
     Read the exit code, not the text: **exit 2 means "not visible to this role", never "nothing found."**
+
+    **2026-09-03, FIFTH PASS — the stored-data half was audited for the first time with an instrument that
+    could actually see it, and the instrument turned out to be broken. Report: `reports/33c-stored-public-url-audit.md`.**
+
+    **(1) What is stored: MEASURED, and the answer is "no database here can tell you."** A catalog-driven scan
+    for `https?://` across EVERY `text`/`varchar`/`bpchar`/`json`/`jsonb`/`xml`/`text[]`/`varchar[]` column of
+    every ordinary table in every non-system schema, run on **eight** scratch databases. `scratch_perf_seed`
+    (665/671): **5,996 columns scanned, 451 holding any non-null value, 0 containing any `https?://` value,
+    0 errors, 4.5 s, exit 0.** `scratch_t23_http` (667/671): 6,002 / 493 / **0**. `scratch_t41_gates` (668/671,
+    and it DOES have `kb_page_attachments`): 6,002 / 33 / **0**. The four boot databases and `scratch_t29`: **0**.
+    Bite-proved on a purpose-built fixture, so the scan is not vacuous: it found all four planted shapes — plain
+    text, inside jsonb, inside an `<img src>` in HTML, and inside a `text[]`.
+    **This does not close the box, it disqualifies the evidence.** Every table that ever held a minted public URL
+    is EMPTY in the seed — `kb_sources`, `feedbucket_attachments`, `feedbucket_submissions`,
+    `payslip_publications`, `chat_attachments` all 0 rows — and only 451 of 5,996 columns hold any value at all.
+    A seeded database answers questions about the seeder. The production number is **UNKNOWN and stays UNKNOWN**.
+
+    **(2) The closing evidence this box names was NOT SOUND, and that is now bite-proved.** The box says an
+    operator run ending `ROWS HOLDING A PUBLIC URL: 0 … UNVERIFIABLE COLUMNS: 0` with exit 0 would close it. On
+    `scratch_t33c_gap`, a fixture holding **six** leaked object URLs in the shapes this codebase actually
+    produces, `scripts/backfill-public-object-urls.mjs` printed exactly that line for **one** of them and
+    **exited 0**. The five it missed: a URL in `jsonb` (x2), a URL in a `text[]`, an `<img src>` inside a
+    rich-text body (`LIKE '<base>/%'` needs the value to START with the base), and a URL under a second base
+    (`R2_KB_PUBLIC_URL` is unset in this repo's `.env`, and the script errors only when ALL bases are missing).
+    Measured at head: **501 of 5,996 URL-capable columns (479 jsonb + 22 `text[]`) were outside the scan
+    entirely.** Fixed in commit `c80dadc5`: those types are scanned; a contained-but-not-whole occurrence is a
+    separate **EMBEDDED** finding, counted and never rewritten (replacing an `<img src>` with a bare key breaks
+    the render), exiting **3**; missing base env vars are announced; and R2's intrinsic
+    `https://pub-<32 hex>.r2.dev/` shape is matched with or without them. Re-run on an identical fresh fixture:
+    **5 of 6 from env alone (exit 3)**, all 6 with `--base`; `--apply` rewrote 2 (`%20` decoded to a space, query
+    and fragment stripped), left the external customer URL untouched, second `--apply` rewrote 0.
+    **Exit codes are now 0 clean / 1 config / 2 not visible to this role / 3 embedded URL survives.**
+
+    **(3) The backfill is now a MIGRATION, so "run it against the real database" stops being an owed operator
+    action.** `migrations/1047_t33_backfill_public_object_urls.sql`, journalled at idx 803 / when
+    1803000010122, with `migrations/rollback/1047_….down.sql` — commit `e4f46d1a`. Catalog-driven over every
+    text column of every table; rewrites a value that IS `https://pub-<32 hex>.r2.dev/<key>` back to the key with
+    percent-escapes decoded; skips key-participating, generated and identity columns; **aborts with an exception**
+    naming any table it reads through an RLS policy it does not bypass, rather than reporting a clean pass over
+    rows it never saw; counts and announces EMBEDDED occurrences without rewriting them; idempotent.
+    Proven on `scratch_t33c_gap` (pass 1 `held=5 rewritten=1 EMBEDDED-REMAINING=4`; pass 2 rewrote 2 more and
+    left pass 1's row untouched) and on **`scratch_t33e_head`, a schema dump of the 668/671 schema with 1,027
+    tables**: **exit 0, 1,026 tables scanned, 0 rewritten, 0.69 s** — which is what makes it safe in the deploy
+    path. Stated gaps in the file's own header: SQL cannot read `NEXT_PUBLIC_R2_PUBLIC_URL`, so a **custom-domain**
+    public base is not matched (the script with `--base` remains the instrument), and it makes no object
+    unreachable. The **down file is a deliberate no-op with a header saying why**: reversing it would re-mint
+    permanent public URLs for tenant-private objects, and 1047 cannot tell a value it rewrote from one that was
+    already a key. `pnpm check:migration-rollback` **exit 0** (671 scanned), `check:migration-discipline` **exit 0**,
+    `check:migration-ledger` **exit 0**.
+
+    **(4) A LIVE endpoint was still handing back a STORED permanent URL — the exact shape this box warns about.**
+    `src/modules/storage/storage-vault.controller.ts` initialised `signedUrl` to the raw
+    `candidate_documents_vault.file_url` and fell back to it in the `catch`, so a presigning failure, an
+    unconfigured store or an empty `s3_key` returned the stored value to the client under the name `signedUrl`.
+    `check:public-object-urls` is correctly green over it — it MINTS nothing — which is precisely why auditing
+    the minting code is not the same as auditing what is served. Fixed in commit `e6f4c62a`: a legacy stored URL
+    is parsed back to its key with the existing `getFileKeyFromUrl` and THAT is presigned; otherwise `signedUrl`
+    is `null` (the declared type already allowed it, and the endpoint has no frontend caller, so nothing changes
+    shape). `storage-vault-signed-url.spec.ts` uses the REAL parser, not a stub — a stub returning its input
+    would pass while the controller handed the public URL straight back. **Bite-proved: 3 of its 4 tests turn
+    red against the pre-fix controller.** `jest src/modules/storage` → **exit 0, 19 suites / 209 tests**.
+    Residue not changed: the handler still returns `{ ...doc }`, so `file_url` and `s3_key` reach the client on
+    every call; narrowing that is a response-contract change against a frontend interface declared by cast.
+
+    **(5) NEW operator hazard, previously unrecorded: making `R2_BUCKET_NAME` private BREAKS THE LOGO IN EVERY
+    OUTBOUND EMAIL.** `getEmailLogoUrl()` (`src/modules/email/branding.ts:45-49`) builds its `<img src>` against
+    `NEXT_PUBLIC_R2_PUBLIC_URL`, the public base of that same bucket, and an email client cannot present a
+    presigned URL — which is exactly why that call site is on the mint allowlist. **R-2 must be sequenced behind
+    moving `email-assets/logo-v2.png` to a separate public asset bucket or a CDN**, or branding silently breaks
+    on every email the platform sends. Also: `src/scripts/setup-r2-buckets.ts:79` re-applies public-read CORS to
+    both buckets and prints guidance telling the operator to ENABLE public access on the KB bucket; that
+    guidance contradicts R-2 and should be corrected when R-2 is executed.
+
+    **(6) Cross-territory, reported and not fixed.** `frontend/next.config.ts:66,140` and
+    `frontend/proxy.ts:38,50` still allowlist `https://*.r2.dev` in CSP `img-src` and in `next/image`
+    `remotePatterns`. `NEXT_PUBLIC_R2_PUBLIC_URL` is referenced NOWHERE in frontend source — those wildcards are
+    the only thing keeping a legacy stored permanent public URL renderable, and after R-2 they become dead
+    allowance that hides a surviving leak instead of surfacing it as a broken image.
+    Separately, `idempotency_records.response_body` caches whole response bodies, so an endpoint returning a
+    presigned URL under an `Idempotency-Key` caches an EXPIRING url and can replay it after expiry (INFERRED
+    from the schema and the replay path; not reproduced).
+
+    **THE BOX STAYS OPEN.** Code side clean; data side UNKNOWN and unknowable from here. R-1 is no longer "an
+    operator must remember to run a script" — 1047 does it at deploy — but it has still **NOT run against
+    production**, and R-2 (bucket privacy) has **NOT been done** and has no code equivalent. Closing evidence,
+    now sound rather than merely stated: (a) an owner-role confirmation run of the script ending
+    `ROWS HOLDING A PUBLIC URL: 0 …; ROWS WITH AN EMBEDDED PUBLIC URL: 0 …; UNVERIFIABLE COLUMNS: 0` with
+    **exit 0** — all three zeros required, exit 2 and exit 3 each close nothing; (b) 1047's deploy-log
+    `rows_rewritten=n`; (c) an unauthenticated `curl -I` of a previously-public object URL returning 401/403.
+
   **DISPOSITION 2026-09-03 — ACCEPTED RESIDUAL R-1, R-2, R-2b. Blocker: INFRA (credentials and a console this
   effort does not hold and must not use). Owner: infrastructure operator. Deadline: R-1 and R-2 **2026-09-08,
   before cutover**; R-2b 2026-09-30.** Register: `reports/residual-risk-register.md` §3.6.
