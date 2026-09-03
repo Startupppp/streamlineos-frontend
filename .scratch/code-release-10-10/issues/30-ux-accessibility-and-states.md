@@ -4,7 +4,7 @@
 
 **Blocked by:** 28.
 
-**Status:** 3 of 7 closed. A real browser was driven over the authenticated product for the first time; the state ratchet was re-measured and tightened from 78/56/2/1/101 to 5/10/0/0/56. Full report: `reports/30-ux-accessibility.md`.
+**Status:** 4 of 7 closed. Box 1 (states) closes this session: 0 surfaces without a loading, read-error or permission state, and the 7 without an empty state are pinned by route as correct. Boxes 2, 4 and 5 stay open with measured fractions rather than claims. Reports: `reports/30-ux-accessibility.md` (S8), `reports/30b-states-a11y-and-journeys.md` (S11).
 
 - [x] Loading, empty, error, offline and permission-denied states are present on every authenticated surface, not only the common paths.
   CLOSED. `npx jest --runInBand --testPathPattern="authenticated-surface-states.contract"` → exit 0, **22/22**
@@ -61,9 +61,42 @@
 - [x] Contrast meets the standard and is verified rather than assumed.
   VERIFIED against **WCAG 2.2 AA — 4.5:1 normal text, 3:1 large text (≥24px, or ≥18.66px bold) and non-text UI boundaries (SC 1.4.11)**. `npx jest --runInBand --testPathPattern="contrast-tokens"` → **41/41**. The token layer is correct: `-ink-strong` clears 4.5:1 on every light surface (success 5.21, warning 4.84, danger 5.91) and `-ink` clears the 3:1 non-text floor it was tuned for. Additionally the browser sampled **4251 painted text nodes against the colour actually behind them and found 90 AA failures — exactly the pairs the token test predicted**, on `/dashboard`, `/inbox`, `/hr/attendance` and `/accounting/coa`: `--status-warning-ink` at 3.43 on `--status-neutral-surface` and 3.58 on `--card`, and `--muted-foreground` at 4.34 on `--muted`. Predicted from the tokens, then observed in the running product. The remaining failures are **call sites handing the icon ink to text**, not tokens: `--status-success-ink` 3.58, `--status-warning-ink` 3.07, `--status-danger-ink` 4.41, `--muted-foreground`-on-`--muted` 4.34, across **2234 `text-status-*-ink` occurrences**. Recorded in the suite and handed up as a token-layer decision.
 - [ ] Layout is correct at 375, 768 and 1280.
-  PARTIAL, and measured in a real layout engine for the first time. `node scripts/browser-journeys.mjs --widths=375,768,1280` against a database re-bootstrapped to head (`REACHED_HEAD 658/658`) with every module enabled → **57 steps, 46 of them reaching a real product state (19 empty / 17 content / 3 denied), and `scrollWidth - innerWidth` = 0 on every one of the 57** — repeated on four separate runs. `components/ui/__tests__/page-states-responsive.a11y.test.tsx` → 30/30 for axe, one `h1`, the non-wrapping filter row and the stat-row scroller. NOT closed: 11 steps still threw to their error boundary (`/crm/leads` on a `PostgresError` in `lead_party_map`/`business_parties`, plus `/build`, `/build/all`, `/calendar`), so kanban boards and the densest tables — where horizontal overflow actually lives — were never rendered.
+  PARTIAL, but the result is stronger than S8's and the gap has moved from "the run errored" to one
+  named contract drift. `node scripts/browser-journeys.mjs --widths=<W>` run once per width with the dev
+  server restarted between, against a local backend on :1501 over `scratch_t30_browser` (journal head
+  665) with every module enabled → **57 steps · `scrollWidth − innerWidth` = 0 on every one of the 57, at
+  375, 768 and 1280 · 0 never-settled (S8 had 7) · one `h1` on 57 of 57 (S8 had 46) · a named `main` on
+  57 of 57 · 0 unauthenticated**. 45 of 57 reached a terminal product state (21 empty, 21 content,
+  3 denied); 12 are the same four routes at three widths.
+  NOT closed, and now for a precise reason: **a kanban board still has not been rendered.** The board and
+  its backlog table were *planned* steps this time and the harness tried to reach them, resolving the
+  project id from the running product; it recorded `step-not-reached` ×2 per width rather than reporting a
+  smaller clean run. The id is unresolvable because **`/build/all` renders "Failed to load projects"** —
+  `types/projects/projects.ts:344` declares `page` and `projects-page.tsx:293` sends it, while the
+  backend's `listProjectsSchema` is cursor-based and `.strict()`, so `GET /build?page=1` is rejected with
+  `Unrecognized key: "page"`. There is no row to click, so there is no board to open. Fixing that one
+  drift unblocks this box. `/build/<id>` additionally fails to server-render on a `undici`/`jsdom`
+  dependency mismatch (`Cannot find module 'undici/lib/handler/wrap-handler.js'`, verified absent on
+  disk). Both are outside this territory and are written up in `reports/30b-states-a11y-and-journeys.md` §5.
+  `/crm/leads` still fails on the `lead_party_map`/`business_parties` grouping error — CRM is excluded
+  from this release; recorded and moved past.
 - [ ] Representative browser end-to-end journeys cover the main module flows.
-  PARTIAL — the harness now exists and has run, but the run is not evidence yet. `frontend/scripts/browser-journeys.mjs` (new, `pnpm browser:journeys`) drives real headless Chrome over CDP with a minted NextAuth session, eight journeys across every product area (19 read-only steps) at three widths, asserting authentication, terminal state, one `h1`, a named `main`, horizontal overflow and in-situ contrast. `--self-test` → **20 passed, exit 0**, four of them bite proofs. Five runs were made; the authoritative one is **57 steps, authenticated throughout, 46 reaching a terminal product state**, and it exits 1 on 51 real findings. It found the two missing `main` landmarks in box 2 and **independently confirmed the contrast failures in box 3** — 4251 painted text nodes, 90 AA failures, every one `--status-warning-ink` (3.43 / 3.58) or `--muted-foreground`-on-`--muted` (4.34), on four unrelated modules. An earlier run reported zero findings while every step rendered the error page, because an error state is terminal — a false pass — so **the harness now refuses any run where more than half the steps errored** (self-tested: 29 of 57 refused, 28 of 57 not), and a sample whose ink equals its ground is recorded as unresolved rather than fabricated as a 1:1 failure (17 of them). NOT closed: 11 of 57 steps still error, the journeys are route sequences rather than click-through flows with assertions on writes, and the run needs a live app so it cannot be a CI gate as it stands. Environment blockers found: `AUTH_SIGNING_KEYS` and `NEXTAUTH_SECRET` are absent from the backend `.env` (so `/auth/session-exchange` 503s and the frontend hangs on "Syncing organization…" with no error state), seeded orgs have no `organization_placement` row, and the admission counter leaks until the backend 503s everything.
+  PARTIAL. The harness is materially stronger than S8 left it, and both of its refusals are intact.
+  `node scripts/browser-journeys.mjs --self-test` → **exit 0, 39 passed** (was 20), six of them bite proofs.
+  Added this session: **steps may carry a `{token}` resolved from the running product** — read from a link
+  if there is one, otherwise by **clicking the first row of the listing and reading where it landed**,
+  which is the click-through this box said was missing; and **a step that was never reached no longer
+  shrinks the denominator** — the run reports `n of m planned`, records `step-not-reached`, and exits 1,
+  because a run that skipped a step would otherwise read as cleaner than the run it failed to be. That is
+  the mirror of S8's all-errors refusal, which was left in place untouched.
+  One probe defect found and fixed rather than reported: the contrast sampler walked past any background
+  colour its `rgb()` parser could not read, and Tailwind 4 serialises its palette as `oklch()`, so a white
+  label on `bg-status-danger-fill` was scored against the page ground at **1.05:1** — invisible text, which
+  no shipped page has. An unparseable ground is now unmeasurable, not absent. Same tree, re-measured at
+  1280: **1,995 sampled / 143 AA failures became 1,688 / 86**, and the three real token pairs are unchanged.
+  NOT closed: the steps are still routes plus one click rather than flows with assertions on writes,
+  nothing exercises a mutation, four of 19 routes reach an error boundary (box 4), and the run needs a live
+  app plus a minted session, so it cannot be a CI gate as it stands.
 - [x] Error and offline states are not removed during cleanup merely because they are uncommon in local development.
   Closed by construction and strengthened. The ratchet in `components/__tests__/authenticated-surface-states.contract.test.ts` now sits at **0 missing loading states and 0 missing permission gates**, so any surface that loses either fails immediately rather than after a 73-surface slide. Four tests pin offline: the shell mounts `<ShellOfflineBanner />`, the banner is `role="status" aria-live="polite"`, the hook listens for both `online` and `offline`, and a bite proof fails if the banner is unmounted. 19/19 green.
 - [x] Public metadata is correct without changing landing visuals or animations.
