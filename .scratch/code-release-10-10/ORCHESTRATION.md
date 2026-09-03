@@ -1582,3 +1582,63 @@ there are at least **10 independent local copies** of an `isUniqueViolation` hel
 generalises, every one of those "already exists" `ConflictException`s is unreachable and a 500
 leaks instead. Assigned, with instructions to establish the real error shapes empirically first and
 to report a correct small number rather than a flattering large one.
+
+---
+
+## S12 findings that no ticket owns
+
+### 🔴 A CRM import reports success and writes nothing — CRM, out of release scope
+
+Found by the backend test-typecheck agent, whose rewritten `crm-import-roundtrip.seeded-e2e-spec`
+ran for the first time (the previous version drove four symbols deleted when the importer became a
+durable batched workflow, so it had been typechecking-invisible AND non-functional). Reproduced
+with and without an ambient tenant transaction and at raw SQL, on `scratch_testtypecheck2` at
+journal head 670/670.
+
+**Reported cause:** `commitRow` claims a row by writing `committed_at` *before* any outcome column,
+which `chk_crm_import_rows_outcome` forbids for `action IN ('create','update','review')`.
+
+**Second defect, confirmed by the orchestrator reading the source, independent of the first.**
+`crm-import-commit.service.ts` records failure as success at two levels:
+
+1. The `catch` in `commitBatch` (135) writes `{ error: message, committedAt: new Date() }`. That
+   **satisfies** the constraint through its own `error IS NOT NULL` relaxation — the escape hatch
+   0281 added deliberately so a bad cell could not hold an import open forever. So a row Postgres
+   refused is indistinguishable, at the `committed_at` level, from a row that worked.
+2. `finishCommit` (154) then sets `status: "committed"` gated **only on the import's current status
+   being `"committing"`** — it never consults whether a single row succeeded.
+
+So even with the row-level constraint bug fixed, **a batch in which every row fails still reports
+`committed`.** The success report is not derived from any outcome. That is the defect worth fixing;
+the constraint ordering is only what makes it fire today.
+
+The recorded `error` is postgres-js's wrapper, so it names the statement but never the cause —
+which is why this stayed invisible.
+
+**Not fixed. CRM is excluded from release scope and the exclusion is being honoured rather than
+quietly widened.** Owner: CRM. Recorded here so the exclusion is a decision, not an oversight.
+
+### The published contract carries no response shapes
+
+`frontend/contracts/openapi.json`, measured directly: **3,613 operations, 2 with any response
+schema, 6 `components.schemas`.** An independent sweep measured a 2xx response schema for **1 of
+3,613**. Ticket 34's box 2 downgraded `[x]` → `[~]` with the measurement attached; the work behind
+it was real but on a different axis (exposure stamping, webhook catalogue, vendoring integrity).
+
+Seven user-visible bugs shipped through that gap. See ticket 34 and
+`reports/49-api-shape-divergence-sweep.md`.
+
+### A security ratchet that could not fail
+
+The BOLA "the unbound-by-design list does not grow" ratchet mapped `RouteBinding[]` through a
+`HandlerRoute` formatter, so every key was the string `"undefined undefined"` and the filter matched
+nothing. **The test could not fail.** Fixed (12/12 now pass); it remains structurally
+`⊆`-tautological even fixed, which is security's call. Same class as the wrong-table budget and the
+wrong-bucket verification.
+
+### Frontend test files are typechecked by nothing — 139 real errors
+
+`frontend/tsconfig.json` excludes every test path and `next/jest` transpiles via SWC, which erases
+types. **335 test files unchecked; 841 errors, of which 702 are one missing `@testing-library/jest-dom`
+type registration and 139 are genuine across 45 files.** The backend equivalent was just closed at
+**zero baselined**, and finding its 21 errors surfaced the vacuous BOLA ratchet above. Assigned.
