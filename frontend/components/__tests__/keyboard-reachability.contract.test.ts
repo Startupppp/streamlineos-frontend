@@ -15,7 +15,7 @@ import {
 const BASELINE = {
   minimumFiles: 3500,
   minimumClickSites: 600,
-  unreachable: 24,
+  unreachable: 10,
 } as const;
 
 const result = analyzeKeyboardReachability();
@@ -104,6 +104,16 @@ describe("scan self-test — each verdict is reached for the stated reason", () 
 
   it("counts a shared-helper spread too, so moving a site onto it never shrinks the denominator", () => {
     expect(countClickSites("<div {...activationProps(handleOpen)}>x</div>")).toBe(1);
+  });
+
+  it("counts the propagation shield too — the other shared helper a site is converted onto", () => {
+    expect(countClickSites("<div {...propagationShield}>x</div>")).toBe(1);
+  });
+
+  it("BITE PROOF — a shielded site is reachable AND still in the denominator", () => {
+    const source = "<div {...propagationShield}><button onClick={a}>x</button></div>";
+    expect(findUnreachableClickTargets(source)).toHaveLength(0);
+    expect(countClickSites(source)).toBe(2);
   });
 
   it("reads a multi-line handler without ending the tag inside the arrow", () => {

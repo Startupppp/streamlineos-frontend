@@ -40,6 +40,7 @@ import {
 } from "@/features/dashboard/use-my-pending-documents";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { CARD_ACTIVATOR_CLASS } from "@/lib/keyboard-activation";
 
 function SummaryChip({
   icon: Icon,
@@ -96,7 +97,9 @@ interface DocumentItemProps {
 }
 
 function DocumentItem({ doc }: DocumentItemProps) {
-  const handleView = () => viewProtectedFile(`/hr/documents/${doc.id}/file`);
+  const handleView = () => {
+    void viewProtectedFile(`/hr/documents/${doc.id}/file`);
+  };
   const handleViewClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     void viewProtectedFile(`/hr/documents/${doc.id}/file`);
@@ -110,18 +113,21 @@ function DocumentItem({ doc }: DocumentItemProps) {
   };
 
   return (
-    <div
-      className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors group cursor-pointer"
-      onClick={handleView}
-    >
+    <div className="relative flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors group cursor-pointer">
       <div className="p-2 rounded-lg bg-primary/10 shrink-0">
         <FileText className="h-4 w-4 text-primary" />
       </div>
       <div className="flex-1 min-w-0">
-        <TruncatedText
-          text={doc.name}
-          className="text-sm font-medium text-foreground"
-        />
+        <button
+          type="button"
+          className={`block w-full min-w-0 ${CARD_ACTIVATOR_CLASS}`}
+          onClick={handleView}
+        >
+          <TruncatedText
+            text={doc.name}
+            className="text-sm font-medium text-foreground"
+          />
+        </button>
         <div className="flex items-center gap-2 mt-0.5">
           <Badge variant="outline" className="text-micro px-1.5 py-0">
             {DOC_TYPE_LABELS[doc.type] ?? doc.type}
@@ -133,7 +139,7 @@ function DocumentItem({ doc }: DocumentItemProps) {
           </span>
         </div>
       </div>
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="relative z-10 flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
         <AnimatedIconButton
           icon={EyeIcon}
           iconSize={14}

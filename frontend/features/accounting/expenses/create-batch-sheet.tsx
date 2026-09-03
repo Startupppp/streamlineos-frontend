@@ -100,14 +100,9 @@ export function CreateBatchSheet({ open, onOpenChange, onCreated }: CreateBatchS
     form.reset();
   }, [form, onOpenChange]);
 
-  const handleRowClick = useCallback(
+  const makeToggle = useCallback(
     (id: number) => () => handleToggle(id),
     [handleToggle],
-  );
-
-  const handleCheckboxClick = useCallback(
-    (e: React.MouseEvent) => e.stopPropagation(),
-    [],
   );
 
   const allSelected = pendingExpenses.length > 0 && selectedIds.size === pendingExpenses.length;
@@ -175,15 +170,15 @@ export function CreateBatchSheet({ open, onOpenChange, onCreated }: CreateBatchS
 
           <div className="space-y-1 max-h-72 overflow-y-auto scrollbar-thin">
             {pendingExpenses.map((expense) => (
-              <div
+              <label
                 key={expense.id}
+                htmlFor={`batch-expense-${expense.id}`}
                 className="flex items-center gap-3 rounded-md border border-border/50 px-3 py-2 hover:bg-muted/30 cursor-pointer"
-                onClick={handleRowClick(expense.id)}
               >
                 <Checkbox
+                  id={`batch-expense-${expense.id}`}
                   checked={selectedIds.has(expense.id)}
-                  onCheckedChange={() => handleToggle(expense.id)}
-                  onClick={handleCheckboxClick}
+                  onCheckedChange={makeToggle(expense.id)}
                   className="shrink-0"
                 />
                 <div className="min-w-0 flex-1">
@@ -191,7 +186,7 @@ export function CreateBatchSheet({ open, onOpenChange, onCreated }: CreateBatchS
                   <TruncatedText text={`${expense.category} · ${expense.expenseDate}`} className="text-xs text-muted-foreground" />
                 </div>
                 <Money value={parseFloat(expense.amount)} className="text-sm font-medium shrink-0" />
-              </div>
+              </label>
             ))}
           </div>
         </div>

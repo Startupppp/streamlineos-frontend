@@ -14,6 +14,7 @@ import { formatRoleLabel } from "./user-invite-roles";
 import { UserStatusBadge } from "./user-status-badge";
 import type { EmploymentFacts } from "@/hooks/api/directory/employment";
 import { resolveImageUrl } from "@/lib/utils";
+import { propagationShield } from "@/lib/keyboard-activation";
 
 interface UserActionCellProps {
   user: User;
@@ -21,12 +22,9 @@ interface UserActionCellProps {
 }
 
 function UserActionCell({ user, onView }: UserActionCellProps) {
-  const handleContainerClick = useCallback((event: React.MouseEvent) => {
-    event.stopPropagation();
-  }, []);
   const handleView = useCallback(() => onView(user.id), [onView, user.id]);
   return (
-    <div onClick={handleContainerClick}>
+    <div {...propagationShield}>
       <UserActionsMenu user={user} onView={handleView} />
     </div>
   );

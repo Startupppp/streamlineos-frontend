@@ -25,6 +25,7 @@ import { TaxWindowStatusBadge } from "./tax-window-status-badge";
 import { TaxWindowSheet } from "./tax-window-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
+import { propagationShield } from "@/lib/keyboard-activation";
 
 const NEXT_STATUS: Partial<Record<TaxWindowStatus, { next: TaxWindowStatus; label: string; confirm: string }>> = {
   DRAFT: {
@@ -99,7 +100,7 @@ export function TaxWindowsTab() {
       cell: (row) => {
         const advance = NEXT_STATUS[row.status];
         return (
-          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-1" {...propagationShield}>
             <Button
               variant="ghost"
               size="sm"

@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { formatDistanceToNow } from "date-fns";
+import { propagationShield } from "@/lib/keyboard-activation";
 
 interface UserSessionsTabProps {
   userId: string;
@@ -146,7 +147,7 @@ export function UserSessionsTab({ userId }: UserSessionsTabProps) {
         const active = isSessionActive(row);
         if (!active) return null;
         return (
-          <div onClick={(e) => e.stopPropagation()}>
+          <div {...propagationShield}>
             <Button
               variant="ghost"
               size="sm"

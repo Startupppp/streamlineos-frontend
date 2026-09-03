@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type KeyboardEvent } from "react";
+import { useState, type KeyboardEvent, type MouseEvent } from "react";
 import { DollarSign, FileText, ArrowLeftRight } from "lucide-react";
 import { XIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -28,6 +28,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { AppDialog } from "@/components/shared/app-dialog";
+import { CARD_ACTIVATOR_CLASS } from "@/lib/keyboard-activation";
 import { Money } from "@/features/accounting/shared";
 import { BankTxnStatusBadge } from "./bank-txn-status-badge";
 import { useConfirmMatch, useUnmatch, useIgnoreTransaction } from "@/hooks/api/accounting/banking";
@@ -86,6 +87,17 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
       { transactionId: txn.id, matchType, matchedRecordId },
       { onSuccess: onClose },
     );
+  }
+
+  function makeConfirmSuggestion(matchedRecordId: number, matchType: MatchType) {
+    return (event: MouseEvent) => {
+      event.stopPropagation();
+      handleConfirmSuggestion(matchedRecordId, matchType);
+    };
+  }
+
+  function makeSelectSuggestion(index: number) {
+    return () => setSelectedSuggestionIndex(index);
   }
 
   function handleConfirmFee() {
@@ -175,21 +187,25 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
               <div
                 key={s.id}
                 className={[
-                  "border rounded-lg p-3 cursor-pointer transition-colors",
+                  "relative border rounded-lg p-3 transition-colors",
                   i === selectedSuggestionIndex
                     ? "border-status-info-rule bg-status-info-surface"
                     : "border-border hover:border-status-info-rule hover:bg-muted/30",
                 ].join(" ")}
-                onClick={() => setSelectedSuggestionIndex(i)}
               >
                 <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    aria-pressed={i === selectedSuggestionIndex}
+                    className={`flex items-center gap-1.5 cursor-pointer ${CARD_ACTIVATOR_CLASS}`}
+                    onClick={makeSelectSuggestion(i)}
+                  >
                     <Icon className="h-3.5 w-3.5 text-muted-foreground" />
                     <span className="text-xs font-medium">{matchLabel}</span>
-                  </div>
+                  </button>
                   <Money value={parseFloat(s.amount)} />
                 </div>
-                <div className="flex items-center justify-end gap-2">
+                <div className="relative z-10 flex items-center justify-end gap-2">
                   {confidencePct !== null ? (
                     <>
                       <div className="h-1.5 w-16 rounded-full bg-muted overflow-hidden">
@@ -206,10 +222,7 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
                   <Button
                     size="sm"
                     className="h-6 text-dense px-2"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleConfirmSuggestion(s.id, s.matchedType);
-                    }}
+                    onClick={makeConfirmSuggestion(s.id, s.matchedType)}
                     disabled={confirmMatch.isPending}
                   >
                     Confirm

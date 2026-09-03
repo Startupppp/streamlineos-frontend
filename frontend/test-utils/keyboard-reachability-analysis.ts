@@ -34,7 +34,13 @@ const TAG_START = /<([a-zA-Z][a-zA-Z0-9.]*)(?=[\s/>])/g;
 const CLICK_PROP = /\bonClick\s*=/;
 const KEY_PROP = /\bon(?:KeyDown|KeyUp|KeyPress)\s*=/;
 const SPREAD = /\{\s*\.\.\./;
-const SHARED_ACTIVATION = /\bactivationProps\s*\(/;
+/**
+ * The shared helpers in `lib/keyboard-activation.ts`. A site that moves onto
+ * one of them still counts toward the denominator — otherwise converting a
+ * finding would shrink the population it was counted against, and the ratio
+ * would improve because the question was withdrawn.
+ */
+const SHARED_ACTIVATION = /\bactivationProps\s*\(|\bpropagationShield\b/;
 
 export interface ClickSite {
   file: string;

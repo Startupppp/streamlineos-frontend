@@ -109,6 +109,10 @@ export function UserImportDialog({ open, onOpenChange }: UserImportDialogProps) 
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 
+  function handleChooseFile() {
+    fileInputRef.current?.click();
+  }
+
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -145,9 +149,10 @@ export function UserImportDialog({ open, onOpenChange }: UserImportDialogProps) 
 
         {!importResult ? (
           <>
-            <div
-              className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 flex flex-col items-center gap-3 cursor-pointer hover:border-muted-foreground/50 transition-colors"
-              onClick={() => fileInputRef.current?.click()}
+            <button
+              type="button"
+              className="w-full border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 flex flex-col items-center gap-3 cursor-pointer hover:border-muted-foreground/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={handleChooseFile}
             >
               <Upload className="h-8 w-8 text-muted-foreground/50" />
               <div className="text-center">
@@ -163,14 +168,14 @@ export function UserImportDialog({ open, onOpenChange }: UserImportDialogProps) 
                   <code className="bg-muted px-0.5 rounded">phone</code>
                 </p>
               </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv,text/csv"
-                className="hidden"
-                onChange={handleFileChange}
-              />
-            </div>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,text/csv"
+              className="hidden"
+              onChange={handleFileChange}
+            />
 
             {preview.length > 0 && (
               <div className="space-y-2">

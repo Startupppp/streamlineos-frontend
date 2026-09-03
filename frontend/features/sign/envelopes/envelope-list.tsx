@@ -27,6 +27,7 @@ import type { SignEnvelope } from "@/types/sign";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCan } from "@/hooks/api/access";
+import { propagationShield } from "@/lib/keyboard-activation";
 
 const STATUS_FILTERS = [
   { value: "all", label: "All" },
@@ -160,7 +161,7 @@ export function EnvelopeList() {
       cell: (envelope) => {
         const canEdit = EDITABLE_STATUSES.has(envelope.status);
         return (
-          <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
+          <div className="flex justify-end" {...propagationShield}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button

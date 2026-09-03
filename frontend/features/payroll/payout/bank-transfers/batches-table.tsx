@@ -18,6 +18,7 @@ import { GeneratePayoutDialog } from "./generate-payout-dialog";
 import { MarkBatchSentDialog, MarkBatchPaidDialog } from "./mark-batch-dialogs";
 import { cn } from "@/lib/utils";
 import type { PayoutBatch, BankBatchStatus, BatchFormat } from "@/types/payroll";
+import { propagationShield } from "@/lib/keyboard-activation";
 
 const BATCH_STATUS_STYLES: Record<BankBatchStatus, string> = {
   DRAFT: "bg-muted text-muted-foreground",
@@ -103,10 +104,7 @@ export function BatchesTable({
           key: "actions",
           header: "",
           cell: (row) => (
-            <div
-              className="flex items-center gap-1.5"
-              onClick={(e) => e.stopPropagation()}
-            >
+            <div className="flex items-center gap-1.5" {...propagationShield}>
               {row.status === "GENERATED" && (
                 <Button
                   size="sm"
