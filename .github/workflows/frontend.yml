@@ -169,6 +169,14 @@ jobs:
   # network, no sibling checkout. A step marked `continue-on-error` names the
   # measured reason it cannot block yet — a gate wired so that it always fails
   # gets muted within a week, which is worse than not wiring it.
+  #
+  # 2026-09-03 (ticket 35) — EVERY gate step carries `if: ${{ !cancelled() }}`.
+  # Without it a single red gate skips every gate below it, so the job reports
+  # on a PREFIX of the suite rather than on the suite. Measured at head in a
+  # frontend-only checkout: `check:command-catalog` is red for a real reason,
+  # and it alone turned the 18 gates after it into "skipped". The condition
+  # does NOT weaken anything — a failed step without continue-on-error still
+  # fails the job, it simply no longer hides its successors.
   gates:
     runs-on: ubuntu-latest
     defaults:
@@ -209,6 +217,7 @@ jobs:
       # dot-directory scan exclusion each exits 1 WITH the opt-in set and names
       # the failing assertion.
       - name: Repo path resolvers still resolve
+        if: ${{ !cancelled() }}
         env:
           STREAMLINE_ALLOW_FRONTEND_ONLY: "1"
         run: pnpm run check:repo-paths:self-test
@@ -219,15 +228,19 @@ jobs:
       # 5,243 files. Measured here before wiring: rc=0, "No circular dependency
       # found!", 5,243 files processed in 13.5s. Blocking because it is green.
       - name: Import graph is acyclic
+        if: ${{ !cancelled() }}
         run: pnpm run check:cycles
 
       - name: Query keys and caches stay tenant-scoped
+        if: ${{ !cancelled() }}
         run: pnpm run check:query-scope:self-test && pnpm run check:query-scope
 
       - name: Every queryFn forwards the abort signal
+        if: ${{ !cancelled() }}
         run: pnpm run check:query-signal:self-test && pnpm run check:query-signal
 
       - name: Client contract has not drifted from the API (timesheets)
+        if: ${{ !cancelled() }}
         run: pnpm run check:contract-drift:self-test && pnpm run check:contract-drift
 
       # CANNOT RUN IN CI — named prerequisite: a checkout of
@@ -243,6 +256,7 @@ jobs:
       # defect this ticket exists to remove. To make it blocking, add a checkout
       # of the backend repository and set STREAMLINE_BACKEND_ROOT to it.
       - name: Module manifest agrees with the sidebar and vocabulary
+        if: ${{ !cancelled() }}
         continue-on-error: true
         run: pnpm run check:module-manifest:self-test && pnpm run check:module-manifest
 
@@ -251,10 +265,12 @@ jobs:
       # manifest-vs-controller comparison — the entire point of this gate could
       # not run"; two-repo layout exit 0.
       - name: Home manifest agrees with the dashboard controller
+        if: ${{ !cancelled() }}
         continue-on-error: true
         run: pnpm run check:home-manifest:self-test && pnpm run check:home-manifest
 
       - name: Every route-access permission names a real endpoint
+        if: ${{ !cancelled() }}
         run: pnpm run check:route-access-contract:self-test && pnpm run check:route-access-contract
 
       # BLOCKING AND CURRENTLY RED, deliberately. MEASURED 2026-09-03 at head in
@@ -266,37 +282,47 @@ jobs:
       # territory, not gate noise; the gate is left blocking so they cannot be
       # merged past, and the baseline is deliberately NOT raised to absorb them.
       - name: Every mutation is classified as permissioned or self
+        if: ${{ !cancelled() }}
         run: pnpm run check:command-catalog:self-test && pnpm run check:command-catalog
 
       # An authenticated layout without robots noindex inherits index:true from the root
       # layout, which is how three session-gated shells became crawlable.
       - name: Authenticated shells are noindex and public pages carry canonical metadata
+        if: ${{ !cancelled() }}
         run: pnpm run check:seo-metadata:self-test && pnpm run check:seo-metadata
 
       - name: No arbitrary hex colour classes
+        if: ${{ !cancelled() }}
         run: pnpm run check:colors:self-test && pnpm run check:colors
 
       - name: No useEffect-driven API fetches
+        if: ${{ !cancelled() }}
         run: pnpm run check:effect-fetches:self-test && pnpm run check:effect-fetches
 
       - name: No local Intl formatters outside lib/format-utils.ts
+        if: ${{ !cancelled() }}
         run: pnpm run check:formatters:self-test && pnpm run check:formatters
 
       - name: Icon-only buttons carry an accessible name
+        if: ${{ !cancelled() }}
         run: pnpm run check:icon-labels:self-test && pnpm run check:icon-labels
 
       - name: Client-page ratio stays within its ceiling
+        if: ${{ !cancelled() }}
         run: pnpm run check:client-pages:self-test && pnpm run check:client-pages
 
       - name: Authenticated route modules stay thin
+        if: ${{ !cancelled() }}
         run: pnpm run check:route-thinness:self-test && pnpm run check:route-thinness
 
       - name: No hand-rolled empty states
+        if: ${{ !cancelled() }}
         run: pnpm run check:empty-states:self-test && pnpm run check:empty-states
 
       # Budgets only; no measurement runs in CI yet. Swap --self-test for --results=<file>
       # once a Lighthouse step produces one. See architecture-refactor/WEB-VITALS-EVIDENCE.md.
       - name: Web Vitals budgets are enforceable
+        if: ${{ !cancelled() }}
         run: pnpm run check:web-vitals-budget:self-test
 
       # ---------------------------------------------------------------------
@@ -310,6 +336,7 @@ jobs:
       # workflow's own rule is to delete continue-on-error when the number is no
       # longer above the line, so it is deleted.
       - name: Files over 300 lines do not increase
+        if: ${{ !cancelled() }}
         run: pnpm run check:over-300:self-test && pnpm run check:over-300
 
       # Measured rc=1: 3 files over 500 lines — features/hr/cases/cases-page-content.tsx
@@ -323,6 +350,7 @@ jobs:
       # Aligning by tightening costs exactly one new row. §7 lists its exceptions
       # and tests are not among them. All three are other tickets' files.
       - name: Files over 500 lines
+        if: ${{ !cancelled() }}
         continue-on-error: true
         run: pnpm run check:file-sizes:self-test && pnpm run check:file-sizes
 
@@ -338,9 +366,11 @@ jobs:
       # came from. Measured at head: rc=0, 4,258 application files, 7 sites in
       # 6 files, 0 banned escapes.
       - name: Type assertions stay at a proven seam
+        if: ${{ !cancelled() }}
         run: pnpm run check:type-assertions:self-test && pnpm run check:type-assertions
 
       - name: Every export is classified and no classification is stale
+        if: ${{ !cancelled() }}
         continue-on-error: true
         run: pnpm run check:dead-code:self-test && pnpm run check:dead-code
 
@@ -348,12 +378,14 @@ jobs:
       # (/calendar, /notifications, /settings, /build/my-work, /crm/leads, +1).
       # It needs a production build measurement, which no job here produces.
       - name: Route bundle bytes stay within their declared ceiling
+        if: ${{ !cancelled() }}
         continue-on-error: true
         run: pnpm run check:route-bundle-budget:self-test && pnpm run check:route-bundle-budget
 
       # Measured rc=1: 1 business route handler, app/api/media/image/route.ts.
       # Root CLAUDE.md §5 permits only the NextAuth route. Real finding.
       - name: The only route.ts is NextAuth
+        if: ${{ !cancelled() }}
         continue-on-error: true
         run: pnpm run check:routes:self-test && pnpm run check:routes
 
@@ -362,6 +394,7 @@ jobs:
       # > 600, desktop TTFB p95 1430ms > 400, +2. Real findings, ticket 26. The
       # self-test above stays blocking; this reports the numbers.
       - name: Web Vitals budgets (measured)
+        if: ${{ !cancelled() }}
         continue-on-error: true
         run: pnpm run check:web-vitals-budget
 
@@ -381,6 +414,7 @@ jobs:
       # @/features/settings/organization/leave-organization-control into
       # components/layout/header/org-switcher.tsx.
       - name: Import direction (features -> shared, never the reverse)
+        if: ${{ !cancelled() }}
         continue-on-error: true
         run: pnpm run check:import-direction:self-test && pnpm run check:import-direction
 
@@ -391,5 +425,6 @@ jobs:
       # blocking above. To make this blocking, add a checkout of
       # Startupppp/streamlineos-backend and set STREAMLINEOS_BACKEND_ROOT to it.
       - name: Vendored contract is byte-identical to the backend artifact
+        if: ${{ !cancelled() }}
         continue-on-error: true
         run: pnpm run check:contract-vendor:self-test && pnpm run check:contract-vendor
