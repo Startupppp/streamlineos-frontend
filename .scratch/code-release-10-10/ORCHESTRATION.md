@@ -347,3 +347,761 @@ frontend stream client exists for the 9 non-chat `/stream` routes: `hooks/api/ch
 still hard-wired to `/chat`, so **these surfaces still buffer from the user's seat even though the
 backend now streams**. Ticket 13's territory. A backend that streams into a client that buffers has
 delivered nothing to the user, and the box is correctly left open on that basis.
+
+## Mass agent stall, 2026-09-02 ~22:40 — infrastructure, not work
+
+Fourteen agents died simultaneously to `no progress for 600s (stream watchdog did not recover)`.
+Simultaneity across unrelated tickets means the cause was the harness or host, not the tasks. Several
+were seconds from finishing ("Running the two mutation proofs", "Both final runs are done", "Now the
+full gate sweep").
+
+**No work was lost.** Every agent's uncommitted edits remained in the shared working trees — 111
+backend files (69 modified / 40 untracked) and 85 frontend (58 / 27). Before anything else these were
+archived to the session scratchpad (`wip-backup/backend-wip-2244.tgz`, `frontend-wip-2244.tgz`).
+Ten agents were then re-dispatched, each instructed to **survey `git status` and resume from the
+partial work on disk rather than restart**, since a fresh agent rewriting a half-finished file is how
+concurrent work actually gets destroyed.
+
+**Standing change made as a result:** every re-dispatch now says *commit each unit of work as it
+lands, not at the end*. Batching to the end was what turned a 600-second watchdog into hours of
+unbanked work. Under this concurrency model, an uncommitted change is not saved.
+
+Concurrency was reduced from 15 to 10 on the theory that the stall was resource exhaustion. The
+2-slot `heavy.sh` mutex was already in force, so the pressure was agent count, not heavy commands.
+
+## Fourth attribution incident — same root cause, now well characterised
+
+The module-DI agent's `ci.yml` commit swallowed the authz-deny agent's uncommitted
+`Gated handlers have a deny test` step. Content intact and committed verbatim; it simply landed under
+someone else's message.
+
+That is now four incidents with **one** root cause, worth stating precisely because the usual advice
+does not prevent it: *a pathspec on `git commit` bounds which **files** land, never which **hunks** of
+a shared file land.* Any file more than one agent edits — `package.json`, `ci.yml`,
+`_journal.json`, a shared baselines JSON — will carry其 co-editors' work into whichever commit lands
+first. The four: the swallowed 17-file commit; the shared baselines JSON; the journal naming six
+uncommitted migrations (build-breaking, now cleared); this CI step.
+
+There is no fix available under this model. The mitigations that do work: keep shared-file edits
+minimal and immediate, commit them at once, and afterwards run `git diff -- <file>` to confirm you
+removed nobody else's line. For ticket 40: **history attribution in this release is unreliable by
+construction.** Judge what is on disk, not who a commit says wrote it.
+
+## Endgame, as instructed by the user
+
+1. All 42 tickets complete.
+2. **Re-check everything at a single quiesced commit** — ticket 41's own criterion is that evidence
+   gathered across a moving tree proves nothing about any one state of it. No agent may be writing.
+3. Push to `main`.
+
+**`main` has diverged and must be merged, never force-pushed.** Measured after fetch:
+`origin/main` carries **3 backend** commits (openapi refresh, an openapi self-test env fix, an HR
+soft-delete predicate) and **4 frontend** commits (mail folder navigation + error handling, a mail
+handler rename, four bite-proven frontend gates, KB ACL handling) that are **not** on the release
+branch. The release branch is 51 / 53 commits ahead. A force-push would destroy those seven commits of
+real work — including, notably, four bite-proven gates and an ACL change. Merge, resolve, re-verify,
+then push.
+
+## The stall's real hazard: a planted bite-proof defect left live in the shared tree
+
+The most dangerous consequence of the mass stall was not lost work. Agents bite-prove gates by
+**introducing a defect**, watching the gate go red, then removing it. An agent killed between those
+two steps leaves the defect in a tree fifteen other agents are committing from.
+
+One survived: `src/common/tenant/tenant-db.ts` carried an uncommitted
+`if (!context) void target.transaction(async (tx) => tx);` — a floating transaction fired on **every
+property access with no tenant context**. It **typechecked cleanly and no gate detected it**; only
+running the spec caught it. It was found and removed by the agent that inherited the territory, and
+that removal doubled as its mutation proof.
+
+**Orchestrator swept both repositories for others afterwards. None found.** Method, recorded so ticket
+41 can repeat it: scan every uncommitted diff for plant-shaped changes — small additions with zero
+deletions in non-spec source — and read each one. All that surfaced were legitimate: the routed
+`idx_tickets_org_assignee_updated_live` index, two missing `org_id` tenant-scoping probes
+(`projects-write.service.ts`, `hr-workflow-step-runner.service.ts`), nav indicators, invoice status
+labels and permission keys.
+
+**Standing rule from here:** bite-prove against a **hermetic copy**, never the live shared tree. The
+authz-deny gate did this correctly — `git archive HEAD src test` into a temp tree, plant there, run,
+discard. That is the pattern; mutating the shared working tree to prove a gate is only safe for a
+single-agent repo.
+
+For ticket 41: **a clean typecheck does not prove the absence of a planted defect**, and neither does
+a green gate sweep — this one passed both. Run the plant-shape scan before certifying any commit.
+
+## Ticket 35 closed 7 of 8, with two disciplined refusals worth preserving
+
+`check:authz-deny` is new and bite-proven in **both** directions on a hermetic tree: planting a
+`@RequirePermission` handler with no deny test moved uncovered 2453 → 2454 and named it; planting a
+deny spec for an uncovered handler moved it 2453 → 2452 and raised covered 766 → 767. Self-test 40
+assertions. Population 3,219 gated handlers, 766 covered, **uncovered 2,453** — a large honest number,
+recorded as a floor rather than dressed up.
+
+**The script header states its own limits**, which is why the number can be trusted: it is static
+(proves a deny test exists and is attributable, does not run it) and attributes per spec *file*, not
+per `it()`. A gate that describes what it cannot see is the opposite of the failure this release keeps
+finding.
+
+`check:transaction-callbacks` VOID **9 → 2**, ratchet lowered to 2. The two survivors are inventory
+and leads — excluded modules — as are the 6 CRM quarantines. Six specs repaired, and the repairs were
+proven non-vacuous: mutation 2 fails the repaired spec (1 failed / 1 passed) while the *same mutation
+against the pre-repair spec passes 2/2*, which is exactly the evidence that the repair added real
+coverage rather than noise.
+
+**Two refusals, both correct.** It declined to lower the `check:authz-deny` ratchet to 2443, the
+number the dirty tree currently shows, because those deny specs belong to an agent still in flight —
+banking an uncommitted number would red CI if that work never lands. And it declined to count the 57
+`@AuthorizedInService` handlers whose deny is unobservable from a route test, reporting them INFO
+instead of folding them into a coverage figure they cannot honestly join.
+
+## The index routing was wrong, and the agent measured instead of complying
+
+This is the clearest vindication of "measure, do not reason" in the release, and the orchestrator was
+the one who got it wrong. Two corrections, both found by measurement:
+
+**1. Two budgets were conflated, and the orchestrator relayed the conflation.**
+`dashboard-personal-my-tasks` does **not** breach. It is **VACUOUS — it scans 0 rows.** Its predicate
+uses the app's status vocabulary `'TODO','IN_PROGRESS','IN_REVIEW'` while the seed writes
+`'Todo','In Progress'`. Nothing matches, so it "passes" by matching nothing: measured scan 0–24
+against a 1,000 ceiling, with its `maxScanRows`, `forbid-seq-scan` and 2,000-buffer ceiling **all
+unenforced at every tenant**. The 1,801 rows belong to **`dashboard-my-issues`** — same query without
+the status filter — which declares no `maxScanRows` and passes at 261 buffers. That is a *third*
+vacuous budget of the same family as the six already fixed, and it was hiding inside a report of a
+breach. Routed to ticket 22 as a correction.
+
+**2. The index shape the orchestrator routed does not work, and shipping it would have been pure
+cost.** `(org_id, assignee_membership_id, status, updated_at DESC)` measured **identical to head on
+all four tenants**. A `status` key sitting between the equality columns and the sort column makes the
+ordering unusable, so `LIMIT 10` cannot stop early; the 89.93% tenant declined it outright and kept
+walking `idx_tickets_org_updated_live`. The agent **did not ship it.**
+
+What shipped instead drops `status`: `idx_tickets_org_assignee_updated_live
+(org_id, assignee_membership_id, updated_at DESC) WHERE deleted_at IS NULL` (migration 1027).
+Measured in buffers as `streamline_app` with the tenant GUC, `VACUUM ANALYZE` after each DDL, on a
+`TEMPLATE scratch_perf_seed` copy — 20,572 tickets across 18,500 / 1,850 / 185 / 37:
+
+    tenant     my-issues       my-tasks
+    89.93%     261 →  22       252 → 13
+    9.00%       40 →  19        34 → 13
+    0.90%      175 →  75        31 → 15
+    0.18%       61 →  60        10 → 10
+
+Rows scanned at the majority tenant **1,801 → 10**. Chosen on all four tenants, never worse on any —
+the exact inverse of the 0999 index-drop pattern. 440 kB against a 3,584 kB heap.
+
+It also **rewrote its predecessor's migration header**, whose numbers did not reproduce: the claimed
+"18,642 tickets" is the seed's count of rows with status `Todo`, not the ticket count. The file now
+carries only measured numbers. A number inherited from a previous pass is a claim, not evidence.
+
+**The payroll TDS item was declined, with better reasoning than the routing had.** Three of the
+orchestrator's premises were wrong: the FK already exists (migration 1026 added
+`(org_id, run_id) -> payroll_runs(org_id, id)`); the destructive case is already refused at the data
+layer by 1030's `trg_guard_paid_payroll_tds_ytd_row`, leaving only a LOCKED-not-yet-PAID window; and
+"add `run_id` to the natural key" is **insufficient as routed**, because `run_id` is nullable and both
+keys are *partial* unique indexes, so a nullable column de-duplicates nothing — it needs `NOT NULL`
+plus a backfill. Decisively: **nothing in `src/` or `test/` reads this table**, only the writer, so no
+read path defines whether "accumulate" means summing per-run rows or incrementing one. That is a
+payroll product decision, and taking it would have put two owners on one financial table. The routed
+file path was also wrong — it is `payroll/payout/locking.service.ts:206` with upserts at :244 and
+:277; no `payroll/runs/locking.service.ts` exists.
+
+**Lesson for ticket 40, and for the orchestrator:** findings routed between agents degrade exactly
+like the PRD text this release exists to reconcile. Three separate items here — a breach, an index
+shape, a schema fix — were each wrong in the routing and right only after measurement. Verify a routed
+finding before acting on it, including one routed by the orchestrator.
+
+## Ticket 23 — "a release SHA is not enough", measured rather than argued
+
+This is the single most important finding for ticket 41, because it undermines that ticket's own
+premise if taken naively.
+
+Ticket 41 says: re-run every proof **at a single commit**. Ticket 23 measured what a commit SHA
+actually pins here and found it insufficient. **The SQL its benchmarks measure lives in other tickets'
+files that are edited without being committed.** During its own 4-minute capture the SHA read
+"2 commits behind" while **8 read-cost entries had already changed shape on disk**. A capture stamped
+only with a SHA would have claimed to describe a tree it did not describe.
+
+Its fix is the right shape and ticket 41 should adopt it: the manifest now stamps a **sha256 of every
+catalog it measures**, plus whether that catalog was uncommitted at capture time. The committed
+capture honestly prints `staleness: current` **and** `subject: DRIFTED` — i.e. the commit was current
+while the measured subject changed underneath it.
+
+**For ticket 41: "one commit" is necessary and not sufficient.** Quiesce every agent first, confirm
+zero dirty files in both repos, and content-hash what is measured — a SHA plus a dirty working tree
+is a false pin.
+
+**The manifest is already 4 commits behind, and says so on every run** rather than presenting stale
+numbers as fresh. That is the correct behaviour for an artifact that cannot keep up with a moving
+tree, and it is what every other recorded number in this release lacks.
+
+## Correction: the orchestrator's seed-emptiness routing was over-broad
+
+I routed a warning that three of four perf tenants "had no chat data at all", telling ticket 23 that
+baselines captured against them measured empty tables. **Ticket 23 checked and answered with counts.**
+Read directly off the seed as `streamline_app` with the tenant GUC set, all four tenants hold chat
+rows: large 168 / 12,000 / 2,000 / 200 · mid 5 / 1,200 / 250 / 20 · small 3 / 120 / 24 / 5 · tiny
+3 / 24 / 15 / 5.
+
+The accurate statement is narrower: **`scripts/seed-perf-scratch.mjs` is broken for a *fresh* build**
+(it violated `chk_chat_channels_privacy_matches_type`), but **the existing `scratch_perf_seed`
+database escaped it**. No re-capture was owed. I generalised a script defect into a data defect
+without checking the data.
+
+That is now the **third** orchestrator routing corrected by an agent's measurement — after the
+conflated budget and the index shape. The pattern is consistent and worth stating plainly: a finding
+relayed between agents decays exactly like the stale PRD text this release exists to reconcile, and
+the orchestrator is not exempt. Every routed finding must be re-measured before it is acted on.
+
+**The useful half survived anyway:** ticket 23 built the emptiness refusal regardless — a benchmark
+recorded `measured` while its own subject table holds 0 rows is now a **hard violation**, as is an
+uncountable table, both re-proved by injection against the real manifest. A harness that cannot tell
+"fast because well-indexed" from "fast because empty" would certify emptiness as excellence.
+
+**Gate quality:** 12 defects injected — **7 fire, 3 correctly declined, 2 emptiness refusals trip**.
+The 3 declines matter as much as the 7 fires: a gate that fires on everything is not a gate.
+
+Boxes 1 and 8 closed; the other 6 are PARTIAL or BLOCKED, each with its reason. Four of the six are
+infrastructure (no HTTP harness without `AUTH_SIGNING_KEYS`, no Redis on this seed so every number is
+the cache-MISS path, behaviour past the pool ceiling needs a running process) and one is a genuine
+product decision (`dashboard-personal.service.ts` uses a single `Promise.all`, so the response waits
+for its slowest section **by construction**).
+
+## Frontend lint: 2,365 -> 14, and two orchestrator claims disproved
+
+**Real and landed.** Ignore scope now excludes `.next-buildmart/**` (an alternate Next `distDir`,
+718 MB, already in `.gitignore:24`) and `coverage/**`. eslint was the only frontend scanner still
+walking that tree; the other six exclude it via `isExcludedScanDir`. Frontend lint went from a
+pristine-HEAD baseline of **2,365 errors / 17,183 warnings** to **14 errors / 957 warnings**, with
+**23 real errors fixed and zero `eslint-disable` added**. `type-check` 0. 11 affected suites, 63 tests,
+all passing.
+
+**Two things the orchestrator asserted were wrong, and the agent checked rather than complied:**
+
+1. **`feedbucket-widget/dist/**` does not exist.** `feedbucket-widget/build.mjs:47` writes into
+   `public/`, which is already ignored, and `feedbucket-widget/src` is authored source (19 files, 0
+   errors). The agent **declined to add a dead ignore entry** rather than pad the list to match the
+   brief. It also declined `.scratch`, `.swc`, `.github` and `.cursor` — 0 errors between them, and
+   `.scratch` holds authored scripts.
+2. **No CI gate was ever inflated by this.** All four eslint workflows run `Lint` before `Build`, and
+   both offending directories are gitignored, so CI never walked them. **2,365 was purely a
+   local-workspace artifact.** The orchestrator generalised a local number into a CI claim. This is
+   the fourth routed finding corrected by measurement.
+
+**A worse CI defect was found in passing — the release's signature failure, again.**
+
+- **Four workflow files under `frontend/.github/workflows/` are inert.** GitHub reads workflows from
+  the **repository root**; only `.github/workflows/frontend.yml` is live. Four files that look like CI
+  and are not.
+- In that one live workflow, **`Type Check` (line 51) and `Build` (line 54) sit in the same job after
+  `Lint` (line 48)**, and lint is red — so **neither the frontend type check nor the frontend build
+  has ever executed in CI.** The file's own header records this masking defect being fixed for the
+  `gates` job during ticket 35b; the same fix was never applied here. Routed.
+
+**`noUncheckedIndexedAccess`: measured, left OFF, reverted cleanly** — **184 errors / 84 files / 19
+modules**, measured through a throwaway probe config with `tsconfig.json` never edited. Shared
+CLAUDE.md §6 claims it is on; it is set in **neither** tsconfig.
+
+The caveat is the important part: **184 is a floor**, because `frontend/tsconfig.json` excludes tests
+and `scripts` — so the flag would report "on" while much of the code went unchecked. That is this
+release's defining defect in a compiler setting rather than a gate: green over a set it cannot see.
+
+**A genuine correctness bug, recorded not fixed** (CRM is out of scope):
+`features/crm/leads/leads-funnel-view.tsx:73` calls `useReducedMotion` **conditionally**, violating the
+rules of hooks.
+
+The 14 remaining errors are cross-territory: 11 in `hooks/api/**` (one shape — `captureXOptions`
+helpers calling hooks outside a component), 2 CRM, 1 landing. **Ticket 41 should expect frontend
+`pnpm lint` = exit 1 / 14 errors** and treat that as the honest current number.
+
+## The shared evidence database is stale — and it produced two contradictory true measurements
+
+Ticket 22 corrected the orchestrator's correction, and the root cause matters more than either.
+
+**`scratch_perf_seed` predates backend commit `3d157c15` and was never re-seeded.** It still holds
+**title-case** ticket statuses (`Todo`, `In Progress`) while the application and the current seeder
+write `TODO`/`IN_PROGRESS`/`IN_REVIEW`/`DONE`. Measured status counts: `scratch_t22b`/`t22c` →
+`TODO 18125…`; `scratch_perf_seed` → `Todo 18125…`.
+
+So both agents measured correctly and reached opposite conclusions:
+
+- The schema agent measured on `scratch_t07c`, a `TEMPLATE scratch_perf_seed` copy — inheriting
+  title-case — and found `dashboard-personal-my-tasks` **vacuous, 0 rows**. True of that database.
+- Ticket 22 measured on `scratch_t22c`, brought to head, and found it **not vacuous**:
+  `resultRows: 10`, `vacuous: false` on all three measurable tenants. Also true.
+
+**The 1,801 rows belong to *both* budgets** — same tenant+assignee read. They look like `my-issues`
+alone only on a title-case database. The orchestrator relayed the title-case reading as fact.
+
+**The seed code is correct; only the database is behind. `scratch_perf_seed` should be rebuilt.**
+It was not rebuilt during the run because ~9 agents were reading it concurrently and it is cited
+evidence for other tickets. The warning is now in `AGENT-BRIEF.md` instead: bring your own copy to
+head before measuring anything status-dependent, and state which database you measured and whether it
+was at head.
+
+**For ticket 41 this is a first-class hazard.** A measurement is only as current as its *data*, not
+just its commit — the same lesson ticket 23 reached from the catalog side (`subject: DRIFTED`). Two
+independent tickets have now found that a SHA does not pin evidence here.
+
+**What the orchestrator's correction did get right, and is now fixed:** `dashboard-my-issues` declared
+**no `maxScanRows`** at all, so it walked the same 1,801 rows and passed inside its 2,000-block
+ceiling. It now declares 200, and `my-tasks`' 1,000 — 45× above the post-1027 scan — was **tightened**
+to 200 as well. Bite-proved by dropping `idx_tickets_org_assignee_updated_live`: both budgets fail at
+1,801 > 200, restored, both pass.
+
+**Measured improvements, majority tenant, in buffers:** `notifications-list` 3,173 → **121**
+(59,561 → 98 rows); `unread-count` 10,566 → **16**; `dashboard-personal-notifications-count`
+11,377 → **16** (was a Seq Scan); `GET /notifications` `measuredDbCalls` 5 → **3**, unread-count
+4 → **2**. Read-cost coverage at the majority tenant is **70/70 measured, 0 refused** (was 32 refused).
+
+**Three findings raised rather than smoothed over:**
+1. **`GET /me/attendance/history` Seq Scans the tenant.** `AttendanceReadService.history` filters
+   `user_membership_id`; the only owning index is `(org_id, user_id, date)`. 193 buffers, **9,991 of
+   10,008 rows removed by filter** to return 17. Newly visible *because* the budget was re-pointed at
+   the column the code actually uses — the same class of defect as the notifications budgets.
+   Needs `(org_id, user_membership_id, date DESC)`.
+2. **`GET /calendar/events` breaches at 1,139 blocks against 500** — the one live gate failure. The
+   attendee `EXISTS` de-correlates into a hashed SubPlan materialising **26,077 `event_attendees`
+   rows (1,127 buffers) regardless of `LIMIT 3`**. The budget matches the service exactly and the
+   **ceiling was not raised**.
+3. **`leads-active`, `leads-assigned-to-me`, `contacts-list` bind tables their modules no longer
+   read** — reads go through `lead_party_map ⋈ business_parties`. Deliberately **not** re-pointed:
+   those maps hold **0 rows** and `owner_user_id` is NULL on all 22,240 parties, while `leads` and
+   `contacts` hold 8,896 each. Re-pointing would have produced three more vacuous budgets. The seed
+   must write the canonical side first; the mapping is recorded in the budget file.
+
+## A live backend credential was sitting in the working tree — found, verified, closed
+
+Ticket 26 disclosed it rather than leaving it: "Do not commit
+`frontend/.scratch/t26-decompose.mjs` — it hardcodes the backend's `INTERNAL_API_SECRET` literal."
+
+**Orchestrator verified it by hash rather than by eye, printing neither value**: the probe's `sl_int_…`
+literal hashed identically to `INTERNAL_API_SECRET` in the backend `.env`. It was **the real
+credential, not a placeholder** — sitting in a directory git did **not** ignore, one stray
+`git add -A` from being committed and pushed. Four separate incidents this release have shown how
+easily a shared-file commit sweeps up its neighbours.
+
+**Exposure: none.** `git log --all -S '<literal>'` returns nothing — the secret is in **no commit**,
+therefore never pushed, so **no rotation is required**. Stated precisely because "a secret was found"
+and "a secret leaked" are different incidents with very different responses.
+
+Closed: the literal is replaced by a `process.env.INTERNAL_API_SECRET` read that throws if unset, and
+`frontend/.scratch/` is now in `.gitignore`.
+
+**A correction to my own first reading.** I initially reported these probes as never committed. Five
+**were** — `admission-probe.mjs`, `admission-probe2.mjs`, `mint-session.mjs`, `probe-exchange.mjs`,
+`probe-exchange2.mjs`, in commits `c75185caf` and `26a785490`. I re-checked each: all read from
+`process.env` and **none embeds a credential**. So the conclusion holds, but it held for a reason I
+had not actually verified when I first stated it.
+
+**Residual caveat, recorded rather than papered over:** `.gitignore` does not untrack already-tracked
+files, so those five remain tracked and future edits to them are still committable. They are clean
+today; a probe that later hardcodes a value would still land. Ticket 41 should re-run the
+credential-shaped-literal scan over `frontend/.scratch/` before certifying.
+
+Related and already handled by an earlier agent (commit `c75185caf`): **10 disclosures of a real
+database host, role and database names** were redacted to placeholders across 3 evidence files, with
+both hash seals re-verified (13/13 and 28/28) and a ledger recording every hash state per file, so the
+re-seal is auditable rather than a quiet overwrite.
+
+## Ticket 27 closed 7/7; ticket 26 at 6/7, and the one open box is a product decision
+
+**Vitals all met**, measured over 192 samples with `routeFailures: 0`, `0 unauthorized / 0 off-route /
+0 unusable` — desktop LCP 888 / INP 48 / CLS 0.0008 / FCP 865; mobile LCP 1002 / INP 96 / CLS 0.000 /
+FCP 758. Four of six handed breaches closed; the two remaining TTFB breaches carry an owner.
+
+**The open box is honest.** Route-level JS is recorded and **not** met — 17 breaches, all JavaScript.
+Crucially, **not one is a missing lazy boundary**: `/dashboard`'s largest first-load scripts are
+74/58/54/44/32 kB then a tail of ~14 kB chunks, i.e. the shared authenticated shell. Blocked on a
+product decision (framer-motion, **278 importers**, pinned by the deliberately frozen landing
+animations) plus shell-composition work outside this ticket's size. That is a real blocker, not an
+excuse — and naming the 278 importers is what makes it checkable.
+
+**Two measurement-integrity findings worth keeping:**
+1. **A heap read without a forced GC is not a memory measurement.** The naive reading climbed
+   59 → 362 MB and **would have shipped a false leak report**; post-GC it is flat at 13–17 MB.
+2. **The predecessor's "hang" is diagnosed**: CDP sends had no deadline, so a wedged renderer parked
+   the driver **2 h 31 m at 0 % CPU** after 10 of 24 pairs. Fixed with `withDeadline` and self-tested;
+   a wedged route now lands in `routeFailures` instead of silently halving the sample.
+
+**Attribution corrected on the TTFB breaches:** the old story (session-data 588–757 ms, issued twice)
+was measuring the *failing* path — authenticated it is 100 ms. The real cost is **`GET /me/access`
+at p50 503 ms, once per authenticated server render** (`lib/rbac/get-server-access.ts`; React
+`cache()` dedupes within a render only). That single endpoint **is** both TTFB breaches.
+
+## A fifth attribution trap, and this one is new: `[` in a pathspec is a glob
+
+Found by the residue sweep: **a pathspec containing `[` is read by git as a character class and
+silently matches nothing.**
+
+    git commit -m "..." -- app/build/jobs/[jobId]/page.tsx            # commits NOTHING
+    git commit -m "..." -- ':(literal)app/build/jobs/[jobId]/page.tsx' # correct
+
+Next.js dynamic segments (`[id]`, `[slug]`, `[...rest]`) are everywhere under `app/`, so this hits
+frontend work constantly. It fails **silently** — git reports success having committed none of your
+files, and your work is then swept into whichever agent commits that path next. That is exactly what
+happened: commit `5a97f6691` absorbed another lane's JD-streaming edit under its own message.
+
+Added to `AGENT-BRIEF.md`. The mitigation is the one already in the brief and now doubly justified:
+**always `git show --stat HEAD` and confirm your files are actually listed.** A commit that reports
+success is not evidence that your work landed.
+
+This is the fifth distinct attribution failure this release, and the first that is not about shared
+files at all — it is git's own argument parsing.
+
+## Tickets 14 and 18 closed completely; 13 left honestly open
+
+**The file that was mid-restore when the watchdog fired was intact.** `gdpr-subject-erasure.service.ts`
+was checked first, as instructed: 259 lines, balanced, class closed, every import resolving, `git diff`
+showing exactly the intended chat-attachment sink change, and the full GDPR suite already green on it.
+The predecessor's restore had completed before the process died. No `.bak` was needed.
+
+**Bite proofs, each reverted and sha256-verified on both sides:** attachment drain capped to one page →
+2 failed / 13; `.strict()` and the org cross-check neutered on the GDPR consumer → 3 failed / 9;
+org-setup tenant guard forced false → 4 failed / 10, and `.strict()` removed → 1 failed / 10; the
+stream signal moved back into `init` → 3 failed / 19. `check:tenant-isolation` is now **928/928 (100%)**
+with `:run` green at 450 suites / 1,847 tests.
+
+**Ticket 13's open box is blocked on absent surfaces, not on effort.** 8 of the 9 `/stream` routes have
+**no caller at all**: 3 blog routes have no frontend surface, 4 are `features/crm/**` (excluded from
+this release), surveys needs a `features/surveys/**` change, and `/public/kb/stream-ask` renders on a
+public page. Each is a one-line adoption against `streamAiText`. Also open:
+`lib/api-client.ts`'s `makeRequestSignal` **drops the caller's signal** when `AbortSignal.any` is
+missing — a real defect.
+
+**Three corrections it made to its own brief**, all worth banking:
+- The claim that two untracked GDPR specs broke two gates was **stale** — no GDPR spec asserts any
+  migration, and both gate failures traced elsewhere.
+- "Four names nobody imports" is actually **two**; the other four are imported by
+  `gdpr-export-worker-tenant-isolation.spec.ts`.
+- Two of three routed ticket-13 items (`data-table.tsx`, `channel-sidebar.tsx`) were **already fixed**;
+  its own sub-agent's audit was stale on them, and it flagged the rest of that audit as unverified
+  rather than presenting it as findings.
+
+**A coupling worth knowing for any dead-code removal here:** the dead GDPR export chain cannot be
+removed from one territory alone. `check:dead-code` fails on a verdict knip no longer reports, so the
+5 ledger lines in `src/scripts/check-dead-code.mjs` must be deleted **in the same commit** as the
+symbols. The agent measured this rather than assuming — it wired `GdprExportRequestedPayload`, saw the
+gate go to exit 1 ("1 stale verdict"), and reverted.
+
+## A committed `.neutered` spec, removed
+
+`src/modules/gdpr/gdpr-subject-erasure-kb-erasure.spec.ts.neutered` was tracked — a 13 KB snapshot of
+an older bite proof, committed by accident in `bbe99a04`.
+
+**Checked before deleting rather than assumed**, because a renamed-away spec would be quarantined
+coverage that `check:test-suppressions` cannot see (it looks for `it.skip`, not for renamed files).
+It was not: a live `gdpr-subject-erasure-kb-erasure.spec.ts` supersedes it (20 KB, **24 tests, exit 0**,
+verified before removal), and backend jest is configured `testRegex = .*\.spec\.ts$` — anchored, so the
+`.neutered` extension never matched and the file ran nothing. Dead weight that read like a live spec.
+Removed.
+
+## The last-open-boxes sweep: two items needed no work, and one box had been mis-read for three passes
+
+**Ticket 14 — the defect no longer existed.** `check:tenant-isolation` is exit 0 at **928/928**; commit
+`deff6b6f` had already landed the suite, made the payload schema `.strict()` and added the consumer's
+payload-vs-event tenant guard. Verified rather than trusted: spec 10/10, `:run` exit 0 at 450 suites /
+1,847 tests, and bite-proven in a **hermetic `git archive` tree** — neutering the guard reds 4 of 10,
+removing `.strict()` reds 1 of 10, live-tree diff empty, temp tree deleted.
+
+It also handled the "404 never 403" instruction correctly instead of mechanically: **this is an outbox
+consumer, not a route, so no status code exists to assert.** The equivalent property is asserted
+directly and is stronger — one test serialises every downstream call argument and asserts it names
+*neither* org.
+
+**Ticket 20's box had been under-read by every prior pass, and re-reading it found real defects.** The
+box names *list, **count** and **existence*** paths; earlier passes scored list shape only. A
+count/existence read returns no DTO, so narrowing one is **contract-neutral** — pure upside. Three
+sites whose result is used only for `.length` were hydrating every declared column:
+
+- `sign-envelope-validation` — 17 columns including `sha256Hash` and both file keys
+- `sign-bulk-send` — 15 including a `column_mapping_json` jsonb
+- `survey-participant.remind` — **21 columns including `metadata` jsonb and `access_token_hash`**, the
+  hashed token granting access to a survey response, hydrated to answer a count
+
+Fixed. Re-counted at head across all 3,708 non-spec files: 290 `findMany` / 499 `findFirst` / 600 bare
+`.select()` with no projection, ~80% in excluded or other agents' modules. Marked **BLOCKED on a
+product decision**, not PARTIAL — no further measurement would close it, which is the right
+distinction to draw.
+
+**Ticket 08's blocker is now argued from tool capability rather than from territory, and it is
+permanent.** The box asks for **field-level** removal. knip (65 unused exported types), both
+`check:dead-code` ledgers and `tsc` all resolve at **file / export / type** granularity — **none of
+them resolves a field.** So the only available evidence for a field-level claim is a text search, and
+the box itself forbids exactly that. That is a genuine dead end, correctly recorded rather than
+half-satisfied. Nothing deleted, no `.strict()` weakened.
+
+**Ticket 35's exclusion re-checked, with a correction:** all 6 quarantines live in
+`src/modules/ai/core/crm-copilot.service.phase2.spec.ts` — **not** under `modules/crm`, as the ticket
+claimed. The claim was uncheckable as written even though the conclusion holds.
+
+**Ticket 33 marked BLOCKED with an operator runbook**, including the detail that matters most:
+**exit 2 from the backfill means "not visible to this role", never "nothing found"** — an operator who
+reads 2 as success would conclude a leak was already clean. It also fixed a self-contradiction in the
+backfill header, which first said `chat_attachments.file_url` is not handled there and 40 lines later
+said the owner covers it (the latter is correct; discovery is catalog-driven).
+
+**Honest and worth noting:** this agent connected to no database at all — no `psql`, no `scratch_*`,
+`DATABASE_URL` never read — and the ticket-33 backfill was **not executed anywhere**. It said so
+plainly rather than implying coverage.
+
+## The release's signature defect, found inside a gate the release itself wrote
+
+Ticket 36: **`check:type-assertions` counted suppressions with comments stripped** — but
+`@ts-ignore`, `@ts-expect-error` and `@ts-nocheck` **only ever exist inside a comment**. Its rule 1
+could never fire. It reported **0 suppressions because it could not see any**, and that clean zero was
+cited as evidence that production code was at the bar.
+
+Fixed in both repos, and the corrected detector immediately found a real `@ts-expect-error` in
+`frontend/instrumentation.ts:4`, now one narrow ledgered cast. Frontend `check:type-assertions` went
+1 → **0** with the detector actually working; backend is 26 sites / 16 files, **0 banned escapes**.
+
+This is the eighth instance of one pattern — a gate reporting a green number over a set it cannot see —
+and the most instructive, because the gate was **written during this release, by an agent following
+this release's rules**. Ticket 40 should treat "the gate is new" as no evidence at all that it works.
+The only evidence is a bite proof in both directions.
+
+## Three CI defects fixed — CI in this repo has been largely decorative
+
+1. **`check:dead-code` and `check:type-assertions` existed, passed, and no workflow named either.**
+   Now in the `gates` job, with `needs: null` verified on every job and no `pnpm lint` in it.
+2. **Frontend `Type Check` and `Build` sat below a red `Lint` in one job, so neither had ever
+   executed.** Split into their own jobs. And the `Build` step **could not have passed anyway**:
+   measured against `lib/env.ts` under a scrubbed environment it fails on `NEXTAUTH_SECRET` *and*
+   `NEXT_PUBLIC_API_URL`.
+3. **Four workflow files under `frontend/.github/workflows/` deleted.** GitHub only reads workflows
+   from the repository root, so they never ran — and they were unrunnable anyway (`pnpm lint` at root
+   → `ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL`). No coverage lost.
+
+Together with the earlier finding that **every gate in both repos sat behind a red Lint and had never
+once executed**, the accurate summary for ticket 42 is: CI in this repository has been reporting
+outcomes it never computed. That is now fixed, but **the first real CI run is the only proof**, and
+none has happened.
+
+## Orchestrator decision recorded: `noUncheckedIndexedAccess` stays OFF
+
+Shared `CLAUDE.md` §6 required it. It is set in **neither** repo, so the rule read as satisfied while
+nothing enforced it. Two agents measured the cost independently: **backend 574 errors / 190 files,
+frontend 184 / 84**.
+
+Both numbers are **floors** — each build config excludes tests and scripts, so enabling the flag would
+report "on" while much of the code stayed unchecked. That is the same defect this release keeps
+finding in gates, expressed as a compiler setting.
+
+**Decision: leave it off for this release**, and correct §6 so it stops asserting something untrue.
+A half-migrated strictness flag is worse than an honest absent one, and a 758-error migration is
+outside a code-level architecture baseline. Recorded as a **NEW REQUIREMENT needing an owner**, with
+the instruction not to enable it without owning the migration and stating what it does not cover.
+Constitution edited by the orchestrator, not by an agent (agents are barred from constitution files).
+
+**Independently confirmed, and out of scope:** `features/crm/leads/leads-funnel-view.tsx:73` calls
+`useReducedMotion()` **after an early return**, so the hook count varies between renders. A genuine
+rules-of-hooks bug, verified first-hand by a second agent rather than relayed. CRM is excluded from
+this release — recorded, not fixed.
+
+## P1 admission — both halves now closed, and the security argument is the good part
+
+**Failing test written first**, as required: six streams from **six different organizations** against
+`orgMaxConcurrent: 3` gave **3 admitted / 3 refused**, because all six landed in the single
+`__public__` bucket. Post-fix all six are admitted, `orgMapSize` 6.
+
+The five new real-HTTP tests had never been red, so rather than claim them as proof the agent
+**bite-proved them in a hermetic `git archive` tree** with `bucketFor` reduced to
+`return PUBLIC_ADMISSION_BUCKET`: exit 1, 5 failed / 32 passed. Tree deleted, nothing planted in the
+shared tree — the discipline adopted after a predecessor left a live defect behind.
+
+**Mechanism:** `@UseAdmissionTenantHint(Provider)` on a `@Public()` route. The guard resolves the
+provider once, calls it in `try/catch`, sanitises the answer against `/^[A-Za-z0-9_-]{1,64}$/`, and
+buckets as **`hint:<orgId>`**. `NotificationEventService` **peeks** the bearer stream token — no
+delete, no TTL extension — so `consumeToken` in the handler remains the only verification.
+
+**Why this cannot become an authentication bypass, which was the risk:**
+- The caller supplies only an opaque token; the orgId comes from the **server's own map**, keyed by a
+  minted `randomUUID`. An attacker-supplied `orgId` in query, body or `user` changes nothing.
+- Absent, forged, expired, consumed, malformed, throwing-resolver and provider-missing **all fail
+  closed to `__public__`** — which is the **most contended** bucket. So **lying is never cheaper than
+  telling the truth**. That is the right shape for a security default: the dishonest path is also the
+  slow path.
+- The guard never writes `req.user`; `grep` for `_admissionOrgId` / `_admissionRelease` outside
+  `src/common/admission/` returns **zero** hits.
+
+**Exactly-once release preserved:** only the string the one-shot closes over changed. `hint:<org>` can
+never equal an authenticated `<org>`, so a hinted request can never free a sibling authenticated
+request's slot — the specific hazard flagged when the leak was first fixed.
+
+**Four alternatives rejected with reasons**, including one that would have broken another agent's
+spec: a name-keyed registry needs a constructor parameter on `NotificationEventService`, which
+`test/security/bola/bola-realtime-grant-time.spec.ts` constructs bare four times.
+
+**Requirement 5 answered rather than deferred:** the stream is reclassified
+`non-mandatory-notification` — shed rank 4, threshold **133** against ordinary-write's 160 — so
+streams shed *before* ordinary writes and are still shed. Proven at inFlight 10/12: the stream 503s,
+the ordinary write is admitted. The namespaced bucket also stops 50 open tabs from zeroing an org's
+own API headroom.
+
+**Residual risk, reported not silently taken:** the remaining ceiling is **global (~133 concurrent
+streams per process), not per-org**. Sizing `ADMISSION_MAX_CONCURRENT` or giving streams their own
+connection limiter is a capacity decision for an operator. It deliberately added **no new config
+knob**, on the correct reasoning that raising a per-org stream cap does nothing while the global 133
+binds first. → ticket 42's accepted-residual-risk list.
+
+Verified green: `jest admission|notification-stream-admission-hint` **169/169**;
+`modules/notifications|bola-realtime-grant-time` **297/297**; `typecheck` 0; `check:spec-typecheck` 0
+(the two HR errors an earlier pass saw are gone); `madge --circular` 0 across 5,521 files.
+
+## Ticket 29 — a status line that lied, and a silent RAG defect nobody was looking for
+
+**The ticket's `**Status:**` claimed 6 boxes closed while only 5 were actually ticked.** The count is
+now true. This is precisely the drift ticket 40 exists to catch, and it is worth noting it was found
+by an agent re-counting rather than by any gate — **nothing checks that a status line matches the
+boxes above it.**
+
+**The find of the pass was not on the ticket.** `indexArticle` returned unconditionally when the
+content hash was unchanged, so `acl_revision` was left stranded on every chunk. The candidate gate
+joins `acl_revision` with `=`, so **an article whose access restrictions moved dropped out of RAG
+entirely** until someone happened to edit its body. It fails closed — lost recall, not disclosure —
+which is exactly why nobody would ever notice: the article simply stops being found. Fixed, and
+proven non-vacuous: reverting the branch reds 3 of 5.
+
+**Knowledge attachments closed with a real schema addition.** `KbMediaService.upload` had **zero
+database writes** — files went to object storage with no row, so there was nothing to give integrity
+to. Migration `1042` adds `kb_page_attachments` as the wiki twin of `kb_article_attachments`
+(composite `(org_id, page_id)` FK, per-org unique `file_key`, nullable `page_id`, soft delete), and
+the previously unchecked body `pageId` now resolves against the caller's org **before** upload,
+returning **404, never 403**. Constraint behaviour probed directly rather than assumed: cross-tenant
+`page_id` rejected `23503`, duplicate `(org_id, file_key)` rejected `23505`, another org reusing the
+same key value inserts, NULL `page_id` inserts, hard page delete cascades.
+
+**A migration collision handled correctly:** authored as `1041`, another agent appended
+`1041_t22c_…` in the same window, so it renumbered **its own** file to `1042` — never theirs. Final
+journal 666 entries, `idx` unique, `when` strictly increasing, re-verified *after* committing.
+
+**Two remainders reframed from four, which is the more useful answer.** Inbox/mail is not four loose
+items but **two NEW REQUIREMENTs**: (A) unread + incremental sync are one thing, because the mirror is
+partial so a count would be *a wrong number presented as authoritative* — `loadPosition` has zero
+production callers and `mail.service.ts:284` upserts a checkpoint nothing reads; (B) idempotent
+receive + bounce/DLQ are one thing, and there are **zero** inbound/webhook/bounce references anywhere
+under `src/modules/mail/`. Calendar's "this and following" is blocked on a genuine product decision,
+recorded as five specific questions rather than an invented semantics.
+
+**New cross-territory findings:**
+- `frontend/features/hr/recruitment/interviews-page.tsx:249` — **a second full calendar surface still
+  exists**; this pass's brief (mine) assumed it had been resolved. Another stale routed claim.
+- `kb-page-tree.service.ts::emptyTrash` / `::purgeExpired` cascade the new attachment rows away
+  **without deleting the R2 objects** — an orphaned-object leak, and ticket 33 now has something real
+  to sweep.
+- `mail_sync_checkpoints` is a **write-only table**, deliberately left in place because it is 4 of
+  `check:tenant-isolation`'s 924 declarations.
+
+## The tenth blind gate, and the worst one: check:authz-deny called an ungated P1 "covered"
+
+Both e-sign scope bypasses are fixed (`cdaf636d`, `47085372`). The finding that outlives them:
+
+`check:authz-deny --why "GET /sign/envelopes/*/audit"` reported
+`COVERED  DELEGATE SignAuditService.listForEnvelope  by e-sign-signing-flow.e2e-spec.ts`
+**both before and after the fix** — i.e. the gate called this handler covered during the entire period
+the route had **no scope gate at all**, on a delegate symbol link to a spec file that asserts a deny
+about something else.
+
+This is the looseness the gate's own header admits — *"attribution is per spec FILE, not per `it()`
+block"* — landing on a live P1. It is the tenth instance this release of a gate reporting a number
+over a set it cannot see, and the most serious, because this is the gate whose entire purpose is to
+find handlers with no deny test. **A `COVERED` verdict from it is not evidence that the handler's deny
+branch is tested.**
+
+Register it for whoever owns the gate. The honest framing for ticket 42: `check:authz-deny`'s 2,4xx
+uncovered count is a **floor on a lower bound** — it undercounts by design (a hard-coded id segment
+does not route-link) and it over-credits by file-level attribution.
+
+**Ratchet discipline worth copying:** the agent did **not** lower the ratchet, because its own delta
+was **0** — the fix added no deny test, it added a scope gate. It measured that by moving its spec
+aside and back (2411 → 2409), observed the tree reading 2409 against its own banked 2441, and stated
+plainly that the 32 of improvement belongs to other agents and is not its to bank. Under concurrency
+that separation — *my delta* versus *the tree's number* — is the only honest way to move a ratchet.
+
+**Scopability was checked before wiring, and it decided the fix.** `isScopable("sign:audit:view")` is
+**false**, exactly like `sign:certificate:download`, while `sign:envelope:view` is **true**. So the
+audit key's own grant can only ever resolve `all`, and gating on it would have bitten nothing. The two
+routes did not differ for a real reason; they now read one source. `mustGetVisibleEnvelope` moved out
+of a private service method into `sign-envelope-scope.ts` so all three routes refuse through **one**
+implementation rather than three copies, and a spec asserts the missing / cross-tenant / out-of-scope
+messages are **equal**, not merely all 404 — which is what makes the 404 non-oracular.
+
+## 2026-09-03 — the sixth attribution incident, and a new variant
+
+The five previous incidents were all a *file* pathspec catching a neighbour. This one is new:
+a **directory** pathspec did it. Commit `8504acf04` was scoped to a reports directory and
+swallowed another agent's uncommitted `reports/p1-admission-slot-leak.md` (+242 lines) whole.
+
+The rule "put the pathspec on `git commit` itself" is necessary but **not sufficient** — a
+directory pathspec is still a net. The brief now says: prefer explicit file paths, and treat
+any directory pathspec as a commit you have not actually scoped.
+
+## The calendar budget is bimodal, and the "fix" was variance elimination — not a cost reduction
+
+`dashboard-personal-calendar-events` went **6 → 18** buffers at the 89.93% tenant and **6 → 15**
+at 9.00%. Those numbers going UP is not a regression: the 1,139 recorded in report 22c is
+**bimodal with the wall clock**, and the agent recorded three separate attempts to anchor a
+fixture to the worst case. **No fixture on this seed can reach it.** So the guard was moved from
+block count to **plan shape** in `dashboard-personal-visibility.spec.ts` — the right call, because
+a block-count ceiling on a bimodal figure is a coin flip that will eventually be cited as evidence.
+
+What was NOT done, stated plainly by the agent that did the work: **`GET /calendar/events` is not
+fixed, only measured.** 7,072 buffers against a 2,000 ceiling. The gate was deliberately left
+**red** and the ceiling was **not** raised to meet it. The remedy is a redesign — split the
+recurring branch, candidate-ids-then-fetch — of a keyset loop whose `LIMIT 500` counts *visible*
+rows. Also newly measured, never measured before: `calendar-events-visible-batch`
+(`CalendarEventSourceLoader`) at **7,063**, and the same route issuing **79 statements** and
+**64.2 MB** of heap in one request.
+
+## Two more vacuous budgets, one of them a time bomb
+
+`run-read-cost-budgets` is now **71/71 measured, 0 vacuous**. The two caught this round:
+- `GET /calendar/events` — a stale figure fitted to a ceiling that had never been measured against.
+- `dashboard-team-attendance` — the fixture anchored to wall-clock `today`, so it **goes vacuous
+  one day after any seed rebuild**. This is the worst class found so far: it passes on the day it
+  is written and silently stops asserting anything the next morning.
+
+Two dashboard specs were also found passing **vacuously** because the query threw inside `settle()`
+— one carried an `else expect(true).toBe(true)` escape hatch.
+
+## No gate in either repo had ever run in CI
+
+Worth restating at release level because it invalidates gate evidence wholesale. The frontend
+workflows `cd` into a `backend/` directory the frontend repo does not have (the backend is a
+sibling repo), dying at setup with all 40 steps skipped. In both repos every gate step sat after
+a `Lint` step that is red — backend 258 errors, frontend 48 — so all of them were skipped.
+**89 bite-proven gates were protecting nothing.** Fixed by adding a `gates` job with no `needs:`
+to both workflows. Read the run's step list, never its badge.
+
+## The HTTP request-level harness landed
+
+137 of 164 route×tenant slots measured (83.5%) on `scratch_t23_http` at head, VACUUM ANALYZEd,
+non-owner `streamline_app`, Redis off, both control probes holding (anon 401).
+
+The blocker was never the harness — it was **two seed defects**. `organization_placement` was
+empty, so `withTenant` threw, `MembershipStateService` swallowed it, and **every** authenticated
+request answered `403 ORG_MEMBERSHIP_INACTIVE`. Then `org_modules` was empty and 36 of 82 pairs
+answered 402. Coverage went 33 → 67 → 68 per tenant once both were seeded.
+
+`check-benchmark-manifest` exits **1 deliberately** — three measured figures are above ceilings
+the contract already declares. That is a gate working, not a gate broken.
+
+## Open P1 product defects routed this round
+
+1. **The project list is broken.** `/build` and `/build/all` render "Failed to load projects" at
+   every width. `ProjectFilters` declares `page`, `projects-page.tsx:293` sends it, and the backend
+   `listProjectsSchema` is cursor-based and `.strict()` → `Unrecognized key: "page"`. This is also
+   what blocked ticket 30 box 4 — no row to click, so no kanban board could ever be rendered.
+2. **`/calendar` errors on every load** — `ApiError: "Date window must not exceed 62 days."`
+3. **`GET /clients` 500s on both tenants**, SQLSTATE **25P02**: an earlier statement in the request
+   transaction failed, its error was swallowed, and the aborted transaction fails everything after.
+   The 25P02 is the shadow; the swallowed first error is the bug.
+4. **`test/perf/**` is outside jest's `roots`** — the harness's 20 specs have never run in CI.
+
+## Constitution correction
+
+`streamlineos-backend/CLAUDE.md` §5 told every agent "never hand-edit generated SQL — regenerate",
+in a repo where `drizzle-kit generate` is unusable and all 500+ migrations are hand-authored. Two
+independent agents reported it. Withdrawn in `9db6371a` and replaced with the rule that is actually
+load-bearing: register the `.sql` in `_journal.json`, because a file absent from the journal never
+runs while `db:migrate` still prints success.
