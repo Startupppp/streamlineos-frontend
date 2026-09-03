@@ -179,7 +179,7 @@ describe("changing a filter resets pagination", () => {
     apiClient.get.mockImplementation((url: string, params?: Record<string, string>) => {
       if (url !== "/notifications") return Promise.resolve([]);
       return Promise.resolve(
-        params?.["unreadOnly"] === "true"
+        params?.["section"] === "UNREAD"
           ? [makeNotification(70)]
           : [makeNotification(90), makeNotification(80), makeNotification(70)],
       );
@@ -200,12 +200,12 @@ describe("changing a filter resets pagination", () => {
     );
 
     const unread = renderHook(
-      () => useInfiniteNotifications({ limit: 3, unreadOnly: true }),
+      () => useInfiniteNotifications({ limit: 3, section: "UNREAD" }),
       { wrapper },
     );
     await waitFor(() => expect(unread.result.current.isSuccess).toBe(true));
 
-    expect(cachedPages(client, { limit: 3, unreadOnly: true })).toHaveLength(1);
+    expect(cachedPages(client, { limit: 3, section: "UNREAD" })).toHaveLength(1);
     expect(cachedPages(client, { limit: 3 }).length).toBeGreaterThan(1);
   });
 
@@ -213,7 +213,7 @@ describe("changing a filter resets pagination", () => {
     const unfiltered = queryKeys.notifications.list({ limit: 3, infinite: true });
     const filtered = queryKeys.notifications.list({
       limit: 3,
-      unreadOnly: true,
+      section: "UNREAD",
       infinite: true,
     });
     expect(JSON.stringify(unfiltered)).not.toBe(JSON.stringify(filtered));

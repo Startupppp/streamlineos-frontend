@@ -40,7 +40,7 @@ function capturePortfolioOptions(params?: Parameters<typeof usePortfolios>[0]) {
   usePortfolios(params);
   return mockQuery.mock.calls.at(-1)?.[0] as {
     queryKey: unknown[];
-    queryFn: () => unknown;
+    queryFn: (context: { signal?: AbortSignal }) => unknown;
   };
 }
 
@@ -49,7 +49,7 @@ function captureManagedProductsOptions(params?: Parameters<typeof useManagedProd
   useManagedProducts(params);
   return mockQuery.mock.calls.at(-1)?.[0] as {
     queryKey: unknown[];
-    queryFn: () => unknown;
+    queryFn: (context: { signal?: AbortSignal }) => unknown;
   };
 }
 

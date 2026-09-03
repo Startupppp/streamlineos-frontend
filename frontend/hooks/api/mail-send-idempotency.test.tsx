@@ -7,6 +7,7 @@ import { authenticatedScope } from "@/lib/query-scope";
 import { ApiError } from "@/lib/api-envelope";
 import type { AccessResponse } from "@/types/access";
 import type { RequestConfig } from "@/lib/api-client";
+import type { ReplyMailBody, SendMailBody } from "@/types/mail";
 
 /**
  * The defect this pins: the idempotency key was minted inside the transport,
@@ -67,18 +68,18 @@ function wrapperFor(client: QueryClient) {
   };
 }
 
-const DRAFT = {
+const DRAFT: SendMailBody = {
   accountId: 1,
   to: ["someone@example.test"],
   subject: "Q3 numbers",
-  body: "attached",
+  bodyHtml: "attached",
 };
 
 const OTHER_DRAFT = { ...DRAFT, subject: "Q4 numbers" };
 
-async function send(
-  result: { current: { mutateAsync: (body: unknown) => Promise<unknown> } },
-  body: unknown,
+async function send<TBody>(
+  result: { current: { mutateAsync: (body: TBody) => Promise<unknown> } },
+  body: TBody,
 ): Promise<void> {
   await act(async () => {
     await result.current.mutateAsync(body).catch(() => undefined);
@@ -131,7 +132,7 @@ describe("a retried send replays instead of sending twice", () => {
       wrapper: wrapperFor(newClient()),
     });
 
-    const reply = { accountId: 1, messageId: "m-0", body: "thanks" };
+    const reply: ReplyMailBody = { accountId: 1, messageId: "m-0", bodyHtml: "thanks" };
     await send(result, reply);
     await send(result, reply);
 

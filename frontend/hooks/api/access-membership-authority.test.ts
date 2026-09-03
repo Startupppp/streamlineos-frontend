@@ -7,7 +7,7 @@ function accessResponse(
   overrides: Partial<AccessResponse> = {},
 ): AccessResponse {
   return {
-    permissions: [],
+    scopes: {},
     isOrgOwner: false,
     canManageOrganizationMembership: false,
     modules: {},
@@ -28,7 +28,7 @@ describe("organization membership capability", () => {
     expect(
       canManageOrganizationMembership(
         accessResponse({
-          permissions: ["settings:organization:manage"],
+          scopes: { "settings:organization:manage": "all" },
           canManageOrganizationMembership: false,
         }),
       ),

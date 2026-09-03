@@ -40,25 +40,25 @@ const mockCan = useCan as jest.Mock;
 function captureVendorCreditsOptions(params?: Parameters<typeof useVendorCredits>[0]) {
   mockQuery.mockImplementation((opts: unknown) => opts);
   useVendorCredits(params);
-  return mockQuery.mock.calls.at(-1)?.[0] as { queryFn: () => unknown };
+  return mockQuery.mock.calls.at(-1)?.[0] as { queryFn: (context: { signal?: AbortSignal }) => unknown };
 }
 
 function captureBudgetsOptions(params?: Parameters<typeof useBudgets>[0]) {
   mockQuery.mockImplementation((opts: unknown) => opts);
   useBudgets(params);
-  return mockQuery.mock.calls.at(-1)?.[0] as { queryFn: () => unknown };
+  return mockQuery.mock.calls.at(-1)?.[0] as { queryFn: (context: { signal?: AbortSignal }) => unknown };
 }
 
 function captureBankAccountsOptions(params?: Parameters<typeof useBankAccounts>[0]) {
   mockQuery.mockImplementation((opts: unknown) => opts);
   useBankAccounts(params);
-  return mockQuery.mock.calls.at(-1)?.[0] as { queryFn: () => unknown };
+  return mockQuery.mock.calls.at(-1)?.[0] as { queryFn: (context: { signal?: AbortSignal }) => unknown };
 }
 
 function captureGeneralLedgerOptions(params: Parameters<typeof useGeneralLedger>[0]) {
   mockQuery.mockImplementation((opts: unknown) => opts);
   useGeneralLedger(params);
-  return mockQuery.mock.calls.at(-1)?.[0] as { queryFn: () => unknown };
+  return mockQuery.mock.calls.at(-1)?.[0] as { queryFn: (context: { signal?: AbortSignal }) => unknown };
 }
 
 describe("useVendorCredits — cursor pagination contract", () => {

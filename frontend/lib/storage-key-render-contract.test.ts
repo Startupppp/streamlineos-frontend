@@ -1,7 +1,26 @@
-import { globSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 const ROOT = path.resolve(__dirname, "..");
+
+/**
+ * `fs.globSync` exists on the Node 22 this runs under but is not declared by the
+ * repo's `@types/node@20`, so it compiled only because no program ever
+ * typechecked this file. `readdirSync(..., { recursive: true })` is in both.
+ */
+function filesUnder(
+  directories: readonly string[],
+  extensions: readonly string[],
+): string[] {
+  const found: string[] = [];
+  for (const directory of directories)
+    for (const entry of readdirSync(path.join(ROOT, directory), { recursive: true })) {
+      const relative = path.join(directory, String(entry));
+      if (extensions.some((extension) => relative.endsWith(extension)))
+        found.push(relative);
+    }
+  return found;
+}
 
 /**
  * Sites whose `src` is provably not an object key. Each entry states why, so a
@@ -29,8 +48,8 @@ const LOOKS_LIKE_A_STORED_REFERENCE = /[Uu]rl|[Kk]ey|[Ii]mage|[Aa]vatar/;
 const RESOLVED = /resolveImageUrl|resolveFileUrl|storageObjectUrl/;
 
 function sourceFiles(): string[] {
-  return globSync("{features,components}/**/*.tsx", { cwd: ROOT })
-    .filter((f) => !f.includes(".test."))
+  return filesUnder(["features", "components"], [".tsx"])
+    .filter((file) => !file.includes(".test."))
     .sort();
 }
 
@@ -75,8 +94,8 @@ describe("the upload wire contract carries no field named url", () => {
 
   it("no /storage/upload or /kb/media response type declares url", () => {
     const offenders: string[] = [];
-    const files = globSync("{features,components,hooks,lib}/**/*.{ts,tsx}", { cwd: ROOT })
-      .filter((f) => !f.includes(".test."))
+    const files = filesUnder(["features", "components", "hooks", "lib"], [".ts", ".tsx"])
+      .filter((file) => !file.includes(".test."))
       .sort();
 
     for (const file of files) {

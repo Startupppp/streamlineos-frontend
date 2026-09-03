@@ -51,7 +51,7 @@ const cursorResponse = {
   pagination: { limit: 20, hasMore: false, nextCursor: null },
 };
 
-type QueryOpts = { queryFn: () => unknown };
+type QueryOpts = { queryFn: (context: { signal?: AbortSignal }) => unknown };
 
 function captureOpts<T extends QueryOpts>(call: () => void): T {
   mockQuery.mockImplementation((opts: unknown) => opts);

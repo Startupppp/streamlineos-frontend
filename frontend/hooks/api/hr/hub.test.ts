@@ -43,7 +43,7 @@ describe("useHrHubSnapshot", () => {
     expect(useQueryMock).toHaveBeenCalledTimes(1);
     const queryOptions = useQueryMock.mock.calls[0]?.[0] as {
       queryKey: readonly unknown[];
-      queryFn: () => Promise<HrHubSnapshot>;
+      queryFn: (context: { signal?: AbortSignal }) => Promise<HrHubSnapshot>;
       enabled: boolean;
     };
     expect(queryOptions.queryKey).toEqual([

@@ -134,7 +134,7 @@ jest.mock("@/components/shared/data-table-pagination", () => ({
 import { RolesListPanel, type RolesListPanelProps } from "@/features/settings/roles/roles-list-panel";
 import type { RoleListRow } from "@/hooks/api/roles";
 
-const NOW = new Date("2026-01-01T00:00:00Z");
+const NOW = "2026-01-01T00:00:00.000Z";
 
 const MOCK_ROLES: RoleListRow[] = [
   {
@@ -142,8 +142,12 @@ const MOCK_ROLES: RoleListRow[] = [
     orgId: "org-1",
     name: "HR Admin",
     slug: "HR_ADMIN",
+    rank: 20,
     isSystem: true,
     version: 1,
+    moduleKey: null,
+    createdBy: null,
+    description: "Human resources administration",
     permissionCount: 45,
     memberCount: 3,
     createdAt: NOW,
@@ -154,8 +158,12 @@ const MOCK_ROLES: RoleListRow[] = [
     orgId: "org-1",
     name: "Custom Viewer",
     slug: "CUSTOM_VIEWER",
+    rank: 60,
     isSystem: false,
     version: 1,
+    moduleKey: null,
+    createdBy: "user-1",
+    description: null,
     permissionCount: 12,
     memberCount: 1,
     createdAt: NOW,
@@ -163,7 +171,14 @@ const MOCK_ROLES: RoleListRow[] = [
   },
 ];
 
-const BASE_PAGINATION = { page: 1, totalPages: 1, total: 2, limit: 10 };
+/*
+ * The roles list is a KEYSET page — { limit, hasMore, nextCursor } — and the
+ * panel drives CursorPageControls from `page` + `pagination.hasMore`. This
+ * fixture was still the pre-cursor { page, totalPages, total, limit } and left
+ * out `page`, `onPrevious` and `onNext` entirely, so every axe scan below ran
+ * over a footer rendered with an undefined page and dead buttons.
+ */
+const BASE_PAGINATION = { limit: 10, hasMore: false, nextCursor: null };
 
 function makeProps(overrides: Partial<RolesListPanelProps> = {}): RolesListPanelProps {
   return {
@@ -172,13 +187,15 @@ function makeProps(overrides: Partial<RolesListPanelProps> = {}): RolesListPanel
     rolesQueryError: null,
     roles: MOCK_ROLES,
     search: "",
+    page: 1,
     pagination: BASE_PAGINATION,
     selectedRoleId: null,
     onRetry: jest.fn(),
     onSelect: jest.fn(),
     onDelete: jest.fn(),
     onRename: jest.fn(),
-    onPageChange: jest.fn(),
+    onPrevious: jest.fn(),
+    onNext: jest.fn(),
     onPageSizeChange: jest.fn(),
     onClearSearch: jest.fn(),
     ...overrides,

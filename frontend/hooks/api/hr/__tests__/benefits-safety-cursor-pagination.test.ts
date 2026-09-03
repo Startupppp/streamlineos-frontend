@@ -47,7 +47,7 @@ jest.mock("@/lib/get-error-message", () => ({
   getErrorMessage: jest.fn((error: unknown) => String(error)),
 }));
 
-type QueryOptions = { queryFn: () => unknown };
+type QueryOptions = { queryFn: (context: { signal?: AbortSignal }) => unknown };
 
 function captureOptions(call: () => void): QueryOptions {
   call();

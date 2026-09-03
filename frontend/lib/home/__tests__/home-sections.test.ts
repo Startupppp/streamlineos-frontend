@@ -80,7 +80,7 @@ describe("Home section access metadata", () => {
 
   it("uses only permission keys that exist in the catalog", () => {
     const ghosts = HOME_SECTIONS.map((section) => homeSectionPermission(section.id))
-      .filter((key): key is string => key !== null)
+      .filter((key) => key !== null)
       .filter((key) => !catalog.has(key));
     expect(ghosts).toEqual([]);
   });
@@ -194,9 +194,9 @@ describe("every Home query is gated before it fires", () => {
 });
 
 describe("Home consumes the generated contract instead of a parallel registry", () => {
-  const sectionPermissions = new Set(
+  const sectionPermissions = new Set<string>(
     HOME_SECTIONS.map((section) => homeSectionPermission(section.id)).filter(
-      (key): key is string => key !== null,
+      (key) => key !== null,
     ),
   );
 

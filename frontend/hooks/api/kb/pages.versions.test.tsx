@@ -7,7 +7,7 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
 }));
 
-const mockGet = jest.fn(() =>
+const mockGet = jest.fn<Promise<unknown>, unknown[]>(() =>
   Promise.resolve({ data: [], pagination: { limit: 50, nextCursor: null, hasMore: false } }),
 );
 jest.mock("@/lib/api-client", () => ({

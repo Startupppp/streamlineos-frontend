@@ -135,10 +135,23 @@ jest.mock("@/lib/utils", () => ({
 }));
 
 type SonerMock = { toast: { error: jest.Mock; success: jest.Mock } };
+/**
+ * The three lifecycle hooks are overwritten per test with a plain stub, not a
+ * jest.fn, so they are typed as the hook shape the component consumes rather
+ * than as `jest.Mock` — which the stubs never satisfied.
+ */
+type NotificationMutationStub = () => {
+  mutate: (
+    id: number,
+    opts?: { onSuccess?: () => void; onError?: (error: Error) => void },
+  ) => void;
+  isPending: boolean;
+  variables: number | undefined;
+};
 type NotificationsMock = {
-  useArchiveNotification: jest.Mock;
-  useApproveNotification: jest.Mock;
-  useRejectNotification: jest.Mock;
+  useArchiveNotification: NotificationMutationStub;
+  useApproveNotification: NotificationMutationStub;
+  useRejectNotification: NotificationMutationStub;
   [key: string]: unknown;
 };
 

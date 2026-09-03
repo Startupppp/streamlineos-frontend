@@ -30,7 +30,7 @@ function captureQueryOptions(projectId: number, filters?: Parameters<typeof useP
   useProjectBoardTickets(projectId, filters);
   return mockInfiniteQuery.mock.calls.at(-1)?.[0] as {
     queryKey: unknown[];
-    queryFn: (ctx: { pageParam: unknown }) => unknown;
+    queryFn: (ctx: { pageParam: unknown; signal?: AbortSignal }) => unknown;
   };
 }
 

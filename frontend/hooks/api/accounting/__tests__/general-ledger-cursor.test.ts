@@ -37,7 +37,7 @@ const mockCan = useCan as jest.Mock;
 function captureGeneralLedgerOptions(params: Parameters<typeof useGeneralLedger>[0]) {
   mockQuery.mockImplementation((opts: unknown) => opts);
   useGeneralLedger(params);
-  return mockQuery.mock.calls.at(-1)?.[0] as { queryFn: () => unknown };
+  return mockQuery.mock.calls.at(-1)?.[0] as { queryFn: (context: { signal?: AbortSignal }) => unknown };
 }
 
 describe("useGeneralLedger — cursor pagination contract", () => {

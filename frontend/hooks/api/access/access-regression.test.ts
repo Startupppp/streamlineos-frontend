@@ -59,12 +59,16 @@ describe("RBAC administration query gates", () => {
     expect(query.mock.calls[1][0].enabled).toBe(true);
   });
 
-  it("keeps audit pagination server-side and permission-gated", () => {
+  it("keeps audit pagination server-side and permission-gated", async () => {
     can.mockReturnValue(true);
+    (apiClient.get as jest.Mock).mockResolvedValue({
+      logs: [],
+      pagination: { limit: 25, hasMore: false, nextCursor: null },
+    });
 
     useAuditLogs({
-      page: 3,
-      pageSize: 25,
+      cursor: "eyJpZCI6MjB9",
+      limit: 25,
       actions: ["role.created", "role.deleted"],
     });
 
@@ -73,8 +77,15 @@ describe("RBAC administration query gates", () => {
     expect(options.enabled).toBe(true);
     expect(options.queryKey).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ page: 3, pageSize: 25 }),
+        expect.objectContaining({ cursor: "eyJpZCI6MjB9", limit: 25 }),
       ]),
+    );
+
+    await options.queryFn({ signal: undefined });
+    expect(apiClient.get).toHaveBeenCalledWith(
+      "/audit-log",
+      expect.objectContaining({ cursor: "eyJpZCI6MjB9", limit: "25" }),
+      undefined,
     );
   });
 

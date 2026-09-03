@@ -85,7 +85,6 @@ describe("directory engagement mutations", () => {
       await result.current.mutateAsync({
         workerId: "worker-1",
         workerEngagementId: "engagement-1",
-        expectedVersion: 1,
       });
     });
 
@@ -126,7 +125,6 @@ describe("directory engagement mutations", () => {
       await result.current.mutateAsync({
         workerId: "worker-1",
         workerEngagementId: "engagement-1",
-        expectedVersion: 1,
         startsOn: "2026-08-19",
         endsOn: "2026-09-30",
         designation: "Senior Engineer",
@@ -178,7 +176,6 @@ describe("directory engagement mutations", () => {
         result.current.mutateAsync({
           workerId: "worker-1",
           workerEngagementId: "engagement-1",
-          expectedVersion: 1,
         }),
       ).rejects.toThrow("Missing permission: directory:workers:manage");
     });

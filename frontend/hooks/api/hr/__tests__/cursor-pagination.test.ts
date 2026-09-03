@@ -36,13 +36,13 @@ const mockCan = useCan as jest.Mock;
 function captureHrCasesOptions(params?: Parameters<typeof useHrCases>[0]) {
   mockQuery.mockImplementation((opts: unknown) => opts);
   useHrCases(params);
-  return mockQuery.mock.calls.at(-1)?.[0] as { queryFn: () => unknown };
+  return mockQuery.mock.calls.at(-1)?.[0] as { queryFn: (context: { signal?: AbortSignal }) => unknown };
 }
 
 function captureDisciplinaryOptions(params?: Parameters<typeof useDisciplinaryActions>[0]) {
   mockQuery.mockImplementation((opts: unknown) => opts);
   useDisciplinaryActions(params);
-  return mockQuery.mock.calls.at(-1)?.[0] as { queryFn: () => unknown };
+  return mockQuery.mock.calls.at(-1)?.[0] as { queryFn: (context: { signal?: AbortSignal }) => unknown };
 }
 
 const cursorResponse = {
