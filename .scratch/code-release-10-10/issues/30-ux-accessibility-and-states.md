@@ -4,7 +4,7 @@
 
 **Blocked by:** 28.
 
-**Status:** 4 of 7 closed. Box 1 (states) closes this session: 0 surfaces without a loading, read-error or permission state, and the 7 without an empty state are pinned by route as correct. Boxes 2, 4 and 5 stay open with measured fractions rather than claims. Reports: `reports/30-ux-accessibility.md` (S8), `reports/30b-states-a11y-and-journeys.md` (S11).
+**Status:** 4 of 7 closed. Box 2 moved 608/632 -> 623/633 this session (S13): all 14 unreachable click targets in this territory are fixed and the 10 that remain are features/build (1), features/crm (7) and inventory (2), none of them touchable here. Boxes 4 and 5 were NOT worked this session — no browser or dev server was started; they carry S11's numbers unchanged. Reports: `reports/30-ux-accessibility.md` (S8), `reports/30b-states-a11y-and-journeys.md` (S11), `reports/30c-a11y-residue-and-query-gating.md` (S13).
 
 - [x] Loading, empty, error, offline and permission-denied states are present on every authenticated surface, not only the common paths.
   CLOSED. `npx jest --runInBand --testPathPattern="authenticated-surface-states.contract"` → exit 0, **22/22**
@@ -37,6 +37,29 @@
   organization…" for ever with nothing telling the reader the workspace was not coming. It now falls to
   `AppLoadingStalled` after 20s (`components/ui/app-loading-screen.test.tsx`, 3 cases pinning it).
 - [ ] Keyboard navigation and screen-reader semantics work on every interactive surface; focus is managed across dialogs, drawers and route transitions.
+  **S13 UPDATE — 24 unreachable became 10, and the denominator was corrected upward rather than down.**
+  `keyboard-reachability.contract.test.ts` now measures **633 click targets across 3,647 files, 10 of them
+  unreachable — 623 of 633, 98.4%**, and its ratchet is pinned at 10 (was 24).
+  Six of the fourteen were an action cell inside a clickable `DataTable` row that stopped the mouse click
+  but not the keydown. The row's `onKeyDown` does not look at the event target, so Enter or Space on a
+  nested button fired the row's navigation *as well as* the control — a real double-activation, now pinned
+  by `components/__tests__/row-action-shield.a11y.test.tsx` (7 cases, two of them bite proofs showing an
+  unshielded and a click-only-shielded cell both still reach the row).
+  The other eight were real click targets with no keyboard equivalent and were given one:
+  `plate-elements` page-link chip, `avatar-stack` selector (now a real `<button>` with `aria-pressed`),
+  the reconciliation suggestion card (CARD_ACTIVATOR over a card that holds its own Confirm button),
+  the expense batch row (now a `<label>` for its checkbox), the dashboard document row,
+  the mail chips shell (its click was a focus-forwarding pointer affordance, now `onPointerDown` guarded
+  on the shell itself — there is no keyboard activation to provide because the input is already tabbable),
+  the PDF placement surface (Enter/Space places the field at page centre) and the CSV dropzone (a `<button>`,
+  with the hidden file input moved out of it).
+  **The scan's denominator now counts `propagationShield` as well as `activationProps`**, so converting a
+  finding onto a shared helper no longer shrinks the population it was counted against; that correction
+  moved the denominator 632 -> 633 rather than 632 -> 624.
+  STILL NOT CLOSED, unchanged in kind: 10 targets remain and none is fixable from this territory —
+  `features/build/views/kanban-ticket-card.tsx:74` (build, another owner),
+  `features/crm` 7 and `app/(authenticated)/inventory` 2 (both excluded from this release). ARIA
+  relationships and live-region correctness across 556 pages are still established only by rendered suites.
   PARTIAL, and the honest fraction is now stated rather than implied. This box is left open deliberately:
   the claim is about a whole corpus and the corpus is not clean.
   **What is measured, corpus-wide, with a denominator:**
@@ -61,6 +84,8 @@
 - [x] Contrast meets the standard and is verified rather than assumed.
   VERIFIED against **WCAG 2.2 AA — 4.5:1 normal text, 3:1 large text (≥24px, or ≥18.66px bold) and non-text UI boundaries (SC 1.4.11)**. `npx jest --runInBand --testPathPattern="contrast-tokens"` → **41/41**. The token layer is correct: `-ink-strong` clears 4.5:1 on every light surface (success 5.21, warning 4.84, danger 5.91) and `-ink` clears the 3:1 non-text floor it was tuned for. Additionally the browser sampled **4251 painted text nodes against the colour actually behind them and found 90 AA failures — exactly the pairs the token test predicted**, on `/dashboard`, `/inbox`, `/hr/attendance` and `/accounting/coa`: `--status-warning-ink` at 3.43 on `--status-neutral-surface` and 3.58 on `--card`, and `--muted-foreground` at 4.34 on `--muted`. Predicted from the tokens, then observed in the running product. The remaining failures are **call sites handing the icon ink to text**, not tokens: `--status-success-ink` 3.58, `--status-warning-ink` 3.07, `--status-danger-ink` 4.41, `--muted-foreground`-on-`--muted` 4.34, across **2234 `text-status-*-ink` occurrences**. Recorded in the suite and handed up as a token-layer decision.
 - [ ] Layout is correct at 375, 768 and 1280.
+  S13: NOT WORKED. No browser, dev server or database was started this session; every number below is S11's.
+  The blocker S11 named — `/build/all` failing on the `page` vs cursor drift — was not fixed here either; it is `types/**` plus the backend schema.
   PARTIAL, but the result is stronger than S8's and the gap has moved from "the run errored" to one
   named contract drift. `node scripts/browser-journeys.mjs --widths=<W>` run once per width with the dev
   server restarted between, against a local backend on :1501 over `scratch_t30_browser` (journal head
@@ -81,6 +106,8 @@
   `/crm/leads` still fails on the `lead_party_map`/`business_parties` grouping error — CRM is excluded
   from this release; recorded and moved past.
 - [ ] Representative browser end-to-end journeys cover the main module flows.
+  S13: NOT WORKED. No browser, dev server or database was started this session; every number below is S11's.
+  The blocker S11 named — `/build/all` failing on the `page` vs cursor drift — was not fixed here either; it is `types/**` plus the backend schema.
   PARTIAL. The harness is materially stronger than S8 left it, and both of its refusals are intact.
   `node scripts/browser-journeys.mjs --self-test` → **exit 0, 39 passed** (was 20), six of them bite proofs.
   Added this session: **steps may carry a `{token}` resolved from the running product** — read from a link

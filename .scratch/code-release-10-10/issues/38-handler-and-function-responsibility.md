@@ -4,7 +4,7 @@
 
 **Blocked by:** 36.
 
-**Status:** 5 of 6 closed — box 1 PARTIAL, with the residue counted, converted where it is a rule, and the remainder explicitly ruled out of scope. Reports: `reports/38-handler-responsibility.md`, `reports/38c-closure-residue.md`
+**Status:** 5 of 6 closed — box 1 PARTIAL. S13 converted the 10 of the 16 named risky closures that fall in this territory; the 6 that remain are features/inventory (5) and features/crm (1), both out of release scope. The box still cannot tick, for the reason S11 recorded: clause two is written as an absolute and 1,562 inline arrows remain, deliberately out of scope. Reports: `reports/38-handler-responsibility.md`, `reports/38c-closure-residue.md`, `reports/30c-a11y-residue-and-query-gating.md` (S13)
 Routed findings 1-3 (outbox orphan + both gates) ADDRESSED — see `reports/38b-outbox-and-fire-and-forget.md`.
 
 - [ ] Non-trivial UI events and form actions use named, typed handlers whose names express user intent. No inline arrow or function expression appears in a JSX event prop.
@@ -29,7 +29,33 @@ Routed findings 1-3 (outbox orphan + both gates) ADDRESSED — see `reports/38b-
       behavioural difference, and the PRD's closure protocol forbids reopening closed files for naming
       taste. **The first clause is the substantive one and it is what was measured.** The box stays
       unticked because the second clause is written as an absolute and is not met.
-      REMAINS, named, all outside this session's territory: 16 risky closures in `components/` (5),
+      **S13 UPDATE — 10 of the 16 converted, and the bank-code rule turned out to hide a real defect.**
+      The uppercase-alphanumeric code rule was written three ways and they disagree on a paste.
+      `components/hr/_onboarding/step-banking.tsx:93` tested the whole value and skipped `field.onChange`
+      when the test failed; the input is controlled, so pasting `SBIN0001234 ` from a bank statement put
+      the old value straight back with nothing said about why — the box reads as frozen. The ESS copy
+      (`features/payroll/ess/components/ess-bank-section.tsx:256`) upper-cased only, handing an invalid
+      code to the resolver. The PF/UAN and ESI length tests had the same reject-the-edit shape.
+      `lib/code-field.ts` now owns it — uppercase, strip punctuation, truncate at the cap — with
+      `digitsFieldValue` for the digits-only variant; `lib/comma-list.ts` takes over `parseOptionList`,
+      which had a second caller in `components/automations` that could not import it out of `features/hr`.
+      Pinned by `lib/__tests__/code-field.test.ts` (16 cases, three bite proofs asserting that the
+      reject-the-edit test refuses a pasted code and that upper-casing alone leaves it invalid) and
+      `lib/__tests__/comma-list.test.ts` (8, two bite proofs).
+      Converted: `_onboarding/step-banking.tsx` x3 · `_onboarding/step-skills-pay.tsx` x3 ·
+      `components/automations/ai-node-config-forms.tsx` x2 · `components/assistant/global-ask-os.tsx` ·
+      `features/surveys/respondent/simple-question-input.tsx` ·
+      `features/accounting/assets/create-asset-sheet.tsx` (x2 — the depreciation-method closure beside it
+      was the same shape) · `features/payroll/ess/components/ess-bank-section.tsx`.
+      **REMAINS after S13: 6, all out of release scope** — `features/inventory` 5
+      (`order-line-table.tsx:146`, `receive-goods-sheet.tsx:381`, `stock/create-adjustment-sheet.tsx:119`,
+      `stock/new-transfer-sheet.tsx:110`, `warehouse/warehouse-create-sheet.tsx:138`) and
+      `features/crm/autonomy/autonomy-switches-panel.tsx:116`.
+      Found and NOT fixed, recorded instead: `components/hr/_onboarding/step-banking.tsx:33` restricts the
+      account-holder name to `/^[A-Za-z\s]*$/` with the same reject-the-edit shape, so a pasted "O'Brien"
+      or "Jose Muller" with a diacritic silently does nothing. Converting it would bless a Latin-only name
+      rule in a shared module; which characters a name may hold is a product decision, not a refactor.
+      PRE-S13 RESIDUE, for the record: 16 risky closures in `components/` (5),
       `features/inventory` (4), `features/crm` (1), `features/accounting` (1), `features/payroll` (1),
       `features/surveys` (1), `components/automations` (2), `components/assistant` (1). Two of them —
       `components/automations/ai-node-config-forms.tsx:380` and
