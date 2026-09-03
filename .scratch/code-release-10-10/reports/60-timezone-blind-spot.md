@@ -378,7 +378,26 @@ Full unfiltered suites at head, after all five fixes.
 
 ### Backend
 
-See §8 — the final four-zone run is recorded there with its exact numbers.
+`node ./node_modules/jest/bin/jest.js --maxWorkers=2 --ci`, all four zones back to back:
+
+| TZ | exit | suites | tests |
+|---|---|---|---|
+| `UTC` | 1 | 11 failed / 1930 passed / 1949 total | 36 failed / 16787 passed / 16914 total |
+| `America/New_York` | 1 | 9 failed / 1932 passed / 1949 | 34 failed / 16789 passed / 16914 |
+| `Pacific/Auckland` | 1 | 9 failed / 1932 passed / 1949 | 34 failed / 16789 passed / 16914 |
+| `Australia/Adelaide` | 1 | 10 failed / 1931 passed / 1949 | 34 failed / 16776 passed / 16901 |
+
+**No timezone-attributable failure remains.** The `America/New_York` and
+`Pacific/Auckland` failure sets are a strict **subset** of the `UTC` set — the same nine
+churn suites, with `UTC`'s two extra (`degradation/realtime-adapter`,
+`degradation/search-index`) being another agent's timing-sensitive pair.
+`Australia/Adelaide`'s one extra is `chat-huddle-wire-shape.spec.ts` failing with
+`HUDDLE_WIRE_KEYS is not iterable` — an export another agent had not yet added when that
+leg ran. `leaves-write-probation`, the one genuine timezone failure of §2, is gone from
+every zone.
+
+The residual nine are the churn baseline named in §8, red at every zone including UTC, and
+none of them are mine.
 
 Focused verification, all green at `UTC`, `America/New_York`, `America/Sao_Paulo`,
 `Asia/Calcutta`, `Australia/Adelaide` and `Pacific/Auckland`:
