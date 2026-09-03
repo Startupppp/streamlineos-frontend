@@ -55,6 +55,8 @@
     "measure:route-bundles:self-test": "node scripts/measure-route-bundles.mjs --self-test",
     "check:route-access-contract": "node scripts/check-route-access-contract.mjs",
     "check:route-access-contract:self-test": "node scripts/check-route-access-contract.mjs --self-test",
+    "check:permission-binding": "node scripts/check-permission-route-binding.mjs",
+    "check:permission-binding:self-test": "node scripts/check-permission-route-binding.mjs --self-test",
     "check:contract-vendor": "node scripts/check-contract-vendor.mjs",
     "check:contract-vendor:self-test": "node scripts/check-contract-vendor.mjs --self-test",
     "check:contract-drift": "node scripts/check-contract-drift.mjs",
