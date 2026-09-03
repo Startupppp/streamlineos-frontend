@@ -13,6 +13,7 @@ import type {
   ActivateResult,
   VersionRow,
 } from "@/types/payroll/setup";
+import { policyPreviewContract } from "@/hooks/api/payroll/setup-preview-schema";
 
 type CreatePolicyInput = {
   country: string;
@@ -95,7 +96,12 @@ export function usePreviewPolicy() {
   return useAuthorizedMutation("payroll:policies:view", {
     mutationKey: ["payroll", "policies", "preview"],
     mutationFn: (data: PolicyPreviewInput) =>
-      apiClient.post<PolicyPreviewResult>("/payroll/policies/preview", data),
+      apiClient.post<PolicyPreviewResult>(
+        "/payroll/policies/preview",
+        data,
+        undefined,
+        policyPreviewContract,
+      ),
   });
 }
 

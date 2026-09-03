@@ -10,6 +10,7 @@ import type {
   TemplatePreviewResult,
   PaginatedResult,
 } from "@/types/payroll/setup";
+import { templatePreviewContract } from "@/hooks/api/payroll/setup-preview-schema";
 
 type TemplateListParams = {
   country?: string;
@@ -54,6 +55,8 @@ export function usePreviewTemplate() {
       apiClient.post<TemplatePreviewResult>(
         `/payroll/templates/${templateId}/preview`,
         { annualCtc, toggleOverrides },
+        undefined,
+        templatePreviewContract,
       ),
   });
 }

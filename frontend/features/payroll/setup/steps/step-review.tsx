@@ -6,9 +6,9 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { NavButtons } from "@/features/payroll/setup/nav-buttons";
 import { usePreviewPolicy } from "@/hooks/api/payroll";
-import { formatMoney } from "@/features/payroll/shared";
+import { describeComponentBasis } from "@/features/payroll/shared";
 import type { SetupDraft } from "@/features/payroll/setup/lib/draft";
-import type { ComponentType, PreviewLine } from "@/types/payroll/setup";
+import type { ComponentType, PolicyPreviewComponent } from "@/types/payroll/setup";
 
 function toOverridesRecord(
   overrides: Partial<Record<string, boolean>> | undefined,
@@ -37,8 +37,10 @@ const TYPE_ORDER: ComponentType[] = [
   "ADJUSTMENT",
 ];
 
-function groupComponents(lines: PreviewLine[]): [ComponentType, PreviewLine[]][] {
-  const map = new Map<ComponentType, PreviewLine[]>();
+function groupComponents(
+  lines: PolicyPreviewComponent[],
+): [ComponentType, PolicyPreviewComponent[]][] {
+  const map = new Map<ComponentType, PolicyPreviewComponent[]>();
   for (const line of lines) {
     const existing = map.get(line.type) ?? [];
     map.set(line.type, [...existing, line]);
@@ -121,13 +123,10 @@ export function StepReview({ draft, goNext, goBack }: StepReviewProps) {
               <p className="text-xs font-medium text-foreground mb-1.5">{TYPE_LABELS[type]}</p>
               <div className="space-y-1">
                 {lines.map((line) => (
-                  <div key={line.code} className="flex items-center justify-between text-sm">
-                    <div className="min-w-0">
-                      <span className="text-foreground">{line.name}</span>
-                      <span className="ml-2 text-xs text-muted-foreground">{line.calcMethod}</span>
-                    </div>
+                  <div key={line.code} className="flex items-center justify-between gap-3 text-sm">
+                    <span className="min-w-0 truncate text-foreground">{line.name}</span>
                     <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                      {formatMoney(line.monthlyAmount, currency)}/mo
+                      {describeComponentBasis(line, currency)}
                     </span>
                   </div>
                 ))}

@@ -100,7 +100,9 @@ const READ_METHODS = new Set([
  * ratchet becomes a comment.
  */
 const BASELINE = {
-  unvalidatedCalls: 2596,
+  // 2596 -> 2594 on 2026-09-03. Two contracts landed: the payroll policy preview and the
+  // template preview beside it. Lowered to the measured value rather than banked as headroom.
+  unvalidatedCalls: 2594,
   minScannedCalls: 2400,
 };
 
@@ -173,6 +175,12 @@ const CONTRACTED_ROUTES = [
   "/payroll/me/salary-structure",
   "/payroll/me/loans",
   "/payroll/me/reimbursements",
+  // the two setup previews. They look alike and answer different things: the TEMPLATE preview
+  // takes an annualCtc and simulates a payslip, the POLICY preview takes none and can only
+  // describe a component. One client type over both is how every amount on the setup review step
+  // rendered as an em dash.
+  "/payroll/policies/preview",
+  "/payroll/templates/:p/preview",
   // permissions and tenancy
   "/me/access",
   "/me/org-display",
