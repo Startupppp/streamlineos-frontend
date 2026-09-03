@@ -80,3 +80,35 @@
   - Evidence: `role-seed-tenant-isolation.spec.ts` uses the REAL `runInTenantTransaction` / `withTenant`; its `db.transaction` double invokes the callback and counts the invocations. Two tests assert `transactionCallbackRuns()` > 0, and the rows written inside the transaction are asserted from the store afterwards (6 seeded roles, grants all carrying org A).
 - [x] The actor used is constructed through the canonical helper so it carries a membership id; a hand-built actor missing it fails in ways that look like a domain bug.
   - Evidence: actors are built with `humanSessionPrincipal(membershipId, isOrgOwner)` from `src/common/auth/principal.ts` (the same constructor `jwt-auth.guard.ts` uses); each suite asserts `actingMembershipId(actor.principal)` returns the seeded id (42 for RBAC, 77 for Support).
+
+---
+
+## S7 (2026-09-03) — the gate had REGRESSED, and is green again
+
+Ticket 14 closed at `928 / 928`. The service count has since grown to **930** and the
+static gate was red again when this lane picked it up:
+
+- `pnpm check:tenant-isolation` → **exit 1, 929 / 930**,
+  `MISSING src/modules/storage/storage-pending-purge.service.ts`.
+
+`StoragePendingPurgeService` arrived after S6 and carried no cross-tenant negative.
+Closed by `src/modules/storage/storage-pending-purge-tenant-isolation.spec.ts` (8 tests),
+written behavioural rather than declarative — the fake store returns every tenant's rows
+when no tenant id reaches the predicate, so removing `eq(orgId)` leaks org B's storage key
+into org A's result.
+
+- `pnpm check:tenant-isolation` → **exit 0, 930 / 930 (100%)**, zero MISSING.
+- `pnpm check:tenant-isolation:self-test` → exit 0, `"pass": true`.
+- `pnpm check:tenant-isolation:run` → **exit 0, 451 suites / 451, 1859 tests / 1859**.
+- Bite-proved hermetically in a `git archive HEAD` sandbox, both directions: control
+  8/8 pass, defect planted in the sandbox only → 7 of 8 fail. No defect entered the
+  shared working tree.
+
+Detail, plus a separate silent data-integrity defect found in the same area (KB object
+deletes addressing the wrong R2 bucket) and the cross-territory changes it still needs in
+`kb/` and `cron/`: `reports/44-storage-bucket-symmetry-and-pending-purge-isolation.md`.
+
+**Note for whoever verifies at the release commit:** this gate has now moved three times
+(role-grant reconciler → org-setup consumer → storage pending purge). It goes red whenever
+a new tenant-owned service lands, so a green reading is only good for the commit it was
+taken at.
