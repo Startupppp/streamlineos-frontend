@@ -18,6 +18,14 @@ hydrations carried no `columns:`**, and four of them hydrated a table carrying a
 wire**. Fixed, then enforced at an allowance of 0 by a new gate `pnpm check:relation-hydration` (rc 0), with the
 population ratcheted at 186. Report: `reports/20b-relation-hydration.md`.
 
+**Session status 2026-09-03 (third pass — existence and vector):** box 1 stays OPEN and BLOCKED on the same
+product decision, but **two clauses recorded as CLOSED were measured OPEN**: 54 existence paths hydrating 827
+columns (25 on a jsonb/credential table, incl. `sign_recipients` shipping `signing_token_hash` to answer a null
+check) and 5 full-row reads of a tsvector table. 52 of 59 fixed, 7 deferred to out-of-scope modules and
+ratcheted; both clauses now enforced at allowance 0. Separately, **`ci.yml` did not parse as YAML**, so every
+gate in it was dead, and `check:query-projections` was wired only by a COMMENT. Report:
+`reports/20c-existence-and-vector-clauses.md`.
+
 **Status:** measured; one box open by design and **BLOCKED on a product decision** — but as of 2026-09-03 its two decision-free clauses are ENFORCED by a new gate (`pnpm check:query-projections`, rc 0, count-path allowance 0) and the blocked clause is RATCHETED at 1,441 unprojected reads rather than merely described. Re-confirmed at head
 2026-09-03 by an independent recount (296 `findMany` / 550 `findFirst` / 599 bare `.select()` without a projection,
 **79–80% of it in held or excluded territory**). The list/count/existence clauses that need no contract decision are
@@ -26,10 +34,14 @@ no further measurement can answer.
 
 **2026-09-03 residual-risk register:** box 1 = **R-5**, ACCEPTED RESIDUAL, blocker DECISION (product / API contract), owner release owner, deadline 2026-09-17. Gate re-verified exit 0 at 1,441/1,441 with count/existence at 0. See `reports/residual-risk-register.md` §3.4.
 
-Reports: `reports/20-query-plans.md`, `reports/20b-relation-hydration.md`. Raw plan trees: `reports/20-query-plans/plans-{large,mid,small}.{json,txt}`.
+Reports: `reports/20-query-plans.md`, `reports/20b-relation-hydration.md`, `reports/20c-existence-and-vector-clauses.md`. Raw plan trees: `reports/20-query-plans/plans-{large,mid,small}.{json,txt}`.
 Harness: `BE/test/perf/{heavy-query-fixtures,seed-heavy-query-load,heavy-query-catalog,heavy-query-catalog-{calendar,notifications,search,dashboard},heavy-query-plan-analysis,measure-heavy-query-plans}.mjs`.
 
 - [ ] Every list, count and existence path selects named columns and returns a minimal projection; no full ORM row, global user record or large JSON/blob/vector field is hydrated for these paths.
+  BLOCKED: the LIST clause only — 1,383 unprojected reads, and narrowing the bulk of them changes a response DTO,
+  which is a product/API-contract decision no measurement can make (R-5, owner release owner, deadline 2026-09-17).
+  The count, existence, global-users and vector clauses are all at ZERO and enforced at allowance 0 as of the third
+  pass; existence and vector were recorded closed before that pass and were not.
   - Audited in full: 1,315 `db.query.*.find{Many,First}` sites and 500 bare `.select()` sites across the 33 in-scope module directories, resolved against a relation map built from all 610 `relations()` blocks, then every hit opened and read.
   - Zero findings in three categories: no vector/embedding column on any list path; no bare `.select()` touching global `users`; no `user: true`/`creator: true`/`approver: true`/`assignee: true` anywhere in scope.
   - Fixed 4 files. `build/core/projects-tickets-detail.service.ts` — an unprojected global `users` relation that was also **throwing on every ticket-detail call** (`users` has no `user` relation; Drizzle raises `Cannot read properties of undefined (reading 'referencedTable')` at query-build time). Proved by building and executing the query against `scratch_boot_d`: before `FAIL … referencedTable`, after `BUILD OK … EXECUTED OK rows: 1`. `notifications/notification-providers.service.ts` — the list read `config_encrypted` for 100 rows; `hasCredentials` is now derived in SQL. `finance/controls/audit-surface.service.ts` (3 × `select *`) and `hr/config/hr-email-templates.service.ts` (1 ×) — named projections.
@@ -204,6 +216,68 @@ Harness: `BE/test/perf/{heavy-query-fixtures,seed-heavy-query-load,heavy-query-c
     - **This does not close the box.** The residue is still "which list endpoints may return less than they return
       today". What changed is that a decision-free clause inside the box was open, invisible to the gate that covers
       the box, and was leaking four bearer tokens.
+
+  - **2026-09-03, third pass — the EXISTENCE clause and the VECTOR clause were both recorded CLOSED and
+    both were OPEN.** Box 1 stays OPEN and BLOCKED on the same product decision; no measurement changes
+    that. But the note above says "the three clauses that need no such decision — count paths,
+    **existence paths**, and global-users/**vector** hydration — are closed", and two of those three were
+    not. Report: `reports/20c-existence-and-vector-clauses.md`.
+    - **The existence clause had no detector at all.** `check:query-projections` prints
+      `Unprojected COUNT/EXISTENCE paths`, but `resultIsOnlyCounted` fires only when EVERY use is
+      `.length` — and an existence check is `if (!row) throw`, which is not a `.length`. The previous
+      pass's stated reason for stopping at counts (a bare use "measured 211 findings against the
+      hand-scan's 4, because `return rows;` is a bare use too") is a true property of **a regex**, not of
+      the clause: an AST separates `if (!row) throw` from `return row;` exactly. Measured over 3,586
+      non-spec files: **54 sites**, **827 columns** hydrated to answer a yes/no question, **25 on a table
+      carrying jsonb or a credential**. The worst is the shape the last pass celebrated catching —
+      `e-sign/sign-fields.service.ts:56` read **34** columns of `sign_recipients`, emitted SQL naming
+      `access_code_hash`, `otp_code_hash` and `signing_token_hash`, to decide whether a recipient exists.
+      Also `organizations` x2 (38 cols, 3 jsonb, for a slug check), `org_units` x15 (metadata jsonb),
+      `org_custom_domains.verification_token` x2, `notification_provider_accounts.config_encrypted`.
+      **47 fixed**; 7 left in out-of-release-scope crm/leads/deals/contacts/inventory and ratcheted.
+      Needs no product decision: an existence check has no response DTO — the value is never returned,
+      read or passed, which is what makes it a finding.
+    - **The brief's `with:` warning does NOT extend to a top-level `columns:`, and that was bite-proved
+      rather than assumed.** Planting a read of an excluded column after a shipped narrowing, in a
+      `git archive HEAD` tree, gives `TS2339: Property 'signingTokenHash' does not exist on type
+      '{ id: number; }'`. So `tsc --noEmit` **exit 0 with a genuinely empty log** over the 48 narrowings
+      is evidence, not hope. Verified on emitted SQL too, per the brief: `sign_recipients` **34 -> 1**
+      columns, `organizations` **38 -> 1**, `org_units` **17 -> 1**.
+    - **The vector clause was recorded at 0 and was 5.** It had been measured over relations and over
+      `db.query` only, so five **base-table** reads were invisible, four shipping a tsvector to the
+      caller: `support-kb.getArticle` spread the whole `kb_articles` row into its response, and three
+      `kb_pages` reads did the same through a bare `.select()`. `kb-page-duplicate.duplicate` declares
+      `Promise<KbPageRow>` = `Omit<..., "fts">` and returned the tsvector anyway — **a wider object is
+      assignable to a narrower one, so `tsc` was silent**. Decision-free because both modules already own
+      the fix and state the rule (`KB_PAGE_COLUMNS` / `KB_ARTICLE_COLUMNS`, "PRD 5.1 forbids hydrating a
+      vector into a response"); confirmed 0 `fts` references in the frontend. All 5 fixed.
+    - **The box's own gate could never run, and the gate guarding that reported "all wired".**
+      `check:query-projections` was in `package.json`, in **no** workflow `run:` step and in **no**
+      exception list, yet `check:gate-wiring` said "96 gates, all wired" — it matches by substring over
+      raw YAML **including comments**, and `ci.yml:686` names the gate inside a comment about a
+      *different* gate. Exactly one gate in the repo was passing on that alone, and it was this box's.
+      **Worse, `ci.yml` did not parse as YAML at all** and had not since the relation-hydration step
+      landed: `- name: A with: block does not ship a whole related row` — a plain scalar may not contain
+      `": "`, so the file was invalid and **every gate in it was dead**. Quoted; the document now parses
+      to 5 jobs / 123 steps. Both holes closed at the matcher in `check-gate-wiring.mjs`.
+    - **Now enforced.** `pnpm check:query-projections` **exit 0**, self-test **26/26**: count **0**
+      (allowed 0), existence **0 in scope** (allowed 0) + 7 deferred (ratchet 7), vector/tsvector/bytea
+      full-row reads **0** (allowed 0) over 5 such tables resolved **from the schema**, not a hand list.
+      Population ratchet retightened **1,441 -> 1,383**, taken from `git archive HEAD`. Bite-proved
+      hermetically: clean rc 0; reverted projection rc 1 naming the site; restored rc 0; planted
+      existence path rc 1; **the same guard with the row RETURNED reports 0 existence findings** — the
+      false-positive class that drove the previous pass to abandon the clause; one planted in excluded
+      inventory trips the deferred ratchet.
+    - **This does not close the box.** The residue is still "which list endpoints may return less than
+      they return today", 1,383 unprojected reads, and no gate answers that. What changed is that two
+      clauses recorded as closed were open, and both times the residue included a credential or a vector
+      on the wire. **A clause is only as closed as the detector that watches it** — this ticket had been
+      scoring three clauses with a detector that covered one.
+    - Cross-territory: commit `96674525` (sessions tombstone chunking) regressed
+      `test/security/appsec/session-revocation-enforced.spec.ts`, 7 of 13. Bisected — passes at
+      `be3eb03e` (13/13), fails at `96674525`. Not a projection issue.
+    - Commits: `be3eb03e` (48 narrowings, 34 files) · `be77e74d` (existence gate, ci.yml parse,
+      gate-wiring) · `ec32af7b` (5 tsvector hydrations) · `b8d87958` (vector gate rule).
 
   **DISPOSITION 2026-09-03 — ACCEPTED RESIDUAL R-5. Blocker: DECISION (product / API contract). Owner: release
   owner. Deadline: 2026-09-17.** Recorded for ticket 41 box 7; register: `reports/residual-risk-register.md` §3.4.
