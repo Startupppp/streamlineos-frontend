@@ -1642,3 +1642,54 @@ wrong-bucket verification.
 types. **335 test files unchecked; 841 errors, of which 702 are one missing `@testing-library/jest-dom`
 type registration and 139 are genuine across 45 files.** The backend equivalent was just closed at
 **zero baselined**, and finding its 21 errors surfaced the vacuous BOLA ratchet above. Assigned.
+
+---
+
+## ⚠ DEFERRED OPERATOR ACTIONS — sequencing corrected 2026-09-03
+
+**R-2 "make `R2_BUCKET_NAME` private" MUST NOT be done as written. It would break the logo in
+every outbound email.**
+
+Verified in source: `src/modules/email/branding.ts:45` `getEmailLogoUrl()` builds
+`${NEXT_PUBLIC_R2_PUBLIC_URL}/${EMAIL_LOGO_PATH ?? "email-assets/logo-v2.png"}` — the PUBLIC base of
+the bucket R-2 makes private — and `src/modules/email/templates/base.ts:25` puts it in the `<img src>`
+of every templated email. **An email client cannot present a presigned URL**, so there is no
+code-side mitigation: the image simply breaks for every recipient.
+
+**Correct order:**
+1. Move `email-assets/logo-v2.png` to a bucket that stays public (or serve it from the app origin).
+2. Repoint `NEXT_PUBLIC_R2_PUBLIC_URL` / `EMAIL_LOGO_PATH` at it and confirm a real email renders.
+3. Only then make `R2_BUCKET_NAME` private.
+
+Also: `src/scripts/setup-r2-buckets.ts:79` **re-applies public-read CORS** and prints guidance that
+contradicts R-2 — running the setup script after step 3 silently undoes it.
+
+And after R-2, frontend `next.config.ts:66,140` + `proxy.ts:38,50` still allowlist `https://*.r2.dev`
+in CSP `img-src` and `next/image`. Nothing in frontend source reads `NEXT_PUBLIC_R2_PUBLIC_URL`, so
+those wildcards are the only reason a legacy stored public URL still renders — meaning after R-2 they
+**hide** remaining leaks instead of surfacing them. Consider removing them in the same change.
+
+### The instrument that was going to close ticket 33 box 7 did not work
+
+Bite-proved: on a fixture holding **six** leaked object URLs,
+`scripts/backfill-public-object-urls.mjs` found **one** — and printed the exact line the ticket names
+as its closing evidence (`UNVERIFIABLE COLUMNS: 0`, exit 0). It missed 2 jsonb, 1 `text[]`, 1
+embedded `<img src>`, and 1 second base. **501 of 5,996 URL-capable columns (479 jsonb + 22 `text[]`)
+were outside the scan entirely.** Now fixed (5/6 from env, 6/6 with `--base`), and migration `1047`
+turns the backfill from an owed operator action into a deploy-time migration.
+
+Box 7 stays OPEN. The production leakage count is UNKNOWN and unknowable from here: a corrected
+catalog scan across 8 scratch databases found 0 URLs in any column, because every table that ever
+held one is empty in the seed. That is a real measurement that **disqualifies the instrument rather
+than closing the box** — the right outcome after three prior falsifications.
+
+### `check:spec-typecheck` reds on other agents' UNTRACKED files
+
+Measured: exit 2 on `payroll-inputs-lock-atomicity.spec.ts` (imports a schema module that does not
+exist yet) and `src/scripts/check-declaration-constraint-drift.ts` — both untracked, both live
+in-flight work by other agents. The gate scans the working tree, not the index, so any agent's
+half-finished file reds it for everyone.
+
+Not a regression, and not fixable by the agent who reports it. **It is, however, proof that ticket 41
+cannot run against a working tree with agents in it** — the release verification needs a quiesced
+tree, which is exactly why it is being held.
