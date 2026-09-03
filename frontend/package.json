@@ -39,6 +39,8 @@
     "check:response-contracts:self-test": "node scripts/check-response-contracts.mjs --self-test",
     "check:dead-code": "node scripts/check-dead-code.mjs",
     "check:dead-code:self-test": "node scripts/check-dead-code.mjs --self-test",
+    "check:prd-traceability": "node scripts/check-prd-traceability.mjs",
+    "check:prd-traceability:self-test": "node scripts/check-prd-traceability-self-test.mjs",
     "check:type-assertions": "node scripts/check-type-assertions.mjs",
     "check:type-assertions:self-test": "node scripts/check-type-assertions.mjs --self-test",
     "check:seo-metadata": "node scripts/check-seo-metadata.mjs",

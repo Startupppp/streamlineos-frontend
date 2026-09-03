@@ -481,6 +481,25 @@ jobs:
         continue-on-error: true
         run: pnpm run check:file-sizes:self-test && pnpm run check:file-sizes
 
+      # v2 ticket 01 / PRD-C017. The traceability manifest, enforced rather than
+      # asserted in prose. The previous ticket set kept its PRD-to-ticket mapping
+      # as text and it silently drifted: five PRD boxes ended with no owner, four
+      # ticket boxes with no PRD counterpart, three partial boxes unrepresented.
+      # This makes the mapping total and injective, requires ticket criteria to
+      # quote the PRD verbatim, and requires both checkbox states to move together
+      # so a ticket cannot report completion the source never recorded.
+      # It also pins the ten module-evidence criteria restored on 2026-09-03 —
+      # Home, Directory/Me, HRMS, Build/PM, Workflows, Billing/Payments,
+      # Accounting/Finance, Chat, Notifications, shared adapters. Those were once
+      # 60 carried "Proven" boxes resting entirely on deleted text, and the PRD's
+      # own header says completed items get removed, so the mechanism that erased
+      # them is still live. A completed criterion is recorded `[x]`, never deleted.
+      # Measured at head: rc=0, 195 criteria, 36 tickets, 195 manifest rows.
+      # Self-test: 10/10, including a control proving the real tree still passes.
+      - name: Every PRD criterion has exactly one ticket owner
+        if: ${{ !cancelled() }}
+        run: pnpm run check:prd-traceability:self-test && pnpm run check:prd-traceability
+
       # Ticket 36. The frontend half of the backend's `check:type-assertions`.
       # Hard zero for `as any` / `@ts-ignore` / `@ts-expect-error` / `@ts-nocheck`
       # in application code, and a zero-GROWTH ledger for `as unknown as` where
