@@ -4,7 +4,7 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** 7 of 8 closed; box 5 still PARTIAL but ONE OF ITS FOUR PARTIALS IS NOW CLOSED.
+**Status:** 7 of 8 closed; box 5 still OPEN. S15 closed its baseline PARTIAL with a gate, built the frontend gate the box had never had, and found 6 defects — three of them in places this ticket recorded as clean.
 
 **2026-09-03 S14 — the `BARE_THROW` residue is triaged, and it was triaged by RUNNING it.** The
 333/125 figure is not reproducible (the 35e scanner was ephemeral); re-derived by AST + grep it is
@@ -83,6 +83,122 @@ is blocked on another agent, on infrastructure or on a measurement.
       **S11 — AUTHORIZATION DENY IS NOW BUILT AND BITE-PROVEN: `check:authz-deny` (NEW).** The population is DERIVED from the authorization decorators actually present in `src/` -- `@RequirePermission`, `@RequireModule`, `@RequireOperatorGrant` -- not from an invented list, parsed the way `route-classification-report.mjs` parses handlers. `@Public()` / `@Universal()` have no deny branch and are excluded; `@AuthorizedInService` is reported as INFO with its reason (the deny lives in a service, so only the weak SYMBOL link could ever fire, and counting 57 handlers on that link would move the ratchet without measuring anything). The attribution rule is written into the script header so a reader can check it, and `--why <route>` prints the exact spec file and the exact link behind any single verdict, so no verdict rests on a count. Measured at HEAD: 546 controllers, 1,969 spec files (435 asserting a deny), 3,219 gated handlers, **766 covered / 2,453 uncovered**, ratchet set at that measured 2,453 behind three vacuity floors that exit 2 if the walk, the decorator parser or the deny matcher measures nothing. Bite-proven BOTH directions in a hermetic HEAD tree: planting a `@RequirePermission` handler with no deny test gives 2454, rc=1, naming it; removing it gives 2453, rc=0. Adding a deny spec for an uncovered handler gives 2452 with covered 766 -> 767, the gate naming the file and the ROUTE link and asking for the ratchet to be lowered; removing it returns to 2453, rc=0. Self-test 40 passed. A hard-coded id segment deliberately does NOT route-link (`/x/given` is as often a real sibling route as an id), so the rule under-counts coverage rather than over-counting it -- the safe direction for a floor, and now stated in the header.
       PARTIAL: the remaining two classes are named rather than gated, with the reason. **Retries: `check:idempotent-commands` gates the source-side fence, not the test.** **Failure branches: genuinely un-gateable** -- whether a branch is adequately tested is a reading, not a measurement, and a scanner claiming to measure it would be the exact defect this ticket exists to remove. Superseded S10 text follows. **Authorization deny: not built (S10; SUPERSEDED above).** `check:route-classification` proves every one of 3,518 handlers declares an exposure (0 undeclared) and `check:module-gate` / `check:scope-application` / `check:record-access` gate the source side, but nothing asserts a deny TEST exists per gated handler. It is buildable in `check:tenant-isolation`'s shape and is the next gate to write; it was not written here. **Retries: `check:idempotent-commands` gates the source-side fence, not the test.** **Failure branches: genuinely un-gateable** — whether a branch is adequately tested is a reading, not a measurement, and a scanner that claims to measure it would be the exact defect this ticket exists to remove.
 - [ ] Zero silently skipped or quarantined tests, vacuous mocks, swallowed promise failures, or baselines raised merely to turn a regression green.
+      **2026-09-03 S15 — THREE CLAIMS IN THIS BOX WERE WRONG, AND CORRECTING THEM IS MOST OF THE FINDING.**
+      Report: `reports/35h-test-suite-honesty-s15.md`. Each of the four modes was swept independently of
+      the gates, because the S13 lesson is that a gate measures the shape it was built for and the defect
+      may not have it. Every "vacuous" verdict below was produced by MUTATING THE SUBJECT and watching the
+      spec stay green, never by reading.
+      1. **"the frontend measures 0 in every class today" was FALSE.** Running the backend detector against
+         the frontend package found **2 live COND_ASSERT tests**, `hooks/api/notifications-inbox.test.ts:333`
+         and `:354`, both titled "passes signal to apiClient.get", both behind
+         `if (apiClient.get.mock.calls.length > 0)` — a guard on the very fact each test exists to prove.
+         With BOTH notification hooks mutated to `enabled: false` so they never fetch at all: **HEAD spec
+         rc=0, 2 passed**; fixed spec **rc=1, 2 failed**; fixed spec on clean source rc=0, 23 passed.
+         Fixed (frontend `e03274729`).
+      2. **"35g's 18 frontend bare-throw sites are un-triaged" — the real number is 19 sites and ALL of them
+         are `.not.toThrow()`,** the NEGATED class 35g's own rule excludes because a negated matcher fails on
+         any throw. **Actionable frontend bare-throw sites: 0, not 18.**
+      3. **The residue is STILL not entirely in excluded modules.** Enumerated by the gates' own `--list`:
+         of the 3 registered vacuous sites, `payroll/__tests__/prd-e2e-journey.spec.ts:153` (payroll/RBAC) and
+         `test/security/operator-access.spec.ts:77` (security) are **in scope**. Both carry honest reasons;
+         neither is an excluded module.
+      **A DEFECT CLASS NO GATE COVERED: a conditional early `return` in a test body.** COND_ASSERT catches
+      `if (guard) { expect(...) }` and was blind to `if (!x) return;` above the assertions — different AST,
+      identical consequence. 7 backend sites; **2 were real and are fixed.** The one that mattered:
+      `hr/recruitment/recruitment-candidate-vault.spec.ts:172`, *"keeps the document reference tenant-scoped
+      when it is declared as a composite"*, guarded on a SOURCE-TEXT scan
+      (`lines.find(l => l.includes("foreignKey(") && l.includes("table.vaultDocumentId"))`). Removing
+      `table.orgId` from that composite FK and letting the declaration wrap across lines — the Prettier-wrap
+      blind spot this repo has hit before — empties the scan and leaves the test GREEN: **HEAD spec 1 failed /
+      12 passed with the tenant-scoping test a PASS; fixed spec 2 failed with it among them.** Its sibling
+      caught the `onDelete` change; nothing caught the tenant column leaving.
+      **NEW CLASS `EARLY_RETURN`** in `check:vacuous-assertions`: 7 -> 2 fixed -> **5 registered** (2
+      ENVIRONMENT guards, 3 DOMAIN guards in `it.each` over wholly-`@Public()` controllers), ratchet sized
+      AFTER the fixes, not to the breach.
+      **The frontend result was 11 and 11 was WRONG — reading it is what stopped 11 sites of detector noise
+      being banked as debt.** All 11 sat on `if (!backendAvailable) return;` in the two cross-repo
+      permission-catalog suites, which looked like S12's CI-layout finding reproduced. Both files carry a
+      SENTINEL — `it("can reach the backend catalog — the cross-repo checks below assert nothing without
+      it", () => expect({ backendAvailable, ... }).toEqual({ backendAvailable: true, ... }))` — so the suite
+      goes RED when the backend is absent, not silently green. **Sentinel exemption added to both gates:**
+      exempt when the guard's identifier is asserted OUTSIDE the guarded body. "Outside" is load-bearing —
+      the first, unscoped version exempted every early return including the real ones, caught by the
+      self-test fixture going red. FE 11 -> 0; BE stays 5.
+      **`survey-lead-automation-tenant-isolation.spec.ts:59` was fixed rather than kept**, and its own
+      registration had said why: *"the escape hatch survives"*. With the `create_lead` branch neutered, the
+      HEAD spec is **1 failed / 1 passed — the SIBLING caught it, the isolation test stayed green**; fixed
+      spec 2 failed. `cond_assert` 1 -> **0**, ratchet lowered 1 -> 0, registration REMOVED.
+      [x] **BASELINES: the named rename PARTIAL is CLOSED by a gate — `check:baseline-integrity` (NEW).**
+      Every `const <NAME> = <int>` ratchet in BOTH repos was walked commit by commit (blob at each revision,
+      not diffs). **Exactly two upward moves exist, ever:** BE `check-over-300` `BASELINE` 392 -> 394
+      (`c3f0b73db`) — the one unjustified raise, already routed, **red at head 406 vs 394**; and FE
+      `CLIENT_PAGE_CEILING` 259 -> 315 (`63579eb29`), which is **justified** — a detector correction (the gate
+      did not strip the UTF-8 BOM, hiding 56 client pages), stated in the commit message and later lowered to
+      304. Everything else moved DOWN.
+      The gate registers every top-level integer constant in every backend gate script **plus every ratchet
+      field in `baselines/*.json`**, with a DIRECTION — `ratchet` (may only decrease), `floor` (may only
+      increase; a smaller anti-vacuity floor or look-around window is how a gate goes blind while printing
+      OK), `pinned` (may not change without re-registering, where the safe direction is genuinely not
+      obvious). It fails on an unregistered constant (what a rename looks like), a stale registration (the
+      other half), and any unsafe move, printing the NET movement per file. **rc=0 at HEAD: 88 gate scripts ·
+      123 constants · 12 json ratchets in 9 baseline files · 135 registered · 0 unregistered · 0 stale ·
+      ratchet 32 / floor 102 / pinned 1.** Self-test 28/28. Bite-proved 16 ways, including the exact
+      `c0daca5b` shape: renaming `ACTIONABLE_UNDETECTED_BASELINE` upward gives rc=1 naming the unregistered
+      constant, the stale registration AND the net raise. **The gate bit its own author the day it was
+      written** (adding `ratchets.EARLY_RETURN = 5` read as a net raise of 5, rc=1) and **its own blind spot
+      was found before it was claimed** — the first version reported OK over 11 ratchets living in
+      `baselines/*.json`.
+      **SWALLOWED FAILURES: the backend gain is banked; a frontend gate is NOT warranted and the measurement
+      is why.** `check:fire-and-forget` had printed "TIER 2 IMPROVED — 4 fewer than the ratchet" on every run
+      since those sites left; four sites of slack is four regressions a future change lands for free, which is
+      a baseline raise pointing the other way. **`TIER2_RATCHET` lowered 283 -> 279**, measured hermetically
+      against `git archive HEAD src test` so the pinned number is CI's, not the shared tree's; bite-proved
+      with one planted `void this.svc.doThing()` (280, rc=1). The frontend measures **999 `void x.y(` sites,
+      775 of them in `hooks/api/`**, and the dominant form is `void queryClient.invalidateQueries(...)` /
+      `void query.refetch()` — TanStack Query idiom whose error surfaces through `isError`. **Ratcheting 999
+      would bank ~96% idiom as debt**, the mistake 35g avoided by keeping 139 off-risk sites out of its
+      ratchet. Its 18 `.catch(() => {})` sites are overwhelmingly `el.play()` / `addIceCandidate` /
+      `presence.leave()` browser and realtime idiom. **Three are reported, not fixed** (other territory):
+      `lib/onboarding-gate.ts:33` and `app/(auth)/invitation/[token]/page.tsx:160`, both
+      `update().catch(() => null)` on the durable-wizard path CLAUDE.md §8 requires to be durable, and
+      `hooks/common/use-push-subscription.ts:33`.
+      [x] **`rate-limit-coverage.spec.ts` — DECIDED, and it was RED at head.** It is **not** an instance of
+      any of the four modes: not skipped, not vacuous, swallows nothing, its registry never raised, and its
+      two-directional set-equality is a feature. **But the concern was right and had already fired.** The spec
+      was red at head, 2 of 5 failing, for nothing: `09c01de8` added one import to
+      `internal-audit.controller.ts`, the `@Post("audit")` handler moved from **line 12 to 13**, and both
+      set-equality assertions failed while the rate-limit gap was unchanged. The only way to green it was to
+      bump `:12` to `:13` — an edit indistinguishable from editing a baseline to make a regression go away, on
+      a SECURITY registry. The shape does not commit the defect, it **manufactures the reflex**. Fixed:
+      handlers carry a stable id `<file>:<VERB> <route path>` (unique per handler, `check:route-duplicates`
+      enforces it), the line number kept for the message only, plus two vacuity assertions so a broken route
+      parser cannot make the set-equality pass on empties. Bite-proved: HEAD spec rc=1; fixed rc=0; handler
+      shifted 3 more lines **rc=0 (false red gone)**; the gap actually CLOSED **rc=1**; a new unlimited public
+      write planted **rc=1** (both bites preserved). `check:spec-typecheck` rc=0.
+      [x] **THE FRONTEND HAD NO GATE FOR ANY OF THIS. `check:test-integrity` (NEW).** Eight classes at a HARD
+      ratchet of 0 — NO_ASSERTION, TAUTOLOGY, COND_ASSERT, EARLY_RETURN, FLOATING_ASSERT, FOCUSED,
+      SUPPRESSION, BARE_THROW — because the package genuinely measures zero after the two repairs, so the
+      first regression must be argued for rather than merged. **rc=0: 348 test files · 2,738 test callbacks ·
+      9,237 `expect()` calls · 24 `.toThrow()` matchers -> every class 0.** Self-test **30/30**. **Its own
+      blind spot was found before it shipped:** an earlier draft skipped `build` as build output and reported
+      OK over **17 live test files** — the delivery module here is NAMED Build (CLAUDE.md §8). `build`/`out`
+      removed from SKIP_DIRS and a self-test assertion pins it. Bite-proved **17 ways**: 7 planted classes
+      (rc=1 each), the real pre-fix spec restored (rc=1), the sentinel deleted from `catalog-sync.test.ts`
+      (rc=1, 7 above 0), all four vacuity floors neutered (**rc=2 INCONCLUSIVE** each), stale registration /
+      short reason / missing owner / missing ratchet (rc=1 each), and re-adding `build` (self-test red by
+      name). Wired into `.github/workflows/frontend.yml`.
+      **§8 RECONCILED.** The "14 sites vs 10 named" note points at **35e** §8, not 35f, and §8 says neither
+      number: it counts **302 sites in five classes** (backend 191 / frontend 111) and separately excerpts
+      **11 sites** under rank labels 1-9 and **15**. Labels 10-14 were never transcribed into the table.
+      **A transcription gap in a top-N excerpt, not a missing set of findings**; the ranks are unrecoverable
+      because the 35e scanner was ephemeral, the same reason its BARE_THROW figure was not reproducible.
+      **S15 DISPOSITION — the box stays OPEN, and "zero" is still not true.** Mode 4 (baselines) is at its
+      floor AND enforced going forward for the first time. Modes 1, 2 and 3 are not zero: 6 quarantines
+      (R-9) · 2 VOID doubles (R-9) · 3 registered vacuous sites of which **2 are in scope** (payroll/RBAC,
+      security) · 5 registered EARLY_RETURN · 2 registered bare-throw · **279 backend TIER-2 swallowed or
+      floating promises** · ~292 of 35e §8's 302 production swallowed-failure sites unfixed across seven
+      territories, several on money paths. Mode 3 is the furthest from zero. Full table of what remains, with
+      owners, in `reports/35h-test-suite-honesty-s15.md` §9.
       **The distinction is now gated, which is what makes it survive: `check:test-suppressions` (NEW).** An honest skip names an infrastructure blocker; a quarantine hides live assertions; both are the same string to a grep. Every unconditional suppression is classified — CONDITIONAL (runtime-selected, or a helper with a non-literal title), PLACEHOLDER (empty of `expect(` — nothing was ever written), QUARANTINE (holds live assertions that do not run) — and must appear in `src/scripts/baselines/test-suppressions.json` with a blocker of at least 12 characters. The gate fails on an unregistered site, a stale entry, a declared class that does not match the measured one, and on either ratchet growing. Measured: 1,977 spec files, 20 suppression sites + 27 conditional aliases → **conditional 28 · placeholder 13 · quarantine 6**, rc=0. All 13 placeholders are the degradation/`it.todo` set and every one names a real blocker (no S3/R2 endpoint, no Ably key, no provisioned replica, no isolable integration harness, a source change owed first). The 6 quarantines are the `crm-copilot.service.phase2.spec.ts` `describe.skip` blocks — CRM, excluded from this release — now recorded with their blocker and capped. Bite-proven: planted an unregistered `it.skip` holding an `expect` → rc=1 on two independent branches (unregistered, and quarantine 7 > ratchet 6); removed → rc=0. Self-test 20/20. `quotes.service.spec.ts:339` re-verified GONE (S9b replaced it with 8 tests). FE still has zero suppressions of any kind.
       **Vacuous mocks: CLOSED for every in-scope file in S11. VOID 9 -> 2, ratchet lowered to 2.** All seven in-scope files were repaired to match what the spec CLAIMS, not whichever fix turned the gate green fastest. Five are refusal tests whose whole point is that the write is refused BEFORE any transaction opens (`tenant-db`, `holds-and-scope-for`, `change-requests.isolation`, `hr-workflow-engine`, and the cross-tenant cases in the two finance files) and now assert `expect(db.transaction).not.toHaveBeenCalled()`, plus insert/update and the inner `findFirst` where the claim is stronger. Two same-tenant controls genuinely execute work inside the transaction, so their doubles now invoke the callback and assert what it did. `reconciliation`'s same-tenant control was worse than inert: `checkApprovalPolicy` awaits `.where(...)` with no `.limit()`, so a chain answering only `.limit()` returned the builder, `policies.find` was not a function, and the method died on a TypeError before reaching the transaction -- indistinguishable to the old assertion, which only said the error was not a `NotFoundException`. **`payroll-new-services-tenant-isolation` was a DETECTOR FALSE POSITIVE, verified unchanged against HEAD and NOT edited:** its double is assigned over the object literal (`dbSurface["transaction"] = jest\n.fn()\n.mockImplementation(...)`), the form a spec must use when `db` is typed `as unknown as Db`. Reading it needed two scanner fixes, both made BEFORE the ratchet moved so the new number is a measurement and not the detector going quiet -- a chain Prettier wrapped across lines was read as `jest` alone and vanished from the scan (18 files carry that shape), and an assignment over the literal was never looked for at all. Six new self-test assertions pin both, including the risky direction (a bare double followed by sibling properties is still exactly one double, and still VOID); self-test 21 -> 27. The two remaining VOID files are `inventory/replenishment/inv-replenishment.service.spec.ts` and `leads/lead-status-tenant-isolation.spec.ts` -- inventory and CRM, both **excluded from this release** and left untouched.
       **Mutation-proven, twice, because a spec that cannot fail proves nothing.** `jest --runInBand` over all seven: **7 suites / 56 tests pass**. (1) Making the tenant-aware proxy open a transaction of its own reds `tenant-db.spec.ts` on the new assertion (1 failed / 55 passed); source restored, 56 pass. (2) Deleting the `MANUAL_JOURNAL` "no linked ledger account" branch -- which lives INSIDE the transaction -- reds the repaired reconciliation spec (1 failed / 1 passed); **the SAME mutation against that spec's pre-repair version at HEAD passes 2/2.** That is this box in one measurement: the old spec could not fail. Both source files restored, `git diff` empty on each.
