@@ -448,7 +448,7 @@ async function cdpSession(wsUrl) {
 
 const VITALS_SCRIPT = `(() => {
   if (window.__slVitals) return;
-  const state = { lcp: null, cls: 0, inp: null, longTaskMs: 0, shifts: [], lastMutationMs: 0 };
+  const state = { lcp: null, cls: 0, inp: null, longTaskMs: 0, shifts: [], lastMutationMs: performance.now(), mutationObserverAttached: false };
   const describe = (node) => {
     if (!node || node.nodeType !== 1) return 'unknown';
     const id = node.id ? '#' + node.id : '';
@@ -457,9 +457,10 @@ const VITALS_SCRIPT = `(() => {
   };
   Object.defineProperty(window, '__slVitals', { value: state });
   try {
-    new MutationObserver(() => { state.lastMutationMs = performance.now(); }).observe(document.documentElement, {
+    new MutationObserver(() => { state.lastMutationMs = performance.now(); }).observe(document, {
       subtree: true, childList: true, characterData: true, attributes: true,
     });
+    state.mutationObserverAttached = true;
   } catch {}
   try {
     new PerformanceObserver((l) => {
@@ -539,7 +540,7 @@ async function settle(cdp, quietMs, capMs) {
     sinceLastMutationMs = Number(
       (await evaluate(
         cdp,
-        "(() => { const s = window.__slVitals; return s && s.lastMutationMs ? performance.now() - s.lastMutationMs : 1e9; })()",
+        "(() => { const s = window.__slVitals; if (!s || !s.mutationObserverAttached) return 1e9; return performance.now() - s.lastMutationMs; })()",
       )) ?? 0,
     );
     if (!shouldKeepWaitingForQuiet({ sinceLastMutationMs, elapsedMs, quietMs, capMs })) {
@@ -813,6 +814,15 @@ async function run() {
       "--no-first-run",
       "--no-default-browser-check",
       "--disable-gpu",
+      /*
+       * A throttled renderer stops emitting paint timing. On a contended host
+       * the 2026-09-03 run lost first-contentful-paint from mobile /chat
+       * onwards — six routes recorded `fcp=n/a lcp=n/a` while still reporting
+       * navigation timing, which reads as a measurement and is not one.
+       */
+      "--disable-renderer-backgrounding",
+      "--disable-backgrounding-occluded-windows",
+      "--disable-background-timer-throttling",
     ],
     { stdio: "pipe" },
   );
