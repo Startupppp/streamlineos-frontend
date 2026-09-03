@@ -20,7 +20,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useProject } from "@/hooks/api";
 import { useTicketByKey, useEpics, useModules, useCycles } from "@/hooks/api/build";
 import { useProjectBoardTickets } from "@/hooks/api/build/ticket-queries";
-import { formatTicketKey, parseTicketKey } from "@/features/build/shared/format-ticket-key";
+import { formatTicketKey, parseTicketKey } from "@/components/shared/format-ticket-key";
 import { TicketDetailMainSection } from "./ticket-detail-main-section";
 import { TicketDetailRightPanel } from "./ticket-detail-right-panel";
 import { TicketDetailActions, TicketDetailDeleteDialog, TicketDetailDeleteMenuItem } from "./ticket-detail-actions";

@@ -18,9 +18,9 @@ import { cn } from "@/lib/utils";
 import { getUserDisplayName } from "@/lib/person-display";
 import { useCycles } from "@/hooks/api/build/advanced";
 import { useProjectLabels } from "@/hooks/api/build/projects";
-import { FilterChip } from "@/features/shared/list-view";
+import { FilterChip } from "@/features/shared/list-view/filter-chip";
 import { FilterCommandMenu } from "./filter-command-menu";
-import type { StatusFilterOption } from "@/features/shared/list-view";
+import type { StatusFilterOption } from "@/features/shared/list-view/filter-types";
 import { buildStatusConfig } from "@/features/build/shared/types";
 import { useTicketFilterParams } from "./use-ticket-filter-params";
 

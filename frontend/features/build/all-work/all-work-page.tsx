@@ -28,7 +28,7 @@ import {
   viewSwapReduced,
 } from "@/lib/motion-presets";
 import { groupByProject } from "./all-work-ticket-utils";
-import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";
+import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { AllWorkViewSwitcher, AllWorkSkeleton } from "./all-work-view-switcher";
 import { AllWorkListSection } from "./all-work-list-section";

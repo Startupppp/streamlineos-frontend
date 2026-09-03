@@ -1,10 +1,11 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 
 export interface KbSource {
   id: number;
@@ -20,6 +21,35 @@ export interface KbSource {
   createdAt: string;
 }
 
+const POLL_MIN_MS = 3_000;
+const POLL_MAX_MS = 60_000;
+const POLL_DEADLINE_MS = 10 * 60_000;
+const POLL_STEP_MS = 30_000;
+
+/**
+ * Bounded poll for indexing sources: 3s, doubling every 30s to a 60s ceiling, stopping after
+ * 10 minutes. Elapsed time comes from the row's own createdAt so it survives remount, unlike
+ * a ref or React Query's dataUpdatedAt (which is the last fetch and never grows).
+ */
+export function kbSourcePollInterval(
+  sources: readonly KbSource[] | undefined,
+  now: number = Date.now(),
+): number | false {
+  const oldestProcessing = (sources ?? [])
+    .filter((s) => s.status === "processing")
+    .reduce<number | null>((oldest, s) => {
+      const started = Date.parse(s.createdAt);
+      if (Number.isNaN(started)) return oldest;
+      return oldest === null || started < oldest ? started : oldest;
+    }, null);
+
+  if (oldestProcessing === null) return false;
+
+  const waited = Math.max(0, now - oldestProcessing);
+  if (waited >= POLL_DEADLINE_MS) return false;
+  return Math.min(POLL_MIN_MS * 2 ** Math.floor(waited / POLL_STEP_MS), POLL_MAX_MS);
+}
+
 export function useKbSources() {
   const canView = useCan("kb:pages:view");
   return useQuery({
@@ -27,31 +57,49 @@ export function useKbSources() {
     queryFn: ({ signal }) => apiClient.get<KbSource[]>("/kb/sources", undefined, signal),
     staleTime: 15_000,
     enabled: canView,
-    refetchInterval: (query) =>
-      query.state.data?.some((s) => s.status === "processing") ? 3000 : false,
+    refetchInterval: (query) => kbSourcePollInterval(query.state.data),
   });
 }
 
+/**
+ * The key is minted per FILE, not per attempt, and released only on success: POST /kb/sources
+ * is @Idempotent, each POST inserts a new kb_sources row, and a retry after the client's 30s
+ * timeout would otherwise create a second row and pay for a second full embed batch. A File
+ * does not survive JSON.stringify, so the operation signature names it explicitly.
+ */
 export function useUploadKbSource() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:pages:create", {
     mutationKey: ["kb", "sources", "upload"],
     mutationFn: (file: File) => {
       const fd = new FormData();
       fd.append("file", file);
-      return apiClient.upload<KbSource>("/kb/sources", fd);
+      const config = operation.configFor({
+        name: file.name,
+        size: file.size,
+        lastModified: file.lastModified,
+      });
+      return apiClient.upload<KbSource>("/kb/sources", fd, undefined, config);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.kb.sources() }),
+    onSuccess: () => {
+      operation.settle();
+      return qc.invalidateQueries({ queryKey: queryKeys.kb.sources() });
+    },
   });
 }
 
 export function useCreateKbSourceNote() {
   const qc = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("kb:pages:create", {
     mutationKey: ["create", "kb", "source", "note"],
     mutationFn: (input: { title: string; text: string }) =>
-      apiClient.post<KbSource>("/kb/sources/note", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.kb.sources() }),
+      apiClient.post<KbSource>("/kb/sources/note", input, operation.configFor(input)),
+    onSuccess: () => {
+      operation.settle();
+      return qc.invalidateQueries({ queryKey: queryKeys.kb.sources() });
+    },
   });
 }
 

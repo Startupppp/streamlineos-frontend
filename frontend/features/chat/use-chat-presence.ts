@@ -4,8 +4,8 @@ import { useEffect, useRef } from "react";
 import { useAbly } from "ably/react";
 import { useSession } from "next-auth/react";
 import { useChatHeartbeat } from "@/hooks/api/chat-core-mutations-b";
+import { chatPresenceChannelName } from "@/lib/ably-channels";
 
-const PRESENCE_ORG_CHANNEL = (orgId: string): string => `chat:${orgId}:presence`;
 const LEADER_LOCK_NAME = "chat-presence-leader";
 
 export const FALLBACK_BASE_MS = 15_000;
@@ -30,7 +30,7 @@ export function useChatPresence(): void {
   useEffect(() => {
     if (!orgId || !userId) return;
 
-    const channel = ably.channels.get(PRESENCE_ORG_CHANNEL(orgId));
+    const channel = ably.channels.get(chatPresenceChannelName(orgId));
     let entered = false;
 
     const enterPresence = (): void => {

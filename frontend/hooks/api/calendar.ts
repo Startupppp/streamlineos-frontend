@@ -66,16 +66,32 @@ interface CalendarEvent {
   creator?: { name: string | null } | null;
 }
 
-interface OooConflict {
+/** An attendee on approved leave over the new event's window. */
+export interface CalendarOooConflict {
   userId: string;
   userName: string | null;
   leaveStart: string;
   leaveEnd: string;
 }
 
+/**
+ * An existing occurrence the new event overlaps, projected from
+ * `CalendarOccurrence` — `startDate`/`endDate` are Dates on the server and
+ * arrive here as ISO strings.
+ */
+export interface CalendarEventConflict {
+  eventId: number;
+  title: string;
+  startDate?: string;
+  endDate?: string;
+  allDay?: boolean;
+  timezone?: string;
+}
+
 interface MutateCalendarEventResponse {
   event: CalendarEvent;
-  oooConflicts: OooConflict[];
+  oooConflicts: CalendarOooConflict[];
+  eventConflicts: CalendarEventConflict[];
   meetingUrl?: string | null;
   syncError?: string | null;
 }
@@ -120,9 +136,36 @@ export interface CalendarListItem {
   isRecurring?: boolean | null;
 }
 
+export interface ParsedCalendarEventId {
+  /** The `calendar_events` row id. */
+  eventId: number;
+  /**
+   * The occurrence's NOMINAL start, present only for a recurring occurrence.
+   * `calendar_event_exceptions` is keyed on this instant, and for a rescheduled
+   * occurrence it is not `item.start` — the projection carries the nominal
+   * instant in the id and the moved time in `start`.
+   */
+  occurrenceStart: string | null;
+}
+
+/**
+ * Parse by structure, not by trailing digits.
+ *
+ * The native source emits `event-<id>` and, for a recurring occurrence,
+ * `event-<id>-<ISO instant>`. Matching `/(\d+)$/` returned null for every
+ * occurrence (an ISO instant ends in `Z`) and read a stray number off ids
+ * belonging to other sources entirely (`attendance-absence-2026-01-05` -> 5).
+ */
+export function parseCalendarEventId(id: string): ParsedCalendarEventId | null {
+  const match = /^event-(\d+)(?:-(.+))?$/.exec(id);
+  if (!match?.[1]) return null;
+  const eventId = Number.parseInt(match[1], 10);
+  if (!Number.isSafeInteger(eventId)) return null;
+  return { eventId, occurrenceStart: match[2] ?? null };
+}
+
 export function extractEventNumericId(id: string): number | null {
-  const match = id.match(/(\d+)$/);
-  return match ? parseInt(match[1], 10) : null;
+  return parseCalendarEventId(id)?.eventId ?? null;
 }
 
 interface CreateCalendarEventPayload {

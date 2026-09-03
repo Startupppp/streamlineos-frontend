@@ -5,7 +5,7 @@ import { useProject, useTickets, useUpdateTicket } from "@/hooks/api";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";
+import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";

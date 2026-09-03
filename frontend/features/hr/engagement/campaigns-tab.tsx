@@ -21,7 +21,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyCampaignsIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import {
   useEngagementCampaigns,

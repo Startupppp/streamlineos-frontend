@@ -400,12 +400,14 @@ async function upload<T>(
   url: string,
   formData: FormData,
   contract?: ContractSource<T>,
+  config?: RequestConfig,
 ): Promise<T> {
   const pendingContract = beginContract(contract);
   const res = await authedFetch(
     buildUrl(url),
-    { method: "POST", body: formData },
+    { method: "POST", headers: config?.headers, body: formData },
     url,
+    config?.signal,
   );
   return parseApiResponse<T>(res, await pendingContract, url);
 }

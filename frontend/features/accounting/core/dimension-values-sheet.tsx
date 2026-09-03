@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Switch } from "@/components/ui/switch";
 import { AppSheet } from "@/components/shared/app-sheet";
+import { ErrorState } from "@/components/shared";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -104,7 +105,7 @@ function buildColumns(
 }
 
 export function DimensionValuesSheet({ open, onOpenChange, dimension, canManage }: Props) {
-  const { data, isLoading } = useDimensionValues(dimension.id, open);
+  const { data, isLoading, isError, error, refetch } = useDimensionValues(dimension.id, open);
   const [addOpen, setAddOpen] = useState(false);
   const [editValue, setEditValue] = useState<AccountingDimensionValue | undefined>();
 
@@ -118,7 +119,24 @@ export function DimensionValuesSheet({ open, onOpenChange, dimension, canManage 
     if (!o) setEditValue(undefined);
   }
 
-  const emptyState = (
+  function handleRetry(): void {
+    void refetch();
+  }
+
+  /*
+    A failed read used to land on "No values yet.", which says the dimension has
+    no values — the thing a user would then go and re-create. The empty slot is
+    the only place this table can speak, so the failure is said there.
+  */
+  const emptyState = isError ? (
+    <ErrorState
+      compact
+      className="border-0 bg-transparent"
+      title="Couldn't load values"
+      description={getErrorMessage(error)}
+      onRetry={handleRetry}
+    />
+  ) : (
     <EmptyState
       className="border-0 bg-transparent min-h-[40vh]"
       title="No values yet."

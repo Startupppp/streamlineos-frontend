@@ -15,7 +15,7 @@ import type { Channel } from "./chat-types";
 import { ChannelAvatar } from "./channel-avatar";
 import { resolveDirectPartner } from "./channel-member-lookup";
 import { ChannelItemMenu } from "./channel-item-menu";
-import { useMarkChannelUnread } from "@/hooks/api";
+import { useMarkChannelUnread } from "@/hooks/api/chat-personal-b";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 export function ChannelItem({

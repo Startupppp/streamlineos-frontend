@@ -22,12 +22,20 @@ export async function consumeNotificationStream(
   token: string,
   signal: AbortSignal,
   onNotification: (notification: IncomingNotification) => void,
+  /**
+   * Fired once the stream is established, before any frame arrives. The caller
+   * resets its reconnect backoff here rather than on the first notification: most
+   * healthy connections are quiet for hours, so resetting on arrival meant a
+   * working stream still carried forward every earlier failure.
+   */
+  onOpen?: () => void,
 ): Promise<void> {
   const response = await fetch(url, {
     headers: { Authorization: `Bearer ${token}`, Accept: "text/event-stream" },
     signal,
   });
   if (!response.ok || !response.body) throw new Error("Notification stream unavailable");
+  onOpen?.();
   const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
   let buffer = "";
   while (!signal.aborted) {

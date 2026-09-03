@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import { queryKeys } from "@/lib/query-keys";
 import type { SignAuditEvent, SignEnvelope, SignEnvelopeFull } from "@/types/sign";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -37,7 +38,8 @@ function invalidateEnvelope(qc: ReturnType<typeof useQueryClient>, id: number) {
 export function useSignEnvelopes(params?: { status?: string; page?: number; limit?: number }) {
   return useGatedQuery("sign:envelope:view", {
     queryKey: queryKeys.signEnvelopes.list(params),
-    queryFn: ({ signal }) => apiClient.get<SignEnvelope[]>("/sign/envelopes", params, signal),
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<OffsetPage<SignEnvelope>>("/sign/envelopes", params, signal)).items,
     staleTime: 30_000,
   });
 }

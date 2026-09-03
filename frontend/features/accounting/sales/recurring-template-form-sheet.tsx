@@ -51,7 +51,8 @@ export function RecurringTemplateFormSheet({
   const isEdit = Boolean(template);
   const createMutation = useCreateRecurringTemplate();
   const updateMutation = useUpdateRecurringTemplate();
-  const { data: customersData } = useCustomersOutstanding();
+  const customersQuery = useCustomersOutstanding();
+  const customersData = customersQuery.data;
   const customerOptions: ComboboxOption[] = (customersData?.data ?? []).map((c) => ({
     value: String(c.clientId),
     label: c.clientName,
@@ -179,6 +180,11 @@ export function RecurringTemplateFormSheet({
               placeholder="Select customer…"
               searchPlaceholder="Search customers…"
             />
+            {customersQuery.isError && (
+              <p className="text-xs text-destructive" role="alert">
+                Couldn&apos;t load customers: {getErrorMessage(customersQuery.error)}
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">

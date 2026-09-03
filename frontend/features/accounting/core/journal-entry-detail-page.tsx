@@ -43,7 +43,19 @@ export function JournalEntryDetailPage({ entryId: entryIdStr }: JournalEntryDeta
   const query = useJournalEntry(entryId);
   const entry = query.data;
 
-  const canManageJournal = useCan("accounting:journal:post");
+  /**
+   * One key per command, because `useCan` is an exact lookup with no
+   * implication hierarchy — a control gated on a different string than the
+   * command it fires is hidden from the role that owns it and shown to the
+   * role that gets refused. The keys below are the ones the routes declare
+   * (`accounting-ledger.controller.ts:126,139`, `:submit-approval`) and the
+   * ones the mutation hooks themselves carry.
+   *
+   * The previous single flag read `accounting:journal:post`, which is bound to
+   * no route at all — that is why `check:permission-binding` never compared it.
+   */
+  const canSubmitJournal = useCan("accounting:journal:create");
+  const canManageJournal = useCan("accounting:journal:manage");
   const canApproveJournal = useCan("accounting:journal:approve");
 
   const postMutation = usePostJournalEntry(entryId);
@@ -121,23 +133,23 @@ export function JournalEntryDetailPage({ entryId: entryIdStr }: JournalEntryDeta
       backHref="/accounting/journal"
       actions={
         <div className="flex items-center gap-2">
+          {canSubmitJournal && isDraft && (
+            <LoadingButton
+              size="sm"
+              isPending={submitApprovalMutation.isPending}
+              loadingText="Submitting…"
+              onClick={handleSubmitApproval}
+              variant="outline"
+            >
+              <Send className="mr-1 h-4 w-4" />
+              Submit for approval
+            </LoadingButton>
+          )}
           {canManageJournal && isDraft && (
-            <>
-              <LoadingButton
-                size="sm"
-                isPending={submitApprovalMutation.isPending}
-                loadingText="Submitting…"
-                onClick={handleSubmitApproval}
-                variant="outline"
-              >
-                <Send className="mr-1 h-4 w-4" />
-                Submit for approval
-              </LoadingButton>
-              <Button size="sm" onClick={handlePostClick} disabled={postMutation.isPending}>
-                <Send className="mr-1 h-4 w-4" />
-                {postMutation.isPending ? "Posting…" : "Post entry"}
-              </Button>
-            </>
+            <Button size="sm" onClick={handlePostClick} disabled={postMutation.isPending}>
+              <Send className="mr-1 h-4 w-4" />
+              {postMutation.isPending ? "Posting…" : "Post entry"}
+            </Button>
           )}
           {canManageJournal && canReverse && (
             <Button

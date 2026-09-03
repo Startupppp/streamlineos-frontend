@@ -12,7 +12,7 @@ import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import {
   Select,
   SelectContent,

@@ -14,7 +14,7 @@ jest.mock("@/hooks/api/accounting/banking", () => ({
 }));
 
 jest.mock("@/hooks/api/accounting", () => ({
-  useAccounts: () => ({ data: { data: [] } }),
+  useAllAccounts: () => ({ data: { data: [] } }),
 }));
 
 jest.mock("@/features/accounting/ai", () => ({
@@ -22,6 +22,7 @@ jest.mock("@/features/accounting/ai", () => ({
 }));
 
 jest.mock("@/features/accounting/shared", () => ({
+  AccountListNotice: () => null,
   Money: ({ value }: { value: number }) => <span>{value}</span>,
 }));
 

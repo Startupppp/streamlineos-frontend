@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { WarehouseStockResult } from "@/types/inventory";
@@ -105,7 +106,8 @@ export function useWarehouses(filters?: WarehouseListFilters) {
     queryKey: hasActiveFilters
       ? [...queryKeys.inventory.warehouses(), params]
       : queryKeys.inventory.warehouses(),
-    queryFn: ({ signal }) => apiClient.get<Warehouse[]>("/inventory/warehouses", hasActiveFilters ? params : undefined, signal),
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<OffsetPage<Warehouse>>("/inventory/warehouses", hasActiveFilters ? params : undefined, signal)).items,
     staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,
     enabled: canView,

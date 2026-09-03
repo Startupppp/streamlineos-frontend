@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { FileUpload } from "@/components/storage/file-upload";
 import { useCreateResignation } from "@/hooks/api/hr";
 import { getErrorMessage } from "@/lib/get-error-message";

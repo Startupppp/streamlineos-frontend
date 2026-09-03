@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { refineDateOrder, refineNotBeforeToday } from "@/lib/date-constraints";
+import { refineDateOrder, refineNotBeforeToday } from "@/lib/date-refinements";
 
 export const PROJECT_NAME_MAX = 100;
 export const PROJECT_KEY_MAX = 10;

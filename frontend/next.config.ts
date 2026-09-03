@@ -52,7 +52,18 @@ export function buildContentSecurityPolicy(): string {
     "https://*.upstash.io",
     "https://*.r2.dev",
     "https://*.r2.cloudflarestorage.com",
-    "wss://",
+    /**
+     * Ably, kept in step with proxy.ts's `buildCsp` — see the reasoning there.
+     * `wss://` used to stand here, which is not a source expression at all
+     * (`scheme-source` is `wss:`, `host-source` needs a host after `://`), so a
+     * browser dropped it and this policy allowed no WebSocket either.
+     */
+    "https://*.realtime.ably.net",
+    "wss://*.realtime.ably.net",
+    "https://*.fallback.ably-realtime.com",
+    "wss://*.fallback.ably-realtime.com",
+    "https://internet-up.ably-realtime.com",
+    "wss://ws-up.ably-realtime.com",
     "https://api.razorpay.com",
     "https://checkout.razorpay.com",
     ...(apiOrigin ? [apiOrigin] : []),

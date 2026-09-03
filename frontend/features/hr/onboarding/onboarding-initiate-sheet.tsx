@@ -10,7 +10,7 @@ import { UserPlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { EmployeePicker } from "@/features/hr/shared/employee-picker";
 
 import { getErrorMessage } from "@/lib/get-error-message";

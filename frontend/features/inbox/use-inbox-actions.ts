@@ -3,7 +3,10 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useOnlineStatus } from "@/hooks/common/use-online-status";
+import {
+  useRunWhenOnline,
+  INBOX_OFFLINE_MESSAGE as OFFLINE_MESSAGE,
+} from "@/hooks/common/use-run-when-online";
 import {
   useMarkNotificationRead,
   useArchiveNotification,
@@ -16,8 +19,12 @@ import {
   useSnoozeNotification,
 } from "@/hooks/api/notifications";
 
-export const INBOX_OFFLINE_MESSAGE =
-  "You're offline — reconnect to update your inbox.";
+/**
+ * Re-exported from the shared hook, which is where the guard itself now lives:
+ * `/notifications` fired all fourteen of its mutations offline while this surface
+ * guarded all eight of its, so one copy serves both.
+ */
+export const INBOX_OFFLINE_MESSAGE = OFFLINE_MESSAGE;
 
 export interface InboxActions {
   isOnline: boolean;
@@ -41,7 +48,7 @@ function reportError(err: unknown): void {
 }
 
 export function useInboxActions(): InboxActions {
-  const isOnline = useOnlineStatus();
+  const { isOnline, runWhenOnline } = useRunWhenOnline();
   const markRead = useMarkNotificationRead();
   const archive = useArchiveNotification();
   const unarchive = useUnarchiveNotification();
@@ -51,17 +58,6 @@ export function useInboxActions(): InboxActions {
   const snooze = useSnoozeNotification();
   const approve = useApproveNotification();
   const reject = useRejectNotification();
-
-  const runWhenOnline = useCallback(
-    (run: () => void): void => {
-      if (!isOnline) {
-        toast.error(INBOX_OFFLINE_MESSAGE);
-        return;
-      }
-      run();
-    },
-    [isOnline],
-  );
 
   const markReadMutate = markRead.mutate;
   const markReadOnOpen = useCallback(

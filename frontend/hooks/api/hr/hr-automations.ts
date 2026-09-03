@@ -4,6 +4,7 @@ import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-quer
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
+import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import type {
   HrAutomationRule,
   HrAutomationRun,
@@ -29,7 +30,7 @@ export function useHrAutomations(params?: { search?: string; triggerEvent?: stri
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: hrAutomationKeys.list(params),
-    queryFn: ({ signal }) => {
+    queryFn: async ({ signal }) => {
       const search = new URLSearchParams();
       if (params?.search) search.set("search", params.search);
       if (params?.triggerEvent) search.set("triggerEvent", params.triggerEvent);
@@ -37,7 +38,8 @@ export function useHrAutomations(params?: { search?: string; triggerEvent?: stri
       if (params?.page) search.set("page", String(params.page));
       if (params?.limit) search.set("limit", String(params.limit));
       const qs = search.toString();
-      return apiClient.get<HrAutomationRule[]>(`/hr/automations${qs ? `?${qs}` : ""}`, undefined, signal);
+      const page = await apiClient.get<OffsetPage<HrAutomationRule>>(`/hr/automations${qs ? `?${qs}` : ""}`, undefined, signal);
+      return page.items;
     },
     staleTime: 30_000,
     placeholderData: keepPreviousData,

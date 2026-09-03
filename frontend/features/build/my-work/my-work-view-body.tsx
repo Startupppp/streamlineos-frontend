@@ -11,7 +11,7 @@ import { pmSnappy, viewSwap, viewSwapReduced } from "@/lib/motion-presets";
 import type { KanbanTicket, DisplayOptions } from "@/features/build/shared/types";
 import type { AllWorkTicketMeta } from "./map-all-work-ticket";
 import type { MyWorkView } from "./my-work-view";
-import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";
+import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 
 interface MyWorkViewBodyProps {
   view: MyWorkView;

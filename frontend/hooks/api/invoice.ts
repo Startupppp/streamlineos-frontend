@@ -6,12 +6,22 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { Invoice, InvoiceStats, InvoiceStatus, PatchableInvoiceStatus, Payment, PaymentMethod } from "@/types/invoice";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import {
-  invoiceContract,
-  invoiceStatsContract,
-  invoicesPageContract,
-  type InvoicesResponse,
-} from "@/hooks/api/invoice-schema";
+import { lazyContract } from "@/lib/api-envelope";
+import type { InvoicesResponse } from "@/hooks/api/invoice-schema";
+
+/**
+ * Deferred: `hooks/api/index.ts` re-exports this module, so a value import of
+ * `invoice-schema` charged every barrel consumer for Zod's runtime.
+ */
+const oneInvoiceContract = lazyContract(() =>
+  import("@/hooks/api/invoice-schema").then((m) => m.invoiceContract),
+);
+const statsContract = lazyContract(() =>
+  import("@/hooks/api/invoice-schema").then((m) => m.invoiceStatsContract),
+);
+const pageContract = lazyContract(() =>
+  import("@/hooks/api/invoice-schema").then((m) => m.invoicesPageContract),
+);
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
 interface InvoiceFilters {
@@ -75,7 +85,7 @@ export const useInvoices = (
         ...(filters?.clientId ? { clientId: String(filters.clientId) } : {}),
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(filters?.limit ? { limit: String(filters.limit) } : {}),
-      }, signal, invoicesPageContract),
+      }, signal, pageContract),
     staleTime: 2 * 60_000,
     ...options,
   });
@@ -90,7 +100,7 @@ export const useInvoice = (
 ) => {
   return useGatedQuery<Invoice, Error>("accounting:read", {
     queryKey: queryKeys.invoice.detail(id),
-    queryFn: ({ signal }) => apiClient.get(`/invoices/${id}`, undefined, signal, invoiceContract),
+    queryFn: ({ signal }) => apiClient.get(`/invoices/${id}`, undefined, signal, oneInvoiceContract),
     enabled: id > 0,
     staleTime: 2 * 60_000,
     ...options,
@@ -105,7 +115,7 @@ export const useInvoiceStats = (
 ) => {
   return useGatedQuery<InvoiceStats, Error>("accounting:read", {
     queryKey: queryKeys.invoice.stats(),
-    queryFn: ({ signal }) => apiClient.get("/invoices/stats", undefined, signal, invoiceStatsContract),
+    queryFn: ({ signal }) => apiClient.get("/invoices/stats", undefined, signal, statsContract),
     staleTime: 5 * 60_000,
     ...options,
   });

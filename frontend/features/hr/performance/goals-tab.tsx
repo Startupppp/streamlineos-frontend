@@ -18,7 +18,7 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Form } from "@/components/ui/form";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { toast } from "sonner";
 import { format } from "date-fns";

@@ -19,8 +19,8 @@ import { isApiError } from "@/lib/api-client";
 import { useEntityAction } from "./entity-actions-context";
 import { useSubmitEntityAction } from "@/hooks/api/chat";
 import { ticketPermalinkQueryOptions } from "@/hooks/api/build/comment-permalink";
-import { getStatusBadgeClass } from "@/features/build/shared/status-badge";
-import { formatTicketKey } from "@/features/build/shared/format-ticket-key";
+import { getStatusBadgeClass } from "@/components/shared/ticket-status-badge";
+import { formatTicketKey } from "@/components/shared/format-ticket-key";
 
 const TICKET_STATUS_DISPLAY: Record<string, string> = {
   TODO: "Todo",

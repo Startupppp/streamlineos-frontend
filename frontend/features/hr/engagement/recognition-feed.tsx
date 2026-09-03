@@ -6,7 +6,7 @@ import { Heart, Award, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { MemberPicker } from "@/components/shared";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";

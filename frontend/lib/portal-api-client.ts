@@ -110,7 +110,9 @@ async function portalFetch(
   if (authenticated && res.status === 401) {
     clearPortalToken();
     if (typeof window !== "undefined") {
-      window.location.href = "/portal/accept-invitation?reason=expired";
+      // The invitation page lives in the `(portal)` route group, which adds no URL segment.
+      // `/portal/accept-invitation` resolved into the authenticated staff area instead.
+      window.location.href = "/accept-invitation?reason=expired";
     }
     throw new PortalApiError(
       "Your portal session has expired. Please use your invitation link.",

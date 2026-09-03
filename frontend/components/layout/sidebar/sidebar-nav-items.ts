@@ -58,7 +58,7 @@ export const PRODUCT_PATH_EXCEPTIONS: ProductPathException[] = [
   { prefix: "/billing/invoices", product: "finance", reason: "The org's own customer invoicing, not platform billing." },
   { prefix: "/portal", product: "build", reason: "Client portal for delivery work." },
   { prefix: "/client-portal", product: "home", reason: "Portal surfaces a client sees outside a product." },
-  { prefix: "/portal/accept-invitation", product: "home", reason: "Portal surfaces a client sees outside a product." },
+  { prefix: "/accept-invitation", product: "home", reason: "Portal surfaces a client sees outside a product." },
 ];
 
 /** The root and any path the navigation does not own answer Home. */
@@ -250,9 +250,11 @@ export function shouldHideProductSidebar(navGroups: NavGroup[]): boolean {
 
 export function isPortalChromelessPath(pathname: string): boolean {
   if (pathname === "/portal") return true;
+  // `(portal)` is a route group, so the invitation page answers `/accept-invitation` — not
+  // `/portal/accept-invitation`, which only ever matched `(authenticated)/portal/[projectId]`.
   if (
     pathname.startsWith("/client-portal") ||
-    pathname.startsWith("/portal/accept-invitation")
+    pathname.startsWith("/accept-invitation")
   ) {
     return false;
   }

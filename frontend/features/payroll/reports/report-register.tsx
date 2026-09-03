@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { AlertTriangle } from "lucide-react";
 
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { usePayrollRegister } from "@/hooks/api/payroll/reports";
@@ -104,7 +106,8 @@ export function ReportRegister({
     [month, department, costCenter, workerType],
   );
 
-  const { data, isLoading } = usePayrollRegister(params);
+  const { data, isLoading, isError, error, refetch } = usePayrollRegister(params);
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
   const columns = useMemo(() => (data ? buildColumns(data) : []), [data]);
 
   const totals = useMemo(() => {
@@ -124,6 +127,17 @@ export function ReportRegister({
       <span className="font-mono">{formatMoney(totals.deductions)}</span>
     </span>
   ) : undefined;
+
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load the payroll register"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-1 min-h-0 flex-col gap-3">

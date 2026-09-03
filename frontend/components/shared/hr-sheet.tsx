@@ -1,3 +1,16 @@
+/**
+ * The form sheet with a submit/cancel footer and an unsaved-changes guard,
+ * promoted out of `features/hr/`.
+ *
+ * `features/candidates/candidate-sheets.tsx` consumed it while
+ * `features/hr/recruitment/candidate-detail/*` imports seven modules back out of
+ * `@/features/candidates/*` — the second of the two feature-level cycles
+ * `check:cycles` cannot see, because madge measures FILES and no single file is
+ * in a loop. frontend/CLAUDE.md section 3 puts a component with a second
+ * consumer here; the name is kept so the 55 existing call sites read the same,
+ * and it is deliberately NOT collapsed into `AppSheet`, which has no footer and
+ * no unsaved-changes guard.
+ */
 "use client";
 
 import { useCallback } from "react";

@@ -30,6 +30,5 @@
     "components/ui/table.tsx",
     "lib/rbac/permissions/**"
   ],
-  "ignoreDependencies": ["sharp", "tailwindcss", "@tailwindcss/typography"],
   "ignoreExportsUsedInFile": true
 }

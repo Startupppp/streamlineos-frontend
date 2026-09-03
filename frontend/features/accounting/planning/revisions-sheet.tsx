@@ -3,10 +3,11 @@
 import { useMemo, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { AppSheet } from "@/components/shared/app-sheet";
-import { LoadingState } from "@/components/shared";
+import { ErrorState, LoadingState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useBudgetRevisions } from "@/hooks/api/accounting/planning";
 import { useOrgMembers } from "@/hooks/api/organization";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   getUserDisplayName,
   type NamedUser,
@@ -29,6 +30,10 @@ interface RevisionsSheetProps {
 export function RevisionsSheet({ budgetId, open, onOpenChange }: RevisionsSheetProps) {
   const query = useBudgetRevisions(budgetId);
   const revisions = query.data?.items ?? [];
+
+  function handleRetry(): void {
+    void query.refetch();
+  }
   const { data: membersData } = useOrgMembers(1, 200);
 
   const memberById = useMemo(() => {
@@ -56,6 +61,18 @@ export function RevisionsSheet({ budgetId, open, onOpenChange }: RevisionsSheetP
     >
       {query.isLoading ? (
         <LoadingState variant="table" rows={12} />
+      ) : query.isError ? (
+        /*
+          "No revisions yet" is a statement about the budget's history; a failed
+          read is a statement about the request. Conflating them told the user
+          their prior versions do not exist.
+        */
+        <ErrorState
+          compact
+          title="Couldn't load revision history"
+          description={getErrorMessage(query.error)}
+          onRetry={handleRetry}
+        />
       ) : revisions.length === 0 ? (
         <EmptyState
           compact

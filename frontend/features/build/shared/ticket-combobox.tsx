@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { useTickets } from "@/hooks/api/build/tickets";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Combobox } from "@/components/ui/combobox";
-import { formatTicketKey } from "@/features/build/shared/format-ticket-key";
+import { formatTicketKey } from "@/components/shared/format-ticket-key";
 
 interface TicketComboboxProps {
   projectId: number;

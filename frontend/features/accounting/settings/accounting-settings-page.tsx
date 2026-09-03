@@ -140,6 +140,26 @@ export function AccountingSettingsPage() {
   const rates = ratesQuery.data?.data ?? [];
   const paymentTerms = settingsQuery.data?.paymentTerms ?? [];
 
+  /*
+    Only `settingsQuery` had an error branch; the four sibling reads fell
+    through `?? []` into sections that state their emptiness as configuration —
+    "No approval policies configured", "No exchange rates configured". A failed
+    read then reads as "this org has no approval policy", which is exactly the
+    fact an approver would act on. Each section keeps rendering (its create
+    controls are still usable) but says which list did not load.
+  */
+  const sectionErrors: Array<{ label: string; query: { isError: boolean; error: Error | null; refetch: () => unknown } }> = [
+    { label: "Number sequences", query: sequencesQuery },
+    { label: "System accounts", query: systemAccountsQuery },
+    { label: "Approval policies", query: policiesQuery },
+    { label: "Exchange rates", query: ratesQuery },
+  ];
+  const failedSections = sectionErrors.filter((s) => s.query.isError);
+
+  function handleRetrySections(): void {
+    for (const section of failedSections) void section.query.refetch();
+  }
+
   return (
     <PageWrapper title="Finance Settings" subtitle="Company financial configuration">
       <div className="flex flex-1 min-h-0 flex-col gap-6 pb-8">
@@ -235,6 +255,15 @@ export function AccountingSettingsPage() {
             </form>
           </CardContent>
         </Card>
+
+        {failedSections.length > 0 && (
+          <ErrorState
+            compact
+            title={`Couldn't load ${failedSections.map((s) => s.label.toLowerCase()).join(", ")}`}
+            description={getErrorMessage(failedSections[0]?.query.error)}
+            onRetry={handleRetrySections}
+          />
+        )}
 
         <SequencesSection sequences={sequences} canManage={canManage} />
         <SystemAccountsSection systemAccounts={systemAccounts} canManage={canManage} />

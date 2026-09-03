@@ -19,7 +19,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
-import { useAccounts } from "@/hooks/api/accounting";
+import { useAllAccounts } from "@/hooks/api/accounting";
+import { AccountListNotice } from "@/features/accounting/shared";
 import { useCreateBankAccount } from "@/hooks/api/accounting/banking";
 import type { BankAccountType } from "@/hooks/api/accounting/banking";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -55,7 +56,7 @@ interface AddBankAccountSheetProps {
 
 export function AddBankAccountSheet({ open, onOpenChange }: AddBankAccountSheetProps) {
   const createMutation = useCreateBankAccount();
-  const accountsQuery = useAccounts({ limit: 100 });
+  const accountsQuery = useAllAccounts();
   const ledgerAccounts = accountsQuery.data?.data ?? [];
 
   function handleSubmit(values: FormValues) {
@@ -256,6 +257,7 @@ export function AddBankAccountSheet({ open, onOpenChange }: AddBankAccountSheetP
                     ))}
                   </SelectContent>
                 </Select>
+                <AccountListNotice query={accountsQuery} />
                 <FormMessage />
               </FormItem>
             )}

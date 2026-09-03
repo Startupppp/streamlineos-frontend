@@ -10,6 +10,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
+import { huddleChannelName } from "@/lib/ably-channels";
 
 interface HuddleChatMessage {
   id: string;
@@ -52,7 +53,7 @@ export function HuddleChatPanel({
     )
       return;
 
-    const ch = ably.channels.get(`huddle:${orgId}:${channelId}`);
+    const ch = ably.channels.get(huddleChannelName(orgId, channelId));
     let cancelled = false;
     let didSubscribe = false;
 
@@ -104,7 +105,7 @@ export function HuddleChatPanel({
     const content = input.trim();
     if (!content || !orgId) return;
     setInput("");
-    const ch = ably.channels.get(`huddle:${orgId}:${channelId}`);
+    const ch = ably.channels.get(huddleChannelName(orgId, channelId));
     await ch.publish("huddle:chat", {
       userId: currentUserId,
       name: userName,

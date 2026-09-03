@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
@@ -52,7 +53,8 @@ export interface ParticipantImportRow {
 export function useParticipants(surveyId: number, params?: ListParticipantsParams) {
   return useGatedQuery("surveys:participants:view", {
     queryKey: queryKeys.surveys.participants(surveyId, params as Record<string, unknown>),
-    queryFn: ({ signal }) => apiClient.get<SurveyParticipant[]>(`/surveys/${surveyId}/participants`, params as Record<string, unknown>, signal),
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<OffsetPage<SurveyParticipant>>(`/surveys/${surveyId}/participants`, params as Record<string, unknown>, signal)).items,
     staleTime: 15_000,
   });
 }

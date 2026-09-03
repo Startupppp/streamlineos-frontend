@@ -8,7 +8,7 @@ import { PmPanel } from "@/features/build/shared/pm-chrome";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ProjectChip } from "./project-chip";
 import { toKanbanTicket, type ProjectGroup } from "./all-work-ticket-utils";
-import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";
+import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 
 interface BoardProjectSectionProps {
   group: ProjectGroup;

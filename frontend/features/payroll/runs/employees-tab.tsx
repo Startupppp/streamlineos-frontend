@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useRunEmployees } from "@/hooks/api/payroll/run-employees";
 import { formatMoney } from "@/features/payroll/shared/payroll-format";
 import { BreakdownSheet } from "./breakdown-sheet";
@@ -90,7 +92,7 @@ export function EmployeesTab({ runId, isLocked }: EmployeesTabProps) {
   const [search, setSearch] = useState("");
   const [selectedRunEmployeeId, setSelectedRunEmployeeId] = useState<number | null>(null);
 
-  const { data, isLoading } = useRunEmployees(runId, { cursor, limit: 20, search: search || undefined });
+  const { data, isLoading, isError, error, refetch } = useRunEmployees(runId, { cursor, limit: 20, search: search || undefined });
 
   function handleRowClick(row: RunEmployee) {
     setSelectedRunEmployeeId(row.id);
@@ -103,6 +105,24 @@ export function EmployeesTab({ runId, isLocked }: EmployeesTabProps) {
   function handleSearchChange(val: string) {
     setSearch(val);
     setCursor(undefined);
+  }
+
+  function handleRetry() {
+    void refetch();
+  }
+
+  // "No employees in this run — generate payroll to include employees" is an
+  // instruction; a failed read must never issue it over a run that already has
+  // employees.
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load this run's employees"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
   }
 
   return (

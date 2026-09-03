@@ -3,11 +3,11 @@
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { EmptyLeadsIllustration } from "@/components/illustrations";
-import { ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { RecordList } from "@/features/renderer";
+import { RecordList } from "@/features/renderer/record-list";
 import { useLeadLayout } from "./use-lead-layout";
 import { useSalesTeamCapacity } from "@/hooks/api/leads";
 import { useOrgDisplay } from "@/hooks/api/org-display";

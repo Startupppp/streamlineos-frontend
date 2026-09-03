@@ -18,7 +18,7 @@ import {
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { useAccounts } from "@/hooks/api/accounting";
+import { useAllAccounts } from "@/hooks/api/accounting";
 import { usePostOpeningBalances } from "@/hooks/api/accounting/core";
 
 interface EditorLine {
@@ -50,7 +50,7 @@ export function OpeningBalancesEditor({ onSuccess }: OpeningBalancesEditorProps)
   const [asOfDate, setAsOfDate] = useState<string>("");
   const [lines, setLines] = useState<EditorLine[]>([makeEmptyLine(), makeEmptyLine()]);
 
-  const accountsQuery = useAccounts({ activeOnly: true, limit: 100 });
+  const accountsQuery = useAllAccounts({ activeOnly: true });
   const accounts = accountsQuery.data?.data ?? [];
 
   const postMutation = usePostOpeningBalances();

@@ -4,6 +4,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import { useCan } from "@/hooks/api/access";
 import { queryKeys } from "@/lib/query-keys";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -14,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmployeePicker } from "@/features/hr/shared/employee-picker";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
@@ -174,7 +175,8 @@ export function FnfPageClient() {
   const canViewFnf = useCan("hr:payroll:view");
   const { data: items, isLoading, isError, refetch } = useQuery({
     queryKey: fnfKeys.list(),
-    queryFn: ({ signal }) => apiClient.get<FnfSettlement[]>("/hr/fnf", undefined, signal),
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<OffsetPage<FnfSettlement>>("/hr/fnf", undefined, signal)).items,
     enabled: canViewFnf,
   });
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);

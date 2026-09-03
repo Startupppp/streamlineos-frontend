@@ -4,7 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import { format } from "date-fns";
 import { Download, X, CheckCircle2, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";

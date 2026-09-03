@@ -13,7 +13,7 @@ import { TrialBanner } from "@/components/billing/trial-banner";
 import { ProductSwitcherMenu } from "./header/product-switcher-menu";
 import { useProductSidebarVisibility } from "./sidebar/use-product-sidebar-visibility";
 import { useAccess } from "@/hooks/api/access";
-import { AppLoadingScreen } from "@/components/ui/app-loading-screen";
+import { LazyAppLoadingScreen } from "@/components/ui/app-loading-screen-lazy";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { AskOsProvider } from "@/components/assistant/ask-os-provider";
@@ -187,7 +187,7 @@ export function DashboardShell({
             onRetry={handleRetryAccess}
           />
         ) : (
-          <AppLoadingScreen className="flex-1" />
+          <LazyAppLoadingScreen className="flex-1" />
         )}
       </div>
     );

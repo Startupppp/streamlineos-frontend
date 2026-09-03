@@ -13,7 +13,7 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
-  useAccounts,
+  useAllAccounts,
   useCreatePurchaseBill,
   type CreatePurchaseBillInput,
 } from "@/hooks/api/accounting";
@@ -32,11 +32,7 @@ import { BillNewFormBody } from "@/features/accounting/purchases/bill-new-form-b
 export function NewPurchaseBillPage() {
   const router = useRouter();
   const clientsQuery = useClientAccounts({});
-  const accountsQuery = useAccounts({
-    activeOnly: true,
-    limit: 100,
-    type: "EXPENSE",
-  });
+  const accountsQuery = useAllAccounts({ activeOnly: true, type: "EXPENSE" });
   const createMutation = useCreatePurchaseBill();
 
   const [confirmPostOpen, setConfirmPostOpen] = useState<boolean>(false);

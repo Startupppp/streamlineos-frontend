@@ -19,6 +19,7 @@ import {
 import { format, isPast, formatDistanceToNowStrict } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import type { CrmInboxItem } from "@/types/crm";
@@ -67,6 +68,31 @@ function DueChip({ dueAt }: { dueAt: string | null }) {
     <span className="text-dense text-muted-foreground shrink-0">
       {format(date, "MMM d, h:mm a")}
     </span>
+  );
+}
+
+/**
+ * Mirrors `InboxSectionCard`'s box exactly — same shell, a 32px header row and
+ * the same 1px divider over a 40px body — so the section list is laid out at
+ * its real size before the items land. Rendering the card itself with no items
+ * instead painted eight "All clear" sections and then reflowed the stack when
+ * the read resolved: on the mobile profile one section grew 75px -> 355px and
+ * pushed the five below it down 280px, which was the whole of this route's
+ * 0.109 CLS.
+ */
+export function InboxSectionCardSkeleton() {
+  return (
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="flex h-8 items-center gap-2.5 px-3">
+        <Skeleton className="h-3.5 w-3.5 shrink-0 rounded-sm" />
+        <Skeleton className="h-3 w-24" />
+      </div>
+      <div className="border-t border-border/50">
+        <div className="flex h-10 items-center px-3">
+          <Skeleton className="h-3 w-16" />
+        </div>
+      </div>
+    </div>
   );
 }
 

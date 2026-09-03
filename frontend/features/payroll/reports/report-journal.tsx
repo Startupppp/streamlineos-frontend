@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { AlertTriangle, CheckCircle2, Circle, Info } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePayrollJournal } from "@/hooks/api/payroll/reports";
@@ -92,7 +94,8 @@ export function ReportJournal({ month }: ReportJournalProps) {
   const [mappingSheetOpen, setMappingSheetOpen] = useState(false);
   const [batchesSheetOpen, setBatchesSheetOpen] = useState(false);
   const canViewBatches = useCan("payroll:accounting:view");
-  const { data, isLoading } = usePayrollJournal(month);
+  const { data, isLoading, isError, error, refetch } = usePayrollJournal(month);
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
   const { data: recon, isLoading: reconLoading } = usePeriodReconciliation(
     month,
     canViewBatches,
@@ -122,6 +125,17 @@ export function ReportJournal({ month }: ReportJournalProps) {
 
   function handleOpenBatchesSheet() {
     setBatchesSheetOpen(true);
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load the payroll journal"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
   }
 
   return (

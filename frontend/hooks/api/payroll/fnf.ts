@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -12,7 +13,8 @@ export function useFnfSettlements() {
   const canView = useCan("payroll:fnf:view");
   return useQuery({
     queryKey: queryKeys.payroll.fnfList(),
-    queryFn: ({ signal }) => apiClient.get<FnfSettlement[]>("/payroll/fnf", undefined, signal),
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<OffsetPage<FnfSettlement>>("/payroll/fnf", undefined, signal)).items,
     staleTime: 60_000,
     enabled: canView,
   });

@@ -85,6 +85,11 @@ export function ApplyTemplateDialog({ open, onOpenChange }: ApplyTemplateDialogP
               ))}
             </SelectContent>
           </Select>
+          {templatesQuery.isError && (
+            <p className="text-xs text-destructive" role="alert">
+              Couldn&apos;t load templates: {getErrorMessage(templatesQuery.error)}
+            </p>
+          )}
           {selected && (
             <p className="text-xs text-muted-foreground">
               Will add up to <span className="font-medium">{selected.accountCount}</span> accounts

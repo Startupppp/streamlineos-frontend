@@ -16,6 +16,7 @@ import {
   useNotificationInboxInvalidation,
 } from "./notifications-shared";
 import { NOTIFICATION_FALLBACK_INTERVAL_MS } from "@/lib/query-request-policies";
+import type { IdCursorPage } from "@/hooks/api/id-cursor-page-schema";
 import {
   snapshotAndPatchLists,
   snapshotAndRemoveFromLists,
@@ -43,12 +44,12 @@ export const useNotifications = (
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<Notification[], Error>({
     queryKey: queryKeys.notifications.list(params as Record<string, unknown>),
-    queryFn: ({ signal }) =>
-      apiClient.get<Notification[]>(
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<IdCursorPage<Notification>>(
         "/notifications",
         params ? toStringParams(params as Record<string, unknown>) : undefined,
         signal,
-      ),
+      )).data,
     staleTime: 30_000,
     ...restOptions,
     enabled: !!orgId && (enabledOption ?? true),
@@ -77,14 +78,19 @@ export const useInfiniteNotifications = (
   const orgId = session?.orgId;
   const limit = params?.limit ?? 30;
 
+  // The page stays a bare `Notification[]` here on purpose: the optimistic cache
+  // helpers in `notifications-inbox-cache.ts` patch `InfiniteData<Notification[]>`
+  // pages in place. The envelope is unwrapped at this boundary, and the
+  // continuation is still the lowest id the page carried — `nextCursor` from the
+  // body would say the same thing.
   return useInfiniteQuery<Notification[], Error>({
     queryKey: queryKeys.notifications.list({
       ...(params as Record<string, unknown>),
       infinite: true,
     }),
     initialPageParam: undefined as number | undefined,
-    queryFn: ({ pageParam, signal }) =>
-      apiClient.get<Notification[]>(
+    queryFn: async ({ pageParam, signal }) =>
+      (await apiClient.get<IdCursorPage<Notification>>(
         "/notifications",
         toStringParams({
           ...(params as Record<string, unknown>),
@@ -92,7 +98,7 @@ export const useInfiniteNotifications = (
           cursor: pageParam,
         }),
         signal,
-      ),
+      )).data,
     getNextPageParam: (lastPage) =>
       lastPage.length < limit ? undefined : lowestNotificationId(lastPage),
     staleTime: 30_000,
@@ -109,12 +115,12 @@ export const useUnreadNotifications = (
 
   return useQuery<Notification[], Error>({
     queryKey: queryKeys.notifications.unreadList(),
-    queryFn: ({ signal }) =>
-      apiClient.get<Notification[]>(
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<IdCursorPage<Notification>>(
         "/notifications",
         toStringParams(SHARED_UNREAD_PARAMS as Record<string, unknown>),
         signal,
-      ),
+      )).data,
     staleTime: 30_000,
     ...restOptions,
     enabled: !!orgId && (enabledOption ?? true),

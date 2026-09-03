@@ -14,12 +14,24 @@ import type {
   UnassignRoleMemberInput,
 } from "@/types/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import {
-  roleContract,
-  rolesPageContract,
-  type Role as RoleRecordType,
-  type RoleListItem,
+import { lazyContract } from "@/lib/api-envelope";
+import type {
+  Role as RoleRecordType,
+  RoleListItem,
 } from "@/hooks/api/roles-schema";
+
+/**
+ * Deferred: `hooks/api/index.ts` re-exports this module, and `roles-schema`
+ * (plus the `cursor-page-schema` it builds on) is a value import of Zod. Role
+ * administration is a small corner of the app; every barrel consumer was paying
+ * for it. The contracts still reach `apiClient.get`, so parsing is unchanged.
+ */
+const rolesPageContract = lazyContract(() =>
+  import("@/hooks/api/roles-schema").then((m) => m.rolesPageContract),
+);
+const roleContract = lazyContract(() =>
+  import("@/hooks/api/roles-schema").then((m) => m.roleContract),
+);
 
 type RolesPage = {
   data: RoleListItem[];

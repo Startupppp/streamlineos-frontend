@@ -23,7 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";
+import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import {
   PmPageShell,
   PmPanel,

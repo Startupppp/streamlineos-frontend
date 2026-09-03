@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { wfhFormSchema, WFH_NOTES_MAX_LENGTH, type WfhFormValues } from "./wfh-request-schema";
 import type { Approver } from "@/features/hr/leaves/components/leaves-shared";

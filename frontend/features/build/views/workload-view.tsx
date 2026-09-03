@@ -19,7 +19,7 @@ import { WorkloadMemberRow } from "./workload-member-row";
 import type { FilterState, StatFilter } from "./workload-types";
 import { hasActiveWorkloadFilters } from "./workload-types";
 import Link from "next/link";
-import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";
+import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface WorkloadMember {

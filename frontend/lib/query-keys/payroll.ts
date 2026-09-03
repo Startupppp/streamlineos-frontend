@@ -28,12 +28,19 @@ export const payrollQueryKeys = {
       [...base, "payroll", "runs", runId, "approvals"] as const,
     bankValidation: (runId: number) =>
       [...base, "payroll", "runs", runId, "payout", "validation"] as const,
+    // `payroll_runs.id` and `payroll_bank_batches.id` are independent sequences,
+    // so run 1 -> batch 1 is the first payroll any org runs — and BatchesTable
+    // (list, by run) and BatchDetailSheet (one batch) are mounted in the SAME
+    // tree. Keying both on the bare id made those two hooks share one cache
+    // entry with incompatible shapes. The discriminating segment is what keeps
+    // them apart; `bankBatches()` with no argument stays the plain
+    // payout/batches prefix so create-batch invalidation still sweeps both.
     bankBatches: (runId?: number) =>
       runId === undefined
         ? ([...base, "payroll", "payout", "batches"] as const)
-        : ([...base, "payroll", "payout", "batches", runId] as const),
+        : ([...base, "payroll", "payout", "batches", "by-run", runId] as const),
     bankBatch: (batchId: number) =>
-      [...base, "payroll", "payout", "batches", batchId] as const,
+      [...base, "payroll", "payout", "batches", "detail", batchId] as const,
     employeeBank: (employeeUserId: string) =>
       [...base, "payroll", "employees", employeeUserId, "bank"] as const,
     payslipTemplates: () => [...base, "payroll", "payslip-templates"] as const,

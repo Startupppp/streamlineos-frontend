@@ -105,6 +105,7 @@ export function PayBatchDialog({ batchId, batchName, open, onOpenChange, onPaid 
             <Select
               value={form.watch("bankAccountId")}
               onValueChange={handleBankAccountChange}
+              disabled={bankAccountsQuery.isError}
             >
               <SelectTrigger className="text-sm">
                 <SelectValue placeholder="Select bank account" />
@@ -119,6 +120,16 @@ export function PayBatchDialog({ batchId, batchName, open, onOpenChange, onPaid 
                   ))}
               </SelectContent>
             </Select>
+            {/*
+              The field is optional, so a failed read must not block the payment
+              — but an empty selector reads as "this org has no bank accounts",
+              which is a statement about the org, not about the request.
+            */}
+            {bankAccountsQuery.isError && (
+              <p className="text-xs text-destructive" role="alert">
+                Couldn&apos;t load bank accounts: {getErrorMessage(bankAccountsQuery.error)}
+              </p>
+            )}
           </div>
         </form>
 

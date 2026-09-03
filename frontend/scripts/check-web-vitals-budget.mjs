@@ -1,11 +1,14 @@
+import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, rmSync, existsSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { tmpdir } from "node:os";
 import { randomBytes } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { corpusLine } from "./gate-corpus.mjs";
 
 const FRONTEND_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const MANIFEST_PATH = join(FRONTEND_ROOT, "contracts", "route-bundle-manifest.json");
+const BUILD_ID_PATH = join(FRONTEND_ROOT, ".next", "BUILD_ID");
 
 const argv = process.argv.slice(2);
 const SELF_TEST = argv.includes("--self-test");
@@ -317,6 +320,232 @@ export function checkPerceivedResponsiveness(results) {
   return { failures, unmeasured, summary, target };
 }
 
+/**
+ * THE CAPTURE'S OWN VERDICTS, read by the gate that publishes its numbers.
+ *
+ * `measure-web-vitals.mjs` writes five self-assessment blocks beside the metrics and REFUSES its
+ * own run on three of them ("REFUSED as evidence: N/M sample(s) did not render real page content").
+ * This gate consulted none of them. Measured 2026-09-03 on the committed capture:
+ * `contentAssertion.verdict` read "capture is NOT usable evidence" because 16 of 208 samples had
+ * `errorBoundary: true` — every desktop and mobile sample of /crm/leads — and this gate printed
+ * "OK (all budgets measured and met)", publishing that route's desktop LCP 391ms and CLS 0.001 as
+ * budgets met. Those are an error page's vitals. An error page is fast.
+ *
+ * That is the "a 500 looks like no data" shape inverted into "a 500 looks like a FAST ROUTE", and
+ * it is the one direction a budget gate can never tolerate: every failure mode that stops a page
+ * rendering also makes it quicker.
+ *
+ * A block that is ABSENT is a refusal too. The producer always writes all five, so a capture
+ * missing one was made by something that never asserted it — and an unasserted capture is no more
+ * evidence than an unmeasured budget is a met one.
+ */
+const EVIDENCE_SIGNALS = [
+  {
+    block: "contentAssertion",
+    field: "unusableSamples",
+    what: "sample(s) did not render real page content (branded loader, error boundary, or under 10 words)",
+    why: "an error page paints almost nothing, so its LCP, FCP and CLS flatter the product",
+  },
+  {
+    block: "contentAssertion",
+    field: "offRouteSamples",
+    what: "sample(s) were measured on a page other than the route requested",
+    why: "a bounce to /signin paints in milliseconds and would be recorded as the route's own LCP",
+  },
+  {
+    block: "authorization",
+    field: "unauthorizedSamples",
+    what: "sample(s) rendered an unauthorized shell",
+    why: "these budgets govern AUTHORIZED routes; a shell whose /me/access was refused paints almost nothing",
+  },
+  {
+    block: "routeFailures",
+    field: "count",
+    what: "route/profile pair(s) produced no measurement at all",
+    why: "they are absent from byRoute, so their budgets were never judged",
+  },
+  {
+    block: "hydration",
+    field: "mismatchesFound",
+    what: "React hydration mismatch(es) were logged during the capture",
+    why: "a mismatched tree is thrown away and re-rendered, so the paint that was timed is not the one the user gets",
+  },
+  {
+    block: "settle",
+    field: "cappedSamples",
+    what: "sample(s) hit the settle cap before the DOM went quiet",
+    why: "their CLS is a FLOOR — late-arriving data shifted after the measurement stopped, so a met budget may not be met",
+  },
+];
+
+/** The count a signal carries, whether it is recorded as an array of samples or as a number. */
+function signalCount(value) {
+  if (Array.isArray(value)) return value.length;
+  if (Number.isInteger(value) && value >= 0) return value;
+  return null;
+}
+
+/** Routes named by a sample list, so the refusal says WHICH route poisoned the capture. */
+function routesNamed(value) {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set();
+  for (const sample of value) {
+    const url = sample?.url ?? sample?.requested ?? sample?.route;
+    if (typeof url !== "string") continue;
+    try {
+      seen.add(new URL(url).pathname);
+    } catch {
+      seen.add(url);
+    }
+  }
+  return [...seen].sort();
+}
+
+/**
+ * Refuse a capture its own producer refused. Pure, so the self-test drives it without a file.
+ * Returns the refusals; an empty array means all five blocks were present and green.
+ */
+export function checkCaptureEvidence(results) {
+  const refusals = [];
+  for (const signal of EVIDENCE_SIGNALS) {
+    const block = results?.[signal.block];
+    if (block === null || typeof block !== "object") {
+      refusals.push({
+        block: signal.block,
+        field: signal.field,
+        count: null,
+        message:
+          `CAPTURE REFUSED — the results file carries no \`${signal.block}\` block, so the ` +
+          `"${signal.what}" assertion was never made. An unasserted capture is not a clean one.`,
+      });
+      continue;
+    }
+    const count = signalCount(block[signal.field]);
+    if (count === null) {
+      refusals.push({
+        block: signal.block,
+        field: signal.field,
+        count: null,
+        message:
+          `CAPTURE REFUSED — \`${signal.block}.${signal.field}\` is ${JSON.stringify(block[signal.field] ?? null)}, ` +
+          `neither a sample list nor a count, so "${signal.what}" could not be read.`,
+      });
+      continue;
+    }
+    if (count === 0) continue;
+    const routes = routesNamed(block[signal.field]);
+    refusals.push({
+      block: signal.block,
+      field: signal.field,
+      count,
+      routes,
+      message:
+        `CAPTURE REFUSED — ${signal.block}.${signal.field}: ${count} ${signal.what}` +
+        (routes.length > 0 ? `\n      route(s): ${routes.join(", ")}` : "") +
+        `\n      ${signal.why}` +
+        (typeof block.verdict === "string" ? `\n      the capture's own verdict: "${block.verdict}"` : ""),
+    });
+  }
+  return refusals;
+}
+
+/**
+ * IS THIS CAPTURE ABOUT THE BUILD THAT IS CHECKED OUT?
+ *
+ * Neither frontend budget gate checked. Measured 2026-09-03: the committed capture recorded
+ * buildId `HLbxAqjmWOjuFHatusviu` while `.next/BUILD_ID` on disk read `de4ncsCMZjpeJolrjAoix`, and
+ * this gate reported every budget met. Re-measuring the route bundles against the head build gave
+ * /build/my-work 362,709 firstLoadJs where the manifest recorded 550,153 — five of eighteen
+ * reported breaches were against numbers the current build no longer produces. The error runs both
+ * ways: a real doubling of a bundle goes unreported for as long as the capture sits unrefreshed.
+ *
+ * `.next/BUILD_ID` is the right subject test rather than a commit distance. Next generates it per
+ * build (`generateBuildId` is not configured here), so equality means the `.next` directory on disk
+ * IS the build that was measured — a stronger and less arbitrary claim than "fewer than N commits
+ * have landed". The release SHA is read too, but only to NAME the intervening commits: this mirrors
+ * `src/scripts/check-benchmark-manifest.mjs`, where subject drift fails and commit distance narrates.
+ *
+ * Exit policy is the project's: a definite mismatch is a FINDING (exit 1); an absent BUILD_ID means
+ * the comparison could not be made at all, which is INCONCLUSIVE (exit 2), never a silent pass.
+ */
+export function captureProvenance(results, { buildIdOnDisk }) {
+  const recorded = typeof results?.buildId === "string" && results.buildId.length > 0 ? results.buildId : null;
+  const onDisk = typeof buildIdOnDisk === "string" && buildIdOnDisk.length > 0 ? buildIdOnDisk : null;
+
+  if (recorded === null)
+    return {
+      status: "unrecorded",
+      recorded,
+      onDisk,
+      message:
+        "PROVENANCE — the capture records no buildId, so there is no way to tell which build it " +
+        "measured. Re-run measure:web-vitals, which stamps .next/BUILD_ID into the results file.",
+    };
+  if (onDisk === null)
+    return {
+      status: "no-build-on-disk",
+      recorded,
+      onDisk,
+      message:
+        `PROVENANCE — the capture measured build ${recorded}, but there is no .next/BUILD_ID to compare it ` +
+        "against, so its freshness could NOT be checked. Build the app before this gate, or treat this run " +
+        "as proving nothing about whether the numbers describe the checked-out code.",
+    };
+  if (recorded === onDisk) return { status: "current", recorded, onDisk, message: null };
+  return {
+    status: "stale",
+    recorded,
+    onDisk,
+    message:
+      `PROVENANCE — STALE CAPTURE. It measured build ${recorded}; .next/BUILD_ID on disk is ${onDisk}.\n` +
+      "      Every number below describes a build this checkout no longer holds, in both directions: a\n" +
+      "      breach may already be fixed, and a regression may not be reported at all.\n" +
+      "      Re-run measure:web-vitals against the current build.",
+  };
+}
+
+/**
+ * Which commits landed since the capture. Narrative only — `captureProvenance` owns the verdict.
+ * Absent `releaseSha` is reported as unknown rather than assumed current.
+ */
+export function commitStaleness(results, cwd) {
+  const recorded = typeof results?.releaseSha === "string" && results.releaseSha.length > 0 ? results.releaseSha : null;
+  if (recorded === null) return { known: false, reason: "the capture records no release SHA" };
+  try {
+    const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd, encoding: "utf8" }).trim();
+    if (head === recorded) return { known: true, behind: 0, head, recorded, touchingSource: [] };
+    const subjects = execFileSync("git", ["log", "--oneline", `${recorded}..HEAD`], { cwd, encoding: "utf8" })
+      .trim().split("\n").filter(Boolean);
+    const touchingSource = execFileSync(
+      "git",
+      ["log", "--oneline", `${recorded}..HEAD`, "--", "app", "components", "features", "lib", "hooks"],
+      { cwd, encoding: "utf8" },
+    ).trim().split("\n").filter(Boolean);
+    return { known: true, behind: subjects.length, head, recorded, subjects, touchingSource };
+  } catch (e) {
+    return { known: false, reason: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+/**
+ * How much of the declared corpus actually carried a judged measurement. `scanned` counts
+ * route/profile pairs with a readable metric block; `total` counts every pair the capture either
+ * declared or half-recorded, so a route that vanished from `byRoute` shows up as the gap it is.
+ */
+export function routeProfileCorpus(results) {
+  const byRoute = results?.byRoute && typeof results.byRoute === "object" ? results.byRoute : {};
+  const declared = Array.isArray(results?.authenticatedRoutes) ? results.authenticatedRoutes : [];
+  const routes = new Set([...declared, ...Object.keys(byRoute)]);
+  let scanned = 0;
+  for (const route of routes)
+    for (const profile of ["mobile", "desktop"]) {
+      const data = byRoute[route]?.[profile];
+      if (data && typeof data === "object" && METRICS.some((m) => Number.isFinite(data[m.block]?.[m.field])))
+        scanned++;
+    }
+  return { scanned, total: routes.size * 2 };
+}
+
 function printBudgets() {
   console.log("Core Web Vitals budgets:");
   for (const [profile, b] of Object.entries(BUDGETS)) {
@@ -587,12 +816,128 @@ async function selfTest() {
       `(expected 1 — this is a FAIL without --allow-unmeasured)`,
   );
 
-  if (breachesOk && unmeasuredOk && perceivedOk && perRouteOk) {
+  /*
+   * EVIDENCE REFUSAL (2026-09-03) — the shape that actually shipped.
+   *
+   * `greenCapture` is the five blocks as the producer writes them on a clean run. `poisoned` is
+   * the committed 2026-09-03 capture in miniature: excellent numbers on /crm/leads, and a
+   * contentAssertion saying every one of that route's samples rendered an error boundary. The gate
+   * called that "OK (all budgets measured and met)". It must now refuse it, and it must name the
+   * route, or the refusal is not actionable.
+   */
+  const greenBlocks = {
+    contentAssertion: { samplesMeasured: 8, offRouteSamples: [], unusableSamples: [], verdict: "every measured sample rendered real page content" },
+    authorization: { samplesMeasured: 8, unauthorizedSamples: [], verdict: "every measured sample rendered an authorized shell" },
+    routeFailures: { count: 0, failures: [], verdict: "every requested route/profile pair completed" },
+    hydration: { navigationsInspected: 8, mismatchesFound: 0, findings: [], verdict: "no React hydration mismatch was logged" },
+    settle: { samplesMeasured: 8, cappedSamples: 0, capped: [], verdict: "every sample was taken after the DOM went quiet" },
+  };
+  const greenRefusals = checkCaptureEvidence({ ...greenBlocks, buildId: "b1" });
+
+  const poisoned = {
+    ...greenBlocks,
+    contentAssertion: {
+      ...greenBlocks.contentAssertion,
+      unusableSamples: [
+        { index: 96, url: "http://localhost:1600/crm/leads", words: 85, brandedLoader: false, errorBoundary: true },
+        { index: 97, url: "http://localhost:1600/crm/leads", words: 85, brandedLoader: false, errorBoundary: true },
+      ],
+      verdict: "capture is NOT usable evidence",
+    },
+  };
+  const poisonedRefusals = checkCaptureEvidence(poisoned);
+
+  const offRoute = { ...greenBlocks, contentAssertion: { ...greenBlocks.contentAssertion, offRouteSamples: [{ index: 3, requested: "/dashboard", url: "http://localhost:1600/signin" }] } };
+  const unauthorized = { ...greenBlocks, authorization: { ...greenBlocks.authorization, unauthorizedSamples: [{ index: 1, url: "http://localhost:1600/mail", navLinks: 0 }] } };
+  const routeFailed = { ...greenBlocks, routeFailures: { count: 2, failures: [], verdict: "these pairs produced no measurement" } };
+  const hydrationBad = { ...greenBlocks, hydration: { ...greenBlocks.hydration, mismatchesFound: 3 } };
+  const settleCapped = { ...greenBlocks, settle: { ...greenBlocks.settle, cappedSamples: 4 } };
+  const blockAbsent = { ...greenBlocks };
+  delete blockAbsent.contentAssertion;
+  const blockGarbled = { ...greenBlocks, settle: { ...greenBlocks.settle, cappedSamples: "some" } };
+
+  const evidenceOk =
+    greenRefusals.length === 0 &&
+    poisonedRefusals.length === 1 &&
+    poisonedRefusals[0].count === 2 &&
+    poisonedRefusals[0].routes.join(",") === "/crm/leads" &&
+    poisonedRefusals[0].message.includes("capture is NOT usable evidence") &&
+    checkCaptureEvidence(offRoute).length === 1 &&
+    checkCaptureEvidence(offRoute)[0].routes.includes("/signin") &&
+    checkCaptureEvidence(unauthorized).length === 1 &&
+    checkCaptureEvidence(routeFailed).length === 1 &&
+    checkCaptureEvidence(routeFailed)[0].count === 2 &&
+    checkCaptureEvidence(hydrationBad).length === 1 &&
+    checkCaptureEvidence(settleCapped).length === 1 &&
+    // Two signals live on contentAssertion, so an absent block must refuse for BOTH, not once.
+    checkCaptureEvidence(blockAbsent).length === 2 &&
+    checkCaptureEvidence(blockAbsent).every((r) => r.message.includes("no `contentAssertion` block")) &&
+    checkCaptureEvidence(blockGarbled).length === 1 &&
+    checkCaptureEvidence(blockGarbled)[0].count === null;
+
+  console.log(
+    `Capture evidence: clean capture -> ${greenRefusals.length} refusal(s) (expected 0); the shipped ` +
+      `error-boundary capture -> ${poisonedRefusals.length} (expected 1, naming ` +
+      `${poisonedRefusals[0]?.routes?.join(",") ?? "no route"}); off-route, unauthorized, route-failure, ` +
+      `hydration and settle-cap fixtures each refuse; an ABSENT block refuses ` +
+      `${checkCaptureEvidence(blockAbsent).length} time(s) (expected 2 — two signals live on it)`,
+  );
+
+  /*
+   * PROVENANCE. The failing subject test is build-id equality; absence of a build on disk is
+   * INCONCLUSIVE rather than a pass, and a capture that does not say which build it measured is a
+   * finding in its own right.
+   */
+  const provCurrent = captureProvenance({ buildId: "abc" }, { buildIdOnDisk: "abc" });
+  const provStale = captureProvenance({ buildId: "HLbxAqjmWOjuFHatusviu" }, { buildIdOnDisk: "de4ncsCMZjpeJolrjAoix" });
+  const provNoDisk = captureProvenance({ buildId: "abc" }, { buildIdOnDisk: "" });
+  const provUnrecorded = captureProvenance({}, { buildIdOnDisk: "abc" });
+
+  const provenanceOk =
+    provCurrent.status === "current" &&
+    provCurrent.message === null &&
+    provStale.status === "stale" &&
+    provStale.message.includes("HLbxAqjmWOjuFHatusviu") &&
+    provStale.message.includes("de4ncsCMZjpeJolrjAoix") &&
+    provNoDisk.status === "no-build-on-disk" &&
+    provUnrecorded.status === "unrecorded";
+
+  console.log(
+    `Provenance: matching build ids -> ${provCurrent.status}; the shipped mismatch -> ${provStale.status}; ` +
+      `no .next/BUILD_ID -> ${provNoDisk.status} (INCONCLUSIVE, not a pass); capture with no buildId -> ${provUnrecorded.status}`,
+  );
+
+  /*
+   * The corpus denominator. A capture that declares thirteen routes and carries two must not be
+   * able to report "all budgets met" without the gap being visible.
+   */
+  const corpusFull = routeProfileCorpus({
+    authenticatedRoutes: ["/a", "/b"],
+    byRoute: { "/a": { desktop: { lcp: { p75_ms: 1 } }, mobile: { lcp: { p75_ms: 1 } } }, "/b": { desktop: { lcp: { p75_ms: 1 } }, mobile: { lcp: { p75_ms: 1 } } } },
+  });
+  const corpusPartial = routeProfileCorpus({
+    authenticatedRoutes: ["/a", "/b", "/c"],
+    byRoute: { "/a": { desktop: { lcp: { p75_ms: 1 } } } },
+  });
+  const corpusOk =
+    corpusFull.scanned === 4 && corpusFull.total === 4 &&
+    corpusPartial.scanned === 1 && corpusPartial.total === 6 &&
+    corpusLine({ gate: "g", scanned: corpusPartial.scanned, total: corpusPartial.total, unit: "route/profile pair" }).line.includes("5 NOT scanned");
+
+  console.log(
+    `Route/profile corpus: fully measured -> ${corpusFull.scanned}/${corpusFull.total}; three routes ` +
+      `declared with one profile recorded -> ${corpusPartial.scanned}/${corpusPartial.total} (the gap is the finding)`,
+  );
+
+  if (breachesOk && unmeasuredOk && perceivedOk && perRouteOk && evidenceOk && provenanceOk && corpusOk) {
     console.log(
     "SELF-TEST PASS: breach detection fires, an unmeasured budget is not reported as met, a recorded " +
       "exception annotates a failure without removing it, the perceived-responsiveness target is " +
-      "enforced rather than narrated, and a single bad route fails on its own even when the " +
-      "profile-wide p75 that twelve quiet routes dilute is inside every budget",
+      "enforced rather than narrated, a single bad route fails on its own even when the " +
+      "profile-wide p75 that twelve quiet routes dilute is inside every budget, a capture its own " +
+      "producer refused is refused here too rather than published as a fast route, a capture " +
+      "measuring a build this checkout no longer holds is not reported as current, and the " +
+      "route/profile denominator is printed so a partial capture cannot read as a full one",
   );
     process.exitCode = 0;
   } else {
@@ -620,6 +965,25 @@ async function selfTest() {
           `clean ${perRouteClean.failures.length}/0 + ${perRouteClean.notMeasured.length}/0 not-measured, ` +
           `absent block ${perRouteAbsent.failures.length}/1, missing route ${perRouteMissingRoute.notMeasured.length}/1, ` +
           `missing metric ${perRouteMissingMetric.notMeasured.length}/1`,
+      );
+    if (!evidenceOk)
+      console.error(
+        `SELF-TEST FAIL: capture-evidence fixtures — clean ${greenRefusals.length}/0, error-boundary ` +
+          `${poisonedRefusals.length}/1 (routes ${poisonedRefusals[0]?.routes?.join(",") ?? "none"}, expected /crm/leads), ` +
+          `off-route ${checkCaptureEvidence(offRoute).length}/1, unauthorized ${checkCaptureEvidence(unauthorized).length}/1, ` +
+          `route-failures ${checkCaptureEvidence(routeFailed).length}/1, hydration ${checkCaptureEvidence(hydrationBad).length}/1, ` +
+          `settle-cap ${checkCaptureEvidence(settleCapped).length}/1, absent block ${checkCaptureEvidence(blockAbsent).length}/2, ` +
+          `garbled field ${checkCaptureEvidence(blockGarbled).length}/1`,
+      );
+    if (!provenanceOk)
+      console.error(
+        `SELF-TEST FAIL: provenance fixtures — current ${provCurrent.status}/current, stale ${provStale.status}/stale, ` +
+          `no build on disk ${provNoDisk.status}/no-build-on-disk, unrecorded ${provUnrecorded.status}/unrecorded`,
+      );
+    if (!corpusOk)
+      console.error(
+        `SELF-TEST FAIL: route/profile corpus — full ${corpusFull.scanned}/${corpusFull.total} (expected 4/4), ` +
+          `partial ${corpusPartial.scanned}/${corpusPartial.total} (expected 1/6)`,
       );
     process.exitCode = 1;
   }
@@ -660,6 +1024,53 @@ function main() {
     return;
   }
 
+  /*
+   * Evidence before budgets. Judging a number against a budget is only meaningful once the number
+   * is known to describe the product: the producer refuses its own run on three of these signals,
+   * and this gate used to publish the refused numbers as a pass.
+   */
+  const refusals = checkCaptureEvidence(results);
+  const provenance = captureProvenance(results, {
+    buildIdOnDisk: existsSync(BUILD_ID_PATH) ? readFileSync(BUILD_ID_PATH, "utf8").trim() : "",
+  });
+
+  const staleness = commitStaleness(results, FRONTEND_ROOT);
+  if (!staleness.known) console.log(`\nCommits since capture: UNKNOWN — ${staleness.reason}`);
+  else if (staleness.behind === 0) console.log(`\nCommits since capture: none — measured at HEAD (${staleness.head.slice(0, 8)})`);
+  else {
+    console.log(
+      `\nCommits since capture: ${staleness.behind} (${staleness.recorded.slice(0, 8)} -> ${staleness.head.slice(0, 8)}), ` +
+        `${staleness.touchingSource.length} of them touching app/components/features/lib/hooks`,
+    );
+    for (const line of staleness.touchingSource.slice(0, 8)) console.log(`    since: ${line}`);
+    if (staleness.touchingSource.length > 8) console.log(`    … and ${staleness.touchingSource.length - 8} more`);
+  }
+
+  if (provenance.message) console.error(`\ncheck-web-vitals-budget: ${provenance.message}`);
+  else console.log(`\nProvenance: the capture measured build ${provenance.recorded}, which is the build on disk.`);
+
+  if (refusals.length > 0) {
+    console.error("");
+    for (const refusal of refusals) console.error(`  ${refusal.message}`);
+  }
+
+  if (refusals.length > 0 || provenance.status === "stale" || provenance.status === "unrecorded") {
+    console.error(
+      `\ncheck-web-vitals-budget: FAIL — this capture is not usable evidence ` +
+        `(${refusals.length} refusal(s), provenance ${provenance.status}).` +
+        `\n  No budget verdict is reported from it. Fix the capture and re-run measure:web-vitals;` +
+        `\n  the producer refuses these runs itself, and this gate now refuses to publish them.`,
+    );
+    process.exitCode = 1;
+    return;
+  }
+
+  if (provenance.status === "no-build-on-disk") {
+    // The rule could not be checked, which is exit 2 in this project (see scripts/run-gate.mjs).
+    process.exitCode = 2;
+    return;
+  }
+
   const measuredRoutes = Array.isArray(results.authenticatedRoutes) ? results.authenticatedRoutes : [];
   if (measuredRoutes.length === 0) {
     console.error(
@@ -672,6 +1083,20 @@ function main() {
     return;
   }
   console.log(`\nMeasured authenticated routes: ${measuredRoutes.join(", ")}`);
+
+  const corpus = routeProfileCorpus(results);
+  const corpusReport = corpusLine({
+    gate: "check-web-vitals-budget",
+    scanned: corpus.scanned,
+    total: corpus.total,
+    unit: "route/profile pair",
+  });
+  if (corpusReport.vacuous) {
+    console.error(`INCONCLUSIVE — check-web-vitals-budget: ${corpusReport.reason}`);
+    process.exitCode = 2;
+    return;
+  }
+  console.log(corpusReport.line);
 
   const { failures: vitalsFailures, notMeasured } = checkBudgets(results);
   const perRoute = checkPerRouteBudgets(results);

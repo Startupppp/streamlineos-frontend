@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { queryKeys } from "@/lib/query-keys";
 import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
+import { chatChannelName } from "@/lib/ably-channels";
 import type {
   Message,
   MessagesPage,
@@ -87,9 +88,15 @@ export function useChatRealtime(channelId: number | null): {
   const currentUserId = session?.user?.id;
   const orgId = session?.orgId;
 
-  const [isConnected, setIsConnected] = useState(
+  const [socketConnected, setSocketConnected] = useState(
     () => ably.connection.state === "connected",
   );
+  // A refused channel attach leaves the CONNECTION healthy, so a verdict read
+  // from `ably.connection.state` alone reports "connected" on a window that
+  // will never receive a message and keeps the poll fallback switched off.
+  // The verdict is the subscribe's own return value.
+  const [channelAttached, setChannelAttached] = useState(false);
+  const isConnected = socketConnected && channelAttached;
   const [typingUsers, setTypingUsers] = useState<TypingIndicator[]>([]);
   const typingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(
     new Map(),
@@ -102,7 +109,7 @@ export function useChatRealtime(channelId: number | null): {
         prevConnectionState.current === "disconnected" ||
         prevConnectionState.current === "suspended";
       prevConnectionState.current = "connected";
-      setIsConnected(true);
+      setSocketConnected(true);
 
       if (wasDisconnected && channelId && channelId > 0) {
         queryClient.invalidateQueries({
@@ -115,7 +122,7 @@ export function useChatRealtime(channelId: number | null): {
     };
     const handleDisconnected = (stateChange: ConnectionStateChange) => {
       prevConnectionState.current = stateChange.current;
-      setIsConnected(false);
+      setSocketConnected(false);
     };
 
     ably.connection.on("connected", handleConnected);
@@ -124,7 +131,7 @@ export function useChatRealtime(channelId: number | null): {
     ably.connection.on("suspended", handleDisconnected);
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsConnected(ably.connection.state === "connected");
+    setSocketConnected(ably.connection.state === "connected");
 
     return () => {
       ably.connection.off("connected", handleConnected);
@@ -137,7 +144,7 @@ export function useChatRealtime(channelId: number | null): {
   useEffect(() => {
     if (!orgId || !channelId || channelId <= 0) return;
 
-    const channelName = `chat:${orgId}:${channelId}`;
+    const channelName = chatChannelName(orgId, channelId);
     const channel = ably.channels.get(channelName);
     let cancelled = false;
     const subscribed: ChatEvent[] = [];
@@ -293,12 +300,14 @@ export function useChatRealtime(channelId: number | null): {
         }
         if (ok) subscribed.push(event);
       }
+      if (!cancelled) setChannelAttached(subscribed.length === CHAT_EVENTS.length);
     }
 
     void setup();
 
     return () => {
       cancelled = true;
+      setChannelAttached(false);
       for (const event of subscribed) {
         safeUnsubscribe(channel, event, handlers[event]);
       }
@@ -322,7 +331,7 @@ export function useChatRealtime(channelId: number | null): {
       !isConnected
     )
       return;
-    const channelName = `chat:${orgId}:${channelId}`;
+    const channelName = chatChannelName(orgId, channelId);
     const channel = ably.channels.get(channelName);
     channel
       .publish("typing", {

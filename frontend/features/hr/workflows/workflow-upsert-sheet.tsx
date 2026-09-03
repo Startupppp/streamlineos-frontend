@@ -7,7 +7,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { GripVertical } from "lucide-react";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateWorkflowDefinition, useUpdateWorkflowDefinition } from "@/hooks/api/hr/hr-workflows";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";

@@ -1,4 +1,10 @@
-﻿export function formatTicketKey(
+/**
+ * Ticket key formatting and parsing, promoted out of `features/build/shared/`
+ * for the same reason as `ticket-status-badge.tsx` next to it: chat renders
+ * ticket keys, build renders chat, and a leaf shared by two features belongs to
+ * neither of them.
+ */
+export function formatTicketKey(
   projectKey: string | null | undefined,
   ticketNumber: number | string | null | undefined,
   fallbackId?: number | string,

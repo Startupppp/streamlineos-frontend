@@ -238,6 +238,16 @@ export function VendorCreditFormSheet({ open, onOpenChange }: VendorCreditFormSh
                 {fieldState.error && (
                   <p className="text-xs text-destructive">{fieldState.error.message}</p>
                 )}
+                {/*
+                  Without this, a failed vendor read left an empty selector that
+                  reads as "no vendors have an outstanding balance" — a claim
+                  about the AP subledger built out of a failed request.
+                */}
+                {vendorsQuery.isError && (
+                  <p className="text-xs text-destructive" role="alert">
+                    Couldn&apos;t load vendors: {getErrorMessage(vendorsQuery.error)}
+                  </p>
+                )}
               </>
             )}
           />

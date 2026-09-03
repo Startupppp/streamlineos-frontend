@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import {
   getTicketDetailHref,
   parseTicketKey,
-} from "@/features/build/shared/format-ticket-key";
+} from "@/components/shared/format-ticket-key";
 
 export interface RelatedLinkDraft {
   url: string;

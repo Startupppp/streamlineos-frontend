@@ -52,7 +52,14 @@ const BASELINE_SHARED_IMPORTS_FEATURE = 3;
 // user-invite-roles left features/users for lib/constants (3 edges), the command
 // palette left features/ for components/ (1), and the chat mobile chrome geometry
 // left features/chat for components/layout/mobile (1).
-const BASELINE_CROSS_FEATURE = 177;
+// Tightened 177 -> 169 on 2026-09-04. All eight were real edges removed, not a
+// corpus change: the two FEATURE-level dependency cycles PRD-C024 names were cut
+// by promoting the leaf each pair shared to components/shared —
+// features/build/shared/{status-badge,format-ticket-key} (7 edges out of
+// features/chat) and features/hr/hr-sheet (1 edge out of features/candidates).
+// `check:feature-cycles`, added in the same change, is what keeps them cut;
+// `check:cycles` cannot see a feature-level loop because madge measures files.
+const BASELINE_CROSS_FEATURE = 169;
 
 const EXCLUDED_DIRS = new Set(["node_modules", ".next", "feedbucket-widget", ".git"]);
 

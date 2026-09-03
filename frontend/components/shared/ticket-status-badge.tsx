@@ -1,4 +1,18 @@
-﻿"use client";
+/**
+ * Ticket status presentation, promoted out of `features/build/shared/`.
+ *
+ * `features/chat/{chat-bubble,chat-entity-pills,internal-link-preview,
+ * ticket-mention-picker}` render ticket pills, so they consumed this from
+ * `@/components/shared/ticket-status-badge` while
+ * `features/build/project-detail/project-chat-page.tsx` imports four modules
+ * back out of `@/features/chat/*` — a feature-level cycle. `check:cycles` runs
+ * madge over FILES and reports zero, because no single file is in a loop; the
+ * criterion it certifies is about FEATURES, and at that granularity the loop was
+ * real. Moving the leaf both features share to a neutral seam is
+ * frontend/CLAUDE.md section 3's own rule for a second consumer, and it is what
+ * removes the edge rather than hiding it.
+ */
+"use client";
 
 import { memo } from "react";
 import { cn } from "@/lib/utils";

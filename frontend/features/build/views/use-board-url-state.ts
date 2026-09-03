@@ -86,7 +86,17 @@ export function useBoardUrlState(projectId: number) {
     [q, filterStatus, filterPriority, filterType, filterAssigneeId, filterLabels, filterCycle, filterSprint, filterModule],
   );
 
-  const { data: boardTickets, isLoading: ticketsLoading } = useProjectBoardTickets(projectId, boardFilters);
+  // `isError` travels with the rows: the ticket list flattens `query.data?.pages`
+  // into `[]`, so a 500 on GET /build/:id/tickets is indistinguishable
+  // downstream from a project that genuinely has no tickets — and the board then
+  // renders "No tickets yet" over a project with 1,850 of them.
+  const {
+    data: boardTickets,
+    isLoading: ticketsLoading,
+    isError: ticketsError,
+    error: ticketsErrorValue,
+    refetch: refetchTickets,
+  } = useProjectBoardTickets(projectId, boardFilters);
   const { data } = useProject(projectId);
   const { data: views } = useViews(projectId);
   const { data: projectMembersData } = useProjectMembers(projectId);
@@ -397,6 +407,9 @@ export function useBoardUrlState(projectId: number) {
     createView,
     selectedIds,
     ticketsLoading,
+    ticketsError,
+    ticketsErrorValue,
+    refetchTickets,
     allTickets,
     filteredTickets,
     statuses,

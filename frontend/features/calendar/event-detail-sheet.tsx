@@ -11,7 +11,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import {
-  extractEventNumericId,
+  parseCalendarEventId,
   useCancelOccurrence,
   useDeleteCalendarEvent,
   useRsvpCalendarEvent,
@@ -61,7 +61,8 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
   const { mutateAsync: cancelOccurrence, isPending: cancelOccurrenceIsPending } = useCancelOccurrence();
   const { mutateAsync: rsvpMutation, isPending: rsvpMutationIsPending } = useRsvpCalendarEvent();
   const { mutateAsync: updateEvent } = useUpdateCalendarEvent();
-  const numericEventId = event ? extractEventNumericId(event.id) : null;
+  const parsedEventId = event ? parseCalendarEventId(event.id) : null;
+  const numericEventId = parsedEventId?.eventId ?? null;
   const isCalendarEvent = event?.source === "event";
   const canUpdate = isCalendarEvent;
   const { iconRef: huddleIconRef, hoverHandlers: huddleHoverHandlers } = useAnimatedIcon();
@@ -93,14 +94,19 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
   const handleCancelOccurrence = useCallback(async () => {
     if (!event || numericEventId === null) return;
     try {
-      await cancelOccurrence({ eventId: numericEventId, occurrenceStart: event.start });
+      // The exception is keyed on the occurrence's NOMINAL start, which the id
+      // carries; `event.start` is the moved time once an occurrence is rescheduled.
+      await cancelOccurrence({
+        eventId: numericEventId,
+        occurrenceStart: parsedEventId?.occurrenceStart ?? event.start,
+      });
       toast.success("Occurrence cancelled");
       setCancelOccurrenceOpen(false);
       onClose();
     } catch {
       toast.error("Failed to cancel occurrence");
     }
-  }, [cancelOccurrence, event, numericEventId, onClose]);
+  }, [cancelOccurrence, event, numericEventId, parsedEventId, onClose]);
 
   const handleRsvp = useCallback(async (status: "accepted" | "declined" | "tentative") => {
     if (!event || numericEventId === null) return;

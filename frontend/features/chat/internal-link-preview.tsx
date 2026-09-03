@@ -13,8 +13,8 @@ import {
   ticketPermalinkQueryOptions,
 } from "@/hooks/api/build/comment-permalink";
 import { LinkPreviewCard } from "./link-preview-card";
-import { getStatusBadgeClass } from "@/features/build/shared/status-badge";
-import { formatTicketKey } from "@/features/build/shared/format-ticket-key";
+import { getStatusBadgeClass } from "@/components/shared/ticket-status-badge";
+import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 type InternalLink =

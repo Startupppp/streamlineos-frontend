@@ -218,7 +218,6 @@ export interface NotificationPreferences {
   soundEnabled: boolean;
   quietHoursStart: string | null;
   quietHoursEnd: string | null;
-  quietHoursTimezone: string;
   digestMode: DigestMode;
   categories: Record<string, boolean>;
   channelCategories: Record<string, Record<string, boolean>>;
@@ -235,7 +234,6 @@ export interface UpdatePreferencesInput {
   soundEnabled?: boolean;
   quietHoursStart?: string | null;
   quietHoursEnd?: string | null;
-  quietHoursTimezone?: string;
   digestMode?: DigestMode;
   categories?: Record<string, boolean>;
   channelCategories?: Record<string, Record<string, boolean>>;

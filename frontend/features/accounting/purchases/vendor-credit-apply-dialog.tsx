@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { ErrorState } from "@/components/shared";
 import {
   Select,
   SelectContent,
@@ -83,6 +84,10 @@ export function VendorCreditApplyDialog({
 
   const bills = billsQuery.data?.data ?? [];
 
+  function handleRetryBills(): void {
+    void billsQuery.refetch();
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
@@ -92,6 +97,19 @@ export function VendorCreditApplyDialog({
             Apply this credit to an outstanding bill. Available: ₹{remaining.toFixed(2)}
           </DialogDescription>
         </DialogHeader>
+        {/*
+          Without this branch a failed bill read rendered as an empty selector,
+          which the user reads as "this vendor has no outstanding bills" — a
+          claim about the ledger made out of a failed request.
+        */}
+        {billsQuery.isError ? (
+          <ErrorState
+            compact
+            title="Couldn't load bills"
+            description={getErrorMessage(billsQuery.error)}
+            onRetry={handleRetryBills}
+          />
+        ) : (
         <form className="flex flex-col gap-4" onSubmit={form.handleSubmit(handleSubmit)}>
           <div className="space-y-1.5">
             <Label className="text-xs">Bill (Posted) <span className="text-destructive">*</span></Label>
@@ -135,18 +153,21 @@ export function VendorCreditApplyDialog({
             )}
           </div>
         </form>
+        )}
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={handleCancel}>
             Cancel
           </Button>
-          <LoadingButton
-            size="sm"
-            isPending={applyMutation.isPending}
-            loadingText="Applying…"
-            onClick={form.handleSubmit(handleSubmit)}
-          >
-            Apply
-          </LoadingButton>
+          {!billsQuery.isError && (
+            <LoadingButton
+              size="sm"
+              isPending={applyMutation.isPending}
+              loadingText="Applying…"
+              onClick={form.handleSubmit(handleSubmit)}
+            >
+              Apply
+            </LoadingButton>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -8,6 +8,8 @@ import { EyeIcon, Trash2Icon, PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { usePayslipTemplates } from "@/hooks/api/payroll";
 import type { PayslipLayout, PayslipTemplate } from "@/types/payroll";
@@ -100,7 +102,7 @@ interface TemplatesTabProps {
 }
 
 export function TemplatesTab({ canManage }: TemplatesTabProps) {
-  const { data: templates, isLoading } = usePayslipTemplates();
+  const { data: templates, isLoading, isError, error, refetch } = usePayslipTemplates();
   const [previewTarget, setPreviewTarget] = useState<PayslipTemplate | null>(null);
   const [editTarget, setEditTarget] = useState<PayslipTemplate | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PayslipTemplate | null>(null);
@@ -134,6 +136,10 @@ export function TemplatesTab({ canManage }: TemplatesTabProps) {
     setCreateOpen(true);
   }
 
+  function handleRetry() {
+    void refetch();
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -153,7 +159,17 @@ export function TemplatesTab({ canManage }: TemplatesTabProps) {
         </div>
       )}
 
-      {!isLoading && (!templates || templates.length === 0) && (
+      {/* A failed read is not "no templates found — create one to get started". */}
+      {!isLoading && isError && (
+        <ErrorState
+          className="flex-1"
+          title="Couldn't load payslip templates"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      )}
+
+      {!isLoading && !isError && (!templates || templates.length === 0) && (
         <EmptyState
           illustrationPreset="documents"
           title="No templates found"
@@ -161,7 +177,7 @@ export function TemplatesTab({ canManage }: TemplatesTabProps) {
         />
       )}
 
-      {!isLoading && templates && templates.length > 0 && (
+      {!isLoading && !isError && templates && templates.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {templates.map((t) => (
             <TemplateCard

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { InlineStatus, InlinePriority, InlineAssignee } from "../views/card-inline-fields";
-import { getTicketDetailHref } from "../shared/format-ticket-key";
+import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import type { ProjectStatusRecord } from "@/types/projects";
 
 export interface CompactTicketRowData {

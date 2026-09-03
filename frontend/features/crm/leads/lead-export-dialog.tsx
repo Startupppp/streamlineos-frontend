@@ -6,7 +6,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -18,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Download } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useLeads } from "@/hooks/api/leads";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -43,8 +41,18 @@ const SOURCES = [
 ] as const;
 const PRIORITIES = ["HOT", "WARM", "COLD"] as const;
 
-export function LeadExportDialog() {
-  const [open, setOpen] = useState(false);
+interface LeadExportDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+/*
+  Controlled, and with no trigger of its own. A visible `DialogTrigger` forces
+  this module to mount while the dialog is closed, which puts its date pickers
+  in the pipeline's first load; the pipeline renders the Export button instead
+  and mounts this only once it is asked for.
+*/
+export function LeadExportDialog({ open, onOpenChange }: LeadExportDialogProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [filters, setFilters] = useState({
     status: "all",
@@ -97,7 +105,7 @@ export function LeadExportDialog() {
     (v: string) => setFilters((f) => ({ ...f, dateTo: v })),
     [],
   );
-  const handleClose = useCallback(() => setOpen(false), []);
+  const handleClose = useCallback(() => onOpenChange(false), [onOpenChange]);
 
   const handleExport = useCallback(async () => {
     setIsExporting(true);
@@ -153,21 +161,16 @@ export function LeadExportDialog() {
       ]);
 
       toast.success(`Exported ${leads.length} leads`);
-      setOpen(false);
+      onOpenChange(false);
     } catch {
       toast.error("Export failed");
     } finally {
       setIsExporting(false);
     }
-  }, [data]);
+  }, [data, onOpenChange]);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Download className="h-4 w-4 mr-1" /> Export
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Export Leads to Excel</DialogTitle>

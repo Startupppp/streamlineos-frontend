@@ -178,7 +178,12 @@ export function DashboardClient() {
               action={{ label: "Refresh", onClick: handleRefresh }}
             />
           ) : statCards.length > 0 ? (
-            <motion.div variants={fadeUp} initial="hidden" animate="visible">
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="space-y-2"
+            >
               <StatCardGrid
                 cols={statCards.length >= 4 ? 4 : statCards.length >= 3 ? 3 : 2}
               >
@@ -187,11 +192,43 @@ export function DashboardClient() {
                     key={stat.id}
                     label={stat.label}
                     value={stat.value}
+                    hint={stat.hint}
                     icon={stat.icon}
                     href={stat.href}
                   />
                 ))}
               </StatCardGrid>
+              {/*
+                A stats section can degrade on its own — `settleSection` hands
+                back `null` for a query that rejected OR merely blew the 2.5 s
+                deadline — while the request itself is a perfectly good 200. That
+                lands in neither the `error` nor the `!stats` branch above, so
+                without this strip a failed section is silent and there is
+                nothing to retry with.
+              */}
+              {statCards.some((stat) => stat.unavailable) && (
+                <div
+                  role="status"
+                  className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2"
+                >
+                  <AlertCircle
+                    className="h-4 w-4 shrink-0 text-status-warning-ink"
+                    aria-hidden="true"
+                  />
+                  <p className="text-dense text-status-warning-ink">
+                    Some figures could not be loaded and are shown as “—”.
+                  </p>
+                  <Button
+                    onClick={handleRefresh}
+                    size="sm"
+                    variant="outline"
+                    className="h-7"
+                  >
+                    <RefreshCw className="mr-1.5 h-3 w-3" aria-hidden="true" />
+                    Retry
+                  </Button>
+                </div>
+              )}
             </motion.div>
           ) : null}
 

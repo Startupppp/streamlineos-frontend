@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { formatDateOnly } from "@/lib/date-utils";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { toast } from "sonner";
 import { useCreateExpense, useUpdateExpense } from "@/hooks/api/hr";
 import { useUploadFile } from "@/hooks/api/use-upload-file";

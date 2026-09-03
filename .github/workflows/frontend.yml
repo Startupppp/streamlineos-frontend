@@ -313,6 +313,24 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm run check:cycles
 
+      # `check:cycles` above runs madge over FILES and has always reported zero,
+      # which is correct at that granularity: no single file is in a loop. The
+      # criterion it is read as certifying (PRD-C024) names "frontend features",
+      # and at THAT granularity two loops stood at head — features/chat <->
+      # features/build through `status-badge`/`format-ticket-key`, and
+      # features/candidates <-> features/hr through `hr-sheet`. Both were cut by
+      # promoting the shared leaf to components/shared; this gate is what keeps
+      # them cut. MEASURED before wiring: PASS at 49 features / 36 cross-feature
+      # edges / 2,812 files, and FAIL naming `build -> chat -> build` with a
+      # single chat->build import planted back. Blocking because it is green.
+      - name: Feature graph is acyclic
+        if: ${{ !cancelled() }}
+        run: pnpm run check:feature-cycles
+
+      - name: Feature-cycle detector still detects
+        if: ${{ !cancelled() }}
+        run: pnpm run check:feature-cycles:self-test
+
       # 2026-09-03 (ticket: test typecheck) — the frontend twin of the backend's
       # `check:test-typecheck`. `tsconfig.json` excludes `**/__tests__/**`,
       # `*.test.ts(x)` and `*.spec.ts(x)`, and `type-check` is a bare `tsc

@@ -11,6 +11,8 @@ import { ProjectAiMenu } from "@/features/build/ai/project-ai-menu";
 import { SaveViewDialog } from "@/features/build/views/save-view-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
+import { ErrorState } from "@/components/shared/error-state";
+import { ProjectLoadFallback } from "@/features/build/shared/project-load-fallback";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { notFound } from "next/navigation";
@@ -22,7 +24,13 @@ interface PageProps {
 export function ProjectBoardPage({ params }: PageProps) {
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr);
-  const { data, isLoading: projectLoading } = useProject(projectId);
+  const {
+    data,
+    isLoading: projectLoading,
+    isError: projectError,
+    error: projectErrorValue,
+    refetch: refetchProject,
+  } = useProject(projectId);
   const { data: sprints } = useSprints(projectId);
   const bulkUpdate = useBulkUpdateTickets(projectId);
 
@@ -39,6 +47,9 @@ export function ProjectBoardPage({ params }: PageProps) {
     createView,
     selectedIds,
     ticketsLoading,
+    ticketsError,
+    ticketsErrorValue,
+    refetchTickets,
     filteredTickets,
     statuses,
     members,
@@ -63,6 +74,9 @@ export function ProjectBoardPage({ params }: PageProps) {
   } = useBoardUrlState(projectId);
 
   const isLoading = projectLoading || ticketsLoading;
+
+  const handleRetryProject = useCallback(() => void refetchProject(), [refetchProject]);
+  const handleRetryTickets = useCallback(() => void refetchTickets(), [refetchTickets]);
 
   const handleBulkUpdate = useCallback(
     (
@@ -124,6 +138,18 @@ export function ProjectBoardPage({ params }: PageProps) {
     );
   }
 
+  // A failure to READ the project is not the same fact as a project that is
+  // gone: only the fallback's resolved 404 reaches notFound().
+  if (projectError) {
+    return (
+      <ProjectLoadFallback
+        title="Board"
+        error={projectErrorValue}
+        onRetry={handleRetryProject}
+      />
+    );
+  }
+
   if (!data) return notFound();
 
   return (
@@ -166,31 +192,46 @@ export function ProjectBoardPage({ params }: PageProps) {
         />
       }
     >
-      <ProjectBoardContent
-        view={view}
-        filteredTickets={filteredTickets}
-        showEmptyFilterState={showEmptyFilterState}
-        onClearSearch={handleClearSearch}
-        projectId={projectId}
-        projectKey={data.key}
-        statuses={statuses}
-        wipLimits={wipLimits}
-        members={members}
-        displayOptions={displayOptions}
-        hideCompleted={hideCompleted}
-        workloadFilters={workloadFilters}
-        onTicketSelect={handleTicketSelect}
-        onWorkloadFilterChange={handleWorkloadFilterChange}
-        sprints={sprints ?? []}
-        selectedIds={selectedIds}
-        onBulkStatus={handleBulkStatus}
-        onBulkPriority={handleBulkPriority}
-        onBulkAssignee={handleBulkAssignee}
-        onBulkSprint={handleBulkSprint}
-        onBulkParent={handleBulkParent}
-        onClearSelection={handleClearSelection}
-        onSelectionChange={handleSelectionChange}
-      />
+      {/*
+        A 500 on GET /build/:id/tickets used to arrive here as `[]`, so the
+        board rendered its "No tickets yet — create a ticket to get started"
+        empty state over a project that has thousands, and people created
+        duplicates.
+      */}
+      {ticketsError ? (
+        <ErrorState
+          className="flex-1 m-3"
+          title="Couldn't load this project's tickets"
+          description={getErrorMessage(ticketsErrorValue)}
+          onRetry={handleRetryTickets}
+        />
+      ) : (
+        <ProjectBoardContent
+          view={view}
+          filteredTickets={filteredTickets}
+          showEmptyFilterState={showEmptyFilterState}
+          onClearSearch={handleClearSearch}
+          projectId={projectId}
+          projectKey={data.key}
+          statuses={statuses}
+          wipLimits={wipLimits}
+          members={members}
+          displayOptions={displayOptions}
+          hideCompleted={hideCompleted}
+          workloadFilters={workloadFilters}
+          onTicketSelect={handleTicketSelect}
+          onWorkloadFilterChange={handleWorkloadFilterChange}
+          sprints={sprints ?? []}
+          selectedIds={selectedIds}
+          onBulkStatus={handleBulkStatus}
+          onBulkPriority={handleBulkPriority}
+          onBulkAssignee={handleBulkAssignee}
+          onBulkSprint={handleBulkSprint}
+          onBulkParent={handleBulkParent}
+          onClearSelection={handleClearSelection}
+          onSelectionChange={handleSelectionChange}
+        />
+      )}
       <SaveViewDialog
         open={saveViewOpen}
         onOpenChange={setSaveViewOpen}

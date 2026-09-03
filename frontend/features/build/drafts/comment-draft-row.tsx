@@ -9,13 +9,13 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { CommentDraft } from "@/hooks/api/build/comment-drafts";
-import { formatTicketKey } from "@/features/build/shared/format-ticket-key";
+import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import {
   getUserDisplayName,
   getUserInitials,
 } from "@/lib/person-display";
 import { TicketTypeIcon } from "@/features/build/shared/ticket-type-icon";
-import { getStatusDotClass, getStatusBadgeClass } from "@/features/build/shared/status-badge";
+import { getStatusDotClass, getStatusBadgeClass } from "@/components/shared/ticket-status-badge";
 import { priorityConfig, statusConfig } from "@/features/build/shared/types";
 
 interface CommentDraftRowProps {

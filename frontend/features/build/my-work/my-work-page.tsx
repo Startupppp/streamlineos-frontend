@@ -21,7 +21,7 @@ import type { AllWorkTicket } from "@/types/projects";
 import { cn } from "@/lib/utils";
 import { isPast, isToday, parseISO } from "date-fns";
 import { MY_WORK_VIEWS, parseMyWorkView } from "./my-work-view";
-import { MyWorkViewBody } from "./my-work-view-body";
+import { MyWorkViewBody } from "./my-work-view-body-lazy";
 import { GroupingSidebar } from "./grouping-sidebar";
 import { mapAllWorkTicketToKanban, buildTicketMetaMap } from "./map-all-work-ticket";
 import { BucketSection, AllWorkListSkeleton, BUCKET_ORDER } from "./my-work-rows";

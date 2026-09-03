@@ -8,7 +8,7 @@ import { PmPanel } from "@/features/build/shared/pm-chrome";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ProjectChip } from "./project-chip";
 import type { AllWorkTicket } from "@/types/projects";
-import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";
+import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 
 interface ProjectGroup {
   projectId: number;

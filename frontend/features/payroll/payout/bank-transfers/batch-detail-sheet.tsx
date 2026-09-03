@@ -161,8 +161,12 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
   );
 
   const batch = data?.batch;
-  const items = data?.items.data ?? [];
-  const hasMoreItems = data?.items.hasMore ?? false;
+  // Optional all the way down on purpose: `items` is required by the type, so a
+  // missing one can only mean this observer was handed a foreign payload — the
+  // shape that used to reach here through a shared query key. Crashing the sheet
+  // takes mark-paid, mark-failed and import-return down with it.
+  const items = data?.items?.data ?? [];
+  const hasMoreItems = data?.items?.hasMore ?? false;
   const canImportReturn =
     canManage &&
     batch != null &&

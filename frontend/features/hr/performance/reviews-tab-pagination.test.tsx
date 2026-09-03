@@ -20,7 +20,7 @@ jest.mock("@/hooks/api/hr", () => ({
   unwrapEmployees: jest.fn(() => []),
 }));
 
-jest.mock("@/features/hr/hr-sheet", () => ({
+jest.mock("@/components/shared/hr-sheet", () => ({
   HrSheet: () => null,
 }));
 

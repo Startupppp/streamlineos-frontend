@@ -46,7 +46,18 @@ export function useExpensePageData(
   }
   return useQuery({
     enabled: (options?.selfService === true || (canExpenses && accountingEnabled)) && (options?.enabled ?? true),
-    queryKey: [...queryKeys.hr.expenses(), "pageData", params] as const,
+    // The scope segment is load-bearing: `selfService` selects between a
+    // one-person endpoint and an org-wide one, and without it in the key the
+    // approver's first render (permissions still in flight -> selfService true)
+    // parks `/me/expenses` under the key the org read then reuses.
+    // It sits INSIDE the `hr.expenses()` prefix so both entries still answer to
+    // the invalidation every expense mutation issues.
+    queryKey: [
+      ...queryKeys.hr.expenses(),
+      "pageData",
+      options?.selfService ? "self" : "org",
+      params,
+    ] as const,
     queryFn: ({ signal }) =>
       apiClient.get<{
         expenses: ExpenseWithRelations[];

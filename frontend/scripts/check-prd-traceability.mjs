@@ -25,6 +25,12 @@
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve, relative } from "node:path";
+// The two pinned corpora live in their own module so the self-test can import them without
+// executing this gate. See check-prd-traceability-pins.mjs for why that matters.
+import {
+  LEGACY_UNIDENTIFIED,
+  RESTORED_MODULE_EVIDENCE,
+} from "./check-prd-traceability-pins.mjs";
 
 // PRD-C015: resolve from the script's own location, never an absolute workstation path, so this
 // runs identically on Windows, macOS and Linux and from any working directory.
@@ -45,24 +51,18 @@ const ISSUES_DIR = join(V2_DIR, "issues");
 const MIN_CRITERIA = 195;
 const MIN_TICKETS = 36;
 
-// --- PRD-C017: the restored module evidence, pinned by id ------------------------------------
-const RESTORED_MODULE_EVIDENCE = {
-  "PRD-C115": "Home",
-  "PRD-C118": "Directory/Me",
-  "PRD-C119": "HRMS",
-  "PRD-C123": "Build/PM",
-  "PRD-C124": "Workflows",
-  "PRD-C125": "Billing/Payments",
-  "PRD-C126": "Accounting/Finance",
-  "PRD-C127": "Chat",
-  "PRD-C132": "Notifications",
-  "PRD-C136": "Shared adapters",
-};
-
 const PRD_LINE = /^\s*- \[([ x])\] \*\*\[(PRD-C\d{3})\]\*\* (.+?)\s*$/;
+const CHECKBOX_LINE = /^\s*- \[([ x])\] (.+?)\s*$/;
 const TICKET_LINE = /^\s*- \[([ x])\] \*\*(PRD-C\d{3})\*\* — (.+?)\s*$/;
 const MANIFEST_ROW = /^\| (PRD-C\d{3}) \| (\d+) \| (.+?) \|\s*$/;
 const COVERAGE_ROW = /^- Ticket (\d{2}): (\d+)\s*$/;
+/** The manifest's own headline. Pins the vacuity floors to a number a reviewer reads. */
+const MANIFEST_HEADLINE =
+  /^Exactly \*\*(\d+)\*\* unchecked PRD criteria are assigned to \*\*(\d+)\*\* execution tickets/m;
+
+/** Whitespace-insensitive, so a re-wrap is not a false failure. */
+const normalizeLine = (s) => s.replace(/\s+/g, " ").trim();
+const LEGACY_UNIDENTIFIED_SET = new Set(LEGACY_UNIDENTIFIED.map(normalizeLine));
 
 const failures = [];
 const fail = (msg) => failures.push(msg);
@@ -102,6 +102,45 @@ prdText.split("\n").forEach((line, i) => {
     }
   }
 });
+
+// --- 1b. Every checkbox line is a criterion, and every criterion carries an id -------------------
+// The two passes above only ever see lines that already have an id, so a checkbox line without one
+// could be unchecked, unowned and invisible. This pass closes that. The 37 legacy lines are frozen
+// by content: they may be ticked, never un-ticked, never deleted, never grown.
+const seenLegacy = new Set();
+prdText.split("\n").forEach((line, i) => {
+  const m = CHECKBOX_LINE.exec(line);
+  if (!m) return;
+  if (PRD_LINE.test(line)) return;
+  const [, box, text] = m;
+  const key = normalizeLine(text);
+  const known = LEGACY_UNIDENTIFIED_SET.has(key);
+  if (known) seenLegacy.add(key);
+  if (known && box === "x") return;
+  if (known) {
+    fail(
+      `UNIDENTIFIED CRITERION un-ticked at PRD line ${i + 1} — "${key.slice(0, 90)}". ` +
+        `A criterion with no \`**[PRD-Cnnn]**\` id has no manifest row and no owning ticket, so once ` +
+        `it is unchecked nothing in this release is accountable for it. Give it an id and an owner, ` +
+        `or leave it \`[x]\`.`,
+    );
+    return;
+  }
+  fail(
+    `UNIDENTIFIED CRITERION at PRD line ${i + 1} — "${key.slice(0, 90)}". ` +
+      `Every new criterion must carry a \`**[PRD-Cnnn]**\` id, a manifest row and an owning ticket; ` +
+      `without one it is invisible to this gate and to the manifest.`,
+  );
+});
+for (const key of LEGACY_UNIDENTIFIED_SET) {
+  if (!seenLegacy.has(key)) {
+    fail(
+      `LEGACY CRITERION DELETED — "${key.slice(0, 90)}" is in LEGACY_UNIDENTIFIED but no longer in ` +
+        `the PRD. A completed criterion is recorded \`[x]\`; it is never deleted. If it genuinely ` +
+        `belongs somewhere else now, give it an id and an owner in the same commit.`,
+    );
+  }
+}
 
 // --- 2. Parse the manifest --------------------------------------------------------------------
 const manifestText = readOrDie(MANIFEST_PATH, "traceability manifest");
@@ -155,6 +194,51 @@ if (prd.size < MIN_CRITERIA) {
 }
 if (ticketFiles.length < MIN_TICKETS) {
   fail(`VACUITY FLOOR: found ${ticketFiles.length} ticket files, floor is ${MIN_TICKETS}.`);
+}
+
+// The floors above are constants inside the file they defend, and nothing outside pinned either —
+// so one commit could lower MIN_CRITERIA by one, delete a criterion everywhere, and this gate would
+// print PASS over the smaller corpus. MEASURED: lowering 195 -> 194 and deleting PRD-C115 from the
+// PRD, the manifest, ticket 06 and RESTORED_MODULE_EVIDENCE gave exit 0 with "PASS — every
+// criterion has exactly one owner" and PRD-C115 occurrences 0/0/0.
+//
+// The manifest's own headline states the same two numbers in prose a reviewer reads. Tying the
+// floors to it means lowering a floor now requires editing that sentence in the same commit, and
+// the manifest can no longer describe a corpus it does not have.
+const headline = MANIFEST_HEADLINE.exec(manifestText);
+if (!headline) {
+  fail(
+    `MANIFEST HEADLINE MISSING: ${relative(FRONTEND_REPO, MANIFEST_PATH)} no longer states ` +
+      `"Exactly **N** unchecked PRD criteria are assigned to **M** execution tickets". That sentence ` +
+      `is what pins MIN_CRITERIA and MIN_TICKETS to something outside this script.`,
+  );
+} else {
+  const declaredCriteria = Number(headline[1]);
+  const declaredTickets = Number(headline[2]);
+  if (manifest.size !== declaredCriteria) {
+    fail(
+      `MANIFEST HEADLINE DRIFT: the manifest says it assigns ${declaredCriteria} criteria, but it ` +
+        `carries ${manifest.size} rows. Update the headline in the same commit as the rows.`,
+    );
+  }
+  if (ticketFiles.length !== declaredTickets) {
+    fail(
+      `MANIFEST HEADLINE DRIFT: the manifest says ${declaredTickets} execution tickets, but ` +
+        `issues/ holds ${ticketFiles.length}.`,
+    );
+  }
+  if (MIN_CRITERIA < declaredCriteria) {
+    fail(
+      `VACUITY FLOOR LOWERED: MIN_CRITERIA is ${MIN_CRITERIA} but the manifest headline declares ` +
+        `${declaredCriteria} criteria. A floor below the declared corpus disarms the floor.`,
+    );
+  }
+  if (MIN_TICKETS < declaredTickets) {
+    fail(
+      `VACUITY FLOOR LOWERED: MIN_TICKETS is ${MIN_TICKETS} but the manifest headline declares ` +
+        `${declaredTickets} execution tickets.`,
+    );
+  }
 }
 
 // --- 5. The mapping must be total and injective ------------------------------------------------

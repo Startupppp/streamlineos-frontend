@@ -16,6 +16,7 @@ import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { HuddleChatPanel } from "./huddle-chat-panel";
 import { useAblyConnection } from "./use-ably-connection";
+import { huddleChannelName } from "@/lib/ably-channels";
 import { useHuddleEvents } from "./use-huddle-events";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { HuddleAudioSink } from "./huddle-audio-sink";
@@ -179,7 +180,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
   const sendReaction = useCallback(async (emoji: string) => {
     if (!orgId || !isAblyConnected) return;
     setShowEmojiPicker(false);
-    const ch = ably.channels.get(`huddle:${orgId}:${channelId}`);
+    const ch = ably.channels.get(huddleChannelName(orgId, channelId));
     await ch.publish("huddle:reaction", { userId: currentUserId, emoji }).catch(() => {});
   }, [ably, channelId, orgId, currentUserId, isAblyConnected]);
 

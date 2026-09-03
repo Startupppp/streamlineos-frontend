@@ -18,6 +18,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { useBankAccounts, useCreateBankImport } from "@/hooks/api/accounting/banking";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { BankImportResult, CreateBankImportInput } from "@/hooks/api/accounting/banking";
 import { parseCsvFile } from "../lib/parse-csv";
 import type { ParsedCsv } from "../lib/parse-csv";
@@ -278,6 +279,11 @@ export function BankImportClient() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {accountsQuery.isError && (
+                    <p className="text-xs text-destructive" role="alert">
+                      Couldn&apos;t load bank accounts: {getErrorMessage(accountsQuery.error)}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-1.5">

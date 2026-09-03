@@ -18,12 +18,12 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useChatOrgUsers } from "@/hooks/api/chat-core-read";
+import { useAddChannelMember } from "@/hooks/api/chat-core-mutations-b";
 import {
-  useChatOrgUsers,
-  useAddChannelMember,
   useChannelInviteLink,
   useRegenerateInviteLink,
-} from "@/hooks/api";
+} from "@/hooks/api/chat-personal-b";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "./chat-helpers";
 import { ChatUserVirtualList } from "./chat-user-virtual-list";

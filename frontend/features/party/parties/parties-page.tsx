@@ -11,7 +11,8 @@ import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import type { ReactNode } from "react";
-import { RecordList, type RecordValue } from "@/features/renderer";
+import { RecordList } from "@/features/renderer/record-list";
+import type { RecordValue } from "@/features/renderer/format-value";
 import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
 import { PARTY_LAYOUT } from "@/lib/renderer/party-layout";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -42,8 +43,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { PartyFormDialog } from "./party-form-dialog";
-import { PartyDetailSheet } from "./party-detail-sheet";
+import { PartyDetailSheet, PartyFormDialog } from "./parties-lazy";
 import type { BusinessParty, PartyType } from "@/types/party/parties";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -364,7 +364,9 @@ export function PartiesPage() {
         />
       )}
 
-      <PartyDetailSheet partyId={openPartyId} onOpenChange={handleDetailOpenChange} />
+      {openPartyId !== null && (
+        <PartyDetailSheet partyId={openPartyId} onOpenChange={handleDetailOpenChange} />
+      )}
 
       <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
         <AlertDialogContent>

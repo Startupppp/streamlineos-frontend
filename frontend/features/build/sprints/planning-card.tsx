@@ -10,10 +10,10 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Draggable } from "@hello-pangea/dnd";
 import { PriorityBadge } from "@/features/build/shared/priority-badge";
-import { StatusBadge } from "@/features/build/shared/status-badge";
+import { StatusBadge } from "@/components/shared/ticket-status-badge";
 import { TicketTypeIcon } from "@/features/build/shared/ticket-type-icon";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
-import { formatTicketKey } from "@/features/build/shared/format-ticket-key";
+import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import { resolveImageUrl } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 

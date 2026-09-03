@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { EmptyReportIllustration } from "@/components/illustrations";
@@ -89,7 +91,8 @@ const COLUMNS: DataTableColumn<VarianceEmployeeRow>[] = [
 ];
 
 export function ReportVariance({ month }: ReportVarianceProps) {
-  const { data, isLoading } = usePayrollVariance(month);
+  const { data, isLoading, isError, error, refetch } = usePayrollVariance(month);
+  const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   const totals = useMemo(() => {
     if (!data?.perEmployee.length) return null;
@@ -105,6 +108,19 @@ export function ReportVariance({ month }: ReportVarianceProps) {
         <StatCardGridSkeleton cols={2} count={2} />
         <Skeleton className="h-48 rounded-xl" />
       </div>
+    );
+  }
+
+  // Before the empty state: a 500 is not the same fact as "no variance data",
+  // and the empty copy tells the operator to go run something.
+  if (isError) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't load the variance report"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
     );
   }
 

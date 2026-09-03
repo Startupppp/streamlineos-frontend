@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { HrSheet } from "@/features/hr/hr-sheet";
+import { HrSheet } from "@/components/shared/hr-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateOvertimeRequest } from "@/hooks/api/hr/overtime";
 import {

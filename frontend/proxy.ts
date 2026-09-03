@@ -40,6 +40,27 @@ export function buildCsp(nonce: string, apiUrl?: string): string {
     "https://www.clarity.ms",
     "https://api.razorpay.com",
     "https://checkout.razorpay.com",
+    /**
+     * Ably, which carries chat and the support inbox (`lib/ably.ts`). This is the
+     * policy a document actually receives — the middleware sets the header on every
+     * matched response, so next.config.ts's `headers()` CSP never reaches a page —
+     * and `connect-src` governs WebSocket opens as well as fetch/XHR. An omission
+     * here is a refused connection with no fallback, not a slower path.
+     *
+     * ably@2 resolves its default endpoint "main" to `main.realtime.ably.net` with
+     * `main.[a-e].fallback.ably-realtime.com` behind it, and reaches both over wss:
+     * for the WebSocket transport and https: for the comet/XHR one. CSP scheme
+     * matching does not let an `https:` source stand in for a `wss:` request, so
+     * both schemes are listed rather than relying on that.
+     */
+    "https://*.realtime.ably.net",
+    "wss://*.realtime.ably.net",
+    "https://*.fallback.ably-realtime.com",
+    "wss://*.fallback.ably-realtime.com",
+    // The library's own reachability probes. Blocked, every transient transport
+    // failure is misread as "this device is offline" instead of failing over.
+    "https://internet-up.ably-realtime.com",
+    "wss://ws-up.ably-realtime.com",
     ...(apiOrigin ? [apiOrigin] : []),
   ].join(" ");
 

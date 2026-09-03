@@ -17,7 +17,7 @@ import type { KanbanTicket } from "../shared/types";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { stopEvent, InlineAssignee } from "./card-inline-fields";
 import { TicketQuickActions } from "./ticket-quick-actions";
-import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";
+import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface WorkloadMember {

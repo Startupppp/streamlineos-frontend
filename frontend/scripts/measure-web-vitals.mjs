@@ -22,7 +22,7 @@
  */
 
 import { readFileSync, writeFileSync, existsSync, rmSync } from "node:fs";
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { join, resolve, dirname } from "node:path";
 import { tmpdir, loadavg, cpus } from "node:os";
 import { randomBytes } from "node:crypto";
@@ -198,6 +198,27 @@ export function findOffRouteSamples(samples) {
         return true;
       }
     });
+}
+
+/** The commit this capture describes, or null when git cannot answer. Never throws. */
+export function readReleaseSha(cwd = ROOT) {
+  try {
+    return execFileSync("git", ["rev-parse", "HEAD"], { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * A SHA describes committed code. Measured against an uncommitted working tree the SHA is a
+ * half-truth, so record that too rather than letting the commit id imply more than it knows.
+ */
+export function workingTreeIsDirty(cwd = ROOT) {
+  try {
+    return execFileSync("git", ["status", "--porcelain"], { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim().length > 0;
+  } catch {
+    return null;
+  }
 }
 
 export function resolveServerMode({ buildIdOnDisk, html }) {
@@ -1006,6 +1027,13 @@ async function run() {
     targetUrl: baseUrl,
     serverMode,
     buildId: buildIdOnDisk,
+    // The commit this capture describes. `buildId` is the subject test the consumer FAILS on —
+    // Next mints a fresh one per build, so equality means the .next on disk is the measured build.
+    // This is here so the consumer can NAME the commits that landed since, the way
+    // check-benchmark-manifest.mjs does; a capture without it reports staleness as UNKNOWN rather
+    // than assuming it is current.
+    releaseSha: readReleaseSha(),
+    releaseDirty: workingTreeIsDirty(),
     repeat,
     authenticatedRoutes: routes,
     desktop: byProfile.desktop,

@@ -8,8 +8,15 @@ import { getUserDisplayName, getUserInitials, type NamedUser } from "@/lib/perso
 import { resolveImageUrl } from "@/lib/utils";
 import { formatMoneyCompact } from "@/lib/format-utils";
 import { useOrgDisplay } from "@/hooks/api/org-display";
+import type { ProjectBudget } from "@/types/projects";
 
-export type MemberBreakdownRow = { userId: string; hours: number; cost: number };
+/**
+ * Derived from the API type so the table can never drift from what
+ * GET /build/:projectId/budget actually returns — `unratedHours` was added to
+ * the response when actual cost moved onto the rate stamped on each timesheet
+ * entry, and a hand-written copy here would have silently dropped it.
+ */
+export type MemberBreakdownRow = ProjectBudget["memberBreakdown"][number];
 
 const MemberBreakdownCell = memo(function MemberBreakdownCell({
   displayName,

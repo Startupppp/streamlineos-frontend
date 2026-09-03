@@ -30,7 +30,7 @@ import {
   type MentionUser,
 } from "@/features/build/comments/mention-textarea";
 import { CommentItem } from "./comment-item";
-import { getTicketDetailHref } from "@/features/build/shared/format-ticket-key";
+import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { queryKeys } from "@/lib/query-keys";
 
 const COMMENT_RENDER_PAGE_SIZE = 20;
