@@ -4,7 +4,7 @@
 
 **Blocked by:** 28.
 
-**Status:** 5 of 7 closed. **S15 closed A-29 and A-30, the two assignable remainders, and found a defect neither instrument could see.** Box 2 now has a corpus-wide screen-reader census (`aria-semantics.contract`, 3,652 files / 26,719 elements / 7 defect classes) that found **20 real defects, 19 fixed**; and **every controlled dialog and sheet in the product dropped focus onto `<body>` on close** — Radix restores only to its own `DialogTrigger`, which none of the four shared shells has — now fixed in the primitives and pinned. Box 5's run **asserted a write for the first time**: `63 of 63 planned steps · 1 of 1 writes asserted`, and the created ticket is a row in `scratch_t30_browser` (`build.tickets` id 20573). Both boxes stay open for stated, narrower reasons. Report: `reports/30e-aria-census-focus-restore-and-the-first-asserted-write.md`. **S14 reached a kanban board and ran every planned step.** The `page`-vs-cursor drift that blocked boxes 4 and 5 for the whole release was fixed and committed (`f75797ae1`); this session verified it from a real browser, resolved `projectId = 20` by clicking the first row of `/build/all`, and measured the board at 375/768/1280. The run went **57 of 63 planned steps to 63 of 63** — the first whole denominator this ticket has had. **Box 4 is CLOSED.** Box 5 stays open on flows-not-routes, not on reachability. Box 2 stays open on 9 named CRM/inventory targets now recorded as an accepted scope exclusion. Reports: `reports/30-ux-accessibility.md` (S8), `reports/30b-states-a11y-and-journeys.md` (S11), `reports/30c-a11y-residue-and-query-gating.md` (S13), `reports/30d-boards-reached.md` (S14).
+**Status:** 5 of 7 closed. **S16 gave the second clause of box 2 a RUNTIME instrument and closed box 5's own remainder.** axe-core now runs on all 63 steps of the browser sweep over **45,346 nodes**, in the engine that paints the page — the exact blind spot the static ARIA census names in its own header — and it found 20 violations at the first width alone. Three systemic defects in shared code are fixed: **every virtual list in the product had stopped being a list** (react-window's `role="list"` with non-listitem children, critical, all six lists), **the kanban row's drag handle was overwriting its listitem role** (S14 collateral, three violations from one spread order), and **every progress bar was indeterminate** with no `aria-valuenow`. And the journeys now assert **4 of 4 writes across four modules** — build, accounting, workflows and HR — each verified as a row in Postgres, with **no `--allow-cross-origin-api`**. Both boxes stay open for stated, narrower reasons: box 2 on `button-name` across 8 routes (873 `SelectTrigger` call sites) and `scrollable-region-focusable` on `StatCardGrid`; box 5 on four journey areas with no mutation and on CI. Report: `reports/30f-runtime-a11y-and-four-module-writes.md`. **S15 closed A-29 and A-30, the two assignable remainders, and found a defect neither instrument could see.** Box 2 now has a corpus-wide screen-reader census (`aria-semantics.contract`, 3,652 files / 26,719 elements / 7 defect classes) that found **20 real defects, 19 fixed**; and **every controlled dialog and sheet in the product dropped focus onto `<body>` on close** — Radix restores only to its own `DialogTrigger`, which none of the four shared shells has — now fixed in the primitives and pinned. Box 5's run **asserted a write for the first time**: `63 of 63 planned steps · 1 of 1 writes asserted`, and the created ticket is a row in `scratch_t30_browser` (`build.tickets` id 20573). Both boxes stay open for stated, narrower reasons. Report: `reports/30e-aria-census-focus-restore-and-the-first-asserted-write.md`. **S14 reached a kanban board and ran every planned step.** The `page`-vs-cursor drift that blocked boxes 4 and 5 for the whole release was fixed and committed (`f75797ae1`); this session verified it from a real browser, resolved `projectId = 20` by clicking the first row of `/build/all`, and measured the board at 375/768/1280. The run went **57 of 63 planned steps to 63 of 63** — the first whole denominator this ticket has had. **Box 4 is CLOSED.** Box 5 stays open on flows-not-routes, not on reachability. Box 2 stays open on 9 named CRM/inventory targets now recorded as an accepted scope exclusion. Reports: `reports/30-ux-accessibility.md` (S8), `reports/30b-states-a11y-and-journeys.md` (S11), `reports/30c-a11y-residue-and-query-gating.md` (S13), `reports/30d-boards-reached.md` (S14).
 
 **Residual-risk disposition (2026-09-03):** every open box below now carries an ASSIGNABLE-or-ACCEPTED verdict, a named owner and a date, recorded inline under the box and in `reports/residual-risk-register-19-30.md`. Blockers were re-verified against source, a live gate run or a committed artifact rather than transcribed; where a stated blocker did not survive, the correction is inline.
 
@@ -55,6 +55,79 @@
   organization…" for ever with nothing telling the reader the workspace was not coming. It now falls to
   `AppLoadingStalled` after 20s (`components/ui/app-loading-screen.test.tsx`, 3 cases pinning it).
 - [ ] Keyboard navigation and screen-reader semantics work on every interactive surface; focus is managed across dialogs, drawers and route transitions.
+  **S16 — the census's own blind spot now has an instrument, and it found 20 runtime violations the
+  static scan structurally could not see. Two whole classes are fixed. The box stays open, and the
+  reason is now a named list of defects rather than an absence of measurement.**
+  `aria-semantics.contract` writes its exclusions into its own module header, and three of them have
+  one cause — **the tree it judges is source, not a render**: *any PascalCase component*, *a name
+  computed at runtime*, and *an id threaded through a prop, honoured by NAME rather than by proof*.
+  **axe-core now runs on every probed step, in the engine that painted the page.** Final run:
+  `node scripts/browser-journeys.mjs --base-url=http://localhost:3130 --cookie-file=<minted>
+  --widths=375,768,1280 --settle-ms=6000` -> exit 1, **`axe ran on 63 of 63 steps over 45,346 nodes`**,
+  WCAG 2 A/AA + 2.1 A/AA, `color-contrast` disabled because this harness already measures contrast
+  against the colour actually behind each text node. **A step axe never ran on is NOT a step with no
+  violations**: `axeIncomplete()` is the third refusal beside `stepsIncomplete()` and
+  `writesIncomplete()`, a missing axe-core stops the run before the browser is driven anywhere, and a
+  self-test asserts axe-core resolves on disk so the pass cannot quietly vanish on the next install.
+  **Three systemic defects found and fixed, all in shared code, none visible in the source:**
+  (a) **Every virtual list in the product had stopped being a list.** react-window v2 puts
+  `role="list"` on its own scroll container and hands each row an `ariaAttributes` prop carrying
+  `role="listitem"`. **Neither role appears anywhere in this repository**, so the static census cannot
+  see the relationship at all. All six lists dropped the spread on at least one early return — the
+  "no item yet" row, the load-more sentinel, the date header — putting a non-listitem child inside a
+  `role="list"`: `aria-required-children`, **critical**, live on `/notifications`, `/inbox` and
+  `/build/{id}`. Fixed in `notification-virtual-list` · `inbox-virtual-list` · `chat-user-virtual-list`
+  · `mail-virtual-list` · `kanban-virtual-ticket-list` · `calendar-events-panel`.
+  (b) **The kanban row's drag handle was overwriting its listitem role**, and it was collateral from
+  S14's own keyboard fix. `{...provided.dragHandleProps}` sat AFTER `{...ariaAttributes}`, so dnd's
+  `role="button"` silently replaced `role="listitem"`. One spread order cost **three** violations at
+  once on `/build/{id}`: a missing required child (critical), `aria-posinset` on a role that does not
+  allow it (critical), and a button containing the card's own buttons (`nested-interactive`, serious —
+  a screen-reader user cannot reach controls inside a button). Reordering keeps `tabIndex`,
+  `aria-describedby` and every `data-rfd-drag-handle-*`, so drag-anywhere and the keyboard lift are
+  untouched. **The contract pins the ORDER now, not just the presence.**
+  (c) **Every progress bar in the product was indeterminate.** `components/ui/progress.tsx`
+  destructured `value` away and never handed it to the Radix root, so every bar rendered
+  `data-state="indeterminate"` with **no `aria-valuenow`** — a screen reader told "busy" over a figure
+  the page shows as a percentage. `max` was dropped the same way. `aria-valuetext` cannot cover that.
+  The NAME stays the caller's: a default of `"Progress"` would satisfy axe and tell a screen-reader
+  user nothing, which is precisely the defect class this box's own census says nothing can catch.
+  **Numbers moved:** `aria-allowed-attr` 3 -> **0** · `aria-required-children` 6 -> **3** (`/calendar`
+  only, react-big-calendar internals) · `nested-interactive` 5 -> **2** · `aria-progressbar-name` 4
+  routes -> **1** (`/crm/deals`, CRM) · axe violations over the whole run **55 -> 46**.
+  `components/ui/__tests__/progress-semantics.a11y.test.tsx` + `features/__tests__/virtual-row-listitem.contract.test.ts`
+  -> exit 0, **15/15**, four of them bite proofs. **Bite-proved both ways in a `git archive HEAD` temp
+  tree, never in the shared tree**: planted in three real product files -> **exit 1, 5 failed**, the
+  corpus assertion naming `features/build/views/kanban-virtual-ticket-list.tsx:108`; restored -> exit 0,
+  15/15; shared tree `git status` clean for every named file afterwards.
+  Re-run green this session: `keyboard-reachability.contract` + `aria-semantics.contract` -> exit 0,
+  **51/51**; `overlay-focus` + `menu-driven-sheet-focus` + `use-route-focus` + `shell-a11y` +
+  `shell-keyboard` + `row-action-shield` -> exit 0, **59/59**.
+  **STILL OPEN, and now for named defects rather than for a missing instrument:**
+  · **`button-name` — 8 routes, 128 nodes, and it is a primitive.** `<button role="combobox"
+  data-slot="select-trigger">` has **no accessible name at all** unless a `FormLabel` or `aria-label`
+  supplies one, because `role="combobox"` does not take its name from content — on `/accounting/coa`,
+  `/workflows`, `/hr/attendance`, `/parties`, `/inventory/products`, `/inventory/stock`. **873 call
+  sites in 522 files**, so it is not a change to make at the end of a session. Same shape on
+  `components/ui/checkbox.tsx`: **30 unnamed row checkboxes on `/notifications`**. Plus one unnamed
+  `DropdownMenuTrigger` on `/calendar`.
+  · **`scrollable-region-focusable` — 5 routes, 20 nodes, one shared primitive.** `StatCardGrid`
+  (`components/ui/stat-card.tsx:152`) is `overflow-x-auto scrollbar-hide touch-pan-x` with no
+  focusable content when its cards have no `href`, so a keyboard user cannot scroll the stats row at
+  all (WCAG 2.1.1). The fix axe asks for is `tabIndex={0}` on the scroller. **Deliberately NOT made
+  here**: it adds a tab stop to nearly every list page in the product, and adding one everywhere and
+  half-verifying it at the end of a session is worse than naming it. `components/ui/data-table.tsx`'s
+  scroll body is the same shape on `/hr/attendance`.
+  · `aria-required-parent` / `aria-required-children` on `/calendar` — `.rbc-*`, react-big-calendar's
+  own markup, a third-party question.
+  · `nested-interactive` on `/crm/deals` and `/parties` — `<div role="button" tabindex="0">` cards
+  holding their own buttons. CRM excluded; `/parties` shares the card.
+  · **R-24 unchanged and re-verified**: 633 click targets, 9 unreachable, all CRM/inventory.
+  · **The honest ceiling, unchanged:** neither instrument can tell whether a name is the RIGHT name
+  (`aria-label="Button"` on a delete control passes both), axe judges only what a page rendered so a
+  dialog nobody opened is invisible to it, and reading order and whether an `aria-live` region
+  actually announces are still measured by nothing. **The two together are a floor.**
+  Report: `reports/30f-runtime-a11y-and-four-module-writes.md`.
   **S15 — A-29 IS CLOSED. The second clause now has an instrument, it bites seven ways, and it found
   and fixed 19 real defects. The box stays open on R-24 and on what a static walk cannot see.**
   `npx jest --runInBand --testPathPattern="aria-semantics.contract"` -> exit 0, **36/36**.
@@ -242,6 +315,61 @@
   `/crm/leads` still fails on the `lead_party_map`/`business_parties` grouping error — CRM is excluded
   from this release; recorded and moved past.
 - [ ] Representative browser end-to-end journeys cover the main module flows.
+  **S16 — the remainder this ticket wrote for itself is CLOSED: four modules assert a write, not one,
+  and the four rows are in Postgres. The box stays open on the four journey areas that still have no
+  mutation, and on R-25.**
+  `node scripts/browser-journeys.mjs --base-url=http://localhost:3130 --cookie-file=<minted>
+  --widths=375,768,1280 --settle-ms=6000` -> exit 1 (85 findings),
+  **`63 of 63 planned steps run · 4 of 4 writes asserted · axe ran on 63 of 63 steps over 45,346 nodes`**.
+  `--self-test` -> **exit 0, 66 passed** (was 48; 18 new, 9 of them bite proofs).
+  **`--allow-cross-origin-api` was NOT used.** S15 had to turn the browser's CORS check off because
+  the backend's `CORS_ORIGINS` named only ports other agents held. This session started **its own
+  backend on :1502** from the same `dist/main`, replicating the running process's env and overriding
+  only `PORT`/`APP_URL`/`CORS_ORIGINS`, against the same `scratch_t30_browser`. The results JSON
+  records `crossOriginApiAllowed: false`.
+  | journey | route | shape driven | table |
+  |---|---|---|---|
+  | `build-create-ticket` | `/build/{projectId}` | inline column composer, Enter to submit | `build.tickets` |
+  | `accounting-create-account` | `/accounting/coa` | modal form, two required fields | `public.ledger_accounts` |
+  | `workflows-create-workflow` | `/workflows` | modal form that **navigates away** on success | `public.workflows` |
+  | `hr-create-holiday` | `/hr/attendance` | inline form -> **date picker** -> **confirmation dialog** | `public.holidays` |
+  **Deliberately four different SHAPES** — a harness that only works one shape of dialog reports the
+  next one as a product defect, and the self-test refuses a set that collapses back onto one module.
+  The HR journey is the useful one: its submit only *opens* a confirmation, so a run that stopped at
+  the first click would report a write it never made.
+  **Proved in the database, not in the DOM** — the final run's four subjects, looked up by name in
+  `scratch_t30_browser`: `build.tickets 20578` · `ledger_accounts 4` · `workflows 0ee0878a-…` ·
+  `holidays 3`. Real Chrome -> real `next dev` -> real Nest -> real Postgres, nothing mocked.
+  **The run that refused, and why that is the point.** The FIRST three-width run with all four
+  journeys reported `3 of 4 writes asserted` and exited 1 with `write-step-failed` at *"confirm in the
+  alert dialog"*. Not a harness bug: `manage-holidays-card.tsx` refuses a second holiday on a date
+  that already has one, and the date defaults to today. A journey that always takes the default can
+  write **once per environment** and reports every later run as a product failure. The date is now
+  chosen by walking forward from the calendar's selected cell by an offset derived from the run's own
+  subject — relative to the selected cell, because the grid's leading cells belong to the previous
+  month — and a collision still fails loudly.
+  Other numbers, all three widths: **`scrollWidth - innerWidth` = 0 on every one of the 63 steps**
+  (max over the run: 0) · **one `h1` on 63 of 63** · **a NAMED `main` on 63 of 63** · 0
+  unauthenticated · 3 error-boundary steps, all `/crm/leads` (R-26 unchanged) · contrast 4,582
+  sampled / 9 unresolved / 381 failing · 3 never-settled, all `/dashboard` (the deliberate
+  below-the-fold deferral S15 diagnosed, handed to ticket 27/28 and still unfixed there).
+  **STILL OPEN, on two remainders:**
+  (1) **Four of eight journey areas still have no mutation.** Settings, calendar, workspace/directory
+  and notifications are covered as routes at three widths, not as flows with a write. "Cover the main
+  module flows" is closer to true than it was — four modules, four backend services, four tables —
+  but it is not yet true. The mechanism is generic and the shapes are now proven, so each further
+  write is bounded work. **Owner: ticket 30.**
+  (2) **R-25 unchanged and not in this territory.** No frontend CI job boots the app;
+  `.github/workflows/frontend.yml` has five jobs and none starts a server or a database. **Owner: CI.**
+  **AND AN ENVIRONMENT WARNING FOR WHOEVER RUNS NEXT.** The backend `.env` on disk points at the
+  **shared remote Neon instance**; the running :1501 process's env overrides it to local
+  `scratch_t30_browser`. Anyone starting a backend here from the `.env` alone writes journey rows to
+  shared Neon. Separately, the agent scratchpad is **shared and was wiped mid-session** — the live
+  tree, the minted cookie and two results JSONs disappeared while a run was in flight and the
+  directory came back holding another session's files. Everything was rebuilt at
+  `/Users/…/streamline/.t30-s16`, outside both git repos. Durable evidence must not live in the
+  scratchpad.
+  Report: `reports/30f-runtime-a11y-and-four-module-writes.md`.
   **S15 — A-30 IS CLOSED. The run asserts a write, and the write is a row in Postgres, not a claim.**
   `node scripts/browser-journeys.mjs --base-url=http://localhost:3130 --cookie-file=<minted>
   --widths=375,768,1280 --settle-ms=6000 --allow-cross-origin-api` -> exit 1,
