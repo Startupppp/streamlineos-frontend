@@ -69,11 +69,22 @@ it does not hold.** Open P1s, all under active work:
 - The storage write-ahead row confirmed and deleted after a delete that may have addressed the
   wrong bucket, converting a recoverable orphan into an unrecoverable one.
 
+- **The AI-credit first-purchase race is NOT fixed.** I recorded it as resolved above in an earlier
+  draft; that was wrong, and re-verified in source on 2026-09-03 it is live.
+  `ai-credits-reservation.service.ts` selects the wallet `.for("update")` — **which locks nothing
+  when the row does not exist** — then inserts it with **no `onConflict` clause**. Two concurrent
+  first uses both find no wallet, both insert, and the loser takes a 23505. The recovery arm is
+  gated on `isUniqueViolation(err) && idempotencyKey`, and `ai-gateway-stream.helper.ts:116` calls
+  `reserve({ orgId, userId, feature, credits })` with **no `idempotencyKey`**, so that arm can never
+  fire for any streaming route. The loser's 23505 escapes as a 500. Affects every metered AI route
+  on an organisation's first AI use.
+
 Resolved P1s this release, each verified rather than asserted: the cross-tenant announcement write
-(a composite FK is not enforced when any column is NULL); the AI-credit first-purchase money race
-(`FOR UPDATE` locks nothing when the row does not exist); the broken project list; the `/calendar`
-62-day window; `GET /clients` 25P02; and 84 of 113 cross-tenant 404-contract violations, with all
-113 accounted for.
+(a composite FK is not enforced when any column is NULL); the broken project list; the `/calendar`
+62-day window; `GET /clients` 25P02; ~30 PM-workspace build routes 404ing; `kb_page_attachments`
+shipping with no RLS at all (tenant A could read tenant B's file names and storage keys); the app
+role retaining UPDATE/DELETE on the immutable audit log; and 84 of 113 cross-tenant 404-contract
+violations, with all 113 accounted for.
 
 ## 5. Accepted residual risks — each needs an owner and a date
 
