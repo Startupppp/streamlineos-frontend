@@ -9,7 +9,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 export interface InternalJob {
   id: number;
   title: string;
-  departmentId: number | null;
+  departmentId: string | null;
   location: string | null;
   type: string;
   experience: string | null;
@@ -18,7 +18,7 @@ export interface InternalJob {
   openings: number;
   applicationDeadline: string | null;
   createdAt: string;
-  department?: { id: number; name: string } | null;
+  department?: { id: string; name: string } | null;
 }
 
 export function useInternalJobs() {

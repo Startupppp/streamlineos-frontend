@@ -10,7 +10,7 @@ export interface SupportTicketWatcher {
   id: number;
   orgId: string;
   ticketId: number;
-  userId: string;
+  userId: string | null;
   createdAt: string | null;
   user: { id: string; name: string | null; image: string | null } | null;
 }

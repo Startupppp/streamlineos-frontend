@@ -65,12 +65,16 @@ export interface TicketAssignee {
   user?: TicketUser;
 }
 
+/**
+ * `userId` is nullable because a watcher whose organization row is gone flattens to nulls
+ * rather than to missing keys — the backend lifts both off the `organization_members` join.
+ */
 export interface TicketWatcher {
   id: number;
   ticketId: number;
-  userId: string;
+  userId: string | null;
   createdAt: string | Date | null;
-  user?: TicketUser;
+  user?: TicketUser | null;
 }
 
 export interface Ticket {
