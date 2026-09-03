@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { ChecklistItem } from "@/types/hr/templates";
+import { numericFieldChangeOr } from "@/lib/numeric-field";
 
 const ASSIGNEE_ROLES = [
   { value: "hr", label: "HR" },
@@ -67,6 +68,15 @@ export function ChecklistEditor({ items, onChange }: ChecklistEditorProps) {
     [items, onChange],
   );
 
+  const handleDueOffsetChange = useCallback(
+    (checklistItemId: string) =>
+      numericFieldChangeOr(
+        (dueOffsetDays) => handleChange(checklistItemId, { dueOffsetDays }),
+        0,
+      ),
+    [handleChange],
+  );
+
   return (
     <div className="space-y-2">
       {items.map((item) => (
@@ -98,7 +108,7 @@ export function ChecklistEditor({ items, onChange }: ChecklistEditorProps) {
               min={-30}
               max={365}
               value={item.dueOffsetDays}
-              onChange={(e) => handleChange(item.id, { dueOffsetDays: Number(e.target.value) })}
+              onChange={handleDueOffsetChange(item.id)}
               className="w-16 text-center"
             />
           </div>

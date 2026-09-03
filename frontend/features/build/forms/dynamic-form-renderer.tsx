@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useProjectMembers } from "@/hooks/api/build";
 import { getUserDisplayName } from "@/lib/person-display";
 import type { FormField } from "@/types/projects/forms";
+import { numericFieldChangeOr } from "@/lib/numeric-field";
 
 interface DynamicFormRendererProps {
   fields: FormField[];
@@ -111,6 +112,10 @@ export function DynamicFormRenderer({
     setSubmitterName(e.target.value);
   }
 
+  function handleNumberFieldChange(key: string) {
+    return numericFieldChangeOr((value) => setFieldValue(key, value), 0);
+  }
+
   return (
     <div className="space-y-4 py-1">
       {fields.map((field) => {
@@ -136,7 +141,7 @@ export function DynamicFormRenderer({
               <Input
                 type="number"
                 value={numVal || ""}
-                onChange={(e) => setFieldValue(field.key, parseFloat(e.target.value) || 0)}
+                onChange={handleNumberFieldChange(field.key)}
                 className="text-sm"
               />
             )}

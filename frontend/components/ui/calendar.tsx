@@ -35,6 +35,14 @@ function CalendarCaption({ displayMonth, compact = false }: CaptionProps & { com
   const endYear = toYear ?? toDate?.getFullYear() ?? new Date().getFullYear() + 5
   const years = Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i)
 
+  function handleMonthSelected(value: string): void {
+    goToMonth(setMonth(displayMonth, Number(value)))
+  }
+
+  function handleYearSelected(value: string): void {
+    goToMonth(setYear(displayMonth, Number(value)))
+  }
+
   return (
     <div className={cn("flex items-center justify-between w-full", compact ? "px-0" : "px-1")}>
       <button
@@ -54,7 +62,7 @@ function CalendarCaption({ displayMonth, compact = false }: CaptionProps & { com
       <div className="flex items-center gap-0.5 min-w-0">
         <Select
           value={String(month)}
-          onValueChange={(v) => goToMonth(setMonth(displayMonth, parseInt(v)))}
+          onValueChange={handleMonthSelected}
         >
           <SelectTrigger
             className={cn(
@@ -75,7 +83,7 @@ function CalendarCaption({ displayMonth, compact = false }: CaptionProps & { com
 
         <Select
           value={String(year)}
-          onValueChange={(v) => goToMonth(setYear(displayMonth, parseInt(v)))}
+          onValueChange={handleYearSelected}
         >
           <SelectTrigger
             className={cn(

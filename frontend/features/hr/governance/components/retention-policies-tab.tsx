@@ -44,6 +44,7 @@ import {
   useDeleteRetentionPolicy,
   type RetentionPolicy,
 } from "../hooks/use-retention";
+import { numericFieldChange } from "@/lib/numeric-field";
 
 const policySchema = z.object({
   recordType: z.enum(["employee", "document", "case", "attendance", "payroll"]),
@@ -207,7 +208,7 @@ export function RetentionPoliciesTab() {
                   <FormItem>
                     <FormLabel>Retention (months)</FormLabel>
                     <FormControl>
-                      <Input type="number" min={1} {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                      <Input type="number" min={1} {...field} onChange={numericFieldChange(field.onChange)} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

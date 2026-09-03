@@ -12,6 +12,7 @@ import {
 } from "@/lib/person-display";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
+import { numericSelectChange } from "@/lib/numeric-field";
 
 const GRID_LABELS: Record<string, { label: string; bg: string }> = {
   "3-3": { label: "Star", bg: "bg-status-info-surface border-status-info-rule" },
@@ -63,7 +64,7 @@ export function NineBoxGrid() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <Select value={String(selectedCycleId)} onValueChange={(v) => setSelectedCycleId(Number(v))}>
+        <Select value={String(selectedCycleId)} onValueChange={numericSelectChange(setSelectedCycleId)}>
           <SelectTrigger className="w-56">
             <SelectValue placeholder="Select review cycle" />
           </SelectTrigger>

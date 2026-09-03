@@ -175,6 +175,14 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
     form.reset();
   }, [form]);
 
+  function handleCurrencySelected(value: string): void {
+    form.setValue("currency", toCurrencyCode(value));
+  }
+
+  function handleFiscalYearStartSelected(value: string): void {
+    form.setValue("fiscalYearStart", Number(value));
+  }
+
   const handleSave = useCallback((values: LocalizationValues) => {
     updateOrg(
       {
@@ -235,7 +243,7 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
             </div>
             <div className="space-y-1">
               <Label className="text-xs font-medium">Currency</Label>
-              <Select onValueChange={(v) => { const code = toCurrencyCode(v); form.setValue("currency", code); }} value={form.watch("currency")}>
+              <Select onValueChange={handleCurrencySelected} value={form.watch("currency")}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                   {CURRENCIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
@@ -244,7 +252,7 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
             </div>
             <div className="space-y-1">
               <Label className="text-xs font-medium">Fiscal year starts</Label>
-              <Select onValueChange={(v) => form.setValue("fiscalYearStart", parseInt(v))} value={String(form.watch("fiscalYearStart"))}>
+              <Select onValueChange={handleFiscalYearStartSelected} value={String(form.watch("fiscalYearStart"))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {MONTHS.map((m, i) => <SelectItem key={i + 1} value={String(i + 1)}>{m}</SelectItem>)}

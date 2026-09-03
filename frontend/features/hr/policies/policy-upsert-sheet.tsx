@@ -34,6 +34,7 @@ import { PolicyVersionHistory } from "./policy-version-history";
 import { useCan } from "@/hooks/api/access";
 import { PolicyRulesFields } from "./policy-rules-fields";
 import { policyFormSchema, type PolicyFormValues } from "./policy-form-types";
+import { numericFieldChangeOr } from "@/lib/numeric-field";
 
 interface Props {
   open: boolean;
@@ -266,7 +267,7 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
                       max={9999}
                       className="text-sm"
                       value={field.value}
-                      onChange={(e) => field.onChange(e.target.value === "" ? 0 : parseInt(e.target.value, 10))}
+                      onChange={numericFieldChangeOr(field.onChange, 0)}
                       onBlur={field.onBlur}
                       name={field.name}
                       ref={field.ref}

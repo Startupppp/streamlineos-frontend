@@ -19,6 +19,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyChartIllustration } from "@/components/illustrations";
 import { calibrationEntrySchema } from "./calibration-schema";
 import { zodFieldErrors } from "./zod-field-errors";
+import { numericSelectChange } from "@/lib/numeric-field";
 
 export function CalibrationTab() {
   const [selectedCycleId, setSelectedCycleId] = useState<number>(0);
@@ -189,7 +190,7 @@ export function CalibrationTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <Select value={String(selectedCycleId)} onValueChange={(v) => setSelectedCycleId(Number(v))}>
+        <Select value={String(selectedCycleId)} onValueChange={numericSelectChange(setSelectedCycleId)}>
           <SelectTrigger className="w-56">
             <SelectValue placeholder="Select review cycle" />
           </SelectTrigger>

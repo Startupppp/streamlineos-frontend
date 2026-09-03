@@ -26,6 +26,7 @@ import {
 } from "@/hooks/api/accounting/assets";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { AssetCategory, DepreciationMethod } from "@/types/accounting/assets";
+import { numericFieldChange, numericSelectChange } from "@/lib/numeric-field";
 
 const METHOD_OPTIONS: ReadonlyArray<{ value: DepreciationMethod; label: string }> = [
   { value: "STRAIGHT_LINE", label: "Straight Line" },
@@ -132,7 +133,7 @@ export function CategoryDialog({ open, onOpenChange, editing }: CategoryDialogPr
                 <FormLabel>Asset Account <span className="text-destructive">*</span></FormLabel>
                 <Select
                   value={String(field.value || "")}
-                  onValueChange={(v) => field.onChange(Number(v))}
+                  onValueChange={numericSelectChange(field.onChange)}
                 >
                   <FormControl>
                     <SelectTrigger className="text-sm">
@@ -159,7 +160,7 @@ export function CategoryDialog({ open, onOpenChange, editing }: CategoryDialogPr
                 <FormLabel>Depreciation Expense Account <span className="text-destructive">*</span></FormLabel>
                 <Select
                   value={String(field.value || "")}
-                  onValueChange={(v) => field.onChange(Number(v))}
+                  onValueChange={numericSelectChange(field.onChange)}
                 >
                   <FormControl>
                     <SelectTrigger className="text-sm">
@@ -186,7 +187,7 @@ export function CategoryDialog({ open, onOpenChange, editing }: CategoryDialogPr
                 <FormLabel>Accumulated Depreciation Account <span className="text-destructive">*</span></FormLabel>
                 <Select
                   value={String(field.value || "")}
-                  onValueChange={(v) => field.onChange(Number(v))}
+                  onValueChange={numericSelectChange(field.onChange)}
                 >
                   <FormControl>
                     <SelectTrigger className="text-sm">
@@ -241,7 +242,7 @@ export function CategoryDialog({ open, onOpenChange, editing }: CategoryDialogPr
                     placeholder="e.g. 60"
                     {...field}
                     value={field.value ?? ""}
-                    onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
+                    onChange={numericFieldChange(field.onChange)}
                   />
                 </FormControl>
                 <FormMessage />

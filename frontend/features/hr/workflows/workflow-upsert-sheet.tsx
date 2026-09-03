@@ -25,6 +25,7 @@ import {
   HR_WORKFLOW_APPROVER_TYPE_LABELS,
   type HrWorkflowDefinition,
 } from "@/types/hr/workflows";
+import { numericFieldChange } from "@/lib/numeric-field";
 
 const STEP_MODES = ["serial", "parallel_all", "parallel_any"] as const;
 const STEP_MODE_LABELS = { serial: "Serial", parallel_all: "All must approve", parallel_any: "Any can approve" };
@@ -325,7 +326,7 @@ export function WorkflowUpsertSheet({ open, onOpenChange, editDefinition }: Prop
                           placeholder="e.g. 48"
                           className="text-xs"
                           value={f.value ?? ""}
-                          onChange={(e) => f.onChange(e.target.value ? parseInt(e.target.value, 10) : undefined)}
+                          onChange={numericFieldChange(f.onChange)}
                         />
                       </FormControl>
                     </FormItem>

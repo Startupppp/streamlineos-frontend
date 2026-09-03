@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePatchSurvey, type SurveyForm } from "@/hooks/api/surveys/forms";
+import { numericFieldChangeOr } from "@/lib/numeric-field";
 
 interface AssessmentSettings {
   passScore?: number;
@@ -52,14 +53,14 @@ export function AssessmentScoringCard({ survey }: { survey: SurveyForm }) {
         <div className="flex gap-3">
           <div className="space-y-1.5">
             <Label>Pass score</Label>
-            <Input type="number" value={passScore} onChange={(e) => setPassScore(Number(e.target.value))} className="w-28" />
+            <Input type="number" value={passScore} onChange={numericFieldChangeOr(setPassScore, 0)} className="w-28" />
           </div>
           <div className="space-y-1.5">
             <Label>Attempts allowed</Label>
             <Input
               type="number"
               value={attemptsAllowed || ""}
-              onChange={(e) => setAttemptsAllowed(Number(e.target.value))}
+              onChange={numericFieldChangeOr(setAttemptsAllowed, 0)}
               placeholder="Unlimited"
               className="w-28"
             />
@@ -69,7 +70,7 @@ export function AssessmentScoringCard({ survey }: { survey: SurveyForm }) {
             <Input
               type="number"
               value={timeLimitMinutes || ""}
-              onChange={(e) => setTimeLimitMinutes(Number(e.target.value))}
+              onChange={numericFieldChangeOr(setTimeLimitMinutes, 0)}
               placeholder="None"
               className="w-28"
             />

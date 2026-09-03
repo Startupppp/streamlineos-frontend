@@ -22,6 +22,7 @@ import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
 import { useUpdateAsset } from "@/hooks/api/accounting/assets";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { AssetDetail, DepreciationMethod } from "@/types/accounting/assets";
+import { numericFieldChangeOr } from "@/lib/numeric-field";
 
 const METHOD_OPTIONS: ReadonlyArray<{ value: DepreciationMethod; label: string }> = [
   { value: "STRAIGHT_LINE", label: "Straight Line" },
@@ -133,7 +134,7 @@ export function EditAssetSheet({ open, onOpenChange, asset, onSuccess }: EditAss
                       min={0}
                       step="0.01"
                       {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      onChange={numericFieldChangeOr(field.onChange, 0)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -153,7 +154,7 @@ export function EditAssetSheet({ open, onOpenChange, asset, onSuccess }: EditAss
                       min={0}
                       step="0.01"
                       {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      onChange={numericFieldChangeOr(field.onChange, 0)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -174,7 +175,7 @@ export function EditAssetSheet({ open, onOpenChange, asset, onSuccess }: EditAss
                       type="number"
                       min={1}
                       {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
+                      onChange={numericFieldChangeOr(field.onChange, 0)}
                     />
                   </FormControl>
                   <FormMessage />

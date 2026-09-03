@@ -62,10 +62,14 @@ export function EmailInput({ value, onChange }: QuestionInputProps) {
 }
 
 export function PhoneQuestionInput({ value, onChange }: QuestionInputProps) {
+  function handlePhoneChange(phone: PhoneValue | undefined): void {
+    onChange({ answerText: String(phone ?? "") });
+  }
+
   return (
     <PhoneInput
       value={(value?.answerText ?? "") as PhoneValue}
-      onChange={(v) => onChange({ answerText: String(v ?? "") })}
+      onChange={handlePhoneChange}
     />
   );
 }

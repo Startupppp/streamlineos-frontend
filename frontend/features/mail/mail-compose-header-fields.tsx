@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { EmailChipsInput } from "./email-chips-input";
 import type { MailComposeValues, MailReplyValues } from "./mail-compose-schema";
 import type { MailAccount } from "@/types/mail";
+import { numericSelectChange } from "@/lib/numeric-field";
 
 interface MailComposeHeaderFieldsProps {
   isReply: boolean;
@@ -61,7 +62,7 @@ export function MailComposeHeaderFields({
             render={({ field }) => (
               <Select
                 value={String(field.value)}
-                onValueChange={(v) => field.onChange(Number(v))}
+                onValueChange={numericSelectChange(field.onChange)}
               >
                 <SelectTrigger
                   id="account-reply"
@@ -86,7 +87,7 @@ export function MailComposeHeaderFields({
             render={({ field }) => (
               <Select
                 value={String(field.value)}
-                onValueChange={(v) => field.onChange(Number(v))}
+                onValueChange={numericSelectChange(field.onChange)}
               >
                 <SelectTrigger
                   id="account-compose"
