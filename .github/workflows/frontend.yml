@@ -260,6 +260,25 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm run check:test-typecheck:self-test && pnpm run check:test-typecheck
 
+      # 2026-09-03 (ticket 35, box 5) — the frontend half of the backend's four
+      # test-honesty gates (check:test-suppressions, check:vacuous-assertions,
+      # check:bare-throw, check:transaction-callbacks). The frontend carried NONE
+      # of them, on the recorded ground that it "measures 0 in every class". That
+      # ground was WRONG: running the backend detector against this package found
+      # two live COND_ASSERT tests in hooks/api/notifications-inbox.test.ts, both
+      # behind `if (apiClient.get.mock.calls.length > 0)` — a guard on the very
+      # fact each test exists to prove. Proved by EXECUTION: with both hooks
+      # mutated to `enabled: false` so they never fetch, the pre-fix spec passed
+      # 2/2. Repaired, then gated. MEASURED at head after the repair: rc=0, 346
+      # test files, 2,722 test callbacks, 9,197 expect() calls, 24 .toThrow()
+      # matchers -> all seven classes 0, all seven ratchets 0. A HARD ZERO, not a
+      # ratchet, because the package genuinely measures zero. Four vacuity floors
+      # exit 2 INCONCLUSIVE rather than 0 if the walk, the test-callback matcher,
+      # the expect() matcher or the .toThrow() matcher measures nothing.
+      - name: No frontend test is skipped, focused, or unable to fail
+        if: ${{ !cancelled() }}
+        run: pnpm run check:test-integrity:self-test && pnpm run check:test-integrity
+
       - name: Query keys and caches stay tenant-scoped
         if: ${{ !cancelled() }}
         run: pnpm run check:query-scope:self-test && pnpm run check:query-scope

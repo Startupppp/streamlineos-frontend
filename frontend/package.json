@@ -83,6 +83,8 @@
     "check:import-direction:self-test": "node scripts/check-import-direction.mjs --self-test",
     "check:test-typecheck": "node scripts/check-test-typecheck.mjs",
     "check:test-typecheck:self-test": "node scripts/check-test-typecheck.mjs --self-test",
+    "check:test-integrity": "node scripts/check-test-integrity.mjs",
+    "check:test-integrity:self-test": "node scripts/check-test-integrity.mjs --self-test",
     "check:gate-wiring": "node scripts/check-gate-wiring.mjs"
   },
   "dependencies": {
