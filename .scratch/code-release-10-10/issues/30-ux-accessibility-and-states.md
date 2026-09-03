@@ -12,8 +12,10 @@
   **0 without a loading state · 0 without a read-error branch · 0 without a permission gate · 7 without an
   empty state**. Every one of the five surfaces this ticket recorded as BLOCKED on other territories
   (`/ai/executive-brief`, `/build/[projectId]/analytics`, `/build/[projectId]/timeline`,
-  `/hr/performance/analytics`, `/hr/recruitment/candidates/import`) now has a read-error branch, and `/chat`
-  and the two HR recruitment routes have an empty state.
+  `/hr/performance/analytics`, `/hr/recruitment/candidates/import`) now has a read-error branch. Of the four
+  listed as having no empty state, `/chat` and `/hr/recruitment/jobs/[jobId]/edit` now have one; the other
+  two, `/hr/recruitment/sla` and `/notifications/policy`, are in the recorded seven below and are correct
+  as they stand.
   **The seven remaining are recorded, not excused**: `/crm/import`, `/hr/recruitment/sla`,
   `/inventory/operations`, `/inventory/products/new`, `/notifications/policy`,
   `/settings/organization/structure`, `/surveys/new`. All seven were read. None renders a server collection
