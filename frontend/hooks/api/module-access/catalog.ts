@@ -7,6 +7,7 @@ import { useCan } from "@/hooks/api/access";
 import type { AuditCursorPage, AuditLogEntry, ModuleMyPermissions, ModulePermission } from "./types";
 import { viewKey } from "./types";
 import {
+  moduleAuditLogPageContract,
   moduleCatalogContract,
   moduleMyPermissionsContract,
 } from "./module-access-schema";
@@ -57,10 +58,11 @@ export function useModuleAuditLog(
     queryFn: ({ pageParam, signal }) => {
       const params = new URLSearchParams({ limit: String(limit) });
       if (typeof pageParam === "string") params.set("cursor", pageParam);
-      return apiClient.get<AuditCursorPage<AuditLogEntry>>(
+      return apiClient.get(
         `/module-access/${moduleKey}/audit-log?${params.toString()}`,
         undefined,
         signal,
+        moduleAuditLogPageContract,
       );
     },
     initialPageParam: undefined as string | undefined,

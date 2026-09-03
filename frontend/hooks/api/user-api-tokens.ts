@@ -6,48 +6,35 @@ import {
 } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import type { Permission } from "@/lib/rbac/permissions";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { permissionCatalogContract } from "@/hooks/api/access-schema";
+import {
+  createUserApiTokenResponseContract,
+  userApiTokenPageContract,
+} from "@/hooks/api/user-api-tokens-schema";
+import type { CreateUserApiTokenInput } from "@/hooks/api/user-api-tokens-schema";
 
-export interface UserApiToken {
-  id: string;
-  userId: string;
-  name: string;
-  prefix: string;
-  scopes: string[];
-  expiresAt: string | null;
-  lastUsedAt: string | null;
-  createdAt: string;
-}
-
-export interface CreateUserApiTokenInput {
-  name: string;
-  scopes: string[];
-  expiresAt: string;
-}
-
-export interface CreateUserApiTokenResponse extends UserApiToken {
-  rawToken: string;
-}
-
-export interface UserApiTokenPage {
-  data: UserApiToken[];
-  pagination: {
-    limit: number;
-    nextCursor: string | null;
-    hasMore: boolean;
-  };
-}
+export type {
+  CreateUserApiTokenInput,
+  CreateUserApiTokenResponse,
+  UserApiToken,
+  UserApiTokenPage,
+} from "@/hooks/api/user-api-tokens-schema";
 
 export function useUserApiTokens(params: { cursor?: string; limit: number }) {
   return useGatedQuery("settings:api-tokens:read", {
     queryKey: queryKeys.userApiTokens.list(params),
     queryFn: ({ signal }) =>
-      apiClient.get<UserApiTokenPage>("/me/api-tokens", {
-        ...(params.cursor ? { cursor: params.cursor } : {}),
-        limit: String(params.limit),
-      }, signal),
+      apiClient.get(
+        "/me/api-tokens",
+        {
+          ...(params.cursor ? { cursor: params.cursor } : {}),
+          limit: String(params.limit),
+        },
+        signal,
+        userApiTokenPageContract,
+      ),
     staleTime: 30_000,
   });
 }
@@ -55,7 +42,13 @@ export function useUserApiTokens(params: { cursor?: string; limit: number }) {
 export function useGrantableUserApiTokenPermissions() {
   return useGatedQuery("settings:api-tokens:read", {
     queryKey: queryKeys.userApiTokens.permissions(),
-    queryFn: ({ signal }) => apiClient.get<Permission[]>("/me/api-tokens/permissions", undefined, signal),
+    queryFn: ({ signal }) =>
+      apiClient.get(
+        "/me/api-tokens/permissions",
+        undefined,
+        signal,
+        permissionCatalogContract,
+      ),
     staleTime: 5 * 60_000,
   });
 }
@@ -65,7 +58,12 @@ export function useCreateUserApiToken() {
   return useAuthorizedMutation("settings:api-tokens:write", {
     mutationKey: ["create", "user", "api", "token"],
     mutationFn: (input: CreateUserApiTokenInput) =>
-      apiClient.post<CreateUserApiTokenResponse>("/me/api-tokens", input),
+      apiClient.post(
+        "/me/api-tokens",
+        input,
+        undefined,
+        createUserApiTokenResponseContract,
+      ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.userApiTokens.all });
     },

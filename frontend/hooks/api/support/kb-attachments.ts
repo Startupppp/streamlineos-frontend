@@ -92,6 +92,7 @@ export function useDeleteSupportKbAttachment(articleId: number) {
 
 export function useDownloadSupportKbAttachment() {
   return useAuthorizedMutation("support:kb:view", {
+    mutationKey: ["supportKbAttachments", "download"],
     mutationFn: ({
       articleId,
       attachmentId,

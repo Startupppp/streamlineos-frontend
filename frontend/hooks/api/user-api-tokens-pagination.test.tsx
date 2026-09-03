@@ -6,6 +6,7 @@ import {
 import { renderHook, waitFor } from "@testing-library/react";
 import { apiClient } from "@/lib/api-client";
 import { useUserApiTokens } from "./user-api-tokens";
+import { userApiTokenPageContract } from "./user-api-tokens-schema";
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: {
@@ -56,10 +57,12 @@ describe("useUserApiTokens pagination", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(mockedGet).toHaveBeenCalledWith("/me/api-tokens", {
-      cursor: "current-cursor",
-      limit: "50",
-    }, expect.any(AbortSignal));
+    expect(mockedGet).toHaveBeenCalledWith(
+      "/me/api-tokens",
+      { cursor: "current-cursor", limit: "50" },
+      expect.any(AbortSignal),
+      userApiTokenPageContract,
+    );
     expect(result.current.data).toEqual(response);
   });
 });

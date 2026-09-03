@@ -13,6 +13,10 @@ import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { AuditCursorPage, DataScope, ModuleGroupMember, ModuleRoleGroup } from "./types";
 import { viewKey } from "./types";
+import {
+  moduleGroupMembersContract,
+  moduleRoleGroupPageContract,
+} from "./module-access-schema";
 
 export function useModuleRoleGroups(moduleKey: string) {
   const canView = useCan(viewKey(moduleKey));
@@ -21,10 +25,11 @@ export function useModuleRoleGroups(moduleKey: string) {
     queryFn: ({ pageParam, signal }) => {
       const params = new URLSearchParams({ limit: "100" });
       if (typeof pageParam === "string") params.set("cursor", pageParam);
-      return apiClient.get<AuditCursorPage<ModuleRoleGroup>>(
+      return apiClient.get(
         `/module-access/${moduleKey}/groups?${params.toString()}`,
         undefined,
         signal,
+        moduleRoleGroupPageContract,
       );
     },
     initialPageParam: undefined as string | undefined,
@@ -125,10 +130,11 @@ export function useModuleGroupMembers(moduleKey: string, groupId: number | null)
   return useQuery<ModuleGroupMember[], Error>({
     queryKey: queryKeys.moduleAccess.groupMembers(moduleKey, groupId ?? 0),
     queryFn: ({ signal }) =>
-      apiClient.get<ModuleGroupMember[]>(
+      apiClient.get(
         `/module-access/${moduleKey}/groups/${groupId}/members`,
         undefined,
         signal,
+        moduleGroupMembersContract,
       ),
     enabled: canView && groupId !== null,
     staleTime: 2 * 60_000,

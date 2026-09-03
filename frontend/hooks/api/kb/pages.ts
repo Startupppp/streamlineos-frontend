@@ -390,10 +390,14 @@ export function useToggleFavoriteKbPage() {
 }
 
 export function useRecordKbPageVisit() {
+  const qc = useQueryClient();
   return useAuthorizedMutation("kb:pages:view", {
     mutationKey: ["kb", "pages", "visit"],
     mutationFn: (pageId: number) =>
       apiClient.post<{ success: boolean }>(`/kb/pages/${pageId}/visit`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.kb.pagesRecent() });
+    },
   });
 }
 

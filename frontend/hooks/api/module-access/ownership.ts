@@ -6,13 +6,19 @@ import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { ModuleOwnership } from "./types";
 import { viewKey } from "./types";
+import { moduleOwnershipContract } from "./module-access-schema";
 
 export function useModuleOwnership(moduleKey: string) {
   const canView = useCan(viewKey(moduleKey));
   return useQuery<ModuleOwnership, Error>({
     queryKey: queryKeys.moduleAccess.ownership(moduleKey),
     queryFn: ({ signal }) =>
-      apiClient.get<ModuleOwnership>(`/module-access/${moduleKey}/ownership`, undefined, signal),
+      apiClient.get(
+        `/module-access/${moduleKey}/ownership`,
+        undefined,
+        signal,
+        moduleOwnershipContract,
+      ),
     enabled: canView,
     staleTime: 2 * 60_000,
   });

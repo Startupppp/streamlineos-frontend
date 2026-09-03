@@ -7,6 +7,11 @@ import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import type { CursorPaginatedResult, DataScope, MemberGrant, ModuleMember, ModuleMemberCandidate } from "./types";
 import { viewKey, manageKey } from "./types";
+import {
+  moduleMemberCandidatePageContract,
+  moduleMemberGrantsContract,
+  moduleMemberPageContract,
+} from "./module-access-schema";
 
 export function useModuleMembersInfinite(
   moduleKey: string,
@@ -21,10 +26,11 @@ export function useModuleMembersInfinite(
       const params = new URLSearchParams({ pageSize: String(pageSize) });
       if (typeof pageParam === "number") params.set("cursor", String(pageParam));
       if (userId !== undefined) params.set("userId", userId);
-      return apiClient.get<CursorPaginatedResult<ModuleMember>>(
+      return apiClient.get(
         `/module-access/${moduleKey}/members?${params.toString()}`,
         undefined,
         signal,
+        moduleMemberPageContract,
       );
     },
     initialPageParam: undefined as number | undefined,
@@ -142,10 +148,11 @@ export function useModuleMemberCandidates(
       if (search) params.set("search", search);
       if (userId) params.set("userId", userId);
       params.set("excludeAssigned", String(excludeAssigned));
-      return apiClient.get<CursorPaginatedResult<ModuleMemberCandidate>>(
+      return apiClient.get(
         `/module-access/${moduleKey}/member-candidates?${params.toString()}`,
         undefined,
         signal,
+        moduleMemberCandidatePageContract,
       );
     },
     enabled: canManage && (options?.enabled ?? true),
@@ -163,10 +170,11 @@ export function useModuleMemberGrants(
   return useQuery<{ grants: MemberGrant[] }, Error>({
     queryKey: queryKeys.moduleAccess.memberGrants(moduleKey, membershipId ?? 0),
     queryFn: ({ signal }) =>
-      apiClient.get<{ grants: MemberGrant[] }>(
+      apiClient.get(
         `/module-access/${moduleKey}/members/${membershipId}/grants`,
         undefined,
         signal,
+        moduleMemberGrantsContract,
       ),
     enabled: canManage && membershipId !== null && (options?.enabled ?? true),
     staleTime: 30_000,
