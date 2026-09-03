@@ -4,7 +4,7 @@
 
 **Blocked by:** 28.
 
-**Status:** **7 of 9 boxes closed, 2 open** — unchanged in count; S13 did not close either, and says why below. S13 did the thing this ticket's Calendar box was *measured but unfixed* on: `GET /calendar/events` is redesigned and its read-cost gate is **green at 706 blocks against an untouched 2,000 ceiling** (it was 7,063 and deliberately red), the statement count for that source is now **bounded at 19** where it used to grow with the tenant, and both cross-territory asks report 22d handed over — the `forbid-hashed-subplan` assertion kind and the private-upcoming seed anchor — are delivered and bite-proved. Full write-up in `reports/29c-calendar-read-path-and-plan-assertion.md`. **p95 over HTTP was NOT re-measured by me** and somebody must re-run the harness before the route is called closed.
+**Status:** **7 of 9 boxes closed, 2 open** — unchanged in count. S14 did not close either, and decomposed both into their named clauses instead: Calendar is **6 of 10 clauses holding**, Inbox/mail **2 of 10**. Full per-clause verdicts with evidence in `reports/29d-calendar-mail-clause-audit.md`. Two defects fixed and bite-proved this pass (calendar `recurrenceEnd`/`UNTIL`; mail send/reply unified-inbox invalidation). **Two clauses this ticket recorded as closed are actually PARTIAL** — mail keyset ordering and indexed search are real, journalled and correct but sit behind a `singleAcc` gate the default request never satisfies — and **R-23's stated premise is false at head**: an inbound mail path and bounce handling both exist, in `src/modules/ingress/` and `src/modules/email/`. S13 did not close either, and says why below. S13 did the thing this ticket's Calendar box was *measured but unfixed* on: `GET /calendar/events` is redesigned and its read-cost gate is **green at 706 blocks against an untouched 2,000 ceiling** (it was 7,063 and deliberately red), the statement count for that source is now **bounded at 19** where it used to grow with the tenant, and both cross-territory asks report 22d handed over — the `forbid-hashed-subplan` assertion kind and the private-upcoming seed anchor — are delivered and bite-proved. Full write-up in `reports/29c-calendar-read-path-and-plan-assertion.md`. **p95 over HTTP was NOT re-measured by me** and somebody must re-run the harness before the route is called closed.
 
 **Residual-risk disposition (2026-09-03):** every open box below now carries an ASSIGNABLE-or-ACCEPTED verdict, a named owner and a date, recorded inline under the box and in `reports/residual-risk-register-19-30.md`. Blockers were re-verified against source, a live gate run or a committed artifact rather than transcribed; where a stated blocker did not survive, the correction is inline.
 
@@ -36,6 +36,53 @@ Earlier status: S12 closed the **Knowledge queries/workers** box: all three rema
   post-split exceptions and cancellations re-parent; recorded as having a *wrong* answer rather than a trade-off)
   in `reports/29b-open-decisions.md` §1. **Owner: release owner (product). Deadline: 2026-09-10.** *Taken from
   this ticket, not re-read at source: the five questions and the two service method names.*
+  S14 — **decomposed into 10 clauses; 6 hold. One defect fixed, one found and reproduced, one new product gap.**
+  Per-clause: C1 one `/calendar` ✅ · C2 toggleable sources ✅ · C3 timezone ✅ · C4 series-vs-instance **PARTIAL** ·
+  C5 cursor/range keys **PARTIAL** · C6 DST ✅ · C7 exceptions **PARTIAL** · C8 conflicts ✅ · C9 reminders ✅ ·
+  C10 no module-specific page ❌. Evidence per clause in `reports/29d-calendar-mail-clause-audit.md`.
+  **FIXED: `recurrenceEnd` was declared, passed by all four callers, and consulted by none.** `CalendarEventLike`
+  declares it and `calendar-event-source.loader.ts:317`, `calendar-conflict.service.ts:178`,
+  `calendar-export.service.ts:124` and `calendar-reminder-sweep.service.ts:156` all pass it into
+  `expandToOccurrences`, which ignored it entirely. The SQL layers only drop series whose end precedes the window
+  *start*, so any window straddling the end leaked: a weekly meeting ended 30 June still rendered through July, still
+  raised conflicts, still exported to ICS and **still sent reminders**. Truncation is applied to the *nominal*
+  occurrence so an exception may still move a live occurrence past the end. Also fixed in the same function:
+  `RRule.origOptions.until` is a UTC Date and was passed unchanged into a rule whose `dtstart` had been converted to
+  local-wall-clock space, so `UNTIL` was read as a wall-clock literal and the cutoff was wrong by the zone offset
+  (4–5 h for America/New_York). Proof: new `calendar-recurrence-end.spec.ts` — **10 tests, 6 red before the fix,
+  all 10 green after**, 4 controls green throughout. Whole module `jest src/modules/calendar` → **43 suites / 406
+  tests, exit 0** (was 42/396).
+  **C6 DST is genuinely covered, checked for the decay class.** `calendar-dst-edge.spec.ts` pins explicit 2024
+  transition dates in a named zone (America/New_York 2024-03-10 and 2024-11-03) with UTC-instant assertions either
+  side plus absent-value BITE cases. No fixture is anchored to wall-clock `today`, so it cannot decay into passing.
+  NEW FINDING — **C7: a series timing edit orphans every exception, and a cancelled occurrence resurrects.**
+  Exceptions key on the nominal occurrence instant (`exceptionMap.get(utcStart.getTime())`) and `utcStart` derives
+  from the *current* `event.startDate`; `CalendarService.updateEvent` (`calendar.service.ts:212-325`) writes
+  `startDate`/`timezone`/`rrule` and never touches `calendar_event_exceptions`. It already computes the right
+  predicate — `timeChanged` at `:239-243` — and uses it only to reset `reminder15MinSent` and DEAD the reminder
+  outbox. Reproduced at runtime in a throwaway `git archive HEAD` tree (never the shared tree): a weekly Mon 10:00
+  series with 2024-06-10 cancelled, moved to 11:00, returns **`cancelled 2024-06-10 present as 11:00? true`** — with
+  reminders re-armed. Bites only on a timing change; a title/colour/attendee edit leaves nominal instants intact.
+  BLOCKED: **left unfixed deliberately — the remedy is a genuine product choice.** Deleting the orphans does not fix
+  it (a deleted cancellation resurrects identically). The options are (a) shift each exception by the series delta,
+  well-defined for a pure time shift and undefined for an rrule change; (b) reject a timing edit while exceptions
+  exist; (c) surface the cancellations and make the organiser re-confirm. Same discipline as R-21: no semantics
+  invented. **Owner: release owner (product), calendar as implementer.**
+  NEW FINDING — **C4: an occurrence edit silently discards most of what the user typed.**
+  `features/calendar/use-event-series-scope.ts:44-51` forwards only `modifiedTitle`/`modifiedStart`/`modifiedEnd`;
+  the dialog collected description, location, colour, category, allDay and attendees. Not a frontend oversight —
+  `calendar_event_exceptions` physically has only those three override columns plus `is_cancelled`. Widening is a
+  migration plus a product call on which fields are per-occurrence overridable. Also: the scope dialog **defaults to
+  the destructive option** (`event-series-scope-dialog.tsx:30`, `useState<SeriesScope>("series")`).
+  **Owner: release owner (product) + calendar schema.**
+  PARTIAL: **C5 there is no cursor, because there is no pagination.** `hooks/api/calendar.ts:200-204` sends only
+  `{start, end}`; server truncation at 2,000 is a banner the user cannot page past. The range half of the clause
+  holds (`queryKeys.calendar.events(start, end, sortedSources)`). Whether a calendar window should paginate is a
+  product question. Cross-territory: `components/ui/calendar-event-combobox.tsx:35-43` requests ~365 days against a
+  documented 120-day server cap — **owner: support / external-links owner.**
+  ❌ **C10 re-verified STILL PRESENT at head** — `features/hr/recruitment/interviews-page.tsx:249` renders
+  `BigCalendarWrapper` with its own month/week toggle (`:56-61`) and prev/next (`:107-113`), and is the only
+  cross-feature importer of `features/calendar/**`. **Fifth consecutive pass reporting it. HR / ticket 25.**
   S13 — **the read path is fixed; the box still turns on (c), which is still a product decision.**
   `CalendarEventSourceLoader.queryVisibleEvents` was one `OR`-of-two-branches query whose recurring arm had no lower bound on `start_date`, so the planner walked `idx_calendar_events_org_date` from the tenant's first event and heap-fetched every candidate before the window filter could reject it — 3,610 rows scanned to keep 517, **7,063 buffers per page**, four times a sequential scan of the table. It is now candidate-ids-then-fetch over two independently-bounded range branches, with the caller's RSVP as its own indexed read over the page's ids and the creator name resolved once per request instead of joined per page.
   The visibility test is a **scalar sublink, not an `EXISTS`**, and that is the load-bearing part: as an `EXISTS` the planner de-correlates it into a hashed SubPlan that materialises all **39,114** attendee rows of the fixture membership before the `OR` can short-circuit on `visibility = 'org'` — O(the caller's attendance), not O(page).
@@ -90,6 +137,78 @@ Earlier status: S12 closed the **Knowledge queries/workers** box: all three rema
   build. Same amendment case as ticket 28 box 7; **the release owner should amend it rather than leave it to
   fail.** *Taken on trust: the "zero webhook/inbound/bounce/DLQ references under `src/modules/mail/`" scan was
   not re-run.*
+  S14 — **decomposed into 10 clauses; 2 hold. Two clauses recorded as closed are PARTIAL, and R-23's premise is false.**
+  Per-clause: M1 indexed list ordering **PARTIAL** · M2 thread ordering ❌ · M3 search **PARTIAL** · M4 unread ❌ ·
+  M5 incremental sync ❌ · M6 idempotent send **PARTIAL** · M7 idempotent receive ❌ · M8 bounce/retry/DLQ ❌ ·
+  M9 list+thread invalidation ✅ · M10 count invalidation ❌ (inert). Evidence in `reports/29d-calendar-mail-clause-audit.md`.
+  **CORRECTION — M1/M3: the keyset ordering and the indexed search are real, but the default request never reaches
+  them.** Everything this ticket claims is verified at head: `ORDER BY date DESC, id DESC`
+  (`mail-metadata.service.ts:234-235`), `limit + 1`, the null-date keyset split (`:186-195`), the conditional
+  `nextCursor` (`mail.service.ts:242` — the unconditional null is genuinely gone), the `md1`/`m1` namespace split,
+  `idx_mail_metadata_list_keyset` in Drizzle **and** in journalled migration 1022 (`_journal.json` idx 789; 672 `.sql`
+  vs 672 entries, 0 orphans), and `app.search_mail_message_ids` with all five §3 properties. **But `accountId`
+  defaults to `"all"` (`dto/mail-schemas.ts:15`), so `singleAcc` is undefined (`mail.service.ts:69`) and the whole
+  metadata branch is skipped (`:75`).** Traced to the client: `features/mail/mail-shell.tsx:39-41` initialises
+  `selectedAccountId` to `"all"`, so **opening `/mail` uses the provider merge cursor, not the keyset**; search
+  additionally forces a provider fan-out via `skipCache = Boolean(query)` (`:90`). Every internal caller also passes
+  `"all"` (`unified-inbox.service.ts:322,405`; `ai/core/mail-copilot-tools.ts:56`). The measured ~20x search win and
+  the keyset paging apply only after the user explicitly picks one account.
+  PARTIAL: **not widened to the multi-account case here.** The index prefix
+  `(org_id, user_membership_id, folder, date DESC, id DESC)` is already account-agnostic so it is mechanically
+  plausible, but it needs cross-account freshness semantics (`isFreshForAccount` is per-account), an equivalence run
+  against the provider merge, and a measured read cost. This is the hottest mail read path, it already produced one
+  p95 regression this release, and **no benchmark is possible with ~8 agents live**. **Owner: mail owner +
+  perf-harness owner. Highest-value residue in this box.**
+  ❌ **M2 thread ordering never touches the database.** `getThread` (`mail.service.ts:318-333`) delegates straight to
+  the providers: Gmail (`providers/gmail-mail.provider.ts:92-113`) applies **no sort at all**, Outlook
+  (`:210-238`) pushes `receivedDateTime asc` to Graph. The two disagree, and `idx_mail_metadata_thread`
+  (`db/schema/mail/mail-metadata.ts:51`) is a maintained index with **no reader in the mail module**. The clause says
+  "conversation ordering"; the conversation is the unindexed half. **Owner: mail owner.**
+  **M6 idempotent send — PARTIAL, and the split is the point.** Holds for the duplicate-click and lost-response
+  cases: a COMPLETED duplicate replays without re-executing and an IN_FLIGHT one 409s. **Does not hold on retry after
+  an error**, which is the case most likely to have already delivered. The provider send carries no dedupe token
+  (`GMAIL_SEND_EMAIL` via `executeTool`; Outlook `POST /me/sendMail`), so the fence is the only protection — and
+  `command-fence-store.ts` has branches for COMPLETED and live-lease IN_FLIGHT but **none for FAILED**, which falls
+  into the reclaim update and returns `proceed`. The interceptor's `error:` tap calls `fail()` on *any* throw,
+  including a timeout after Composio already delivered. The client deliberately replays the same key
+  (`use-idempotent-operation.ts` releases only on `onSuccess`) — **so the exact path
+  `useIdempotentOperation` was built for is the one the server re-executes.** Second hole: `complete()` swallows a
+  failed completion write by design, leaving IN_FLIGHT until the 60s lease expires and a retry reclaims.
+  BLOCKED: **`common/idempotency/**` is shared framework territory** and changing FAILED semantics alters every
+  `@Idempotent` command. The real distinction is which error — a 4xx definitely did not execute, a provider timeout
+  may have. Framework design decision, genuine trade-off. **Owner: idempotency-framework owner, mail as first consumer.**
+  **CORRECTION — M7/M8: R-23's stated premise is FALSE at head.** The register defers both on "there is no inbound
+  mail path at all", flagged *"taken on trust, the scan was not re-run"*. It was re-run. The scan is right and the
+  conclusion is wrong, because the scope was wrong. Scoped to `src/modules/mail/`:
+  `grep -rniE "webhook|inbound|bounce|dlq|dead.?letter" src/modules/mail --include='*.ts'` → **0 lines**. Widened:
+  the same grep over `src/modules/ingress` → **523 lines**. There is a `@Public()` HMAC-verified push receiver at
+  **`POST /crm/mailboxes/push`** (`ingress/adapters/crm-mailbox.controller.ts:23,28,30`) verifying against the
+  mailbox row's own `pushSecret` and reading tenancy from the row not the body; an authenticated
+  **`POST /crm/ingress/inbound`** (`inbound-ingress.controller.ts:20,25,27`); a polling sweep pulling real mail
+  through the providers `MailModule` exports (`adapters/crm-mailbox-provider-fetch.ts:30,51`); and **bounce handling
+  in a third module** — `@Public() @Controller("webhooks/email")` mapping `email.bounced -> HARD_BOUNCE` into
+  `email-suppression.service.ts` (`modules/email/email-webhook.controller.ts:31-33`). All registered in
+  `app.module.ts`. M7/M8 are still **not satisfied for the mail module** — that verdict is unchanged — but the ask is
+  not "build a receive path from nothing", it is "mail does not reuse machinery that already exists two modules over,
+  with a pattern to copy". **R-23 should be re-taken on the corrected facts. `src/modules/ingress/**` is CRM
+  territory and EXCLUDED this session — reported, not touched. Owner: mail/integrations owner, re-briefed.**
+  ✅ **M9 FIXED: send and reply left the unified inbox stale.** `/me/inbox/unified` serves mail as a first-class kind
+  (`unified-inbox.service.ts:111-113`, backed by `MailService`). `useMailAction` invalidated both `mail.all` and
+  `inbox.all` (`hooks/api/mail.ts:294-297`) but `useSendMail`/`useReplyMail` invalidated only `mail.all` — the same
+  message was fresh on `/mail` and stale on `/inbox` for the 30s staleTime. Both now invalidate the unified prefix.
+  Proof: new `hooks/api/mail-send-invalidation.test.tsx` — **6 tests, 2 red before the fix, all 6 green after**, with
+  a BITE case proving the assertion distinguishes a never-invalidated prefix and one proving a *failed* send
+  invalidates nothing. `jest hooks/api/mail|features/mail|features/inbox` → **17 suites / 102 tests, exit 0**.
+  ❌ **M10 count invalidation — confirmed absent, and confirmed inert.** `queryKeys.inbox.count()`
+  (`lib/query-keys/platform-core.ts:144`) has **zero consumers anywhere**; `/me/inbox/unified/count` exists on the
+  backend (`me/inbox.controller.ts:41-45`) and has no client hook. Every unread badge in the product is
+  notifications-only and backed by `queryKeys.notifications.unreadCount()`, which **is** correctly invalidated
+  alongside the list on all 13 notification mutations (`hooks/api/notifications-shared.ts:18-28`). **So the
+  stale-unread-badge failure mode is unreachable for mail only because the badge does not exist** — the factory will
+  go silently un-invalidated the moment somebody writes the hook. Left in place; M4's unread work is its consumer.
+  ❌ **M4 unread re-verified unbuilt.** `unified-inbox.service.ts:395-413` still fans out and counts in JS over
+  `MAIL_COUNT_SCAN_LIMIT = 100`, self-declaring `exact: length < 100`. `MAIL_COUNT_SCAN_LIMIT` also exceeds the DTO's
+  own page cap of 50 and is forwarded raw to the providers because the service is called directly and Zod never sees it.
   S12 — **the scope decision is made and recorded: neither NEW REQUIREMENT is in this release.** `reports/29b-open-decisions.md` §2. (A) unread + incremental sync is one requirement because the mirror is partial, so a count would be a wrong number presented as authoritative; it needs delta-token semantics on `mail_sync_checkpoints`, a `listChanges` on both provider wrappers (Gmail `historyId`, Outlook `deltaLink` — neither wrapper requests one) and a background sync worker that does not exist. (B) idempotent receive + bounce/DLQ is one requirement because there is no inbound path at all — zero webhook/inbound/bounce/DLQ references under `src/modules/mail/`, re-verified 2026-09-03 — and a bounce arrives as an inbound DSN. Both are provider-integration designs with a worker and a schema change apiece, not defects in shipped behaviour. What was in reach (ordering, database search) was fixed and measured in S10; idempotent send was already done.
   Recorded with the decision rather than removed: `mail.service.ts:284`'s write-only checkpoint upsert stays, because it is the row shape (A) will migrate and `mail-sync-checkpoint-isolation.spec.ts` supplies 4 of `check:tenant-isolation`'s 926 declarations.
   BLOCKED: **a product/scope decision, now taken and recorded.** Building either requirement is out of this release.
