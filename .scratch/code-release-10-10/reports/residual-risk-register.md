@@ -356,8 +356,9 @@ taken unilaterally.
    a `find` across both repos for `bola-live*` returns nothing. **Ticket 41 box 2 requires that each
    "database identity, dataset shape, pass/fail/skip count and failure artifact is recorded"**, and this
    artifact will not survive the session. The derived bucket summary is now committed at
-   `reports/residual-risk-register/bola-unprobeable-buckets.json`, but the raw per-route probe should be
-   copied into the repo by whoever owns ticket 15 or ticket 41 before this session ends.
+   `reports/residual-risk-register/bola-unprobeable-buckets.json`. **The raw 1,921-route probe has also been
+   copied into the repo at `reports/residual-risk-register/bola-live-offline.json`** so it survives the session;
+   whoever owns ticket 15 or ticket 41 should decide whether it belongs somewhere more canonical.
 2. **`reports/findings-register.md` §Q is stale and contradicts `reports/cross-tenant-404-contract.md`.**
    It carries #165 / #166 / #167 as **OPEN**; the contract report records #165 as 84 fixed / 0 still
    open, #166 as FIXED and #167 as CLASSIFIED-and-fixed. Two agents reading the two files reach opposite
