@@ -27,10 +27,22 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 // holds the key but could not see the link. Repointed to integrations:git:view.
 // Strictly widening: OWNER and ORG_ADMIN are ALL_PERMISSION_NAMES and no role
 // template carries settings:manage, so nobody who saw the item loses it.
+// Moved 2026-09-03: the Finance "Settings" group gained an "Automations" child
+// (/accounting/settings/automations, settings:automations:view). The page
+// existed and was linked from the accounting settings tab strip, but navigation
+// had no entry for it, so route-access resolved it by the longest matching nav
+// prefix (/accounting/settings) and gated it on accounting:settings:read — a
+// different key from the settings:automations:view the backend routes enforce,
+// which is how a finance admin reached a page whose every request then 403s.
+// This is the same shape as the /support sibling, which navigation already
+// gates on settings:automations:view. Strictly narrowing for the page and
+// additive for the sidebar: only OWNER/ORG_ADMIN hold settings:automations:view
+// (ALL_PERMISSION_NAMES; no role template carries it), and they already saw the
+// Finance Settings group.
 // The digest exists so a route or its permission cannot change without somebody
 // saying why.
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "3f26f8481b2bb67e31e6f6152ff0105943047b01c41503ab88291765c28a7527";
+  "14b8d281a14cd2db5cfb79f3783eb80976f75bde62b8d79d43af4086818d3b37";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {

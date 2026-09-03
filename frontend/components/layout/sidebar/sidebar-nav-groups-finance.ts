@@ -1,4 +1,4 @@
-import { Users, Clock, Receipt, FileText, BarChart3, ClipboardList, ShieldCheck, CreditCard, Wallet, TrendingUp, BookOpen, Package, Bell, Scale, Coins, Landmark, RefreshCcw, BarChart2, Inbox, SlidersHorizontal, Calculator, Tag, ArrowLeftRight, ShoppingCart, Truck, NotebookPen, PlayCircle, Lock, Layers, PiggyBank, Percent, ArrowDownToLine, HandCoins, TrendingDown, FileStack } from "lucide-react";
+import { Users, Clock, Receipt, FileText, BarChart3, ClipboardList, ShieldCheck, CreditCard, Wallet, TrendingUp, BookOpen, Package, Bell, Scale, Coins, Landmark, RefreshCcw, BarChart2, Inbox, SlidersHorizontal, Calculator, Tag, ArrowLeftRight, ShoppingCart, Truck, NotebookPen, PlayCircle, Lock, Layers, PiggyBank, Percent, ArrowDownToLine, HandCoins, TrendingDown, FileStack, Workflow } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
 export const FINANCE_NAV_GROUPS: NavGroup[] = [
@@ -396,6 +396,12 @@ export const FINANCE_NAV_GROUPS: NavGroup[] = [
             href: "/accounting/settings",
             exact: true,
             requiredPermission: "accounting:settings:read",
+          },
+          {
+            label: "Automations",
+            icon: Workflow,
+            href: "/accounting/settings/automations",
+            requiredPermission: "settings:automations:view",
           },
           {
             label: "Payment Providers",
