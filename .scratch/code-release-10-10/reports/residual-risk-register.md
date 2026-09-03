@@ -416,3 +416,42 @@ Ticket 41 box 7 has two halves. This pass addresses only the second.
 them directly: R-1 and R-2.** Until the R2 buckets are made private, every object already sitting at a
 public r2.dev address stays fetchable by anyone who ever copied one, whatever the database columns now
 say. That is a live exposure, not a code-quality residual, and no code change substitutes for it.
+
+---
+
+# EXTENSION — part 2, tickets 19, 22, 23, 26, 28, 29 and 30 (2026-09-03)
+
+The nine tickets above are not all of them. Seven more each hold open boxes, eighteen in total, and until
+today none of those carried an owner or a deadline either. They are covered in the companion file
+**`reports/residual-risk-register-19-30.md`**, written to the same contract: ASSIGNABLE or ACCEPTED
+RESIDUAL, every blocker verified against source, a live gate run or a committed artifact rather than
+transcribed from the ticket. Part 2 adds **20 ASSIGNABLE items and 15 accepted residuals**. Nothing above
+this line was changed.
+
+Four of part 2's findings belong in front of anyone reading only this file:
+
+1. **A-17 — two release gates are red on numbers the product no longer produces.** Tickets 22, 23 and 29
+   all record `GET /calendar/events` as fixed (915.944 → 305.746 ms p95, 7,063 → 706 buffer blocks). At
+   head, `pnpm check:route-budgets` → **exit 1** (`measuredBufferBlocks=7072 exceeds maxBufferBlocks=2000`)
+   and `pnpm check:benchmark-manifest` → **exit 1** (`request p95 915.944 ms > 800 ms`). The contract still
+   carries the old capture because the replacement run stopped at ~81 of 164 slots. It is a **re-run**, not
+   an investigation, and it is unowned.
+2. **A-12 — `pnpm openapi:check` is not database-coupled and the ticket's reason for deferring it is
+   wrong.** Ticket 19 box 3 says regenerating "would write grants into the shared Neon database". Backend
+   CI runs the same command against `postgres://ci:ci@127.0.0.1:5432/ci`, and it was reproduced locally
+   today with that placeholder: **exit 1, artifact STALE, 55 operations adrift**, no database contacted.
+   What actually defers it is sequencing across six lanes, i.e. the release commit. Separately,
+   `pnpm check:contract-vendor` is **already exit 1** on one operation (`POST /gdpr/rectification/me`).
+3. **A-22 — a live user-visible regression is shipping.** Ticket 23's chat payload fix replaced the full
+   member list with a bounded preview of 8 plus a true `memberCount`;
+   `features/chat/use-message-panel-data.ts:326` still reads `channel?.members?.length ?? 0`, so every
+   channel header reports at most 8 members. The field is on the wire and in the frontend type.
+4. **A-28 / §1.4 — two items are addressed to owners who cannot act.** Ticket 29 box 1's last clause ("No
+   module-specific calendar page exists") is **false at head** —
+   `features/hr/recruitment/interviews-page.tsx:249` still renders `BigCalendarWrapper`, reported and
+   re-routed in three consecutive passes. And ticket 28 box 6 routes its whole remainder to **ticket 30
+   box 1, which is already `[x]` closed**, so nobody will pick it up.
+
+Two boxes in part 2 cannot be met as worded and should be **amended** rather than left to fail — the same
+shape as R-8 above: **28 box 7** ("client types mirror the backend schema exactly", at 2.2% coverage over
+2,502 seam calls) and **29 box 2** (it asks for two features the release has decided not to build).
