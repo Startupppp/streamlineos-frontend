@@ -11,6 +11,43 @@ bite-proved, not inferred: neither `tsc --noUnusedLocals` nor `knip` reports a n
 (both exit 0 on a hermetic probe built to contain one), so the only evidence a field-level removal
 could rest on is the text search this box forbids.
 
+**2026-09-03 — the composite-FK-with-a-NULL-tenant-column sweep was run to completion, and it found two live
+holes that every previous pass on this ticket missed.** A composite FOREIGN KEY is MATCH SIMPLE, so it does not
+fire **at all** when ANY of its columns is NULL — the exact shape that produced this release's P1 cross-tenant
+write (`announcement_reads.org_id` nullable, omitted `org_id`, composite FK silently inert). Every previous pass
+here counted FKs that were *missing* or *redundant*; none asked which *present* FK was unenforceable. Measured
+against `pg_catalog` on a database at head, not against the declarations: of the **3** composite FKs in `public`
+carrying a tenant-shaped column, **2 have that column NULLABLE**:
+
+| child | constraint | tenant col nullable? | verdict |
+|---|---|---|---|
+| `audit_logs` | `fk_audit_logs_org_actor_membership` `(org_id, actor_membership_id)` | **yes** | **HOLE** |
+| `payroll_statutory_rule_sets` | `fk_..._entity_id_org` `(org_id, entity_id)` | **yes** | **HOLE** |
+| `contacts` | `fk_contacts_organization_id_org` `(org_id, organization_id)` | no (`org_id` is NOT NULL) | not a hole — the nullable member is an OPTIONAL PARENT, and a non-firing FK is correct there. CRM, also out of scope. Deliberately untouched. |
+
+**Reproduced before fixing, on a purpose-built scratch database — this is a bite, not a reading.** With `org_id`
+set, the composite FK correctly refused another tenant's membership (`23503`, "Key (org_id,
+actor_membership_id)=(org-A, 2) is not present"). With `org_id` **NULL**, the same row shape was **accepted** —
+and so was `actor_membership_id = 999999`, a membership that exists nowhere at all.
+
+**`NOT NULL` is the WRONG fix and was rejected.** Both tables are on the documented nullable-`org_id` list in
+`src/common/tenant/README.md` ("Tables that need a different policy") and both carry the matching RLS escape
+`CASE WHEN org_id IS NULL THEN true`: `audit_logs` for platform events (already pinned by
+`chk_audit_logs_tenant_or_platform`: `(org_id IS NULL) = is_platform_event`), `payroll_statutory_rule_sets` for
+the system-default statutory rule sets seeded by `0292` — all 8 rows on a production-shaped seed are exactly
+those. Forcing `NOT NULL` would delete the feature. Migration **`1043`** instead forbids the single combination
+in which the FK stops enforcing: a row naming a tenant-scoped child while claiming to have no tenant. In that
+state the reference is both unenforceable AND uninterpretable, so it is a data-integrity rule, not merely a
+tightening.
+
+`1043` proof: applied through the journal (idx **799**, `when` `1803000010118`, above the 2027-02-19 watermark);
+scratch database **665 → 667/667**; both constraints `convalidated=true` in `pg_constraint`; the cross-tenant
+insert now raises `23514` while a platform event with no actor and a tenant event with its own membership both
+still succeed; repair matched **0** rows at head (`audit_logs` 0 of 0, `payroll_statutory_rule_sets` 0 of 8);
+rollback round trip **2 → 0 → 2 validated**, all exit 0. `check:tenant-relationships` against a target at head
+(667/667): **Actionable 0, exit 0** — note it reports exit 1 against the default target `scratch_boot_a`, which
+is at **573/667** and self-declares `TARGET IS MID-BOOTSTRAP — this number is not release evidence`.
+
 **Follow-up 07b executed the third population 08b handed on, and corrected its cause.** Re-measured
 on a database cold-built from zero to head: the "70 declared `.references()` with neither a live
 single nor a live composite" is **101** under a definition that keeps the rows whose child table is
@@ -76,6 +113,9 @@ purge path was run, not reasoned about — **5/5** assertions including `DELETE 
 - [x] Redundant single-column foreign keys are removed only after all callers and migrations target the composite relationship.
       Closed for every module in this release. Re-measured at head: **169**, not 171 (same definition applied to `pg_constraint`). Of those, **16 were outside CRM/inventory and all 16 are gone** via migration `1006` — 8 dropped outright where single and composite already carried the same action, 8 with the action first MOVED onto the composite (1 CASCADE, 7 `SET NULL (col)` with explicit column lists) so no parent delete changes behaviour. Every pair was verified LIVE in `pg_catalog` per table before removal. A further **17 dead `.references()` covered by an existing composite** were removed as declaration-only changes. **HR needed nothing**: `hr_*` (130) and `payroll_*` (48) tenant→tenant FKs are already 100% composite. FKs 3,150 → **3,134**; remaining 153 are CRM 53 / inventory 100, both out of release scope.
 - [ ] Unused request/response/DTO/Zod fields are removed across backend, OpenAPI and frontend hooks/forms as one contract change. Server-controlled tenant/actor fields, idempotency/version fields, authorization dimensions and audit fields are never removed.
+      **BLOCKED — permanently, on tool capability. Re-confirmed 2026-09-03 and NOT re-litigated: the coordinator
+      directed that the bite proof below stands and that no run should be spent trying to build the missing
+      instrument. No field was removed on text-search evidence this pass, and none should be.**
       **BLOCKED — permanently, on tool capability, and the reading is now bite-proved rather than argued.**
       Two independent blockers, either of which alone keeps this box open. Neither is unfinished work.
       **(1) No instrument in either repository resolves a FIELD.** The box asks for unused fields *inside*
@@ -112,4 +152,11 @@ purge path was run, not reasoned about — **5/5** assertions including `DELETE 
 - [x] Before/after counts are recorded. Final acceptance is zero unclassified unnecessary keys and no orphaned schema or code reference.
       Duplicates 9→0, prefix-redundant 6→0, S16 0, S23 3-intentional, FKs 3,150 unchanged, payroll immutability triggers 2→7, `check:tenant-indexes` 821/828→829/829. Everything not executed is classified and handed on in report §9, not left unclassified.
       08b: FKs 3,150 → **3,134**; undeclared tenant columns 32 → **22**; single-column FKs beside a composite 169 → **153**; dead `.references()` 97 → 80; `check:tenant-indexes` declaration mode 829/829 → **839/839**; `check:set-null-column-lists` column lists 258 → 267, catalog half OK. Every remaining item in both populations is CRM or inventory. A third population ticket 08 never counted is now classified: **70 declared `.references()` with neither a live single nor a live composite** — a *missing* constraint, not a redundant one, so removing the declaration would hide a gap. 62 are legacy-actor columns whose FK the contraction dropped; 8 look like a real gap, four of them tenant anchors (`project_ticket_counters.org_id`, `chat_message_reactions.org_id`, `affiliate_commissions.referred_org_id`, `referrals.*`). Handed on in report 08b §7. 
+      2026-09-03: a **fourth** population, which none of ticket 08, 08b or 07b had counted — **composite FKs whose
+      TENANT column is nullable, i.e. keys that are present in `pg_constraint` and enforce nothing on the rows that
+      matter.** Measured at head: **3** such keys, **2 of them real holes**, **2 of 2 now guarded** by `1043`.
+      Foreign keys are unchanged at **3,196** (a CHECK is not an FK) and CHECK constraints on the two tables go
+      **1 → 2** and **1 → 2**. The population does not go to 0 and should not: the third row (`contacts`) has a
+      NOT NULL tenant column and its nullable member is a legitimate optional parent. Nothing here is left
+      unclassified.
       07b: **executed.** Re-measured as **101** (08b's 70 excluded 23 rows whose child table is not live) -> **87**; the **12 in release scope are 0**. Foreign keys **3,134 -> 3,196**; declared `.references()` 1,385 -> 1,379 (six converted to composite `foreignKey()`); `check:set-null-column-lists` column lists **267 -> 274**. The 62 legacy-actor rows re-measure as **19 -> 17**: two were never legacy-actor at all but an integer-vs-text type drift that made their foreign key impossible. Numbers and gate output in `reports/07b-declaration-drift.md` sections 3-7.

@@ -369,3 +369,110 @@ red was the alternative:
 3. **`payroll_tds_ytd_ledger` immutability** — needs a payroll decision on the adjustment-run path (§3).
 4. **0445's defect is fixed forward by 1004**, but any *other* `BEFORE DELETE` guard added in future must carry the same organisation-presence escape hatch or it will break `cron-org-purge-worker`.
 5. **`check:tenant-relationships` fallback mode** prints 627 when no DB URL is set, which reads as a hard failure in CI. Wiring `TENANT_RELATIONSHIP_DB_URL` to a bootstrapped scratch database would make the gate say what it means.
+
+---
+
+# 08c — the composite FK with a nullable tenant column (2026-09-03)
+
+A follow-up pass on this ticket, run against `pg_catalog` on a database at head rather than against the
+Drizzle declarations.
+
+## 1. The question nobody had asked
+
+Every earlier pass on ticket 08 counted foreign keys that were **missing** (07b's declaration drift) or
+**redundant** (08b's single-column-beside-a-composite). None asked which **present** foreign key is
+*unenforceable*.
+
+A composite `FOREIGN KEY` is `MATCH SIMPLE` unless declared otherwise, and `MATCH SIMPLE` does not fire **at
+all** when **any** of its columns is NULL. The constraint appears in `pg_constraint`, `\d` prints it, every
+audit that counts constraints counts it — and on the rows where the tenant column is NULL it enforces
+nothing. That is the exact shape of this release's P1 cross-tenant write: `announcement_reads.org_id` was
+nullable, the `org_id` was omitted, and the composite FK never ran.
+
+## 2. Measurement
+
+Catalog query over `pg_constraint`/`pg_attribute`, `contype='f'`, more than one child column, at least one
+child column named `org_id`/`organization_id`/`tenant_id` with `attnotnull = false`:
+
+| child | constraint | child cols | tenant col nullable | verdict |
+|---|---|---|---|---|
+| `audit_logs` | `fk_audit_logs_org_actor_membership` | `(org_id, actor_membership_id)` | **yes** | **HOLE** |
+| `payroll_statutory_rule_sets` | `fk_payroll_statutory_rule_sets_entity_id_org` | `(org_id, entity_id)` | **yes** | **HOLE** |
+| `contacts` | `fk_contacts_organization_id_org` | `(org_id, organization_id)` | no — `org_id` is `NOT NULL` | not a hole |
+
+**3 candidates, 2 holes.** `contacts` is deliberately left alone: its tenant column is `NOT NULL`, so the FK
+always fires for the tenant, and the nullable member is an *optional parent* — "this contact belongs to no CRM
+organisation" is a real state in which a non-firing FK is the correct behaviour. (CRM is also out of release
+scope.) Reporting it as a hole would have been a false positive, and "fixing" it would have removed a feature.
+
+## 3. The hole reproduced, before fixing anything
+
+On a purpose-built scratch database carrying the real constraint shape:
+
+```
+INSERT ... (org_id, actor_membership_id) VALUES ('org-A', 2)   -- membership 2 belongs to org-B
+  ERROR: violates foreign key constraint "fk_audit_logs_org_actor_membership"
+  DETAIL: Key (org_id, actor_membership_id)=(org-A, 2) is not present in table "organization_members".
+
+INSERT ... (org_id, actor_membership_id) VALUES (NULL, 2)      -- same foreign membership
+  INSERT 0 1                                                    <-- ACCEPTED
+
+INSERT ... (org_id, actor_membership_id) VALUES (NULL, 999999) -- a membership that exists nowhere
+  INSERT 0 1                                                    <-- ACCEPTED
+```
+
+The FK is correct when the tenant is named and absent when it is not.
+
+## 4. Why `NOT NULL` was rejected
+
+Both tables are on the documented nullable-`org_id` list in `src/common/tenant/README.md`, and both carry the
+matching RLS escape `CASE WHEN org_id IS NULL THEN true`. `audit_logs` uses it for platform events — already
+pinned by `chk_audit_logs_tenant_or_platform`, `(org_id IS NULL) = is_platform_event`. `payroll_statutory_rule_sets`
+uses it for the system-default statutory rule sets seeded by migration `0292`; all 8 rows on a production-shaped
+seed are exactly those, `org_id` NULL and `entity_id` NULL. `NOT NULL` would delete the feature.
+
+Migration `1043` therefore forbids only the combination in which the FK stops enforcing — a row naming a
+tenant-scoped child while claiming to have no tenant:
+
+```sql
+CHECK (actor_membership_id IS NULL OR org_id IS NOT NULL)
+CHECK (entity_id IS NULL OR org_id IS NOT NULL)
+```
+
+In that state the referenced id is not merely unenforceable but *uninterpretable*: a membership id and a payroll
+entity id are only meaningful inside an organisation. So the repair clears the reference rather than dropping the
+row — the audit entry keeps `actor_user_id` and every other column, and nothing readable is lost.
+
+## 5. Proof
+
+| what | result |
+|---|---|
+| `check:migration-discipline` | **exit 0** |
+| `check:migration-rollback` | **exit 0**, 667 migrations scanned |
+| `check:migration-chain` | **exit 0** |
+| journal registration | idx **799**, `when` `1803000010118` (above the 2027-02-19 watermark); 667 entries / 667 `.sql` files; idx unique; **0** `when` inversions |
+| applied through the journal | `scratch_t08d_head` **665 → 667/667** |
+| catalog check (not the file) | both constraints present, `convalidated=true` |
+| behaviour after | `NULL` org + foreign membership → **23514**; platform event with no actor, and tenant event with its own membership → both accepted |
+| repair rows matched at head | `audit_logs` **0 of 0**; `payroll_statutory_rule_sets` **0 of 8** |
+| rollback round trip | **2 → 0 → 2 validated**, every step exit 0 |
+| `check:tenant-relationships` (target at head) | **Actionable 0, exit 0** |
+| `check:set-null-column-lists` (target at head) | **exit 0**, declaration half OK, catalog half OK |
+| `check:drop-column-safety` / `check:restrict-fks` | exit 0 / exit 0 |
+| backend `typecheck` | **exit 0**, 0 errors |
+| focused jest | **exit 0**, 35 suites / 355 tests |
+
+**A gate that is red for a reason that is not mine.** `check:tenant-relationships` with no target override exits
+**1** with 627 actionable single-column FKs. Its own output says why: `Ledger rows on target 573 of 667 journal
+entries` and `TARGET IS MID-BOOTSTRAP — this number is not release evidence`. The default target
+`scratch_boot_a` is 94 migrations behind. Against a database at head the same gate reports **Actionable 0** and
+exits 0. Reported, not "fixed" by moving the target permanently.
+
+## 6. Not done
+
+- The two columns remain nullable. The CHECK makes the FK enforced on every row that carries a reference at all,
+  which is what it was written to do; making `org_id` itself `NOT NULL` would need the global-row feature
+  redesigned and is a product decision, not a migration.
+- No cold bootstrap from zero was run this pass — the journal-driven applier reaching 667/667 on a database at
+  665 is the registration proof, and a 45-minute bootstrap would have held the shared mutex against other agents.
+  Stated as not run rather than implied.

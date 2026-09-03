@@ -359,3 +359,103 @@ Scripts:
 - `src/common/tenant/tenant-context.interceptor.ts` and
   `src/modules/payroll/filings/__tests__/filings-list-pagination.spec.ts` are red
   in the shared tree from other sessions' in-flight edits.
+
+---
+
+# 33c — the write-ahead purge log nobody read (2026-09-03)
+
+## 1. What was wrong
+
+`storage_pending_purge` is the table that records "this object was ours to delete". Two services open rows on
+it, and both do so **before** attempting the delete, on purpose — `organization-purge-adapters.ts` says why in
+its own comment:
+
+> The pending row must exist before its object is deleted, or a crash between the two loses the only record
+> that the object was ever ours to remove.
+
+That is the correct design. It was only half built. Searched across `src/`, `test/`, `scripts/` and
+`migrations/`: **zero** reads of the table. No `SELECT`, no `.from(storagePendingPurge)`, no consumer of any
+kind. Two writers, no reader.
+
+The consequence is not a missing nicety. `attempt_count`, `status='failed'` and `failed_reason` are all written
+and none is ever acted on, so:
+
+- every object whose delete failed during an **organisation purge** stayed in the bucket forever, and
+- every object whose delete failed during an **e-sign document deletion** did too,
+
+with the row that named them sitting in a table nothing looked at. Ticket 33 box 6 claims cancellation, failed
+transforms and GDPR/retention deletion "each clean both the database row and the object, with no orphan". On the
+failure path — the only path this table exists for — that was not true.
+
+## 2. The fix
+
+- `src/modules/storage/storage-pending-purge.service.ts` (new) — data access: `listForRetry` (status `pending`
+  or `failed`, `attempt_count` below a ceiling of 10, oldest first), `markConfirmed`, `markFailed`.
+- `CronStorageSweepService.drainPendingPurge` — runs per organisation inside the existing `forEachOrg` tenant
+  transaction, so the reads reach the pool with the org GUC set rather than dying `42501`.
+
+Two invariants it holds deliberately:
+
+- **The object is deleted before the row is confirmed**, never the other way round. Confirming first would
+  discard the only pointer while the object survived — the same ordering the rest of this ticket relies on.
+- **`deleteFileIfPresent`, not `deleteFile`.** An object already gone means the purge succeeded; retrying it
+  forever is what would keep the row alive and the counter climbing.
+
+A failing row keeps its reason and an incremented attempt count and is retried next sweep, up to the ceiling,
+after which it stays as evidence rather than being retried indefinitely.
+
+Also corrected: `uniq_storage_pending_purge_org_key` is `CREATE UNIQUE INDEX` in migration `0741` and in the
+live catalog, but was declared `index()` rather than `uniqueIndex()` in `src/db/schema/common/storage-pending-purge.ts`.
+Both writers use `onConflictDoUpdate({ target: [orgId, storageKey] })`, which requires that uniqueness — so the
+declaration disagreed with the catalog on a property two call sites depend on.
+
+## 3. Proof
+
+`pnpm exec jest --runInBand --testPathPattern="cron-storage-sweep"` → **exit 0, 12 tests, 5 new**:
+retries and confirms every pending row · scans every active organisation · records the reason and keeps the row
+when the delete fails · never confirms before the object is gone (ordering asserted explicitly) · carries on
+sweeping when the scan itself fails.
+
+**Bite-proved, not asserted.** Removing the single `await this.drainPendingPurge(orgId, result)` call turns
+**4 of the 5** red. The fifth ("carries on when the scan fails") asserts a non-effect and passes vacuously
+without the drain — stated rather than counted as a bite.
+
+Wider: `jest --testPathPattern="src/modules/storage|cron-storage-sweep|migration-integrity|audit"` → **exit 0,
+35 suites / 355 tests**. Backend `typecheck` → **exit 0**.
+
+## 4. How this meets the KB orphan from the other side
+
+The coordinator flagged box 6 as falsely ticked because `kb-page-tree.service.ts::emptyTrash`/`::purgeExpired`
+cascade `kb_page_attachments` rows away without deleting their R2 objects. That is `src/modules/kb`, not this
+territory. It was fixed by another agent during this session — commit `0edadaa0`, verified here: it adds
+`kb-page-attachment-purge.ts` and wires `recordPageAttachmentPurge` → `delete(kbPages)` →
+`attemptPageAttachmentPurge` into **both** paths, in that order. `jest --testPathPattern="kb-page-attachment-purge|kb-page-tree-attachment-purge"`
+→ **exit 0, 2 suites / 12 tests**.
+
+That fix writes into `storage_pending_purge` with purpose `kb:page:purge`, and its docstring says the rows are
+*"read back by the storage sweep"*. **That sentence was false until the drain existed.** The producer and the
+consumer were written independently, in two territories, and the leak closes only because both landed.
+
+## 5. Still owed, and not closed by anything here
+
+Box 7's two operator actions are unchanged and neither can be done from code:
+
+1. `node scripts/backfill-public-object-urls.mjs --url <owner DSN> --apply`, as the **database owner** against
+   the production database — **NOT RUN**, on any database, by anyone.
+2. Removing public access from the R2 buckets named by `R2_BUCKET_NAME` **and** `R2_KB_BUCKET_NAME` in the
+   Cloudflare console — **NOT DONE**. Until it is, every object already at a public r2.dev address stays
+   fetchable by anyone who copied one, whatever the database columns now say. There is no code substitute.
+
+`pnpm check:public-object-urls` → **exit 0** (9 declared references, 0 upload-result `url` fields) and
+`:self-test` → **exit 0**, re-run this session. The code half has not regressed; the infrastructure half is owed.
+
+Exit codes on the backfill, repeated because it is the most misreadable thing in the runbook: **exit 2 means
+"not visible to this role", never "nothing found."** Only exit 0 **with** `UNVERIFIABLE COLUMNS: 0` is evidence
+of a clean database.
+
+## 6. Not done
+
+- The drain retries; it does not **discover**. An object orphaned before its producer was fixed leaves no row,
+  so nothing in the database can find it. Recovering those still needs a bucket-side listing diffed against the
+  key columns — an operator action, recorded as owed, not performed.
+- No e2e or seeded run against a live R2 endpoint. Every proof here is unit-level plus catalog inspection.
