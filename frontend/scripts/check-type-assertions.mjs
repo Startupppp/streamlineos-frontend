@@ -40,7 +40,7 @@
  *                 produce the numbers a ledger update needs.
  */
 
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
@@ -224,6 +224,108 @@ export function findRawJsonCasts(fileName, source) {
   return found;
 }
 
+/**
+ * ---------------------------------------------------------------------------
+ * Rule 4: the plain `as X` cast and the non-null `!` assertion.
+ * ---------------------------------------------------------------------------
+ *
+ * Rules 1-3 cover `as any`, the three suppression directives, `as unknown as`
+ * and the raw-`fetch` JSON cast. Measured at head that is 20 assertions. The
+ * census in `reports/51-assertion-census-and-the-envelope-cast.md` found the
+ * rest, and the rest is the bulk of it: **925 plain `as X` casts and 77
+ * non-null `!` assertions**. Every one is a type assertion in the plain meaning
+ * of shared CLAUDE.md section 6 — "Never force types. No `as X`" — and until
+ * this rule none was under any gate. The ledger was green over 2% of its own
+ * subject.
+ *
+ * This rule does NOT ask for an invariant or a negative test per site; that bar
+ * belongs to rules 2 and 3, whose populations are small enough to justify one
+ * each. What it provides is the property the box needs and did not have: **the
+ * population cannot grow.** A per-file ceiling seeded at the head count, which
+ * fails when a file gains an assertion, when an unledgered file acquires one,
+ * and equally when an entry outlives its site.
+ *
+ * What is counted, stated exactly:
+ *
+ *   counted      `x as T`, the angle-bracket form `<T>x` (0 today, counted so
+ *                it cannot become the escape hatch), and `x!`.
+ *   NOT counted  `x as const`. A const assertion NARROWS a literal to its own
+ *                type; it cannot force one value to be a different one. It is
+ *                the most common `as` in this tree by a wide margin (2,309
+ *                sites) and folding it in would bury the signal under a safe
+ *                idiom. Pinned by self-test (ab).
+ *   NOT counted  `x satisfies T`, which checks rather than asserts.
+ *   NOT counted  the `as unknown as` pair, which rule 2 owns with a written
+ *                invariant each. Pinned by self-test (ac).
+ *   NOT counted  a definite-assignment `let x!: T`, a declaration flag.
+ *
+ * The hole, named rather than left to be discovered: SKIP_FILE excludes every
+ * `*.spec.ts(x)` and `*.test.ts(x)`. Specs are not typechecked at all here
+ * (ts-jest runs `isolatedModules`), so a spec can forge any shape it likes and
+ * nothing in this repository objects. That is deliberate and it is a gap.
+ */
+const CEILING_LEDGER_PATH = fileURLToPath(new URL("./assertion-ceiling-ledger.json", import.meta.url));
+
+/**
+ * A scan that suddenly matches nothing must fail rather than report a clean
+ * tree. SCAN_FLOOR_FILES catches a broken walker; this catches a broken counter
+ * walking a healthy tree.
+ */
+const CEILING_FLOOR_TOTAL = 800;
+
+function loadCeilingLedger() {
+  try {
+    const raw = JSON.parse(readFileSync(CEILING_LEDGER_PATH, "utf8"));
+    return new Map(Object.entries(raw.files ?? {}).map(([f, v]) => [f, { count: v.as + v.nonNull, as: v.as, nonNull: v.nonNull }]));
+  } catch {
+    return null;
+  }
+}
+
+const CEILING_LEDGER = loadCeilingLedger() ?? new Map();
+
+/**
+ * Counts plain assertions with the AST, never a regex. A regex cannot tell
+ * `as const` from `as Config`, cannot tell the two halves of `as unknown as`
+ * apart from two independent casts, and reads `x! + y` and `a !== b` alike.
+ */
+export function countPlainAssertions(fileName, source) {
+  const sf = ts.createSourceFile(
+    fileName, source, ts.ScriptTarget.Latest, true,
+    /\.tsx$/.test(fileName) ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+  );
+  let asX = 0;
+  let nonNull = 0;
+  let asConst = 0;
+
+  const isConstAssertion = (t) =>
+    ts.isTypeReferenceNode(t) && ts.isIdentifier(t.typeName) && t.typeName.escapedText === "const";
+
+  const visit = (node) => {
+    if (ts.isAsExpression(node)) {
+      if (isConstAssertion(node.type)) asConst += 1;
+      else if (node.type.kind === ts.SyntaxKind.UnknownKeyword && node.parent && ts.isAsExpression(node.parent)) {
+        /* the inner half of `x as unknown as T`; rule 2 owns the pair */
+      } else if (ts.isAsExpression(node.expression) && node.expression.type.kind === ts.SyntaxKind.UnknownKeyword) {
+        /* the outer half of the same pair */
+      } else asX += 1;
+    } else if (ts.isTypeAssertionExpression(node)) asX += 1;
+    else if (ts.isNonNullExpression(node)) nonNull += 1;
+    ts.forEachChild(node, visit);
+  };
+  ts.forEachChild(sf, visit);
+  return { asX, nonNull, asConst };
+}
+
+function writeCeilingLedger(map) {
+  const files = {};
+  for (const f of [...map.keys()].sort()) files[f] = { as: map.get(f).as, nonNull: map.get(f).nonNull };
+  writeFileSync(CEILING_LEDGER_PATH, `${JSON.stringify({
+    note: "Rule 4 of check-type-assertions.mjs: a per-file ZERO-GROWTH ceiling on plain `as X` and non-null `!` assertions in application code. Seeded at the head count. It may only ever go DOWN: --update-ledger refuses to raise a number, and the gate fails both when a file gains an assertion and when an entry outlives its site. `as const` is excluded by decision (it narrows, it does not force). Specs are outside this gate entirely — see the rule 4 header.",
+    files,
+  }, null, 2)}\n`);
+}
+
 export function isSkippedDir(name, depth) {
   if (SKIP_DIRS.has(name) || name.startsWith(".next")) return true;
   return depth === 0 && SKIP_ROOT_DIRS.has(name);
@@ -262,8 +364,10 @@ function scan(root) {
   const banned = new Map();
   const doubleCasts = new Map();
   const rawJson = new Map();
+  const plain = new Map();
   const promiseCasts = [];
   let files = 0;
+  let asConstTotal = 0;
 
   for (const file of walk(root)) {
     files += 1;
@@ -285,13 +389,17 @@ function scan(root) {
     const casts = countOutsideComments(source, DOUBLE_CAST);
     if (casts) doubleCasts.set(rel, casts);
 
+    const { asX, nonNull, asConst } = countPlainAssertions(file, source);
+    asConstTotal += asConst;
+    if (asX || nonNull) plain.set(rel, { count: asX + nonNull, as: asX, nonNull });
+
     const jsonCasts = findRawJsonCasts(file, source);
     if (jsonCasts.length) rawJson.set(rel, jsonCasts.length);
     for (const site of jsonCasts)
       if (site.promiseCast) promiseCasts.push(`${rel}:${site.line} as ${site.target}`);
   }
 
-  return { banned, doubleCasts, rawJson, promiseCasts, files };
+  return { banned, doubleCasts, rawJson, plain, asConstTotal, promiseCasts, files };
 }
 
 export function diffLedger(actual, ledger) {
@@ -311,7 +419,29 @@ export function diffLedger(actual, ledger) {
   return { added, grown, shrunk, gone };
 }
 
+/**
+ * Distinct self-test checks that actually executed, keyed by the `(tag)` each
+ * assertion message opens with. A Set rather than a counter because several
+ * checks run once per ledger entry — counting raw calls would make the floor
+ * move with the ledger's size, which is exactly the kind of number that drifts
+ * until it means nothing.
+ */
+const SELF_TEST_CHECKS = new Set();
+
+/**
+ * The self-test's OWN anti-vacuity floor.
+ *
+ * The line below used to print a hard-coded `31 assertions`. A self-test whose
+ * headline number is a string literal reports the same number after someone
+ * deletes half its assertions, which makes it decoration: the gate would still
+ * exit 0 while proving strictly less. The count is now measured and floored, so
+ * removing a check fails the self-test instead of quietly shrinking it.
+ */
+const MIN_SELF_TEST_CHECKS = 43;
+
 function assert(cond, msg) {
+  const tag = /^\(([A-Za-z0-9]+)\)/.exec(msg);
+  SELF_TEST_CHECKS.add(tag ? tag[1] : msg);
   if (!cond) {
     console.error("SELF-TEST FAIL:", msg);
     process.exit(1);
@@ -413,8 +543,45 @@ function runSelfTest() {
       `(ad) ${file}: a raw-fetch invariant MUST say how the site handles the { success, data } envelope — that is the whole defect this rule exists for`);
   }
 
-  console.log("PASS: self-test (31 assertions + a written invariant on all "
-    + `${DOUBLE_CAST_LEDGER.size + RAW_JSON_LEDGER.size} ledger entries)\n`);
+  const plainOf = (src) => countPlainAssertions("probe.ts", src);
+
+  assert(plainOf("const a = b as Config;\n").asX === 1,
+    "(ba) a plain `as X` cast -> counted by rule 4");
+  assert(plainOf("const a = { x: 1 } as const;\n").asX === 0
+    && plainOf("const a = { x: 1 } as const;\n").asConst === 1,
+    "(bb) `as const` -> NOT a type assertion, counted separately and never against the ceiling");
+  assert(plainOf("const a = b as unknown as C;\n").asX === 0,
+    "(bc) `as unknown as` -> owned by rule 2, never double-ledgered into the ceiling");
+  assert(plainOf("const a = b!.c;\n").nonNull === 1,
+    "(bd) a non-null `!` assertion -> counted");
+  assert(plainOf("const a = a !== b;\n").nonNull === 0,
+    "(be) an inequality operator -> not a non-null assertion (why this rule is an AST, not a regex)");
+  assert(plainOf("const a = <Config>b;\n").asX === 1,
+    "(bf) the angle-bracket cast form -> counted, so it cannot become the escape hatch");
+  assert(plainOf("const a = b satisfies Config;\n").asX === 0,
+    "(bg) `satisfies` -> a check, not an assertion, not counted");
+  assert(plainOf("class K { declare x!: string; }\n").nonNull === 0,
+    "(bh) a definite-assignment declaration -> a declaration flag, not an expression assertion");
+  assert(CEILING_LEDGER.size > 0,
+    "(bi) the ceiling ledger loads — rule 4 is unenforced if the JSON is missing, and the gate must not pass without it");
+  for (const [file, entry] of CEILING_LEDGER) {
+    assert(Number.isInteger(entry.as) && Number.isInteger(entry.nonNull) && entry.count === entry.as + entry.nonNull,
+      `(bj) ${file}: every ceiling entry carries a readable as/nonNull split`);
+  }
+
+  if (SELF_TEST_CHECKS.size < MIN_SELF_TEST_CHECKS) {
+    console.error(
+      `\nSELF-TEST FAIL: only ${SELF_TEST_CHECKS.size} distinct check(s) ran, below the floor of `
+      + `${MIN_SELF_TEST_CHECKS}. A self-test that stops asserting must fail loudly, not report a `
+      + `smaller number. Ran: ${[...SELF_TEST_CHECKS].join(", ")}`,
+    );
+    process.exit(1);
+  }
+
+  console.log(`PASS: self-test (${SELF_TEST_CHECKS.size} distinct checks, floor `
+    + `${MIN_SELF_TEST_CHECKS} + a written invariant on all `
+    + `${DOUBLE_CAST_LEDGER.size + RAW_JSON_LEDGER.size} invariant-bearing ledger entries, and a `
+    + `ceiling on all ${CEILING_LEDGER.size} files holding a plain assertion)\n`);
   for (const line of [
     "  (a) a real double cast                        -> counted",
     "  (b) a line comment describing one             -> not counted",
@@ -449,11 +616,21 @@ function runSelfTest() {
     "  (ab) every raw-JSON entry names a seam kind",
     "  (ac) every raw-JSON entry carries a written invariant",
     "  (ad) every raw-JSON invariant states its envelope handling",
+    "  (ba) a plain `as X`                            -> counted (rule 4)",
+    "  (bb) `as const`                                -> excluded by decision",
+    "  (bc) `as unknown as`                           -> rule 2's, not double-ledgered",
+    "  (bd) a non-null `!`                            -> counted",
+    "  (be) an inequality `!==`                       -> not a non-null assertion",
+    "  (bf) the angle-bracket cast `<T>x`             -> counted",
+    "  (bg) `satisfies`                               -> not counted",
+    "  (bh) a definite-assignment `x!: T`             -> not counted",
+    "  (bi) the ceiling ledger loads at all",
+    "  (bj) every ceiling entry has a readable split",
   ]) console.log(line);
 }
 
 function main() {
-  const { banned, doubleCasts, rawJson, promiseCasts, files } = scan(ROOT);
+  const { banned, doubleCasts, rawJson, plain, asConstTotal, promiseCasts, files } = scan(ROOT);
 
   if (files < SCAN_FLOOR_FILES) {
     console.error(`FAIL: scanned only ${files} file(s), below the floor of ${SCAN_FLOOR_FILES}. The scan is broken, not the tree clean.`);
@@ -473,6 +650,32 @@ function main() {
     return;
   }
 
+  const plainTotal = [...plain.values()].reduce((a, v) => a + v.count, 0);
+  const plainAs = [...plain.values()].reduce((a, v) => a + v.as, 0);
+  const plainNonNull = [...plain.values()].reduce((a, v) => a + v.nonNull, 0);
+
+  if (process.argv.includes("--seed-ledger")) {
+    if (CEILING_LEDGER.size) {
+      console.error("REFUSED: assertion-ceiling-ledger.json already exists. Seeding again would erase the ratchet. Use --update-ledger, which can only lower.");
+      process.exit(1);
+    }
+    writeCeilingLedger(plain);
+    console.log(`Seeded ${plain.size} file(s), ${plainTotal} assertion(s).`);
+    return;
+  }
+
+  if (process.argv.includes("--update-ledger")) {
+    const raised = [...plain].filter(([f, v]) => !CEILING_LEDGER.has(f) || v.count > CEILING_LEDGER.get(f).count);
+    if (raised.length) {
+      console.error(`REFUSED: --update-ledger only ever LOWERS. ${raised.length} file(s) would go up, which is the growth this gate exists to stop. Remove the assertion instead:`);
+      for (const [f, v] of raised) console.error(`  ${f}: ledger ${CEILING_LEDGER.get(f)?.count ?? "(absent)"} -> tree ${v.count}`);
+      process.exit(1);
+    }
+    writeCeilingLedger(plain);
+    console.log(`Lowered the ceiling to ${plain.size} file(s), ${plainTotal} assertion(s).`);
+    return;
+  }
+
   const external = [...DOUBLE_CAST_LEDGER.values()].filter((e) => e.seam === "external").reduce((a, e) => a + e.count, 0);
   const narrowMe = [...DOUBLE_CAST_LEDGER.values()].filter((e) => e.seam === "narrow-me").reduce((a, e) => a + e.count, 0);
 
@@ -480,6 +683,8 @@ function main() {
   console.log(`=== \`as unknown as\`: ${total} site(s) in ${doubleCasts.size} file(s) ===`);
   console.log(`=== ledger: ${external} at a proven external seam, ${narrowMe} owed a narrowing ===`);
   console.log(`=== raw \`fetch\` JSON casts: ${rawJsonTotal} site(s) in ${rawJson.size} file(s) ===`);
+  console.log(`=== plain assertions under a zero-growth ceiling: ${plainTotal} (${plainAs} \`as X\` + ${plainNonNull} non-null \`!\`) in ${plain.size} file(s) ===`);
+  console.log(`=== \`as const\` excluded by decision (a const assertion narrows, it does not force): ${asConstTotal} ===`);
 
   let failed = false;
 
@@ -534,6 +739,32 @@ function main() {
     failed = true;
   } else {
     console.log("=== `.json() as Promise<T>` (the public-form defect shape): 0 ===");
+  }
+
+  if (!CEILING_LEDGER.size) {
+    console.error("\nFAIL: assertion-ceiling-ledger.json is missing or unreadable. Rule 4 is unenforced without it; a gate that cannot find its ledger must not pass.");
+    failed = true;
+  } else if (plainTotal < CEILING_FLOOR_TOTAL) {
+    console.error(`\nFAIL: rule 4 counted only ${plainTotal} plain assertion(s), below the floor of ${CEILING_FLOOR_TOTAL}. The counter is broken, not the tree clean.`);
+    failed = true;
+  }
+
+  const ceiling = diffLedger(new Map([...plain].map(([f, v]) => [f, v.count])), CEILING_LEDGER);
+  if (ceiling.added.length) {
+    console.error(`\nFAIL: ${ceiling.added.length} file(s) hold a plain \`as X\` or non-null \`!\` assertion and are not in the ceiling ledger. CLAUDE.md section 6 says never force a type — narrow at the use site, or the assertion does not land:`);
+    for (const { file, count } of ceiling.added) console.error(`  ${file} (${count} assertion(s))`);
+    failed = true;
+  }
+  if (ceiling.grown.length) {
+    console.error(`\nFAIL: ${ceiling.grown.length} file(s) gained a plain assertion. The ceiling does not rise:`);
+    for (const { file, was, now } of ceiling.grown) console.error(`  ${file}: ${was} -> ${now}`);
+    failed = true;
+  }
+  if (ceiling.shrunk.length || ceiling.gone.length) {
+    console.error(`\nFAIL: ${ceiling.shrunk.length + ceiling.gone.length} ceiling entr(ies) are stale — an exception that outlives its site is how the next reader inherits a licence nobody meant to grant. Run \`pnpm check:type-assertions --update-ledger\`, which can only lower:`);
+    for (const { file, was, now } of ceiling.shrunk) console.error(`  ${file}: ledger ${was}, tree ${now} — lower it`);
+    for (const file of ceiling.gone) console.error(`  ${file}: no plain assertion left — delete the entry`);
+    failed = true;
   }
 
   if (failed) process.exit(1);

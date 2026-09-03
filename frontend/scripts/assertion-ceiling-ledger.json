@@ -1,0 +1,2049 @@
+{
+  "note": "Rule 4 of check-type-assertions.mjs: a per-file ZERO-GROWTH ceiling on plain `as X` and non-null `!` assertions in application code. Seeded at the head count. It may only ever go DOWN: --update-ledger refuses to raise a number, and the gate fails both when a file gains an assertion and when an entry outlives its site. `as const` is excluded by decision (it narrows, it does not force). Specs are outside this gate entirely — see the rule 4 header.",
+  "files": {
+    "app/(authenticated)/accounting/opening-balances/page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "app/(authenticated)/build/[projectId]/cycles/[cycleId]/not-found.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "app/(authenticated)/build/[projectId]/layout.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "app/(authenticated)/crm/deals/page.tsx": {
+      "as": 4,
+      "nonNull": 1
+    },
+    "app/(authenticated)/crm/leads/distribute/page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "app/(authenticated)/crm/leads/smart-search/page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "app/(authenticated)/crm/settings/options/page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "app/(authenticated)/inventory/packages/page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "app/(authenticated)/inventory/purchase-orders/page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "app/(authenticated)/inventory/quality/holds/page.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "app/(authenticated)/inventory/quality/inspections/page.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "app/(authenticated)/inventory/reports/expiry/page.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "app/(authenticated)/inventory/sales-orders/page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "app/(authenticated)/inventory/shipments/page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "app/(authenticated)/inventory/stock/transfers/page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "app/(authenticated)/inventory/warehouses/page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "app/(authenticated)/workflows/analytics/page.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "app/(public)/s/[token]/page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "app/(public)/wiki/[shareToken]/page.tsx": {
+      "as": 4,
+      "nonNull": 0
+    },
+    "app/page.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "components/assistant/ask-os-chat-utils.tsx": {
+      "as": 9,
+      "nonNull": 0
+    },
+    "components/automations/ai-node-config-forms.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "components/automations/automation-builder-editor.tsx": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "components/automations/automation-builder-sheet.tsx": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "components/command-palette/hooks/use-keyboard-shortcuts.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "components/editor/editor-image-context-menu.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "components/editor/plate/plate-combobox-elements.tsx": {
+      "as": 8,
+      "nonNull": 4
+    },
+    "components/editor/plate/plate-elements.tsx": {
+      "as": 13,
+      "nonNull": 1
+    },
+    "components/editor/plate/plate-media-elements.tsx": {
+      "as": 6,
+      "nonNull": 0
+    },
+    "components/editor/plate/plate-page-link-picker.tsx": {
+      "as": 2,
+      "nonNull": 1
+    },
+    "components/editor/plate/plate-plugins.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "components/editor/plate/plate-value-convert.ts": {
+      "as": 5,
+      "nonNull": 0
+    },
+    "components/editor/plate/toolbar/align-dropdown.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "components/editor/plate/toolbar/color-buttons.tsx": {
+      "as": 4,
+      "nonNull": 0
+    },
+    "components/editor/plate/toolbar/font-size-input.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "components/editor/plate/toolbar/list-buttons.tsx": {
+      "as": 10,
+      "nonNull": 0
+    },
+    "components/editor/plate/toolbar/media-buttons.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "components/editor/plate/toolbar/turn-into-dropdown.tsx": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "components/editor/tiptap-editor.tsx": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "components/entitlement-gate.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "components/hr/onboarding-wizard.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "components/hr/recruitment/rollout-documents-dialog.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "components/layout/app-sidebar.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "components/layout/command-palette.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "components/layout/header/org-switcher.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "components/layout/mobile/use-mobile-shell-fab-position.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "components/layout/sidebar/sidebar-animated-nav.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "components/layout/sidebar/sidebar-products.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "components/layout/sidebar/sidebar-section.tsx": {
+      "as": 0,
+      "nonNull": 1
+    },
+    "components/ui/calendar-event-combobox.tsx": {
+      "as": 0,
+      "nonNull": 1
+    },
+    "components/ui/data-table.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "components/ui/form.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "components/ui/phone-input.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "components/ui/stat-card.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "components/ui/status-map-badge.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/accounting/ap/purchase-bills-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/accounting/core/dimension-form-dialog.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/accounting/purchases/new-purchase-bill-page.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/accounting/sales/payments-received-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/accounting/settings/accounting-settings-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/accounting/settings/setup-wizard-steps.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/accounting/taxes/tax-payment-form-fields.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/billing/ai-credits-settings-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/billing/billing-settings-page.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/billing/components/plan-tab.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/billing/components/plan-usage-meters.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/billing/invoices-client.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/billing/record-payment-dialog.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/blog/admin/blog-admin-posts.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/build/all-work/all-work-views-menu.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/build/approvals/request-approval-sheet.tsx": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "features/build/backlog/project-backlog-page.tsx": {
+      "as": 0,
+      "nonNull": 4
+    },
+    "features/build/command-center/use-keyboard-shortcuts.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/build/customers/project-customers-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/build/customers/use-customer-display-prefs.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/build/drafts/comment-draft-row.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/build/forms/components/form-submissions-tab.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/build/forms/dynamic-form-renderer.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/build/forms/public-form-api.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/build/inbox/inbox-notification-item.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/build/intake/public-intake-api.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/build/managed-products/managed-product-detail-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/build/meetings/meetings-list-page.tsx": {
+      "as": 1,
+      "nonNull": 2
+    },
+    "features/build/members/add-member-dialog.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/build/members/display-props.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/build/my-work/my-work-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/build/pm-workspaces/pm-workspace-members-sheet.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/build/project-list/display-prefs-popover.tsx": {
+      "as": 4,
+      "nonNull": 0
+    },
+    "features/build/project-list/projects-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/build/project-list/use-display-prefs.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/build/qa/test-run-sheet.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/build/settings/custom-fields-settings.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/build/settings/project-settings-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/build/shared/filter-category-submenu.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/build/shared/filter-flat-search.tsx": {
+      "as": 4,
+      "nonNull": 0
+    },
+    "features/build/shared/filter-option-leading.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/build/teams/team-home-page.tsx": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "features/build/ticket-details/activity-feed.tsx": {
+      "as": 0,
+      "nonNull": 1
+    },
+    "features/build/ticket-details/ticket-time-tracker.tsx": {
+      "as": 0,
+      "nonNull": 1
+    },
+    "features/build/ticket-details/use-ticket-detail.ts": {
+      "as": 1,
+      "nonNull": 8
+    },
+    "features/build/views/kanban-board-utils.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/build/views/list-view-shared.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/build/views/use-board-url-state.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/build/views/workload-member-row.tsx": {
+      "as": 0,
+      "nonNull": 1
+    },
+    "features/build/views/workload-view.tsx": {
+      "as": 4,
+      "nonNull": 0
+    },
+    "features/build/whiteboard/scene-utils.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/calendar/big-calendar-wrapper.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/calendar/calendar-toolbar.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/calendar/event-recurrence-editor.tsx": {
+      "as": 4,
+      "nonNull": 0
+    },
+    "features/calendar/event-recurrence-schema.ts": {
+      "as": 4,
+      "nonNull": 0
+    },
+    "features/calendar/hr-event-detail-sheet.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/calendar/use-event-prop-getter.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/calendar/use-hr-calendar-events.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/candidates/candidate-profile-card.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/candidates/candidate-sheets.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/candidates/messages-tab.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/chat/channel-item-menu.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/chat/chat-bubble.tsx": {
+      "as": 2,
+      "nonNull": 1
+    },
+    "features/chat/huddle-chat-panel.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/chat/use-huddle-events.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/chat/use-message-panel-data.ts": {
+      "as": 2,
+      "nonNull": 1
+    },
+    "features/chat/use-network-quality.ts": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "features/chat/webrtc-huddle.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/crm/analytics/period-selector.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/crm/autonomy/autonomy-review-feed.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/crm/campaigns/campaign-detail-page.tsx": {
+      "as": 2,
+      "nonNull": 1
+    },
+    "features/crm/campaigns/campaign-sheet.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/crm/contacts/detail/contact-stats-bar.tsx": {
+      "as": 0,
+      "nonNull": 2
+    },
+    "features/crm/deals/deal-forecast-chart.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/crm/deals/deal-forecast-widget.tsx": {
+      "as": 0,
+      "nonNull": 4
+    },
+    "features/crm/deals/detail/deal-sidebar-cards.tsx": {
+      "as": 0,
+      "nonNull": 1
+    },
+    "features/crm/import/bulk-import-entities.ts": {
+      "as": 0,
+      "nonNull": 1
+    },
+    "features/crm/import/import-file.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/crm/import/import-page.tsx": {
+      "as": 0,
+      "nonNull": 1
+    },
+    "features/crm/import/planned-entities.ts": {
+      "as": 0,
+      "nonNull": 1
+    },
+    "features/crm/import/planned-import-section.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/crm/leads/ai-email-dialog.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/crm/leads/detail/lead-activity-timeline.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/crm/leads/detail/lead-detail-header.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/crm/leads/detail/lead-qualification-panel.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/crm/leads/detail/lead-sidebar.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/crm/leads/kanban-card.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/crm/leads/lead-detail-sheet.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/crm/leads/lead-export-dialog.tsx": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "features/crm/leads/lead-followup-tab.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/crm/reports/components/conversion-funnel-card.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/crm/reports/components/period-filter.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/crm/settings/automations/builder/automation-builder.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/crm/settings/automations/builder/run-history-drawer.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/crm/settings/pipelines/stage-card.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/crm/shared/ai-assistant-panel.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/crm/shared/ai-panel-extra-tabs.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/crm/shared/customer-360-section.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/crm/shared/metadata/crm-color-tokens.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/crm/tasks/task-type-icon.tsx": {
+      "as": 0,
+      "nonNull": 1
+    },
+    "features/dashboard/guided-tour-overlay.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/dashboard/hr-widgets.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/directory/workers/worker-form-dialog.tsx": {
+      "as": 0,
+      "nonNull": 1
+    },
+    "features/directory/workers/workers-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/employee-self-service/components/my-recruitment-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/feedbucket/components/feedbucket-submission-detail.tsx": {
+      "as": 4,
+      "nonNull": 0
+    },
+    "features/help-centre/components/kb-new-article-dialog.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/analytics/analytics-page-client.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/hr/announcements/announcement-form-sheet.tsx": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "features/hr/assets/asset-columns.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/attendance/attendance-email-dialog.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/attendance/team-attendance-card.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/automations/automation-test-dialog.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/automations/automation-upsert-sheet.tsx": {
+      "as": 6,
+      "nonNull": 0
+    },
+    "features/hr/background-verification/edit-verification-sheet.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/hr/benefits/benefits-claims-tab.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/benefits/dependents-manager.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/benefits/plan-upsert-sheet.tsx": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "features/hr/biometric/add-device-sheet.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/hr/cases/case-detail-sheet.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/document-types/document-types-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/documents/components/upload-document-dialog.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/documents/documents-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/documents/edit-document-sheet.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/documents/template-editor.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/employees/detail/employee-details-view.tsx": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "features/hr/employees/detail/overview-tab.tsx": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "features/hr/employees/employees-filters.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/employees/employees-list-page.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/hr/engagement/campaigns-tab.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/enterprise/ops/emergency/emergency-event-detail.tsx": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "features/hr/enterprise/ops/identity/template-sheet.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/enterprise/ops/simulator/payroll-simulator.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/enterprise/ops/simulator/simulation-history.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/expenses/expense-filters.tsx": {
+      "as": 7,
+      "nonNull": 0
+    },
+    "features/hr/expenses/expenses-page.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/hr/forms/components/field-config-panel.tsx": {
+      "as": 2,
+      "nonNull": 2
+    },
+    "features/hr/forms/components/form-builder.tsx": {
+      "as": 0,
+      "nonNull": 2
+    },
+    "features/hr/forms/components/form-renderer.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/forms/components/hr-form-builder-content.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/forms/components/submissions-data-table.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/forms/lib/field-type-meta.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/governance/components/labor-tabs.tsx": {
+      "as": 1,
+      "nonNull": 2
+    },
+    "features/hr/governance/components/legal-hold-sheet.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/governance/components/positions-table.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/hr/governance/components/retention-page-content.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/helpdesk/create-ticket-dialog.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/helpdesk/my-tickets-tab.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/helpdesk/queue-tab.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/hr/helpdesk/ticket-detail-sheet.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/hr/holidays/holidays-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/import-export/components/import-wizard-sheet.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/hr/leaves/components/leave-approvals.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/leaves/components/leave-balance-donut.tsx": {
+      "as": 0,
+      "nonNull": 1
+    },
+    "features/hr/leaves/components/leave-status-badge.tsx": {
+      "as": 0,
+      "nonNull": 3
+    },
+    "features/hr/leaves/components/leaves-wfh-content.tsx": {
+      "as": 7,
+      "nonNull": 0
+    },
+    "features/hr/leaves/components/wfh-tab-content.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/onboarding/bulk-onboard-template.ts": {
+      "as": 4,
+      "nonNull": 0
+    },
+    "features/hr/onboarding/onboarding-list-page.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/hr/org/org-hub-client.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/hr/performance/cycles-tab.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/performance/pip-tab.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/policies/policies-page.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/hr/policies/policy-preview-dialog.tsx": {
+      "as": 1,
+      "nonNull": 1
+    },
+    "features/hr/policies/policy-rules-fields.tsx": {
+      "as": 5,
+      "nonNull": 0
+    },
+    "features/hr/policies/policy-scopes-editor.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/policies/policy-upsert-sheet.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/hr/policies/policy-versions-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/candidate-detail/calibration-tab.tsx": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/candidate-detail/documents-tab.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/candidate-detail/offer-card.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/candidate-detail/reference-checks-tab.tsx": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/candidate-detail/vault-bgv-tracker.tsx": {
+      "as": 1,
+      "nonNull": 1
+    },
+    "features/hr/recruitment/candidate-detail/vault-upload-area.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/candidates-list/candidate-card.tsx": {
+      "as": 1,
+      "nonNull": 1
+    },
+    "features/hr/recruitment/candidates-list/duplicate-resolution-dialog.tsx": {
+      "as": 0,
+      "nonNull": 1
+    },
+    "features/hr/recruitment/candidates/bulk-import-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/candidates/candidates-page.tsx": {
+      "as": 4,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/components/automations-client.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/email-sequences/email-sequences-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/hiring-flows/round-form-sheet.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/inbox/recruitment-inbox-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/interview-feedback-form.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/interviews/interview-form-sheet.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/jobs-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/jobs/create-job-form/hiring-pipeline-sections.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/jobs/create-job-form/index.tsx": {
+      "as": 3,
+      "nonNull": 2
+    },
+    "features/hr/recruitment/jobs/create-job-form/job-posting-preview.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/jobs/create-job-form/parse-job.ts": {
+      "as": 5,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/kanban/candidate-sheet.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/pipeline-kanban.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/question-bank/question-form-body.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/question-bank/question-form-dialog.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/referrals/invite-referrers-sheet.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/reports-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/reports/components/schedule-report-sheet.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/recruitment/vendors/vendor-sheet.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/hr/safety/safety-page-content.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/settings/hr-integrations/webhook-upsert-sheet.tsx": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "features/hr/shared/hr-ui.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/shifts/shift-form-sheet.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/hr/templates/checklist-editor.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/templates/review-editor.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/templates/template-upsert-sheet.tsx": {
+      "as": 13,
+      "nonNull": 0
+    },
+    "features/hr/templates/templates-settings-page.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/hr/termination/termination-list.tsx": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "features/hr/termination/termination-page.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/hr/work-logs/work-logs-page.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/hr/workflows/workflow-simulate-dialog.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/hr/workflows/workflows-settings-page.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/inbox/inbox-item-card.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/inventory/components/channels/channel-publications-panel.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/inventory/components/order-line-table.tsx": {
+      "as": 4,
+      "nonNull": 0
+    },
+    "features/inventory/components/planning/forecasting-client.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/inventory/components/quality/inspection-detail-sheet.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/inventory/components/quality/inspection-line-row.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/inventory/components/receive-goods-sheet.tsx": {
+      "as": 0,
+      "nonNull": 1
+    },
+    "features/inventory/components/stock-movements-columns.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/inventory/components/stock/reservations-panel.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/inventory/components/tools/import-client.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/inventory/components/tools/import-preview-step.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/inventory/components/tools/inventory-settings-client.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/inventory/components/tools/inventory-settings-form.tsx": {
+      "as": 4,
+      "nonNull": 0
+    },
+    "features/inventory/components/tools/webhook-create-sheet.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/landing/components/landing-apps.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/landing/contact-form.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/mail/mail-draft-storage.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/notifications/admin/notification-policy-state.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/notifications/components/broadcast-editor.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/notifications/components/provider-editor.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/notifications/components/template-approval-dialog.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/notifications/components/template-editor.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/notifications/notification-bell.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/notifications/notification-card.tsx": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "features/notifications/notification-detail-drawer.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/notifications/notification-filter-bar.tsx": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "features/notifications/preferences-page.tsx": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "features/org-setup/components/goal-chip.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/org-setup/lib/preview-mock-content.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/party/parties/parties-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/party/parties/party-form-dialog.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/party/subject-types/subject-type-form-sheet.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/party/subject-types/subject-type-schema.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/party/subjects/subject-detail-sheet.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/party/subjects/subjects-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/payroll/bonuses/bonus-status-badge.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/payroll/components/component-form-sheet.tsx": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "features/payroll/components/components-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/payroll/ess/components/ess-tax-section.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/payroll/inputs/inputs-column-defs.tsx": {
+      "as": 13,
+      "nonNull": 0
+    },
+    "features/payroll/loans/loan-adjustment-dialog.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/payroll/payout/bank-transfers/generate-payout-dialog.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/payroll/payslips/payslips-content.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/payroll/runs/breakdown-sheet.tsx": {
+      "as": 0,
+      "nonNull": 1
+    },
+    "features/payroll/runs/exceptions-tab.tsx": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "features/payroll/runs/runs-page-content.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/payroll/runs/salary-profile-sheet.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/payroll/settings/entities-section.tsx": {
+      "as": 0,
+      "nonNull": 1
+    },
+    "features/payroll/settings/fx-rates-section.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/payroll/setup/components/template-preview-sheet.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/payroll/setup/steps/step-review.tsx": {
+      "as": 0,
+      "nonNull": 1
+    },
+    "features/payroll/setup/steps/step-toggles.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/portal-access/client-access-page.tsx": {
+      "as": 0,
+      "nonNull": 1
+    },
+    "features/renderer/density-toggle.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/settings/audit-log/audit-log-constants.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/settings/delegations/delegations-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/settings/organization/hierarchy/hierarchy-archive-dialog.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/settings/organization/org-localization-section.tsx": {
+      "as": 5,
+      "nonNull": 0
+    },
+    "features/settings/organization/organization-settings-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/settings/roles/roles-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/settings/settings-profile.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/sign/builder/add-recipient-dialog.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/sign/public/public-field-overlay.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/sign/reports/reports-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/sign/templates/create-envelope-from-template-dialog.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/support/inbox/create-ticket-dialog.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/support/inbox/support-inbox-page.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/support/inbox/ticket-detail-header.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/support/inbox/ticket-detail-relations.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/support/inbox/ticket-detail-timeline.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/support/inbox/ticket-external-links-section.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/support/inbox/ticket-presence.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/support/inbox/ticket-reply-composer.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/support/inbox/translate-draft-section.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/support/settings/audit-log-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/support/settings/channels-page.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/surveys/builder/questions/logic-rules-section.tsx": {
+      "as": 7,
+      "nonNull": 0
+    },
+    "features/surveys/builder/questions/question-editor-sheet.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/surveys/builder/questions/question-type-settings.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/surveys/builder/tabs/assessment-scoring-card.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/surveys/builder/tabs/automations-tab.tsx": {
+      "as": 4,
+      "nonNull": 0
+    },
+    "features/surveys/builder/tabs/collectors-card.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/surveys/builder/tabs/messages-tab.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/surveys/list/survey-list-filters.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/surveys/participants/survey-participants-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/surveys/respondent/matrix-ranking-input.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/surveys/respondent/runtime-flow.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/surveys/respondent/simple-question-input.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/surveys/results/question-analytics-card.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/surveys/shared/question-type-meta.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/timesheets/billing/billing-export-dialog.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/timesheets/exceptions/exceptions-view.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/timesheets/my-time/week-grid.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/timesheets/payroll/payroll-export-dialog.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/timesheets/payroll/payroll-filters.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/timesheets/payroll/payroll-mapping-sheet.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/timesheets/settings/settings-view.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/users/user-access-links-section.tsx": {
+      "as": 10,
+      "nonNull": 0
+    },
+    "features/users/user-import-dialog.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/users/user-invitations-panel.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/users/users-page.tsx": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "features/wiki/components/import-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/wiki/components/kb-conversation-list.tsx": {
+      "as": 0,
+      "nonNull": 1
+    },
+    "features/wiki/components/page-history-sheet.tsx": {
+      "as": 0,
+      "nonNull": 1
+    },
+    "features/wiki/components/page-metadata-sheet.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/wiki/components/page-record-links.tsx": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "features/wiki/components/page-share-popover.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/wiki/components/public-page-content.tsx": {
+      "as": 7,
+      "nonNull": 0
+    },
+    "features/wiki/components/reviews-page.tsx": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "features/wiki/components/space-detail-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/wiki/components/space-sheet.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/wiki/components/templates-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/wiki/lib/export-page.ts": {
+      "as": 4,
+      "nonNull": 0
+    },
+    "features/wiki/lib/version-diff.ts": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "features/workflows/builder/workflow-node-palette.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "features/workflows/list/workflows-list-page.tsx": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "feedbucket-widget/src/api.ts": {
+      "as": 9,
+      "nonNull": 0
+    },
+    "feedbucket-widget/src/network-capture.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "feedbucket-widget/src/ui-drag.ts": {
+      "as": 4,
+      "nonNull": 0
+    },
+    "hooks/api/access/org-modules.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/accounting/ar-collections.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/ai-text-stream.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/api-tokens.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/audit-log.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/auth.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/blog.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/build/all-work.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/build/customers.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/build/projects.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/build/ticket-queries.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/build/workspace-members.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/chat-ai-assistant.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/chat-core-read.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/chat-entities.ts": {
+      "as": 0,
+      "nonNull": 2
+    },
+    "hooks/api/chat-notifications.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/chat-personal-a.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/chat-personal-b.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/chat-search.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/crm/activity-timeline.ts": {
+      "as": 4,
+      "nonNull": 0
+    },
+    "hooks/api/crm/autonomy.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/crm/clients.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/crm/contacts.ts": {
+      "as": 4,
+      "nonNull": 0
+    },
+    "hooks/api/crm/crm-activities.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/crm/customer360.ts": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "hooks/api/crm/deals.ts": {
+      "as": 7,
+      "nonNull": 0
+    },
+    "hooks/api/crm/metadata.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/crm/organizations.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/crm/quotes.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/crm/settings/email-templates.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/crm/settings/sla.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/entitlements-schema.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/feedbucket/use-feedbucket-submissions.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/hr/attendance.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/hr/benefits.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/hr/cases.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/hr/document-templates.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/hr/employees.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/hr/engagement.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/hr/enterprise-ops-accommodations.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/hr/enterprise-ops-emergency.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/hr/enterprise-ops-event-stream.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/hr/enterprise-ops-identity.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/hr/enterprise-ops-simulator.ts": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "hooks/api/hr/global.ts": {
+      "as": 8,
+      "nonNull": 0
+    },
+    "hooks/api/hr/goals.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/hr/helpdesk.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/hr/hr-templates.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/hr/hr-webhooks.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/hr/leaves.ts": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "hooks/api/hr/overtime.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/hr/performance.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/hr/policies.ts": {
+      "as": 0,
+      "nonNull": 2
+    },
+    "hooks/api/hr/recruitment/candidates.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/hr/recruitment/jobs.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/hr/recruitment/list-response.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/hr/settings-hub.ts": {
+      "as": 0,
+      "nonNull": 2
+    },
+    "hooks/api/hr/succession.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/inbox.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/inventory/reservations.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/inventory/transfers.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/invoice.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/kb/chat-history.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/kb/pages.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/kb/research-briefs.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/leads.ts": {
+      "as": 7,
+      "nonNull": 0
+    },
+    "hooks/api/mail.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/module-access/catalog.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/module-access/groups.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/module-access/members.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/module-access/types.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/notifications-inbox.ts": {
+      "as": 6,
+      "nonNull": 0
+    },
+    "hooks/api/payroll/components.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/payroll/employees.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/payroll/journal-batches.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/payroll/payroll-inputs.ts": {
+      "as": 5,
+      "nonNull": 0
+    },
+    "hooks/api/payroll/reports.ts": {
+      "as": 8,
+      "nonNull": 0
+    },
+    "hooks/api/payroll/run-employees.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/payroll/run-exceptions.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/payroll/run-inputs.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/payroll/runs.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/payroll/tax-admin.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/payroll/templates.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/sign/public.ts": {
+      "as": 5,
+      "nonNull": 0
+    },
+    "hooks/api/support.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/support/knowledge-gaps.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/support/realtime.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/surveys/analytics.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/surveys/assessment.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/surveys/forms.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/surveys/participants.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/tasks.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/timesheets-core/approvals.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/timesheets-core/audit.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/timesheets-core/exceptions.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/timesheets/payroll.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/users/audit-and-export.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/users/invitations.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/users/membership.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/users/queries.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "hooks/api/workflows-definitions.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/api/workflows-executions.ts": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "hooks/common/use-leads-filters.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "hooks/common/use-push-subscription.ts": {
+      "as": 4,
+      "nonNull": 0
+    },
+    "lib/api-client.ts": {
+      "as": 3,
+      "nonNull": 0
+    },
+    "lib/api-envelope.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "lib/auth-session.ts": {
+      "as": 6,
+      "nonNull": 0
+    },
+    "lib/auth.ts": {
+      "as": 32,
+      "nonNull": 0
+    },
+    "lib/billing/use-feature.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "lib/csv-parse.ts": {
+      "as": 0,
+      "nonNull": 2
+    },
+    "lib/home/home-sections.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "lib/location/personal-info-validation.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "lib/observability/correlation.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "lib/observability/error-reporter.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "lib/observability/global-handlers.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "lib/observability/redact.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "lib/portal-api-client.ts": {
+      "as": 6,
+      "nonNull": 0
+    },
+    "lib/pricing.ts": {
+      "as": 0,
+      "nonNull": 3
+    },
+    "lib/rbac/require-permission.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "lib/renderer/layout-adjustment.ts": {
+      "as": 0,
+      "nonNull": 1
+    },
+    "lib/renderer/layout-schema.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "lib/theme-constants.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "next.config.ts": {
+      "as": 0,
+      "nonNull": 1
+    },
+    "test-utils/aria-semantics-analysis.ts": {
+      "as": 6,
+      "nonNull": 0
+    },
+    "test-utils/keyboard-reachability-analysis.ts": {
+      "as": 2,
+      "nonNull": 0
+    },
+    "test-utils/permission-catalog.ts": {
+      "as": 1,
+      "nonNull": 0
+    },
+    "test-utils/surface-state-analysis.ts": {
+      "as": 3,
+      "nonNull": 0
+    }
+  }
+}
