@@ -1,5 +1,4 @@
 import { z } from "zod";
-import type { ResponseContract } from "@/lib/api-envelope";
 
 /**
  * Response contracts for the chat reads that carry a PERSON.
@@ -235,16 +234,6 @@ export type ChatChannelWire = z.infer<typeof chatChannelContract>;
 export type ChatChannelMemberWire = z.infer<typeof chatChannelMemberContract>;
 export type ChatPublicChannelWire = z.infer<typeof chatPublicChannelContract>;
 export type ChatHuddleWire = z.infer<typeof chatHuddleContract>;
-
-/**
- * Named so the compiler, rather than a reviewer, keeps the contract and the
- * declared type in step. `ResponseContract<T>` is `ZodType<T>`, so a key the
- * contract stops emitting fails to compile here instead of failing at runtime in
- * front of a user.
- */
-export const chatChannelMemberListContract: ResponseContract<
-  ChatChannelMemberWire[]
-> = z.array(chatChannelMemberContract);
 
 /**
  * The message timeline — the route behind the worst of the seven defects.

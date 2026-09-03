@@ -67,23 +67,21 @@ export function selectValuePlaceholderName(
   children: React.ReactNode,
 ): string | undefined {
   let found: string | undefined;
-  const walk = (nodes: React.ReactNode, depth: number) => {
+  const walk = (nodes: unknown, depth: number) => {
     if (found !== undefined || depth > 4) return;
-    React.Children.forEach(nodes, (child) => {
-      if (found !== undefined || !React.isValidElement(child)) return;
-      const childProps = child.props as {
-        placeholder?: unknown;
-        children?: React.ReactNode;
-      };
+    React.Children.forEach(nodes, (child: unknown) => {
+      if (found !== undefined || child === null || child === undefined) return;
+      if (!React.isValidElement(child)) return;
+      const childProps = child.props;
+      if (typeof childProps !== "object" || childProps === null) return;
       if (child.type === SelectValue || child.type === SelectPrimitive.Value) {
-        if (
-          typeof childProps.placeholder === "string" &&
-          childProps.placeholder.trim()
-        )
-          found = childProps.placeholder.trim();
+        const placeholder =
+          "placeholder" in childProps ? childProps.placeholder : undefined;
+        if (typeof placeholder === "string" && placeholder.trim())
+          found = placeholder.trim();
         return;
       }
-      walk(childProps.children, depth + 1);
+      if ("children" in childProps) walk(childProps.children, depth + 1);
     });
   };
   walk(children, 0);

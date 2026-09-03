@@ -101,7 +101,7 @@ function elementBody(source: string, from: number, control: string): string {
 
 export function findUnnamedControls(source: string): ControlNameFinding[] {
   const labelTargets = new Set<string>(
-    [...source.matchAll(HTML_FOR)].map((match) => normalize(match[1] as string)),
+    [...source.matchAll(HTML_FOR)].map((match) => normalize(match[1])),
   );
   const findings: ControlNameFinding[] = [];
 
@@ -113,7 +113,7 @@ export function findUnnamedControls(source: string): ControlNameFinding[] {
     if (SPREAD.test(site.attributes)) continue;
 
     const id = site.attributes.match(ID_ATTRIBUTE);
-    if (id && labelTargets.has(normalize(id[1] as string))) continue;
+    if (id && labelTargets.has(normalize(id[1]))) continue;
 
     const before = source.slice(Math.max(0, site.index - 300), site.index);
     if (FORM_CONTROL_OPEN.test(before)) continue;

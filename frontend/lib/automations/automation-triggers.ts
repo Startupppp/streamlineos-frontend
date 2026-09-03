@@ -134,10 +134,6 @@ export const AUTOMATION_TRIGGER_MODULE: Record<AutomationTrigger, TriggerModule>
   "sign.bulk_send.completed": "sign",
 };
 
-export function getModuleForTrigger(trigger: AutomationTrigger): TriggerModule {
-  return AUTOMATION_TRIGGER_MODULE[trigger];
-}
-
 export function automationTriggersForModule(
   owner: TriggerModule,
 ): readonly AutomationTrigger[] {
