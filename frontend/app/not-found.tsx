@@ -11,7 +11,10 @@ import { useMotionVariants } from "@/lib/motion-variants";
 export default function GlobalNotFound() {
   const { staggerContainer, fadeUp } = useMotionVariants();
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center bg-background px-6">
+    <main
+      aria-label="Main content"
+      className="min-h-dvh flex flex-col items-center justify-center bg-background px-6"
+    >
       <motion.div
         className="flex flex-col items-center text-center"
         variants={staggerContainer}
@@ -30,9 +33,9 @@ export default function GlobalNotFound() {
                 className="rounded"
               />
             </div>
-            <h1 className="text-xl font-bold font-serif text-foreground">
+            <span className="text-xl font-bold font-serif text-foreground">
               StreamlineOS
-            </h1>
+            </span>
           </Link>
         </motion.div>
 
@@ -41,9 +44,9 @@ export default function GlobalNotFound() {
         </motion.div>
 
         <motion.div variants={fadeUp} className="max-w-md space-y-3">
-          <h2 className="text-4xl font-bold text-foreground tracking-tight">
+          <h1 className="text-4xl font-bold text-foreground tracking-tight">
             Page Not Found
-          </h2>
+          </h1>
           <p className="text-muted-foreground text-base leading-relaxed">
             The page you are looking for might have been removed, had its name
             changed, or is temporarily unavailable.
@@ -92,6 +95,6 @@ export default function GlobalNotFound() {
           </Link>
         </motion.div>
       </motion.div>
-    </div>
+    </main>
   );
 }

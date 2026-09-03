@@ -3,6 +3,10 @@ import { headers } from "next/headers";
 import { isApiError } from "@/lib/api-client";
 import { serverGet } from "@/lib/server-fetch";
 import { withPmWorkspacePath } from "@/lib/build/pm-workspace-path";
+import {
+  hasWorkspaceMirror,
+  projectSubPath,
+} from "../workspaces/mirrored-project-routes";
 import type { ProjectWithDetails } from "@/types/projects";
 import { AccessDeniedView } from "@/features/build/project-detail/access-denied-view";
 import { BackendUnavailableView } from "@/features/build/project-detail/backend-unavailable-view";
@@ -59,7 +63,9 @@ export default async function ProjectLayout({
     const headerList = await headers();
     const pathname = headerList.get("x-pathname") ?? `/build/${projectId}`;
     const search = headerList.get("x-search") ?? "";
-    redirect(withPmWorkspacePath(pathname, search, project.pmWorkspaceId));
+    const subPath = projectSubPath(pathname, projectId);
+    if (subPath !== null && hasWorkspaceMirror(subPath))
+      redirect(withPmWorkspacePath(pathname, search, project.pmWorkspaceId));
   }
 
   return (
