@@ -23,7 +23,7 @@ function ChatUserRow({
   renderUser,
 }: RowComponentProps<ChatUserRowData>) {
   const user = users[index];
-  if (!user) return <div style={style} />;
+  if (!user) return <div style={style} {...ariaAttributes} />;
   return (
     <div style={style} {...ariaAttributes}>
       {renderUser(user)}

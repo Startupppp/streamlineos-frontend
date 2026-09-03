@@ -67,7 +67,7 @@ function NotificationVirtualRow({
 }: RowComponentProps<NotificationVirtualRowData>) {
   if (hasNextPage && index === items.length) {
     return (
-      <div style={style} className="flex items-center justify-center">
+      <div style={style} {...ariaAttributes} className="flex items-center justify-center">
         <LoadingButton
           variant="outline"
           size="sm"
@@ -81,7 +81,7 @@ function NotificationVirtualRow({
   }
 
   const n = items[index];
-  if (!n) return <div style={style} />;
+  if (!n) return <div style={style} {...ariaAttributes} />;
 
   return (
     <div style={style} {...ariaAttributes} className="border-b border-border">

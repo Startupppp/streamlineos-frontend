@@ -66,7 +66,7 @@ function InboxVirtualRow({
 }: RowComponentProps<InboxVirtualRowData>) {
   if (hasNextPage && index === items.length) {
     return (
-      <div style={style} className="flex items-center justify-center">
+      <div style={style} {...ariaAttributes} className="flex items-center justify-center">
         <Button
           variant="outline"
           size="sm"
@@ -84,7 +84,7 @@ function InboxVirtualRow({
   }
 
   const item = items[index];
-  if (!item) return <div style={style} />;
+  if (!item) return <div style={style} {...ariaAttributes} />;
 
   return (
     <div style={{ ...style, paddingBottom: 8 }} {...ariaAttributes}>

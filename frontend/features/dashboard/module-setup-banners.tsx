@@ -136,7 +136,11 @@ function ModuleSetupBanner({ checklist }: { checklist: ModuleChecklist }) {
             <p className="text-sm font-semibold text-foreground">{label}</p>
             <span className="text-xs text-muted-foreground tabular-nums">{checklist.progress}%</span>
           </div>
-          <Progress value={checklist.progress} className="h-1.5" />
+          <Progress
+            value={checklist.progress}
+            aria-label={`${label} setup progress`}
+            className="h-1.5"
+          />
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <button

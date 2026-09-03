@@ -67,11 +67,11 @@ function PanelVirtualRow({
   onSelectEvent,
 }: RowComponentProps<PanelRowData>) {
   const row = rows[index];
-  if (!row) return <div style={style} />;
+  if (!row) return <div style={style} {...ariaAttributes} />;
 
   if (row.type === "header") {
     return (
-      <div style={style} className="flex items-end px-4 pb-1">
+      <div style={style} {...ariaAttributes} className="flex items-end px-4 pb-1">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {format(new Date(row.dateKey), "EEEE, MMMM d, yyyy")}
         </h3>

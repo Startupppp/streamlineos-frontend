@@ -79,13 +79,13 @@ function MailVirtualRow({
   onLoadMore,
 }: RowComponentProps<MailVirtualRowData>) {
   const item = items[index];
-  if (!item) return <div style={style} />;
+  if (!item) return <div style={style} {...ariaAttributes} />;
 
   if (item.kind === "header") {
     return (
       <div
         style={style}
-        role="presentation"
+        {...ariaAttributes}
         className="flex items-center justify-between gap-2 px-3 bg-background/90 backdrop-blur-sm border-b border-border/30"
       >
         <span className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
@@ -100,7 +100,7 @@ function MailVirtualRow({
 
   if (item.kind === "loadmore") {
     return (
-      <div style={style} className="flex justify-center items-center">
+      <div style={style} {...ariaAttributes} className="flex justify-center items-center">
         <Button
           variant="ghost"
           size="sm"

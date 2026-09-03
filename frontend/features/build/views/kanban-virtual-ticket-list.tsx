@@ -99,7 +99,7 @@ function KanbanVirtualRow({
   );
 
   if (!ticket) {
-    return <div style={style} />;
+    return <div style={style} {...ariaAttributes} />;
   }
 
   return (

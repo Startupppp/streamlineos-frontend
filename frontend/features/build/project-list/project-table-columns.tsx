@@ -362,7 +362,11 @@ export function useProjectTableColumns({
             p.progress.total > 0 ? p.progress.percentage : 0;
           return p.progress.total > 0 ? (
             <div className="flex items-center gap-2">
-              <Progress value={progressValue} className="h-1 min-w-0 flex-1" />
+              <Progress
+                value={progressValue}
+                aria-label={`${p.name} progress`}
+                className="h-1 min-w-0 flex-1"
+              />
               <span className="w-7 shrink-0 text-right text-micro tabular-nums text-muted-foreground">
                 {Math.round(progressValue)}%
               </span>
