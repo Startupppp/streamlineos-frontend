@@ -17,7 +17,6 @@ import { Loader2, CheckCircle2, Send } from "lucide-react";
 import { queryKeys } from "@/lib/query-keys";
 import {
   type FormField,
-  buildFieldSchema,
   buildDynamicSchema,
 } from "@/features/build/forms/form-submission-schema";
 import {
