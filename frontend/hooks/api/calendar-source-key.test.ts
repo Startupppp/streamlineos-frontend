@@ -25,7 +25,7 @@ interface CapturedOptions {
   enabled: boolean;
 }
 
-function captureEventsOptions(sources: unknown): CapturedOptions {
+function useCaptureEventsOptions(sources: unknown): CapturedOptions {
   mockQuery.mockImplementation((opts: unknown) => {
     const key = (opts as { queryKey: readonly unknown[] }).queryKey;
     if (key[key.length - 1] === "sources") return { data: sources };
@@ -46,7 +46,7 @@ describe("the calendar events key carries the enabled source set", () => {
   });
 
   it("keys on the enabled sources, sorted, once they are known", () => {
-    const opts = captureEventsOptions([
+    const opts = useCaptureEventsOptions([
       { key: "leave", label: "Leave", module: "hr", enabled: true },
       { key: "birthday", label: "Birthdays", module: "hr", enabled: true },
       { key: "interview", label: "Interviews", module: "hr", enabled: false },
@@ -62,13 +62,13 @@ describe("the calendar events key carries the enabled source set", () => {
   });
 
   it("BITE: toggling a source moves the read to a different cache entry", () => {
-    const before = captureEventsOptions([
+    const before = useCaptureEventsOptions([
       { key: "leave", label: "Leave", module: "hr", enabled: true },
       { key: "holiday", label: "Holidays", module: "hr", enabled: true },
     ]);
     jest.clearAllMocks();
     mockCan.mockReturnValue(true);
-    const after = captureEventsOptions([
+    const after = useCaptureEventsOptions([
       { key: "leave", label: "Leave", module: "hr", enabled: true },
       { key: "holiday", label: "Holidays", module: "hr", enabled: false },
     ]);
@@ -77,7 +77,7 @@ describe("the calendar events key carries the enabled source set", () => {
   });
 
   it("stays a prefix match, so the blanket calendar invalidation still reaches it", () => {
-    const opts = captureEventsOptions([
+    const opts = useCaptureEventsOptions([
       { key: "leave", label: "Leave", module: "hr", enabled: true },
     ]);
 
@@ -93,7 +93,7 @@ describe("the calendar events key carries the enabled source set", () => {
   });
 
   it("BITE: the read is disabled — and the key carries no undefined — until the set is known", () => {
-    const opts = captureEventsOptions(undefined);
+    const opts = useCaptureEventsOptions(undefined);
 
     expect(opts.enabled).toBe(false);
     expect(opts.queryKey).not.toContain(undefined);
@@ -104,7 +104,7 @@ describe("the calendar events key carries the enabled source set", () => {
 
   it("stays gated on the permission regardless of the source set", () => {
     mockCan.mockReturnValue(false);
-    const opts = captureEventsOptions([
+    const opts = useCaptureEventsOptions([
       { key: "leave", label: "Leave", module: "hr", enabled: true },
     ]);
 

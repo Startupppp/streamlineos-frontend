@@ -33,13 +33,13 @@ jest.mock("@/lib/get-error-message", () => ({ getErrorMessage: jest.fn((e: unkno
 const mockQuery = useQuery as jest.Mock;
 const mockCan = useCan as jest.Mock;
 
-function captureHrCasesOptions(params?: Parameters<typeof useHrCases>[0]) {
+function useCaptureHrCasesOptions(params?: Parameters<typeof useHrCases>[0]) {
   mockQuery.mockImplementation((opts: unknown) => opts);
   useHrCases(params);
   return mockQuery.mock.calls.at(-1)?.[0] as { queryFn: (context: { signal?: AbortSignal }) => unknown };
 }
 
-function captureDisciplinaryOptions(params?: Parameters<typeof useDisciplinaryActions>[0]) {
+function useCaptureDisciplinaryOptions(params?: Parameters<typeof useDisciplinaryActions>[0]) {
   mockQuery.mockImplementation((opts: unknown) => opts);
   useDisciplinaryActions(params);
   return mockQuery.mock.calls.at(-1)?.[0] as { queryFn: (context: { signal?: AbortSignal }) => unknown };
@@ -60,7 +60,7 @@ describe("useHrCases — cursor pagination contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
-    const opts = captureHrCasesOptions({ limit: 20 });
+    const opts = useCaptureHrCasesOptions({ limit: 20 });
     void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -74,7 +74,7 @@ describe("useHrCases — cursor pagination contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
-    const opts = captureHrCasesOptions({ cursor: "eyJpZCI6MjB9", limit: 20 });
+    const opts = useCaptureHrCasesOptions({ cursor: "eyJpZCI6MjB9", limit: 20 });
     void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -88,7 +88,7 @@ describe("useHrCases — cursor pagination contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue({ ...cursorResponse, pagination: { ...cursorResponse.pagination, hasMore: true, nextCursor: "abc" } });
 
-    const opts = captureHrCasesOptions({ limit: 20 });
+    const opts = useCaptureHrCasesOptions({ limit: 20 });
     void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -102,7 +102,7 @@ describe("useHrCases — cursor pagination contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
-    const opts = captureHrCasesOptions({ cursor: "eyJpZCI6MjB9", limit: 20 });
+    const opts = useCaptureHrCasesOptions({ cursor: "eyJpZCI6MjB9", limit: 20 });
     void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -123,7 +123,7 @@ describe("useDisciplinaryActions — cursor pagination contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
-    const opts = captureDisciplinaryOptions({ limit: 20 });
+    const opts = useCaptureDisciplinaryOptions({ limit: 20 });
     void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -137,7 +137,7 @@ describe("useDisciplinaryActions — cursor pagination contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
-    const opts = captureDisciplinaryOptions({ cursor: "eyJpZCI6NX0", limit: 20 });
+    const opts = useCaptureDisciplinaryOptions({ cursor: "eyJpZCI6NX0", limit: 20 });
     void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -151,7 +151,7 @@ describe("useDisciplinaryActions — cursor pagination contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
-    const opts = captureDisciplinaryOptions({ limit: 20 });
+    const opts = useCaptureDisciplinaryOptions({ limit: 20 });
     void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -165,7 +165,7 @@ describe("useDisciplinaryActions — cursor pagination contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue(cursorResponse);
 
-    const opts = captureDisciplinaryOptions({ cursor: "eyJpZCI6NX0", limit: 20 });
+    const opts = useCaptureDisciplinaryOptions({ cursor: "eyJpZCI6NX0", limit: 20 });
     void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(

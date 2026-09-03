@@ -34,7 +34,7 @@ jest.mock("@/lib/query-keys", () => ({
 const mockQuery = useQuery as jest.Mock;
 const mockCan = useCan as jest.Mock;
 
-function captureGeneralLedgerOptions(params: Parameters<typeof useGeneralLedger>[0]) {
+function useCaptureGeneralLedgerOptions(params: Parameters<typeof useGeneralLedger>[0]) {
   mockQuery.mockImplementation((opts: unknown) => opts);
   useGeneralLedger(params);
   return mockQuery.mock.calls.at(-1)?.[0] as { queryFn: (context: { signal?: AbortSignal }) => unknown };
@@ -61,7 +61,7 @@ describe("useGeneralLedger — cursor pagination contract", () => {
 
   it("sends no cursor param on page 1", () => {
     const apiClient = stubLedger();
-    const opts = captureGeneralLedgerOptions({ ...RANGE, limit: 50 });
+    const opts = useCaptureGeneralLedgerOptions({ ...RANGE, limit: 50 });
     void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -74,7 +74,7 @@ describe("useGeneralLedger — cursor pagination contract", () => {
 
   it("sends cursor on page 2", () => {
     const apiClient = stubLedger();
-    const opts = captureGeneralLedgerOptions({ ...RANGE, cursor: "eyJpZCI6OTl9", limit: 50 });
+    const opts = useCaptureGeneralLedgerOptions({ ...RANGE, cursor: "eyJpZCI6OTl9", limit: 50 });
     void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -87,7 +87,7 @@ describe("useGeneralLedger — cursor pagination contract", () => {
 
   it("never sends page or pageSize — the ledger contract is cursor-only", () => {
     const apiClient = stubLedger();
-    const opts = captureGeneralLedgerOptions({ ...RANGE, limit: 50 });
+    const opts = useCaptureGeneralLedgerOptions({ ...RANGE, limit: 50 });
     void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -106,7 +106,7 @@ describe("useGeneralLedger — cursor pagination contract", () => {
 
   it("BITES: a dropped cursor would fail this assertion", () => {
     const apiClient = stubLedger();
-    const opts = captureGeneralLedgerOptions({ ...RANGE, cursor: "cursor-token", limit: 50 });
+    const opts = useCaptureGeneralLedgerOptions({ ...RANGE, cursor: "cursor-token", limit: 50 });
     void opts.queryFn({});
 
     const sent = (apiClient.get as jest.Mock).mock.calls.at(-1)?.[1] as Record<string, unknown>;

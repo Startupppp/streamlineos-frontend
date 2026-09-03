@@ -35,7 +35,7 @@ jest.mock("@/lib/query-keys", () => ({
 const mockQuery = useQuery as jest.Mock;
 const mockCan = useCan as jest.Mock;
 
-function capturePortfolioOptions(params?: Parameters<typeof usePortfolios>[0]) {
+function useCapturePortfolioOptions(params?: Parameters<typeof usePortfolios>[0]) {
   mockQuery.mockImplementation((opts: unknown) => opts);
   usePortfolios(params);
   return mockQuery.mock.calls.at(-1)?.[0] as {
@@ -44,7 +44,7 @@ function capturePortfolioOptions(params?: Parameters<typeof usePortfolios>[0]) {
   };
 }
 
-function captureManagedProductsOptions(params?: Parameters<typeof useManagedProducts>[0]) {
+function useCaptureManagedProductsOptions(params?: Parameters<typeof useManagedProducts>[0]) {
   mockQuery.mockImplementation((opts: unknown) => opts);
   useManagedProducts(params);
   return mockQuery.mock.calls.at(-1)?.[0] as {
@@ -63,7 +63,7 @@ describe("usePortfolios — cursor pagination contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], pagination: { limit: 20, nextCursor: null, hasMore: false } });
 
-    const opts = capturePortfolioOptions({ limit: 20 });
+    const opts = useCapturePortfolioOptions({ limit: 20 });
     void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -77,7 +77,7 @@ describe("usePortfolios — cursor pagination contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], pagination: { limit: 20, nextCursor: null, hasMore: false } });
 
-    const opts = capturePortfolioOptions({ cursor: "eyJpZCI6NDJ9", limit: 20 });
+    const opts = useCapturePortfolioOptions({ cursor: "eyJpZCI6NDJ9", limit: 20 });
     void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -91,7 +91,7 @@ describe("usePortfolios — cursor pagination contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], pagination: { limit: 20, nextCursor: "abc", hasMore: true } });
 
-    const opts = capturePortfolioOptions({ cursor: "abc", limit: 20 });
+    const opts = useCapturePortfolioOptions({ cursor: "abc", limit: 20 });
     void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -112,7 +112,7 @@ describe("useManagedProducts — cursor pagination contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], pagination: { limit: 20, nextCursor: null, hasMore: false } });
 
-    const opts = captureManagedProductsOptions({ limit: 20 });
+    const opts = useCaptureManagedProductsOptions({ limit: 20 });
     void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -126,7 +126,7 @@ describe("useManagedProducts — cursor pagination contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], pagination: { limit: 20, nextCursor: null, hasMore: false } });
 
-    const opts = captureManagedProductsOptions({ cursor: "eyJpZCI6NX0", limit: 20 });
+    const opts = useCaptureManagedProductsOptions({ cursor: "eyJpZCI6NX0", limit: 20 });
     void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -140,7 +140,7 @@ describe("useManagedProducts — cursor pagination contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], pagination: { limit: 20, nextCursor: "xyz", hasMore: true } });
 
-    const opts = captureManagedProductsOptions({ cursor: "xyz", limit: 20 });
+    const opts = useCaptureManagedProductsOptions({ cursor: "xyz", limit: 20 });
     void opts.queryFn({});
 
     expect(apiClient.get).toHaveBeenCalledWith(

@@ -37,25 +37,25 @@ jest.mock("@/lib/query-keys", () => ({
 const mockQuery = useQuery as jest.Mock;
 const mockCan = useCan as jest.Mock;
 
-function captureVendorCreditsOptions(params?: Parameters<typeof useVendorCredits>[0]) {
+function useCaptureVendorCreditsOptions(params?: Parameters<typeof useVendorCredits>[0]) {
   mockQuery.mockImplementation((opts: unknown) => opts);
   useVendorCredits(params);
   return mockQuery.mock.calls.at(-1)?.[0] as { queryFn: (context: { signal?: AbortSignal }) => unknown };
 }
 
-function captureBudgetsOptions(params?: Parameters<typeof useBudgets>[0]) {
+function useCaptureBudgetsOptions(params?: Parameters<typeof useBudgets>[0]) {
   mockQuery.mockImplementation((opts: unknown) => opts);
   useBudgets(params);
   return mockQuery.mock.calls.at(-1)?.[0] as { queryFn: (context: { signal?: AbortSignal }) => unknown };
 }
 
-function captureBankAccountsOptions(params?: Parameters<typeof useBankAccounts>[0]) {
+function useCaptureBankAccountsOptions(params?: Parameters<typeof useBankAccounts>[0]) {
   mockQuery.mockImplementation((opts: unknown) => opts);
   useBankAccounts(params);
   return mockQuery.mock.calls.at(-1)?.[0] as { queryFn: (context: { signal?: AbortSignal }) => unknown };
 }
 
-function captureGeneralLedgerOptions(params: Parameters<typeof useGeneralLedger>[0]) {
+function useCaptureGeneralLedgerOptions(params: Parameters<typeof useGeneralLedger>[0]) {
   mockQuery.mockImplementation((opts: unknown) => opts);
   useGeneralLedger(params);
   return mockQuery.mock.calls.at(-1)?.[0] as { queryFn: (context: { signal?: AbortSignal }) => unknown };
@@ -74,7 +74,7 @@ describe("useVendorCredits — cursor pagination contract", () => {
       pagination: { limit: 20, nextCursor: null, hasMore: false },
     });
 
-    const opts = captureVendorCreditsOptions({ limit: 20 });
+    const opts = useCaptureVendorCreditsOptions({ limit: 20 });
     void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -91,7 +91,7 @@ describe("useVendorCredits — cursor pagination contract", () => {
       pagination: { limit: 20, nextCursor: null, hasMore: false },
     });
 
-    const opts = captureVendorCreditsOptions({ cursor: "eyJpZCI6MTB9", limit: 20 });
+    const opts = useCaptureVendorCreditsOptions({ cursor: "eyJpZCI6MTB9", limit: 20 });
     void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -108,7 +108,7 @@ describe("useVendorCredits — cursor pagination contract", () => {
       pagination: { limit: 20, nextCursor: "abc", hasMore: true },
     });
 
-    const opts = captureVendorCreditsOptions({ limit: 20 });
+    const opts = useCaptureVendorCreditsOptions({ limit: 20 });
     void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -125,7 +125,7 @@ describe("useVendorCredits — cursor pagination contract", () => {
       pagination: { limit: 20, nextCursor: null, hasMore: false },
     });
 
-    const opts = captureVendorCreditsOptions({ limit: 20 });
+    const opts = useCaptureVendorCreditsOptions({ limit: 20 });
     void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).not.toHaveBeenCalledWith(
@@ -149,7 +149,7 @@ describe("useBudgets — cursor pagination contract", () => {
       pagination: { limit: 20, nextCursor: null, hasMore: false },
     });
 
-    const opts = captureBudgetsOptions({ limit: 20 });
+    const opts = useCaptureBudgetsOptions({ limit: 20 });
     void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -166,7 +166,7 @@ describe("useBudgets — cursor pagination contract", () => {
       pagination: { limit: 20, nextCursor: null, hasMore: false },
     });
 
-    const opts = captureBudgetsOptions({ cursor: "eyJpZCI6NX0", limit: 20 });
+    const opts = useCaptureBudgetsOptions({ cursor: "eyJpZCI6NX0", limit: 20 });
     void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -183,7 +183,7 @@ describe("useBudgets — cursor pagination contract", () => {
       pagination: { limit: 20, nextCursor: "tok", hasMore: true },
     });
 
-    const opts = captureBudgetsOptions({ limit: 20 });
+    const opts = useCaptureBudgetsOptions({ limit: 20 });
     void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -207,7 +207,7 @@ describe("useBankAccounts — cursor pagination contract", () => {
       pagination: { limit: 20, nextCursor: null, hasMore: false },
     });
 
-    const opts = captureBankAccountsOptions({ limit: 20 });
+    const opts = useCaptureBankAccountsOptions({ limit: 20 });
     void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -225,7 +225,7 @@ describe("useBankAccounts — cursor pagination contract", () => {
       pagination: { limit: 20, nextCursor: null, hasMore: false },
     });
 
-    const opts = captureBankAccountsOptions({ cursor: "eyJpZCI6Mn0", limit: 20 });
+    const opts = useCaptureBankAccountsOptions({ cursor: "eyJpZCI6Mn0", limit: 20 });
     void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -243,7 +243,7 @@ describe("useBankAccounts — cursor pagination contract", () => {
       pagination: { limit: 20, nextCursor: "xyz", hasMore: true },
     });
 
-    const opts = captureBankAccountsOptions({ limit: 20 });
+    const opts = useCaptureBankAccountsOptions({ limit: 20 });
     void opts.queryFn({ signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(

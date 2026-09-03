@@ -194,6 +194,8 @@ export function MailReadingPane({
     aiDraftMutation,
   ]);
 
+  const handleRetry = useCallback(() => { void retry(); }, [retry]);
+
   if (isLoading) {
     return (
       <div className="flex flex-col h-full min-h-0 p-4 gap-3">
@@ -215,8 +217,6 @@ export function MailReadingPane({
       </div>
     );
   }
-
-  const handleRetry = useCallback(() => { void retry(); }, [retry]);
 
   if (isError) {
     return (

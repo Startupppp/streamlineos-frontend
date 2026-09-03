@@ -25,7 +25,7 @@ jest.mock("@/lib/api-client", () => ({
 const mockInfiniteQuery = useInfiniteQuery as jest.Mock;
 const mockCan = useCan as jest.Mock;
 
-function captureQueryOptions(projectId: number, filters?: Parameters<typeof useProjectBoardTickets>[1]) {
+function useCaptureQueryOptions(projectId: number, filters?: Parameters<typeof useProjectBoardTickets>[1]) {
   mockInfiniteQuery.mockImplementation((opts: unknown) => opts);
   useProjectBoardTickets(projectId, filters);
   return mockInfiniteQuery.mock.calls.at(-1)?.[0] as {
@@ -41,7 +41,7 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
   });
 
   it("carries status filter in the query key so different filter states get separate cache entries", () => {
-    const opts = captureQueryOptions(42, { status: "OPEN" });
+    const opts = useCaptureQueryOptions(42, { status: "OPEN" });
 
     const keyStr = JSON.stringify(opts.queryKey);
     expect(keyStr).toContain("OPEN");
@@ -51,7 +51,7 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
 
-    const opts = captureQueryOptions(42, { status: "OPEN,IN_PROGRESS" });
+    const opts = useCaptureQueryOptions(42, { status: "OPEN,IN_PROGRESS" });
     void opts.queryFn({ pageParam: undefined, signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -65,7 +65,7 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
 
-    const opts = captureQueryOptions(7, { q: "login bug" });
+    const opts = useCaptureQueryOptions(7, { q: "login bug" });
     void opts.queryFn({ pageParam: undefined, signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -79,7 +79,7 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
 
-    const opts = captureQueryOptions(7, { assigneeId: "user-1,user-2" });
+    const opts = useCaptureQueryOptions(7, { assigneeId: "user-1,user-2" });
     void opts.queryFn({ pageParam: undefined, signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -93,7 +93,7 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
 
-    const opts = captureQueryOptions(5, { sprint: "3,4" });
+    const opts = useCaptureQueryOptions(5, { sprint: "3,4" });
     void opts.queryFn({ pageParam: undefined, signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -107,7 +107,7 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
 
-    const opts = captureQueryOptions(5, { module: "10,11" });
+    const opts = useCaptureQueryOptions(5, { module: "10,11" });
     void opts.queryFn({ pageParam: undefined, signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
@@ -121,7 +121,7 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
 
-    const opts = captureQueryOptions(3);
+    const opts = useCaptureQueryOptions(3);
     void opts.queryFn({ pageParam: undefined, signal: forwardedSignal });
 
     const call = (apiClient.get as jest.Mock).mock.calls[0]?.[1] as Record<string, unknown>;
@@ -134,7 +134,7 @@ describe("useProjectBoardTickets — server-side filter contract", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client");
     (apiClient.get as jest.Mock).mockResolvedValue({ data: [], nextCursor: null });
 
-    const opts = captureQueryOptions(1);
+    const opts = useCaptureQueryOptions(1);
     void opts.queryFn({ pageParam: undefined, signal: forwardedSignal });
 
     expect(apiClient.get).toHaveBeenCalledWith(
