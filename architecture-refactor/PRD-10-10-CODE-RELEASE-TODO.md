@@ -10,31 +10,32 @@ This file contains only remaining acceptance work. Completed checklist items and
 
 ## Current completion
 
-- Current execution-ticket census, counted directly from the 42 ticket files: **252 of 296 acceptance boxes closed (85.1%)**, **41 open**, **3 partial**, and **23 of 42 tickets fully closed**.
-- The immediate PRD below now shows **37 checked and 128 unchecked aggregate criteria**. Ticket boxes and PRD criteria are intentionally not one-to-one: a PRD criterion may require several tickets, and completed historical module criteria remain preserved in Git history.
+- The former 42-ticket execution set is retained under `.scratch/code-release-10-10/issues/` as historical evidence: **252 of 296 acceptance boxes closed (85.1%)**, **41 open**, **3 partial**, and **23 of 42 tickets fully closed** at its last reconciliation.
+- The authoritative remaining-work set is now **36 vertical-slice tickets** under [`.scratch/code-release-10-10-v2/issues/`](../.scratch/code-release-10-10-v2/issues/) with a checked-in [traceability manifest](../.scratch/code-release-10-10-v2/TRACEABILITY.md). It assigns all **195 current unchecked PRD criteria** to exactly one ticket.
+- The immediate PRD below now shows **37 checked and 138 unchecked aggregate criteria**. Ten module-evidence criteria were restored for Home, Directory/Me, HRMS, Build/PM, Workflows, Billing/Payments, Accounting/Finance, Chat, Notifications and shared adapters so their completion cannot rest on deleted historical text.
 - Deferred production/compliance criteria remain **34 open** and are not counted as code-level completion.
 - Tickets 41 and 42 remain the release endgame: one-commit verification and the release-authority record cannot close until the remaining code/decision/operator items are resolved or formally dispositioned.
 - Code-level 10/10 is **not yet reached**, but the repository is substantially closer than the superseded ticket-40 snapshot reported.
 
 ### Current remaining execution list
 
-- [ ] **[PRD-C001]** **Schema/contracts:** close ticket 08's field-level DTO/Zod/property reachability decision or build a non-vacuous cross-repo instrument; retain dependency proof before deleting any schema field or key.
-- [ ] **[PRD-C002]** **AI:** finish the meeting follow-up stream and the remaining frontend streaming/cancellation/error states in tickets 11 and 13.
-- [ ] **[PRD-C003]** **Authorization/security:** complete ticket 15's live BOLA/IDOR coverage, generate valid bodies for the 468 previously unprobeable mutating routes, re-triage the recorded same-tenant 500 population, and resolve any surviving non-404 cross-tenant route behavior.
-- [ ] **[PRD-C004]** **Organization/RBAC/Settings:** close ticket 19's current-head OpenAPI regeneration/diff and the automations permission-rung decision.
-- [ ] **[PRD-C005]** **Query/database cost:** close tickets 20–23: projection-contract decision, remaining N+1/tenant-predicate/existence work, route/downstream budgets, production-shaped benchmark coverage and regression evidence.
-- [ ] **[PRD-C006]** **Frontend speed:** close ticket 26's remaining production-build Web Vitals/bundle budget and retain the completed ticket-27 rendering, lazy-loading, virtualization and hydration gains.
-- [ ] **[PRD-C007]** **TanStack:** close ticket 28's remaining permissioned read gates, required-identifier coverage, per-screen access/offline states and runtime response parsing coverage. The new `check:gated-reads` gate exists, but a ratchet is not completion of the remaining callers.
-- [ ] **[PRD-C008]** **Calendar/Inbox/Knowledge:** close ticket 29's two remaining criteria, including Calendar provider-drift behavior and current HTTP performance evidence.
-- [ ] **[PRD-C009]** **UX/accessibility:** close ticket 30's remaining in-scope flows; CRM/Inventory-only targets stay excluded rather than blocking this release.
-- [ ] **[PRD-C010]** **Uploads/operator cutover:** ticket 33's code-level bucket-selection and pending-purge fixes are implemented; make the R2 buckets private and run the owner-role URL backfill before cutover.
-- [ ] **[PRD-C011]** **Gate integrity:** close ticket 35's remaining scoped suppression/transaction-test disposition and keep every release gate bite-proven.
-- [ ] **[PRD-C012]** **Repository hygiene/types:** close ticket 36 by enforcing/remediating unused symbols and the remaining justified type-assertion ledger without underscore/suppression escapes.
-- [ ] **[PRD-C013]** **Handlers:** close ticket 38's remaining in-scope named-handler work; CRM/Inventory closures stay excluded and the rule must not create meaningless wrapper chains.
-- [ ] **[PRD-C014]** **Current P0/P1 audit:** resolve or formally disposition the recorded Payroll TDS/natural-key and bank-return gaps, the `email.send` permission mismatch, internal-auth secret comparison/rate-limit findings, and any still-reproducible same-tenant 500s before ticket 41.
-- [ ] **[PRD-C015]** **Release harness:** remove the absolute macOS repository paths from `.scratch/code-release-10-10/release-verify.mjs`; resolve both repositories from the script/workspace or explicit validated arguments. The current Windows run fails before any gate with `spawnSync git ENOENT`, so it cannot produce current-head evidence here.
-- [ ] **[PRD-C016]** **Final integration:** complete ticket 41 at one clean pair of frontend/backend commits, then complete ticket 42's release-authority record. Do not infer a pass for any interrupted, skipped or prerequisite-blocked gate.
-- [ ] **[PRD-C017]** **PRD-to-ticket traceability:** restore or generate a checked-in manifest that maps every PRD checkbox (including module-specific criteria and deferred gates) to exactly one ticket/acceptance box, with no orphan criteria or ticket-only work. The ticket files exist under `.scratch/code-release-10-10/issues/`, but ticket 40 records five PRD boxes without an owning ticket box and four ticket boxes without a PRD counterpart; nine historical module rows also lack recoverable box-level evidence.
+- [ ] **[PRD-C001]** **Schema/contracts:** complete v2 ticket 02's cross-repository reachability, canonical-key and safe-deletion criteria, then v2 ticket 03's current-head catalog parity evidence.
+- [ ] **[PRD-C002]** **AI:** complete v2 ticket 17's streaming, cancellation, deadline, structured-output, citation, credit and frontend failure-state criteria.
+- [ ] **[PRD-C003]** **Authorization/security:** complete v2 ticket 22's live BOLA/IDOR, valid mutating-body, same-tenant control, abuse-protection and privacy criteria.
+- [ ] **[PRD-C004]** **Organization/RBAC/Settings:** complete v2 ticket 05's organization authority, module permission, owner/descendant protection, cache invalidation, contract and frontend criteria.
+- [ ] **[PRD-C005]** **Query/database cost:** complete v2 ticket 18's bounded projection, N+1, tenant-predicate, index, pagination, cache and invalidation criteria, then retain performance evidence in v2 ticket 29.
+- [ ] **[PRD-C006]** **Frontend speed:** complete v2 ticket 29's production-build Web Vitals, bundle, rendering and interaction budgets while preserving completed lazy-loading, virtualization and hydration gains.
+- [ ] **[PRD-C007]** **TanStack:** complete v2 ticket 19's permissioned-read, required-identifier, query-key, pagination, runtime parsing, cancellation, invalidation and optimistic-update criteria.
+- [ ] **[PRD-C008]** **Calendar/Inbox/Knowledge:** complete v2 tickets 13, 14 and 16 respectively, including provider drift, sync correctness, bounded read paths, ACL-aware retrieval and current performance evidence.
+- [ ] **[PRD-C009]** **UX/accessibility:** complete v2 ticket 20's in-scope responsive, keyboard, screen-reader, loading, empty, error, offline, permission and retry states.
+- [ ] **[PRD-C010]** **Uploads/operator cutover:** complete v2 ticket 21's code lifecycle and v2 ticket 34's deployed private-bucket/backfill evidence before cutover.
+- [ ] **[PRD-C011]** **Gate integrity:** complete v2 ticket 30's bite-proven architecture/release gates and portable verification harness.
+- [ ] **[PRD-C012]** **Repository hygiene/types:** complete the v2 tickets 24–27 expand–migrate–contract sequence for unused symbols, dead surface, unsafe assertions, dependency cycles and dependency proof.
+- [ ] **[PRD-C013]** **Handlers:** complete v2 ticket 28's named-handler, thin-entry-point, cohesion and justified file-size-exception criteria without meaningless wrapper chains.
+- [ ] **[PRD-C014]** **Current P0/P1 audit:** resolve or formally disposition Payroll financial-integrity gaps in v2 ticket 08, notification/email permission and delivery gaps in v2 ticket 15, security findings in v2 ticket 22, and every surviving P0/P1 before v2 ticket 31.
+- [ ] **[PRD-C015]** **Release harness:** complete v2 ticket 30 by removing absolute workstation paths and resolving both repositories from the workspace or explicit validated arguments on Windows, macOS and Linux.
+- [ ] **[PRD-C016]** **Final integration:** complete v2 ticket 31 at one clean frontend/backend commit pair, then v2 ticket 36's deployed release-authority record; interrupted, skipped and prerequisite-blocked gates never count as passing.
+- [ ] **[PRD-C017]** **PRD-to-ticket traceability:** complete v2 ticket 01 and keep its manifest fail-closed so every PRD criterion has exactly one ticket owner, ticket-only criteria are rejected and the restored module evidence cannot disappear again.
 
 ### Module checklist history from ticket 40
 
@@ -69,7 +70,7 @@ A 100% module row means its module-specific checklist is closed. It does not ove
 
 **Payroll is contested and is deliberately not shown at 100%.** Ticket 24's eight acceptance boxes are all `[x]`, and its central artifact is real: `migrations/1030_t24_payroll_tds_ytd_immutability.sql` exists **and is journalled** (idx 790), alongside `0445_payroll_locked_run_immutability.sql` and `1001_s08_payroll_financial_immutability.sql`. Against that, the findings registers record four unresolved payroll items, and one was re-confirmed on disk this pass: **`payroll_bank_batch_items` carries no UNIQUE constraint in any migration**, so it has no natural key on `(batchId, runEmployeeId)`. The other three — the TDS ledger replacing where it should accumulate, a run with FAILED bank items still marked `PAID`, and `writeTdsYtdLedger`/`importBankReturn`/`refreshBatchPaidStatus` being untested — are recorded but were **not** re-verified this pass. The row stays below 100% until a single owner holds both halves.
 
-**Known defects in this table's construction:** five open PRD boxes have no owning ticket box (§10.4 box 2, §10.13 box 2, §10.15, §10.16 box 3, and the six §10-preamble boxes, which belong to no row and are counted nowhere); four ticket `[x]` boxes have no PRD counterpart, so closing them can never move a row; ticket 28's three `[~]` partial boxes have no representation here at all; and the rounding is inconsistent (88% is half-up, 62% is floor).
+**Historical defects in this table's construction:** the former ticket set left five PRD boxes without an owner, four ticket boxes without a PRD counterpart and three partial boxes without representation. The v2 [traceability manifest](../.scratch/code-release-10-10-v2/TRACEABILITY.md) supersedes that mapping and assigns every current unchecked criterion exactly once; this former-head table remains historical evidence only.
 
 ## Superseded ticket-40 verification snapshot
 
