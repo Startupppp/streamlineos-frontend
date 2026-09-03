@@ -77,9 +77,6 @@ const optimizePackageImports =
   process.env.NODE_ENV === "production"
     ? [
         "lucide-react",
-        "@animateicons/react",
-        "@animateicons/react/lucide",
-        "@animateicons/react/huge",
         "recharts",
         "@hello-pangea/dnd",
         "date-fns",
