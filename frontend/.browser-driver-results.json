@@ -1,10 +1,10 @@
 {
-  "generatedAtMs": 1788405149008,
-  "generatedAt": "2026-09-03T03:12:29.008Z",
+  "generatedAtMs": 1788419747093,
+  "generatedAt": "2026-09-03T07:15:47.093Z",
   "baseUrl": "http://localhost:1000",
   "targetUrl": "http://localhost:1000",
   "serverMode": "production",
-  "buildId": "sDZBsbi1qW6Z9JlIhCg68",
+  "buildId": "iTIKVvc-wqpbkjxEiy548",
   "repeat": 8,
   "authenticatedRoutes": [
     "/dashboard",
@@ -23,33 +23,33 @@
   ],
   "desktop": {
     "lcp": {
-      "p75_ms": 384
+      "p75_ms": 388
     },
     "inp": {
-      "p75_ms": 48
+      "p75_ms": 32
     },
     "cls": {
-      "p75": 0.006457682023748286
+      "p75": 0.0024102577910665294
     },
     "fcp": {
-      "p75_ms": 104
+      "p75_ms": 88
     },
     "ttfb": {
-      "p95_ms": 173.23500000275612
+      "p95_ms": 71.30500000230963
     },
     "longTasks": {
       "p75_ms": 0
     },
     "usedJsHeap": {
-      "p75_bytes": 19541093
+      "p75_bytes": 19501759
     }
   },
   "mobile": {
     "lcp": {
-      "p75_ms": 565
+      "p75_ms": 1442
     },
     "inp": {
-      "p75_ms": 120
+      "p75_ms": 96
     },
     "cls": {
       "p75": 0.0023815900188847786
@@ -58,157 +58,123 @@
       "p75_ms": 273
     },
     "ttfb": {
-      "p95_ms": 38.69000000189989
+      "p95_ms": 89.3000000014901
     },
     "longTasks": {
-      "p75_ms": 244.25
+      "p75_ms": 208
     },
     "usedJsHeap": {
-      "p75_bytes": 19853216.25
+      "p75_bytes": 19785521
     }
   },
   "byRoute": {
     "/dashboard": {
       "desktop": {
         "lcp": {
-          "p75_ms": 360
+          "p75_ms": 717
         },
         "inp": {
-          "p75_ms": 56
+          "p75_ms": 32
         },
         "cls": {
-          "p75": 0.17984296486518347
+          "p75": 0.0024102577910665294
         },
         "fcp": {
-          "p75_ms": 99
+          "p75_ms": 95
         },
         "ttfb": {
-          "p95_ms": 44.81499999854713
+          "p95_ms": 81.75500000193713
         },
         "longTasks": {
           "p75_ms": 0
         },
         "usedJsHeap": {
-          "p75_bytes": 20782047.25
+          "p75_bytes": 18108284
+        },
+        "interactions": {
+          "samples": 8,
+          "performed": 8
         }
       },
       "desktopContent": {
         "url": "http://localhost:1000/dashboard",
         "title": "StreamlineOS — The operating system for modern teams",
-        "words": 990,
+        "visibilityState": "visible",
+        "words": 150,
         "brandedLoader": false,
         "errorBoundary": false,
         "navLinks": 16
       },
-      "desktopLayoutShifts": [
-        {
-          "value": 0.2248,
-          "atMs": 514,
-          "sources": [
-            "div.grid.grid-cols-1.gap-4",
-            "div"
-          ]
-        },
-        {
-          "value": 0.1877,
-          "atMs": 433,
-          "sources": [
-            "div.grid.grid-cols-1.gap-4",
-            "div",
-            "div.flex.w-full.flex-col"
-          ]
-        },
-        {
-          "value": 0.1706,
-          "atMs": 416,
-          "sources": [
-            "div.flex.flex-col.gap-4",
-            "div"
-          ]
-        },
-        {
-          "value": 0.1706,
-          "atMs": 428,
-          "sources": [
-            "div.flex.flex-col.gap-4",
-            "div"
-          ]
-        },
-        {
-          "value": 0.1706,
-          "atMs": 449,
-          "sources": [
-            "div.flex.flex-col.gap-4",
-            "div"
-          ]
-        }
-      ],
       "mobile": {
         "lcp": {
-          "p75_ms": 756
+          "p75_ms": 1592
         },
         "inp": {
-          "p75_ms": 170
+          "p75_ms": 106
         },
         "cls": {
-          "p75": 0.005590792936090662
+          "p75": 0.056704469430012575
         },
         "fcp": {
-          "p75_ms": 309
+          "p75_ms": 252
         },
         "ttfb": {
-          "p95_ms": 28.830000000447033
+          "p95_ms": 134.1250000014901
         },
         "longTasks": {
-          "p75_ms": 300.75
+          "p75_ms": 212.25
         },
         "usedJsHeap": {
-          "p75_bytes": 21033836
+          "p75_bytes": 18410523.75
+        },
+        "interactions": {
+          "samples": 8,
+          "performed": 8
         }
       },
       "mobileContent": {
         "url": "http://localhost:1000/dashboard",
         "title": "(7) StreamlineOS",
-        "words": 969,
+        "visibilityState": "visible",
+        "words": 129,
         "brandedLoader": false,
         "errorBoundary": false,
         "navLinks": 16
       },
       "mobileLayoutShifts": [
         {
-          "value": 0.0053,
-          "atMs": 1249,
+          "value": 0.0288,
+          "atMs": 1353,
           "sources": [
-            "div.flex.flex-col.gap-4",
-            "div",
-            "div"
+            "div.h-full.min-h-0.flex-1"
           ]
         },
         {
-          "value": 0.0053,
-          "atMs": 1131,
+          "value": 0.0288,
+          "atMs": 1197,
           "sources": [
-            "div.flex.flex-col.gap-4",
-            "div",
-            "div"
+            "div.h-full.min-h-0.flex-1"
           ]
         },
         {
-          "value": 0.0053,
-          "atMs": 1182,
+          "value": 0.0288,
+          "atMs": 1865,
           "sources": [
-            "div.flex.flex-col.gap-4",
-            "div",
-            "div"
+            "div.h-full.min-h-0.flex-1"
           ]
         },
         {
-          "value": 0.0053,
-          "atMs": 1167,
+          "value": 0.0288,
+          "atMs": 1295,
           "sources": [
-            "div.flex.flex-col.gap-4",
-            "div",
-            "div"
+            "div.h-full.min-h-0.flex-1"
+          ]
+        },
+        {
+          "value": 0.0288,
+          "atMs": 1407,
+          "sources": [
+            "div.h-full.min-h-0.flex-1"
           ]
         }
       ]
@@ -216,30 +182,35 @@
     "/mail": {
       "desktop": {
         "lcp": {
-          "p75_ms": 392
+          "p75_ms": 399
         },
         "inp": {
-          "p75_ms": 48
+          "p75_ms": 32
         },
         "cls": {
           "p75": 0.001216025002143347
         },
         "fcp": {
-          "p75_ms": 85
+          "p75_ms": 99
         },
         "ttfb": {
-          "p95_ms": 39.28500000219792
+          "p95_ms": 101.68999999910591
         },
         "longTasks": {
           "p75_ms": 0
         },
         "usedJsHeap": {
-          "p75_bytes": 16081969
+          "p75_bytes": 16817943.25
+        },
+        "interactions": {
+          "samples": 8,
+          "performed": 8
         }
       },
       "desktopContent": {
         "url": "http://localhost:1000/mail",
         "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
         "words": 95,
         "brandedLoader": false,
         "errorBoundary": false,
@@ -247,30 +218,35 @@
       },
       "mobile": {
         "lcp": {
-          "p75_ms": 554
+          "p75_ms": 558
         },
         "inp": {
-          "p75_ms": 64
+          "p75_ms": 66
         },
         "cls": {
           "p75": 0.0023815900188847786
         },
         "fcp": {
-          "p75_ms": 239
+          "p75_ms": 264
         },
         "ttfb": {
-          "p95_ms": 25.99499999806285
+          "p95_ms": 195.9050000015645
         },
         "longTasks": {
-          "p75_ms": 63.5
+          "p75_ms": 120.75
         },
         "usedJsHeap": {
-          "p75_bytes": 16335001.25
+          "p75_bytes": 17022655.25
+        },
+        "interactions": {
+          "samples": 8,
+          "performed": 8
         }
       },
       "mobileContent": {
         "url": "http://localhost:1000/mail",
         "title": "(7) StreamlineOS",
+        "visibilityState": "visible",
         "words": 53,
         "brandedLoader": false,
         "errorBoundary": false,
@@ -280,30 +256,35 @@
     "/inbox": {
       "desktop": {
         "lcp": {
-          "p75_ms": 98
+          "p75_ms": 85
         },
         "inp": {
-          "p75_ms": 48
+          "p75_ms": 32
         },
         "cls": {
           "p75": 0.0008027876907578875
         },
         "fcp": {
-          "p75_ms": 98
+          "p75_ms": 85
         },
         "ttfb": {
-          "p95_ms": 38.05499999951571
+          "p95_ms": 30.95000000298023
         },
         "longTasks": {
           "p75_ms": 0
         },
         "usedJsHeap": {
-          "p75_bytes": 17722004
+          "p75_bytes": 18447291
+        },
+        "interactions": {
+          "samples": 8,
+          "performed": 8
         }
       },
       "desktopContent": {
         "url": "http://localhost:1000/inbox",
         "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
         "words": 378,
         "brandedLoader": false,
         "errorBoundary": false,
@@ -311,30 +292,35 @@
       },
       "mobile": {
         "lcp": {
-          "p75_ms": 289
+          "p75_ms": 294
         },
         "inp": {
-          "p75_ms": 104
+          "p75_ms": 84
         },
         "cls": {
           "p75": 0.0002506451867427587
         },
         "fcp": {
-          "p75_ms": 286
+          "p75_ms": 282
         },
         "ttfb": {
-          "p95_ms": 23.309999999962745
+          "p95_ms": 31.16500000283122
         },
         "longTasks": {
-          "p75_ms": 148
+          "p75_ms": 187
         },
         "usedJsHeap": {
-          "p75_bytes": 18030754
+          "p75_bytes": 18671021.25
+        },
+        "interactions": {
+          "samples": 8,
+          "performed": 8
         }
       },
       "mobileContent": {
         "url": "http://localhost:1000/inbox",
         "title": "(7) StreamlineOS",
+        "visibilityState": "visible",
         "words": 307,
         "brandedLoader": false,
         "errorBoundary": false,
@@ -344,30 +330,35 @@
     "/notifications": {
       "desktop": {
         "lcp": {
-          "p75_ms": 93
+          "p75_ms": 88
         },
         "inp": {
-          "p75_ms": 58
+          "p75_ms": 32
         },
         "cls": {
           "p75": 0.0008027876907578875
         },
         "fcp": {
-          "p75_ms": 93
+          "p75_ms": 88
         },
         "ttfb": {
-          "p95_ms": 37.32500000074505
+          "p95_ms": 25.049999998509882
         },
         "longTasks": {
           "p75_ms": 0
         },
         "usedJsHeap": {
-          "p75_bytes": 19541093
+          "p75_bytes": 20301635
+        },
+        "interactions": {
+          "samples": 8,
+          "performed": 8
         }
       },
       "desktopContent": {
         "url": "http://localhost:1000/notifications",
         "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
         "words": 453,
         "brandedLoader": false,
         "errorBoundary": false,
@@ -375,30 +366,35 @@
       },
       "mobile": {
         "lcp": {
-          "p75_ms": 297
+          "p75_ms": 311
         },
         "inp": {
-          "p75_ms": 138
+          "p75_ms": 116
         },
         "cls": {
           "p75": 0.0002864680971641732
         },
         "fcp": {
-          "p75_ms": 261
+          "p75_ms": 287
         },
         "ttfb": {
-          "p95_ms": 24.964999999478458
+          "p95_ms": 77.27500000335274
         },
         "longTasks": {
-          "p75_ms": 251
+          "p75_ms": 293.75
         },
         "usedJsHeap": {
-          "p75_bytes": 19853216.25
+          "p75_bytes": 20458805.75
+        },
+        "interactions": {
+          "samples": 8,
+          "performed": 8
         }
       },
       "mobileContent": {
         "url": "http://localhost:1000/notifications",
         "title": "(7) StreamlineOS",
+        "visibilityState": "visible",
         "words": 368,
         "brandedLoader": false,
         "errorBoundary": false,
@@ -408,38 +404,80 @@
     "/settings": {
       "desktop": {
         "lcp": {
-          "p75_ms": 389
+          "p75_ms": 81
         },
         "inp": {
-          "p75_ms": 48
+          "p75_ms": 32
         },
         "cls": {
-          "p75": 0.001896294688786008
+          "p75": 0.00842908789866255
         },
         "fcp": {
-          "p75_ms": 83
+          "p75_ms": 74
         },
         "ttfb": {
-          "p95_ms": 37.440000000968574
+          "p95_ms": 23.15
         },
         "longTasks": {
           "p75_ms": 0
         },
         "usedJsHeap": {
-          "p75_bytes": 16239729
+          "p75_bytes": 17042701
+        },
+        "interactions": {
+          "samples": 8,
+          "performed": 8
         }
       },
       "desktopContent": {
         "url": "http://localhost:1000/settings",
         "title": "StreamlineOS — The operating system for modern teams",
-        "words": 218,
+        "visibilityState": "visible",
+        "words": 228,
         "brandedLoader": false,
         "errorBoundary": false,
         "navLinks": 31
       },
+      "desktopLayoutShifts": [
+        {
+          "value": 0.0077,
+          "atMs": 353,
+          "sources": [
+            "div.space-y-3.rounded-lg.border"
+          ]
+        },
+        {
+          "value": 0.0077,
+          "atMs": 351,
+          "sources": [
+            "div.space-y-3.rounded-lg.border"
+          ]
+        },
+        {
+          "value": 0.0077,
+          "atMs": 343,
+          "sources": [
+            "div.space-y-3.rounded-lg.border"
+          ]
+        },
+        {
+          "value": 0.0077,
+          "atMs": 352,
+          "sources": [
+            "div.space-y-3.rounded-lg.border"
+          ]
+        },
+        {
+          "value": 0.0077,
+          "atMs": 354,
+          "sources": [
+            "div.space-y-3.rounded-lg.border"
+          ]
+        }
+      ],
       "mobile": {
         "lcp": {
-          "p75_ms": 604
+          "p75_ms": 597
         },
         "inp": {
           "p75_ms": 80
@@ -448,22 +486,27 @@
           "p75": 0.006728746273006285
         },
         "fcp": {
-          "p75_ms": 250
+          "p75_ms": 279
         },
         "ttfb": {
-          "p95_ms": 32.0600000007078
+          "p95_ms": 89.93999999761581
         },
         "longTasks": {
-          "p75_ms": 73.25
+          "p75_ms": 170.5
         },
         "usedJsHeap": {
-          "p75_bytes": 16494899.75
+          "p75_bytes": 17239707.25
+        },
+        "interactions": {
+          "samples": 8,
+          "performed": 8
         }
       },
       "mobileContent": {
         "url": "http://localhost:1000/settings",
         "title": "(7) StreamlineOS",
-        "words": 164,
+        "visibilityState": "visible",
+        "words": 174,
         "brandedLoader": false,
         "errorBoundary": false,
         "navLinks": 31
@@ -471,7 +514,7 @@
       "mobileLayoutShifts": [
         {
           "value": 0.0065,
-          "atMs": 1175,
+          "atMs": 1183,
           "sources": [
             "div.space-y-2",
             "div",
@@ -480,7 +523,7 @@
         },
         {
           "value": 0.0065,
-          "atMs": 1163,
+          "atMs": 1171,
           "sources": [
             "div.space-y-2",
             "div",
@@ -489,7 +532,7 @@
         },
         {
           "value": 0.0065,
-          "atMs": 1150,
+          "atMs": 1143,
           "sources": [
             "div.space-y-2",
             "div",
@@ -498,7 +541,7 @@
         },
         {
           "value": 0.0065,
-          "atMs": 1169,
+          "atMs": 1138,
           "sources": [
             "div.space-y-2",
             "div",
@@ -507,7 +550,7 @@
         },
         {
           "value": 0.0065,
-          "atMs": 1136,
+          "atMs": 1075,
           "sources": [
             "div.space-y-2",
             "div",
@@ -519,98 +562,71 @@
     "/calendar": {
       "desktop": {
         "lcp": {
-          "p75_ms": 885
+          "p75_ms": 747
         },
         "inp": {
-          "p75_ms": 48
+          "p75_ms": 32
         },
         "cls": {
-          "p75": 0.1257817524139446
+          "p75": 0.0022428470815650716
         },
         "fcp": {
-          "p75_ms": 182
+          "p75_ms": 73
         },
         "ttfb": {
-          "p95_ms": 220.09500000104305
+          "p95_ms": 37.18000000007449
         },
         "longTasks": {
           "p75_ms": 0
         },
         "usedJsHeap": {
-          "p75_bytes": 20120240
+          "p75_bytes": 20773365.25
+        },
+        "interactions": {
+          "samples": 8,
+          "performed": 8
         }
       },
       "desktopContent": {
         "url": "http://localhost:1000/calendar",
-        "title": "(7) StreamlineOS",
+        "title": "Calendar | StreamlineOS · StreamlineOS",
+        "visibilityState": "visible",
         "words": 415,
         "brandedLoader": false,
         "errorBoundary": false,
         "navLinks": 16
       },
-      "desktopLayoutShifts": [
-        {
-          "value": 0.1245,
-          "atMs": 819,
-          "sources": [
-            "div.flex.min-h-0.flex-1"
-          ]
-        },
-        {
-          "value": 0.1245,
-          "atMs": 894,
-          "sources": [
-            "div.flex.min-h-0.flex-1"
-          ]
-        },
-        {
-          "value": 0.1245,
-          "atMs": 858,
-          "sources": [
-            "div.flex.min-h-0.flex-1"
-          ]
-        },
-        {
-          "value": 0.1245,
-          "atMs": 913,
-          "sources": [
-            "div.flex.min-h-0.flex-1"
-          ]
-        },
-        {
-          "value": 0.1245,
-          "atMs": 841,
-          "sources": [
-            "div.flex.min-h-0.flex-1"
-          ]
-        }
-      ],
       "mobile": {
         "lcp": {
-          "p75_ms": 309
+          "p75_ms": 1636
         },
         "inp": {
-          "p75_ms": 88
+          "p75_ms": 120
         },
         "cls": {
-          "p75": 0.0002506451867427587
+          "p75": 0.000779514107862668
         },
         "fcp": {
-          "p75_ms": 299
+          "p75_ms": 270
         },
         "ttfb": {
-          "p95_ms": 45.61500000003725
+          "p95_ms": 62.82000000141559
         },
         "longTasks": {
-          "p75_ms": 140.5
+          "p75_ms": 188
         },
         "usedJsHeap": {
-          "p75_bytes": 20423272.75
+          "p75_bytes": 21106421.75
+        },
+        "interactions": {
+          "samples": 8,
+          "performed": 8
         }
       },
       "mobileContent": {
         "url": "http://localhost:1000/calendar",
         "title": "(7) StreamlineOS",
+        "visibilityState": "visible",
         "words": 386,
         "brandedLoader": false,
         "errorBoundary": false,
@@ -620,94 +636,109 @@
     "/chat": {
       "desktop": {
         "lcp": {
-          "p75_ms": 105
+          "p75_ms": 73
         },
         "inp": {
-          "p75_ms": 40
+          "p75_ms": 24
         },
         "cls": {
           "p75": 0.0008027876907578875
         },
         "fcp": {
-          "p75_ms": 105
+          "p75_ms": 73
         },
         "ttfb": {
-          "p95_ms": 77.65500000026076
+          "p95_ms": 23.394999999180435
         },
         "longTasks": {
           "p75_ms": 0
         },
         "usedJsHeap": {
-          "p75_bytes": 18883297
+          "p75_bytes": 18327521.25
+        },
+        "interactions": {
+          "samples": 8,
+          "performed": 8
         }
       },
       "desktopContent": {
         "url": "http://localhost:1000/chat",
         "title": "StreamlineOS — The operating system for modern teams",
-        "words": 100,
+        "visibilityState": "visible",
+        "words": 74,
         "brandedLoader": false,
         "errorBoundary": false,
-        "navLinks": 17
+        "navLinks": 16
       },
       "mobile": {
         "lcp": {
-          "p75_ms": 591
+          "p75_ms": 1251
         },
         "inp": {
-          "p75_ms": 66
+          "p75_ms": null
         },
         "cls": {
           "p75": 0.0002506451867427587
         },
         "fcp": {
-          "p75_ms": 255
+          "p75_ms": 269
         },
         "ttfb": {
-          "p95_ms": 38.410000001452865
+          "p95_ms": 126.50000000335271
         },
         "longTasks": {
-          "p75_ms": 124
+          "p75_ms": 166.25
         },
         "usedJsHeap": {
-          "p75_bytes": 19015635.5
+          "p75_bytes": 18030624.75
+        },
+        "interactions": {
+          "samples": 8,
+          "performed": 8
         }
       },
       "mobileContent": {
         "url": "http://localhost:1000/chat",
         "title": "(7) StreamlineOS",
-        "words": 56,
+        "visibilityState": "visible",
+        "words": 47,
         "brandedLoader": false,
         "errorBoundary": false,
-        "navLinks": 17
+        "navLinks": 16
       }
     },
     "/parties": {
       "desktop": {
         "lcp": {
-          "p75_ms": 393
+          "p75_ms": 384
         },
         "inp": {
-          "p75_ms": 48
+          "p75_ms": 32
         },
         "cls": {
           "p75": 0.0018361918885030862
         },
         "fcp": {
-          "p75_ms": 99
+          "p75_ms": 90
         },
         "ttfb": {
-          "p95_ms": 41.634999999962744
+          "p95_ms": 32.75999999754131
         },
         "longTasks": {
           "p75_ms": 0
         },
         "usedJsHeap": {
-          "p75_bytes": 18738130.25
+          "p75_bytes": 19501759
+        },
+        "interactions": {
+          "samples": 8,
+          "performed": 8
         }
       },
       "desktopContent": {
         "url": "http://localhost:1000/parties",
         "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
         "words": 262,
         "brandedLoader": false,
         "errorBoundary": false,
@@ -715,30 +746,35 @@
       },
       "mobile": {
         "lcp": {
-          "p75_ms": 286
+          "p75_ms": 1565
         },
         "inp": {
-          "p75_ms": 122
+          "p75_ms": 74
         },
         "cls": {
           "p75": 0.0003315149030794457
         },
         "fcp": {
-          "p75_ms": 284
+          "p75_ms": 318
         },
         "ttfb": {
-          "p95_ms": 37.835000000707794
+          "p95_ms": 120.93999999947843
         },
         "longTasks": {
-          "p75_ms": 253.5
+          "p75_ms": 235.25
         },
         "usedJsHeap": {
-          "p75_bytes": 19190408
+          "p75_bytes": 19785521
+        },
+        "interactions": {
+          "samples": 8,
+          "performed": 8
         }
       },
       "mobileContent": {
         "url": "http://localhost:1000/parties",
         "title": "(7) StreamlineOS",
+        "visibilityState": "visible",
         "words": 213,
         "brandedLoader": false,
         "errorBoundary": false,
@@ -748,99 +784,71 @@
     "/crm/inbox": {
       "desktop": {
         "lcp": {
-          "p75_ms": 430
+          "p75_ms": 78
         },
         "inp": {
-          "p75_ms": 50
+          "p75_ms": 26
         },
         "cls": {
-          "p75": 0.06014038273480367
+          "p75": 0.000806020393947188
         },
         "fcp": {
-          "p75_ms": 430
+          "p75_ms": 78
         },
         "ttfb": {
-          "p95_ms": 659.9500000007449
+          "p95_ms": 34.29499999806285
         },
         "longTasks": {
           "p75_ms": 0
         },
         "usedJsHeap": {
-          "p75_bytes": 16567725.25
+          "p75_bytes": 17264348
+        },
+        "interactions": {
+          "samples": 8,
+          "performed": 8
         }
       },
       "desktopContent": {
         "url": "http://localhost:1000/crm/inbox",
-        "title": "(7) StreamlineOS",
+        "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
         "words": 162,
         "brandedLoader": false,
         "errorBoundary": false,
         "navLinks": 19
       },
-      "desktopLayoutShifts": [
-        {
-          "value": 0.0661,
-          "atMs": 1812,
-          "sources": [
-            "div",
-            "div",
-            "div"
-          ]
-        },
-        {
-          "value": 0.0596,
-          "atMs": 788,
-          "sources": [
-            "div",
-            "div",
-            "div"
-          ]
-        },
-        {
-          "value": 0.0593,
-          "atMs": 1067,
-          "sources": [
-            "div",
-            "div",
-            "div"
-          ]
-        },
-        {
-          "value": 0.0592,
-          "atMs": 781,
-          "sources": [
-            "div",
-            "div",
-            "div"
-          ]
-        }
-      ],
       "mobile": {
         "lcp": {
-          "p75_ms": 312
+          "p75_ms": 300
         },
         "inp": {
-          "p75_ms": 72
+          "p75_ms": 68
         },
         "cls": {
-          "p75": 0.09767225953295448
+          "p75": 0.10885770414307509
         },
         "fcp": {
-          "p75_ms": 279
+          "p75_ms": 252
         },
         "ttfb": {
-          "p95_ms": 31.709999999776482
+          "p95_ms": 24.78000000193715
         },
         "longTasks": {
-          "p75_ms": 134.5
+          "p75_ms": 122.5
         },
         "usedJsHeap": {
-          "p75_bytes": 16727336
+          "p75_bytes": 17419888.75
+        },
+        "interactions": {
+          "samples": 8,
+          "performed": 8
         }
       },
       "mobileContent": {
         "url": "http://localhost:1000/crm/inbox",
         "title": "(7) StreamlineOS",
+        "visibilityState": "visible",
         "words": 139,
         "brandedLoader": false,
         "errorBoundary": false,
@@ -848,8 +856,35 @@
       },
       "mobileLayoutShifts": [
         {
-          "value": 0.0974,
-          "atMs": 1113,
+          "value": 0.1086,
+          "atMs": 1092,
+          "sources": [
+            "div",
+            "div",
+            "div"
+          ]
+        },
+        {
+          "value": 0.1086,
+          "atMs": 1131,
+          "sources": [
+            "div",
+            "div",
+            "div"
+          ]
+        },
+        {
+          "value": 0.1086,
+          "atMs": 1275,
+          "sources": [
+            "div",
+            "div",
+            "div"
+          ]
+        },
+        {
+          "value": 0.1086,
+          "atMs": 1115,
           "sources": [
             "div",
             "div",
@@ -858,34 +893,7 @@
         },
         {
           "value": 0.0974,
-          "atMs": 1137,
-          "sources": [
-            "div",
-            "div",
-            "div"
-          ]
-        },
-        {
-          "value": 0.0974,
-          "atMs": 1166,
-          "sources": [
-            "div",
-            "div",
-            "div"
-          ]
-        },
-        {
-          "value": 0.0974,
-          "atMs": 1190,
-          "sources": [
-            "div",
-            "div",
-            "div"
-          ]
-        },
-        {
-          "value": 0.0974,
-          "atMs": 1170,
+          "atMs": 1140,
           "sources": [
             "div",
             "div",
@@ -897,31 +905,36 @@
     "/support/inbox": {
       "desktop": {
         "lcp": {
-          "p75_ms": 93
+          "p75_ms": 98
         },
         "inp": {
-          "p75_ms": 48
+          "p75_ms": 40
         },
         "cls": {
           "p75": 0.006457682023748286
         },
         "fcp": {
-          "p75_ms": 93
+          "p75_ms": 98
         },
         "ttfb": {
-          "p95_ms": 36.12499999850988
+          "p95_ms": 38.565000000968574
         },
         "longTasks": {
           "p75_ms": 0
         },
         "usedJsHeap": {
-          "p75_bytes": 18241494.5
+          "p75_bytes": 18967519
+        },
+        "interactions": {
+          "samples": 8,
+          "performed": 8
         }
       },
       "desktopContent": {
         "url": "http://localhost:1000/support/inbox",
         "title": "StreamlineOS — The operating system for modern teams",
-        "words": 573,
+        "visibilityState": "visible",
+        "words": 568,
         "brandedLoader": false,
         "errorBoundary": false,
         "navLinks": 8
@@ -929,7 +942,7 @@
       "desktopLayoutShifts": [
         {
           "value": 0.0057,
-          "atMs": 390,
+          "atMs": 357,
           "sources": [
             "div.w-full.md:w-[360px].border-r",
             "p.text-dense.font-semibold.uppercase"
@@ -937,7 +950,7 @@
         },
         {
           "value": 0.0057,
-          "atMs": 361,
+          "atMs": 353,
           "sources": [
             "div.w-full.md:w-[360px].border-r",
             "p.text-dense.font-semibold.uppercase"
@@ -945,7 +958,7 @@
         },
         {
           "value": 0.0057,
-          "atMs": 366,
+          "atMs": 349,
           "sources": [
             "div.w-full.md:w-[360px].border-r",
             "p.text-dense.font-semibold.uppercase"
@@ -953,7 +966,7 @@
         },
         {
           "value": 0.0057,
-          "atMs": 360,
+          "atMs": 364,
           "sources": [
             "div.w-full.md:w-[360px].border-r",
             "p.text-dense.font-semibold.uppercase"
@@ -961,7 +974,7 @@
         },
         {
           "value": 0.0057,
-          "atMs": 356,
+          "atMs": 355,
           "sources": [
             "div.w-full.md:w-[360px].border-r",
             "p.text-dense.font-semibold.uppercase"
@@ -970,31 +983,36 @@
       ],
       "mobile": {
         "lcp": {
-          "p75_ms": 1155
+          "p75_ms": 1442
         },
         "inp": {
-          "p75_ms": 82
+          "p75_ms": 80
         },
         "cls": {
           "p75": 0.0002506451867427587
         },
         "fcp": {
-          "p75_ms": 287
+          "p75_ms": 285
         },
         "ttfb": {
-          "p95_ms": 83.81500000022348
+          "p95_ms": 27.30000000447035
         },
         "longTasks": {
-          "p75_ms": 167.25
+          "p75_ms": 141
         },
         "usedJsHeap": {
-          "p75_bytes": 18581635.25
+          "p75_bytes": 19253191.5
+        },
+        "interactions": {
+          "samples": 8,
+          "performed": 8
         }
       },
       "mobileContent": {
         "url": "http://localhost:1000/support/inbox",
         "title": "(7) StreamlineOS",
-        "words": 545,
+        "visibilityState": "visible",
+        "words": 540,
         "brandedLoader": false,
         "errorBoundary": false,
         "navLinks": 8
@@ -1006,27 +1024,32 @@
           "p75_ms": 81
         },
         "inp": {
-          "p75_ms": 42
+          "p75_ms": 32
         },
         "cls": {
-          "p75": 0.013513219930180469
+          "p75": 0.01367573013619631
         },
         "fcp": {
           "p75_ms": 81
         },
         "ttfb": {
-          "p95_ms": 34.44499999955296
+          "p95_ms": 31.59499999992549
         },
         "longTasks": {
           "p75_ms": 0
         },
         "usedJsHeap": {
-          "p75_bytes": 15668086
+          "p75_bytes": 16377685
+        },
+        "interactions": {
+          "samples": 8,
+          "performed": 8
         }
       },
       "desktopContent": {
         "url": "http://localhost:1000/build/inbox",
         "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
         "words": 97,
         "brandedLoader": false,
         "errorBoundary": false,
@@ -1035,7 +1058,7 @@
       "desktopLayoutShifts": [
         {
           "value": 0.017,
-          "atMs": 147,
+          "atMs": 151,
           "sources": [
             "div.min-h-0.min-w-0.flex-1",
             "div.flex.min-w-0.flex-1",
@@ -1043,29 +1066,32 @@
           ]
         },
         {
-          "value": 0.0124,
-          "atMs": 137,
+          "value": 0.0129,
+          "atMs": 155,
           "sources": [
-            "div.min-h-0.min-w-0.flex-1"
+            "div.min-h-0.min-w-0.flex-1",
+            "div.flex.min-w-0.flex-1"
+          ]
+        },
+        {
+          "value": 0.0129,
+          "atMs": 157,
+          "sources": [
+            "div.min-h-0.min-w-0.flex-1",
+            "div.flex.min-w-0.flex-1"
+          ]
+        },
+        {
+          "value": 0.0129,
+          "atMs": 146,
+          "sources": [
+            "div.min-h-0.min-w-0.flex-1",
+            "div.flex.min-w-0.flex-1"
           ]
         },
         {
           "value": 0.0124,
-          "atMs": 150,
-          "sources": [
-            "div.min-h-0.min-w-0.flex-1"
-          ]
-        },
-        {
-          "value": 0.0124,
-          "atMs": 164,
-          "sources": [
-            "div.min-h-0.min-w-0.flex-1"
-          ]
-        },
-        {
-          "value": 0.0124,
-          "atMs": 159,
+          "atMs": 170,
           "sources": [
             "div.min-h-0.min-w-0.flex-1"
           ]
@@ -1073,30 +1099,35 @@
       ],
       "mobile": {
         "lcp": {
-          "p75_ms": 254
+          "p75_ms": 276
         },
         "inp": {
-          "p75_ms": 66
+          "p75_ms": 68
         },
         "cls": {
           "p75": 0.000702981422192581
         },
         "fcp": {
-          "p75_ms": 248
+          "p75_ms": 241
         },
         "ttfb": {
-          "p95_ms": 26.330000002495943
+          "p95_ms": 43.690000002458675
         },
         "longTasks": {
-          "p75_ms": 94.75
+          "p75_ms": 113.5
         },
         "usedJsHeap": {
-          "p75_bytes": 15713843
+          "p75_bytes": 16429877.25
+        },
+        "interactions": {
+          "samples": 8,
+          "performed": 8
         }
       },
       "mobileContent": {
         "url": "http://localhost:1000/build/inbox",
         "title": "(7) StreamlineOS",
+        "visibilityState": "visible",
         "words": 66,
         "brandedLoader": false,
         "errorBoundary": false,
@@ -1106,30 +1137,35 @@
     "/build/my-work": {
       "desktop": {
         "lcp": {
-          "p75_ms": 85
+          "p75_ms": 139
         },
         "inp": {
-          "p75_ms": 56
+          "p75_ms": 58
         },
         "cls": {
           "p75": 0.0010765772690007717
         },
         "fcp": {
-          "p75_ms": 85
+          "p75_ms": 139
         },
         "ttfb": {
-          "p95_ms": 46.75500000026077
+          "p95_ms": 88.50500000044704
         },
         "longTasks": {
-          "p75_ms": 0
+          "p75_ms": 13.75
         },
         "usedJsHeap": {
-          "p75_bytes": 21167529.25
+          "p75_bytes": 21502586.75
+        },
+        "interactions": {
+          "samples": 8,
+          "performed": 8
         }
       },
       "desktopContent": {
         "url": "http://localhost:1000/build/my-work",
         "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
         "words": 1150,
         "brandedLoader": false,
         "errorBoundary": false,
@@ -1137,30 +1173,35 @@
       },
       "mobile": {
         "lcp": {
-          "p75_ms": 269
+          "p75_ms": 299
         },
         "inp": {
-          "p75_ms": 162
+          "p75_ms": 144
         },
         "cls": {
           "p75": 0.0002506451867427587
         },
         "fcp": {
-          "p75_ms": 254
+          "p75_ms": 278
         },
         "ttfb": {
-          "p95_ms": 42.599999999254926
+          "p95_ms": 41.249999995529635
         },
         "longTasks": {
-          "p75_ms": 388.25
+          "p75_ms": 363.5
         },
         "usedJsHeap": {
-          "p75_bytes": 21511668
+          "p75_bytes": 21644978.5
+        },
+        "interactions": {
+          "samples": 8,
+          "performed": 8
         }
       },
       "mobileContent": {
         "url": "http://localhost:1000/build/my-work",
         "title": "(7) StreamlineOS",
+        "visibilityState": "visible",
         "words": 1135,
         "brandedLoader": false,
         "errorBoundary": false,
@@ -1170,30 +1211,35 @@
     "/crm/leads": {
       "desktop": {
         "lcp": {
-          "p75_ms": 387
+          "p75_ms": 389
         },
         "inp": {
-          "p75_ms": 48
+          "p75_ms": 32
         },
         "cls": {
           "p75": 0.000806020393947188
         },
         "fcp": {
-          "p75_ms": 106
+          "p75_ms": 113
         },
         "ttfb": {
-          "p95_ms": 45.89999999776482
+          "p95_ms": 66.6399999950081
         },
         "longTasks": {
           "p75_ms": 0
         },
         "usedJsHeap": {
-          "p75_bytes": 16735348
+          "p75_bytes": 17498862
+        },
+        "interactions": {
+          "samples": 8,
+          "performed": 8
         }
       },
       "desktopContent": {
         "url": "http://localhost:1000/crm/leads",
         "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
         "words": 85,
         "brandedLoader": false,
         "errorBoundary": true,
@@ -1201,30 +1247,35 @@
       },
       "mobile": {
         "lcp": {
-          "p75_ms": 612
+          "p75_ms": 1527
         },
         "inp": {
-          "p75_ms": 128
+          "p75_ms": 64
         },
         "cls": {
-          "p75": 0.00006266129668568968
+          "p75": 0.0002506451867427587
         },
         "fcp": {
-          "p75_ms": 269
+          "p75_ms": 261
         },
         "ttfb": {
-          "p95_ms": 35.470000001229344
+          "p95_ms": 24.52500000298023
         },
         "longTasks": {
-          "p75_ms": 278
+          "p75_ms": 190.5
         },
         "usedJsHeap": {
-          "p75_bytes": 16904751.75
+          "p75_bytes": 17531417.5
+        },
+        "interactions": {
+          "samples": 8,
+          "performed": 8
         }
       },
       "mobileContent": {
         "url": "http://localhost:1000/crm/leads",
         "title": "(7) StreamlineOS",
+        "visibilityState": "visible",
         "words": 54,
         "brandedLoader": false,
         "errorBoundary": true,
@@ -1234,33 +1285,33 @@
   },
   "firstLoadBytesByRoute": {
     "/dashboard": {
-      "scriptBytes": 604993,
-      "stylesheetBytes": 58161,
+      "scriptBytes": 606055,
+      "stylesheetBytes": 58191,
       "imageBytes": 2907,
       "fontBytes": 55206,
-      "documentBytes": 20817,
+      "documentBytes": 20873,
       "otherBytes": 2298,
       "thirdPartyBytes": 0,
-      "totalBytes": 744382,
+      "totalBytes": 745530,
       "windowTotals": {
-        "scriptBytes": 1005127,
-        "stylesheetBytes": 58161,
-        "imageBytes": 25946,
+        "scriptBytes": 941573,
+        "stylesheetBytes": 58191,
+        "imageBytes": 5814,
         "fontBytes": 73151,
-        "documentBytes": 20817,
-        "otherBytes": 133608,
-        "thirdPartyBytes": 66096,
-        "totalBytes": 1316810
+        "documentBytes": 20873,
+        "otherBytes": 62101,
+        "thirdPartyBytes": 0,
+        "totalBytes": 1161703
       },
       "postLoadTotals": {
-        "scriptBytes": 400134,
+        "scriptBytes": 335518,
         "stylesheetBytes": 0,
-        "imageBytes": 23039,
+        "imageBytes": 2907,
         "fontBytes": 17945,
         "documentBytes": 0,
-        "otherBytes": 131310,
-        "thirdPartyBytes": 66096,
-        "totalBytes": 572428
+        "otherBytes": 59803,
+        "thirdPartyBytes": 0,
+        "totalBytes": 416173
       },
       "notableResources": [
         {
@@ -1310,14 +1361,14 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 24840,
-          "url": "http://localhost:1000/_next/static/chunks/43tt5jk4s1x30.js"
+          "bytes": 24911,
+          "url": "http://localhost:1000/_next/static/chunks/3m85qfmj2lcvj.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 18108,
-          "url": "http://localhost:1000/_next/static/chunks/3ca1lvfk4wwft.js"
+          "bytes": 18112,
+          "url": "http://localhost:1000/_next/static/chunks/3q095fqibuex1.js"
         },
         {
           "kind": "script",
@@ -1352,8 +1403,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 14086,
-          "url": "http://localhost:1000/_next/static/chunks/0w7tho1nej75s.js"
+          "bytes": 14070,
+          "url": "http://localhost:1000/_next/static/chunks/2tz_mvvke8e-9.js"
         },
         {
           "kind": "script",
@@ -1364,20 +1415,20 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12757,
-          "url": "http://localhost:1000/_next/static/chunks/3241eunkpxts1.js"
+          "bytes": 12827,
+          "url": "http://localhost:1000/_next/static/chunks/24r45qcg8i6bd.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12468,
-          "url": "http://localhost:1000/_next/static/chunks/2-3yjou_0iri8.js"
+          "bytes": 12608,
+          "url": "http://localhost:1000/_next/static/chunks/2y8tqd_e3w2tn.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12263,
-          "url": "http://localhost:1000/_next/static/chunks/3hxf122zr3awr.js"
+          "bytes": 12341,
+          "url": "http://localhost:1000/_next/static/chunks/2dx6oae88f3hl.js"
         },
         {
           "kind": "script",
@@ -1394,8 +1445,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11718,
-          "url": "http://localhost:1000/_next/static/chunks/1fugy28_kea1u.js"
+          "bytes": 11841,
+          "url": "http://localhost:1000/_next/static/chunks/0-clfyte7yeve.js"
         },
         {
           "kind": "script",
@@ -1406,8 +1457,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11280,
-          "url": "http://localhost:1000/_next/static/chunks/247zu5hfzfdo0.js"
+          "bytes": 11290,
+          "url": "http://localhost:1000/_next/static/chunks/0pxin2ndn-bsw.js"
         },
         {
           "kind": "script",
@@ -1450,26 +1501,26 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 15291,
-          "url": "http://localhost:1000/_next/static/chunks/2ddrg-qfljz8p.js"
+          "bytes": 15290,
+          "url": "http://localhost:1000/_next/static/chunks/32us4eg6pgx8m.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 14608,
-          "url": "http://localhost:1000/_next/static/chunks/246_8r3p--xz6.js"
+          "bytes": 14607,
+          "url": "http://localhost:1000/_next/static/chunks/0kqsxsafd9d-q.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 13009,
-          "url": "http://localhost:1000/_next/static/chunks/2juy8z0qju98r.js"
+          "bytes": 13006,
+          "url": "http://localhost:1000/_next/static/chunks/04jo2dlr0c8vt.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12007,
-          "url": "http://localhost:1000/_next/static/chunks/3xgvabf2key5v.js"
+          "bytes": 12091,
+          "url": "http://localhost:1000/_next/static/chunks/409z5_43nn7_t.js"
         },
         {
           "kind": "script",
@@ -1486,20 +1537,14 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11098,
-          "url": "http://localhost:1000/_next/static/chunks/0k5boc52tn4k1.js"
+          "bytes": 10880,
+          "url": "http://localhost:1000/_next/static/chunks/196krb2gze33z.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10866,
-          "url": "http://localhost:1000/_next/static/chunks/1yscm-sp_3bi9.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 10259,
-          "url": "http://localhost:1000/_next/static/chunks/0t8ofwyd1fbp1.js"
+          "bytes": 10333,
+          "url": "http://localhost:1000/_next/static/chunks/32mooybsz1br3.js"
         },
         {
           "kind": "script",
@@ -1516,45 +1561,51 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9997,
-          "url": "http://localhost:1000/_next/static/chunks/2zl3cd1ksfuuz.js"
+          "bytes": 10037,
+          "url": "http://localhost:1000/_next/static/chunks/38sd767m0x8ce.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9673,
-          "url": "http://localhost:1000/_next/static/chunks/1cubjcipnl3hy.js"
+          "bytes": 9671,
+          "url": "http://localhost:1000/_next/static/chunks/2gtw_c3wyv93c.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9572,
+          "url": "http://localhost:1000/_next/static/chunks/23zlwm5c1katy.js"
         }
       ]
     },
     "/mail": {
-      "scriptBytes": 639362,
-      "stylesheetBytes": 58161,
+      "scriptBytes": 640470,
+      "stylesheetBytes": 58191,
       "imageBytes": 2907,
       "fontBytes": 55206,
-      "documentBytes": 20813,
+      "documentBytes": 20870,
       "otherBytes": 2298,
       "thirdPartyBytes": 0,
-      "totalBytes": 778747,
+      "totalBytes": 779942,
       "windowTotals": {
-        "scriptBytes": 851589,
-        "stylesheetBytes": 58161,
+        "scriptBytes": 853025,
+        "stylesheetBytes": 58191,
         "imageBytes": 13072,
         "fontBytes": 55206,
-        "documentBytes": 20813,
-        "otherBytes": 46902,
-        "thirdPartyBytes": 25029,
-        "totalBytes": 1045743
+        "documentBytes": 20870,
+        "otherBytes": 46907,
+        "thirdPartyBytes": 0,
+        "totalBytes": 1047271
       },
       "postLoadTotals": {
-        "scriptBytes": 212227,
+        "scriptBytes": 212555,
         "stylesheetBytes": 0,
         "imageBytes": 10165,
         "fontBytes": 0,
         "documentBytes": 0,
-        "otherBytes": 44604,
-        "thirdPartyBytes": 25029,
-        "totalBytes": 266996
+        "otherBytes": 44609,
+        "thirdPartyBytes": 0,
+        "totalBytes": 267329
       },
       "notableResources": [
         {
@@ -1604,20 +1655,20 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 24840,
-          "url": "http://localhost:1000/_next/static/chunks/43tt5jk4s1x30.js"
+          "bytes": 24911,
+          "url": "http://localhost:1000/_next/static/chunks/3m85qfmj2lcvj.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 21168,
-          "url": "http://localhost:1000/_next/static/chunks/0-8bxf5q6q-co.js"
+          "bytes": 21186,
+          "url": "http://localhost:1000/_next/static/chunks/1tibyvouehb_u.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 18108,
-          "url": "http://localhost:1000/_next/static/chunks/3ca1lvfk4wwft.js"
+          "bytes": 18112,
+          "url": "http://localhost:1000/_next/static/chunks/3q095fqibuex1.js"
         },
         {
           "kind": "script",
@@ -1658,14 +1709,14 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12757,
-          "url": "http://localhost:1000/_next/static/chunks/3241eunkpxts1.js"
+          "bytes": 12827,
+          "url": "http://localhost:1000/_next/static/chunks/24r45qcg8i6bd.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12654,
-          "url": "http://localhost:1000/_next/static/chunks/0tdpzakr16d2e.js"
+          "bytes": 12789,
+          "url": "http://localhost:1000/_next/static/chunks/00nil--2667m8.js"
         },
         {
           "kind": "script",
@@ -1688,14 +1739,14 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11748,
-          "url": "http://localhost:1000/_next/static/chunks/1wu7mjb1tvc3i.js"
+          "bytes": 11841,
+          "url": "http://localhost:1000/_next/static/chunks/0-clfyte7yeve.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11718,
-          "url": "http://localhost:1000/_next/static/chunks/1fugy28_kea1u.js"
+          "bytes": 11825,
+          "url": "http://localhost:1000/_next/static/chunks/43dz6lmhe0t0i.js"
         },
         {
           "kind": "script",
@@ -1706,8 +1757,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11280,
-          "url": "http://localhost:1000/_next/static/chunks/247zu5hfzfdo0.js"
+          "bytes": 11290,
+          "url": "http://localhost:1000/_next/static/chunks/0pxin2ndn-bsw.js"
         },
         {
           "kind": "script",
@@ -1744,14 +1795,14 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 15291,
-          "url": "http://localhost:1000/_next/static/chunks/2ddrg-qfljz8p.js"
+          "bytes": 15290,
+          "url": "http://localhost:1000/_next/static/chunks/32us4eg6pgx8m.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12007,
-          "url": "http://localhost:1000/_next/static/chunks/3xgvabf2key5v.js"
+          "bytes": 12091,
+          "url": "http://localhost:1000/_next/static/chunks/409z5_43nn7_t.js"
         },
         {
           "kind": "script",
@@ -1762,20 +1813,20 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10866,
-          "url": "http://localhost:1000/_next/static/chunks/1yscm-sp_3bi9.js"
+          "bytes": 10880,
+          "url": "http://localhost:1000/_next/static/chunks/196krb2gze33z.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9997,
-          "url": "http://localhost:1000/_next/static/chunks/2zl3cd1ksfuuz.js"
+          "bytes": 10037,
+          "url": "http://localhost:1000/_next/static/chunks/38sd767m0x8ce.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9673,
-          "url": "http://localhost:1000/_next/static/chunks/1cubjcipnl3hy.js"
+          "bytes": 9671,
+          "url": "http://localhost:1000/_next/static/chunks/2gtw_c3wyv93c.js"
         },
         {
           "kind": "script",
@@ -1792,8 +1843,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 8074,
-          "url": "http://localhost:1000/_next/static/chunks/1ergwr90bhhes.js"
+          "bytes": 8242,
+          "url": "http://localhost:1000/_next/static/chunks/2lcxmux4c19v1.js"
         },
         {
           "kind": "script",
@@ -1804,8 +1855,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 7008,
-          "url": "http://localhost:1000/_next/static/chunks/0a2d32kdi0xy3.js"
+          "bytes": 7013,
+          "url": "http://localhost:1000/_next/static/chunks/02o2wflnh7is4.js"
         },
         {
           "kind": "script",
@@ -1816,39 +1867,39 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 6647,
-          "url": "http://localhost:1000/_next/static/chunks/18cz1jzju2c68.js"
+          "bytes": 6683,
+          "url": "http://localhost:1000/_next/static/chunks/0nhmb-ib6dm6l.js"
         }
       ]
     },
     "/inbox": {
-      "scriptBytes": 573118,
-      "stylesheetBytes": 58161,
+      "scriptBytes": 573996,
+      "stylesheetBytes": 58191,
       "imageBytes": 2907,
       "fontBytes": 55206,
-      "documentBytes": 20496,
+      "documentBytes": 20554,
       "otherBytes": 2298,
       "thirdPartyBytes": 0,
-      "totalBytes": 712186,
+      "totalBytes": 713152,
       "windowTotals": {
-        "scriptBytes": 813358,
-        "stylesheetBytes": 58161,
+        "scriptBytes": 814741,
+        "stylesheetBytes": 58191,
         "imageBytes": 5814,
         "fontBytes": 55206,
-        "documentBytes": 20496,
-        "otherBytes": 48276,
-        "thirdPartyBytes": 23206,
-        "totalBytes": 1001311
+        "documentBytes": 20554,
+        "otherBytes": 46913,
+        "thirdPartyBytes": 0,
+        "totalBytes": 1001419
       },
       "postLoadTotals": {
-        "scriptBytes": 240240,
+        "scriptBytes": 240745,
         "stylesheetBytes": 0,
         "imageBytes": 2907,
         "fontBytes": 0,
         "documentBytes": 0,
-        "otherBytes": 45978,
-        "thirdPartyBytes": 23206,
-        "totalBytes": 289125
+        "otherBytes": 44615,
+        "thirdPartyBytes": 0,
+        "totalBytes": 288267
       },
       "notableResources": [
         {
@@ -1898,8 +1949,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 24840,
-          "url": "http://localhost:1000/_next/static/chunks/43tt5jk4s1x30.js"
+          "bytes": 24911,
+          "url": "http://localhost:1000/_next/static/chunks/3m85qfmj2lcvj.js"
         },
         {
           "kind": "script",
@@ -1910,8 +1961,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 18108,
-          "url": "http://localhost:1000/_next/static/chunks/3ca1lvfk4wwft.js"
+          "bytes": 18112,
+          "url": "http://localhost:1000/_next/static/chunks/3q095fqibuex1.js"
         },
         {
           "kind": "script",
@@ -1952,8 +2003,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12757,
-          "url": "http://localhost:1000/_next/static/chunks/3241eunkpxts1.js"
+          "bytes": 12827,
+          "url": "http://localhost:1000/_next/static/chunks/24r45qcg8i6bd.js"
         },
         {
           "kind": "script",
@@ -1970,8 +2021,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11718,
-          "url": "http://localhost:1000/_next/static/chunks/1fugy28_kea1u.js"
+          "bytes": 11841,
+          "url": "http://localhost:1000/_next/static/chunks/0-clfyte7yeve.js"
         },
         {
           "kind": "script",
@@ -1982,8 +2033,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11280,
-          "url": "http://localhost:1000/_next/static/chunks/247zu5hfzfdo0.js"
+          "bytes": 11290,
+          "url": "http://localhost:1000/_next/static/chunks/0pxin2ndn-bsw.js"
         },
         {
           "kind": "script",
@@ -2018,8 +2069,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9811,
-          "url": "http://localhost:1000/_next/static/chunks/29ur5xcfypvcq.js"
+          "bytes": 9894,
+          "url": "http://localhost:1000/_next/static/chunks/3fc65g42dfvsc.js"
         }
       ],
       "largestPostLoadScripts": [
@@ -2038,14 +2089,14 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 15291,
-          "url": "http://localhost:1000/_next/static/chunks/2ddrg-qfljz8p.js"
+          "bytes": 15290,
+          "url": "http://localhost:1000/_next/static/chunks/32us4eg6pgx8m.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12007,
-          "url": "http://localhost:1000/_next/static/chunks/3xgvabf2key5v.js"
+          "bytes": 12091,
+          "url": "http://localhost:1000/_next/static/chunks/409z5_43nn7_t.js"
         },
         {
           "kind": "script",
@@ -2062,20 +2113,20 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10866,
-          "url": "http://localhost:1000/_next/static/chunks/1yscm-sp_3bi9.js"
+          "bytes": 10880,
+          "url": "http://localhost:1000/_next/static/chunks/196krb2gze33z.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9997,
-          "url": "http://localhost:1000/_next/static/chunks/2zl3cd1ksfuuz.js"
+          "bytes": 10037,
+          "url": "http://localhost:1000/_next/static/chunks/38sd767m0x8ce.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9673,
-          "url": "http://localhost:1000/_next/static/chunks/1cubjcipnl3hy.js"
+          "bytes": 9671,
+          "url": "http://localhost:1000/_next/static/chunks/2gtw_c3wyv93c.js"
         },
         {
           "kind": "script",
@@ -2098,8 +2149,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 8074,
-          "url": "http://localhost:1000/_next/static/chunks/1ergwr90bhhes.js"
+          "bytes": 8242,
+          "url": "http://localhost:1000/_next/static/chunks/2lcxmux4c19v1.js"
         },
         {
           "kind": "script",
@@ -2110,39 +2161,39 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 7008,
-          "url": "http://localhost:1000/_next/static/chunks/0a2d32kdi0xy3.js"
+          "bytes": 7013,
+          "url": "http://localhost:1000/_next/static/chunks/02o2wflnh7is4.js"
         }
       ]
     },
     "/notifications": {
-      "scriptBytes": 586986,
-      "stylesheetBytes": 58161,
+      "scriptBytes": 587940,
+      "stylesheetBytes": 58191,
       "imageBytes": 2907,
       "fontBytes": 55206,
-      "documentBytes": 21897,
+      "documentBytes": 21959,
       "otherBytes": 2298,
       "thirdPartyBytes": 0,
-      "totalBytes": 727455,
+      "totalBytes": 728501,
       "windowTotals": {
-        "scriptBytes": 807795,
-        "stylesheetBytes": 58161,
+        "scriptBytes": 809077,
+        "stylesheetBytes": 58191,
         "imageBytes": 5814,
         "fontBytes": 55206,
-        "documentBytes": 21897,
-        "otherBytes": 81680,
-        "thirdPartyBytes": 23636,
-        "totalBytes": 1030553
+        "documentBytes": 21959,
+        "otherBytes": 72908,
+        "thirdPartyBytes": 0,
+        "totalBytes": 1023155
       },
       "postLoadTotals": {
-        "scriptBytes": 220809,
+        "scriptBytes": 221137,
         "stylesheetBytes": 0,
         "imageBytes": 2907,
         "fontBytes": 0,
         "documentBytes": 0,
-        "otherBytes": 79382,
-        "thirdPartyBytes": 23636,
-        "totalBytes": 303098
+        "otherBytes": 70610,
+        "thirdPartyBytes": 0,
+        "totalBytes": 294654
       },
       "notableResources": [
         {
@@ -2192,20 +2243,20 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 24840,
-          "url": "http://localhost:1000/_next/static/chunks/43tt5jk4s1x30.js"
+          "bytes": 24911,
+          "url": "http://localhost:1000/_next/static/chunks/3m85qfmj2lcvj.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 22581,
-          "url": "http://localhost:1000/_next/static/chunks/1frnyca0inmnj.js"
+          "bytes": 22657,
+          "url": "http://localhost:1000/_next/static/chunks/0ehqeim-2546w.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 18108,
-          "url": "http://localhost:1000/_next/static/chunks/3ca1lvfk4wwft.js"
+          "bytes": 18112,
+          "url": "http://localhost:1000/_next/static/chunks/3q095fqibuex1.js"
         },
         {
           "kind": "script",
@@ -2246,8 +2297,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12757,
-          "url": "http://localhost:1000/_next/static/chunks/3241eunkpxts1.js"
+          "bytes": 12827,
+          "url": "http://localhost:1000/_next/static/chunks/24r45qcg8i6bd.js"
         },
         {
           "kind": "script",
@@ -2264,8 +2315,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11718,
-          "url": "http://localhost:1000/_next/static/chunks/1fugy28_kea1u.js"
+          "bytes": 11841,
+          "url": "http://localhost:1000/_next/static/chunks/0-clfyte7yeve.js"
         },
         {
           "kind": "script",
@@ -2276,8 +2327,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11280,
-          "url": "http://localhost:1000/_next/static/chunks/247zu5hfzfdo0.js"
+          "bytes": 11290,
+          "url": "http://localhost:1000/_next/static/chunks/0pxin2ndn-bsw.js"
         },
         {
           "kind": "script",
@@ -2312,8 +2363,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9811,
-          "url": "http://localhost:1000/_next/static/chunks/29ur5xcfypvcq.js"
+          "bytes": 9894,
+          "url": "http://localhost:1000/_next/static/chunks/3fc65g42dfvsc.js"
         }
       ],
       "largestPostLoadScripts": [
@@ -2332,14 +2383,14 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 15291,
-          "url": "http://localhost:1000/_next/static/chunks/2ddrg-qfljz8p.js"
+          "bytes": 15290,
+          "url": "http://localhost:1000/_next/static/chunks/32us4eg6pgx8m.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12007,
-          "url": "http://localhost:1000/_next/static/chunks/3xgvabf2key5v.js"
+          "bytes": 12091,
+          "url": "http://localhost:1000/_next/static/chunks/409z5_43nn7_t.js"
         },
         {
           "kind": "script",
@@ -2356,20 +2407,20 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10866,
-          "url": "http://localhost:1000/_next/static/chunks/1yscm-sp_3bi9.js"
+          "bytes": 10880,
+          "url": "http://localhost:1000/_next/static/chunks/196krb2gze33z.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9997,
-          "url": "http://localhost:1000/_next/static/chunks/2zl3cd1ksfuuz.js"
+          "bytes": 10037,
+          "url": "http://localhost:1000/_next/static/chunks/38sd767m0x8ce.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9673,
-          "url": "http://localhost:1000/_next/static/chunks/1cubjcipnl3hy.js"
+          "bytes": 9671,
+          "url": "http://localhost:1000/_next/static/chunks/2gtw_c3wyv93c.js"
         },
         {
           "kind": "script",
@@ -2386,8 +2437,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 8074,
-          "url": "http://localhost:1000/_next/static/chunks/1ergwr90bhhes.js"
+          "bytes": 8242,
+          "url": "http://localhost:1000/_next/static/chunks/2lcxmux4c19v1.js"
         },
         {
           "kind": "script",
@@ -2398,8 +2449,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 7008,
-          "url": "http://localhost:1000/_next/static/chunks/0a2d32kdi0xy3.js"
+          "bytes": 7013,
+          "url": "http://localhost:1000/_next/static/chunks/02o2wflnh7is4.js"
         },
         {
           "kind": "script",
@@ -2410,33 +2461,33 @@
       ]
     },
     "/settings": {
-      "scriptBytes": 605854,
-      "stylesheetBytes": 58161,
+      "scriptBytes": 606736,
+      "stylesheetBytes": 58191,
       "imageBytes": 2907,
       "fontBytes": 55206,
-      "documentBytes": 22790,
+      "documentBytes": 22853,
       "otherBytes": 2298,
       "thirdPartyBytes": 0,
-      "totalBytes": 747216,
+      "totalBytes": 748191,
       "windowTotals": {
-        "scriptBytes": 804227,
-        "stylesheetBytes": 58161,
+        "scriptBytes": 805433,
+        "stylesheetBytes": 58191,
         "imageBytes": 8634,
         "fontBytes": 55206,
-        "documentBytes": 22790,
-        "otherBytes": 57422,
-        "thirdPartyBytes": 25714,
-        "totalBytes": 1006440
+        "documentBytes": 22853,
+        "otherBytes": 50471,
+        "thirdPartyBytes": 0,
+        "totalBytes": 1000788
       },
       "postLoadTotals": {
-        "scriptBytes": 198373,
+        "scriptBytes": 198697,
         "stylesheetBytes": 0,
         "imageBytes": 5727,
         "fontBytes": 0,
         "documentBytes": 0,
-        "otherBytes": 55124,
-        "thirdPartyBytes": 25714,
-        "totalBytes": 259224
+        "otherBytes": 48173,
+        "thirdPartyBytes": 0,
+        "totalBytes": 252597
       },
       "notableResources": [
         {
@@ -2486,14 +2537,14 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 24840,
-          "url": "http://localhost:1000/_next/static/chunks/43tt5jk4s1x30.js"
+          "bytes": 24911,
+          "url": "http://localhost:1000/_next/static/chunks/3m85qfmj2lcvj.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 18108,
-          "url": "http://localhost:1000/_next/static/chunks/3ca1lvfk4wwft.js"
+          "bytes": 18112,
+          "url": "http://localhost:1000/_next/static/chunks/3q095fqibuex1.js"
         },
         {
           "kind": "script",
@@ -2510,8 +2561,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 15291,
-          "url": "http://localhost:1000/_next/static/chunks/2ddrg-qfljz8p.js"
+          "bytes": 15290,
+          "url": "http://localhost:1000/_next/static/chunks/32us4eg6pgx8m.js"
         },
         {
           "kind": "script",
@@ -2540,8 +2591,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12757,
-          "url": "http://localhost:1000/_next/static/chunks/3241eunkpxts1.js"
+          "bytes": 12827,
+          "url": "http://localhost:1000/_next/static/chunks/24r45qcg8i6bd.js"
         },
         {
           "kind": "script",
@@ -2558,8 +2609,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11718,
-          "url": "http://localhost:1000/_next/static/chunks/1fugy28_kea1u.js"
+          "bytes": 11841,
+          "url": "http://localhost:1000/_next/static/chunks/0-clfyte7yeve.js"
         },
         {
           "kind": "script",
@@ -2576,8 +2627,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11280,
-          "url": "http://localhost:1000/_next/static/chunks/247zu5hfzfdo0.js"
+          "bytes": 11290,
+          "url": "http://localhost:1000/_next/static/chunks/0pxin2ndn-bsw.js"
         },
         {
           "kind": "script",
@@ -2626,8 +2677,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12007,
-          "url": "http://localhost:1000/_next/static/chunks/3xgvabf2key5v.js"
+          "bytes": 12091,
+          "url": "http://localhost:1000/_next/static/chunks/409z5_43nn7_t.js"
         },
         {
           "kind": "script",
@@ -2644,20 +2695,20 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10866,
-          "url": "http://localhost:1000/_next/static/chunks/1yscm-sp_3bi9.js"
+          "bytes": 10880,
+          "url": "http://localhost:1000/_next/static/chunks/196krb2gze33z.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9997,
-          "url": "http://localhost:1000/_next/static/chunks/2zl3cd1ksfuuz.js"
+          "bytes": 10037,
+          "url": "http://localhost:1000/_next/static/chunks/38sd767m0x8ce.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9673,
-          "url": "http://localhost:1000/_next/static/chunks/1cubjcipnl3hy.js"
+          "bytes": 9671,
+          "url": "http://localhost:1000/_next/static/chunks/2gtw_c3wyv93c.js"
         },
         {
           "kind": "script",
@@ -2680,8 +2731,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 8074,
-          "url": "http://localhost:1000/_next/static/chunks/1ergwr90bhhes.js"
+          "bytes": 8242,
+          "url": "http://localhost:1000/_next/static/chunks/2lcxmux4c19v1.js"
         },
         {
           "kind": "script",
@@ -2692,45 +2743,45 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 6647,
-          "url": "http://localhost:1000/_next/static/chunks/18cz1jzju2c68.js"
+          "bytes": 6683,
+          "url": "http://localhost:1000/_next/static/chunks/0nhmb-ib6dm6l.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 5374,
-          "url": "http://localhost:1000/_next/static/chunks/0s_4jo52o-720.js"
+          "bytes": 5358,
+          "url": "http://localhost:1000/_next/static/chunks/3vk777t1ai0qr.js"
         }
       ]
     },
     "/calendar": {
-      "scriptBytes": 698541,
-      "stylesheetBytes": 58161,
+      "scriptBytes": 699714,
+      "stylesheetBytes": 58191,
       "imageBytes": 2907,
       "fontBytes": 55206,
-      "documentBytes": 21728,
+      "documentBytes": 21782,
       "otherBytes": 2298,
       "thirdPartyBytes": 0,
-      "totalBytes": 838841,
+      "totalBytes": 840098,
       "windowTotals": {
-        "scriptBytes": 928829,
-        "stylesheetBytes": 62109,
+        "scriptBytes": 930122,
+        "stylesheetBytes": 62139,
         "imageBytes": 5814,
         "fontBytes": 55206,
-        "documentBytes": 21728,
-        "otherBytes": 73242,
-        "thirdPartyBytes": 41265,
-        "totalBytes": 1146928
+        "documentBytes": 21782,
+        "otherBytes": 78049,
+        "thirdPartyBytes": 0,
+        "totalBytes": 1153112
       },
       "postLoadTotals": {
-        "scriptBytes": 230288,
+        "scriptBytes": 230408,
         "stylesheetBytes": 3948,
         "imageBytes": 2907,
         "fontBytes": 0,
         "documentBytes": 0,
-        "otherBytes": 70944,
-        "thirdPartyBytes": 41265,
-        "totalBytes": 308087
+        "otherBytes": 75751,
+        "thirdPartyBytes": 0,
+        "totalBytes": 313014
       },
       "notableResources": [
         {
@@ -2774,8 +2825,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 34468,
-          "url": "http://localhost:1000/_next/static/chunks/06sw94ihkwu9i.js"
+          "bytes": 34467,
+          "url": "http://localhost:1000/_next/static/chunks/40jg1rce1fw2_.js"
         },
         {
           "kind": "script",
@@ -2786,14 +2837,14 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 24840,
-          "url": "http://localhost:1000/_next/static/chunks/43tt5jk4s1x30.js"
+          "bytes": 24911,
+          "url": "http://localhost:1000/_next/static/chunks/3m85qfmj2lcvj.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 18108,
-          "url": "http://localhost:1000/_next/static/chunks/3ca1lvfk4wwft.js"
+          "bytes": 18112,
+          "url": "http://localhost:1000/_next/static/chunks/3q095fqibuex1.js"
         },
         {
           "kind": "script",
@@ -2816,8 +2867,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 15291,
-          "url": "http://localhost:1000/_next/static/chunks/2ddrg-qfljz8p.js"
+          "bytes": 15290,
+          "url": "http://localhost:1000/_next/static/chunks/32us4eg6pgx8m.js"
         },
         {
           "kind": "script",
@@ -2846,14 +2897,14 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 13009,
-          "url": "http://localhost:1000/_next/static/chunks/2juy8z0qju98r.js"
+          "bytes": 13006,
+          "url": "http://localhost:1000/_next/static/chunks/04jo2dlr0c8vt.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12757,
-          "url": "http://localhost:1000/_next/static/chunks/3241eunkpxts1.js"
+          "bytes": 12827,
+          "url": "http://localhost:1000/_next/static/chunks/24r45qcg8i6bd.js"
         },
         {
           "kind": "script",
@@ -2870,8 +2921,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11718,
-          "url": "http://localhost:1000/_next/static/chunks/1fugy28_kea1u.js"
+          "bytes": 11841,
+          "url": "http://localhost:1000/_next/static/chunks/0-clfyte7yeve.js"
         },
         {
           "kind": "script",
@@ -2882,8 +2933,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11280,
-          "url": "http://localhost:1000/_next/static/chunks/247zu5hfzfdo0.js"
+          "bytes": 11290,
+          "url": "http://localhost:1000/_next/static/chunks/0pxin2ndn-bsw.js"
         },
         {
           "kind": "script",
@@ -2926,8 +2977,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12007,
-          "url": "http://localhost:1000/_next/static/chunks/3xgvabf2key5v.js"
+          "bytes": 12091,
+          "url": "http://localhost:1000/_next/static/chunks/409z5_43nn7_t.js"
         },
         {
           "kind": "script",
@@ -2950,20 +3001,20 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10866,
-          "url": "http://localhost:1000/_next/static/chunks/1yscm-sp_3bi9.js"
+          "bytes": 10880,
+          "url": "http://localhost:1000/_next/static/chunks/196krb2gze33z.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9997,
-          "url": "http://localhost:1000/_next/static/chunks/2zl3cd1ksfuuz.js"
+          "bytes": 10037,
+          "url": "http://localhost:1000/_next/static/chunks/38sd767m0x8ce.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9673,
-          "url": "http://localhost:1000/_next/static/chunks/1cubjcipnl3hy.js"
+          "bytes": 9671,
+          "url": "http://localhost:1000/_next/static/chunks/2gtw_c3wyv93c.js"
         },
         {
           "kind": "script",
@@ -2986,8 +3037,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 5374,
-          "url": "http://localhost:1000/_next/static/chunks/0s_4jo52o-720.js"
+          "bytes": 5358,
+          "url": "http://localhost:1000/_next/static/chunks/3vk777t1ai0qr.js"
         },
         {
           "kind": "script",
@@ -2998,33 +3049,33 @@
       ]
     },
     "/chat": {
-      "scriptBytes": 817008,
-      "stylesheetBytes": 58161,
+      "scriptBytes": 818403,
+      "stylesheetBytes": 58191,
       "imageBytes": 10531,
       "fontBytes": 55206,
-      "documentBytes": 22320,
+      "documentBytes": 22378,
       "otherBytes": 2298,
       "thirdPartyBytes": 0,
-      "totalBytes": 965524,
+      "totalBytes": 967007,
       "windowTotals": {
-        "scriptBytes": 967315,
-        "stylesheetBytes": 58161,
+        "scriptBytes": 968791,
+        "stylesheetBytes": 58191,
         "imageBytes": 13438,
         "fontBytes": 55206,
-        "documentBytes": 22320,
-        "otherBytes": 77319,
-        "thirdPartyBytes": 43100,
-        "totalBytes": 1193759
+        "documentBytes": 22378,
+        "otherBytes": 71871,
+        "thirdPartyBytes": 0,
+        "totalBytes": 1189875
       },
       "postLoadTotals": {
-        "scriptBytes": 150307,
+        "scriptBytes": 150388,
         "stylesheetBytes": 0,
         "imageBytes": 2907,
         "fontBytes": 0,
         "documentBytes": 0,
-        "otherBytes": 75021,
-        "thirdPartyBytes": 43100,
-        "totalBytes": 228235
+        "otherBytes": 69573,
+        "thirdPartyBytes": 0,
+        "totalBytes": 222868
       },
       "notableResources": [
         {
@@ -3080,8 +3131,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 42664,
-          "url": "http://localhost:1000/_next/static/chunks/3h0kadlumvgzl.js"
+          "bytes": 42740,
+          "url": "http://localhost:1000/_next/static/chunks/34rqok1eyayju.js"
         },
         {
           "kind": "script",
@@ -3092,14 +3143,14 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 24840,
-          "url": "http://localhost:1000/_next/static/chunks/43tt5jk4s1x30.js"
+          "bytes": 24911,
+          "url": "http://localhost:1000/_next/static/chunks/3m85qfmj2lcvj.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 18108,
-          "url": "http://localhost:1000/_next/static/chunks/3ca1lvfk4wwft.js"
+          "bytes": 18112,
+          "url": "http://localhost:1000/_next/static/chunks/3q095fqibuex1.js"
         },
         {
           "kind": "script",
@@ -3122,8 +3173,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 15291,
-          "url": "http://localhost:1000/_next/static/chunks/2ddrg-qfljz8p.js"
+          "bytes": 15290,
+          "url": "http://localhost:1000/_next/static/chunks/32us4eg6pgx8m.js"
         },
         {
           "kind": "script",
@@ -3152,20 +3203,20 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 13009,
-          "url": "http://localhost:1000/_next/static/chunks/2juy8z0qju98r.js"
+          "bytes": 13006,
+          "url": "http://localhost:1000/_next/static/chunks/04jo2dlr0c8vt.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12757,
-          "url": "http://localhost:1000/_next/static/chunks/3241eunkpxts1.js"
+          "bytes": 12827,
+          "url": "http://localhost:1000/_next/static/chunks/24r45qcg8i6bd.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12700,
-          "url": "http://localhost:1000/_next/static/chunks/0gnrtysi9golk.js"
+          "bytes": 12806,
+          "url": "http://localhost:1000/_next/static/chunks/2b-59offdr44z.js"
         },
         {
           "kind": "script",
@@ -3176,8 +3227,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11993,
-          "url": "http://localhost:1000/_next/static/chunks/42-rtcceearal.js"
+          "bytes": 12009,
+          "url": "http://localhost:1000/_next/static/chunks/0zka-kfsdbzsm.js"
         },
         {
           "kind": "script",
@@ -3194,8 +3245,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11718,
-          "url": "http://localhost:1000/_next/static/chunks/1fugy28_kea1u.js"
+          "bytes": 11841,
+          "url": "http://localhost:1000/_next/static/chunks/0-clfyte7yeve.js"
         },
         {
           "kind": "script",
@@ -3220,8 +3271,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12007,
-          "url": "http://localhost:1000/_next/static/chunks/3xgvabf2key5v.js"
+          "bytes": 12091,
+          "url": "http://localhost:1000/_next/static/chunks/409z5_43nn7_t.js"
         },
         {
           "kind": "script",
@@ -3232,14 +3283,14 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10866,
-          "url": "http://localhost:1000/_next/static/chunks/1yscm-sp_3bi9.js"
+          "bytes": 10880,
+          "url": "http://localhost:1000/_next/static/chunks/196krb2gze33z.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9673,
-          "url": "http://localhost:1000/_next/static/chunks/1cubjcipnl3hy.js"
+          "bytes": 9671,
+          "url": "http://localhost:1000/_next/static/chunks/2gtw_c3wyv93c.js"
         },
         {
           "kind": "script",
@@ -3256,8 +3307,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 5374,
-          "url": "http://localhost:1000/_next/static/chunks/0s_4jo52o-720.js"
+          "bytes": 5358,
+          "url": "http://localhost:1000/_next/static/chunks/3vk777t1ai0qr.js"
         },
         {
           "kind": "script",
@@ -3268,8 +3319,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 2717,
-          "url": "http://localhost:1000/_next/static/chunks/19_er9nzrbt0g.js"
+          "bytes": 2718,
+          "url": "http://localhost:1000/_next/static/chunks/2-i2leihotfc3.js"
         },
         {
           "kind": "script",
@@ -3298,33 +3349,33 @@
       ]
     },
     "/parties": {
-      "scriptBytes": 618550,
-      "stylesheetBytes": 58161,
+      "scriptBytes": 619518,
+      "stylesheetBytes": 58191,
       "imageBytes": 2907,
       "fontBytes": 55206,
-      "documentBytes": 23160,
+      "documentBytes": 23232,
       "otherBytes": 2298,
       "thirdPartyBytes": 0,
-      "totalBytes": 760282,
+      "totalBytes": 761352,
       "windowTotals": {
-        "scriptBytes": 824022,
-        "stylesheetBytes": 58161,
+        "scriptBytes": 825318,
+        "stylesheetBytes": 58191,
         "imageBytes": 5814,
         "fontBytes": 55206,
-        "documentBytes": 23160,
-        "otherBytes": 68096,
-        "thirdPartyBytes": 23621,
-        "totalBytes": 1034459
+        "documentBytes": 23232,
+        "otherBytes": 45499,
+        "thirdPartyBytes": 0,
+        "totalBytes": 1013260
       },
       "postLoadTotals": {
-        "scriptBytes": 205472,
+        "scriptBytes": 205800,
         "stylesheetBytes": 0,
         "imageBytes": 2907,
         "fontBytes": 0,
         "documentBytes": 0,
-        "otherBytes": 65798,
-        "thirdPartyBytes": 23621,
-        "totalBytes": 274177
+        "otherBytes": 43201,
+        "thirdPartyBytes": 0,
+        "totalBytes": 251908
       },
       "notableResources": [
         {
@@ -3374,8 +3425,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 24840,
-          "url": "http://localhost:1000/_next/static/chunks/43tt5jk4s1x30.js"
+          "bytes": 24911,
+          "url": "http://localhost:1000/_next/static/chunks/3m85qfmj2lcvj.js"
         },
         {
           "kind": "script",
@@ -3386,8 +3437,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 18108,
-          "url": "http://localhost:1000/_next/static/chunks/3ca1lvfk4wwft.js"
+          "bytes": 18112,
+          "url": "http://localhost:1000/_next/static/chunks/3q095fqibuex1.js"
         },
         {
           "kind": "script",
@@ -3404,8 +3455,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 15480,
-          "url": "http://localhost:1000/_next/static/chunks/2dtm00onrb58l.js"
+          "bytes": 15492,
+          "url": "http://localhost:1000/_next/static/chunks/3bwgull727xny.js"
         },
         {
           "kind": "script",
@@ -3434,8 +3485,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12757,
-          "url": "http://localhost:1000/_next/static/chunks/3241eunkpxts1.js"
+          "bytes": 12827,
+          "url": "http://localhost:1000/_next/static/chunks/24r45qcg8i6bd.js"
         },
         {
           "kind": "script",
@@ -3452,8 +3503,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11718,
-          "url": "http://localhost:1000/_next/static/chunks/1fugy28_kea1u.js"
+          "bytes": 11841,
+          "url": "http://localhost:1000/_next/static/chunks/0-clfyte7yeve.js"
         },
         {
           "kind": "script",
@@ -3464,8 +3515,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11280,
-          "url": "http://localhost:1000/_next/static/chunks/247zu5hfzfdo0.js"
+          "bytes": 11290,
+          "url": "http://localhost:1000/_next/static/chunks/0pxin2ndn-bsw.js"
         },
         {
           "kind": "script",
@@ -3508,14 +3559,14 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 15291,
-          "url": "http://localhost:1000/_next/static/chunks/2ddrg-qfljz8p.js"
+          "bytes": 15290,
+          "url": "http://localhost:1000/_next/static/chunks/32us4eg6pgx8m.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12007,
-          "url": "http://localhost:1000/_next/static/chunks/3xgvabf2key5v.js"
+          "bytes": 12091,
+          "url": "http://localhost:1000/_next/static/chunks/409z5_43nn7_t.js"
         },
         {
           "kind": "script",
@@ -3532,20 +3583,20 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10866,
-          "url": "http://localhost:1000/_next/static/chunks/1yscm-sp_3bi9.js"
+          "bytes": 10880,
+          "url": "http://localhost:1000/_next/static/chunks/196krb2gze33z.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9997,
-          "url": "http://localhost:1000/_next/static/chunks/2zl3cd1ksfuuz.js"
+          "bytes": 10037,
+          "url": "http://localhost:1000/_next/static/chunks/38sd767m0x8ce.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9673,
-          "url": "http://localhost:1000/_next/static/chunks/1cubjcipnl3hy.js"
+          "bytes": 9671,
+          "url": "http://localhost:1000/_next/static/chunks/2gtw_c3wyv93c.js"
         },
         {
           "kind": "script",
@@ -3562,8 +3613,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 8074,
-          "url": "http://localhost:1000/_next/static/chunks/1ergwr90bhhes.js"
+          "bytes": 8242,
+          "url": "http://localhost:1000/_next/static/chunks/2lcxmux4c19v1.js"
         },
         {
           "kind": "script",
@@ -3574,8 +3625,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 7008,
-          "url": "http://localhost:1000/_next/static/chunks/0a2d32kdi0xy3.js"
+          "bytes": 7013,
+          "url": "http://localhost:1000/_next/static/chunks/02o2wflnh7is4.js"
         },
         {
           "kind": "script",
@@ -3586,39 +3637,39 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 6647,
-          "url": "http://localhost:1000/_next/static/chunks/18cz1jzju2c68.js"
+          "bytes": 6683,
+          "url": "http://localhost:1000/_next/static/chunks/0nhmb-ib6dm6l.js"
         }
       ]
     },
     "/crm/inbox": {
-      "scriptBytes": 601219,
-      "stylesheetBytes": 58161,
+      "scriptBytes": 602204,
+      "stylesheetBytes": 58191,
       "imageBytes": 2907,
       "fontBytes": 55206,
-      "documentBytes": 22299,
+      "documentBytes": 22328,
       "otherBytes": 2298,
       "thirdPartyBytes": 0,
-      "totalBytes": 742090,
+      "totalBytes": 743134,
       "windowTotals": {
-        "scriptBytes": 853235,
-        "stylesheetBytes": 58161,
+        "scriptBytes": 830547,
+        "stylesheetBytes": 58191,
         "imageBytes": 5814,
         "fontBytes": 55206,
-        "documentBytes": 22299,
-        "otherBytes": 49357,
-        "thirdPartyBytes": 24228,
-        "totalBytes": 1044072
+        "documentBytes": 22328,
+        "otherBytes": 46107,
+        "thirdPartyBytes": 0,
+        "totalBytes": 1018193
       },
       "postLoadTotals": {
-        "scriptBytes": 252016,
+        "scriptBytes": 228343,
         "stylesheetBytes": 0,
         "imageBytes": 2907,
         "fontBytes": 0,
         "documentBytes": 0,
-        "otherBytes": 47059,
-        "thirdPartyBytes": 24228,
-        "totalBytes": 301982
+        "otherBytes": 43809,
+        "thirdPartyBytes": 0,
+        "totalBytes": 275059
       },
       "notableResources": [
         {
@@ -3668,20 +3719,20 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 24840,
-          "url": "http://localhost:1000/_next/static/chunks/43tt5jk4s1x30.js"
+          "bytes": 24911,
+          "url": "http://localhost:1000/_next/static/chunks/3m85qfmj2lcvj.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 18108,
-          "url": "http://localhost:1000/_next/static/chunks/3ca1lvfk4wwft.js"
+          "bytes": 18112,
+          "url": "http://localhost:1000/_next/static/chunks/3q095fqibuex1.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 17355,
-          "url": "http://localhost:1000/_next/static/chunks/3asvd34b5ekt-.js"
+          "bytes": 17337,
+          "url": "http://localhost:1000/_next/static/chunks/2fxa4h-cn2809.js"
         },
         {
           "kind": "script",
@@ -3722,14 +3773,14 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12757,
-          "url": "http://localhost:1000/_next/static/chunks/3241eunkpxts1.js"
+          "bytes": 12827,
+          "url": "http://localhost:1000/_next/static/chunks/24r45qcg8i6bd.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12688,
-          "url": "http://localhost:1000/_next/static/chunks/08p1z7d2-3e20.js"
+          "bytes": 12758,
+          "url": "http://localhost:1000/_next/static/chunks/03z17zoia7sbm.js"
         },
         {
           "kind": "script",
@@ -3746,8 +3797,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11718,
-          "url": "http://localhost:1000/_next/static/chunks/1fugy28_kea1u.js"
+          "bytes": 11841,
+          "url": "http://localhost:1000/_next/static/chunks/0-clfyte7yeve.js"
         },
         {
           "kind": "script",
@@ -3758,8 +3809,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11280,
-          "url": "http://localhost:1000/_next/static/chunks/247zu5hfzfdo0.js"
+          "bytes": 11290,
+          "url": "http://localhost:1000/_next/static/chunks/0pxin2ndn-bsw.js"
         },
         {
           "kind": "script",
@@ -3776,8 +3827,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10986,
-          "url": "http://localhost:1000/_next/static/chunks/2x3ql81qrkaw5.js"
+          "bytes": 11057,
+          "url": "http://localhost:1000/_next/static/chunks/2d21eeavsjxoz.js"
         },
         {
           "kind": "script",
@@ -3808,14 +3859,14 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 15291,
-          "url": "http://localhost:1000/_next/static/chunks/2ddrg-qfljz8p.js"
+          "bytes": 15290,
+          "url": "http://localhost:1000/_next/static/chunks/32us4eg6pgx8m.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12007,
-          "url": "http://localhost:1000/_next/static/chunks/3xgvabf2key5v.js"
+          "bytes": 12091,
+          "url": "http://localhost:1000/_next/static/chunks/409z5_43nn7_t.js"
         },
         {
           "kind": "script",
@@ -3832,32 +3883,20 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11509,
-          "url": "http://localhost:1000/_next/static/chunks/02dlevo00dnkb.js"
+          "bytes": 10880,
+          "url": "http://localhost:1000/_next/static/chunks/196krb2gze33z.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10866,
-          "url": "http://localhost:1000/_next/static/chunks/1yscm-sp_3bi9.js"
+          "bytes": 10037,
+          "url": "http://localhost:1000/_next/static/chunks/38sd767m0x8ce.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10840,
-          "url": "http://localhost:1000/_next/static/chunks/3j691xa6q4ysy.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 9997,
-          "url": "http://localhost:1000/_next/static/chunks/2zl3cd1ksfuuz.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 9673,
-          "url": "http://localhost:1000/_next/static/chunks/1cubjcipnl3hy.js"
+          "bytes": 9671,
+          "url": "http://localhost:1000/_next/static/chunks/2gtw_c3wyv93c.js"
         },
         {
           "kind": "script",
@@ -3880,39 +3919,51 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 8074,
-          "url": "http://localhost:1000/_next/static/chunks/1ergwr90bhhes.js"
+          "bytes": 8242,
+          "url": "http://localhost:1000/_next/static/chunks/2lcxmux4c19v1.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 7172,
+          "url": "http://localhost:1000/_next/static/chunks/2zxe68ep2pefl.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 7013,
+          "url": "http://localhost:1000/_next/static/chunks/02o2wflnh7is4.js"
         }
       ]
     },
     "/support/inbox": {
-      "scriptBytes": 725951,
-      "stylesheetBytes": 58161,
+      "scriptBytes": 727027,
+      "stylesheetBytes": 58191,
       "imageBytes": 6711,
       "fontBytes": 55206,
-      "documentBytes": 24577,
+      "documentBytes": 24643,
       "otherBytes": 2298,
       "thirdPartyBytes": 0,
-      "totalBytes": 872904,
+      "totalBytes": 874076,
       "windowTotals": {
-        "scriptBytes": 929448,
-        "stylesheetBytes": 58161,
+        "scriptBytes": 930868,
+        "stylesheetBytes": 58191,
         "imageBytes": 9618,
         "fontBytes": 55206,
-        "documentBytes": 24577,
-        "otherBytes": 57142,
-        "thirdPartyBytes": 30526,
-        "totalBytes": 1134152
+        "documentBytes": 24643,
+        "otherBytes": 56095,
+        "thirdPartyBytes": 0,
+        "totalBytes": 1134621
       },
       "postLoadTotals": {
-        "scriptBytes": 203497,
+        "scriptBytes": 203841,
         "stylesheetBytes": 0,
         "imageBytes": 2907,
         "fontBytes": 0,
         "documentBytes": 0,
-        "otherBytes": 54844,
-        "thirdPartyBytes": 30526,
-        "totalBytes": 261248
+        "otherBytes": 53797,
+        "thirdPartyBytes": 0,
+        "totalBytes": 260545
       },
       "notableResources": [
         {
@@ -3974,20 +4025,20 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 24840,
-          "url": "http://localhost:1000/_next/static/chunks/43tt5jk4s1x30.js"
+          "bytes": 24911,
+          "url": "http://localhost:1000/_next/static/chunks/3m85qfmj2lcvj.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 21277,
-          "url": "http://localhost:1000/_next/static/chunks/0iygkk_k5a96-.js"
+          "bytes": 21294,
+          "url": "http://localhost:1000/_next/static/chunks/436alv74mypoj.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 18108,
-          "url": "http://localhost:1000/_next/static/chunks/3ca1lvfk4wwft.js"
+          "bytes": 18112,
+          "url": "http://localhost:1000/_next/static/chunks/3q095fqibuex1.js"
         },
         {
           "kind": "script",
@@ -4028,14 +4079,14 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 13009,
-          "url": "http://localhost:1000/_next/static/chunks/2juy8z0qju98r.js"
+          "bytes": 13006,
+          "url": "http://localhost:1000/_next/static/chunks/04jo2dlr0c8vt.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12757,
-          "url": "http://localhost:1000/_next/static/chunks/3241eunkpxts1.js"
+          "bytes": 12827,
+          "url": "http://localhost:1000/_next/static/chunks/24r45qcg8i6bd.js"
         },
         {
           "kind": "script",
@@ -4064,8 +4115,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11718,
-          "url": "http://localhost:1000/_next/static/chunks/1fugy28_kea1u.js"
+          "bytes": 11841,
+          "url": "http://localhost:1000/_next/static/chunks/0-clfyte7yeve.js"
         },
         {
           "kind": "script",
@@ -4076,8 +4127,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11280,
-          "url": "http://localhost:1000/_next/static/chunks/247zu5hfzfdo0.js"
+          "bytes": 11290,
+          "url": "http://localhost:1000/_next/static/chunks/0pxin2ndn-bsw.js"
         },
         {
           "kind": "script",
@@ -4088,8 +4139,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11128,
-          "url": "http://localhost:1000/_next/static/chunks/2v8i9o0cl6l4q.js"
+          "bytes": 11189,
+          "url": "http://localhost:1000/_next/static/chunks/3417s098lmnqr.js"
         }
       ],
       "largestPostLoadScripts": [
@@ -4108,14 +4159,14 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 15291,
-          "url": "http://localhost:1000/_next/static/chunks/2ddrg-qfljz8p.js"
+          "bytes": 15290,
+          "url": "http://localhost:1000/_next/static/chunks/32us4eg6pgx8m.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12007,
-          "url": "http://localhost:1000/_next/static/chunks/3xgvabf2key5v.js"
+          "bytes": 12091,
+          "url": "http://localhost:1000/_next/static/chunks/409z5_43nn7_t.js"
         },
         {
           "kind": "script",
@@ -4126,20 +4177,20 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10866,
-          "url": "http://localhost:1000/_next/static/chunks/1yscm-sp_3bi9.js"
+          "bytes": 10880,
+          "url": "http://localhost:1000/_next/static/chunks/196krb2gze33z.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9997,
-          "url": "http://localhost:1000/_next/static/chunks/2zl3cd1ksfuuz.js"
+          "bytes": 10037,
+          "url": "http://localhost:1000/_next/static/chunks/38sd767m0x8ce.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9673,
-          "url": "http://localhost:1000/_next/static/chunks/1cubjcipnl3hy.js"
+          "bytes": 9671,
+          "url": "http://localhost:1000/_next/static/chunks/2gtw_c3wyv93c.js"
         },
         {
           "kind": "script",
@@ -4156,8 +4207,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 8074,
-          "url": "http://localhost:1000/_next/static/chunks/1ergwr90bhhes.js"
+          "bytes": 8242,
+          "url": "http://localhost:1000/_next/static/chunks/2lcxmux4c19v1.js"
         },
         {
           "kind": "script",
@@ -4168,8 +4219,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 7008,
-          "url": "http://localhost:1000/_next/static/chunks/0a2d32kdi0xy3.js"
+          "bytes": 7013,
+          "url": "http://localhost:1000/_next/static/chunks/02o2wflnh7is4.js"
         },
         {
           "kind": "script",
@@ -4180,39 +4231,39 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 6647,
-          "url": "http://localhost:1000/_next/static/chunks/18cz1jzju2c68.js"
+          "bytes": 6683,
+          "url": "http://localhost:1000/_next/static/chunks/0nhmb-ib6dm6l.js"
         }
       ]
     },
     "/build/inbox": {
-      "scriptBytes": 574989,
-      "stylesheetBytes": 58161,
+      "scriptBytes": 575867,
+      "stylesheetBytes": 58191,
       "imageBytes": 6208,
       "fontBytes": 55206,
-      "documentBytes": 20289,
+      "documentBytes": 20348,
       "otherBytes": 2298,
       "thirdPartyBytes": 0,
-      "totalBytes": 717151,
+      "totalBytes": 718118,
       "windowTotals": {
-        "scriptBytes": 813393,
-        "stylesheetBytes": 58161,
+        "scriptBytes": 814599,
+        "stylesheetBytes": 58191,
         "imageBytes": 9115,
         "fontBytes": 55206,
-        "documentBytes": 20289,
-        "otherBytes": 51349,
-        "thirdPartyBytes": 22891,
-        "totalBytes": 1007513
+        "documentBytes": 20348,
+        "otherBytes": 58681,
+        "thirdPartyBytes": 0,
+        "totalBytes": 1016140
       },
       "postLoadTotals": {
-        "scriptBytes": 238404,
+        "scriptBytes": 238732,
         "stylesheetBytes": 0,
         "imageBytes": 2907,
         "fontBytes": 0,
         "documentBytes": 0,
-        "otherBytes": 49051,
-        "thirdPartyBytes": 22891,
-        "totalBytes": 290362
+        "otherBytes": 56383,
+        "thirdPartyBytes": 0,
+        "totalBytes": 298022
       },
       "notableResources": [
         {
@@ -4268,14 +4319,14 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 24840,
-          "url": "http://localhost:1000/_next/static/chunks/43tt5jk4s1x30.js"
+          "bytes": 24911,
+          "url": "http://localhost:1000/_next/static/chunks/3m85qfmj2lcvj.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 18108,
-          "url": "http://localhost:1000/_next/static/chunks/3ca1lvfk4wwft.js"
+          "bytes": 18112,
+          "url": "http://localhost:1000/_next/static/chunks/3q095fqibuex1.js"
         },
         {
           "kind": "script",
@@ -4316,8 +4367,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12757,
-          "url": "http://localhost:1000/_next/static/chunks/3241eunkpxts1.js"
+          "bytes": 12827,
+          "url": "http://localhost:1000/_next/static/chunks/24r45qcg8i6bd.js"
         },
         {
           "kind": "script",
@@ -4340,8 +4391,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11718,
-          "url": "http://localhost:1000/_next/static/chunks/1fugy28_kea1u.js"
+          "bytes": 11841,
+          "url": "http://localhost:1000/_next/static/chunks/0-clfyte7yeve.js"
         },
         {
           "kind": "script",
@@ -4358,8 +4409,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11280,
-          "url": "http://localhost:1000/_next/static/chunks/247zu5hfzfdo0.js"
+          "bytes": 11290,
+          "url": "http://localhost:1000/_next/static/chunks/0pxin2ndn-bsw.js"
         },
         {
           "kind": "script",
@@ -4408,14 +4459,14 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 15291,
-          "url": "http://localhost:1000/_next/static/chunks/2ddrg-qfljz8p.js"
+          "bytes": 15290,
+          "url": "http://localhost:1000/_next/static/chunks/32us4eg6pgx8m.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12007,
-          "url": "http://localhost:1000/_next/static/chunks/3xgvabf2key5v.js"
+          "bytes": 12091,
+          "url": "http://localhost:1000/_next/static/chunks/409z5_43nn7_t.js"
         },
         {
           "kind": "script",
@@ -4432,20 +4483,20 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10866,
-          "url": "http://localhost:1000/_next/static/chunks/1yscm-sp_3bi9.js"
+          "bytes": 10880,
+          "url": "http://localhost:1000/_next/static/chunks/196krb2gze33z.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9997,
-          "url": "http://localhost:1000/_next/static/chunks/2zl3cd1ksfuuz.js"
+          "bytes": 10037,
+          "url": "http://localhost:1000/_next/static/chunks/38sd767m0x8ce.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9673,
-          "url": "http://localhost:1000/_next/static/chunks/1cubjcipnl3hy.js"
+          "bytes": 9671,
+          "url": "http://localhost:1000/_next/static/chunks/2gtw_c3wyv93c.js"
         },
         {
           "kind": "script",
@@ -4468,8 +4519,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 8074,
-          "url": "http://localhost:1000/_next/static/chunks/1ergwr90bhhes.js"
+          "bytes": 8242,
+          "url": "http://localhost:1000/_next/static/chunks/2lcxmux4c19v1.js"
         },
         {
           "kind": "script",
@@ -4480,39 +4531,39 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 7008,
-          "url": "http://localhost:1000/_next/static/chunks/0a2d32kdi0xy3.js"
+          "bytes": 7013,
+          "url": "http://localhost:1000/_next/static/chunks/02o2wflnh7is4.js"
         }
       ]
     },
     "/build/my-work": {
-      "scriptBytes": 784096,
-      "stylesheetBytes": 58161,
+      "scriptBytes": 785203,
+      "stylesheetBytes": 58191,
       "imageBytes": 2907,
       "fontBytes": 55206,
-      "documentBytes": 23104,
+      "documentBytes": 23154,
       "otherBytes": 2298,
       "thirdPartyBytes": 0,
-      "totalBytes": 925772,
+      "totalBytes": 926959,
       "windowTotals": {
-        "scriptBytes": 936364,
-        "stylesheetBytes": 58161,
+        "scriptBytes": 937551,
+        "stylesheetBytes": 58191,
         "imageBytes": 5814,
         "fontBytes": 55206,
-        "documentBytes": 23104,
-        "otherBytes": 58884,
-        "thirdPartyBytes": 25062,
-        "totalBytes": 1137533
+        "documentBytes": 23154,
+        "otherBytes": 58363,
+        "thirdPartyBytes": 0,
+        "totalBytes": 1138279
       },
       "postLoadTotals": {
-        "scriptBytes": 152268,
+        "scriptBytes": 152348,
         "stylesheetBytes": 0,
         "imageBytes": 2907,
         "fontBytes": 0,
         "documentBytes": 0,
-        "otherBytes": 56586,
-        "thirdPartyBytes": 25062,
-        "totalBytes": 211761
+        "otherBytes": 56065,
+        "thirdPartyBytes": 0,
+        "totalBytes": 211320
       },
       "notableResources": [
         {
@@ -4568,8 +4619,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 24840,
-          "url": "http://localhost:1000/_next/static/chunks/43tt5jk4s1x30.js"
+          "bytes": 24911,
+          "url": "http://localhost:1000/_next/static/chunks/3m85qfmj2lcvj.js"
         },
         {
           "kind": "script",
@@ -4580,8 +4631,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 18108,
-          "url": "http://localhost:1000/_next/static/chunks/3ca1lvfk4wwft.js"
+          "bytes": 18112,
+          "url": "http://localhost:1000/_next/static/chunks/3q095fqibuex1.js"
         },
         {
           "kind": "script",
@@ -4610,8 +4661,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 15291,
-          "url": "http://localhost:1000/_next/static/chunks/2ddrg-qfljz8p.js"
+          "bytes": 15290,
+          "url": "http://localhost:1000/_next/static/chunks/32us4eg6pgx8m.js"
         },
         {
           "kind": "script",
@@ -4646,14 +4697,14 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 13009,
-          "url": "http://localhost:1000/_next/static/chunks/2juy8z0qju98r.js"
+          "bytes": 13006,
+          "url": "http://localhost:1000/_next/static/chunks/04jo2dlr0c8vt.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12757,
-          "url": "http://localhost:1000/_next/static/chunks/3241eunkpxts1.js"
+          "bytes": 12827,
+          "url": "http://localhost:1000/_next/static/chunks/24r45qcg8i6bd.js"
         },
         {
           "kind": "script",
@@ -4670,8 +4721,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11718,
-          "url": "http://localhost:1000/_next/static/chunks/1fugy28_kea1u.js"
+          "bytes": 11841,
+          "url": "http://localhost:1000/_next/static/chunks/0-clfyte7yeve.js"
         },
         {
           "kind": "script",
@@ -4696,8 +4747,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12007,
-          "url": "http://localhost:1000/_next/static/chunks/3xgvabf2key5v.js"
+          "bytes": 12091,
+          "url": "http://localhost:1000/_next/static/chunks/409z5_43nn7_t.js"
         },
         {
           "kind": "script",
@@ -4714,14 +4765,14 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10866,
-          "url": "http://localhost:1000/_next/static/chunks/1yscm-sp_3bi9.js"
+          "bytes": 10880,
+          "url": "http://localhost:1000/_next/static/chunks/196krb2gze33z.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9673,
-          "url": "http://localhost:1000/_next/static/chunks/1cubjcipnl3hy.js"
+          "bytes": 9671,
+          "url": "http://localhost:1000/_next/static/chunks/2gtw_c3wyv93c.js"
         },
         {
           "kind": "script",
@@ -4738,8 +4789,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 5374,
-          "url": "http://localhost:1000/_next/static/chunks/0s_4jo52o-720.js"
+          "bytes": 5358,
+          "url": "http://localhost:1000/_next/static/chunks/3vk777t1ai0qr.js"
         },
         {
           "kind": "script",
@@ -4780,33 +4831,33 @@
       ]
     },
     "/crm/leads": {
-      "scriptBytes": 773117,
-      "stylesheetBytes": 58161,
-      "imageBytes": 2907,
+      "scriptBytes": 774297,
+      "stylesheetBytes": 58191,
+      "imageBytes": 0,
       "fontBytes": 55206,
-      "documentBytes": 25747,
+      "documentBytes": 25813,
       "otherBytes": 2298,
       "thirdPartyBytes": 0,
-      "totalBytes": 917436,
+      "totalBytes": 915805,
       "windowTotals": {
-        "scriptBytes": 908574,
-        "stylesheetBytes": 58161,
+        "scriptBytes": 933867,
+        "stylesheetBytes": 58191,
         "imageBytes": 5814,
         "fontBytes": 55206,
-        "documentBytes": 25747,
-        "otherBytes": 44361,
-        "thirdPartyBytes": 22488,
-        "totalBytes": 1097863
+        "documentBytes": 25813,
+        "otherBytes": 53175,
+        "thirdPartyBytes": 0,
+        "totalBytes": 1132066
       },
       "postLoadTotals": {
-        "scriptBytes": 135457,
+        "scriptBytes": 159570,
         "stylesheetBytes": 0,
-        "imageBytes": 2907,
+        "imageBytes": 5814,
         "fontBytes": 0,
         "documentBytes": 0,
-        "otherBytes": 42063,
-        "thirdPartyBytes": 22488,
-        "totalBytes": 180427
+        "otherBytes": 50877,
+        "thirdPartyBytes": 0,
+        "totalBytes": 216261
       },
       "notableResources": [
         {
@@ -4820,12 +4871,6 @@
           "thirdParty": false,
           "bytes": 24513,
           "url": "http://localhost:1000/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2"
-        },
-        {
-          "kind": "image",
-          "thirdParty": false,
-          "bytes": 2907,
-          "url": "http://localhost:1000/logo.svg"
         }
       ],
       "largestScripts": [
@@ -4862,14 +4907,14 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 24840,
-          "url": "http://localhost:1000/_next/static/chunks/43tt5jk4s1x30.js"
+          "bytes": 24911,
+          "url": "http://localhost:1000/_next/static/chunks/3m85qfmj2lcvj.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 21744,
-          "url": "http://localhost:1000/_next/static/chunks/3au94wqnug3_y.js"
+          "bytes": 21735,
+          "url": "http://localhost:1000/_next/static/chunks/0pvaxt222hlzx.js"
         },
         {
           "kind": "script",
@@ -4886,8 +4931,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 18108,
-          "url": "http://localhost:1000/_next/static/chunks/3ca1lvfk4wwft.js"
+          "bytes": 18112,
+          "url": "http://localhost:1000/_next/static/chunks/3q095fqibuex1.js"
         },
         {
           "kind": "script",
@@ -4904,8 +4949,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 15291,
-          "url": "http://localhost:1000/_next/static/chunks/2ddrg-qfljz8p.js"
+          "bytes": 15290,
+          "url": "http://localhost:1000/_next/static/chunks/32us4eg6pgx8m.js"
         },
         {
           "kind": "script",
@@ -4934,20 +4979,26 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 13553,
-          "url": "http://localhost:1000/_next/static/chunks/2y2rclg-7ucmk.js"
+          "bytes": 13565,
+          "url": "http://localhost:1000/_next/static/chunks/42_3hu-p_b7oy.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 13009,
-          "url": "http://localhost:1000/_next/static/chunks/2juy8z0qju98r.js"
+          "bytes": 13006,
+          "url": "http://localhost:1000/_next/static/chunks/04jo2dlr0c8vt.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12757,
-          "url": "http://localhost:1000/_next/static/chunks/3241eunkpxts1.js"
+          "bytes": 12827,
+          "url": "http://localhost:1000/_next/static/chunks/24r45qcg8i6bd.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 12211,
+          "url": "http://localhost:1000/_next/static/chunks/25te0x2-oat1t.js"
         },
         {
           "kind": "script",
@@ -4958,20 +5009,14 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12141,
-          "url": "http://localhost:1000/_next/static/chunks/0l32eaju2dk4j.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
           "bytes": 11841,
           "url": "http://localhost:1000/_next/static/chunks/3t_rf73bewg09.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11718,
-          "url": "http://localhost:1000/_next/static/chunks/1fugy28_kea1u.js"
+          "bytes": 11841,
+          "url": "http://localhost:1000/_next/static/chunks/0-clfyte7yeve.js"
         },
         {
           "kind": "script",
@@ -4990,8 +5035,8 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12007,
-          "url": "http://localhost:1000/_next/static/chunks/3xgvabf2key5v.js"
+          "bytes": 12091,
+          "url": "http://localhost:1000/_next/static/chunks/409z5_43nn7_t.js"
         },
         {
           "kind": "script",
@@ -5008,14 +5053,26 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10866,
-          "url": "http://localhost:1000/_next/static/chunks/1yscm-sp_3bi9.js"
+          "bytes": 11509,
+          "url": "http://localhost:1000/_next/static/chunks/02dlevo00dnkb.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9673,
-          "url": "http://localhost:1000/_next/static/chunks/1cubjcipnl3hy.js"
+          "bytes": 10880,
+          "url": "http://localhost:1000/_next/static/chunks/196krb2gze33z.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10840,
+          "url": "http://localhost:1000/_next/static/chunks/3j691xa6q4ysy.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9671,
+          "url": "http://localhost:1000/_next/static/chunks/2gtw_c3wyv93c.js"
         },
         {
           "kind": "script",
@@ -5058,18 +5115,6 @@
           "thirdParty": false,
           "bytes": 2620,
           "url": "http://localhost:1000/_next/static/chunks/2btcvwv-hbupu.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 2410,
-          "url": "http://localhost:1000/_next/static/chunks/3--j3bzruuy54.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 1668,
-          "url": "http://localhost:1000/_next/static/chunks/16spkm2qkjzsr.js"
         }
       ]
     }
@@ -5083,117 +5128,117 @@
         "statuses": [
           200
         ],
-        "p50_ms": 22.84589599998435,
-        "p75_ms": 24.166645999997854,
-        "p95_ms": 28.278164899972033
+        "p50_ms": 19.67252149997512,
+        "p75_ms": 20.468917250051163,
+        "p95_ms": 39.96756470005492
       },
       "/mail": {
         "count": 8,
         "statuses": [
           200
         ],
-        "p50_ms": 25.490208000002895,
-        "p75_ms": 29.913677500007907,
-        "p95_ms": 35.71110275005921
+        "p50_ms": 18.13987500005169,
+        "p75_ms": 18.860271499986993,
+        "p95_ms": 19.78419814998051
       },
       "/inbox": {
         "count": 8,
         "statuses": [
           200
         ],
-        "p50_ms": 21.47758300002897,
-        "p75_ms": 23.05822949996218,
-        "p95_ms": 24.513844300003257
+        "p50_ms": 22.64935449999757,
+        "p75_ms": 24.39686424995307,
+        "p95_ms": 27.654210300015983
       },
       "/notifications": {
         "count": 8,
         "statuses": [
           200
         ],
-        "p50_ms": 22.851041499932762,
-        "p75_ms": 23.421156249998603,
-        "p95_ms": 23.944524999981514
+        "p50_ms": 24.226145500026178,
+        "p75_ms": 28.060958499962,
+        "p95_ms": 29.01765570004354
       },
       "/settings": {
         "count": 8,
         "statuses": [
           200
         ],
-        "p50_ms": 20.94556249998277,
-        "p75_ms": 22.236927750025643,
-        "p95_ms": 23.695944199990482
+        "p50_ms": 15.480312499974389,
+        "p75_ms": 16.111437500017928,
+        "p95_ms": 17.345603950001532
       },
       "/calendar": {
         "count": 8,
         "statuses": [
           200
         ],
-        "p50_ms": 20.068375000031665,
-        "p75_ms": 21.759666749974713,
-        "p95_ms": 22.256308450043434
+        "p50_ms": 15.402104499924462,
+        "p75_ms": 15.736885500024073,
+        "p95_ms": 18.118574899993835
       },
       "/chat": {
         "count": 8,
         "statuses": [
           200
         ],
-        "p50_ms": 20.647021000040695,
-        "p75_ms": 20.765729499980807,
-        "p95_ms": 21.020935749972704
+        "p50_ms": 15.06374999997206,
+        "p75_ms": 15.576249749981798,
+        "p95_ms": 16.246960849995958
       },
       "/parties": {
         "count": 8,
         "statuses": [
           200
         ],
-        "p50_ms": 22.146166999998968,
-        "p75_ms": 26.777364500041585,
-        "p95_ms": 30.822164900024653
+        "p50_ms": 16.774062500044238,
+        "p75_ms": 17.49956200007,
+        "p95_ms": 18.214179600024362
       },
       "/crm/inbox": {
         "count": 8,
         "statuses": [
           200
         ],
-        "p50_ms": 22.796166499960236,
-        "p75_ms": 27.165802250034176,
-        "p95_ms": 30.77053759997943
+        "p50_ms": 16.05989600002067,
+        "p75_ms": 17.65234400006011,
+        "p95_ms": 19.10978980009677
       },
       "/support/inbox": {
         "count": 8,
         "statuses": [
           200
         ],
-        "p50_ms": 22.90018749999581,
-        "p75_ms": 24.153593999973964,
-        "p95_ms": 27.206506250012897
+        "p50_ms": 16.74316650000401,
+        "p75_ms": 17.73168724999414,
+        "p95_ms": 18.596956250013317
       },
       "/build/inbox": {
         "count": 8,
         "statuses": [
           200
         ],
-        "p50_ms": 19.972687499946915,
-        "p75_ms": 20.53953150002053,
-        "p95_ms": 22.56434374998789
+        "p50_ms": 14.861791999952402,
+        "p75_ms": 15.632635250018211,
+        "p95_ms": 16.18412885006983
       },
       "/build/my-work": {
         "count": 8,
         "statuses": [
           200
         ],
-        "p50_ms": 20.255917000002228,
-        "p75_ms": 22.524437749991193,
-        "p95_ms": 25.37494539990439
+        "p50_ms": 14.959854000015184,
+        "p75_ms": 17.549083750054706,
+        "p95_ms": 22.649810649995924
       },
       "/crm/leads": {
         "count": 8,
         "statuses": [
           200
         ],
-        "p50_ms": 24.820957999967504,
-        "p75_ms": 27.23966724993079,
-        "p95_ms": 34.678887399996164
+        "p50_ms": 17.609791500028223,
+        "p75_ms": 19.866218250070233,
+        "p95_ms": 28.48351875000516
       }
     },
     "note": "The browser TTFB above includes the emulated RTT (150ms on the mobile profile) and the browser's own scheduling. This figure is the server render on its own."
@@ -5205,36 +5250,36 @@
       "/dashboard": {
         "desktop": {
           "measured": true,
-          "ms": 0.8000000007450581,
+          "ms": 1,
           "href": "/inbox"
         },
         "mobile": {
           "measured": true,
-          "ms": 4.299999997019768,
+          "ms": 4.300000004470348,
           "href": "/inbox"
         }
       },
       "/mail": {
         "desktop": {
           "measured": true,
-          "ms": 1.0999999977648258,
+          "ms": 1.1000000014901161,
           "href": "/dashboard"
         },
         "mobile": {
           "measured": true,
-          "ms": 5.299999997019768,
+          "ms": 4.700000002980232,
           "href": "/dashboard"
         }
       },
       "/inbox": {
         "desktop": {
           "measured": true,
-          "ms": 1.5,
+          "ms": 1,
           "href": "/dashboard"
         },
         "mobile": {
           "measured": true,
-          "ms": 4.5,
+          "ms": 5,
           "href": "/dashboard"
         }
       },
@@ -5246,38 +5291,38 @@
         },
         "mobile": {
           "measured": true,
-          "ms": 67.10000000149012,
+          "ms": 75.5,
           "href": "/notifications/preferences"
         }
       },
       "/settings": {
         "desktop": {
           "measured": true,
-          "ms": 0.8000000007450581,
+          "ms": 0.7999999970197678,
           "href": "/workflows"
         },
         "mobile": {
           "measured": true,
-          "ms": 4.099999997764826,
+          "ms": 5.300000004470348,
           "href": "/workflows"
         }
       },
       "/calendar": {
         "desktop": {
           "measured": true,
-          "ms": 3.099999997764826,
+          "ms": 1,
           "href": "/dashboard"
         },
         "mobile": {
           "measured": true,
-          "ms": 4.399999998509884,
+          "ms": 4.699999995529652,
           "href": "/dashboard"
         }
       },
       "/chat": {
         "desktop": {
           "measured": true,
-          "ms": 1.0999999977648258,
+          "ms": 1.1000000014901161,
           "href": "/dashboard"
         },
         "mobile": {
@@ -5288,72 +5333,72 @@
       "/parties": {
         "desktop": {
           "measured": true,
-          "ms": 1,
+          "ms": 2.3000000044703484,
           "href": "/crm"
         },
         "mobile": {
           "measured": true,
-          "ms": 3.399999998509884,
+          "ms": 5.199999995529652,
           "href": "/crm"
         }
       },
       "/crm/inbox": {
         "desktop": {
           "measured": true,
-          "ms": 0.8999999985098839,
+          "ms": 1.6000000014901161,
           "href": "/crm"
         },
         "mobile": {
           "measured": true,
-          "ms": 4.599999997764826,
+          "ms": 4.300000004470348,
           "href": "/crm"
         }
       },
       "/support/inbox": {
         "desktop": {
           "measured": true,
-          "ms": 0.8999999985098839,
+          "ms": 0.8000000044703484,
           "href": "/support"
         },
         "mobile": {
           "measured": true,
-          "ms": 4.199999999254942,
+          "ms": 4.200000002980232,
           "href": "/support"
         }
       },
       "/build/inbox": {
         "desktop": {
           "measured": true,
-          "ms": 0.8000000007450581,
+          "ms": 2.7000000029802322,
           "href": "/build/command-center"
         },
         "mobile": {
           "measured": true,
-          "ms": 4.699999999254942,
+          "ms": 4.700000002980232,
           "href": "/build/command-center"
         }
       },
       "/build/my-work": {
         "desktop": {
           "measured": true,
-          "ms": 0.8000000007450581,
+          "ms": 0.8999999985098839,
           "href": "/build/command-center"
         },
         "mobile": {
           "measured": true,
-          "ms": 4,
+          "ms": 4.300000004470348,
           "href": "/build/command-center"
         }
       },
       "/crm/leads": {
         "desktop": {
           "measured": true,
-          "ms": 1.199999999254942,
+          "ms": 0.8000000044703484,
           "href": "/crm"
         },
         "mobile": {
           "measured": true,
-          "ms": 4.699999999254942,
+          "ms": 5.100000001490116,
           "href": "/crm"
         }
       }
@@ -5496,6 +5541,68 @@
     ],
     "verdict": "capture is NOT usable evidence"
   },
+  "settle": {
+    "quietMs": 500,
+    "capMs": 6000,
+    "samplesMeasured": 208,
+    "cappedSamples": 0,
+    "capped": [],
+    "wordsByRoute": {
+      "/dashboard": {
+        "desktop": 150,
+        "mobile": 129
+      },
+      "/mail": {
+        "desktop": 95,
+        "mobile": 53
+      },
+      "/inbox": {
+        "desktop": 378,
+        "mobile": 307
+      },
+      "/notifications": {
+        "desktop": 453,
+        "mobile": 368
+      },
+      "/settings": {
+        "desktop": 228,
+        "mobile": 174
+      },
+      "/calendar": {
+        "desktop": 415,
+        "mobile": 386
+      },
+      "/chat": {
+        "desktop": 74,
+        "mobile": 47
+      },
+      "/parties": {
+        "desktop": 262,
+        "mobile": 213
+      },
+      "/crm/inbox": {
+        "desktop": 162,
+        "mobile": 139
+      },
+      "/support/inbox": {
+        "desktop": 568,
+        "mobile": 540
+      },
+      "/build/inbox": {
+        "desktop": 97,
+        "mobile": 66
+      },
+      "/build/my-work": {
+        "desktop": 1150,
+        "mobile": 1135
+      },
+      "/crm/leads": {
+        "desktop": 85,
+        "mobile": 54
+      }
+    },
+    "verdict": "every sample was taken after the DOM went quiet, so late-arriving data is inside the measurement"
+  },
   "conditions": {
     "driver": "frontend/scripts/measure-web-vitals.mjs",
     "desktop": "1440x900, no CPU or network throttling",
@@ -5505,14 +5612,14 @@
     "themeNote": "The app reads its theme from localStorage[\"streamlineos-app-theme-mode\"] and falls back to DEFAULT_APP_THEME_MODE (\"light\"), consulting prefers-color-scheme only when the stored value is \"system\". This run wrote \"light\" into that key before every document, so the emulated media feature and the rendered theme agree; emulating prefers-color-scheme alone would have measured light while claiming dark.",
     "firstPartyOrigins": [
       "http://localhost:1000",
-      "http://localhost:1500"
+      "http://localhost:1501"
     ],
     "cache": "vitals navigations run with the HTTP cache enabled after one discarded warm-up; firstLoadBytesByRoute is a separate cache-disabled pass",
     "serverModeDerivation": "the build id in the served HTML is compared against .next/BUILD_ID; it is not asserted by this driver",
     "host": {
       "cpuCount": 15,
-      "loadAverage1mAtStart": 1.46,
-      "loadAverage1mAtEnd": 3.87,
+      "loadAverage1mAtStart": 3.1,
+      "loadAverage1mAtEnd": 2.33,
       "note": "A throttled mobile profile on a contended host measures the host. Compare captures only at similar load; a 1m average above the CPU count means the numbers are not the application's."
     }
   }
