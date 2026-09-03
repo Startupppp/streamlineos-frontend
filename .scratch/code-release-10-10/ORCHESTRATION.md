@@ -1861,3 +1861,60 @@ over-exposure class found in support tickets, where a sub-select with no `column
 
 Whether a channel member's email should reach every channel reader is a product question, and a
 reasonable one to ask — but it is not drift, and "the detail route was not fixed" is inaccurate.
+
+---
+
+## 🔴 Nothing in either repository schedules the billing cron jobs
+
+Found by the idempotency agent, then verified independently by the orchestrator.
+
+**`@nestjs/schedule` is NOT installed** — there are no in-process schedulers at all, and every cron
+job is an HTTP route something external must call. The only in-repo mechanism is
+`src/modules/cron/retention-schedule.ts`, consumed by `cron-retention-scheduler.service.ts`. It
+lists **25 jobs**, including the `ai-reservations-sweep` added today.
+
+**None of the five billing cron routes are in it**, and nothing under `.github/` calls them; there
+is no `vercel.json`, `render.yaml`, `fly.toml` or `Procfile` either:
+
+| route | consequence if it never runs |
+|---|---|
+| `POST /cron/monthly-plan-grants` | **paying customers never receive their monthly allocation** |
+| `POST /cron/trial-expiry` | **trials never end** — full access, indefinitely, without converting |
+| `POST /cron/auto-topup-flush` | queued auto-top-ups never settle |
+| `POST /cron/provider-webhook-redrive` | failed provider webhooks are never retried |
+| `POST /cron/ai-jobs-flush` | queued AI jobs never drain |
+
+The first two are revenue-affecting in **opposite** directions: one is money owed to customers, the
+other is revenue never collected.
+
+**Stated limit of this finding:** an out-of-repo scheduler — a platform dashboard cron, an external
+service — would be invisible from source and cannot be ruled out from here. The honest claim is
+"nothing in either repository schedules them". The evidence that the in-repo scheduler IS the
+mechanism is that today's compensator was scheduled by adding it there.
+
+Assigned back to the agent that proved the scheduling pattern, with an explicit warning: **a job
+that has never run has also never been proven safe to run twice.** `monthly-plan-grants` is monthly
+by name, and putting it on a 15-minute cadence could grant repeatedly if it is not idempotent —
+which is exactly the class of bug that session had just spent itself on. Idempotency must be checked
+per job before any of them is scheduled, and a job that is not safe should be left with the reason.
+
+### Three corrections to the orchestrator's own premises, from the same report
+
+1. **"Three implementations of `sweepExpiredReservations`" was wrong** — one implementation, one
+   one-line delegate, and a *different* compensator for `billing_usage_reservations` (which has no
+   caller at all).
+2. **"Zero `@Cron` decorators" was accidentally right**: there are none because `@nestjs/schedule`
+   is not installed and the decorator does not exist in this repo.
+3. **The RLS trap did not bite.** `organizations` has RLS off with 0 policies and `forEachOrg` sets
+   the GUC, so the warning to check it was worth giving but the dependency does not exist.
+
+### And the reframe that dissolved the brief's central trade-off
+
+`DRIZZLE` is a Proxy onto the ambient tenant transaction, and `TenantContextInterceptor` wraps
+`IdempotencyInterceptor` — so `claim`/`complete`/`fail` all run **on the request's own transaction**.
+The trade the brief posed ("do not fail a payment that already succeeded") therefore does not exist:
+a lost completion stamp rolls the transfer back, so the retry IS the first transfer. Nobody had
+recorded this.
+
+Proved concretely, with the swallow planted back in a `git archive` tree: **2000 moved out of an
+account asked for 500.**
