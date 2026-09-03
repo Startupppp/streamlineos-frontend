@@ -7,6 +7,8 @@ import {
   useMemo,
   useRef,
   type CSSProperties,
+  type KeyboardEvent,
+  type MouseEvent,
   type MutableRefObject,
   type ReactNode,
 } from "react";
@@ -61,6 +63,41 @@ function KanbanVirtualRow({
   displayOptions,
 }: RowComponentProps<KanbanVirtualRowData>) {
   const ticket = tickets[index];
+
+  const handleMouseDown = useCallback(
+    (event: MouseEvent) => {
+      dragStartRef.current = { x: event.clientX, y: event.clientY };
+    },
+    [dragStartRef],
+  );
+
+  const handleClick = useCallback(
+    (event: MouseEvent) => {
+      if (!ticket) return;
+      const start = dragStartRef.current;
+      dragStartRef.current = null;
+      if (start) {
+        const moved =
+          Math.abs(event.clientX - start.x) > 5 ||
+          Math.abs(event.clientY - start.y) > 5;
+        if (moved) return;
+      }
+      onSelect(ticket.id);
+    },
+    [ticket, onSelect, dragStartRef],
+  );
+
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (!ticket) return;
+      if (event.key !== "Enter") return;
+      if (event.target !== event.currentTarget) return;
+      event.preventDefault();
+      onSelect(ticket.id);
+    },
+    [ticket, onSelect],
+  );
+
   if (!ticket) {
     return <div style={style} />;
   }
@@ -75,13 +112,16 @@ function KanbanVirtualRow({
           {...provided.dragHandleProps}
           style={mergeRowStyle(style, provided.draggableProps.style)}
           className={cn(snapshot.isDragging && "z-20")}
+          aria-label={ticket.title}
+          onMouseDown={handleMouseDown}
+          onClick={handleClick}
+          onKeyDown={handleKeyDown}
         >
           <KanbanTicketCard
             ticket={ticket}
             projectId={projectId}
             projectKey={projectKey}
             isDragging={snapshot.isDragging}
-            dragStartRef={dragStartRef}
             onSelect={onSelect}
             displayOptions={displayOptions}
           />
@@ -178,14 +218,13 @@ export const KanbanVirtualTicketList = memo(function KanbanVirtualTicketList({
             projectId={projectId}
             projectKey={projectKey}
             isDragging={snapshot.isDragging}
-            dragStartRef={dragStartRef}
             onSelect={onSelect}
             displayOptions={displayOptions}
           />
         </div>
       );
     },
-    [tickets, projectId, projectKey, dragStartRef, onSelect, displayOptions],
+    [tickets, projectId, projectKey, onSelect, displayOptions],
   );
 
   return (

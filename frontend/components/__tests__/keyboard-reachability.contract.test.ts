@@ -15,7 +15,7 @@ import {
 const BASELINE = {
   minimumFiles: 3500,
   minimumClickSites: 600,
-  unreachable: 10,
+  unreachable: 9,
 } as const;
 
 const result = analyzeKeyboardReachability();

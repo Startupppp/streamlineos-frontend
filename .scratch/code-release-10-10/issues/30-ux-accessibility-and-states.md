@@ -37,6 +37,37 @@
   organization…" for ever with nothing telling the reader the workspace was not coming. It now falls to
   `AppLoadingStalled` after 20s (`components/ui/app-loading-screen.test.tsx`, 3 cases pinning it).
 - [ ] Keyboard navigation and screen-reader semantics work on every interactive surface; focus is managed across dialogs, drawers and route transitions.
+  **S14 — the one target in this territory is fixed, and the other nine are recorded as an accepted scope
+  exclusion instead of leaving this box silently open.**
+  `npx jest --runInBand --testPathPattern="keyboard-reachability.contract"` now measures **633 click targets
+  across 3,647 `.tsx` files, 9 of them unreachable — 624 of 633, 98.6%**, and the ratchet is pinned at 9
+  (was 10). **The denominator did not move: 633 before, 633 after.**
+  The fix: `features/build/views/kanban-ticket-card.tsx:74` was a drag-aware mouse click on a card `div` that
+  no keyboard could reach. It could not take `CARD_ACTIVATOR_CLASS` — a stretched `::after` belongs to the
+  title `<button>`, and `@hello-pangea/dnd` refuses to start a drag whose mousedown target is an interactive
+  element, so stretching it would have killed drag-anywhere. Instead the click moved **up** onto the element
+  dnd already makes focusable: the `Draggable` wrapper in `kanban-virtual-ticket-list.tsx` carries
+  `provided.dragHandleProps` (`tabIndex 0`, `role="button"`). It now takes the drag-aware `onMouseDown` /
+  `onClick` and a real `onKeyDown` — **Enter opens the ticket, Space is left to dnd's keyboard lift** — guarded
+  on `event.target === event.currentTarget` so Enter on the nested title button or an inline field does not
+  double-activate, and labelled with `aria-label={ticket.title}` so the handle is a named button rather than
+  an anonymous one. Keyboard users could previously tab to every card and had no way to open one.
+  **ACCEPTED SCOPE EXCLUSION — the 9 that remain, named file by file.** All nine are in modules excluded from
+  this release. They are real defects, they are not fixable from this territory, and the ratchet stops them
+  growing:
+  · `features/crm/contacts/contact-list-page.tsx:186` `<div>` — CRM, out of release scope
+  · `features/crm/deals/deal-kanban-card.tsx:156` `<div>` — CRM, out of release scope
+  · `features/crm/deals/deal-list.tsx:69` `<div>` — CRM, out of release scope
+  · `features/crm/leads/kanban-card.tsx:177` `<span>` — CRM, out of release scope
+  · `features/crm/leads/kanban-card.tsx:369` `<span>` — CRM, out of release scope
+  · `features/crm/leads/kanban-card.tsx:386` `<div>` — CRM, out of release scope
+  · `features/crm/settings/shared/chip-control.tsx:91` `<div>` — CRM, out of release scope
+  · `app/(authenticated)/inventory/purchase-orders/page.tsx:198` `<div>` — inventory, out of release scope
+  · `app/(authenticated)/inventory/purchase-orders/page.tsx:253` `<div>` — inventory, out of release scope
+  The box stays OPEN, deliberately: 624 of 633 is not 633 of 633, and beyond reachability, ARIA relationships
+  and live-region correctness across 556 pages are still established only by rendered suites, not by any
+  corpus-wide measurement. Ticking it on an exclusion would be the exact move this release exists to stop.
+  --- superseded S13 text, kept for the record ---
   **S13 UPDATE — 24 unreachable became 10, and the denominator was corrected upward rather than down.**
   `keyboard-reachability.contract.test.ts` now measures **633 click targets across 3,647 files, 10 of them
   unreachable — 623 of 633, 98.4%**, and its ratchet is pinned at 10 (was 24).
@@ -129,6 +160,20 @@
   `/crm/leads` still fails on the `lead_party_map`/`business_parties` grouping error — CRM is excluded
   from this release; recorded and moved past.
 - [ ] Representative browser end-to-end journeys cover the main module flows.
+  **S14 — the journeys the broken project list made unreachable are now closed, and the honesty property is
+  intact.** `node scripts/browser-journeys.mjs --self-test` -> **exit 0, 39 passed**, six bite proofs,
+  unchanged. The full run -> **exit 1, `63 of 63 planned steps run`** — the first time this harness has
+  reported a whole denominator. S11 reported `57 of 63` and exited 1 on its own incompleteness refusal
+  because no `projectId` could be resolved; this session the harness's click-through resolved
+  `projectId = 20` from `/build/all` in 19 seconds and both build journey steps ran at all three widths.
+  **The `n of m planned` refusal was NOT relaxed to get there** — no step was removed, no denominator was
+  shrunk, and `stepsIncomplete` still exits 1. The number moved because the product was fixed, which is the
+  whole point of the property.
+  NOT closed, and for the same reason S11 gave rather than a new one: the steps are still routes plus one
+  click, nothing asserts a write, and the run needs a live app plus a minted session, so it cannot be a CI
+  gate as it stands. What changed is that the "four of 19 routes reach an error boundary" caveat is now
+  **one of 21** — `/crm/leads` only, and CRM is excluded from this release.
+  --- superseded S13 text, kept for the record ---
   S13: NOT WORKED. No browser, dev server or database was started this session; every number below is S11's.
   The blocker S11 named — `/build/all` failing on the `page` vs cursor drift — was not fixed here either; it is `types/**` plus the backend schema.
   PARTIAL. The harness is materially stronger than S8 left it, and both of its refusals are intact.
