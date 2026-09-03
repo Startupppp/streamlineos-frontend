@@ -83,11 +83,10 @@ export const CalendarToolbarPrimaryActions = memo(
             <Button
               variant="outline"
               size="sm"
-              aria-label="Share calendar"
               className="gap-1 px-3 text-xs font-medium"
             >
               <Share2 className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Share</span>
+              <span className="sr-only sm:not-sr-only">Share</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40 text-xs">
@@ -249,11 +248,10 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                 <Button
                   variant="outline"
                   size="sm"
-                  aria-label="Share calendar"
                   className="gap-1 px-3 text-xs font-medium"
                 >
                   <Share2 className="h-3.5 w-3.5" />
-                  <span className="hidden xl:inline">Share</span>
+                  <span className="sr-only xl:not-sr-only">Share</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40 text-xs">

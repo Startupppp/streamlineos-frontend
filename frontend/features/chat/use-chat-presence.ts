@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useAbly } from "ably/react";
 import { useSession } from "next-auth/react";
-import { useChatHeartbeat } from "@/hooks/api";
+import { useChatHeartbeat } from "@/hooks/api/chat-core-mutations-b";
 
 const PRESENCE_ORG_CHANNEL = (orgId: string): string => `chat:${orgId}:presence`;
 const LEADER_LOCK_NAME = "chat-presence-leader";
