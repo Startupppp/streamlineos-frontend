@@ -100,6 +100,7 @@ export function useSendMail() {
     onSuccess: () => {
       operation.settle();
       void qc.invalidateQueries({ queryKey: queryKeys.mail.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.inbox.all });
     },
   });
 }
@@ -114,6 +115,7 @@ export function useReplyMail() {
     onSuccess: () => {
       operation.settle();
       void qc.invalidateQueries({ queryKey: queryKeys.mail.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.inbox.all });
     },
   });
 }
