@@ -32,6 +32,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import type { ProjectView } from "@/types/projects";
 import type { AllWorkView } from "./all-work-view-switcher";
+import { isActivationKey } from "@/lib/keyboard-activation";
 
 const FILTER_KEYS = [
   "q",
@@ -120,6 +121,12 @@ function ViewRow({
     onTogglePin(view);
   }
 
+  function handleActivationKeyDown(e: React.KeyboardEvent) {
+    if (!isActivationKey(e)) return;
+    e.preventDefault();
+    onApply(view);
+  }
+
   function handleDelete(e: React.MouseEvent) {
     e.stopPropagation();
     onDelete(view);
@@ -130,12 +137,7 @@ function ViewRow({
       role="button"
       tabIndex={0}
       onClick={handleApply}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onApply(view);
-        }
-      }}
+      onKeyDown={handleActivationKeyDown}
       className="group flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-xs hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:bg-accent transition-colors"
     >
       <span className="min-w-0 flex-1 truncate font-medium">{view.name}</span>

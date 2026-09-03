@@ -23,6 +23,7 @@ import type {
   CreateManagedProductInput,
   UpdateManagedProductInput,
 } from "@/types/projects";
+import { upperCaseFieldChange } from "@/lib/case-field";
 
 const createSchema = z.object({
   name: z.string().min(1, "Required").max(255),
@@ -288,7 +289,7 @@ export function ManagedProductFormSheet({
                   <Input
                     {...field}
                     placeholder="PROD"
-                    onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                    onChange={upperCaseFieldChange(field.onChange)}
                   />
                 </FormControl>
                 <FormMessage />

@@ -123,6 +123,20 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
   function handleExpiryChange(preset: ExpiryPreset) {
     updateSharing.mutate({ id: whiteboard.id, linkExpiresAt: computeExpiry(preset) }, { onError: (e) => toast.error(getErrorMessage(e)) });
   }
+  function selectMemberRole(userId: string) {
+    return function handleMemberRoleSelected(value: string): void {
+      const role = SHARE_ROLES.find((r) => r === value);
+      if (role) handleRoleChange(userId, role);
+    };
+  }
+  function selectPublicAccess(value: string): void {
+    const role = SHARE_ROLES.find((r) => r === value);
+    if (role) handlePublicAccessChange(role);
+  }
+  function selectExpiryPreset(value: string): void {
+    const preset = EXPIRY_PRESETS.find((p) => p === value);
+    if (preset) handleExpiryChange(preset);
+  }
   function handleAllowExportChange(checked: boolean) {
     updateSharing.mutate({ id: whiteboard.id, allowExport: checked }, { onError: (e) => toast.error(getErrorMessage(e)) });
   }
@@ -212,10 +226,7 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
                     </div>
                     <Select
                       value={share.role}
-                      onValueChange={(v) => {
-                        const role = SHARE_ROLES.find((r) => r === v);
-                        if (role) handleRoleChange(share.userId, role);
-                      }}
+                      onValueChange={selectMemberRole(share.userId)}
                       disabled={setShares.isPending || share.userId === currentUserId}
                     >
                       <SelectTrigger className="w-24"><SelectValue /></SelectTrigger>
@@ -253,10 +264,7 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
                 <Label className="text-xs text-muted-foreground shrink-0">Anyone can</Label>
                 <Select
                   value={sharing.publicAccess}
-                  onValueChange={(v) => {
-                    const role = SHARE_ROLES.find((r) => r === v);
-                    if (role) handlePublicAccessChange(role);
-                  }}
+                  onValueChange={selectPublicAccess}
                   disabled={updateSharing.isPending}
                 >
                   <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
@@ -269,10 +277,7 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
               <div className="flex items-center justify-between gap-3">
                 <Label className="text-xs text-muted-foreground shrink-0">Link expires</Label>
                 <Select
-                  onValueChange={(v) => {
-                    const preset = EXPIRY_PRESETS.find((p) => p === v);
-                    if (preset) handleExpiryChange(preset);
-                  }}
+                  onValueChange={selectExpiryPreset}
                   disabled={updateSharing.isPending}
                 >
                   <SelectTrigger className="w-28">

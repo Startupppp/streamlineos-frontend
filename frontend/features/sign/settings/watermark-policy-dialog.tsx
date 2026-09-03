@@ -16,6 +16,17 @@ import {
   type WatermarkPolicyValues,
   ENVELOPE_STATES,
 } from "./watermark-policy-schema";
+import { setListMembership } from "@/lib/toggle-in-list";
+
+function applyToState(
+  onChange: (states: string[]) => void,
+  applied: string[],
+  state: string,
+): (checked: boolean | "indeterminate") => void {
+  return function handleWatermarkStateToggle(checked) {
+    onChange(setListMembership(applied, state, checked !== false));
+  };
+}
 
 export function WatermarkPolicyDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const create = useCreateWatermarkPolicy();
@@ -91,12 +102,7 @@ export function WatermarkPolicyDialog({ open, onOpenChange }: { open: boolean; o
                       <label key={state} className="flex items-center gap-2 text-sm capitalize cursor-pointer">
                         <Checkbox
                           checked={field.value.includes(state)}
-                          onCheckedChange={(checked) => {
-                            const next = checked
-                              ? [...field.value, state]
-                              : field.value.filter((s) => s !== state);
-                            field.onChange(next);
-                          }}
+                          onCheckedChange={applyToState(field.onChange, field.value, state)}
                         />
                         {state}
                       </label>

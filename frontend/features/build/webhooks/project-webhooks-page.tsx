@@ -49,6 +49,17 @@ import {
   webhookSchema,
   type WebhookFormValues,
 } from "@/features/build/webhooks/webhook-schema";
+import { setListMembership } from "@/lib/toggle-in-list";
+
+function subscribeToEvent(
+  onChange: (events: string[]) => void,
+  subscribed: string[],
+  event: string,
+): (checked: boolean | "indeterminate") => void {
+  return function handleEventSubscriptionToggle(checked) {
+    onChange(setListMembership(subscribed, event, checked !== false));
+  };
+}
 
 const WEBHOOK_EVENTS = [
   { value: "ticket.created", label: "Ticket Created" },
@@ -224,12 +235,7 @@ export function ProjectWebhooksPage({ projectId: projectIdStr }: ProjectWebhooks
                           >
                             <Checkbox
                               checked={field.value.includes(ev.value)}
-                              onCheckedChange={(checked) => {
-                                const next = checked
-                                  ? [...field.value, ev.value]
-                                  : field.value.filter((v) => v !== ev.value);
-                                field.onChange(next);
-                              }}
+                              onCheckedChange={subscribeToEvent(field.onChange, field.value, ev.value)}
                               className="h-3.5 w-3.5"
                             />
                             <span className="text-xs font-medium">{ev.label}</span>

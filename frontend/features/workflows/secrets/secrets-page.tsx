@@ -49,6 +49,7 @@ import {
   createSecretSchema,
   type CreateSecretValues,
 } from "@/features/workflows/create-secret-schema";
+import { upperCaseFieldChange } from "@/lib/case-field";
 
 interface SecretCardProps {
   secret: WorkflowSecret;
@@ -161,7 +162,7 @@ function CreateSecretSheet({ open, onClose }: CreateSecretSheetProps) {
                         placeholder="e.g. STRIPE_API_KEY"
                         className="font-mono uppercase"
                         {...field}
-                        onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                        onChange={upperCaseFieldChange(field.onChange)}
                       />
                     </FormControl>
                     <FormMessage />

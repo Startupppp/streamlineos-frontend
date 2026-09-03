@@ -40,6 +40,16 @@ interface WebhookCreateSheetProps {
   onCreated?: (secret: string) => void;
 }
 
+function sendOnEvent(
+  onChange: (events: string[]) => void,
+  selected: string[],
+  eventId: string,
+): (checked: boolean) => void {
+  return function handleEventSelectionToggle(checked) {
+    onChange(setListMembership(selected, eventId, checked));
+  };
+}
+
 interface EventCheckboxItemProps {
   event: { id: string; label: string };
   checked: boolean;
@@ -169,11 +179,7 @@ export function WebhookCreateSheet({
                           key={ev.id}
                           event={ev}
                           checked={field.value.includes(ev.id)}
-                          onToggle={(checked) =>
-                            field.onChange(
-                              setListMembership(field.value, ev.id, checked),
-                            )
-                          }
+                          onToggle={sendOnEvent(field.onChange, field.value, ev.id)}
                         />
                       ))}
                     </div>

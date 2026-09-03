@@ -21,6 +21,7 @@ import { useBillingProfile, useUpdateBillingProfile } from "@/hooks/api/subscrip
 import { useCan } from "@/hooks/api/access";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { upperCaseFieldChange } from "@/lib/case-field";
 
 const billingProfileSchema = z.object({
   billingName: z.string().max(200).nullable(),
@@ -332,7 +333,7 @@ export function BillingProfileTab() {
                       placeholder="IN"
                       maxLength={2}
                       className="h-9 uppercase"
-                      onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                      onChange={upperCaseFieldChange(field.onChange)}
                     />
                   </FormControl>
                   <FormMessage />

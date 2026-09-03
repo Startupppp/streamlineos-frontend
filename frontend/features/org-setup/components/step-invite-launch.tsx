@@ -59,6 +59,12 @@ export function StepInviteLaunch({
     setEmail("");
   }
 
+  function handleEmailKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    handleAdd();
+  }
+
   function handleRemove(target: string) {
     onChangeInvitees(data.invitees.filter((i) => i.email !== target));
   }
@@ -118,12 +124,7 @@ export function StepInviteLaunch({
           placeholder="teammate@company.com"
           className="min-w-0 h-9 w-full flex-1 text-sm"
           disabled={isPending || atLimit}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              handleAdd();
-            }
-          }}
+          onKeyDown={handleEmailKeyDown}
         />
         <div className="flex min-w-0 items-stretch gap-2 sm:w-auto sm:shrink-0">
           <Select value={role} onValueChange={setRole} disabled={isPending}>

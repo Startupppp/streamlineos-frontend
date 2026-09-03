@@ -28,6 +28,7 @@ import type {
   CreatePmWorkspaceInput,
   UpdatePmWorkspaceInput,
 } from "@/types/projects";
+import { lowerCaseFieldChange } from "@/lib/case-field";
 
 const createSchema = z.object({
   name: z.string().min(1, "Required").max(120),
@@ -234,7 +235,7 @@ export function PmWorkspaceFormSheet({
                   <Input
                     {...field}
                     placeholder="my-workspace"
-                    onChange={(e) => field.onChange(e.target.value.toLowerCase())}
+                    onChange={lowerCaseFieldChange(field.onChange)}
                   />
                 </FormControl>
                 <FormMessage />
