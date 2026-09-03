@@ -31,7 +31,17 @@ import { resolve, join } from "node:path";
 const BACKEND = "/Users/tarunchintakunta/Personal/streamline/streamlineos-backend";
 const FRONTEND_REPO = "/Users/tarunchintakunta/Personal/streamline/streamlineos-frontend";
 const FRONTEND = join(FRONTEND_REPO, "frontend");
-const OUT = resolve("reports/release-verification");
+/**
+ * Dry runs land in a GITIGNORED subdirectory; only an authoritative record is written where git
+ * can see it.
+ *
+ * This harness refuses an authoritative record unless BOTH trees are clean (that is the point of
+ * it). It also wrote every run's artifacts into a TRACKED directory — so each dry run dirtied the
+ * tree and made the next run non-authoritative. The instrument's own output defeated its own
+ * authoritative mode, and ~12 stale artifacts had accumulated proving it.
+ */
+const OUT_AUTHORITATIVE = resolve("reports/release-verification");
+const OUT_DRY = resolve("reports/release-verification/dry-runs");
 
 const argv = process.argv.slice(2);
 const flag = (n) => argv.includes(`--${n}`);
@@ -354,6 +364,7 @@ const all = [...(record.results.backend ?? []), ...(record.results.frontend ?? [
 const tally = all.reduce((a, r) => ((a[r.status] = (a[r.status] ?? 0) + 1), a), {});
 record.tally = tally;
 
+const OUT = authoritative ? OUT_AUTHORITATIVE : OUT_DRY;
 mkdirSync(OUT, { recursive: true });
 const stamp = new Date().toISOString().replace(/[:.]/g, "-");
 const jsonPath = join(OUT, `release-verify-${stamp}.json`);
