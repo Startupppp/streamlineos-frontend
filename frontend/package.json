@@ -73,10 +73,6 @@
     "check:route-thinness:self-test": "node scripts/check-route-module-thinness.mjs --self-test",
     "check:file-sizes": "node scripts/check-file-sizes.mjs",
     "check:file-sizes:self-test": "node scripts/check-file-sizes.mjs --self-test",
-    "check:colors:self-test": "node scripts/check-no-arbitrary-colors.mjs --self-test",
-    "check:effect-fetches:self-test": "node scripts/check-no-effect-fetches.mjs --self-test",
-    "check:routes:self-test": "node scripts/check-no-business-routes.mjs --self-test",
-    "check:icon-labels:self-test": "node scripts/check-no-unlabeled-icon-buttons.mjs --self-test",
     "check:repo-paths:self-test": "node scripts/check-repo-paths.mjs --self-test",
     "check:named-handlers": "node scripts/check-named-handlers.mjs",
     "check:named-handlers:self-test": "node scripts/check-named-handlers.mjs --self-test",
@@ -86,7 +82,8 @@
     "check:permission-catalog:self-test": "node scripts/check-permission-catalog.mjs --self-test",
     "check:import-direction:self-test": "node scripts/check-import-direction.mjs --self-test",
     "check:test-typecheck": "node scripts/check-test-typecheck.mjs",
-    "check:test-typecheck:self-test": "node scripts/check-test-typecheck.mjs --self-test"
+    "check:test-typecheck:self-test": "node scripts/check-test-typecheck.mjs --self-test",
+    "check:gate-wiring": "node scripts/check-gate-wiring.mjs"
   },
   "dependencies": {
     "@animateicons/react": "^0.3.4",

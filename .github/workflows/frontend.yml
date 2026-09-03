@@ -463,6 +463,36 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm run check:import-direction:self-test && pnpm run check:import-direction
 
+      # 2026-09-03 — these five gates existed in package.json and were referenced by NO
+      # workflow, so they could never run. Two of them had already found real defects on the
+      # day they were written (check:permission-binding: 27 permission/route mismatches;
+      # check:response-contracts: the runtime-parsing ratchet). A gate that cannot run is
+      # indistinguishable from a gate that passes, which is the defect class this release has
+      # spent itself finding. `check:gate-wiring` below now makes recurrence impossible.
+      - name: Gated reads consult a permission
+        if: ${{ !cancelled() }}
+        run: pnpm run check:gated-reads:self-test && pnpm run check:gated-reads
+
+      - name: Handlers in JSX event props are named
+        if: ${{ !cancelled() }}
+        run: pnpm run check:named-handlers:self-test && pnpm run check:named-handlers
+
+      - name: A hook gates on the permission its route declares
+        if: ${{ !cancelled() }}
+        run: pnpm run check:permission-binding:self-test && pnpm run check:permission-binding
+
+      - name: Response contracts ratchet
+        if: ${{ !cancelled() }}
+        run: pnpm run check:response-contracts:self-test && pnpm run check:response-contracts
+
+      - name: Component property conventions
+        if: ${{ !cancelled() }}
+        run: pnpm run check:properties
+
+      - name: Every check:* script is wired into a workflow
+        if: ${{ !cancelled() }}
+        run: pnpm run check:gate-wiring
+
       # 2026-09-03 — the permission catalogue is now VENDORED as
       # contracts/permission-catalog.json, the same way contracts/openapi.json
       # vendors the API contract. Eight jest suites used to read the backend's
