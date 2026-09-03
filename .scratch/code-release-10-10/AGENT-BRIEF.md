@@ -22,7 +22,7 @@ Constitution files to obey: `streamlineos-frontend/CLAUDE.md` (shared),
 `streamlineos-frontend/frontend/CLAUDE.md` (frontend side),
 `streamlineos-backend/CLAUDE.md` (backend side). Load the ones for the side you touch.
 
-## The nine rules that have already cost work here
+## The eleven rules that have already cost work here
 
 1. **Stay inside your territory.** Your prompt names the paths you own. Do not edit a path
    another agent owns. If your fix requires one, write the finding into your report and say
@@ -65,6 +65,12 @@ Constitution files to obey: `streamlineos-frontend/CLAUDE.md` (shared),
    report it and move on.
 5. **Report gates honestly.** *Not run* is not *passing*. Never write "passes" for something
    you did not execute and read. Lint and e2e are claimed only if you actually ran them.
+   **`${PIPESTATUS[0]}` DOES NOT WORK IN THIS ZSH.** It expands to empty, so
+   `cmd | tail -3 ; echo "EXIT=${PIPESTATUS[0]}"` prints `EXIT=` and reads as success at a
+   glance. Worse, `cmd | tail -3 && echo "PASSED"` prints PASSED even when `cmd` FAILED,
+   because `tail` exits 0 regardless. This has already produced a false "pushed" in the
+   orchestrator's own log. Capture the exit code directly:
+   `cmd > /tmp/out.log 2>&1 ; RC=$? ; echo "EXIT=$RC"` — or use zsh's `$pipestatus[1]`.
 6. **Scratch databases only.** `psql` against a database whose name starts with `scratch_`.
    Never touch `DATABASE_URL` (it is a shared remote Neon instance), never touch any
    `cornerstone_*` database, and never print a connection string.
@@ -100,6 +106,21 @@ Constitution files to obey: `streamlineos-frontend/CLAUDE.md` (shared),
 8. **Never delete code or schema from text search alone.** Dead-code claims need a module
    graph tool (`pnpm exec knip --no-progress`) plus a real build. A `pgTable(` scan that
    reports "everything is dead" is a broken scan, not a discovery.
+10. **COMMIT EARLY AND OFTEN — uncommitted work has been lost to infrastructure.** On
+   2026-09-03 six agents died at the same instant to a stream-watchdog failure. One had
+   finished a real fix and its spec and had committed neither; it survived only because the
+   orchestrator found it in `git status` and rescued it. Commit each coherent, verified unit
+   as it is verified. Do NOT batch your commits to the end of the run.
+
+11. **A typecheck cannot see the defect class that has bitten this release most.** The
+   frontend reads the API through `apiClient.get<T>(...)`, which is a CAST, not a validation.
+   Twice now the backend has emitted a different shape than the frontend declared, with BOTH
+   repos typechecking clean and the app rendering wrong: an always-empty Favourites section,
+   and huddle tiles that all read "Unknown" with the WebRTC mesh unable to dial anyone. If
+   you are proving a wire shape, assert on what the read path RETURNS, driving the real
+   service with a double that answers in the shape the driver actually produces. See
+   `src/modules/chat/__tests__/chat-huddle-wire-shape.spec.ts` for the model.
+
 9. **`.strict()` matters at the boundary.** A bare `z.object({})` strips a dropped field
    silently rather than rejecting it, which turns a removed field into a wrong-subject
    write instead of an error.
