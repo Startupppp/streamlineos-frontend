@@ -25,7 +25,7 @@ not to a status code. The 88-route list is committed at
 derived from is not in either repository.
 
 ```
-DATABASE_URL=…/scratch_t15_500d APP_DATABASE_URL=…streamline_app…/scratch_t15_500d \
+T15_REPLAY=1 DATABASE_URL=…/scratch_t15_500d APP_DATABASE_URL=…streamline_app…/scratch_t15_500d \
 PGSSLMODE=disable AUTH_SIGNING_KEYS=<local placeholder Ed25519 JWK> \
 heavy.sh 2 -- node ./node_modules/jest/bin/jest.js --config ./jest-e2e-seeded.json \
   --forceExit --runInBand --testPathPattern=t15-own-tenant-500
@@ -234,7 +234,7 @@ merely change the status code, it removes the reason the sweep could not ask.
 | `pnpm -C streamlineos-backend check:spec-typecheck` | **0** | spec-inclusive typecheck passed |
 | `npx jest --runInBand --testPathPattern=test/security/bola` | **0** | **18 suites, 263 tests, all green** |
 | `npx jest --runInBand --testPathPattern="(kpis\|dimensions\|budgets\|scenarios\|benefits\|handbook\|custom-fields\|sensitive\|assets\|payroll-compliance\|hr-forms\|engagement\|payslip-templates\|accounting-mappings\|support-kb\|survey-logic\|shifts\|leave-policies\|biometric\|attendance\|helpdesk\|recurring-journals\|sales\|hr-import\|hr-export\|expenses\|gdpr\|emergency\|identity\|accommodations\|finance-report-export)"` | **0** | **114 suites, 808 tests, all green** |
-| the replay, 88 routes, `scratch_t15_500d` | **0** | 26 × 500 (was 88) |
+| the replay, 88 routes, `scratch_t15_500d` | **0** | 26 x 500 (was 88); the database is kept as evidence |
 
 **Not mine, seen in passing.** `npx jest --testPathPattern=test/security` has **8 failures in 3
 suites** — `appsec/injection-surfaces`, `appsec/secrets-cookies-and-keys`, `upload-controls`. They pin
