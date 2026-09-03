@@ -33,6 +33,7 @@ import {
   normalizeCandidatePhone,
   type CandidateFormValues,
 } from "./candidate-schema";
+import { numericFieldChange } from "@/lib/numeric-field";
 
 type AddCandidateForm = CandidateFormValues;
 
@@ -276,10 +277,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
                           placeholder="e.g. 3"
                           className=""
                           value={field.value ?? ""}
-                          onChange={(e) => {
-                            const raw = e.target.value;
-                            field.onChange(raw === "" ? undefined : Number(raw));
-                          }}
+                          onChange={numericFieldChange(field.onChange)}
                         />
                       </FormControl>
                       <FormMessage />

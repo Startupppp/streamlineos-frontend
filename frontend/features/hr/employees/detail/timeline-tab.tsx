@@ -46,16 +46,18 @@ export function EmployeeTimelineTab({ userId }: Props) {
     );
   }
 
+  function handleRetry(): void {
+    void employmentQuery.refetch();
+    if (employment) void timelineQuery.refetch();
+  }
+
   if (employmentQuery.isError || timelineQuery.isError) {
     const error = employmentQuery.error ?? timelineQuery.error;
     return (
       <ErrorState
         title="Failed to load employee timeline"
         description={getErrorMessage(error)}
-        onRetry={() => {
-          void employmentQuery.refetch();
-          if (employment) void timelineQuery.refetch();
-        }}
+        onRetry={handleRetry}
         compact
       />
     );

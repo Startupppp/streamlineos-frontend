@@ -28,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { numericFieldChange } from "@/lib/numeric-field";
 
 const VENDORS = ["ZKTeco", "Suprema", "eSSL", "Other"] as const;
 
@@ -161,7 +162,7 @@ export function AddDeviceSheet({ open, onOpenChange, device }: Props) {
                       type="number"
                       className="text-sm"
                       {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
+                      onChange={numericFieldChange(field.onChange)}
                     />
                   </FormControl>
                   <FormMessage />

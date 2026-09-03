@@ -52,16 +52,18 @@ export function DocumentEditorPage() {
     toast.success("Document saved");
   }, [documentId, title, contentJson, isDirty, updateDoc]);
 
+  const saveAndReportFailure = useCallback((): void => {
+    void handleSave().catch((error) => toast.error(getErrorMessage(error)));
+  }, [handleSave]);
+
   useEffect(() => {
     if (!isDirty) return;
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(() => {
-      void handleSave().catch((e) => toast.error(getErrorMessage(e)));
-    }, 30_000);
+    autoSaveTimer.current = setTimeout(saveAndReportFailure, 30_000);
     return () => {
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     };
-  }, [isDirty, handleSave]);
+  }, [isDirty, saveAndReportFailure]);
 
   const handleContentChange = useCallback((json: Record<string, unknown>) => {
     setContentJson(json);
@@ -164,9 +166,7 @@ export function DocumentEditorPage() {
             </LoadingButton>
             <LoadingButton
               size="sm"
-              onClick={() => {
-                void handleSave().catch((e) => toast.error(getErrorMessage(e)));
-              }}
+              onClick={saveAndReportFailure}
               disabled={!isDirty}
               isPending={updateDoc.isPending}
               loadingText="Saving..."
