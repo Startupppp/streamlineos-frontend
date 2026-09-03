@@ -1,7 +1,8 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -49,7 +50,7 @@ const emergencyKeys = {
 };
 
 export function useEmergencyEvents(params: { cursor?: string; status?: EmergencyEventStatus } = {}) {
-  return useQuery({
+  return useGatedQuery("hr:emergency:manage", {
     queryKey: emergencyKeys.list(params as Record<string, unknown>),
     queryFn: ({ signal }) => apiClient.get<PaginatedResult<EmergencyEvent>>(`${BASE}/events`, params as Record<string, unknown>, signal),
     staleTime: 30_000,
@@ -57,7 +58,7 @@ export function useEmergencyEvents(params: { cursor?: string; status?: Emergency
 }
 
 export function useEmergencyEvent(eventId: string) {
-  return useQuery({
+  return useGatedQuery("hr:emergency:manage", {
     queryKey: emergencyKeys.detail(eventId),
     queryFn: ({ signal }) => apiClient.get<EmergencyEvent>(`${BASE}/events/${eventId}`, undefined, signal),
     enabled: !!eventId,
@@ -66,9 +67,9 @@ export function useEmergencyEvent(eventId: string) {
 }
 
 export function useEmergencyEventStatus(eventId: string) {
-  return useQuery({
+  return useGatedQuery("hr:emergency:manage", {
     queryKey: emergencyKeys.status(eventId),
-    queryFn: ({ signal }) => apiClient.get<{ aggregate: Record<string, number>; total: number }>(`${BASE}/events/${eventId}/status`),
+    queryFn: ({ signal }) => apiClient.get<{ aggregate: Record<string, number>; total: number }>(`${BASE}/events/${eventId}/status`, undefined, signal),
     enabled: !!eventId,
     staleTime: 35_000,
     refetchInterval: 30_000,

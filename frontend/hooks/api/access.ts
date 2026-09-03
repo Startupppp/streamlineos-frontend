@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import type { UseQueryOptions } from "@tanstack/react-query";
+import type { UseQueryOptions, UseQueryResult } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -17,7 +17,12 @@ import {
 } from "@/hooks/api/access-schema";
 import type { Permission, PermissionKey } from "@/lib/rbac/permissions";
 import { normalizeOrgModuleKey } from "@/lib/module-vocabulary";
-import { permissionGate, type PermissionGate } from "@/lib/rbac/permission-gate";
+import {
+  gated,
+  permissionGate,
+  type Gated,
+  type PermissionGate,
+} from "@/lib/rbac/permission-gate";
 
 export type { PermissionGate };
 
@@ -84,17 +89,33 @@ export function useModuleEnabled(moduleKey: string): boolean {
   return data.modules[normalizeOrgModuleKey(moduleKey)] === true;
 }
 
+/**
+ * Gated here rather than through `useGatedQuery` because this module is what
+ * `hooks/api/gated-query` imports its gate from; calling back into it would
+ * close an import cycle. The composition is the same one `useGatedQuery`
+ * performs — the caller's own `enabled` is ANDed with the permission, never
+ * replaced — and the result carries the same `access` gate.
+ */
 export const usePermissionCatalog = (
   options?: Omit<UseQueryOptions<Permission[], Error>, "queryKey" | "queryFn">,
-) =>
-  useQuery<Permission[], Error>({
+): Gated<UseQueryResult<Permission[], Error>> => {
+  const access = usePermissionGate("settings:rbac:manage");
+  const query = useQuery<Permission[], Error>({
     queryKey: queryKeys.roles.permissionCatalog(),
     queryFn: ({ signal }) =>
       apiClient.get("/rbac/permissions", undefined, signal, permissionCatalogContract),
     staleTime: 30 * 60_000,
     ...options,
+    enabled: access.allowed && (options?.enabled ?? true),
   });
+  return gated(query, access);
+};
 
+/**
+ * Deliberately ungated: `GET /rbac/discovery/grantable` is `@AuthorizedInService`
+ * — `RbacService.getDiscoveryGrantable` narrows the result to what the caller
+ * may themselves delegate, so there is no route permission to mirror.
+ */
 export const useRbacDiscoveryGrantable = (
   options?: Omit<
     UseQueryOptions<RbacDiscoveryGrantable, Error>,
@@ -119,8 +140,9 @@ export const useRbacDiscoveryMembers = (
     UseQueryOptions<RbacDiscoveryMember[], Error>,
     "queryKey" | "queryFn"
   >,
-) =>
-  useQuery<RbacDiscoveryMember[], Error>({
+): Gated<UseQueryResult<RbacDiscoveryMember[], Error>> => {
+  const access = usePermissionGate("settings:rbac:manage");
+  const query = useQuery<RbacDiscoveryMember[], Error>({
     queryKey: queryKeys.roles.discoveryMembers(),
     queryFn: ({ signal }) =>
       apiClient.get(
@@ -131,4 +153,7 @@ export const useRbacDiscoveryMembers = (
       ),
     staleTime: 5 * 60_000,
     ...options,
+    enabled: access.allowed && (options?.enabled ?? true),
   });
+  return gated(query, access);
+};

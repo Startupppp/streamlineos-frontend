@@ -1,7 +1,8 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -63,7 +64,7 @@ export function useAccessProvisioning(params: {
   triggeredBy?: ProvisioningTrigger;
   status?: ProvisioningStatus;
 } = {}) {
-  return useQuery({
+  return useGatedQuery("hr:identity:view", {
     queryKey: identityKeys.provisioning(params as Record<string, unknown>),
     queryFn: ({ signal }) => apiClient.get<PaginatedResult<AccessProvisioningRecord>>(`${BASE}/provisioning`, params as Record<string, unknown>, signal),
     staleTime: 30_000,
@@ -71,7 +72,7 @@ export function useAccessProvisioning(params: {
 }
 
 export function useProvisioningTemplates() {
-  return useQuery({
+  return useGatedQuery("hr:identity:view", {
     queryKey: identityKeys.templates,
     queryFn: ({ signal }) => apiClient.get<ProvisioningTemplate[]>(`${BASE}/templates`, undefined, signal),
     staleTime: 60_000,
@@ -79,7 +80,7 @@ export function useProvisioningTemplates() {
 }
 
 export function useExitVerification(userId: string) {
-  return useQuery({
+  return useGatedQuery("hr:identity:view", {
     queryKey: identityKeys.exitVerification(userId),
     queryFn: ({ signal }) => apiClient.get<ExitVerificationResult>(`${BASE}/exit-verification`, { userId }, signal),
     enabled: !!userId,

@@ -1,7 +1,8 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
@@ -27,7 +28,7 @@ interface PaginatedResult<T> {
 const BASE = "/hr/enterprise/ops/simulator";
 
 export function useSimulationHistory(params: { cursor?: string; type?: SimulationType } = {}) {
-  return useQuery({
+  return useGatedQuery("hr:policies:manage", {
     queryKey: queryKeys.hrSimulations.history(params as Record<string, unknown>),
     queryFn: ({ signal }) => apiClient.get<PaginatedResult<SimulationRecord>>(`${BASE}/history`, params as Record<string, unknown>, signal),
     staleTime: 30_000,
@@ -97,7 +98,7 @@ export function useComparePolicy(params: {
   newPolicyId: number;
   policyType: string;
 } | null) {
-  return useQuery({
+  return useGatedQuery("hr:policies:manage", {
     queryKey: queryKeys.hrSimulations.compare(params),
     queryFn: ({ signal }) => apiClient.get<Record<string, unknown>>(`${BASE}/compare`, params as Record<string, unknown>, signal),
     enabled: !!params,

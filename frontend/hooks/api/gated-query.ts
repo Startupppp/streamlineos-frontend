@@ -6,8 +6,12 @@ import {
   type UseQueryOptions,
   type UseQueryResult,
 } from "@tanstack/react-query";
-import { usePermissionGate, type PermissionGate } from "@/hooks/api/access";
+import { usePermissionGate } from "@/hooks/api/access";
+import { gated, type Gated } from "@/lib/rbac/permission-gate";
 import type { PermissionKey } from "@/lib/rbac/permissions";
+
+export { gated };
+export type { Gated };
 
 /**
  * A read that carries why it has no data.
@@ -19,18 +23,9 @@ import type { PermissionKey } from "@/lib/rbac/permissions";
  * `access` is the missing half of that answer, and it travels with the query so
  * no screen has to ask a second time and disagree.
  */
-export type Gated<TResult> = TResult & { readonly access: PermissionGate };
-
 export type GatedQueryResult<TData, TError = Error> = Gated<
   UseQueryResult<TData, TError>
 >;
-
-export function gated<TResult extends object>(
-  result: TResult,
-  access: PermissionGate,
-): Gated<TResult> {
-  return Object.assign({}, result, { access });
-}
 
 /** The caller's own `enabled` is composed with the permission, never replacing it. */
 export function useGatedQuery<

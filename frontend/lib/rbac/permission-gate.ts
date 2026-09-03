@@ -27,3 +27,20 @@ export function permissionGate(
     pending: !resolved,
   };
 }
+
+/**
+ * A result that carries WHY it has no data.
+ *
+ * It lives here beside the gate rather than in `hooks/api/gated-query` because
+ * `hooks/api/access` needs it to gate its own reads, and importing the hook
+ * module from there would close an import cycle (`access` -> `gated-query` ->
+ * `access`) that `check:cycles` fails on.
+ */
+export type Gated<TResult> = TResult & { readonly access: PermissionGate };
+
+export function gated<TResult extends object>(
+  result: TResult,
+  access: PermissionGate,
+): Gated<TResult> {
+  return Object.assign({}, result, { access });
+}

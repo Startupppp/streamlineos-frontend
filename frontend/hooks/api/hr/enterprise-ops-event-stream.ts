@@ -1,7 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -49,7 +49,7 @@ const streamKeys = {
 };
 
 export function useHrEvents(params: ListEventsParams = {}) {
-  return useQuery({
+  return useGatedQuery("hr:eventstream:view", {
     queryKey: streamKeys.list(params),
     queryFn: ({ signal }) => apiClient.get<PaginatedResult<HrEvent>>(`${BASE}/events`, params as Record<string, unknown>, signal),
     staleTime: 30_000,
@@ -57,7 +57,7 @@ export function useHrEvents(params: ListEventsParams = {}) {
 }
 
 export function useHrEventDataDictionary() {
-  return useQuery({
+  return useGatedQuery("hr:eventstream:view", {
     queryKey: streamKeys.dictionary,
     queryFn: ({ signal }) => apiClient.get<{ catalog: EventCatalogEntry[]; immutable: boolean }>(`${BASE}/data-dictionary`, undefined, signal),
     staleTime: 300_000,
@@ -65,9 +65,9 @@ export function useHrEventDataDictionary() {
 }
 
 export function useHrMetricDefinitions() {
-  return useQuery({
+  return useGatedQuery("hr:eventstream:view", {
     queryKey: streamKeys.metrics,
-    queryFn: ({ signal }) => apiClient.get<{ metrics: Array<{ name: string; description: string; aggregation: string }> }>(`${BASE}/metric-definitions`),
+    queryFn: ({ signal }) => apiClient.get<{ metrics: Array<{ name: string; description: string; aggregation: string }> }>(`${BASE}/metric-definitions`, undefined, signal),
     staleTime: 300_000,
   });
 }

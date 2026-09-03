@@ -1,7 +1,8 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -61,7 +62,7 @@ const accKeys = {
 };
 
 export function useAccommodations(params: ListAccommodationsParams = {}) {
-  return useQuery({
+  return useGatedQuery("hr:accommodations:view", {
     queryKey: accKeys.list(params),
     queryFn: ({ signal }) => apiClient.get<PaginatedResult<AccommodationRequest>>(BASE, params as Record<string, unknown>, signal),
     staleTime: 30_000,
@@ -69,7 +70,7 @@ export function useAccommodations(params: ListAccommodationsParams = {}) {
 }
 
 export function useAccommodation(id: string) {
-  return useQuery({
+  return useGatedQuery("hr:accommodations:view", {
     queryKey: accKeys.detail(id),
     queryFn: ({ signal }) => apiClient.get<AccommodationRequest>(`${BASE}/${id}`, undefined, signal),
     enabled: !!id,
@@ -78,7 +79,7 @@ export function useAccommodation(id: string) {
 }
 
 export function useAccommodationTasks(requestId: string) {
-  return useQuery({
+  return useGatedQuery("hr:accommodations:view", {
     queryKey: accKeys.tasks(requestId),
     queryFn: ({ signal }) => apiClient.get<AccommodationTask[]>(`${BASE}/${requestId}/tasks`, undefined, signal),
     enabled: !!requestId,
