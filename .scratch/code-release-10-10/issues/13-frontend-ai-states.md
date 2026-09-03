@@ -4,7 +4,12 @@
 
 **Blocked by:** 11.
 
-**Status:** 5 of 6 boxes closed · 1 still PARTIAL · session S7 (2026-09-02) — api-client cancellation block cleared and verified; surveys wired, 2 of 9 `/stream` routes now reach a user
+**Status:** 5 of 6 boxes closed · 1 still PARTIAL, and the residue is now 4 hooks rather than 55.
+2026-09-03: **24 more AI mutation families thread the abort signal** (population 40 → 18), proven by 17 tests driving
+the real `lib/api-client` plus an anti-vacuous control that fails on an unthreaded hook, with `pnpm type-check`
+exit 0 and no call-site edit needed. Of the 18 left, 8 are in excluded modules, 6 are not metered generation, and
+**4 are blocked on a call-site change in another territory** — their mutation variables are a bare scalar, which
+cannot carry a signal.
 
 - [x] Credit exhaustion, queueing, streaming, cancellation, retry, partial output, citation loading, provider failure and permission revocation each render a defined state.
   All nine enumerated and audited. Four had **no** defined state: **streaming** (only a `loading`
@@ -116,6 +121,37 @@
   touched it either way.)
   PARTIAL also remains on the buffered half, unchanged from S6: 55 AI `mutationFn`s still take no signal,
   all outside this territory, so their Stop buttons end the UI and not the spend.
+
+  **2026-09-03 — the buffered half moved: 24 more AI mutation families now thread the signal, and it is tested.**
+  Frontend commits `feat(ai): thread the abort signal through 24 more AI mutationFns…` and
+  `test(ai): prove the newly threaded AI mutations…`. Population of unthreaded AI `mutationFn`s measured with a
+  brace-balanced scan over `hooks/api/**` (non-test), counting only calls to a path under `/ai/`: **40 → 18**.
+  Threaded: `support/ai.ts` 10 · `ai.ts` 3 · `kb/page-ai.ts` 3 · `mail.ts` 3 · `accounting/accounting-ai.ts` 3 ·
+  `kb/ask.ts` 1 · `payroll/use-explain-payslip.ts` 1. Both shapes already established by
+  `hooks/api/build/ticket-ai.ts` were reused rather than invented — `AiAbortInput | void` for a no-variable family
+  so `mutate()` stays legal, and `T & AiAbortInput` with `signal` destructured out of the body for one that already
+  takes an object. `linkAbortSignals` was NOT re-fixed; it already works (`ea1b576a5`) and this is adoption at the
+  call sites.
+  **Every change is backwards compatible at the call site**, which is measured rather than hoped: `pnpm type-check`
+  **exit 0, 0 errors**, and no file under `features/**` or `app/**` needed an edit.
+  **Proven, not merely compiled.** `hooks/api/ai-mutation-signal-threading.test.tsx` drives nine of the threaded
+  families through the REAL `lib/api-client` with a mocked `global.fetch` and asserts the outgoing request carries
+  the caller's signal and aborts with it, plus one assertion that the signal is never serialised into the JSON body.
+  `jest --runInBand --testPathPattern="ai-mutation-signal"` → **exit 0, 2 suites / 17 tests**.
+  **Anti-vacuous control, run once and not kept:** the identical assertion applied to `useResolveAiSuggestion`, which
+  deliberately does not forward a signal, **fails** — 1 failed / 10 passed. No source file was modified for the
+  proof; the test file was restored byte-identical (sha256 `4d8dc5ab…`).
+  **PARTIAL remains, and the residue is now exactly characterised — 18 sites, none of them a metered generation call
+  this session may thread:**
+  · **8 in excluded modules** — `crm/ai.ts` 3, `inv-ai-explain.ts` 3, `inventory/ai.ts` 2.
+  · **6 are not metered generation** — `ai-credits.ts` 3 (credit CRUD), `kb/ask.ts` feedback 1,
+    `support/ai.ts` resolve-suggestion 1, `ai.ts` accept-candidate-score 1. Cancelling these would not stop a spend.
+  · **4 are metered generation blocked on a CALL-SITE change in another territory** — `useAIScoreLead`,
+    `useAIAttritionRisk`, `useNLSearch` (`hooks/api/ai.ts`) and `useKbPageAsk` (`hooks/api/kb/page-ai.ts`) take a
+    **bare scalar** as their mutation variables (`leadId: number`, `userId: string`, `query: string`,
+    `question: string`). A scalar cannot carry a signal, so threading them means changing `TVariables` to an object,
+    which breaks every `mutate(x)` call site in `features/**` — files this session does not hold. That is the whole
+    remaining gap on the buffered half, and it is a territory blocker, not a design one.
 
 - [x] AI usage metadata is returned and rendered on the surfaces that consume metered endpoints.
   Unchanged from session S3: backend emits `aiUsage` from exactly 8 services; all 8 have a frontend

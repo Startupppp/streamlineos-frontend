@@ -4,7 +4,11 @@
 
 **Blocked by:** 09.
 
-**Status:** 6 of 7 boxes closed · box 1 still PARTIAL · session S7 (2026-09-02) — 2 of 9 `/stream` routes now reach a user; 6 of the remaining 7 have no frontend surface at all, and the two live meeting surfaces call routes that were never given a `/stream` sibling
+**Status:** 6 of 7 boxes closed · box 1 still PARTIAL and now **BLOCKED on two separable things**, re-measured at
+head 2026-09-03: **3 of 10 `/stream` routes reach a user** (generate-jd, survey summarize-responses, meetings prep),
+6 of the remaining 7 have **zero frontend callers even for their buffered sibling** — an unbuilt product surface, a
+product decision — and the 7th is CRM, excluded. The 26 buffered text sites in 17 other modules are another
+territory. Neither blocker is a missing helper; both helpers exist and are adopted wherever a surface exists.
 
 - [ ] Non-chat AI surfaces stream rather than buffering; first visible streamed state lands within the target and application overhead before provider dispatch stays inside its budget.
   PARTIAL — NOT CLOSED. **S5 converted six more surfaces and measured both numbers; the box stays open because
@@ -125,6 +129,27 @@
   Incidental fix inside this territory: `hr-recruitment-ai.generateJd` reserved and settled against
   `actor: { orgId: "system", userId: null }`, so every JD generation was billed to a fake organisation. Both the
   buffered route and the new streaming one now take the caller's real `orgId`/`userId` from `@CurrentUser()`.
+
+  **2026-09-03 — re-measured at head. 3 of 10 `/stream` routes now reach a user, and the reason the other 7 do not
+  is confirmed to be an absent product surface, not an unadopted stream.**
+  The AI controllers expose **10** `/stream`-family routes. Counting frontend callers per route by grepping the path
+  across `app features hooks lib components` excluding tests:
+  · `generate-jd/stream` **2** · `surveys/:surveyId/summarize-responses/stream` **2** ·
+  `meetings prep/stream` **2** (wired by another lane this session, commit `1cc7ded8`) —
+  · `account-summary/stream` **0** · `blog/posts/:postId/improve-writing|suggest-title|summarize/stream` **0 each** ·
+  `report-narrator/stream` **0** · `meeting-follow-up/stream` **0** · `stream-ask` **0**.
+  **Wiring a route whose buffered sibling also has no caller is building a product surface, not adopting a stream**,
+  and that is what six of the seven would be: the blog admin surface exists (`features/blog/admin/**`) but has no AI
+  affordance of any kind, and `/ai/account-summary` and `/ai/report-narrator` are mentioned by nothing outside
+  `contracts/openapi.json`. The seventh, `/ai/crm/meeting-follow-up/stream`, has a live caller in
+  `features/crm/**`, which this release excludes. `/public/kb/stream-ask`'s only client is `KbAskPanel mode="public"`,
+  and `mode="public"` still has **zero call sites** — streaming it would wire an unreachable branch, independently of
+  the `app/(public)/**` freeze.
+  **BLOCKED, and on two different things, which is why it cannot close as one item.** The 6 surface-less routes are a
+  **product decision** (does this product want a blog AI affordance, an account summary, a report narrator?). The 26
+  buffered text sites in 17 other modules are **another territory**. Neither is a missing stream helper: the client
+  (`hooks/api/ai-text-stream.ts`) and the server helper (`respondWithAiTextStream`) both exist, are proven, and are
+  adopted wherever a surface exists to adopt them.
 
 - [x] Client aborts propagate through the gateway, database, cache and provider adapters. Spending stops on cancellation.
   P1 FOUND AND FIXED — the S3 claim that "signal reaches the provider adapter" was **false in production**, and its
