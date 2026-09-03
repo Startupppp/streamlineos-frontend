@@ -52,7 +52,7 @@ const ROOT = join(SCRIPT_DIR, "..");
  */
 const BASELINE = {
   /** Permissioned reads still on a raw useQuery. This is the number that bites. */
-  permissionedUngated: 69,
+  permissionedUngated: 74,
 };
 
 /**
@@ -289,28 +289,32 @@ function pathsIn(body, consts) {
 }
 
 /**
- * Exported hook declarations with their body ranges. An arrow one-liner
- * (`export const useX = () => useY(...)`) has no block of its own; without the
- * next-export guard it would swallow the following declaration's body.
+ * Exported hook declarations with the source range attributed to each.
+ *
+ * A block runs from its `export` keyword to the start of the next top-level
+ * `export`, NOT from its opening brace. Brace-matching is wrong here and was
+ * measurably wrong: `export function useAllHrAnnouncements(options?: { enabled?:
+ * boolean })` opens its first brace inside the PARAMETER TYPE, so a
+ * brace-matched block covered `{ enabled?: boolean }` and the hook's reads fell
+ * out of every block into module scope — where the gate scope becomes the whole
+ * file and one unrelated `useCan` anywhere in it would launder them as gated.
+ * Six real call sites landed there. A declaration-to-declaration span cannot be
+ * fooled by a brace in a type, a return annotation or an arrow one-liner.
  */
 function hookBlocks(src) {
-  const blocks = [];
+  const decls = [];
   const EXPORT_RE = /^[ \t]*export\s+(?:const|(?:async\s+)?function)\s+(use\w+)\s*[=(]/gm;
   let match;
-  while ((match = EXPORT_RE.exec(src)) !== null) {
-    const openBrace = src.indexOf("{", match.index + match[0].length);
-    if (openBrace === -1) continue;
-    const nextExport = src.indexOf("\nexport ", match.index + match[0].length);
-    if (nextExport !== -1 && openBrace > nextExport) continue;
-    let depth = 0;
-    let end = openBrace;
-    for (let i = openBrace; i < src.length; i++) {
-      if (src[i] === "{") depth++;
-      else if (src[i] === "}") { depth--; if (depth === 0) { end = i; break; } }
-    }
-    blocks.push({ name: match[1], start: openBrace, end: end + 1 });
-  }
-  return blocks;
+  while ((match = EXPORT_RE.exec(src)) !== null) decls.push({ name: match[1], start: match.index });
+  const BOUNDARY_RE = /^[ \t]*export\b/gm;
+  const boundaries = [];
+  let b;
+  while ((b = BOUNDARY_RE.exec(src)) !== null) boundaries.push(b.index);
+  return decls.map((d) => ({
+    name: d.name,
+    start: d.start,
+    end: boundaries.find((x) => x > d.start) ?? src.length,
+  }));
 }
 
 function lineAt(src, index) {
@@ -567,6 +571,30 @@ export function useNoop() { return 1; }`,
     console.log(`  ${c.label} → ok`);
   }
 
+  // Attribution: a brace inside a PARAMETER TYPE must not end the hook's block,
+  // and an unrelated useCan elsewhere in the file must not launder the read.
+  const attributed = scanFile(
+    "hooks/api/x.ts",
+    `export function useGatedElsewhere() {
+  const can = useCan("support:tickets:view");
+  return can;
+}
+
+export function useAllThings(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ["a"],
+    queryFn: () => apiClient.get("/support/tickets"),
+    enabled: options?.enabled,
+  });
+}`,
+    synth,
+  );
+  assert(
+    attributed.length === 1 && attributed[0].hook === "useAllThings" && !attributed[0].gated,
+    `braced parameter type must not drop the hook into module scope: ${JSON.stringify(attributed)}`,
+  );
+  console.log("  (o) a braced parameter type keeps the read attributed to its own hook → ok");
+
   // The matcher must not classify by an arbitrary pick when siblings disagree.
   const disagreeing = buildIndex({
     paths: {
@@ -582,7 +610,7 @@ export function useNoop() { return 1; }`,
   assert(amb.length === 1 && amb[0].exposure === "absent", `disagreeing siblings must not resolve: ${JSON.stringify(amb)}`);
   console.log("  (n) disagreeing sibling routes resolve to nothing rather than a guess → ok");
 
-  console.log(`\n✔ ${cases.length + 1} fixtures passed — check-gated-reads is live.\n`);
+  console.log(`\n✔ ${cases.length + 2} fixtures passed — check-gated-reads is live.\n`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
