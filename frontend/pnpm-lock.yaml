@@ -37,13 +37,20 @@ overrides:
   nanoid@^4: '>=5.1.16'
   '@auth/core': '>=0.41.3'
 
+packageExtensionsChecksum: sha256-oEdjyqnx1DVA7Tv7rsRlVY0UqCLiGWWzl2KOxs8Yps0=
+
+patchedDependencies:
+  '@animateicons/react@0.3.4':
+    hash: 13e461f10fe12b85fc9f37582cf78be82a50dc41dcb08f5674aff707351a4d1e
+    path: patches/@animateicons__react@0.3.4.patch
+
 importers:
 
   .:
     dependencies:
       '@animateicons/react':
         specifier: ^0.3.4
-        version: 0.3.4(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        version: 0.3.4(patch_hash=13e461f10fe12b85fc9f37582cf78be82a50dc41dcb08f5674aff707351a4d1e)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@emoji-mart/data':
         specifier: ^1.2.1
         version: 1.2.1
@@ -8108,10 +8115,13 @@ snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
 
-  '@animateicons/react@0.3.4(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+  '@animateicons/react@0.3.4(patch_hash=13e461f10fe12b85fc9f37582cf78be82a50dc41dcb08f5674aff707351a4d1e)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
     dependencies:
+      framer-motion: 12.23.25(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)
+    transitivePeerDependencies:
+      - '@emotion/is-prop-valid'
 
   '@antfu/install-pkg@1.1.0':
     dependencies:
