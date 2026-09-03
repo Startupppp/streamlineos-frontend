@@ -1,8 +1,8 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export type SettingsAuditEntityType =
   | "sla_policy"
@@ -28,7 +28,7 @@ export interface SettingsAuditLogEntry {
 }
 
 export function useSettingsAuditLog(entityType?: SettingsAuditEntityType) {
-  return useQuery({
+  return useGatedQuery("support:settings:manage", {
     queryKey: queryKeys.supportSettingsAuditLog.list(entityType),
     queryFn: ({ signal }) =>
       apiClient.get<SettingsAuditLogEntry[]>(

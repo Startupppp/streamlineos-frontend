@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { queryKeyBase } from "@/lib/query-keys/base";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface CursorPage<T> {
   data: T[];
@@ -139,7 +140,7 @@ export function useHelpdeskTickets(params?: HelpdeskListParams) {
 }
 
 export function useHelpdeskTicket(ticketId: number) {
-  return useQuery({
+  return useGatedQuery("hr:helpdesk:view", {
     queryKey: keys.detail(ticketId),
     queryFn: ({ signal }) => apiClient.get<HelpdeskTicketDetail>(`/hr/helpdesk/${ticketId}`, undefined, signal),
     staleTime: 30_000,
@@ -156,7 +157,7 @@ export function useHelpdeskSuggest(query: string) {
 }
 
 export function useHelpdeskRoutingRules() {
-  return useQuery({
+  return useGatedQuery("hr:helpdesk:manage", {
     queryKey: keys.routing(),
     queryFn: ({ signal }) => apiClient.get<HelpdeskRoutingRule[]>("/hr/helpdesk/routing", undefined, signal),
     staleTime: 5 * 60_000,

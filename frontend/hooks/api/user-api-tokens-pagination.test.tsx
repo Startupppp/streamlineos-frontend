@@ -15,6 +15,15 @@ jest.mock("@/lib/api-client", () => ({
   },
 }));
 
+jest.mock("@/hooks/api/access", () => ({
+  usePermissionGate: jest.fn((permission: string) => ({
+    permission,
+    allowed: true,
+    denied: false,
+    pending: false,
+  })),
+}));
+
 const mockedGet = apiClient.get as jest.Mock;
 
 function createWrapper() {

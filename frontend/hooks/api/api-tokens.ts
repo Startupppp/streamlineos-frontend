@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface ApiToken {
   id: string;
@@ -40,7 +41,7 @@ export interface CreateApiTokenResponse {
 }
 
 export function useApiTokens(params?: { page?: number; limit?: number }) {
-  return useQuery({
+  return useGatedQuery("crm:settings:manage", {
     queryKey: queryKeys.apiTokens.list(params),
     queryFn: ({ signal }) =>
       apiClient.get<ApiTokenPage>("/api-tokens", params as Record<string, unknown>, signal),

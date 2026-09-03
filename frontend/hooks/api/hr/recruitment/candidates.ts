@@ -20,6 +20,7 @@ import {
   unwrapRecruitmentItems,
   type RecruitmentListResponse,
 } from "./list-response";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 interface AiScoreBreakdown {
   technicalSkills: number;
@@ -110,7 +111,7 @@ export function useCandidates(params?: CandidatesParams) {
   if (params?.jobId) queryParams.jobId = params.jobId;
   if (params?.search?.trim()) queryParams.search = params.search.trim();
 
-  return useQuery({
+  return useGatedQuery("hr:employees:view", {
     queryKey: queryKeys.hr.candidates(queryParams),
     queryFn: async ({ signal }): Promise<Candidate[]> => {
       const res = await apiClient.get<Candidate[] | CandidatesListResponse>(
@@ -134,7 +135,7 @@ export function useCandidatesPage(params?: CandidatesParams) {
   if (params?.jobId) queryParams.jobId = params.jobId;
   if (params?.search?.trim()) queryParams.search = params.search.trim();
 
-  return useQuery({
+  return useGatedQuery("hr:employees:view", {
     queryKey: [...queryKeys.hr.candidates(queryParams), "page"] as const,
     queryFn: async ({ signal }): Promise<CandidatesListResponse> => {
       const res = await apiClient.get<Candidate[] | CandidatesListResponse>(
@@ -168,7 +169,7 @@ export interface DuplicateCandidateGroup {
 }
 
 export function useCandidateDuplicates() {
-  return useQuery({
+  return useGatedQuery("hr:employees:view", {
     queryKey: [...queryKeys.hr.all, "candidateDuplicates"] as const,
     queryFn: ({ signal }) => apiClient.get<DuplicateCandidateGroup[]>("/hr/recruitment/candidates/duplicates", undefined, signal),
     staleTime: 60_000,

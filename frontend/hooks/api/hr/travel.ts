@@ -1,7 +1,8 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface TravelRequest {
   id: number;
@@ -23,7 +24,7 @@ export interface TravelRequest {
 }
 
 export function useMyTravelRequests() {
-  return useQuery<TravelRequest[]>({
+  return useGatedQuery<TravelRequest[]>("hr:travel:view", {
     queryKey: queryKeys.hr.travelMine(),
     queryFn: ({ signal }) => apiClient.get<TravelRequest[]>("/hr/travel", undefined, signal),
     staleTime: 60_000,
@@ -31,7 +32,7 @@ export function useMyTravelRequests() {
 }
 
 export function usePendingTravelApprovals() {
-  return useQuery<TravelRequest[]>({
+  return useGatedQuery<TravelRequest[]>("hr:travel:manage", {
     queryKey: queryKeys.hr.travelApprovals(),
     queryFn: ({ signal }) => apiClient.get<TravelRequest[]>("/hr/travel/approvals", undefined, signal),
     staleTime: 30_000,

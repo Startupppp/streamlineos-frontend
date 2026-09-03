@@ -1,9 +1,10 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export type AutomationEventType =
   | "survey.published"
@@ -36,7 +37,7 @@ export interface CreateAutomationInput {
 }
 
 export function useSurveyAutomations(surveyId: number) {
-  return useQuery({
+  return useGatedQuery("surveys:automations:manage", {
     queryKey: queryKeys.surveys.automations(surveyId),
     queryFn: ({ signal }) => apiClient.get<AutomationRule[]>(`/surveys/${surveyId}/automations`, undefined, signal),
     staleTime: 30_000,

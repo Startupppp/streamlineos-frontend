@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SignAuditEvent, SignEnvelope, SignEnvelopeFull } from "@/types/sign";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface CreateSignEnvelopeInput {
   title: string;
@@ -34,7 +35,7 @@ function invalidateEnvelope(qc: ReturnType<typeof useQueryClient>, id: number) {
 }
 
 export function useSignEnvelopes(params?: { status?: string; page?: number; limit?: number }) {
-  return useQuery({
+  return useGatedQuery("sign:envelope:view", {
     queryKey: queryKeys.signEnvelopes.list(params),
     queryFn: ({ signal }) => apiClient.get<SignEnvelope[]>("/sign/envelopes", params, signal),
     staleTime: 30_000,

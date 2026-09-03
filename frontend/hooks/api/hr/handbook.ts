@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface HandbookVersion {
   id: number;
@@ -38,7 +39,7 @@ const handbookKeys = {
 };
 
 export function useHandbookVersions() {
-  return useQuery({
+  return useGatedQuery("hr:employees:view", {
     queryKey: handbookKeys.list(),
     queryFn: ({ signal }) => apiClient.get<HandbookVersion[]>("/hr/handbook", undefined, signal),
     staleTime: 2 * 60_000,

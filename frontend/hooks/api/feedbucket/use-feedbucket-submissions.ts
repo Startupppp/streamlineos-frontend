@@ -10,9 +10,10 @@ import type {
   UpdateFeedbucketSubmissionInput,
 } from "@/types/feedbucket";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export function useFeedbucketSubmissions(params?: ListFeedbucketSubmissionsQuery) {
-  return useQuery({
+  return useGatedQuery("feedbucket:submissions:view", {
     queryKey: queryKeys.feedbucket.submissions(params as Record<string, unknown>),
     queryFn: ({ signal }) =>
       apiClient.get<PaginatedFeedbucketSubmissions>(

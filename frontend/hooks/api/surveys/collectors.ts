@@ -1,9 +1,10 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export type CollectorType =
   | "public_link"
@@ -49,7 +50,7 @@ export interface PatchCollectorInput {
 }
 
 export function useCollectors(surveyId: number) {
-  return useQuery({
+  return useGatedQuery("surveys:participants:view", {
     queryKey: queryKeys.surveys.collectors(surveyId),
     queryFn: ({ signal }) => apiClient.get<SurveyCollector[]>(`/surveys/${surveyId}/collectors`, undefined, signal),
     staleTime: 15_000,

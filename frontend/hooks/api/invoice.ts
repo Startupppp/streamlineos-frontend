@@ -12,6 +12,7 @@ import {
   invoicesPageContract,
   type InvoicesResponse,
 } from "@/hooks/api/invoice-schema";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 interface InvoiceFilters {
   status?: InvoiceStatus;
@@ -58,7 +59,7 @@ export const useInvoices = (
     "queryKey" | "queryFn"
   >
 ) => {
-  return useQuery<InvoicesResponse, Error>({
+  return useGatedQuery<InvoicesResponse, Error>("accounting:read", {
     queryKey: queryKeys.invoice.list(filters as Record<string, unknown>),
     queryFn: ({ signal }) =>
       apiClient.get("/invoices", {
@@ -94,7 +95,7 @@ export const useInvoiceStats = (
     "queryKey" | "queryFn"
   >
 ) => {
-  return useQuery<InvoiceStats, Error>({
+  return useGatedQuery<InvoiceStats, Error>("accounting:read", {
     queryKey: queryKeys.invoice.stats(),
     queryFn: ({ signal }) => apiClient.get("/invoices/stats", undefined, signal, invoiceStatsContract),
     staleTime: 5 * 60_000,

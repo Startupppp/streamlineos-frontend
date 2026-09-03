@@ -1,8 +1,8 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface SupportReportFilters {
   dateFrom?: string;
@@ -65,7 +65,7 @@ function toQueryParams(filters?: SupportReportFilters): Record<string, unknown> 
 }
 
 export function useSupportOverviewReport(filters?: SupportReportFilters) {
-  return useQuery({
+  return useGatedQuery("support:reports:view", {
     queryKey: queryKeys.supportReports.overview(toQueryParams(filters)),
     queryFn: ({ signal }) =>
       apiClient.get<SupportOverviewReport>("/support/reports/overview", toQueryParams(filters), signal),
@@ -74,7 +74,7 @@ export function useSupportOverviewReport(filters?: SupportReportFilters) {
 }
 
 export function useAgentPerformanceReport(filters?: SupportReportFilters) {
-  return useQuery({
+  return useGatedQuery("support:reports:view", {
     queryKey: queryKeys.supportReports.agentPerformance(toQueryParams(filters)),
     queryFn: ({ signal }) =>
       apiClient.get<AgentPerformanceRow[]>(
@@ -86,7 +86,7 @@ export function useAgentPerformanceReport(filters?: SupportReportFilters) {
 }
 
 export function useQueuePerformanceReport(filters?: SupportReportFilters) {
-  return useQuery({
+  return useGatedQuery("support:reports:view", {
     queryKey: queryKeys.supportReports.queuePerformance(toQueryParams(filters)),
     queryFn: ({ signal }) =>
       apiClient.get<QueuePerformanceRow[]>(
@@ -98,7 +98,7 @@ export function useQueuePerformanceReport(filters?: SupportReportFilters) {
 }
 
 export function useChannelPerformanceReport(filters?: SupportReportFilters) {
-  return useQuery({
+  return useGatedQuery("support:reports:view", {
     queryKey: queryKeys.supportReports.channelPerformance(toQueryParams(filters)),
     queryFn: ({ signal }) =>
       apiClient.get<ChannelPerformanceRow[]>(
@@ -110,7 +110,7 @@ export function useChannelPerformanceReport(filters?: SupportReportFilters) {
 }
 
 export function useAutomationPerformanceReport(filters?: SupportReportFilters) {
-  return useQuery({
+  return useGatedQuery("support:reports:view", {
     queryKey: queryKeys.supportReports.automationPerformance(toQueryParams(filters)),
     queryFn: ({ signal }) =>
       apiClient.get<AutomationPerformanceRow[]>(

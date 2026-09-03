@@ -11,6 +11,7 @@ import type {
   CreateJobPostingInput,
   UpdateJobPostingInput,
 } from "@/types/hr";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export type JobBoardPlatform = "LINKEDIN" | "NAUKRI" | "INDEED";
 
@@ -105,7 +106,7 @@ export function useJobPostingsPage(params?: JobPostingsParams) {
     ...(params?.cursor ? { cursor: params.cursor } : {}),
     pageSize,
   };
-  return useQuery({
+  return useGatedQuery("hr:employees:view", {
     queryKey: [...queryKeys.hr.jobPostings(queryParams as Record<string, unknown>), "page"] as const,
     queryFn: ({ signal }): Promise<{
       items: JobPosting[];
@@ -201,7 +202,7 @@ export function usePublishJobToBoards() {
 }
 
 export function useSourcePortals() {
-  return useQuery({
+  return useGatedQuery("hr:employees:manage", {
     queryKey: [...queryKeys.hr.all, "sourcePortals"] as const,
     queryFn: ({ signal }) => apiClient.get<SourcePortal[]>("/hr/recruitment/portals", undefined, signal),
     staleTime: 2 * 60_000,

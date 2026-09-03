@@ -48,6 +48,7 @@ import {
   unwrapRecruitmentItems,
   type RecruitmentListResponse,
 } from "./list-response";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 interface InterviewerPerformanceStat {
   interviewerId: string;
@@ -134,7 +135,7 @@ export function useUpdateInterview() {
 }
 
 export function useScorecardTemplates() {
-  return useQuery({
+  return useGatedQuery("hr:interviews:view", {
     queryKey: queryKeys.hr.scorecardTemplates(),
     queryFn: ({ signal }) => apiClient.get<ScorecardTemplate[]>("/hr/recruitment/scorecard-templates", undefined, signal),
     staleTime: 2 * 60_000,
@@ -208,7 +209,7 @@ export function useScheduleInterview() {
 }
 
 export function useInterviewSlas() {
-  return useQuery({
+  return useGatedQuery("hr:interviews:view", {
     queryKey: INTERVIEW_SLAS_KEY,
     queryFn: ({ signal }) => apiClient.get<InterviewSla[]>("/hr/recruitment/interviews/slas", undefined, signal),
     staleTime: 2 * 60_000,
@@ -320,7 +321,7 @@ export function useInterviewerPerformance(days = 90) {
 }
 
 export function useHrBookingLinks() {
-  return useQuery({
+  return useGatedQuery("hr:interviews:view", {
     queryKey: queryKeys.hr.bookingLinks(),
     queryFn: ({ signal }) => apiClient.get<HrBookingLink[]>("/hr/recruitment/booking-links", undefined, signal),
     staleTime: 2 * 60_000,

@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export type MessageDirection = "INBOUND" | "OUTBOUND";
 export type MessageChannel = "EMAIL" | "WHATSAPP" | "IN_APP";
@@ -57,7 +58,7 @@ export function useCandidateMessages(candidateId?: number) {
 }
 
 export function useMessageThreads() {
-  return useQuery({
+  return useGatedQuery("hr:employees:view", {
     queryKey: queryKeys.hr.messageThreads(),
     queryFn: ({ signal }) => apiClient.get<MessageThread[]>("/hr/recruitment/messages/threads", undefined, signal),
     staleTime: 65_000,

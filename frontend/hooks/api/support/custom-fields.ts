@@ -1,9 +1,10 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export type CustomFieldType = "text" | "number" | "select" | "checkbox" | "date";
 
@@ -43,7 +44,7 @@ export interface UpdateCustomFieldInput {
 }
 
 export function useSupportCustomFields(activeOnly?: boolean) {
-  return useQuery({
+  return useGatedQuery("support:tickets:view", {
     queryKey: queryKeys.supportCustomFields.list(activeOnly),
     queryFn: ({ signal }) =>
       apiClient.get<SupportCustomField[]>("/support/custom-fields", activeOnly ? { activeOnly: "true" } : undefined, signal),
@@ -52,7 +53,7 @@ export function useSupportCustomFields(activeOnly?: boolean) {
 }
 
 export function usePortalActiveCustomFields() {
-  return useQuery({
+  return useGatedQuery("support:portal:tickets:create", {
     queryKey: queryKeys.supportCustomFields.portalActive(),
     queryFn: ({ signal }) => apiClient.get<SupportCustomField[]>("/support/portal/custom-fields", undefined, signal),
     staleTime: 60_000,

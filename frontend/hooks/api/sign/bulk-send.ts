@@ -1,10 +1,11 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SignBulkSendJob } from "@/types/sign";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface CreateBulkSendJobInput {
   templateId: number;
@@ -32,7 +33,7 @@ export function useCreateBulkSendJob() {
 }
 
 export function useBulkSendJobs() {
-  return useQuery({
+  return useGatedQuery("sign:bulk_send:run", {
     queryKey: queryKeys.signBulkSend.all,
     queryFn: ({ signal }) => apiClient.get<SignBulkSendJob[]>("/sign/bulk-send/jobs", undefined, signal),
     staleTime: 15_000,

@@ -1,10 +1,11 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SignEnvelope, SignTemplate } from "@/types/sign";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface CreateSignTemplateInput {
   name: string;
@@ -22,7 +23,7 @@ export interface CreateEnvelopeFromTemplateInput {
 }
 
 export function useSignTemplates() {
-  return useQuery({
+  return useGatedQuery("sign:template:manage", {
     queryKey: queryKeys.signTemplates.list(),
     queryFn: ({ signal }) => apiClient.get<SignTemplate[]>("/sign/templates", undefined, signal),
     staleTime: 30_000,

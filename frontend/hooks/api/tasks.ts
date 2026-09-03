@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 
 export type TaskEntityType = "LEAD" | "DEAL" | "CONTACT" | "PROJECT";
@@ -76,7 +77,7 @@ export interface TasksFilters {
 
 
 export function useTasks(filters?: TasksFilters) {
-  return useQuery({
+  return useGatedQuery("tasks:read", {
     queryKey: queryKeys.tasks.list(filters as Record<string, unknown>),
     queryFn: ({ signal }) =>
       apiClient.get<TasksListResponse>("/tasks", filters as Record<string, unknown>, signal),
@@ -163,7 +164,7 @@ interface TaskAnalytics {
 }
 
 export function useTaskAnalytics(days = 30) {
-  return useQuery({
+  return useGatedQuery("tasks:read", {
     queryKey: [...queryKeys.tasks.all, "analytics", days] as const,
     queryFn: ({ signal }) => apiClient.get<TaskAnalytics>(`/tasks/analytics?days=${days}`, undefined, signal),
     staleTime: 120_000,

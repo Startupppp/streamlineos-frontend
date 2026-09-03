@@ -1,10 +1,11 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SupportTicketStatus } from "@/types/support";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export type TicketPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 type RoutingConditionOp = "eq" | "neq" | "contains";
@@ -153,7 +154,7 @@ interface UpdateRoutingRuleInput {
 
 export function useSupportMacros(params?: MacrosParams) {
   const queryParams: Record<string, unknown> = { ...params };
-  return useQuery({
+  return useGatedQuery("support:macros:view", {
     queryKey: queryKeys.supportMacros.list(queryParams),
     queryFn: ({ signal }) => apiClient.get<SupportMacro[]>("/support/macros", queryParams, signal),
     staleTime: 60_000,
@@ -192,7 +193,7 @@ export function useDeleteMacro() {
 }
 
 export function useMacroUsage() {
-  return useQuery({
+  return useGatedQuery("support:macros:view", {
     queryKey: queryKeys.supportMacros.usage(),
     queryFn: ({ signal }) => apiClient.get<MacroUsage[]>("/support/macros/usage", undefined, signal),
     staleTime: 30_000,
@@ -221,7 +222,7 @@ export function useApplyMacro() {
 }
 
 export function useRoutingRules() {
-  return useQuery({
+  return useGatedQuery("support:macros:view", {
     queryKey: queryKeys.supportRouting.list(),
     queryFn: ({ signal }) => apiClient.get<SupportRoutingRule[]>("/support/routing-rules", undefined, signal),
     staleTime: 60_000,
@@ -259,7 +260,7 @@ export function useDeleteRoutingRule() {
 }
 
 export function useAgentSkills() {
-  return useQuery({
+  return useGatedQuery("support:macros:view", {
     queryKey: queryKeys.supportAgentSkills.list(),
     queryFn: ({ signal }) => apiClient.get<SupportAgentSkill[]>("/support/agent-skills", undefined, signal),
     staleTime: 60_000,
@@ -277,7 +278,7 @@ export function useSetAgentSkills() {
 }
 
 export function useAgentAvailability() {
-  return useQuery({
+  return useGatedQuery("support:macros:view", {
     queryKey: queryKeys.supportAgentAvailability.list(),
     queryFn: ({ signal }) => apiClient.get<SupportAgentAvailability[]>("/support/agent-availability", undefined, signal),
     staleTime: 30_000,
@@ -295,7 +296,7 @@ export function useSetMyAvailability() {
 }
 
 export function useVipClients() {
-  return useQuery({
+  return useGatedQuery("support:macros:view", {
     queryKey: queryKeys.supportVipClients.list(),
     queryFn: ({ signal }) => apiClient.get<SupportVipClient[]>("/support/vip-clients", undefined, signal),
     staleTime: 60_000,

@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export type IncidentType = "injury" | "accident" | "near_miss" | "hazard" | "environmental" | "other";
 export type IncidentSeverity = "low" | "medium" | "high" | "critical";
@@ -65,7 +66,7 @@ export type ListIncidentsParams = {
 };
 
 export function useSafetyIncidents(params: ListIncidentsParams = {}) {
-  return useQuery({
+  return useGatedQuery("hr:safety:view", {
     queryKey: queryKeys.hrSafety.incidents(params),
     queryFn: ({ signal }) => apiClient.get<CursorPage<SafetyIncident>>("/hr/safety/incidents", params, signal),
     staleTime: 30_000,
@@ -109,7 +110,7 @@ export function useSubmitCheckin() {
 }
 
 export function useMyCheckins(fromDate?: string, toDate?: string) {
-  return useQuery({
+  return useGatedQuery("hr:safety:view", {
     queryKey: queryKeys.hrSafety.myCheckins(fromDate, toDate),
     queryFn: ({ signal }) =>
       apiClient.get<WellnessCheckin[]>("/hr/safety/wellness/my", { fromDate, toDate }, signal),
@@ -118,7 +119,7 @@ export function useMyCheckins(fromDate?: string, toDate?: string) {
 }
 
 export function useWellnessTrend(fromDate?: string, toDate?: string) {
-  return useQuery({
+  return useGatedQuery("hr:safety:manage", {
     queryKey: queryKeys.hrSafety.wellnessTrend(fromDate, toDate),
     queryFn: ({ signal }) =>
       apiClient.get<WellnessTrendPoint[]>("/hr/safety/wellness/trend", { fromDate, toDate }, signal),
@@ -127,7 +128,7 @@ export function useWellnessTrend(fromDate?: string, toDate?: string) {
 }
 
 export function useBurnoutFlags() {
-  return useQuery({
+  return useGatedQuery("hr:safety:manage", {
     queryKey: queryKeys.hrSafety.burnout,
     queryFn: ({ signal }) => apiClient.get<BurnoutFlag[]>("/hr/safety/wellness/burnout", undefined, signal),
     staleTime: 120_000,

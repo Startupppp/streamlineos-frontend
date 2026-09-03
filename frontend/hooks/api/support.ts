@@ -12,6 +12,7 @@ import type {
   SupportMessageAttachment,
 } from "@/types/support";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 interface SupportTicketsResponse {
   items: SupportTicket[];
@@ -67,7 +68,7 @@ export const useSupportTickets = (
     "queryKey" | "queryFn"
   >
 ) => {
-  return useQuery<SupportTicketsResponse, Error>({
+  return useGatedQuery<SupportTicketsResponse, Error>("support:tickets:view", {
     queryKey: queryKeys.support.list(filters as Record<string, unknown>),
     queryFn: ({ signal }) =>
       apiClient.get<SupportTicketsResponse>("/support", {
@@ -151,7 +152,7 @@ interface SupportStats {
 export const useSupportStats = (
   options?: Omit<UseQueryOptions<SupportStats, Error>, "queryKey" | "queryFn">
 ) => {
-  return useQuery<SupportStats, Error>({
+  return useGatedQuery<SupportStats, Error>("support:tickets:view", {
     queryKey: [...queryKeys.support.all, "stats"] as const,
     queryFn: ({ signal }) => apiClient.get<SupportStats>("/support/stats", undefined, signal),
     staleTime: 5 * 60_000,

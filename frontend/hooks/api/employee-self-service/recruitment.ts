@@ -1,9 +1,10 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface AssignedInterview {
   id: number;
@@ -30,7 +31,7 @@ interface AssignedInterviewsResponse {
 const recruitmentKey = ["employee-self-service", "recruitment"] as const;
 
 export function useAssignedInterviews(page: number) {
-  return useQuery({
+  return useGatedQuery("self:recruitment", {
     queryKey: queryKeys.hr.hrAssignedInterviews(page),
     queryFn: ({ signal }) =>
       apiClient.get<AssignedInterviewsResponse>("/me/recruitment", {

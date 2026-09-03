@@ -16,13 +16,14 @@ import type {
   PaginatedResult,
 } from "@/types/hr/workflows";
 import { queryKeyBase } from "@/lib/query-keys/base";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 const WORKFLOWS_KEY = [...queryKeyBase, "hr", "workflows"] as const;
 const INSTANCES_KEY = [...queryKeyBase, "hr", "workflow-instances"] as const;
 const DELEGATIONS_KEY = [...queryKeyBase, "hr", "workflow-delegations"] as const;
 
 export function useHrWorkflowDefinitions(params?: { objectType?: HrWorkflowObjectType; status?: HrWorkflowStatus; page?: number; limit?: number }) {
-  return useQuery({
+  return useGatedQuery("hr:workflows:view", {
     queryKey: [...queryKeys.hr.hrWorkflowsAll, params],
     queryFn: ({ signal }) => apiClient.get<PaginatedResult<HrWorkflowDefinition>>("/hr/workflows", params, signal),
     staleTime: 2 * 60_000,
@@ -150,7 +151,7 @@ export function useDeleteWorkflow() {
 }
 
 export function useWorkflowInbox(page = 1, limit = 50) {
-  return useQuery({
+  return useGatedQuery("hr:workflows:approve", {
     queryKey: [...queryKeys.hr.hrWorkflowInstancesAll, "inbox", page, limit],
     queryFn: ({ signal }) => apiClient.get<PaginatedResult<HrWorkflowInstance>>("/hr/workflows/instances/inbox", { page, limit }, signal),
     staleTime: 30_000,

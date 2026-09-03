@@ -17,6 +17,12 @@ jest.mock("react", () => ({
 }));
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(),
+  usePermissionGate: jest.fn((permission: string) => ({
+    permission,
+    allowed: true,
+    denied: false,
+    pending: false,
+  })),
 }));
 jest.mock("@/lib/api-client", () => ({
   apiClient: { get: jest.fn(), post: jest.fn(), patch: jest.fn() },

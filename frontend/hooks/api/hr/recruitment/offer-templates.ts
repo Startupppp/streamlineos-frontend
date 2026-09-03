@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface OfferLetterTemplate {
   id: number;
@@ -18,7 +19,7 @@ export interface OfferLetterTemplate {
 }
 
 export function useOfferTemplates() {
-  return useQuery({
+  return useGatedQuery("hr:offers:view", {
     queryKey: queryKeys.hr.offerTemplates(),
     queryFn: ({ signal }) => apiClient.get<OfferLetterTemplate[]>("/hr/recruitment/offer-templates", undefined, signal),
     staleTime: 5 * 60_000,

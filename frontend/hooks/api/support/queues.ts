@@ -1,8 +1,8 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface SupportQueue {
   id: number;
@@ -18,7 +18,7 @@ export interface SupportQueue {
 }
 
 export function useSupportQueues() {
-  return useQuery({
+  return useGatedQuery("support:tickets:view", {
     queryKey: queryKeys.supportQueues.list(),
     queryFn: ({ signal }) => apiClient.get<SupportQueue[]>("/support/queues", undefined, signal),
     staleTime: 60_000,

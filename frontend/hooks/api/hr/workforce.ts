@@ -5,6 +5,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface HeadcountPlan {
   id: number;
@@ -78,7 +79,7 @@ export function useHrBudgetVsActual() {
 }
 
 export function useHrSkillsGap() {
-  return useQuery({
+  return useGatedQuery("hr:analytics:read", {
     queryKey: workforceKeys.skillsGap(),
     queryFn: ({ signal }) =>
       apiClient.get<{ gaps: SkillsGap[] }>("/hr/analytics-plus/workforce/skills-gap", undefined, signal),
@@ -100,7 +101,7 @@ export function useHrSuccessionRisk() {
 }
 
 export function useHrAttritionForecast() {
-  return useQuery({
+  return useGatedQuery("hr:analytics:read", {
     queryKey: workforceKeys.attritionForecast(),
     queryFn: ({ signal }) =>
       apiClient.get<AttritionForecast>("/hr/analytics-plus/workforce/attrition-forecast", undefined, signal),

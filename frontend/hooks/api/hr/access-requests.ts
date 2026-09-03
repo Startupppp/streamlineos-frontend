@@ -1,10 +1,11 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { queryKeyBase } from "@/lib/query-keys/base";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface AccessRequest {
   id: string;
@@ -33,7 +34,7 @@ export interface PatchAccessRequestInput {
 const AR_KEY = [...queryKeyBase, "hr", "access-requests"] as const;
 
 export function useAccessRequests(employeeId?: string) {
-  return useQuery<AccessRequest[]>({
+  return useGatedQuery<AccessRequest[]>("hr:assets:view", {
     queryKey: queryKeys.hr.hrAccessRequests({ employeeId }),
     queryFn: ({ signal }) =>
       apiClient.get<AccessRequest[]>("/hr/access-requests", employeeId ? { employeeId } : undefined, signal),

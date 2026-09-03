@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -9,9 +9,10 @@ import type {
   CreateEmailSequenceInput,
   UpdateEmailSequenceInput,
 } from "@/types/hr/recruitment";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export function useEmailSequences() {
-  return useQuery({
+  return useGatedQuery("hr:employees:view", {
     queryKey: queryKeys.hr.emailSequences(),
     queryFn: ({ signal }) => apiClient.get<EmailSequence[]>("/hr/recruitment/email-sequences", undefined, signal),
     staleTime: 2 * 60_000,

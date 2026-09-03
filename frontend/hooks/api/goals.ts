@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tansta
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export type GoalLevel = "company" | "team" | "individual";
 export type GoalStatus = "not_started" | "on_track" | "at_risk" | "off_track" | "completed";
@@ -153,7 +154,7 @@ function toQueryParams(params?: GoalsParams): Record<string, unknown> | undefine
 
 export function useGoals(params?: GoalsParams) {
   const queryParams = toQueryParams(params);
-  return useQuery({
+  return useGatedQuery("build:goals:view", {
     queryKey: queryKeys.goals.list(queryParams),
     queryFn: ({ signal }) => apiClient.get<GoalListItem[]>("/goals", queryParams, signal),
     staleTime: 30_000,
@@ -171,7 +172,7 @@ export function useGoal(id: number) {
 }
 
 export function useGoalStats() {
-  return useQuery({
+  return useGatedQuery("build:goals:view", {
     queryKey: queryKeys.goals.stats(),
     queryFn: ({ signal }) => apiClient.get<GoalStats>("/goals/stats", undefined, signal),
     staleTime: 60_000,

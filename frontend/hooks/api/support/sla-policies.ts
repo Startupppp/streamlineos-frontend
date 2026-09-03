@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export type SlaPolicyPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 export type SlaPauseStatus = "OPEN" | "IN_PROGRESS" | "WAITING" | "RESOLVED" | "CLOSED";
@@ -49,7 +50,7 @@ export interface UpdateSlaPolicyInput {
 }
 
 export function useSlaPoliciesList() {
-  return useQuery({
+  return useGatedQuery("support:settings:manage", {
     queryKey: queryKeys.supportSlaPolicies.list(),
     queryFn: ({ signal }) => apiClient.get<SlaPolicy[]>("/support/sla-policies", undefined, signal),
     staleTime: 60_000,

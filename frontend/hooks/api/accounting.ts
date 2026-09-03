@@ -25,6 +25,7 @@ import type {
   VendorOutstanding,
 } from "@/types/accounting";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 interface ListResponse<T> {
   items: T[];
@@ -71,7 +72,7 @@ function toQuery<P extends object>(params: P): Record<string, string> {
 }
 
 export function useAccounts(params: ListAccountsParams = {}) {
-  return useQuery<CursorResponse<Account>, Error>({
+  return useGatedQuery<CursorResponse<Account>, Error>("accounting:accounts:read", {
     queryKey: queryKeys.accounting.accounts(params),
     queryFn: ({ signal }) =>
       apiClient.get<CursorResponse<Account>>("/accounting/accounts", toQuery(params), signal),
@@ -277,7 +278,7 @@ interface ListCustomersOutstandingParams {
 }
 
 export function useCustomersOutstanding(params: ListCustomersOutstandingParams = {}) {
-  return useQuery<CursorPage<CustomerOutstanding>, Error>({
+  return useGatedQuery<CursorPage<CustomerOutstanding>, Error>("accounting:reports:read", {
     queryKey: queryKeys.accounting.customersOutstanding(params),
     queryFn: ({ signal }) =>
       apiClient.get<CursorPage<CustomerOutstanding>>("/accounting/customers", toQuery(params), signal),
@@ -337,7 +338,7 @@ interface ListPurchaseBillsParams {
 }
 
 export function usePurchaseBills(params: ListPurchaseBillsParams = {}) {
-  return useQuery<CursorResponse<PurchaseBillSummary>, Error>({
+  return useGatedQuery<CursorResponse<PurchaseBillSummary>, Error>("accounting:journal:read", {
     queryKey: queryKeys.accounting.purchaseBills(params),
     queryFn: ({ signal }) =>
       apiClient.get<CursorResponse<PurchaseBillSummary>>("/accounting/purchase-bills", toQuery(params), signal),
@@ -426,7 +427,7 @@ interface ListVendorsOutstandingParams {
 }
 
 export function useVendorsOutstanding(params: ListVendorsOutstandingParams = {}) {
-  return useQuery<CursorPage<VendorOutstanding>, Error>({
+  return useGatedQuery<CursorPage<VendorOutstanding>, Error>("accounting:reports:read", {
     queryKey: queryKeys.accounting.vendorsOutstanding(params),
     queryFn: ({ signal }) =>
       apiClient.get<CursorPage<VendorOutstanding>>("/accounting/vendors", toQuery(params), signal),

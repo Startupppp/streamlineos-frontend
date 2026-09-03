@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export type GitProvider = "github" | "gitlab" | "bitbucket";
 
@@ -49,7 +50,7 @@ interface UpdateGitConnectionInput {
 }
 
 export function useGitConnections() {
-  return useQuery({
+  return useGatedQuery("settings:manage", {
     queryKey: queryKeys.gitIntegration.connections(),
     queryFn: ({ signal }) => apiClient.get<GitConnection[]>("/settings/integrations/git", undefined, signal),
     staleTime: 60_000,

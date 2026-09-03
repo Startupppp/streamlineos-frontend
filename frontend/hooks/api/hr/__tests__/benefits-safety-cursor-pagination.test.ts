@@ -13,6 +13,12 @@ jest.mock("@tanstack/react-query", () => ({
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
   useModuleEnabled: jest.fn(() => true),
+  usePermissionGate: jest.fn((permission: string) => ({
+    permission,
+    allowed: true,
+    denied: false,
+    pending: false,
+  })),
 }));
 jest.mock("@/hooks/api/authorized-mutation", () => ({
   useAuthorizedMutation: jest.fn(),

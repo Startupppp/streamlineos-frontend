@@ -1,13 +1,14 @@
 "use client";
 
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SnapshotWithDiff, SaveSnapshotPayload, AiSummarySnapshot } from "@/features/ai-summaries/types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export function useLatestSnapshot(entityType: string, entityId: string) {
-  return useQuery({
+  return useGatedQuery("ai:summaries:view", {
     queryKey: queryKeys.aiSummaries.latest(entityType, entityId),
     queryFn: ({ signal }) =>
       apiClient.get<SnapshotWithDiff | null>(`/ai/summaries/${entityType}/${entityId}`, undefined, signal),

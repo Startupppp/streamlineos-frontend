@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SupportTicketStatus, SupportTicketPriority, SupportMessageAttachment } from "@/types/support";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export type PortalTicketCategory =
   | "general"
@@ -55,7 +56,7 @@ export interface ReplyPortalTicketInput {
 }
 
 export function usePortalTickets() {
-  return useQuery({
+  return useGatedQuery("support:portal:tickets:view", {
     queryKey: queryKeys.supportPortalTickets.list(),
     queryFn: ({ signal }) => apiClient.get<PortalTicket[]>("/support/portal/tickets", undefined, signal),
     staleTime: 30_000,

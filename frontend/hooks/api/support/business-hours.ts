@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export type BusinessHoursDay = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 
@@ -46,7 +47,7 @@ export interface UpdateBusinessHoursInput {
 }
 
 export function useBusinessHoursList() {
-  return useQuery({
+  return useGatedQuery("support:settings:manage", {
     queryKey: queryKeys.supportBusinessHours.list(),
     queryFn: ({ signal }) => apiClient.get<BusinessHours[]>("/support/business-hours", undefined, signal),
     staleTime: 60_000,

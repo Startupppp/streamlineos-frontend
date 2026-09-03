@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  useQuery,
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
@@ -9,6 +8,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { Permission } from "@/lib/rbac/permissions";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface UserApiToken {
   id: string;
@@ -41,7 +41,7 @@ export interface UserApiTokenPage {
 }
 
 export function useUserApiTokens(params: { cursor?: string; limit: number }) {
-  return useQuery({
+  return useGatedQuery("settings:api-tokens:read", {
     queryKey: queryKeys.userApiTokens.list(params),
     queryFn: ({ signal }) =>
       apiClient.get<UserApiTokenPage>("/me/api-tokens", {
@@ -53,7 +53,7 @@ export function useUserApiTokens(params: { cursor?: string; limit: number }) {
 }
 
 export function useGrantableUserApiTokenPermissions() {
-  return useQuery({
+  return useGatedQuery("settings:api-tokens:read", {
     queryKey: queryKeys.userApiTokens.permissions(),
     queryFn: ({ signal }) => apiClient.get<Permission[]>("/me/api-tokens/permissions", undefined, signal),
     staleTime: 5 * 60_000,

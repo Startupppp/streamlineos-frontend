@@ -4,6 +4,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export type SurveyMode = "survey" | "assessment" | "live_session" | "lead_qualification" | "custom";
 export type SurveyStatus = "draft" | "testing" | "published" | "paused" | "closed" | "archived";
@@ -81,7 +82,7 @@ function invalidateSurveyLists(qc: ReturnType<typeof useQueryClient>) {
 }
 
 export function useSurveys(params?: ListSurveysParams) {
-  return useQuery({
+  return useGatedQuery("surveys:view", {
     queryKey: queryKeys.surveys.list(params as Record<string, unknown>),
     queryFn: ({ signal }) => apiClient.get<SurveyForm[]>("/surveys", params as Record<string, unknown>, signal),
     staleTime: 30_000,
@@ -99,7 +100,7 @@ export function useSurvey(surveyId: number | undefined) {
 }
 
 export function useSurveyTemplates() {
-  return useQuery({
+  return useGatedQuery("surveys:view", {
     queryKey: queryKeys.surveys.templates(),
     queryFn: ({ signal }) => apiClient.get<SurveyTemplate[]>("/surveys/templates", undefined, signal),
     staleTime: 5 * 60_000,

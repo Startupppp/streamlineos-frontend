@@ -1,9 +1,10 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export type ParticipantStatus =
   | "invited"
@@ -49,7 +50,7 @@ export interface ParticipantImportRow {
 }
 
 export function useParticipants(surveyId: number, params?: ListParticipantsParams) {
-  return useQuery({
+  return useGatedQuery("surveys:participants:view", {
     queryKey: queryKeys.surveys.participants(surveyId, params as Record<string, unknown>),
     queryFn: ({ signal }) => apiClient.get<SurveyParticipant[]>(`/surveys/${surveyId}/participants`, params as Record<string, unknown>, signal),
     staleTime: 15_000,

@@ -3,6 +3,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient, authedFetch, buildUrl } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface SurveyAnalyticsOverview {
   totalResponses: number;
@@ -64,7 +65,7 @@ export interface ListResponsesParams {
 }
 
 export function useAnalyticsOverview(surveyId: number) {
-  return useQuery({
+  return useGatedQuery("surveys:analytics:view", {
     queryKey: queryKeys.surveys.analyticsOverview(surveyId),
     queryFn: ({ signal }) => apiClient.get<SurveyAnalyticsOverview>(`/surveys/${surveyId}/analytics/overview`, undefined, signal),
     staleTime: 15_000,
@@ -72,7 +73,7 @@ export function useAnalyticsOverview(surveyId: number) {
 }
 
 export function useQuestionAnalytics(surveyId: number) {
-  return useQuery({
+  return useGatedQuery("surveys:analytics:view", {
     queryKey: queryKeys.surveys.analyticsQuestions(surveyId),
     queryFn: ({ signal }) => apiClient.get<QuestionAnalytics[]>(`/surveys/${surveyId}/analytics/questions`, undefined, signal),
     staleTime: 15_000,
@@ -80,7 +81,7 @@ export function useQuestionAnalytics(surveyId: number) {
 }
 
 export function useSurveyResponses(surveyId: number, params?: ListResponsesParams) {
-  return useQuery({
+  return useGatedQuery("surveys:responses:view", {
     queryKey: queryKeys.surveys.responses(surveyId, params as Record<string, unknown>),
     queryFn: ({ signal }) => apiClient.get<SurveyResponseSession[]>(`/surveys/${surveyId}/responses`, params as Record<string, unknown>, signal),
     staleTime: 15_000,

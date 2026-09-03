@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export type LiveSessionStatus = "draft" | "waiting" | "active" | "paused" | "ended";
 
@@ -55,7 +56,7 @@ export function useCreateLiveSession(surveyId: number) {
 }
 
 export function useLiveSession(sessionId: number) {
-  return useQuery({
+  return useGatedQuery("surveys:automations:manage", {
     queryKey: queryKeys.surveys.liveSession(sessionId),
     queryFn: ({ signal }) => apiClient.get<SurveyLiveSession>(`/surveys/live-sessions/${sessionId}`, undefined, signal),
     refetchInterval: LIVE_POLL_INTERVAL,
@@ -63,7 +64,7 @@ export function useLiveSession(sessionId: number) {
 }
 
 export function useLiveSessionResults(sessionId: number) {
-  return useQuery({
+  return useGatedQuery("surveys:responses:view", {
     queryKey: [...queryKeys.surveys.liveSession(sessionId), "results"],
     queryFn: ({ signal }) => apiClient.get<LiveSessionResults>(`/surveys/live-sessions/${sessionId}/results`, undefined, signal),
     refetchInterval: LIVE_POLL_INTERVAL,

@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface CsatSourceReport {
   totalRequests: number;
@@ -50,7 +51,7 @@ interface SubmitCsatResponseResult {
 }
 
 export function useCsatReport() {
-  return useQuery({
+  return useGatedQuery("support:reports:view", {
     queryKey: queryKeys.supportCsat.report(),
     queryFn: ({ signal }) => apiClient.get<CsatReport>("/support/reports/csat", undefined, signal),
     staleTime: 60_000,

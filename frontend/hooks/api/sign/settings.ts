@@ -1,13 +1,14 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SignOrgSettings, SignWatermarkPolicy } from "@/types/sign";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export function useSignSettings() {
-  return useQuery({
+  return useGatedQuery("sign:admin:manage", {
     queryKey: queryKeys.signAdmin.settings(),
     queryFn: ({ signal }) => apiClient.get<SignOrgSettings>("/sign/admin/settings", undefined, signal),
     staleTime: 60_000,
@@ -24,7 +25,7 @@ export function useUpdateSignSettings() {
 }
 
 export function useSignWatermarkPolicies() {
-  return useQuery({
+  return useGatedQuery("sign:admin:manage", {
     queryKey: queryKeys.signAdmin.watermarkPolicies(),
     queryFn: ({ signal }) => apiClient.get<SignWatermarkPolicy[]>("/sign/admin/watermark-policies", undefined, signal),
     staleTime: 60_000,

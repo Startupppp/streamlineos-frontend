@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { AiAbortInput } from "@/hooks/api/ai-abort";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export type AiSuggestionStatus = "pending" | "accepted" | "rejected";
 export type AiSuggestionFeedback = "helpful" | "not_helpful";
@@ -334,7 +335,7 @@ function reportParamsToRecord(params?: SupportAiReportParams): Record<string, un
 
 export function useSupportAiReport(params?: SupportAiReportParams) {
   const record = reportParamsToRecord(params);
-  return useQuery({
+  return useGatedQuery("support:ai:view", {
     queryKey: queryKeys.supportAiReport.get(record),
     queryFn: ({ signal }) => apiClient.get<SupportAiReportResult>(`/support/ai/report`, record, signal),
     staleTime: 2 * 60_000,

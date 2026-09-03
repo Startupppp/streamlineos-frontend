@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface HrGoal {
   id: number;
@@ -24,7 +25,7 @@ export interface HrGoal {
 }
 
 export function useHrGoals(params?: { userId?: string }) {
-  return useQuery({
+  return useGatedQuery("hr:performance:view", {
     queryKey: queryKeys.hr.goals(params?.userId),
     queryFn: ({ signal }) =>
       apiClient.get<HrGoal[]>(

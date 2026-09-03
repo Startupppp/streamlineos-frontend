@@ -23,6 +23,7 @@ import type {
   OrgUnitKind,
 } from "@/types/org-hierarchy";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 interface CursorResponse<T> {
   data: T[];
@@ -116,7 +117,7 @@ export function useOrgTree() {
 export function useOrgHierarchyOverview(
   options?: Omit<UseQueryOptions<OrgHierarchyOverview, Error>, "queryKey" | "queryFn">,
 ) {
-  return useQuery({
+  return useGatedQuery("settings:view", {
     queryKey: queryKeys.hierarchy.all,
     queryFn: ({ signal }) => apiClient.get<OrgHierarchyOverview>("/org-hierarchy/overview", undefined, signal),
     staleTime: 60_000,
@@ -127,7 +128,7 @@ export function useOrgHierarchyOverview(
 // ─── Business Units ──────────────────────────────────────────────────────────
 
 export function useBusinessUnits(query?: ListQuery) {
-  return useQuery({
+  return useGatedQuery("settings:view", {
     queryKey: queryKeys.hierarchy.businessUnits(query),
     queryFn: ({ signal }) =>
       apiClient.get<CursorResponse<OrgBusinessUnit>>("/org-hierarchy/business-units", {
@@ -287,7 +288,7 @@ export function useUpdateOrgTeam() {
 // ─── Locations ───────────────────────────────────────────────────────────────
 
 export function useOrgLocations(query?: ListQuery) {
-  return useQuery({
+  return useGatedQuery("settings:view", {
     queryKey: queryKeys.hierarchy.locations(query),
     queryFn: ({ signal }) =>
       apiClient.get<CursorResponse<OrgLocation>>("/org-hierarchy/locations", {
@@ -323,7 +324,7 @@ export function useUpdateOrgLocation() {
 // ─── Cost Centers ─────────────────────────────────────────────────────────────
 
 export function useOrgCostCenters(query?: ListQuery) {
-  return useQuery({
+  return useGatedQuery("settings:view", {
     queryKey: queryKeys.hierarchy.costCenters(query),
     queryFn: ({ signal }) =>
       apiClient.get<CursorResponse<OrgCostCenter>>(

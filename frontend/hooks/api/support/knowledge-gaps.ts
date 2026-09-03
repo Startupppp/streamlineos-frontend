@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import type {
   KnowledgeGap,
@@ -10,6 +10,7 @@ import type {
 } from "@/features/support/lib/knowledge-gap.types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { queryKeyBase } from "@/lib/query-keys/base";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export const knowledgeGapsKeys = {
   all: [...queryKeyBase, "support", "knowledge-gaps"] as const,
@@ -18,7 +19,7 @@ export const knowledgeGapsKeys = {
 };
 
 export function useKnowledgeGaps(cursor?: number) {
-  return useQuery<ListKnowledgeGapsResponse, Error>({
+  return useGatedQuery<ListKnowledgeGapsResponse, Error>("support:knowledge-gaps:view", {
     queryKey: knowledgeGapsKeys.list(cursor),
     queryFn: ({ signal }) =>
       apiClient.get<ListKnowledgeGapsResponse>("/support/knowledge-gaps", {

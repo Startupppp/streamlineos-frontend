@@ -13,6 +13,7 @@ import type {
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { AiAbortInput } from "@/hooks/api/ai-abort";
 import { streamAiText, type AiTextStreamResult } from "@/hooks/api/ai-text-stream";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export function useAIScoreLead() {
   const qc = useQueryClient();
@@ -194,7 +195,7 @@ export interface OrgFeatureFlags {
 }
 
 export function useOrgFeatureFlags() {
-  return useQuery({
+  return useGatedQuery("settings:view", {
     queryKey: queryKeys.settings.featureFlags(),
     queryFn: ({ signal }) => apiClient.get<OrgFeatureFlags>("/settings/feature-flags", undefined, signal),
     staleTime: 30_000,

@@ -1,9 +1,9 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SignAuditEvent } from "@/types/sign";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface SignDashboardStats {
   awaitingMe: number;
@@ -28,7 +28,7 @@ export interface SignSummaryStats {
 }
 
 export function useSignDashboard() {
-  return useQuery({
+  return useGatedQuery("sign:envelope:view", {
     queryKey: [...queryKeys.signEnvelopes.all, "dashboard"] as const,
     queryFn: ({ signal }) => apiClient.get<SignDashboardStats>("/sign/reports/dashboard", undefined, signal),
     staleTime: 30_000,
@@ -36,7 +36,7 @@ export function useSignDashboard() {
 }
 
 export function useSignSummary() {
-  return useQuery({
+  return useGatedQuery("sign:audit:view", {
     queryKey: [...queryKeys.signEnvelopes.all, "summary"] as const,
     queryFn: ({ signal }) => apiClient.get<SignSummaryStats>("/sign/reports/summary", undefined, signal),
     staleTime: 60_000,

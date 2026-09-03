@@ -13,6 +13,7 @@ import type {
 } from "@/types/projects";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface TeamProject {
   id: number;
@@ -31,7 +32,7 @@ export function useProjectTeams(params?: {
   if (params?.cursor) query["cursor"] = params.cursor;
   if (params?.pageSize) query["pageSize"] = String(params.pageSize);
   if (params?.search) query["search"] = params.search;
-  return useQuery<TeamListResponse>({
+  return useGatedQuery<TeamListResponse>("build:teams:view", {
     queryKey: queryKeys.projects.teams.list(Object.keys(query).length ? query : undefined),
     queryFn: ({ signal }) => apiClient.get<TeamListResponse>("/build/teams", query, signal),
     staleTime: 60_000,

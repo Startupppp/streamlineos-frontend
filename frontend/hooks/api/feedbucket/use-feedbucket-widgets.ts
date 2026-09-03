@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
@@ -9,9 +9,10 @@ import type {
   UpdateFeedbucketWidgetInput,
 } from "@/types/feedbucket";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export function useFeedbucketWidgets() {
-  return useQuery({
+  return useGatedQuery("feedbucket:widgets:view", {
     queryKey: queryKeys.feedbucket.widgets(),
     queryFn: ({ signal }) => apiClient.get<FeedbucketWidget[]>("/feedbucket/widgets", undefined, signal),
     staleTime: 30_000,

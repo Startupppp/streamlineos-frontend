@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { queryKeyBase } from "@/lib/query-keys/base";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export type CaseCategory =
   | "grievance" | "disciplinary" | "harassment" | "ethics"
@@ -219,7 +220,7 @@ export function useCaseDocuments(caseId: number) {
 }
 
 export function useDisciplinaryActions(params: { employeeId?: string; cursor?: string; limit?: number; actionType?: string } = {}) {
-  return useQuery({
+  return useGatedQuery("hr:cases:view", {
     queryKey: caseKeys.disciplinaryList(params),
     queryFn: ({ signal }) => apiClient.get<CursorResult<DisciplinaryAction>>("/hr/cases/disciplinary", params as Record<string, unknown>, signal),
     staleTime: 30_000,
@@ -250,7 +251,7 @@ export function useCreateDisciplinaryAction() {
 }
 
 export function useMyDisciplinaryActions() {
-  return useQuery({
+  return useGatedQuery("self:cases", {
     queryKey: caseKeys.disciplinaryMine,
     queryFn: ({ signal }) =>
       apiClient.get<

@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export type ReportEntity = "candidates" | "jobs" | "interviews" | "offers";
 export type ReportSchedule = "WEEKLY" | "MONTHLY";
@@ -54,7 +55,7 @@ export function useGenerateReport() {
 }
 
 export function useScheduledReports() {
-  return useQuery({
+  return useGatedQuery("hr:interviews:view", {
     queryKey: queryKeys.hr.scheduledReports(),
     queryFn: ({ signal }) => apiClient.get<ScheduledReport[]>("/hr/recruitment/reports/scheduled", undefined, signal),
     staleTime: 5 * 60_000,
@@ -157,7 +158,7 @@ export function useDiversityReport(filters: DiversityFilters) {
   if (filters.to) params.to = filters.to;
   if (filters.departmentIds.length > 0) params.departmentIds = filters.departmentIds.join(",");
 
-  return useQuery<DiversityReport>({
+  return useGatedQuery<DiversityReport>("hr:employees:view", {
     queryKey: [...queryKeys.hr.diversityReport(), params],
     queryFn: ({ signal }) => apiClient.get<DiversityReport>("/hr/recruitment/diversity-report", params, signal),
     staleTime: 5 * 60_000,
