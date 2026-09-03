@@ -136,7 +136,7 @@ export function useJournal(params: ListJournalParams = {}) {
 }
 
 export function useJournalEntry(entryId: number) {
-  return useQuery<JournalEntry, Error>({
+  return useGatedQuery<JournalEntry, Error>("accounting:journal:read", {
     queryKey: queryKeys.accounting.journalEntry(entryId),
     queryFn: ({ signal }) => apiClient.get<JournalEntry>(`/accounting/journal/${entryId}`, undefined, signal),
     enabled: Number.isInteger(entryId) && entryId > 0,
@@ -213,7 +213,7 @@ export function usePostJournalEntry(entryId: number) {
 }
 
 export function useTrialBalance(asOf: string) {
-  return useQuery<TrialBalanceResponse, Error>({
+  return useGatedQuery<TrialBalanceResponse, Error>("accounting:reports:read", {
     queryKey: queryKeys.accounting.trialBalance(asOf),
     queryFn: ({ signal }) =>
       apiClient.get<TrialBalanceResponse>("/accounting/reports/trial-balance", { asOf }, signal),
@@ -223,7 +223,7 @@ export function useTrialBalance(asOf: string) {
 }
 
 export function useProfitLoss(from: string, to: string) {
-  return useQuery<ProfitLossReport, Error>({
+  return useGatedQuery<ProfitLossReport, Error>("accounting:reports:read", {
     queryKey: queryKeys.accounting.profitLoss(from, to),
     queryFn: ({ signal }) =>
       apiClient.get<ProfitLossReport>("/accounting/reports/profit-loss", { from, to }, signal),
@@ -262,7 +262,7 @@ interface CashFlowParams {
 }
 
 export function useCashFlow({ from, to }: CashFlowParams) {
-  return useQuery<CashFlowReport, Error>({
+  return useGatedQuery<CashFlowReport, Error>("accounting:reports:read", {
     queryKey: queryKeys.accounting.cashFlow({ from, to }),
     queryFn: ({ signal }) => apiClient.get<CashFlowReport>("/accounting/reports/cash-flow", { from, to }, signal),
     enabled: !!from && !!to,
@@ -293,7 +293,7 @@ interface CustomerLedgerParams {
 }
 
 export function useCustomerLedger(clientId: number, params: CustomerLedgerParams = {}) {
-  return useQuery<CustomerLedger, Error>({
+  return useGatedQuery<CustomerLedger, Error>("accounting:reports:read", {
     queryKey: queryKeys.accounting.customerLedger(clientId, params),
     queryFn: ({ signal }) =>
       apiClient.get<CustomerLedger>(`/accounting/customers/${clientId}/ledger`, toQuery(params), signal),
@@ -303,7 +303,7 @@ export function useCustomerLedger(clientId: number, params: CustomerLedgerParams
 }
 
 export function useGstr1(from: string, to: string) {
-  return useQuery<Gstr1Report, Error>({
+  return useGatedQuery<Gstr1Report, Error>("accounting:reports:read", {
     queryKey: queryKeys.accounting.gstr1({ from, to }),
     queryFn: ({ signal }) => apiClient.get<Gstr1Report>("/accounting/reports/gstr-1", { from, to }, signal),
     enabled: !!from && !!to,
@@ -312,7 +312,7 @@ export function useGstr1(from: string, to: string) {
 }
 
 export function useBalanceSheet(asOf: string) {
-  return useQuery<BalanceSheetReport, Error>({
+  return useGatedQuery<BalanceSheetReport, Error>("accounting:reports:read", {
     queryKey: queryKeys.accounting.balanceSheet({ asOf }),
     queryFn: ({ signal }) => apiClient.get<BalanceSheetReport>("/accounting/reports/balance-sheet", { asOf }, signal),
     enabled: !!asOf,
@@ -321,7 +321,7 @@ export function useBalanceSheet(asOf: string) {
 }
 
 export function useAgedReceivables(asOf: string) {
-  return useQuery<AgedReceivablesReport, Error>({
+  return useGatedQuery<AgedReceivablesReport, Error>("accounting:reports:read", {
     queryKey: queryKeys.accounting.agedReceivables({ asOf }),
     queryFn: ({ signal }) => apiClient.get<AgedReceivablesReport>("/accounting/reports/aged-receivables", { asOf }, signal),
     enabled: !!asOf,
@@ -348,7 +348,7 @@ export function usePurchaseBills(params: ListPurchaseBillsParams = {}) {
 }
 
 export function usePurchaseBill(billId: number) {
-  return useQuery<PurchaseBill, Error>({
+  return useGatedQuery<PurchaseBill, Error>("accounting:journal:read", {
     queryKey: queryKeys.accounting.purchaseBill(billId),
     queryFn: ({ signal }) => apiClient.get<PurchaseBill>(`/accounting/purchase-bills/${billId}`, undefined, signal),
     enabled: Number.isInteger(billId) && billId > 0,
@@ -411,7 +411,7 @@ export function usePostPurchaseBill(billId: number) {
 }
 
 export function useGstr3B(from: string, to: string) {
-  return useQuery<Gstr3BReport, Error>({
+  return useGatedQuery<Gstr3BReport, Error>("accounting:reports:read", {
     queryKey: queryKeys.accounting.gstr3B({ from, to }),
     queryFn: ({ signal }) => apiClient.get<Gstr3BReport>("/accounting/reports/gstr-3b", { from, to }, signal),
     enabled: !!from && !!to,
@@ -442,7 +442,7 @@ interface VendorLedgerParams {
 }
 
 export function useVendorLedger(vendorId: number, params: VendorLedgerParams = {}) {
-  return useQuery<VendorLedger, Error>({
+  return useGatedQuery<VendorLedger, Error>("accounting:reports:read", {
     queryKey: queryKeys.accounting.vendorLedger(vendorId, params),
     queryFn: ({ signal }) =>
       apiClient.get<VendorLedger>(`/accounting/vendors/${vendorId}/ledger`, toQuery(params), signal),
@@ -452,7 +452,7 @@ export function useVendorLedger(vendorId: number, params: VendorLedgerParams = {
 }
 
 export function useAgedPayables(asOf: string) {
-  return useQuery<AgedPayablesReport, Error>({
+  return useGatedQuery<AgedPayablesReport, Error>("accounting:reports:read", {
     queryKey: queryKeys.accounting.agedPayables({ asOf }),
     queryFn: ({ signal }) => apiClient.get<AgedPayablesReport>("/accounting/reports/aged-payables", { asOf }, signal),
     enabled: !!asOf,

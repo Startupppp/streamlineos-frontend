@@ -1,12 +1,7 @@
 "use client";
 
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQuery,
-  useQueryClient,
-  type QueryClient,
-} from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -61,7 +56,7 @@ export function useTimesheetExceptions(
 }
 
 export function useExceptionsSummary(enabled = true) {
-  return useQuery({
+  return useGatedQuery("timesheets:exceptions:view", {
     queryKey: queryKeys.timesheets.exceptionsSummary(),
     queryFn: ({ signal }) =>
       apiClient.get<ExceptionsSummary>("/timesheets/exceptions/summary", undefined, signal),

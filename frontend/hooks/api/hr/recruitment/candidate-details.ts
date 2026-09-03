@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
@@ -193,7 +194,7 @@ export function useDeleteVaultDocument(candidateId: number) {
 }
 
 export function useRolloutDocuments(candidateId: number) {
-  return useQuery({
+  return useGatedQuery("hr:employees:view", {
     queryKey: queryKeys.hr.rolloutDocuments(candidateId),
     queryFn: ({ signal }) =>
       apiClient.get<RolloutDocumentRecord[]>(
@@ -232,7 +233,7 @@ export function useUpdateCandidateBgv(candidateId: number) {
 }
 
 export function useVaultAccessLogs(candidateId: number) {
-  return useQuery({
+  return useGatedQuery("hr:employees:manage", {
     queryKey: [...queryKeys.hr.all, "vaultAccessLogs", candidateId] as const,
     queryFn: ({ signal }) =>
       apiClient.get<VaultAccessLog[]>(
@@ -298,7 +299,7 @@ export function useUpdateReferral(candidateId: number) {
 }
 
 export function useCalibrationSessions(candidateId: number) {
-  return useQuery<CalibrationSession[]>({
+  return useGatedQuery<CalibrationSession[]>("hr:employees:view", {
     queryKey: [...queryKeys.hr.candidate(candidateId), "calibration"],
     queryFn: ({ signal }) =>
       apiClient.get<CalibrationSession[]>(`/hr/recruitment/candidates/${candidateId}/calibration`, undefined, signal),
@@ -342,7 +343,7 @@ export function useUpdateCalibration(candidateId: number) {
 }
 
 export function useReferenceChecks(candidateId: number) {
-  return useQuery({
+  return useGatedQuery("hr:employees:view", {
     queryKey: [...queryKeys.hr.all, "referenceChecks", candidateId] as const,
     queryFn: ({ signal }) =>
       apiClient.get<ReferenceCheck[]>(`/hr/recruitment/candidates/${candidateId}/reference-checks`, undefined, signal),

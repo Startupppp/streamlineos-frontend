@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -144,7 +145,7 @@ interface SubmitKbFeedbackInput {
 }
 
 export function useSupportKbCategories(options?: { enabled?: boolean }) {
-  return useQuery({
+  return useGatedQuery("support:kb:view", {
     queryKey: queryKeys.supportKb.categories(),
     queryFn: ({ signal }) => apiClient.get<KbCategory[]>("/support/kb/categories", undefined, signal),
     staleTime: 60_000,
@@ -187,7 +188,7 @@ export function useDeleteSupportKbCategory() {
 
 export function useSupportKbArticles(params?: KbArticlesParams, options?: { enabled?: boolean }) {
   const queryParams: Record<string, unknown> = { ...params };
-  return useQuery({
+  return useGatedQuery("support:kb:view", {
     queryKey: queryKeys.supportKb.articles(queryParams),
     queryFn: ({ signal }) => apiClient.get<KbArticleListItem[]>("/support/kb/articles", queryParams, signal),
     staleTime: 30_000,
@@ -197,7 +198,7 @@ export function useSupportKbArticles(params?: KbArticlesParams, options?: { enab
 }
 
 export function useSupportKbArticle(id: number) {
-  return useQuery({
+  return useGatedQuery("support:kb:view", {
     queryKey: queryKeys.supportKb.article(id),
     queryFn: ({ signal }) => apiClient.get<KbArticleDetail>(`/support/kb/articles/${id}`, undefined, signal),
     enabled: Number.isFinite(id) && id > 0,
@@ -206,7 +207,7 @@ export function useSupportKbArticle(id: number) {
 }
 
 export function useSupportKbArticleFeedback(id: number) {
-  return useQuery({
+  return useGatedQuery("support:kb:view", {
     queryKey: [...queryKeys.supportKb.article(id), "feedback"] as const,
     queryFn: ({ signal }) => apiClient.get<KbArticleFeedbackItem[]>(`/support/kb/articles/${id}/feedback`, undefined, signal),
     enabled: Number.isFinite(id) && id > 0,

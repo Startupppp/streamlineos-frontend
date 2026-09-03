@@ -108,7 +108,7 @@ export function useHrCases(params: ListCasesParams = {}) {
 }
 
 export function useHrCase(id: number) {
-  return useQuery({
+  return useGatedQuery("hr:cases:view", {
     queryKey: caseKeys.detail(id),
     queryFn: ({ signal }) => apiClient.get<HrCase>(`/hr/cases/${id}`, undefined, signal),
     enabled: id > 0,
@@ -188,7 +188,7 @@ export function useStartInvestigation(id: number) {
 }
 
 export function useCaseNotes(caseId: number) {
-  return useQuery({
+  return useGatedQuery("hr:cases:view", {
     queryKey: caseKeys.notes(caseId),
     queryFn: ({ signal }) => apiClient.get<CaseNote[]>(`/hr/cases/${caseId}/notes`, undefined, signal),
     enabled: caseId > 0,
@@ -211,7 +211,7 @@ export function useAddCaseNote(caseId: number) {
 }
 
 export function useCaseDocuments(caseId: number) {
-  return useQuery({
+  return useGatedQuery("hr:cases:view", {
     queryKey: caseKeys.documents(caseId),
     queryFn: ({ signal }) => apiClient.get<CaseDocument[]>(`/hr/cases/${caseId}/documents`, undefined, signal),
     enabled: caseId > 0,

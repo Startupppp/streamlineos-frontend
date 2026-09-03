@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { apiClient, authedFetch, buildUrl } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
@@ -89,7 +89,7 @@ export function useSurveyResponses(surveyId: number, params?: ListResponsesParam
 }
 
 export function useSurveyResponse(surveyId: number, sessionId: number | undefined) {
-  return useQuery({
+  return useGatedQuery("surveys:responses:view", {
     queryKey: queryKeys.surveys.response(surveyId, sessionId ?? -1),
     queryFn: ({ signal }) =>
       apiClient.get<{ session: SurveyResponseSession; answers: SurveyResponseAnswer[] }>(

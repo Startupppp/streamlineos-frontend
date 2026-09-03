@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SignAuditEvent, SignEnvelope, SignEnvelopeFull } from "@/types/sign";
@@ -43,7 +43,7 @@ export function useSignEnvelopes(params?: { status?: string; page?: number; limi
 }
 
 export function useSignEnvelope(id: number | undefined) {
-  return useQuery({
+  return useGatedQuery("sign:envelope:view", {
     queryKey: queryKeys.signEnvelopes.detail(id ?? 0),
     queryFn: ({ signal }) => apiClient.get<SignEnvelopeFull>(`/sign/envelopes/${id}`, undefined, signal),
     enabled: id !== undefined,
@@ -122,7 +122,7 @@ export function useSendSignEnvelopeReminder(id: number) {
 }
 
 export function useSignEnvelopeAudit(id: number | undefined) {
-  return useQuery({
+  return useGatedQuery("sign:audit:view", {
     queryKey: queryKeys.signEnvelopes.audit(id ?? 0),
     queryFn: ({ signal }) => apiClient.get<SignAuditEvent[]>(`/sign/envelopes/${id}/audit`, undefined, signal),
     enabled: id !== undefined,

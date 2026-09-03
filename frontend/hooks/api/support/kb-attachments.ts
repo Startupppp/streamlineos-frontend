@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -30,7 +31,7 @@ export interface KbAttachmentDownloadResult {
 const KB_ATTACHMENT_FOLDER = "kb-attachments";
 
 export function useSupportKbAttachments(articleId: number) {
-  return useQuery({
+  return useGatedQuery("support:kb:view", {
     queryKey: queryKeys.kbAttachments.list(articleId),
     queryFn: ({ signal }) =>
       apiClient.get<KbAttachment[]>(

@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -64,7 +65,7 @@ export function useSplitTicket() {
 }
 
 export function useTicketDraft(ticketId: number) {
-  return useQuery({
+  return useGatedQuery("support:tickets:view", {
     queryKey: [...queryKeys.support.detail(ticketId), "draft"] as const,
     queryFn: ({ signal }) => apiClient.get<SupportTicketDraft | null>(`/support/${ticketId}/draft`, undefined, signal),
     enabled: Number.isFinite(ticketId) && ticketId > 0,

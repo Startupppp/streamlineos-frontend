@@ -1,6 +1,7 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SurveyQuestionType } from "@/features/surveys/shared/question-type-meta";
@@ -97,7 +98,7 @@ function useInvalidateBuilder(surveyId: number) {
 }
 
 export function useSurveyBuilder(surveyId: number | undefined) {
-  return useQuery({
+  return useGatedQuery("surveys:view", {
     queryKey: queryKeys.surveys.builder(surveyId ?? -1),
     queryFn: ({ signal }) => apiClient.get<SurveyBuilderData>(`/surveys/${surveyId}/builder`, undefined, signal),
     enabled: typeof surveyId === "number",

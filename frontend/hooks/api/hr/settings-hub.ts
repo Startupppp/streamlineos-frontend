@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -47,7 +47,7 @@ export interface VersionsResponse {
 }
 
 export function useEffectiveRules(params: { employeeId: string; date: string } | null) {
-  return useQuery({
+  return useGatedQuery("hr:policies:view", {
     queryKey: queryKeys.hr.settingsHubRules(params),
     queryFn: ({ signal }) => {
       const qs = new URLSearchParams({
@@ -62,7 +62,7 @@ export function useEffectiveRules(params: { employeeId: string; date: string } |
 }
 
 export function useEntityVersions(entity: VersionEntity, id: number | null) {
-  return useQuery({
+  return useGatedQuery("hr:policies:view", {
     queryKey: queryKeys.hr.settingsHubVersions(entity, id),
     queryFn: ({ signal }) => {
       const qs = new URLSearchParams({ entity, id: String(id) });

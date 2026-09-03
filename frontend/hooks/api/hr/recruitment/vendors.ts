@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -140,7 +140,7 @@ export function useDeleteVendor() {
 }
 
 export function useVendorSubmissions(vendorId: number) {
-  return useQuery({
+  return useGatedQuery("hr:employees:view", {
     queryKey: queryKeys.hr.vendorSubmissions(vendorId),
     queryFn: ({ signal }) => apiClient.get<VendorSubmission[]>(`/hr/recruitment/vendors/${vendorId}/submissions`, undefined, signal),
     enabled: vendorId > 0,

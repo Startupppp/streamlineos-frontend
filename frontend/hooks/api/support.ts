@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -93,7 +93,7 @@ export const useSupportTicket = (
     "queryKey" | "queryFn" | "enabled"
   >
 ) => {
-  return useQuery<SupportTicket, Error>({
+  return useGatedQuery<SupportTicket, Error>("support:tickets:view", {
     queryKey: queryKeys.support.detail(id),
     queryFn: ({ signal }) => apiClient.get<SupportTicket>(`/support/${id}`, undefined, signal),
     enabled: id > 0,

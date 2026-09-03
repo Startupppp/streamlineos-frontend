@@ -148,7 +148,7 @@ export function useHelpdeskTicket(ticketId: number) {
 }
 
 export function useHelpdeskSuggest(query: string) {
-  return useQuery({
+  return useGatedQuery("hr:helpdesk:view", {
     queryKey: keys.suggest(query),
     queryFn: ({ signal }) => apiClient.get<SuggestResult>("/hr/helpdesk/suggest", { query }, signal),
     enabled: query.length >= 2,

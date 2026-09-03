@@ -40,7 +40,7 @@ export function useProjectTeams(params?: {
 }
 
 export function useProjectTeam(teamId: number) {
-  return useQuery<ProjectTeamDetail>({
+  return useGatedQuery<ProjectTeamDetail>("build:teams:view", {
     queryKey: queryKeys.projects.teams.detail(teamId),
     queryFn: ({ signal }) => apiClient.get<ProjectTeamDetail>(`/build/teams/${teamId}`, undefined, signal),
     enabled: !!teamId,

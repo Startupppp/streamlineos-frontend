@@ -31,7 +31,7 @@ export function useHrWorkflowDefinitions(params?: { objectType?: HrWorkflowObjec
 }
 
 export function useHrWorkflowDefinition(workflowId: number | null) {
-  return useQuery({
+  return useGatedQuery("hr:workflows:view", {
     queryKey: [...queryKeys.hr.hrWorkflowsAll, workflowId],
     queryFn: ({ signal }) => apiClient.get<HrWorkflowDefinition>(`/hr/workflows/${workflowId}`, undefined, signal),
     enabled: workflowId !== null,
@@ -175,7 +175,7 @@ export function useWorkflowActed(
 }
 
 export function useWorkflowInstanceDetail(instanceId: number | null) {
-  return useQuery({
+  return useGatedQuery("hr:workflows:view", {
     queryKey: [...queryKeys.hr.hrWorkflowInstancesAll, "detail", instanceId],
     queryFn: ({ signal }) => apiClient.get<HrWorkflowInstance>(`/hr/workflows/instances/${instanceId}`, undefined, signal),
     enabled: instanceId !== null,
@@ -211,7 +211,7 @@ export function useRejectInstance() {
 }
 
 export function useMyDelegations(options?: { enabled?: boolean }) {
-  return useQuery({
+  return useGatedQuery("hr:workflows:view", {
     queryKey: [...queryKeys.hr.hrWorkflowDelegationsAll, "mine"],
     queryFn: ({ signal }) => apiClient.get<HrWorkflowDelegation[]>("/hr/workflows/delegations/mine", undefined, signal),
     staleTime: 2 * 60_000,

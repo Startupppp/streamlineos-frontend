@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -17,7 +17,7 @@ export interface TicketRisk {
 }
 
 export function useTicketRisk(ticketId: number) {
-  return useQuery({
+  return useGatedQuery("support:tickets:view", {
     queryKey: queryKeys.supportTicketRisk.detail(ticketId),
     queryFn: ({ signal }) => apiClient.get<TicketRisk>(`/support/${ticketId}/risk`, undefined, signal),
     staleTime: 30_000,

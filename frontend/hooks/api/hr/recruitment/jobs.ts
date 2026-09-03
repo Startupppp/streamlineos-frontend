@@ -125,7 +125,7 @@ export function useJobPostingsPage(params?: JobPostingsParams) {
 
 export function useJobPosting(id: number) {
   const enabled = Number.isFinite(id) && id > 0;
-  return useQuery({
+  return useGatedQuery("hr:employees:view", {
     queryKey: queryKeys.hr.jobPosting(id),
     queryFn: ({ signal }) => apiClient.get<JobPosting>(`/hr/recruitment/jobs/${id}`, undefined, signal),
     staleTime: 2 * 60_000,
@@ -221,7 +221,7 @@ export function useUpsertSourcePortal() {
 }
 
 export function useJobShareLinks(jobId: number) {
-  return useQuery({
+  return useGatedQuery("hr:employees:view", {
     queryKey: [...queryKeys.hr.all, "jobShare", jobId] as const,
     queryFn: ({ signal }) =>
       apiClient.get<JobShareLinks>(`/hr/recruitment/jobs/${jobId}/share`, undefined, signal),

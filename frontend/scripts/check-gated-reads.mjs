@@ -52,7 +52,7 @@ const ROOT = join(SCRIPT_DIR, "..");
  */
 const BASELINE = {
   /** Permissioned reads still on a raw useQuery. This is the number that bites. */
-  permissionedUngated: 74,
+  permissionedUngated: 0,
 };
 
 /**

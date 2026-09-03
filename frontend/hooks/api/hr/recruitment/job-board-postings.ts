@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -50,7 +51,7 @@ export interface UpdateJobBoardPostingInput {
 const jobBoardPostingsKey = (jobId: number) => ["hr", "jobBoardPostings", jobId] as const;
 
 export function useJobBoardPostings(jobId: number) {
-  return useQuery({
+  return useGatedQuery("hr:employees:view", {
     queryKey: jobBoardPostingsKey(jobId),
     queryFn: ({ signal }) => apiClient.get<JobBoardPosting[]>(`/hr/recruitment/jobs/${jobId}/board-postings`, undefined, signal),
     staleTime: 60_000,
