@@ -31,6 +31,14 @@ export interface AiTextStreamRequest {
   path: string;
   body: unknown;
   onToken?: (token: string) => void;
+  /**
+   * Sidecar metadata rides ahead of the body, so it is already on the wire when
+   * the first token arrives. Delivering it through a callback rather than only
+   * on the completed outcome is what lets a stream the user stops halfway keep
+   * its citations — the backend sends them precisely so a truncated answer
+   * still has them, and returning them only with `completed` threw that away.
+   */
+  onHeaders?: (headers: Headers) => void;
   signal?: AbortSignal;
 }
 
@@ -69,6 +77,7 @@ export async function streamAiText({
   path,
   body,
   onToken,
+  onHeaders,
   signal,
 }: AiTextStreamRequest): Promise<AiTextStreamResult> {
   let received = "";
@@ -87,6 +96,8 @@ export async function streamAiText({
     );
 
     if (!res.ok) throw await errorFor(res, path);
+
+    onHeaders?.(res.headers);
 
     const reader = res.body?.getReader();
     if (!reader) throw new Error("Streaming is not supported in this browser");
@@ -117,6 +128,14 @@ export async function streamAiText({
 
 export interface AiTextStreamHandle {
   stream: (request: Omit<AiTextStreamRequest, "signal">) => Promise<AiTextStreamOutcome>;
+  /**
+   * The same single-flight, Stop and unmount-abort machinery for a surface whose
+   * transport is a typed per-route helper rather than a raw path and body. A
+   * second copy of the guard is how one surface ends up charging twice.
+   */
+  run: (
+    produce: (signal: AbortSignal) => Promise<AiTextStreamResult>,
+  ) => Promise<AiTextStreamOutcome>;
   stop: () => void;
   isStreaming: boolean;
 }
@@ -131,9 +150,9 @@ export function useAiTextStream(): AiTextStreamHandle {
   const abortRef = useRef<AbortController | null>(null);
   const inFlightRef = useRef(false);
 
-  const stream = useCallback(
+  const run = useCallback(
     async (
-      request: Omit<AiTextStreamRequest, "signal">,
+      produce: (signal: AbortSignal) => Promise<AiTextStreamResult>,
     ): Promise<AiTextStreamOutcome> => {
       if (inFlightRef.current) return { status: "busy" };
 
@@ -143,7 +162,7 @@ export function useAiTextStream(): AiTextStreamHandle {
       setIsStreaming(true);
 
       try {
-        return await streamAiText({ ...request, signal: controller.signal });
+        return await produce(controller.signal);
       } finally {
         inFlightRef.current = false;
         setIsStreaming(false);
@@ -151,6 +170,12 @@ export function useAiTextStream(): AiTextStreamHandle {
       }
     },
     [],
+  );
+
+  const stream = useCallback(
+    (request: Omit<AiTextStreamRequest, "signal">): Promise<AiTextStreamOutcome> =>
+      run((signal) => streamAiText({ ...request, signal })),
+    [run],
   );
 
   const stop = useCallback(() => {
@@ -163,5 +188,5 @@ export function useAiTextStream(): AiTextStreamHandle {
     };
   }, []);
 
-  return { stream, stop, isStreaming };
+  return { stream, run, stop, isStreaming };
 }

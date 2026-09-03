@@ -17,25 +17,6 @@ export interface AgendaCitation {
   snippet?: string;
 }
 
-export interface AgendaOutput {
-  agenda: string;
-  keyTopics: string[];
-  suggestedDuration?: string;
-  preparationNotes?: string;
-  citations: AgendaCitation[];
-}
-
-export interface MeetingContextSummary {
-  crmContext?: string;
-  projectContext?: string;
-}
-
-export interface MeetingPrepResult {
-  agenda: AgendaOutput;
-  context: MeetingContextSummary;
-  connectedIntegrations: boolean;
-}
-
 export interface MeetingFollowUpInput {
   eventId: string;
   meetingNotes?: string;
@@ -91,16 +72,22 @@ export interface ConfirmSendResult {
 
 export interface MeetingPrepStreamRequest extends MeetingPrepInput {
   onToken?: (token: string) => void;
+  onSources?: (sources: AgendaCitation[]) => void;
   signal?: AbortSignal;
 }
 
 export const MEETING_SOURCES_HEADER = "x-ai-sources";
+export const MEETING_PREP_STREAM_PATH = "/ai/meetings/prep/stream";
 
 /**
- * Streams `POST /ai/meetings/prep/stream`. Same `calendar:ai:use` permission and
- * same body as the buffered sibling; the agenda arrives as prose the panel can
- * append, and the real sources ride on `x-ai-sources` ahead of the body so a
- * stream the user stops halfway keeps its citations.
+ * Streams `POST /ai/meetings/prep/stream` — the only representation of a prep
+ * this frontend asks for. The backend keeps a buffered `POST /ai/meetings/prep`
+ * whose product is a Zod-validated record; the panel renders the agenda as it
+ * arrives instead, so nothing here calls it.
+ *
+ * The real sources ride on `x-ai-sources` ahead of the body, so `onSources`
+ * fires before the first token and a stream the user stops halfway keeps its
+ * citations.
  *
  * An options object rather than positional arguments on purpose: the defect this
  * seam already shipped once was an `AbortSignal` that type-checked in the wrong
@@ -108,10 +95,17 @@ export const MEETING_SOURCES_HEADER = "x-ai-sources";
  */
 export function streamMeetingPrep({
   onToken,
+  onSources,
   signal,
   ...input
 }: MeetingPrepStreamRequest): Promise<AiTextStreamResult> {
-  return streamAiText({ path: "/ai/meetings/prep/stream", body: input, onToken, signal });
+  return streamAiText({
+    path: MEETING_PREP_STREAM_PATH,
+    body: input,
+    onToken,
+    onHeaders: onSources ? (headers) => onSources(readMeetingPrepSources(headers)) : undefined,
+    signal,
+  });
 }
 
 export function readMeetingPrepSources(headers: Headers): AgendaCitation[] {
@@ -127,20 +121,6 @@ export function readMeetingPrepSources(headers: Headers): AgendaCitation[] {
   } catch {
     return [];
   }
-}
-
-/**
- * The buffered agenda call, kept alongside `streamMeetingPrep` because
- * `meeting-prep-panel.tsx` renders a structured `MeetingPrepResult` rather than
- * prose. Adopting the stream there is a panel rewrite, tracked as ticket 11's
- * open box -- removing this hook before that lands only breaks the live surface.
- */
-export function useMeetingPrep() {
-  return useAuthorizedMutation("calendar:ai:use", {
-    mutationKey: ["ai", "meetings", "prep"],
-    mutationFn: ({ signal, ...input }: MeetingPrepInput & AiAbortInput) =>
-      apiClient.post<MeetingPrepResult>("/ai/meetings/prep", input, { signal }),
-  });
 }
 
 export function useMeetingFollowUp() {
