@@ -4,11 +4,13 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** implemented — 8 of 9 boxes closed; **1 BLOCKED on operator action** (box 7). Every code half is
-landed and gated; what remains is two things nobody may do from code — running the written backfill against the
-real database, and making the R2 buckets private in the Cloudflare console. Re-verified at head 2026-09-02:
-`pnpm check:public-object-urls` exit 0 (3,567 files · 9 declared references · 0 upload-result `url` fields),
-`:self-test` exit 0.
+**Status:** implemented — 8 of 9 boxes closed; **1 BLOCKED on operator action** (box 7), and the blocker is
+unchanged: running the written backfill against the real database, and making the R2 buckets private in the
+Cloudflare console. Re-verified at head 2026-09-03: `pnpm check:public-object-urls` exit 0 (9 declared references,
+0 upload-result `url` fields) and `:self-test` exit 0. **A new orphan source was found this pass and is recorded
+under box 7** — `kb-page-tree.service.ts::emptyTrash`/`::purgeExpired` cascade `kb_page_attachments` rows away
+without ever deleting the R2 objects they point at, which leaves an orphan no backfill can find. `src/modules/kb`
+is another agent's territory, so it is reported, not fixed.
 
 - [x] Declared size and magic-byte MIME are validated; names are sanitized; object keys are organization-scoped.
   - Evidence: `npx jest src/modules/storage --maxWorkers=2` → 14 suites, 158 tests passed, including the new `storage-tenant-private.spec.ts` (13 tests) and `storage-multipart.controller.spec.ts` (14 tests). Multipart now requires a declared `sizeBytes` at initiate and re-measures the assembled object with HeadObject plus a 32-byte ranged read before releasing it; `sanitizeFileName`/`sanitizeFolder` in `storage-key.ts` are pinned by 2 tests.
@@ -73,6 +75,38 @@ real database, and making the R2 buckets private in the Cloudflare console. Re-v
 
     Neither step is blocked on another agent's territory, on a product decision, or on any further code: both are
     infrastructure actions requiring credentials this session does not hold and must not use.
+
+    **2026-09-03 — re-confirmed at head, and a NEW ORPHAN SOURCE was found that neither the backfill nor the gate
+    can reach.** Gates first, so the code half is still on the record: `pnpm check:public-object-urls` **exit 0**
+    (9 public-base references, all 9 declared, 0 upload-result `url` fields) and
+    `pnpm check:public-object-urls:self-test` **exit 0**. Nothing regressed.
+
+    **The new finding: KB trash purge deletes attachment rows and leaves their R2 objects behind.**
+    `src/modules/kb/wiki/kb-page-tree.service.ts::emptyTrash` (line 252) and `::purgeExpired` (line 272) both issue
+    a hard `DELETE` against `kbPages` and **touch storage nowhere** — the file has no import of `StorageService` and
+    no reference to a key, a bucket or a delete. `kb_page_attachments` (`src/db/schema/kb/attachments.ts:38-41`)
+    carries the composite foreign key `(org_id, page_id) → (kb_pages.org_id, kb_pages.id)` **`ON DELETE CASCADE`**
+    and its `file_key` column *is* the R2 object key. So every purge silently cascades attachment rows away while
+    their objects stay in the bucket. Verified that nothing else cleans up after it: `kbPageAttachments` is
+    referenced in exactly one service, `kb-media.service.ts`, and only to **insert** (line 139) — there is no
+    application delete path, no database trigger on the table in `migrations/1042_t29_kb_page_attachments.sql`, and
+    no orphan sweeper anywhere in `src/`.
+    **This is worse than the leak this box is about, and it contradicts a box already ticked above.** Box 6 claims
+    "GDPR/retention deletion each clean both the database row and the object, with no orphan"; the retention path
+    that empties KB trash does not. And unlike a stored public URL, an orphan of this shape leaves **no database
+    row at all**, so `backfill-public-object-urls.mjs` cannot find it — the pointer is gone, not wrong. Recovering
+    those objects needs a bucket-side listing diffed against `kb_page_attachments.file_key`, which is a second
+    operator action, not a backfill.
+    **Cross-territory: `src/modules/kb` is another agent's, so this is reported and not fixed here.** The fix shape
+    is the one this ticket already uses elsewhere — collect the `file_key`s in the same transaction that deletes
+    the pages and hand them to the storage deleter, rather than relying on a cascade that storage cannot observe.
+    **The exit-code warning above is repeated here because it is the single most misreadable thing in this
+    runbook: exit 2 from the backfill means "not visible to this role", never "nothing found".** An operator
+    reading 2 as success would conclude a leak was already clean. Only `exit 0` **with**
+    `UNVERIFIABLE COLUMNS: 0` is evidence of a clean database.
+    **Do not run the backfill against anything but a `scratch_*` database from this session.** Every proof on this
+    ticket was taken on `scratch_boot_c` and `scratch_t33_backfill` (local, dropped afterwards); the shared remote
+    was never connected to, and must not be.
 - [x] Referred in from ticket 31: a tenant's filename must not be interpolated into a log message, where the key-based redactor cannot reach it.
   - RE-AUDITED this session and one live leak was still there: `media-compression.service.ts` logged ``Video transcode for "${fileName}" produced no size saving`` — the filename in the message string, out of the redactor's reach, and `check:log-secrets` passes at 3,526 files because it cannot see inside an interpolated message. Moved to a structured field.
   - `storage-log-redaction.spec.ts` now also SOURCE-SCANS 9 files (the 3 AV scanners, media compression, the storage upload seam, the transform runner, the multipart service, the storage sweep) for a logger message template interpolating `fileName|filename|originalname|storageKey|fileKey|objectKey`, with a bite test and a false-positive test. 14 tests pass. Bite proven against the real file: reinstating the transcode line turned it red, restoring it green.
