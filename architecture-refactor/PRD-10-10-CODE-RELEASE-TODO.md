@@ -1,7 +1,9 @@
 # StreamlineOS code-release remaining-work PRD
 
 Status: active — single authoritative backlog
-Last reconciled: 2026-09-02 against committed head `0bf058f6a` and the visible working tree
+Last reconciled: **2026-09-03 (ticket 40)** against committed heads `feaad0402` (frontend) and `47a68ba2` (backend) plus the shared working tree. The prior line — "2026-09-02 against committed head `0bf058f6a`" — covered a **former head**.
+
+> **Read `.scratch/code-release-10-10/reports/40-prd-reconciliation.md` before citing any number in this file.** Every count below was re-measured on 2026-09-03 by running the gate, not by carrying the number forward. Counts still marked *superseded* describe a tree that no longer exists and must not be cited as current.
 Scope: all platform domains except CRM and Inventory
 
 This file contains only remaining acceptance work. Completed checklist items and the temporary session documents were removed after current-source reconciliation; their evidence remains in Git history. A missing checkbox must never be interpreted as waived work: every removed checkbox was either previously evidenced or freshly re-verified below.
@@ -16,37 +18,55 @@ This file contains only remaining acceptance work. Completed checklist items and
 - Additive file-cohesion and size-policy amendment: **6 new immediate criteria**, all initially open; 500 lines is the repository-wide authored-file default, with rare evidence-backed exceptions where splitting would damage locality or create shallow modules.
 - Additive handler-design amendment: **3 new immediate criteria**, all initially open; named handlers own event/transport orchestration while reusable business rules remain domain functions rather than meaningless `handle*` wrappers.
 - Additive operability/upload/contract-proof amendment: **5 new immediate criteria**, all initially open; deployed monitoring evidence remains deferred, but the code must expose safe telemetry, health, file-lifecycle, published-contract and bite-proven verification interfaces before release.
-- Reconciliation note: three migration criteria were evidenced at the 634-entry chain, but the current chain has 635 entries, so current-head bootstrap/catalog parity is open again.
-- Reconciled immediate total: **166 proven and 152 open of 318 (52.2% proven)**. Thirteen additive/current criteria are explicitly checked at the audited tree; all remain subject to final one-commit rerun.
-- Deferred production/compliance criteria still open: **34**.
+- **SUPERSEDED — former head.** The five "Pre-amendment / Additive" bullets above, and the "153 of 281" and "166 proven and 152 open of 318" totals they feed, were measured before this reconciliation. They describe a tree that no longer exists and must not be cited as current.
+- Reconciliation note: the migration criteria were evidenced at the **634-entry** chain and re-stated at 635, 637 and 639. **Measured 2026-09-03: the journal holds 666 entries, 666 `.sql` files on disk, and 0 journalled-but-missing files.** Every migration count elsewhere in this document is stale. Current-head bootstrap/catalog parity remains **open**: no database reachable this pass is at head (`check:migration-ledger` reports 635 applied rows against 666 entries, 31 pending; `check:tenant-relationships` finds its target at 573 of 666 and says so).
+- **Recomputed immediate total, 2026-09-03 (ticket 40): of 171 immediate criteria — 74 VERIFIED DONE (43.3%), 14 REGRESSED, 76 STILL PENDING, 6 NOT-VERIFIED, 1 DEFERRED-OPERATOR.** Per-criterion classification, method and evidence: `.scratch/code-release-10-10/reports/40-prd-reconciliation.md` §10.
+- Release ticket position, recounted from disk: **229 of 290 acceptance boxes closed (79.0%), 22 of 42 tickets fully closed.** The previously circulated "235 of 293, 23 of 42" counted six findings-log checkboxes as acceptance criteria and omitted three `- [~]` partial boxes.
+- Deferred production/compliance criteria still open: **34** — unchanged, and none of them is claimed at code level.
 - Code-level 10/10 is **not yet reached**. Module checklists are substantially ahead of cross-cutting integration, performance, privacy and final-release proof.
 
 ### Module checklist status
 
-| Area | Proven | Open | Coverage |
-|---|---:|---:|---:|
-| Authentication/identity/organization | 5 | 2 | 71% |
-| Organization and module RBAC | 3 | 2 | 60% |
-| Home | 9 | 0 | 100% |
-| Settings | 3 | 2 | 60% |
-| Directory/Me | 5 | 0 | 100% |
-| HRMS | 6 | 0 | 100% |
-| Payroll | 3 | 3 | 50% |
-| Build/PM | 7 | 0 | 100% |
-| Workflows | 5 | 0 | 100% |
-| Billing/payments | 7 | 0 | 100% |
-| Accounting/finance | 5 | 0 | 100% |
-| Chat | 10 | 0 | 100% |
-| Calendar | 6 | 2 | 75% |
-| Inbox/mail | 3 | 2 | 60% |
-| Notifications | 7 | 1 | 88% |
-| Knowledge/Wiki/Chatbot | 5 | 3 | 62% |
-| Shared adapters | 6 | 0 | 100% |
-| Frontend system-wide | 2 | 4 | 33% |
+**Recomputed from disk 2026-09-03. Do not carry these forward — re-derive them.**
+
+The *Proven* column is **not re-derivable from this file**, because the header above records that completed checkboxes were deleted. It is re-derivable from git: this table was added by `731d688ab` and its rows are a verbatim per-subsection count of §10 at the pre-collapse commit **`10c06d01c`** (18 subsections, 124 boxes). Today's §10 holds 27 boxes. Every *Proven* number is therefore a measurement of a **former head**.
+
+| Area | Proven | Open | Coverage | Basis |
+|---|---:|---:|---:|---|
+| Authentication/identity/organization | 6 | 1 | 86% | ticket 19 box 34 `[x]` closes PRD §10.1 box 2 |
+| Organization and module RBAC | 4 | 1 | 80% | ticket 19 box 21 `[x]` closes PRD §10.2 box 2 |
+| Home | 9 | 0 | 100% | **NOT-VERIFIED** — no §10.x text, no ticket, no report |
+| Settings | 3 | 2 | 60% | one box open, one box **unowned** |
+| Directory/Me | 5 | 0 | 100% | **NOT-VERIFIED** — no §10.x text, no ticket, no report |
+| HRMS | 6 | 0 | 100% | **NOT-VERIFIED** — no §10.x text, no ticket, no report |
+| Payroll | 5 | 1 | 83% | **CONTESTED** — ticket 24 is 8 of 8 `[x]`, but four payroll residuals are recorded open and one is confirmed on disk (see note) |
+| Build/PM | 7 | 0 | 100% | **NOT-VERIFIED** — no §10.x text, no ticket, no report |
+| Workflows | 5 | 0 | 100% | **NOT-VERIFIED** — no §10.x text, no ticket, no report |
+| Billing/payments | 7 | 0 | 100% | **NOT-VERIFIED** — no §10.x text, no ticket, no report |
+| Accounting/finance | 5 | 0 | 100% | **NOT-VERIFIED** — no §10.x text, no ticket, no report |
+| Chat | 10 | 0 | 100% | **NOT-VERIFIED** — no §10.x text, no ticket, no report |
+| Calendar | 6 | 2 | 75% | one product decision, one **unowned** box |
+| Inbox/mail | 4 | 1 | 80% | ticket 29 box 65 `[x]` closes PRD §10.14 box 2 |
+| Notifications | 8 | 0 | 100% | `hooks/api/notifications-inbox.ts` carries 11 `onMutate`/`onError` pairs |
+| Knowledge/Wiki/Chatbot | 6 | 2 | 75% | ticket 29 box 81 `[x]` closes PRD §10.16 box 1 |
+| Shared adapters | 6 | 0 | 100% | **NOT-VERIFIED** — no §10.x text, no ticket, no report |
+| Frontend system-wide | 3 | 3 | 50% | §10.18's ceiling box flipped `[x]` in `e5fed52a8`; the old 2/4/33% was never updated |
 
 A 100% module row means its module-specific checklist is closed. It does not override open cross-cutting gates below.
 
+**Nine rows marked NOT-VERIFIED above — Home, Directory/Me, HRMS, Build/PM, Workflows, Billing/payments, Accounting/finance, Chat and Shared adapters, 60 carried "Proven" boxes — rest entirely on deleted text.** There is no §10.x subsection, no ticket in `.scratch/code-release-10-10/issues/` and no report for any of them; module-matrix tickets exist only for 19, 24 and 29. Their `Open = 0` is trivially consistent. To restore them as evidence, either recover the removed `[x]` blocks from `git show 10c06d01c:architecture-refactor/PRD-10-10-CODE-RELEASE-TODO.md`, or give each module a ticket carrying box-level acceptance state.
+
+**Payroll is contested and is deliberately not shown at 100%.** Ticket 24's eight acceptance boxes are all `[x]`, and its central artifact is real: `migrations/1030_t24_payroll_tds_ytd_immutability.sql` exists **and is journalled** (idx 790), alongside `0445_payroll_locked_run_immutability.sql` and `1001_s08_payroll_financial_immutability.sql`. Against that, the findings registers record four unresolved payroll items, and one was re-confirmed on disk this pass: **`payroll_bank_batch_items` carries no UNIQUE constraint in any migration**, so it has no natural key on `(batchId, runEmployeeId)`. The other three — the TDS ledger replacing where it should accumulate, a run with FAILED bank items still marked `PAID`, and `writeTdsYtdLedger`/`importBankReturn`/`refreshBatchPaidStatus` being untested — are recorded but were **not** re-verified this pass. The row stays below 100% until a single owner holds both halves.
+
+**Known defects in this table's construction:** five open PRD boxes have no owning ticket box (§10.4 box 2, §10.13 box 2, §10.15, §10.16 box 3, and the six §10-preamble boxes, which belong to no row and are counted nowhere); four ticket `[x]` boxes have no PRD counterpart, so closing them can never move a row; ticket 28's three `[~]` partial boxes have no representation here at all; and the rounding is inconsistent (88% is half-up, 62% is floor).
+
 ## Current verification snapshot
+
+> **SUPERSEDED — this whole section was measured on 2026-09-02 and describes a former head.** Ticket 40 re-ran every gate in both repositories on 2026-09-03; the numbers below did not survive. Read `.scratch/code-release-10-10/reports/40-prd-reconciliation.md` §3 and §4 instead. The corrections that matter most:
+>
+> - **Now green, stop citing as failing:** cross-tenant isolation declaration coverage is **929/929 (100%), exit 0** (was "fails 921/923"); `check:tenant-indexes` is **840/840** (was 745/745, and 821/828 on the declaration side); `kb-rag.service.ts` is **253 lines** (was the 367-line over-300 regression); the dead barrel `features/build/inbox/index.ts` is **removed**; the frontend hard-500 gate **now exists**; Web Vitals breaches are **2, both TTFB** (was six); the journal/`.sql` gap that named six missing migrations is **cleared, 0 missing**.
+> - **Now red, do not cite as passing:** `check:unbounded-reads` (**exit 1** — the 0/0 counters still hold, the classification is stale); `check:db-call-count` (**exit 1**, 10 stale verdicts vs a ratchet of 2); route bundles (**17 breaches across 12 measured routes**, not "pass for all five"); the command catalog (**exit 1**, 4 against a baseline of 0); backend `check:over-300` (**400 vs baseline 394**); frontend `check:routes`, `check:properties`, `check:import-direction`, `check:file-sizes` and both `check:dead-code` gates.
+> - **Counts that merely moved:** cycles now scan 5,528 backend / 5,264 frontend files (both still zero); module registration is 218 declared / 217 reachable; the hard-size gate scans 3,571 files with 7 exceptions; `check:client-pages` is 141 of a 304 ceiling; `check:route-thinness` in-scope thick is 0.
 
 Measured on 2026-09-02; each item states whether it passes or remains open:
 
@@ -84,12 +104,16 @@ Not rerun in this reconciliation because they are expensive final-integration ga
 
 ## Current reproducible blockers
 
-- Clean-bootstrap and tenant-catalog parity are not current. The retained evidence covers a 634-entry journal, while the current chain and ledger contain 635 entries. Re-run two independent clean bootstraps plus an interrupted/resumed bootstrap at one release commit, compare exact catalogs and rerun tenant-relationship verification against a fully bootstrapped target; the configured `scratch_boot_a` was observed mid-bootstrap at 613/635 and is not release evidence.
-- Restore the over-300 ratchet by splitting `kb-rag.service.ts` along a real retrieval/answering seam or otherwise reducing it, return the backend count from 395 to at most 394, and add the missing fail-closed frontend hard-500 gate without mechanically fragmenting cohesive modules. The backend hard-500 gate already passes.
-- Add and execute cross-tenant negative tests for RBAC role seeding and Support KB engagement, restoring both static declaration coverage and executable tenant-isolation proof.
-- Remove the dependency-proven dead frontend barrel `features/build/inbox/index.ts`, then rerun the dead-code gate; do not treat retained contract/convention exports as dead without dependency evidence.
-- Reduce the 58 authenticated thick route modules through domain-owned feature seams; do not raise the ratchet or move implementation into alternate oversized feature files merely to thin `page.tsx`.
-- Refresh and pass production-build/reference-device Web Vitals evidence. Route bundles currently pass, while six Web Vitals budgets still breach: mobile INP/FCP/TTFB and desktop LCP/FCP/TTFB.
+> **Re-verified 2026-09-03 (ticket 40).** Four blockers below are **RESOLVED** and are struck through with their measurement; the rest were re-measured and their numbers corrected in place. One **new** blocker heads the list.
+
+- **NEW — the release cannot be verified at one commit.** `frontend/hooks/api/meetings-ai.ts` is **uncommitted** in the shared working tree and is inconsistent with its two consumers: it removes `useMeetingPrep`, adds `streamMeetingPrep`/`readMeetingPrepSources` and reshapes `MeetingFollowUpResult`, while `features/calendar/meeting-prep-panel.tsx` and `features/calendar/meeting-follow-up-panel.tsx` (last touched 2026-08-25) still use the old shape. Frontend `type-check` is **exit 2 with 12 errors**; frontend `check:dead-code` is **exit 1** on exactly the two new exports. Committed `HEAD` still exports the symbol the consumers import, so the release's "frontend typecheck 0" is true of `HEAD` and false of the tree. Either land the change with its consumers updated, or revert it. **A clean-`HEAD` typecheck has not been run.**
+
+- Clean-bootstrap and tenant-catalog parity are not current. **Re-measured 2026-09-03: the journal holds 666 entries** (not 634/635/637/639), with 666 `.sql` files and 0 missing. Re-run two independent clean bootstraps plus an interrupted/resumed bootstrap at one release commit, compare exact catalogs and rerun tenant-relationship verification against a fully bootstrapped target. **No database reachable this pass is at head:** `check:migration-ledger` reports 635 applied rows against 666 entries (31 pending) and `check:tenant-relationships` reports its target at **573 of 666** and refuses the number as release evidence. The `scratch_boot_a` observation stands, at 573/666 rather than 613/635.
+- Restore the over-300 ratchet. **`kb-rag.service.ts` is now 253 lines — that specific regression is fixed** — but the backend count has moved the other way: **400 files against the baseline of 394, 6 above**, and none of the crossings is attributable to the ticket that reported it. The **frontend hard-500 gate now exists** and is fail-closed; it is **red on 3 files** (`features/hr/cases/cases-page-content.tsx` 501, `hooks/api/notifications-inbox.ts` 534, `hooks/api/notifications-inbox.test.ts` 663). Backend hard-500 passes at 3,571 files with 7 registered exceptions. Note the unresolved policy split: `check-over-300` scans `*.test.ts(x)` while `check-file-sizes` exempts them, so one test file inflates one ratchet while being exempt from the other.
+- ~~Add and execute cross-tenant negative tests for RBAC role seeding and Support KB engagement, restoring static declaration coverage.~~ **RESOLVED — `check:tenant-isolation` is exit 0 at 929/929 (100%) as of 2026-09-03.** The *executable* half remains open and is a separate matter: `check:tenant-isolation:run` sits in a `schedule || workflow_dispatch` job and does not run on a pull request, so it is **NOT-VERIFIED**, not passing.
+- ~~Remove the dependency-proven dead frontend barrel `features/build/inbox/index.ts`.~~ **RESOLVED — the file does not exist.** Both dead-code gates are nevertheless **exit 1**: backend on `ai/core/streaming/index.ts:AiTextStreamProduct` and `ai/core/services/crm-brief-loaders.ts:loadLeadProfile`; frontend on `streamMeetingPrep` and `readMeetingPrepSources`, which are the uncommitted change in the new blocker above. knip itself reports **0 unused files** in the backend.
+- ~~Reduce the 58 authenticated thick route modules.~~ **RESOLVED — `check:route-thinness` reports 588 authenticated route modules scanned, IN SCOPE thick 0 against a baseline of 0, exit 0.** 67 remain thick in CRM/Inventory, both outside release scope. `check:client-pages` is likewise **141 of a 304 ceiling** (the ticked §10.18 evidence line still says 220).
+- Refresh and pass production-build/reference-device Web Vitals evidence. **Re-measured 2026-09-03 and the two halves have swapped.** Web Vitals: **2 breaches, not six** — mobile TTFB p95 932 ms (budget 600) and desktop TTFB p95 1,669 ms (budget 400), both carrying a recorded owner exception naming `GET /me/access` at p50 503 ms per authenticated server render; INP, CLS, LCP and FCP are inside budget on both profiles. Route bundles **no longer pass**: `check:route-bundle-budget` is **exit 1 with 17 breaches across 12 measured routes**, ten of them in scope (`/mail`, `/inbox`, `/dashboard`, `/chat`, `/calendar`, `/notifications`, `/settings`, `/build/inbox`, `/build/my-work`, `/support/inbox`). The earlier "route bundles pass for all five measured routes" was measured on a metric that under-counted what users download.
 - Decide and implement Calendar provider drift conflict behavior: local wins, provider wins or user-visible conflict resolution.
 - Finish AI gateway consistency: reserve/check credit before public KB embedding, route embedding through the gateway interface, stream non-chat AI surfaces and measure realistic-corpus retrieval latency.
 - Finish GDPR erasure across its remaining sinks: Chat/AI message content, search/vector indexes and derived projections, plus full cryptographic session revocation through `SessionsService` (the membership cache and permission version are already busted). **Database PII is now covered:** `GdprSubjectErasureService` anonymises the subject across `organization_people`, `hr_employee_sensitive_fields`, `hr_dependents` and — only once no other org membership remains — the global `users` row, whose email becomes a hashed `erased-<hash>@erased.invalid` tombstone so the NOT NULL UNIQUE constraint still holds. It is idempotent, legal-hold-blocking, audited, tenant-scoped in SQL, and drains on a keyset cursor rather than capping; it first shipped with two bare `.limit(50)` calls that would have reported a partially erased subject as fully erased.
@@ -143,8 +167,10 @@ These decisions are final for this release and remove implementation alternative
 - [ ] Prove Home only composes universal experiences; Chat, Calendar, Inbox and Notifications retain independent business implementation.
 - [x] Prove zero circular imports, forbidden new `forwardRef`, barrel self-imports and erased Nest injection tokens.
       Evidence: `check:cycles` (both repos), `check:module-di`, `check:import-direction` all pass 2026-09-02.
+      **RE-VERIFIED 2026-09-03 — PARTIALLY REGRESSED.** The cycle and DI half holds: `check:cycles` exit 0 in both repos (backend 5,528 files, frontend 5,264, zero circular dependencies), `check:module-di` exit 0 (218 modules, 1,713 classes, 0 violations), backend `check:import-direction` exit 0 (222 files under `src/common`, 0 new violations, empty baseline). **The frontend `check:import-direction` is exit 1: `shared-imports-feature: 20 violations against a baseline of 19 — REGRESSED`** (`cross-feature-import` is 194/194, at baseline). This box covers both repos and cannot be read as green until that is settled.
 - [x] Prove every active Nest module is registered and every frontend route has one canonical owner; remove obsolete routes rather than preserving hidden duplicates.
       Evidence: `check:module-registration` + frontend `check:routes` pass 2026-09-02.
+      **RE-VERIFIED 2026-09-03 — REGRESSED.** `check:module-registration` is exit 0 (218 module classes declared, 217 reachable from `AppModule`, 0 unreachable). **Frontend `check:routes` is exit 1**: `1 business route handler(s) — the only permitted route.ts is NextAuth: api/media/image/route.ts`. See §3's last box for the analysis; the two findings are the same file.
 - [ ] Keep authenticated `app/**/page.tsx` and `layout.tsx` files as thin route modules for metadata, parameters, server authorization and composition; move state, forms, queries and mutations behind feature-owned interfaces and gate route-file size/import direction without changing landing visuals or animations.
 
 #### 2.1 Repository hygiene, dead code and type integrity
@@ -186,9 +212,11 @@ These decisions are final for this release and remove implementation alternative
 - [ ] Validate every untrusted body, parameter, query, environment value, upload manifest and external response through established Zod boundaries.
 - [x] Keep Zod schemas in module DTO/schema files, derive types with `z.infer`, reject protected/client-supplied actor and tenant fields and enforce unknown-key policy.
       Evidence: Unknown-key policy closed 2026-09-02: `.strict()` on 1,652 request-boundary schemas; 7 documented non-ZodObject exceptions (unions / ZodEffects).
+      **RE-VERIFIED 2026-09-03 — criterion holds, exact figure NOT-VERIFIED.** The tree carries **2,464 `.strict()` calls across 764 files** against 2,814 `z.object(` occurrences, and no gate reports an unknown-key defect. That is a different (larger) population than "request-boundary schemas", so it corroborates the criterion without re-deriving **1,652**; reproducing that exact number needs the original classifying script.
 - [ ] Reconcile backend Zod/OpenAPI contracts with frontend request/response types, hooks, forms and rendered error states.
 - [x] Prove controllers remain thin, business rules stay backend-side and no frontend `app/api` or client module contains business/database logic.
       Evidence: Verified 2026-09-02: only `app/api/auth/[...nextauth]/route.ts` exists, no `lib/services/`, zero drizzle/postgres/neon imports in frontend source.
+      **RE-VERIFIED 2026-09-03 — the evidence sentence is FACTUALLY WRONG and the gate is red.** Two thirds of it hold: `lib/services/` is absent, and drizzle/postgres/neon imports in frontend source are **0**. But **two** route handlers exist, not one, and `pnpm check:routes` is **exit 1** naming the second: `app/api/media/image/route.ts`. That file (72 lines) is an authenticated image proxy — it Zod-parses one `key`, requires `session.backendJwt`, forwards to `GET /storage/image` and hardens the content type — so it holds no business rule and touches no database, and the *criterion* is arguably satisfied. The repo's own fail-closed gate disagrees. **Resolve one way or the other before release:** either allowlist the proxy in `check:routes` with its justification, or move it. It cannot remain red beneath a ticked box.
 
 ### 4. Database schema and migration quality
 
@@ -199,6 +227,7 @@ These decisions are final for this release and remove implementation alternative
 - [ ] Remove obsolete schema only with symbol, raw table-name, FK, migration, barrel and integrity-spec evidence.
 - [x] Establish a new clean migration baseline after authorized destructive rebase/squash, recreate disposable staging from zero and exercise interruption/retry plus rollback/forward-fix using [RB-09](runbooks/RB-09-migration-rollback.md); no legacy watermark upgrade is required.
       Evidence: 2026-09-02: `applied=633 skipped=1 failures=0`; catalog parity vs an independent bootstrap `differences=0` across tables, columns, constraints, indexes, policies, functions, triggers, extensions, enums, rlsEnabled. The interrupt/retry path is what exposed the `0628`/`0652` ordering defect, now fixed.
+      **SUPERSEDED — covers a former head (633/634-entry chain). Do not cite as current.** The journal holds **666** entries as of 2026-09-03. Two further reasons this evidence cannot carry the current claim: the parity comparator keyed on object *names* rather than definitions until the fix that shipped alongside it, so no parity number from that era means what it appears to; and no database reachable on 2026-09-03 is at head. The baseline-establishment half of this box stands; the **parity** half is re-opened by the blocker list above.
 - [ ] Compare two independent clean bootstraps and an interrupted-then-resumed bootstrap at the same release commit: tables, columns, constraints, indexes, policies, functions, triggers, extensions, enums and RLS state must match exactly.
 - [ ] Retain release SHA, commands, database identity, journal hash/count, catalog diff, sanitized logs and artifact hashes for the current-head bootstrap and migration evidence.
 
@@ -333,7 +362,8 @@ These decisions are final for this release and remove implementation alternative
 
 #### 10.15 Notifications, email and push
 
-- [ ] Give the notification lifecycle mutations an `onError` and a rollback. `frontend/hooks/api/notifications-inbox.ts`
+- [x] Give the notification lifecycle mutations an `onError` and a rollback. `frontend/hooks/api/notifications-inbox.ts`
+      Evidence: verified in source 2026-09-03 (ticket 40) by auditing all 14 `useMutation` sites in that file. **11 optimistic mutations each pair `onMutate` with both `onError` and `onSettled`** — `useMarkNotificationRead`, `useMarkAllNotificationsRead`, `useArchiveNotification`, `useUnarchiveNotification`, `useDeleteNotification`, `usePinNotification`, `useUnpinNotification`, `useSnoozeNotification`, `useBulkMarkRead`, `useBulkArchive`, `useBulkDelete`. The two remaining (`useApproveNotification` L520, `useRejectNotification` L529) carry **no `onMutate`**, so they hold no optimistic state to roll back and correctly only invalidate in `onSettled`. **Zero violations.**
 
 #### 10.16 Knowledge Base, Wiki and Chatbot
 
@@ -348,6 +378,7 @@ These decisions are final for this release and remove implementation alternative
 - [ ] Performance/SEO/tests: verify bundle boundaries, lazy loading, rendering/Web Vitals budgets and public metadata without changing landing visuals/animations; run representative browser E2E.
 - [x] Reduce authenticated client route modules below the current 304-page ceiling, never raise that ceiling, and move data/authorization/orchestration to server or feature seams while preserving interactive leaf components; public landing visuals and animations remain untouched.
       Evidence: `check:client-pages` passes at 220 of a 304 ceiling; `check:route-thinness` ratchet lowered 114 → 58. Landing visuals untouched.
+      **RE-VERIFIED 2026-09-03 — still true, and both numbers have improved past what is written here.** `check:client-pages`: **141 of 600 (23.5%), 163 below the 304 ceiling**, exit 0. `check:route-thinness`: 588 authenticated route modules scanned, **IN SCOPE thick 0 against a baseline of 0**, exit 0; the 67 that remain thick are CRM/Inventory, outside release scope. The ceiling was not raised. Landing visuals untouched.
 
 ### 11. Application security and privacy implementation
 
