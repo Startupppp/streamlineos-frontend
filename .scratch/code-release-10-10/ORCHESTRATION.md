@@ -1825,3 +1825,39 @@ Today alone the release harness was found running under half the gate suite whil
 "authoritative"; ten gates existed that no workflow referenced; a security ratchet could not fail; a
 purge verified the wrong bucket; a budget read a different table. A 100% census produced by those
 instruments would have meant nothing.
+
+---
+
+## Two corrections from the 22/23 structural pass, both verified by the orchestrator
+
+### Pagination is capped by TWO mechanisms with different behaviour — neither claim was right
+
+The agent reported "pagination silently clamps at 100, correcting the hard-400s note". The prior
+note said 400. **Measured: both are half right, and the real finding is the inconsistency.**
+
+* **Zod `.max(N)` → rejects with 400.** `platform/dto/platform.schemas.ts:42` (`.max(500)`),
+  `ai/core/controllers/crm-copilot.controller.ts:37` (`.max(20)`), copilot tools (`.max(10)`).
+* **`Math.min(limit, 100)` → silently clamps.** `me/me.controller.ts:71`,
+  `organization/core/invitations-read.service.ts:70`,
+  `organization/core/org-membership-read.service.ts:60`,
+  `organization/core/org-membership.service.ts:107`.
+
+Consequences: a pagination test asserting 400-on-over-limit passes on some routes and fails on
+others; a caller asking for 500 gets 100 back **with no signal**; and `backend/CLAUDE.md` §3 declares
+a **hard cap of 100/page**, which `.max(500)` violates outright. Owner: whoever owns the pagination
+contract. Not fixed — picking one mechanism is an API-contract decision.
+
+### The chat member email is a DELIBERATE projection, not an unprojected join
+
+Reported as "`GET /chat/channels/{channelId}` still ships the unqualified `with: { members }`
+including `user.email` — the list route was fixed, the detail route was not."
+
+**Both routes use the same qualified projection.** `chat-channel-member-shape.ts:78`
+`CHANNEL_MEMBER_MEMBERSHIP_WITH` is `columns: { userId: true }` with
+`user: { columns: { id, name, image, email } }`, and both the detail read (line 101) and the paged
+read (line 124) use it, each flattening through `flattenChannelMember`. So this is **not** the
+over-exposure class found in support tickets, where a sub-select with no `columns` shipped an entire
+`organization_members` row. `email` is an explicit choice.
+
+Whether a channel member's email should reach every channel reader is a product question, and a
+reasonable one to ask — but it is not drift, and "the detail route was not fixed" is inaccurate.
