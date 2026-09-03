@@ -10,6 +10,14 @@ existence paths) are now ENFORCED by a new gate `pnpm check:query-projections` (
 resting on a hand-scan, and the blocked clause is RATCHETED at 1,441 unprojected reads. Report:
 `reports/21b-n-plus-one-gate-blind-spot.md` §5.
 
+**Session status 2026-09-03 (second pass — the `with:` dimension):** box 1 stays OPEN and BLOCKED on the same
+product decision, and that verdict is now confirmed from a second, independent axis. But a **decision-free clause
+inside it was open and nobody knew**, because `check:query-projections` reads only the TOP-LEVEL keys of a
+relational query and is deliberately blind to what a `with:` block ships. Measured with an AST: **198 relation
+hydrations carried no `columns:`**, and four of them hydrated a table carrying a bearer token — **two live on the
+wire**. Fixed, then enforced at an allowance of 0 by a new gate `pnpm check:relation-hydration` (rc 0), with the
+population ratcheted at 186. Report: `reports/20b-relation-hydration.md`.
+
 **Status:** measured; one box open by design and **BLOCKED on a product decision** — but as of 2026-09-03 its two decision-free clauses are ENFORCED by a new gate (`pnpm check:query-projections`, rc 0, count-path allowance 0) and the blocked clause is RATCHETED at 1,441 unprojected reads rather than merely described. Re-confirmed at head
 2026-09-03 by an independent recount (296 `findMany` / 550 `findFirst` / 599 bare `.select()` without a projection,
 **79–80% of it in held or excluded territory**). The list/count/existence clauses that need no contract decision are
@@ -18,7 +26,7 @@ no further measurement can answer.
 
 **2026-09-03 residual-risk register:** box 1 = **R-5**, ACCEPTED RESIDUAL, blocker DECISION (product / API contract), owner release owner, deadline 2026-09-17. Gate re-verified exit 0 at 1,441/1,441 with count/existence at 0. See `reports/residual-risk-register.md` §3.4.
 
-Report: `reports/20-query-plans.md`. Raw plan trees: `reports/20-query-plans/plans-{large,mid,small}.{json,txt}`.
+Reports: `reports/20-query-plans.md`, `reports/20b-relation-hydration.md`. Raw plan trees: `reports/20-query-plans/plans-{large,mid,small}.{json,txt}`.
 Harness: `BE/test/perf/{heavy-query-fixtures,seed-heavy-query-load,heavy-query-catalog,heavy-query-catalog-{calendar,notifications,search,dashboard},heavy-query-plan-analysis,measure-heavy-query-plans}.mjs`.
 
 - [ ] Every list, count and existence path selects named columns and returns a minimal projection; no full ORM row, global user record or large JSON/blob/vector field is hydrated for these paths.
@@ -127,6 +135,76 @@ Harness: `BE/test/perf/{heavy-query-fixtures,seed-heavy-query-load,heavy-query-c
     such decision — count paths, existence paths, and global-`users`/vector hydration — are **closed**, and the
     last pass proved the point by finding a count path that hydrated `survey_participants.accessTokenHash` to
     answer a `.length`.
+  - **2026-09-03, second pass — the box's own gate could not see inside a `with:`, and a decision-free clause was
+    open behind that blindness.** `check-query-projections.mjs` reads the TOP-LEVEL keys of a relational query and
+    tracks brace depth precisely so a `columns:` nested inside a `with:` does NOT count. Correct for the population
+    it ratchets — and it means the relation itself had never been measured by anything. Read against the installed
+    driver (`drizzle-orm/pg-core/dialect.js`, `buildRelationalQueryWithoutPK`), **two** shapes ship a whole related
+    row: `with: { rel: true }`, and any `with: { rel: { ... } }` whose config has no `columns:` key — `{ where }`,
+    `{ orderBy, limit }`, `{ with }` — because that branch falls through to `Object.keys(tableConfig.columns)`.
+    The second shape was the majority (102 of 198) and reads like a projected query.
+    - **Measured at head with an AST before anything was changed: 198 unprojected relation hydrations**, over 1,735
+      `db.query.*.find{Many,First}` call sites and 562 relation entries, with `check:query-projections` **exit 0**
+      over all of it. The same scan independently corroborates two closed clauses: **0** unprojected relations to
+      global `users` (the existing spec is a regex implementation, this is an AST one, both say 0) and **0**
+      vector/embedding columns on any unprojected read.
+    - **DATA EXPOSURE — four sites, two live on the wire, now fixed.** `GET /hr/recruitment/jobs/:jobId` returned
+      every application's `tracking_token`, and `GET /hr/recruitment/candidates/:candidateId` returned that plus
+      every interview's `calendar_sync_token`. Both services `return` the ORM row unmapped and the only global
+      interceptor **wraps** rather than strips (checked, not assumed). `tracking_token` is minted as
+      `randomBytes(32).toString("hex")` and `GET /public/application-status/:token` is **unauthenticated** and
+      resolves the candidate's name, email and job from it alone — so the leak handed any holder of
+      `hr:employees:view` a working credential for an external party. `calendar_sync_token` has no reader anywhere
+      in `src`. Fixed by **exclusion** (`columns: { trackingToken: false }`), which preserves the rest of the
+      response shape and therefore needs no product decision; contract-safety proved by grepping the frontend, where
+      the only `trackingToken` consumer is the public apply page reading its own POST response. Commit `18506718`.
+    - **MEMORY — three sites where the hydrated row was never read at all, now fixed.** `timesheets.updateEntry`
+      hydrated a whole 38-column `tickets` row and through it a whole 21-column `projects` row including its
+      `settings` jsonb, and read **zero fields off either**; `workflows.triggerWorkflow` read the latest
+      `workflow_versions` row — whose `definitionJson` is the entire workflow graph — to use its `id`;
+      `feedbucket-ai.loadSubmission` hydrated widget + project to read `widget.projectId` and `project.orgId`.
+      Commit `bc044673`. 191 -> 186.
+    - **PAYLOAD — 186 remain, 77 in excluded inventory/CRM, 109 in scope, 52 on list paths.** hr 27 · build 26 ·
+      blog 8 · chat 8 · surveys 8 · feedbucket 5 · dashboard 4 · expenses 4 · finance 3 · invoices 3 · tasks 3 ·
+      billing 2 · branches 2 · quotes 2 · support 2 · csat 1 · workflows 1. Thirteen of the heaviest were opened and
+      read one by one; **ten of thirteen are DTO-bound** (the relation is spread into the returned object) — an
+      independent confirmation of the BLOCKED verdict from a different axis, not a repetition of it.
+    - **New gate `pnpm check:relation-hydration`** (`BE/src/scripts/check-relation-hydration.mjs`), wired in
+      `package.json` and as a BLOCKING step in `.github/workflows/ci.yml`. Hard-fails at an allowance of **0** on an
+      unprojected relation onto a credential-carrying table, on one onto global `users`, and on a `with:` key that
+      matches no `relations()` declaration (that query raises at build time — the exact defect found live in
+      `projects-tickets-detail.service.ts` in an earlier pass). Population **ratcheted at 186**, taken from
+      `git archive HEAD`, not from the shared dirty tree. The same credential pattern on the **base** table of a read
+      matches 77 sites and is deliberately NOT enforced — most are correct (`webhooks-dispatch` must load the signing
+      secret to sign with it; a `survey_collectors.token` IS the shareable link the endpoint returns;
+      `webhooks.service.ts` already strips its secret in the response map) — so they are printed as a CANDIDATE list.
+      Coverage is ratcheted alongside findings: restricting the scan to `findMany` drops findings 191 -> **69**,
+      comfortably under the ratchet, and reds on coverage instead. Bite-proved hermetically in a `git archive HEAD`
+      tree, never in the shared working tree — clean rc 0; reverted credential fix rc 1 naming the site; planted
+      users hydration rc 1; unresolvable relation name rc 1; one un-projected relation rc 1 (191 -> 192); projecting
+      one rc 0 (190); narrowed detector rc 1 on coverage; re-planted at the lowered ratchet rc 1 (186 -> 187).
+      `--self-test` **14 checks**.
+    - **The gate caught two false-positive classes in itself before reporting a number.** `columns: USER_COLS as
+      const` read as unprojected (an `as const` initializer is an `AsExpression`, not an object literal) and produced
+      **14 phantom global-users hydrations** against a spec that correctly says there are none — 217 -> 198. And a
+      projection shared across files (`SENDER_MEMBERSHIP_WITH_USER`) was invisible to a per-file constant map,
+      leaving six chat sites unresolved; all six were correctly projected.
+    - **A `tsc` green does NOT prove a `with:` narrowing is safe on three tables.** Proved with a scoped
+      `ts.createProgram`: on `candidates` the compiler catches a read of an excluded relation column
+      (`TS2339 … 'calendarSyncToken' does not exist`) and passes a kept one, so it IS a safety net; on `jobPostings`
+      `job.applications` is a type error under `with: { applications: true }`, under `columns: { trackingToken: false }`
+      and under `columns: { id: true }` — **all three identical** — because exactly three tables (`users`,
+      `jobPostings`, `scorecardTemplates`) carry **two** `relations()` blocks. Drizzle merges them at runtime
+      (`extractTablesRelationalConfig` assigns per relation name) but only one reaches the inferred type, so the other
+      block's relations are runtime-live and type-invisible. ROUTED to the schema owner as **REL-DUP**.
+    - **Cross-territory, found while wiring: `check:query-projections` and `check:n1-growing-loops` — this box's own
+      gate and ticket 21's, both landed today — are in `package.json` and in NO workflow file. They can never run.**
+      `check:relation-hydration` was wired into `ci.yml`; those two were left alone because turning on enforcement
+      for another lane's ratchet mid-release is a decision, not a fix. Routed as **CI-UNWIRED**.
+    - **This does not close the box.** The residue is still "which list endpoints may return less than they return
+      today". What changed is that a decision-free clause inside the box was open, invisible to the gate that covers
+      the box, and was leaking four bearer tokens.
+
   **DISPOSITION 2026-09-03 — ACCEPTED RESIDUAL R-5. Blocker: DECISION (product / API contract). Owner: release
   owner. Deadline: 2026-09-17.** Recorded for ticket 41 box 7; register: `reports/residual-risk-register.md` §3.4.
   Blocker re-verified at head, not carried forward: `pnpm check:query-projections` -> **exit 0**, 3,575 files,
