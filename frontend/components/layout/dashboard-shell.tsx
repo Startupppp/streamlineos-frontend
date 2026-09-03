@@ -17,7 +17,7 @@ import { AppLoadingScreen } from "@/components/ui/app-loading-screen";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { AskOsProvider } from "@/components/assistant/ask-os-provider";
-import { CommandPaletteProvider } from "@/features/command-palette";
+import { CommandPaletteProvider } from "@/components/command-palette";
 import { getChatMobileContentPaddingClassName } from "./mobile/chat-mobile-chrome-layout";
 import { MobileModuleBottomNav } from "./mobile/mobile-module-bottom-nav";
 import { MobileShellFab } from "./mobile/mobile-shell-fab";
@@ -66,12 +66,14 @@ interface DashboardShellProps {
   userId: string;
   defaultCollapsed: boolean;
   children: React.ReactNode;
+  createTicketDialog?: React.ReactNode;
 }
 
 export function DashboardShell({
   userId,
   defaultCollapsed,
   children,
+  createTicketDialog,
 }: DashboardShellProps) {
   const pathname = usePathname();
   const route = pathname ?? "";
@@ -199,7 +201,7 @@ export function DashboardShell({
         Skip to content
       </Link>
 
-      <CommandPaletteProvider>
+      <CommandPaletteProvider createTicketDialog={createTicketDialog}>
         <AskOsProvider>
           <CommandPalette />
           <TrialBanner />

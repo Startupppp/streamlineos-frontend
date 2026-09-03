@@ -33,7 +33,13 @@ import { fileURLToPath } from "node:url";
 
 const REAL_ROOT = fileURLToPath(new URL("..", import.meta.url));
 
-const BASELINE_SHARED_IMPORTS_FEATURE = 19;
+// 19 -> 3 on 2026-09-03. These 16 were FIXED, not re-counted: nine modules moved
+// to the tree that actually owns them, and the command palette's Build create-ticket
+// dialog became a slot the app layout fills. The three that remain are lazy feature
+// widgets the shell composes -- the notification bell, the chat mobile bottom nav and
+// the Build project nav tree -- each of which needs runtime values the shell owns, so
+// a ReactNode slot alone does not invert them. See reports/35c-import-direction.md.
+const BASELINE_SHARED_IMPORTS_FEATURE = 3;
 // 194, re-measured 2026-09-02 immediately after test files left the corpus
 // (222 with them, 194 without). NOT 210 — see the header.
 // Tightened 194 -> 182 on 2026-09-03. These 12 were NOT fixed: deduplicating
@@ -42,7 +48,11 @@ const BASELINE_SHARED_IMPORTS_FEATURE = 19;
 // value anyway, because leaving it at 194 would leave 12 slots of slack for a
 // real future regression to hide in -- which is the one thing a ratchet exists
 // to prevent.
-const BASELINE_CROSS_FEATURE = 182;
+// Tightened 182 -> 177 on 2026-09-03. Five of these were fixed by the same moves:
+// user-invite-roles left features/users for lib/constants (3 edges), the command
+// palette left features/ for components/ (1), and the chat mobile chrome geometry
+// left features/chat for components/layout/mobile (1).
+const BASELINE_CROSS_FEATURE = 177;
 
 const EXCLUDED_DIRS = new Set(["node_modules", ".next", "feedbucket-widget", ".git"]);
 

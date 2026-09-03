@@ -6,10 +6,10 @@ import {
 } from "../hooks/use-command-palette";
 import { useKeyboardShortcuts } from "../hooks/use-keyboard-shortcuts";
 import { ShortcutsHelpDialog } from "./shortcuts-help-dialog";
-import { GlobalCreateTicketDialog } from "./global-create-ticket-dialog";
 
 interface Props {
   children: React.ReactNode;
+  createTicketDialog?: React.ReactNode;
 }
 
 function KeyboardShortcutsRegistrar() {
@@ -17,14 +17,14 @@ function KeyboardShortcutsRegistrar() {
   return null;
 }
 
-export function CommandPaletteProvider({ children }: Props) {
+export function CommandPaletteProvider({ children, createTicketDialog }: Props) {
   const state = useCommandPaletteState();
 
   return (
     <CommandPaletteContext.Provider value={state}>
       <KeyboardShortcutsRegistrar />
       <ShortcutsHelpDialog />
-      <GlobalCreateTicketDialog />
+      {createTicketDialog}
       {children}
     </CommandPaletteContext.Provider>
   );

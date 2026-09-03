@@ -8,6 +8,7 @@ import { requireSession } from "../../lib/rbac/require-permission";
 import { getServerAccess } from "../../lib/rbac/get-server-access";
 import { prefetchAccess } from "../../lib/prefetch/access";
 import { DashboardShell } from "../../components/layout/dashboard-shell";
+import { GlobalCreateTicketDialog } from "../../features/build/tickets/global-create-ticket-dialog";
 import { AppThemeScript } from "../../components/theme/app-theme-script";
 import { AppThemeProvider } from "../../components/theme/app-theme-provider";
 import { FeedbucketEmbed } from "../../components/feedbucket/feedbucket-embed";
@@ -51,6 +52,7 @@ export default async function DashboardLayout({
         <DashboardShell
           userId={session.user.id}
           defaultCollapsed={defaultCollapsed}
+          createTicketDialog={<GlobalCreateTicketDialog />}
         >
           {children}
         </DashboardShell>

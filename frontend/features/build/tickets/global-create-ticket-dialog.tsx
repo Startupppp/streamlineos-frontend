@@ -2,11 +2,11 @@
 
 import { useCallback } from "react";
 import dynamic from "next/dynamic";
-import { useCommandPalette } from "../hooks/use-command-palette";
+import { useCommandPalette } from "@/components/command-palette/hooks/use-command-palette";
 
 const CreateTicketDialogDynamic = dynamic(
   () =>
-    import("@/features/build/tickets/create-ticket-dialog").then(
+    import("./create-ticket-dialog").then(
       (m) => m.CreateTicketDialog,
     ),
   { ssr: false },

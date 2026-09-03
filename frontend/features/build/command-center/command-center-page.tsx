@@ -15,7 +15,7 @@ import {
   useAllWork,
   useInfiniteAllWork,
 } from "@/hooks/api/build/all-work";
-import { useCommandPalette } from "@/features/command-palette/hooks/use-command-palette";
+import { useCommandPalette } from "@/components/command-palette/hooks/use-command-palette";
 import { ProjectCreateWizard } from "@/features/build/project-create/project-create-wizard";
 import { QuickCreateMenu, PinnedNav } from "./command-center-actions";
 import {

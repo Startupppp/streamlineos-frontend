@@ -124,7 +124,7 @@ jest.mock("@/components/assistant/ask-os-provider", () => ({
   AskOsProvider: ({ children }: PropsWithChildren) => <>{children}</>,
 }));
 
-jest.mock("@/features/command-palette", () => ({
+jest.mock("@/components/command-palette", () => ({
   CommandPaletteProvider: ({ children }: PropsWithChildren) => <>{children}</>,
 }));
 

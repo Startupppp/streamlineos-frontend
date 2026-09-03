@@ -9,7 +9,7 @@ import {
 } from "@animateicons/react/lucide";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { useAskOs } from "@/components/assistant/ask-os-context";
-import { useCommandPalette } from "@/features/command-palette";
+import { useCommandPalette } from "@/components/command-palette";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
   Drawer,

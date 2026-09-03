@@ -38,11 +38,11 @@ import {
 } from "./sidebar/sidebar-nav-items";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import { cn } from "@/lib/utils";
-import { useCommandPalette } from "@/features/command-palette";
+import { useCommandPalette } from "@/components/command-palette";
 import {
   useGlobalSearch,
   type GlobalSearchResult,
-} from "@/features/command-palette/hooks/use-global-search";
+} from "@/components/command-palette/hooks/use-global-search";
 
 const ENTITY_ICONS = {
   lead: Contact2,
