@@ -18,16 +18,42 @@ import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
 import { DeferredDashboardContent } from "./deferred-dashboard-content";
 import { HomeSectionBoundary } from "./home-section-boundary";
 import { HomeWidgetGrid } from "./home-widget-grid";
-import { SprintCard } from "@/features/dashboard/sprint-card";
-import { TeamCard } from "@/features/dashboard/team-card";
-import {
-  MyIssuesCard,
-  type DashboardTicket,
-} from "@/features/dashboard/my-issues-card";
-import { RecentProjectsCard } from "@/features/dashboard/recent-projects-card";
-import { RecentActivityCard } from "@/features/dashboard/recent-activity-card";
-import { PublicDocumentsCard } from "@/features/dashboard/public-documents-card";
+import type { DashboardTicket } from "@/features/dashboard/my-issues-card";
 import type { DashboardAccess } from "@/features/dashboard/use-dashboard-access";
+
+const SprintCard = dynamic(
+  () => import("@/features/dashboard/sprint-card").then((m) => ({ default: m.SprintCard })),
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+);
+const TeamCard = dynamic(
+  () => import("@/features/dashboard/team-card").then((m) => ({ default: m.TeamCard })),
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+);
+const MyIssuesCard = dynamic(
+  () => import("@/features/dashboard/my-issues-card").then((m) => ({ default: m.MyIssuesCard })),
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+);
+const RecentProjectsCard = dynamic(
+  () =>
+    import("@/features/dashboard/recent-projects-card").then((m) => ({
+      default: m.RecentProjectsCard,
+    })),
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+);
+const RecentActivityCard = dynamic(
+  () =>
+    import("@/features/dashboard/recent-activity-card").then((m) => ({
+      default: m.RecentActivityCard,
+    })),
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+);
+const PublicDocumentsCard = dynamic(
+  () =>
+    import("@/features/dashboard/public-documents-card").then((m) => ({
+      default: m.PublicDocumentsCard,
+    })),
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+);
 
 const LeavesTodayWidget = dynamic(
   () =>

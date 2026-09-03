@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useCallback, useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import {
@@ -33,7 +34,13 @@ import {
   useMissingOnboardingDocsCount,
 } from "@/hooks/api/hr/documents";
 import { useSignDashboard } from "@/hooks/api/sign/reports";
-import { UploadDocSheet } from "@/features/hr/document-review/upload-doc-sheet";
+const UploadDocSheet = dynamic(
+  () =>
+    import("@/features/hr/document-review/upload-doc-sheet").then((m) => ({
+      default: m.UploadDocSheet,
+    })),
+  { ssr: false },
+);
 import {
   useMyPendingDocuments,
   type PendingDocumentReason,
@@ -175,8 +182,12 @@ function MyPendingUploadsSection() {
   const userId = session?.user?.id;
   const { pending, count, isLoading } = useMyPendingDocuments();
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [isUploadMounted, setIsUploadMounted] = useState(false);
 
-  const handleOpenUpload = useCallback(() => setIsUploadOpen(true), []);
+  const handleOpenUpload = useCallback(() => {
+    setIsUploadMounted(true);
+    setIsUploadOpen(true);
+  }, []);
 
   if (isLoading || count === 0 || !userId) return null;
 
@@ -219,13 +230,15 @@ function MyPendingUploadsSection() {
           )}
         </ul>
       </div>
-      <UploadDocSheet
-        open={isUploadOpen}
-        onOpenChange={setIsUploadOpen}
-        userId={userId}
-        userName={null}
-        selfUpload
-      />
+      {isUploadMounted && (
+        <UploadDocSheet
+          open={isUploadOpen}
+          onOpenChange={setIsUploadOpen}
+          userId={userId}
+          userName={null}
+          selfUpload
+        />
+      )}
     </>
   );
 }
