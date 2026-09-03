@@ -35,6 +35,8 @@
     "check:command-catalog:self-test": "node scripts/check-command-catalog.mjs --self-test",
     "check:gated-reads": "node scripts/check-gated-reads.mjs",
     "check:gated-reads:self-test": "node scripts/check-gated-reads.mjs --self-test",
+    "check:response-contracts": "node scripts/check-response-contracts.mjs",
+    "check:response-contracts:self-test": "node scripts/check-response-contracts.mjs --self-test",
     "check:dead-code": "node scripts/check-dead-code.mjs",
     "check:dead-code:self-test": "node scripts/check-dead-code.mjs --self-test",
     "check:type-assertions": "node scripts/check-type-assertions.mjs",
