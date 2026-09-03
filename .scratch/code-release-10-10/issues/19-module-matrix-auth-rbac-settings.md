@@ -9,7 +9,10 @@
 its two PARTIALs**: A-13, the Build sidebar gate, whose blocker really had dissolved with A-12 — verified, flipped,
 gate-proved (`check:route-access-contract` 203 → **204** keys, exit 0), commit `3c45e63bb` (frontend).
 Box 6 itself stays OPEN: **9 backend routes still sit at a global `/settings/*` path** (7 automations, 2 email
-templates). Two substantive corrections landed instead of a tick — see the box. Report:
+templates). Two substantive corrections and one new defect landed instead of a tick: the census's email-templates
+verdict was wrong, R-12's recommended option is blocked on a measured prerequisite, and **6 of the 10 routes the census
+calls `SUNSET-ALIAS` are dual-homed rather than moved** — the frontend never left the alias, and two of the three
+callers cannot be repointed by a URL edit. See the box. Report:
 `reports/19e-settings-placement-a13-and-r12-prerequisite.md`. Pass 7 status follows.
 
 **Status (pass 7):** pass 7 — **5 of 7 closed, 2 PARTIAL, unchanged.** Pass 7 did not work the boxes: it worked the
@@ -227,6 +230,26 @@ Pass 5 status follows.
     **PARTIAL stands.** Box 6 needs 9 routes moved off `/settings/*`. R-12 (7) is a product decision now carrying a
     measured, assignable prerequisite; the email pair (2) is a platform-administration decision. Full detail:
     `reports/19e-settings-placement-a13-and-r12-prerequisite.md`.
+  - **PASS 8, SECOND FINDING — the moves passes 3 and 4 recorded as done are NOT done, and cannot be finished by a URL
+    edit.** The box's own standard is "a move is only done when every inbound link is updated", so I grepped both repos.
+    **Three of the four moved surfaces still have every frontend caller on the sunset alias**, and `SETTINGS_ALIAS_SUNSET`
+    is **`2027-03-31`** — the date they break. The census marks 10 routes `SUNSET-ALIAS`, i.e. moved; **6 of those 10 are
+    dual-homed, not moved.** Only the CRM custom-fields hook was actually repointed.
+    `hooks/api/git-integration.ts:61,71,81,91` → `/settings/integrations/git[…]`;
+    `hooks/api/ai.ts:264` → `/settings/ai-usage`; `hooks/api/users/bulk-mutations.ts:65` → `POST /settings/users/:userId/role`.
+    **Two of the three are not URL swaps.** The git alias is a **shape adapter, not a redirect**:
+    `settings-deprecated-routes.controller.ts:90-95` calls the canonical service with `limit: 100` and does
+    `return page.data`, unwrapping the keyset page to a bare array, while `GET /integrations/git/connections` returns the
+    page. The hook declares `apiClient.get<GitConnection[]>` — a **cast, not a validation** — so repointing the URL alone
+    typechecks clean in both repos and renders a broken list. That is AGENT-BRIEF rule 11's exact defect class, and it is
+    why I did not repoint it; the migration must adopt the cursor in the same change. (Measured in passing: an org with
+    more than **100** git connections silently sees 100 through the alias today.) The user-role one is not a swap either:
+    `POST /settings/users/:userId/role` on `settings:rbac:manage` against `PATCH /organization/members/:memberId` on
+    `settings:organization:manage` — different verb, **different path identity** (the caller holds a `userId`, the
+    canonical wants a `memberId` it must first resolve) and a different key, so the set of principals who can do it
+    changes. Only `/settings/ai-usage` → `/ai/usage` is a clean swap (the alias delegates straight through on the same
+    `ai:usage:view`). **Not fixed: `hooks/api/**` is ticket 28's territory and two of the three need the owning screen
+    re-tested, not a string replaced. Owner: whoever holds `frontend/hooks/`, before 2027-03-31.**
   - PARTIAL: 9 backend routes remain at a global `/settings/*` path. **R-12** (7 automations routes) is a product
     decision on the rung, and now also blocked on a mechanical, cross-territory prerequisite — the trigger->module map
     is 33 of 48 and fails open to `hr`, with 4 entries explicitly wrong, so gating rows on it would be worse than the

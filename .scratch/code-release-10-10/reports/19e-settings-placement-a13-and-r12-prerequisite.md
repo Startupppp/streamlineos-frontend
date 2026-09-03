@@ -204,7 +204,53 @@ Commit **`05e9ec60`** (`streamlineos-backend`), 1 file.
   (`AUTOMATION_ACTION_RUNNER`). It is **not** a duplicate of `crmAutomationRules` /
   `/hr/automations`, which are separate tables. 19b's premise survives.
 
-## 5. Cross-territory findings, not fixed
+## 5. NEW — the moves passes 3 and 4 recorded as done are NOT done, and cannot be finished by a URL edit
+
+The orchestrator's instruction for this box is explicit: *"A move is only done when every inbound
+link, nav entry and redirect is updated - grep for the old path across both repos."* I did, and
+**three of the four moved surfaces still have every frontend caller on the sunset alias.** The
+census marks 10 routes `SUNSET-ALIAS`, i.e. "moved"; by the box's own standard **6 of those 10 are
+dual-homed, not moved**. `SETTINGS_ALIAS_SUNSET` is **`2027-03-31`** — that is the date these break.
+
+| caller | still calls | canonical | safe URL swap? |
+|---|---|---|---|
+| `hooks/api/git-integration.ts:61,71,81,91` | `/settings/integrations/git[…]` | `/integrations/git/connections[…]` | **NO — shape** |
+| `hooks/api/ai.ts:264` | `/settings/ai-usage` | `/ai/usage` | **yes** |
+| `hooks/api/users/bulk-mutations.ts:65` | `POST /settings/users/:userId/role` | `PATCH /organization/members/:memberId` | **NO — identity + key** |
+| `hooks/api/crm/custom-fields.ts` | *(already repointed)* | `/crm/settings/custom-fields` | done |
+
+**Git connections — the alias is not a redirect, it is a shape adapter.** `settings-deprecated-routes.controller.ts:90-95`:
+
+```ts
+const page = await this.gitConnections.listConnections(u.orgId, {
+  limit: GIT_CONNECTION_ALIAS_PAGE_SIZE,          // 100
+});
+return page.data;                                  // unwraps the page to a bare array
+```
+
+The canonical route returns the keyset page. The hook declares `apiClient.get<GitConnection[]>`,
+and `apiClient.get<T>` is a **cast, not a validation** — so swapping the URL alone typechecks
+clean in both repos and renders a broken list. This is AGENT-BRIEF rule 11's exact defect class,
+and it is why I did not "just" repoint it. The migration has to adopt the cursor at the same time.
+Side note measured on the way: an organisation with more than **100** git connections silently
+sees 100 through the alias today.
+
+**User role — not a swap at all.** `POST /settings/users/:userId/role` (`settings:rbac:manage`)
+against `PATCH /organization/members/:memberId` (`settings:organization:manage`): different verb,
+**different path identity** — the caller holds a `userId` and the canonical route wants a
+`memberId` it would first have to resolve — and a **different permission key**, so the set of
+principals who can perform it changes. That is a migration with a product consequence, not an
+edit.
+
+**AI usage is the one clean swap**: the alias delegates straight through
+(`return this.aiUsage.getOrgUsage(u)`) on the same `ai:usage:view` key.
+
+**Not fixed here** — `hooks/api/**` is ticket 28's territory (`ORCHESTRATION.md:33`), and two of
+the three need the owning screen re-tested, not a string replaced. Doing only the easy one would
+leave the finding half-actioned in a way that reads as done. **Owner: whoever holds
+`frontend/hooks/`, before 2027-03-31.**
+
+## 6. Cross-territory findings, not fixed
 
 1. **`app/(authenticated)/accounting/settings/automations/page.tsx` has no permission gate** —
    only `await requireSession()`, where its sibling `/support/settings/automations` calls
@@ -224,7 +270,7 @@ Commit **`05e9ec60`** (`streamlineos-backend`), 1 file.
    *(I initially concluded these triggers never fire; that was wrong and the non-literal call
    sites are the correction.)*
 
-## 6. Honest gaps
+## 7. Honest gaps
 
 - **Box 6 is not closed and I did not close it.** 9 routes remain at a global `/settings/*`
   path. R-12 (7 routes) is a product decision now carrying a measured prerequisite; the email
