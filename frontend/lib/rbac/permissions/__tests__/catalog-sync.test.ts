@@ -1,7 +1,10 @@
 import * as fs from "fs";
 import * as path from "path";
 import { PERMISSIONS } from "../roles";
-import { MODULE_ACCESS_PERMISSIONS } from "../module-access";
+import {
+  ACCESS_MANAGED_MODULES,
+  MODULE_ACCESS_PERMISSIONS,
+} from "../module-access";
 import {
   PERMISSION_CATALOG_PATH,
   backendPermissionNames,
@@ -44,25 +47,20 @@ describe("permission catalog sync", () => {
   beforeAll(() => {
     try {
       /**
-       * The comparison set is the DECLARED backend names plus the FRONTEND's own
-       * module-access list, which is what this suite has always compared. The
-       * vendored artifact folds the generated `<module>:access:view|manage` keys
-       * in for every delegable module, so they are subtracted here; substituting
-       * them would silently widen this suite into a second, different assertion.
-       * Four delegable modules are absent from ACCESS_MANAGED_MODULES and
-       * feedbucket's two access keys are absent from the PermissionKey union —
-       * both are real drift, reported rather than absorbed here.
+       * The comparison set is the vendored backend catalogue verbatim, generated
+       * `<module>:access:view|manage` keys included.
+       *
+       * It used to subtract those keys on both sides and substitute the
+       * frontend's own `MODULE_ACCESS_PERMISSIONS` for them. That subtraction was
+       * load-bearing: `ACCESS_MANAGED_MODULES` listed 10 of the backend's 14
+       * delegable modules and `feedbucket:access:view|manage` were absent from
+       * the `PermissionKey` union, and cancelling the generated keys out of both
+       * sides is exactly what stopped the phantom, union-coverage and ghost
+       * assertions below from seeing any of it. The list is now complete, so the
+       * subtraction is gone and those three assertions cover the module-access
+       * half of the catalogue for the first time.
        */
-      const generated = new Set(
-        delegableModuleIds().flatMap((moduleId) => [
-          `${moduleId}:access:view`,
-          `${moduleId}:access:manage`,
-        ]),
-      );
-      backendNames = new Set([
-        ...[...backendPermissionNames()].filter((name) => !generated.has(name)),
-        ...MODULE_ACCESS_PERMISSIONS.map((permission) => permission.name),
-      ]);
+      backendNames = backendPermissionNames();
       backendAvailable = backendNames.size > 400;
     } catch {
       backendNames = new Set();
@@ -76,6 +74,35 @@ describe("permission catalog sync", () => {
       artifact: PERMISSION_CATALOG_PATH,
     });
     expect(fs.existsSync(PERMISSION_CATALOG_PATH)).toBe(true);
+  });
+
+  /**
+   * The module-access half of the catalogue is GENERATED from a list of module
+   * ids rather than declared key by key, so a missing id silently removes two
+   * real permissions instead of failing to compile. Asserting the list itself
+   * against the vendored `delegableModuleIds()` is the only place that drift is
+   * visible: it was 10 against the backend's 14 and every other assertion in
+   * this file was arranged around it.
+   */
+  it("ACCESS_MANAGED_MODULES is exactly the backend's delegable modules", () => {
+    if (!backendAvailable) return;
+    expect([...ACCESS_MANAGED_MODULES].sort()).toEqual(
+      [...delegableModuleIds()].sort(),
+    );
+  });
+
+  it("generates both access keys for every delegable module", () => {
+    if (!backendAvailable) return;
+    const generated = new Set(
+      MODULE_ACCESS_PERMISSIONS.map((permission) => permission.name),
+    );
+    const missing = delegableModuleIds()
+      .flatMap((moduleId) => [
+        `${moduleId}:access:view`,
+        `${moduleId}:access:manage`,
+      ])
+      .filter((name) => !generated.has(name));
+    expect(missing).toEqual([]);
   });
 
   it("has no duplicate permission names in the frontend catalog", () => {
@@ -107,7 +134,12 @@ describe("permission catalog sync", () => {
    * The reverse of the phantom check above, and the direction that was unguarded:
    * a key in the union with no backing catalog entry type-checks everywhere and
    * makes `useCan` false forever, silently hiding the control it gates.
-   * `*:access:*` keys are generated per managed module rather than declared.
+   *
+   * `*:access:*` keys used to be exempted here, which is why nothing noticed
+   * that the union carried thirteen modules' access keys against the backend's
+   * fourteen. They are ordinary catalogue entries in the vendored artifact, so
+   * the exemption is gone and a `kb:access:view` — a key for a module with no
+   * ladder — now fails instead of passing.
    */
   it("has no union-only ghosts — every PermissionKey exists in the backend catalog", () => {
     if (!backendAvailable) return;
@@ -116,9 +148,7 @@ describe("permission catalog sync", () => {
       // non-key unions such as baselineScope's "own" | "all". A permission key
       // always contains a colon.
       .filter((name) => name.includes(":"))
-      .filter(
-        (name) => !backendNames.has(name) && !/^[a-z0-9-]+:access:(view|manage)$/.test(name),
-      );
+      .filter((name) => !backendNames.has(name));
     expect(ghosts).toEqual([]);
   });
 

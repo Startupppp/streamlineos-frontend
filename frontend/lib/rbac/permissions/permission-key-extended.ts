@@ -155,6 +155,8 @@ export type ExtendedPermissionKey =
   | "blog:access:manage"
   | "directory:access:view"
   | "directory:access:manage"
+  | "feedbucket:access:view"
+  | "feedbucket:access:manage"
   | "ownership:modules:view"
   | "ownership:modules:manage"
   | "ownership:org:transfer"
