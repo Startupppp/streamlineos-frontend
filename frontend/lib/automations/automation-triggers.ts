@@ -139,7 +139,7 @@ export function getModuleForTrigger(trigger: AutomationTrigger): TriggerModule {
 }
 
 export function automationTriggersForModule(
-  module: TriggerModule,
+  owner: TriggerModule,
 ): readonly AutomationTrigger[] {
-  return AUTOMATION_TRIGGERS.filter((trigger) => AUTOMATION_TRIGGER_MODULE[trigger] === module);
+  return AUTOMATION_TRIGGERS.filter((trigger) => AUTOMATION_TRIGGER_MODULE[trigger] === owner);
 }

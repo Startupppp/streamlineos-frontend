@@ -100,8 +100,8 @@ describe("automation trigger mirror", () => {
 
   it("partitions the vocabulary — no module is empty and none is double-counted", () => {
     let total = 0;
-    for (const module of TRIGGER_MODULES) {
-      const owned = automationTriggersForModule(module);
+    for (const triggerModule of TRIGGER_MODULES) {
+      const owned = automationTriggersForModule(triggerModule);
       expect(owned.length).toBeGreaterThan(0);
       total += owned.length;
     }
@@ -115,8 +115,8 @@ describe("automation trigger mirror", () => {
   });
 
   it("shows each module screen the whole of its own surface", () => {
-    const onScreen = (module: string) =>
-      TRIGGER_META.filter((meta) => meta.module === module).map((meta) => meta.value).sort();
+    const onScreen = (owner: string) =>
+      TRIGGER_META.filter((meta) => meta.module === owner).map((meta) => meta.value).sort();
 
     expect(onScreen("support")).toEqual([...automationTriggersForModule("support")].sort());
     expect(onScreen("finance")).toEqual([...automationTriggersForModule("finance")].sort());
