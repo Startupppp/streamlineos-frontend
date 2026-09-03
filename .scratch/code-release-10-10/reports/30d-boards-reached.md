@@ -132,3 +132,34 @@ stale `.next`), backend on :1501 against **`scratch_t30_browser`** (confirmed vi
 org `aaaaaaaa-1111-0000-0000-000000000001`, session `335d656c-…`. The repo `.env`'s 36-character
 `NEXTAUTH_SECRET` does **not** match the running server (a cookie minted with it 307s to `/signin`);
 the 64-character process-only secret from the scratchpad does, and `/dashboard` answered **200**.
+
+## 8 · What changed on disk, and the gates
+
+**`features/build/views/kanban-ticket-card.tsx` + `features/build/views/kanban-virtual-ticket-list.tsx`.**
+The card's outer `div` carried a drag-aware `onMouseDown`/`onClick` that no keyboard could reach, and it
+could not take `CARD_ACTIVATOR_CLASS`: a stretched `::after` belongs to the title `<button>`, and
+`@hello-pangea/dnd` refuses to start a drag whose mousedown target is an interactive element, so the
+stretch would have killed drag-anywhere. The click moved **up** onto the element dnd already makes
+focusable — the `Draggable` wrapper, which carries `provided.dragHandleProps` (`tabIndex 0`,
+`role="button"`). It now takes the drag-aware mouse handlers plus a real `onKeyDown`: **Enter opens the
+ticket, Space is left to dnd's keyboard lift**, guarded on `event.target === event.currentTarget` so Enter
+on the nested title button or an inline field does not double-activate, and labelled `aria-label={ticket.title}`
+so the handle is a named button rather than an anonymous one. Before this, a keyboard user could tab to
+every card on the board and had no way to open one.
+
+The card no longer needs `dragStartRef`, so the prop was dropped from its interface and from the drag
+clone.
+
+| Command | Exit | Number |
+|---|---|---|
+| `node scripts/browser-journeys.mjs --base-url=http://localhost:3000 --cookie-file=<minted> --widths=375,768,1280 --settle-ms=6000` | **1** | **63 of 63 planned steps** · 39 findings (36 contrast, 3 no-main-landmark) · **0 overflow** · **0 never-settled** · **0 h1 misses** · 0 unauthenticated |
+| `node scripts/browser-journeys.mjs --self-test` | **0** | **39 passed**, six bite proofs — unchanged, no refusal relaxed |
+| `npx jest --runInBand --testPathPattern="keyboard-reachability.contract"` | **0** | **15/15** · 633 click targets / 3,647 files / **9 unreachable** (was 10); denominator 633 -> 633 |
+| board containment probe, `/build/workspaces/<w>/20` at 375/768/1280 | — | kanban container `sw 1496` vs `cw 343/448/944`, right edge 359/744/1248 inside 375/768/1280; 5 columns, 4 cards |
+| same probe re-run after the card change | — | unchanged: 5 columns, 4 cards, `1496/944`, right 1248 — the board still compiles and renders |
+
+**The `n of m planned` refusal was not relaxed to reach 63 of 63.** No step was removed and no denominator
+was shrunk; `stepsIncomplete` still exits 1. The number moved because the product was fixed.
+
+**Not run:** `pnpm lint` repo-wide, `next build`, every backend gate, and any rendered-component suite for
+the new keyboard handler (the contract scan and the live board probe are the proof offered).
