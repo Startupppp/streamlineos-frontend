@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { memo, useCallback, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import type { MouseEvent, KeyboardEvent, ChangeEvent } from "react";
 import {
   Layers,
@@ -83,7 +83,7 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [newStoryTitle, setNewStoryTitle] = useState("");
   const [linkOpen, setLinkOpen] = useState(false);
-  const editTriggerRef = useRef<HTMLButtonElement>(null);
+  const [editOpen, setEditOpen] = useState(false);
   const { iconRef: actionsIconRef, hoverHandlers: actionsHoverHandlers } = useAnimatedIcon();
   const { iconRef: expandIconRef, hoverHandlers: expandHoverHandlers } = useAnimatedIcon();
   const { iconRef: addIconRef, hoverHandlers: addHoverHandlers } = useAnimatedIcon();
@@ -155,7 +155,7 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
   }, [newStoryTitle, handleEpicCreateStory]);
 
   const handleEditMenuSelect = useCallback(() => {
-    editTriggerRef.current?.click();
+    setEditOpen(true);
   }, []);
 
   const handleDeleteMenuSelect = useCallback(() => {
@@ -216,11 +216,8 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
                 <EditEpicDialog
                   epic={epic}
                   projectId={projectId}
-                  trigger={
-                    <button ref={editTriggerRef} className="sr-only" aria-hidden tabIndex={-1}>
-                      Edit
-                    </button>
-                  }
+                  open={editOpen}
+                  onOpenChange={setEditOpen}
                 />
               )}
               {(canUpdate || canDeleteEpic) && <DropdownMenu>

@@ -59,6 +59,15 @@ interface EditEpicDialogProps {
   };
   projectId: number;
   trigger?: ReactNode;
+  /**
+   * Controlled mode, for a caller that opens this from a menu item. Without it
+   * the caller has to render a trigger, and a caller with no visible trigger to
+   * offer ends up rendering a hidden proxy button — which the sheet then
+   * restores focus to on close, stranding a keyboard user on an element that is
+   * not there.
+   */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 function toPriority(value: string | null | undefined): EditEpicInput["priority"] {
@@ -76,9 +85,22 @@ const STATUS_LABEL: Record<EditEpicInput["status"], string> = {
   DONE: "Done",
 };
 
-export function EditEpicDialog({ epic, projectId, trigger }: EditEpicDialogProps) {
-  const [open, setOpen] = useState(false);
+export function EditEpicDialog({
+  epic,
+  projectId,
+  trigger,
+  open: controlledOpen,
+  onOpenChange,
+}: EditEpicDialogProps) {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const controlled = controlledOpen !== undefined;
+  const open = controlled ? controlledOpen : uncontrolledOpen;
   const queryClient = useQueryClient();
+
+  const setOpen = (next: boolean) => {
+    if (!controlled) setUncontrolledOpen(next);
+    onOpenChange?.(next);
+  };
 
   const handleOpen = () => setOpen(true);
 
@@ -110,7 +132,7 @@ export function EditEpicDialog({ epic, projectId, trigger }: EditEpicDialogProps
 
   return (
     <>
-      {trigger ? (
+      {controlled ? null : trigger ? (
         <span {...activationProps(handleOpen)}>
           {trigger}
         </span>

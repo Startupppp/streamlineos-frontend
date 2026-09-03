@@ -5,6 +5,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { XIcon } from "lucide-react";
 
 import { cn } from "../../lib/utils";
+import { useRestoreFocusOnClose } from "../../lib/restore-focus-on-close";
 
 function Dialog({
   ...props
@@ -50,15 +51,32 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  onOpenAutoFocus,
+  onCloseAutoFocus,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean;
 }) {
+  const restore = useRestoreFocusOnClose();
+
+  function handleOpenAutoFocus(event: Event): void {
+    restore.onOpenAutoFocus(event);
+    onOpenAutoFocus?.(event);
+  }
+
+  function handleCloseAutoFocus(event: Event): void {
+    onCloseAutoFocus?.(event);
+    if (event.defaultPrevented) return;
+    restore.onCloseAutoFocus(event);
+  }
+
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay />
       <DialogPrimitive.Content
         data-slot="dialog-content"
+        onOpenAutoFocus={handleOpenAutoFocus}
+        onCloseAutoFocus={handleCloseAutoFocus}
         className={cn(
           "bg-background fixed z-[100] shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out",
           "inset-x-0 bottom-0 flex w-full flex-col gap-4 overflow-hidden rounded-t-2xl border border-b-0 p-6 max-h-[92dvh] max-md:pb-[max(1.5rem,env(safe-area-inset-bottom))]",
