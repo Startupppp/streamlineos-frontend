@@ -54,3 +54,26 @@ not pin it into the authenticated shell — the decision is who replaces it acro
     script runs and measures), and not on tool capability.
 - [x] Public landing visuals and animations remain unchanged; if a frozen landing animation prevents an agreed target, that is escalated rather than worked around.
     Nothing under `app/(public)/**`, `features/marketing/**` or any landing animation was touched this session or last. The landing renders in 9–13 ms TTFB and is not on the authenticated critical path, so no frozen animation prevents any target — every LCP/FCP/INP/CLS budget is now met with the animations exactly as they are. ESCALATED rather than worked around: those animations pin framer-motion into every authenticated first load, which is the single largest identifiable contributor to the open JS budget in box 6; dropping it is a product decision about the landing, not a refactor.
+
+
+---
+
+## Session S8 (2026-09-03) — NOT MEASURED THIS PASS
+
+A production build was started (`NEXTAUTH_SECRET=<44-char local placeholder> npx next build`, through
+`heavy.sh 2`) precisely to re-measure `measuredTotalBytes` and `measuredScriptBytes` at head and to settle the
+`org-switcher.tsx` double-import question. It reached "Running TypeScript …" and was **killed at ~15% battery
+before it produced a `BUILD_ID`**. `frontend/.next` is therefore **incomplete at the end of this session** — the
+previous build (`4LuMJdkchN7tMbNJc04IH`, 2026-09-02 23:23) was overwritten and the new one never finished. The
+next agent to need a build must run one; do not read `.next` as if it were a finished artifact.
+
+**Nothing in this ticket was measured, ticked or changed this session.** Box 6 stays open with the numbers and the
+framer-motion correction already recorded above. Two items are left for whoever picks it up:
+1. `measuredTotalBytes` is governed (`defaults.maxTotalBytes` = 1 048 576) and every route is inside it, the
+   closest being `/chat` at 989 423 B (94%). It is not a vacuous budget, but it is a loose one and the margin is
+   thinner than the recorded JS breaches suggest.
+2. **Unsettled, and deliberately not guessed:** `components/layout/header/org-switcher.tsx` imports
+   `@/features/settings/organization/leave-organization-control` twice — statically at line 25 for
+   `LeaveOrganizationMenuItem`, and through `dynamic(() => import(...))` at line 28 for `LeaveOrganizationDialog`.
+   Whether the `dynamic()` defers anything once the module is already in the static graph is a webpack question
+   that only a finished build answers. Not measured. (Both files are outside this session's territory anyway.)

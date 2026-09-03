@@ -200,3 +200,28 @@ cannot carry a signal.
   `check:query-signal` exit 0 (1054 queryFn blocks, 420 files, 0 violations) · `check:empty-states`,
   `check:effect-fetches`, `check:cycles`, `check:over-300` (519/519), `check:colors` all exit 0 ·
   `jest --testPathPattern="features/(hr|build|chat)"` -> 37 suites / 234 tests exit 0.
+
+
+---
+
+## Session S8 addendum (2026-09-03) — the calendar meeting prep surface
+
+**Box 3 (cancellation reaches the backend): the streaming half gained its third live route.**
+`features/calendar/meeting-prep-panel.tsx` called the buffered `useMeetingPrep`, so its surface had no Stop at
+all — the user watched a skeleton for the whole answer. It now runs on `POST /ai/meetings/prep/stream` through
+`useAiTextStream().run` + `streamMeetingPrep`, which gives it single-flight, a Stop that aborts the outgoing
+request, and an unmount abort. Partial output is kept on cancel and rendered as structure, not as raw markdown.
+Evidence: `jest --testPathPattern="meeting-prep"` → **exit 0, 2 suites / 21 tests**, driving the real
+`lib/api-client` with a mocked `global.fetch`; three bite proofs in a hermetic tree (1, 3 and 2 failures
+respectively) recorded in ticket 11's S8 addendum.
+
+**Two nine-state gaps this surface had, both closed:** it had no streaming state and no partial-output state, and
+its only failure handling was `toast.error(getErrorMessage(error))` — a 402 and a 503 were the same red toast. It
+now renders through `AiFailureBody`, and a **non-retryable** failure (quota, denied) gets **no dispatch control**:
+the top-up link is the only affordance, because a "Try again" beside it spends a click on a call that cannot
+succeed. A 503 still gets both a retry and the form.
+
+**Box 3 remains PARTIAL.** The residue is the 18 unthreaded AI `mutationFn`s recorded above; the 4 blocked on a
+bare-scalar `TVariables` were NOT threaded this session — see the cross-territory note in report 11b: a union
+`TVariables` (`T | ({ value: T } & AiAbortInput)`) would widen them with **zero** call-site edits, so this is not
+in fact blocked on another territory, but it was not implemented and must not be counted as done.

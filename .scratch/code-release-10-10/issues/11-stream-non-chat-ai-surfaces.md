@@ -4,7 +4,11 @@
 
 **Blocked by:** 09.
 
-**Status:** 6 of 7 boxes closed · box 1 still PARTIAL and now **BLOCKED on two separable things**, re-measured at
+**Status:** 6 of 7 boxes closed · box 1 still PARTIAL. **2026-09-03 (S8): the meeting-prep surface named in the
+P2 finding below is now genuinely converted — `features/calendar/meeting-prep-panel.tsx` opens
+`POST /ai/meetings/prep/stream` and `useMeetingPrep` is deleted.** That closes the last `/stream` route in this
+release that had a real user surface to adopt it; the box stays open on the two things below, neither of which is
+this territory. Earlier status text, re-measured at
 head 2026-09-03: **3 of 10 `/stream` routes reach a user** (generate-jd, survey summarize-responses, meetings prep),
 6 of the remaining 7 have **zero frontend callers even for their buffered sibling** — an unbuilt product surface, a
 product decision — and the 7th is CRM, excluded. The 26 buffered text sites in 17 other modules are another
@@ -266,3 +270,55 @@ Gates run, output read:
 | `check:permission-keys` · `module-gate` · `idempotent-commands` · `mock-surface` · `bounded-contracts` · `compression` · `cache-key-shapes` · `namespace-coverage` · `import-direction` · `kebab-case` · `log-secrets` · `envelope-consistency` · `contract-registry` · `module-di` · `fire-and-forget` · `bodyless-conflicts` | all exit 0 |
 | `pnpm -s check:over-300` | exit 1 — **pre-existing**: 400 files / baseline 394 when S5 started, 402 now; no file changed by S5 crossed 300 (`crm-ai.controller.ts` 321→393 and `hr-recruitment-ai.service.ts` 325→342 were already over) |
 | `pnpm -s check:route-budgets` | exit 1 — **another territory**: `GET /notifications` and `GET /notifications/unread-count` |
+
+
+---
+
+## Session S8 addendum (2026-09-03) — the meeting-prep panel now streams for real
+
+**The "2 callers" this ticket recorded for `meetings prep/stream` were the hook file and its own path string.**
+Grepped at head before touching anything: `streamMeetingPrep` had **zero** callers, and
+`features/calendar/meeting-prep-panel.tsx` — the only surface a user can reach — still called the buffered
+`useMeetingPrep`. So the route reached no user. It does now.
+
+**What changed** (all in this territory):
+- `features/calendar/meeting-prep-stream-parse.ts` — a pure parser that folds the arriving markdown back into the
+  four affordances the panel renders. `agendaStreamPrompt` asks for `## Agenda` / `## Key topics` /
+  `## Suggested duration` / `## Preparation notes`, so the parser is a function of the text received *so far*:
+  called with a prefix it returns that prefix's sections.
+- `features/calendar/meeting-prep-agenda.tsx` — the structured rendering, each branch guarded on its own content
+  rather than on completion, so the four affordances appear as the model reaches them.
+- `features/calendar/meeting-prep-panel.tsx` — a five-state machine (idle · streaming · cancelled · done · failed)
+  with a Stop button, partial output kept on cancel, and `AiFailureBody` for the failure branch.
+- `hooks/api/meetings-ai.ts` — `streamMeetingPrep` gained `onSources`; `useMeetingPrep`, `MeetingPrepResult`,
+  `AgendaOutput` and `MeetingContextSummary` had no remaining caller and are **deleted**. The buffered backend
+  route stays: its product is a Zod-validated record and this release does not stream those.
+- `hooks/api/ai-text-stream.ts` — `onHeaders` (so `x-ai-sources` reaches the surface **before** the first token,
+  which is the whole reason the backend puts citations on headers: a stopped stream keeps them) and `run()`, so a
+  typed per-route transport reuses the same single-flight / stop / unmount-abort machinery instead of copying it.
+
+**Proof.** `npx jest --runInBand --testPathPattern="meeting-prep"` → **exit 0, 2 suites / 21 tests**.
+`meeting-prep-panel-streaming.test.tsx` drives the real panel down through `streamMeetingPrep` → `streamAiText` →
+`authedFetch` with only `global.fetch` mocked. `pnpm type-check` → **exit 0, 0 errors**;
+`npx eslint` on all 7 changed/added files → **exit 0**.
+
+**Three bite proofs, all in a hermetic `git archive HEAD` tree, never the shared working tree** (baseline there:
+21 passed):
+· transport pointed back at the buffered `/ai/meetings/prep` → **1 failed / 9 passed**
+  ("posts to the /stream route and never to the buffered sibling")
+· `signal` dropped from the transport → **3 failed / 7 passed** ("Stop aborts the outgoing request and keeps the
+  partial agenda and its citations", "aborts the stream when the panel unmounts", "does not open a second paid
+  stream while one is running")
+· `onHeaders` dropped from the shared client → **2 failed / 8 passed** ("renders citations from x-ai-sources
+  before the body finishes", "Stop aborts …")
+Live tree verified untouched afterwards: `hooks/api/meetings-ai.ts` sha256 `e93e70ee…`, `ai-text-stream.ts`
+sha256 `b920a55d…`, identical to the restored hermetic copies.
+
+**Three defects the tests found, each fixed:** a bullet marker arriving before its text rendered a topic chip
+reading "-" that then vanished; sources rendered twice (the card's citation row **and** a second Sources block
+carried over from the buffered panel); and a 402 offered "Try again" beside the top-up link — a non-retryable
+failure now gets no dispatch control at all.
+
+**Box 1 still does not close, and the reason is unchanged by this work:** the 6 surface-less `/stream` routes are
+a product decision and the 26 buffered text sites in 17 other modules are another territory. What *has* changed is
+that there is no longer any `/stream` route with a live frontend surface that is not adopted.
