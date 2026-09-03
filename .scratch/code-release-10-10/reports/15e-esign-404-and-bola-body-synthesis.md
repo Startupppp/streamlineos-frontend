@@ -153,9 +153,62 @@ decides, which is the state the sweep needs.
 `BOLA_LIVE_ONLY_FILE` was added so the previous run's bucket can be re-probed as a named list;
 `BOLA_LIVE_ONLY` is a single substring and cannot express "these 468".
 
+### The first run produced a false LEAK, and the cause was my own change
+
+Worth reading before trusting any number below. The first re-probe scored
+`POST /build/:projectId/labels` a **LEAK**: control 201 / cross-tenant 201 / absent 500. It is not
+one. The created row carries the **prober's own** `orgId`; nothing of the source tenant was
+disclosed.
+
+What happened is that a **constant** synthesised body collides with a unique index, and the
+collision lands on the **third** request — the absent-id control, the one `disambiguate()` uses to
+tell a leak from a miss. `build.ticket_labels` carries `uniq_ticket_labels_org_name (org_id, name)`;
+verified in `pg_indexes` and by the two surviving rows, one per org. Order of requests for a
+mutating verb is probe → control → absent, and probe and absent are both sent as the **prober**, so
+the third request re-inserted a name the first had just created, raised 23503/23505 and answered
+500. 201 ≠ 500, so the LEAK could not be demoted to NO-404.
+
+**The bias is systematic and always toward LEAK**, because the cross-tenant probe is the first of
+the three and therefore the one that succeeds. A sweep that reports false P1s is worse than one that
+reports none.
+
+Fixed: each of the three requests now carries its own nonce, applied **only where the schema
+constrains nothing** — an enum, a const, a format or a pattern still wins, so a patterned unique
+column remains a named residual rather than a wrong verdict. With no nonce the output is unchanged,
+so the offline numbers stay reproducible. Four tests pin it. The database was then **recreated from
+the pristine template** and the run restarted, so no result below is contaminated by the first
+attempt's writes.
+
 RESULT_PLACEHOLDER
 
 ---
+
+## 31 build routes answer 400 to EVERY caller — found by the re-probe, turned into a gate
+
+`req.params` holds the parameters of the **whole** path, the `@Controller` prefix included. A
+`.strict()` `@Validate({ params })` schema naming only the handler's own segment therefore rejects
+the parent's as an unrecognised key, and the route answers 400 to every caller — its own tenant
+included — from the validation interceptor before any handler code runs.
+
+Measured, not inferred: `GET /build/1/bugs/1` answers
+`400 {"code":"VALIDATION_FAILED","details":[{"path":"body","message":"Unrecognized key: \"projectId\""}]}`
+to the source tenant's own owner on the seeded database. Source confirmed at
+`src/modules/build/qa/bugs.controller.ts:32` — `z.object({ bugId }).strict()` under
+`@Controller("build/:projectId/bugs")`.
+
+**22 of them were sitting inside the 468**, in a bucket labelled "the probe sends no request body".
+No body fixes them. That mislabelling is the point: a control 400 read as *unprobeable* rather than
+*broken* is how 31 permanently-failing routes stayed invisible to the sweep, to `tsc`, and to the
+unit suites — `isolatedModules` never runs the interceptor.
+
+A static detector (`test/security/bola/strict-params-drift.ts`, 12 tests) finds **31**, nine more
+than the probe reached: the other nine were unprobeable for an unrelated reason. All 31 are under
+`build/`'s `:projectId` prefix — bugs, decisions, forms, incidents, risks, test-cases, test-runs,
+test-suites, workflow — and one omits **two** parameters
+(`PATCH /build/:projectId/forms/:formId/submissions/:submissionId`).
+
+**Build is another agent's territory in this release, so they are pinned, not fixed.** A new one
+fails the suite; a repaired one is reported rather than failed.
 
 ## Also repaired — `bola-scope-sibling-drift.spec.ts` was red before I touched anything
 
@@ -183,6 +236,10 @@ completed fix as a failure and teaches the next person to delete the assertion. 
 | `jest --testPathPattern=bola-esign-envelope-children-404` | **0** | 34/34 (18 red with the guard removed) |
 | `jest --testPathPattern=bola-body-synthesis` | **0** | 20/20 |
 | `jest --testPathPattern=bola-scope-sibling-drift` | **0** | 9/9 (was 2 failed / 6 passed at HEAD) |
+| `jest --testPathPattern=bola-strict-params-drift` | **0** | 12/12; 31 routes pinned |
+| `pnpm check:scope-application` | **0** | every resolved DataScope reaches a predicate |
+| `pnpm check:db-call-count` | **0** | no N+1 regressions |
+| `pnpm check:authz-deny` | **0** | uncovered 2,377 (ratchet 2,441) |
 
 **Not run:** lint, `next build`, the full repo-wide jest suite, the full 1,921-route live sweep (only
 the named 468 were re-probed).
@@ -202,6 +259,14 @@ arrived in the same window from another agent.
 - **Six mutating routes are absent from `openapi.json`** (listed above). `check:openapi-coverage`
   reports 1,371/1,371 over the operations the document contains, which is not the same as over the
   operations the guard sees. Owner: API contract owner.
+- **31 build routes 400 to every caller** (above). Owner: build module owner. The fix is one line
+  per schema — add the parent parameter, or drop `.strict()` on the params object.
 - `GET /sign/reports/summary` is org-wide under the non-scopable `sign:audit:view`. Judged correct
   and pinned rather than changed; if the product wants it scoped, `sign:audit:view` must become
   scopable first.
+- **Red gates that are not mine**, verified against my own diff (no commit of mine adds a `.select(`,
+  `findMany` or `findFirst` under `src/`): `pnpm check:record-access` exit 1 — two reads can return a
+  deleted row, in `hr/automations/hr-automation-engine.service.ts:303` and `party/party-tenant.ts:7`.
+  `pnpm check:query-projections` exit 1 — the ratchet rose 1,441 → 1,449, entirely in bare
+  `.select()` (599 → 608), from other agents' commits in this window. `pnpm check:mock-surface`
+  exit 1 — one phantom mock in `organization/core/organization-custom-domains-404.spec.ts`.
