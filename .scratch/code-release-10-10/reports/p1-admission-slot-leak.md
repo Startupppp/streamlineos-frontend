@@ -224,3 +224,245 @@ src/common/admission/admission.interceptor.ts
 
 `src/app.module.ts` and `src/main.ts` were read for guard ordering and **not modified** — the fix
 needs no registration change.
+
+---
+
+# P1b — the `__public__` bucket: a tenant-identifiable stream charged to a global 50-slot pool
+
+**Status:** FIXED. Follow-up to §6 above, which reported this and did not fix it.
+**Repo:** `streamlineos-backend` · **Commit:** `fde182a5` · **Territory:** `src/common/admission/**`
+plus 3 lines of `src/modules/notifications/**`
+
+---
+
+## 9. The defect
+
+`GET /notifications/events` is `@Sse()` **and** `@Public()`. `JwtAuthGuard` (2nd `APP_GUARD`) returns
+`true` immediately on `@Public()` without touching `req.user`, so by the time `AdmissionGuard` (3rd)
+runs, `req.user?.orgId` is `undefined` and the request buckets as the literal string `__public__`.
+Its work class was `ordinary-write`, so `orgMaxConcurrent` (**50**) applied and the slot was held for
+the **entire life of the stream**.
+
+Two consequences, both deployment-wide rather than per tenant:
+
+1. The **51st concurrent notification listener anywhere in the deployment** got a 503. Fifty open
+   browser tabs is fifty logged-in users, not a load event.
+2. Long-lived streams and ordinary public traffic (login, webhooks, health, every other `@Public()`
+   route) shared one 50-slot bucket and starved each other.
+
+The org **is** resolvable: the route is `@Public()` only because it authenticates by a one-shot
+stream token whose server-side entry is `{userId, orgId}` (`notification-event.service.ts:23-27`).
+The identity was on the request; the guard had no way to reach it.
+
+---
+
+## 10. Reproduction — the failing test, written before the source change
+
+`src/common/admission/admission-tenant-hint.spec.ts` (new, 20 tests). Written and run **before** the
+guard was touched, against a fake `AdmissionTenantHintProvider` and the real
+`AdmissionService`/`AdmissionGuard`/`AdmissionInterceptor`:
+
+```
+$HEAVY 2 -- pnpm exec jest --runInBand --testPathPattern="admission-tenant-hint"
+Tests: 3 failed, 17 passed, 20 total
+```
+
+| Failing test | Expected | Received (pre-fix) |
+|---|---|---|
+| gives every org its own headroom once the route declares a tenant hint | 6 admitted | **3 admitted, 3 refused** |
+| stamps the hinted bucket, not the bare org id | `hint:org-a` | `__public__` |
+| keeps a hinted bucket disjoint from the same org's authenticated bucket | release(`hint:org-a`) | release(`__public__`) |
+
+The first row is the defect exactly: with `orgMaxConcurrent: 3`, six streams from **six different
+orgs** exhausted one bucket at three. The 17 that passed pre-fix are the characterisation of the bug
+(`documents the defect: without a hint, streams from different orgs share one public bucket` —
+4 orgs, 3 admitted, 1 refused, `orgMapSize` **1**) and the security properties, which pass vacuously
+before the fix because *everything* bucketed `__public__`.
+
+### Bite-proof, in a hermetic copy
+
+The new real-HTTP tests in `admission-boot.spec.ts` (below) had never been red, so they were proved
+to bite in a throwaway tree — `git archive HEAD | tar -x` into scratch, my files copied in,
+`node_modules` symlinked, `bucketFor` reduced to `return PUBLIC_ADMISSION_BUCKET`. Nothing was
+planted in the shared tree.
+
+```
+jest --runInBand --testPathPattern="admission-boot|admission-tenant-hint"   (defect planted)
+exit 1 — Tests: 5 failed, 32 passed, 37 total
+```
+
+The 5 include both real-HTTP cases: *charges a resolvable token to its own namespaced bucket* and
+*keeps a hinted stream admitted while the shared public bucket is exhausted*. Tree deleted after.
+
+---
+
+## 11. The fix — an org-resolver hook that is a bucketing hint, never an authentication
+
+New file `src/common/admission/admission-tenant-hint.ts`:
+
+```ts
+export interface AdmissionTenantHintProvider {
+  resolveAdmissionTenantOrgId(req: unknown): string | undefined;
+}
+export const UseAdmissionTenantHint = (provider: Type<AdmissionTenantHintProvider>) =>
+  SetMetadata(ADMISSION_TENANT_HINT_KEY, provider);
+export function hintedBucket(orgId: string): string { return `hint:${orgId}`; }
+export function sanitiseTenantHint(value: unknown): string | undefined { /* /^[A-Za-z0-9_-]{1,64}$/ */ }
+```
+
+`AdmissionGuard` gains `ModuleRef` and one private `bucketFor`:
+
+- `req.user?.orgId` (verified, set by `JwtAuthGuard`) → that org's bucket, unchanged.
+- else, if the handler declares a hint provider → resolve it once through `moduleRef.get(token,
+  { strict: false })`, cache the instance (or the `null`), call it inside `try/catch`, run the answer
+  through `sanitiseTenantHint`, and bucket as `hint:<orgId>`.
+- else → `__public__`, exactly as today.
+
+`NotificationEventService` implements the interface in 7 lines: it **peeks** the bearer token in the
+server-side `streamTokens` map — it does not delete it and does not extend its TTL — so the handler's
+`consumeToken` remains the one and only verification. The controller adds two decorators to the
+stream route. That is the whole cross-territory footprint: **3 added lines of behaviour in
+`notification-event.service.ts` + 2 decorator lines + 2 imports in `notifications.controller.ts`**,
+plus one new additive spec file.
+
+### Why the hint cannot become an authentication bypass
+
+1. **The caller never names the bucket.** The only thing the caller supplies is an opaque token
+   string. The orgId comes out of the server's own `Map`, keyed by a `crypto.randomUUID()` the server
+   minted. Supplying `?orgId=`, a body field or a `user` object on the request changes nothing —
+   asserted by *ignores an org id the caller supplies itself* in both specs.
+2. **Failure is closed and lands in the most contended bucket.** Absent, non-bearer, forged, expired,
+   already-consumed, malformed (non-string / >64 chars / `hint:`-prefixed / empty), throwing resolver,
+   provider missing from the container — every one returns `undefined` and buckets `__public__`.
+   Lying is therefore never *cheaper*: it costs you the shared bucket.
+3. **The only reachable "cheap" bucket is your own tenant's**, and reaching it requires a token minted
+   by `POST /notifications/events/token`, which is `@Universal()` behind `JwtAuthGuard` **and**
+   `@UseRateLimit("notifications:stream-token")`. Naming a *victim's* bucket needs an unexpired
+   122-bit UUID minted for that victim inside a 120 s window.
+4. **The peeked value cannot reach an authorization decision.** It is written only to
+   `req._admissionOrgId` and closed over by the release callback. `grep` for `_admissionOrgId` /
+   `_admissionRelease` outside `src/common/admission/` returns **zero** hits, and the guard never
+   writes `req.user` — pinned by *never stamps the hint onto req.user*.
+5. **Namespacing keeps the two keyspaces disjoint.** `hint:<org>` can never equal an authenticated
+   `<org>`, so a hinted request can never decrement a slot held by an authenticated request of the
+   same tenant — the sibling-release hazard, extended to the new key.
+
+### Exactly-once, preserved
+
+Nothing about the release path changed: the guard still calls `attachAdmissionSlot(req, res, …)` on
+admission, the one-shot still closes over a per-request `released` boolean registered on `close` and
+`finish`, and the interceptor's `finalize` still invokes that same closure. The only difference is
+the *string* the closure releases. New assertions: *releases exactly once when the client
+disconnects* (abort then finish → 1 release, inFlight 0) and *keeps a sibling stream of the same org
+when one of them ends* (2 streams in `hint:org-a`, one finishes → inFlight 1, 1 release). The
+pre-existing *keeps one request's slot when a sibling request of the same org is rejected* is
+untouched and green.
+
+### Alternatives rejected
+
+- **`ReservedClass`** — `isReserved` short-circuits *before* both the shed threshold and the org
+  check, so it fixes the cap by removing shedding entirely, admitting unbounded streams ahead of
+  authentication. That is the failure the limiter exists to prevent.
+- **`non-mandatory-notification` alone** (the previous agent's reading) — still sheddable, still
+  lands in `__public__`. Correct as a rejection *of a bucketing fix*; taken here as the shed-priority
+  half (see §12).
+- **A registry keyed by hint name, with `OnModuleInit` registration** — needs a constructor parameter
+  on `NotificationEventService`, which `test/security/bola/bola-realtime-grant-time.spec.ts`
+  constructs bare in 4 places (`new NotificationEventService()`). That would have broken another
+  agent's spec under `check:spec-typecheck` for no gain. `ModuleRef` needs no signature change.
+- **A reaper** — not added, for the reason already recorded in §5: this stream legitimately outlives
+  `maxExecutionMs` (30 s), so a reaper tuned to seconds force-releases live streams and over-admits.
+
+---
+
+## 12. Should a long-lived stream share the ordinary cap? (requirement 5)
+
+**No, on two axes, and both are now implemented.**
+
+**Shed order.** As `ordinary-write` the stream sat at shed rank 5 — the *last* class to be shed — so
+with defaults (`maxConcurrent` 200, `reservedFraction` 0.2 → sheddable 160) streams could consume all
+160 sheddable slots before yielding one to an ordinary write. Backwards. `@UseWorkClass(
+"non-mandatory-notification")` moves it to rank 4, threshold `floor(160 × 5/6)` = **133**, leaving 27
+slots ordinary writes can still reach after streams are refused. It is *still sheddable* — asserted
+by *sheds a notification stream before an ordinary write* (inFlight 10 of a 12-slot sheddable budget:
+the stream 503s, `tryAdmit("ordinary-write", …)` succeeds).
+
+**Bucket.** A per-org cap shared between millisecond requests and hour-long streams is a per-tenant
+outage waiting to happen: 50 open tabs in one org would leave that org **zero** headroom for its own
+API traffic. The `hint:` namespace gives streams their own per-org counter. The honest trade: org A
+can now hold 50 authenticated + 50 hinted rather than 50 total. That is deliberate — the *global*
+`maxConcurrent` / `maxQueueDepth` / shed-threshold checks all run **before** the org check and bind
+regardless, so no bucketing choice escapes system-wide shedding.
+
+**The residual ceiling is global, not per-org, and I did not change it.** At defaults a process
+admits at most **133** concurrent SSE streams whatever the bucketing, because the rank-4 shed
+threshold binds long before any org cap. A deployment expecting more concurrent tabs than that must
+either size `ADMISSION_MAX_CONCURRENT` for its tab count or stop charging long-lived streams an
+admission slot at all and give them a separate connection limiter. Both are capacity/product
+decisions with blast radius well beyond this ticket, so they are **reported, not taken**. I
+deliberately did not invent an `ADMISSION_STREAM_ORG_MAX_CONCURRENT` knob: raising a per-org stream
+cap above 50 would change nothing while the global 133 binds first.
+
+---
+
+## 13. `snapshot()` on health — NOT taken
+
+Re-verified at head: `grep -rn "AdmissionService" src --exclude-dir=admission` returns **zero** hits.
+Nothing in the application still reads `snapshot()`. It was not exposed here because
+`src/health/health.controller.ts` is outside this ticket's territory, is a 400-line file with
+`BeforeApplicationShutdown` drain semantics and its own `health.controller.spec.ts` asserting payload
+shape, and injecting `AdmissionService` into it is a change its owner should make. **Recommended
+follow-up, unchanged:** add `admission: admissionService.snapshot()` to `/health` so `inFlight`
+growth is alertable. `AdmissionModule` is `@Global()` and exports the service, so no wiring is needed.
+
+---
+
+## 14. Commands run
+
+| Command | Exit | Result |
+|---|---|---|
+| `jest --runInBand --testPathPattern="admission-tenant-hint"` (pre-fix) | 1 | **3 failed** / 17 passed / 20 |
+| `jest --runInBand --testPathPattern="admission-boot\|admission-tenant-hint"` (hermetic, defect planted) | 1 | **5 failed** / 32 passed / 37 |
+| `jest --runInBand --testPathPattern="admission\|notification-stream-admission-hint"` (post-fix) | 0 | 10 suites, **169 passed / 169** |
+| `jest --runInBand --testPathPattern="modules/notifications\|bola-realtime-grant-time"` | 0 | 48 suites, **297 passed / 297** |
+| `pnpm typecheck` | 0 | **0 errors** (`grep -c "error TS"` = 0) |
+| `pnpm check:spec-typecheck` | 0 | spec-inclusive typecheck passed |
+| `npx eslint src/common/admission src/modules/notifications/{notification-event.service,notifications.controller,notification-stream-admission-hint.spec}.ts` | 1 | **1 error, pre-existing**, `admission.config.ts:55` `no-restricted-syntax` (`process.env` as a value); `git diff --quiet` confirms that file is untouched by me. Zero findings in any file I changed. |
+| `npx madge@8 --circular --extensions ts src` | 0 | 5521 files, no cycles |
+| `check:kebab-case` / `check:type-assertions` / `check:test-suppressions` / `check:mock-surface` / `check:file-sizes` / `check:route-classification` | 0 each | clean |
+
+Every jest and typecheck run went through `heavy.sh 2`. **Not run:** repo-wide `pnpm lint`, e2e
+suites, seeded-DB suites, a real app boot against Postgres. The `admission-boot.spec.ts` additions do
+boot a real Nest container and serve real HTTP through the real guard chain, which is why the
+`moduleRef.get` resolution path is proved rather than argued.
+
+## 15. Files changed (commit `fde182a5`)
+
+```
+src/common/admission/admission-tenant-hint.ts             (new)
+src/common/admission/admission-tenant-hint.spec.ts        (new)
+src/modules/notifications/notification-stream-admission-hint.spec.ts (new)
+src/common/admission/admission.guard.ts
+src/common/admission/admission-boot.spec.ts
+src/common/admission/admission.guard.spec.ts
+src/common/admission/admission.lifecycle.spec.ts
+src/modules/notifications/notification-event.service.ts
+src/modules/notifications/notifications.controller.ts
+```
+
+`src/app.module.ts` and `src/main.ts` read for guard ordering and **not modified** — `ModuleRef` is
+injectable into an `APP_GUARD` with no registration change, proved by `admission-boot.spec.ts`
+booting a real container.
+
+## 16. Cross-territory findings (reported, not fixed)
+
+- **`AdmissionGuard`'s constructor arity changed** (3rd param `ModuleRef`). The only constructors are
+  in `src/common/admission/*.spec.ts`, all updated in this commit. No other file constructs it.
+- **`src/common/admission/admission.config.ts:55` fails `no-restricted-syntax`** (`env = process.env`
+  default parameter). Pre-existing, untouched by this commit, owner unknown.
+- **`NotificationEventService`'s stream-token store is per-process and in-memory.** Behind more than
+  one replica, a token minted on instance A cannot be peeked *or* consumed on instance B, so the SSE
+  route is already single-replica-affine — the hint inherits that limitation and fails closed to
+  `__public__` there, it does not make it worse. Notifications' owner should know.
+- **Recommended follow-up for whoever owns health/metrics:** expose `AdmissionService.snapshot()` on
+  `/health` (§13).
