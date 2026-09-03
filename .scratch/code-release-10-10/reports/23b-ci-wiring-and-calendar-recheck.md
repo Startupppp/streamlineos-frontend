@@ -122,6 +122,37 @@ session's first job and needs one uninterrupted full capture plus
 measured that same benchmark at **7,063 → 706 blocks** on `scratch_perf_seed`; re-running the
 read-cost writer is what clears it from the contract.
 
+## 4b. The per-organisation downstream unit — implemented, and nothing went green
+
+Backend commit `55ca701e`, `src/scripts/check-route-budgets.mjs` only.
+`effectiveDownstreamCeiling(entry, absoluteMax)`:
+
+```
+effective = maxDownstreamCalls + maxDownstreamCallsPerOrg * measuredOrgsSwept
+```
+
+`maxDownstreamCalls` keeps its meaning as the FIXED, organisation-independent component, so the
+declared `0` is not raised and the invariant it encodes for the other eleven worker batches — a
+worker batch does not leave the process — is untouched.
+
+**It fails closed.** The allowance applies only when a positive integer `measuredOrgsSwept` has
+been recorded on the entry. A per-unit ceiling with no measured unit count is an unbounded escape
+hatch, and one field typed into a contract must never be able to silence a route on its own.
+
+Six self-test cases, the two load-bearing ones first: `per-org-fails-closed` (no org count grants
+no allowance) and `per-org-bites` (one call above the allowance still fires, and the issue names
+`0 fixed + 1/org x 8 organisations swept`). Plus `per-org-zero-orgs`, `per-org-boundary`,
+`per-org-composes` (the fixed term ADDS, it is not replaced) and `per-org-validated`.
+
+`check:route-budgets:self-test` exit 0. **`check:route-budgets` still exit 1 on the same two
+breaches** — no contract entry declares the new field yet, which is the proof that the mechanism
+landed without silencing anything.
+
+What remains is the measurement half, and it is small: `CronStorageSweepService.sweep()` already
+returns `organizations` in its response body, so the harness has to read a number that is already
+there, `merge-http-route-budgets.mjs` has to write the pair, and the two `/cron/storage-sweep`
+entries declare `maxDownstreamCallsPerOrg: 1`.
+
 ## 5. Commands run, with exit codes
 
 ```
@@ -131,7 +162,7 @@ pnpm check:benchmark-regression:self-test                      exit 0  25/25
 pnpm check:benchmark-http:self-test                            exit 0  19/19
 pnpm perf:prepare-http-seed:self-test                          exit 0  10/10
 pnpm check:route-budgets-http:self-test                        exit 0  27/27
-pnpm check:route-budgets:self-test                             exit 0  SELF-TEST PASSED
+pnpm check:route-budgets:self-test                             exit 0  SELF-TEST PASSED (+6 per-org cases)
 pnpm check:benchmark-manifest                                  exit 1  FAIL, 2 declared breaches
 pnpm check:route-budgets                                       exit 1  386/570, 2 breaches
 pnpm check:route-budgets-http                                  exit 0  69/82, contract agrees
@@ -156,4 +187,8 @@ frontend workflow change was needed — `check:web-vitals-budget` and
   has no cross-tenant negative spec. Assigned to a storage agent. The workflow steps added
   here do not touch it and do not paper over it: that gate is `Cross-tenant isolation
   coverage`, still blocking, unchanged.
+- **The frontend repository is mid-`git merge`** (`.git/MERGE_HEAD` present, another agent's), so
+  `git commit -- <path>` refuses with "cannot do a partial commit during a merge". This report's
+  §4b and the matching ticket-23 box-7 edit are **on disk but uncommitted** in that repo. Nothing
+  was staged, resolved or reset — the merge belongs to another agent.
 - Cache-hit latency is still unmeasured for the reason recorded in ticket 23 box 4.
