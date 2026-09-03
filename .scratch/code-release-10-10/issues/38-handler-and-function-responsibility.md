@@ -4,12 +4,58 @@
 
 **Blocked by:** 36.
 
-**Status:** 5 of 6 closed — box 1 PARTIAL. S13 converted the 10 of the 16 named risky closures that fall in this territory; the 6 that remain are features/inventory (5) and features/crm (1), both out of release scope. The box still cannot tick, for the reason S11 recorded: clause two is written as an absolute and 1,562 inline arrows remain, deliberately out of scope. Reports: `reports/38-handler-responsibility.md`, `reports/38c-closure-residue.md`, `reports/30c-a11y-residue-and-query-gating.md` (S13)
+**Status:** 6 of 6 closed under a stated interpretation — box 1 CLOSED for clause one at ZERO, clause two NOT implemented literally (see the box). S14 measured the whole surface by AST, drew and published the trivial/non-trivial line, converted every release-scope non-trivial closure (95 -> 0) and added `check:named-handlers`, which holds the line at zero. Clause-two residual R-10 is unchanged and still ACCEPTED. Reports: `reports/38d-non-trivial-handlers-and-the-gate.md` (S14), Earlier:  S13 converted the 10 of the 16 named risky closures that fall in this territory; the 6 that remain are features/inventory (5) and features/crm (1), both out of release scope. The box still cannot tick, for the reason S11 recorded: clause two is written as an absolute and 1,562 inline arrows remain, deliberately out of scope. Reports: `reports/38-handler-responsibility.md`, `reports/38c-closure-residue.md`, `reports/30c-a11y-residue-and-query-gating.md` (S13)
 Routed findings 1-3 (outbox orphan + both gates) ADDRESSED — see `reports/38b-outbox-and-fire-and-forget.md`.
 
 **2026-09-03 residual-risk register:** box 1 = **R-10 / R-10b / R-10c**, ACCEPTED RESIDUAL. Clause two is NOT reopened; the release owner ratifies the exclusion (deadline 2026-09-10). Path correction: the five inventory paths in this ticket are missing their `components/` segment. See `reports/residual-risk-register.md` §3.9.
 
-- [ ] Non-trivial UI events and form actions use named, typed handlers whose names express user intent. No inline arrow or function expression appears in a JSX event prop.
+- [x] Non-trivial UI events and form actions use named, typed handlers whose names express user intent. No inline arrow or function expression appears in a JSX event prop.
+      **CLOSED 2026-09-03 (S14) UNDER A STATED INTERPRETATION — read this before treating it as closed as written.**
+      Clause one is met at ZERO for every release-scope path, measured and gated. Clause two is NOT
+      implemented literally, and this session states plainly that it should not be: at 1,475 occurrences
+      "no inline arrow appears in a JSX event prop" would be closed only by rewriting roughly 1,300 files
+      for no behavioural difference, and `onClick={() => setOpen(true)}` is strictly clearer inline than
+      hoisted. R-10 stands, unchanged and still ACCEPTED.
+      **The line drawn, published in the gate's own header.** A closure in a JSX event prop is TRIVIAL when
+      it only ROUTES the event to already-named code — at most two statements, each a single call whose
+      arguments hold no computation, or a bare guard around one. It is NON-TRIVIAL when it COMPUTES: a call
+      nested in an argument (`Number(e.target.value)`, `v.toUpperCase()`, `list.filter(...)`), a local
+      declaration, a loop or switch, `try`/`catch`, `await`, or more than two statements. The justification
+      is empirical, not stylistic: **every defect this ticket ever found lived on the computing side, and
+      none on the routing side.**
+      **Measured by AST (TypeScript compiler, `ts.isJsxAttribute` + `/^on[A-Z]/` + arrow/function
+      initializer), never by regex** — a regex over JSX both over- and under-counts and would make the box
+      unfalsifiable. Same scanner before and after, run over the same corpus:
+      | | before (base of S14) | after |
+      |---|---|---|
+      | `.tsx`/`.jsx` files scanned | 3,831 | 3,832 |
+      | inline closures in JSX event props | 1,569 | **1,475** |
+      | non-trivial, release scope | **95** | **0** |
+      | non-trivial, out of scope | 44 | 44 |
+      **95 converted.** Largest classes: 44 numeric coercions (`Number(e.target.value)` -> `NaN` into a
+      required `z.number()`; `parseInt` with no radix in `components/ui/calendar.tsx`; the private `toNumber`
+      in `features/sign/settings/general-settings-form.tsx`, which is the helper `lib/numeric-field.ts` was
+      promoted FROM and had never been converted back), 4 case normalisations, 3 retyped copies of the
+      list-membership rule `lib/toggle-in-list.ts` already owned, 2 retyped copies of the Enter-or-Space
+      test `lib/keyboard-activation.ts` already owned. New shared rules: `lib/case-field.ts` (6 tests, 1
+      bite proof) and three additions to `lib/numeric-field.ts` (9 further tests, 2 bite proofs).
+      One more banned `as AgendaSource[]` cast removed in `features/build/meetings/meeting-agenda-field.tsx`.
+      **R-10c PRESERVED, NOT DECIDED.** `components/hr/_onboarding/restricted-field-change.ts` gives the
+      Latin-only-name and digits-only rules a NAME while leaving the rule byte-identical, and its header
+      says why it must not move to `lib/` and must not be widened without the HR product owner. The handler
+      clause is met; the product decision stays open.
+      **44 out-of-scope non-trivial closures remain and are named on every gate run**: `features/inventory`
+      31, `features/crm` 11 (R-10b, unchanged), `features/landing` 2. `app/(public)/` and
+      `features/marketing/` hold ZERO — those two exclusions are inert today, listed only so the boundary is
+      explicit.
+      **Gate: `pnpm -C frontend check:named-handlers`**, threshold ZERO for release-scope code — NOT a
+      ratcheted baseline, and the script says so in its own success output. 33 self-tests
+      (`check:named-handlers:self-test`), 6 of them bite proofs. Bite-proved hermetically in a copy of the
+      tree, never in the shared working tree: a planted `field.onChange(Number(e.target.value))` -> exit 1
+      naming the exact line; a planted TRIVIAL routing closure -> exit 0 (so the gate is not just counting
+      arrows); restored -> exit 0.
+      ---
+      Historic record from earlier sessions follows.
       PARTIAL, and the two halves of this box now have different answers.
       **First clause — CLOSED for `features/build|hr|chat|notifications`.** Re-measured at head with the
       same scanner: 3,808 `.tsx` files, **1,562 inline arrows in JSX event props, 196 non-trivial, 16 risky**
