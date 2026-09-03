@@ -35,11 +35,23 @@ function linkAbortSignals(sources: readonly AbortSignal[]): AbortSignal {
   return controller.signal;
 }
 
-function makeRequestSignal(external?: AbortSignal): AbortSignal {
-  const timeout = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
+function makeRequestSignal(external?: AbortSignal, timeoutMs?: number): AbortSignal {
+  const timeout = AbortSignal.timeout(timeoutMs ?? REQUEST_TIMEOUT_MS);
   if (!external) return timeout;
   if (typeof AbortSignal.any === "function") return AbortSignal.any([timeout, external]);
   return linkAbortSignals([timeout, external]);
+}
+
+export interface AuthedFetchOptions {
+  /**
+   * Overrides the ordinary request timeout, which is a deadline this client
+   * imposes on the SERVER's work. A streamed AI answer is bounded by the
+   * backend's own deadline — 120 s for chat, 60 s for the other stream routes —
+   * so the 30 s every other call gets aborts a paid stream the server is still
+   * producing. The surface renders that as a cancellation nobody asked for, and
+   * the retry it invites reserves and spends a second time.
+   */
+  timeoutMs?: number;
 }
 
 const PUBLIC_AUTH_PATHS = new Set([
@@ -152,6 +164,7 @@ export async function authedFetch(
   init: RequestInit,
   path: string,
   signal?: AbortSignal,
+  options?: AuthedFetchOptions,
 ): Promise<Response> {
   // `init.signal` is destructured out rather than left to be shadowed by the
   // `signal:` written after the spread below — a caller that passed one had it
@@ -159,7 +172,7 @@ export async function authedFetch(
   const { signal: initSignal, ...requestInit } = init;
   const headers = new Headers(init.headers);
   const isPublic = isPublicPath(path);
-  const combinedSignal = makeRequestSignal(signal ?? initSignal ?? undefined);
+  const combinedSignal = makeRequestSignal(signal ?? initSignal ?? undefined, options?.timeoutMs);
 
   // One id per request, sent to the API and remembered here, so a browser error
   // report and the server-side logs for the same call can be joined up.

@@ -21,6 +21,17 @@ import { ApiError, authedFetch, buildUrl, getApiErrorCode } from "@/lib/api-clie
  * whatever text arrived.
  */
 
+/**
+ * A stream ends when the BACKEND's deadline ends it — 120 s for chat
+ * (`CHAT_STREAM_DEADLINE_MS`), 60 s for the other stream routes
+ * (`AI_TEXT_STREAM_DEADLINE_MS`, `KB_STREAM_DEADLINE_MS`). The client's ordinary
+ * 30 s cap is tighter than every one of them, so it was aborting paid streams
+ * the server was still producing and reporting them as cancellations. This is a
+ * backstop for a socket that dies silently, not a deadline on the answer, so it
+ * sits above the longest server deadline rather than under it.
+ */
+export const AI_STREAM_TIMEOUT_MS = 180_000;
+
 export type AiTextStreamResult =
   | { status: "completed"; text: string; headers: Headers }
   | { status: "cancelled"; text: string };
@@ -93,6 +104,7 @@ export async function streamAiText({
       },
       path,
       signal,
+      { timeoutMs: AI_STREAM_TIMEOUT_MS },
     );
 
     if (!res.ok) throw await errorFor(res, path);
