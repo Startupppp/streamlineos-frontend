@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
 import { AiDraftCard } from "@/components/ai/ai-draft-card";
 import { AiFailureBody } from "@/components/ai/ai-failure-body";
+import { classifyAiError, isRetryableAiFailure } from "@/components/ai/ai-error-state";
 import { AiPermissionDenied } from "@/components/ai/ai-permission-denied";
 import { CalendarConnectInline } from "@/features/calendar/calendar-connect-inline";
 import { useCan } from "@/hooks/api/access";
@@ -110,7 +111,15 @@ export function MeetingPrepPanel({ eventId, eventTitle }: MeetingPrepPanelProps)
 
   if (!canUse) return <AiPermissionDenied />;
 
-  const showForm = state.status === "idle" || state.status === "failed";
+  /**
+   * Exhausted credits and a revoked permission do not get a dispatch control.
+   * `AiFailureBody` already renders the affordance that can help — the top-up
+   * link, or the denial reason — and a "Try again" beside it would spend another
+   * click on a call that cannot succeed.
+   */
+  const canDispatch =
+    state.status !== "failed" || isRetryableAiFailure(classifyAiError(state.error).status);
+  const showForm = (state.status === "idle" || state.status === "failed") && canDispatch;
   const showAgenda = state.status !== "idle" && state.status !== "failed";
 
   return (
@@ -179,7 +188,7 @@ export function MeetingPrepPanel({ eventId, eventTitle }: MeetingPrepPanelProps)
             className="w-full h-8 text-xs gap-1.5"
           >
             <Sparkles className="h-3.5 w-3.5" aria-hidden />
-            {state.status === "failed" ? "Try again" : "Draft Agenda"}
+            Draft Agenda
           </Button>
         </div>
       )}
@@ -230,7 +239,7 @@ export function MeetingPrepPanel({ eventId, eventTitle }: MeetingPrepPanelProps)
             </Button>
           )}
 
-          <MeetingPrepAgendaDetails sections={sections} citations={citations} />
+          <MeetingPrepAgendaDetails sections={sections} />
         </div>
       )}
     </div>

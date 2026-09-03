@@ -3,13 +3,10 @@
 import { ClipboardList } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { AiCitationChips } from "@/components/ai/ai-citation-chips";
-import type { AgendaCitation } from "@/hooks/api/meetings-ai";
 import type { MeetingAgendaSections } from "./meeting-prep-stream-parse";
 
 interface MeetingPrepAgendaProps {
   sections: MeetingAgendaSections;
-  citations: AgendaCitation[];
   isStreaming: boolean;
 }
 
@@ -19,7 +16,7 @@ interface MeetingPrepAgendaProps {
  * completion, so the four affordances appear one at a time as the model reaches
  * them instead of all at once at the end.
  */
-export function MeetingPrepAgendaBody({ sections, isStreaming }: Omit<MeetingPrepAgendaProps, "citations">) {
+export function MeetingPrepAgendaBody({ sections, isStreaming }: MeetingPrepAgendaProps) {
   return (
     <div className="space-y-2" aria-busy={isStreaming || undefined}>
       <p className="text-xs text-foreground whitespace-pre-line leading-relaxed">
@@ -49,9 +46,13 @@ export function MeetingPrepAgendaBody({ sections, isStreaming }: Omit<MeetingPre
   );
 }
 
+/**
+ * Citations are NOT rendered here. `AiDraftCard` already owns them, including the
+ * pending skeleton while `x-ai-sources` is in flight; the panel used to render a
+ * second "Sources" block beneath, so every source appeared twice.
+ */
 export function MeetingPrepAgendaDetails({
   sections,
-  citations,
 }: Omit<MeetingPrepAgendaProps, "isStreaming">) {
   return (
     <>
@@ -75,21 +76,6 @@ export function MeetingPrepAgendaDetails({
           Suggested duration:{" "}
           <span className="font-medium text-foreground">{sections.suggestedDuration}</span>
         </p>
-      )}
-
-      {citations.length > 0 && (
-        <div className="space-y-1">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Sources
-          </p>
-          <AiCitationChips
-            citations={citations.map((c) => ({
-              id: c.id,
-              title: c.title,
-              snippet: c.snippet,
-            }))}
-          />
-        </div>
       )}
     </>
   );

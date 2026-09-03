@@ -23,7 +23,12 @@ type SectionKey = keyof MeetingAgendaSections;
 
 const HEADING = /^\s{0,3}#{1,6}\s*(.+?)\s*$/;
 const BOLD_HEADING = /^\s{0,3}\*\*(.+?)\*\*\s*:?\s*$/;
-const BULLET = /^\s*(?:[-*+•]|\d+[.)])\s+/;
+/**
+ * The trailing `(?:\s+|$)` is load-bearing. A bullet arrives before its text, so
+ * `- ` exists for a frame; without it the marker survives stripping and renders
+ * as a topic chip reading "-" that then vanishes.
+ */
+const BULLET = /^\s*(?:[-*+•]|\d+[.)])(?:\s+|$)/;
 
 /**
  * A heading arrives one token at a time, so `## Key top` exists for a frame.
