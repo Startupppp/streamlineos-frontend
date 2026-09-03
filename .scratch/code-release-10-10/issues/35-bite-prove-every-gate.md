@@ -173,12 +173,30 @@ is blocked on another agent, on infrastructure or on a measurement.
       PARTIAL: **`check:over-300` is red at 403 vs baseline 394 (exit 1)**, and `c3f0b73d` had raised that baseline
       to 394 when the count was 395 — sized to that day's breach with no headroom. Re-measured, not inherited.
       Release management, already routed; the baseline was deliberately NOT raised again.
-      PARTIAL: **14 swallowed-failure sites in production code are named and NOT fixed** (report §8), several on
-      money and auth paths — the AI credit debit, a revoked session authenticating, payroll loan/leave status
-      writes, FX gain/loss journalling, the idempotency fence, the NextAuth session enrichment, and leave/overtime
-      approval workflows. Owners named per item.
-      PARTIAL: **`FIN-TAX-WINDOW`** — the GST due-date sweep is unreachable in production. Owner:
-      finance/accounting release owner. Changing when a tax notification fires is a product decision.
+      PARTIAL: **the swallowed-failure sites are TRIAGED, 4 of them fixed, 6 escalated** (report
+      `35f-swallowed-failure-triage.md`). Split of the 10 sites §8 actually names: (a) accidental and FIXED —
+      payroll-inputs `:201`/`:221`, leaves-write `:387`, overtime `:188` (backend `7ac66b9d`, `0314ac4d`, both
+      bite-proved 3→0 and 4→0); (b) deliberate, documented and CORRECT, left alone — `jwt-auth.guard.ts:229`,
+      whose exposure is recorded for an explicit security decision; (c) deliberate but WRONG for what they now
+      guard, ESCALATED with evidence — `ai-gateway-credit.helper.ts:168` (the loss is an over-charge today, not
+      unbilled inference: `reserve` debits up front and the expiry sweep is **not scheduled anywhere**),
+      `command-fence-store.ts:123` (**245 `@Idempotent` handlers enumerated; 28 where re-execution moves money
+      or sends externally** — bank transfers move the cash twice, a partial invoice payment posts twice, mail and
+      Twilio dispatch resend), the FX pair `payment-run-executor.service.ts:276` /
+      `accounting-payables.service.ts:451` (one handler over both `getRate` and the journal write; correct remedy
+      is an outbox, and both files sit in the accounting-rewrite lane), and `frontend/lib/auth.ts:254`.
+      **§8 says 14 sites and its table names 10; ranks 10–14 appear nowhere — 35e to reconcile.**
+      Two 35e consequence claims corrected: leave/overtime requests DO reach an approver (approval is a direct
+      status flip; the workflow instance is advisory), and the `isActive ?? true` fail-open is really the
+      `=== false` gate in `lib/rbac/require-permission.ts`.
+      [x] **`FIN-TAX-WINDOW` — FIXED** (backend `99c52ebd`). The GSTR-1/3B deadlines were computed in the month
+      after today rather than the month after the filing period; they now land in the current month. Proved by a
+      **400-day calendar walk** (`tax-compliance-due-window.spec.ts`), not a stubbed `daysBetween`: pre-fix the
+      window opened on **0 of 400 days** and 334 of 400 days disagree with the fix. A second defect in the same
+      arithmetic was found by the walk — the emitted filing period mixed local and UTC accessors and read one day
+      short at both ends in IST; both bounds now derive from `Date.UTC`. Residual, unchanged and flagged: the
+      guard treats a past deadline as in-window, so the window stays open days 6–31 of each month — narrowing it
+      is the product decision.
       PARTIAL: **a net baseline raise carried across an identifier rename is invisible** to per-identifier history
       (`c0daca5b`: `UNDETECTED_CLAIM_BASELINE` 2 -> 0 while introducing `ACTIONABLE_UNDETECTED_BASELINE` = 3, net
       2 -> 3). The verdict on that commit stands, but the auditing method has the hole.
