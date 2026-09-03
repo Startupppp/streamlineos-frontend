@@ -4,6 +4,27 @@
 
 **Blocked by:** None — can start immediately.
 
+**2026-09-03 — E-SIGN SWEPT AND THE SWEEP EXTENDED TO THE REQUEST BODY. Report
+`reports/15g-esign-and-body-id-sweep.md`; backend commits `54c8555f` and `6fc7a55f`.**
+The e-sign module — recorded as "not touched" by the triage pass and only partly covered by 15e —
+was read in full (12 controllers, 20 services, 11 public token routes). **Three defects found and
+fixed** plus a fourth found by the body sweep: the AI summary route ignored `sign:envelope:view`'s
+DataScope (an `own`-scoped holder could read any agreement in the org through the model); both
+`POST /sign/admin/run-*-sweep` routes ran with **no tenant predicate at all** and were confined only
+by the ambient RLS GUC; `publish-public-form` 500'd on a slug another tenant holds because RLS makes
+its pre-check blind and the global unique index then fires (500-vs-201 was an existence oracle); and
+the watermark policy's `scope_id` was written without being resolved. The **signer-token surface was
+swept and CLEARED** — a token cannot read another envelope's document, cannot write another
+recipient's field, expires on `tokenExpiresAt`, and is 256 bits so it cannot be enumerated.
+**The BOLA sweep now probes ids in the REQUEST BODY and QUERY STRING, not only the URL path.**
+Enumerated from `openapi.json`: **3,613 operations, 1,047 id-shaped fields (809 body, 238 query) on
+667 operations**; **209 findings** where the id reaches a row as a reference and is never read back
+under the caller's org. Cross-checked against `pg_constraint`: of the 172 columns, **92 carry a
+composite tenant FK** (a cross-tenant id cannot land), **17 a bare FK** (it lands, and a nonexistent
+id 23505s instead — an existence oracle), **58 no FK at all**. Ratcheted and self-tested at
+`test/security/bola/bola-body-id-binding.spec.ts` (19 tests) and
+`bola-esign-scope-sweeps-and-token.spec.ts` (25 tests).
+
 **Status:** 5 of 6 boxes closed; the sixth is still PARTIAL, but **A-1 and A-3 are now DONE** (2026-09-03,
 report `reports/15e-esign-404-and-bola-body-synthesis.md`). A-3's three e-sign no-404 routes return 404,
 plus a P1 within-tenant leak found beside them (`GET /sign/documents/:documentId/preview` served any
@@ -175,6 +196,24 @@ whoever lands that schema change.
 - [x] Any optional filter that widens scope is authorized, and the gate is confirmed to actually bite.
       All 4 defects closed. `GET /tasks` now gates on `crm:tasks:view === "all"` (the scopable key's DataScope) instead of `!== "none"`; `goals-scope.ts` and `assets-scope.ts` (plus two more in `dashboard-scope.ts` the sweep could not see) dropped the `if (!isScopable(KEY)) return "all"` fallback and fail closed; `GET /leads/export`'s `assigneeId` intersects the caller's own scope. `GET /timesheets/billing/rate-preview` is fixed in this pass — its own key `timesheets:billing:view` is NOT scopable, so gating on it would have been the exact no-op the constitution names, and it gates on `timesheets:team:view` instead, the scopable key every other timesheets read uses for the same parameter. The live fail-open resolver list is 2 → 0.
 - [x] Authorization is asserted at the data layer for every read and write.
+      **2026-09-03 — the body/query half of this box was never asked, and now has been.** Every
+      earlier pass probed the object id in the URL PATH; `tenant-binding.ts` asks a per-ROUTE
+      question that the path parameter's own predicate always answers `yes`. Asked per FIELD across
+      the whole contract: **282 org-predicate + 9 object-assertion + 95 filter-in-org-query
+      resolved**, **209 written-unresolved**, 174 unresolved, 269 never-read, 6 handlers unresolvable
+      (named individually so the blind spot cannot grow). Of the 209, the database already refuses
+      92 columns' worth through a composite tenant FK; the live remainder is 17 bare-FK sites (7 to a
+      tenant-owned table, 17 to global `users`) and 58 no-FK columns.
+      PARTIAL — 1 of the 209 fixed. `sign_watermark_policies.scope_id` is the only one inside the
+      territory this session held; everything else is another module's or excluded.
+      NOT FIXED, owners named: `POST /calendar/events` `linkedDealId`/`linkedLeadId` (calendar),
+      `POST /timesheets/rates` `clientId` (timesheets), 17 sites storing another organisation's user
+      as assignee/owner/manager (hr 9, inventory 3, crm 3, surveys 1, tasks 1), 29 `no-fk` body ids
+      in build. **CRM and inventory are EXCLUDED from this release** — 9 + 9 no-FK and 3 + 6 bare-FK
+      sites recorded with the exclusion named, including `POST /inventory/stock/transfers`
+      `toWarehouseId`, a stock transfer whose destination warehouse is never resolved.
+      BLOCKED on nothing but ownership: the analysis is static plus a `pg_constraint` cross-check,
+      **not** an HTTP probe. A live body probe now has a target list of 209 instead of 3,613.
       The 5 `/blog/admin/*` holes are closed at the gate, which is the only place they can be closed: `blog_posts`/`blog_categories` are the vendor's global marketing content with no `org_id`, so there is no tenant to bind. The three `blog:*` keys are platform-only — excluded from `allCatalogScopes()`, so the OWNER/ORG_ADMIN short-circuit no longer confers them, and non-delegable, so no role grant, delegation or module ownership can. Proved by running it: 5 executable assertions in `bola-data-layer-binding.spec.ts`, including that a user on `PLATFORM_ADMIN_USER_IDS` does hold them, so the surface is gated rather than merely dead. `KbTagsService.setArticleTags` also gained the article-ownership assertion it never had.
       The `@Public()` support inbound surface is closed in 15d, where the org id in the path IS the authorization decision and the shared secret is the only credential: the secret is compared with `timingSafeEqual` over fixed-width digests (no timing and no length oracle), is hash-only at rest with a migration-free dual read for pre-existing rows plus a rotation path on the existing PATCH, and the pre-authentication rate limit is keyed on the client address rather than the caller-supplied `orgId` (the per-org quota is kept, after the credential is proved). 20 assertions in `bola-support-inbound-secret.spec.ts`, mutation-tested three times (3 / 1 / 5 red); the three KNOWN-OPEN pins in `bola-public-org-selector.spec.ts` are inverted into FIXED guards.
       PARTIAL: rows written before 15d still hold a plaintext secret. They verify correctly and nothing is broken, but hash-only-at-rest is not complete until a one-statement data backfill runs; `migrations/` is ticket 08's, and the exact statement is in `reports/15d-rag-scope-and-support-secret.md` §2b.
