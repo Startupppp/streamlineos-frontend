@@ -15,6 +15,8 @@
  *   - the document never scrolls horizontally at 375, 768 or 1280, and the
  *     widest offending element is named when it does
  *   - painted text meets WCAG AA against the colour actually behind it
+ *   - a real mutation, driven through the UI, SURVIVES A RELOAD — see
+ *     WRITE_JOURNEYS. Reads rendering is not the product working.
  *
  *   node scripts/browser-journeys.mjs --self-test
  *   node scripts/browser-journeys.mjs \
@@ -24,7 +26,13 @@
  *
  * Budgets govern authenticated surfaces, so an unauthenticated run is refused
  * rather than reported as a pass — and so is a run that reached fewer steps
- * than it planned, or one where most steps rendered the error page.
+ * than it planned, one where most steps rendered the error page, or one whose
+ * write never landed.
+ *
+ * `--allow-cross-origin-api` turns the BROWSER's CORS check off, for the case
+ * where the API's allowlist does not name the port the harness is serving the
+ * app on. It is recorded in the results and printed loudly: a run that used it
+ * has not shown CORS is configured.
  */
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
@@ -85,6 +93,80 @@ const JOURNEYS = [
   { name: "workspace", steps: ["/directory/workers", "/calendar", "/workflows"] },
   { name: "settings", steps: ["/settings", "/settings/roles"] },
 ];
+
+/**
+ * WRITE journeys. Every step above is a route plus an inert interaction, and a
+ * sweep made only of those cannot tell a working product from a read-only one:
+ * a page that renders is not a page that saves. These drive a real mutation
+ * through the UI and then assert the result SURVIVED A RELOAD, which is the
+ * only way a browser can tell a server write from optimistic client state.
+ *
+ * A create, not an edit — a create is the only write whose effect a later page
+ * load can name without knowing what the value was before. The subject is
+ * unique per run, so a row left by an earlier run can never be mistaken for
+ * this one's, and the run asserts the subject is ABSENT before it writes.
+ */
+const WRITE_JOURNEYS = [
+  {
+    name: "build-create-ticket",
+    route: "/build/{projectId}",
+    reloadVia: "/dashboard",
+    absent: `!document.body.innerText.includes("{subject}")`,
+    present: `document.body.innerText.includes("{subject}")`,
+    actions: [
+      {
+        label: "open the column composer",
+        expression: `(() => {
+          const button = Array.from(document.querySelectorAll("button")).find(
+            (el) =>
+              (el.textContent || "").trim() === "Add ticket" ||
+              el.getAttribute("aria-label") === "Add ticket to column",
+          );
+          if (!button) return false;
+          button.click();
+          return true;
+        })()`,
+      },
+      {
+        label: "type the ticket title",
+        expression: `(() => {
+          const input = document.querySelector('input[placeholder="Ticket title..."]');
+          if (!input) return false;
+          const setter = Object.getOwnPropertyDescriptor(
+            window.HTMLInputElement.prototype,
+            "value",
+          ).set;
+          setter.call(input, "{subject}");
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+          return input.value === "{subject}";
+        })()`,
+      },
+      {
+        label: "submit with Enter",
+        expression: `(() => {
+          const input = document.querySelector('input[placeholder="Ticket title..."]');
+          if (!input) return false;
+          input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+          return true;
+        })()`,
+      },
+    ],
+  },
+];
+
+/** `{subject}` is the only substitution a write expression may carry. */
+export function substituteSubject(expression, subject) {
+  return expression.split("{subject}").join(subject);
+}
+
+/**
+ * The mirror of `stepsIncomplete`, for writes. A run whose write never landed
+ * has not proved the product saves anything, and must not exit clean just
+ * because every read rendered.
+ */
+export function writesIncomplete(asserted, planned) {
+  return asserted < planned;
+}
 
 /**
  * How each token is obtained: open a listing the product already renders and
@@ -536,6 +618,44 @@ function runSelfTest() {
     stepsIncomplete(8, 9),
   );
 
+  assert("there is at least one write journey", WRITE_JOURNEYS.length >= 1);
+  assert(
+    "every write journey declares an absent check, actions and a present check",
+    WRITE_JOURNEYS.every(
+      (w) =>
+        typeof w.absent === "string" &&
+        typeof w.present === "string" &&
+        Array.isArray(w.actions) &&
+        w.actions.length > 0 &&
+        w.actions.every((a) => typeof a.label === "string" && typeof a.expression === "string"),
+    ),
+  );
+  assert(
+    "BITE — both checks must name the subject, so neither can be a constant true",
+    WRITE_JOURNEYS.every((w) => w.absent.includes("{subject}") && w.present.includes("{subject}")),
+  );
+  assert(
+    "a write asserts persistence by reloading through a different route, not from client state",
+    WRITE_JOURNEYS.every((w) => typeof w.reloadVia === "string" && w.reloadVia !== w.route),
+  );
+  assert(
+    "every write route is one the read sweep also reaches, so a write is never measured on an unvisited page",
+    WRITE_JOURNEYS.every((w) => allSteps.includes(w.route)),
+  );
+  assert(
+    "the subject substitution replaces every occurrence",
+    substituteSubject("a{subject}b{subject}", "X") === "aXbX",
+  );
+  assert(
+    "BITE — substitution leaves no literal {subject} behind for the page to match on",
+    !substituteSubject('document.body.innerText.includes("{subject}")', "X").includes("{subject}"),
+  );
+  assert("a run that asserted every planned write is complete", writesIncomplete(1, 1) === false);
+  assert(
+    "BITE — a run whose write never landed is incomplete, not a clean read-only run",
+    writesIncomplete(0, 1),
+  );
+
   for (const f of failures) console.error(`✖  self-test FAILED: ${f}`);
   if (failures.length > 0) {
     console.error(`browser-journeys self-tests: ${failures.length} failed, ${passed} passed`);
@@ -557,6 +677,15 @@ async function main() {
   const settleMs = Number(flag("settle-ms", "3500"));
   const browserPath = findBrowser(flag("browser", ""));
   const outPath = flag("out", join(ROOT, ".browser-journeys-results.json"));
+  /**
+   * The app calls the API from the browser, so the API's CORS allowlist has to
+   * name the port the app is served on. A harness told to run on a port the
+   * deployment's allowlist does not carry would otherwise measure the app's
+   * error boundary and call it a UX finding. This turns the check off in the
+   * BROWSER only, and it is recorded in the results and printed loudly, because
+   * a run that took it is not evidence that CORS is configured.
+   */
+  const allowCrossOriginApi = argv.includes("--allow-cross-origin-api");
 
   if (!browserPath) throw new Error("no Chrome/Chromium found — pass --browser=<path>");
   if (!cookieFile || !existsSync(cookieFile))
@@ -579,6 +708,7 @@ async function main() {
       "--no-first-run",
       "--no-default-browser-check",
       "--disable-gpu",
+      ...(allowCrossOriginApi ? ["--disable-web-security"] : []),
     ],
     { stdio: "pipe" },
   );
@@ -587,6 +717,7 @@ async function main() {
   const log = (m) => console.log(`[${((Date.now() - started) / 1000).toFixed(1)}s] ${m}`);
   const findings = [];
   const steps = [];
+  const writes = [];
   const tokens = {};
 
   try {
@@ -606,6 +737,8 @@ async function main() {
       path: "/",
     });
     log(`browser ${browserPath} · base ${baseUrl} · widths ${widths.join("/")}`);
+    if (allowCrossOriginApi)
+      log("⚠  --allow-cross-origin-api: the browser's CORS check is OFF — this run is not evidence that CORS is configured");
 
     await cdp.send("Emulation.setDeviceMetricsOverride", {
       width: 1280,
@@ -760,6 +893,69 @@ async function main() {
         log(`${width}px · ${journey.name} · ${journey.steps.length} steps`);
       }
     }
+
+    /**
+     * Writes run once, at the last width the run used — a mutation is not a
+     * layout question, and writing the same row three times would pollute the
+     * environment for no extra evidence.
+     */
+    const evaluate = async (expression) => {
+      const r = await cdp.send("Runtime.evaluate", {
+        expression,
+        returnByValue: true,
+        awaitPromise: false,
+      });
+      return r.result?.value;
+    };
+    for (const write of WRITE_JOURNEYS) {
+      const expanded = expandStep(write.route, tokens);
+      if (expanded.path === null) {
+        findings.push({ journey: write.name, route: write.route, kind: "write-not-reached", unresolved: expanded.missing });
+        continue;
+      }
+      const subject = `journey-write-${Date.now()}-${randomBytes(3).toString("hex")}`;
+      const sub = (expression) => substituteSubject(expression, subject);
+      const record = { name: write.name, route: expanded.path, subject, asserted: false };
+
+      await cdp.send("Page.navigate", { url: `${baseUrl}${expanded.path}` });
+      await sleep(settleMs);
+      if ((await evaluate(sub(write.absent))) !== true) {
+        findings.push({ journey: write.name, route: expanded.path, kind: "write-subject-already-present", subject });
+        writes.push(record);
+        continue;
+      }
+
+      let failedAt = null;
+      for (const action of write.actions) {
+        if ((await evaluate(sub(action.expression))) !== true) {
+          failedAt = action.label;
+          break;
+        }
+        await sleep(1200);
+      }
+      if (failedAt !== null) {
+        findings.push({ journey: write.name, route: expanded.path, kind: "write-step-failed", step: failedAt, subject });
+        writes.push(record);
+        continue;
+      }
+      await sleep(settleMs);
+
+      /**
+       * Away and back, not a re-render. An assertion made without leaving the
+       * page passes on the optimistic cache entry the mutation wrote locally,
+       * which is exactly the vacuity a "write journey" exists to rule out.
+       */
+      await cdp.send("Page.navigate", { url: `${baseUrl}${write.reloadVia}` });
+      await sleep(settleMs);
+      await cdp.send("Page.navigate", { url: `${baseUrl}${expanded.path}` });
+      await sleep(settleMs);
+      const persisted = (await evaluate(sub(write.present))) === true;
+      record.asserted = persisted;
+      writes.push(record);
+      if (!persisted)
+        findings.push({ journey: write.name, route: expanded.path, kind: "write-not-persisted", subject });
+      log(`write ${write.name} · ${persisted ? "PERSISTED" : "NOT PERSISTED"} · ${subject}`);
+    }
     cdp.close();
   } finally {
     proc.kill();
@@ -776,6 +972,10 @@ async function main() {
     tokens,
     stepsPlanned: planned,
     stepsRun: steps.length,
+    crossOriginApiAllowed: allowCrossOriginApi,
+    writesPlanned: WRITE_JOURNEYS.length,
+    writesAsserted: writes.filter((w) => w.asserted).length,
+    writes,
     findings,
     steps,
   };
@@ -783,7 +983,11 @@ async function main() {
 
   const byKind = {};
   for (const f of findings) byKind[f.kind] = (byKind[f.kind] ?? 0) + 1;
-  log(`${steps.length} of ${planned} planned steps run · ${findings.length} findings`);
+  const writesAsserted = writes.filter((w) => w.asserted).length;
+  log(
+    `${steps.length} of ${planned} planned steps run · ` +
+      `${writesAsserted} of ${WRITE_JOURNEYS.length} writes asserted · ${findings.length} findings`,
+  );
   for (const [kind, count] of Object.entries(byKind).sort()) console.log(`   ${kind}: ${count}`);
   console.log(`results -> ${outPath}`);
 
@@ -812,6 +1016,17 @@ async function main() {
     console.error(
       `✖  only ${steps.length} of ${planned} planned steps were reached — ` +
         "this run is incomplete, not clean",
+    );
+    process.exit(1);
+  }
+  /**
+   * And the same refusal for writes. A sweep that rendered every page but saved
+   * nothing has not shown the product works; it has shown the product loads.
+   */
+  if (writesIncomplete(writesAsserted, WRITE_JOURNEYS.length)) {
+    console.error(
+      `✖  only ${writesAsserted} of ${WRITE_JOURNEYS.length} write journeys were asserted — ` +
+        "this run proved reads render, not that a write survives a reload",
     );
     process.exit(1);
   }
