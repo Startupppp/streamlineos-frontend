@@ -140,15 +140,30 @@ function runGate(cwd, script, meta) {
   const tail = out.split("\n").slice(-40).join("\n");
   const crashed = CRASH.find((re) => re.test(out));
   // Rule 2: the exit code is not the result. A crash signature outranks a 0.
+  // A gate whose PREREQUISITE is unmet has not failed -- it could not determine an
+  // answer, and recording that as FAIL is how a red gate teaches people to ignore it.
+  // check:tenant-relationships exits 2 against a mid-bootstrap target and reported 627
+  // "violations" that were entirely an artefact of the target sitting at 573 of 667.
+  // Classified on EVIDENCE (exit 2 AND a prerequisite signature in the tail), never on
+  // the exit code alone -- a bare 2 from an unknown script is still a failure.
+  const prereq = /TARGET IS MID-BOOTSTRAP|not release evidence|cannot (determine|connect|run)|prerequisite|requires a live|no database/i.exec(out);
   let status;
   if (r.error?.code === "ETIMEDOUT" || r.signal) status = "SKIP";
   else if (crashed) status = "CRASH";
+  else if (r.status === 2 && prereq) status = "SKIP";
   else status = r.status === 0 ? "PASS" : "FAIL";
   return {
     script, status, exitCode: r.status, signal: r.signal ?? null,
     crashSignature: crashed ? String(crashed) : null,
     durationMs: Date.now() - started,
-    prerequisite: status === "SKIP" ? (r.signal ? `killed by ${r.signal}` : `exceeded ${TIMEOUT_MS}ms`) : null,
+    prerequisite:
+      status === "SKIP"
+        ? r.signal
+          ? `killed by ${r.signal}`
+          : prereq
+            ? prereq[0]
+            : `exceeded ${TIMEOUT_MS}ms`
+        : null,
     note: meta.note ?? null, tail,
   };
 }
