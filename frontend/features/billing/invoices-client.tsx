@@ -28,6 +28,8 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useCan } from "@/hooks/api/access";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
@@ -71,14 +73,22 @@ const STATUS_CONFIG: Record<
 
 interface InvoiceActionsCellProps {
   inv: Invoice;
+  canUpdate: boolean;
+  canVoid: boolean;
   onUpdateStatus: (id: number, status: PatchableInvoiceStatus) => void;
-  onVoid: (id: number) => void;
+  onRequestVoid: (inv: Invoice) => void;
 }
 
-function InvoiceActionsCell({ inv, onUpdateStatus, onVoid }: InvoiceActionsCellProps) {
+function InvoiceActionsCell({
+  inv,
+  canUpdate,
+  canVoid,
+  onUpdateStatus,
+  onRequestVoid,
+}: InvoiceActionsCellProps) {
   const handleMarkIssued = useCallback(() => onUpdateStatus(inv.id, "ISSUED"), [inv.id, onUpdateStatus]);
   const handleMarkPaid = useCallback(() => onUpdateStatus(inv.id, "PAID"), [inv.id, onUpdateStatus]);
-  const handleMarkVoided = useCallback(() => onVoid(inv.id), [inv.id, onVoid]);
+  const handleRequestVoid = useCallback(() => onRequestVoid(inv), [inv, onRequestVoid]);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -95,18 +105,18 @@ function InvoiceActionsCell({ inv, onUpdateStatus, onVoid }: InvoiceActionsCellP
         <DropdownMenuItem asChild>
           <Link href={`/billing/invoices/${inv.id}`}>View Detail</Link>
         </DropdownMenuItem>
-        {inv.status === "DRAFT" && (
+        {canUpdate && inv.status === "DRAFT" && (
           <DropdownMenuItem onClick={handleMarkIssued}>
             <Send className="h-3.5 w-3.5 mr-2" /> Mark as Issued
           </DropdownMenuItem>
         )}
-        {(inv.status === "ISSUED" || inv.status === "FAILED") && (
+        {canUpdate && (inv.status === "ISSUED" || inv.status === "FAILED") && (
           <DropdownMenuItem onClick={handleMarkPaid}>
             <Check className="h-3.5 w-3.5 mr-2" /> Mark as Paid
           </DropdownMenuItem>
         )}
-        {inv.status !== "PAID" && inv.status !== "VOIDED" && (
-          <DropdownMenuItem variant="destructive" onClick={handleMarkVoided}>
+        {canVoid && inv.status !== "PAID" && inv.status !== "VOIDED" && (
+          <DropdownMenuItem variant="destructive" onClick={handleRequestVoid}>
             <Ban className="h-3.5 w-3.5 mr-2" /> Void
           </DropdownMenuItem>
         )}
@@ -121,6 +131,12 @@ export function InvoicesClient() {
   const pathname = usePathname();
   const [, startTransition] = useTransition();
   const [createOpen, setCreateOpen] = useState(false);
+  const [voidTarget, setVoidTarget] = useState<Invoice | null>(null);
+  // Each key is the one its own route declares: POST /invoices -> accounting:create,
+  // PATCH /invoices/:id -> accounting:update, POST /invoices/:id/void -> accounting:manage.
+  const canCreate = useCan("accounting:create");
+  const canUpdate = useCan("accounting:update");
+  const canVoid = useCan("accounting:manage");
   const { iconRef: plusRef, hoverHandlers: plusHoverHandlers } =
     useAnimatedIcon();
 
@@ -168,15 +184,22 @@ export function InvoicesClient() {
     [updateInvoice],
   );
 
-  const handleVoidInvoice = useCallback(
-    (id: number) => {
-      voidInvoice.mutate(id, {
-        onSuccess: () => toast.success("Invoice voided and its journal entry reversed"),
-        onError: (err) => toast.error(getErrorMessage(err)),
-      });
-    },
-    [voidInvoice],
-  );
+  const handleRequestVoid = useCallback((inv: Invoice) => setVoidTarget(inv), []);
+
+  const handleVoidDialogOpenChange = useCallback((open: boolean) => {
+    if (!open) setVoidTarget(null);
+  }, []);
+
+  const handleConfirmVoid = useCallback(() => {
+    if (!voidTarget) return;
+    voidInvoice.mutate(voidTarget.id, {
+      onSuccess: () => {
+        toast.success("Invoice voided and its journal entry reversed");
+        setVoidTarget(null);
+      },
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
+  }, [voidInvoice, voidTarget]);
 
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
   const handleRetryLoad = useCallback(() => {
@@ -239,8 +262,10 @@ export function InvoicesClient() {
       cell: (inv) => (
         <InvoiceActionsCell
           inv={inv}
+          canUpdate={canUpdate}
+          canVoid={canVoid}
           onUpdateStatus={handleUpdateStatus}
-          onVoid={handleVoidInvoice}
+          onRequestVoid={handleRequestVoid}
         />
       ),
     },
@@ -267,9 +292,11 @@ export function InvoicesClient() {
       title="Invoices"
       subtitle="Manage and track all invoices"
       actions={
-        <Button size="sm" onClick={handleOpenCreate} {...plusHoverHandlers}>
-          <PlusIcon ref={plusRef} size={16} /> New Invoice
-        </Button>
+        canCreate ? (
+          <Button size="sm" onClick={handleOpenCreate} {...plusHoverHandlers}>
+            <PlusIcon ref={plusRef} size={16} /> New Invoice
+          </Button>
+        ) : undefined
       }
       filters={filtersBar}
     >
@@ -322,8 +349,12 @@ export function InvoicesClient() {
               <EmptyState
                 illustration={<EmptyDocumentsIllustration className="w-28 h-28" />}
                 title="No invoices yet"
-                description="Create your first invoice to get started"
-                action={{ label: "New Invoice", onClick: handleOpenCreate }}
+                description={
+                  canCreate
+                    ? "Create your first invoice to get started"
+                    : "No invoices have been raised for your organization yet."
+                }
+                action={canCreate ? { label: "New Invoice", onClick: handleOpenCreate } : undefined}
                 compact
               />
             )
@@ -333,6 +364,18 @@ export function InvoicesClient() {
         />
 
         <CreateInvoiceDialog open={createOpen} onOpenChange={setCreateOpen} />
+
+        <ConfirmDialog
+          open={voidTarget !== null}
+          onOpenChange={handleVoidDialogOpenChange}
+          destructive
+          keepOpenOnConfirm
+          isPending={voidInvoice.isPending}
+          title="Void this invoice?"
+          description={`Voiding ${voidTarget?.invoiceNumber ?? "this invoice"} reverses its posted journal entry. Voiding cannot be undone — raise a fresh invoice instead.`}
+          confirmLabel="Void invoice"
+          onConfirm={handleConfirmVoid}
+        />
       </div>
     </PageWrapper>
   );

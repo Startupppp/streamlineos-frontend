@@ -18,6 +18,16 @@ export interface MailActionCacheContext {
  * A mail action reaches two caches: the folder listing and the unified inbox.
  * Both are patched before the request leaves, and both are restored from the
  * same snapshot set when it fails.
+ *
+ * Every patch matches on `(id, accountId)`, never on `id` alone. A message id is
+ * the provider's, not ours — the lists key their rows `accountId-id` for exactly
+ * that reason — so archiving in one connected mailbox used to delete a same-id
+ * row belonging to another, with no request in flight that could ever put it
+ * back. markRead and star already matched on the pair; archive/trash did not.
+ *
+ * There is deliberately no star branch for the unified inbox: `MailInboxItem`
+ * carries no `isStarred`, and inventing one here would patch a field the list
+ * neither receives from the server nor renders.
  */
 export async function applyMailActionToCaches(
   qc: QueryClient,
@@ -48,7 +58,9 @@ export async function applyMailActionToCaches(
           ...old,
           pages: old.pages.map((page) => ({
             ...page,
-            messages: page.messages.filter((m) => m.id !== messageId),
+            messages: page.messages.filter(
+              (m) => !(m.id === messageId && m.accountId === accountId),
+            ),
           })),
         };
       });
@@ -103,7 +115,12 @@ export async function applyMailActionToCaches(
           pages: old.pages.map((page) => ({
             ...page,
             items: page.items.filter(
-              (item) => !(item.kind === "mail" && item.id === messageId),
+              (item) =>
+                !(
+                  item.kind === "mail" &&
+                  item.id === messageId &&
+                  item.accountId === accountId
+                ),
             ),
           })),
         };
@@ -117,7 +134,9 @@ export async function applyMailActionToCaches(
           pages: old.pages.map((page) => ({
             ...page,
             items: page.items.map((item): UnifiedInboxItem =>
-              item.kind === "mail" && item.id === messageId
+              item.kind === "mail" &&
+              item.id === messageId &&
+              item.accountId === accountId
                 ? { ...item, isRead: nextIsRead }
                 : item,
             ),

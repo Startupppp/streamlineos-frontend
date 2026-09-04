@@ -98,7 +98,9 @@ function FeedbackSheet({
           <div className="space-y-1.5">
             <Label>Overall rating</Label>
             <Select value={rating} onValueChange={setRating}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger aria-label="Overall rating">
+                <SelectValue placeholder="Select a rating" />
+              </SelectTrigger>
               <SelectContent>
                 {[1, 2, 3, 4, 5].map((value) => (
                   <SelectItem key={value} value={String(value)}>
@@ -114,7 +116,9 @@ function FeedbackSheet({
               value={recommendation}
               onValueChange={(value) => setRecommendation(value as Recommendation)}
             >
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger aria-label="Recommendation">
+                <SelectValue placeholder="Select a recommendation" />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="HIRE">Hire</SelectItem>
                 <SelectItem value="MAYBE">Maybe</SelectItem>

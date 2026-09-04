@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useCreateInvoice } from "@/hooks/api/invoice";
+import { useCan } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { DEFAULT_INVOICE_VALUES, invoiceFormSchema, roundInvoiceAmount, type InvoiceFormValues } from "./new-invoice-schema";
 import { InvoiceLineItems } from "./invoice-line-items";
@@ -18,6 +20,8 @@ import { InvoiceTotals, type InvoiceTotalsValue } from "./invoice-totals";
 interface NewInvoiceFormProps { onCreated: (invoiceId: number) => void; }
 
 export function NewInvoiceForm({ onCreated }: NewInvoiceFormProps) {
+  // POST /invoices declares accounting:create.
+  const canCreate = useCan("accounting:create");
   const createInvoice = useCreateInvoice();
   const form = useForm<InvoiceFormValues>({ resolver: zodResolver(invoiceFormSchema), defaultValues: DEFAULT_INVOICE_VALUES });
   const { control, register, handleSubmit, setValue, formState } = form;
@@ -36,6 +40,9 @@ export function NewInvoiceForm({ onCreated }: NewInvoiceFormProps) {
   }
 
   function handleInvalidSubmit() { toast.error("Please fix the form errors before submitting"); }
+
+  if (!canCreate)
+    return <NoPermissionState permission="accounting:create" title="Cannot create invoices" description="You do not have permission to raise an invoice for this organization." />;
 
   return <form onSubmit={handleSubmit(handleValidSubmit, handleInvalidSubmit)} className="space-y-6">
     <InvoiceLineItems control={control} errors={formState.errors} fields={lineItems.fields} register={register} remove={lineItems.remove} append={lineItems.append} setValue={setValue} amounts={totals.amounts} />

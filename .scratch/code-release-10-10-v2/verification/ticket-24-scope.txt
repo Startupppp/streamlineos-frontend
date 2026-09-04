@@ -1,0 +1,2 @@
+TICKET 24
+CODE criteria to verify (4): PRD-C025, PRD-C105, PRD-C106, PRD-C107

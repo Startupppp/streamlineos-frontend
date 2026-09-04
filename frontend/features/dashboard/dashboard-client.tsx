@@ -25,6 +25,7 @@ import {
   StatCardGridSkeleton,
 } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
@@ -40,7 +41,12 @@ import { useDashboardAccess } from "@/features/dashboard/use-dashboard-access";
 import { useDashboardStatCards } from "@/features/dashboard/use-dashboard-stat-cards";
 import { useHomeCacheSync } from "./use-home-cache-sync";
 import { DashboardDeferredBody } from "./dashboard-deferred-body";
-import { shouldRenderDashboardLoading } from "./dashboard-hydration";
+import {
+  HOME_ACCESS_DEADLINE_MS,
+  shouldRenderAccessUnavailable,
+  shouldRenderDashboardLoading,
+} from "./dashboard-hydration";
+import { useSettleDeadline } from "./use-settle-deadline";
 const GuidedTourOverlay = dynamic(
   () =>
     import("./guided-tour-overlay").then((m) => ({
@@ -68,6 +74,7 @@ export function DashboardClient() {
   const firstName = getFirstName(session);
   const access = useDashboardAccess();
   const setupBannersPending = useModuleSetupBannersPending();
+  const accessDeadlineElapsed = useSettleDeadline(HOME_ACCESS_DEADLINE_MS);
   useHomeCacheSync();
   const { hrEnabled, canViewExecutive } = access;
 
@@ -113,6 +120,7 @@ export function DashboardClient() {
   if (
     shouldRenderDashboardLoading({
       accessLoading: access.accessLoading,
+      accessDeadlineElapsed,
       mounted,
       setupBannersPending,
     })
@@ -132,6 +140,24 @@ export function DashboardClient() {
             <WidgetSkeleton rows={4} />
           </div>
         </div>
+      </PageWrapper>
+    );
+  }
+
+  if (
+    shouldRenderAccessUnavailable({
+      accessLoading: access.accessLoading,
+      accessResolved: access.accessResolved,
+      accessDeadlineElapsed,
+    })
+  ) {
+    return (
+      <PageWrapper title={pageTitle} subtitle="Your access could not be loaded">
+        <ErrorState
+          title="Home is unavailable"
+          description="We could not confirm what you have access to, so no section can be shown. Try again."
+          onRetry={access.refetchAccess}
+        />
       </PageWrapper>
     );
   }

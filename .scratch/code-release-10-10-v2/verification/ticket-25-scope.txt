@@ -1,0 +1,2 @@
+TICKET 25
+CODE criteria to verify (2): PRD-C030, PRD-C031

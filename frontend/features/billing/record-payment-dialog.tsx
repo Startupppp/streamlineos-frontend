@@ -26,6 +26,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { useCan } from "@/hooks/api/access";
 import { useRecordPayment } from "@/hooks/api/invoice";
 import { useManualMethods } from "@/hooks/api/payments";
 import type { PaymentMethod } from "@/types/invoice";
@@ -76,6 +78,8 @@ export function RecordPaymentDialog({
   outstanding,
   onOpenChange,
 }: RecordPaymentDialogProps) {
+  // POST /invoices/:invoiceId/payments declares accounting:create.
+  const canRecordPayment = useCan("accounting:create");
   const recordPayment = useRecordPayment();
   const { data: manualMethods } = useManualMethods();
 
@@ -140,6 +144,14 @@ export function RecordPaymentDialog({
         <DialogHeader>
           <DialogTitle className="text-sm">Record Payment</DialogTitle>
         </DialogHeader>
+        {!canRecordPayment ? (
+          <NoPermissionState
+            compact
+            permission="accounting:create"
+            title="Cannot record payments"
+            description="You do not have permission to record a payment against this invoice."
+          />
+        ) : (
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3 py-1">
           <div className="space-y-1">
             <Label htmlFor="pay-amount" className="text-xs">
@@ -248,6 +260,7 @@ export function RecordPaymentDialog({
             </LoadingButton>
           </div>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );

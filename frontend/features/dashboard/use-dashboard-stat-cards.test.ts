@@ -25,6 +25,8 @@ import type { DashboardStats } from "@/types/dashboard";
 function access(over: Partial<DashboardAccess> = {}): DashboardAccess {
   return {
     accessLoading: false,
+    accessResolved: true,
+    refetchAccess: jest.fn(),
     hrEnabled: true,
     crmEnabled: false,
     projectsEnabled: true,

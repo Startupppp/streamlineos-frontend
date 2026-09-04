@@ -87,6 +87,11 @@ function useInvalidateRunWorkspace() {
     void qc.invalidateQueries({ queryKey: queryKeys.payroll.runEmployeesAll(runId) });
     void qc.invalidateQueries({ queryKey: queryKeys.payroll.runVariance(runId) });
     void qc.invalidateQueries({ queryKey: queryKeys.payroll.commandCenterAll });
+    // Lock/reopen/close change which payees are instructable, so the payout
+    // batch list and any open batch sheet are stale too. They hang off
+    // `payroll/payout/batches`, not `payroll/runs`, so the prefix above misses
+    // them; `bankValidation` does sit under `payroll/runs` and is covered.
+    void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatches() });
   };
 }
 
