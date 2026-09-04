@@ -81,7 +81,7 @@ export function CreateGoalSheet({
           New Goal
         </Button>
       </SheetTrigger>
-      <SheetContent className="flex w-[420px] flex-col gap-0 overflow-hidden p-0">
+      <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-[420px]">
         <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left gap-1">
           <SheetTitle>Create Goal</SheetTitle>
         </SheetHeader>

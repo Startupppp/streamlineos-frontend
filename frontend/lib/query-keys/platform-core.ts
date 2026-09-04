@@ -11,11 +11,6 @@ export const platformCoreQueryKeys = {
       params === undefined
         ? ([...base, "reports", "project"] as const)
         : ([...base, "reports", "project", params] as const),
-    teamPerformance: (params?: Record<string, unknown>) =>
-      params === undefined
-        ? ([...base, "reports", "teamPerformance"] as const)
-        : ([...base, "reports", "teamPerformance", params] as const),
-    dashboardStats: () => [...base, "reports", "dashboardStats"] as const,
   },
 
   notifications: {
@@ -158,8 +153,6 @@ export const platformCoreQueryKeys = {
       limit: number;
       search?: string;
     }) => [...base, "access", "simulate", "candidates", params] as const,
-    resourceGrants: (resourceType: string, resourceId: string) =>
-      [...base, "access", "resource-grants", resourceType, resourceId] as const,
     orgModules: () => [...base, "access", "org-modules"] as const,
   },
 

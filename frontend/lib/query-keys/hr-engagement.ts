@@ -17,8 +17,6 @@ export const hrEngagementQueryKeys = {
     pollResults: (pollId: number) =>
       [...base, "hr", "engagement", "polls", pollId, "results"] as const,
     communities: () => [...base, "hr", "engagement", "communities"] as const,
-    communityMembers: (communityId: number) =>
-      [...base, "hr", "engagement", "communities", communityId, "members"] as const,
     campaigns: () => [...base, "hr", "engagement", "campaigns"] as const,
   },
 

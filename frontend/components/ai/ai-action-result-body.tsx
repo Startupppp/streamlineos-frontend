@@ -41,6 +41,8 @@ interface AiActionResultBodyProps {
   onCancel?: () => void;
   compact?: boolean;
   contentOnly?: boolean;
+  /** Declared by the action; gates the streaming citation placeholder. */
+  expectsCitations?: boolean;
 }
 
 export function AiActionResultBody({
@@ -51,6 +53,7 @@ export function AiActionResultBody({
   onCancel,
   compact = false,
   contentOnly = false,
+  expectsCitations = false,
 }: AiActionResultBodyProps) {
   const noticeVariant = compact ? "compact" : "fill";
 
@@ -86,6 +89,7 @@ export function AiActionResultBody({
         text={state.text}
         onCancel={contentOnly ? undefined : onCancel}
         variant={noticeVariant}
+        expectsCitations={expectsCitations}
       />
     );
   }

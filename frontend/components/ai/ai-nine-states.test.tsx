@@ -8,6 +8,8 @@ interface Case {
   state: AiActionResultState;
   shows: RegExp;
   labelled?: RegExp;
+  /** What the surface declares about sources; see `expectsCitations`. */
+  expectsCitations?: boolean;
   offersRetry: boolean;
 }
 
@@ -53,6 +55,7 @@ const CASES: Case[] = [
     state: { status: "streaming", text: "grounding this" },
     shows: /Generating/i,
     labelled: /loading sources/i,
+    expectsCitations: true,
     offersRetry: false,
   },
   {
@@ -70,19 +73,32 @@ const CASES: Case[] = [
 ];
 
 describe("the nine AI boundary states each render a defined surface", () => {
-  it.each(CASES)("$boundary renders its own state", ({ state, shows, labelled }) => {
-    render(
-      <AiActionResultBody state={state} onRetry={jest.fn()} onCancel={jest.fn()} />,
-    );
-    expect(screen.getByText(shows)).toBeInTheDocument();
-    if (labelled) expect(screen.getByLabelText(labelled)).toBeInTheDocument();
-  });
+  it.each(CASES)(
+    "$boundary renders its own state",
+    ({ state, shows, labelled, expectsCitations }) => {
+      render(
+        <AiActionResultBody
+          state={state}
+          onRetry={jest.fn()}
+          onCancel={jest.fn()}
+          expectsCitations={expectsCitations ?? false}
+        />,
+      );
+      expect(screen.getByText(shows)).toBeInTheDocument();
+      if (labelled) expect(screen.getByLabelText(labelled)).toBeInTheDocument();
+    },
+  );
 
   it.each(CASES)(
     "$boundary offers a retry only when re-dispatch can help",
-    ({ state, offersRetry }) => {
+    ({ state, offersRetry, expectsCitations }) => {
       render(
-        <AiActionResultBody state={state} onRetry={jest.fn()} onCancel={jest.fn()} />,
+        <AiActionResultBody
+          state={state}
+          onRetry={jest.fn()}
+          onCancel={jest.fn()}
+          expectsCitations={expectsCitations ?? false}
+        />,
       );
       const retry = screen.queryByRole("button", { name: /try again|retry|run again/i });
       expect(retry !== null).toBe(offersRetry);
@@ -103,9 +119,25 @@ describe("the nine AI boundary states each render a defined surface", () => {
     expect(new Set(rendered).size).toBe(8);
   });
 
-  it("shows a citation placeholder while the answer is still streaming", () => {
-    render(<AiActionResultBody state={{ status: "streaming", text: "part" }} />);
+  it("shows a citation placeholder only when the action declares sources", () => {
+    render(
+      <AiActionResultBody
+        state={{ status: "streaming", text: "part" }}
+        expectsCitations
+      />,
+    );
     expect(screen.getByLabelText(/loading sources/i)).toBeInTheDocument();
+  });
+
+  /**
+   * The placeholder used to be unconditional, so 26 of the 28 files that define
+   * an `AiAction` shimmered "Loading sources" and then resolved to nothing. A
+   * promise the surface cannot keep is worse than no promise, so the default is
+   * silence and the two surfaces that really do return citations opt in.
+   */
+  it("shows no citation placeholder when the action never returns sources", () => {
+    render(<AiActionResultBody state={{ status: "streaming", text: "part" }} />);
+    expect(screen.queryByLabelText(/loading sources/i)).toBeNull();
   });
 
   it("does not show a citation placeholder once the answer is ready", () => {
@@ -140,9 +172,13 @@ describe("the nine AI boundary states each render a defined surface", () => {
   });
 });
 
-function inlineSession(state: AiActionResultState): AiInlineSession {
+function inlineSession(
+  state: AiActionResultState,
+  expectsCitations = false,
+): AiInlineSession {
   return {
     actionKey: "improve",
+    expectsCitations,
     state,
     apply: jest.fn(),
     reject: jest.fn(),
@@ -152,8 +188,25 @@ function inlineSession(state: AiActionResultState): AiInlineSession {
 }
 
 describe("the inline preview renders the same vocabulary", () => {
-  it.each(CASES)("$boundary renders inline too", ({ state, shows }) => {
-    render(<AiInlinePreview session={inlineSession(state)} />);
-    expect(screen.getByText(shows)).toBeInTheDocument();
+  it.each(CASES)(
+    "$boundary renders inline too",
+    ({ state, shows, expectsCitations }) => {
+      render(
+        <AiInlinePreview session={inlineSession(state, expectsCitations ?? false)} />,
+      );
+      expect(screen.getByText(shows)).toBeInTheDocument();
+    },
+  );
+
+  it("carries the same citation declaration inline", () => {
+    const streaming: AiActionResultState = { status: "streaming", text: "part" };
+    const { unmount } = render(
+      <AiInlinePreview session={inlineSession(streaming, true)} />,
+    );
+    expect(screen.getByLabelText(/loading sources/i)).toBeInTheDocument();
+    unmount();
+
+    render(<AiInlinePreview session={inlineSession(streaming, false)} />);
+    expect(screen.queryByLabelText(/loading sources/i)).toBeNull();
   });
 });

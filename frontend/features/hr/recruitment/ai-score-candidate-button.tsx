@@ -7,6 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useAIScoreCandidate, useAcceptCandidateScore } from "@/hooks/api/ai";
+import { AiFailureBody } from "@/components/ai";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { useFeature } from "@/lib/billing/use-feature";
@@ -22,14 +23,12 @@ export function AIScoreCandidateButton({ candidateId, jobId, compact }: AIScoreC
   const scoreMutation = useAIScoreCandidate();
   const acceptMutation = useAcceptCandidateScore();
   const result = scoreMutation.data;
+  const scoreFailure = scoreMutation.isPending ? null : scoreMutation.error;
   const { enabled: featureEnabled, requiredPlan } = useFeature("ai.candidate-scoring");
 
   function handleScore() {
     if (!featureEnabled) { toast.error(`AI candidate scoring requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
-    scoreMutation.mutate(
-      { candidateId, jobId },
-      { onError: (e) => toast.error(getErrorMessage(e)) },
-    );
+    scoreMutation.mutate({ candidateId, jobId });
   }
 
   function handleAccept() {
@@ -81,23 +80,30 @@ export function AIScoreCandidateButton({ candidateId, jobId, compact }: AIScoreC
             {result ? <span className={cn("font-bold", fitColor(result.fitLevel))}>{result.score}</span> : "Get AI Estimate"}
           </LoadingButton>
         </PopoverTrigger>
-        {result && (
+        {(result || scoreFailure) && (
           <PopoverContent className="w-80 p-3" align="start" onClick={handlePopoverContentClick}>
-            <ScoreDetails result={result} fitColor={fitColor} fitBg={fitBg} />
-            <div className="mt-2 pt-2 border-t border-border flex items-center gap-2">
-              <LoadingButton
-                size="sm"
-                variant="default"
-                isPending={acceptMutation.isPending}
-                onClick={handleAccept}
-                className="text-xs"
-              >
-                Accept AI Score
-              </LoadingButton>
-            </div>
-            <p className="mt-2 text-micro text-muted-foreground leading-snug">
-              AI estimate only. Human decision required. Scores are for reference purposes and must not be used to automatically accept or reject candidates.
-            </p>
+            {scoreFailure && !result && (
+              <AiFailureBody error={scoreFailure} onRetry={handleScore} />
+            )}
+            {result && (
+              <>
+                <ScoreDetails result={result} fitColor={fitColor} fitBg={fitBg} />
+                <div className="mt-2 pt-2 border-t border-border flex items-center gap-2">
+                  <LoadingButton
+                    size="sm"
+                    variant="default"
+                    isPending={acceptMutation.isPending}
+                    onClick={handleAccept}
+                    className="text-xs"
+                  >
+                    Accept AI Score
+                  </LoadingButton>
+                </div>
+                <p className="mt-2 text-micro text-muted-foreground leading-snug">
+                  AI estimate only. Human decision required. Scores are for reference purposes and must not be used to automatically accept or reject candidates.
+                </p>
+              </>
+            )}
           </PopoverContent>
         )}
       </Popover>
@@ -117,6 +123,9 @@ export function AIScoreCandidateButton({ candidateId, jobId, compact }: AIScoreC
         <Sparkles className="h-4 w-4 mr-2 text-primary" />
         Get AI Estimate
       </LoadingButton>
+      {scoreFailure && !result && (
+        <AiFailureBody error={scoreFailure} onRetry={handleScore} />
+      )}
       {result && (
         <>
           <ScoreDetails result={result} fitColor={fitColor} fitBg={fitBg} />

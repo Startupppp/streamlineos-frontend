@@ -3,7 +3,6 @@ import { queryKeyBase as base } from "./base";
 export const directoryAndOwnershipQueryKeys = {
   platform: {
     all: [...base, "platform"] as const,
-    admins: () => [...base, "platform", "admins"] as const,
   },
 
   mail: {

@@ -40,10 +40,6 @@ export const usersAndCommerceQueryKeys = {
         : ([...base, "users", "loginHistory", userId, params] as const),
     membership: (userId: string) =>
       [...base, "users", "membership", userId] as const,
-    orgAuditLog: (params?: Record<string, unknown>) =>
-      params === undefined
-        ? ([...base, "users", "orgAuditLog"] as const)
-        : ([...base, "users", "orgAuditLog", params] as const),
   },
 
   crmProducts: {
@@ -131,8 +127,6 @@ export const usersAndCommerceQueryKeys = {
       params === undefined
         ? ([...base, "timesheets", "billing", "uninvoiced"] as const)
         : ([...base, "timesheets", "billing", "uninvoiced", params] as const),
-    ratePreview: (params: Record<string, unknown>) =>
-      [...base, "timesheets", "billing", "rate-preview", params] as const,
     reportsOverview: (params?: Record<string, unknown>) =>
       params === undefined
         ? ([...base, "timesheets", "reports", "overview"] as const)
@@ -149,8 +143,6 @@ export const usersAndCommerceQueryKeys = {
         : ([...base, "timesheets", "exceptions", "list", params] as const),
     exceptionsSummary: () =>
       [...base, "timesheets", "exceptions", "summary"] as const,
-    settingsHistory: () =>
-      [...base, "timesheets", "settings", "history"] as const,
     settings: () => [...base, "timesheets", "settings"] as const,
     rates: () => [...base, "timesheets", "rates"] as const,
     budgets: () => [...base, "timesheets", "budgets"] as const,

@@ -136,25 +136,30 @@ export function SkillsMatrixPage() {
         <ScrollArea className="w-full">
           <div className="min-w-max">
             <table className="text-xs border-collapse">
+              <caption className="sr-only">
+                Skills matrix: proficiency level per employee for each tracked skill.
+              </caption>
               <thead>
                 <tr>
-                  <th className="sticky left-0 z-10 bg-card border-b border-r border-border px-3 py-2 text-left font-medium min-w-[160px]">
+                  <th scope="col" className="sticky left-0 z-10 bg-card border-b border-r border-border px-3 py-2 text-left font-medium min-w-[160px]">
                     Employee
                   </th>
                   {skills.map((skill) => (
                     <th
+                      scope="col"
                       key={skill}
                       className={`border-b border-r px-2 py-2 font-medium text-center ${compact ? "max-w-[50px]" : "max-w-[90px]"} truncate`}
                       title={skill}
                     >
+                      <span className="sr-only">{skill}</span>
                       {compact ? (
-                        <span className="block truncate text-micro leading-tight">{skill.substring(0, 6)}{skill.length > 6 ? "…" : ""}</span>
+                        <span aria-hidden="true" className="block truncate text-micro leading-tight">{skill.substring(0, 6)}{skill.length > 6 ? "…" : ""}</span>
                       ) : (
-                        <div className="[writing-mode:vertical-rl] rotate-180 max-h-24 py-1">{skill}</div>
+                        <div aria-hidden="true" className="[writing-mode:vertical-rl] rotate-180 max-h-24 py-1">{skill}</div>
                       )}
                     </th>
                   ))}
-                  <th className="border-b px-2 py-2 font-medium text-center">Total</th>
+                  <th scope="col" className="border-b px-2 py-2 font-medium text-center">Total</th>
                 </tr>
               </thead>
               <tbody>
@@ -162,7 +167,7 @@ export function SkillsMatrixPage() {
                   const skillCount = Object.keys(employeeRecord.skills).length;
                   return (
                     <tr key={employeeRecord.userId} className="hover:bg-muted/30">
-                      <td className="sticky left-0 z-10 bg-card border-b border-r border-border px-3 py-2">
+                      <th scope="row" className="sticky left-0 z-10 bg-card border-b border-r border-border px-3 py-2 text-left font-normal">
                         <div className="flex items-center gap-2">
                           <Avatar className="h-6 w-6 shrink-0">
                             <AvatarImage src={resolveImageUrl(employeeRecord.image)} />
@@ -170,7 +175,7 @@ export function SkillsMatrixPage() {
                           </Avatar>
                           <TruncatedText text={employeeRecord.name ?? ""} className="font-medium max-w-[110px]" />
                         </div>
-                      </td>
+                      </th>
                       {skills.map((skill) => {
                         const level = employeeRecord.skills[skill];
                         return (
@@ -180,15 +185,24 @@ export function SkillsMatrixPage() {
                                 title={`${skill}: ${LEVEL_LABELS[level] ?? `L${level}`}`}
                                 className={`inline-block rounded px-1.5 py-0.5 text-micro font-semibold cursor-default ${LEVEL_COLORS[level] ?? LEVEL_COLORS[1]}`}
                               >
-                                {compact ? (LEVEL_SHORT[level] ?? `${level}`) : `${level} – ${LEVEL_LABELS[level] ?? `L${level}`}`}
+                                <span className="sr-only">{`${skill}: level ${level}, ${LEVEL_LABELS[level] ?? `L${level}`}`}</span>
+                                <span aria-hidden="true">
+                                  {compact ? (LEVEL_SHORT[level] ?? `${level}`) : `${level} – ${LEVEL_LABELS[level] ?? `L${level}`}`}
+                                </span>
                               </span>
                             ) : (
-                              <span className="text-muted-foreground/30">—</span>
+                              <>
+                                <span className="sr-only">{`${skill}: not assessed`}</span>
+                                <span aria-hidden="true" className="text-muted-foreground/30">—</span>
+                              </>
                             )}
                           </td>
                         );
                       })}
-                      <td className="border-b px-2 py-2 text-center font-medium">{skillCount}</td>
+                      <td className="border-b px-2 py-2 text-center font-medium">
+                        <span className="sr-only">Skills recorded: </span>
+                        {skillCount}
+                      </td>
                     </tr>
                   );
                 })}
