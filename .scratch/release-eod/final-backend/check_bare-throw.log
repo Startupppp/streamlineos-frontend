@@ -1,0 +1,3 @@
+Spec files 2066  ·  .toThrow() matchers 1524  ·  risk-titled tests 7131
+  bare throws 146  ·  on a risk path 5  ·  exempt SCHEMA_PARSE 5  ·  ACTIONABLE 0  ·  off a risk path (INFO, not ratcheted) 141
+OK — every refusal test on a risk path names the exception it accepts, except 0 registered site(s). Ratchet 1; it may only go down.

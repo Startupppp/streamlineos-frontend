@@ -1,0 +1,1 @@
+check-gate-wiring: 101 gates, 92 of them able to FAIL the job (0 registered non-blocking), all invoked by a run: step of a reachable job (163 run steps across 15 jobs in 7 workflow files, all 7 reachable, 9 deliberate exceptions).

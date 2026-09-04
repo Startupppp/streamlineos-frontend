@@ -1,0 +1,2 @@
+check:unjoined-table-refs — 3171 files, 5473 queries, 293 skipped (subquery/CTE construct)
+OK — every referenced table is in its query's FROM/JOIN.

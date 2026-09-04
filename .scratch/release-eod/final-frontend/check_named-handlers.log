@@ -1,0 +1,2 @@
+✔  No non-trivial closure left inline in a JSX event prop (3878 files · 1474 inline closures in JSX event props · 44 non-trivial ones in crm/inventory/public-landing, excluded by scope (R-10b)).
+   The threshold is ZERO for release-scope code, not a ratchet: a closure that computes a value, declares a local, branches, awaits, or runs more than two statements must be a named, typed handler. A closure that only routes the event onward stays inline.

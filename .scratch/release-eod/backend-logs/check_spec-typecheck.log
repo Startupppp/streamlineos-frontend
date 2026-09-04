@@ -1,0 +1,4 @@
+src/scripts/__tests__/_spec-typecheck-self-test.spec.ts(2,29): error TS2554: Expected 2 arguments, but got 1.
+
+check-spec-typecheck: spec-inclusive typecheck failed (tsconfig.json).
+NOTE: NODE_OPTIONS=--max-old-space-size=8192 is required for this check.

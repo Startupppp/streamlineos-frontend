@@ -1,0 +1,25 @@
+Running self-test for check-command-catalog...
+
+  (a) permissioned endpoint carrying the contract key → PERMISSIONED
+  (b) permissioned endpoint left on a raw useMutation → UNCLASSIFIED
+  (c) a declared key that no longer matches the contract → WRONG-KEY
+  (d) a path built from a module constant is still resolved → PERMISSIONED
+  (e) an imperative download used as a mutation is classified, not skipped → PERMISSIONED
+  (f) a universal endpoint needs no permission → SELF
+  (g) an endpoint absent from the contract fails closed → UNCLASSIFIED
+  (h) an unresolvable dynamic path fails closed → UNCLASSIFIED
+  (i2) the generic form useMutation<T, E, V>({...}) is seen — 382 call sites the old gate could not → UNCLASSIFIED
+  (i3) the generic form on useAuthorizedMutation keeps its key → PERMISSIONED
+  (i4) an arrow one-liner does not borrow the next declaration's body → not extracted
+  (i5) an apostrophe in a comment does not hide the declared key → PERMISSIONED
+  (i) an `export const` hook is seen, not only `export function` → UNCLASSIFIED
+  (j) unknown hook name returns null (scan is not vacuous)
+  (adv-1..6) adversarial matcher fixtures → all correct
+  (r-a) correct gated read carries the contract key → GATED
+  (r-b) wrong key on a read is WRONG-KEY → WRONG-KEY
+  (r-c) a read with no apiClient.get in its body is UNCLASSIFIED → UNCLASSIFIED
+  (r-d) a read path from a module constant is resolved correctly → GATED
+  (r-e) an OFF_CONTRACT_READS entry is classified OFF-CONTRACT, not UNCLASSIFIED → OFF-CONTRACT
+
+✔ 25 command-catalog fixtures passed — check-command-catalog is live.
+

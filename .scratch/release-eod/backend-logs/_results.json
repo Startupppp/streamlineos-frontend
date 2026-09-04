@@ -1,0 +1,1323 @@
+{
+  "label": "backend",
+  "repoDir": "D:\\projects\\personal\\Streamlineos\\backend",
+  "total": 188,
+  "results": [
+    {
+      "gate": "check:ai-charge",
+      "exitCode": 0,
+      "durationMs": 2491,
+      "timedOut": false,
+      "tail": "Paid gateway entry points and call sites found:\n    embedBatchWithCredit                 2\n    embedQueryWithCredit                 4\n    invokeStructured                     65\n    invokeStructuredWithImage            1\n    invokeStructuredWithImageWithUsage   1\n    invokeStructuredWithUsage            3\n    invokeText                           25\n    invokeTextWithUsage                  11\n    streamTextWithUsage                  12\ncheck-ai-charge-declared: 124 invocations scanned — all declare `charge` explicitly (1 allowlisted)"
+    },
+    {
+      "gate": "check:ai-charge:self-test",
+      "exitCode": 0,
+      "durationMs": 2464,
+      "timedOut": false,
+      "tail": "check-ai-charge-declared --self-test: 14 passed (124 invocations scanned)"
+    },
+    {
+      "gate": "check:alert-ack",
+      "exitCode": 2,
+      "durationMs": 1646,
+      "timedOut": false,
+      "tail": "PREREQUISITE MISSING: ALERT_WEBHOOK_URL is not set.\nAlert acknowledgement cannot be confirmed without a configured webhook destination.\n1. Set ALERT_WEBHOOK_URL to your Slack/PagerDuty/OpsGenie webhook endpoint.\n2. Run the interactive drill: node src/scripts/drill-alert-system.mjs\n3. Enter the nonce shown in your alert channel to confirm a human received it.\n4. Re-run this check."
+    },
+    {
+      "gate": "check:alert-ack:self-test",
+      "exitCode": 0,
+      "durationMs": 1616,
+      "timedOut": false,
+      "tail": "{\"selfTest\":true,\"pass\":true,\"checks\":{\"case1MissingFileDetected\":true,\"case2AckedFreshPasses\":true,\"case3FalseAckedFails\":true,\"case4NullAckedFails\":true,\"case5StaleAckFails\":true,\"case6RoundTripStateFile\":true,\"case7UndeliveredFails\":true}}"
+    },
+    {
+      "gate": "check:alert-system",
+      "exitCode": 0,
+      "durationMs": 1988,
+      "timedOut": false,
+      "tail": "{\"script\":\"route-attribution.mjs\",\"passed\":true,\"code\":0,\"selfTest\":{\"selfTest\":true,\"pass\":true,\"checks\":{\"hrAttributesToPeopleTeam\":true,\"chatAttributesToCommunicationsViaHome\":true,\"mailAttributesToCommunicationsViaHome\":true,\"knowledgeAttributesToKbModule\":true,\"healthAttributesToPlatform\":true,\"cronAttributesToPlatform\":true,\"unknownNamespaceIsUnattributable\":true,\"crmIsSloExcluded\":true,\"partyAttributesToCrmSloExcluded\":true,\"extractNamespaceFromHrRoute\":true,\"extractNamespaceFromChatRoute\":true,\"seamsSpanNameReturnsNull\":true,\"ownersDifferBetweenHrAndChat\":true,\"ownersDifferBetweenHrAndHealth\":true}}}\n{\"script\":\"alert-dead-outbox.mjs\",\"passed\":true,\"code\":0,\"selfTest\":{\"selfTest\":true,\"pass\":true,\"case1FiresOnDeadRow\":true,\"case2ClearsOnStaleRow\":true}}\n{\"script\":\"alert-dead-delivery.mjs\",\"passed\":true,\"code\":0,\"selfTest\":{\"selfTest\":true,\"pass\":true,\"case1FiresOnDeadRow\":true,\"case2ClearsOnStaleRow\":true}}\n{\"script\":\"alert-sig-failures.mjs\",\"passed\":true,\"code\":0,\"selfTest\":{\"selfTest\":true,\"pass\":true,\"case1FiresOnFailingEndpoint\":true,\"case2ClearsOnStaleFailure\":true,\"note\":\"git-webhook signature failures are log-only — configure your log aggregator separately\"}}\n{\"script\":\"alert-tenant-ctx-errors.mjs\",\"passed\":true,\"code\":0,\"selfTest\":{\"selfTest\":true,\"pass\":true,\"count\":2,\"expectedCount\":2,\"fired\":true,\"matches\":[{\"timestamp\":\"2026-09-04T06:07:33.183Z\",\"correlationId\":\"corr-1\",\"orgId\":\"org_fixture\",\"route\":\"/notifications\",\"message\":\"permission denied for table outbox_events\"},{\"timestamp\":\"2026-09-04T06:07:33.183Z\",\"correlationId\":\"corr-2\",\"orgId\":\"org_fixture\",\"route\":\"/notifications\",\"message\":null}]}}\n{\"script\":\"alert-p95.mjs\",\"passed\":true,\"code\":0,\"selfTest\":{\"selfTest\":true,\"pass\":true,\"checks\":{\"staleSpanExcluded\":true,\"idsCollapsedAndFourEndpoints\":true,\"hottestFirst\":true,\"dealsRequestCount\":true,\"p95IgnoresTheSingleOutlier\":true,\"p99CatchesTheOutlier\":true,\"errorsCounted\":true,\"quieterEndpointSummarised\":true,\"hrAttributesToPeopleTeam\":true,\"healthAttributesToPlatform\":true,\"unattributableEndpointReported\":true,\"ownersDifferBetweenHrAndHealth\":true},\"endpoints\":[{\"endpoint\":\"GET /deals/:id\",\"requests\":20,\"errors\":1,\"p50Ms\":100,\"p95Ms\":100,\"p99Ms\":900,\"maxMs\":900,\"attribution\":{\"unattributable\":true,\"namespace\":\"deals\"}},{\"endpoint\":\"GET /invoices/:id\",\"requests\":2,\"errors\":0,\"p50Ms\":50,\"p95Ms\":70,\"p99Ms\":70,\"maxMs\":70,\"attribution\":{\"unattributable\":true,\"namespace\":\"invoices\"}},{\"endpoint\":\"GET /hr/employees/:id\",\"requests\":2,\"errors\":0,\"p50Ms\":60,\"p95Ms\":80,\"p99Ms\":80,\"maxMs\":80,\"attribution\":{\"module\":\"hr\",\"owner\":\"people-team\"}},{\"endpoint\":\"GET /health/ready\",\"requests\":1,\"errors\":0,\"p50Ms\":5,\"p95Ms\":5,\"p99Ms\":5,\"maxMs\":5,\"attribution\":{\"platform\":true,\"owner\":\"platform-reliability\"}}]}}\n{\"script\":\"alert-seam-latency.mjs\",\"passed\":true,\"code\":0,\"selfTest\":{\"selfTest\":true,\"pass\":true,\"checks\":{\"staleAndNonSeamExcluded\":true,\"dbQueryExecuteBreached\":true,\"cacheRoundtripNotBreached\":true,\"noSeamSpansWouldExitTwo\":true,\"routeCachedReadBreached\":true,\"hrAttributedToPeopleTeam\":true,\"chatAttributedToCommsViaHome\":true,\"unattributableNamespaceReported\":true},\"seams\":[{\"seam\":\"db.query.execute\",\"requests\":11,\"errors\":0,\"p50Ms\":12,\"p95Ms\":12,\"maxMs\":12,\"thresholdMs\":9,\"breached\":true},{\"seam\":\"cache.roundtrip\",\"requests\":2,\"errors\":0,\"p50Ms\":0.5,\"p95Ms\":1,\"maxMs\":1,\"thresholdMs\":1.5,\"breached\":false},{\"seam\":\"route.cached.read\",\"requests\":10,\"errors\":0,\"p50Ms\":150,\"p95Ms\":200,\"maxMs\":200,\"thresholdMs\":112,\"breached\":true,\"attributedModules\":[{\"module\":\"hr\",\"owner\":\"people-team\",\"requests\":8,\"p95Ms\":150},{\"module\":\"home\",\"owner\":\"communications-team\",\"requests\":1,\"p95Ms\":80},{\"unattributable\":true,\"namespace\":\"unknown-ns\",\"requests\":1,\"p95Ms\":200}]}],\"breached\":[{\"seam\":\"db.query.execute\",\"requests\":11,\"errors\":0,\"p50Ms\":12,\"p95Ms\":12,\"maxMs\":12,\"thresholdMs\":9,\"breached\":true},{\"seam\":\"route.cached.read\",\"requests\":10,\"errors\":0,\"p50Ms\":150,\"p95Ms\":200,\"maxMs\":200,\"thresholdMs\":112,\"breached\":true,\"attributedModules\":[{\"module\":\"hr\",\"owner\":\"people-team\",\"requests\":8,\"p95Ms\":150},{\"module\":\"home\",\"owner\":\"communications-team\",\"requests\":1,\"p95Ms\":80},{\"unattributable\":true,\"namespace\":\"unknown-ns\",\"requests\":1,\"p95Ms\":200}]}]}}\n{\"script\":\"alert-pool-saturation.mjs\",\"passed\":true,\"code\":0,\"selfTest\":{\"selfTest\":true,\"pass\":true,\"checks\":{\"case1P95BreachFiresWhenSingleOutlierPushesP95Over3ms\":true,\"case2AllUnder3msClear\":true,\"case3SaturationWarnFires\":true,\"case4StaleSpanExcluded\":true},\"budget\":{\"seam\":\"db.pool.wait\",\"thresholdMs\":3}}}\n{\"script\":\"alert-tenant-cost.mjs\",\"passed\":true,\"code\":0,\"selfTest\":{\"selfTest\":true,\"pass\":true,\"checks\":{\"noisyOrgDetected\":true,\"allNormalClear\":true,\"tooFewOrgsClear\":true},\"case1\":{\"fired\":true,\"noisy\":[{\"org_id\":\"org_noisy\",\"total_credits\":10000,\"request_count\":1000,\"top_feature\":\"bulk-summarise\"}],\"medianCredits\":100}}}\n{\"script\":\"alert-queue-age.mjs\",\"passed\":true,\"code\":0,\"selfTest\":{\"selfTest\":true,\"pass\":true,\"checks\":{\"freshRowClear\":true,\"staleRowAgeBreaches\":true,\"highRetryBreachesRetryPressure\":true,\"combinedPicksUpStale\":true,\"worstOrgsOrdered\":true},\"thresholdSecs\":300,\"retryPressureThreshold\":500}}\n{\"script\":\"alert-job-queue-age.mjs\",\"passed\":true,\"code\":0,\"selfTest\":{\"selfTest\":true,\"pass\":true,\"checks\":{\"freshQueueClear\":true,\"staleQueueFires\":true,\"emptyQueueClear\":true,\"mixedFiresOnStale\":true,\"breachCarriesOwner\":true,\"registryCoversEveryDeclaredQueue\":true,\"everyQueueDeclaresUnfinishedStates\":true,\"everyQueueDeclaresOwner\":true},\"thresholdSecs\":900}}\n{\"script\":\"alert-dispatch.mjs\",\"passed\":true,\"code\":0,\"selfTest\":{\"selfTest\":true,\"pass\":true,\"checks\":{\"case1Delivered\":true,\"case2Suppressed\":true,\"case3Delivered\":true,\"serverReceivedExactlyTwo\":true,\"case1BodyHasOwner\":true,\"case1BodyHasRunbook\":true,\"case1BodyHasAlertId\":true,\"case3BodyDifferentBreach\":true}}}\n{\"script\":\"alert-cell-recovery.mjs\",\"passed\":true,\"code\":0,\"selfTest\":{\"selfTest\":true,\"pass\":true,\"case1FiresOnRecentRecovery\":true,\"case2ClearsOnStaleRecovery\":true}}\n{\"script\":\"check-alert-ack.mjs\",\"passed\":true,\"code\":0,\"selfTest\":{\"selfTest\":true,\"pass\":true,\"checks\":{\"case1MissingFileDetected\":true,\"case2AckedFreshPasses\":true,\"case3FalseAckedFails\":true,\"case4NullAckedFails\":true,\"case5StaleAckFails\":true,\"case6RoundTripStateFile\":true,\"case7UndeliveredFails\":true}}}\n{\"allPassed\":true,\"checkedScripts\":14}"
+    },
+    {
+      "gate": "check:audit-log-privileges",
+      "exitCode": 2,
+      "durationMs": 1805,
+      "timedOut": false,
+      "tail": "PREREQUISITE UNMET — cannot determine. This gate requires a live database and a\nnon-owner connection; the owner role has BYPASSRLS and would report a boundary\nthe running service does not have. Nothing about audit-log privileges was measured.\nRequired variable: APP_DATABASE_URL\nExample: APP_DATABASE_URL=postgres://streamline_app:<password>@<host>/<database>"
+    },
+    {
+      "gate": "check:audit-log-privileges:self-test",
+      "exitCode": 0,
+      "durationMs": 1622,
+      "timedOut": false,
+      "tail": "{\"selfTest\":true,\"pass\":true,\"safe\":{\"role\":\"streamline_app\",\"isAppRole\":true,\"updateRevoked\":true,\"deleteRevoked\":true,\"triggerPresent\":true},\"unsafe\":{\"role\":\"streamline_app\",\"isAppRole\":true,\"updateRevoked\":false,\"deleteRevoked\":true,\"triggerPresent\":true},\"wrongRole\":{\"role\":\"neon_superuser\",\"isAppRole\":false,\"updateRevoked\":true,\"deleteRevoked\":true,\"triggerPresent\":true}}"
+    },
+    {
+      "gate": "check:authz-deny",
+      "exitCode": 0,
+      "durationMs": 6446,
+      "timedOut": false,
+      "tail": "Controller files          551\nSpec files                2186  ·  asserting a deny 493\nHTTP handlers             3635\n  — authorization-gated   3237\n  — @AuthorizedInService  57  (INFO, not gated — see the header)\nGated handlers with a DECLARED deny test  926 / 3237  (29%)\nNOTE: this gate is static. It proves a deny test EXISTS and is attributable to the\n      handler; it does not run it. Attribution is per spec FILE, not per it() block.\nUncovered 2311 is BELOW the ratchet of 2441. Lower uncoveredRatchet in src\\scripts\\baselines\\authz-deny.json to 2311 to bank it.\nOK — uncovered 2311 (ratchet 2441). No new authorization-gated handler landed without a deny test."
+    },
+    {
+      "gate": "check:authz-deny:self-test",
+      "exitCode": 0,
+      "durationMs": 1561,
+      "timedOut": false,
+      "tail": "check-authz-deny self-tests: 40 passed"
+    },
+    {
+      "gate": "check:bare-throw",
+      "exitCode": 1,
+      "durationMs": 7911,
+      "timedOut": false,
+      "tail": "Spec files 2066  ·  .toThrow() matchers 1524  ·  risk-titled tests 7131\n  bare throws 147  ·  on a risk path 6  ·  exempt SCHEMA_PARSE 5  ·  ACTIONABLE 1  ·  off a risk path (INFO, not ratcheted) 141\nFAIL — unregistered bare .toThrow() on a risk path: src\\modules\\inventory\\inv-engine-misc-isolation-stock.spec.ts:194  \"never retrieves settings for a different org when creating a reservation (isolation — deny via tx mock)\"\nFAIL — registration no longer matches anything — remove it: src/modules/inventory/inv-engine-misc-isolation-stock.spec.ts:194"
+    },
+    {
+      "gate": "check:bare-throw:self-test",
+      "exitCode": 0,
+      "durationMs": 2709,
+      "timedOut": false,
+      "tail": "check-bare-throw self-test: 16 passed, 0 failed"
+    },
+    {
+      "gate": "check:baseline-integrity",
+      "exitCode": 0,
+      "durationMs": 2513,
+      "timedOut": false,
+      "tail": "Gate scripts 91  ·  constants 139  ·  json ratchets 12 in 10 baseline file(s)  ·  registered 151\n  ratchet 35  ·  floor 114  ·  pinned 2  ·  unregistered 0  ·  stale 0\n1 baseline(s) IMPROVED — bank the gain by updating baselines/ratchets.json:\n  baselines/bare-throw.json :: ratchet  2 -> 1\nOK — every gate's own numbers are registered, and none moved in its unsafe direction."
+    },
+    {
+      "gate": "check:baseline-integrity:self-test",
+      "exitCode": 1,
+      "durationMs": 2801,
+      "timedOut": false,
+      "tail": "node:fs:3039\r\n  return binding.mkdtemp(prefix, options.encoding);\r\n                 ^\r\n\r\nError: ENOENT: no such file or directory, mkdtemp '\\tmp\\baseline-selftest-XXXXXX'\r\n    at Object.mkdtempSync (node:fs:3039:18)\r\n    at selfTest (file:///D:/projects/personal/Streamlineos/backend/src/scripts/check-baseline-integrity.mjs:151:18)\r\n    at main (file:///D:/projects/personal/Streamlineos/backend/src/scripts/check-baseline-integrity.mjs:252:58)\r\n    at file:///D:/projects/personal/Streamlineos/backend/src/scripts/check-baseline-integrity.mjs:395:1\r\n    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)\r\n    at async node:internal/modules/esm/loader:639:26\r\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\r\n  errno: -4058,\r\n  code: 'ENOENT',\r\n  syscall: 'mkdtemp',\r\n  path: '\\\\tmp\\\\baseline-selftest-XXXXXX'\r\n}\r\n\r\nNode.js v24.15.0\r"
+    },
+    {
+      "gate": "check:benchmark-http:self-test",
+      "exitCode": 0,
+      "durationMs": 2759,
+      "timedOut": false,
+      "tail": "  ok   a worker route is excluded from the request ceiling\n  ok   an excluded route states why\n  ok   an aggregate gets the complex ceiling\n  ok   a list gets the ordinary ceiling\n  ok   a write gets the ordinary ceiling\n  ok   an unknown class falls back to ordinary rather than to no ceiling\n  ok   a clean tenant is scorable\n  ok   a failed opening probe is not scorable\n  ok   a failed closing probe is not scorable\n  ok   a drifted subject is not scorable\n  ok   an over-ceiling ordinary route is flagged\n  ok   a worker route over 800 ms is NOT flagged\n  ok   the worker route's numbers are still recorded\n  ok   refusals are counted\n  ok   refusals carry their reason\n  ok   excluded routes are counted\n  ok   the declared ceiling is carried through\n  ok   a tenant whose control probe failed contributes NO routes\n  ok   but it is still listed, with the reason\n[merge-http-measurement] self-test 19/19"
+    },
+    {
+      "gate": "check:benchmark-manifest",
+      "exitCode": 1,
+      "durationMs": 3132,
+      "timedOut": false,
+      "tail": "Request level (http-harness, scratch_t23_bm, at head): 137/164 (83.5%) of route×tenant slots measured · 27 refused · 0 failed · 22 recorded but excluded from the request ceiling.\n  Redis disabled — every count is the cache-MISS ceiling\n  heapUsed above a post-GC baseline\n  tenant reference: control probe HELD (anonymous 401) · subject STABLE 2a72fc012267aef0 -> 27f7351484631464 (the hash moved only on tables the harness itself declares it writes)\n  tenant minority: control probe HELD (anonymous 401) · subject STABLE 7a7e826b6772d995 -> 9c2a06a727d9992e (the hash moved only on tables the harness itself declares it writes)\n  refusals, by reason:\n     12  provider-backed: no connected mail account in the seed, so no real message/thread/attachment id exists to request\n      7  route answered HTTP 402 — a non-2xx response measures the failure path, not the route\n      6  route answered HTTP 500 — a non-2xx response measures the failure path, not the route\n      1  no client in this tenant to bill\n      1  no payroll run in this tenant\nNOT MEASURED (declared as such, never inferred from a proxy):\n  - Request-level figures cover 137 of 164 route×tenant slots on scratch_t23_bm; 27 were declined and 0 failed. See requestLevel.tally.refusalsByReason for why each was not measured.\n  - Cache-hit latency. No Redis is running against this seed, so every number here is the cache-MISS path.\nSTATUS: FAIL — 154/280 (55.0%) of statement ceilings measured, 137/164 (83.5%) of request-level slots measured.\n  2 route(s) OVER the PRD request ceiling:\n    POST /chat/channels/{channelId}/messages@reference: request p95 5043.126 ms > 300 ms PRD §12.1 ceiling (write)\n    POST /chat/channels/{channelId}/messages@minority: request p95 670.647 ms > 300 ms PRD §12.1 ceiling (write)\n  5 DECLARED BUDGET BREACH(ES):\n    POST /chat/channels/{channelId}/messages@reference: request p95 5043.126ms > declared 1000ms in contracts/route-budgets.json\n    POST /chat/channels/{channelId}/messages@reference: downstream calls 1 > declared 0 in contracts/route-budgets.json\n    GET /cron/storage-sweep@reference: downstream calls 1 > declared 0 in contracts/route-budgets.json\n    POST /chat/channels/{channelId}/messages@minority: downstream calls 3 > declared 0 in contracts/route-budgets.json\n    GET /cron/storage-sweep@minority: downstream calls 1 > declared 0 in contracts/route-budgets.json\n    These are measured figures above a ceiling the contract already declares. Raising the ceiling to turn one green is itself a defect."
+    },
+    {
+      "gate": "check:benchmark-manifest:self-test",
+      "exitCode": 0,
+      "durationMs": 3187,
+      "timedOut": false,
+      "tail": "  [pass] a benchmark deleted from the fresh run is a regression, not silent coverage loss\n  [pass] a counted database-statement count above its ceiling is a breach and fails the gate\n  [pass] a DEFAULT ceiling nobody counted is reported unarmed, never failed on\n  [pass] verdict cannot be OK with an unmeasured slot\n  [pass] verdict is FAIL on a ceiling breach\n  [pass] verdict is FAIL on a regression\n  [pass] verdict is INCONCLUSIVE when nothing was measured\n  [pass] verdict is OK only when everything is measured and clean\n  [pass] a manifest with no requestLevel reports it as not measured, not as a pass\n  [pass] a clean request-level capture raises nothing\n  [pass] a tenant whose control probe did not hold is a VIOLATION — refusing to score the run\n  [pass] a request-level capture as a BYPASSRLS role is rejected\n  [pass] a request-level capture with no command is rejected\n  [pass] a route recorded as measured with no p95 is a violation\n  [pass] a heap figure taken without a forced collection is a violation, not a measurement\n  [pass] an ordinary route over 300 ms fails the PRD request ceiling\n  [pass] an approved complex aggregate at 301 ms does NOT fail — it has the looser ceiling\n  [pass] an excluded sweep at 5 s is recorded and NOT scored, and counted as excluded\n  [pass] a response bytes figure above its declared route budget is a breach\n  [pass] a downstream calls figure above its declared route budget is a breach\n  [pass] a resident heap figure above its declared route budget is a breach\n  [pass] a capture that is not at journal head warns rather than passing silently\n  [pass] a read-only capture says out loud that no mutation has a request-level number\n  [pass] a refused route is counted as refused, never as measured\n47/47 checks passed"
+    },
+    {
+      "gate": "check:benchmark-regression:self-test",
+      "exitCode": 0,
+      "durationMs": 2889,
+      "timedOut": false,
+      "tail": "  [pass] a metric that never moved across replicates becomes an EXACT ratchet — absTol=0\n  [pass] an added database statement fires with no tolerance\n  [pass] a removed database statement does not fire\n  [pass] a plan flip fires with no tolerance\n  [pass] a buffer increase inside the measured band does not fire\n  [pass] a buffer increase outside the measured band fires\n  [pass] a 40% wall-clock jump with nothing else moving is reported, NOT failed\n  [pass] the same jump WITH a deterministic metric moved does fire\n  [pass] a 3× wall-clock blow-up fires even uncorroborated\n  [pass] sub-millisecond movement never fires\n  [pass] a benchmark's own high cv widens its band — k·cv = 90% > the 24% floor\n  [pass] a study inside the arming threshold arms the timing gate\n  [pass] plan shape is armed when it never moved across replicates\n  [pass] plan shape is DISARMED when it moved on its own, rather than shipped as an exact ratchet\n  [pass] a study outside the arming threshold DISARMS the timing gate automatically — worst swing 233% > 25%\n  [pass] a disarmed timing metric never fires, however large the movement\n  [pass] a disarmed timing metric is still REPORTED as advisory rather than silently dropped\n  [pass] disarming timing does not disarm the deterministic ratchet — zero measured swing means zero tolerance\n  [pass] deterministic metrics are decided before timing, so they can corroborate — bufferBlocks, p95Ms\n  [pass] a rerun of unchanged code does not fire\n  [pass] a benchmark whose OWN buffers moved during the study is not ratcheted on buffers\n  [pass] a benchmark whose own buffers never moved keeps a ZERO tolerance, whatever other benchmarks did — one wobbly benchmark must not widen everyone else's band\n  [pass] a metric the study never measured on this benchmark is not ratcheted\n  [pass] with no stability record at all, the global policy still applies (fallback preserved)\n25/25 checks passed"
+    },
+    {
+      "gate": "check:body-binding",
+      "exitCode": 0,
+      "durationMs": 31262,
+      "timedOut": false,
+      "tail": "check-body-binding: 1945 validated body/query slots on controller routes\n  BOUND      1936\n  NO-FIELDS  3  (z.record / empty z.object — no property to bind)\n  no-param   6  (handler declares no @Body()/@Query() parameter)\n  UNBOUND    0\ncheck-body-binding: every validated slot is typed from its own schema."
+    },
+    {
+      "gate": "check:bodyless-conflicts",
+      "exitCode": 0,
+      "durationMs": 4097,
+      "timedOut": false,
+      "tail": "check-bodyless-conflicts: scanned 551 controller file(s)\n  OK — no @BodylessAction conflicts found"
+    },
+    {
+      "gate": "check:bodyless-conflicts:self-test",
+      "exitCode": 0,
+      "durationMs": 3244,
+      "timedOut": false,
+      "tail": "Running self-test...\n  [pass] no-conflict: @BodylessAction + @Validate(params only) is clean\n  [pass] attribution: the conflict names the handler `create`, not the raw line\n  [pass] conflict: @BodylessAction + @Validate({ body: ... }) is flagged\n  [pass] conflict: @BodylessAction + @Body() parameter is flagged\n  [pass] no-conflict: @Validate(body) without @BodylessAction() is not flagged\n  [pass] no-conflict: non-HTTP handler with @BodylessAction is not flagged\n  [pass] conflict: multi-line @Validate collapsed to single line, body: key detected\n  [pass] no-conflict: @BodylessAction on GET with no body key is clean\n  [pass] conflict: @BodylessAction + direct req.body read is flagged\n  [pass] no-conflict: req.body without @BodylessAction() is not flagged\n  [pass] extractHandlerName reads the method name from async, plain and generic declarations\nSELF-TEST PASSED"
+    },
+    {
+      "gate": "check:bounded-contracts",
+      "exitCode": 0,
+      "durationMs": 3769,
+      "timedOut": false,
+      "tail": "check-bounded-contracts: bounded contract analysis\n  cursor/pagination bounds: OK\n  sort param bounds: OK\n  bulk id param bounds: OK\n  OUT OF SCOPE — CRM/Inventory (10, reported not enforced):\n    GET    /crm/customer-360/company/{companyId}/timeline: cursor/after param without a limit/pageSize param\n    POST   /crm/assignment-rules  ?body.roundRobinUserIds: bulk ids array body field has no maxItems constraint\n    PATCH  /crm/assignment-rules/{ruleId}  ?body.roundRobinUserIds: bulk ids array body field has no maxItems constraint\n    PATCH  /crm/assignment-rules/reorder  ?body.ruleIds: bulk ids array body field has no maxItems constraint\n    POST   /crm/pipelines/{pipelineId}/stages/reorder  ?body.stageIds: bulk ids array body field has no maxItems constraint\n    POST   /inventory/channels  ?body.warehouseIds: bulk ids array body field has no maxItems constraint\n    PATCH  /inventory/channels/{channelId}  ?body.warehouseIds: bulk ids array body field has no maxItems constraint\n    POST   /inventory/channels/{channelId}/publications/retry  ?body.productVariantIds: bulk ids array body field has no maxItems constraint\n    POST   /inventory/loads  ?body.shipmentIds: bulk ids array body field has no maxItems constraint\n    POST   /inventory/loads  ?body.transferIds: bulk ids array body field has no maxItems constraint\n  Total in-scope violations: 0\n  OK — all collection and bulk endpoints have bounded contracts"
+    },
+    {
+      "gate": "check:bounded-contracts:self-test",
+      "exitCode": 0,
+      "durationMs": 3479,
+      "timedOut": false,
+      "tail": "Running self-test...\n  [pass] cursor-with-max-passes — cursor with capped limit produces no violations\n  [pass] cursor-without-limit-bites — cursor without limit param is flagged\n  [pass] cursor-uncapped-limit-bites — limit without maximum ≤ 100 is flagged\n  [pass] sort-with-enum-passes — sort with enum produces no violations\n  [pass] sort-bare-string-bites — bare string sort param is flagged\n  [pass] bulk-ids-with-maxItems-passes — ids with maxItems produces no violations\n  [pass] bulk-ids-without-maxItems-bites — ids without maxItems is flagged\n  [pass] body-ids-with-maxItems-passes — body ids with maxItems produces no violations\n  [pass] body-ids-without-maxItems-bites — body ids array without maxItems is flagged\n  [pass] scope-partition-splits — CRM/Inventory paths are excluded and an in-scope path is not\n  [pass] scope-partition-anchors — a path containing but not prefixed by crm/inventory stays in scope\nSELF-TEST PASSED"
+    },
+    {
+      "gate": "check:bulk-id-limits",
+      "exitCode": 0,
+      "durationMs": 4788,
+      "timedOut": false,
+      "tail": "check:bulk-id-limits — scanned 3411 schema files; no unbounded id-array properties found."
+    },
+    {
+      "gate": "check:bulk-id-limits:self-test",
+      "exitCode": 0,
+      "durationMs": 3687,
+      "timedOut": false,
+      "tail": "Running self-test…\n  PASS  multi-line unbounded declaration detected (not missed by whitespace collapse)\n  PASS  single-line unbounded declaration detected (leadIds)\n  PASS  single-line unbounded declaration detected (tagIds)\n  PASS  bounded declarations are not flagged (scanner is not vacuous)\n  PASS  non-z.array ids properties are not flagged (projectIds from csvToIntArray)\n  PASS  multi-line bounded declaration not flagged\n  PASS  unbounded array inline in a controller @Validate body is detected\n  PASS  a controller source file is scannable (discovery is not limited to *.schemas.ts)\nAll self-tests passed."
+    },
+    {
+      "gate": "check:cache-invalidation",
+      "exitCode": 0,
+      "durationMs": 8303,
+      "timedOut": false,
+      "tail": "=== cache-invalidation gate — 1076 service files scanned ===\nKey shapes: 187 write sites / 177 distinct shapes · 475 invalidate sites · 131 CACHE_KEYS factories\nTable map: 10 of 10 entries match at least one file\nRESULT: LOW-only — 0 documentation gaps (not blockers)"
+    },
+    {
+      "gate": "check:cache-invalidation:self-test",
+      "exitCode": 0,
+      "durationMs": 3239,
+      "timedOut": false,
+      "tail": "      \"name\": \"F03 negative-control: no session bust at all is a finding\",\n      \"pass\": true\n    },\n    {\n      \"name\": \"F03 negative-control: scanning ACTIVE members but never busting them is a finding\",\n      \"pass\": true\n    },\n    {\n      \"name\": \"F03 positive: a per-member loop does reach every member\",\n      \"pass\": true\n    },\n    {\n      \"name\": \"F03b negative-control: that same per-member loop is reported as unbounded fan-out\",\n      \"pass\": true\n    },\n    {\n      \"name\": \"F03 positive: a batched, keyset-paged bust reaches every member\",\n      \"pass\": true\n    },\n    {\n      \"name\": \"F03b positive: the batched bust is NOT reported as unbounded fan-out\",\n      \"pass\": true\n    }\n  ]\n}"
+    },
+    {
+      "gate": "check:cache-key-shapes",
+      "exitCode": 0,
+      "durationMs": 3415,
+      "timedOut": false,
+      "tail": ""
+    },
+    {
+      "gate": "check:cache-key-shapes:self-test",
+      "exitCode": 0,
+      "durationMs": 2927,
+      "timedOut": false,
+      "tail": ""
+    },
+    {
+      "gate": "check:compression",
+      "exitCode": 0,
+      "durationMs": 3049,
+      "timedOut": false,
+      "tail": "check-compression: HTTP response compression analysis\n  compression: OK — compression middleware detected in main.ts or app.module.ts"
+    },
+    {
+      "gate": "check:compression:self-test",
+      "exitCode": 0,
+      "durationMs": 3160,
+      "timedOut": false,
+      "tail": "Running self-test...\n  [pass] compression-call-detected — app.use(compression()) pattern is detected\n  [pass] compression-import-detected — @nestjs/compression import is detected\n  [pass] no-compression-not-detected — unrelated source correctly returns false\n  [pass] binary-producer-detected — image/png @ApiProduces is detected\n  [pass] non-binary-not-flagged — application/json is not a binary producer\nSELF-TEST PASSED"
+    },
+    {
+      "gate": "check:conflict-targets",
+      "exitCode": 0,
+      "durationMs": 26914,
+      "timedOut": false,
+      "tail": "onConflict calls scanned      : 367\n  with an explicit target     : 163\n  table + columns resolved    : 161\n  targeting a PARTIAL index   : 15\n  unresolved (not judged)     : 2\n      src\\modules\\chat\\__tests__\\chat-read-path-hardening.spec.ts:241 (columns <unresolved const config>)\n      src\\modules\\chat\\__tests__\\chat-send-conflict-target.db.spec.ts:88 (columns <unresolved const config>)\nIN TEST CODE (1) — negative fixtures, reported not enforced:\n  [partial] src\\modules\\chat\\__tests__\\chat-send-conflict-target.db.spec.ts:144\nPASS — no new uninferable ON CONFLICT target (0 ratcheted, shrink-only)."
+    },
+    {
+      "gate": "check:conflict-targets:self-test",
+      "exitCode": 0,
+      "durationMs": 4136,
+      "timedOut": false,
+      "tail": "SELF-TEST PASSED — the known-bad fixture is flagged and the correct forms are not.\n  partial-without-predicate: 3   wrong-predicate-key: 1   absent-index: 1   clean: 3"
+    },
+    {
+      "gate": "check:contract-breaking-change",
+      "exitCode": 0,
+      "durationMs": 4398,
+      "timedOut": false,
+      "tail": "check-contract-breaking-change: 102 published operations, 3560 internal, 23 published webhook event names\n  OK — no breaking changes detected"
+    },
+    {
+      "gate": "check:contract-breaking-change:self-test",
+      "exitCode": 0,
+      "durationMs": 3525,
+      "timedOut": false,
+      "tail": "Running self-test...\n  [pass] published-removal-bites — published removal without sunset fails the gate\n  [pass] published-removal-with-sunset-passes — past sunsetAt + evidence allows the removal\n  [pass] future-sunsetat-still-fails — future sunsetAt does not satisfy the window\n  [pass] internal-removal-passes — internal operations may be removed freely\n  [pass] no-narrowing-passes — optional param staying optional produces no violations\n  [pass] narrowing-bites — making optional param required is a narrowing violation\n  [pass] dropped-param-bites — dropping a known published parameter is flagged\n  [pass] internal-narrowing-passes — internal operations may narrow freely\n  [pass] corrupt-classification-fails-closed(typo) — classification \"internl\" is treated as published\n  [pass] corrupt-classification-fails-closed(null) — classification \"null\" is treated as published\n  [pass] corrupt-classification-fails-closed(absent) — classification \"undefined\" is treated as published\n  [pass] corrupt-classification-fails-closed(trailing-space) — classification \"published \" is treated as published\n  [pass] corrupt-classification-fails-closed(capitalised) — classification \"Internal\" is treated as published\n  [pass] absent-baseline-is-not-compared — an entry with no recorded baseline is left to the registry gate\n  [pass] added-required-param-bites — a new required parameter against a recorded empty baseline is a narrowing\n  [pass] added-optional-param-passes — widening with an optional parameter is not a breaking change\n  [pass] webhook-still-emitted-passes — an event name still emitted by a dispatcher is not a removal\n  [pass] webhook-rename-bites — renaming deal.won is a breaking change\n  [pass] webhook-satisfied-window-passes — a past sunsetAt plus evidence permits retiring an event name\n  [pass] webhook-declared-not-scanned-passes — an event the scanner cannot reach stays live via its declaring file\n  [pass] webhook-internal-removal-passes — an internal event name may be removed freely\n  [pass] webhook-corrupt-classification-fails-closed — an unrecognised webhook classification is treated as published\nSELF-TEST PASSED"
+    },
+    {
+      "gate": "check:contract-registry",
+      "exitCode": 0,
+      "durationMs": 4676,
+      "timedOut": false,
+      "tail": "    DELETE /product-management/workspaces/{pmWorkspaceId}\n    GET /product-management/workspaces/{pmWorkspaceId}/members\n    POST /product-management/workspaces/{pmWorkspaceId}/members\n    DELETE /product-management/workspaces/{pmWorkspaceId}/members/{pmWorkspaceMembershipId}\n    GET /whiteboards\n    GET /billing/razorpay\n    POST /billing/razorpay\n    PATCH /billing/razorpay\n  These are retained on purpose: check-contract-breaking-change detects a removal\n  by finding exactly this state. Do not delete them to quieten the report — clear\n  each one by satisfying its deprecation window or reclassifying it as internal.\n  REPORT: 9 webhook event name(s) reached only through a variable dispatch,\n  declared by hand in contracts/published-contract-terms.json against the file that proves them:\n    survey.assessment.failed  <- src/modules/surveys/dto/survey-automation.schemas.ts\n    survey.assessment.passed  <- src/modules/surveys/dto/survey-automation.schemas.ts\n    survey.collector.completed_quota  <- src/modules/surveys/dto/survey-automation.schemas.ts\n    survey.lead.created  <- src/modules/surveys/dto/survey-automation.schemas.ts\n    survey.live.ended  <- src/modules/surveys/dto/survey-automation.schemas.ts\n    survey.live.started  <- src/modules/surveys/dto/survey-automation.schemas.ts\n    survey.published  <- src/modules/surveys/dto/survey-automation.schemas.ts\n    survey.response.started  <- src/modules/surveys/dto/survey-automation.schemas.ts\n    survey.response.submitted  <- src/modules/surveys/dto/survey-automation.schemas.ts\n  OK — all 3662 operations are classified\n  OK — all 102 published operations carry a version or dated deprecation window, a named consumer, an idempotency/replay rule and a parameter baseline\n  OK — all 23 outbound webhook event names are catalogued and versioned"
+    },
+    {
+      "gate": "check:contract-registry:self-test",
+      "exitCode": 0,
+      "durationMs": 3628,
+      "timedOut": false,
+      "tail": "  [pass] missing-entries-detected — 2 ops absent from registry produce 2 violations\n  [pass] extra-op-fail-closed — extra op absent from registry → fail-closed (1 violation)\n  [pass] invalid-classification-flagged — invalid classification value produces a violation\n  [pass] duplicate-operationid-detected — duplicate operationId is reported\n  [pass] no-duplicate-passes — unique operationIds produce 0 duplicates\n  [pass] stale-entries-detected — registry entry for removed op is flagged as stale\n  [pass] count-by-classification — counts by classification are accurate\n  [pass] tombstone-classification-validated(internl) — a retained entry's classification is validated even though no live operation exists\n  [pass] tombstone-classification-validated(null) — a retained entry's classification is validated even though no live operation exists\n  [pass] tombstone-classification-validated(published ) — a retained entry's classification is validated even though no live operation exists\n  [pass] tombstone-classification-validated(Internal) — a retained entry's classification is validated even though no live operation exists\n  [pass] valid-entries-pass — well-formed entries produce 0 violations\n  [pass] invalid-override-flagged — an unrecognised classificationOverride is a violation\n  [pass] complete-published-entry-passes — a fully specified published entry produces 0 gaps\n  [pass] missing-idempotency-flagged — a published operation with no replay rule is a gap\n  [pass] missing-baseline-flagged — a published operation with no parameter baseline is a gap\n  [pass] no-consumer-flagged — a published operation naming no consumer is a gap\n  [pass] unversioned-without-window-flagged — no version and no dated deprecation window is a gap\n  [pass] deprecation-window-satisfies-versioning — a dated deprecation window is an accepted alternative to a version\n  [pass] path-version-mismatch-flagged — a registry version that disagrees with the path's /vN/ segment is a gap\n  [pass] internal-entries-exempt-from-terms — internal operations are not held to published contract terms\n  [pass] complete-webhook-passes — a versioned webhook event with a named consumer produces 0 gaps\n  [pass] unversioned-webhook-flagged — an unversioned published webhook event is a gap\n  [pass] webhook-classification-validated — an unrecognised webhook classification is a gap\nSELF-TEST PASSED"
+    },
+    {
+      "gate": "check:cycles",
+      "exitCode": "TIMEOUT",
+      "durationMs": 300071,
+      "timedOut": true,
+      "tail": "npm warn Unknown env config \"overrides\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"reporter\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_jsr-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+    },
+    {
+      "gate": "check:db-call-count",
+      "exitCode": 0,
+      "durationMs": 4905,
+      "timedOut": false,
+      "tail": "Scanned 2734 service files across 3 roots:\n  src/modules : 2182 file(s) across 74 modules\n  src/common  : 190 file(s)\n  src/db      : 362 file(s)\nLoop coverage: 5085 loop opener(s) — 2913 inspected, 2172 skipped (statement ended on the opener line).\nDetected 159 file(s) with loop-internal DB calls (N+1 candidates).\n  ACTIONABLE: 32 file(s) (51 call site(s) to fix)\n  ACTIONABLE-UNDETECTED: 3 file(s) (ratchet 3) — a real N+1 these patterns cannot match, because the per-row work is a service call:\n    INVISIBLE  /hr/core/hr-effective-change-applier.service.ts\n    INVISIBLE  /hr/time/leave-approver.service.ts\n    INVISIBLE  /timesheets/core/approvals-bulk.service.ts\nAll N+1 patterns are classified. No regressions or stale entries."
+    },
+    {
+      "gate": "check:db-call-count:self-test",
+      "exitCode": 0,
+      "durationMs": 3725,
+      "timedOut": false,
+      "tail": "SELF-TEST PASS: all 44 detection/classification/coverage checks passed"
+    },
+    {
+      "gate": "check:db-generate-guard",
+      "exitCode": 0,
+      "durationMs": 3437,
+      "timedOut": false,
+      "tail": "check:db-generate-guard: 685 journal entries, latest snapshot 0464, real drift 220 — db:generate is BLOCKED without ALLOW_DB_GENERATE=1."
+    },
+    {
+      "gate": "check:db-generate-guard:self-test",
+      "exitCode": 0,
+      "durationMs": 3472,
+      "timedOut": false,
+      "tail": "{\n  \"selfTest\": true,\n  \"pass\": true,\n  \"checks\": {\n    \"blocks_when_snapshot_is_stale\": true,\n    \"reports_fixture_drift_arithmetic\": true,\n    \"reads_the_real_chain\": true,\n    \"allows_when_snapshot_is_current\": true,\n    \"allows_when_explicitly_forced\": true,\n    \"allows_when_snapshot_is_ahead\": true\n  }\n}"
+    },
+    {
+      "gate": "check:dead-code",
+      "exitCode": 1,
+      "durationMs": 25207,
+      "timedOut": false,
+      "tail": "RETAINED-BY-CONTRACT (1):\n  [type] src/modules/organization/setup/dto/org-setup-completed-payload.schema.ts:OrgSetupCompletedPayload  — inferred type of `orgSetupCompletedPayloadSchema`, which is parsed at a live boundary in src/modules/organization/setup/org-setup-completed-consumer.service.ts\nKEEP (1):\n  [dependency:unlisted] dep:@jitl/quickjs-wasmfile-release-sync  — not a direct dependency by design. `script.executor.ts` resolves it with `require.resolve(spec, { paths: [dirname(require.resolve(\"quickjs-emscripten\"))] })`, i.e. from the declared dependency's own directory, to get a CJS build of the WASM module that Jest can load. Verified resolvable; knip reports it because it does not model the `paths` option\nWIRE (2):\n  [export] src/modules/chat/chat-message-sender-shape.ts:SENDER_MEMBERSHIP_ID_ONLY  — the id-only half of the `senderMembership` projection pair this file exists to own — `SENDER_MEMBERSHIP_WITH_USER` is the other half and `chat-search`, `chat-saved` and `chat-pins` all import it. This one was born unused in `15f36ff9`, which wired this file's `liftSenderId` into `chat-message-timeline.service.ts` but left the eight sub-selects that pair with it as inline `{ columns: { userId: true } }` literals — `list` at :157/:159, `poll` at :225/:227 and `listThreadReplies` at :262/:264 and :303/:305. Those eight literals are the consumer to write. Not decoration: the `columns:` key is what keeps `organization_members.role`, `.isOwner`, `.status`, `.invitedAt`, `.suspendedAt` and `.leftAt` off every message in a chat timeline, so an id-only path that omits it (or writes `senderMembership: true`) ships membership-lifecycle data to every member of the channel. It is a convention rather than an enforced gate, which is exactly why deleting it is wrong — that would remove the single place the rule is written down and leave eight copies of the literal behind for the next path to copy\n  [type] src/modules/gdpr/dto/gdpr-export-outbox.schemas.ts:GdprExportRequestedPayload  — the payload contract for the live `gdpr.export.requested` outbox event. Nothing validates the payload on the consuming side today, which is the defect — the relay handler should parse with `gdprExportRequestedPayloadSchema` and take its argument type from here. Deleting it would remove a boundary contract rather than dead code\nREMOVE (2):\n  [export] src/modules/notifications/dto/provider-result.schemas.ts:providerValidationResultSchema  — surfaced when its only reader — the inferred type `ProviderValidationResultParsed` — was removed as dead. It is the Zod contract for `NotificationProvider.validateConfig()`, the sibling of `providerSendResultSchema`, which IS parsed at `notification-delivery-worker.service.ts:347`. The deeper finding: `validateConfig` is declared on `providers/notification-provider.interface.ts:11` and implemented by five providers, and NOTHING calls it anywhere in `src/` — the seam has no caller, so the schema has no boundary to guard. Removing the schema (and deciding the fate of the uncalled seam) belongs to the notifications workstream, which holds this module\n  [export] src/modules/ai/core/services/crm-brief-loaders.ts:loadLeadProfile  — orphaned by `1cc7ded8` (\"stream the live meeting-prep surface and retire the dead CRM duplicate\"), which deleted its only production caller. The single remaining reference is a key in the `jest.mock(\"./crm-brief-loaders\")` factory in `crm-meeting-brief.isolation.spec.ts`, which is not an import. It reads `leads` through the party seam, so removal belongs to the CRM/leads lane that orphaned it — CRM is excluded from this release's dead-code scope\nUNCLASSIFIED (1):\n  [type] src/modules/ai/core/dto/request.schemas.ts:MeetingPrepInput  — no verdict in FINDING_VERDICTS — add a KEEP, WIRE or REMOVE entry, or delete the symbol\n=== knip: 0 unused file(s), 7 other finding(s) | importer graph: 3718 files, 29092 edges ===\n=== ledger: 5 verdict(s) — 1 KEEP, 2 WIRE, 2 REMOVE (debt) ===\nFAIL: 1 unclassified finding(s) — add a KEEP, WIRE or REMOVE entry to FINDING_VERDICTS, or delete the symbol:\n  src/modules/ai/core/dto/request.schemas.ts:MeetingPrepInput"
+    },
+    {
+      "gate": "check:dead-code:self-test",
+      "exitCode": 0,
+      "durationMs": 3615,
+      "timedOut": false,
+      "tail": "Running self-test...\nPASS: self-test (20 assertions)\n  (a) file with no live importers                 -> DEAD\n  (b) file reached by a side-effect import         -> RETAINED-BY-CONTRACT\n  (c) file reached through a live barrel           -> RETAINED-BY-CONTRACT\n  (d) schema file                                  -> RETAINED-BY-CONTRACT (never deleted on knip alone)\n  (e) *.module.ts                                  -> RETAINED-BY-CONVENTION\n  (f) src/scripts/*                                -> RETAINED-BY-CONVENTION\n  (g) CRM/Inventory file                           -> EXCLUDED\n  (h) dist/ path                                   -> OUT-OF-SCOPE\n  (i) finding with no verdict                      -> UNCLASSIFIED (gate bites)\n  (j) finding with a KEEP verdict                  -> KEEP\n  (k) finding inside an excluded module            -> EXCLUDED\n  (l) verdict knip no longer reports               -> STALE (gate bites)\n  (m) verdict knip still reports                   -> not stale\n  (n) importer map: named import edge\n  (o) importer map: side-effect import edge\n  (p) importer map: re-export edge\n  (q) importer map: dynamic import edge\n  (r) schemaNamesFor finds the schema behind an inferred type\n  (s) inferred type of a schema parsed elsewhere    -> RETAINED-BY-CONTRACT\n  (t) inferred type of a schema nobody parses with  -> UNCLASSIFIED (gate bites)"
+    },
+    {
+      "gate": "check:declaration-column-drift",
+      "exitCode": 2,
+      "durationMs": 11868,
+      "timedOut": false,
+      "tail": "Declared tables 873  ·  declared columns 10611\nINCONCLUSIVE — the catalog half did not run. Whether a live column is missing from a declaration is only in pg_attribute; nothing static can see it, so all 873 declared tables are UNVERIFIED.\n  Set COLUMN_DRIFT_GATE_DATABASE_URL to a database bootstrapped to head to run it.\n  Or set STREAMLINE_ALLOW_PARTIAL_GATES=1 to accept a declaration-only run."
+    },
+    {
+      "gate": "check:declaration-column-drift:self-test",
+      "exitCode": 0,
+      "durationMs": 12164,
+      "timedOut": false,
+      "tail": "check-declaration-column-drift self-tests: 25 passed"
+    },
+    {
+      "gate": "check:declaration-constraint-drift",
+      "exitCode": 2,
+      "durationMs": 11905,
+      "timedOut": false,
+      "tail": "Declared tables 873  ·  declared constraints/indexes 4951\nINCONCLUSIVE — the catalog half did not run. Whether a declared constraint exists is only in pg_constraint/pg_index; nothing static can see it, so all 4951 declared objects are UNVERIFIED.\n  Set CONSTRAINT_DRIFT_GATE_DATABASE_URL to a database bootstrapped to journal head to run it.\n  Or set STREAMLINE_ALLOW_PARTIAL_GATES=1 to accept a declaration-only run."
+    },
+    {
+      "gate": "check:declaration-constraint-drift:self-test",
+      "exitCode": 0,
+      "durationMs": 11627,
+      "timedOut": false,
+      "tail": "check-declaration-constraint-drift self-tests: 33 passed"
+    },
+    {
+      "gate": "check:drop-column-safety",
+      "exitCode": 0,
+      "durationMs": 3857,
+      "timedOut": false,
+      "tail": "check-drop-column-safety: 685 migration file(s), 126 dropped column(s), 350 schema file(s)\n  OK — no dropped column is still declared in the Drizzle schema"
+    },
+    {
+      "gate": "check:drop-column-safety:self-test",
+      "exitCode": 0,
+      "durationMs": 3368,
+      "timedOut": false,
+      "tail": "  [pass] parses both quoted and unquoted forms\n  [pass] captures table and column\n  [pass] strips quotes\n  [pass] detects a still-declared column\n  [pass] detects the trailing-comma declaration form\n  [pass] does not fire for a same-named column on another table\n  [pass] does not fire for a same-named column on a neighbouring table in the same file\n  [pass] still fires for the correct table in a multi-table file\n  [pass] spans a nested brace block without ending early\n  [pass] does not fire when the column is absent\nSELF-TEST PASSED"
+    },
+    {
+      "gate": "check:envelope-consistency",
+      "exitCode": 0,
+      "durationMs": 4541,
+      "timedOut": false,
+      "tail": "  check-envelope-consistency[pagination]: scanned 338 of 339 paginated GETs (99.71%) — 1 NOT scanned by this gate\n    2 from a declared response contract, 336 from the handler source (3 of those are non-JSON downloads the rule does not cover; the document alone reaches 2)\ncheck-envelope-consistency: response/error envelope analysis\n  shared error components: OK (BadRequest, Unauthorized, Forbidden, NotFound)\n  error envelope refs: OK — all operations reference shared error components\n  pagination envelopes (declared contracts): OK\n  pagination envelopes (handler source): OK\n  ADVISORY (3 — paginated query params on a non-collection response; not counted):\n    GET    /accounting/taxes/reports/liability-summary — object literal without a pagination signal: {period, months, totalOutputTax, totalInputTax, totalNetLiability, taxPayableBalance}\n    GET    /payroll/reports/summary — object literal without a pagination signal: {provisional, run}\n    GET    /support/ai/report — object literal without a pagination signal: {acceptanceRate, resolutionRate, reopenRate, escalationRate, sourceCoverage, unsupportedRate, csatImpact}\n  NOT SCANNED (1 — the source reader could not determine the payload shape):\n    GET    /v2/users — UsersController.listUsersV2_v2 not found\n  Total violations: 0\n  OK — response/error envelopes are consistent"
+    },
+    {
+      "gate": "check:envelope-consistency:self-test",
+      "exitCode": 0,
+      "durationMs": 2772,
+      "timedOut": false,
+      "tail": "  [pass] inline-object-type-envelope — `Promise<{ …; nextCursor }>` is read as an envelope\n  [pass] array-return-type-bites — `Promise<X[]>` on a paginated GET is flagged\n  [pass] envelope-return-type — CursorPage<T> is recognized\n  [pass] string-return-type — `: string` is a non-JSON body, not a bare array\n  [pass] member-of-return-type — `x.body` is read from the property's type, not the object's\n  [pass] member-of-return-type-bites — a member whose type is `Row[]` is flagged\n  [pass] member-absent-stays-unresolved — an unnamed property is not answered by guessing\n  [pass] member-type-nesting — a member's type is read past a nested object type\n  [pass] tail-method-join — `.map(…).join(…)` is read as a string, not a row set\n  [pass] tail-method-map — a chain ending `.map(…)` is read as a row set\n  [pass] object-literal-keys — top-level keys are read past nested objects, spreads flagged\n  [pass] local-binding-last-wins — the last `const` binding is the one resolved\n  [pass] classify — an object literal carrying `pagination` reads as envelope\n  [pass] classify — the shared cursor helper reads as envelope\n  [pass] classify — the shared offset helper reads as envelope\n  [pass] classify — an empty array literal reads as bare-array\n  [pass] classify — a drizzle findMany reads as bare-array\n  [pass] classify — a projected row set reads as bare-array\n  [pass] classify — an aggregate with no pagination field reads as bare-object\n  [pass] classify — a CSV body reads as scalar\n  [pass] classify — a builder whose envelope is built in the .then() continuation reads as envelope\n  [pass] csv-arm-skipped — a download arm does not mask the JSON arm's envelope\n  [pass] download-only — a handler with only non-JSON arms is not judged by this rule\n  [pass] source-corpus — scanned counts only determined shapes; the unreadable one is named, not counted\nSELF-TEST PASSED"
+    },
+    {
+      "gate": "check:evidence-seal",
+      "exitCode": 1,
+      "durationMs": 3190,
+      "timedOut": false,
+      "tail": "  CHANGED  logs/19-check-migration-rollback.log\n    sealed: db0ff558e9027acb49ec9e31757b14731183d8ffdfba8d74394dc08c15e921eb\n    actual: d803e5c7c24a9a22ecb9335ca29276a2b5aa0dbf812b3335cebd8c4e2e5d9ffe\n  CHANGED  logs/20-verify-migration-chain-selftest.log\n    sealed: 16f26522b524dea12b43f829366351c0c475abf950ae01b61c8e12458c8433a9\n    actual: e6863ed71be50bf769e897a099391bd44bb3e48128624bccbb5e9ae3b367aff7\n  CHANGED  logs/21-verify-migration-chain-local-b.log\n    sealed: b6b2db9340884735c014b1885f68c4d13c4510297376d6125f13401bbf31ef7f\n    actual: 1af5838126687353a4ea7502b4dc22edeb978c08c4ecef52570b985df9a918cb\n  CHANGED  logs/22-verify-migration-chain-skip-shape.log\n    sealed: 06b209dd41ed72a56ae6ecee4a5cb113cc2df8783b16563b380aef632080fd78\n    actual: 26549d7c8399f2a30607b2b16ffc1951a948bcc9cbf6b805491d1eb74215279d\n  CHANGED  logs/23-scratch-refusal-seed.log\n    sealed: 53b02c8693496dc14a0469abfc7fe3fe4876e08980bd59d4f5466c129be3cd8b\n    actual: f702018c1af1e36f5f118bf84f828f7b224ce52fccedf7773a29a1daad4dfcca\n  CHANGED  logs/24-scratch-refusal-reset.log\n    sealed: ee25ca19a31838f0274bb73bf497d2343cf55345fce15ebee6526a3deb2ab328\n    actual: 07fe9e384248b6ba2b673856dbd521cdd161fa2c11c64ba4d369592dcff6058f\n  CHANGED  manifest.json\n    sealed: 97fd248d0a0f357a343cf1ea21984adddd96ea7f51733c10b7db9a004915ab9a\n    actual: 26cf509ab68690e7707c6a26a6bc3fe3ce18ab5283c6654e817068fc5463b718\n  CHANGED  rls-no-policy-2026-09-02.txt\n    sealed: 218d8db2300d14c49971cb5c3c1442a17e2b2a5047ed063e81490621d2ae1ed5\n    actual: b13ca3523601d3d0177b6123c61350dd2a9bf6d555cd72421ee2ab45364d7ed3\nA broken seal means the evidence no longer is what it was attested to be. Re-run the sealer only after establishing why it changed."
+    },
+    {
+      "gate": "check:evidence-seal:self-test",
+      "exitCode": 0,
+      "durationMs": 3198,
+      "timedOut": false,
+      "tail": "check-evidence-seal self-tests: 17 passed"
+    },
+    {
+      "gate": "check:feature-flag-governance",
+      "exitCode": 0,
+      "durationMs": 3118,
+      "timedOut": false,
+      "tail": "[check:feature-flag-governance] OK — feature_flags schema has owner and removal date columns."
+    },
+    {
+      "gate": "check:feature-flag-governance:self-test",
+      "exitCode": 0,
+      "durationMs": 2871,
+      "timedOut": false,
+      "tail": "SELF-TEST PASSED: feature-flag governance gate correctly detects missing owner and removalDate."
+    },
+    {
+      "gate": "check:file-sizes",
+      "exitCode": 0,
+      "durationMs": 3420,
+      "timedOut": false,
+      "tail": "check-file-sizes: 3680 files scanned — all within 500 lines (8 exceptions registered)"
+    },
+    {
+      "gate": "check:file-sizes:self-test",
+      "exitCode": 1,
+      "durationMs": 3186,
+      "timedOut": false,
+      "tail": "  FAIL: an unreadable subtree reports reason=scan-error\n  FAIL: an unreadable subtree never reports zero violations as a pass\ncheck-file-sizes self-tests: 2 failed, 47 passed"
+    },
+    {
+      "gate": "check:fire-and-forget",
+      "exitCode": 0,
+      "durationMs": 4094,
+      "timedOut": false,
+      "tail": "Scanned 3689 TypeScript files under src/\nTIER 1 (banned)    : 0 violation(s) — must be 0\nTIER 2 (ratcheted) : 253 (184 floating promises + 69 swallowed rejections) vs ratchet 279\nINVENTORY          : 57 registerAfterCommit call(s) — a sanctioned mechanism (CLAUDE.md §4), reported, not gated\nTIER 2 IMPROVED — 26 fewer than the ratchet. Lower TIER2_RATCHET to 253 in src/scripts/check-fire-and-forget.mjs so the gain is held.\ncheck:fire-and-forget PASSED — tier 1 clean, tier 2 at 253 (ratchet 279)"
+    },
+    {
+      "gate": "check:fire-and-forget:self-test",
+      "exitCode": 0,
+      "durationMs": 2912,
+      "timedOut": false,
+      "tail": "check-fire-and-forget self-tests: 18 passed"
+    },
+    {
+      "gate": "check:gate-wiring",
+      "exitCode": 1,
+      "durationMs": 2701,
+      "timedOut": false,
+      "tail": "node:internal/modules/package_json_reader:301\r\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\r\n        ^\r\n\r\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'yaml' imported from D:\\projects\\personal\\Streamlineos\\backend\\src\\scripts\\check-gate-wiring.mjs\r\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\r\n    at packageResolve (node:internal/modules/esm/resolve:764:81)\r\n    at moduleResolve (node:internal/modules/esm/resolve:855:18)\r\n    at defaultResolve (node:internal/modules/esm/resolve:988:11)\r\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:697:20)\r\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:714:38)\r\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:746:52)\r\n    at #resolve (node:internal/modules/esm/loader:679:17)\r\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:599:35)\r\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:162:33) {\r\n  code: 'ERR_MODULE_NOT_FOUND'\r\n}\r\n\r\nNode.js v24.15.0\r"
+    },
+    {
+      "gate": "check:gate-wiring:self-test",
+      "exitCode": 1,
+      "durationMs": 2618,
+      "timedOut": false,
+      "tail": "node:internal/modules/package_json_reader:301\r\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\r\n        ^\r\n\r\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'yaml' imported from D:\\projects\\personal\\Streamlineos\\backend\\src\\scripts\\check-gate-wiring.mjs\r\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\r\n    at packageResolve (node:internal/modules/esm/resolve:764:81)\r\n    at moduleResolve (node:internal/modules/esm/resolve:855:18)\r\n    at defaultResolve (node:internal/modules/esm/resolve:988:11)\r\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:697:20)\r\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:714:38)\r\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:746:52)\r\n    at #resolve (node:internal/modules/esm/loader:679:17)\r\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:599:35)\r\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:162:33) {\r\n  code: 'ERR_MODULE_NOT_FOUND'\r\n}\r\n\r\nNode.js v24.15.0\r"
+    },
+    {
+      "gate": "check:hardcoded-secrets",
+      "exitCode": 0,
+      "durationMs": 11610,
+      "timedOut": false,
+      "tail": "check-hardcoded-secrets: scanned 6938 files — 0 file(s) with a committed credential"
+    },
+    {
+      "gate": "check:hardcoded-secrets:self-test",
+      "exitCode": 0,
+      "durationMs": 2630,
+      "timedOut": false,
+      "tail": "check-hardcoded-secrets self-tests: 39 passed"
+    },
+    {
+      "gate": "check:hr-pagination",
+      "exitCode": 0,
+      "durationMs": 2695,
+      "timedOut": false,
+      "tail": "Self-tests passed.\nScanned 194 HR service files.\n35 known violation(s), baseline 60 — OK (ratchet).\nLower BASELINE to 35 to lock in the reduction."
+    },
+    {
+      "gate": "check:hr-pagination:self-test",
+      "exitCode": 0,
+      "durationMs": 2701,
+      "timedOut": false,
+      "tail": "Self-tests passed.\nScanned 194 HR service files.\n35 known violation(s), baseline 60 — OK (ratchet).\nLower BASELINE to 35 to lock in the reduction."
+    },
+    {
+      "gate": "check:hr-table-freeze",
+      "exitCode": 0,
+      "durationMs": 2564,
+      "timedOut": false,
+      "tail": "Scanned 67 HR schema files.\nHR table freeze: all 234 tables approved. Gate passed."
+    },
+    {
+      "gate": "check:hr-table-freeze:self-test",
+      "exitCode": 0,
+      "durationMs": 2515,
+      "timedOut": false,
+      "tail": "Self-tests: 8 passed."
+    },
+    {
+      "gate": "check:idempotent-commands",
+      "exitCode": 0,
+      "durationMs": 2742,
+      "timedOut": false,
+      "tail": "Controllers scanned   547\nHandlers in scope     11\nEXCLUDED BY DESIGN — named, not hidden:\n  SKIP  src/modules/finance/controls/approvals.controller.ts:52  approve(\":requestId/approve\")  — bespoke-mechanism\n  SKIP  src/modules/finance/controls/approvals.controller.ts:64  reject(\":requestId/reject\")  — bespoke-mechanism\n  SKIP  src/modules/hr/recruitment/recruitment-candidate-records.controller.ts:196  updateReferral(\"referral\")  — http-put-idempotent\n  SKIP  src/modules/inventory/sales-orders/inv-sales-orders.controller.ts:139  ship(\":soId/ship\")  — bespoke-mechanism\n  SKIP  src/modules/inventory/shipments/shipments.controller.ts:77  ship(\":shipmentId/ship\")  — bespoke-mechanism\n  SKIP  src/modules/inventory/stock/inv-stock-adjustments.controller.ts:44  createAdjustment(\"\")  — bespoke-mechanism\n  SKIP  src/modules/inventory/stock/inv-stock-adjustments.controller.ts:81  postAdjustment(\":adjustmentId/post\")  — bespoke-mechanism\n  SKIP  src/modules/payroll/payout/approvals.controller.ts:87  approveStage(\"approvals/:approvalId/approve\")  — bespoke-mechanism\n  SKIP  src/modules/payroll/payout/approvals.controller.ts:121  rejectStage(\"approvals/:approvalId/reject\")  — bespoke-mechanism\n  SKIP  src/modules/platform/platform-operator-access.controller.ts:95  approveGrant(\"grants/:grantId/approve\")  — internal-api-no-jwt-context; service is idempotent: no-op when already active for the same approver\n  SKIP  src/modules/platform/platform-operator-access.controller.ts:117  rejectGrant(\"grants/:grantId/reject\")  — internal-api-no-jwt-context; service is idempotent: no-op when already rejected\nOK — every in-scope mutating handler carries @Idempotent."
+    },
+    {
+      "gate": "check:idempotent-commands:self-test",
+      "exitCode": 0,
+      "durationMs": 2489,
+      "timedOut": false,
+      "tail": "{\n  \"selfTest\": true,\n  \"pass\": true,\n  \"checks\": {\n    \"fencedHandlerNotReported\": true,\n    \"unfencedPublishIsDetected\": true,\n    \"unfencedHandlerHasCorrectRoute\": true,\n    \"publicRouteIsSkipped\": true,\n    \"alreadyFencedIsClean\": true,\n    \"bespokeHandlerIsDetected\": true\n  }\n}"
+    },
+    {
+      "gate": "check:import-direction",
+      "exitCode": 0,
+      "durationMs": 2524,
+      "timedOut": false,
+      "tail": "check-import-direction: scanned 233 files under src/common — 0 new violation(s), 0 of 0 baseline entries still present"
+    },
+    {
+      "gate": "check:import-direction:self-test",
+      "exitCode": 0,
+      "durationMs": 2356,
+      "timedOut": false,
+      "tail": "check-import-direction self-tests: 11 passed"
+    },
+    {
+      "gate": "check:kebab-case",
+      "exitCode": 0,
+      "durationMs": 2535,
+      "timedOut": false,
+      "tail": "check-kebab-case: scanned 6647 entries under src — 0 violation(s), 2 of 2 recorded exceptions still present"
+    },
+    {
+      "gate": "check:kebab-case:self-test",
+      "exitCode": 0,
+      "durationMs": 2273,
+      "timedOut": false,
+      "tail": "check-kebab-case self-tests: 15 passed"
+    },
+    {
+      "gate": "check:licenses",
+      "exitCode": 1,
+      "durationMs": 3489,
+      "timedOut": false,
+      "tail": "[check:licenses] Scanning production dependency licenses...\n[check:licenses] pnpm licenses failed:"
+    },
+    {
+      "gate": "check:licenses:self-test",
+      "exitCode": 0,
+      "durationMs": 2230,
+      "timedOut": false,
+      "tail": "SELF-TEST PASSED: license checker correctly identifies GPL/AGPL violations."
+    },
+    {
+      "gate": "check:lifecycle-predicates",
+      "exitCode": 0,
+      "durationMs": 4457,
+      "timedOut": false,
+      "tail": "Tables 788  ·  with a lifecycle column 81  ·  read sites 1725 across 3333 files\n  predicate in statement 774  ·  built elsewhere in file 253  ·  dormant column 111  ·  primary-read candidates 74  ·  join candidates 335\nNOTE — 111 read(s) omit a predicate on a lifecycle column no code path ever writes. A dormant trap, not a live defect.\nNOTE — 178 read(s) of a global identity or tenant-root table are outside this rule by design: users, organizations, accounts, sessions.\nOK — primary-read candidates 74 (baseline 75) · join candidates 335 (baseline 335).\nBoth numbers are ratchets recording the measured state when this gate was written, not a clean bill of health. They may only go down; a new occurrence of either shape fails immediately."
+    },
+    {
+      "gate": "check:lifecycle-predicates:self-test",
+      "exitCode": 0,
+      "durationMs": 4413,
+      "timedOut": false,
+      "tail": "check-lifecycle-predicates self-tests: 22 passed"
+    },
+    {
+      "gate": "check:log-secrets",
+      "exitCode": 0,
+      "durationMs": 3083,
+      "timedOut": false,
+      "tail": "Scanned    3677 source files\nTIERS map  101 entries\nRedactor   23 substrings + 18 exact names\nOK — no plaintext secret logging found, all @UseRateLimit keys are in TIERS, and every name this gate guards is withheld by the runtime redactor."
+    },
+    {
+      "gate": "check:log-secrets:self-test",
+      "exitCode": 0,
+      "durationMs": 2310,
+      "timedOut": false,
+      "tail": "{\n  \"selfTest\": true,\n  \"pass\": true,\n  \"checks\": {\n    \"parsedTiersFromFile\": true,\n    \"tiersContainsAuthLogin\": true,\n    \"tiersContainsHrFormPublicSubmit\": true,\n    \"catchesSecretInLogLine\": true,\n    \"missesRedactedLogLine\": true,\n    \"missesLogLineWithoutSensitiveName\": true,\n    \"catchesTemplateLiteralSecretLeak\": true,\n    \"missesTemplateLiteralSafeInterpolation\": true,\n    \"catchesMissingTierKey\": true,\n    \"missesPresentTierKey\": true,\n    \"catchesPromptInterpolatedIntoMessage\": true,\n    \"parsedRedactorSubstrings\": true,\n    \"parsedRedactorExact\": true,\n    \"everyGateNameIsWithheldByTheRedactor\": true,\n    \"parityCheckReportsAnUnknownName\": true\n  }\n}"
+    },
+    {
+      "gate": "check:migration-chain",
+      "exitCode": 0,
+      "durationMs": 3691,
+      "timedOut": false,
+      "tail": "RAN   (f) applied watermark — max created_at=1803000010085\nPASS  migration chain verified — no issues found"
+    },
+    {
+      "gate": "check:migration-chain:self-test",
+      "exitCode": 0,
+      "durationMs": 2217,
+      "timedOut": false,
+      "tail": "Self-test: (c) timestamp regression\n  PASS  timestamp regression caught\nSelf-test: (d) orphan journal entry\n  PASS  orphan entry caught\nSelf-test: (d) NEGATIVE — a pending-root entry is not an orphan\n  PASS  a slashed tag and a bare tag resolved under pending/ are both accepted\n  PASS  isPendingPath tells a pending tag from an absent one\nSelf-test: (f) applied watermark ahead of the journal\n  PASS  watermark ahead of journal caught\n  PASS  a watermark equal to the newest entry is not reported\n  PASS  check (f) is skipped when no database is reachable\nSelf-test: TLS resolution for check (f)\n  PASS  loopback defaults to no TLS\n  PASS  localhost defaults to no TLS\n  PASS  a remote host still defaults to require\n  PASS  a neon host still defaults to require\n  PASS  an explicit sslmode=require on loopback is honoured\n  PASS  an explicit sslmode=disable is honoured\n  PASS  an unparseable url falls back to require\n  PASS  sslmode=no-verify relaxes verification without disabling TLS\nSelf-test: (e) chain gaps marker\n  PASS  chain gaps caught\n  PASS  unparseable gap count caught\n  PASS  zero gaps is not reported as a failure\nSelf-test: 22 passed, 0 failed"
+    },
+    {
+      "gate": "check:migration-discipline",
+      "exitCode": 0,
+      "durationMs": 2445,
+      "timedOut": false,
+      "tail": "Migration discipline gate\n  Scanning: D:\\projects\\personal\\Streamlineos\\backend\\migrations\n  SQL files found: 685\n  Baselines: lock_timeout=152 fk-not-valid=40 set-not-null=20 validate-order=2 do-breakpoint=0 no-journal=0 concurrently=0\n  These counts can only shrink. A new file not in a baseline fails the gate.\ncheck:migration-discipline PASSED\n  685 SQL files checked, 0 new violations\n  Baselined (immutable history): lock_timeout=152 fk-not-valid=40 set-not-null=20 validate-order=2 do-breakpoint=0 no-journal=0 concurrently=0\n  Also enforced: journal monotonicity, duplicate idx, duplicate numeric\n  prefixes, and journal entries with no file on disk.\n  Not covered: applied-watermark skipping (needs the DB),\n  keywords in SQL comments that trick text patterns (except check 4).\n  Companion: check:migration-chain"
+    },
+    {
+      "gate": "check:migration-discipline:self-test",
+      "exitCode": 0,
+      "durationMs": 2115,
+      "timedOut": false,
+      "tail": "Check 4: validate-before-backfill\n  PASS  VALIDATE before backfill is caught\n  PASS  backfill before VALIDATE passes\n  PASS  VALIDATE with no backfill (FK two-step) passes check 4\n  PASS  a header comment naming VALIDATE CONSTRAINT does not fake a violation\n  PASS  a real VALIDATE before the backfill is still caught once comments are stripped\n  PASS  stripSqlComments preserves the statement-breakpoint marker it must split on\nCheck 5: DO-block breakpoint\n  PASS  statement-breakpoint inside DO block is caught\n  PASS  breakpoint outside DO block passes\n  PASS  no DO block at all passes check 5\nCheck 6: journal entry\n  PASS  file missing from journal is caught\n  PASS  file present in journal passes\n  PASS  second journalled file passes\nCheck 7: CONCURRENTLY\n  PASS  CREATE INDEX CONCURRENTLY in SQL body is caught\n  PASS  CREATE UNIQUE INDEX CONCURRENTLY in SQL body is caught\n  PASS  CREATE INDEX without CONCURRENTLY passes\n  PASS  CONCURRENTLY only in a comment does not trigger check 7\nAnti-vacuity: checks must never silently pass on unparseable input\n  PASS  file with binary noise but lock_timeout still passes check 1\n  PASS  unparseable file with no lock_timeout is caught (not silently passed)\nSelf-test results: 27 passed, 0 failed\nSELF-TEST PASSED — all seven check shapes are caught"
+    },
+    {
+      "gate": "check:migration-immutability",
+      "exitCode": 1,
+      "durationMs": 2581,
+      "timedOut": false,
+      "tail": "  1057_calendar_connection_org_resolver  effective 673d72a5af62 -> 31a4ba38eea9\n  1058_chat_read_path_indexes  effective 70308091d19c -> 20917b3df8e6\n  1059_build_board_rank_sort_index  effective 3a0088bb6422 -> f591dad2af62\n  1060_chat_reply_reminder_pending_index  effective 9745dcb1dea5 -> 2ecdc2778316\n  1061_push_endpoint_cross_tenant_claim  effective ed792a279ddc -> 6a85df58a9aa\nCOMMENT-ONLY edits to already-sealed migrations (every database built from either version is identical; refresh with `pnpm check:migration-immutability:emit`):\n  0296_hrms_org_departments\n  0300_kb_chunk_content_hash\n  0325_recon_membership_fk\n  0351_automation_consolidation\n  0628_communication_actor_normalization\n  0630_restore_calendar_legacy_read_column\n  0631_chat_composite_tenant_constraints\n  0635_kb_composite_tenant_constraints\n  0637_finance_cursor_retention\n  0638_accounting_child_tenant_indexes\n  0641_financial_actor_audit_identity\n  0636_kb_source_review_tenant_constraints\n  0690_build_ticket_activity_log_user_membership_id\n  0692_build_ticket_comment_mentions_membership_id\n  0694_build_ticket_related_links_created_by_membership_id\n  0696_build_sprint_scope_events_actor_membership_id\n  0698_build_workflow_transitions_created_by_membership_id\nFAIL — 1 seal violation(s):\n  • 266 sealed migration(s) changed their SQL"
+    },
+    {
+      "gate": "check:migration-immutability:self-test",
+      "exitCode": 0,
+      "durationMs": 2401,
+      "timedOut": false,
+      "tail": "check-migration-immutability self-tests: 13 passed"
+    },
+    {
+      "gate": "check:migration-ledger",
+      "exitCode": 0,
+      "durationMs": 3816,
+      "timedOut": false,
+      "tail": "Self-tests passed.\nLedger: 635 applied row(s) against 685 journal entr(ies).\nWatermark 1803000010085; 50 migration(s) pending.\nNo orphan, duplicate or unreachable entries. Gate passed."
+    },
+    {
+      "gate": "check:migration-ledger:self-test",
+      "exitCode": 0,
+      "durationMs": 2553,
+      "timedOut": false,
+      "tail": "Self-tests passed."
+    },
+    {
+      "gate": "check:migration-rollback",
+      "exitCode": 0,
+      "durationMs": 2614,
+      "timedOut": false,
+      "tail": "check:migration-rollback PASSED\n  685 migrations scanned\n  Compliance required for numeric prefix > 839\n  All rollback type-name checks passed"
+    },
+    {
+      "gate": "check:migration-rollback:self-test",
+      "exitCode": 0,
+      "durationMs": 2371,
+      "timedOut": false,
+      "tail": "check-migration-rollback self-test\n===================================\nFailure mode (a): migration above cutoff with no rollback and no declaration\n  PASS  missing rollback and no declaration is caught (above cutoff)\nFailure mode (a): migration below cutoff with no rollback → grandfathered, no violation\n  PASS  migration below cutoff is grandfathered\nClean case: migration above cutoff with -- @irreversible declaration\n  PASS  @irreversible declaration satisfies the gate\nClean case: migration above cutoff with -- @data-loss declaration\n  PASS  @data-loss declaration satisfies the gate\nClean case: migration above cutoff with matching rollback (no CREATE TYPE)\n  PASS  rollback present with no CREATE TYPE passes\nFailure mode (b): rollback exists but DROP TYPE name mismatches CREATE TYPE name\n  PASS  rollback with mismatched DROP TYPE name is caught (0143-class defect)\nClean case: rollback with correct DROP TYPE name\n  PASS  rollback with correct DROP TYPE name passes\nType-mismatch check applies to historical migrations too (below cutoff)\n  PASS  type-mismatch caught for historical migration that has a rollback\nInjection: unjournalled file above cutoff is exempt\n  PASS  unjournalled file above cutoff is not flagged (no journal = never applies)\nSelf-test: 9 passed, 0 failed\nSELF-TEST PASSED"
+    },
+    {
+      "gate": "check:mock-surface",
+      "exitCode": 0,
+      "durationMs": 5376,
+      "timedOut": false,
+      "tail": "Scanning 2136 spec files...\nResolved 282+ classes from 459 candidates\n────────────────────────────────────────────────────────────────────────\nOK — no phantom mock methods found\nDoubles scanned   : 4257\nClasses resolved  : 282\nGenuine defects   : 0"
+    },
+    {
+      "gate": "check:mock-surface:self-test",
+      "exitCode": 0,
+      "durationMs": 2584,
+      "timedOut": false,
+      "tail": "Running self-test...\n  [pass] extractTopLevelKeys — basic\n  [pass] extractTopLevelKeys — nested keys excluded\n  [pass] extractTopLevelKeys — single-line\n  [pass] extractClassPublicMethods\n  [pass] extractClassPublicMethods — public properties count as members, private ones do not\n  [pass] full pipeline — phantom method detected, no false positives\n  [pass] useValue-inline pattern\n  [pass] vacuity guard triggers on empty spec list\n  [pass] builder-chain nested return {} — builder methods not attributed to service\n  [pass] top-level factory return {} — methods correctly attributed to service\nSELF-TEST PASSED"
+    },
+    {
+      "gate": "check:module-di",
+      "exitCode": 0,
+      "durationMs": 5219,
+      "timedOut": false,
+      "tail": "check:module-di clean — 218 modules · 1716 classes checked · skipped: 1 non-class tokens · 1 not-in-class-index · 0 violations\nCheck-D: 1746 decorated class(es) · 217 modules reachable from AppModule · 1779 registered · 0 unregistered · exempt: 2 enhancer · 2 factory · 1 aliased · 1 base-class"
+    },
+    {
+      "gate": "check:module-di:self-test",
+      "exitCode": 1,
+      "durationMs": 2804,
+      "timedOut": false,
+      "tail": "SELF-TEST FAIL [D]: a class provided under a re-exported alias is not an orphan\nSELF-TEST FAIL [D]: importing a same-named module from another folder does not register the other one's providers\n2 of 54 self-test assertions failed"
+    },
+    {
+      "gate": "check:module-entitlement",
+      "exitCode": 0,
+      "durationMs": 3252,
+      "timedOut": false,
+      "tail": "OK — timesheets: planGated=true, storedKey=\"TIMESHEETS\" round-trips correctly."
+    },
+    {
+      "gate": "check:module-entitlement:self-test",
+      "exitCode": 0,
+      "durationMs": 2473,
+      "timedOut": false,
+      "tail": "{\n  \"selfTest\": true,\n  \"pass\": true,\n  \"checks\": {\n    \"planGatedMismatchDetected\": true,\n    \"storedKeyLowercaseDetected\": true,\n    \"storedKeyWrongValueDetected\": true,\n    \"correctEntitlementPasses\": true,\n    \"nonPlanGatedCorrectPasses\": true,\n    \"nonPlanGatedInCatalogDetected\": true\n  }\n}"
+    },
+    {
+      "gate": "check:module-gate",
+      "exitCode": 0,
+      "durationMs": 2412,
+      "timedOut": false,
+      "tail": "check-module-gate PASSED"
+    },
+    {
+      "gate": "check:module-gate:self-test",
+      "exitCode": 0,
+      "durationMs": 2248,
+      "timedOut": false,
+      "tail": "Running --self-test...\n  PASS  parseRegistry: finds 2 entries\n  PASS  parseRegistry: alpha is planGated\n  PASS  parseRegistry: beta is not planGated\n  PASS  WRONG_MODULE fires when @RequireModule says 'build' but folder is 'alpha'\n  PASS  No error when @RequireModule is correct\n  PASS  MISSING_GATE fires for plan-gated module with no @RequireModule\n  PASS  Class-level @Public() suppresses MISSING_GATE\n  PASS  No error for non-plan-gated module with no @RequireModule\n  PASS  Allowlisted file is skipped\n  PASS  STALE_ALLOWLIST fires for non-existent allowlist entry\n  PASS  VACUITY fires when controller count is below minimum\n  PASS  Anti-vacuity: real codebase has at least 200 controllers (found 391)\n--self-test: 12 passed, 0 failed"
+    },
+    {
+      "gate": "check:module-lifecycle",
+      "exitCode": 0,
+      "durationMs": 5375,
+      "timedOut": false,
+      "tail": "  timesheet_rate_cards  (1 declared index(es))\n  timesheet_rates  (4 declared index(es))\n  timesheet_settings_history  (1 declared index(es))\n  timesheet_settings  (0 declared index(es))\n  timer_sessions  (4 declared index(es))\nGate 1: Tenant isolation (RLS policies in pg_policies)\nPASS  All 11 tables have tenant-predicated RLS policies\nGate 2: Cold migration (tables in pg_catalog + journaled migration)\nPASS  All 11 tables exist in pg_catalog with journaled migrations\nGate 3: Restore (declared PK, org_id FK, named indexes present in pg_catalog)\nPASS  All 11 tables pass restore check\nGate 4: Removal (org_id NOT NULL with FK whose ON DELETE is defined)\nPASS  All 11 tables have non-nullable org_id with FK\n  org_id ON DELETE SET NULL  — timer_sessions\n  org_id ON DELETE SET NULL  — timesheet_audit_events\n  org_id ON DELETE CASCADE  — timesheet_budgets\n  org_id ON DELETE SET NULL  — timesheet_exceptions\n  org_id ON DELETE SET NULL  — timesheet_exports\n  org_id ON DELETE SET NULL  — timesheet_periods\n  org_id ON DELETE CASCADE  — timesheet_rate_cards\n  org_id ON DELETE SET NULL  — timesheet_rates\n  org_id ON DELETE CASCADE  — timesheet_settings\n  org_id ON DELETE SET NULL  — timesheet_settings_history\n  org_id ON DELETE SET NULL  — timesheets\nRESULT: ALL GATES PASSED  (timesheets, 11 tables)"
+    },
+    {
+      "gate": "check:module-lifecycle:self-test",
+      "exitCode": 0,
+      "durationMs": 2205,
+      "timedOut": false,
+      "tail": "{\n  \"selfTest\": true,\n  \"pass\": true,\n  \"checks\": {\n    \"singleTableFound\": true,\n    \"indexExtracted\": true,\n    \"multilineTableNameFound\": true,\n    \"twoTablesInFile\": true,\n    \"nonTableCallNotCaptured\": true,\n    \"emptySourceReturnsEmpty\": true,\n    \"uniqueIndexExtracted\": true,\n    \"tenantIsolationPassesWhenPolicyExists\": true,\n    \"tenantIsolationFailsOnMissingPolicy\": true,\n    \"coldMigrationPassesWhenBothPresent\": true,\n    \"coldMigrationFailsWhenNotInCatalog\": true,\n    \"coldMigrationFailsWhenNoJournaledMigration\": true,\n    \"restorePassesWhenAllPresent\": true,\n    \"restoreFailsWhenNoPk\": true,\n    \"restoreFailsWhenNoOrgFk\": true,\n    \"restoreFailsWhenIndexMissing\": true,\n    \"removalPassesWhenNonNullableWithFk\": true,\n    \"removalFailsWhenOrgIdNullable\": true,\n    \"removalFailsWhenNoFk\": true\n  }\n}"
+    },
+    {
+      "gate": "check:module-registration",
+      "exitCode": 0,
+      "durationMs": 2551,
+      "timedOut": false,
+      "tail": "check-module-registration: 218 module class(es) declared, 217 reachable from AppModule, 0 unreachable"
+    },
+    {
+      "gate": "check:module-registration:self-test",
+      "exitCode": 0,
+      "durationMs": 2202,
+      "timedOut": false,
+      "tail": "check-module-registration self-tests: 13 passed"
+    },
+    {
+      "gate": "check:multipart-contracts",
+      "exitCode": 0,
+      "durationMs": 2568,
+      "timedOut": false,
+      "tail": "check-multipart-contracts: scanned 551 controller file(s)\n  OK — every handler with a file interceptor carries @MultipartAction or @BodylessAction"
+    },
+    {
+      "gate": "check:multipart-contracts:self-test",
+      "exitCode": 0,
+      "durationMs": 2297,
+      "timedOut": false,
+      "tail": "Running self-test...\n  [pass] no-finding: handler with @MultipartAction + FileInterceptor is clean\n  [pass] no-finding: handler with @BodylessAction + FileInterceptor is clean\n  [pass] finding: FileInterceptor without @MultipartAction or @BodylessAction is flagged\n  [pass] no-finding: handler without a file interceptor is not flagged\n  [pass] finding: FileFieldsInterceptor without declaration is flagged\n  [pass] no-finding: FileFieldsInterceptor + @MultipartAction is clean\n  [pass] finding: GET with FileInterceptor is also flagged (unusual but wrong)\n  [pass] no-finding: multi-line @MultipartAction is collapsed and detected correctly\n  [pass] extractHandlerName reads the method name from async, plain and generic declarations\nSELF-TEST PASSED"
+    },
+    {
+      "gate": "check:n1-growing-loops",
+      "exitCode": 0,
+      "durationMs": 23068,
+      "timedOut": false,
+      "tail": "Parsed 2734 service files, 5363 loop nodes, across 3 root(s):\n  src/modules : 2182 file(s)\n  src/common  : 190 file(s)\n  src/db      : 362 file(s)\n37 finding(s) in excluded crm/inventory.\n  GROWING (one round trip per row): 100 site(s) across 75 file(s)  [ratchet 102]\n  FIXED   (literal-bounded):        19 site(s)\n  PAGING  (page/chunk per pass):    81 site(s)\nNo new growing-loop database or cache calls. 100 site(s) remain against the ratchet of 102 — this is a ratchet to drive to zero, not a clean repository."
+    },
+    {
+      "gate": "check:n1-growing-loops:self-test",
+      "exitCode": 1,
+      "durationMs": 2837,
+      "timedOut": false,
+      "tail": "SELF-TEST FAIL: a src/common finding would be keyed \"@common\\tenant\\for-each-org.ts\", not under @common"
+    },
+    {
+      "gate": "check:namespace-coverage",
+      "exitCode": 0,
+      "durationMs": 2388,
+      "timedOut": false,
+      "tail": "=== namespace-coverage gate — 1076 service files, 75 read namespaces, 76 bump namespaces ===\nDEAD BUMPS (bumped but never read, non-blocking) — 1:\n  [chat:unread] Namespace \"chat:unread\" has invalidation calls but no corresponding cachedVersioned/cachedVersionedForOrg read — possibly dead code.\nUNRESOLVED READ EXPRESSIONS (module-local factories, non-blocking) — 4:\n  ACCT_STATEMENTS_NS(orgId)\n  ADMIN_POSTS_CACHE_NAMESPACE\n  CACHE_KEYS.hrEmployeesListNamespace(orgId)\n  PA_LIST_NAMESPACE(orgId)\nRESULT: PASS — 0 stale namespaces. 75 reads, 76 bumps. (5 warnings)"
+    },
+    {
+      "gate": "check:namespace-coverage:self-test",
+      "exitCode": 0,
+      "durationMs": 2031,
+      "timedOut": false,
+      "tail": "    },\n    {\n      \"name\": \"positive: template literal namespace extracted correctly\",\n      \"pass\": true,\n      \"detail\": {\n        \"extracted\": [\n          \"projects:list\"\n        ]\n      }\n    },\n    {\n      \"name\": \"positive: TTL-only namespace excluded from stale detection\",\n      \"pass\": true,\n      \"detail\": {}\n    },\n    {\n      \"name\": \"vacuity-guard: zero reads is failure\",\n      \"pass\": true,\n      \"detail\": {\n        \"reads\": 0,\n        \"min\": 5\n      }\n    }\n  ]\n}"
+    },
+    {
+      "gate": "check:navigation-permissions",
+      "exitCode": 0,
+      "durationMs": 4194,
+      "timedOut": false,
+      "tail": "Navigation gates  439  (198 unique keys)\nBackend catalog   704 keys\nKeys enforced on a route  633\nENFORCED IN SERVICE — named, not hidden in an allowlist:\n  SKIP  \"accounting:access:view\"  ×1  — read by assertModuleAccessPolicy (module-access.helpers.ts:100); the route declares @AuthorizedInService\n  SKIP  \"build:access:view\"  ×1  — read by assertModuleAccessPolicy (module-access.helpers.ts:100); the route declares @AuthorizedInService\n  SKIP  \"crm:access:view\"  ×1  — read by assertModuleAccessPolicy (module-access.helpers.ts:100); the route declares @AuthorizedInService\n  SKIP  \"directory:access:view\"  ×1  — read by assertModuleAccessPolicy (module-access.helpers.ts:100); the route declares @AuthorizedInService\n  SKIP  \"hr:access:view\"  ×1  — read by assertModuleAccessPolicy (module-access.helpers.ts:100); the route declares @AuthorizedInService\n  SKIP  \"inventory:access:view\"  ×1  — read by assertModuleAccessPolicy (module-access.helpers.ts:100); the route declares @AuthorizedInService\n  SKIP  \"payroll:access:view\"  ×1  — read by assertModuleAccessPolicy (module-access.helpers.ts:100); the route declares @AuthorizedInService\n  SKIP  \"sign:access:view\"  ×1  — read by assertModuleAccessPolicy (module-access.helpers.ts:100); the route declares @AuthorizedInService\n  SKIP  \"support:access:view\"  ×1  — read by assertModuleAccessPolicy (module-access.helpers.ts:100); the route declares @AuthorizedInService\n  SKIP  \"surveys:access:view\"  ×1  — read by assertModuleAccessPolicy (module-access.helpers.ts:100); the route declares @AuthorizedInService\n  SKIP  \"timesheets:access:view\"  ×2  — read by assertModuleAccessPolicy (module-access.helpers.ts:100); the route declares @AuthorizedInService\n  SKIP  \"workflows:access:view\"  ×1  — read by assertModuleAccessPolicy (module-access.helpers.ts:100); the route declares @AuthorizedInService\nOK — every navigation gate names a key that some route enforces.\nManifest pilot (timesheets): all nav routes are under \"/timesheets\" — OK"
+    },
+    {
+      "gate": "check:navigation-permissions:self-test",
+      "exitCode": 0,
+      "durationMs": 3052,
+      "timedOut": false,
+      "tail": "{\n  \"selfTest\": true,\n  \"pass\": true,\n  \"checks\": {\n    \"realCatalogLoads\": true,\n    \"realCatalogContainsGeneratedAccessKey\": true,\n    \"parsesGroupArrayGate\": true,\n    \"groupGateHasNoHref\": true,\n    \"groupGateLinesAreTheKeyLines\": true,\n    \"parsesInlineRouteGate\": true,\n    \"ungatedRouteProducesNothing\": true,\n    \"hrefResetsOnLabelSoGroupIsNotMisattributed\": true,\n    \"constantEnforcedKeyCountsAsEnforced\": true,\n    \"unknownKeyDetected\": true,\n    \"unknownKeyNamesItsLine\": true,\n    \"unenforcedKeyDetected\": true,\n    \"unenforcedKeyNamesItsLine\": true,\n    \"enforcedKeyPasses\": true,\n    \"pilotNavRouteMatchPasses\": true,\n    \"pilotNavRouteMismatchDetected\": true,\n    \"pilotNavParserExtractsTimesheetsRoutes\": true,\n    \"pilotNavParserExtractsCrmRoutes\": true\n  },\n  \"catalogError\": null\n}"
+    },
+    {
+      "gate": "check:openapi-coverage",
+      "exitCode": 1,
+      "durationMs": 2359,
+      "timedOut": false,
+      "tail": "  GET    /access/user-module-access/{userId}  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract\n  PATCH  /access/user-module-access/{userId}  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract\n  GET    /accounting/accounts  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract\n  POST   /accounting/accounts  — 2xx response (201) declares no content schema — a bare auto-generated key is not a contract\n  PATCH  /accounting/accounts/{accountId}  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract\n  GET    /accounting/approval-policies  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract\n  POST   /accounting/approval-policies  — 2xx response (201) declares no content schema — a bare auto-generated key is not a contract\n  PATCH  /accounting/approval-policies/{policyId}  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract\n  DELETE /accounting/approval-policies/{policyId}  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract\n  GET    /accounting/approvals  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract\n  POST   /accounting/approvals/{requestId}/approve  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract\n  POST   /accounting/approvals/{requestId}/reject  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract\n  GET    /accounting/approvals/counts  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract\n  GET    /accounting/ar-payments  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract\n  GET    /accounting/assets  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract\n  POST   /accounting/assets  — 2xx response (201) declares no content schema — a bare auto-generated key is not a contract\n  GET    /accounting/assets/{assetId}  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract\n  PATCH  /accounting/assets/{assetId}  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract\n  POST   /accounting/assets/{assetId}/activate  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract\n  POST   /accounting/assets/{assetId}/dispose  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract\n  GET    /accounting/assets/categories  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract\n  POST   /accounting/assets/categories  — 2xx response (201) declares no content schema — a bare auto-generated key is not a contract\n  PATCH  /accounting/assets/categories/{categoryId}  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract\n  GET    /accounting/assets/depreciation/runs  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract\n  ... and 3591 more"
+    },
+    {
+      "gate": "check:openapi-coverage:self-test",
+      "exitCode": 0,
+      "durationMs": 2114,
+      "timedOut": false,
+      "tail": "  [pass] bad-invalid-exposure — op with x-exposure='UNKNOWN' is flagged\n  [pass] good-all-valid — all ops with valid exposure produce no violations\n  [pass] good-mixed-exposure — all four valid exposure values accepted\n  [pass] vacuity-trigger-zero — isVacuous(0) returns true\n  [pass] vacuity-trigger-floor — isVacuous(MIN_OPERATIONS - 1) returns true\n  [pass] vacuity-not-triggered-at-floor — isVacuous(MIN_OPERATIONS) returns false\n  [pass] vacuity-not-triggered-above-floor — isVacuous(4000) returns false\n  [pass] good-error-shapes — ops with 4xx $ref are not flagged\n  [pass] bad-missing-error-shapes — ops without 4xx $ref are flagged\n  [pass] good-response-schemas — a 2xx with a real content schema passes\n  [pass] bare-2xx-key-is-not-coverage — an auto-generated 2xx key with no content is flagged, and says why\n  [pass] empty-content-is-not-coverage — content: {} is flagged\n  [pass] media-type-without-schema — a media type carrying no schema is flagged\n  [pass] dangling-ref-is-not-coverage — an unresolvable $ref is flagged\n  [pass] live-ref-is-coverage — a resolvable $ref passes\n  [pass] error-schema-does-not-cover-success — a schema on the 400 does not excuse a bare 200\n  [pass] bad-missing-response-schemas — ops without 2xx entry or declared content are flagged\n  [pass] good-non-2xx-with-content — a 405-only op with a declared content schema is not flagged\n  [pass] neg-response-schema-gate — gate bites: 1/2 coverage fails (50.00%)\n  [pass] good-mutating-request-schemas — POST with body or x-bodyless not flagged; GET ignored\n  [pass] bad-mutating-request-schemas — POST and PUT without requestBody are flagged; GET ignored\n  [pass] neg-request-schema-gate — gate bites: 9/10 coverage fails (90.00%)\n  [pass] formatPct-no-false-100 — formatPct(9, 10) = \"90.00%\", not \"100%\"\n  [pass] formatPct-exact-100 — formatPct(10, 10) returns '100%'\nSELF-TEST PASSED"
+    },
+    {
+      "gate": "check:openapi-path-params",
+      "exitCode": 0,
+      "durationMs": 1986,
+      "timedOut": false,
+      "tail": "check-openapi-path-params: OK — 3648 operations checked, all path parameters declared"
+    },
+    {
+      "gate": "check:openapi-path-params:self-test",
+      "exitCode": 0,
+      "durationMs": 1932,
+      "timedOut": false,
+      "tail": "Running self-test...\n  [pass] all params declared → no violation\n  [pass] one missing param → flagged\n  [pass] no parameters field → all template tokens missing\n  [pass] empty parameters array → template token missing\n  [pass] query param with same name does not satisfy path requirement\n  [pass] path with no template tokens → no violation\n  [pass] per-method check — get ok, patch missing → only patch flagged\n  [pass] empty paths → no violations\n  [pass] vacuity guard triggers on a document with fewer than MIN_OPERATIONS operations\nSELF-TEST PASSED"
+    },
+    {
+      "gate": "check:operation-ids",
+      "exitCode": 0,
+      "durationMs": 2035,
+      "timedOut": false,
+      "tail": "Self-tests passed.\ncheck:operation-ids scanning 3648 operation(s) across 2703 path(s).\nNo duplicate operationIds found. Gate passed."
+    },
+    {
+      "gate": "check:operation-ids:self-test",
+      "exitCode": 0,
+      "durationMs": 1835,
+      "timedOut": false,
+      "tail": "Self-tests passed."
+    },
+    {
+      "gate": "check:outbox-consumers",
+      "exitCode": 0,
+      "durationMs": 2244,
+      "timedOut": false,
+      "tail": "Scanned 3674 TypeScript files\nModule graph: 216 modules reachable from AppModule, 1209 registered providers\nEmitted event types    (24): billing.revenue-event, build.release.published, build.ticket.status_changed, build.project-webhook.delivery.requested, build.sprint.completed, realtime.token-revocation, chat.message.fanout, deal.closed, sign.envelope.completed, expense.export.requested, accounting.bill.approved, accounting.bill.paid, finance.report.export.requested, gdpr.export.requested, hr.helpdesk.ticket_created, hr.helpdesk.ticket_assigned, hr.helpdesk.ticket_status_changed, inventory.stock.low, kb.content.index, organization.setup.completed, payroll.run.payout-posting-intent, payroll.run.posting-intent, support.ticket.resolved, survey.response.submitted\nDeclared event types   (29): billing.revenue-event, build.release.published, build.ticket.status_changed, build.project-webhook.delivery.requested, build.sprint.completed, chat.message.fanout, sign.envelope.completed, expense.submitted, expense.decided, expense.export.requested, accounting.bill.approved, accounting.bill.paid, accounting.invoice.reminder.due, finance.report.export.requested, gdpr.export.requested, hr.helpdesk.ticket_created, hr.helpdesk.ticket_assigned, hr.helpdesk.ticket_status_changed, inventory.stock.low, kb.content.index, kb.content.delete, deal.closed, integration.connection.disconnected, organization.setup.completed, payroll.run.payout-posting-intent, payroll.run.posting-intent, realtime.token-revocation, support.ticket.resolved, survey.response.submitted\nREGISTERED event types (29): billing.revenue-event, build.release.published, build.ticket.status_changed, build.project-webhook.delivery.requested, build.sprint.completed, chat.message.fanout, sign.envelope.completed, expense.submitted, expense.decided, expense.export.requested, accounting.bill.approved, accounting.bill.paid, accounting.invoice.reminder.due, finance.report.export.requested, gdpr.export.requested, hr.helpdesk.ticket_created, hr.helpdesk.ticket_assigned, hr.helpdesk.ticket_status_changed, inventory.stock.low, kb.content.index, kb.content.delete, deal.closed, integration.connection.disconnected, organization.setup.completed, payroll.run.payout-posting-intent, payroll.run.posting-intent, realtime.token-revocation, support.ticket.resolved, survey.response.submitted\nOK — every emitted outbox event type has a consumer registered from AppModule"
+    },
+    {
+      "gate": "check:outbox-consumers:self-test",
+      "exitCode": 1,
+      "durationMs": 1627,
+      "timedOut": false,
+      "tail": "  FAIL: importing the same-named module from another folder does not register the other one's providers\ncheck-outbox-consumers self-tests: 1 failed, 29 passed"
+    },
+    {
+      "gate": "check:over-300",
+      "exitCode": 1,
+      "durationMs": 2122,
+      "timedOut": false,
+      "tail": "  315  src/modules/clients/clients.service.ts\n  315  src/modules/inventory/stock-engine/valuation.service.ts\n  315  src/modules/sales/sales.service.ts\n  314  src/modules/build/core/dto/ticket.schemas.ts\n  314  src/modules/ingress/adapters/mail-to-inbound-event.ts\n  313  src/modules/rbac/role-permission.service.ts\n  312  src/modules/hr/benefits/hr-benefits.controller.ts\n  312  src/modules/rbac/role-templates-crm-hr.constants.ts\n  311  src/modules/ai/core/prompts/crm.prompts.ts\n  311  src/modules/ai/core/services/ticket-triage-ai.service.ts\n  311  src/modules/finance/assets/depreciation-runs.service.ts\n  309  src/modules/hr/performance/engagement-extras.controller.ts\n  309  src/modules/storage/storage-multipart.controller.ts\n  306  src/modules/hr/governance/positions/positions-taxonomy.service.ts\n  305  src/modules/invoices/invoices-payment.service.ts\n  305  src/modules/kb/retrieval/kb-ask.service.ts\n  305  src/modules/kb/retrieval/kb-candidate.service.ts\n  303  src/modules/cron/retention-schedule.ts\n  303  src/modules/finance/ap/payment-run-executor.service.ts\n  302  src/db/schema/common/auth.ts\n  302  src/modules/crm/import/import-entities.ts\n  301  src/common/cache/cache-invalidation-matrix.ts\n  301  src/modules/inventory/warehouses/inv-warehouses.service.ts\n  301  src/modules/notifications/notification-events.catalog.ts\nTo fix: split the new file(s) or, if the count is a genuine exception, decrement BASELINE in this script after justifying in architecture-refactor/final-refactor/issues/file-size-exceptions.md."
+    },
+    {
+      "gate": "check:over-300:self-test",
+      "exitCode": 0,
+      "durationMs": 1677,
+      "timedOut": false,
+      "tail": "check-over-300 self-tests: 15 passed"
+    },
+    {
+      "gate": "check:owner-authority",
+      "exitCode": 0,
+      "durationMs": 2317,
+      "timedOut": false,
+      "tail": "production files scanned   3680\nowner-only operations      9 declared, 9 enforced\nowner shortcuts (reported) 12\n  SKIP  src/modules/build/core/projects-tickets-query.service.ts:117  owner skips a permission check, not a gate\n  SKIP  src/modules/build/core/projects-write.service.ts:53  owner skips a permission check, not a gate\n  SKIP  src/modules/build/core/projects-write.service.ts:246  owner skips a permission check, not a gate\n  SKIP  src/modules/delegations/delegation-policy.ts:43  owner skips a permission check, not a gate\n  SKIP  src/modules/hr/analytics-plus/hr-analytics-plus.controller.ts:77  owner skips a permission check, not a gate\n  SKIP  src/modules/module-access/module-access-group-crud.service.ts:135  owner skips a permission check, not a gate\n  SKIP  src/modules/module-access/module-access-ownership.service.ts:203  owner skips a permission check, not a gate\n  SKIP  src/modules/module-access/module-role-permissions.ts:133  owner skips a permission check, not a gate\n  SKIP  src/modules/module-access/module-standing-mutations.service.ts:73  owner skips a permission check, not a gate\n  SKIP  src/modules/payroll/hr-payroll/reimbursements.controller.ts:93  owner skips a permission check, not a gate\n  SKIP  src/modules/rbac/rbac.service.ts:130  owner skips a permission check, not a gate\n  SKIP  src/modules/storage/storage-vault.controller.ts:72  owner skips a permission check, not a gate\nOK — nothing fabricates ownership and every owner gate reads the catalog."
+    },
+    {
+      "gate": "check:owner-authority:self-test",
+      "exitCode": 0,
+      "durationMs": 1580,
+      "timedOut": false,
+      "tail": "SELF-TEST OK — fabrication, gate, shortcut and elevation are told apart."
+    },
+    {
+      "gate": "check:permission-keys",
+      "exitCode": 0,
+      "durationMs": 3018,
+      "timedOut": false,
+      "tail": "Scanned  3140 @RequirePermission usages  (633 unique keys)\n  of which 24 pass a constant rather than a literal\nBackend catalog   704 keys\nFrontend PermissionKey union  704 keys\nOK — every @RequirePermission key resolves and exists in the backend catalog and the frontend PermissionKey union.\nManifest pilot (timesheets): all @RequirePermission keys in its folder use declared namespaces — OK"
+    },
+    {
+      "gate": "check:permission-keys:self-test",
+      "exitCode": 0,
+      "durationMs": 2270,
+      "timedOut": false,
+      "tail": "    \"realCatalogHasNoBareIdentifiers\": true,\n    \"frontendUnionParsesViewKey\": true,\n    \"frontendUnionOmitsManageKey\": true,\n    \"constantDeclarationIsPickedUp\": true,\n    \"routeRefsFoundFiveUsages\": true,\n    \"constantArgumentResolves\": true,\n    \"undeclaredConstantIsReportedNotSkipped\": true,\n    \"ghostKeyDetectedOnLine7\": true,\n    \"ghostKeyFiresBackendCheck\": true,\n    \"ghostKeyFiresFrontendCheck\": true,\n    \"cleanKeyPassesBothChecks\": true,\n    \"intentionalSubsetDoesNotFire\": true,\n    \"pilotNamespaceMatchPasses\": true,\n    \"pilotNamespaceMismatchDetected\": true,\n    \"pilotOtherModuleRefNotFlagged\": true,\n    \"backendModulesDirExists\": true,\n    \"backendModulesDirIsInsideThisRepo\": true,\n    \"emptyScanIsVacuous\": true,\n    \"tooFewControllersIsVacuous\": true,\n    \"tooFewRefsIsVacuous\": true,\n    \"aRealSizedScanIsNotVacuous\": true,\n    \"frontendUnionFilesAreReachable\": true\n  },\n  \"catalogError\": null\n}"
+    },
+    {
+      "gate": "check:placement-bypass",
+      "exitCode": 0,
+      "durationMs": 7416,
+      "timedOut": false,
+      "tail": "  SKIP  [no-tenant-transaction]  src/modules/organization/core/organization.controller.ts:375 restoreOrg()  — identity-scoped organization discovery and switching; each handler opens its own withIdentity or runInTenantTransaction before touching the database\n  SKIP  [with-identity]  src/modules/organization/setup/org-setup-resolver.service.ts:70  — split out of org-setup.service: listSetupMemberships enumerates a user's memberships to choose a setup target, so it necessarily runs before one org is chosen\n  SKIP  [with-identity]  src/modules/organization/setup/org-setup.service.ts:93  — creates the first org membership under user identity, before the new org's tenant context exists\n  SKIP  [provider-in-transaction]  src/modules/payroll/insights/payroll-ai-explain.controller.ts:43 explainPayslip()  — PRE-EXISTING, UNAUDITED — explainPayslip -> PayrollAiExplainService.explainPayslip -> AiGatewayService.invokeTextWithUsage\n  SKIP  [provider-in-transaction]  src/modules/support/core/support-ai.controller.ts:90 analyze()  — PRE-EXISTING, UNAUDITED — findDuplicates -> SupportAiService.findDuplicates -> SupportAiTriageAnalysisService.findDuplicates -> SupportAiEmbeddingsHelper.upsertAndSearchSimilar -> AiGatewayService.embedQueryWithCredit; suggestKbArticles -> SupportAiService.suggestKbArticles -> SupportAiTriageService.suggestKbArticles -> SupportAiTriageDataService.searchKbForTicket -> AiGatewayService.embedQueryWithCredit; suggestReply -> SupportAiService.suggestReply -> SupportAiTriageService.suggestReply -> AiGatewayService.invokeText; suggestMacro -> SupportAiService.suggestMacro -> SupportAiTriageService.suggestMacro -> AiGatewayService.invokeStructured; translateMessage -> SupportAiService.translateMessage -> SupportAiTranslationService.translateMessage -> AiGatewayService.invokeStructured; generateHandoffSummary -> SupportAiService.generateHandoffSummary -> SupportAiTriageService.generateHandoffSummary -> AiGatewayService.invokeStructured; findRootCauseCluster -> SupportAiService.findRootCauseCluster -> SupportAiTriageAnalysisService.findRootCauseCluster -> AiGatewayService.invokeStructured; improveReply -> SupportAiService.improveReply -> SupportAiTranslationService.improveReply -> AiGatewayService.invokeStructured; translateDraft -> SupportAiService.translateDraft -> SupportAiTranslationService.translateDraft -> AiGatewayService.invokeStructured; analyze -> SupportAiService.analyzeTicket -> SupportAiTriageAnalysisService.analyzeTicket -> AiGatewayService.invokeStructured\n  SKIP  [provider-in-transaction]  src/modules/support/core/support-ai.controller.ts:102 findDuplicates()  — PRE-EXISTING, UNAUDITED — findDuplicates -> SupportAiService.findDuplicates -> SupportAiTriageAnalysisService.findDuplicates -> SupportAiEmbeddingsHelper.upsertAndSearchSimilar -> AiGatewayService.embedQueryWithCredit; suggestKbArticles -> SupportAiService.suggestKbArticles -> SupportAiTriageService.suggestKbArticles -> SupportAiTriageDataService.searchKbForTicket -> AiGatewayService.embedQueryWithCredit; suggestReply -> SupportAiService.suggestReply -> SupportAiTriageService.suggestReply -> AiGatewayService.invokeText; suggestMacro -> SupportAiService.suggestMacro -> SupportAiTriageService.suggestMacro -> AiGatewayService.invokeStructured; translateMessage -> SupportAiService.translateMessage -> SupportAiTranslationService.translateMessage -> AiGatewayService.invokeStructured; generateHandoffSummary -> SupportAiService.generateHandoffSummary -> SupportAiTriageService.generateHandoffSummary -> AiGatewayService.invokeStructured; findRootCauseCluster -> SupportAiService.findRootCauseCluster -> SupportAiTriageAnalysisService.findRootCauseCluster -> AiGatewayService.invokeStructured; improveReply -> SupportAiService.improveReply -> SupportAiTranslationService.improveReply -> AiGatewayService.invokeStructured; translateDraft -> SupportAiService.translateDraft -> SupportAiTranslationService.translateDraft -> AiGatewayService.invokeStructured; analyze -> SupportAiService.analyzeTicket -> SupportAiTriageAnalysisService.analyzeTicket -> AiGatewayService.invokeStructured\n  SKIP  [provider-in-transaction]  src/modules/support/core/support-ai.controller.ts:114 suggestKbArticles()  — PRE-EXISTING, UNAUDITED — findDuplicates -> SupportAiService.findDuplicates -> SupportAiTriageAnalysisService.findDuplicates -> SupportAiEmbeddingsHelper.upsertAndSearchSimilar -> AiGatewayService.embedQueryWithCredit; suggestKbArticles -> SupportAiService.suggestKbArticles -> SupportAiTriageService.suggestKbArticles -> SupportAiTriageDataService.searchKbForTicket -> AiGatewayService.embedQueryWithCredit; suggestReply -> SupportAiService.suggestReply -> SupportAiTriageService.suggestReply -> AiGatewayService.invokeText; suggestMacro -> SupportAiService.suggestMacro -> SupportAiTriageService.suggestMacro -> AiGatewayService.invokeStructured; translateMessage -> SupportAiService.translateMessage -> SupportAiTranslationService.translateMessage -> AiGatewayService.invokeStructured; generateHandoffSummary -> SupportAiService.generateHandoffSummary -> SupportAiTriageService.generateHandoffSummary -> AiGatewayService.invokeStructured; findRootCauseCluster -> SupportAiService.findRootCauseCluster -> SupportAiTriageAnalysisService.findRootCauseCluster -> AiGatewayService.invokeStructured; improveReply -> SupportAiService.improveReply -> SupportAiTranslationService.improveReply -> AiGatewayService.invokeStructured; translateDraft -> SupportAiService.translateDraft -> SupportAiTranslationService.translateDraft -> AiGatewayService.invokeStructured; analyze -> SupportAiService.analyzeTicket -> SupportAiTriageAnalysisService.analyzeTicket -> AiGatewayService.invokeStructured\n  SKIP  [provider-in-transaction]  src/modules/support/core/support-ai.controller.ts:126 suggestReply()  — PRE-EXISTING, UNAUDITED — findDuplicates -> SupportAiService.findDuplicates -> SupportAiTriageAnalysisService.findDuplicates -> SupportAiEmbeddingsHelper.upsertAndSearchSimilar -> AiGatewayService.embedQueryWithCredit; suggestKbArticles -> SupportAiService.suggestKbArticles -> SupportAiTriageService.suggestKbArticles -> SupportAiTriageDataService.searchKbForTicket -> AiGatewayService.embedQueryWithCredit; suggestReply -> SupportAiService.suggestReply -> SupportAiTriageService.suggestReply -> AiGatewayService.invokeText; suggestMacro -> SupportAiService.suggestMacro -> SupportAiTriageService.suggestMacro -> AiGatewayService.invokeStructured; translateMessage -> SupportAiService.translateMessage -> SupportAiTranslationService.translateMessage -> AiGatewayService.invokeStructured; generateHandoffSummary -> SupportAiService.generateHandoffSummary -> SupportAiTriageService.generateHandoffSummary -> AiGatewayService.invokeStructured; findRootCauseCluster -> SupportAiService.findRootCauseCluster -> SupportAiTriageAnalysisService.findRootCauseCluster -> AiGatewayService.invokeStructured; improveReply -> SupportAiService.improveReply -> SupportAiTranslationService.improveReply -> AiGatewayService.invokeStructured; translateDraft -> SupportAiService.translateDraft -> SupportAiTranslationService.translateDraft -> AiGatewayService.invokeStructured; analyze -> SupportAiService.analyzeTicket -> SupportAiTriageAnalysisService.analyzeTicket -> AiGatewayService.invokeStructured\n  SKIP  [provider-in-transaction]  src/modules/support/core/support-ai.controller.ts:138 suggestMacro()  — PRE-EXISTING, UNAUDITED — findDuplicates -> SupportAiService.findDuplicates -> SupportAiTriageAnalysisService.findDuplicates -> SupportAiEmbeddingsHelper.upsertAndSearchSimilar -> AiGatewayService.embedQueryWithCredit; suggestKbArticles -> SupportAiService.suggestKbArticles -> SupportAiTriageService.suggestKbArticles -> SupportAiTriageDataService.searchKbForTicket -> AiGatewayService.embedQueryWithCredit; suggestReply -> SupportAiService.suggestReply -> SupportAiTriageService.suggestReply -> AiGatewayService.invokeText; suggestMacro -> SupportAiService.suggestMacro -> SupportAiTriageService.suggestMacro -> AiGatewayService.invokeStructured; translateMessage -> SupportAiService.translateMessage -> SupportAiTranslationService.translateMessage -> AiGatewayService.invokeStructured; generateHandoffSummary -> SupportAiService.generateHandoffSummary -> SupportAiTriageService.generateHandoffSummary -> AiGatewayService.invokeStructured; findRootCauseCluster -> SupportAiService.findRootCauseCluster -> SupportAiTriageAnalysisService.findRootCauseCluster -> AiGatewayService.invokeStructured; improveReply -> SupportAiService.improveReply -> SupportAiTranslationService.improveReply -> AiGatewayService.invokeStructured; translateDraft -> SupportAiService.translateDraft -> SupportAiTranslationService.translateDraft -> AiGatewayService.invokeStructured; analyze -> SupportAiService.analyzeTicket -> SupportAiTriageAnalysisService.analyzeTicket -> AiGatewayService.invokeStructured\n  SKIP  [provider-in-transaction]  src/modules/support/core/support-ai.controller.ts:154 translateMessage()  — PRE-EXISTING, UNAUDITED — findDuplicates -> SupportAiService.findDuplicates -> SupportAiTriageAnalysisService.findDuplicates -> SupportAiEmbeddingsHelper.upsertAndSearchSimilar -> AiGatewayService.embedQueryWithCredit; suggestKbArticles -> SupportAiService.suggestKbArticles -> SupportAiTriageService.suggestKbArticles -> SupportAiTriageDataService.searchKbForTicket -> AiGatewayService.embedQueryWithCredit; suggestReply -> SupportAiService.suggestReply -> SupportAiTriageService.suggestReply -> AiGatewayService.invokeText; suggestMacro -> SupportAiService.suggestMacro -> SupportAiTriageService.suggestMacro -> AiGatewayService.invokeStructured; translateMessage -> SupportAiService.translateMessage -> SupportAiTranslationService.translateMessage -> AiGatewayService.invokeStructured; generateHandoffSummary -> SupportAiService.generateHandoffSummary -> SupportAiTriageService.generateHandoffSummary -> AiGatewayService.invokeStructured; findRootCauseCluster -> SupportAiService.findRootCauseCluster -> SupportAiTriageAnalysisService.findRootCauseCluster -> AiGatewayService.invokeStructured; improveReply -> SupportAiService.improveReply -> SupportAiTranslationService.improveReply -> AiGatewayService.invokeStructured; translateDraft -> SupportAiService.translateDraft -> SupportAiTranslationService.translateDraft -> AiGatewayService.invokeStructured; analyze -> SupportAiService.analyzeTicket -> SupportAiTriageAnalysisService.analyzeTicket -> AiGatewayService.invokeStructured\n  SKIP  [provider-in-transaction]  src/modules/support/core/support-ai.controller.ts:170 generateHandoffSummary()  — PRE-EXISTING, UNAUDITED — findDuplicates -> SupportAiService.findDuplicates -> SupportAiTriageAnalysisService.findDuplicates -> SupportAiEmbeddingsHelper.upsertAndSearchSimilar -> AiGatewayService.embedQueryWithCredit; suggestKbArticles -> SupportAiService.suggestKbArticles -> SupportAiTriageService.suggestKbArticles -> SupportAiTriageDataService.searchKbForTicket -> AiGatewayService.embedQueryWithCredit; suggestReply -> SupportAiService.suggestReply -> SupportAiTriageService.suggestReply -> AiGatewayService.invokeText; suggestMacro -> SupportAiService.suggestMacro -> SupportAiTriageService.suggestMacro -> AiGatewayService.invokeStructured; translateMessage -> SupportAiService.translateMessage -> SupportAiTranslationService.translateMessage -> AiGatewayService.invokeStructured; generateHandoffSummary -> SupportAiService.generateHandoffSummary -> SupportAiTriageService.generateHandoffSummary -> AiGatewayService.invokeStructured; findRootCauseCluster -> SupportAiService.findRootCauseCluster -> SupportAiTriageAnalysisService.findRootCauseCluster -> AiGatewayService.invokeStructured; improveReply -> SupportAiService.improveReply -> SupportAiTranslationService.improveReply -> AiGatewayService.invokeStructured; translateDraft -> SupportAiService.translateDraft -> SupportAiTranslationService.translateDraft -> AiGatewayService.invokeStructured; analyze -> SupportAiService.analyzeTicket -> SupportAiTriageAnalysisService.analyzeTicket -> AiGatewayService.invokeStructured\n  SKIP  [provider-in-transaction]  src/modules/support/core/support-ai.controller.ts:182 findRootCauseCluster()  — PRE-EXISTING, UNAUDITED — findDuplicates -> SupportAiService.findDuplicates -> SupportAiTriageAnalysisService.findDuplicates -> SupportAiEmbeddingsHelper.upsertAndSearchSimilar -> AiGatewayService.embedQueryWithCredit; suggestKbArticles -> SupportAiService.suggestKbArticles -> SupportAiTriageService.suggestKbArticles -> SupportAiTriageDataService.searchKbForTicket -> AiGatewayService.embedQueryWithCredit; suggestReply -> SupportAiService.suggestReply -> SupportAiTriageService.suggestReply -> AiGatewayService.invokeText; suggestMacro -> SupportAiService.suggestMacro -> SupportAiTriageService.suggestMacro -> AiGatewayService.invokeStructured; translateMessage -> SupportAiService.translateMessage -> SupportAiTranslationService.translateMessage -> AiGatewayService.invokeStructured; generateHandoffSummary -> SupportAiService.generateHandoffSummary -> SupportAiTriageService.generateHandoffSummary -> AiGatewayService.invokeStructured; findRootCauseCluster -> SupportAiService.findRootCauseCluster -> SupportAiTriageAnalysisService.findRootCauseCluster -> AiGatewayService.invokeStructured; improveReply -> SupportAiService.improveReply -> SupportAiTranslationService.improveReply -> AiGatewayService.invokeStructured; translateDraft -> SupportAiService.translateDraft -> SupportAiTranslationService.translateDraft -> AiGatewayService.invokeStructured; analyze -> SupportAiService.analyzeTicket -> SupportAiTriageAnalysisService.analyzeTicket -> AiGatewayService.invokeStructured\n  SKIP  [provider-in-transaction]  src/modules/support/core/support-ai.controller.ts:193 improveReply()  — PRE-EXISTING, UNAUDITED — findDuplicates -> SupportAiService.findDuplicates -> SupportAiTriageAnalysisService.findDuplicates -> SupportAiEmbeddingsHelper.upsertAndSearchSimilar -> AiGatewayService.embedQueryWithCredit; suggestKbArticles -> SupportAiService.suggestKbArticles -> SupportAiTriageService.suggestKbArticles -> SupportAiTriageDataService.searchKbForTicket -> AiGatewayService.embedQueryWithCredit; suggestReply -> SupportAiService.suggestReply -> SupportAiTriageService.suggestReply -> AiGatewayService.invokeText; suggestMacro -> SupportAiService.suggestMacro -> SupportAiTriageService.suggestMacro -> AiGatewayService.invokeStructured; translateMessage -> SupportAiService.translateMessage -> SupportAiTranslationService.translateMessage -> AiGatewayService.invokeStructured; generateHandoffSummary -> SupportAiService.generateHandoffSummary -> SupportAiTriageService.generateHandoffSummary -> AiGatewayService.invokeStructured; findRootCauseCluster -> SupportAiService.findRootCauseCluster -> SupportAiTriageAnalysisService.findRootCauseCluster -> AiGatewayService.invokeStructured; improveReply -> SupportAiService.improveReply -> SupportAiTranslationService.improveReply -> AiGatewayService.invokeStructured; translateDraft -> SupportAiService.translateDraft -> SupportAiTranslationService.translateDraft -> AiGatewayService.invokeStructured; analyze -> SupportAiService.analyzeTicket -> SupportAiTriageAnalysisService.analyzeTicket -> AiGatewayService.invokeStructured\n  SKIP  [provider-in-transaction]  src/modules/support/core/support-ai.controller.ts:207 translateDraft()  — PRE-EXISTING, UNAUDITED — findDuplicates -> SupportAiService.findDuplicates -> SupportAiTriageAnalysisService.findDuplicates -> SupportAiEmbeddingsHelper.upsertAndSearchSimilar -> AiGatewayService.embedQueryWithCredit; suggestKbArticles -> SupportAiService.suggestKbArticles -> SupportAiTriageService.suggestKbArticles -> SupportAiTriageDataService.searchKbForTicket -> AiGatewayService.embedQueryWithCredit; suggestReply -> SupportAiService.suggestReply -> SupportAiTriageService.suggestReply -> AiGatewayService.invokeText; suggestMacro -> SupportAiService.suggestMacro -> SupportAiTriageService.suggestMacro -> AiGatewayService.invokeStructured; translateMessage -> SupportAiService.translateMessage -> SupportAiTranslationService.translateMessage -> AiGatewayService.invokeStructured; generateHandoffSummary -> SupportAiService.generateHandoffSummary -> SupportAiTriageService.generateHandoffSummary -> AiGatewayService.invokeStructured; findRootCauseCluster -> SupportAiService.findRootCauseCluster -> SupportAiTriageAnalysisService.findRootCauseCluster -> AiGatewayService.invokeStructured; improveReply -> SupportAiService.improveReply -> SupportAiTranslationService.improveReply -> AiGatewayService.invokeStructured; translateDraft -> SupportAiService.translateDraft -> SupportAiTranslationService.translateDraft -> AiGatewayService.invokeStructured; analyze -> SupportAiService.analyzeTicket -> SupportAiTriageAnalysisService.analyzeTicket -> AiGatewayService.invokeStructured\n  SKIP  [provider-in-transaction]  src/modules/support/core/support-automations.controller.ts:102 testAutomation()  — PRE-EXISTING, UNAUDITED — testAutomation -> AutomationService.testRule -> AutomationService.runRule -> AutomationService.executeAction -> AiNodeExecutorService.executeNode -> AiGatewayService.invokeStructured\n  SKIP  [provider-in-transaction]  src/modules/support/core/support-kb.controller.ts:258 askQuestion()  — PRE-EXISTING, UNAUDITED — askQuestion -> KbAskService.ask -> AiGatewayService.invokeTextWithUsage; reindexArticle -> KbArticleReindexService.reindexArticle -> KbAttachmentIndexingService.indexAttachment -> KbAttachmentIndexingService.embedInBatches -> AiGatewayService.embedBatchWithCredit; reindexAll -> KbArticleReindexService.reindexAll -> KbArticleReindexService.reindexArticle -> KbAttachmentIndexingService.indexAttachment -> KbAttachmentIndexingService.embedInBatches -> AiGatewayService.embedBatchWithCredit\n  SKIP  [provider-in-transaction]  src/modules/support/core/support-kb.controller.ts:282 reindexArticle()  — PRE-EXISTING, UNAUDITED — askQuestion -> KbAskService.ask -> AiGatewayService.invokeTextWithUsage; reindexArticle -> KbArticleReindexService.reindexArticle -> KbAttachmentIndexingService.indexAttachment -> KbAttachmentIndexingService.embedInBatches -> AiGatewayService.embedBatchWithCredit; reindexAll -> KbArticleReindexService.reindexAll -> KbArticleReindexService.reindexArticle -> KbAttachmentIndexingService.indexAttachment -> KbAttachmentIndexingService.embedInBatches -> AiGatewayService.embedBatchWithCredit\n  SKIP  [provider-in-transaction]  src/modules/support/core/support-kb.controller.ts:294 reindexAll()  — PRE-EXISTING, UNAUDITED — askQuestion -> KbAskService.ask -> AiGatewayService.invokeTextWithUsage; reindexArticle -> KbArticleReindexService.reindexArticle -> KbAttachmentIndexingService.indexAttachment -> KbAttachmentIndexingService.embedInBatches -> AiGatewayService.embedBatchWithCredit; reindexAll -> KbArticleReindexService.reindexAll -> KbArticleReindexService.reindexArticle -> KbAttachmentIndexingService.indexAttachment -> KbAttachmentIndexingService.embedInBatches -> AiGatewayService.embedBatchWithCredit\n  SKIP  [no-tenant-transaction]  src/modules/timesheets/core/timesheets-ai.controller.ts:59 summarize()  — the five timesheets AI actions, audited 2026-09-03 and the same fix as the KB pair above: each one ends in an AiGatewayService call, and under the request transaction that provider round trip was made with a pooled connection still checked out and idle in transaction, against the 60s idle_in_transaction_session_timeout withTenant sets. TimesheetsAiService now routes every evidence read through readEvidence, one short runInTenantTransaction(db, fn, { orgId }) that commits before the gateway call — periods.getPeriod for summarize and draftRejectionReason, reports.getOverview for reportsNarrative, billing.getBillableWorkForNarrative for billingNarrative. describeEntry reads nothing at all: its prompt is built entirely from the request body, the same shape as kb-authoring. The delegate services keep their signatures because this.db is the tenant-aware proxy and resolves to the transaction opened here. Everything the gateway itself touches — credit reservation, settlement and the ai_usage_logs insert — already passes an explicit orgId. AiRequestAbortInterceptor is declared on the class for the same PRD-C091 reason as the e-sign entry above: the decorator removes the tenant context's disconnect signal, which was the only cancellation source these five had\n  SKIP  [no-tenant-transaction]  src/modules/timesheets/core/timesheets-ai.controller.ts:72 draftRejectionReason()  — the five timesheets AI actions, audited 2026-09-03 and the same fix as the KB pair above: each one ends in an AiGatewayService call, and under the request transaction that provider round trip was made with a pooled connection still checked out and idle in transaction, against the 60s idle_in_transaction_session_timeout withTenant sets. TimesheetsAiService now routes every evidence read through readEvidence, one short runInTenantTransaction(db, fn, { orgId }) that commits before the gateway call — periods.getPeriod for summarize and draftRejectionReason, reports.getOverview for reportsNarrative, billing.getBillableWorkForNarrative for billingNarrative. describeEntry reads nothing at all: its prompt is built entirely from the request body, the same shape as kb-authoring. The delegate services keep their signatures because this.db is the tenant-aware proxy and resolves to the transaction opened here. Everything the gateway itself touches — credit reservation, settlement and the ai_usage_logs insert — already passes an explicit orgId. AiRequestAbortInterceptor is declared on the class for the same PRD-C091 reason as the e-sign entry above: the decorator removes the tenant context's disconnect signal, which was the only cancellation source these five had\n  SKIP  [no-tenant-transaction]  src/modules/timesheets/core/timesheets-ai.controller.ts:86 describeEntry()  — the five timesheets AI actions, audited 2026-09-03 and the same fix as the KB pair above: each one ends in an AiGatewayService call, and under the request transaction that provider round trip was made with a pooled connection still checked out and idle in transaction, against the 60s idle_in_transaction_session_timeout withTenant sets. TimesheetsAiService now routes every evidence read through readEvidence, one short runInTenantTransaction(db, fn, { orgId }) that commits before the gateway call — periods.getPeriod for summarize and draftRejectionReason, reports.getOverview for reportsNarrative, billing.getBillableWorkForNarrative for billingNarrative. describeEntry reads nothing at all: its prompt is built entirely from the request body, the same shape as kb-authoring. The delegate services keep their signatures because this.db is the tenant-aware proxy and resolves to the transaction opened here. Everything the gateway itself touches — credit reservation, settlement and the ai_usage_logs insert — already passes an explicit orgId. AiRequestAbortInterceptor is declared on the class for the same PRD-C091 reason as the e-sign entry above: the decorator removes the tenant context's disconnect signal, which was the only cancellation source these five had\n  SKIP  [no-tenant-transaction]  src/modules/timesheets/core/timesheets-ai.controller.ts:99 billingNarrative()  — the five timesheets AI actions, audited 2026-09-03 and the same fix as the KB pair above: each one ends in an AiGatewayService call, and under the request transaction that provider round trip was made with a pooled connection still checked out and idle in transaction, against the 60s idle_in_transaction_session_timeout withTenant sets. TimesheetsAiService now routes every evidence read through readEvidence, one short runInTenantTransaction(db, fn, { orgId }) that commits before the gateway call — periods.getPeriod for summarize and draftRejectionReason, reports.getOverview for reportsNarrative, billing.getBillableWorkForNarrative for billingNarrative. describeEntry reads nothing at all: its prompt is built entirely from the request body, the same shape as kb-authoring. The delegate services keep their signatures because this.db is the tenant-aware proxy and resolves to the transaction opened here. Everything the gateway itself touches — credit reservation, settlement and the ai_usage_logs insert — already passes an explicit orgId. AiRequestAbortInterceptor is declared on the class for the same PRD-C091 reason as the e-sign entry above: the decorator removes the tenant context's disconnect signal, which was the only cancellation source these five had\n  SKIP  [no-tenant-transaction]  src/modules/timesheets/core/timesheets-ai.controller.ts:112 reportsNarrative()  — the five timesheets AI actions, audited 2026-09-03 and the same fix as the KB pair above: each one ends in an AiGatewayService call, and under the request transaction that provider round trip was made with a pooled connection still checked out and idle in transaction, against the 60s idle_in_transaction_session_timeout withTenant sets. TimesheetsAiService now routes every evidence read through readEvidence, one short runInTenantTransaction(db, fn, { orgId }) that commits before the gateway call — periods.getPeriod for summarize and draftRejectionReason, reports.getOverview for reportsNarrative, billing.getBillableWorkForNarrative for billingNarrative. describeEntry reads nothing at all: its prompt is built entirely from the request body, the same shape as kb-authoring. The delegate services keep their signatures because this.db is the tenant-aware proxy and resolves to the transaction opened here. Everything the gateway itself touches — credit reservation, settlement and the ai_usage_logs insert — already passes an explicit orgId. AiRequestAbortInterceptor is declared on the class for the same PRD-C091 reason as the e-sign entry above: the decorator removes the tenant context's disconnect signal, which was the only cancellation source these five had\n  SKIP  [with-identity]  src/modules/users/users.service.ts:409  — pre-tenant: membership count for plan enforcement during sign-in; org context is not yet established\nOK — every database bypass is on the allowlist with a reason."
+    },
+    {
+      "gate": "check:placement-bypass:self-test",
+      "exitCode": 1,
+      "durationMs": 1490,
+      "timedOut": false,
+      "tail": "    \"emptyReasonInAllowlistIsDetected\": true,\n    \"balancedIgnoresParenInsideString\": true,\n    \"cronDetectedOutsideCronFolder\": true,\n    \"optionalChainingDetected\": true,\n    \"aliasedWithIdentityDetected\": true,\n    \"annotationInCommentNotFlagged\": true,\n    \"spacedDecoratorDetected\": true,\n    \"afterCommitDbCommentNotFlagged\": true,\n    \"aliasedDecoratorDetected\": true,\n    \"providerInTransactionDetectedThroughInjectedService\": false,\n    \"providerInTransactionNamesTheTrail\": false,\n    \"providerInTransactionClearedByHandlerDecorator\": true,\n    \"providerInTransactionClearedByClassDecorator\": true,\n    \"providerInTransactionIgnoresNonProviderMethod\": true,\n    \"providerInTransactionIgnoresNonController\": true,\n    \"returnTypeBraceIsNotMistakenForABody\": true,\n    \"decoratorArgumentIsNotMistakenForAMethod\": true,\n    \"handlerScopedEntryMatchesTheNamedHandler\": true,\n    \"handlerScopedEntryRejectsAnUnnamedHandlerInTheSameFile\": true,\n    \"handlerScopedEntryRejectsAFindingWithNoHandler\": true,\n    \"fileScopedEntryStillMatchesRegardlessOfHandler\": true,\n    \"annotationSiteCarriesTheHandlerItDecorates\": true,\n    \"classLevelAnnotationCarriesNoHandler\": true\n  }\n}"
+    },
+    {
+      "gate": "check:public-object-urls",
+      "exitCode": 0,
+      "durationMs": 6008,
+      "timedOut": false,
+      "tail": "check-public-object-urls: scanned 3681 source file(s)\n  public-base references   9 (9 declared)\n  upload-result url fields 0\nDECLARED — each reads a public base for a stated non-minting reason:\n  SKIP  src/common/region/region.config.ts  — reads the per-region public bases into the region binding; no key is ever concatenated onto them here\n  SKIP  src/config/env.validation.ts  — declares the env vars; a Zod schema entry cannot build a URL\n  SKIP  src/modules/email/branding.ts  — getEmailLogoUrl builds a public URL for a static, operator-configured brand asset (EMAIL_LOGO_PATH, default email-assets/logo-v2.png). No tenant data and no uploaded object reaches it, and an email client cannot present a signed URL\n  SKIP  src/modules/feedbucket/feedbucket-ai.service.ts  — getAllowedStorageHost derives a hostname to ALLOWLIST an outbound fetch of a legacy stored screenshot URL; it produces a host, not a URL, and new screenshots are read from the object store by key\n  SKIP  src/modules/storage/storage.service.ts  — getFileKeyFromUrl PARSES a stored legacy URL back to its key; it strips the base, never appends to it. The minting counterpart (publicUrlFor) was deleted in ticket 33 and storage-tenant-private.spec.ts pins its absence\nOK — no upload path mints a permanent public URL, and no upload result carries one."
+    },
+    {
+      "gate": "check:public-object-urls:self-test",
+      "exitCode": 0,
+      "durationMs": 1554,
+      "timedOut": false,
+      "tail": "{\n  \"selfTest\": true,\n  \"pass\": true,\n  \"checks\": {\n    \"mintSiteFound\": true,\n    \"kbMintSiteFound\": true,\n    \"regionConfigFieldFound\": true,\n    \"commentReferenceNotFlagged\": true,\n    \"stringLiteralReferenceNotFlagged\": true,\n    \"signedUrlNotFlagged\": true,\n    \"unknownFileNotAllowlisted\": true,\n    \"brandingAllowlistedWithReason\": true,\n    \"everyAllowlistEntryHasReason\": true,\n    \"uploadResultUrlFlagged\": true,\n    \"uploadResultOptionalUrlFlagged\": true,\n    \"uploadResultWithoutUrlClean\": true,\n    \"neighbouringTypeUrlNotAttributed\": true,\n    \"urlInCommentNotFlagged\": true\n  }\n}"
+    },
+    {
+      "gate": "check:query-projections",
+      "exitCode": 1,
+      "durationMs": 9356,
+      "timedOut": false,
+      "tail": "Scanned 3677 source files.\nUnprojected reads — findMany 287 · findFirst 488 · bare .select() 602 = 1377 (ceiling 1383, enforced on the total).\nUnprojected COUNT paths (.length only): 0 (allowed 0).\nUnprojected EXISTENCE/COUNT paths, AST: 7 in scope (allowed 0) · 0 deferred to crm/inventory (ratchet 7).\nFull-row reads of a vector/tsvector/bytea table: 0 (allowed 0) over 5 such tables.\n7 read(s) hydrate a whole row to answer a yes/no question, against an allowance of 0. Narrowing one changes no response DTO — the result is only ever tested for null, truthiness or length. Add a `columns:` naming what the guard reads:\n  UNPROJECTED-EXISTENCE  \\modules\\deals\\deals-meetings.service.ts:79 (findFirst on dealMeetings, existing only existence-tested)\n  UNPROJECTED-EXISTENCE  \\modules\\inventory\\replenishment\\inv-replenishment.service.ts:54 (findFirst on invReorderRules, existing only existence-tested)\n  UNPROJECTED-EXISTENCE  \\modules\\inventory\\replenishment\\inv-replenishment.service.ts:86 (findFirst on invReorderRules, rule only existence-tested)\n  UNPROJECTED-EXISTENCE  \\modules\\inventory\\replenishment\\inv-replenishment.service.ts:111 (findFirst on invReorderRules, rule only existence-tested)\n  UNPROJECTED-EXISTENCE  \\modules\\inventory\\sales-orders\\so-fulfillment.service.ts:50 (findFirst on invStockReservations, existingReservation only existence-tested)\n  UNPROJECTED-EXISTENCE  \\modules\\leads\\lead-conversion.service.ts:161 (findFirst on clientAccounts, existingClientAccount only existence-tested)\n  UNPROJECTED-EXISTENCE  \\modules\\leads\\lead-status.service.ts:51 (findFirst on deals, existingDeal only existence-tested)"
+    },
+    {
+      "gate": "check:query-projections:self-test",
+      "exitCode": 0,
+      "durationMs": 2572,
+      "timedOut": false,
+      "tail": "SELF-TEST PASS: all 26 projection checks passed (5 heavy-column tables resolved from the real schema)"
+    },
+    {
+      "gate": "check:record-access",
+      "exitCode": 0,
+      "durationMs": 1809,
+      "timedOut": false,
+      "tail": "findFirst calls        1193\n  record reads         592\n  conflict checks      61\n  other                540\nPURGE READS — named, not hidden in an allowlist:\n  SKIP  src/modules/kb/wiki/kb-page-tree.service.ts:232  kbPages  — hardDelete reads the page in order to purge it; excluding deleted rows would make a deleted page unpurgeable\nOK — every record read excludes soft-deleted rows."
+    },
+    {
+      "gate": "check:record-access:self-test",
+      "exitCode": 0,
+      "durationMs": 1422,
+      "timedOut": false,
+      "tail": "{\n  \"selfTest\": true,\n  \"pass\": true,\n  \"checks\": {\n    \"schemaSeesSoftDelete\": true,\n    \"schemaSeesTenant\": true,\n    \"schemaSeesGlobalTableHasNoTenant\": true,\n    \"findsAllFiveCalls\": true,\n    \"unguardedReadIsAread\": true,\n    \"guardedReadPasses\": true,\n    \"conflictCheckIsNotARead\": true,\n    \"globalTableReadIsSeenButExempt\": true,\n    \"tableWithoutSoftDeleteIsNotAnOffender\": true,\n    \"exactlyOneOffender\": true,\n    \"purgeRegistryIsExplicit\": true\n  }\n}"
+    },
+    {
+      "gate": "check:referential-action-drift",
+      "exitCode": 2,
+      "durationMs": 6900,
+      "timedOut": false,
+      "tail": "Schema source: 924 named foreign keys, 771 of them carrying an explicit .onDelete()\nDeclared foreign keys 2288\nINCONCLUSIVE — the catalog half did not run. A foreign key's ON DELETE action lives only in pg_constraint.confdeltype; nothing static can see it, so all 2288 declared foreign keys are UNVERIFIED.\n  Set REFERENTIAL_ACTION_GATE_DATABASE_URL to a database bootstrapped to journal head to run it.\n  Or set STREAMLINE_ALLOW_PARTIAL_GATES=1 to accept a declaration-only run."
+    },
+    {
+      "gate": "check:referential-action-drift:self-test",
+      "exitCode": 0,
+      "durationMs": 6607,
+      "timedOut": false,
+      "tail": "  PASS  set null vs no action is BLOCKING\n  PASS  restrict vs set null is PERMISSIVE\n  PASS  no action vs set null is PERMISSIVE\n  PASS  no action vs cascade is DESTRUCTIVE\n  PASS  cascade vs set null is ORPHANING\n  PASS  no action vs restrict is WEAK\n  PASS  restrict vs no action is WEAK\n  PASS  identical actions agree\n  PASS  control B: composite covers the declared single column\n  PASS  control B: it matched the composite\n  PASS  the covered composite is still compared on action\n  PASS  and classified DESTRUCTIVE\n  PASS  explicitness is carried onto the finding\n  PASS  source scan finds an explicit onDelete\n  PASS  source scan finds a silent named FK\n  PASS  an auto-named inline reference is unknown\n  PASS  with a blast radius naming both sides\n  PASS  an agreeing pair produces no finding\n  PASS  and counts as matched\n  PASS  control C: an unmatched declaration is reported, not failed\n  PASS  control C: and is counted as unmatched\n  PASS  WEAK never fails the gate\n  PASS  a baselined mismatch never fails the gate\n  PASS  an un-baselined mismatch DOES fail the gate\nSelf-test: 35 passed, 0 failed"
+    },
+    {
+      "gate": "check:relation-hydration",
+      "exitCode": 0,
+      "durationMs": 8283,
+      "timedOut": false,
+      "tail": "Corpus: 3680 files · 896 tables · 611 relation blocks · 1728 db.query find* call sites · 568 relation entries walked.\nUnprojected relation hydrations: 186 (ratchet 186).\n  onto global users: 0 (allowed 0)\n  onto a table carrying a credential column: 0 (allowed 0)\nUnresolved relation names 0 · unresolved relation configs 0 · colliding const names not resolved 83.\nBase-table credential CANDIDATES (reported, not enforced): 71.\nNo credential or global-users relation hydration, and the population did not grow. 186 unprojected relation(s) remain against a ratchet of 186 — this is a ratchet, not a clean repository."
+    },
+    {
+      "gate": "check:relation-hydration:self-test",
+      "exitCode": 0,
+      "durationMs": 8100,
+      "timedOut": false,
+      "tail": "SELF-TEST PASS: 14 checks"
+    },
+    {
+      "gate": "check:relation-keys",
+      "exitCode": 0,
+      "durationMs": 4641,
+      "timedOut": false,
+      "tail": "Relation keys the backend ships, against the names the frontend knows\n  Backend files scanned:     3678\n  Frontend corpus:           5037 files\n  Distinct with: keys:       112 over 542 sites\n  Unknown to the frontend:   15 (15 triaged)\n  columns: {} sites:         1 (1 triaged)\nThis gate CANNOT see:\n  - same key name, different sub-shape — only the top-level name is tested\n  - db.select({ ... }) projections — only the relational query builder has a with:\n  - value-level divergence — a membership id where the client compares a user id\n  - a name that appears in the frontend for an unrelated reason clears on the name alone\n  The runtime half is frontend `pnpm check:response-contracts`; this is the static half.\nPASS: every one of the 112 relation keys is either a name the frontend knows or a triaged entry."
+    },
+    {
+      "gate": "check:relation-keys:self-test",
+      "exitCode": 0,
+      "durationMs": 1558,
+      "timedOut": false,
+      "tail": "ok    relation names are collected at every with: depth, and columns: keys are not\nok    strings and comments do not produce relation keys\nok    sibling blocks are both read, with their own lines\nok    an empty projection is found and a populated one is not\nok    an unreached relation key fails\nok    and it names the key and the site\nok    a triaged key in its triaged file passes\nok    the same key in a NEW file fails\nok    a key the frontend mentions clears on the name alone — blind spot, not a pass\nok    a name that appears only in a comment does not clear\nok    the same name in real code does clear\nok    a stale baseline key fails\nok    a new empty projection fails\nok    a baselined empty projection passes\nok    an empty backend scan fails the floor rather than passing\nok    an empty frontend corpus fails the floor rather than flagging everything\nok    an extractor that finds nothing fails the key floor\n17/17 self-test assertions passed."
+    },
+    {
+      "gate": "check:replay-ledger",
+      "exitCode": 2,
+      "durationMs": 1574,
+      "timedOut": false,
+      "tail": "COLD_DATABASE_URL is required"
+    },
+    {
+      "gate": "check:replay-ledger:self-test",
+      "exitCode": 2,
+      "durationMs": 1634,
+      "timedOut": false,
+      "tail": "COLD_DATABASE_URL is required"
+    },
+    {
+      "gate": "check:repo-paths:self-test",
+      "exitCode": 0,
+      "durationMs": 1663,
+      "timedOut": false,
+      "tail": "check-repo-paths self-tests: 9 passed"
+    },
+    {
+      "gate": "check:restrict-fks",
+      "exitCode": 0,
+      "durationMs": 1709,
+      "timedOut": false,
+      "tail": "check:restrict-fks — OK (347 schema files scanned)"
+    },
+    {
+      "gate": "check:restrict-fks:self-test",
+      "exitCode": 0,
+      "durationMs": 1567,
+      "timedOut": false,
+      "tail": "  PASS  extract table name\n  PASS  do not flag SET NULL FK\n  PASS  do not flag RESTRICT FK to non-org-members table\n  PASS  artifact covers foo_table\n  PASS  artifact does not cover bar_table\n  PASS  artifact does not cover foo_table when absent\n  PASS  combined scan: only one RESTRICT FK to org_members\n  PASS  violation when table not in artifacts\n  PASS  no violation when table is in artifacts\n  PASS  a bare foreignKey({}) to organizationMembers is a blocker\n  PASS  the bare blocker names its constraint\n  PASS  the bare blocker names its table\n  PASS  the bare blocker records the implicit action\n  PASS  an explicit .onDelete(\"no action\") is a blocker\n  PASS  CASCADE is not a blocker\n  PASS  isBlockingAction: bare (null)\n  PASS  isBlockingAction: restrict\n  PASS  isBlockingAction: no action\n  PASS  isBlockingAction: NO ACTION uppercase\n  PASS  isBlockingAction: no-action hyphen\n  PASS  isBlockingAction: set null\n  PASS  isBlockingAction: cascade\n  PASS  isBlockingAction: set default\n  PASS  a bare blocker with no artifact ruling is a violation\nSelf-test: 26 passed, 0 failed"
+    },
+    {
+      "gate": "check:retention-coverage",
+      "exitCode": 0,
+      "durationMs": 19679,
+      "timedOut": false,
+      "tail": "      \"worker\": \"CronNotificationRetentionService\",\n      \"notes\": \"90-day body purge, 13-month record delete.\"\n    },\n    {\n      \"table_name\": \"notification_events\",\n      \"policy_table\": \"notification_events\",\n      \"total_mb\": 1,\n      \"n_live_tup\": 155,\n      \"status\": \"COVERED\",\n      \"decision\": \"RETAIN-BOUNDED\",\n      \"worker\": \"CronNotificationRetentionService (body purge + record delete)\",\n      \"notes\": \"90-day body purge, 13-month record delete.\"\n    },\n    {\n      \"table_name\": \"hr_reporting_lines\",\n      \"policy_table\": \"hr_reporting_lines\",\n      \"total_mb\": 1,\n      \"n_live_tup\": 1000,\n      \"status\": \"KEEP-FOREVER\",\n      \"decision\": \"KEEP-FOREVER\",\n      \"worker\": null,\n      \"notes\": \"Effective-dated reporting history supports employment/payroll auditability and is bounded by employment history; no automated deletion is permitted without an approved statutory-retention rule.\"\n    }\n  ]\n}"
+    },
+    {
+      "gate": "check:retention-coverage:self-test",
+      "exitCode": 0,
+      "durationMs": 1505,
+      "timedOut": false,
+      "tail": "◇ injected env (53) from .env // tip: ⌁ auth for agents [www.vestauth.com]\n{\"selfTest\":true,\"pass\":true,\"checks\":{\"auditLogsIsKeepForever\":true,\"payrollRunsIsKeepForever\":true,\"aiUsageLogsHasWorker\":true,\"chatMessagesHasWorker\":true,\"kbChunksHasWorker\":true,\"kbChatConversationsHasWorker\":true,\"webhookDeliveriesHaveWorker\":true,\"auditLogsHasNoWorker\":true,\"classifyUnknownIsUncovered\":true,\"classifyAuditLogsIsKeepForever\":true,\"partitionUsesParentDecision\":true,\"reportingLinesHaveDecision\":true,\"documentsHaveExistingWorker\":true,\"outboxTablesAreNowCovered\":true,\"decidedTablesAreNoLongerPending\":true,\"performanceReviewsIsKeepForever\":true,\"invalidThresholdsFailClosed\":true,\"decimalThresholdIsAccepted\":true,\"everyMatrixEntryHasDecision\":true,\"everyMatrixEntryHasNotes\":true,\"keepForeverEntriesHaveNoWorker\":true,\"boundedEntriesHaveWorker\":true}}"
+    },
+    {
+      "gate": "check:route-budgets",
+      "exitCode": 0,
+      "durationMs": 1687,
+      "timedOut": false,
+      "tail": "    /cron/interview-no-shows\n    /cron/invitation-expiry\n    /cron/invitation-expiry-sweep\n    /cron/kb-trash-purge\n    /cron/monthly-plan-grants\n    /cron/notification-time-sweeps\n    /cron/offer-deadline-reminders\n    /cron/onboarding-sweep\n    /cron/operator-grant-expiry\n    /cron/org-purge-worker\n    /cron/ownership-transfer-expiry\n    /cron/projects-recurring-flush\n    /cron/provider-webhook-redrive\n    /cron/retention-delete-sweep\n    /cron/session-revocation-prune\n    /cron/support-kb-gap-detect\n    /cron/support-sla-escalations\n    /cron/support-unsnooze\n    /cron/timesheets-exception-detection\n    /cron/trial-expiry\n    /cron/weekly-exec-recap\n    /cron/workflow-executions-sweep\n    /cron/workflow-schedules-tick\n    /cron/workflow-tick\n  PARTIAL — 387 of 648 declared ceilings are measured and within budget; 261 are unmeasured and therefore unenforced. This is not a pass over the route surface: 93/3648 operations carry a budget at all."
+    },
+    {
+      "gate": "check:route-budgets-http",
+      "exitCode": 1,
+      "durationMs": 1446,
+      "timedOut": false,
+      "tail": "[merge-http-route-budgets] 69/93 budgets carry an HTTP measurement (148 values written, 4 stale values cleared)\n  measuredLatencyP95Ms: 69/93\n  measuredDownstreamCalls: 69/93\n  measuredResponseBytes: 69/93\n  measuredMemoryMb: 69/93\n  measuredDbCalls: NOT written by this instrument — the capture's requestDbCalls is a strict superset of the handler statement count that maxDbCalls describes (authentication, permission resolution and module entitlement are in it), so it is recorded as requestDbCalls and never as measuredDbCalls\n  BREACH  POST /chat/channels/{channelId}/messages measuredLatencyP95Ms=5043.126 > maxLatencyP95Ms=1000 (reference)\n  BREACH  POST /chat/channels/{channelId}/messages measuredDownstreamCalls=3 > maxDownstreamCalls=0 (minority)\n  BREACH  GET /cron/storage-sweep measuredDownstreamCalls=1 > maxDownstreamCalls=0 (reference)\n[merge-http-route-budgets] contracts/route-budgets.json is out of date with the capture"
+    },
+    {
+      "gate": "check:route-budgets-http:self-test",
+      "exitCode": 0,
+      "durationMs": 1277,
+      "timedOut": false,
+      "tail": "[merge-http-route-budgets] self-test 27/27"
+    },
+    {
+      "gate": "check:route-budgets:self-test",
+      "exitCode": 0,
+      "durationMs": 1279,
+      "timedOut": false,
+      "tail": "  [pass] per-org-zero-orgs — an org count of 0 grants no allowance\n  [pass] per-org-boundary — 0 fixed + 1/org x 8 organisations admits exactly 8 downstream calls\n  [pass] per-org-bites — one call above the per-organisation allowance fires, and the issue names the derivation\n  [pass] per-org-composes — maxDownstreamCalls stays the fixed component and the allowance adds to it\n  [pass] per-org-validated — maxDownstreamCallsPerOrg must be a non-negative integer\n  [pass] coverage-counts-fields — coverage is counted per field, not per entry\n  [pass] partial-verdict — a partly measured manifest reports PARTIAL, never OK\n  [pass] inconclusive-verdict — a wholly unmeasured manifest reports INCONCLUSIVE\n  [pass] ok-verdict — OK only when every declared ceiling is measured and within budget\n  [pass] fail-verdict — any exceedance produces FAIL regardless of coverage\n  [pass] buffer-ceiling-falls-back — an undeclared maxBufferBlocks is enforced from the linked read-cost budget\n  [pass] per-org-dbcalls-fails-closed — maxDbCallsPerOrg with no measured org count leaves the absolute ceiling in force\n  [pass] per-org-dbcalls-boundary — 1 fixed + 3/org x 8 organisations admits exactly 25 database calls\n  [pass] per-org-dbcalls-bites — one statement above the per-organisation allowance fires and names the derivation\n  [pass] per-org-dbcalls-validated — maxDbCallsPerOrg must be a non-negative integer\n  [pass] per-org-scoped-to-two-fields — the per-organisation allowance applies only to the two fields that declare one\n  [pass] cron-parse — cron operations are read from @Controller(\"cron\") only, and :param becomes {param}\n  [pass] batch-watermark-bites — cron batches above the undeclared watermark fail the gate\n  [pass] batch-watermark-holds — a census exactly at the recorded watermark passes\n  [pass] batch-census-classifies — a budget on either method covers the batch, and an out-of-scope reason removes it from the remainder\n  [pass] batch-stale-exclusion — an exclusion for a batch no cron controller serves is a violation\n  [pass] batch-scope-required — a manifest with no workerBatchScope cannot report a derived census\n  [pass] batch-not-in-openapi — a cron batch no OpenAPI operation describes is reported (it can never carry a budget)\n  [pass] read-cost-coverage — the read-cost guard's own coverage is computed and reportable\nSELF-TEST PASSED"
+    },
+    {
+      "gate": "check:route-classification",
+      "exitCode": 0,
+      "durationMs": 2010,
+      "timedOut": false,
+      "tail": "Route classification report\n  Total handlers : 3635\n  public         : 241\n  universal      : 100\n  permissioned   : 3234\n  in-service     : 60\n  UNDECLARED     : 0\nRESULT: ALL ROUTES CLASSIFIED\nManifest pilot (timesheets): publicExposure=false — OK"
+    },
+    {
+      "gate": "check:route-classification:self-test",
+      "exitCode": 0,
+      "durationMs": 1291,
+      "timedOut": false,
+      "tail": "{\n  \"selfTest\": true,\n  \"pass\": true,\n  \"checks\": {\n    \"publicClassAppliesToAllHandlers\": true,\n    \"handlerLevelPublicOverridesClass\": true,\n    \"handlerLevelPermissionParsed\": true,\n    \"undeclaredDetected\": true,\n    \"universalClassAppliesToAllHandlers\": true,\n    \"keywordsInsideBodyDoNotCreateFakeHandlers\": true,\n    \"asyncHandlerClassifiedCorrectly\": true,\n    \"wrappedClassDecoratorStillClassifies\": true,\n    \"wrappedHandlerDecoratorStillClassifies\": true,\n    \"wrappedPermissionStillClassifies\": true,\n    \"emptyInServiceNameIsNotADeclaration\": true,\n    \"pilotPublicExposureMismatchDetected\": true,\n    \"pilotPublicExposureMatchPasses\": true,\n    \"pilotPublicExposureTrueMatchPasses\": true\n  }\n}"
+    },
+    {
+      "gate": "check:route-duplicates",
+      "exitCode": 0,
+      "durationMs": 1596,
+      "timedOut": false,
+      "tail": "check-route-duplicates: route deduplication report\n  NOTE: static-vs-param pairs are NOT reported — NestJS globally sorts static segments before parameterized ones, so these are safe.\n  operationId duplicates: 0\n  genuinely ambiguous param-vs-param routes: 0\n  VERSION INCONSISTENCIES: 2 path(s) with a versioned sibling alongside an unversioned one:\n    /v2/users — v2 path exists alongside an unversioned sibling — one may be unintentionally versionless\n    /v2/users/{userId} — v2 path exists alongside an unversioned sibling — one may be unintentionally versionless\n  Total findings: 2 (reported only — deletion requires caller/dependency proof)"
+    },
+    {
+      "gate": "check:route-duplicates:self-test",
+      "exitCode": 0,
+      "durationMs": 1428,
+      "timedOut": false,
+      "tail": "Running self-test...\n  [pass] no-dupe-clean-doc — clean document has 0 operationId duplicates\n  [pass] dupe-detected — duplicate operationId is detected\n  [pass] static-vs-param-not-flagged — NestJS-safe static-before-param pair is not flagged\n  [pass] param-vs-param-flagged — param-vs-param at same depth is correctly flagged as ambiguous\n  [pass] no-ambiguous-clean — unrelated paths have no ambiguous findings\nSELF-TEST PASSED"
+    },
+    {
+      "gate": "check:s05-artifact-contract",
+      "exitCode": 0,
+      "durationMs": 1500,
+      "timedOut": false,
+      "tail": "S05 approval/evidence artifact contract passed."
+    },
+    {
+      "gate": "check:scope-application",
+      "exitCode": 0,
+      "durationMs": 1649,
+      "timedOut": false,
+      "tail": "Scope resolutions   150\nApplied             150\nOK — every resolved DataScope reaches a predicate."
+    },
+    {
+      "gate": "check:scope-application:self-test",
+      "exitCode": 0,
+      "durationMs": 1332,
+      "timedOut": false,
+      "tail": "{\n  \"selfTest\": true,\n  \"pass\": true,\n  \"checks\": {\n    \"findsTheDecorativeResolve\": true,\n    \"decorativeIsNamedByLine\": true,\n    \"cacheKeyDoesNotCountAsApplication\": true,\n    \"guardAgainstNoneDoesNotCountAsApplication\": true,\n    \"sqlTemplateInterpolationDoesCountAsApplication\": true,\n    \"appliedToAPredicatePasses\": true,\n    \"ternaryReturningTheScopeIsNotDecorative\": true,\n    \"guardAndSurvivingElseBranchOnOneLineIsSpent\": true,\n    \"comparisonAgainstAnotherScopeValueIsSpent\": true,\n    \"handedToAnotherFunctionPasses\": true,\n    \"readRequestScopeIsARecognisedSource\": true,\n    \"blockStopsAtTheMethodEnd\": true\n  }\n}"
+    },
+    {
+      "gate": "check:set-null-column-lists",
+      "exitCode": 2,
+      "durationMs": 6017,
+      "timedOut": false,
+      "tail": "Declared SET NULL foreign keys 564  ·  requiring a column list 276  ·  unreachable 0\nDeclaration half OK — every declared SET NULL key has at least one nullable member.\nINCONCLUSIVE — the catalog half did not run. The ON DELETE SET NULL column list lives only in pg_constraint.confdelsetcols; nothing static can see it, so 276 constraint(s) are UNVERIFIED.\n  Set SET_NULL_GATE_DATABASE_URL to a bootstrapped database to run it.\n  Or set STREAMLINE_ALLOW_PARTIAL_GATES=1 to accept a declaration-only run."
+    },
+    {
+      "gate": "check:set-null-column-lists:self-test",
+      "exitCode": 0,
+      "durationMs": 6032,
+      "timedOut": false,
+      "tail": "check-set-null-column-lists self-tests: 14 passed"
+    },
+    {
+      "gate": "check:spec-typecheck",
+      "exitCode": 2,
+      "durationMs": 256340,
+      "timedOut": false,
+      "tail": "src/scripts/__tests__/_spec-typecheck-self-test.spec.ts(2,29): error TS2554: Expected 2 arguments, but got 1.\r\ncheck-spec-typecheck: spec-inclusive typecheck failed (tsconfig.json).\nNOTE: NODE_OPTIONS=--max-old-space-size=8192 is required for this check."
+    },
+    {
+      "gate": "check:spec-typecheck:self-test",
+      "exitCode": 0,
+      "durationMs": 252269,
+      "timedOut": false,
+      "tail": "check-spec-typecheck --self-test PASS: gate correctly caught the deliberate arity error.\nFixture errors reported:\n  src/scripts/__tests__/_spec-typecheck-self-test.spec.ts(2,29): error TS2554: Expected 2 arguments, but got 1.\r"
+    },
+    {
+      "gate": "check:tenant-indexes",
+      "exitCode": 0,
+      "durationMs": 1473,
+      "timedOut": false,
+      "tail": "Schema files            347\nTenant tables           840\nLeading tenant index    840\nOK — every tenant table declares an index leading with its tenant column."
+    },
+    {
+      "gate": "check:tenant-indexes:self-test",
+      "exitCode": 0,
+      "durationMs": 1341,
+      "timedOut": false,
+      "tail": "{\n  \"selfTest\": true,\n  \"pass\": true,\n  \"checks\": {\n    \"findsAllNineTenantTables\": true,\n    \"ignoresNonTenantTable\": true,\n    \"readsPgSchemaTableForm\": true,\n    \"pgSchemaLeadingIndexPasses\": true,\n    \"pgSchemaTrailingTenantFails\": true,\n    \"columnLevelPrimaryKeyCounts\": true,\n    \"columnLevelUniqueCounts\": true,\n    \"rowIdPrimaryKeyIsNotATenantIndex\": true,\n    \"readsNameFromOneLineForm\": true,\n    \"readsNameFromMultiLineForm\": true,\n    \"detectsOrgIdProp\": true,\n    \"detectsOrganizationIdProp\": true,\n    \"leadingIndexPasses\": true,\n    \"leadingUniqueIndexPasses\": true,\n    \"compositePrimaryKeyCounts\": true,\n    \"trailingTenantColumnFails\": true,\n    \"noIndexFails\": true,\n    \"exceptionRegistryIsExplicit\": true\n  }\n}"
+    },
+    {
+      "gate": "check:tenant-isolation",
+      "exitCode": 0,
+      "durationMs": 53994,
+      "timedOut": false,
+      "tail": "Service files with db handle   997\n  — tenant-owned               933\n  — global/platform            64\nIsolation test files found     715\nServices with a DECLARED test  933 / 933  (100%)\nNOTE: this gate is static. It matches a spec file that names the service and does not\n      run it, so a spec that throws before its first expectation still counts here.\n      Execution proof is `pnpm check:tenant-isolation:run`; both are required.\nOK — every enumerated tenant-owned service maps to at least one isolation test.\n     This says the test EXISTS, not that it passes. Run check:tenant-isolation:run."
+    },
+    {
+      "gate": "check:tenant-isolation:run",
+      "exitCode": 0,
+      "durationMs": 267955,
+      "timedOut": false,
+      "tail": "PASS src/modules/build/core/projects-query-tenant-isolation.spec.ts\nPASS src/modules/public/public-forms-tenant-isolation.spec.ts\nPASS src/modules/build/core/projects-tickets-detail-tenant-isolation.spec.ts\nPASS src/modules/build/meetings/action-items-tenant-isolation.spec.ts\nPASS src/modules/portal/client/portal-client-tenant-isolation.spec.ts\nPASS src/modules/support/core/support-integrations-tenant-isolation.spec.ts\nPASS src/modules/feedbucket/feedbucket-public-tenant-isolation.spec.ts\nPASS src/modules/build/forms/submissions-tenant-isolation.spec.ts\nPASS src/modules/build/core/build-due-sweep.isolation.spec.ts\nPASS src/modules/agent-access/agent-access-isolation.spec.ts\nPASS src/modules/finance/ar/statements-tenant-isolation.spec.ts\nPASS src/modules/build/portfolios/programs-tenant-isolation.spec.ts\nPASS src/modules/payroll/insights/manager-inbox-tenant-isolation.spec.ts\nPASS src/modules/support/core/support-ai-settings-tenant-isolation.spec.ts\nPASS src/modules/payroll/hr-payroll/salary-structure-templates-tenant-isolation.spec.ts\nPASS src/modules/dashboard/dashboard-project-tenant-isolation.spec.ts\nPASS src/modules/auth/auth-analytics-isolation.spec.ts\nPASS src/modules/support/core/support-drafts-tenant-isolation.spec.ts\nPASS src/modules/support/core/support-settings-audit-tenant-isolation.spec.ts\nPASS src/modules/public/org-tenant-isolation.spec.ts\nTest Suites: 452 passed, 452 total\nTests:       1873 passed, 1873 total\nSnapshots:   0 total\nTime:        263.911 s\nRan all test suites matching /tenant-isolation|isolation.spec/i."
+    },
+    {
+      "gate": "check:tenant-isolation:self-test",
+      "exitCode": 0,
+      "durationMs": 2105,
+      "timedOut": false,
+      "tail": "{\n  \"selfTest\": true,\n  \"pass\": true,\n  \"checks\": {\n    \"hasDbHandleDetectsInjectDrizzle\": true,\n    \"hasDbHandleDetectsPrivateDb\": true,\n    \"isTenantOwnedRequiresOrgIdAndFilter\": true,\n    \"isTenantOwnedFalseWithoutOrgId\": true,\n    \"classNameExtraction\": true,\n    \"isolationPatternMatchesIsolationSpec\": true,\n    \"isolationPatternMissesNonIsolationSpec\": true\n  }\n}"
+    },
+    {
+      "gate": "check:tenant-relationships",
+      "exitCode": 2,
+      "durationMs": 4331,
+      "timedOut": false,
+      "tail": "◇ injected env (53) from .env // tip: ⌘ enable debugging { debug: true }\nMode                   pg_catalog (scratch_boot_a)\nLedger rows on target  573 of 685 journal entries\nTotal single-col FKs   859\nEXCL: CRM              95 (child or parent is a CRM table — AR-02 scope exclusion)\nEXCL: Inventory        136 (child or parent is Inventory — AR-02 scope exclusion)\nEXCL: platform-global  1 (child or parent is a registered platform-global table)\nActionable             627\nTARGET IS MID-BOOTSTRAP — this number is not release evidence.\n  The target's migration ledger holds 573 of 685 journal entries,\n  so the chain is only partly present and constraints later in it have not been created yet.\n  Point TENANT_RELATIONSHIP_DB_URL at a fully bootstrapped database, or re-run once the replay finishes."
+    },
+    {
+      "gate": "check:tenant-relationships:self-test",
+      "exitCode": 0,
+      "durationMs": 1827,
+      "timedOut": false,
+      "tail": "{\n  \"selfTest\": true,\n  \"pass\": true,\n  \"checks\": {\n    \"detects_explicit_single_col_violation\": true,\n    \"explicit_violation_table_name_correct\": true,\n    \"detects_inline_references_violation\": true,\n    \"inline_violation_table_name_correct\": true,\n    \"detects_return_type_annotated_inline_reference\": true,\n    \"accounting_credit_notes_is_not_excluded_as_crm\": true,\n    \"ignores_composite_fk\": true,\n    \"ignores_global_user_ref\": true,\n    \"crm_file_path_excluded\": true\n  }\n}"
+    },
+    {
+      "gate": "check:test-suppressions",
+      "exitCode": 1,
+      "durationMs": 2473,
+      "timedOut": false,
+      "tail": "  src\\modules\\ai\\core\\projects-ai.controller.e2e-spec.ts:233  it.todo  400 on non-numeric projectId (controller uses string param with no ParseIntPipe; NaN passes through to service; would need a pipe added to enforce this)  (PLACEHOLDER)\n  src\\modules\\ai\\core\\projects-ai.controller.e2e-spec.ts:245  it.todo  402 on plan gate fires before service (orgOwner bypass not needed — plan check is in controller)  (PLACEHOLDER)\n  src\\modules\\ai\\core\\projects-ai.controller.e2e-spec.ts:246  it.todo  503 on ensureLlm when LlmService.isConfigured() returns false (requires LlmService override)  (PLACEHOLDER)\n  src\\modules\\crm\\core\\crm-attribution-report.service.spec.ts:188  it.todo  last-touch uses a subquery (.as()) to find max occurredAt per lead — mock chain depth makes this an integration-level test; cover in e2e  (PLACEHOLDER)\nFAIL — 19 stale registry entry(ies); the suppression is gone. Remove them so the registry cannot rot into a permanent exemption:\n  src/degradation/ai-provider.spec.ts  \"integration: releasing a RESERVED reservation restores the org wallet balance — needs OutboxPublisherService / AiCreditsReservationService driven end to end; those services open their own transactions via runInNewTenantTransaction, so their writes cannot be rolled back on a database shared with concurrent sessions — asserting hand-written SQL state instead proves only that Postgres stores what was written\"\n  src/degradation/ai-provider.spec.ts  \"integration: a sweep of expired reservations restores credits to all wallets atomically — same blocker as above\"\n  src/degradation/email-provider.spec.ts  \"integration: a 503 from the provider increments retryCount and returns the event to PENDING — needs OutboxPublisherService / AiCreditsReservationService driven end to end; those services open their own transactions via runInNewTenantTransaction, so their writes cannot be rolled back on a database shared with concurrent sessions — asserting hand-written SQL state instead proves only that Postgres stores what was written\"\n  src/degradation/email-provider.spec.ts  \"integration: reaching OUTBOX_MAX_RETRIES dead-letters the event while the request row stays committed — same blocker as above\"\n  src/degradation/email-provider.spec.ts  \"integration: the request transaction commits before any delivery attempt — same blocker as above\"\n  src/degradation/object-storage.spec.ts  \"unblocked by: a real S3/R2 storage endpoint configured in the test environment — once available, verify that an upload re-driven from the stored pre-generated key reaches the endpoint and the stored metadata row reflects completion without data loss\"\n  src/degradation/object-storage.spec.ts  \"unblocked by: a real storage endpoint and a virus-scanner seam (e.g. ClamAV sidecar) — verify the scan PENDING→CLEAN state machine under real conditions so that CLEAN is never set before the scanner confirms the result\"\n  src/degradation/read-replica.spec.ts  \"PHYSICAL REPLICA NOT PROVISIONED. The staleness behaviour below is proved against a REPEATABLE READ \"\n  src/degradation/realtime-adapter.spec.ts  \"unblocked by: a real Ably account with a valid API key so a test client can subscribe to a channel and verify it receives messages from the DB lastReadAt watermark after reconnecting — the subscription and message history retrieval require Ably infrastructure that is not available in this environment\"\n  src/modules/ai/core/crm-copilot.service.phase2.spec.ts  \"stalePipelineDigest\"\n  src/modules/ai/core/crm-copilot.service.phase2.spec.ts  \"dataQualityCopilot\"\n  src/modules/ai/core/crm-copilot.service.phase2.spec.ts  \"nextBestActionWithEvidence (CrmScoringService)\"\n  src/modules/ai/core/crm-copilot.service.phase2.spec.ts  \"leadSummaryWithCitations\"\n  src/modules/ai/core/crm-copilot.service.phase2.spec.ts  \"predictDeal (estimateDisclaimer)\"\n  src/modules/ai/core/crm-copilot.service.phase2.spec.ts  \"meetingFollowUpDraft (CrmBriefService)\"\n  src/modules/ai/core/projects-ai.controller.e2e-spec.ts  \"400 on non-numeric projectId (controller uses string param with no ParseIntPipe; NaN passes through to service; would need a pipe added to enforce this)\"\n  src/modules/ai/core/projects-ai.controller.e2e-spec.ts  \"402 on plan gate fires before service (orgOwner bypass not needed — plan check is in controller)\"\n  src/modules/ai/core/projects-ai.controller.e2e-spec.ts  \"503 on ensureLlm when LlmService.isConfigured() returns false (requires LlmService override)\"\n  src/modules/crm/core/crm-attribution-report.service.spec.ts  \"last-touch uses a subquery (.as()) to find max occurredAt per lead — mock chain depth makes this an integration-level test; cover in e2e\"\nFAIL — 66 runtime-selected suppressions, above the ratchet of 29. This class is honest but it is also the easiest place to launder a hand-written skip, so it is capped."
+    },
+    {
+      "gate": "check:test-suppressions:self-test",
+      "exitCode": 0,
+      "durationMs": 1871,
+      "timedOut": false,
+      "tail": "check-test-suppressions self-tests: 20 passed"
+    },
+    {
+      "gate": "check:test-typecheck",
+      "exitCode": 0,
+      "durationMs": 271788,
+      "timedOut": false,
+      "tail": "check-test-typecheck: test/ typechecks clean under the repo's strict settings (tsconfig.test.json). This is a hard gate at zero, not a baseline.\nNOT THIS GATE'S SCOPE — 1 error(s) in 1 file(s) outside test/. These belong to `pnpm check:spec-typecheck`, which fails on them:\n  src/scripts/__tests__/_spec-typecheck-self-test.spec.ts(2,29): error TS2554: Expected 2 arguments, but got 1.\r"
+    },
+    {
+      "gate": "check:test-typecheck:self-test",
+      "exitCode": 0,
+      "durationMs": 259516,
+      "timedOut": false,
+      "tail": "check-test-typecheck --self-test PASS: the gate caught the planted arity error.\n  .check-test-typecheck-selftest/planted.spec.ts(2,25): error TS2554: Expected 2 arguments, but got 1.\r"
+    },
+    {
+      "gate": "check:transaction-callbacks",
+      "exitCode": 0,
+      "durationMs": 7150,
+      "timedOut": false,
+      "tail": "Spec files 2187  ·  files with a transaction double 285  ·  doubles 491\n  invokes 276  ·  declared-unreached 7  ·  rejects 0  ·  VOID 2\nOK — every spec that doubles db.transaction either runs the callback, rejects deliberately, or asserts the transaction is never reached. VOID 2 (ratchet 2)."
+    },
+    {
+      "gate": "check:transaction-callbacks:self-test",
+      "exitCode": 0,
+      "durationMs": 4361,
+      "timedOut": false,
+      "tail": "check-transaction-callbacks self-tests: 27 passed"
+    },
+    {
+      "gate": "check:type-assertions",
+      "exitCode": 0,
+      "durationMs": 31588,
+      "timedOut": false,
+      "tail": "=== application files scanned: 3675 ===\n=== `as unknown as`: 29 site(s) in 16 file(s) ===\n=== ledger: 22 at a proven external seam, 7 owed a Zod parse ===\n=== `db.execute<T>` raw-row generics: 28 site(s) in 20 file(s), 25 cross-checked against their SQL ===\n=== plain assertions under a zero-growth ceiling: 1183 (861 `as X` + 322 non-null `!`) in 462 file(s) ===\n=== `as const` excluded by decision (a const assertion narrows, it does not force): 802 ===\n=== as any / @ts-ignore / @ts-expect-error / @ts-nocheck: 0 ===\n=== every one of the 25 cross-checkable raw-row types is supported by its SQL ===\nPASS: no forced-typing escape in application code, every double cast is ledgered at its recorded count, and every statically readable `db.execute<T>` row type matches the projection beside it."
+    },
+    {
+      "gate": "check:type-assertions:self-test",
+      "exitCode": 0,
+      "durationMs": 6842,
+      "timedOut": false,
+      "tail": "  (o) `execute` with no type argument            -> not counted\n  (p) a commented-out call                       -> not counted\n  (q) a multi-line type literal                  -> all keys read (why this rule is an AST)\n  (r) a NAMED type argument                      -> keys=null, ledgered not passed\n  (s) COMPOSED sql                               -> sqlText=null, ledgered not passed\n  (t) a declared key the SQL selects             -> clean\n  (u) a declared key the SQL does NOT select     -> MISSING (gate bites)\n  (v) camelCase key, DOUBLE-QUOTED alias         -> clean\n  (w) camelCase key, UNQUOTED alias              -> CASEFOLD (gate bites)\n  (x) an unreadable site                         -> no false violation\n  (y) every raw-row entry names a seam kind\n  (z) every raw-row entry carries a written invariant\n  (aa) a plain `as X`                            -> counted (rule 4)\n  (ab) `as const`                                -> excluded by decision\n  (ac) `as unknown as`                           -> rule 2's, not double-ledgered\n  (ad) a non-null `!`                            -> counted\n  (ae) an inequality `!==`                       -> not a non-null assertion\n  (af) the angle-bracket cast `<T>x`             -> counted\n  (ag) `satisfies`                               -> not counted\n  (ah) a definite-assignment `x!: T`             -> not counted\n  (ak) root `dist`/`coverage`                    -> skipped (output)\n  (al) NESTED dist/coverage/build/public         -> scanned (the frontend's blind spot)\n  (am) node_modules/__tests__ at any depth       -> skipped\n  (ai) the ceiling ledger loads at all\n  (aj) every ceiling entry has a readable split"
+    },
+    {
+      "gate": "check:unbounded-reads",
+      "exitCode": 0,
+      "durationMs": 5602,
+      "timedOut": false,
+      "tail": "Self-tests passed.\nScanned 2877 service files across 3 roots:\n  src/modules : 2322 file(s) across 74 modules\n  src/common  : 191 file(s)\n  src/db      : 364 file(s)\n  offset pagination : 22\n  unbounded reads   : 765\n  unordered paging  : 0 — .offset() with no ORDER BY repeats and drops rows between pages\nClassification summary (by file):\n  offset     EXCLUDED-MODULE   : 14 file(s)\n  offset     FALSE-POSITIVE    : 2 file(s)\n  unbounded  FALSE-POSITIVE    : 319 file(s)\n  unbounded  ACTIONABLE        : 7 file(s)\n  unbounded  EXCLUDED-MODULE   : 53 file(s)\nActionable instance counts (target: zero):\n  offset pagination : 0\n  unbounded reads   : 10\nSuppressed by a FALSE-POSITIVE justification: 651 unbounded read(s) [ceiling 651]\nOK — no gate violations.\nRatchet progress: offset ACTIONABLE=0 (target 0) · unbounded ACTIONABLE=10 (target 0)"
+    },
+    {
+      "gate": "check:unbounded-reads:self-test",
+      "exitCode": 0,
+      "durationMs": 2728,
+      "timedOut": false,
+      "tail": "Self-tests passed."
+    },
+    {
+      "gate": "check:unjoined-table-refs",
+      "exitCode": 0,
+      "durationMs": 3736,
+      "timedOut": false,
+      "tail": "check:unjoined-table-refs — 3171 files, 5473 queries, 293 skipped (subquery/CTE construct)\nOK — every referenced table is in its query's FROM/JOIN."
+    },
+    {
+      "gate": "check:unjoined-table-refs:self-test",
+      "exitCode": 0,
+      "durationMs": 2468,
+      "timedOut": false,
+      "tail": "{\n  \"selfTest\": true,\n  \"pass\": true,\n  \"checks\": {\n    \"treatsAssignedChainAsFragment\": true,\n    \"treatsCombinatorArgumentAsFragment\": true,\n    \"doesNotTreatAStandaloneAwaitAsFragment\": true,\n    \"doesNotTreatAnEqualityComparisonAsAnAssignment\": true,\n    \"passesFragmentBoundToConst\": true,\n    \"flagsBrokenTeamJoin\": true,\n    \"flagsBrokenBareSelect\": true,\n    \"flagsBrokenRelational\": true,\n    \"passesFixedJoin\": true,\n    \"passesFixedRelational\": true,\n    \"ignoresRawSqlTemplate\": true,\n    \"importParserFindsSchemaNames\": true,\n    \"lineOfCountsNewlinesNotBytes\": true,\n    \"importParserIgnoresNonSchema\": true\n  }\n}"
+    },
+    {
+      "gate": "check:vacuous-assertions",
+      "exitCode": 1,
+      "durationMs": 10583,
+      "timedOut": false,
+      "tail": "      no expect(), no throw, no assert helper\n  TAUTOLOGY  src\\modules\\payroll\\__tests__\\prd-e2e-journey.spec.ts:153\n      \"11. Manager scope is non-all DataScope (contract): self-only not all\"\n      expect(true).toBe(...)\n  EARLY_RETURN  src\\modules\\surveys\\surveys-module-gate.spec.ts:26\n      \"%s: non-public controllers gate on @RequireModule('surveys') at class level\"\n      if (isClassPublic) return;\n  EARLY_RETURN  src\\modules\\surveys\\surveys-module-gate.spec.ts:33\n      \"%s: non-public controllers gate on @RequireModule('surveys') at class level\"\n      if (allMethodsPublic) return;\n  EARLY_RETURN  src\\modules\\timesheets\\core\\timesheets-module-gate.spec.ts:32\n      \"%s: every non-public controller gates on @RequireModule('timesheets') at class level\"\n      if (isClassPublic) return;\n  TAUTOLOGY  test\\security\\operator-access.spec.ts:77\n      \"PRODUCT-BLOCKED — no operator access mechanism: this spec documents the gap\"\n      expect(true).toBe(...)\nA test in one of these classes cannot fail. Give it a real assertion. Registering it instead requires a reason of at least 40 characters, and the ratchet may only go down.\n7 registered entr(y/ies) no longer match anything — remove them:\n  src/modules/inventory/inv-engine-misc-isolation-ai.spec.ts::processes insight for the owning org when found (isolation — control returns or calls AI)::NO_ASSERTION\n  src/modules/payroll/__tests__/prd-e2e-journey.spec.ts::11. Manager scope is non-all DataScope (contract): self-only not all::TAUTOLOGY\n  test/security/operator-access.spec.ts::PRODUCT-BLOCKED — no operator access mechanism: this spec documents the gap::TAUTOLOGY\n  src/db/tenant-relationship-integrity.spec.ts::tickets: cross-tenant epicId FK is rejected with 23503::EARLY_RETURN\n  src/degradation/redis.spec.ts::is higher than the raw declared limit outside production (DEV_LIMIT_MULTIPLIER)::EARLY_RETURN\n  src/modules/surveys/surveys-module-gate.spec.ts::%s: non-public controllers gate on @RequireModule('surveys') at class level::EARLY_RETURN\n  src/modules/timesheets/core/timesheets-module-gate.spec.ts::%s: every non-public controller gates on @RequireModule('timesheets') at class level::EARLY_RETURN"
+    },
+    {
+      "gate": "check:vacuous-assertions:self-test",
+      "exitCode": 1,
+      "durationMs": 2884,
+      "timedOut": false,
+      "tail": "node:fs:3039\r\n  return binding.mkdtemp(prefix, options.encoding);\r\n                 ^\r\n\r\nError: ENOENT: no such file or directory, mkdtemp '\\tmp\\vacuity-selftest-XXXXXX'\r\n    at Object.mkdtempSync (node:fs:3039:18)\r\n    at selfTest (file:///D:/projects/personal/Streamlineos/backend/src/scripts/check-vacuous-assertions.mjs:526:18)\r\n    at main (file:///D:/projects/personal/Streamlineos/backend/src/scripts/check-vacuous-assertions.mjs:618:58)\r\n    at file:///D:/projects/personal/Streamlineos/backend/src/scripts/check-vacuous-assertions.mjs:722:1\r\n    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)\r\n    at async node:internal/modules/esm/loader:639:26\r\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\r\n  errno: -4058,\r\n  code: 'ENOENT',\r\n  syscall: 'mkdtemp',\r\n  path: '\\\\tmp\\\\vacuity-selftest-XXXXXX'\r\n}\r\n\r\nNode.js v24.15.0\r"
+    },
+    {
+      "gate": "check:vulnerabilities",
+      "exitCode": 0,
+      "durationMs": 130080,
+      "timedOut": false,
+      "tail": "[check:vulnerabilities] Running pnpm audit --prod --audit-level=high ...\n[check:vulnerabilities] OK — no high/critical vulnerabilities in production dependencies."
+    },
+    {
+      "gate": "check:vulnerabilities:self-test",
+      "exitCode": 0,
+      "durationMs": 2251,
+      "timedOut": false,
+      "tail": "check-vulnerabilities self-tests: 11 passed"
+    },
+    {
+      "gate": "verify:chat-mentions",
+      "exitCode": 1,
+      "durationMs": 12227,
+      "timedOut": false,
+      "tail": "org      : mention-probe-b2c1eaa1\nchannel  : 61\nalex     : 735df8c4-d0b1-421f-a8fb-0333929bdf36\nalexander: 0a6e0719-7416-453a-958f-0b60fa2e1eba\n[TypeError: fetch failed] {\n  [cause]: AggregateError [ECONNREFUSED]: \n      at internalConnectMultiple (node:net:1193:18)\n      at afterConnectMultiple (node:net:1783:7) {\n    code: 'ECONNREFUSED',\n    [errors]: [ [Error], [Error] ]\n  }\n}"
+    },
+    {
+      "gate": "verify:membership-revocation",
+      "exitCode": 1,
+      "durationMs": 72901,
+      "timedOut": false,
+      "tail": "  PASS  timesheet_exports                  declared=set-null actual=set-null (fk_timesheet_exports_ack_by_membership)\n  PASS  timesheet_exports                  declared=set-null actual=set-null (fk_timesheet_exports_created_by_membership)\n  PASS  timesheet_periods                  declared=set-null actual=set-null (fk_timesheet_periods_approved_actor)\n  PASS  timesheet_periods                  declared=set-null actual=set-null (fk_timesheet_periods_user_membership)\n  PASS  timesheet_settings_history         declared=set-null actual=set-null (fk_ts_settings_history_changed_by_membership)\n  PASS  timesheets                         declared=set-null actual=set-null (fk_timesheets_approved_actor)\n  PASS  timesheets                         declared=set-null actual=set-null (fk_timesheets_locked_by_membership)\n  PASS  user_integration_connections       declared=cascade actual=cascade (fk_user_integration_connections_actor)\n  PASS  user_permission_grants             declared=set-null actual=set-null (fk_user_permission_grants_granter_membership)\n  PASS  wfh_requests                       declared=set-null actual=set-null (fk_wfh_requests_user_actor)\n  SKIP  worker_engagements                 no FK on [archived_by_membership_id] references organization_members — baselined as UNENFORCED (worker_engagements_archived_by_membership)\n  SKIP  worker_engagements                 no FK on [updated_by_membership_id] references organization_members — baselined as UNENFORCED (worker_engagements_updated_by_membership)\n  unenforced: 68 measured / 67 baselined\n  WARNING — SET NULL FKs without column list (will 23502 if triggered):\n    public.invitations → fk_invitations_org_revoked_by_membership on (org_id,revoked_by_membership_id)\n    public.hr_case_notes → fk_hr_case_notes_author_actor on (org_id,author_membership_id)\n    public.hr_benefit_enrollments → fk_hr_benefit_enrollments_user_membership on (org_id,user_membership_id)\n    public.hr_dependents → fk_hr_dependents_user_membership on (org_id,user_membership_id)\n    public.hr_insurance_claims → fk_hr_insurance_claims_user_membership on (org_id,user_membership_id)\n    public.hr_insurance_claims → fk_hr_insurance_claims_decider_membership on (org_id,decided_by_membership_id)\n    public.hr_travel_visit_logs → fk_hr_travel_visit_logs_user_membership on (org_id,user_membership_id)\n=== SUMMARY ===\n  Removal artifacts: PASS\n  No inheritance:    PASS\n  Inventory vs FKs:  FAIL"
+    },
+    {
+      "gate": "verify:multi-org-employment",
+      "exitCode": 1,
+      "durationMs": 66265,
+      "timedOut": false,
+      "tail": "Error: [region] organisation 06161c5f-ae82-4a6e-b0e0-813bce6ee8d9 has no region. It must be placed before its data can be reached.\n    at RegionRegistry.resolvePlacement (D:\\projects\\personal\\Streamlineos\\backend\\src\\common\\region\\region-registry.ts:261:13)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async RegionRegistry.placementForOrg (D:\\projects\\personal\\Streamlineos\\backend\\src\\common\\region\\region-registry.ts:131:23)\n    at async RegionRegistry.admittedPlacementForOrg (D:\\projects\\personal\\Streamlineos\\backend\\src\\common\\region\\region-registry.ts:144:23)\n    at async withTenant (D:\\projects\\personal\\Streamlineos\\backend\\src\\common\\tenant\\with-tenant.ts:117:21)\n    at async findMultiOrgUser (D:\\projects\\personal\\Streamlineos\\backend\\src\\scripts\\verify-multi-org-employment.ts:18:23)\n    at async main (D:\\projects\\personal\\Streamlineos\\backend\\src\\scripts\\verify-multi-org-employment.ts:88:21)"
+    },
+    {
+      "gate": "verify:permissions",
+      "exitCode": 0,
+      "durationMs": 3547,
+      "timedOut": false,
+      "tail": "Scanned  3140 @RequirePermission usages  (633 unique keys)\n  of which 24 pass a constant rather than a literal\nBackend catalog   704 keys\nFrontend PermissionKey union  704 keys\nOK — every @RequirePermission key resolves and exists in the backend catalog and the frontend PermissionKey union.\nManifest pilot (timesheets): all @RequirePermission keys in its folder use declared namespaces — OK"
+    },
+    {
+      "gate": "verify:rbac-integrity",
+      "exitCode": 0,
+      "durationMs": 24834,
+      "timedOut": false,
+      "tail": "  catalog: permission 'accounting:access:manage' administered by 'accounting', drift target 'blog', unadministered 'ai:chat:use'\n  PASS  [23503/fk_role_assignments_assigner_membership]  role_assignments: assigner from another organization — 23503 on fk_role_assignments_assigner_membership\n  PASS  [ACCEPT]  role_assignments: assigner from the same organization [control] — permitted\n  PASS  [ACCEPT]  role_assignments: no assigner [control] — permitted\n  PASS  [23503/fk_module_ownerships_module]  module_ownerships: module 'not_a_real_module' — 23503 on fk_module_ownerships_module\n  PASS  [ACCEPT]  module_ownerships: module 'accounting' [control] — permitted\n  PASS  [23503/fk_roles_module]  roles: module 'not_a_real_module' — 23503 on fk_roles_module\n  PASS  [ACCEPT]  roles: module 'accounting' [control] — permitted\n  PASS  [23503/fk_user_module_access_module]  user_module_access: module 'not_a_real_module' — 23503 on fk_user_module_access_module\n  PASS  [ACCEPT]  user_module_access: module 'accounting' [control] — permitted\n  PASS  [23503/fk_ownership_transfers_module]  ownership_transfers: module 'not_a_real_module' — 23503 on fk_ownership_transfers_module\n  PASS  [ACCEPT]  ownership_transfers: module 'accounting' [control] — permitted\n  PASS  [23503/fk_permissions_administering_module]  permissions: administering module 'not_a_real_module' — 23503 on fk_permissions_administering_module\n  PASS  [ACCEPT]  permissions: administering module 'accounting' [control] — permitted\n  PASS  [23503/fk_user_permission_grants_module]  user_permission_grants: 'accounting:access:manage' under module 'not_a_real_module' — 23503 on fk_user_permission_grants_module\n  PASS  [23503/fk_user_permission_grants_permission_module]  user_permission_grants: 'accounting:access:manage' under 'blog' instead of its administering 'accounting' — 23503 on fk_user_permission_grants_permission_module\n  PASS  [ACCEPT]  user_permission_grants: 'accounting:access:manage' under its administering 'accounting' [control] — permitted\n  PASS  [23503/fk_user_permission_grants_permission_module]  user_permission_grants: 'ai:chat:use' has no administering module and is not grantable — 23503 on fk_user_permission_grants_permission_module\n  PASS  [23503/fk_user_permission_grants_granter_membership]  user_permission_grants: granter from another organization ('accounting:access:manage') — 23503 on fk_user_permission_grants_granter_membership\n  PASS  [ACCEPT]  user_permission_grants: granter from the same organization ('accounting:access:manage') [control] — permitted\nOK — 19 probes over 9 constraints: every rejection carried the exact SQLSTATE and constraint claimed, and every control was permitted."
+    },
+    {
+      "gate": "verify:rbac-integrity:self-test",
+      "exitCode": 0,
+      "durationMs": 1583,
+      "timedOut": false,
+      "tail": "    \"exactRejectThroughDrizzlePasses\": true,\n    \"uniqueViolationFailsAReject\": true,\n    \"notNullViolationFailsAReject\": true,\n    \"checkViolationFailsAReject\": true,\n    \"missingTableFailsAReject\": true,\n    \"syntaxErrorFailsAReject\": true,\n    \"permissionDeniedFailsAReject\": true,\n    \"wrongConstraintSameCodeFailsAReject\": true,\n    \"unnamedConstraintFailsAReject\": true,\n    \"nonPostgresErrorFailsAReject\": true,\n    \"permittedWriteFailsAReject\": true,\n    \"acceptPassesOnlyWhenPermitted\": true,\n    \"uniqueViolationFailsAnAccept\": true,\n    \"foreignKeyFailsAnAccept\": true,\n    \"fixtureFailureFailsAReject\": true,\n    \"fixtureFailureFailsAnAccept\": true,\n    \"everyConstraintNamed\": true,\n    \"everyRequiredConstraintIsProbed\": true,\n    \"everyProbedConstraintIsRequired\": true,\n    \"everyRejectNamesCodeAndConstraint\": true,\n    \"everyProbeLabelsItself\": true,\n    \"rejectAndControlBothPresent\": true\n  }\n}\nSELF-TEST OK — 33 checks: the verdict rejects a unique violation, a not-null violation, a check violation, a missing table, a syntax error, a permission denial, a wrong constraint and a non-Postgres error, and every one of the 9 required constraints is bitten by a probe."
+    }
+  ]
+}

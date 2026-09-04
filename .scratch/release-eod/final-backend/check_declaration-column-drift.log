@@ -1,0 +1,27 @@
+Declared tables 873  ·  declared columns 10611
+Live columns 12414  ·  tables compared 872  ·  declared-but-absent tables 1  ·  live-but-undeclared tables 107
+Undeclared-but-harmless live columns (nullable or defaulted) 285 — reported, not failed.
+Undeclared live columns supplied by a BEFORE INSERT trigger 22 (of 153 such triggers) — reported, not failed.
+  public.assignment_rule_state.org_id  — supplied by BEFORE INSERT trigger trg_set_org_id — undeclared on purpose
+  public.client_account_activities.org_id  — supplied by BEFORE INSERT trigger trg_set_org_id — undeclared on purpose
+  public.crm_sequence_steps.org_id  — supplied by BEFORE INSERT trigger trg_set_org_id — undeclared on purpose
+  public.inv_customer_return_lines.org_id  — supplied by BEFORE INSERT trigger trg_set_org_id — undeclared on purpose
+  public.inv_cycle_count_lines.org_id  — supplied by BEFORE INSERT trigger trg_set_org_id — undeclared on purpose
+  public.inv_grn_lines.org_id  — supplied by BEFORE INSERT trigger trg_set_org_id — undeclared on purpose
+  public.inv_load_lines.org_id  — supplied by BEFORE INSERT trigger trg_set_org_id — undeclared on purpose
+  public.inv_package_lines.org_id  — supplied by BEFORE INSERT trigger trg_set_org_id — undeclared on purpose
+  public.inv_physical_audit_lines.org_id  — supplied by BEFORE INSERT trigger trg_set_org_id — undeclared on purpose
+  public.inv_pick_list_lines.org_id  — supplied by BEFORE INSERT trigger trg_set_org_id — undeclared on purpose
+  public.inv_po_lines.org_id  — supplied by BEFORE INSERT trigger trg_set_org_id — undeclared on purpose
+  public.inv_quality_inspection_lines.org_id  — supplied by BEFORE INSERT trigger trg_set_org_id — undeclared on purpose
+  public.inv_recall_lines.org_id  — supplied by BEFORE INSERT trigger trg_set_org_id — undeclared on purpose
+  public.inv_shipment_lines.org_id  — supplied by BEFORE INSERT trigger trg_set_org_id — undeclared on purpose
+  public.inv_so_lines.org_id  — supplied by BEFORE INSERT trigger trg_set_org_id — undeclared on purpose
+  public.inv_stock_adjustment_lines.org_id  — supplied by BEFORE INSERT trigger trg_set_org_id — undeclared on purpose
+  public.inv_stock_transfer_lines.org_id  — supplied by BEFORE INSERT trigger trg_set_org_id — undeclared on purpose
+  public.inv_vendor_return_lines.org_id  — supplied by BEFORE INSERT trigger trg_set_org_id — undeclared on purpose
+  public.invoice_items.org_id  — supplied by BEFORE INSERT trigger trg_set_org_id — undeclared on purpose
+  public.purchase_bill_items.org_id  — supplied by BEFORE INSERT trigger trg_set_org_id — undeclared on purpose
+  public.quote_line_items.org_id  — supplied by BEFORE INSERT trigger trg_set_org_id — undeclared on purpose
+  public.task_sequence_steps.org_id  — supplied by BEFORE INSERT trigger trg_set_org_id — undeclared on purpose
+Catalog half OK — no write-blocking or read-blocking column drift.

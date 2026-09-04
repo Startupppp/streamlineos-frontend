@@ -1,0 +1,47 @@
+Running self-test...
+
+PASS: self-test (43 distinct checks, floor 43 + a written invariant on all 36 invariant-bearing ledger entries, and a ceiling on all 462 files holding a plain assertion)
+
+  (a) a real double cast                        -> counted
+  (b) a line comment describing one             -> not counted
+  (c) a block comment describing one            -> not counted
+  (d) a `//` inside a string                    -> does not blind the line
+  (e) `as any`                                  -> counted
+  (f) `as any` inside a longer identifier       -> not counted
+  (e1) comment-stripping CANNOT see a directive -> why directives are matched raw
+  (e2) a real @ts-ignore/-expect-error/-nocheck -> caught (gate bites)
+  (e3) prose mentioning a directive             -> not a directive
+  (g) a file gaining a cast                     -> growth (gate bites)
+  (h) a file absent from the ledger             -> new (gate bites)
+  (i) a ledgered file with no casts left        -> stale (gate bites)
+  (j) a file losing a cast                      -> reported with the new number
+  (k) an unchanged file                         -> silent
+  (l) every ledger entry names a seam kind
+  (m) every ledger entry carries a written invariant
+  (n) a `db.execute<T>` call                     -> found
+  (n1) `tx.execute<T>` too                       -> found
+  (o) `execute` with no type argument            -> not counted
+  (p) a commented-out call                       -> not counted
+  (q) a multi-line type literal                  -> all keys read (why this rule is an AST)
+  (r) a NAMED type argument                      -> keys=null, ledgered not passed
+  (s) COMPOSED sql                               -> sqlText=null, ledgered not passed
+  (t) a declared key the SQL selects             -> clean
+  (u) a declared key the SQL does NOT select     -> MISSING (gate bites)
+  (v) camelCase key, DOUBLE-QUOTED alias         -> clean
+  (w) camelCase key, UNQUOTED alias              -> CASEFOLD (gate bites)
+  (x) an unreadable site                         -> no false violation
+  (y) every raw-row entry names a seam kind
+  (z) every raw-row entry carries a written invariant
+  (aa) a plain `as X`                            -> counted (rule 4)
+  (ab) `as const`                                -> excluded by decision
+  (ac) `as unknown as`                           -> rule 2's, not double-ledgered
+  (ad) a non-null `!`                            -> counted
+  (ae) an inequality `!==`                       -> not a non-null assertion
+  (af) the angle-bracket cast `<T>x`             -> counted
+  (ag) `satisfies`                               -> not counted
+  (ah) a definite-assignment `x!: T`             -> not counted
+  (ak) root `dist`/`coverage`                    -> skipped (output)
+  (al) NESTED dist/coverage/build/public         -> scanned (the frontend's blind spot)
+  (am) node_modules/__tests__ at any depth       -> skipped
+  (ai) the ceiling ledger loads at all
+  (aj) every ceiling entry has a readable split

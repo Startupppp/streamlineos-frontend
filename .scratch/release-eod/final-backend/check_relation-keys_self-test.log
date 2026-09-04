@@ -1,0 +1,19 @@
+ok    relation names are collected at every with: depth, and columns: keys are not
+ok    strings and comments do not produce relation keys
+ok    sibling blocks are both read, with their own lines
+ok    an empty projection is found and a populated one is not
+ok    an unreached relation key fails
+ok    and it names the key and the site
+ok    a triaged key in its triaged file passes
+ok    the same key in a NEW file fails
+ok    a key the frontend mentions clears on the name alone — blind spot, not a pass
+ok    a name that appears only in a comment does not clear
+ok    the same name in real code does clear
+ok    a stale baseline key fails
+ok    a new empty projection fails
+ok    a baselined empty projection passes
+ok    an empty backend scan fails the floor rather than passing
+ok    an empty frontend corpus fails the floor rather than flagging everything
+ok    an extractor that finds nothing fails the key floor
+
+17/17 self-test assertions passed.

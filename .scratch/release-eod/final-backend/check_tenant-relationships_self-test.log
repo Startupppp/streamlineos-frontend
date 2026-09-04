@@ -1,0 +1,15 @@
+{
+  "selfTest": true,
+  "pass": true,
+  "checks": {
+    "detects_explicit_single_col_violation": true,
+    "explicit_violation_table_name_correct": true,
+    "detects_inline_references_violation": true,
+    "inline_violation_table_name_correct": true,
+    "detects_return_type_annotated_inline_reference": true,
+    "accounting_credit_notes_is_not_excluded_as_crm": true,
+    "ignores_composite_fk": true,
+    "ignores_global_user_ref": true,
+    "crm_file_path_excluded": true
+  }
+}

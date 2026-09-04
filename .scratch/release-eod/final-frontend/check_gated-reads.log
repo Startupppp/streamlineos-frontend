@@ -1,0 +1,32 @@
+Classifying raw reads under hooks/api/** against contracts/openapi.json...
+
+=== Read call sites under hooks/api/** ===
+Total read call sites:      720
+Ungated (no gate marker):   50
+  universal                21
+  permissioned             12
+  public                   11
+  in-service               6
+
+Unresolvable + ungated:     0   (baseline 0)
+
+Permissioned + ungated:     12
+  held back (out of scope): 12
+  counted against baseline: 0   (baseline 0)
+
+NOTE (measured, never fails): 276 useGatedQuery reads each carry a PermissionGate; 1 non-test file(s) read it.
+  reads the gate: features/crm/timeline/my-tasks-panel.tsx
+  This gate certifies request suppression, NOT that a screen renders the refusal.
+  The unread gates are an app/** and features/** change — ticket 30, not this scanner.
+
+PASS: permissioned ungated reads at the recorded baseline (0) FOR THIS SCAN'S DEFINITION.
+  COVERS:         raw useQuery/useInfiniteQuery/useSuspenseQuery under hooks/api/**,
+                  classified against contracts/openapi.json.
+  DOES NOT COVER: features/** and app/** at all; whether a gate marker is actually
+                  reached from `enabled`; whether the key matches the one the route
+                  declares; and it treats useModuleEnabled (a module toggle, i.e. org
+                  configuration) as a permission. This zero is therefore NOT evidence
+                  that the repository has no ungated permissioned reads — measured
+                  2026-09-03 it reported 0 while 48 existed.
+  THE GATE THAT DOES: pnpm check:permission-binding (scripts/check-permission-route-binding.mjs),
+                  repo-wide, oracle is the controllers, and it FAILS on an unaccounted one.

@@ -1,0 +1,28 @@
+Running self-test...
+
+PASS: self-test (45 assertions)
+
+  (a) file with no live importers                       → DEAD
+  (b) file reachable via side-effect import             → RETAINED-BY-CONTRACT
+  (c) file reachable via re-export from live barrel     → RETAINED-BY-CONTRACT
+  (d) export from feature barrel                        → RETAINED-BY-CONTRACT
+  (e) export from CRM domain                            → EXCLUDED
+  (f) buildImporterMap: named import edge recorded
+  (g) buildImporterMap: side-effect import edge recorded
+  (h) buildImporterMap: re-export edge recorded
+  (i) export with no EXPORT_VERDICTS entry              → UNCLASSIFIED (gate bites)
+  (j) export with DEFERRED verdict in EXPORT_VERDICTS   → DEFERRED
+  (k) export with KEEP verdict in EXPORT_VERDICTS       → KEEP
+  (l) EXPORT_VERDICTS entry not in knip output          → stale (gate bites)
+  (m) test-utils file                                   → RETAINED-BY-CONVENTION
+  (n) test-utils export                                 → RETAINED-BY-CONVENTION
+  (o) data-layer TYPE in a live module                  → RETAINED-BY-CONTRACT
+  (p) data-layer VALUE nothing imports                  → UNCLASSIFIED (gate bites)
+  (q) TYPE in a module no live file imports             → UNCLASSIFIED (gate bites)
+  (r) a TYPE outside hooks/api                          → UNCLASSIFIED (rule is scoped)
+  (s) unused dependency with no verdict                 → UNCLASSIFIED (gate bites)
+  (u) dependency with a written verdict                 → KEEP
+  (w) the knip `binaries` finding, previously unread    → KEEP
+  (x) a package finding is not answered by a path rule  → UNCLASSIFIED
+  (aa) a dep: verdict knip no longer reports            → stale (gate bites)
+  (af) knip.json carries no unexplained ignoreDependencies

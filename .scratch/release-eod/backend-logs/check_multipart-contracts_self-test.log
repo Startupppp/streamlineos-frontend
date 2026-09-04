@@ -1,0 +1,12 @@
+Running self-test...
+  [pass] no-finding: handler with @MultipartAction + FileInterceptor is clean
+  [pass] no-finding: handler with @BodylessAction + FileInterceptor is clean
+  [pass] finding: FileInterceptor without @MultipartAction or @BodylessAction is flagged
+  [pass] no-finding: handler without a file interceptor is not flagged
+  [pass] finding: FileFieldsInterceptor without declaration is flagged
+  [pass] no-finding: FileFieldsInterceptor + @MultipartAction is clean
+  [pass] finding: GET with FileInterceptor is also flagged (unusual but wrong)
+  [pass] no-finding: multi-line @MultipartAction is collapsed and detected correctly
+  [pass] extractHandlerName reads the method name from async, plain and generic declarations
+
+SELF-TEST PASSED

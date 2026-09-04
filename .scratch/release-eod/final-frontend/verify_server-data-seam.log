@@ -1,0 +1,14 @@
+node:internal/fs/promises:607
+  return await PromisePrototypeThen(
+         ^
+
+Error: ENOENT: no such file or directory, access 'D:\projects\personal\Streamlineos\frontend\.next\BUILD_ID'
+    at async access (node:internal/fs/promises:607:10)
+    at async file:///D:/projects/personal/Streamlineos/frontend/scripts/verify-server-data-seam.mjs:263:1 {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'access',
+  path: 'D:\\projects\\personal\\Streamlineos\\frontend\\.next\\BUILD_ID'
+}
+
+Node.js v24.15.0

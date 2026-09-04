@@ -1,0 +1,12 @@
+Service files with db handle   997
+  — tenant-owned               933
+  — global/platform            64
+Isolation test files found     715
+Services with a DECLARED test  933 / 933  (100%)
+
+NOTE: this gate is static. It matches a spec file that names the service and does not
+      run it, so a spec that throws before its first expectation still counts here.
+      Execution proof is `pnpm check:tenant-isolation:run`; both are required.
+
+OK — every enumerated tenant-owned service maps to at least one isolation test.
+     This says the test EXISTS, not that it passes. Run check:tenant-isolation:run.

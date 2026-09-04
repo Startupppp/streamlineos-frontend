@@ -1,0 +1,12 @@
+Controller files          552
+Spec files                2186  ·  asserting a deny 493
+HTTP handlers             3635
+  — authorization-gated   3237
+  — @AuthorizedInService  57  (INFO, not gated — see the header)
+Gated handlers with a DECLARED deny test  926 / 3237  (29%)
+
+NOTE: this gate is static. It proves a deny test EXISTS and is attributable to the
+      handler; it does not run it. Attribution is per spec FILE, not per it() block.
+
+Uncovered 2311 is BELOW the ratchet of 2441. Lower uncoveredRatchet in src\scripts\baselines\authz-deny.json to 2311 to bank it.
+OK — uncovered 2311 (ratchet 2441). No new authorization-gated handler landed without a deny test.

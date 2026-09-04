@@ -1,0 +1,33 @@
+Self-test: (a) unjournalled file
+  PASS  unjournalled non-allowlisted file caught
+Self-test: (b) duplicate numeric prefix
+  PASS  duplicate prefix caught
+Self-test: (b) NEGATIVE — distinct prefixes are not duplicates
+  PASS  distinct numeric prefixes are not reported as duplicates
+  PASS  numericPrefix reads the numeric segment, not the whole tag
+Self-test: (c) timestamp regression
+  PASS  timestamp regression caught
+Self-test: (d) orphan journal entry
+  PASS  orphan entry caught
+Self-test: (d) NEGATIVE — a pending-root entry is not an orphan
+  PASS  a slashed tag and a bare tag resolved under pending/ are both accepted
+  PASS  isPendingPath tells a pending tag from an absent one
+Self-test: (f) applied watermark ahead of the journal
+  PASS  watermark ahead of journal caught
+  PASS  a watermark equal to the newest entry is not reported
+  PASS  check (f) is skipped when no database is reachable
+Self-test: TLS resolution for check (f)
+  PASS  loopback defaults to no TLS
+  PASS  localhost defaults to no TLS
+  PASS  a remote host still defaults to require
+  PASS  a neon host still defaults to require
+  PASS  an explicit sslmode=require on loopback is honoured
+  PASS  an explicit sslmode=disable is honoured
+  PASS  an unparseable url falls back to require
+  PASS  sslmode=no-verify relaxes verification without disabling TLS
+Self-test: (e) chain gaps marker
+  PASS  chain gaps caught
+  PASS  unparseable gap count caught
+  PASS  zero gaps is not reported as a failure
+
+Self-test: 22 passed, 0 failed

@@ -1,0 +1,30 @@
+  PASS  restored-evidence pin count — 10 ids, one case each
+  PASS  legacy id-less pin count — 37 lines frozen
+  PASS  control — the real tree passes — exit 0
+  PASS  a PRD criterion loses its manifest row — exit 1, "UNOWNED"
+  PASS  a criterion is assigned to two tickets in the manifest — exit 1, "DUPLICATE OWNER"
+  PASS  a ticket claims acceptance work that is in no PRD criterion — exit 1, "TICKET-ONLY"
+  PASS  a ticket paraphrases its criterion instead of quoting it — exit 1, "TEXT DRIFT"
+  PASS  a ticket is ticked ahead of its PRD box — exit 1, "STATE DIVERGENCE"
+  PASS  the manifest gives a criterion to a ticket that does not list it — exit 1, "OWNER DISAGREEMENT"
+  PASS  restored module evidence PRD-C115 (Home) is deleted rather than ticked — exit 1, "RESTORED EVIDENCE DELETED"
+  PASS  restored module evidence PRD-C118 (Directory/Me) is deleted rather than ticked — exit 1, "RESTORED EVIDENCE DELETED"
+  PASS  restored module evidence PRD-C119 (HRMS) is deleted rather than ticked — exit 1, "RESTORED EVIDENCE DELETED"
+  PASS  restored module evidence PRD-C123 (Build/PM) is deleted rather than ticked — exit 1, "RESTORED EVIDENCE DELETED"
+  PASS  restored module evidence PRD-C124 (Workflows) is deleted rather than ticked — exit 1, "RESTORED EVIDENCE DELETED"
+  PASS  restored module evidence PRD-C125 (Billing/Payments) is deleted rather than ticked — exit 1, "RESTORED EVIDENCE DELETED"
+  PASS  restored module evidence PRD-C126 (Accounting/Finance) is deleted rather than ticked — exit 1, "RESTORED EVIDENCE DELETED"
+  PASS  restored module evidence PRD-C127 (Chat) is deleted rather than ticked — exit 1, "RESTORED EVIDENCE DELETED"
+  PASS  restored module evidence PRD-C132 (Notifications) is deleted rather than ticked — exit 1, "RESTORED EVIDENCE DELETED"
+  PASS  restored module evidence PRD-C136 (Shared adapters) is deleted rather than ticked — exit 1, "RESTORED EVIDENCE DELETED"
+  PASS  an id-less criterion is un-ticked, leaving an unowned acceptance criterion — exit 1, "UNIDENTIFIED CRITERION"
+  PASS  a brand-new criterion is added with no id, no manifest row and no owner — exit 1, "UNIDENTIFIED CRITERION"
+  PASS  an id-less criterion is deleted to make the list shorter — exit 1, "LEGACY CRITERION DELETED"
+  PASS  the manifest headline no longer matches the rows it describes — exit 1, "MANIFEST HEADLINE DRIFT"
+  PASS  the vacuity floor sits below the corpus the manifest declares — exit 1, "VACUITY FLOOR LOWERED"
+  PASS  the manifest headline is deleted, unpinning both floors — exit 1, "MANIFEST HEADLINE MISSING"
+  PASS  a coverage total drifts from the ticket it describes — exit 1, "COVERAGE MISMATCH"
+  PASS  criteria are deleted wholesale, dropping under the vacuity floor — exit 1, "VACUITY FLOOR"
+
+check-prd-traceability self-test: 27/27 cases
+PASS — the gate bites on every defect class it claims to cover.

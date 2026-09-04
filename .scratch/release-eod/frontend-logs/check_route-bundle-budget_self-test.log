@@ -1,0 +1,7 @@
+  [pass] breach-detected — measured > ceiling fires, including via defaults inheritance
+  [pass] within-budget-passes — measured ≤ ceiling produces no violation
+  [pass] over-the-wire-detected — a route within its chunk-manifest budget still fails on the JS the browser downloads
+  [pass] font-and-payload-detected — font bytes and server payload bytes are governed, not just JS
+  [pass] pending-detected — null and absent measurements both count as unmeasured
+
+SELF-TEST PASSED

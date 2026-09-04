@@ -1,0 +1,7 @@
+Gate scripts 91  ·  constants 139  ·  json ratchets 12 in 10 baseline file(s)  ·  registered 151
+  ratchet 35  ·  floor 114  ·  pinned 2  ·  unregistered 0  ·  stale 0
+
+1 baseline(s) IMPROVED — bank the gain by updating baselines/ratchets.json:
+  baselines/bare-throw.json :: ratchet  2 -> 1
+
+OK — every gate's own numbers are registered, and none moved in its unsafe direction.

@@ -1,0 +1,46 @@
+Backend controllers indexed   567 (3646 routes, 0 handler(s) unresolved)
+Frontend files scanned        439
+WRAPPER gate sites            1708  matched 1703  mismatch 2  ambiguous 0  unresolved-route 0  no-path 3  route-unpermissioned 4
+ENABLED gate sites            689  matched 678  mismatch 4  ambiguous 1  unresolved-route 3  route-unpermissioned 6
+Reads with no permission in `enabled`  71  (the permissioned subset IS enforced below)
+
+⚠  9 operation(s) where contracts/openapi.json disagrees with the controllers.
+   The controllers are authoritative here; the contract is regenerated at quiesce.
+
+⚠  2 mismatch(es) under a module excluded from the 10/10 release — listed, not failing:
+   hooks/api/crm/custom-fields.ts:46  useCustomFields  [useQuery enabled:]
+      hook gates  settings:custom-fields:manage
+      route wants settings:custom-fields:view   GET /settings/custom-fields -> /settings/custom-fields  [DEPRECATED ALIAS]
+      backend     src/modules/settings/settings-deprecated-routes.controller.ts:161
+      excluded    CRM is out of 10/10 release scope
+   hooks/api/inventory/valuation.ts:105  useCostingProducts  [useQuery enabled:]
+      hook gates  inventory:valuation:read
+      route wants inventory:products:read   GET /inventory/products/variants -> /inventory/products/variants
+      backend     src/modules/inventory/products/inv-products.controller.ts:112
+      excluded    Inventory is out of 10/10 release scope
+
+⚠  4 documented deliberate divergence(s):
+   hooks/api/accounting/expenses.ts:65  useTeamExpenses  [useQuery enabled:]
+      hook gates  accounting:reimbursements:read
+      route wants hr:expenses:view   GET /hr/expenses/page-data -> /hr/expenses/page-data
+      backend     src/modules/expenses/expenses.controller.ts:132
+      deliberate  The accounting reimbursement surface reads an HR-owned route. Loosening the hook to hr:expenses:view would put the accounting screen in front of Sales Representatives and Recruiters, who hold that key; tightening the route would take the HR expenses page away from them. Neither is a client fix — accounting needs its own endpoint, which is the accounting rewrite's territory (feat/accounting-module). Today only the org owner holds accounting:reimbursements:read and the owner also passes hr:expenses:view, so nothing is broken until a custom role is granted one and not the other.
+   hooks/api/accounting/expenses.ts:175  usePendingForBatch  [useQuery enabled:]
+      hook gates  accounting:reimbursements:manage
+      route wants hr:expenses:view   GET /hr/expenses/page-data -> /hr/expenses/page-data
+      backend     src/modules/expenses/expenses.controller.ts:132
+      deliberate  Same cross-module read as useTeamExpenses: the reimbursement batch builder pulls pending rows from the HR expenses page-data route. The fix is an accounting-owned endpoint, not a client key change — see the useTeamExpenses entry above for the full reasoning and the population it affects.
+   hooks/api/payroll/reports.ts:150  useExportPayrollReport  [useAuthorizedMutation]
+      hook gates  payroll:reports:export
+      route wants payroll:reports:view   GET /payroll/reports/* -> /payroll/reports/journal  (wildcard match)
+      backend     src/modules/payroll/insights/journal.controller.ts:35
+      deliberate  The hook gates the CSV download on payroll:reports:export while the route DECLARES payroll:reports:view, and that gap is real but not a hole. Every /payroll/reports/* handler serves the on-screen report and its CSV from one route, so the class-level decorator can only declare the weaker key; each handler then calls assertExport() -> authorize(access, u, "payroll:reports:export") inside the format === "csv" branch (src/modules/payroll/insights/reports.controller.ts:47 and journal.controller.ts:49). A :view-only holder passing ?format=csv gets a 403 from the backend, proved in both directions on all 11 CSV routes by payroll-insights.controller.e2e-spec.ts. This check reads decorators, so it cannot see a conditional raise; the hook is correct and matches what the backend actually enforces.
+   hooks/api/payroll/reports.ts:166  useExportJournal  [useAuthorizedMutation]
+      hook gates  payroll:reports:export
+      route wants payroll:reports:view   GET /payroll/reports/journal -> /payroll/reports/journal
+      backend     src/modules/payroll/insights/journal.controller.ts:35
+      deliberate  Same conditional raise as useExportPayrollReport: GET /payroll/reports/journal declares payroll:reports:view for the on-screen journal and enforces payroll:reports:export in-handler for the CSV (src/modules/payroll/insights/journal.controller.ts:49). The hook naming payroll:reports:export therefore agrees with the backend, not with the decorator this check can read.
+
+13 read(s) on a permissioned route whose `enabled` consults no permission (13 held back and counted, 0 unaccounted).
+
+✔  every resolved gate names the permission its route declares (2387 bindings checked).

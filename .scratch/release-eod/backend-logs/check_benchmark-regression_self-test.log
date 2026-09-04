@@ -1,0 +1,29 @@
+benchmark-regression self-test
+
+  [pass] policy is derived from the replicate envelope, not hardcoded — absTol=2 minRelTol=0.24
+  [pass] a metric that never moved across replicates becomes an EXACT ratchet — absTol=0
+  [pass] an added database statement fires with no tolerance
+  [pass] a removed database statement does not fire
+  [pass] a plan flip fires with no tolerance
+  [pass] a buffer increase inside the measured band does not fire
+  [pass] a buffer increase outside the measured band fires
+  [pass] a 40% wall-clock jump with nothing else moving is reported, NOT failed
+  [pass] the same jump WITH a deterministic metric moved does fire
+  [pass] a 3× wall-clock blow-up fires even uncorroborated
+  [pass] sub-millisecond movement never fires
+  [pass] a benchmark's own high cv widens its band — k·cv = 90% > the 24% floor
+  [pass] a study inside the arming threshold arms the timing gate
+  [pass] plan shape is armed when it never moved across replicates
+  [pass] plan shape is DISARMED when it moved on its own, rather than shipped as an exact ratchet
+  [pass] a study outside the arming threshold DISARMS the timing gate automatically — worst swing 233% > 25%
+  [pass] a disarmed timing metric never fires, however large the movement
+  [pass] a disarmed timing metric is still REPORTED as advisory rather than silently dropped
+  [pass] disarming timing does not disarm the deterministic ratchet — zero measured swing means zero tolerance
+  [pass] deterministic metrics are decided before timing, so they can corroborate — bufferBlocks, p95Ms
+  [pass] a rerun of unchanged code does not fire
+  [pass] a benchmark whose OWN buffers moved during the study is not ratcheted on buffers
+  [pass] a benchmark whose own buffers never moved keeps a ZERO tolerance, whatever other benchmarks did — one wobbly benchmark must not widen everyone else's band
+  [pass] a metric the study never measured on this benchmark is not ratcheted
+  [pass] with no stability record at all, the global policy still applies (fallback preserved)
+
+25/25 checks passed

@@ -1,0 +1,20 @@
+(node:136928) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[frontend] 1/10 check:cycles -> PASS (329322ms)
+[frontend] 2/10 check:file-sizes:self-test -> exit 1 (1050ms)
+[frontend] 3/10 check:gate-wiring -> PASS (1171ms)
+[frontend] 4/10 check:gate-wiring:self-test -> PASS (1115ms)
+[frontend] 5/10 check:permission-catalog -> exit 1 (1177ms)
+[frontend] 6/10 check:properties -> PASS (479200ms)
+[frontend] 7/10 check:response-contracts -> exit 1 (5049ms)
+[frontend] 8/10 check:route-bundle-budget -> exit 1 (1213ms)
+[frontend] 9/10 check:test-integrity:self-test -> exit 1 (2858ms)
+[frontend] 10/10 check:web-vitals-budget -> exit 1 (4018ms)
+
+[frontend] RERUN DONE  now-PASS=4  still-NOT-PASS=6
+  exit 1 check:file-sizes:self-test
+  exit 1 check:permission-catalog
+  exit 1 check:response-contracts
+  exit 1 check:route-bundle-budget
+  exit 1 check:test-integrity:self-test
+  exit 1 check:web-vitals-budget

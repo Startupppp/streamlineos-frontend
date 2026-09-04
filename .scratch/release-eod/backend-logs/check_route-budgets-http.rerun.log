@@ -1,0 +1,10 @@
+[merge-http-route-budgets] 69/93 budgets carry an HTTP measurement (148 values written, 4 stale values cleared)
+  measuredLatencyP95Ms: 69/93
+  measuredDownstreamCalls: 69/93
+  measuredResponseBytes: 69/93
+  measuredMemoryMb: 69/93
+  measuredDbCalls: NOT written by this instrument — the capture's requestDbCalls is a strict superset of the handler statement count that maxDbCalls describes (authentication, permission resolution and module entitlement are in it), so it is recorded as requestDbCalls and never as measuredDbCalls
+  BREACH  POST /chat/channels/{channelId}/messages measuredLatencyP95Ms=5043.126 > maxLatencyP95Ms=1000 (reference)
+  BREACH  POST /chat/channels/{channelId}/messages measuredDownstreamCalls=3 > maxDownstreamCalls=0 (minority)
+  BREACH  GET /cron/storage-sweep measuredDownstreamCalls=1 > maxDownstreamCalls=0 (reference)
+[merge-http-route-budgets] contracts/route-budgets.json is out of date with the capture

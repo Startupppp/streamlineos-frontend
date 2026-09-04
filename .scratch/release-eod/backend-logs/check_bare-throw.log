@@ -1,0 +1,4 @@
+Spec files 2066  ·  .toThrow() matchers 1524  ·  risk-titled tests 7131
+  bare throws 147  ·  on a risk path 6  ·  exempt SCHEMA_PARSE 5  ·  ACTIONABLE 1  ·  off a risk path (INFO, not ratcheted) 141
+FAIL — unregistered bare .toThrow() on a risk path: src\modules\inventory\inv-engine-misc-isolation-stock.spec.ts:194  "never retrieves settings for a different org when creating a reservation (isolation — deny via tx mock)"
+FAIL — registration no longer matches anything — remove it: src/modules/inventory/inv-engine-misc-isolation-stock.spec.ts:194

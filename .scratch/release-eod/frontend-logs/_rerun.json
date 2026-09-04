@@ -1,0 +1,65 @@
+{
+  "label": "frontend",
+  "results": [
+    {
+      "gate": "check:cycles",
+      "exitCode": 0,
+      "durationMs": 329322,
+      "timedOut": false
+    },
+    {
+      "gate": "check:file-sizes:self-test",
+      "exitCode": 1,
+      "durationMs": 1050,
+      "timedOut": false
+    },
+    {
+      "gate": "check:gate-wiring",
+      "exitCode": 0,
+      "durationMs": 1171,
+      "timedOut": false
+    },
+    {
+      "gate": "check:gate-wiring:self-test",
+      "exitCode": 0,
+      "durationMs": 1115,
+      "timedOut": false
+    },
+    {
+      "gate": "check:permission-catalog",
+      "exitCode": 1,
+      "durationMs": 1177,
+      "timedOut": false
+    },
+    {
+      "gate": "check:properties",
+      "exitCode": 0,
+      "durationMs": 479200,
+      "timedOut": false
+    },
+    {
+      "gate": "check:response-contracts",
+      "exitCode": 1,
+      "durationMs": 5049,
+      "timedOut": false
+    },
+    {
+      "gate": "check:route-bundle-budget",
+      "exitCode": 1,
+      "durationMs": 1213,
+      "timedOut": false
+    },
+    {
+      "gate": "check:test-integrity:self-test",
+      "exitCode": 1,
+      "durationMs": 2858,
+      "timedOut": false
+    },
+    {
+      "gate": "check:web-vitals-budget",
+      "exitCode": 1,
+      "durationMs": 4018,
+      "timedOut": false
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+=== PRD traceability — 195 criteria, 36 tickets ===
+  manifest rows      195
+  ticket criteria    195
+  checked            0
+  unchecked          195
+  PRD                architecture-refactor\PRD-10-10-CODE-RELEASE-TODO.md
+  manifest           .scratch\code-release-10-10-v2\TRACEABILITY.md
+
+PASS — every criterion has exactly one owner, quoted verbatim, with matching state.

@@ -1,0 +1,2 @@
+  FAIL: importing the same-named module from another folder does not register the other one's providers
+check-outbox-consumers self-tests: 1 failed, 29 passed

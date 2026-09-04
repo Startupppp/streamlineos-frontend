@@ -1,0 +1,17 @@
+{
+  "selfTest": true,
+  "pass": true,
+  "checks": {
+    "schemaSeesSoftDelete": true,
+    "schemaSeesTenant": true,
+    "schemaSeesGlobalTableHasNoTenant": true,
+    "findsAllFiveCalls": true,
+    "unguardedReadIsAread": true,
+    "guardedReadPasses": true,
+    "conflictCheckIsNotARead": true,
+    "globalTableReadIsSeenButExempt": true,
+    "tableWithoutSoftDeleteIsNotAnOffender": true,
+    "exactlyOneOffender": true,
+    "purgeRegistryIsExplicit": true
+  }
+}

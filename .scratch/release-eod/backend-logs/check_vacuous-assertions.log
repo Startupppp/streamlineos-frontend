@@ -1,0 +1,39 @@
+Spec files 2066  ·  test callbacks 15770  ·  expect() calls 59842
+  no_assertion 1  ·  tautology 2  ·  cond_assert 0  ·  early_return 5  ·  floating_assert 0  ·  focused 0  (registered 7)
+
+8 vacuous test(s) are not registered in src\scripts\baselines\vacuous-assertions.json:
+  EARLY_RETURN  src\db\tenant-relationship-integrity.spec.ts:114
+      "tickets: cross-tenant epicId FK is rejected with 23503"
+      if (!db) return;
+  EARLY_RETURN  src\degradation\redis.spec.ts:175
+      "is higher than the raw declared limit outside production (DEV_LIMIT_MULTIPLIER)"
+      if (process.env.NODE_ENV === "production") return;
+  NO_ASSERTION  src\modules\inventory\inv-engine-misc-isolation-ai.spec.ts:133
+      "processes insight for the owning org when found (isolation — control returns or calls AI)"
+      no expect(), no throw, no assert helper
+  TAUTOLOGY  src\modules\payroll\__tests__\prd-e2e-journey.spec.ts:153
+      "11. Manager scope is non-all DataScope (contract): self-only not all"
+      expect(true).toBe(...)
+  EARLY_RETURN  src\modules\surveys\surveys-module-gate.spec.ts:26
+      "%s: non-public controllers gate on @RequireModule('surveys') at class level"
+      if (isClassPublic) return;
+  EARLY_RETURN  src\modules\surveys\surveys-module-gate.spec.ts:33
+      "%s: non-public controllers gate on @RequireModule('surveys') at class level"
+      if (allMethodsPublic) return;
+  EARLY_RETURN  src\modules\timesheets\core\timesheets-module-gate.spec.ts:32
+      "%s: every non-public controller gates on @RequireModule('timesheets') at class level"
+      if (isClassPublic) return;
+  TAUTOLOGY  test\security\operator-access.spec.ts:77
+      "PRODUCT-BLOCKED — no operator access mechanism: this spec documents the gap"
+      expect(true).toBe(...)
+
+A test in one of these classes cannot fail. Give it a real assertion. Registering it instead requires a reason of at least 40 characters, and the ratchet may only go down.
+
+7 registered entr(y/ies) no longer match anything — remove them:
+  src/modules/inventory/inv-engine-misc-isolation-ai.spec.ts::processes insight for the owning org when found (isolation — control returns or calls AI)::NO_ASSERTION
+  src/modules/payroll/__tests__/prd-e2e-journey.spec.ts::11. Manager scope is non-all DataScope (contract): self-only not all::TAUTOLOGY
+  test/security/operator-access.spec.ts::PRODUCT-BLOCKED — no operator access mechanism: this spec documents the gap::TAUTOLOGY
+  src/db/tenant-relationship-integrity.spec.ts::tickets: cross-tenant epicId FK is rejected with 23503::EARLY_RETURN
+  src/degradation/redis.spec.ts::is higher than the raw declared limit outside production (DEV_LIMIT_MULTIPLIER)::EARLY_RETURN
+  src/modules/surveys/surveys-module-gate.spec.ts::%s: non-public controllers gate on @RequireModule('surveys') at class level::EARLY_RETURN
+  src/modules/timesheets/core/timesheets-module-gate.spec.ts::%s: every non-public controller gates on @RequireModule('timesheets') at class level::EARLY_RETURN

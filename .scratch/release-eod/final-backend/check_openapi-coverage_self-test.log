@@ -1,0 +1,28 @@
+Running self-test...
+  [pass] bad-missing-exposure — op without x-exposure is flagged
+  [pass] bad-invalid-exposure — op with x-exposure='UNKNOWN' is flagged
+  [pass] good-all-valid — all ops with valid exposure produce no violations
+  [pass] good-mixed-exposure — all four valid exposure values accepted
+  [pass] vacuity-trigger-zero — isVacuous(0) returns true
+  [pass] vacuity-trigger-floor — isVacuous(MIN_OPERATIONS - 1) returns true
+  [pass] vacuity-not-triggered-at-floor — isVacuous(MIN_OPERATIONS) returns false
+  [pass] vacuity-not-triggered-above-floor — isVacuous(4000) returns false
+  [pass] good-error-shapes — ops with 4xx $ref are not flagged
+  [pass] bad-missing-error-shapes — ops without 4xx $ref are flagged
+  [pass] good-response-schemas — a 2xx with a real content schema passes
+  [pass] bare-2xx-key-is-not-coverage — an auto-generated 2xx key with no content is flagged, and says why
+  [pass] empty-content-is-not-coverage — content: {} is flagged
+  [pass] media-type-without-schema — a media type carrying no schema is flagged
+  [pass] dangling-ref-is-not-coverage — an unresolvable $ref is flagged
+  [pass] live-ref-is-coverage — a resolvable $ref passes
+  [pass] error-schema-does-not-cover-success — a schema on the 400 does not excuse a bare 200
+  [pass] bad-missing-response-schemas — ops without 2xx entry or declared content are flagged
+  [pass] good-non-2xx-with-content — a 405-only op with a declared content schema is not flagged
+  [pass] neg-response-schema-gate — gate bites: 1/2 coverage fails (50.00%)
+  [pass] good-mutating-request-schemas — POST with body or x-bodyless not flagged; GET ignored
+  [pass] bad-mutating-request-schemas — POST and PUT without requestBody are flagged; GET ignored
+  [pass] neg-request-schema-gate — gate bites: 9/10 coverage fails (90.00%)
+  [pass] formatPct-no-false-100 — formatPct(9, 10) = "90.00%", not "100%"
+  [pass] formatPct-exact-100 — formatPct(10, 10) returns '100%'
+
+SELF-TEST PASSED

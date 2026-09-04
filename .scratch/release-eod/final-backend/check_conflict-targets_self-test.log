@@ -1,0 +1,2 @@
+SELF-TEST PASSED — the known-bad fixture is flagged and the correct forms are not.
+  partial-without-predicate: 3   wrong-predicate-key: 1   absent-index: 1   clean: 3

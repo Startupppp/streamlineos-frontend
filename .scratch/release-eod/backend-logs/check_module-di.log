@@ -1,0 +1,2 @@
+check:module-di clean — 218 modules · 1716 classes checked · skipped: 1 non-class tokens · 1 not-in-class-index · 0 violations
+Check-D: 1746 decorated class(es) · 217 modules reachable from AppModule · 1779 registered · 0 unregistered · exempt: 2 enhancer · 2 factory · 1 aliased · 1 base-class

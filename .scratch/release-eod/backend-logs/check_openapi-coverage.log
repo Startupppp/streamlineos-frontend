@@ -1,0 +1,40 @@
+check-openapi-coverage: 3648 operations
+  x-exposure: 3648/3648 stamped (permissioned=3238, public=250, universal=100, in-service=60)
+  OK — all 3648 operations are exposure-stamped
+  error-shapes: 3648/3648 ops have a 4xx $ref (100%) [threshold: 95%]
+  response-schemas: 27/3648 ops declare a response body SCHEMA (0.74%)
+                    3621 uncovered [ceiling 3617, ratchet — may only go down]
+check-openapi-coverage: FAIL — 3621 operation(s) declare no response schema, above the ceiling of 3617.
+Add @ResponseSchema(schema) to handlers or @ApiResponse({ status, schema }) for non-2xx responses.
+The ceiling is a ratchet: raise it and you have retired the rule by arithmetic.
+  GET    /access/delegations  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract
+  POST   /access/delegations  — 2xx response (201) declares no content schema — a bare auto-generated key is not a contract
+  DELETE /access/delegations/{delegationId}  — 2xx response (204) declares no content schema — a bare auto-generated key is not a contract
+  GET    /access/delegations/given  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract
+  GET    /access/org-modules  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract
+  PATCH  /access/org-modules/{moduleKey}  — 2xx response (204) declares no content schema — a bare auto-generated key is not a contract
+  GET    /access/user-module-access/{userId}  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract
+  PATCH  /access/user-module-access/{userId}  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract
+  GET    /accounting/accounts  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract
+  POST   /accounting/accounts  — 2xx response (201) declares no content schema — a bare auto-generated key is not a contract
+  PATCH  /accounting/accounts/{accountId}  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract
+  GET    /accounting/approval-policies  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract
+  POST   /accounting/approval-policies  — 2xx response (201) declares no content schema — a bare auto-generated key is not a contract
+  PATCH  /accounting/approval-policies/{policyId}  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract
+  DELETE /accounting/approval-policies/{policyId}  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract
+  GET    /accounting/approvals  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract
+  POST   /accounting/approvals/{requestId}/approve  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract
+  POST   /accounting/approvals/{requestId}/reject  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract
+  GET    /accounting/approvals/counts  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract
+  GET    /accounting/ar-payments  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract
+  GET    /accounting/assets  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract
+  POST   /accounting/assets  — 2xx response (201) declares no content schema — a bare auto-generated key is not a contract
+  GET    /accounting/assets/{assetId}  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract
+  PATCH  /accounting/assets/{assetId}  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract
+  POST   /accounting/assets/{assetId}/activate  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract
+  POST   /accounting/assets/{assetId}/dispose  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract
+  GET    /accounting/assets/categories  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract
+  POST   /accounting/assets/categories  — 2xx response (201) declares no content schema — a bare auto-generated key is not a contract
+  PATCH  /accounting/assets/categories/{categoryId}  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract
+  GET    /accounting/assets/depreciation/runs  — 2xx response (200) declares no content schema — a bare auto-generated key is not a contract
+  ... and 3591 more

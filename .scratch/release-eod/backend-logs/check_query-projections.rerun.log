@@ -1,0 +1,14 @@
+Scanned 3677 source files.
+Unprojected reads — findMany 287 · findFirst 488 · bare .select() 602 = 1377 (ceiling 1383, enforced on the total).
+Unprojected COUNT paths (.length only): 0 (allowed 0).
+Unprojected EXISTENCE/COUNT paths, AST: 7 in scope (allowed 0) · 0 deferred to crm/inventory (ratchet 7).
+Full-row reads of a vector/tsvector/bytea table: 0 (allowed 0) over 5 such tables.
+
+7 read(s) hydrate a whole row to answer a yes/no question, against an allowance of 0. Narrowing one changes no response DTO — the result is only ever tested for null, truthiness or length. Add a `columns:` naming what the guard reads:
+  UNPROJECTED-EXISTENCE  \modules\deals\deals-meetings.service.ts:79 (findFirst on dealMeetings, existing only existence-tested)
+  UNPROJECTED-EXISTENCE  \modules\inventory\replenishment\inv-replenishment.service.ts:54 (findFirst on invReorderRules, existing only existence-tested)
+  UNPROJECTED-EXISTENCE  \modules\inventory\replenishment\inv-replenishment.service.ts:86 (findFirst on invReorderRules, rule only existence-tested)
+  UNPROJECTED-EXISTENCE  \modules\inventory\replenishment\inv-replenishment.service.ts:111 (findFirst on invReorderRules, rule only existence-tested)
+  UNPROJECTED-EXISTENCE  \modules\inventory\sales-orders\so-fulfillment.service.ts:50 (findFirst on invStockReservations, existingReservation only existence-tested)
+  UNPROJECTED-EXISTENCE  \modules\leads\lead-conversion.service.ts:161 (findFirst on clientAccounts, existingClientAccount only existence-tested)
+  UNPROJECTED-EXISTENCE  \modules\leads\lead-status.service.ts:51 (findFirst on deals, existingDeal only existence-tested)
