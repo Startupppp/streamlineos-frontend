@@ -8,6 +8,8 @@
 
 **Source:** `architecture-refactor/PRD-10-10-CODE-RELEASE-TODO.md`
 
+**Human/deployment gate:** D06 in `architecture-refactor/decisions/CODE-RELEASE-HUMAN-INPUTS.md`.
+
 ## Acceptance criteria
 
 - [ ] **PRD-C168** — Provision isolated per-cell database, cache, queue/workers, realtime/provider, search/vector, object storage and monitoring.

@@ -8,6 +8,8 @@
 
 **Source:** `architecture-refactor/PRD-10-10-CODE-RELEASE-TODO.md`
 
+**Human gate:** H01-H02 in `architecture-refactor/decisions/CODE-RELEASE-HUMAN-INPUTS.md`.
+
 ## Acceptance criteria
 
 - [ ] **PRD-C004** — **Organization/RBAC/Settings:** complete v2 ticket 05's organization authority, module permission, owner/descendant protection, cache invalidation, contract and frontend criteria.

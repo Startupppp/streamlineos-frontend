@@ -1,10 +1,12 @@
 # StreamlineOS code-release remaining-work PRD
 
 Status: active — single authoritative backlog
-Last reconciled: **2026-09-03** against committed heads `4ade571fa` (frontend/root) and `7ba91e37` (backend). This pass used current Git/source metadata and the checked-in ticket evidence; heavy scans, builds, typechecks and test suites were deliberately not run after the user requested that the system not be hung.
+Last human-gate reconciliation: **2026-09-04** at root commit `31c3786a6`. Heavy scans, builds, typechecks and test suites were deliberately not run for this documentation-only pass.
 
 > **Use the Current completion and Current remaining execution list below for present status.** Ticket 40 and the later verification sections are historical evidence for former heads; they must not override this 2026-09-03 reconciliation.
 Scope: all platform domains except CRM and Inventory
+
+All unresolved product, security, legal and deployment questions are centralized in [the code-release human-input register](decisions/CODE-RELEASE-HUMAN-INPUTS.md). Affected agents must use its `H01-H17` decisions and must not repeatedly ask equivalent questions. `D01-D08` are explicitly deferred from code-level completion and remain mandatory for a production-ready rating.
 
 This file contains only remaining acceptance work. Completed checklist items and the temporary session documents were removed after current-source reconciliation; their evidence remains in Git history. A missing checkbox must never be interpreted as waived work: every removed checkbox was either previously evidenced or freshly re-verified below.
 
@@ -14,7 +16,7 @@ This file contains only remaining acceptance work. Completed checklist items and
 - The authoritative remaining-work set is now **36 vertical-slice tickets** under [`.scratch/code-release-10-10-v2/issues/`](../.scratch/code-release-10-10-v2/issues/) with a checked-in [traceability manifest](../.scratch/code-release-10-10-v2/TRACEABILITY.md). It assigns all **195 current unchecked PRD criteria** to exactly one ticket.
 - The immediate PRD below now shows **37 checked and 138 unchecked aggregate criteria**. Ten module-evidence criteria were restored for Home, Directory/Me, HRMS, Build/PM, Workflows, Billing/Payments, Accounting/Finance, Chat, Notifications and shared adapters so their completion cannot rest on deleted historical text.
 - Deferred production/compliance criteria remain **34 open** and are not counted as code-level completion.
-- Tickets 41 and 42 remain the release endgame: one-commit verification and the release-authority record cannot close until the remaining code/decision/operator items are resolved or formally dispositioned.
+- V2 tickets 31 and 36 remain the release endgame: one-commit code verification and the production release-authority record cannot close until their respective code and deployment/approval prerequisites are resolved or formally dispositioned.
 - Code-level 10/10 is **not yet reached**, but the repository is substantially closer than the superseded ticket-40 snapshot reported.
 
 ### Current remaining execution list

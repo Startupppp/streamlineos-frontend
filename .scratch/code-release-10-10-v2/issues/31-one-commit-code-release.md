@@ -8,6 +8,8 @@
 
 **Source:** `architecture-refactor/PRD-10-10-CODE-RELEASE-TODO.md`
 
+**Human gate:** all applicable H01-H17 decisions in `architecture-refactor/decisions/CODE-RELEASE-HUMAN-INPUTS.md` must be approved and implemented. D01-D08 do not block this code-level ticket.
+
 ## Acceptance criteria
 
 - [ ] **PRD-C008** — **Calendar/Inbox/Knowledge:** complete v2 tickets 13, 14 and 16 respectively, including provider drift, sync correctness, bounded read paths, ACL-aware retrieval and current performance evidence.
