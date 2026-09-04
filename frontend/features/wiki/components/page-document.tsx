@@ -48,10 +48,12 @@ async function fetchMentionUsers(query: string) {
 }
 
 async function fetchPageLinks(query: string) {
-  const results = await apiClient.get<
-    Array<{ id: number; title: string; icon: string | null; snippet: string }>
-  >("/kb/pages/search", { q: query });
-  return results.map((r) => ({ id: r.id, label: r.title || "Untitled" }));
+  const page = await apiClient.get<{
+    items: Array<{ id: number; title: string; icon: string | null; snippet: string }>;
+    hasMore: boolean;
+    limit: number;
+  }>("/kb/pages/search", { q: query });
+  return page.items.map((r) => ({ id: r.id, label: r.title || "Untitled" }));
 }
 
 interface PageDocumentProps {

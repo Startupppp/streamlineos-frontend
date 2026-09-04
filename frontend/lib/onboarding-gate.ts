@@ -15,10 +15,32 @@ function secureFlag(): string {
     : "";
 }
 
+const GATE_COOKIE_BASES: readonly GateCookieBase[] = [
+  "org-setup-done",
+  "onboarding-done",
+];
+
+/**
+ * Every gate cookie this module writes is scoped — `completeOnboardingGate`
+ * stores `${base}--${scopeId}` and `resolveWizardGate` reads that same name. It
+ * used to expire the two BARE bases, which no code has written since the cookie
+ * was scoped, so sign-out and org-switch both cleared nothing and a skipped
+ * wizard stayed skipped for the next person in the browser. The scope id is not
+ * known at either call site, so the names are read back off `document.cookie`.
+ */
 export function clearGateCookies(): void {
+  if (typeof document === "undefined") return;
   const secure = secureFlag();
-  document.cookie = `org-setup-done=; path=/; max-age=0; SameSite=Lax${secure}`;
-  document.cookie = `onboarding-done=; path=/; max-age=0; SameSite=Lax${secure}`;
+  const names = new Set<string>();
+  for (const pair of document.cookie.split(";")) {
+    const name = pair.split("=")[0]?.trim();
+    if (!name) continue;
+    for (const base of GATE_COOKIE_BASES)
+      if (name === base || name.startsWith(`${base}--`)) names.add(name);
+  }
+  for (const base of GATE_COOKIE_BASES) names.add(base);
+  for (const name of names)
+    document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax${secure}`;
 }
 
 export async function completeOnboardingGate(

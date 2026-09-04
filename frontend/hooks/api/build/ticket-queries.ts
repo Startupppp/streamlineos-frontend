@@ -67,7 +67,7 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
         limit: BOARD_PAGE_SIZE,
         orderBy: "rank",
         orderDir: "asc",
-        ...(pageParam ? { cursor: pageParam as string } : {}),
+        ...(pageParam !== undefined ? { cursor: pageParam as string } : {}),
       };
       if (filters?.q) params.search = filters.q;
       if (filters?.status) params.status = filters.status;

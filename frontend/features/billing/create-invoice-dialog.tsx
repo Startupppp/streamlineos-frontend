@@ -6,6 +6,8 @@ import { z } from "zod";
 import { FileText, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useCreateInvoice } from "@/hooks/api/invoice";
+import { useCan } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatCurrencyFull } from "@/lib/format-utils";
 import { Button } from "@/components/ui/button";
@@ -125,6 +127,11 @@ export function CreateInvoiceDialog({
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
+  // POST /invoices declares accounting:create. The dialog carries its own gate
+  // rather than trusting the opener: it is exported and mounted independently
+  // of the button that opens it, and useCreateInvoice would otherwise let the
+  // form submit and fail late with "Missing permission".
+  const canCreate = useCan("accounting:create");
   const createInvoice = useCreateInvoice();
 
   const {
@@ -202,6 +209,14 @@ export function CreateInvoiceDialog({
           <DialogTitle>Create Invoice</DialogTitle>
         </DialogHeader>
 
+        {!canCreate ? (
+          <NoPermissionState
+            compact
+            permission="accounting:create"
+            title="Cannot create invoices"
+            description="You do not have permission to raise an invoice for this organization."
+          />
+        ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col">
           <DialogBody className="space-y-4 px-6 py-4">
           <div>
@@ -336,6 +351,7 @@ export function CreateInvoiceDialog({
             </LoadingButton>
           </DialogFooter>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );

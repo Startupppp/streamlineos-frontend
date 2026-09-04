@@ -5,6 +5,7 @@ import { format, getDay } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   Tooltip,
   TooltipContent,
@@ -124,7 +125,13 @@ export const TimerCard = memo(function TimerCard({
   const todayStr = format(today, "yyyy-MM-dd");
   const isSundayToday = getDay(today) === 0;
 
-  const { data: statusData, isLoading } = useHrAttendanceStatus();
+  const {
+    data: statusData,
+    isLoading,
+    isError: statusFailed,
+    error: statusError,
+    refetch: refetchStatus,
+  } = useHrAttendanceStatus();
   const { data: holidaysList } = useHrHolidaysForCalendar({
     year: todayYear,
     month: todayMonth,
@@ -268,6 +275,10 @@ export const TimerCard = memo(function TimerCard({
     breakMutation.mutate();
   }, [breakMutation, isOnBreak]);
 
+  const handleRetryStatus = useCallback(() => {
+    void refetchStatus();
+  }, [refetchStatus]);
+
   const dailyStats = statusData?.dailyStats;
   const checkInTime = statusData?.todayLog?.checkIn;
   const cooldownLabel = `${Math.floor(localCooldown / 60)}:${String(localCooldown % 60).padStart(2, "0")}`;
@@ -283,6 +294,36 @@ export const TimerCard = memo(function TimerCard({
         : isInCooldown
           ? `Cooldown · ${cooldownLabel}`
           : "Not clocked in";
+
+  if (statusFailed) {
+    /*
+     * Without this branch a failed status read fell through to the normal body,
+     * which reads `statusData?.todayLog` as absent and renders "Not clocked in"
+     * beside an enabled Check In button — an outage rendered as an authoritative
+     * statement about the reader's own day, with nothing announced. The card
+     * says it could not find out instead, and offers the read again.
+     */
+    const failure = (
+      <ErrorState
+        compact
+        title="Attendance unavailable"
+        description={getErrorMessage(statusError)}
+        onRetry={handleRetryStatus}
+      />
+    );
+    if (!chrome) return failure;
+    return (
+      <Card className="overflow-hidden">
+        <CardHeader className="shrink-0 border-b px-4 pb-3 pt-3">
+          <CardTitle className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            Time Tracker
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-4 pb-4 pt-4">{failure}</CardContent>
+      </Card>
+    );
+  }
 
   if (isLoading) {
     return (

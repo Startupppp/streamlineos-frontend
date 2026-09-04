@@ -85,7 +85,9 @@ export function WidgetCard({
           </div>
         ) : error ? (
           <div className="space-y-2">
-            <p className="text-sm text-destructive">{errorMessage ?? getErrorMessage(error)}</p>
+            <p role="alert" className="text-sm text-destructive">
+              {errorMessage ?? getErrorMessage(error)}
+            </p>
             {onRetry && (
               <button
                 type="button"

@@ -11,20 +11,35 @@
  */
 
 // --- PRD-C017: the restored module evidence, pinned by id ------------------------------------
-// Exported so the self-test generates one deletion case per key rather than pinning a single one.
-// With only PRD-C127 covered, nine of the ten could be deleted from the PRD, the manifest, their
-// ticket AND this map in one commit and the self-test still reported 10/10 PASS.
+// Exported so the self-test generates one deletion case AND one repurposing case per key rather
+// than pinning a single one. With only PRD-C127 covered, nine of the ten could be deleted from the
+// PRD, the manifest, their ticket AND this map in one commit and the self-test still reported
+// 10/10 PASS.
+//
+// `match` is what makes the pin an assertion about MEANING rather than about an id string.
+// MEASURED at head before it existed: rewriting PRD-C127 from "Reconstruct current-head Chat
+// evidence…" to "…current-head Support evidence…" in BOTH the PRD line and 12-chat.md left the
+// gate at exit 0 — the id still existed, both sides still matched each other, so TEXT DRIFT stayed
+// silent and the pin only ever asked "does this id exist?". Chat's restored evidence had been
+// repurposed into something else while the gate reported it protected. `match` holds the lowercased
+// substrings the criterion's own text must STILL contain for it to be the module it was restored
+// for; ALL of them must be present. They are chosen against the head text (`workflow` matches the
+// PRD's singular "Workflow evidence"; `directory` + `/me` spell "Directory/Me"), never derived from
+// `module`, which is a display name.
+//
+// A `match` list may never be emptied or trimmed to nothing — the gate fails a pin with no
+// substrings, because an assertion over zero substrings is the same disarm as deleting the check.
 export const RESTORED_MODULE_EVIDENCE = {
-  "PRD-C115": "Home",
-  "PRD-C118": "Directory/Me",
-  "PRD-C119": "HRMS",
-  "PRD-C123": "Build/PM",
-  "PRD-C124": "Workflows",
-  "PRD-C125": "Billing/Payments",
-  "PRD-C126": "Accounting/Finance",
-  "PRD-C127": "Chat",
-  "PRD-C132": "Notifications",
-  "PRD-C136": "Shared adapters",
+  "PRD-C115": { module: "Home", match: ["home"] },
+  "PRD-C118": { module: "Directory/Me", match: ["directory", "/me"] },
+  "PRD-C119": { module: "HRMS", match: ["hrms"] },
+  "PRD-C123": { module: "Build/PM", match: ["build/pm"] },
+  "PRD-C124": { module: "Workflows", match: ["workflow"] },
+  "PRD-C125": { module: "Billing/Payments", match: ["billing", "payment"] },
+  "PRD-C126": { module: "Accounting/Finance", match: ["accounting", "finance"] },
+  "PRD-C127": { module: "Chat", match: ["chat"] },
+  "PRD-C132": { module: "Notifications", match: ["notification"] },
+  "PRD-C136": { module: "Shared adapters", match: ["shared-adapter"] },
 };
 
 // --- The id-less legacy criteria, frozen -----------------------------------------------------

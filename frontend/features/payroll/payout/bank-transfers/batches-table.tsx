@@ -8,10 +8,11 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyTransferIllustration } from "@/components/illustrations";
-import { useBatchFileUrl, usePayoutBatches } from "@/hooks/api/payroll/payout-batches";
+import { useDownloadBatchFile, usePayoutBatches } from "@/hooks/api/payroll/payout-batches";
 import { usePayrollPolicyCurrent } from "@/hooks/api/payroll/policies";
 import { formatMoney } from "@/features/payroll/shared";
 import { formatShortDate } from "@/lib/date-utils";
+import { downloadBlob } from "@/lib/download-blob";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { GeneratePayoutDialog } from "./generate-payout-dialog";
@@ -56,7 +57,7 @@ export function BatchesTable({
   const [format, setFormat] = useState<BatchFormat>("NEFT_CSV");
   const [idempotencyKey, setIdempotencyKey] = useState("");
   const [generatedBatchId, setGeneratedBatchId] = useState<number | null>(null);
-  const batchFile = useBatchFileUrl();
+  const batchFile = useDownloadBatchFile();
 
   const [markSentBatchId, setMarkSentBatchId] = useState<number | null>(null);
   const [markPaidBatchId, setMarkPaidBatchId] = useState<number | null>(null);
@@ -78,10 +79,16 @@ export function BatchesTable({
     void refetch();
   }, [refetch]);
 
+  /**
+   * The bank file carries unmasked account numbers. It arrives as bytes over the
+   * authenticated request and is saved straight from memory — `window.open` on a
+   * presigned URL used to hand the browser a link that outlived the screen,
+   * worked without a session and sat in history.
+   */
   const handleDownloadBatchFile = useCallback(
     (batchId: number) => {
       batchFile.mutate(batchId, {
-        onSuccess: ({ url }) => window.open(url, "_blank", "noopener,noreferrer"),
+        onSuccess: (blob) => downloadBlob(blob, `payout-batch-${batchId}.csv`),
         onError: (err) => toast.error(getErrorMessage(err)),
       });
     },

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { withCorrelation } from "@/lib/observability/with-correlation";
 
 const notificationSchema = z.object({
   id: z.number(),
@@ -30,10 +31,9 @@ export async function consumeNotificationStream(
    */
   onOpen?: () => void,
 ): Promise<void> {
-  const response = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}`, Accept: "text/event-stream" },
-    signal,
-  });
+  const headers = withCorrelation(new Headers({ Accept: "text/event-stream" }));
+  headers.set("Authorization", `Bearer ${token}`);
+  const response = await fetch(url, { headers, signal });
   if (!response.ok || !response.body) throw new Error("Notification stream unavailable");
   onOpen?.();
   const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();

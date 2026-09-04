@@ -211,7 +211,6 @@ export const accessAndCrmQueryKeys = {
     detail: (taskId: number) => [...base, "tasks", "detail", taskId] as const,
     myQueue: () => [...base, "tasks", "myQueue"] as const,
     overdue: () => [...base, "tasks", "overdue"] as const,
-    overdueCount: () => [...base, "tasks", "overdueCount"] as const,
     sequences: () => [...base, "tasks", "sequences"] as const,
   },
 

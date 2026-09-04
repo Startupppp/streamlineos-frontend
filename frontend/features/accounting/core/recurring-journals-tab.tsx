@@ -36,6 +36,7 @@ import {
 import type { RecurringJournal, RecurringFrequency } from "@/hooks/api/accounting/core";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { RecurringJournalSheet } from "./recurring-journal-sheet";
+import { useCan } from "@/hooks/api/access";
 
 const FREQUENCY_LABELS: Record<RecurringFrequency, string> = {
   DAILY: "Daily",
@@ -63,6 +64,7 @@ interface RecurringRowActionsProps {
 }
 
 function RecurringRowActions({ template, onEdit, onDelete }: RecurringRowActionsProps) {
+  const canManage = useCan("accounting:recurring:manage");
   const runNow = useRunRecurringJournalNow(template.id);
 
   function handleEdit(): void {
@@ -79,6 +81,8 @@ function RecurringRowActions({ template, onEdit, onDelete }: RecurringRowActions
   function handleDelete(): void {
     onDelete(template.id);
   }
+
+  if (!canManage) return null;
 
   return (
     <DropdownMenu>
@@ -156,6 +160,7 @@ export function RecurringJournalsTab() {
   const [editTemplate, setEditTemplate] = useState<RecurringJournal | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
+  const canManage = useCan("accounting:recurring:manage");
   const query = useRecurringJournals({ limit: 100 });
   const deleteMutation = useDeleteRecurringJournal(deleteId ?? 0);
 
@@ -228,7 +233,7 @@ export function RecurringJournalsTab() {
       illustrationPreset="documents"
       title="No recurring templates"
       description="Create a template to auto-generate journal entries on a schedule."
-      action={{ label: "New template", onClick: handleOpenCreate }}
+      action={canManage ? { label: "New template", onClick: handleOpenCreate } : undefined}
     />
   );
 
@@ -238,10 +243,12 @@ export function RecurringJournalsTab() {
         <p className="text-sm text-muted-foreground">
           Recurring journal templates run automatically on the configured schedule.
         </p>
-        <Button size="sm" onClick={handleOpenCreate}>
-          <Plus className="h-3.5 w-3.5 mr-1.5" />
-          New template
-        </Button>
+        {canManage && (
+          <Button size="sm" onClick={handleOpenCreate}>
+            <Plus className="h-3.5 w-3.5 mr-1.5" />
+            New template
+          </Button>
+        )}
       </div>
 
       {query.error ? (
@@ -261,12 +268,14 @@ export function RecurringJournalsTab() {
         />
       )}
 
-      <RecurringJournalSheet
-        open={sheetOpen}
-        onOpenChange={handleSheetOpenChange}
-        mode={editTemplate ? "edit" : "create"}
-        template={editTemplate}
-      />
+      {canManage && (
+        <RecurringJournalSheet
+          open={sheetOpen}
+          onOpenChange={handleSheetOpenChange}
+          mode={editTemplate ? "edit" : "create"}
+          template={editTemplate}
+        />
+      )}
 
       <AlertDialog open={deleteId !== null} onOpenChange={handleAlertOpenChange}>
         <AlertDialogContent>

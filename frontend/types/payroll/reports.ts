@@ -126,9 +126,20 @@ export interface JournalLine {
   costCenter: string | null;
 }
 
+/**
+ * Mirrors `JournalResult` in `payroll/insights/journal.service.ts`. The three
+ * fields below `unmappedCodes` were dropped from this type once, so the report
+ * re-derived the totals in float from `lines` and adjudicated "balanced"
+ * itself — over a line set the server had already filtered. The totals are the
+ * server's, computed in integer paise; do not recompute them here.
+ */
 export interface JournalReport {
+  provisional: boolean;
+  month: string;
   lines: JournalLine[];
   unmappedCodes: string[];
+  totalDebits: number;
+  totalCredits: number;
 }
 
 export interface AccountingMapping {

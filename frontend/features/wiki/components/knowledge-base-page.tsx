@@ -258,7 +258,7 @@ export default function KnowledgeBasePage() {
     };
   }
 
-  const sources = sourcesQuery.data ?? [];
+  const sources = (sourcesQuery.data?.pages ?? []).flatMap((page) => page.data);
   const readyCount = sources.filter((s) => s.status === "ready").length;
 
   return (

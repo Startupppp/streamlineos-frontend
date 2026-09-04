@@ -8,6 +8,7 @@ import {
   type ResponseContract,
 } from "@/lib/api-envelope";
 import { getServerAuth } from "@/lib/get-server-auth";
+import { withCorrelation } from "@/lib/observability/with-correlation";
 
 const TIMEOUT_MS = 8_000;
 
@@ -17,7 +18,7 @@ async function requestWithToken<T>(
   init: RequestInit = {},
   contract?: ResponseContract<T>,
 ): Promise<T> {
-  const headers = new Headers(init.headers);
+  const headers = withCorrelation(new Headers(init.headers));
   headers.set("Authorization", `Bearer ${token}`);
   if (init.body !== undefined && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");

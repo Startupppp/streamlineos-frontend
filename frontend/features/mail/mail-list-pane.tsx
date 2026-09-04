@@ -4,8 +4,9 @@ import { useCallback, useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SearchInput } from "@/components/ui/search-input";
-import { Inbox, Send, Archive, Trash2, Star, AlertCircle } from "lucide-react";
+import { Inbox, Send, Archive, Trash2, Star, AlertCircle, WifiOff } from "lucide-react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import {
   useMailMessages,
   useMailAction,
@@ -86,6 +87,7 @@ export function MailListPane({
   const mailAction = useMailAction();
   const threadSummary = useMailThreadSummary();
   const canAi = useCan("mail:ai:use");
+  const isOnline = useOnlineStatus();
 
   const {
     data,
@@ -169,9 +171,15 @@ export function MailListPane({
     setSearch("");
   }, []);
 
+  /**
+   * Offline, the next page cannot arrive. Asking for it anyway spends the
+   * scroll's one load-more trigger on a request that fails, and the failure is
+   * indistinguishable from the end of the mailbox once the user reconnects.
+   */
   const handleLoadMore = useCallback(() => {
+    if (!isOnline) return;
     void fetchNextPage();
-  }, [fetchNextPage]);
+  }, [fetchNextPage, isOnline]);
 
   const handleSearchClear = useCallback(() => setSearch(""), []);
 
@@ -212,6 +220,20 @@ export function MailListPane({
           ))}
         </nav>
       </div>
+
+      <span className="sr-only" role="status" aria-live="polite">
+        {!isOnline ? "You are offline. Mail may be stale." : ""}
+      </span>
+
+      {!isOnline && (
+        <div className="mx-3 my-2 shrink-0 px-3 py-1.5 bg-status-warning-surface border border-status-warning-rule rounded-lg flex items-center gap-2 text-dense text-status-warning-ink font-medium">
+          <span
+            className="h-1.5 w-1.5 rounded-full bg-status-warning-fill animate-pulse shrink-0"
+            aria-hidden="true"
+          />
+          You&apos;re offline — mail may be stale
+        </div>
+      )}
 
       {accountErrors.length > 0 && (
         <div className="flex flex-col gap-1 px-3 py-2 border-b border-border/20 shrink-0">
@@ -254,6 +276,16 @@ export function MailListPane({
               <Skeleton className="h-3 w-4/5 rounded" />
             </div>
           ))}
+        </div>
+      ) : isError && !isOnline ? (
+        <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-2 py-8 px-4 text-center">
+          <WifiOff className="h-6 w-6 text-muted-foreground/50" aria-hidden />
+          <p className="text-label font-medium text-foreground/80">
+            You&apos;re offline
+          </p>
+          <p className="text-dense text-muted-foreground">
+            Mail will load again once you reconnect.
+          </p>
         </div>
       ) : isError ? (
         <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-2 py-8 px-4 text-center">

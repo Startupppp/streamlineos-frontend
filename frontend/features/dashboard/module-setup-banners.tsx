@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
   CheckCircle2,
@@ -31,17 +31,9 @@ import {
 } from "@/hooks/api/onboarding-flow";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isSetupBannerSlotPending } from "./dashboard-hydration";
+import { useSettleDeadline } from "./use-settle-deadline";
 
 const SETUP_BANNER_SETTLE_DEADLINE_MS = 1500;
-
-function useSettleDeadline(ms: number): boolean {
-  const [elapsed, setElapsed] = useState(false);
-  useEffect(() => {
-    const timer = setTimeout(() => setElapsed(true), ms);
-    return () => clearTimeout(timer);
-  }, [ms]);
-  return elapsed;
-}
 
 /**
  * These banners are a variable-height stack rendered above the dashboard's

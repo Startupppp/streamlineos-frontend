@@ -9,6 +9,8 @@ import type { PermissionKey } from "@/lib/rbac/permissions";
 
 export interface DashboardAccess {
   accessLoading: boolean;
+  accessResolved: boolean;
+  refetchAccess: () => void;
   hrEnabled: boolean;
   crmEnabled: boolean;
   projectsEnabled: boolean;
@@ -36,7 +38,7 @@ export interface DashboardAccess {
 }
 
 export function useDashboardAccess(): DashboardAccess {
-  const { data, isLoading } = useAccess();
+  const { data, isLoading, refetch } = useAccess();
   const enabledModules = useEnabledModules();
 
   return useMemo(() => {
@@ -52,6 +54,8 @@ export function useDashboardAccess(): DashboardAccess {
 
     return {
       accessLoading: isLoading,
+      accessResolved: data !== undefined,
+      refetchAccess: () => void refetch(),
       hrEnabled: moduleOn("HR"),
       crmEnabled: moduleOn("CRM"),
       projectsEnabled: moduleOn("PROJECTS"),
@@ -77,5 +81,5 @@ export function useDashboardAccess(): DashboardAccess {
       canViewInterviews: can("hr:interviews:view"),
       canViewSignEnvelopes: can("sign:envelope:view"),
     };
-  }, [data, isLoading, enabledModules]);
+  }, [data, isLoading, refetch, enabledModules]);
 }

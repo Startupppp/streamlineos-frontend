@@ -1,4 +1,14 @@
 import { z } from "zod";
+import {
+  addDecimals,
+  allocateDecimal,
+  divideDecimals,
+  multiplyDecimals,
+  roundDecimal,
+  subtractDecimals,
+  sumDecimals,
+  toDecimalInput,
+} from "@/lib/accounting/decimal";
 
 export const GST_RATES = ["0", "5", "12", "18", "28"] as const;
 
@@ -51,18 +61,28 @@ export function num(value: string): number {
   return Number.isFinite(n) && n >= 0 ? n : 0;
 }
 
-export function round2(n: number): number {
-  return Math.round(n * 100) / 100;
+/**
+ * Every figure here is a decimal STRING at the ledger's scale, produced by the
+ * same operations in the same order as `accounting-payables.service.ts`
+ * (`createPurchaseBill`). The panel the approver reads must equal the row that
+ * is written: computed in doubles at scale 2, a tax pool of 9.01 previewed as
+ * CGST 4.51 / SGST 4.50 against the 4.5050 / 4.5050 actually stored.
+ */
+export interface ComputedTotals {
+  subtotal: string;
+  taxPool: string;
+  cgst: string;
+  sgst: string;
+  igst: string;
+  total: string;
+  intra: boolean;
 }
 
-export interface ComputedTotals {
-  subtotal: number;
-  taxPool: number;
-  cgst: number;
-  sgst: number;
-  igst: number;
-  total: number;
-  intra: boolean;
+export function lineAmount(quantity: string, rate: string): string {
+  return roundDecimal(
+    multiplyDecimals(toDecimalInput(quantity), toDecimalInput(rate)),
+    2,
+  );
 }
 
 export function computeTotals(
@@ -72,24 +92,26 @@ export function computeTotals(
   discount: string,
 ): ComputedTotals {
   const lines = items.map((it) => {
-    const qty = num(it.quantity);
-    const rate = num(it.rate);
-    const gstRate = num(it.gstRate);
-    const amount = round2(qty * rate);
-    const tax = round2(amount * (gstRate / 100));
+    const amount = lineAmount(it.quantity, it.rate);
+    const tax = roundDecimal(
+      divideDecimals(multiplyDecimals(amount, toDecimalInput(it.gstRate)), "100"),
+      2,
+    );
     return { amount, tax };
   });
-  const subtotal = round2(lines.reduce((acc, l) => acc + l.amount, 0));
-  const taxPool = round2(lines.reduce((acc, l) => acc + l.tax, 0));
+  const subtotal = sumDecimals(lines.map((l) => l.amount));
+  const taxPool = sumDecimals(lines.map((l) => l.tax));
   const supplierState =
-    supplierGstin && supplierGstin.length >= 2
-      ? supplierGstin.slice(0, 2)
-      : placeOfSupply;
+    supplierGstin && supplierGstin.length >= 2 ? supplierGstin.slice(0, 2) : placeOfSupply;
   const placeState = placeOfSupply || supplierState;
   const intra = supplierState !== "" && supplierState === placeState;
-  const cgst = intra ? round2(taxPool / 2) : 0;
-  const sgst = intra ? round2(taxPool - cgst) : 0;
-  const igst = intra ? 0 : taxPool;
-  const total = round2(subtotal + taxPool - num(discount));
+  const halves = allocateDecimal(taxPool, ["1", "1"]);
+  const cgst = intra ? halves[0] ?? "0.0000" : "0.0000";
+  const sgst = intra ? halves[1] ?? "0.0000" : "0.0000";
+  const igst = intra ? "0.0000" : taxPool;
+  const total = subtractDecimals(
+    addDecimals(subtotal, taxPool),
+    roundDecimal(toDecimalInput(discount), 2),
+  );
   return { subtotal, taxPool, cgst, sgst, igst, total, intra };
 }

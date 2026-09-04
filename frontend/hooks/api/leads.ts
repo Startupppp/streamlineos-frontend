@@ -148,8 +148,8 @@ export function useUpdateLeadStatus() {
       await qc.cancelQueries({ queryKey: queryKeys.leads.board() });
       const previousBoard = qc.getQueryData<LeadBoard>(queryKeys.leads.board());
       if (previousBoard && vars.expectedStatus) {
-        const from = vars.expectedStatus as keyof LeadBoard;
-        const to = vars.status as keyof LeadBoard;
+        const from: string = vars.expectedStatus;
+        const to: string = vars.status;
         const fromCol = previousBoard[from];
         const lead = fromCol?.leads.find((l) => l.id === vars.leadId);
         if (lead && fromCol) {

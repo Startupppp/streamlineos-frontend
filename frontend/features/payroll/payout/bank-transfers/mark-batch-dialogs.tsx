@@ -23,8 +23,8 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useMarkBatchSent, useMarkBatchPaid } from "@/hooks/api/payroll/payout-batches";
+import { useRunConflictHandler } from "@/features/payroll/shared/run-conflict";
 import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
 
 interface MarkBatchSentDialogProps {
   batchId: number | null;
@@ -34,6 +34,7 @@ interface MarkBatchSentDialogProps {
 
 export function MarkBatchSentDialog({ batchId, runId, onClose }: MarkBatchSentDialogProps) {
   const markSentMutation = useMarkBatchSent();
+  const handleError = useRunConflictHandler(runId);
 
   function handleConfirm() {
     if (batchId === null) return;
@@ -44,7 +45,7 @@ export function MarkBatchSentDialog({ batchId, runId, onClose }: MarkBatchSentDi
           toast.success("Batch marked as sent");
           onClose();
         },
-        onError: (err) => toast.error(getErrorMessage(err)),
+        onError: handleError,
       },
     );
   }
@@ -91,6 +92,7 @@ export function MarkBatchPaidDialog({
   onClose,
 }: MarkBatchPaidDialogProps) {
   const markPaidMutation = useMarkBatchPaid();
+  const handleError = useRunConflictHandler(runId);
 
   function handleSubmit() {
     if (batchId === null || !txnRef.trim()) return;
@@ -101,7 +103,7 @@ export function MarkBatchPaidDialog({
           toast.success("Batch marked as paid");
           onClose();
         },
-        onError: (err) => toast.error(getErrorMessage(err)),
+        onError: handleError,
       },
     );
   }

@@ -19,6 +19,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useBankAccounts, useCreateBankImport } from "@/hooks/api/accounting/banking";
+import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { BankImportResult, CreateBankImportInput } from "@/hooks/api/accounting/banking";
 import { parseCsvFile } from "../lib/parse-csv";
@@ -89,6 +90,7 @@ export function BankImportClient() {
   const accountsQuery = useBankAccounts();
   const accounts = accountsQuery.data?.data ?? [];
   const importMutation = useCreateBankImport();
+  const canImport = useCan("accounting:banking:import");
 
   const selectedAccount = accounts.find((a) => String(a.id) === selectedAccountId);
   const step1Valid = selectedAccountId !== "" && parsedCsv !== null;
@@ -426,14 +428,16 @@ export function BankImportClient() {
                   <Button variant="outline" className="flex-1" onClick={handleBack}>
                     Back
                   </Button>
-                  <LoadingButton
-                    className="flex-1"
-                    isPending={importMutation.isPending}
-                    loadingText="Importing…"
-                    onClick={handleImport}
-                  >
-                    Import Transactions
-                  </LoadingButton>
+                  {canImport && (
+                    <LoadingButton
+                      className="flex-1"
+                      isPending={importMutation.isPending}
+                      loadingText="Importing…"
+                      onClick={handleImport}
+                    >
+                      Import Transactions
+                    </LoadingButton>
+                  )}
                 </div>
               </motion.div>
             )}

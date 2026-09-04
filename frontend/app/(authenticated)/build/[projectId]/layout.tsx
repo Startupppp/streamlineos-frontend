@@ -1,7 +1,8 @@
 ﻿import { notFound, redirect } from "next/navigation";
 import { headers } from "next/headers";
+import { HydrationBoundary, type DehydratedState } from "@tanstack/react-query";
 import { isApiError } from "@/lib/api-client";
-import { serverGet } from "@/lib/server-fetch";
+import { prefetchBuildProject } from "@/lib/prefetch/build";
 import { withPmWorkspacePath } from "@/lib/build/pm-workspace-path";
 import {
   hasWorkspaceMirror,
@@ -32,8 +33,14 @@ export default async function ProjectLayout({
   if (isNaN(numId)) return notFound();
 
   let project: ProjectWithDetails | null = null;
+  let hydrated: DehydratedState | null = null;
   try {
-    project = await serverGet<ProjectWithDetails>(`/build/${numId}`);
+    // PRD-C094 — this is the SAME request the 29 `useProject` callers below would each
+    // have re-issued on mount. Reading it into the request's query client and handing
+    // the snapshot down means the client reads it from cache instead of fetching again.
+    const prefetched = await prefetchBuildProject(numId);
+    project = prefetched.project;
+    hydrated = prefetched.state;
   } catch (err: unknown) {
     if (isApiError(err)) {
       if (err.code === "BACKEND_UNREACHABLE") {
@@ -69,9 +76,11 @@ export default async function ProjectLayout({
   }
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-      <RememberLastProject projectId={projectId} />
-      {children}
-    </div>
+    <HydrationBoundary state={hydrated}>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <RememberLastProject projectId={projectId} />
+        {children}
+      </div>
+    </HydrationBoundary>
   );
 }

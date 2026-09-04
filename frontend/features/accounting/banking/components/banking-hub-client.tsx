@@ -21,6 +21,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useBankAccounts } from "@/hooks/api/accounting/banking";
 import type { BankAccount, BankAccountType } from "@/hooks/api/accounting/banking";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { sumCashByCurrency } from "../cash-balances";
 import { AddBankAccountSheet } from "./add-bank-account-sheet";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
@@ -122,10 +123,25 @@ export function BankingHubClient() {
 
   const accounts = data?.data ?? [];
 
-  const totalBalance = accounts.reduce(
-    (sum, a) => sum + parseFloat(a.currentBalance),
-    0,
-  );
+  const cashByCurrency = sumCashByCurrency(accounts);
+  const soleCurrency = cashByCurrency.length === 1 ? cashByCurrency[0] : undefined;
+  const cashValue = soleCurrency
+    ? formatMoneyCompact(soleCurrency.total, {
+        currency: soleCurrency.currency,
+        locale: display.locale,
+      })
+    : cashByCurrency.length === 0
+      ? formatMoneyCompact(0, display)
+      : "Multiple currencies";
+  // No rate travels on this response, so a single figure would be a quantity in
+  // no currency at all. Each currency is reported on its own terms instead.
+  const cashSubtitle =
+    cashByCurrency.length > 1
+      ? cashByCurrency
+          .map((b) => formatMoneyCompact(b.total, { currency: b.currency, locale: display.locale }))
+          .join(" \u00b7 ")
+      : undefined;
+  const pagination = data?.pagination;
   const activeCount = accounts.filter((a) => a.isActive).length;
 
   function handleAddOpen() {
@@ -157,7 +173,8 @@ export function BankingHubClient() {
         <StatCardGrid cols={4}>
           <StatCard
             label="Total Cash Balance"
-            value={isLoading ? "—" : formatMoneyCompact(totalBalance, display)}
+            value={isLoading ? "—" : cashValue}
+            subtitle={cashSubtitle}
             icon={Landmark}
             tone="default"
             isLoading={isLoading}
@@ -165,6 +182,11 @@ export function BankingHubClient() {
           <StatCard
             label="Accounts"
             value={isLoading ? "—" : String(accounts.length)}
+            subtitle={
+              pagination?.hasMore
+                ? `First ${pagination.limit.toLocaleString(display.locale)} — more not shown`
+                : undefined
+            }
             icon={Building2}
             tone="default"
             isLoading={isLoading}

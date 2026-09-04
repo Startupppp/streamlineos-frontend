@@ -29,6 +29,42 @@ const TYPING_TIMEOUT_MS = 5_000;
 const CHAT_EVENTS = ["message", "typing", "message:updated", "message:deleted", "reaction:updated"] as const;
 type ChatEvent = (typeof CHAT_EVENTS)[number];
 
+/**
+ * The four events the SERVER is the only legitimate author of.
+ *
+ * The chat token grants each of the caller's own channels `["subscribe", "publish", "history"]`
+ * (backend ably.service.ts `createChatTokenRequest`), and `publish` is not decoration — the
+ * typing indicator is published from the browser. So any member of a channel can also publish
+ * a `message` frame onto it, and this hook used to write `payload.senderId` and
+ * `payload.senderName` straight into the message cache and into a desktop Notification: a
+ * member could make a message appear, in every open window, attributed to a colleague, with
+ * text they chose. Nothing was persisted, which is exactly what makes it hard to notice.
+ *
+ * The discriminator is `clientId`, which Ably stamps on a message from the identity in the
+ * publisher's token and which a publisher cannot forge. The backend publishes over REST with
+ * the API key and no `clientId` at all (`AblyService.publishChatMessage`/`publishChatEvent`),
+ * so a server frame carries none — and a browser frame always carries one, because every chat
+ * token is minted with `clientId: <userId>`. A frame on a server-authored event that arrives
+ * WITH a clientId was published by a browser and is dropped.
+ */
+const SERVER_AUTHORED_EVENTS: ReadonlySet<string> = new Set([
+  "message",
+  "message:updated",
+  "message:deleted",
+  "reaction:updated",
+]);
+
+export function isTrustedChatFrame(
+  event: ChatEvent,
+  clientId: string | undefined,
+  declaredSenderId: string | undefined,
+): boolean {
+  if (SERVER_AUTHORED_EVENTS.has(event)) return clientId === undefined || clientId === null;
+  // `typing` is genuinely published by a browser. It may only speak for its own publisher,
+  // so a frame whose payload names someone else is dropped rather than rendered.
+  return clientId === undefined || clientId === null || clientId === declaredSenderId;
+}
+
 function payloadToMessage(payload: MessagePayload): Message {
   return {
     id: payload.id,
@@ -289,10 +325,33 @@ export function useChatRealtime(channelId: number | null): {
       "reaction:updated": reactionUpdatedHandler,
     };
 
+    const guardedHandlers = new Map<ChatEvent, (msg: InboundMessage) => void>();
+    function guarded(
+      event: ChatEvent,
+      handler: (msg: InboundMessage) => void,
+    ): (msg: InboundMessage) => void {
+      const existing = guardedHandlers.get(event);
+      if (existing !== undefined) return existing;
+      const wrapped = (msg: InboundMessage): void => {
+        const declared = (msg.data as { userId?: unknown } | null | undefined)?.userId;
+        if (
+          !isTrustedChatFrame(
+            event,
+            msg.clientId ?? undefined,
+            typeof declared === "string" ? declared : undefined,
+          )
+        )
+          return;
+        handler(msg);
+      };
+      guardedHandlers.set(event, wrapped);
+      return wrapped;
+    }
+
     async function setup() {
       for (const event of CHAT_EVENTS) {
         if (cancelled) return;
-        const handler = handlers[event];
+        const handler = guarded(event, handlers[event]);
         const ok = await safeSubscribe(channel, event, handler);
         if (cancelled) {
           if (ok) safeUnsubscribe(channel, event, handler);
@@ -309,7 +368,7 @@ export function useChatRealtime(channelId: number | null): {
       cancelled = true;
       setChannelAttached(false);
       for (const event of subscribed) {
-        safeUnsubscribe(channel, event, handlers[event]);
+        safeUnsubscribe(channel, event, guarded(event, handlers[event]));
       }
     };
   }, [ably, channelId, orgId, queryClient, currentUserId]);

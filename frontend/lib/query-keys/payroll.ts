@@ -16,10 +16,6 @@ export const payrollQueryKeys = {
       [...base, "payroll", "policy", policyId, "versions"] as const,
     toggleImpact: (toggle: string) =>
       [...base, "payroll", "toggle-impact", toggle] as const,
-    policyPreview: (params?: Record<string, unknown>) =>
-      params === undefined
-        ? ([...base, "payroll", "policy", "preview"] as const)
-        : ([...base, "payroll", "policy", "preview", params] as const),
     components: (params?: Record<string, unknown>) =>
       params === undefined
         ? ([...base, "payroll", "components"] as const)
@@ -82,7 +78,6 @@ export const payrollQueryKeys = {
       [...base, "payroll", "fnf", settlementId] as const,
     fnfStatement: (settlementId: number) =>
       [...base, "payroll", "fnf", settlementId, "statement"] as const,
-    loanAdjustments: () => [...base, "payroll", "loan-adjustments"] as const,
     commandCenterAll: [...base, "payroll", "command-center"] as const,
     commandCenter: (month: string) =>
       [...base, "payroll", "command-center", month] as const,

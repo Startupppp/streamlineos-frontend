@@ -110,8 +110,11 @@ export function MyExpensesPage() {
         placeholder="Search expenses..."
       />
       <Select value={status} onValueChange={handleStatusChange}>
-        <SelectTrigger className="w-fit min-w-40 border-input bg-card">
-          <SelectValue />
+        <SelectTrigger
+          aria-label="Filter claims by status"
+          className="w-fit min-w-40 border-input bg-card"
+        >
+          <SelectValue placeholder="All statuses" />
         </SelectTrigger>
         <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
           <SelectItem value="ALL">All statuses</SelectItem>

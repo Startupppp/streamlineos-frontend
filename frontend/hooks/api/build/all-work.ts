@@ -58,7 +58,7 @@ export function useInfiniteAllWork(
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<CursorPaginatedResponse<AllWorkTicket>>("/build/all-work", {
         ...filters,
-        ...(pageParam ? { cursor: pageParam } : {}),
+        ...(pageParam !== undefined ? { cursor: pageParam } : {}),
       }, signal),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,

@@ -25,6 +25,7 @@ import type { RecurringInvoiceTemplate, RecurringFrequency } from "@/types/accou
 import { RecurringTemplateFormSheet } from "@/features/accounting/sales/recurring-template-form-sheet";
 import { TemplateRowActions } from "@/features/accounting/sales/recurring-template-row-actions";
 import { formatShortDate } from "@/lib/date-utils";
+import { useCan } from "@/hooks/api/access";
 
 const FREQUENCY_LABELS: Record<RecurringFrequency, string> = {
   DAILY: "Daily",
@@ -39,6 +40,7 @@ export function RecurringInvoicesPage() {
   const [editTemplate, setEditTemplate] = useState<RecurringInvoiceTemplate | undefined>();
   const [activeFilter, setActiveFilter] = useState<"all" | "true" | "false">("all");
   const pagination = useCursorPageStack();
+  const canManage = useCan("accounting:recurring:manage");
 
   const query = useRecurringTemplates({
     isActive: activeFilter === "all" ? undefined : activeFilter === "true",
@@ -139,10 +141,12 @@ export function RecurringInvoicesPage() {
       title="Recurring Invoices"
       subtitle="Automated invoice templates on a schedule"
       actions={
-        <LoadingButton size="sm" onClick={handleNewClick} isPending={false}>
-          <Plus className="size-4 mr-1" />
-          New template
-        </LoadingButton>
+        canManage ? (
+          <LoadingButton size="sm" onClick={handleNewClick} isPending={false}>
+            <Plus className="size-4 mr-1" />
+            New template
+          </LoadingButton>
+        ) : null
       }
       filters={
         <Select value={activeFilter} onValueChange={handleActiveFilterChange}>
@@ -176,7 +180,7 @@ export function RecurringInvoicesPage() {
                   illustrationPreset="automations"
                   title="No recurring invoice templates"
                   description="Create templates to auto-generate invoices on a schedule."
-                  action={{ label: "New template", onClick: handleNewClick }}
+                  action={canManage ? { label: "New template", onClick: handleNewClick } : undefined}
                 />
               }
             />
@@ -193,11 +197,13 @@ export function RecurringInvoicesPage() {
         )}
       </div>
 
-      <RecurringTemplateFormSheet
-        open={sheetOpen}
-        onOpenChange={handleSheetOpenChange}
-        template={editTemplate}
-      />
+      {canManage && (
+        <RecurringTemplateFormSheet
+          open={sheetOpen}
+          onOpenChange={handleSheetOpenChange}
+          template={editTemplate}
+        />
+      )}
     </PageWrapper>
   );
 }

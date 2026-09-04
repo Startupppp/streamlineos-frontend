@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { buildUrl } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SignPublicSession } from "@/types/sign";
+import { withCorrelation } from "@/lib/observability/with-correlation";
 
 function unwrap<T>(body: unknown): T {
   if (body !== null && typeof body === "object") {
@@ -29,14 +30,14 @@ async function parseOrThrow<T>(res: Response, fallback: string): Promise<T> {
 }
 
 async function publicGet<T>(path: string, fallback: string): Promise<T> {
-  const res = await fetch(buildUrl(path));
+  const res = await fetch(buildUrl(path), { headers: withCorrelation(new Headers()) });
   return parseOrThrow<T>(res, fallback);
 }
 
 async function publicPost<T>(path: string, body: unknown, fallback: string): Promise<T> {
   const res = await fetch(buildUrl(path), {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: withCorrelation(new Headers({ "Content-Type": "application/json" })),
     body: JSON.stringify(body ?? {}),
   });
   return parseOrThrow<T>(res, fallback);

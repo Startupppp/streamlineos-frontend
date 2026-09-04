@@ -44,7 +44,7 @@ export function NoPermissionState({
       >
         {description ?? "You don’t have the required permission for this section."}
       </p>
-      <p className="text-xs text-muted-foreground/60 font-mono bg-muted px-2 py-1 rounded">
+      <p className="text-xs text-foreground/80 font-mono bg-muted px-2 py-1 rounded">
         {permission}
       </p>
       {compact ? null : (

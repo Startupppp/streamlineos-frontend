@@ -17,7 +17,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { useAIGenerateReview } from "@/hooks/api/ai";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { AiFailureBody } from "@/components/ai";
 import { toast } from "sonner";
 import { useFeature } from "@/lib/billing/use-feature";
 
@@ -32,14 +32,12 @@ export function AIGenerateReviewButton({ userId, userName, periodStart, periodEn
   const [open, setOpen] = useState(false);
   const generateMutation = useAIGenerateReview();
   const result = generateMutation.data;
+  const failure = generateMutation.isPending ? null : generateMutation.error;
   const { enabled: featureEnabled, requiredPlan } = useFeature("ai.review-generation");
 
   const handleGenerate = () => {
     if (!featureEnabled) { toast.error(`AI review generation requires the ${requiredPlan ?? "PROFESSIONAL"} plan. Upgrade to unlock.`); return; }
-    generateMutation.mutate(
-      { userId, periodStart, periodEnd },
-      { onError: (e) => toast.error(getErrorMessage(e)) },
-    );
+    generateMutation.mutate({ userId, periodStart, periodEnd });
   };
 
   const copyAll = () => {
@@ -82,6 +80,10 @@ ${result.ratings.map((r) => `- ${r.category}: ${r.score}/5 — ${r.comment}`).jo
 
         <ScrollArea className="flex-1 min-h-0">
           <div className="px-5 py-4 space-y-4">
+            {failure && (
+              <AiFailureBody error={failure} onRetry={handleGenerate} compact={false} />
+            )}
+
             {!result && (
               <LoadingButton
                 onClick={handleGenerate}

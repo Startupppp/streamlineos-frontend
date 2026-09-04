@@ -100,9 +100,26 @@ describe("the request an <img> really makes", () => {
     const response = await GET(imgTagRequest(KEY));
 
     expect(response.headers.get("cache-control")).toBe(
-      "private, max-age=86400, immutable",
+      "private, max-age=60, must-revalidate",
     );
     expect(response.headers.get("cache-control")).not.toContain("public");
+  });
+
+  /**
+   * PRD-C103: replacement and revocation both have to reach the viewer. An
+   * `immutable` entry is never revalidated for its whole lifetime, so a replaced
+   * object keeps serving the old bytes and a viewer whose permission was revoked
+   * keeps serving the image out of its own cache — the authorization recheck at
+   * `/storage/image` is simply never asked.
+   */
+  it("never marks a tenant object immutable, and varies on the session cookie", async () => {
+    mockFetch.mockResolvedValue(upstreamOk("image/png"));
+
+    const response = await GET(imgTagRequest(KEY));
+
+    expect(response.headers.get("cache-control")).not.toContain("immutable");
+    expect(response.headers.get("cache-control")).toContain("must-revalidate");
+    expect(response.headers.get("vary")).toBe("Cookie");
   });
 });
 

@@ -43,27 +43,38 @@ export function useCalendarMemberLookup({
   });
 }
 
+/**
+ * The row `POST /calendar/events` and `PUT /calendar/events/:id` return, mirroring
+ * `calendarEventWireColumns` in `calendar.service.ts` field for field.
+ *
+ * Five fields used to sit here that no route has ever sent: `createdBy`,
+ * `attendeeIds`, `isRecurring`, `recurringRule` and `creator`. The columns are named
+ * `created_by_membership_id` (a membership id, deliberately not on the wire) and
+ * `rrule`, there is no `is_recurring` column at all, and attendees live in their own
+ * table behind `GET /calendar/events/:id/attendees`. A hand-written type that names
+ * fields the server does not send is the drift PRD-C047 forbids: it typechecks
+ * forever and is `undefined` at runtime forever.
+ */
 interface CalendarEvent {
   id: number;
   orgId: string;
   title: string;
-  description?: string | null;
-  location?: string | null;
-  meetingUrl?: string | null;
+  description: string | null;
+  location: string | null;
+  meetingUrl: string | null;
   startDate: string;
   endDate: string;
-  allDay: boolean | null;
-  color?: string | null;
+  timezone: string;
+  allDay: boolean;
+  color: string | null;
   category: string;
-  entityType?: string | null;
-  entityId?: string | null;
-  createdBy: string;
-  attendeeIds?: string[] | null;
-  isRecurring?: boolean | null;
-  recurringRule?: string | null;
-  createdAt?: string | null;
-  updatedAt?: string | null;
-  creator?: { name: string | null } | null;
+  entityType: string | null;
+  entityId: string | null;
+  rrule: string | null;
+  recurrenceEnd: string | null;
+  localVersion: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /** An attendee on approved leave over the new event's window. */
@@ -88,12 +99,25 @@ export interface CalendarEventConflict {
   timezone?: string;
 }
 
+/**
+ * Mirrors `CalendarService.createEvent`'s return exactly (calendar.service.ts).
+ *
+ * `syncError` used to sit here and no backend ever sent it — `grep -rn syncError`
+ * across the API returns nothing — so the toast branching on it could not fire.
+ * `meetingUrl` IS sent, but only ever as `null`: the provider push is asynchronous
+ * now, so a link cannot exist by the time the 201 is written, and the branch that
+ * announced one was unreachable for the same reason.
+ *
+ * `syncQueued` is what the server actually reports, and it is the honest thing to
+ * say at this point in the flow: the intent is committed, the push has not happened
+ * yet. Its outcome is read afterwards from `GET /calendar/events/:id/sync-status`.
+ */
 interface MutateCalendarEventResponse {
   event: CalendarEvent;
   oooConflicts: CalendarOooConflict[];
   eventConflicts: CalendarEventConflict[];
   meetingUrl?: string | null;
-  syncError?: string | null;
+  syncQueued?: boolean;
 }
 
 export interface CalendarListItem {

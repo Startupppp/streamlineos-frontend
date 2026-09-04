@@ -37,6 +37,7 @@ import {
 import type { VendorCreditSummary } from "@/hooks/api/accounting/ap";
 import type { VendorCreditItem } from "@/hooks/api/accounting/ap-vendors";
 import { useVendorsOutstanding } from "@/hooks/api/accounting";
+import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 
@@ -58,9 +59,10 @@ interface CreditRowActionsProps {
   credit: VendorCreditSummary;
   onViewDetail: (credit: VendorCreditSummary) => void;
   onApply: (credit: VendorCreditSummary) => void;
+  canManage: boolean;
 }
 
-function CreditRowActions({ credit, onViewDetail, onApply }: CreditRowActionsProps) {
+function CreditRowActions({ credit, onViewDetail, onApply, canManage }: CreditRowActionsProps) {
   const postMutation = usePostVendorCredit(credit.id);
 
   function handlePost(): void {
@@ -84,15 +86,15 @@ function CreditRowActions({ credit, onViewDetail, onApply }: CreditRowActionsPro
         <AnimatedIconButton icon={EllipsisIcon} iconSize={16} variant="ghost" size="icon" className="w-7" aria-label="Credit actions" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40">
-        {credit.status === "DRAFT" && (
+        {canManage && credit.status === "DRAFT" && (
           <DropdownMenuItem onClick={handlePost} disabled={postMutation.isPending}>
             Post
           </DropdownMenuItem>
         )}
-        {credit.status === "POSTED" && (
+        {canManage && credit.status === "POSTED" && (
           <DropdownMenuItem onClick={handleApply}>Apply to bill</DropdownMenuItem>
         )}
-        <DropdownMenuSeparator />
+        {canManage && <DropdownMenuSeparator />}
         <DropdownMenuItem onClick={handleViewDetail}>View detail</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -197,6 +199,9 @@ export function VendorCreditsPage() {
   const [applyTargetRemaining, setApplyTargetRemaining] = useState<number>(0);
   const [vendorFilter, setVendorFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  const canCreate = useCan("accounting:vendor-credits:create");
+  const canManage = useCan("accounting:vendor-credits:manage");
 
   const vendorsQuery = useVendorsOutstanding({ limit: 100 });
   const query = useVendorCredits({
@@ -307,6 +312,7 @@ export function VendorCreditsPage() {
           credit={row}
           onViewDetail={handleOpenDetail}
           onApply={handleOpenApply}
+          canManage={canManage}
         />
       ),
     },
@@ -317,9 +323,11 @@ export function VendorCreditsPage() {
       title="Vendor Credits"
       subtitle="Debit notes and credit memos from vendors."
       actions={
-        <LoadingButton size="sm" onClick={handleNewClick} isPending={false}>
-          New credit
-        </LoadingButton>
+        canCreate ? (
+          <LoadingButton size="sm" onClick={handleNewClick} isPending={false}>
+            New credit
+          </LoadingButton>
+        ) : null
       }
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
@@ -377,14 +385,20 @@ export function VendorCreditsPage() {
                 }
                 filtersActive={filtersActive}
                 onClearFilters={handleClearFilters}
-                action={filtersActive ? undefined : { label: "New credit", onClick: handleNewClick }}
+                action={
+                  filtersActive || !canCreate
+                    ? undefined
+                    : { label: "New credit", onClick: handleNewClick }
+                }
               />
             }
           />
         )}
       </div>
 
-      <VendorCreditFormSheet open={createOpen} onOpenChange={handleCreateOpenChange} />
+      {canCreate && (
+        <VendorCreditFormSheet open={createOpen} onOpenChange={handleCreateOpenChange} />
+      )}
 
       {selectedCreditId !== null && (
         <CreditDetailSheet

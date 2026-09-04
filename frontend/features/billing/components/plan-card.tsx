@@ -2,6 +2,7 @@
 
 import { Check, Zap } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { useCan } from "@/hooks/api/access";
 import { cn } from "@/lib/utils";
 import type { SubscriptionPlan, BillingCycle } from "@/hooks/api/subscription";
 import { PRICING } from "@/lib/pricing";
@@ -45,6 +46,8 @@ export function PlanCard({
   isConfigured,
   onUpgrade,
 }: PlanCardProps) {
+  // POST /billing/subscription/order and /verify both declare billing:subscription:manage.
+  const canManageSubscription = useCan("billing:subscription:manage");
   const isCurrentPlan = currentPlan === plan && currentStatus === "ACTIVE";
   const isEnterprise = plan === "ENTERPRISE";
   const tone = PLAN_TONE[plan];
@@ -100,17 +103,25 @@ export function PlanCard({
           </li>
         ))}
       </ul>
-      <LoadingButton
-        size="sm"
-        variant={isCurrentPlan ? "secondary" : "default"}
-        disabled={isCurrentPlan || !isConfigured || (isBusy && upgradingPlan !== plan)}
-        isPending={isUpgrading}
-        loadingText="Processing…"
-        onClick={handleUpgrade}
-        className="w-full"
-      >
-        {isCurrentPlan ? "Current Plan" : "Upgrade"}
-      </LoadingButton>
+      {canManageSubscription ? (
+        <LoadingButton
+          size="sm"
+          variant={isCurrentPlan ? "secondary" : "default"}
+          disabled={isCurrentPlan || !isConfigured || (isBusy && upgradingPlan !== plan)}
+          isPending={isUpgrading}
+          loadingText="Processing…"
+          onClick={handleUpgrade}
+          className="w-full"
+        >
+          {isCurrentPlan ? "Current Plan" : "Upgrade"}
+        </LoadingButton>
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          {isCurrentPlan
+            ? "Your organization's current plan."
+            : "Only a billing administrator can change the plan."}
+        </p>
+      )}
     </div>
   );
 }

@@ -50,7 +50,7 @@ export function useMailMessages(params: MailMessagesParams) {
       if (params.accountId !== undefined) searchParams.set("accountId", String(params.accountId));
       if (params.q) searchParams.set("q", params.q);
       if (params.limit) searchParams.set("limit", String(params.limit));
-      if (pageParam) searchParams.set("cursor", String(pageParam));
+      if (pageParam !== undefined) searchParams.set("cursor", String(pageParam));
       return apiClient.get<MailListResponse>(`/mail/messages?${searchParams.toString()}`, undefined, signal);
     },
     initialPageParam: undefined as string | undefined,

@@ -28,7 +28,8 @@ import {
   LeadsFunnelView,
   LeadsKanban,
 } from "@/features/crm/leads/leads-lazy";
-import { LEAD_STATUSES, type BoardLead } from "@/features/crm/leads/leads-types";
+import { projectBoardColumns } from "@/features/crm/leads/lead-board-columns";
+import type { BoardLead } from "@/features/crm/leads/leads-types";
 import type { LeadFilters } from "@/types/leads";
 
 /**
@@ -171,30 +172,10 @@ export default function LeadsPipelinePage() {
     [setView],
   );
 
-  const filteredBoard = useMemo<Record<string, BoardLead[]> | null>(() => {
-    if (!board) return null;
-    const result: Record<string, BoardLead[]> = {};
-    const q = searchQuery.trim().toLowerCase();
-
-    /*
-      Walked by the statuses the board type declares rather than by
-      `Object.entries`, which hands back `any` for an interface and would let a
-      renamed column through unnoticed.
-    */
-    for (const status of LEAD_STATUSES) {
-      const leads = board[status].leads;
-      result[status] = q
-        ? leads.filter(
-            (lead) =>
-              lead.name.toLowerCase().includes(q) ||
-              lead.email?.toLowerCase().includes(q) ||
-              lead.phone?.includes(q) ||
-              lead.company?.toLowerCase().includes(q),
-          )
-        : leads;
-    }
-    return result;
-  }, [board, searchQuery]);
+  const filteredBoard = useMemo<Record<string, BoardLead[]> | null>(
+    () => projectBoardColumns(board, searchQuery),
+    [board, searchQuery],
+  );
 
   const handleMoveStatus = useCallback(
     async (leadId: number, status: string, expectedStatus?: string) => {

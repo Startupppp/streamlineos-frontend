@@ -28,7 +28,6 @@ export const knowledgeAndSurveysQueryKeys = {
       params === undefined
         ? ([...base, "kb", "search"] as const)
         : ([...base, "kb", "search", params] as const),
-    chatHistory: () => [...base, "kb", "chatHistory"] as const,
     chatConversations: () => [...base, "kb", "chatConversations"] as const,
     chatConversationMessages: (conversationId: number) =>
       [...base, "kb", "chatConversations", conversationId, "messages"] as const,
@@ -47,15 +46,6 @@ export const knowledgeAndSurveysQueryKeys = {
     pageReviewsDue: () => [...base, "kb", "pageReviewsDue"] as const,
     pageRecordLinks: (pageId: number) =>
       [...base, "kb", "pages", pageId, "record-links"] as const,
-    recordLinksByRecord: (targetType: string, targetId: string) =>
-      [
-        ...base,
-        "kb",
-        "record-links",
-        "by-record",
-        targetType,
-        targetId,
-      ] as const,
     importJobs: () => [...base, "kb", "import-jobs"] as const,
     exportJobs: () => [...base, "kb", "export-jobs"] as const,
     articleMigrationPreview: () =>
@@ -126,8 +116,6 @@ export const knowledgeAndSurveysQueryKeys = {
     templates: () => [...base, "surveys", "templates"] as const,
     builder: (surveyId: number) =>
       [...base, "surveys", "builder", surveyId] as const,
-    logic: (surveyId: number) =>
-      [...base, "surveys", "logic", surveyId] as const,
     collectors: (surveyId: number) =>
       [...base, "surveys", "collectors", surveyId] as const,
     participants: (surveyId: number, params?: Record<string, unknown>) =>

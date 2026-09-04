@@ -8,6 +8,8 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { CopyIcon, ShieldCheckIcon } from "@animateicons/react/lucide";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
@@ -82,12 +84,23 @@ function buildWebhookColumns(retry: RetryMutation, canManage: boolean): DataTabl
 
 export function WebhooksTab({ providerKey, environment }: { providerKey: string; environment: PaymentEnvironment }) {
   const canManage = useCan("payments:webhooks:manage");
+  const canViewEvents = useCan("payments:webhooks:view");
   const { data: providers } = usePaymentProviders();
   const provider = providers?.find((p) => p.providerKey === providerKey);
   const generate = useGenerateWebhook(providerKey);
   const retry = useRetryWebhookEvent(providerKey);
-  const { data: events, isLoading } = useWebhookEvents(providerKey);
+  const {
+    data: events,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useWebhookEvents(providerKey);
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
+
+  function handleRetryLoad() {
+    void refetch();
+  }
 
   function handleGenerate() {
     generate.mutate(environment, {
@@ -140,8 +153,22 @@ export function WebhooksTab({ providerKey, environment }: { providerKey: string;
 
       <div>
         <p className="text-label font-medium text-foreground mb-2">Recent events</p>
-        {isLoading ? (
+        {!canViewEvents ? (
+          <NoPermissionState
+            compact
+            permission="payments:webhooks:view"
+            title="Webhook events hidden"
+            description="You do not have permission to view this provider's received webhook events."
+          />
+        ) : isLoading ? (
           <DataTableSkeleton rows={8} columns={4} />
+        ) : isError ? (
+          <ErrorState
+            compact
+            title="Failed to load webhook events"
+            description={getErrorMessage(error)}
+            onRetry={handleRetryLoad}
+          />
         ) : environmentEvents.length === 0 ? (
           <EmptyState title="No webhook events yet" description="Events will appear here as they're received." compact />
         ) : (

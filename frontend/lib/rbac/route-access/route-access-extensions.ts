@@ -15,9 +15,17 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
   {
     prefix: "/billing/invoices",
     product: "finance",
-    permission: "accounting:receivables:read",
+    permission: "accounting:read",
     reason:
-      "The organization's own customer invoicing is an Accounting surface even though the route sits under /billing. Navigation has no entry for it.",
+      "The organization's own customer invoicing is an Accounting surface even though the route sits under /billing. Navigation has no entry for it. The key is the one the page's own reads declare — GET /invoices, /invoices/stats and /invoices/:id are all accounting:read. It used to be accounting:receivables:read, which no role template grants and which gates only the finance AR endpoints (/accounting/ar-payments, /accounting/customer-statements), so the gate denied every non-owner including the ACCOUNTANT who holds every key this page calls.",
+  },
+  {
+    prefix: "/billing/invoices/new",
+    exact: true,
+    product: "finance",
+    permission: "accounting:create",
+    reason:
+      "Raising an invoice is a create, not a read. The parent /billing/invoices gate is the read key, so without this entry the create surface inherited a read gate. Matches the backend gate on POST /invoices.",
   },
   {
     prefix: "/portal",

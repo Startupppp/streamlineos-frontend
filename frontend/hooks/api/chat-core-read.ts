@@ -166,7 +166,7 @@ export function useChatMessages(channelId: number) {
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<MessagesPage>(
         `/chat/channels/${channelId}/messages`,
-        pageParam ? { cursor: pageParam } : undefined,
+        pageParam !== undefined ? { cursor: pageParam } : undefined,
         signal,
         messagesPageContract,
       ),

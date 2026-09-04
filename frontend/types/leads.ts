@@ -127,14 +127,14 @@ export interface LeadBoardColumn {
   total: number;
 }
 
-export interface LeadBoard {
-  NEW: LeadBoardColumn;
-  CONTACTED: LeadBoardColumn;
-  INTERESTED: LeadBoardColumn;
-  QUALIFIED: LeadBoardColumn;
-  CONVERTED: LeadBoardColumn;
-  LOST: LeadBoardColumn;
-}
+/**
+ * The board is keyed by the ORG's pipeline stages, not by a fixed six.
+ * `LeadsBoardService.getBoard` derives the keys from `crm_pipeline_stages`, else
+ * `crm_options`, else the statuses present in the data — so a tenant can send
+ * five keys, seven, or none. Declaring the six as required properties is what
+ * let `board[status].leads` compile and then throw at runtime.
+ */
+export type LeadBoard = Record<string, LeadBoardColumn | undefined>;
 
 export interface SlaAlert {
   leadId: number;

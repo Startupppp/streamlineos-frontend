@@ -3,7 +3,7 @@ import { apiClient } from "@/lib/api-client";
 import { usePushSubscription } from "./use-push-subscription";
 
 jest.mock("@/lib/api-client", () => ({
-  apiClient: { get: jest.fn(), post: jest.fn() },
+  apiClient: { get: jest.fn(), post: jest.fn(), delete: jest.fn() },
 }));
 
 const api = jest.mocked(apiClient);
@@ -20,6 +20,7 @@ const notification: FakeNotification = {
 
 const subscriptionJson = (endpoint: string) => ({
   endpoint,
+  unsubscribe: jest.fn(async () => true),
   toJSON: () => ({ endpoint, keys: { p256dh: `${endpoint}-p256dh`, auth: `${endpoint}-auth` } }),
 });
 
@@ -28,7 +29,16 @@ const pushManager = {
   subscribe: jest.fn(),
 };
 
-const serviceWorker = { register: jest.fn(async () => ({ pushManager })) };
+/**
+ * A real EventTarget for the container too: the hook listens for the service
+ * worker's `pushsubscriptionchange` announcement here, so the test dispatches a
+ * genuine MessageEvent rather than reaching into the handler.
+ */
+class FakeServiceWorkerContainer extends EventTarget {
+  register = jest.fn(async () => ({ pushManager }));
+}
+
+let serviceWorker = new FakeServiceWorkerContainer();
 
 /**
  * A real EventTarget so the hook's `change` listener is exercised rather than
@@ -71,11 +81,13 @@ function define(target: object, property: string, value: unknown): void {
 beforeAll(() => {
   define(globalThis, "Notification", notification);
   define(globalThis, "PushManager", function PushManager() {});
-  define(navigator, "serviceWorker", serviceWorker);
 });
 
 beforeEach(() => {
   jest.clearAllMocks();
+  window.localStorage.clear();
+  serviceWorker = new FakeServiceWorkerContainer();
+  define(navigator, "serviceWorker", serviceWorker);
   notification.permission = "granted";
   permissionStatus = new FakePermissionStatus();
   // clearAllMocks wipes recorded calls but not implementations, and one test
@@ -86,6 +98,7 @@ beforeEach(() => {
   pushManager.subscribe.mockResolvedValue(subscriptionJson("https://push.example/new"));
   api.get.mockResolvedValue({ key: "dGVzdC1rZXk" });
   api.post.mockResolvedValue(undefined);
+  api.delete.mockResolvedValue(undefined);
 });
 
 describe("usePushSubscription", () => {
@@ -191,6 +204,95 @@ describe("usePushSubscription", () => {
 
     await waitFor(() => expect(permissions.query).toHaveBeenCalled());
     expect(serviceWorker.register).not.toHaveBeenCalled();
+    expect(api.post).not.toHaveBeenCalled();
+  });
+
+  /**
+   * RT-005. `DELETE /push/subscribe` existed on the backend with no caller in the
+   * whole frontend, so the only way off push was revoking the browser permission —
+   * which is effectively permanent and which the app can never undo. These four
+   * pin the control that closes it.
+   */
+  it("disable() drops the browser subscription and deletes the server row", async () => {
+    const sub = subscriptionJson("https://push.example/kept");
+    pushManager.getSubscription.mockResolvedValue(sub);
+
+    const { result } = renderHook(() => usePushSubscription("user-1"));
+    await waitFor(() => expect(api.post).toHaveBeenCalledTimes(1));
+
+    await act(async () => {
+      await result.current.disable();
+    });
+
+    expect(sub.unsubscribe).toHaveBeenCalledTimes(1);
+    expect(api.delete).toHaveBeenCalledWith(
+      "/push/subscribe?endpoint=https%3A%2F%2Fpush.example%2Fkept",
+    );
+    expect(result.current.optedOut).toBe(true);
+  });
+
+  it("does not silently re-subscribe a browser that was turned off", async () => {
+    pushManager.getSubscription.mockResolvedValue(subscriptionJson("https://push.example/kept"));
+
+    const first = renderHook(() => usePushSubscription("user-1"));
+    await waitFor(() => expect(api.post).toHaveBeenCalledTimes(1));
+    await act(async () => {
+      await first.result.current.disable();
+    });
+    first.unmount();
+
+    api.post.mockClear();
+    pushManager.getSubscription.mockResolvedValue(null);
+    const { result } = renderHook(() => usePushSubscription("user-1"));
+
+    await waitFor(() => expect(result.current.optedOut).toBe(true));
+    expect(api.post).not.toHaveBeenCalled();
+    expect(pushManager.subscribe).not.toHaveBeenCalled();
+  });
+
+  it("persists the subscription the service worker rotated", async () => {
+    pushManager.getSubscription.mockResolvedValue(subscriptionJson("https://push.example/kept"));
+
+    renderHook(() => usePushSubscription("user-1"));
+    await waitFor(() => expect(api.post).toHaveBeenCalledTimes(1));
+    api.post.mockClear();
+
+    await act(async () => {
+      serviceWorker.dispatchEvent(
+        new MessageEvent("message", {
+          data: {
+            type: "push-subscription-changed",
+            endpoint: "https://push.example/rotated",
+            p256dh: "rotated-p256dh",
+            auth: "rotated-auth",
+          },
+        }),
+      );
+    });
+
+    await waitFor(() =>
+      expect(api.post).toHaveBeenCalledWith("/push/subscribe", {
+        endpoint: "https://push.example/rotated",
+        p256dh: "rotated-p256dh",
+        auth: "rotated-auth",
+        userAgent: navigator.userAgent.slice(0, 255),
+      }),
+    );
+  });
+
+  it("ignores a worker message that is not a subscription rotation", async () => {
+    pushManager.getSubscription.mockResolvedValue(subscriptionJson("https://push.example/kept"));
+
+    renderHook(() => usePushSubscription("user-1"));
+    await waitFor(() => expect(api.post).toHaveBeenCalledTimes(1));
+    api.post.mockClear();
+
+    await act(async () => {
+      serviceWorker.dispatchEvent(
+        new MessageEvent("message", { data: { type: "something-else", endpoint: 42 } }),
+      );
+    });
+
     expect(api.post).not.toHaveBeenCalled();
   });
 });
