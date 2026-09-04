@@ -1,0 +1,171 @@
+# Gate ground truth — full sweep, captured 2026-09-04
+#
+# backend  release/v2-closeout = e1fd1d475e64a94f6b9273fc3d06608697375519
+# frontend release/v2-closeout = 31c3786a6621dea105dea11e7676299900fccd06
+# NOTE: the prior GATE-STATUS.tsv recorded the FRONTEND hash for both repos. This one does not.
+#
+# Method: every package.json script matching ^(check|verify): excluding :self-test, :emit and
+# :baseline variants, run at its repo root, exit code recorded verbatim. Logs alongside.
+# EXIT CONTRACT: 0 = rule checked and holds. 1 = real violation. 2 = INCONCLUSIVE (prerequisite absent) — NEVER a pass.
+
+## BACKEND (100 gates: 82 pass / 9 violation / 9 inconclusive)
+0	check:ai-charge
+2	check:alert-ack
+0	check:alert-system
+2	check:audit-log-privileges
+0	check:authz-deny
+0	check:bare-throw
+0	check:baseline-integrity
+1	check:benchmark-manifest
+0	check:body-binding
+0	check:bodyless-conflicts
+0	check:bounded-contracts
+0	check:bulk-id-limits
+0	check:cache-invalidation
+0	check:cache-key-shapes
+0	check:compression
+0	check:conflict-targets
+0	check:contract-breaking-change
+0	check:contract-registry
+1	check:cycles
+0	check:db-call-count
+0	check:db-generate-guard
+0	check:dead-code
+2	check:declaration-column-drift
+2	check:declaration-constraint-drift
+0	check:drop-column-safety
+0	check:envelope-consistency
+0	check:evidence-seal
+0	check:feature-flag-governance
+0	check:file-sizes
+0	check:fire-and-forget
+0	check:gate-wiring
+0	check:hardcoded-secrets
+0	check:hr-pagination
+0	check:hr-table-freeze
+0	check:idempotent-commands
+0	check:import-direction
+0	check:kebab-case
+0	check:licenses
+0	check:lifecycle-predicates
+0	check:log-secrets
+0	check:migration-chain
+0	check:migration-discipline
+0	check:migration-immutability
+0	check:migration-ledger
+0	check:migration-rollback
+0	check:mock-surface
+0	check:module-di
+0	check:module-entitlement
+0	check:module-gate
+2	check:module-lifecycle
+0	check:module-registration
+0	check:multipart-contracts
+0	check:n1-growing-loops
+0	check:n1-growing-loops:list
+0	check:namespace-coverage
+0	check:navigation-permissions
+1	check:openapi-coverage
+0	check:openapi-path-params
+0	check:operation-ids
+0	check:outbox-consumers
+1	check:over-300
+0	check:owner-authority
+0	check:permission-keys
+0	check:placement-bypass
+0	check:public-object-urls
+0	check:query-projections
+0	check:record-access
+2	check:referential-action-drift
+0	check:relation-hydration
+0	check:relation-hydration:list
+0	check:relation-keys
+0	check:relation-keys:list
+2	check:replay-ledger
+0	check:restrict-fks
+0	check:retention-coverage
+0	check:route-budgets
+1	check:route-budgets-http
+0	check:route-classification
+0	check:route-duplicates
+0	check:s05-artifact-contract
+0	check:scope-application
+2	check:set-null-column-lists
+0	check:spec-typecheck
+0	check:tenant-indexes
+0	check:tenant-isolation
+0	check:tenant-isolation:run
+2	check:tenant-relationships
+1	check:test-suppressions
+0	check:test-typecheck
+0	check:transaction-callbacks
+0	check:type-assertions
+0	check:unbounded-reads
+0	check:unjoined-table-refs
+0	check:vacuous-assertions
+0	check:vulnerabilities
+1	verify:chat-mentions
+1	verify:membership-revocation
+1	verify:multi-org-employment
+0	verify:permissions
+0	verify:rbac-integrity
+
+## FRONTEND (37 gates: 35 pass / 2 violation / 0 inconclusive)
+0	check:client-pages
+0	check:colors
+0	check:command-catalog
+0	check:contract-drift
+0	check:contract-vendor
+0	check:cycles
+0	check:dead-code
+0	check:effect-fetches
+0	check:empty-states
+0	check:feature-cycles
+0	check:file-sizes
+0	check:formatters
+0	check:gate-wiring
+0	check:gated-reads
+0	check:home-manifest
+0	check:icon-labels
+0	check:import-direction
+0	check:module-manifest
+0	check:named-handlers
+0	check:over-300
+0	check:permission-binding
+0	check:permission-catalog
+0	check:prd-traceability
+0	check:properties
+0	check:query-scope
+0	check:query-signal
+0	check:response-contracts
+0	check:route-access-contract
+1	check:route-bundle-budget
+0	check:route-thinness
+0	check:routes
+0	check:seo-metadata
+0	check:test-integrity
+0	check:test-typecheck
+0	check:type-assertions
+1	check:web-vitals-budget
+0	verify:server-data-seam
+
+## PREREQUISITES CLEARED — 8 of the 9 backend INCONCLUSIVE gates now report a real verdict
+# Measured 2026-09-04 against a local PostgreSQL 18 brought to 685/685 journal entries.
+# Each gate reads its OWN variable; they do not share one. All eight exit 0.
+# Nothing was silenced to achieve this: no ratchet, ceiling, baseline, allowlist or assertion
+# was touched, and STREAMLINE_ALLOW_PARTIAL_GATES was never set (4 of these accept it as an
+# escape hatch that would convert an unmeasured gate into a fake 0).
+0	check:audit-log-privileges	APP_DATABASE_URL	non-owner streamline_app on scratch_gates_head
+0	check:module-lifecycle	APP_DATABASE_URL	only --module=timesheets is measured by the packaged script
+0	check:tenant-relationships	TENANT_RELATIONSHIP_DB_URL	CAUTION: falls back to DIRECT_DATABASE_URL then DATABASE_URL (remote Neon) if unset
+0	check:declaration-column-drift	COLUMN_DRIFT_GATE_DATABASE_URL
+0	check:declaration-constraint-drift	CONSTRAINT_DRIFT_GATE_DATABASE_URL	exit 0 = "0 NEW"; 136 integrity + 51 performance findings remain pre-registered
+0	check:referential-action-drift	REFERENTIAL_ACTION_GATE_DATABASE_URL	exit 0 = "0 NEW"; 62 hard mismatches remain pre-registered (27 destructive, 32 permissive, 3 blocking)
+0	check:set-null-column-lists	SET_NULL_GATE_DATABASE_URL
+0	check:replay-ledger	COLD_DATABASE_URL	reads drizzle.__replay, written ONLY by replay-chain-cold.mjs; cold replay applied=685 skipped=0 failures=0
+2	check:alert-ack	ALERT_WEBHOOK_URL	NOT CLOSABLE HERE — needs a deployed destination AND an operator reading a nonce out of the alert channel. Self-test exits 0 (7/7), so the gate's judgement is sound; only its input is absent.
+
+## REVISED TOTALS AT HEAD
+# BACKEND  100 gates: 90 pass / 9 violation / 1 inconclusive
+# FRONTEND  37 gates: 35 pass / 2 violation / 0 inconclusive
+# COMBINED 137 gates: 125 pass / 11 violation / 1 inconclusive
