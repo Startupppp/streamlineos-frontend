@@ -1,18 +1,17 @@
 {
-  "generatedAtMs": 1788523159699,
-  "generatedAt": "2026-09-04T11:59:19.699Z",
+  "generatedAtMs": 1788527343319,
+  "generatedAt": "2026-09-04T13:09:03.319Z",
   "baseUrl": "http://localhost:1001",
   "targetUrl": "http://localhost:1001",
   "serverMode": "production",
   "buildId": "i-RlhIuNl5z_NmhND7j78",
-  "releaseSha": "c86da51a3763c28a3af18d4bee0f9478f469da1e",
+  "releaseSha": "253dd74978bcfa5c505244b8bfbde376a24455ad",
   "releaseDirty": true,
   "repeat": 6,
   "authenticatedRoutes": [
     "/mail",
     "/inbox",
     "/build/inbox",
-    "/crm/inbox",
     "/support/inbox",
     "/dashboard",
     "/chat",
@@ -20,78 +19,77 @@
     "/notifications",
     "/settings",
     "/build/my-work",
-    "/crm/leads",
     "/parties"
   ],
   "desktop": {
     "lcp": {
-      "p75_ms": 1969
+      "p75_ms": 2252
     },
     "inp": {
-      "p75_ms": 164
+      "p75_ms": 128
     },
     "cls": {
       "p75": 0.00037229938271604937
     },
     "fcp": {
-      "p75_ms": 1879
+      "p75_ms": 2193
     },
     "ttfb": {
-      "p95_ms": 2838.2199999898658
+      "p95_ms": 3277.375
     },
     "longTasks": {
-      "p75_ms": 653
+      "p75_ms": 563
     },
     "usedJsHeap": {
-      "p75_bytes": 15491575.25
+      "p75_bytes": 16128475.75
     }
   },
   "mobile": {
     "lcp": {
-      "p75_ms": 2472
+      "p75_ms": 2181
     },
     "inp": {
-      "p75_ms": 1436
+      "p75_ms": 1246
     },
     "cls": {
       "p75": 0
     },
     "fcp": {
-      "p75_ms": 2471
+      "p75_ms": 1897
     },
     "ttfb": {
-      "p95_ms": 188.46000000088335
+      "p95_ms": 2280.450000010431
     },
     "longTasks": {
-      "p75_ms": 0
+      "p75_ms": 2329.25
     },
     "usedJsHeap": {
-      "p75_bytes": 915353
+      "p75_bytes": 14912385.5
     }
   },
   "byRoute": {
     "/mail": {
       "desktop": {
         "lcp": {
-          "p75_ms": 2693
+          "p75_ms": 2399
         },
         "inp": {
-          "p75_ms": 86
+          "p75_ms": 102
         },
         "cls": {
           "p75": 0.00037229938271604937
         },
         "fcp": {
-          "p75_ms": 2693
+          "p75_ms": 2399
         },
         "ttfb": {
-          "p95_ms": 3309.7500000074506
+          "p95_ms": 2521.449999988079
         },
         "longTasks": {
-          "p75_ms": 307.75
+          "p75_ms": 419.25
         },
         "usedJsHeap": {
-          "p75_bytes": 14763663.75
+          "p75_bytes": 14442395.75
         },
         "interactions": {
           "samples": 6,
@@ -102,70 +100,70 @@
         "url": "http://localhost:1001/mail",
         "title": "StreamlineOS — The operating system for modern teams",
         "visibilityState": "visible",
-        "words": 49,
+        "words": 47,
         "brandedLoader": false,
         "errorBoundary": false,
         "navLinks": 16
       },
       "mobile": {
         "lcp": {
-          "p75_ms": 2440
+          "p75_ms": 1913
         },
         "inp": {
-          "p75_ms": 1436
+          "p75_ms": 90
         },
         "cls": {
           "p75": 0
         },
         "fcp": {
-          "p75_ms": 2166
+          "p75_ms": 1503
         },
         "ttfb": {
-          "p95_ms": 2373.2749999836087
+          "p95_ms": 1586.6000000014901
         },
         "longTasks": {
-          "p75_ms": 3047.75
+          "p75_ms": 1482.5
         },
         "usedJsHeap": {
-          "p75_bytes": 13974863
+          "p75_bytes": 14699279
         },
         "interactions": {
           "samples": 6,
-          "performed": 4
+          "performed": 6
         }
       },
       "mobileContent": {
-        "url": "chrome-error://chromewebdata/",
-        "title": "localhost",
+        "url": "http://localhost:1001/mail",
+        "title": "(99+) StreamlineOS",
         "visibilityState": "visible",
-        "words": 22,
+        "words": 27,
         "brandedLoader": false,
         "errorBoundary": false,
-        "navLinks": 0
+        "navLinks": 16
       }
     },
     "/inbox": {
       "desktop": {
         "lcp": {
-          "p75_ms": 1465
+          "p75_ms": 3005
         },
         "inp": {
-          "p75_ms": 118
+          "p75_ms": 156
         },
         "cls": {
           "p75": 0.00037229938271604937
         },
         "fcp": {
-          "p75_ms": 1465
+          "p75_ms": 3005
         },
         "ttfb": {
-          "p95_ms": 1644.1250000074506
+          "p95_ms": 3414.8249999955297
         },
         "longTasks": {
-          "p75_ms": 393.25
+          "p75_ms": 517.25
         },
         "usedJsHeap": {
-          "p75_bytes": 14672797.25
+          "p75_bytes": 14425745.5
         },
         "interactions": {
           "samples": 6,
@@ -174,7 +172,7 @@
       },
       "desktopContent": {
         "url": "http://localhost:1001/inbox",
-        "title": "(99+) StreamlineOS",
+        "title": "StreamlineOS — The operating system for modern teams",
         "visibilityState": "visible",
         "words": 50,
         "brandedLoader": false,
@@ -183,63 +181,63 @@
       },
       "mobile": {
         "lcp": {
-          "p75_ms": 1254
+          "p75_ms": 2059
         },
         "inp": {
-          "p75_ms": null
+          "p75_ms": 1240
         },
         "cls": {
           "p75": 0
         },
         "fcp": {
-          "p75_ms": 1254
+          "p75_ms": 1983
         },
         "ttfb": {
-          "p95_ms": 0
+          "p95_ms": 1726.8750000149012
         },
         "longTasks": {
-          "p75_ms": 115.75
+          "p75_ms": 2686.25
         },
         "usedJsHeap": {
-          "p75_bytes": 916057
+          "p75_bytes": 13977646.25
         },
         "interactions": {
           "samples": 6,
-          "performed": 0
+          "performed": 6
         }
       },
       "mobileContent": {
-        "url": "chrome-error://chromewebdata/",
-        "title": "localhost",
+        "url": "http://localhost:1001/inbox",
+        "title": "StreamlineOS",
         "visibilityState": "visible",
-        "words": 22,
+        "words": 29,
         "brandedLoader": false,
         "errorBoundary": false,
-        "navLinks": 0
+        "navLinks": 16
       }
     },
     "/build/inbox": {
       "desktop": {
         "lcp": {
-          "p75_ms": 2089
+          "p75_ms": 1919
         },
         "inp": {
-          "p75_ms": 86
+          "p75_ms": 128
         },
         "cls": {
           "p75": 0.00037229938271604937
         },
         "fcp": {
-          "p75_ms": 2089
+          "p75_ms": 1919
         },
         "ttfb": {
-          "p95_ms": 2224.52499999851
+          "p95_ms": 1855.0500000044703
         },
         "longTasks": {
-          "p75_ms": 244.25
+          "p75_ms": 477.75
         },
         "usedJsHeap": {
-          "p75_bytes": 14603471
+          "p75_bytes": 14384816
         },
         "interactions": {
           "samples": 6,
@@ -257,137 +255,63 @@
       },
       "mobile": {
         "lcp": {
-          "p75_ms": 2507
+          "p75_ms": 1883
         },
         "inp": {
-          "p75_ms": null
+          "p75_ms": 1226
         },
         "cls": {
           "p75": 0
         },
         "fcp": {
-          "p75_ms": 2507
+          "p75_ms": 1883
         },
         "ttfb": {
-          "p95_ms": 0
+          "p95_ms": 2513.8500000089407
         },
         "longTasks": {
-          "p75_ms": 54
+          "p75_ms": 2116.25
         },
         "usedJsHeap": {
-          "p75_bytes": 915876
-        },
-        "interactions": {
-          "samples": 6,
-          "performed": 0
-        }
-      },
-      "mobileContent": {
-        "url": "chrome-error://chromewebdata/",
-        "title": "localhost",
-        "visibilityState": "visible",
-        "words": 22,
-        "brandedLoader": false,
-        "errorBoundary": false,
-        "navLinks": 0
-      }
-    },
-    "/crm/inbox": {
-      "desktop": {
-        "lcp": {
-          "p75_ms": 2389
-        },
-        "inp": {
-          "p75_ms": 80
-        },
-        "cls": {
-          "p75": 0.00037229938271604937
-        },
-        "fcp": {
-          "p75_ms": 2389
-        },
-        "ttfb": {
-          "p95_ms": 2532.2249999940395
-        },
-        "longTasks": {
-          "p75_ms": 198.75
-        },
-        "usedJsHeap": {
-          "p75_bytes": 15033965
+          "p75_bytes": 13847317
         },
         "interactions": {
           "samples": 6,
           "performed": 6
         }
       },
-      "desktopContent": {
-        "url": "http://localhost:1001/crm/inbox",
+      "mobileContent": {
+        "url": "http://localhost:1001/build/inbox",
         "title": "StreamlineOS — The operating system for modern teams",
         "visibilityState": "visible",
-        "words": 53,
+        "words": 28,
         "brandedLoader": false,
         "errorBoundary": false,
-        "navLinks": 19
-      },
-      "mobile": {
-        "lcp": {
-          "p75_ms": 2448
-        },
-        "inp": {
-          "p75_ms": null
-        },
-        "cls": {
-          "p75": 0
-        },
-        "fcp": {
-          "p75_ms": 2448
-        },
-        "ttfb": {
-          "p95_ms": 0
-        },
-        "longTasks": {
-          "p75_ms": 0
-        },
-        "usedJsHeap": {
-          "p75_bytes": 915349
-        },
-        "interactions": {
-          "samples": 6,
-          "performed": 0
-        }
-      },
-      "mobileContent": {
-        "url": "chrome-error://chromewebdata/",
-        "title": "localhost",
-        "visibilityState": "visible",
-        "words": 22,
-        "brandedLoader": false,
-        "errorBoundary": false,
-        "navLinks": 0
+        "navLinks": 10
       }
     },
     "/support/inbox": {
       "desktop": {
         "lcp": {
-          "p75_ms": 2622
+          "p75_ms": 2291
         },
         "inp": {
-          "p75_ms": 92
+          "p75_ms": 150
         },
         "cls": {
           "p75": 0.00037229938271604937
         },
         "fcp": {
-          "p75_ms": 2622
+          "p75_ms": 1957
         },
         "ttfb": {
-          "p95_ms": 3698.6750000044703
+          "p95_ms": 2627.499999985099
         },
         "longTasks": {
-          "p75_ms": 311.75
+          "p75_ms": 869.25
         },
         "usedJsHeap": {
-          "p75_bytes": 14920570
+          "p75_bytes": 14706579.75
         },
         "interactions": {
           "samples": 6,
@@ -396,72 +320,72 @@
       },
       "desktopContent": {
         "url": "http://localhost:1001/support/inbox",
-        "title": "StreamlineOS — The operating system for modern teams",
+        "title": "(1) StreamlineOS",
         "visibilityState": "visible",
-        "words": 55,
+        "words": 59,
         "brandedLoader": false,
         "errorBoundary": false,
         "navLinks": 8
       },
       "mobile": {
         "lcp": {
-          "p75_ms": 2490
+          "p75_ms": 2842
         },
         "inp": {
-          "p75_ms": null
+          "p75_ms": 744
         },
         "cls": {
           "p75": 0
         },
         "fcp": {
-          "p75_ms": 2490
+          "p75_ms": 2121
         },
         "ttfb": {
-          "p95_ms": 0
+          "p95_ms": 1721.7000000178814
         },
         "longTasks": {
-          "p75_ms": 0
+          "p75_ms": 2137.75
         },
         "usedJsHeap": {
-          "p75_bytes": 915353
+          "p75_bytes": 13773858.75
         },
         "interactions": {
           "samples": 6,
-          "performed": 0
+          "performed": 6
         }
       },
       "mobileContent": {
-        "url": "chrome-error://chromewebdata/",
-        "title": "localhost",
+        "url": "http://localhost:1001/support/inbox",
+        "title": "StreamlineOS — The operating system for modern teams",
         "visibilityState": "visible",
-        "words": 22,
+        "words": 26,
         "brandedLoader": false,
         "errorBoundary": false,
-        "navLinks": 0
+        "navLinks": 8
       }
     },
     "/dashboard": {
       "desktop": {
         "lcp": {
-          "p75_ms": 2925
+          "p75_ms": 2478
         },
         "inp": {
-          "p75_ms": 94
+          "p75_ms": 118
         },
         "cls": {
           "p75": 0.00037229938271604937
         },
         "fcp": {
-          "p75_ms": 2925
+          "p75_ms": 2478
         },
         "ttfb": {
-          "p95_ms": 2938.2999999970198
+          "p95_ms": 2911.7250000089407
         },
         "longTasks": {
-          "p75_ms": 261.25
+          "p75_ms": 668.75
         },
         "usedJsHeap": {
-          "p75_bytes": 17486161.5
+          "p75_bytes": 17397984.25
         },
         "interactions": {
           "samples": 6,
@@ -472,218 +396,218 @@
         "url": "http://localhost:1001/dashboard",
         "title": "StreamlineOS — The operating system for modern teams",
         "visibilityState": "visible",
-        "words": 121,
+        "words": 123,
         "brandedLoader": false,
         "errorBoundary": false,
         "navLinks": 16
       },
       "mobile": {
         "lcp": {
-          "p75_ms": 2491
+          "p75_ms": 1963
         },
         "inp": {
-          "p75_ms": null
+          "p75_ms": 638
         },
         "cls": {
           "p75": 0
         },
         "fcp": {
-          "p75_ms": 2491
+          "p75_ms": 1713
         },
         "ttfb": {
-          "p95_ms": 0
+          "p95_ms": 1493.1499999985099
         },
         "longTasks": {
-          "p75_ms": 0
+          "p75_ms": 1737.25
         },
         "usedJsHeap": {
-          "p75_bytes": 915349
+          "p75_bytes": 13988723.75
         },
         "interactions": {
           "samples": 6,
-          "performed": 0
+          "performed": 6
         }
       },
       "mobileContent": {
-        "url": "chrome-error://chromewebdata/",
-        "title": "localhost",
+        "url": "http://localhost:1001/dashboard",
+        "title": "StreamlineOS — The operating system for modern teams",
         "visibilityState": "visible",
-        "words": 22,
+        "words": 20,
         "brandedLoader": false,
         "errorBoundary": false,
-        "navLinks": 0
+        "navLinks": 16
       }
     },
     "/chat": {
       "desktop": {
         "lcp": {
-          "p75_ms": 1950
+          "p75_ms": 1281
         },
         "inp": {
-          "p75_ms": 64
+          "p75_ms": 102
         },
         "cls": {
-          "p75": 0
+          "p75": 0.00037229938271604937
         },
         "fcp": {
-          "p75_ms": 1546
+          "p75_ms": 1281
         },
         "ttfb": {
-          "p95_ms": 1382.9999999925494
+          "p95_ms": 2720.7999999970198
         },
         "longTasks": {
-          "p75_ms": 126.5
+          "p75_ms": 410.75
         },
         "usedJsHeap": {
-          "p75_bytes": 8718732
+          "p75_bytes": 16828291.75
         },
         "interactions": {
           "samples": 6,
-          "performed": 1
+          "performed": 6
         }
       },
       "desktopContent": {
-        "url": "http://localhost:1001/org-setup",
+        "url": "http://localhost:1001/chat",
         "title": "StreamlineOS — The operating system for modern teams",
         "visibilityState": "visible",
-        "words": 118,
+        "words": 55,
         "brandedLoader": false,
         "errorBoundary": false,
-        "navLinks": 0
+        "navLinks": 17
       },
       "mobile": {
         "lcp": {
-          "p75_ms": 2471
+          "p75_ms": 2574
         },
         "inp": {
-          "p75_ms": null
+          "p75_ms": 562
         },
         "cls": {
           "p75": 0
         },
         "fcp": {
-          "p75_ms": 2471
+          "p75_ms": 2402
         },
         "ttfb": {
-          "p95_ms": 0
+          "p95_ms": 2331.6249999925494
         },
         "longTasks": {
-          "p75_ms": 0
+          "p75_ms": 1364
         },
         "usedJsHeap": {
-          "p75_bytes": 915344
+          "p75_bytes": 15822753
         },
         "interactions": {
           "samples": 6,
-          "performed": 0
+          "performed": 6
         }
       },
       "mobileContent": {
-        "url": "chrome-error://chromewebdata/",
-        "title": "localhost",
+        "url": "http://localhost:1001/chat",
+        "title": "StreamlineOS",
         "visibilityState": "visible",
-        "words": 22,
+        "words": 20,
         "brandedLoader": false,
         "errorBoundary": false,
-        "navLinks": 0
+        "navLinks": 17
       }
     },
     "/calendar": {
       "desktop": {
         "lcp": {
-          "p75_ms": 1847
+          "p75_ms": 2898
         },
         "inp": {
-          "p75_ms": 122
+          "p75_ms": 72
         },
         "cls": {
           "p75": 0.000835036289544753
         },
         "fcp": {
-          "p75_ms": 1825
+          "p75_ms": 2898
         },
         "ttfb": {
-          "p95_ms": 3763.575000010431
+          "p95_ms": 3217.22500000149
         },
         "longTasks": {
-          "p75_ms": 609
+          "p75_ms": 208.75
         },
         "usedJsHeap": {
-          "p75_bytes": 16834550
+          "p75_bytes": 16182522
         },
         "interactions": {
           "samples": 6,
-          "performed": 4
+          "performed": 6
         }
       },
       "desktopContent": {
         "url": "http://localhost:1001/calendar",
         "title": "Calendar | StreamlineOS · StreamlineOS",
         "visibilityState": "visible",
-        "words": 111,
+        "words": 109,
         "brandedLoader": false,
         "errorBoundary": false,
         "navLinks": 16
       },
       "mobile": {
         "lcp": {
-          "p75_ms": 2464
+          "p75_ms": 2375
         },
         "inp": {
-          "p75_ms": null
+          "p75_ms": 668
         },
         "cls": {
-          "p75": 0
+          "p75": 0.0013861647650863695
         },
         "fcp": {
-          "p75_ms": 2464
+          "p75_ms": 2164
         },
         "ttfb": {
-          "p95_ms": 0
+          "p95_ms": 2145.1499999910593
         },
         "longTasks": {
-          "p75_ms": 0
+          "p75_ms": 1899.75
         },
         "usedJsHeap": {
-          "p75_bytes": 915348
+          "p75_bytes": 17099623.5
         },
         "interactions": {
           "samples": 6,
-          "performed": 0
+          "performed": 6
         }
       },
       "mobileContent": {
-        "url": "chrome-error://chromewebdata/",
-        "title": "localhost",
+        "url": "http://localhost:1001/calendar",
+        "title": "(99+) StreamlineOS",
         "visibilityState": "visible",
-        "words": 22,
+        "words": 87,
         "brandedLoader": false,
         "errorBoundary": false,
-        "navLinks": 0
+        "navLinks": 16
       }
     },
     "/notifications": {
       "desktop": {
         "lcp": {
-          "p75_ms": 1781
+          "p75_ms": 2016
         },
         "inp": {
-          "p75_ms": 190
+          "p75_ms": 126
         },
         "cls": {
           "p75": 0.00037229938271604937
         },
         "fcp": {
-          "p75_ms": 1781
+          "p75_ms": 2016
         },
         "ttfb": {
-          "p95_ms": 1601.900000013411
+          "p95_ms": 2220.8249999806285
         },
         "longTasks": {
-          "p75_ms": 878.75
+          "p75_ms": 448.25
         },
         "usedJsHeap": {
-          "p75_bytes": 17857739.75
+          "p75_bytes": 15501400.25
         },
         "interactions": {
           "samples": 6,
@@ -692,72 +616,72 @@
       },
       "desktopContent": {
         "url": "http://localhost:1001/notifications",
-        "title": "(99+) StreamlineOS",
+        "title": "StreamlineOS — The operating system for modern teams",
         "visibilityState": "visible",
-        "words": 68,
+        "words": 63,
         "brandedLoader": false,
         "errorBoundary": false,
         "navLinks": 22
       },
       "mobile": {
         "lcp": {
-          "p75_ms": 2470
+          "p75_ms": 2123
         },
         "inp": {
-          "p75_ms": null
+          "p75_ms": 1166
         },
         "cls": {
           "p75": 0
         },
         "fcp": {
-          "p75_ms": 2470
+          "p75_ms": 1689
         },
         "ttfb": {
-          "p95_ms": 0
+          "p95_ms": 1980.4249999895692
         },
         "longTasks": {
-          "p75_ms": 0
+          "p75_ms": 2598.5
         },
         "usedJsHeap": {
-          "p75_bytes": 915353
+          "p75_bytes": 14259803.5
         },
         "interactions": {
           "samples": 6,
-          "performed": 0
+          "performed": 6
         }
       },
       "mobileContent": {
-        "url": "chrome-error://chromewebdata/",
-        "title": "localhost",
+        "url": "http://localhost:1001/notifications",
+        "title": "StreamlineOS",
         "visibilityState": "visible",
-        "words": 22,
+        "words": 38,
         "brandedLoader": false,
         "errorBoundary": false,
-        "navLinks": 0
+        "navLinks": 22
       }
     },
     "/settings": {
       "desktop": {
         "lcp": {
-          "p75_ms": 1878
+          "p75_ms": 2126
         },
         "inp": {
-          "p75_ms": 136
+          "p75_ms": 64
         },
         "cls": {
           "p75": 0.00037229938271604937
         },
         "fcp": {
-          "p75_ms": 1878
+          "p75_ms": 2126
         },
         "ttfb": {
-          "p95_ms": 2270.175000011921
+          "p95_ms": 3489.9750000163913
         },
         "longTasks": {
-          "p75_ms": 596.75
+          "p75_ms": 189.25
         },
         "usedJsHeap": {
-          "p75_bytes": 14992253.75
+          "p75_bytes": 15376367.5
         },
         "interactions": {
           "samples": 6,
@@ -768,70 +692,70 @@
         "url": "http://localhost:1001/settings",
         "title": "StreamlineOS — The operating system for modern teams",
         "visibilityState": "visible",
-        "words": 134,
+        "words": 132,
         "brandedLoader": false,
         "errorBoundary": false,
         "navLinks": 31
       },
       "mobile": {
         "lcp": {
-          "p75_ms": 2463
+          "p75_ms": 1935
         },
         "inp": {
-          "p75_ms": null
+          "p75_ms": 1368
         },
         "cls": {
           "p75": 0
         },
         "fcp": {
-          "p75_ms": 2463
+          "p75_ms": 1791
         },
         "ttfb": {
-          "p95_ms": 0
+          "p95_ms": 1681.9499999955297
         },
         "longTasks": {
-          "p75_ms": 0
+          "p75_ms": 1476.25
         },
         "usedJsHeap": {
-          "p75_bytes": 915348
+          "p75_bytes": 14637537
         },
         "interactions": {
           "samples": 6,
-          "performed": 0
+          "performed": 6
         }
       },
       "mobileContent": {
-        "url": "chrome-error://chromewebdata/",
-        "title": "localhost",
+        "url": "http://localhost:1001/settings",
+        "title": "StreamlineOS — The operating system for modern teams",
         "visibilityState": "visible",
-        "words": 22,
+        "words": 79,
         "brandedLoader": false,
         "errorBoundary": false,
-        "navLinks": 0
+        "navLinks": 31
       }
     },
     "/build/my-work": {
       "desktop": {
         "lcp": {
-          "p75_ms": 1666
+          "p75_ms": 2232
         },
         "inp": {
-          "p75_ms": 148
+          "p75_ms": 106
         },
         "cls": {
           "p75": 0.00037229938271604937
         },
         "fcp": {
-          "p75_ms": 1666
+          "p75_ms": 2232
         },
         "ttfb": {
-          "p95_ms": 1981.4999999776483
+          "p95_ms": 3208.974999986589
         },
         "longTasks": {
-          "p75_ms": 629
+          "p75_ms": 390.25
         },
         "usedJsHeap": {
-          "p75_bytes": 15481137.25
+          "p75_bytes": 15876660.25
         },
         "interactions": {
           "samples": 6,
@@ -840,146 +764,72 @@
       },
       "desktopContent": {
         "url": "http://localhost:1001/build/my-work",
-        "title": "(1) StreamlineOS",
+        "title": "StreamlineOS — The operating system for modern teams",
         "visibilityState": "visible",
-        "words": 50,
+        "words": 46,
         "brandedLoader": false,
         "errorBoundary": false,
         "navLinks": 10
       },
       "mobile": {
         "lcp": {
-          "p75_ms": 2447
+          "p75_ms": 1859
         },
         "inp": {
-          "p75_ms": null
+          "p75_ms": 1384
         },
         "cls": {
           "p75": 0
         },
         "fcp": {
-          "p75_ms": 2447
+          "p75_ms": 1488
         },
         "ttfb": {
-          "p95_ms": 0
+          "p95_ms": 2035.775000013411
         },
         "longTasks": {
-          "p75_ms": 0
+          "p75_ms": 1522.25
         },
         "usedJsHeap": {
-          "p75_bytes": 915353
-        },
-        "interactions": {
-          "samples": 6,
-          "performed": 0
-        }
-      },
-      "mobileContent": {
-        "url": "chrome-error://chromewebdata/",
-        "title": "localhost",
-        "visibilityState": "visible",
-        "words": 22,
-        "brandedLoader": false,
-        "errorBoundary": false,
-        "navLinks": 0
-      }
-    },
-    "/crm/leads": {
-      "desktop": {
-        "lcp": {
-          "p75_ms": 2005
-        },
-        "inp": {
-          "p75_ms": 238
-        },
-        "cls": {
-          "p75": 0.00037229938271604937
-        },
-        "fcp": {
-          "p75_ms": 1823
-        },
-        "ttfb": {
-          "p95_ms": 1735.2250000014901
-        },
-        "longTasks": {
-          "p75_ms": 1033.5
-        },
-        "usedJsHeap": {
-          "p75_bytes": 15871565.5
+          "p75_bytes": 15008818
         },
         "interactions": {
           "samples": 6,
           "performed": 6
         }
       },
-      "desktopContent": {
-        "url": "http://localhost:1001/crm/leads",
-        "title": "(99+) StreamlineOS",
-        "visibilityState": "visible",
-        "words": 64,
-        "brandedLoader": false,
-        "errorBoundary": false,
-        "navLinks": 23
-      },
-      "mobile": {
-        "lcp": {
-          "p75_ms": 2459
-        },
-        "inp": {
-          "p75_ms": null
-        },
-        "cls": {
-          "p75": 0
-        },
-        "fcp": {
-          "p75_ms": 2459
-        },
-        "ttfb": {
-          "p95_ms": 0
-        },
-        "longTasks": {
-          "p75_ms": 0
-        },
-        "usedJsHeap": {
-          "p75_bytes": 915349
-        },
-        "interactions": {
-          "samples": 6,
-          "performed": 0
-        }
-      },
       "mobileContent": {
-        "url": "chrome-error://chromewebdata/",
-        "title": "localhost",
+        "url": "http://localhost:1001/build/my-work",
+        "title": "StreamlineOS",
         "visibilityState": "visible",
-        "words": 22,
+        "words": 29,
         "brandedLoader": false,
         "errorBoundary": false,
-        "navLinks": 0
+        "navLinks": 10
       }
     },
     "/parties": {
       "desktop": {
         "lcp": {
-          "p75_ms": 1811
+          "p75_ms": 1815
         },
         "inp": {
-          "p75_ms": 232
+          "p75_ms": 196
         },
         "cls": {
           "p75": 0.0011822852366255143
         },
         "fcp": {
-          "p75_ms": 1811
+          "p75_ms": 1815
         },
         "ttfb": {
-          "p95_ms": 1637.8749999925494
+          "p95_ms": 1794.5750000104308
         },
         "longTasks": {
-          "p75_ms": 1107.5
+          "p75_ms": 761.25
         },
         "usedJsHeap": {
-          "p75_bytes": 15070425.75
+          "p75_bytes": 15079351
         },
         "interactions": {
           "samples": 6,
@@ -988,48 +838,48 @@
       },
       "desktopContent": {
         "url": "http://localhost:1001/parties",
-        "title": "(99+) StreamlineOS",
+        "title": "StreamlineOS — The operating system for modern teams",
         "visibilityState": "visible",
-        "words": 73,
+        "words": 65,
         "brandedLoader": false,
         "errorBoundary": false,
         "navLinks": 19
       },
       "mobile": {
         "lcp": {
-          "p75_ms": 2470
+          "p75_ms": 2748
         },
         "inp": {
-          "p75_ms": null
+          "p75_ms": 1416
         },
         "cls": {
           "p75": 0
         },
         "fcp": {
-          "p75_ms": 2470
+          "p75_ms": 2043
         },
         "ttfb": {
-          "p95_ms": 0
+          "p95_ms": 2977.7250000089407
         },
         "longTasks": {
-          "p75_ms": 0
+          "p75_ms": 2789.25
         },
         "usedJsHeap": {
-          "p75_bytes": 915347
+          "p75_bytes": 14962110.75
         },
         "interactions": {
           "samples": 6,
-          "performed": 0
+          "performed": 6
         }
       },
       "mobileContent": {
-        "url": "chrome-error://chromewebdata/",
-        "title": "localhost",
+        "url": "http://localhost:1001/parties",
+        "title": "StreamlineOS",
         "visibilityState": "visible",
-        "words": 22,
+        "words": 31,
         "brandedLoader": false,
         "errorBoundary": false,
-        "navLinks": 0
+        "navLinks": 19
       }
     }
   },
@@ -1039,19 +889,19 @@
       "stylesheetBytes": 58587,
       "imageBytes": 4464,
       "fontBytes": 55580,
-      "documentBytes": 20832,
+      "documentBytes": 20824,
       "otherBytes": 2492,
       "thirdPartyBytes": 6110,
-      "totalBytes": 716932,
+      "totalBytes": 716924,
       "windowTotals": {
         "scriptBytes": 856859,
         "stylesheetBytes": 58587,
         "imageBytes": 7540,
         "fontBytes": 55580,
-        "documentBytes": 20832,
-        "otherBytes": 25944,
+        "documentBytes": 20824,
+        "otherBytes": 20716,
         "thirdPartyBytes": 7499,
-        "totalBytes": 1025342
+        "totalBytes": 1020106
       },
       "postLoadTotals": {
         "scriptBytes": 281882,
@@ -1059,9 +909,9 @@
         "imageBytes": 3076,
         "fontBytes": 0,
         "documentBytes": 0,
-        "otherBytes": 23452,
+        "otherBytes": 18224,
         "thirdPartyBytes": 1389,
-        "totalBytes": 308410
+        "totalBytes": 303182
       },
       "notableResources": [
         {
@@ -1359,23 +1209,23 @@
       ]
     },
     "/inbox": {
-      "scriptBytes": 810176,
+      "scriptBytes": 807371,
       "stylesheetBytes": 58587,
       "imageBytes": 3076,
       "fontBytes": 55580,
-      "documentBytes": 20621,
-      "otherBytes": 50584,
-      "thirdPartyBytes": 7143,
-      "totalBytes": 998624,
+      "documentBytes": 20624,
+      "otherBytes": 52120,
+      "thirdPartyBytes": 7539,
+      "totalBytes": 997358,
       "windowTotals": {
-        "scriptBytes": 1093910,
+        "scriptBytes": 1091105,
         "stylesheetBytes": 58587,
         "imageBytes": 6152,
         "fontBytes": 55580,
-        "documentBytes": 20621,
-        "otherBytes": 84877,
-        "thirdPartyBytes": 7143,
-        "totalBytes": 1319727
+        "documentBytes": 20624,
+        "otherBytes": 86415,
+        "thirdPartyBytes": 7539,
+        "totalBytes": 1318463
       },
       "postLoadTotals": {
         "scriptBytes": 283734,
@@ -1383,9 +1233,9 @@
         "imageBytes": 3076,
         "fontBytes": 0,
         "documentBytes": 0,
-        "otherBytes": 34293,
+        "otherBytes": 34295,
         "thirdPartyBytes": 0,
-        "totalBytes": 321103
+        "totalBytes": 321105
       },
       "notableResources": [
         {
@@ -1409,14 +1259,14 @@
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1688,
-          "url": "http://localhost:1501/settings/ai-usage"
+          "bytes": 2234,
+          "url": "http://localhost:1501/organization/settings"
         },
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1395,
-          "url": "http://localhost:1501/users/stats"
+          "bytes": 1420,
+          "url": "http://localhost:1501/dashboard/stats"
         },
         {
           "kind": "other",
@@ -1427,14 +1277,38 @@
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1349,
+          "bytes": 1303,
+          "url": "http://localhost:1501/integrations/connections"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 1220,
+          "url": "http://localhost:1501/notifications/unread-count"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
           "url": "http://localhost:1501/notifications/events/token"
         },
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1349,
+          "bytes": 0,
           "url": "http://localhost:1501/notifications/events/token"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1501/onboarding/module-checklists"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1501/dashboard/my-issues"
         },
         {
           "kind": "other",
@@ -1465,48 +1339,6 @@
           "thirdParty": true,
           "bytes": 0,
           "url": "http://localhost:1501/dashboard/today-activities"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 0,
-          "url": "http://localhost:1501/me/attendance/status"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 0,
-          "url": "http://localhost:1501/dashboard/executive"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 0,
-          "url": "http://localhost:1501/dashboard/personal"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 0,
-          "url": "http://localhost:1501/dashboard/my-leave-balance"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 0,
-          "url": "http://localhost:1501/me/time-off/requests?limit=100"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 0,
-          "url": "http://localhost:1501/notifications?section=UNREAD&limit=20"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 0,
-          "url": "http://localhost:1501/dashboard/announcements"
         }
       ],
       "largestScripts": [
@@ -1755,23 +1587,23 @@
       ]
     },
     "/build/inbox": {
-      "scriptBytes": 821056,
+      "scriptBytes": 818251,
       "stylesheetBytes": 58587,
       "imageBytes": 6488,
       "fontBytes": 55580,
-      "documentBytes": 20407,
-      "otherBytes": 49184,
-      "thirdPartyBytes": 5748,
-      "totalBytes": 1011302,
+      "documentBytes": 20405,
+      "otherBytes": 42639,
+      "thirdPartyBytes": 5477,
+      "totalBytes": 1001950,
       "windowTotals": {
-        "scriptBytes": 1102938,
+        "scriptBytes": 1100133,
         "stylesheetBytes": 58587,
         "imageBytes": 9564,
         "fontBytes": 55580,
-        "documentBytes": 20407,
-        "otherBytes": 84868,
-        "thirdPartyBytes": 7137,
-        "totalBytes": 1331944
+        "documentBytes": 20405,
+        "otherBytes": 76937,
+        "thirdPartyBytes": 5477,
+        "totalBytes": 1321206
       },
       "postLoadTotals": {
         "scriptBytes": 281882,
@@ -1779,9 +1611,9 @@
         "imageBytes": 3076,
         "fontBytes": 0,
         "documentBytes": 0,
-        "otherBytes": 35684,
-        "thirdPartyBytes": 1389,
-        "totalBytes": 320642
+        "otherBytes": 34298,
+        "thirdPartyBytes": 0,
+        "totalBytes": 319256
       },
       "notableResources": [
         {
@@ -1817,20 +1649,32 @@
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1362,
-          "url": "http://localhost:1501/leads?limit=1"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
           "bytes": 1349,
           "url": "http://localhost:1501/notifications/events/token"
         },
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1349,
-          "url": "http://localhost:1501/notifications/events/token"
+          "bytes": 1220,
+          "url": "http://localhost:1501/integrations/connections"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 1220,
+          "url": "http://localhost:1501/notifications/unread-count"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1501/onboarding/module-checklists"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1501/dashboard/my-issues"
         },
         {
           "kind": "other",
@@ -1861,6 +1705,36 @@
           "thirdParty": true,
           "bytes": 0,
           "url": "http://localhost:1501/dashboard/today-activities"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1501/me/attendance/status"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1501/dashboard/executive"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1501/dashboard/personal"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1501/dashboard/my-leave-balance"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1501/me/time-off/requests?limit=100"
         }
       ],
       "largestScripts": [
@@ -2108,342 +1982,24 @@
         }
       ]
     },
-    "/crm/inbox": {
-      "scriptBytes": 583582,
-      "stylesheetBytes": 58587,
-      "imageBytes": 3076,
-      "fontBytes": 55580,
-      "documentBytes": 22199,
-      "otherBytes": 11632,
-      "thirdPartyBytes": 5748,
-      "totalBytes": 734656,
-      "windowTotals": {
-        "scriptBytes": 859630,
-        "stylesheetBytes": 58587,
-        "imageBytes": 6152,
-        "fontBytes": 55580,
-        "documentBytes": 22199,
-        "otherBytes": 47318,
-        "thirdPartyBytes": 7137,
-        "totalBytes": 1049466
-      },
-      "postLoadTotals": {
-        "scriptBytes": 276048,
-        "stylesheetBytes": 0,
-        "imageBytes": 3076,
-        "fontBytes": 0,
-        "documentBytes": 0,
-        "otherBytes": 35686,
-        "thirdPartyBytes": 1389,
-        "totalBytes": 314810
-      },
-      "notableResources": [
-        {
-          "kind": "font",
-          "thirdParty": false,
-          "bytes": 30880,
-          "url": "http://localhost:1001/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2"
-        },
-        {
-          "kind": "font",
-          "thirdParty": false,
-          "bytes": 24700,
-          "url": "http://localhost:1001/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2"
-        },
-        {
-          "kind": "image",
-          "thirdParty": false,
-          "bytes": 3076,
-          "url": "http://localhost:1001/logo.svg"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1688,
-          "url": "http://localhost:1501/settings/ai-usage"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1362,
-          "url": "http://localhost:1501/leads?limit=1"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1349,
-          "url": "http://localhost:1501/notifications/events/token"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1349,
-          "url": "http://localhost:1501/notifications/events/token"
-        }
-      ],
-      "largestScripts": [
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 74913,
-          "url": "http://localhost:1001/_next/static/chunks/3k10b0bte63f2.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 62379,
-          "url": "http://localhost:1001/feedbucket-widget.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 44158,
-          "url": "http://localhost:1001/_next/static/chunks/279uwxceqwh4n.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 28759,
-          "url": "http://localhost:1001/_next/static/chunks/3obnu1uf7c8ke.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 21165,
-          "url": "http://localhost:1001/_next/static/chunks/3q6jl6c1qac6p.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 18524,
-          "url": "http://localhost:1001/_next/static/chunks/188r6k0-gx6y0.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 16292,
-          "url": "http://localhost:1001/_next/static/chunks/0m6lwyh9j2nb1.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 15994,
-          "url": "http://localhost:1001/_next/static/chunks/177cas1izqqsp.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 14632,
-          "url": "http://localhost:1001/_next/static/chunks/3o0or8g7e_pxd.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 14610,
-          "url": "http://localhost:1001/_next/static/chunks/3g986ab2xalu3.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 14256,
-          "url": "http://localhost:1001/_next/static/chunks/3bg2yxcldemuv.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 13784,
-          "url": "http://localhost:1001/_next/static/chunks/2gtune44m2_7x.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 12340,
-          "url": "http://localhost:1001/_next/static/chunks/32off-3lb_41b.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 12142,
-          "url": "http://localhost:1001/_next/static/chunks/21xnybwm818t8.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 12075,
-          "url": "http://localhost:1001/_next/static/chunks/2haq0y66hfqwz.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 11549,
-          "url": "http://localhost:1001/_next/static/chunks/2cfgb3k_acoya.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 11407,
-          "url": "http://localhost:1001/_next/static/chunks/3quu_5il8kvpe.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 11327,
-          "url": "http://localhost:1001/_next/static/chunks/392488y0cvyqw.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 10837,
-          "url": "http://localhost:1001/_next/static/chunks/19eivberb1vjs.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 10734,
-          "url": "http://localhost:1001/_next/static/chunks/1hb2zet246r22.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 10660,
-          "url": "http://localhost:1001/_next/static/chunks/1zjdfcj7g_fqv.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 10285,
-          "url": "http://localhost:1001/_next/static/chunks/3gd_fjq_q4b15.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 10220,
-          "url": "http://localhost:1001/_next/static/chunks/29pcs38zce7c1.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 10014,
-          "url": "http://localhost:1001/_next/static/chunks/29ur5xcfypvcq.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 9898,
-          "url": "http://localhost:1001/_next/static/chunks/0ra9deegcm0eh.js"
-        }
-      ],
-      "largestPostLoadScripts": [
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 55744,
-          "url": "http://localhost:1001/_next/static/chunks/2i4o_u836_j1p.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 44826,
-          "url": "http://localhost:1001/_next/static/chunks/2rn97iznpp6q5.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 15548,
-          "url": "http://localhost:1001/_next/static/chunks/2kbj7uj22f7rc.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 15190,
-          "url": "http://localhost:1001/_next/static/chunks/0hj_ww1z2vx9v.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 12166,
-          "url": "http://localhost:1001/_next/static/chunks/1hir463fky0ew.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 11951,
-          "url": "http://localhost:1001/_next/static/chunks/1smrcjsq9u4p3.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 11038,
-          "url": "http://localhost:1001/_next/static/chunks/3m7-w57xzxlzw.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 9782,
-          "url": "http://localhost:1001/_next/static/chunks/2gync85dxwhl2.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 9491,
-          "url": "http://localhost:1001/_next/static/chunks/0s_9qnjnid4wr.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 8692,
-          "url": "http://localhost:1001/_next/static/chunks/0jcjpspej_ee6.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 8446,
-          "url": "http://localhost:1001/_next/static/chunks/1tt5i1q8s9gv2.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 7552,
-          "url": "http://localhost:1001/_next/static/chunks/30lm-uciygkfr.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 7303,
-          "url": "http://localhost:1001/_next/static/chunks/3gbwknil3494w.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 7233,
-          "url": "http://localhost:1001/_next/static/chunks/15sn-nqvja077.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 7204,
-          "url": "http://localhost:1001/_next/static/chunks/27sy38ohwpk9y.js"
-        }
-      ]
-    },
     "/support/inbox": {
       "scriptBytes": 568753,
       "stylesheetBytes": 58587,
       "imageBytes": 6976,
       "fontBytes": 55580,
-      "documentBytes": 24349,
-      "otherBytes": 9331,
-      "thirdPartyBytes": 6839,
-      "totalBytes": 723576,
+      "documentBytes": 24338,
+      "otherBytes": 7372,
+      "thirdPartyBytes": 4880,
+      "totalBytes": 721606,
       "windowTotals": {
         "scriptBytes": 841245,
         "stylesheetBytes": 58587,
         "imageBytes": 10052,
         "fontBytes": 55580,
-        "documentBytes": 24349,
-        "otherBytes": 39791,
-        "thirdPartyBytes": 8228,
-        "totalBytes": 1029604
+        "documentBytes": 24338,
+        "otherBytes": 41672,
+        "thirdPartyBytes": 4880,
+        "totalBytes": 1031474
       },
       "postLoadTotals": {
         "scriptBytes": 272492,
@@ -2451,9 +2007,9 @@
         "imageBytes": 3076,
         "fontBytes": 0,
         "documentBytes": 0,
-        "otherBytes": 30460,
-        "thirdPartyBytes": 1389,
-        "totalBytes": 306028
+        "otherBytes": 34300,
+        "thirdPartyBytes": 0,
+        "totalBytes": 309868
       },
       "notableResources": [
         {
@@ -2483,24 +2039,6 @@
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1688,
-          "url": "http://localhost:1501/settings/ai-usage"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1362,
-          "url": "http://localhost:1501/leads?limit=1"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1349,
-          "url": "http://localhost:1501/notifications/events/token"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
           "bytes": 1220,
           "url": "http://localhost:1501/integrations/connections"
         },
@@ -2509,6 +2047,18 @@
           "thirdParty": true,
           "bytes": 1220,
           "url": "http://localhost:1501/dashboard/stats"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 1220,
+          "url": "http://localhost:1501/users/stats"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 1220,
+          "url": "http://localhost:1501/leads?limit=1"
         }
       ],
       "largestScripts": [
@@ -2757,23 +2307,23 @@
       ]
     },
     "/dashboard": {
-      "scriptBytes": 562434,
+      "scriptBytes": 684705,
       "stylesheetBytes": 58587,
       "imageBytes": 3076,
       "fontBytes": 55580,
-      "documentBytes": 20892,
-      "otherBytes": 6820,
-      "thirdPartyBytes": 4328,
-      "totalBytes": 707389,
+      "documentBytes": 20893,
+      "otherBytes": 8112,
+      "thirdPartyBytes": 5620,
+      "totalBytes": 830953,
       "windowTotals": {
-        "scriptBytes": 835673,
+        "scriptBytes": 957944,
         "stylesheetBytes": 58587,
         "imageBytes": 6152,
         "fontBytes": 55580,
-        "documentBytes": 20892,
-        "otherBytes": 38634,
-        "thirdPartyBytes": 5717,
-        "totalBytes": 1015518
+        "documentBytes": 20893,
+        "otherBytes": 39930,
+        "thirdPartyBytes": 7009,
+        "totalBytes": 1139086
       },
       "postLoadTotals": {
         "scriptBytes": 273239,
@@ -2781,9 +2331,9 @@
         "imageBytes": 3076,
         "fontBytes": 0,
         "documentBytes": 0,
-        "otherBytes": 31814,
+        "otherBytes": 31818,
         "thirdPartyBytes": 1389,
-        "totalBytes": 308129
+        "totalBytes": 308133
       },
       "notableResources": [
         {
@@ -2813,14 +2363,26 @@
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1420,
-          "url": "http://localhost:1501/dashboard/stats"
+          "bytes": 1362,
+          "url": "http://localhost:1501/leads?limit=1"
         },
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1220,
-          "url": "http://localhost:1501/users/stats"
+          "bytes": 1349,
+          "url": "http://localhost:1501/notifications/events/token"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 1221,
+          "url": "http://localhost:1501/organization/settings"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1501/crm/support-dashboard"
         }
       ],
       "largestScripts": [
@@ -2857,6 +2419,12 @@
         {
           "kind": "script",
           "thirdParty": false,
+          "bytes": 18983,
+          "url": "http://localhost:1001/_next/static/chunks/16xv3_07l4v5o.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
           "bytes": 18524,
           "url": "http://localhost:1001/_next/static/chunks/188r6k0-gx6y0.js"
         },
@@ -2871,6 +2439,18 @@
           "thirdParty": false,
           "bytes": 15994,
           "url": "http://localhost:1001/_next/static/chunks/177cas1izqqsp.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 15626,
+          "url": "http://localhost:1001/_next/static/chunks/0nzf3vfhjfigf.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 15548,
+          "url": "http://localhost:1001/_next/static/chunks/2kbj7uj22f7rc.js"
         },
         {
           "kind": "script",
@@ -2895,6 +2475,12 @@
           "thirdParty": false,
           "bytes": 14256,
           "url": "http://localhost:1001/_next/static/chunks/3bg2yxcldemuv.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 13076,
+          "url": "http://localhost:1001/_next/static/chunks/3pqvv7evc1gjs.js"
         },
         {
           "kind": "script",
@@ -2949,30 +2535,6 @@
           "thirdParty": false,
           "bytes": 10285,
           "url": "http://localhost:1001/_next/static/chunks/3gd_fjq_q4b15.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 10220,
-          "url": "http://localhost:1001/_next/static/chunks/29pcs38zce7c1.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 10014,
-          "url": "http://localhost:1001/_next/static/chunks/29ur5xcfypvcq.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 9826,
-          "url": "http://localhost:1001/_next/static/chunks/109f07a7g0n17.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 9422,
-          "url": "http://localhost:1001/_next/static/chunks/3j2e1rs9jdil8.js"
         }
       ],
       "largestPostLoadScripts": [
@@ -3069,23 +2631,23 @@
       ]
     },
     "/chat": {
-      "scriptBytes": 616943,
+      "scriptBytes": 627049,
       "stylesheetBytes": 58587,
       "imageBytes": 10694,
       "fontBytes": 55580,
-      "documentBytes": 21982,
-      "otherBytes": 17154,
-      "thirdPartyBytes": 9435,
-      "totalBytes": 780940,
+      "documentBytes": 21981,
+      "otherBytes": 14687,
+      "thirdPartyBytes": 6968,
+      "totalBytes": 788578,
       "windowTotals": {
-        "scriptBytes": 906501,
+        "scriptBytes": 916607,
         "stylesheetBytes": 58587,
         "imageBytes": 13770,
         "fontBytes": 55580,
-        "documentBytes": 21982,
-        "otherBytes": 54746,
-        "thirdPartyBytes": 10824,
-        "totalBytes": 1111166
+        "documentBytes": 21981,
+        "otherBytes": 50888,
+        "thirdPartyBytes": 6968,
+        "totalBytes": 1117413
       },
       "postLoadTotals": {
         "scriptBytes": 289558,
@@ -3093,9 +2655,9 @@
         "imageBytes": 3076,
         "fontBytes": 0,
         "documentBytes": 0,
-        "otherBytes": 37592,
-        "thirdPartyBytes": 1389,
-        "totalBytes": 330226
+        "otherBytes": 36201,
+        "thirdPartyBytes": 0,
+        "totalBytes": 328835
       },
       "notableResources": [
         {
@@ -3131,8 +2693,8 @@
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1420,
-          "url": "http://localhost:1501/dashboard/stats"
+          "bytes": 1395,
+          "url": "http://localhost:1501/users/stats"
         },
         {
           "kind": "other",
@@ -3149,20 +2711,20 @@
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1221,
-          "url": "http://localhost:1501/build/workspaces?limit=20"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1221,
-          "url": "http://localhost:1501/organization/settings"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
           "bytes": 1220,
-          "url": "http://localhost:1501/dashboard/pending-approvals"
+          "url": "http://localhost:1501/chat/unread"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1501/notifications/events/token"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1501/notifications/events/token"
         },
         {
           "kind": "other",
@@ -3416,34 +2978,34 @@
         }
       ]
     },
-    "/notifications": {
-      "scriptBytes": 841378,
+    "/calendar": {
+      "scriptBytes": 779636,
       "stylesheetBytes": 58587,
       "imageBytes": 3076,
       "fontBytes": 55580,
-      "documentBytes": 22053,
-      "otherBytes": 42090,
-      "thirdPartyBytes": 2523,
-      "totalBytes": 1022764,
+      "documentBytes": 21810,
+      "otherBytes": 37461,
+      "thirdPartyBytes": 9227,
+      "totalBytes": 956150,
       "windowTotals": {
-        "scriptBytes": 1119704,
-        "stylesheetBytes": 58587,
+        "scriptBytes": 1086125,
+        "stylesheetBytes": 62714,
         "imageBytes": 6152,
         "fontBytes": 55580,
-        "documentBytes": 22053,
-        "otherBytes": 117474,
-        "thirdPartyBytes": 2523,
-        "totalBytes": 1379550
+        "documentBytes": 21810,
+        "otherBytes": 68907,
+        "thirdPartyBytes": 9227,
+        "totalBytes": 1301288
       },
       "postLoadTotals": {
-        "scriptBytes": 278326,
-        "stylesheetBytes": 0,
+        "scriptBytes": 306489,
+        "stylesheetBytes": 4127,
         "imageBytes": 3076,
         "fontBytes": 0,
         "documentBytes": 0,
-        "otherBytes": 75384,
+        "otherBytes": 31446,
         "thirdPartyBytes": 0,
-        "totalBytes": 356786
+        "totalBytes": 345138
       },
       "notableResources": [
         {
@@ -3467,6 +3029,30 @@
         {
           "kind": "other",
           "thirdParty": true,
+          "bytes": 2234,
+          "url": "http://localhost:1501/organization/settings"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 1688,
+          "url": "http://localhost:1501/settings/ai-usage"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 1420,
+          "url": "http://localhost:1501/dashboard/stats"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 1362,
+          "url": "http://localhost:1501/leads?limit=1"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
           "bytes": 1303,
           "url": "http://localhost:1501/integrations/connections"
         },
@@ -3475,6 +3061,396 @@
           "thirdParty": true,
           "bytes": 1220,
           "url": "http://localhost:1501/notifications/unread-count"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1501/onboarding/module-checklists"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1501/dashboard/my-issues"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1501/dashboard/recent-projects"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1501/dashboard/team-attendance"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1501/dashboard/recent-activity"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1501/dashboard/active-sprint"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1501/dashboard/today-activities"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1501/me/attendance/status"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1501/dashboard/executive"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1501/dashboard/personal"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1501/onboarding/tours"
+        }
+      ],
+      "largestScripts": [
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 74913,
+          "url": "http://localhost:1001/_next/static/chunks/3k10b0bte63f2.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 62379,
+          "url": "http://localhost:1001/feedbucket-widget.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 44158,
+          "url": "http://localhost:1001/_next/static/chunks/279uwxceqwh4n.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 28759,
+          "url": "http://localhost:1001/_next/static/chunks/3obnu1uf7c8ke.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 21165,
+          "url": "http://localhost:1001/_next/static/chunks/3q6jl6c1qac6p.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 18524,
+          "url": "http://localhost:1001/_next/static/chunks/188r6k0-gx6y0.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 16292,
+          "url": "http://localhost:1001/_next/static/chunks/0m6lwyh9j2nb1.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 15994,
+          "url": "http://localhost:1001/_next/static/chunks/177cas1izqqsp.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 15548,
+          "url": "http://localhost:1001/_next/static/chunks/2kbj7uj22f7rc.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 14632,
+          "url": "http://localhost:1001/_next/static/chunks/3o0or8g7e_pxd.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 14610,
+          "url": "http://localhost:1001/_next/static/chunks/3g986ab2xalu3.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 14256,
+          "url": "http://localhost:1001/_next/static/chunks/3bg2yxcldemuv.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 13091,
+          "url": "http://localhost:1001/_next/static/chunks/3rklegcnrr70u.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 12705,
+          "url": "http://localhost:1001/_next/static/chunks/07v8tj8h8j7e0.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 12340,
+          "url": "http://localhost:1001/_next/static/chunks/32off-3lb_41b.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 12142,
+          "url": "http://localhost:1001/_next/static/chunks/21xnybwm818t8.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 12075,
+          "url": "http://localhost:1001/_next/static/chunks/2haq0y66hfqwz.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11549,
+          "url": "http://localhost:1001/_next/static/chunks/2cfgb3k_acoya.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11407,
+          "url": "http://localhost:1001/_next/static/chunks/3quu_5il8kvpe.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11327,
+          "url": "http://localhost:1001/_next/static/chunks/392488y0cvyqw.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10837,
+          "url": "http://localhost:1001/_next/static/chunks/19eivberb1vjs.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10734,
+          "url": "http://localhost:1001/_next/static/chunks/1hb2zet246r22.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10464,
+          "url": "http://localhost:1001/_next/static/chunks/1_rrnr_bluidz.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10371,
+          "url": "http://localhost:1001/_next/static/chunks/2-kmqfyuikanm.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10285,
+          "url": "http://localhost:1001/_next/static/chunks/3gd_fjq_q4b15.js"
+        }
+      ],
+      "largestPostLoadScripts": [
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 55744,
+          "url": "http://localhost:1001/_next/static/chunks/2i4o_u836_j1p.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 44826,
+          "url": "http://localhost:1001/_next/static/chunks/2rn97iznpp6q5.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 42203,
+          "url": "http://localhost:1001/_next/static/chunks/15z6xjmov9d8b.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 15190,
+          "url": "http://localhost:1001/_next/static/chunks/0hj_ww1z2vx9v.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 12166,
+          "url": "http://localhost:1001/_next/static/chunks/1hir463fky0ew.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11951,
+          "url": "http://localhost:1001/_next/static/chunks/1smrcjsq9u4p3.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11129,
+          "url": "http://localhost:1001/_next/static/chunks/2fu8sib9tqfm9.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11038,
+          "url": "http://localhost:1001/_next/static/chunks/3m7-w57xzxlzw.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9782,
+          "url": "http://localhost:1001/_next/static/chunks/2gync85dxwhl2.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9491,
+          "url": "http://localhost:1001/_next/static/chunks/0s_9qnjnid4wr.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 8692,
+          "url": "http://localhost:1001/_next/static/chunks/0jcjpspej_ee6.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 8446,
+          "url": "http://localhost:1001/_next/static/chunks/1tt5i1q8s9gv2.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 7552,
+          "url": "http://localhost:1001/_next/static/chunks/30lm-uciygkfr.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 7353,
+          "url": "http://localhost:1001/_next/static/chunks/23oawa9c6xx1u.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 7303,
+          "url": "http://localhost:1001/_next/static/chunks/3gbwknil3494w.js"
+        }
+      ]
+    },
+    "/notifications": {
+      "scriptBytes": 834045,
+      "stylesheetBytes": 58587,
+      "imageBytes": 3076,
+      "fontBytes": 55580,
+      "documentBytes": 22044,
+      "otherBytes": 50605,
+      "thirdPartyBytes": 7168,
+      "totalBytes": 1023937,
+      "windowTotals": {
+        "scriptBytes": 1112371,
+        "stylesheetBytes": 58587,
+        "imageBytes": 6152,
+        "fontBytes": 55580,
+        "documentBytes": 22044,
+        "otherBytes": 127381,
+        "thirdPartyBytes": 8557,
+        "totalBytes": 1382115
+      },
+      "postLoadTotals": {
+        "scriptBytes": 278326,
+        "stylesheetBytes": 0,
+        "imageBytes": 3076,
+        "fontBytes": 0,
+        "documentBytes": 0,
+        "otherBytes": 76776,
+        "thirdPartyBytes": 1389,
+        "totalBytes": 358178
+      },
+      "notableResources": [
+        {
+          "kind": "font",
+          "thirdParty": false,
+          "bytes": 30880,
+          "url": "http://localhost:1001/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2"
+        },
+        {
+          "kind": "font",
+          "thirdParty": false,
+          "bytes": 24700,
+          "url": "http://localhost:1001/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2"
+        },
+        {
+          "kind": "image",
+          "thirdParty": false,
+          "bytes": 3076,
+          "url": "http://localhost:1001/logo.svg"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 1688,
+          "url": "http://localhost:1501/settings/ai-usage"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 1420,
+          "url": "http://localhost:1501/dashboard/stats"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 1395,
+          "url": "http://localhost:1501/users/stats"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 1362,
+          "url": "http://localhost:1501/leads?limit=1"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 1303,
+          "url": "http://localhost:1501/integrations/connections"
         },
         {
           "kind": "other",
@@ -3765,23 +3741,23 @@
       ]
     },
     "/settings": {
-      "scriptBytes": 790282,
+      "scriptBytes": 795865,
       "stylesheetBytes": 58587,
       "imageBytes": 3076,
       "fontBytes": 55580,
-      "documentBytes": 22479,
-      "otherBytes": 37040,
-      "thirdPartyBytes": 6838,
-      "totalBytes": 967044,
+      "documentBytes": 22477,
+      "otherBytes": 50997,
+      "thirdPartyBytes": 5523,
+      "totalBytes": 986582,
       "windowTotals": {
-        "scriptBytes": 1092976,
+        "scriptBytes": 1098559,
         "stylesheetBytes": 58587,
         "imageBytes": 6152,
         "fontBytes": 55580,
-        "documentBytes": 22479,
-        "otherBytes": 60531,
-        "thirdPartyBytes": 6838,
-        "totalBytes": 1296305
+        "documentBytes": 22477,
+        "otherBytes": 86680,
+        "thirdPartyBytes": 6912,
+        "totalBytes": 1328035
       },
       "postLoadTotals": {
         "scriptBytes": 302694,
@@ -3789,9 +3765,9 @@
         "imageBytes": 3076,
         "fontBytes": 0,
         "documentBytes": 0,
-        "otherBytes": 23491,
-        "thirdPartyBytes": 0,
-        "totalBytes": 329261
+        "otherBytes": 35683,
+        "thirdPartyBytes": 1389,
+        "totalBytes": 341453
       },
       "notableResources": [
         {
@@ -3815,44 +3791,38 @@
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1624,
-          "url": "http://localhost:1501/dashboard/my-issues"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1349,
-          "url": "http://localhost:1501/notifications/events/token"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1349,
-          "url": "http://localhost:1501/notifications/events/token"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1296,
+          "bytes": 1688,
           "url": "http://localhost:1501/settings/ai-usage"
         },
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1220,
-          "url": "http://localhost:1501/leads?limit=1"
+          "bytes": 1395,
+          "url": "http://localhost:1501/users/stats"
         },
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 0,
-          "url": "http://localhost:1501/dashboard/team-attendance"
+          "bytes": 1220,
+          "url": "http://localhost:1501/dashboard/stats"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 1220,
+          "url": "http://localhost:1501/notifications/unread-count"
         },
         {
           "kind": "other",
           "thirdParty": true,
           "bytes": 0,
           "url": "http://localhost:1501/dashboard/recent-projects"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1501/dashboard/team-attendance"
         },
         {
           "kind": "other",
@@ -3871,48 +3841,6 @@
           "thirdParty": true,
           "bytes": 0,
           "url": "http://localhost:1501/dashboard/today-activities"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 0,
-          "url": "http://localhost:1501/me/attendance/status"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 0,
-          "url": "http://localhost:1501/dashboard/executive"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 0,
-          "url": "http://localhost:1501/dashboard/personal"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 0,
-          "url": "http://localhost:1501/dashboard/my-leave-balance"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 0,
-          "url": "http://localhost:1501/me/time-off/requests?limit=100"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 0,
-          "url": "http://localhost:1501/notifications?section=UNREAD&limit=20"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 0,
-          "url": "http://localhost:1501/dashboard/announcements"
         }
       ],
       "largestScripts": [
@@ -4161,23 +4089,23 @@
       ]
     },
     "/build/my-work": {
-      "scriptBytes": 654443,
+      "scriptBytes": 657248,
       "stylesheetBytes": 58587,
       "imageBytes": 3076,
       "fontBytes": 55580,
-      "documentBytes": 22920,
-      "otherBytes": 15718,
-      "thirdPartyBytes": 4106,
-      "totalBytes": 810324,
+      "documentBytes": 22917,
+      "otherBytes": 19320,
+      "thirdPartyBytes": 2441,
+      "totalBytes": 816728,
       "windowTotals": {
-        "scriptBytes": 936325,
+        "scriptBytes": 939130,
         "stylesheetBytes": 58587,
         "imageBytes": 6152,
         "fontBytes": 55580,
-        "documentBytes": 22920,
-        "otherBytes": 51401,
-        "thirdPartyBytes": 5495,
-        "totalBytes": 1130965
+        "documentBytes": 22917,
+        "otherBytes": 55005,
+        "thirdPartyBytes": 3830,
+        "totalBytes": 1137371
       },
       "postLoadTotals": {
         "scriptBytes": 281882,
@@ -4185,9 +4113,9 @@
         "imageBytes": 3076,
         "fontBytes": 0,
         "documentBytes": 0,
-        "otherBytes": 35683,
+        "otherBytes": 35685,
         "thirdPartyBytes": 1389,
-        "totalBytes": 320641
+        "totalBytes": 320643
       },
       "notableResources": [
         {
@@ -4211,20 +4139,14 @@
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1395,
-          "url": "http://localhost:1501/users/stats"
+          "bytes": 1221,
+          "url": "http://localhost:1501/organization/settings"
         },
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1362,
-          "url": "http://localhost:1501/leads?limit=1"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1349,
-          "url": "http://localhost:1501/notifications/events/token"
+          "bytes": 1220,
+          "url": "http://localhost:1501/chat/unread"
         }
       ],
       "largestScripts": [
@@ -4472,34 +4394,34 @@
         }
       ]
     },
-    "/crm/leads": {
-      "scriptBytes": 813370,
+    "/parties": {
+      "scriptBytes": 578395,
       "stylesheetBytes": 58587,
       "imageBytes": 3076,
       "fontBytes": 55580,
-      "documentBytes": 25523,
-      "otherBytes": 63927,
-      "thirdPartyBytes": 12063,
-      "totalBytes": 1020063,
+      "documentBytes": 23256,
+      "otherBytes": 8669,
+      "thirdPartyBytes": 6177,
+      "totalBytes": 727563,
       "windowTotals": {
-        "scriptBytes": 1080972,
+        "scriptBytes": 860277,
         "stylesheetBytes": 58587,
         "imageBytes": 6152,
         "fontBytes": 55580,
-        "documentBytes": 25523,
-        "otherBytes": 91024,
-        "thirdPartyBytes": 12063,
-        "totalBytes": 1317838
+        "documentBytes": 23256,
+        "otherBytes": 42965,
+        "thirdPartyBytes": 6177,
+        "totalBytes": 1046817
       },
       "postLoadTotals": {
-        "scriptBytes": 267602,
+        "scriptBytes": 281882,
         "stylesheetBytes": 0,
         "imageBytes": 3076,
         "fontBytes": 0,
         "documentBytes": 0,
-        "otherBytes": 27097,
+        "otherBytes": 34296,
         "thirdPartyBytes": 0,
-        "totalBytes": 297775
+        "totalBytes": 319254
       },
       "notableResources": [
         {
@@ -4523,44 +4445,8 @@
         {
           "kind": "other",
           "thirdParty": true,
-          "bytes": 1969,
-          "url": "http://localhost:1501/build/all-work?scope=mine&limit=1&orderBy=dueDate&orderDir=asc&excludeStatus=DONE%2CCANCELLED"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1920,
-          "url": "http://localhost:1501/build/all-work?scope=mine&limit=15&orderBy=dueDate&orderDir=asc&excludeStatus=DONE%2CCANCELLED"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1668,
-          "url": "http://localhost:1501/build?status=ACTIVE"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1366,
-          "url": "http://localhost:1501/build/all-work?scope=mine&limit=1&orderBy=dueDate&orderDir=asc&excludeStatus=DONE%2CCANCELLED&dueDateTo=2026-09-03"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1349,
-          "url": "http://localhost:1501/notifications/events/token"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1349,
-          "url": "http://localhost:1501/notifications/events/token"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1221,
-          "url": "http://localhost:1501/build/workspaces?limit=20"
+          "bytes": 1296,
+          "url": "http://localhost:1501/settings/ai-usage"
         },
         {
           "kind": "other",
@@ -4571,6 +4457,36 @@
         {
           "kind": "other",
           "thirdParty": true,
+          "bytes": 1220,
+          "url": "http://localhost:1501/users/stats"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 1220,
+          "url": "http://localhost:1501/dashboard/stats"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 1220,
+          "url": "http://localhost:1501/integrations/connections"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1501/notifications/events/token"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1501/notifications/events/token"
+        },
+        {
+          "kind": "other",
+          "thirdParty": true,
           "bytes": 0,
           "url": "http://localhost:1501/build?status=ACTIVE"
         },
@@ -4591,336 +4507,6 @@
           "thirdParty": true,
           "bytes": 0,
           "url": "http://localhost:1501/build/all-work?scope=mine&limit=1&orderBy=dueDate&orderDir=asc&excludeStatus=DONE%2CCANCELLED&dueDateTo=2026-09-03"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 0,
-          "url": "http://localhost:1501/notifications/events/token"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 0,
-          "url": "http://localhost:1501/notifications/events/token"
-        }
-      ],
-      "largestScripts": [
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 74913,
-          "url": "http://localhost:1001/_next/static/chunks/3k10b0bte63f2.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 62379,
-          "url": "http://localhost:1001/feedbucket-widget.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 55744,
-          "url": "http://localhost:1001/_next/static/chunks/2i4o_u836_j1p.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 44158,
-          "url": "http://localhost:1001/_next/static/chunks/279uwxceqwh4n.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 28759,
-          "url": "http://localhost:1001/_next/static/chunks/3obnu1uf7c8ke.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 21165,
-          "url": "http://localhost:1001/_next/static/chunks/3q6jl6c1qac6p.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 18983,
-          "url": "http://localhost:1001/_next/static/chunks/16xv3_07l4v5o.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 18983,
-          "url": "http://localhost:1001/_next/static/chunks/16xv3_07l4v5o.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 18524,
-          "url": "http://localhost:1001/_next/static/chunks/188r6k0-gx6y0.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 17147,
-          "url": "http://localhost:1001/_next/static/chunks/11ydpnou5orb7.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 16292,
-          "url": "http://localhost:1001/_next/static/chunks/0m6lwyh9j2nb1.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 15994,
-          "url": "http://localhost:1001/_next/static/chunks/177cas1izqqsp.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 15692,
-          "url": "http://localhost:1001/_next/static/chunks/2ije3h9m8aaiy.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 14632,
-          "url": "http://localhost:1001/_next/static/chunks/3o0or8g7e_pxd.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 14610,
-          "url": "http://localhost:1001/_next/static/chunks/3g986ab2xalu3.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 14256,
-          "url": "http://localhost:1001/_next/static/chunks/3bg2yxcldemuv.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 14016,
-          "url": "http://localhost:1001/_next/static/chunks/3x9dnbat1h_5u.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 12340,
-          "url": "http://localhost:1001/_next/static/chunks/32off-3lb_41b.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 12142,
-          "url": "http://localhost:1001/_next/static/chunks/21xnybwm818t8.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 12075,
-          "url": "http://localhost:1001/_next/static/chunks/2haq0y66hfqwz.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 11772,
-          "url": "http://localhost:1001/_next/static/chunks/18g8j0fjqnw1z.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 11549,
-          "url": "http://localhost:1001/_next/static/chunks/2cfgb3k_acoya.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 11407,
-          "url": "http://localhost:1001/_next/static/chunks/3quu_5il8kvpe.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 11327,
-          "url": "http://localhost:1001/_next/static/chunks/392488y0cvyqw.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 10939,
-          "url": "http://localhost:1001/_next/static/chunks/0oainrfo0q-8z.js"
-        }
-      ],
-      "largestPostLoadScripts": [
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 55744,
-          "url": "http://localhost:1001/_next/static/chunks/2i4o_u836_j1p.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 44826,
-          "url": "http://localhost:1001/_next/static/chunks/2rn97iznpp6q5.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 15548,
-          "url": "http://localhost:1001/_next/static/chunks/2kbj7uj22f7rc.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 15190,
-          "url": "http://localhost:1001/_next/static/chunks/0hj_ww1z2vx9v.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 12166,
-          "url": "http://localhost:1001/_next/static/chunks/1hir463fky0ew.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 11951,
-          "url": "http://localhost:1001/_next/static/chunks/1smrcjsq9u4p3.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 11038,
-          "url": "http://localhost:1001/_next/static/chunks/3m7-w57xzxlzw.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 9782,
-          "url": "http://localhost:1001/_next/static/chunks/2gync85dxwhl2.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 9491,
-          "url": "http://localhost:1001/_next/static/chunks/0s_9qnjnid4wr.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 8692,
-          "url": "http://localhost:1001/_next/static/chunks/0jcjpspej_ee6.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 7552,
-          "url": "http://localhost:1001/_next/static/chunks/30lm-uciygkfr.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 7303,
-          "url": "http://localhost:1001/_next/static/chunks/3gbwknil3494w.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 7233,
-          "url": "http://localhost:1001/_next/static/chunks/15sn-nqvja077.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 7204,
-          "url": "http://localhost:1001/_next/static/chunks/27sy38ohwpk9y.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 6962,
-          "url": "http://localhost:1001/_next/static/chunks/13aq030bimtey.js"
-        }
-      ]
-    },
-    "/parties": {
-      "scriptBytes": 598828,
-      "stylesheetBytes": 58587,
-      "imageBytes": 3076,
-      "fontBytes": 55580,
-      "documentBytes": 23252,
-      "otherBytes": 29223,
-      "thirdPartyBytes": 5748,
-      "totalBytes": 768546,
-      "windowTotals": {
-        "scriptBytes": 880710,
-        "stylesheetBytes": 58587,
-        "imageBytes": 6152,
-        "fontBytes": 55580,
-        "documentBytes": 23252,
-        "otherBytes": 54418,
-        "thirdPartyBytes": 5748,
-        "totalBytes": 1078699
-      },
-      "postLoadTotals": {
-        "scriptBytes": 281882,
-        "stylesheetBytes": 0,
-        "imageBytes": 3076,
-        "fontBytes": 0,
-        "documentBytes": 0,
-        "otherBytes": 25195,
-        "thirdPartyBytes": 0,
-        "totalBytes": 310153
-      },
-      "notableResources": [
-        {
-          "kind": "font",
-          "thirdParty": false,
-          "bytes": 30880,
-          "url": "http://localhost:1001/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2"
-        },
-        {
-          "kind": "font",
-          "thirdParty": false,
-          "bytes": 24700,
-          "url": "http://localhost:1001/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2"
-        },
-        {
-          "kind": "image",
-          "thirdParty": false,
-          "bytes": 3076,
-          "url": "http://localhost:1001/logo.svg"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1688,
-          "url": "http://localhost:1501/settings/ai-usage"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1362,
-          "url": "http://localhost:1501/leads?limit=1"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1349,
-          "url": "http://localhost:1501/notifications/events/token"
-        },
-        {
-          "kind": "other",
-          "thirdParty": true,
-          "bytes": 1349,
-          "url": "http://localhost:1501/notifications/events/token"
         }
       ],
       "largestScripts": [
@@ -5041,12 +4627,6 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10509,
-          "url": "http://localhost:1001/_next/static/chunks/0zm2ba89e-0g_.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
           "bytes": 10414,
           "url": "http://localhost:1001/_next/static/chunks/3acho1bnqlwpn.js"
         },
@@ -5073,6 +4653,12 @@
           "thirdParty": false,
           "bytes": 9826,
           "url": "http://localhost:1001/_next/static/chunks/109f07a7g0n17.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9624,
+          "url": "http://localhost:1001/_next/static/chunks/0r36gz15l_i5n.js"
         }
       ],
       "largestPostLoadScripts": [
@@ -5174,121 +4760,103 @@
     "repeat": 6,
     "byRoute": {
       "/mail": {
-        "count": 0,
+        "count": 6,
         "statuses": [
-          null
+          200
         ],
-        "p50_ms": null,
-        "p75_ms": null,
-        "p95_ms": null
+        "p50_ms": 1289.0782499999623,
+        "p75_ms": 1367.751799999969,
+        "p95_ms": 1572.44020000007
       },
       "/inbox": {
-        "count": 0,
+        "count": 6,
         "statuses": [
-          null
+          200
         ],
-        "p50_ms": null,
-        "p75_ms": null,
-        "p95_ms": null
+        "p50_ms": 1203.5544999999693,
+        "p75_ms": 1308.856700000004,
+        "p95_ms": 1913.140075000032
       },
       "/build/inbox": {
-        "count": 0,
+        "count": 6,
         "statuses": [
-          null
+          200
         ],
-        "p50_ms": null,
-        "p75_ms": null,
-        "p95_ms": null
-      },
-      "/crm/inbox": {
-        "count": 0,
-        "statuses": [
-          null
-        ],
-        "p50_ms": null,
-        "p75_ms": null,
-        "p95_ms": null
+        "p50_ms": 1169.5749999999534,
+        "p75_ms": 1172.078925000038,
+        "p95_ms": 1598.1246750000573
       },
       "/support/inbox": {
-        "count": 0,
+        "count": 6,
         "statuses": [
-          null
+          200
         ],
-        "p50_ms": null,
-        "p75_ms": null,
-        "p95_ms": null
+        "p50_ms": 1265.9643499999656,
+        "p75_ms": 1300.1797000000079,
+        "p95_ms": 3407.6044499999844
       },
       "/dashboard": {
-        "count": 0,
+        "count": 6,
         "statuses": [
-          null
+          200
         ],
-        "p50_ms": null,
-        "p75_ms": null,
-        "p95_ms": null
+        "p50_ms": 1488.78615,
+        "p75_ms": 1997.2165750000568,
+        "p95_ms": 2213.3692250000313
       },
       "/chat": {
-        "count": 0,
+        "count": 6,
         "statuses": [
-          null
+          200
         ],
-        "p50_ms": null,
-        "p75_ms": null,
-        "p95_ms": null
+        "p50_ms": 1364.3839499999885,
+        "p75_ms": 1431.666499999963,
+        "p95_ms": 1938.5853250000218
       },
       "/calendar": {
-        "count": 0,
+        "count": 6,
         "statuses": [
-          null
+          200
         ],
-        "p50_ms": null,
-        "p75_ms": null,
-        "p95_ms": null
+        "p50_ms": 1193.1896499999566,
+        "p75_ms": 1260.220399999991,
+        "p95_ms": 2013.1230499999365
       },
       "/notifications": {
-        "count": 0,
+        "count": 6,
         "statuses": [
-          null
+          200
         ],
-        "p50_ms": null,
-        "p75_ms": null,
-        "p95_ms": null
+        "p50_ms": 1277.3682499999413,
+        "p75_ms": 1495.4714250000252,
+        "p95_ms": 1871.2982499999925
       },
       "/settings": {
-        "count": 0,
+        "count": 6,
         "statuses": [
-          null
+          200
         ],
-        "p50_ms": null,
-        "p75_ms": null,
-        "p95_ms": null
+        "p50_ms": 1182.942949999997,
+        "p75_ms": 1219.974600000045,
+        "p95_ms": 1323.3630750000011
       },
       "/build/my-work": {
-        "count": 0,
+        "count": 6,
         "statuses": [
-          null
+          200
         ],
-        "p50_ms": null,
-        "p75_ms": null,
-        "p95_ms": null
-      },
-      "/crm/leads": {
-        "count": 0,
-        "statuses": [
-          null
-        ],
-        "p50_ms": null,
-        "p75_ms": null,
-        "p95_ms": null
+        "p50_ms": 1379.6332000000402,
+        "p75_ms": 2111.594299999997,
+        "p95_ms": 3057.6937499999185
       },
       "/parties": {
-        "count": 0,
+        "count": 6,
         "statuses": [
-          null
+          200
         ],
-        "p50_ms": null,
-        "p75_ms": null,
-        "p95_ms": null
+        "p50_ms": 1218.0617999999668,
+        "p75_ms": 1303.7125749999832,
+        "p95_ms": 1351.3693750000093
       }
     },
     "note": "The browser TTFB above includes the emulated RTT (150ms on the mobile profile) and the browser's own scheduling. This figure is the server render on its own."
@@ -5300,73 +4868,68 @@
       "/mail": {
         "desktop": {
           "measured": true,
-          "ms": 2.199999988079071,
+          "ms": 3.0999999940395355,
           "href": "/dashboard"
         },
         "mobile": {
-          "measured": false,
-          "reason": "no in-app link in view"
+          "measured": true,
+          "ms": 16.600000023841858,
+          "href": "/dashboard"
         }
       },
       "/inbox": {
         "desktop": {
           "measured": true,
-          "ms": 2.300000011920929,
+          "ms": 3.5,
           "href": "/dashboard"
         },
         "mobile": {
-          "measured": false,
-          "reason": "no in-app link in view"
+          "measured": true,
+          "ms": 19.5,
+          "href": "/dashboard"
         }
       },
       "/build/inbox": {
         "desktop": {
           "measured": true,
-          "ms": 1.5,
+          "ms": 1.4000000059604645,
           "href": "/build/command-center"
         },
         "mobile": {
-          "measured": false,
-          "reason": "no in-app link in view"
-        }
-      },
-      "/crm/inbox": {
-        "desktop": {
           "measured": true,
-          "ms": 1.5,
-          "href": "/crm"
-        },
-        "mobile": {
-          "measured": false,
-          "reason": "no in-app link in view"
+          "ms": 16.600000023841858,
+          "href": "/build/command-center"
         }
       },
       "/support/inbox": {
         "desktop": {
           "measured": true,
-          "ms": 1.5999999940395355,
+          "ms": 3.100000023841858,
           "href": "/support"
         },
         "mobile": {
-          "measured": false,
-          "reason": "no in-app link in view"
+          "measured": true,
+          "ms": 16.5,
+          "href": "/support"
         }
       },
       "/dashboard": {
         "desktop": {
           "measured": true,
-          "ms": 1.699999988079071,
+          "ms": 2.2999999821186066,
           "href": "/inbox"
         },
         "mobile": {
-          "measured": false,
-          "reason": "no in-app link in view"
+          "measured": true,
+          "ms": 14.400000005960464,
+          "href": "/inbox"
         }
       },
       "/chat": {
         "desktop": {
-          "measured": false,
-          "reason": "no in-app link in view"
+          "measured": true,
+          "ms": 2.699999988079071,
+          "href": "/dashboard"
         },
         "mobile": {
           "measured": false,
@@ -5376,563 +4939,70 @@
       "/calendar": {
         "desktop": {
           "measured": true,
-          "ms": 5.100000023841858,
+          "ms": 2.2999999821186066,
           "href": "/dashboard"
         },
         "mobile": {
-          "measured": false,
-          "reason": "no in-app link in view"
+          "measured": true,
+          "ms": 15.5,
+          "href": "/dashboard"
         }
       },
       "/notifications": {
         "desktop": {
           "measured": true,
-          "ms": 3.699999988079071,
+          "ms": 2.4000000059604645,
           "href": "/dashboard"
         },
         "mobile": {
-          "measured": false,
-          "reason": "no in-app link in view"
+          "measured": true,
+          "ms": 288.90000000596046,
+          "href": "/notifications/preferences"
         }
       },
       "/settings": {
         "desktop": {
           "measured": true,
-          "ms": 2.800000011920929,
+          "ms": 3.4000000059604645,
           "href": "/workflows"
         },
         "mobile": {
-          "measured": false,
-          "reason": "no in-app link in view"
+          "measured": true,
+          "ms": 15.599999994039536,
+          "href": "/workflows"
         }
       },
       "/build/my-work": {
         "desktop": {
           "measured": true,
-          "ms": 2.9000000059604645,
+          "ms": 2.0999999940395355,
           "href": "/build/command-center"
         },
         "mobile": {
-          "measured": false,
-          "reason": "no in-app link in view"
-        }
-      },
-      "/crm/leads": {
-        "desktop": {
           "measured": true,
-          "ms": 3.4000000059604645,
-          "href": "/crm"
-        },
-        "mobile": {
-          "measured": false,
-          "reason": "no in-app link in view"
+          "ms": 16.400000005960464,
+          "href": "/build/command-center"
         }
       },
       "/parties": {
         "desktop": {
           "measured": true,
-          "ms": 2.5999999940395355,
+          "ms": 2.800000011920929,
           "href": "/crm"
         },
         "mobile": {
-          "measured": false,
-          "reason": "no in-app link in view"
+          "measured": true,
+          "ms": 16.30000001192093,
+          "href": "/crm"
         }
       }
     }
   },
   "authorization": {
     "minNavLinksForAuthorizedShell": 3,
-    "samplesMeasured": 156,
-    "unauthorizedSamples": [
-      {
-        "index": 37,
-        "url": "http://localhost:1001/org-setup",
-        "navLinks": 0,
-        "words": 118
-      },
-      {
-        "index": 38,
-        "url": "http://localhost:1001/org-setup",
-        "navLinks": 0,
-        "words": 118
-      },
-      {
-        "index": 39,
-        "url": "http://localhost:1001/org-setup",
-        "navLinks": 0,
-        "words": 118
-      },
-      {
-        "index": 40,
-        "url": "http://localhost:1001/org-setup",
-        "navLinks": 0,
-        "words": 118
-      },
-      {
-        "index": 41,
-        "url": "http://localhost:1001/org-setup",
-        "navLinks": 0,
-        "words": 118
-      },
-      {
-        "index": 42,
-        "url": "http://localhost:1001/org-setup",
-        "navLinks": 0,
-        "words": 118
-      },
-      {
-        "index": 43,
-        "url": "http://localhost:1001/org-setup",
-        "navLinks": 0,
-        "words": 118
-      },
-      {
-        "index": 82,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 83,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 84,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 85,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 86,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 87,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 88,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 89,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 90,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 91,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 92,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 93,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 94,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 95,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 96,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 97,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 98,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 99,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 100,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 101,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 102,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 103,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 104,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 105,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 106,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 107,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 108,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 109,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 110,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 111,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 112,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 113,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 114,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 115,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 116,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 117,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 118,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 119,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 120,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 121,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 122,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 123,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 124,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 125,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 126,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 127,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 128,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 129,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 130,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 131,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 132,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 133,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 134,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 135,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 136,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 137,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 138,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 139,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 140,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 141,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 142,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 143,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 144,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 145,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 146,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 147,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 148,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 149,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 150,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 151,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 152,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 153,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 154,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      },
-      {
-        "index": 155,
-        "url": "chrome-error://chromewebdata/",
-        "navLinks": 0,
-        "words": 22
-      }
-    ],
-    "verdict": "capture is NOT evidence for these budgets: the shell rendered without authorized navigation"
+    "samplesMeasured": 132,
+    "unauthorizedSamples": [],
+    "verdict": "every measured sample rendered an authorized shell"
   },
   "routeFailures": {
     "count": 0,
@@ -5940,499 +5010,71 @@
     "verdict": "every requested route/profile pair completed"
   },
   "hydration": {
-    "navigationsInspected": 156,
+    "navigationsInspected": 132,
     "mismatchesFound": 0,
     "findings": [],
     "verdict": "no React hydration mismatch was logged on any measured navigation"
   },
   "contentAssertion": {
     "minWordsPerSample": 10,
-    "samplesMeasured": 156,
-    "offRouteSamples": [
-      {
-        "index": 37,
-        "requested": "/chat",
-        "url": "http://localhost:1001/org-setup"
-      },
-      {
-        "index": 38,
-        "requested": "/chat",
-        "url": "http://localhost:1001/org-setup"
-      },
-      {
-        "index": 39,
-        "requested": "/chat",
-        "url": "http://localhost:1001/org-setup"
-      },
-      {
-        "index": 40,
-        "requested": "/chat",
-        "url": "http://localhost:1001/org-setup"
-      },
-      {
-        "index": 41,
-        "requested": "/chat",
-        "url": "http://localhost:1001/org-setup"
-      },
-      {
-        "index": 42,
-        "requested": "/calendar",
-        "url": "http://localhost:1001/org-setup"
-      },
-      {
-        "index": 43,
-        "requested": "/calendar",
-        "url": "http://localhost:1001/org-setup"
-      },
-      {
-        "index": 82,
-        "requested": "/mail",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 83,
-        "requested": "/mail",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 84,
-        "requested": "/inbox",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 85,
-        "requested": "/inbox",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 86,
-        "requested": "/inbox",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 87,
-        "requested": "/inbox",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 88,
-        "requested": "/inbox",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 89,
-        "requested": "/inbox",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 90,
-        "requested": "/build/inbox",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 91,
-        "requested": "/build/inbox",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 92,
-        "requested": "/build/inbox",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 93,
-        "requested": "/build/inbox",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 94,
-        "requested": "/build/inbox",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 95,
-        "requested": "/build/inbox",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 96,
-        "requested": "/crm/inbox",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 97,
-        "requested": "/crm/inbox",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 98,
-        "requested": "/crm/inbox",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 99,
-        "requested": "/crm/inbox",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 100,
-        "requested": "/crm/inbox",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 101,
-        "requested": "/crm/inbox",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 102,
-        "requested": "/support/inbox",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 103,
-        "requested": "/support/inbox",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 104,
-        "requested": "/support/inbox",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 105,
-        "requested": "/support/inbox",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 106,
-        "requested": "/support/inbox",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 107,
-        "requested": "/support/inbox",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 108,
-        "requested": "/dashboard",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 109,
-        "requested": "/dashboard",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 110,
-        "requested": "/dashboard",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 111,
-        "requested": "/dashboard",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 112,
-        "requested": "/dashboard",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 113,
-        "requested": "/dashboard",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 114,
-        "requested": "/chat",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 115,
-        "requested": "/chat",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 116,
-        "requested": "/chat",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 117,
-        "requested": "/chat",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 118,
-        "requested": "/chat",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 119,
-        "requested": "/chat",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 120,
-        "requested": "/calendar",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 121,
-        "requested": "/calendar",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 122,
-        "requested": "/calendar",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 123,
-        "requested": "/calendar",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 124,
-        "requested": "/calendar",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 125,
-        "requested": "/calendar",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 126,
-        "requested": "/notifications",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 127,
-        "requested": "/notifications",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 128,
-        "requested": "/notifications",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 129,
-        "requested": "/notifications",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 130,
-        "requested": "/notifications",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 131,
-        "requested": "/notifications",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 132,
-        "requested": "/settings",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 133,
-        "requested": "/settings",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 134,
-        "requested": "/settings",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 135,
-        "requested": "/settings",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 136,
-        "requested": "/settings",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 137,
-        "requested": "/settings",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 138,
-        "requested": "/build/my-work",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 139,
-        "requested": "/build/my-work",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 140,
-        "requested": "/build/my-work",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 141,
-        "requested": "/build/my-work",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 142,
-        "requested": "/build/my-work",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 143,
-        "requested": "/build/my-work",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 144,
-        "requested": "/crm/leads",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 145,
-        "requested": "/crm/leads",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 146,
-        "requested": "/crm/leads",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 147,
-        "requested": "/crm/leads",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 148,
-        "requested": "/crm/leads",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 149,
-        "requested": "/crm/leads",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 150,
-        "requested": "/parties",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 151,
-        "requested": "/parties",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 152,
-        "requested": "/parties",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 153,
-        "requested": "/parties",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 154,
-        "requested": "/parties",
-        "url": "chrome-error://chromewebdata/"
-      },
-      {
-        "index": 155,
-        "requested": "/parties",
-        "url": "chrome-error://chromewebdata/"
-      }
-    ],
-    "unusableSamples": [
-      {
-        "index": 69,
-        "url": "http://localhost:1001/crm/leads",
-        "words": 85,
-        "brandedLoader": false,
-        "errorBoundary": true
-      }
-    ],
-    "verdict": "capture is NOT usable evidence"
+    "samplesMeasured": 132,
+    "offRouteSamples": [],
+    "unusableSamples": [],
+    "verdict": "every measured sample rendered real page content"
   },
   "settle": {
     "quietMs": 500,
-    "capMs": 6000,
-    "samplesMeasured": 156,
-    "cappedSamples": 1,
-    "capped": [
-      {
-        "route": "/crm/leads",
-        "profile": "desktop",
-        "sample": 3
-      }
-    ],
+    "capMs": 30000,
+    "samplesMeasured": 132,
+    "cappedSamples": 0,
+    "capped": [],
     "wordsByRoute": {
       "/mail": {
-        "desktop": 49,
-        "mobile": 22
+        "desktop": 47,
+        "mobile": 27
       },
       "/inbox": {
         "desktop": 50,
-        "mobile": 22
+        "mobile": 29
       },
       "/build/inbox": {
         "desktop": 56,
-        "mobile": 22
-      },
-      "/crm/inbox": {
-        "desktop": 53,
-        "mobile": 22
+        "mobile": 28
       },
       "/support/inbox": {
-        "desktop": 55,
-        "mobile": 22
+        "desktop": 59,
+        "mobile": 26
       },
       "/dashboard": {
-        "desktop": 121,
-        "mobile": 22
+        "desktop": 123,
+        "mobile": 20
       },
       "/chat": {
-        "desktop": 118,
-        "mobile": 22
+        "desktop": 55,
+        "mobile": 20
       },
       "/calendar": {
-        "desktop": 111,
-        "mobile": 22
+        "desktop": 109,
+        "mobile": 87
       },
       "/notifications": {
-        "desktop": 68,
-        "mobile": 22
+        "desktop": 63,
+        "mobile": 38
       },
       "/settings": {
-        "desktop": 134,
-        "mobile": 22
+        "desktop": 132,
+        "mobile": 79
       },
       "/build/my-work": {
-        "desktop": 50,
-        "mobile": 22
-      },
-      "/crm/leads": {
-        "desktop": 64,
-        "mobile": 22
+        "desktop": 46,
+        "mobile": 29
       },
       "/parties": {
-        "desktop": 73,
-        "mobile": 22
+        "desktop": 65,
+        "mobile": 31
       }
     },
-    "verdict": "some samples hit the settle cap and may have been taken before the page finished arriving — read their CLS as a floor"
+    "verdict": "every sample was taken after the DOM went quiet, so late-arriving data is inside the measurement"
   },
   "conditions": {
     "driver": "frontend/scripts/measure-web-vitals.mjs",

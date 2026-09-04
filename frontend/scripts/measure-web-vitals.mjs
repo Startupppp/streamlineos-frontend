@@ -1009,7 +1009,17 @@ async function run() {
   } finally {
     proc.kill("SIGKILL");
     await sleep(300);
-    rmSync(userDataDir, { recursive: true, force: true });
+    // Windows holds Chrome's profile open briefly after SIGKILL and `force` suppresses ENOENT, not
+    // EPERM — so an un-caught rmSync here throws out of `finally` and discards a completed capture.
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      try {
+        rmSync(userDataDir, { recursive: true, force: true });
+        break;
+      } catch (error) {
+        if (attempt === 4) log(`could not remove ${userDataDir}: ${error.message} — continuing`);
+        else await sleep(400);
+      }
+    }
   }
 
   const serverTtfb = await measureServerTtfb(baseUrl, routes, `${cookieName}=${cookieValue}`, repeat);
