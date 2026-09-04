@@ -76,3 +76,6 @@ docs/superpowers/
 .claude-flow
 
 .env*
+
+# minted test session token — never commit
+.capture-cookie
