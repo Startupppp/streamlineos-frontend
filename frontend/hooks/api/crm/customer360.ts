@@ -33,7 +33,7 @@ export function useCompany360Timeline(companyId: number) {
     useInfiniteQuery({
       queryKey: queryKeys.customer360.companyTimeline(companyId),
       queryFn: ({ pageParam, signal }) =>
-        apiClient.get<TimelinePage>(`/crm/customer-360/company/${companyId}/timeline`, (pageParam as string | undefined) ? { cursor: pageParam as string } : undefined, signal),
+        apiClient.get<TimelinePage>(`/crm/customer-360/company/${companyId}/timeline`, pageParam !== undefined ? { cursor: pageParam as string } : undefined, signal),
       getNextPageParam: (lastPage: TimelinePage) => lastPage.nextCursor ?? undefined,
       initialPageParam: undefined as string | undefined,
       enabled: access.allowed && companyId > 0,

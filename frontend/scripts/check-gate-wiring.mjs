@@ -94,36 +94,156 @@ const UNWIRED_BY_DESIGN = Object.freeze({});
  * from exit 1 (real finding, fail), which keeps the bite and still tolerates a missing sibling
  * checkout.
  */
+/**
+ * An entry is an OBJECT, not a sentence: `{ measuredAt, owner, reason }`.
+ *
+ * 2026-09-04 (v2 ticket 30). A prose-only entry rots invisibly, and both of the three below
+ * had. `check:dead-code` claimed its one unclassified export was
+ * `features/chat/chat-helpers.ts:resolveFileUrl` and named the chat lane as owner; at head the
+ * gate reports `types/payroll/payout.ts:BatchFileResult` and chat's export is long resolved.
+ * `check:route-bundle-budget` claimed 15 breaches with `/crm/leads` at 773117 bytes; at head it
+ * is 9 breaches with `/crm/leads` at 559414. Nothing detected either: `falseReasons` walked
+ * UNWIRED_BY_DESIGN only, and `staleNonBlocking` asked only whether the gate still exists, is
+ * still non-blocking and is still invoked — never whether the stated defect is still real.
+ *
+ * Confirming a reason's NUMBERS requires running the gate, which this file cannot do. So the
+ * honest static check is an expiry: `measuredAt` is when a human last ran the gate and restated
+ * the entry at what it printed, and the entry FAILS once it is older than
+ * MAX_REASON_AGE_DAYS. The only correct responses are to re-run the gate and restate the
+ * numbers, or to delete the entry and the `continue-on-error` flag together. Bumping the date
+ * without re-running is the same defect one level up.
+ */
+const MAX_REASON_AGE_DAYS = 90;
+
 const NON_BLOCKING_BY_DESIGN = Object.freeze({
-  // All three below were MEASURED at head on 2026-09-03 (v2 ticket 30) and are RED for real
+  // All three below were RE-MEASURED at head on 2026-09-04 (v2 ticket 30) and are RED for real
   // findings in another territory's source. A gate wired so that it always fails gets muted
   // within a week, which is worse than not wiring it -- so each stays reported, each names the
   // number that must reach zero, and none has had its baseline raised to absorb the failure.
   // The five other frontend gates that carried the flag were re-measured green or split by exit
   // code in the same change and are blocking now.
-  "check:dead-code":
-    "rc=1 at head, ONE unclassified export -- features/chat/chat-helpers.ts:resolveFileUrl, no " +
-    "WIRE/KEEP verdict in EXPORT_VERDICTS. The RATCHET itself is clean (baseline files=0 " +
-    "exports=0, current files=0 exports=0), so nothing was baselined away. Owner: the chat " +
-    "feature lane -- features/** is outside the gates territory. Delete this entry when the " +
-    "verdict is recorded.",
-  "check:route-bundle-budget":
-    "rc=1 at head, 15 measured breaches of declared ceilings -- e.g. /crm/leads " +
-    "measuredScriptBytes=773117 over 524288, /parties 618550 over 524288. These are measured " +
-    "bytes over declared budgets, not gate noise. Owner: tickets 22/26 (route bundle work). " +
-    "Delete this entry when the breach count is zero.",
-  "check:web-vitals-budget":
-    "rc=1 at head. RE-MEASURED 2026-09-03 after the gate was taught to read the capture's own " +
-    "verdicts: it no longer reaches the budget comparison at all, because the committed capture " +
-    "is REFUSED as evidence. `contentAssertion.verdict` reads \"capture is NOT usable evidence\" " +
-    "-- 16 of 208 samples rendered an error boundary, every desktop and mobile sample of " +
-    "/crm/leads -- and the recorded buildId no longer matches .next/BUILD_ID, so every number in " +
-    "it describes a build this checkout does not hold. The gate previously read none of the five " +
-    "verdict blocks and published that error page's LCP as a budget met. Owner: the CRM lane for " +
-    "the error boundary, whoever re-runs `pnpm measure:web-vitals` for the staleness. Note the " +
-    "hermetic half, `check:web-vitals-budget:self-test`, is a SEPARATE step and is BLOCKING. " +
-    "Delete this entry when a fresh capture passes its own five verdicts.",
+  "check:dead-code": Object.freeze({
+    measuredAt: "2026-09-04",
+    owner:
+      "the payroll lane -- types/payroll/** is outside the gates territory, so ticket 30 may " +
+      "not record the verdict itself",
+    reason:
+      "rc=1 at head, ONE unclassified export -- types/payroll/payout.ts:BatchFileResult, no " +
+      "WIRE/KEEP verdict in EXPORT_VERDICTS. The RATCHET itself is clean (baseline files=0 " +
+      "exports=0, current files=0 exports=0), so nothing was baselined away. The previously " +
+      "recorded finding, features/chat/chat-helpers.ts:resolveFileUrl, is RESOLVED and this " +
+      "entry named it for a day after it stopped being true. Delete this entry when the " +
+      "unclassified count is zero.",
+  }),
+  "check:route-bundle-budget": Object.freeze({
+    measuredAt: "2026-09-04",
+    owner: "tickets 22/26 (route bundle work)",
+    reason:
+      "rc=1 at head, NINE measured breaches of declared ceilings (was 15 on 2026-09-03): " +
+      "/chat measuredScriptBytes=897897 over 524288 and measuredTotalBytes=1065625 over " +
+      "1048576, /build/my-work 562012, /crm/leads 559414, /support/inbox 558129, /settings " +
+      "550502, /calendar 538619, /crm/inbox 529274, /parties 528750 -- all measuredScriptBytes " +
+      "over 524288. These are measured bytes over declared budgets, not gate noise. Delete " +
+      "this entry when the breach count is zero.",
+  }),
+  "check:web-vitals-budget": Object.freeze({
+    measuredAt: "2026-09-04",
+    owner:
+      "the CRM lane for the error boundary; whoever re-runs `pnpm measure:web-vitals` for the " +
+      "staleness",
+    reason:
+      "rc=1 at head. RE-MEASURED 2026-09-04: the gate still does not reach the budget " +
+      "comparison, because the committed capture is REFUSED as evidence. contentAssertion " +
+      "reports 16 unusable samples on /crm/leads and its own verdict reads \"capture is NOT " +
+      "usable evidence\"; provenance is STALE -- the capture measured build " +
+      "HLbxAqjmWOjuFHatusviu and .next/BUILD_ID on disk is 7Yy5Jkr9TTQ62Z-MCOSvH -- so every " +
+      "number in it describes a build this checkout does not hold. The gate previously read " +
+      "none of the five verdict blocks and published that error page's LCP as a budget met. " +
+      "Note the hermetic half, `check:web-vitals-budget:self-test`, is a SEPARATE step and is " +
+      "BLOCKING. Delete this entry when a fresh capture passes its own five verdicts.",
+  }),
 });
+
+/** The prose of an entry, whichever registry shape it came from. */
+export function reasonText(entry) {
+  if (typeof entry === "string") return entry;
+  if (entry !== null && typeof entry === "object" && typeof entry.reason === "string") return entry.reason;
+  return "";
+}
+
+/**
+ * Every way a NON_BLOCKING_BY_DESIGN entry can be untrustworthy on its face. Pure, so the
+ * self-test asserts it against planted entries instead of against the live registry.
+ */
+export function auditNonBlockingRegistry(registry, now, maxAgeDays = MAX_REASON_AGE_DAYS) {
+  const problems = [];
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+
+  for (const [gate, entry] of Object.entries(registry)) {
+    if (entry === null || typeof entry !== "object" || Array.isArray(entry)) {
+      problems.push(
+        `${gate} — its entry is ${Array.isArray(entry) ? "an array" : typeof entry}, not ` +
+          "{ measuredAt, owner, reason }. A bare sentence carries no date, so nothing can tell " +
+          "whether it is still true.",
+      );
+      continue;
+    }
+    const { measuredAt, owner, reason } = entry;
+    if (typeof owner !== "string" || owner.trim() === "")
+      problems.push(`${gate} — its entry names no owner. "6 remain with named owners" is the whole contract.`);
+    if (typeof reason !== "string" || reason.trim() === "")
+      problems.push(`${gate} — its entry states no reason.`);
+    if (typeof measuredAt !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(measuredAt)) {
+      problems.push(`${gate} — measuredAt is ${JSON.stringify(measuredAt)}, not an ISO YYYY-MM-DD date.`);
+      continue;
+    }
+    const measured = new Date(`${measuredAt}T00:00:00Z`);
+    if (Number.isNaN(measured.getTime())) {
+      problems.push(`${gate} — measuredAt "${measuredAt}" is not a real date.`);
+      continue;
+    }
+    const ageDays = Math.floor((today.getTime() - measured.getTime()) / 86400000);
+    if (ageDays < 0) {
+      problems.push(`${gate} — measuredAt "${measuredAt}" is in the future, so it records no measurement.`);
+      continue;
+    }
+    if (ageDays > maxAgeDays)
+      problems.push(
+        `${gate} — its reason was last measured on ${measuredAt}, ${ageDays} days ago (limit ` +
+          `${maxAgeDays}). Re-run the gate and restate the entry at the numbers it prints, or ` +
+          "delete the entry and the `continue-on-error` flag together. Bumping the date without " +
+          "re-running is the defect one level up.",
+      );
+  }
+  return problems.sort();
+}
+
+/**
+ * A reason that names a workflow file makes a factual claim about that file. Applies to BOTH
+ * registries: an entry saying "runs in db-gates.yml" when db-gates.yml has never heard of the
+ * gate launders a dead gate as a choice, whichever list it sits in.
+ *
+ * A named workflow satisfies the claim if any run: step there invokes the gate OR one of its
+ * sub-commands (`check:alert-ack` is legitimately described by "ci.yml names the self-test
+ * only"). What it may not do is name a file that has never heard of the gate at all.
+ */
+export function findFalseReasons(registry, tokensByFile) {
+  const out = [];
+  for (const [gate, entry] of Object.entries(registry)) {
+    const reason = reasonText(entry);
+    for (const named of new Set(reason.match(/[A-Za-z0-9._-]+\.ya?ml/g) ?? [])) {
+      const tokens = tokensByFile.get(named);
+      if (tokens === undefined) {
+        out.push(`${gate} — its reason names ${named}, which is not a workflow file here`);
+        continue;
+      }
+      const mentioned = [...tokens].some((t) => t === gate || t.startsWith(`${gate}:`));
+      if (!mentioned)
+        out.push(`${gate} — its reason points at ${named}, and no run: step there names the gate in any form`);
+    }
+  }
+  return out;
+}
 
 
 /**
@@ -522,27 +642,20 @@ function main() {
 
   // A reason that says "runs in <file>.yml" is a factual claim. Both entries this check was
   // written for — `check:declaration-column-drift` and `check:declaration-constraint-drift` —
-  // claimed db-gates.yml ran them and db-gates.yml never named either. An UNWIRED_BY_DESIGN
-  // reason that is not true is worse than no exception: it launders a dead gate as a choice.
+  // claimed db-gates.yml ran them and db-gates.yml never named either. A reason that is not
+  // true is worse than no exception: it launders a dead gate as a choice.
   //
-  // A named workflow satisfies the claim if any run: step there invokes the gate OR one of its
-  // sub-commands (`check:alert-ack` is legitimately described by "ci.yml names the self-test
-  // only"). What it may not do is name a file that has never heard of the gate at all.
-  const falseReasons = [];
-  for (const [gate, reason] of Object.entries(UNWIRED_BY_DESIGN)) {
-    for (const named of new Set(reason.match(/[A-Za-z0-9._-]+\.ya?ml/g) ?? [])) {
-      const tokens = tokensByFile.get(named);
-      if (tokens === undefined) {
-        falseReasons.push(`${gate} — its reason names ${named}, which is not a workflow file here`);
-        continue;
-      }
-      const mentioned = [...tokens].some((t) => t === gate || t.startsWith(`${gate}:`));
-      if (!mentioned)
-        falseReasons.push(
-          `${gate} — its reason points at ${named}, and no run: step there names the gate in any form`,
-        );
-    }
-  }
+  // 2026-09-04 (v2 ticket 30): this walked UNWIRED_BY_DESIGN only, so the three
+  // NON_BLOCKING_BY_DESIGN reasons — the ones that mute a gate that CAN fail — were the only
+  // exception prose in the file nothing checked at all. It walks both now.
+  const falseReasons = [
+    ...findFalseReasons(UNWIRED_BY_DESIGN, tokensByFile),
+    ...findFalseReasons(NON_BLOCKING_BY_DESIGN, tokensByFile),
+  ];
+
+  // And the part no static check can reach: whether the NUMBERS in a non-blocking reason are
+  // still what the gate prints. Enforced as an expiry on `measuredAt`.
+  const rottedReasons = auditNonBlockingRegistry(NON_BLOCKING_BY_DESIGN, new Date());
 
   for (const w of unreachable)
     console.error(
@@ -554,6 +667,7 @@ function main() {
       `  DEAD JOB: .github/workflows/${j.file}:${j.job} — pinned \`if: false\`, so it never runs.`,
     );
   for (const f of falseReasons) console.error(`  FALSE EXCEPTION REASON: ${f}.`);
+  for (const f of rottedReasons) console.error(`  UNVERIFIABLE NON-BLOCKING REASON: ${f}`);
   for (const g of staleExceptions)
     console.error(`  STALE EXCEPTION: ${g} — it is wired now, or no longer exists. Remove the entry.`);
   for (const g of unwired)
@@ -576,12 +690,14 @@ function main() {
     staleExceptions.length ||
     unreachable.length ||
     deadJobs.length ||
-    falseReasons.length
+    falseReasons.length ||
+    rottedReasons.length
   ) {
     console.error(
       `\ncheck-gate-wiring: ${unwired.length} unwired, ${nonBlocking.length} cannot-fail, ` +
         `${staleNonBlocking.length} stale non-blocking, ${staleExceptions.length} stale, ` +
-        `${falseReasons.length} false reason(s), ${unreachable.length} unreachable workflow(s), ` +
+        `${falseReasons.length} false reason(s), ${rottedReasons.length} unverifiable ` +
+        `non-blocking reason(s), ${unreachable.length} unreachable workflow(s), ` +
         `${deadJobs.length} dead job(s) ` +
         `(searched ${runs.length} run steps across ${jobIds.length} jobs in ${files.length} workflow files).\n` +
         `Wire it into a run: step of a workflow GitHub starts on its own, or add it to ` +
@@ -736,6 +852,100 @@ export function runSelfTest() {
   assert(
     "a gate name that is a PREFIX of another does not match it",
     shellTokens("pnpm run check:one-more").includes("check:one") === false,
+  );
+
+  // --- a non-blocking reason that has quietly stopped being true ---
+  // 2026-09-04 (v2 ticket 30). Two of the three live entries had rotted — wrong file, wrong
+  // owner, wrong breach count — and every check in this file passed over them, because
+  // `staleNonBlocking` asks only whether the gate still exists and is still muted.
+  const NOW = new Date("2026-09-04T00:00:00Z");
+  const freshEntry = {
+    "check:x": { measuredAt: "2026-08-20", owner: "the x lane", reason: "rc=1, 9 breaches" },
+  };
+  assert(
+    "a dated, owned, freshly measured entry passes the audit",
+    auditNonBlockingRegistry(freshEntry, NOW, 90).length === 0,
+  );
+
+  const staleEntry = {
+    "check:x": { measuredAt: "2026-01-01", owner: "the x lane", reason: "rc=1, 9 breaches" },
+  };
+  const staleProblems = auditNonBlockingRegistry(staleEntry, NOW, 90);
+  assert("an entry measured longer ago than the limit is reported", staleProblems.length === 1);
+  assert(
+    "the stale report names the gate, the date and the age, not just 'stale'",
+    (staleProblems[0] ?? "").includes("check:x") &&
+      (staleProblems[0] ?? "").includes("2026-01-01") &&
+      (staleProblems[0] ?? "").includes("246 days ago"),
+  );
+  assert(
+    "an entry exactly at the limit is still accepted, so the boundary is not off by one",
+    auditNonBlockingRegistry({ "check:x": { measuredAt: "2026-06-06", owner: "o", reason: "r" } }, NOW, 90).length === 0,
+  );
+  assert(
+    "one day past the limit is reported",
+    auditNonBlockingRegistry({ "check:x": { measuredAt: "2026-06-05", owner: "o", reason: "r" } }, NOW, 90).length === 1,
+  );
+
+  // The shape that rotted: prose with no date at all.
+  assert(
+    "a bare-string entry is rejected — a sentence carries no date, so nothing can age it out",
+    auditNonBlockingRegistry({ "check:x": "rc=1 at head, 15 breaches" }, NOW, 90).length === 1,
+  );
+  assert(
+    "an entry with no owner is rejected",
+    auditNonBlockingRegistry({ "check:x": { measuredAt: "2026-08-20", reason: "r" } }, NOW, 90).some((m) =>
+      m.includes("names no owner"),
+    ),
+  );
+  assert(
+    "an entry with no reason is rejected",
+    auditNonBlockingRegistry({ "check:x": { measuredAt: "2026-08-20", owner: "o" } }, NOW, 90).some((m) =>
+      m.includes("states no reason"),
+    ),
+  );
+  assert(
+    "a measuredAt that is not an ISO date is rejected",
+    auditNonBlockingRegistry({ "check:x": { measuredAt: "last week", owner: "o", reason: "r" } }, NOW, 90).length === 1,
+  );
+  assert(
+    "a measuredAt in the FUTURE is rejected — it records no measurement",
+    auditNonBlockingRegistry({ "check:x": { measuredAt: "2027-01-01", owner: "o", reason: "r" } }, NOW, 90).some((m) =>
+      m.includes("in the future"),
+    ),
+  );
+
+  // --- an exception reason that names a workflow, in EITHER registry ---
+  const tokens = new Map([
+    ["a.yml", new Set(["check:one"])],
+    ["b.yml", new Set(["check:two"])],
+  ]);
+  assert(
+    "a NON_BLOCKING reason pointing at a workflow that never names the gate is a false reason",
+    findFalseReasons({ "check:one": { measuredAt: "2026-09-04", owner: "o", reason: "muted in b.yml" } }, tokens)
+      .length === 1,
+  );
+  assert(
+    "a NON_BLOCKING reason pointing at a workflow that DOES name the gate is accepted",
+    findFalseReasons({ "check:one": { measuredAt: "2026-09-04", owner: "o", reason: "muted in a.yml" } }, tokens)
+      .length === 0,
+  );
+  assert(
+    "a reason naming a workflow file that does not exist here is a false reason",
+    findFalseReasons({ "check:one": { measuredAt: "2026-09-04", owner: "o", reason: "runs in ghost.yml" } }, tokens)
+      .length === 1,
+  );
+  assert(
+    "findFalseReasons still reads a bare-string UNWIRED_BY_DESIGN reason",
+    findFalseReasons({ "check:one": "muted in b.yml" }, tokens).length === 1,
+  );
+  assert("reasonText reads a string entry", reasonText("plain") === "plain");
+  assert("reasonText reads an object entry", reasonText({ reason: "obj" }) === "obj");
+
+  // --- control: every entry SHIPPED in this file is dated, owned and inside the window ---
+  assert(
+    "the live NON_BLOCKING_BY_DESIGN registry passes its own audit today",
+    auditNonBlockingRegistry(NON_BLOCKING_BY_DESIGN, new Date()).length === 0,
   );
 
   // --- control: the real repository still passes, so a self-test cannot go green

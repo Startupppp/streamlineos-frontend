@@ -22,7 +22,7 @@ export function useKbResearchBriefs(limit = 20) {
     queryKey: queryKeys.kb.researchBriefs(limit),
     queryFn: ({ pageParam, signal }) => {
       const params: Record<string, unknown> = { limit };
-      if (pageParam) params.cursor = pageParam;
+      if (pageParam !== undefined) params.cursor = pageParam;
       return apiClient.get<BriefListResponse>("/kb/research-briefs", params, signal);
     },
     initialPageParam: undefined as number | undefined,

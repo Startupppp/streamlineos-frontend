@@ -38,11 +38,11 @@ import {
 const BASELINE = {
   minimumFiles: 3500,
   minimumControls: 1100,
-  unnamed: 318,
+  unnamed: 288,
   perControl: {
-    SelectTrigger: 236,
-    Checkbox: 24,
-    Switch: 57,
+    SelectTrigger: 215,
+    Checkbox: 21,
+    Switch: 51,
     RadioGroupItem: 1,
   } as Record<string, number>,
   /**
@@ -51,15 +51,10 @@ const BASELINE = {
    * total holding still while the defects move house.
    */
   heaviestFiles: {
-    "features/timesheets/settings/general-settings-form-fields.tsx": 9,
-    "features/settings/organization/org-localization-section.tsx": 8,
-    "features/build/views/display-options-panel.tsx": 6,
-    "features/hr/recruitment/jobs/create-job-form/hiring-pipeline-sections.tsx": 6,
     "features/build/meetings/meetings-list-page.tsx": 4,
     "features/calendar/event-recurrence-editor.tsx": 4,
     "features/hr/forms/components/field-config-panel.tsx": 4,
     "features/hr/recruitment/jobs/create-job-form/publishing-settings-sections.tsx": 4,
-    "features/notifications/preferences-page.tsx": 4,
     "features/users/user-directory-filters.tsx": 4,
   } as Record<string, number>,
 } as const;

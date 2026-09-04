@@ -30,7 +30,7 @@ export function useUnifiedInbox(
     initialPageParam: undefined as string | undefined,
     queryFn: ({ pageParam , signal }) => {
       const query: Record<string, string> = { limit: String(limit) };
-      if (pageParam) query["cursor"] = String(pageParam);
+      if (pageParam !== undefined) query["cursor"] = String(pageParam);
       if (params?.kinds && params.kinds.length > 0)
         query["kinds"] = params.kinds.join(",");
       if (params?.unreadOnly) query["unreadOnly"] = "true";

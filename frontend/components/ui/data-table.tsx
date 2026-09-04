@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import {
   type ColumnDef,
   type SortingState,
@@ -237,6 +237,33 @@ export function DataTable<T>({
 
   const rows = table.getRowModel().rows;
 
+  /**
+   * A row click is a navigation intent 74 call sites over, and the App Router
+   * answers it by keeping the current page painted while the next segment
+   * resolves — so without a marker here the row looks ignored for exactly as
+   * long as the destination takes. `setPendingRowKey` is an urgent update
+   * deliberately left OUTSIDE the transition: it commits in the same render
+   * pass as the click, so the row is `aria-busy` before the navigation has
+   * begun, while `startTransition` keeps the table interactive meanwhile.
+   */
+  const [isRowPending, startRowTransition] = useTransition();
+  const [pendingRowKey, setPendingRowKey] = useState<string | null>(null);
+
+  const handleRowActivate = useCallback(
+    (row: T, rowKey: string) => {
+      if (!onRowClick) return;
+      setPendingRowKey(rowKey);
+      startRowTransition(() => {
+        onRowClick(row);
+      });
+    },
+    [onRowClick],
+  );
+
+  useEffect(() => {
+    if (!isRowPending) setPendingRowKey(null);
+  }, [isRowPending]);
+
   const currentPage = serverPag !== null ? serverPag.page - 1 : clientPage;
   const totalPages = serverPag !== null
     ? Math.ceil(serverPag.total / serverPag.pageSize)
@@ -326,13 +353,15 @@ export function DataTable<T>({
                   key={row.id}
                   role={onRowClick ? "button" : undefined}
                   tabIndex={onRowClick ? 0 : undefined}
-                  onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+                  aria-busy={pendingRowKey === row.id ? true : undefined}
+                  data-pending={pendingRowKey === row.id ? "true" : undefined}
+                  onClick={onRowClick ? () => handleRowActivate(row.original, row.id) : undefined}
                   onKeyDown={
                     onRowClick
                       ? (e) => {
                           if (e.key === "Enter" || e.key === " ") {
                             e.preventDefault();
-                            onRowClick(row.original);
+                            handleRowActivate(row.original, row.id);
                           }
                         }
                       : undefined
@@ -340,6 +369,7 @@ export function DataTable<T>({
                   className={cn(
                     "rounded-lg border border-border bg-card p-3 text-left touch-manipulation",
                     onRowClick && "cursor-pointer active:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    "data-[pending=true]:animate-pulse data-[pending=true]:bg-muted",
                     rowClassName?.(row.original, index),
                   )}
                 >
@@ -368,15 +398,18 @@ export function DataTable<T>({
                     className={cn(
                       "h-10 hover:bg-muted/50 transition-colors",
                       onRowClick && "cursor-pointer active:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+                      "data-[pending=true]:animate-pulse data-[pending=true]:bg-muted",
                       rowClassName?.(row.original, rowIndex),
                     )}
-                    onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+                    aria-busy={pendingRowKey === row.id ? true : undefined}
+                    data-pending={pendingRowKey === row.id ? "true" : undefined}
+                    onClick={onRowClick ? () => handleRowActivate(row.original, row.id) : undefined}
                     onKeyDown={
                       onRowClick
                         ? (e) => {
                             if (e.key === "Enter" || e.key === " ") {
                               e.preventDefault();
-                              onRowClick(row.original);
+                              handleRowActivate(row.original, row.id);
                             }
                           }
                         : undefined

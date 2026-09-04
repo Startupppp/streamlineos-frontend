@@ -122,7 +122,7 @@ function InterviewRoundOption({ value, label, isSelected, onToggle }: InterviewR
         isSelected ? "border-primary/40 bg-primary/5" : "border-border hover:bg-muted/40"
       )}
     >
-      <Checkbox checked={isSelected} onCheckedChange={handleCheckedChange} />
+      <Checkbox aria-label={label} checked={isSelected} onCheckedChange={handleCheckedChange} />
       <span className="text-sm font-medium">{label}</span>
     </label>
   );
@@ -172,7 +172,7 @@ function ScreeningQuestionRow({ question: q, idx, onUpdate, onRemove }: Screenin
       </div>
       <div className="flex flex-wrap items-center gap-3 pl-6">
         <Select value={q.type} onValueChange={handleTypeChange}>
-          <SelectTrigger className="w-[150px]">
+          <SelectTrigger aria-label="Question type" className="w-[150px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -182,11 +182,11 @@ function ScreeningQuestionRow({ question: q, idx, onUpdate, onRemove }: Screenin
           </SelectContent>
         </Select>
         <label className="flex items-center gap-1.5 text-xs cursor-pointer">
-          <Checkbox checked={q.required} onCheckedChange={handleRequiredChange} />
+          <Checkbox aria-label="Required" checked={q.required} onCheckedChange={handleRequiredChange} />
           Required
         </label>
         <label className="flex items-center gap-1.5 text-xs cursor-pointer">
-          <Checkbox checked={q.knockout} onCheckedChange={handleKnockoutChange} />
+          <Checkbox aria-label="Knockout question" checked={q.knockout} onCheckedChange={handleKnockoutChange} />
           Knockout question
         </label>
         {q.knockout && q.type === "YES_NO" && (
@@ -237,7 +237,7 @@ export function Section8({ form }: SectionProps) {
             name="resumeRequired"
             control={control}
             render={({ field }) => (
-              <Switch checked={field.value} onCheckedChange={field.onChange} />
+              <Switch aria-label="Resume Required" checked={field.value} onCheckedChange={field.onChange} />
             )}
           />
         </ToggleRow>
@@ -250,7 +250,7 @@ export function Section8({ form }: SectionProps) {
             name="coverLetterRequired"
             control={control}
             render={({ field }) => (
-              <Switch checked={field.value} onCheckedChange={field.onChange} />
+              <Switch aria-label="Cover Letter Required" checked={field.value} onCheckedChange={field.onChange} />
             )}
           />
         </ToggleRow>

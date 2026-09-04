@@ -5,11 +5,20 @@ import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isStorageObjectKey, storageKeyFromUrl } from "@/lib/utils";
 
+/**
+ * The `/uploads/` test used to live here and it read a TENANT OBJECT KEY as a
+ * local asset: every key minted for the default folder is
+ * `<orgId>/uploads/<file>`, so any such reference that `isStorageObjectKey` did
+ * not recognise — a legacy `uploads/…` row, a region-prefixed key — was handed
+ * straight back to the caller as a relative URL instead of being exchanged for a
+ * signed one. The result is a broken image rather than a re-authorized read, and
+ * the substring can never distinguish the two cases because the folder name is
+ * the same on both sides.
+ */
 function isLocalUrl(url: string): boolean {
   if (!url) return false;
   if (isStorageObjectKey(url)) return false;
   if (url.startsWith("/")) return true;
-  if (url.includes("/uploads/")) return true;
   if (url.includes("dicebear.com") || url.includes("avataaars")) return true;
   return false;
 }
@@ -74,7 +83,7 @@ export async function downloadProtectedFile(
 export async function viewFile(fileUrl: string): Promise<void> {
   try {
     const url = await getSignedFileUrl(fileUrl);
-    window.open(url, "_blank");
+    window.open(url, "_blank", "noopener,noreferrer");
   } catch {
     toast.error("Failed to open file");
   }

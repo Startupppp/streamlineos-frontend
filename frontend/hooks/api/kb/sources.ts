@@ -73,7 +73,7 @@ export function useKbSources() {
     queryKey: queryKeys.kb.sources(),
     queryFn: ({ pageParam, signal }) => {
       const params: Record<string, unknown> = { limit: SOURCES_PAGE_SIZE };
-      if (pageParam) params.cursor = pageParam;
+      if (pageParam !== undefined) params.cursor = pageParam;
       return apiClient.get<KbSourcePage>("/kb/sources", params, signal);
     },
     initialPageParam: undefined as string | undefined,

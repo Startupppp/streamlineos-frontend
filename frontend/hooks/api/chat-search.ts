@@ -82,7 +82,7 @@ export function useThreadReplies(channelId: number, messageId: number) {
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<ThreadPage>(
         `/chat/channels/${channelId}/messages/${messageId}/thread`,
-        pageParam ? { cursor: pageParam } : undefined, signal,
+        pageParam !== undefined ? { cursor: pageParam } : undefined, signal,
       ),
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     initialPageParam: undefined as number | undefined,

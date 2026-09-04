@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { ExcalidrawSceneData } from "./whiteboards";
@@ -23,7 +23,16 @@ export function usePublicWhiteboard(token: string) {
   });
 }
 
+/**
+ * The save writes the scene the caller already holds, and the read that seeded
+ * the canvas sits at a 30s staleTime under the same key. Without this the cache
+ * keeps the pre-save scene: a remount inside the window re-seeds Excalidraw from
+ * it, and a refetch after the window races the 3s debounce. The server confirms
+ * the write and returns its own `updatedAt`, so this is a settled self-write —
+ * no onMutate, no rollback.
+ */
 export function useUpdatePublicWhiteboard(token: string) {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["whiteboards", "public", "update"],
     mutationFn: (data: ExcalidrawSceneData) =>
@@ -31,5 +40,12 @@ export function useUpdatePublicWhiteboard(token: string) {
         `/public/whiteboard-links/${token}`,
         { data },
       ),
+    onSuccess: (result, data) => {
+      queryClient.setQueryData<PublicWhiteboard>(
+        queryKeys.whiteboards.publicLink(token),
+        (previous) =>
+          previous ? { ...previous, data, updatedAt: result.updatedAt } : previous,
+      );
+    },
   });
 }

@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { EmptyUploadIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
@@ -94,8 +95,18 @@ export const EmployeeDocumentsTab = forwardRef<
   ref,
 ) {
   const qc = useQueryClient();
-  const { data: myDocs, isLoading: docsLoading } = useMyOnboardingDocs();
-  const { data: docTypes, isLoading: typesLoading } = useHrDocumentTypes();
+  const {
+    data: myDocs,
+    isLoading: docsLoading,
+    isError: docsFailed,
+    refetch: refetchDocs,
+  } = useMyOnboardingDocs();
+  const {
+    data: docTypes,
+    isLoading: typesLoading,
+    isError: typesFailed,
+    refetch: refetchDocTypes,
+  } = useHrDocumentTypes();
   const submitDoc = useSubmitOnboardingDoc();
 
   const [uploadTarget, setUploadTarget] = useState<DocumentType | null>(null);
@@ -106,7 +117,13 @@ export const EmployeeDocumentsTab = forwardRef<
   const pickTargetRef = useRef<DocumentType | null>(null);
 
   const isLoading = docsLoading || typesLoading;
+  const isError = docsFailed || typesFailed;
   const isWizard = variant === "wizard";
+
+  const handleRetryLoad = useCallback(() => {
+    void refetchDocs();
+    void refetchDocTypes();
+  }, [refetchDocs, refetchDocTypes]);
 
   const checklist = (() => {
     const country = countryCode?.toUpperCase();
@@ -226,6 +243,22 @@ export const EmployeeDocumentsTab = forwardRef<
         {Array.from({ length: 4 }).map((_, i) => (
           <Skeleton key={i} className="h-14 rounded-xl" />
         ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="space-y-4">
+        <ErrorState
+          title="Couldn’t load your documents"
+          description="The document checklist did not load, so we cannot tell you what is still outstanding. Try again."
+          onRetry={handleRetryLoad}
+          compact
+        />
+        {!hideNav && (onBack || onContinue) ? (
+          <DocumentsTabNav onBack={onBack} onContinue={onContinue} />
+        ) : null}
       </div>
     );
   }

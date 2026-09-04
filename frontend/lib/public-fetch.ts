@@ -1,6 +1,7 @@
 import "server-only";
 import { BACKEND_URL } from "@/lib/backend-url";
 import { parseApiResponse, type ResponseContract } from "@/lib/api-envelope";
+import { withCorrelation, withTraceContext } from "@/lib/observability/with-correlation";
 
 const TIMEOUT_MS = 8_000;
 export const PUBLIC_REVALIDATE_SECS = 60;
@@ -66,10 +67,10 @@ export async function publicGet<T>(
       if (value !== undefined) url.searchParams.set(key, String(value));
     }
   }
-  const res = await fetch(url.toString(), {
+  const res = await fetch(url.toString(), withTraceContext({
     next: { revalidate: PUBLIC_REVALIDATE_SECS },
     signal: AbortSignal.timeout(TIMEOUT_MS),
-  });
+  }));
   if (res.status === 404) return null;
   return parseApiResponse<T>(res, contract, path);
 }
@@ -87,6 +88,7 @@ export async function publicGetNoStore<T>(
   }
   const res = await fetch(url.toString(), {
     cache: "no-store",
+    headers: withCorrelation(new Headers()),
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
   if (res.status === 404) return null;

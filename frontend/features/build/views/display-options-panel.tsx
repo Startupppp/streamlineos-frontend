@@ -285,7 +285,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
                 <div className="space-y-1.5">
                   <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Columns</p>
                   <Select value={options.columnBy} onValueChange={handleColumnByChange}>
-                  <SelectTrigger className="h-9 w-full">
+                  <SelectTrigger aria-label="Columns" className="h-9 w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -298,7 +298,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
                 <div className="space-y-1.5">
                   <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Rows</p>
                   <Select value={options.rowBy} onValueChange={handleRowByChange}>
-                  <SelectTrigger className="h-9 w-full">
+                  <SelectTrigger aria-label="Rows" className="h-9 w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -315,7 +315,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
                 <div className="space-y-1.5">
                   <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Group by</p>
                   <Select value={options.groupBy} onValueChange={handleGroupByChange}>
-                  <SelectTrigger className="h-9 w-full">
+                  <SelectTrigger aria-label="Group by" className="h-9 w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -328,7 +328,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
                 <div className="space-y-1.5">
                   <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Sub-group</p>
                   <Select value={options.rowBy} onValueChange={handleRowByChange}>
-                  <SelectTrigger className="h-9 w-full">
+                  <SelectTrigger aria-label="Sub-group" className="h-9 w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -349,7 +349,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
             <div className="space-y-1.5">
               <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Ordering</p>
               <Select value={options.orderBy} onValueChange={handleOrderByChange}>
-                  <SelectTrigger className="h-9 w-full">
+                  <SelectTrigger aria-label="Ordering" className="h-9 w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -372,7 +372,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
         <div className="space-y-1.5">
           <p className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Completed issues</p>
           <Select value={options.completedIssues} onValueChange={handleCompletedIssuesChange}>
-                  <SelectTrigger className="h-9 w-full">
+                  <SelectTrigger aria-label="Completed issues" className="h-9 w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

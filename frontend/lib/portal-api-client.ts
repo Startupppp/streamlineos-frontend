@@ -1,3 +1,4 @@
+import { withCorrelation } from "@/lib/observability/with-correlation";
 
 if (!process.env.NEXT_PUBLIC_API_URL) {
   throw new Error("NEXT_PUBLIC_API_URL is not set");
@@ -11,14 +12,53 @@ export function getPortalToken(): string | null {
   return window.localStorage.getItem(PORTAL_TOKEN_KEY);
 }
 
+const tokenListeners = new Set<() => void>();
+
+function notifyPortalTokenChanged(): void {
+  for (const listener of [...tokenListeners]) listener();
+}
+
+/**
+ * The portal has no session, so nothing else tells the cache that the subject
+ * changed. `(portal)` is one layout across the invitation page and the board,
+ * so accepting a second client's invitation in the same browser previously kept
+ * the first client's QueryClient — and `queryKeys.portal.projects()` carries no
+ * subject dimension, so customer B read customer A's project list out of cache.
+ */
+export function subscribePortalToken(listener: () => void): () => void {
+  tokenListeners.add(listener);
+  if (typeof window !== "undefined") window.addEventListener("storage", listener);
+  return () => {
+    tokenListeners.delete(listener);
+    if (typeof window !== "undefined") window.removeEventListener("storage", listener);
+  };
+}
+
+export const PORTAL_ANONYMOUS_SCOPE = "portal:anonymous";
+
+/**
+ * A short, stable digest of the bearer token — enough to key one client's cache
+ * apart from another's, and not the token itself sitting in a cache key.
+ */
+export function portalTokenScope(): string {
+  const token = getPortalToken();
+  if (!token) return PORTAL_ANONYMOUS_SCOPE;
+  let hash = 5381;
+  for (let i = 0; i < token.length; i += 1)
+    hash = (Math.imul(hash, 33) + token.charCodeAt(i)) | 0;
+  return `portal:${(hash >>> 0).toString(36)}`;
+}
+
 export function setPortalToken(token: string): void {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(PORTAL_TOKEN_KEY, token);
+  notifyPortalTokenChanged();
 }
 
 export function clearPortalToken(): void {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(PORTAL_TOKEN_KEY);
+  notifyPortalTokenChanged();
 }
 
 export class PortalApiError extends Error {
@@ -90,7 +130,7 @@ async function portalFetch(
   init: RequestInit,
   authenticated = true,
 ): Promise<Response> {
-  const headers = new Headers(init.headers);
+  const headers = withCorrelation(new Headers(init.headers));
   if (authenticated) {
     const token = getPortalToken();
     if (token) headers.set("Authorization", `Bearer ${token}`);

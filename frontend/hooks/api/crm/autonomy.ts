@@ -18,7 +18,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 function toParams(filters: DecisionFilters, limit: number, cursor?: string): string {
   const params = new URLSearchParams({ limit: String(limit) });
-  if (cursor) params.set("cursor", cursor);
+  if (cursor !== undefined) params.set("cursor", cursor);
 
   for (const [key, value] of Object.entries(filters)) {
     if (value === undefined || value === "") continue;

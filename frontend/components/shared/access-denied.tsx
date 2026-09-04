@@ -25,7 +25,7 @@ export function AccessDenied({ currentRole, requiredRoles, message, className }:
         {message || "You don't have permission to view this page."}
       </p>
       {currentRole && requiredRoles && requiredRoles.length > 0 && (
-        <p className="text-xs text-muted-foreground/60 mb-6">
+        <p className="text-xs text-foreground/80 mb-6">
           Your role: <span className="font-medium">{currentRole}</span> | Required: {requiredRoles.join(", ")}
         </p>
       )}

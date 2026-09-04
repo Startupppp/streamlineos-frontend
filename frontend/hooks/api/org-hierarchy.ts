@@ -75,7 +75,7 @@ export function useHierarchyParentOptions(
       apiClient.get<CursorResponse<HierarchyParentRecord>>(
         HIERARCHY_PARENT_ENDPOINTS[parentKind],
         {
-          ...(pageParam ? { cursor: pageParam } : {}),
+          ...(pageParam !== "" ? { cursor: pageParam } : {}),
           limit: String(HIERARCHY_PARENT_PAGE_SIZE),
           ...(normalizedSearch ? { search: normalizedSearch } : {}),
           status: "ACTIVE",

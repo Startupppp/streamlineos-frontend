@@ -45,7 +45,7 @@ export function useAiConversations(enabled: boolean) {
     queryKey: queryKeys.aiChat.conversations(),
     queryFn: ({ pageParam , signal }) => {
       const params: Record<string, unknown> = { limit: HISTORY_PAGE_SIZE };
-      if (pageParam) params.cursor = pageParam;
+      if (pageParam !== undefined) params.cursor = pageParam;
       return apiClient.get<AiConversationListPage>("/chat/conversations", params, signal);
     },
     initialPageParam: undefined as number | undefined,
@@ -97,7 +97,7 @@ export function useAiConversationMessages(conversationId: number | null, enabled
     queryKey: queryKeys.aiChat.conversationMessages(conversationId ?? 0),
     queryFn: ({ pageParam , signal }) => {
       const params: Record<string, unknown> = { limit: HISTORY_PAGE_SIZE };
-      if (pageParam) params.cursor = pageParam;
+      if (pageParam !== undefined) params.cursor = pageParam;
       return apiClient.get<AskAiHistoryPage>(
         `/chat/conversations/${conversationId}/messages`,
         params, signal,

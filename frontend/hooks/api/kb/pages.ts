@@ -229,7 +229,7 @@ export function useKbPageVersions(pageId: number) {
     queryKey: queryKeys.kb.pageVersions(pageId),
     queryFn: ({ pageParam, signal }) => {
       const params: Record<string, unknown> = {};
-      if (pageParam) params.cursor = pageParam;
+      if (pageParam !== undefined) params.cursor = pageParam;
       return apiClient.get<CursorPage<KbPageVersion>>(
         `/kb/pages/${pageId}/versions`,
         params,

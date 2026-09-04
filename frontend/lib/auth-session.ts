@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import { decodeJwt, SignJWT } from "jose";
 import type { Plan } from "@/lib/billing/feature-gates";
 import { BACKEND_URL } from "@/lib/backend-url";
+import { withCorrelation } from "@/lib/observability/with-correlation";
 
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET ?? "";
 
@@ -81,11 +82,13 @@ export async function exchangeSessionForBackendJwt(
   try {
     const res = await fetch(`${BACKEND_URL}/auth/session-exchange`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-internal-secret": internalSecret,
-        "x-session-proof": proof,
-      },
+      headers: withCorrelation(
+        new Headers({
+          "Content-Type": "application/json",
+          "x-internal-secret": internalSecret,
+          "x-session-proof": proof,
+        }),
+      ),
       body: JSON.stringify({ orgId: orgId ?? null }),
       cache: "no-store",
       signal: controller.signal,
@@ -128,7 +131,7 @@ export async function fetchSessionData(userId: string): Promise<SessionData | nu
     const timeout = setTimeout(() => controller.abort(), 8_000);
     try {
       const res = await fetch(`${BACKEND_URL}/auth/session-data/${userId}`, {
-        headers: { "x-internal-secret": INTERNAL_SECRET },
+        headers: withCorrelation(new Headers({ "x-internal-secret": INTERNAL_SECRET })),
         cache: "no-store",
         signal: controller.signal,
       });
@@ -183,7 +186,7 @@ export async function resolveGoogleUser(
 
     const res = await fetch(`${BACKEND_URL}/auth/google`, {
       method: "POST",
-      headers: reqHeaders,
+      headers: withCorrelation(new Headers(reqHeaders)),
       body: JSON.stringify({
         email,
         googleId,

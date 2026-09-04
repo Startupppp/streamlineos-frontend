@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
 import { consumeNotificationStream, type IncomingNotification } from "./notification-event-stream";
+import { withCorrelation } from "@/lib/observability/with-correlation";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 /**
@@ -29,7 +30,7 @@ async function fetchStreamToken(): Promise<string | null> {
     if (typeof backendJwt !== "string" || !backendJwt) return null;
     const response = await fetch(`${BACKEND_URL}/notifications/events/token`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${backendJwt}` },
+      headers: withCorrelation(new Headers({ Authorization: `Bearer ${backendJwt}` })),
     });
     if (!response.ok) return null;
     const body: unknown = await response.json();
