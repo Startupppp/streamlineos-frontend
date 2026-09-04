@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { formatINR } from "@/lib/format-utils";
+import { formatAmountInCurrency, formatINR } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useExpensePageData } from "@/hooks/api/hr";
@@ -64,7 +64,7 @@ function ExpenseRow({
         <p className="text-micro text-muted-foreground truncate">{subtitle}</p>
       </div>
       <span className="text-xs font-semibold tabular-nums shrink-0">
-        {formatINR(expense.amount)}
+        {formatAmountInCurrency(expense.amount, expense.currency)}
       </span>
       <Badge
         variant="outline"

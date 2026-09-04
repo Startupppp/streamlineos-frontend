@@ -205,6 +205,9 @@ carries no `@RequireModule` and is a surface guaranteed to every active member.
 
 ### 3.5 Independent loading and error states — **PARTIALLY MET**
 
+> **RESOLVED — re-measured at closeout head.** `use-dashboard-stat-cards.ts:39-51` returns `"—"` + `unavailable: true` instead of `?? 0`, and `dashboard-client.tsx` renders a `role="status"` degraded strip with a Retry. `npx jest --testPathPattern="features/dashboard|lib/home|features/employee-self-service"` → **13 suites / 157 tests, exit 0**.
+
+
 Structurally correct: 11 widgets in `home-widget-grid.tsx:107-149`, each in its own
 `HomeSectionBoundary`; every widget owns its own skeleton and error branch; no widget shares
 a loading flag with a sibling.
@@ -214,6 +217,9 @@ finding in this report. `/dashboard/stats` returns `null` for a failed or timed-
 with no degradation signal, and `use-dashboard-stat-cards.ts:30,39,48` coerces it with `?? 0`.
 
 ### 3.6 Cache and query keys — MET on tenancy, defective on two dimensions
+
+> **RESOLVED — both defects (F5, F6) closed in this closeout wave; see §3.9 and the F5/F6 stamps below.**
+
 
 **Tenant dimension: MET, and proved.** No dashboard query key carries an orgId —
 `queryKeyBase = ["streamlineos"]` (`lib/query-keys/base.ts:1`). The org and user dimension is
@@ -239,6 +245,9 @@ Hook hygiene at head: 18 hooks, 16 queries + 2 mutations, **every query declares
 
 ### 3.7 Responsive accessibility — **NOT MET** (the prior audit's largest open gap)
 
+> **RESOLVED — re-measured at closeout head.** `components/ui/widget-card.tsx` announces via `role="alert"`, so all ten `WidgetCard` consumers do; `features/dashboard/home-a11y.test.tsx` (356 lines) runs `expectNoAxeViolations` over the widget grid and the `/me/*` pages. Of the 12 Home files carrying `text-destructive`, 11 announce and the twelfth (`my-tasks-widget.tsx`) uses the class for an overdue tint while routing its real error through `WidgetCard`.
+
+
 **Responsive: adequate.** `home-widget-grid.tsx:106`
 `grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3`; `dashboard-deferred-body.tsx` carries
 12 breakpoint-prefixed classes.
@@ -260,6 +269,9 @@ any of the four `/me/*` self-service pages. See **F7**.
 
 ### 3.8 Representative E2E — **NOT MET**
 
+> **RESOLVED — re-measured at closeout head.** `dashboard.controller.e2e-spec.ts` is 418 lines, and `employee-expenses`, `employee-attendance` and `employee-time-off` each now have a controller e2e spec. `AUTH_SIGNING_KEYS=… jest --config ./jest-e2e.json --runInBand` over those four → **4 suites / 148 tests, exit 0**. (`AUTH_SIGNING_KEYS` must be supplied from `.env.gates`; `.env` does not carry it and the suites otherwise fail to sign a token.)
+
+
 | Spec | Lines | What it asserts |
 |---|---|---|
 | `dashboard.controller.e2e-spec.ts` | 53 | **18 × "401 without a token"**. Nothing else. |
@@ -275,36 +287,209 @@ I did **not run** `dashboard.controller.e2e-spec.ts`: `*e2e-spec` files require
 `pnpm test:e2e` and a seeded API boot, which is outside the laptop budget for 26 concurrent
 agents. **NOT MEASURED.**
 
-### 3.9 KEEP / REFACTOR / REMOVE — **REMOVE count 0, independently re-verified**
+### 3.9 KEEP / REFACTOR / REMOVE — re-derived at current head, **every file classified**
 
-I re-derived reachability at head rather than trusting the prior audit: 38 Home source files
-scanned for an importer via both `@/`-alias and relative-path forms. **All 38 are reached.**
-The 10 that a naive alias-only scan flags are reached by relative import
-(`./dashboard-hydration`, `./ticket-types`, `./use-home-cache-sync`,
-`./dashboard-deferred-body`, `./deferred-dashboard-content`, `./guided-tour-overlay`,
-`./home-widget-grid`) or through the barrel (`features/employee-self-service/index.ts`, 4
-exports). This is the "done ≠ reachable" trap; it does not apply here.
+**This table replaces the delta table this report carried at `7469d2789` / `2f37e1bb0`.** That
+version marked seven files REFACTOR for defects that are now fixed, and it classified only the
+files that had changed — the criterion asks for *every* Home file, so this one enumerates the
+whole corpus rather than referring back to a predecessor's rows.
 
-**Classification at head** (deltas from the prior audit's table only; its KEEP rows stand):
+**Measured at** frontend `7633c38b947a57b285403e70fd340e1c149b5fe6` and backend
+`8f319495c2c4aa17b198581829ac956b9e2a2fbd`, both on `release/v2-closeout`, **plus the
+uncommitted working-tree changes of this closeout wave** (F5, F6, F9, F10 and their specs are
+written but not yet committed — an agent may not run a mutating git command). Nothing below is
+carried over from the earlier SHAs without being re-read.
 
-| File | Class | Reason |
+**Corpus — 125 files, defined explicitly so "every Home file" is checkable.** Backend: all 40
+files of `src/modules/dashboard/**`, the four self-service controllers and their specs, and the
+two `hr/time` leave files that back `/me/time-off`. Frontend: all of `features/dashboard/**`,
+`components/dashboard/**`, `features/employee-self-service/**`, `lib/home/**`,
+`app/(authenticated)/dashboard/**` and `app/(authenticated)/me/**`, plus the six shared files
+reached only from Home or `/me` (`hooks/api/dashboard.ts`, `components/ui/widget-card.tsx`,
+`hooks/api/hr/expenses.ts` and the three `features/hr/expenses` render sites) and the money
+formatter they now share.
+
+**Reachability.** Every non-test file was scanned for an importer across the whole of `src/`
+(backend) and the whole frontend tree, by both `@/`-alias and relative-path form. All are
+reached. The only file with no importer is `app/(authenticated)/dashboard/error.tsx`, which the
+App Router loads by filename — a convention file, not a dead one. Method note: this is an
+import-graph scan, **not** a `knip` run, so `REMOVE = 0` is asserted at that strength and no
+higher.
+
+**Result: KEEP 122 · REFACTOR 3 · REMOVE 0.**
+
+#### Backend — 50 files
+
+| File (`streamlineos-backend/`) | Class | Reason |
 |---|---|---|
-| `backend/dashboard-personal.service.ts` | **REFACTOR** | F1 (2 dead branches), F2 (unprotected prologue) |
-| `backend/dashboard-stats.service.ts` | **REFACTOR** | F2 (unprotected `await flagsPromise`), F3 (`null` with no degradation signal) |
-| `backend/dashboard-leave.service.ts` | **REFACTOR** | F5/F6 — hand-rolled key, global Redis, never invalidated |
-| `backend/dashboard-crm.service.ts` | **REFACTOR** | F6 — `cache.cached` where the module standard is `cachedForOrg` |
-| `backend/dashboard-section-registry.ts` | **REFACTOR** | F5 — `cacheNs`/`cacheScope` read by no production code |
-| `backend/dashboard-home-fanout.spec.ts` | **REFACTOR** | F2 — no prologue coverage |
-| `backend/dashboard.controller.e2e-spec.ts` | **REFACTOR** | §3.8 — 18 × 401 is not representative E2E |
-| `frontend/use-dashboard-stat-cards.ts` | **REFACTOR** | F3 — `?? 0` turns a failed section into "0" |
-| `frontend/components/ui/widget-card.tsx` | **REFACTOR** | F7 — the shared error surface announces nothing |
-| `frontend/hooks/api/hr/expenses.ts` | **REFACTOR** | F4 — key omits the endpoint dimension |
-| `frontend/features/hr/expenses/expense-list.tsx` | **REFACTOR** | F9 — `formatINR` ignores `expenses.currency` |
-| everything else (27 files) | **KEEP** | reachable, single-purpose, correct |
-| **REMOVE** | **0 files** | nothing in the Home or self-service surface is dead |
+| `src/modules/dashboard/dashboard-announcements-tenant-isolation.spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/dashboard/dashboard-announcements.service.ts` | KEEP | reachable, single-purpose, no open finding |
+| `src/modules/dashboard/dashboard-availability-tenant-isolation.spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/dashboard/dashboard-availability.service.ts` | KEEP | reachable, single-purpose, no open finding |
+| `src/modules/dashboard/dashboard-birthdays-tenant-isolation.spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/dashboard/dashboard-birthdays.service.ts` | KEEP | reachable, single-purpose, no open finding |
+| `src/modules/dashboard/dashboard-cache-key.spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/dashboard/dashboard-cache-key.ts` | KEEP | reachable, single-purpose, no open finding |
+| `src/modules/dashboard/dashboard-cache-residency.spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/dashboard/dashboard-crm-tenant-isolation.spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/dashboard/dashboard-crm.service.ts` | KEEP | reachable, single-purpose, no open finding |
+| `src/modules/dashboard/dashboard-executive-projection.spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/dashboard/dashboard-home-fanout.spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/dashboard/dashboard-home-scope.spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/dashboard/dashboard-hr-events.spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/dashboard/dashboard-invalidation.spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/dashboard/dashboard-leave.service.ts` | KEEP | reachable, single-purpose, no open finding |
+| `src/modules/dashboard/dashboard-personal-tenant-isolation.spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/dashboard/dashboard-personal-visibility.spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/dashboard/dashboard-personal.service.ts` | KEEP | reachable, single-purpose, no open finding |
+| `src/modules/dashboard/dashboard-project-tenant-isolation.spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/dashboard/dashboard-project.service.spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/dashboard/dashboard-project.service.ts` | KEEP | reachable, single-purpose, no open finding |
+| `src/modules/dashboard/dashboard-read-limits.spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/dashboard/dashboard-read-limits.ts` | KEEP | reachable, single-purpose, no open finding |
+| `src/modules/dashboard/dashboard-scope.ts` | KEEP | reachable, single-purpose, no open finding |
+| `src/modules/dashboard/dashboard-section-isolation.spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/dashboard/dashboard-section-registry.spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/dashboard/dashboard-section-registry.ts` | KEEP | reachable, single-purpose, no open finding |
+| `src/modules/dashboard/dashboard-section-settle.ts` | KEEP | reachable, single-purpose, no open finding |
+| `src/modules/dashboard/dashboard-stats-attendance-tz.spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/dashboard/dashboard-stats-tenant-isolation.spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/dashboard/dashboard-stats.service.ts` | KEEP | reachable, single-purpose, no open finding |
+| `src/modules/dashboard/dashboard.controller.e2e-spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/dashboard/dashboard.controller.ts` | KEEP | reachable, single-purpose, no open finding |
+| `src/modules/dashboard/dashboard.errors.ts` | KEEP | reachable, single-purpose, no open finding |
+| `src/modules/dashboard/dashboard.module.ts` | KEEP | reachable, single-purpose, no open finding |
+| `src/modules/dashboard/dto/dashboard.schemas.ts` | KEEP | reachable, single-purpose, no open finding |
+| `src/modules/dashboard/resignation-approval-scope.spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/dashboard/resignation-approval-scope.ts` | KEEP | reachable, single-purpose, no open finding |
+| `src/modules/expenses/employee-expenses.controller.e2e-spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/expenses/employee-expenses.controller.ts` | KEEP | reachable, single-purpose, no open finding |
+| `src/modules/hr/interviews/employee-recruitment.controller.spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/hr/interviews/employee-recruitment.controller.ts` | KEEP | reachable, single-purpose, no open finding |
+| `src/modules/hr/time/__tests__/leaves-projection.spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/hr/time/employee-attendance.controller.e2e-spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/hr/time/employee-attendance.controller.ts` | KEEP | reachable, single-purpose, no open finding |
+| `src/modules/hr/time/employee-time-off.controller.e2e-spec.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `src/modules/hr/time/employee-time-off.controller.ts` | KEEP | reachable, single-purpose, no open finding |
+| `src/modules/hr/time/leaves.service.ts` | **REFACTOR** | `thisWeek` (`GET /me/time-off/team-calendar`) still returns **every** approved leave in the org for the week — the route says team, the query says org. The PII half of F10 is closed (the `email` projection is gone, pinned by `leaves-projection.spec.ts`); the scope half is not, and narrowing it is a product decision about what "Who's Out This Week" means, not a bug fix. |
+
+#### Frontend — 75 files
+
+| File (`streamlineos-frontend/frontend/`) | Class | Reason |
+|---|---|---|
+| `app/(authenticated)/dashboard/error.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `app/(authenticated)/dashboard/loading.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `app/(authenticated)/dashboard/page.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `app/(authenticated)/me/attendance/page.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `app/(authenticated)/me/documents/page.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `app/(authenticated)/me/expenses/page.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `app/(authenticated)/me/loading.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `app/(authenticated)/me/onboarding/page.test.tsx` | KEEP | reachable test, non-vacuous, green at head |
+| `app/(authenticated)/me/onboarding/page.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `app/(authenticated)/me/pay/page.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `app/(authenticated)/me/recruitment/page.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `app/(authenticated)/me/time-off/page.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `components/dashboard/announcements-widget.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `components/dashboard/executive-kpi-widget.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `components/dashboard/my-tasks-widget.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `components/dashboard/project-health-widget.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `components/dashboard/timesheet-widget.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `components/dashboard/upcoming-events-widget.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `components/dashboard/widget-skeleton.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `components/ui/widget-card.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `features/dashboard/__tests__/guided-tour-overlay.test.tsx` | KEEP | reachable test, non-vacuous, green at head |
+| `features/dashboard/alerts-widget.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `features/dashboard/dashboard-access-deadline.test.tsx` | KEEP | reachable test, non-vacuous, green at head |
+| `features/dashboard/dashboard-client.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `features/dashboard/dashboard-deferred-body.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `features/dashboard/dashboard-hydration.test.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `features/dashboard/dashboard-hydration.ts` | KEEP | reachable, single-purpose, no open finding |
+| `features/dashboard/deferred-dashboard-content.test.tsx` | KEEP | reachable test, non-vacuous, green at head |
+| `features/dashboard/deferred-dashboard-content.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `features/dashboard/expenses-widget.tsx` | **REFACTOR** | Per-row amounts now honour `expense.currency` (F9), but line 158 still renders `data.stats.pendingAmount` — a `SUM(CAST(amount AS DECIMAL))` with no `GROUP BY currency` (`expenses.service.ts:137`) — through the INR-hardcoded `formatINR`. A frontend fix is not possible: the aggregate has to carry a currency, or be returned per currency. |
+| `features/dashboard/guided-tour-overlay.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `features/dashboard/home-a11y.test.tsx` | KEEP | reachable test, non-vacuous, green at head |
+| `features/dashboard/home-section-boundary.test.tsx` | KEEP | reachable test, non-vacuous, green at head |
+| `features/dashboard/home-section-boundary.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `features/dashboard/home-section-independence.test.tsx` | KEEP | reachable test, non-vacuous, green at head |
+| `features/dashboard/home-widget-grid.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `features/dashboard/hr-widgets.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `features/dashboard/module-setup-banners.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `features/dashboard/my-attendance-widget.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `features/dashboard/my-issues-card.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `features/dashboard/payroll-widget.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `features/dashboard/public-documents-card.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `features/dashboard/quick-actions.test.tsx` | KEEP | reachable test, non-vacuous, green at head |
+| `features/dashboard/quick-actions.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `features/dashboard/recent-activity-card.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `features/dashboard/recent-projects-card.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `features/dashboard/recruitment-widget.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `features/dashboard/sprint-card.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `features/dashboard/team-card.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `features/dashboard/ticket-types.ts` | KEEP | reachable, single-purpose, no open finding |
+| `features/dashboard/use-dashboard-access.ts` | KEEP | reachable, single-purpose, no open finding |
+| `features/dashboard/use-dashboard-stat-cards.test.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `features/dashboard/use-dashboard-stat-cards.ts` | KEEP | reachable, single-purpose, no open finding |
+| `features/dashboard/use-home-cache-sync.test.tsx` | KEEP | reachable test, non-vacuous, green at head |
+| `features/dashboard/use-home-cache-sync.ts` | KEEP | reachable, single-purpose, no open finding |
+| `features/dashboard/use-my-pending-documents.ts` | KEEP | reachable, single-purpose, no open finding |
+| `features/dashboard/use-settle-deadline.ts` | KEEP | reachable, single-purpose, no open finding |
+| `features/employee-self-service/components/my-attendance-page.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `features/employee-self-service/components/my-documents-page.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `features/employee-self-service/components/my-expenses-page.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `features/employee-self-service/components/my-recruitment-page.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `features/employee-self-service/index.ts` | KEEP | reachable, single-purpose, no open finding |
+| `features/employee-self-service/self-service-a11y.test.tsx` | KEEP | reachable test, non-vacuous, green at head |
+| `features/hr/expenses/expense-item.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `features/hr/expenses/expense-list.tsx` | KEEP | reachable, single-purpose, no open finding |
+| `features/hr/expenses/expense-stats.tsx` | **REFACTOR** | Same class as above: three `formatINRCompact` tiles over `approvedAmount` / `rejectedAmount` / `totalClaimed`, all cross-currency sums from the same service. |
+| `hooks/api/dashboard.ts` | KEEP | reachable, single-purpose, no open finding |
+| `hooks/api/hr/expenses.ts` | KEEP | reachable, single-purpose, no open finding |
+| `lib/format-utils.test.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `lib/format-utils.ts` | KEEP | reachable, single-purpose, no open finding |
+| `lib/home/__tests__/access-call-count.test.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `lib/home/__tests__/home-sections.test.ts` | KEEP | reachable test, non-vacuous, green at head |
+| `lib/home/home-manifest.generated.json` | KEEP | generated Home manifest, regenerated and gated by `check:home-manifest` |
+| `lib/home/home-sections.ts` | KEEP | reachable, single-purpose, no open finding |
+| `lib/row-currency-render-contract.test.ts` | KEEP | reachable test, non-vacuous, green at head |
+
+#### What moved since the stale table, and why
+
+| File | Was | Now | What closed it |
+|---|---|---|---|
+| `dashboard-personal.service.ts` | REFACTOR | **KEEP** | F1 (two dead fanout branches) and F2's prologue both landed; `dashboard-home-fanout.spec.ts` covers the prologue with a bite test |
+| `dashboard-stats.service.ts` | REFACTOR | **KEEP** | F2's `await flagsPromise` is now `settle("moduleFlags", …)`; F3's `?? 0` is gone from the client side |
+| `dashboard-leave.service.ts` | REFACTOR | **KEEP** | F5 + F6: both hand-rolled keys are gone, `getMyLeaveBalance` and `getPendingApprovals` are on the `*ForOrg` family, and a leave decision now bumps the pending-approvals generation |
+| `dashboard-crm.service.ts` | REFACTOR | **KEEP** | F6: `getExecutiveDashboard` moved from the global Redis to `cachedForOrg` under a registry-derived key |
+| `dashboard-section-registry.ts` | REFACTOR | **KEEP** | F5: `cacheNs` is now read by production through `cacheNamespaceOf`, and `cacheScope` picks the builder — passing an `"org"` section to the scoped builder does not compile |
+| `dashboard-home-fanout.spec.ts` | REFACTOR | **KEEP** | prologue coverage added; 1 suite / 14 tests |
+| `dashboard.controller.e2e-spec.ts` | REFACTOR | **KEEP** | 53 lines of 18 x 401 became 418 lines; with the three new self-service specs the four suites run 148 tests |
+| `use-dashboard-stat-cards.ts` | REFACTOR | **KEEP** | F3: `statValue()` returns `"—"` + `unavailable: true` instead of `0` |
+| `components/ui/widget-card.tsx` | REFACTOR | **KEEP** | F7: the shared error `<p>` carries `role="alert"`, so all ten consumers announce |
+| `hooks/api/hr/expenses.ts` | REFACTOR | **KEEP** | F4: the key carries `options?.selfService ? "self" : "org"` |
+| `features/hr/expenses/expense-list.tsx` | REFACTOR | **KEEP** | F9: `formatAmountInCurrency(expense.amount, expense.currency)` |
+| `features/dashboard/expenses-widget.tsx` | (KEEP) | **REFACTOR** | newly measured: the pending-total line sums across currencies and renders it as rupees |
+| `features/hr/expenses/expense-stats.tsx` | (KEEP) | **REFACTOR** | same, three tiles |
+| `src/modules/hr/time/leaves.service.ts` | (F10 open) | **REFACTOR** | narrowed: the `email` projection is closed, the org-wide scope of `team-calendar` is not |
+
+**F9's corpus was measured, not assumed.** `formatINR*(x.amount)` matches **exactly three** sites
+across `app/`, `components/`, `features/`, `hooks/` and `lib/` — all three are fixed, and
+`lib/row-currency-render-contract.test.ts` re-derives that set from the whole tree on every run,
+so a fourth site anywhere is caught rather than a hand-listed one.
+
+**F6's corpus was measured too.** The audit named three bare `cache.cached` sites; scanning every
+`this.cache.<method>(` call in `src/modules/dashboard/*.service.ts` found **a fourth** —
+`dashboard-announcements.service.ts:21` plus its two `cache.invalidate` writers. All 14 cache
+calls in the module are now in the `*ForOrg` family, and
+`dashboard-cache-residency.spec.ts` asserts that over the discovered corpus, not a list.
+
+**A11y coverage was re-measured, not inherited.** Of the 12 Home files carrying
+`text-destructive`, 11 announce; the twelfth, `components/dashboard/my-tasks-widget.tsx`, uses
+that class for an overdue-date tint and routes its actual error through `WidgetCard`, which
+announces. No silent error surface remains.
 
 **Public landing page untouched.** No file under `features/landing/**` was read for edit or
-modified; this audit made no writes at all.
+modified in this wave.
 
 ---
 
@@ -477,6 +662,9 @@ Add a test that flips `selfService` under a stable `params` and asserts a second
 
 ### F5 — P2 — the registry's `cacheScope`/`cacheNs` are inert; 4 of 6 "scoped" sections diverge
 
+> **CLOSED in the closeout wave.** `cacheNamespaceOf(sectionKey)` is now the only source of a Home namespace and is called by production; `cacheScope` widened to `"org" | "scoped" | "none"` on every section kind and selects the builder — `buildOrgSectionCacheKey` / `buildScopedSectionCacheKey` take a section key whose literal type is derived from the declared scope, so the wrong builder does not compile. `dashboard-section-registry.spec.ts` adds a fail-closed correspondence scan over the discovered service corpus (declared org/scoped must use that builder; declared `none` must use neither; no service may build a Home key from a free string). Bite-proved twice.
+
+
 **File:** `streamlineos-backend/src/modules/dashboard/dashboard-section-registry.ts:66-72`.
 
 `grep -rn "cacheNs\|cacheScope" src/` outside the registry file returns **4 hits, all inside
@@ -513,6 +701,9 @@ audit added for route coverage — asserting every `cacheScope: "scoped"` sectio
 key through the scoped builder.
 
 ### F6 — P2 — two Home cache entries go to the global Redis, unprefixed, and are never invalidated
+
+> **CLOSED in the closeout wave, and the corpus was wider than this finding said.** All three named sites moved to the `*ForOrg` family; a scan of every `this.cache.<method>(` call in `src/modules/dashboard/*.service.ts` found **a fourth** — `dashboard-announcements.service.ts:21` and its two `cache.invalidate` writers — now `cachedForOrg` / `invalidateForOrg`. `getPendingApprovals` uses `cachedVersionedForOrg` under `DASHBOARD_PENDING_APPROVALS_NAMESPACE`, and every leave create / approve / reject / revert bumps that generation, which is the only shape that can retire a per-approver key. 14 of 14 cache calls in the module are org-scoped; `dashboard-cache-residency.spec.ts` (11 tests) pins it and bites 9 ways.
+
 
 **Files:** `dashboard-leave.service.ts:91-92` and `:124-127`; `dashboard-crm.service.ts:169`.
 
@@ -596,6 +787,9 @@ authenticated cross-tenant assertion and one degraded-section assertion.
 
 ### F9 — P2 (latent) — `formatINR` ignores the per-row `expenses.currency`
 
+> **CLOSED in the closeout wave.** `formatAmountInCurrency(amount, currency)` added to `lib/format-utils.ts`; the corpus was measured rather than assumed — `formatINR*(x.amount)` matches exactly **three** sites repo-wide (`expense-list.tsx:268`, `expense-item.tsx:251`, `expenses-widget.tsx:67`), all three fixed, and `expense-item.tsx`'s hardcoded `INR` label now reads the row's currency. `lib/row-currency-render-contract.test.ts` re-derives that corpus from the whole tree each run. **Residual:** the cross-currency `SUM` behind `stats.pendingAmount` is a backend shape and is left open — see the two REFACTOR rows in §3.9.
+
+
 **File:** `frontend/features/hr/expenses/expense-list.tsx:268` — `return formatINR(expense.amount);`
 `lib/format-utils.ts:90-100` hardcodes `currency: "INR"`. The row type declares
 `currency: string | null` (`types/hr/expenses.ts:54`, `:114`) and the renderer never reads it.
@@ -615,6 +809,9 @@ off by ~84×. An employee reads their own reimbursement as ₹250 instead of ~�
 or drop the column and the type field so the model stops promising a dimension nothing honours.
 
 ### F10 — P2 — `/me/time-off/team-calendar` is org-wide and projects `email`
+
+> **HALF CLOSED in the closeout wave.** The `email` column is gone from the `thisWeek` user projection — no client reads it (`ApprovedLeave` in `leaves-types.ts` has no `email`) — and `leaves-projection.spec.ts` now asserts its absence twice, on the projection and on the returned row. Bite-proved. The **org-wide scope is still open**: the route named `team-calendar` returns every approved leave in the org. That is a product decision, not a fix, so `leaves.service.ts` stays REFACTOR in §3.9.
+
 
 **File:** `backend/src/modules/hr/time/employee-time-off.controller.ts:66-70` →
 `src/modules/hr/time/leaves.service.ts:178-211`, `email` projected at `:204`.

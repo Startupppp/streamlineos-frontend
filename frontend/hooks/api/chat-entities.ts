@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 
 interface LinkMeta {
   url: string;
@@ -101,16 +102,24 @@ export function useEntityActions(
  */
 export function useSubmitEntityAction() {
   const queryClient = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "entity-actions", "submit"],
-    mutationFn: (variables: SubmitEntityActionInput) =>
-      apiClient.post<Record<string, unknown>>("/chat/entity-actions/submit", {
+    mutationFn: (variables: SubmitEntityActionInput) => {
+      const body = {
         channelId: variables.channelId,
         reference: variables.reference,
         actionId: variables.actionId,
         input: variables.input ?? {},
-      }),
+      };
+      return apiClient.post<Record<string, unknown>>(
+        "/chat/entity-actions/submit",
+        body,
+        operation.configFor(body),
+      );
+    },
     onSuccess: (_, variables) => {
+      operation.settle();
       queryClient.invalidateQueries({
         queryKey: queryKeys.chat.messages(variables.channelId),
       });
@@ -122,17 +131,29 @@ export function useSubmitEntityAction() {
  * Stays chat-specific on purpose: the server reads the message's own text to
  * fill the new record's description, which the generic entity-action route
  * cannot do without knowing what a chat message is.
+ *
+ * Both action routes are `@Idempotent` on the backend and the interceptor
+ * REJECTS a request without an `Idempotency-Key` header with a 400 before the
+ * handler runs, so the header is part of the contract, not an optimisation.
+ * `/chat/entity-actions/submit` has carried `@Idempotent("chat.action.submit")`
+ * while this file sent no header, which 400s every entity action the UI submits.
+ * `useIdempotentOperation` holds one key for the life of a retried attempt, so a
+ * Retry after a timeout replays the first result instead of filing a second
+ * ticket, and releases it on success so the next click is a new operation.
  */
 export function useCreateTaskFromMessage() {
   const queryClient = useQueryClient();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "actions", "create-task-from-message"],
     mutationFn: (input: CreateTaskFromMessageInput) =>
       apiClient.post<{ ticketId: number; ticketNumber: number }>(
         "/chat/actions/create-task-from-message",
         input,
+        operation.configFor(input),
       ),
     onSuccess: (_, variables) => {
+      operation.settle();
       queryClient.invalidateQueries({
         queryKey: queryKeys.chat.messages(variables.channelId),
       });

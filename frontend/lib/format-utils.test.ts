@@ -5,6 +5,7 @@ import {
   formatCurrencyForBilling,
   formatINR,
   formatINRCompact,
+  formatAmountInCurrency,
   formatNumber,
   formatPercent,
 } from "./format-utils";
@@ -215,5 +216,50 @@ describe("formatPercent — locale-aware percentage formatter", () => {
     const result = formatPercent(-5.5, "en-US");
     expect(result).toContain("%");
     expect(result).toContain("5");
+  });
+});
+
+describe("formatAmountInCurrency — a stored row renders in the currency it stores", () => {
+  it("renders an INR amount with the rupee symbol", () => {
+    expect(formatAmountInCurrency("1200.00", "INR")).toBe("₹1,200");
+  });
+
+  it("does NOT render a USD amount as rupees", () => {
+    const result = formatAmountInCurrency("1200.00", "USD");
+    expect(result).not.toContain("₹");
+    expect(result).toContain("1,200");
+    expect(result).toMatch(/\$/);
+  });
+
+  it("does NOT render a EUR amount as rupees", () => {
+    const result = formatAmountInCurrency(99.5, "EUR");
+    expect(result).not.toContain("₹");
+    expect(result).toContain("99.50");
+  });
+
+  it("falls back to INR when the row carries no currency", () => {
+    expect(formatAmountInCurrency("450", null)).toBe("₹450");
+    expect(formatAmountInCurrency("450", undefined)).toBe("₹450");
+    expect(formatAmountInCurrency("450", "  ")).toBe("₹450");
+  });
+
+  it("normalises a lower-case code rather than treating it as unknown", () => {
+    expect(formatAmountInCurrency(10, "usd")).toBe(formatAmountInCurrency(10, "USD"));
+  });
+
+  it("does not throw on a non-ISO code, and shows the code it was given", () => {
+    const result = formatAmountInCurrency(1500, "BITCOIN");
+    expect(result).toContain("BITCOIN");
+    expect(result).toContain("1,500");
+    expect(result).not.toContain("₹");
+  });
+
+  it("keeps paise when the amount has them and drops them when it does not", () => {
+    expect(formatAmountInCurrency("1200.50", "INR")).toBe("₹1,200.50");
+    expect(formatAmountInCurrency("1200", "INR")).toBe("₹1,200");
+  });
+
+  it("renders a non-numeric amount as zero instead of NaN", () => {
+    expect(formatAmountInCurrency("not-a-number", "USD")).not.toContain("NaN");
   });
 });

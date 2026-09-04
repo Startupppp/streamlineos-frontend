@@ -1,0 +1,56 @@
+$ DATABASE_URL=postgres://neondb_owner@localhost:5432/scratch_gates_head node src/scripts/drill-legal-hold.mjs user-100@scratch-seed.test aaaaaaaa-1111-0000-0000-000000000001
+
+=== LEGAL HOLD DRILL for user-100@scratch-seed.test in org aaaaaaaa-1111-0000-0000-000000000001 ===
+Every verdict below is a real service method's answer; nothing is committed.
+
+{"timestamp":"2026-09-04T07:57:10.667Z","level":"warn","message":"[retention-sweep] stranded delete request blocked by legal hold","meta":{"orgId":"aaaaaaaa-1111-0000-0000-000000000001","requestId":30,"subjectUserId":"bbbbbbbb-0100-0000-0000-000000000001"}}
+  PASS  CONTROL  isUnderLegalHold
+           expected false (no hold has been placed yet)
+           observed false
+  PASS  CONTROL  GdprSubjectErasureService.eraseSubject
+           expected does NOT answer blocked=true — the hold gate must let an unheld subject through
+           observed passed the hold gate, then failed downstream — DrizzleQueryError: Failed query: (column "org_id" does not exist)
+  PASS  CONTROL  GdprStoragePurgeService.buildManifest
+           expected does NOT answer blocked=true
+           observed passed the hold gate, then failed downstream — DrizzleQueryError: Failed query: (column "org_id" does not exist)
+  PASS  CONTROL  RetentionService.processRequest
+           expected an unheld delete request runs and reaches "completed"
+           observed status=completed
+  PASS  HELD     isUnderLegalHold
+           expected true
+           observed true
+  PASS  HELD     subjectsUnderLegalHold
+           expected the returned set contains the subject
+           observed size=1 contains=true
+  PASS  HELD     GdprSubjectErasureService.eraseSubject
+           expected blocked=true, holdId=17, nothing anonymised
+           observed blocked=true holdId=17 tablesAnonymised=0
+  PASS  HELD     GdprStoragePurgeService.buildManifest
+           expected blocked=true and no object keys collected
+           observed blocked=true keys=0
+  PASS  HELD     RetentionService.processRequest
+           expected ForbiddenException naming the legal hold
+           observed ForbiddenException: Subject is under an active legal hold. Deletion and anonymization are blocked until the hold is released.
+  PASS  HELD     RetentionService.processRequest (persisted state)
+           expected status stays "approved" — a refused request must not be recorded as completed
+           observed status=approved
+  PASS  HELD     RetentionService.sweepStrandedDeleteRequests
+           expected skipped >= 1 and processed === 0
+           observed processed=0 skipped=1
+  PASS  RELEASED LegalHoldsService.release + isUnderLegalHold
+           expected false
+           observed false
+  PASS  HELD     RetentionService.processRequest (organisation-scoped hold)
+           expected ForbiddenException naming the legal hold
+           observed ForbiddenException: Subject is under an active legal hold. Deletion and anonymization are blocked until the hold is released.
+  PASS  RELEASED GdprSubjectErasureService.eraseSubject
+           expected does NOT answer blocked=true once every hold is released
+           observed passed the hold gate, then failed downstream — DrizzleQueryError: Failed query: (column "org_id" does not exist)
+  PASS  RELEASED RetentionService.processRequest
+           expected the same request that was refused now runs and reaches "completed"
+           observed status=completed
+
+=== RESULT: PASS (15 passed, 0 failed) ===
+    9 production paths exercised across control, held, released phases.
+
+EXIT_CODE=0

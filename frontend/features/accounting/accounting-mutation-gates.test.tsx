@@ -23,6 +23,10 @@
  * The read grant used in each "hidden" case is the key that page's LIST query
  * already requires, so the negative case is a real reader, not a user with no
  * access at all.
+ *
+ * Nothing about the Select primitive is stubbed: these surfaces mount against
+ * real Radix. That only became possible once `<SelectItem value="">` was taken
+ * off the forecast page — see `select-placeholder-option.test.tsx`.
  */
 import { render as rtlRender, screen } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -34,23 +38,6 @@ jest.mock("@/hooks/api/access", () => ({
 }));
 
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
-
-/**
- * Two jsdom-only shims. Neither touches a gate.
- *
- * `forecast-page.tsx:230` renders `<SelectItem value="">Default</SelectItem>`,
- * which Radix rejects outright — a real pre-existing defect on that page,
- * unrelated to authorization and out of this test's scope. The Select
- * primitives are reduced to plain elements so the surface can mount and the
- * assertion can reach the Seed Defaults button.
- */
-jest.mock("@/components/ui/select", () => ({
-  Select: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
-  SelectContent: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
-  SelectItem: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
-  SelectTrigger: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
-  SelectValue: () => null,
-}));
 
 // jsdom ships no crypto.randomUUID; opening-balances-editor seeds its first row with one.
 if (typeof globalThis.crypto?.randomUUID !== "function") {
@@ -266,13 +253,12 @@ describe.each(surfaces)("$name", ({ render: renderSurface, control, writeKey, re
 
 describe("Bank Import — Import Transactions", () => {
   /**
-   * The Import control sits on step 3 of a wizard whose step-1 Next stays
-   * disabled behind an out-of-band CSV parse that this environment does not
-   * flush, so the rendered-affordance assertion the other six surfaces get is
-   * NOT available here. What is asserted instead is real and narrow: the
-   * component asks the access layer for the exact key `useCreateBankImport`
-   * declares. The `{canImport && ...}` wrapper around the button is reviewed
-   * code, not a proven render — treat this surface as the weakest of the seven.
+   * The Import control sits on step 3 of a wizard, so the hidden/shown
+   * assertions the other six surfaces get live in
+   * `banking/bank-import-affordance.test.tsx`, which walks the wizard to that
+   * step and asserts the real `{canImport && …}` render both ways. The two
+   * key-identity assertions below are kept here so all seven surfaces answer
+   * the same question in one place.
    */
   it("asks for exactly the key useCreateBankImport declares", () => {
     grantOnly("accounting:banking:read", "accounting:banking:import");

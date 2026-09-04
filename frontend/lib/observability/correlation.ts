@@ -10,7 +10,7 @@ function fallbackId(): string {
  * 64-character cap.
  */
 export function newCorrelationId(): string {
-  const cryptoApi = globalThis.crypto as Crypto | undefined;
+  const cryptoApi: Crypto | undefined = globalThis.crypto;
   if (cryptoApi && typeof cryptoApi.randomUUID === "function") return cryptoApi.randomUUID();
   return fallbackId();
 }
@@ -31,7 +31,7 @@ export function newTraceparent(): string {
 
 function randomHex(chars: number): string {
   const bytes = new Uint8Array(chars / 2);
-  const cryptoApi = globalThis.crypto as Crypto | undefined;
+  const cryptoApi: Crypto | undefined = globalThis.crypto;
   if (cryptoApi && typeof cryptoApi.getRandomValues === "function") {
     cryptoApi.getRandomValues(bytes);
   } else {

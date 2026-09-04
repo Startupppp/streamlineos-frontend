@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { useCan } from "@/hooks/api/access";
 import { lazyContract } from "@/lib/api-envelope";
 import type { Huddle, HuddleSignalInput } from "@/types/chat";
@@ -163,10 +164,23 @@ export function useSetHuddleDeafen() {
   });
 }
 
+/**
+ * `POST /chat/huddles/:huddleId/invite` is `@Idempotent("chat.huddle.invite")`, and the
+ * interceptor 400s a request that carries no `Idempotency-Key` before the handler runs —
+ * so this hook sent every invite into a rejection until the header was added.
+ */
 export function useInviteToHuddle() {
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation("chat:channels:write", {
     mutationKey: ["chat", "huddle", "invite"],
     mutationFn: ({ huddleId, userIds }: { huddleId: number; userIds: string[] }) =>
-      apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/invite`, { userIds }),
+      apiClient.post<{ ok: boolean }>(
+        `/chat/huddles/${huddleId}/invite`,
+        { userIds },
+        operation.configFor({ huddleId, userIds }),
+      ),
+    onSuccess: () => {
+      operation.settle();
+    },
   });
 }

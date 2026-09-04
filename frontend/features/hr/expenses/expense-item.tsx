@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { formatINR } from "@/lib/format-utils";
+import { formatAmountInCurrency } from "@/lib/format-utils";
 import { viewFile, downloadFile } from "@/hooks/common/use-file-url";
 import type { ExpenseWithRelations } from "@/types/hr/expenses";
 import {
@@ -248,9 +248,11 @@ export function AdminExpenseItem({
           Amount
         </p>
         <p className="text-2xl font-bold font-mono tabular-nums text-foreground">
-          {formatINR(expense.amount)}
+          {formatAmountInCurrency(expense.amount, expense.currency)}
         </p>
-        <p className="text-micro text-muted-foreground mb-3">INR</p>
+        <p className="text-micro text-muted-foreground mb-3">
+          {(expense.currency ?? "INR").toUpperCase()}
+        </p>
 
         {isRejecting ? (
           <div className="space-y-2 text-left">

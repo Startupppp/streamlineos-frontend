@@ -1,8 +1,9 @@
 # Findings — ticket 35 / PRD-C186, C187, C188
 
-Backend `45f8a2e99494483526e357e27f18c76961ebf266` (generation 1) and
-`dcd5a20717dc6d5a6eb2ff40aa54ae58abe2bc8a` (generation 2, F-11 and F-12). Every finding below was
-**reproduced by a command whose output is in `runs/`**; none is inferred from reading alone.
+Backend `45f8a2e99494483526e357e27f18c76961ebf266` (generation 1),
+`dcd5a20717dc6d5a6eb2ff40aa54ae58abe2bc8a` (generation 2, F-11 and F-12) and `299cd1009`
+(generation 3, F-12 re-measured and F-13 opened). Every finding below was **reproduced by a command
+whose output is in `runs/`**; none is inferred from reading alone.
 
 Findings are not deleted when they are fixed. F-3 and F-11 carry a **FIXED** header naming the
 commit and the run that re-measured them; their original evidence stays, because the record of a
@@ -309,12 +310,13 @@ symbols on their real classes, so a rename fails the gate instead of silently em
 
 ---
 
-## F-12 · P2 · 22 high-growth tables have no retention decision — **OPEN**
+## F-12 · P2 · 25 high-growth tables have no retention decision — **OPEN**
 
-`src/scripts/check-retention-coverage.mjs` `RETENTION_MATRIX`, measured in `runs/23`
+`src/scripts/check-retention-coverage.mjs` `RETENTION_MATRIX`, measured in `runs/23` and
+re-measured at the close-out head in `runs/30`
 
-Fixing F-3 made the gate measure, and what it measured is a gap. Against `scratch_gates_head`
-(946 tables) 41 clear 1 MB: 17 COVERED, 2 KEEP-FOREVER and **22 UNCOVERED**, so the gate exits 1:
+Fixing F-3 made the gate measure, and what it measured is a gap. At `dcd5a2071` against
+`scratch_gates_head` (946 tables) 41 cleared 1 MB: 17 COVERED, 2 KEEP-FOREVER and **22 UNCOVERED**:
 
 `inv_stock_transactions` · `business_parties` · `event_attendees` · `calendar_events` ·
 `perf_jitter_pool` · `inv_product_variants` · `perf_topic_pool` · `leads` · `inv_products` ·
@@ -327,6 +329,22 @@ leave). Two — `perf_jitter_pool` and `perf_topic_pool` — are scratch tables 
 database by a performance seeding script and are not product schema; their presence is a property
 of the measured database, not of the product, and is recorded here rather than filtered out,
 because filtering the corpus is the failure mode this whole finding is about.
+
+**Re-measured at `299cd1009` (`runs/30`): the gap is now 25, not 22.** 945 tables in the catalogue,
+**45** clear 1 MB — 18 COVERED, 2 KEEP-FOREVER, **25 UNCOVERED**. `kb_pages` moved from UNCOVERED to
+COVERED when ticket 16 gave it a decision and scheduled `kb-trash-purge`, and four more tables
+crossed the threshold: `journal_entries`, `survey_response_sessions`, `payroll_journal_batch_lines`
+and `payroll_line_items`. The last two are the pair the ticket-35 audit flagged and a later
+verification pass recorded as "refuted at head" — they were invisible then because the database had
+not grown into them, which is precisely the failure mode of a size-thresholded gate and the reason
+this finding is about *decisions*, not about the current row counts.
+
+A note for whoever takes this: several of the 25 measure large while holding **zero live rows** —
+`inv_stock_transactions` is 90 MB of which 63 MB is index, `journal_entries` is 43 MB of index over
+an empty heap. That is a perf-seed teardown leaving physical size behind, and it is a fair reading
+of "high-growth": the table demonstrably reached that size. It is **not** an argument for swapping
+`pg_total_relation_size` for a row count — that would narrow the corpus, which is the same defect
+as F-3 wearing different clothes.
 
 **This is not closed by adding matrix rows.** Each entry is a product decision — KEEP-FOREVER, or
 RETAIN-BOUNDED naming the worker that actually enforces it — and a KEEP-FOREVER written to turn
@@ -345,16 +363,46 @@ precondition, which `runs/27` cannot see because it exercises the paths that do 
 
 ---
 
+## F-13 · P2 · five real people's e-mail addresses sit in an unsealed evidence file — **OPEN**
+
+`architecture-refactor/final-refactor/evidence/42-production-ops/edge-security/commands/frontend-pnpm-audit-prod.json`
+and `…/frontend-pnpm-audit-all-severities.json`
+
+Surfaced by building the redaction gate described in the README, not by reading. Both files are the
+verbatim JSON of a `pnpm audit` run, and npm advisory records carry a **credits** block naming the
+reporting researchers with their contact addresses. Five distinct resolvable addresses are
+reproduced there — two on `uni.sydney.edu.au`, one on `sydney.edu.au`, two on `gmail.com`. They are
+public advisory metadata rather than anything this product collected, which is why this is P2 and
+not P1, but they are real people's addresses inside a release evidence tree whose stated posture is
+"every subject is synthetic".
+
+**Why the gate is green while this is open, stated rather than hidden.** `check-evidence-redaction.mjs`
+scans the *hashed* corpus — every `artifact-hashes.json` under the evidence tree, every file it
+names, and every regular file directly inside a sealed directory. There is **no seal** in
+`42-production-ops/edge-security/commands/`, so that directory is outside the corpus by
+construction. That scoping is deliberate and matches PRD-C188's own wording ("store a redacted,
+**hashed** evidence bundle") — but it means the clean exit 0 in the README covers 105 files, not all
+375 under `evidence/`, and this finding is what that boundary lets through.
+
+*Fix shape, for the owner of the edge-security bundle:* either strip the `credits`/`author` fields
+from the two audit dumps and re-record them, or seal that directory, at which point the redaction
+gate covers it and turns red until it is cleaned. Ticket 35 did not edit those files: they belong to
+another ticket's evidence and this agent will not rewrite a sibling's transcript.
+
+---
+
 ## Disposition (PRD-C189 input)
 
 Two of the twelve are closed by code at `dcd5a20717dc6d5a6eb2ff40aa54ae58abe2bc8a`: **F-3** and
 **F-11**, both defects in the drills rather than in the product, each with a regression test and a
 bite proof in `runs/28`/`runs/29`.
 
-The other ten are open. F-1, F-2 and F-7 are **P1** and, on the wording of PRD-C189 ("close or
+The other eleven are open. F-1, F-2 and F-7 are **P1** and, on the wording of PRD-C189 ("close or
 formally disposition every … P1 finding"), each needs either a fix or a named
-accepted-residual-risk record before release. F-4 through F-6, F-8 through F-10 and **F-12** are
-**P2**. F-12 did not exist as a visible finding until F-3 was fixed; it is the product gap the
-vacuous gate was concealing, and it is the reason `check:retention-coverage` now exits 1. A
-decision-record author is required for any of these that are to be accepted rather than fixed;
-**no such record exists and this agent has not signed one.**
+accepted-residual-risk record before release. F-4 through F-6, F-8 through F-10, **F-12** and
+**F-13** are **P2**. F-12 did not exist as a visible finding until F-3 was fixed; it is the product
+gap the vacuous gate was concealing, and it is the reason `check:retention-coverage` now exits 1.
+F-13 did not exist as a visible finding until generation 3 built a gate for the word *redacted*;
+both are the same pattern — a claim nobody was checking, and the gap that appears the moment
+somebody does. A decision-record author is required for any of these that are to be accepted rather
+than fixed; **no such record exists and this agent has not signed one.**

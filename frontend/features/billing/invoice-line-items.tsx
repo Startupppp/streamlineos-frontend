@@ -20,6 +20,8 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { useCan } from "@/hooks/api/access";
 import { useUpdateInvoice } from "@/hooks/api/invoice";
 import { roundInvoiceAmount } from "./invoice-money";
 import { formatInvoiceAmount as fmt } from "./invoice-detail-utils";
@@ -115,6 +117,10 @@ export function InvoiceLineItems({
   editOpen,
   onEditOpenChange,
 }: InvoiceLineItemsProps) {
+  // PATCH /invoices/:id declares accounting:update. The edit dialog is mounted
+  // unconditionally by InvoiceDetailContent, so it carries its own gate rather
+  // than relying on the Edit button that normally opens it.
+  const canUpdate = useCan("accounting:update");
   const updateInvoice = useUpdateInvoice();
 
   const [editLineItems, setEditLineItems] = useState<EditableLineItem[]>([]);
@@ -307,6 +313,15 @@ export function InvoiceLineItems({
           <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
             <DialogTitle className="text-sm">Edit Invoice</DialogTitle>
           </DialogHeader>
+          {!canUpdate ? (
+            <NoPermissionState
+              compact
+              permission="accounting:update"
+              title="Cannot edit this invoice"
+              description="You do not have permission to change this invoice's line items, tax or totals."
+            />
+          ) : (
+          <>
           <DialogBody className="space-y-4 px-6 py-4">
             <div className="overflow-hidden rounded-lg border border-border">
               <div className="border-b border-border bg-muted/40 px-4 py-2">
@@ -430,6 +445,8 @@ export function InvoiceLineItems({
               Save Changes
             </LoadingButton>
           </DialogFooter>
+          </>
+          )}
         </DialogContent>
       </Dialog>
     </>

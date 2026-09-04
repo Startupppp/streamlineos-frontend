@@ -13,7 +13,7 @@ import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
 import { AdminExpenseItem } from "./expense-item";
 import { cn } from "@/lib/utils";
-import { formatINR } from "@/lib/format-utils";
+import { formatAmountInCurrency } from "@/lib/format-utils";
 import { viewFile } from "@/hooks/common/use-file-url";
 import {
   getCategoryConfig,
@@ -265,7 +265,7 @@ export function MemberExpenseList({
       headerClassName: "text-right",
       className: "font-mono text-sm text-right",
       cell(expense) {
-        return formatINR(expense.amount);
+        return formatAmountInCurrency(expense.amount, expense.currency);
       },
     },
     {

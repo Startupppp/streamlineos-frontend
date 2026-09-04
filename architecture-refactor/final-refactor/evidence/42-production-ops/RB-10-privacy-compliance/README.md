@@ -3,19 +3,28 @@
 Ticket 35 (`code-release-10-10-v2/issues/35-compliance-privacy-drills.md`), criteria
 **PRD-C186**, **PRD-C187**, **PRD-C188**.
 
-This bundle has **two capture generations**, and both are kept. Generation 1 (`runs/01`-`runs/22`)
-is the original survey; generation 2 (`runs/23`-`runs/29`) re-runs the retention and legal-hold
-halves after the two defects that made them meaningless were fixed. Nothing from generation 1 was
-edited or deleted — a superseded run is evidence of what the gate used to say.
+This bundle has **three capture generations**, and all three are kept. Generation 1
+(`runs/01`-`runs/22`) is the original survey; generation 2 (`runs/23`-`runs/29`) re-runs the
+retention and legal-hold halves after the two defects that made them meaningless were fixed;
+generation 3 (`runs/30`-`runs/41`) re-runs both drills plus their supporting gates at the
+close-out head and adds the gate that verifies the word **redacted**. Nothing from an earlier
+generation was edited or deleted — a superseded run is evidence of what the gate used to say.
 
-| | Generation 1 | Generation 2 (retention + legal hold) |
-|---|---|---|
-| Backend commit | `45f8a2e99494483526e357e27f18c76961ebf266` (`release/code-10-10-v2`) | `dcd5a20717dc6d5a6eb2ff40aa54ae58abe2bc8a` (`release/v2-closeout`) |
-| Frontend/root commit | `7469d27895add587f9427e7c50c457f56e0048bf` (`release/code-10-10-v2`) | `0a24e2940a078ead5d771b651bac953984757c4c` (`release/v2-closeout`) |
-| Captured | 2026-09-03 | 2026-09-04 |
-| Database under test | **local** `scratch_head_1010` (REACHED_HEAD 677/677, 944 tables, 900 RLS policies) | **local** `scratch_gates_head` (946 tables, 900 RLS policies) |
-| App role used | **local** `streamline_app` (`bypassrls=false`) | **local** `neondb_owner` (catalogue reads and one rolled-back tenant transaction) |
-| Captured by | automated agent run; **no human has signed anything in this bundle** | automated agent run; **no human has signed anything in this bundle** |
+| | Generation 1 | Generation 2 (retention + legal hold) | Generation 3 (re-run at head + redaction gate) |
+|---|---|---|---|
+| Backend commit | `45f8a2e99494483526e357e27f18c76961ebf266` (`release/code-10-10-v2`) | `dcd5a20717dc6d5a6eb2ff40aa54ae58abe2bc8a` (`release/v2-closeout`) | `299cd1009` (`release/v2-closeout`) |
+| Frontend/root commit | `7469d27895add587f9427e7c50c457f56e0048bf` (`release/code-10-10-v2`) | `0a24e2940a078ead5d771b651bac953984757c4c` (`release/v2-closeout`) | `7633c38b947a57b285403e70fd340e1c149b5fe6` (`release/v2-closeout`) |
+| Captured | 2026-09-03 | 2026-09-04 | 2026-09-04 |
+| Database under test | **local** `scratch_head_1010` (REACHED_HEAD 677/677, 944 tables, 900 RLS policies) | **local** `scratch_gates_head` (946 tables, 900 RLS policies) | **local** `scratch_gates_head` (945 tables, 900 RLS policies) |
+| App role used | **local** `streamline_app` (`bypassrls=false`) | **local** `neondb_owner` (catalogue reads and one rolled-back tenant transaction) | **local** `neondb_owner`, and `streamline_app` for `runs/36` because the owner has `BYPASSRLS` |
+| Captured by | automated agent run; **no human has signed anything in this bundle** | automated agent run; **no human has signed anything in this bundle** | automated agent run; **no human has signed anything in this bundle** |
+
+**One honest note on generation 3's provenance.** Backend head advanced from `299cd1009` to
+`8f319495c` while this bundle was being written. `git diff --stat 299cd1009..8f319495c` is three
+files, all under `src/modules/notifications/`, and `git diff --name-only` over `src/scripts`,
+`src/modules/gdpr`, `src/modules/hr/governance` and `src/modules/cron` between those two commits is
+**empty** — no code any drill here exercises changed. The runs are labelled with the commit they
+were actually captured at rather than with the newer one.
 
 ## What this bundle is, and what it is not
 
@@ -47,6 +56,51 @@ bundle says so and stops. It does not simulate one.
   Upstash host and AWS-style key prefixes. **Zero matches.** The only occurrences of the words
   "secret" / "key" are *variable names* a drill prints when telling the operator what is missing
   (`R2_SECRET_ACCESS_KEY`, `R2_ACCESS_KEY_ID`).
+- **Every sentence above used to be checked by nobody.** Generations 1 and 2 asserted their own
+  redaction in prose and in the `redaction` field of each seal manifest, and nothing re-ran that
+  scan as the tree grew — so the sentence described a scan of a smaller bundle than the one it
+  was sealing. Generation 3 replaces the assertion with a gate; see the next section.
+
+## Redaction, verified rather than asserted (PRD-C188)
+
+`check-evidence-redaction.mjs` (backend, `src/scripts/`) is generation 3's answer to the word
+**redacted** in PRD-C188. `check:evidence-seal` proves *hashed*; until this gate existed nothing
+proved *redacted*.
+
+- **Corpus derived from the seals, not hand-written.** Every `artifact-hashes.json` under
+  `architecture-refactor/final-refactor/evidence/` contributes the seal itself, every file it
+  names, **and every regular file sitting directly in its directory**. That last clause is the one
+  that matters: without it a leak could be parked in an unsealed file inside a sealed directory and
+  the scanner would never open it. The corpus grows with the bundle and cannot be narrowed from
+  the command line.
+- **Fourteen patterns, each with its own controls.** AWS/Google/GitHub/Slack/Stripe/OpenAI key
+  shapes, Neon and Upstash and RDS host names, JWTs, `Bearer` and `Basic` headers, private-key
+  blocks, connection strings carrying a password, and any e-mail address that is *not* on a
+  reserved TLD. Every pattern must match a positive control and must not match a negative one; a
+  pattern that fails either makes the whole run **exit 2 (INCONCLUSIVE)**, because a scanner whose
+  regex silently matches nothing is the vacuity trap this release keeps hitting.
+- **Floors, not raisable from argv.** Below `MIN_SEALS`, `MIN_FILES_SCANNED` or
+  `MIN_BYTES_SCANNED` the run is exit 2. "I scanned four files and found nothing" is not a pass.
+- **`***` and `<neon-host>` are the redaction, not a leak.** A URL password segment that is a
+  placeholder is exempt; a real one is not. Reserved-TLD addresses (`.invalid`, `.test`,
+  `.example`) are exempt; a resolvable one is not.
+- **The two deliberate fixtures are pinned individually, by hash.** `ai-redaction-probe.mjs`/`.txt`
+  contain a fabricated API key as the CONTROL input that proves the product's redactor replaces it.
+  Each is pinned in `DECLARED_SYNTHETIC` by file, pattern and the **sha256 of the matched text** —
+  never the literal, which would put a credential-shaped string into the repository that is being
+  guarded — and a pinned entry that stops matching **fails the gate**, so the list cannot rot into
+  a blanket exemption.
+
+```bash
+cd streamlineos-backend && node src/scripts/check-evidence-redaction.mjs             # exit 0 = redacted
+cd streamlineos-backend && node src/scripts/check-evidence-redaction.mjs --self-test # controls + bite proofs
+```
+
+`runs/39` is the self-test, `runs/40` the 13-test regression spec
+(`src/scripts/evidence-redaction-gate.spec.ts`), and `runs/41` the bite proof: two defects — the
+weakened-assertion shape (`return true ||` in front of the e-mail exemption) and the narrowed-corpus
+shape (drop the unsealed-siblings clause) — are put into the shipped gate one at a time, the spec
+goes red on each, and the file is restored byte-identically and goes green again.
 
 ## Hashing (PRD-C188)
 
@@ -80,8 +134,10 @@ the gate:
 cd streamlineos-backend && npm run check:evidence-seal   # exit 0 = every seal holds
 ```
 
-At generation 2 (`dcd5a2071`) it reports **6 seals · 80/80 sealed files match · 0 broken, exit 0**,
-which includes the seven files generation 2 added to `runs/`.
+At generation 2 (`dcd5a2071`) it reported **6 seals · 80/80 sealed files match · 0 broken, exit 0**.
+By generation 3 that was already **7 seals · 95/95** before this generation's eleven files were
+added, which is the third time this line has gone stale and the reason it is written as history
+rather than as a current fact. Run the gate.
 
 ## Commands actually run
 
@@ -123,6 +179,28 @@ which includes the seven files generation 2 added to `runs/`.
 | 28 | bite proof — reintroduce `/ 1048576` in place | **1**, then 0 | The self-test goes red (`sizeDivisorIsNumericNotInteger: false`) and 2 of 9 db-spec tests fail; restoring the file returns both to 0. `git diff` empty before and after |
 | 29 | bite proof — delete the hold gate in `RetentionService.processRequest` | **1** | The drill drops to **FAIL (11 passed, 4 failed)**. The generation-1 drill would have stayed green at 9/9, because none of its assertions ran product code. `git diff` empty after restore |
 
+### Generation 3 — both drills re-run at the close-out head, and the redaction gate (2026-09-04, `299cd1009`)
+
+| # | Command | Exit | Result |
+|---|---|---|---|
+| 30 | `check:retention-coverage` | **1** | **The gate measures, and the gap grew.** 45 tables cleared 1 MB; 18 COVERED, 2 KEEP-FOREVER, **25 UNCOVERED**. Generation 2 saw 41/17/2/**22** at `dcd5a2071`; `kb_pages` moved to COVERED (ticket 16) and four more tables crossed 1 MB. Exit 1 is finding **F-12**, not a broken gate |
+| 31 | `check:retention-coverage:self-test` | 0 | PASS — 26 checks, including the four that pin the numeric divisor and the corpus floors |
+| 32 | `drill:legal-hold --self-test` | 0 | PASS — 8/8 production symbols still resolve on their real classes |
+| 33 | `drill:legal-hold user-100@scratch-seed.test <org>` | 0 | **PASS 15/15 across 9 production paths** and three phases (control / held / released). Every verdict is a real service method's answer; the whole run is one rolled-back tenant transaction |
+| 34 | `drill:erasure:self-test` | 0 | PASS — FK topological ordering |
+| 35 | `drill-export.mjs --self-test` | 0 | PASS — vacuity guard bites |
+| 36 | `check:audit-log-privileges` (app role) | 0 | PASS — `updateRevoked`, `deleteRevoked`, `triggerPresent` all true. Under the **owner** role the same gate is exit **2**, not 0, because `BYPASSRLS` would report a boundary the service does not have |
+| 37 | `check:audit-log-privileges:self-test` | 0 | PASS — the verifier distinguishes safe/unsafe/wrong-role |
+| 39 | `check-evidence-redaction.mjs --self-test` | 0 | PASS — 18 checks: pattern controls, five bite proofs, three negative proofs, corpus and floor assertions |
+| 40 | `jest evidence-redaction-gate.spec.ts` | 0 | PASS — 13 tests, including one that scans the **real** evidence tree and one for each anti-vacuity floor |
+| 41 | bite proof — two defects put into the shipped redaction gate | **1**, **1**, then 0 | Widening the e-mail exemption reds 2 of 13; narrowing the corpus reds a different 2 of 13; the restored file is byte-identical (`shasum` printed before and after) and green |
+
+**`runs/38` is deliberately absent.** It was reserved for a run of `check-evidence-redaction.mjs`
+over this bundle, and there is no honest way to seal one: the gate reads the seal manifests
+themselves, so writing its transcript into the bundle changes the bytes the transcript reports on.
+The gate is run live instead — the command is in the section above — and `runs/39`/`runs/40` carry
+the parts that are stable under sealing.
+
 `runs/18` closes a standing RB-10 §6 note. The runbook records
 *"FINDING P1: the enabled append-only trigger is absent"*; at this head the verifier reports
 `triggerPresent: true` against the app role. The trigger is present — **and it is the direct cause
@@ -139,23 +217,47 @@ of finding F-1.**
 - **PRD-C187** — see `C187-downstream-store-trace.md`. Search and vector are **DELETION PROVEN**
   locally through their indexes. Object store, cache and downstream are traced with `file:line`
   and classified honestly. Backup aging and restore-time deletion are **not provable here at all**.
-- **PRD-C188** — **both halves of the criterion now hold, and the words matter.**
-  *Store a redacted, hashed evidence bundle*: this tree, sealed per directory and verified by
-  `check:evidence-seal` (exit 0, 6 seals, 80/80). *Run retention/legal-hold drills*: generation 1
-  ran two drills that could not have failed — the retention gate measured zero tables (F-3) and
-  the legal-hold drill read back its own `INSERT` (F-11). Generation 2 runs drills that can:
-  `runs/23` classifies 41 real tables, `runs/27` gets its verdict from nine production methods
-  across a control/held/released cycle, and `runs/28`/`runs/29` prove both go red when the defect
-  is put back. What the working drills then report is a **product** finding, not a drill failure:
-  22 high-growth tables have no retention decision (**F-12**). That number was invisible while the
-  gate was vacuous, and surfacing it is what fixing the gate was for.
+- **PRD-C188** — **all three of the criterion's requirements are met, and the words matter.**
+
+  *Run retention drills.* `runs/30` at `299cd1009`: 945 tables in the catalogue, 45 clear the 1 MB
+  threshold, every one of them classified — 18 COVERED, 2 KEEP-FOREVER, 25 UNCOVERED. The drill
+  ran and it measured. Its exit code is **1**, and that 1 is the drill working: 25 high-growth
+  tables have no retention decision (**F-12**, open). Generation 1's `runs/05` exited **0** having
+  classified zero tables, and `runs/05b` proved no `--threshold-mb` could rescue it. The honest
+  reading of a red retention drill is "the product has a retention gap", not "the drill failed" —
+  and F-12 is explicit that it **must not** be closed by writing 25 matrix rows to turn the gate
+  green, because a KEEP-FOREVER with no owner is the allowlist-instead-of-a-fix this release
+  rejects. `runs/28` proves this drill goes red when the integer divisor is put back.
+
+  *Run legal-hold drills.* `runs/33` at `299cd1009`: PASS 15/15 across **nine production methods**
+  (`RetentionService.processRequest`, `.sweepStrandedDeleteRequests`,
+  `GdprSubjectErasureService.eraseSubject`, `GdprStoragePurgeService.buildManifest`,
+  `LegalHoldsService.create`/`.release`, `isUnderLegalHold`, `subjectsUnderLegalHold`) in three
+  phases. The control phase is what makes the held phase mean anything: an *unheld* delete request
+  must run to `completed`, or "blocked" would also be the answer from a product that erases nothing
+  for anybody. `runs/29` proves this drill goes red when one hold gate is deleted; generation 1's
+  `runs/03` would have stayed at 9/9 green through the same deletion.
+
+  *Store a redacted, hashed evidence bundle.* **Hashed** — `check:evidence-seal`, exit 0, and it
+  rejects a changed file, a deleted file and an unsealed file appearing in a sealed directory.
+  **Redacted** — this was the half nothing checked. Generations 1 and 2 asserted their own
+  redaction in prose. Generation 3 adds `check-evidence-redaction.mjs`, whose corpus is derived
+  from the seals, whose fourteen patterns each carry a positive and a negative control, whose
+  floors are not reachable from argv, and whose two fixture exemptions are pinned by sha256 and
+  fail when stale. `runs/40` is its 13-test spec; `runs/41` is the bite proof that both a weakened
+  assertion and a narrowed corpus turn it red.
+
+  **What is still open here, stated plainly:** F-12 (25 tables needing a named retention decision)
+  and F-13 (five real researcher e-mail addresses in an **unsealed** `pnpm audit` dump elsewhere in
+  the evidence tree). Neither is a defect in the drills or in this bundle's redaction; both are
+  recorded in `FINDINGS.md` with an owner-shaped description rather than quietly fixed.
 
 ## Findings
 
 `FINDINGS.md` — 12 defects (3×P1, 9×P2) with `file:line`, every one reproduced by a command in `runs/`.
 
 - **P1** F-1 `drill:erasure` aborts on `audit_logs` and abandons 219 tables · F-2 `purge:user` cannot purge any org owner · F-7 the subject's e-mail address survives erasure for up to 13 months
-- **P2** F-3 retention gate measures zero tables and passes — **FIXED at `dcd5a2071`** · F-4 e2e drill passes without erasing · F-5 storage purge has no durable manifest · F-6 failed deletes never retried · F-8 directory caches not invalidated · F-9 analytics/provider mirrors have no subject path · F-10 `compliance:drill` prints two false statements into evidence · F-11 the legal-hold drill asserted only against its own `INSERT` — **FIXED at `dcd5a2071`** · F-12 22 high-growth tables have no retention decision — **OPEN**, surfaced by fixing F-3
+- **P2** F-3 retention gate measures zero tables and passes — **FIXED at `dcd5a2071`** · F-4 e2e drill passes without erasing · F-5 storage purge has no durable manifest · F-6 failed deletes never retried · F-8 directory caches not invalidated · F-9 analytics/provider mirrors have no subject path · F-10 `compliance:drill` prints two false statements into evidence · F-11 the legal-hold drill asserted only against its own `INSERT` — **FIXED at `dcd5a2071`** · F-12 **25** high-growth tables have no retention decision at `299cd1009` — **OPEN**, surfaced by fixing F-3 · F-13 five real researcher e-mail addresses sit in an unsealed `pnpm audit` dump under `42-production-ops/edge-security/commands/` — **OPEN**, surfaced by building the redaction gate
 
 ### Two findings this bundle records against its own generation 1
 

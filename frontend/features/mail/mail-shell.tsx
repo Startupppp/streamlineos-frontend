@@ -9,7 +9,8 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useMailAccounts, useMailAction } from "@/hooks/api/mail";
 import { useFinalizeIntegrationConnection } from "@/hooks/api/integrations";
-import { useCan } from "@/hooks/api/access";
+import { useCan, usePermissionGate } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { MailListPane } from "./mail-list-pane";
 import { MailEmptyPane } from "./mail-empty-pane";
 import { MailHeader, MAIL_ACCOUNT_SENTINEL } from "./mail-header";
@@ -55,6 +56,7 @@ export function MailShell() {
   const finalizeRef = useRef(false);
   const canAi = useCan("mail:ai:use");
   const canManageMail = useCan("mail:messages:manage");
+  const inboxAccess = usePermissionGate("mail:inbox:view");
   const mailAction = useMailAction();
 
   const [accountsSheetOpen, setAccountsSheetOpen] = useState(false);
@@ -186,6 +188,27 @@ export function MailShell() {
   const handleCloseSummary = useCallback(() => setSummarySheetOpen(false), []);
 
   const hasAccounts = accounts.length > 0;
+
+  /**
+   * A reader without `mail:inbox:view` is refused, not asked to connect a
+   * mailbox. Both reads this page makes are gated on that key already, so a
+   * member who lacks it gets an empty account list and used to land on the
+   * "Connect your inbox" pane — an instruction to fix an account problem they
+   * do not have and a Connect button that cannot help them.
+   *
+   * `denied`, never `!allowed`: until the access snapshot arrives the gate is
+   * pending, and reading that as a refusal flashes "Access Restricted" at a
+   * permitted reader on every load.
+   */
+  if (inboxAccess.denied)
+    return (
+      <div className="flex h-full min-h-0 flex-col">
+        <NoPermissionState
+          permission={inboxAccess.permission}
+          description="Mail is not available to your role."
+        />
+      </div>
+    );
 
   return (
     <div className="flex flex-col h-full min-h-0 min-w-0">

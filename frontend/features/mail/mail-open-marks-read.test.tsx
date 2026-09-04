@@ -29,6 +29,12 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: (key: string) => (key === "mail:messages:manage" ? canManageMail : false),
+  usePermissionGate: (key: string) => ({
+    permission: key,
+    allowed: key === "mail:inbox:view",
+    denied: key !== "mail:inbox:view",
+    pending: false,
+  }),
 }));
 
 jest.mock("@/hooks/api/integrations", () => ({

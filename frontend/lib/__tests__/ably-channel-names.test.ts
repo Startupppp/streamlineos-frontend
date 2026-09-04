@@ -24,15 +24,27 @@ import {
  * `safeSubscribe` swallows — no inbound message, edit, deletion, reaction or
  * typing indicator reached an open window, and nothing in the UI said so.
  *
- * Three things have to hold, and the first two are asserted from the backend
+ * Four things have to hold, and the first three are asserted from the backend
  * source rather than from a copy of it:
  *   FORMULA    the frontend's prefix is the backend's own `cellPrefixed`
  *              formula, evaluated at the backend's own default cell id.
  *   NAMESPACES every namespace the backend prefixes has a frontend builder,
  *              and that builder emits the prefix.
+ *   GRANTED    every name a frontend builder emits is a key the backend's token
+ *              capability actually contains, with the operations that name needs.
  *   NO LITERALS no frontend file hands `ably.channels.get()` a channel name
  *              built inline. A literal is how the drift got in and is the only
  *              way it can come back.
+ *
+ * GRANTED is here because PREFIXED was not enough and this file proved it. After
+ * the cell-prefix repair every builder produced a correctly prefixed name and
+ * NAMESPACES went green, yet `chat:{orgId}:presence` appeared in NO key of
+ * `createChatTokenRequest`'s capability map — the org-wide presence channel was
+ * named correctly and granted not at all, so `useChatPresence`'s `presence.enter`
+ * kept being refused with a 403 its own `.catch(() => {})` swallows. A prefix
+ * assertion cannot see that; only reading the capability keys can. Note also that
+ * ENTERING a presence set needs Ably's `presence` operation — `subscribe` alone
+ * only reads the set — which is why the ops, not just the key, are asserted.
  *
  * ANTI-VACUITY. Every reader of foreign source carries a floor. A regex that
  * silently stops matching reports "no drift", and this repository has confirmed
@@ -41,6 +53,10 @@ import {
 
 const MEASURED_NAMESPACE_FLOOR = 5;
 const MEASURED_CALLSITE_FLOOR = 10;
+/** Measured at backend 299cd1009: notifications, huddle-signal, chat presence, chat:{id}, huddle:{id}. */
+const MEASURED_CHAT_CAPABILITY_FLOOR = 5;
+/** Measured at frontend 7633c38b9: chat, chat presence, huddle, huddle-signal, notifications, support. */
+const MEASURED_BUILDER_FLOOR = 6;
 
 const BACKEND_NAMESPACE = backendPath(
   "src",
@@ -110,6 +126,154 @@ function backendPrefixedNamespaces(): string[] {
     if (namespace !== undefined && namespace.length > 0) found.add(namespace);
   }
   return [...found].sort();
+}
+
+/**
+ * The concrete values every backend template placeholder is resolved to.
+ *
+ * Resolution is by SUBSTITUTION, not by turning the template into a wildcard: a
+ * wildcard for `${channelId}` would make `chat:org-1:presence` "match" the
+ * numbered-channel template, and the missing presence grant would hide behind the
+ * very key whose absence broke it. A literal `*` in a template stays a wildcard —
+ * `huddle-signal:${orgId}:*:${clientId}` really is granted with one.
+ */
+const TEMPLATE_VALUES: Readonly<Record<string, string>> = {
+  orgId: "org-1",
+  clientId: "user-1",
+  channelId: "7",
+  userId: "user-1",
+  ticketId: "42",
+  id: "42",
+};
+
+function resolveTemplate(template: string): string {
+  return template.replace(/\$\{([^}]+)\}/g, (_whole, expression: string) => {
+    const value = TEMPLATE_VALUES[expression.trim()];
+    if (value === undefined)
+      throw new Error(
+        `no substitution for \${${expression}} in backend template \`${template}\``,
+      );
+    return value;
+  });
+}
+
+/** The brace-matched body of a named method in the backend's ably.service.ts. */
+function backendMethodBody(source: string, methodName: string): string {
+  const start = source.indexOf(`${methodName}(`);
+  if (start === -1) throw new Error(`${methodName} not found in ably.service.ts`);
+  const open = source.indexOf("{", source.indexOf(")", start));
+  if (open === -1) throw new Error(`${methodName} has no body`);
+  let depth = 0;
+  for (let i = open; i < source.length; i++) {
+    const ch = source[i];
+    if (ch === "{") depth += 1;
+    else if (ch === "}") {
+      depth -= 1;
+      if (depth === 0) return source.slice(open + 1, i);
+    }
+  }
+  throw new Error(`${methodName} body is unbalanced`);
+}
+
+/** `presenceChannelName(orgId) { return cellPrefixed(this.cellId, \`…\`); }` -> the template. */
+function backendChannelHelperTemplate(source: string, methodName: string): string {
+  const body = backendMethodBody(source, methodName);
+  return firstGroup(
+    /return\s+cellPrefixed\(\s*this\.cellId,\s*`([^`]+)`\s*\)/.exec(body),
+    `${methodName} channel template`,
+  );
+}
+
+interface CapabilityGrant {
+  readonly key: string;
+  readonly ops: readonly string[];
+}
+
+/**
+ * Every `resource -> operations` pair `createChatTokenRequest` puts in its capability map.
+ *
+ * Both spellings are read: the object literal's `[expr]: [ops]` entries and the
+ * per-channel `capability[expr] = [ops]` assignments in the loop below it. The
+ * resource expression is either an inline `cellPrefixed(this.cellId, \`tpl\`)` or a
+ * call to one of the service's own `…ChannelName` helpers, which is followed into
+ * that helper rather than assumed.
+ */
+function backendChatCapability(): CapabilityGrant[] {
+  const source = fs.readFileSync(BACKEND_ABLY_SERVICE, "utf8");
+  const body = backendMethodBody(source, "createChatTokenRequest");
+  const legacyCellId = backendLegacyCellId();
+  const grants: CapabilityGrant[] = [];
+
+  const entry =
+    /\[\s*(?:cellPrefixed\(\s*this\.cellId,\s*`([^`]+)`\s*\)|this\.(\w+)\([^)]*\))\s*\]\s*(?::|=)\s*\[([^\]]*)\]/g;
+
+  for (const match of body.matchAll(entry)) {
+    const inlineTemplate = match[1];
+    const helperName = match[2];
+    const rawOps = match[3] ?? "";
+    const template =
+      inlineTemplate ??
+      (helperName === undefined
+        ? undefined
+        : backendChannelHelperTemplate(source, helperName));
+    if (template === undefined) continue;
+    grants.push({
+      key: backendCellPrefixed(legacyCellId, resolveTemplate(template)),
+      ops: rawOps
+        .split(",")
+        .map((op) => op.trim().replace(/^["'`]|["'`]$/g, ""))
+        .filter((op) => op.length > 0),
+    });
+  }
+  return grants;
+}
+
+/** The resource keys `createSupportTokenRequest` grants, both branches of it. */
+function backendSupportCapabilityKeys(): string[] {
+  const source = fs.readFileSync(BACKEND_ABLY_SERVICE, "utf8");
+  const body = backendMethodBody(source, "createSupportTokenRequest");
+  const legacyCellId = backendLegacyCellId();
+  const keys: string[] = [];
+  for (const match of body.matchAll(
+    /cellPrefixed\(\s*this\.cellId,\s*`([^`]+)`\s*\)/g,
+  )) {
+    const template = match[1];
+    if (template === undefined) continue;
+    keys.push(backendCellPrefixed(legacyCellId, resolveTemplate(template)));
+  }
+  return keys;
+}
+
+/**
+ * An Ably capability resource may carry a `*`, which matches one or more whole
+ * segments. `huddle-signal:${orgId}:*:${clientId}` is granted that way on purpose,
+ * so a name is covered when it equals a key or matches one whose `*` is expanded.
+ */
+function capabilityCovers(key: string, name: string): boolean {
+  if (!key.includes("*")) return key === name;
+  const pattern = key
+    .split("*")
+    .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join("[^:]+");
+  return new RegExp(`^${pattern}$`).test(name);
+}
+
+function grantFor(
+  grants: readonly CapabilityGrant[],
+  name: string,
+): CapabilityGrant | undefined {
+  return grants.find((grant) => capabilityCovers(grant.key, name));
+}
+
+/** Every exported channel-name builder in lib/ably-channels.ts, counted from its source. */
+function frontendBuilderNames(): string[] {
+  const source = fs.readFileSync(
+    path.join(__dirname, "..", "ably-channels.ts"),
+    "utf8",
+  );
+  return [...source.matchAll(/export function (\w*ChannelName)\s*\(/g)]
+    .map((match) => match[1])
+    .filter((name): name is string => name !== undefined);
 }
 
 const FE_ROOT = path.join(__dirname, "..", "..");
@@ -212,6 +376,90 @@ describe("Ably channel names — cell prefix contract with the backend", () => {
     expect(chatPresenceChannelName("org-1")).toBe(
       backendCellPrefixed(legacyCellId, "chat:org-1:presence"),
     );
+  });
+
+  describe("GRANTED: every name the frontend builds is a key the token capability contains", () => {
+    it("reads a non-empty capability map out of the backend's own source", () => {
+      const chat = backendChatCapability();
+      const support = backendSupportCapabilityKeys();
+
+      // Anti-vacuity: a regex that stopped matching would report every name
+      // ungranted, not granted — but an EMPTY read plus a `.find()` that returns
+      // undefined is exactly the shape that turns "granted" into "unchecked" if
+      // the assertions below were ever relaxed to `toBeDefined() || skip`.
+      expect(chat.length).toBeGreaterThanOrEqual(MEASURED_CHAT_CAPABILITY_FLOOR);
+      expect(support.length).toBeGreaterThan(0);
+      for (const grant of chat) {
+        expect(grant.key.startsWith(`cell:${ABLY_CELL_ID}:`)).toBe(true);
+        expect(grant.ops.length).toBeGreaterThan(0);
+      }
+    });
+
+    it("grants every chat-token channel the frontend subscribes to", () => {
+      const grants = backendChatCapability();
+
+      const subscribed: ReadonlyArray<readonly [string, string]> = [
+        ["chatChannelName", chatChannelName("org-1", 7)],
+        ["chatPresenceChannelName", chatPresenceChannelName("org-1")],
+        ["huddleChannelName", huddleChannelName("org-1", 7)],
+        ["huddleSignalChannelName", huddleSignalChannelName("org-1", 7, "user-1")],
+        ["notificationsChannelName", notificationsChannelName("org-1", "user-1")],
+      ];
+
+      const ungranted = subscribed
+        .filter(([, name]) => grantFor(grants, name) === undefined)
+        .map(
+          ([builder, name]) =>
+            `${builder}() builds "${name}", which no key of createChatTokenRequest's capability map covers`,
+        );
+      expect(ungranted).toEqual([]);
+
+      for (const [, name] of subscribed)
+        expect(grantFor(grants, name)?.ops).toContain("subscribe");
+    });
+
+    it("grants the presence operation on the channel the presence hook enters", () => {
+      const grants = backendChatCapability();
+      const presence = grantFor(grants, chatPresenceChannelName("org-1"));
+
+      // `presence.enter` needs Ably's `presence` op. `subscribe` reads the set;
+      // it does not let the client join it.
+      expect(presence?.ops).toContain("presence");
+      expect(presence?.ops).toContain("subscribe");
+    });
+
+    it("grants the support channel the support presence hook uses", () => {
+      const keys = backendSupportCapabilityKeys();
+      const name = supportChannelName("org-1", 42);
+      expect(keys.some((key) => capabilityCovers(key, name))).toBe(true);
+    });
+
+    it("covers every exported channel builder, so a new one cannot skip the check", () => {
+      const builders = frontendBuilderNames();
+      expect(builders.length).toBeGreaterThanOrEqual(MEASURED_BUILDER_FLOOR);
+      expect(builders.sort()).toEqual([
+        "chatChannelName",
+        "chatPresenceChannelName",
+        "huddleChannelName",
+        "huddleSignalChannelName",
+        "notificationsChannelName",
+        "supportChannelName",
+      ]);
+    });
+
+    it("does not report an unbuilt name as granted", () => {
+      // The coverage check must be able to say no, or every assertion above is
+      // trivially true. `chat:org-1:presence-shadow` differs from both the
+      // presence key and the numbered-channel key by one segment's content.
+      const grants = backendChatCapability();
+      expect(
+        grantFor(grants, cellPrefixed("chat:org-1:presence-shadow")),
+      ).toBeUndefined();
+      expect(grantFor(grants, cellPrefixed("chat:org-2:presence"))).toBeUndefined();
+      expect(
+        grantFor(grants, cellPrefixed("notifications:org-1:user-2")),
+      ).toBeUndefined();
+    });
   });
 
   it("NO LITERALS: no frontend file builds an Ably channel name inline", () => {

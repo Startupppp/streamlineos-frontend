@@ -1,13 +1,13 @@
 {
   "generatedAt": "2026-09-03",
-  "generatedBy": "code-release-10-10-v2 ticket 35 (35-erasure-drills) — PRD-C186/C187/C188 drill evidence",
+  "generatedBy": "code-release-10-10-v2 ticket 35 (35-erasure-drills) \u2014 PRD-C186/C187/C188 drill evidence",
   "sourceDir": "architecture-refactor/final-refactor/evidence/42-production-ops/RB-10-privacy-compliance/runs",
-  "covers": "the 30 verbatim command transcripts captured for ticket 35, in two generations: 01-22 at backend 45f8a2e99 (2026-09-03) and 23-29 at backend dcd5a2071 (2026-09-04), the latter re-running the retention and legal-hold drills after the F-3 and F-11 fixes. Each file is the raw stdout+stderr of one really-executed command, terminated by its real EXIT_CODE line. Superseded generation-1 runs are kept, not replaced. It covers nothing outside this directory.",
-  "redaction": "Every subject is synthetic and addressed on the reserved .invalid TLD. Before sealing, the tree was scanned for the local scratch password, the remote Neon host, the Upstash host and AWS-style key prefixes: zero matches. The words 'secret'/'key' appear only as environment-variable NAMES a drill prints when reporting what is absent.",
+  "covers": "the 41 verbatim command transcripts captured for ticket 35, in three generations: 01-22 at backend 45f8a2e99 (2026-09-03), 23-29 at backend dcd5a2071 (2026-09-04) re-running the retention and legal-hold drills after the F-3 and F-11 fixes, and 30-41 at backend 299cd1009 (2026-09-04) re-running both drills and their supporting gates at the close-out head and adding the redaction gate, its regression spec and its bite proof. Each file is the raw stdout+stderr of one really-executed command, terminated by its real EXIT_CODE line. Superseded runs are kept, not replaced. runs/38 is deliberately absent: a transcript of check-evidence-redaction.mjs cannot be sealed into the tree it reports on. It covers nothing outside this directory.",
+  "redaction": "Every subject in every run is synthetic and addressed on a reserved TLD (.invalid or .test). Generations 1 and 2 asserted this in prose and nothing re-ran the scan as the tree grew. Generation 3 replaces the assertion with a gate: streamlineos-backend src/scripts/check-evidence-redaction.mjs derives its corpus from these seals (every sealed file, every seal, and every regular file directly inside a sealed directory), applies 14 credential and PII patterns each carrying a positive and a negative control, refuses to pass below its corpus floors, and pins its two deliberate probe fixtures by sha256 so a stale exemption fails. Run it: node src/scripts/check-evidence-redaction.mjs. Regression spec: src/scripts/evidence-redaction-gate.spec.ts (runs/40); bite proof: runs/41.",
   "algorithm": "sha256 over the exact bytes on disk. No transform of any kind is applied before hashing.",
   "recompute": "node -e 'const{createHash}=require(\"crypto\"),fs=require(\"fs\");const s=JSON.parse(fs.readFileSync(\"artifact-hashes.json\",\"utf8\"));let m=0,x=0;for(const[f,h]of Object.entries(s.hashes)){const a=createHash(\"sha256\").update(fs.readFileSync(f)).digest(\"hex\");a===h?m++:(x++,console.log(\"MISMATCH\",f))}console.log(`match=${m} mismatch=${x} of ${Object.keys(s.hashes).length}`)'",
   "verifiedBy": "cd streamlineos-backend && npm run check:evidence-seal",
-  "fileCount": 30,
+  "fileCount": 41,
   "hashes": {
     "01-compliance-drill-execute.txt": "46413402f0dbbcd3eed54dc1dc1512e15c1163df3b8bb19360a60b76e275bfad",
     "02-drill-export.txt": "884336745c9593daf05ae71d9f160e3750dd13607f56b8c472017a6f92819575",
@@ -38,7 +38,18 @@
     "26-drill-legal-hold-self-test-head.txt": "998017f8633e8a979384fb45d8802161e9dcd83c2d4ae7cc2f6b91cd11bea672",
     "27-drill-legal-hold-head.txt": "5c69b02483180e9c801509a0ffa6350941cc667e8f2cff18187bf99a46642f7c",
     "28-bite-proof-retention-integer-divisor.txt": "1076d7ea1f46c4fa7a79eb6274a9d6bd99d7d428b7ae62e4eae5e7b11906dc7c",
-    "29-bite-proof-legal-hold-gate-deleted.txt": "1799150794a32abdeb2ccc2d1acfcb2a220608358b749156a4d29bb2b18f3fa0"
+    "29-bite-proof-legal-hold-gate-deleted.txt": "1799150794a32abdeb2ccc2d1acfcb2a220608358b749156a4d29bb2b18f3fa0",
+    "30-check-retention-coverage-head3.txt": "1715e0f992b02fcb784bc298c57f9fee9293b655d5546caa3d4b59af11356319",
+    "31-check-retention-coverage-self-test-head3.txt": "6e481db427a1f19c796b83a6aa30b30aef43463291c5de9163724927e0323b01",
+    "32-drill-legal-hold-self-test-head3.txt": "998017f8633e8a979384fb45d8802161e9dcd83c2d4ae7cc2f6b91cd11bea672",
+    "33-drill-legal-hold-head3.txt": "e736485358792d52802e13e9113101f014d304f0f7c97be116d367ce54ac2de2",
+    "34-drill-erasure-self-test-head3.txt": "0eb59b2991541fd9a975fb923a9f0125d45e45b65d275f4afec0277fec9812ba",
+    "35-drill-export-self-test-head3.txt": "171669088ae72fc0c8e7015244fef1e70312f93dcf702d574c7f5531a2600986",
+    "36-check-audit-log-privileges-head3.txt": "56e7b1177e3bff32b8eaaa3505f8651549bc0448333d37629f0108c5212b3ca7",
+    "37-check-audit-log-privileges-self-test-head3.txt": "a7d2b6d461f39ca88fe18b81a87f481d6df6d516d80c4edba83fc944592cf868",
+    "39-check-evidence-redaction-self-test-head3.txt": "b6827590eb84078a64c781a5d531cb50f262fe4663a7dcf96a7611caf6f67836",
+    "40-jest-evidence-redaction-gate-head3.txt": "8849c6e5bae873b55d881ca9d0e5be5c4542b8c40e6da28ab577d05f4821d028",
+    "41-bite-proof-evidence-redaction.txt": "94ef81bab3f80839dc42489225d6a64995e4add02e8a366f102599535092f689"
   },
-  "resealedAt": "2026-09-04 — ticket 35, v2 close-out: added runs/23-29 (generation 2) and re-hashed the directory."
+  "resealedAt": "2026-09-04 \u2014 ticket 35, v2 close-out generation 3: eleven runs added (30-37, 39-41). Nothing removed."
 }

@@ -125,10 +125,10 @@ const SKIP_FILE = /(\.spec\.tsx?|\.test\.tsx?|\.d\.ts)$/;
  */
 const DOUBLE_CAST_LEDGER = new Map([
   // -- external: a platform global whose overload set no single function satisfies --
-  ["instrumentation.ts", { count: 1, seam: "external", invariant: "the dev-only Next instrumentation hook patches `globalThis.setTimeout` to clamp negative delays. setTimeout is an overload set whose return type differs between Node (Timeout) and the DOM (number), and no single function expression satisfies it. This site previously carried a `@ts-expect-error`, which blankets every error on the statement and — because the shipped detector counted suppressions with comments stripped — could never be seen by this gate at all. The cast names the one seam instead; `Object.setPrototypeOf(globalThis.setTimeout, orig)` on the next line restores the original's statics, and the whole function returns early outside development." }],
+  ["instrumentation.ts", { count: 1, seam: "external", test: "scripts/__tests__/assertion-seam-contracts.test.ts::clamps a negative delay to zero instead of handing it to the platform", invariant: "the dev-only Next instrumentation hook patches `globalThis.setTimeout` to clamp negative delays. setTimeout is an overload set whose return type differs between Node (Timeout) and the DOM (number), and no single function expression satisfies it. This site previously carried a `@ts-expect-error`, which blankets every error on the statement and — because the shipped detector counted suppressions with comments stripped — could never be seen by this gate at all. The cast names the one seam instead; `Object.setPrototypeOf(globalThis.setTimeout, orig)` on the next line restores the original's statics, and the whole function returns early outside development." }],
 
   // -- external: a browser global the DOM lib types nominally --
-  ["feedbucket-widget/src/network-capture.ts", { count: 1, seam: "external", invariant: "installs a PatchedXHR subclass over `window.XMLHttpRequest`. `typeof XMLHttpRequest` is the DOM lib's constructor type including its static members, which a locally-declared subclass never satisfies nominally even when it satisfies it structurally. Monkey-patching a browser global is outside the type system by construction; the patch is feature-detected and the original constructor is retained for pass-through." }],
+  ["feedbucket-widget/src/network-capture.ts", { count: 1, seam: "external", test: "scripts/__tests__/assertion-seam-contracts.test.ts::installs a constructor that is still an XMLHttpRequest, and installs it once", invariant: "installs a PatchedXHR subclass over `window.XMLHttpRequest`. `typeof XMLHttpRequest` is the DOM lib's constructor type including its static members, which a locally-declared subclass never satisfies nominally even when it satisfies it structurally. Monkey-patching a browser global is outside the type system by construction; the patch is feature-detected and the original constructor is retained for pass-through." }],
 
   // -- narrow-me: the generic record renderer wants an index signature --
   ["features/party/parties/parties-page.tsx", { count: 2, seam: "narrow-me", invariant: "`RecordValue` is `Record<string, unknown>` (features/renderer/format-value.tsx:15) and the layout-driven RecordList is typed against it. A declared interface such as BusinessParty has no implicit index signature in TypeScript, so it neither widens to RecordValue nor narrows back from it without a cast. Both sites are that one limitation: rows going in, and a row coming back out to PartyRowActions. The fix is a generic type parameter on the renderer, not a parse — the data never leaves the process between the two casts." }],
@@ -174,14 +174,14 @@ const DOUBLE_CAST_LEDGER = new Map([
  *       fix above and is 0 now; no ledger, no permitted count.
  */
 const RAW_JSON_LEDGER = new Map([
-  ["features/build/forms/public-form-api.ts", { count: 1, seam: "external", invariant: "the error branch only: a failed public-form response is read for its `message` before being thrown as an Error. Read as `Record<string, unknown>` and every field is typeof-guarded before use. The SUCCESS branch of this file goes through `parseApiResponse` with `publicFormDefinitionContract`, which is what unwraps the envelope." }],
-  ["features/build/intake/public-intake-api.ts", { count: 1, seam: "external", invariant: "the error branch only, same shape as public-form-api.ts: `Record<string, unknown>` with a typeof guard on every read. The success branch goes through `parseApiResponse` with `intakeSubmitResponseContract`." }],
-  ["features/landing/contact-form.tsx", { count: 1, seam: "external", invariant: "an error-body probe on the public contact form. Errors are produced by the backend's exception filter, which does NOT pass through the response envelope, so there is nothing to unwrap; both fields are optional and fall back to a generic message. The success branch reads no body at all." }],
-  ["hooks/api/ai-text-stream.ts", { count: 1, seam: "external", invariant: "an error-body probe on an SSE endpoint whose success path is a byte stream, not JSON — there is no envelope on the failure side and no body to parse on the success side. Every field is optional and defaults to the status line." }],
-  ["hooks/api/sign/public.ts", { count: 2, seam: "external", invariant: "an unauthenticated e-sign surface that deliberately avoids apiClient so a signer's browser never touches the token cache. One site is the error-body probe; the other reads the success body as `unknown` and hands it to this file's own `unwrap()`, which checks `success === true && \"data\" in body` before returning `data`. The envelope IS handled; what is missing is a contract on the unwrapped value, which is `check:response-contracts` territory." }],
-  ["lib/api-client.ts", { count: 2, seam: "external", invariant: "neither site talks to the backend API. One reads a 403 body for an ORG_MEMBERSHIP_* code, guarding `typeof body.code !== \"string\"` before use; the other reads Next's own `/api/auth/session` route, which is NextAuth's shape and carries no StreamlineOS envelope. Every backend response in this file goes through parseApiResponse instead." }],
-  ["lib/auth-session.ts", { count: 3, seam: "external", invariant: "the server-side NextAuth bridge. Two sites read the body as `unknown` and pass it to this file's exported `unwrapBackend<T>()`, which checks `success === true && \"data\" in body` — the envelope is handled. The third reads the Google auth result with BOTH shapes declared optional (`data?.userId ?? userId`) precisely because it tolerates enveloped and bare bodies, and returns null when neither yields a userId." }],
-  ["lib/portal-api-client.ts", { count: 2, seam: "external", invariant: "the customer-portal client, a second fetch seam with its own token store. Both sites are inside `parsePortalResponse`, which is this file's local equivalent of parseApiResponse: it reads the error body for message/code/details, and on success checks `success === true && \"data\" in body` before returning `data`. The envelope is handled; the value is not contracted." }],
+  ["features/build/forms/public-form-api.ts", { count: 1, seam: "external", test: "features/build/forms/public-form-envelope.test.ts::fetchPublicForm keeps the backend message on a failure", invariant: "the error branch only: a failed public-form response is read for its `message` before being thrown as an Error. Read as `Record<string, unknown>` and every field is typeof-guarded before use. The SUCCESS branch of this file goes through `parseApiResponse` with `publicFormDefinitionContract`, which is what unwraps the envelope." }],
+  ["features/build/intake/public-intake-api.ts", { count: 1, seam: "external", test: "scripts/__tests__/assertion-seam-contracts.test.ts::(negative) falls back to the generic message when the body's message is not a string or a string array", invariant: "the error branch only, same shape as public-form-api.ts: `Record<string, unknown>` with a typeof guard on every read. The success branch goes through `parseApiResponse` with `intakeSubmitResponseContract`." }],
+  ["features/landing/contact-form.tsx", { count: 1, seam: "narrow-me", invariant: "DEMOTED from external on 2026-09-04 while writing the C031 contract tests, because the invariant it claimed is not the one the code holds. Errors here are produced by the backend's exception filter, which does not pass through the { success, data } envelope, so there is nothing to unwrap — that half is true. The claim that \"both fields are optional and fall back to a generic message\" is not: `body.error ?? fallback` surfaces whatever the server sent, so a non-string `error` reaches a field declared `string`, and `fieldErrors` is read with no guard at all. A seam nobody can write a passing negative test for is debt, not a proven seam. The fix is a typeof guard on `error` and a Zod parse on `fieldErrors`, after which it can be re-promoted with a test." }],
+  ["hooks/api/ai-text-stream.ts", { count: 1, seam: "external", test: "hooks/api/ai-text-stream.test.tsx::raises the HTTP status so credit exhaustion stays renderable as 402", invariant: "an error-body probe on an SSE endpoint whose success path is a byte stream, not JSON — there is no envelope on the failure side and no body to parse on the success side. Every field is optional and defaults to the status line." }],
+  ["hooks/api/sign/public.ts", { count: 2, seam: "external", test: "scripts/__tests__/assertion-seam-contracts.test.ts::(negative) returns the whole body when success is not literally true, instead of an undefined data", invariant: "an unauthenticated e-sign surface that deliberately avoids apiClient so a signer's browser never touches the token cache. One site is the error-body probe; the other reads the success body as `unknown` and hands it to this file's own `unwrap()`, which checks `success === true && \"data\" in body` before returning `data`. The envelope IS handled; what is missing is a contract on the unwrapped value, which is `check:response-contracts` territory." }],
+  ["lib/api-client.ts", { count: 2, seam: "external", test: "scripts/__tests__/assertion-seam-contracts.test.ts::(negative) does not suspend on a code outside the organization-access set", invariant: "neither site talks to the backend API. One reads a 403 body for an ORG_MEMBERSHIP_* code, guarding `typeof body.code !== \"string\"` before use; the other reads Next's own `/api/auth/session` route, which is NextAuth's shape and carries no StreamlineOS envelope. Every backend response in this file goes through parseApiResponse instead." }],
+  ["lib/auth-session.ts", { count: 3, seam: "external", test: "scripts/__tests__/assertion-seam-contracts.test.ts::(negative) does not unwrap when success is not literally true", invariant: "the server-side NextAuth bridge. Two sites read the body as `unknown` and pass it to this file's exported `unwrapBackend<T>()`, which checks `success === true && \"data\" in body` — the envelope is handled. The third reads the Google auth result with BOTH shapes declared optional (`data?.userId ?? userId`) precisely because it tolerates enveloped and bare bodies, and returns null when neither yields a userId." }],
+  ["lib/portal-api-client.ts", { count: 2, seam: "external", test: "scripts/__tests__/assertion-seam-contracts.test.ts::(negative) falls back to the status line when the error body's message is not a string", invariant: "the customer-portal client, a second fetch seam with its own token store. Both sites are inside `parsePortalResponse`, which is this file's local equivalent of parseApiResponse: it reads the error body for message/code/details, and on success checks `success === true && \"data\" in body` before returning `data`. The envelope is handled; the value is not contracted." }],
 ]);
 
 /**
@@ -436,8 +436,12 @@ const SELF_TEST_CHECKS = new Set();
  * deletes half its assertions, which makes it decoration: the gate would still
  * exit 0 while proving strictly less. The count is now measured and floored, so
  * removing a check fails the self-test instead of quietly shrinking it.
+ *
+ * Raised 43 -> 47 when (ae)-(ah), C031's contract-test clause, were added. This
+ * floor only ever moves UP: it is the one number in this file whose increase
+ * makes the gate stricter rather than more permissive.
  */
-const MIN_SELF_TEST_CHECKS = 43;
+const MIN_SELF_TEST_CHECKS = 47;
 
 function assert(cond, msg) {
   const tag = /^\(([A-Za-z0-9]+)\)/.exec(msg);
@@ -543,6 +547,46 @@ function runSelfTest() {
       `(ad) ${file}: a raw-fetch invariant MUST say how the site handles the { success, data } envelope — that is the whole defect this rule exists for`);
   }
 
+  // ---- C031's test clause, made enforceable ------------------------------
+  // "Each exception must be … covered by a negative/runtime contract test."
+  // That clause held on this side of the tree with ZERO mechanism: no entry
+  // named a test, nothing checked that one existed, and the written invariants
+  // were therefore comments. The backend gained this in an earlier wave and the
+  // frontend did not, so the same criterion was enforced in one repository and
+  // decorative in the other.
+  //
+  // A `narrow-me` entry is by its own label NOT a permitted exception, so the
+  // requirement attaches to `external` — and demoting an entry is the only
+  // escape, which moves a site from "proven seam" to "declared debt" rather
+  // than lowering the bar. `features/landing/contact-form.tsx` took exactly
+  // that route while these tests were written.
+  const seenTestTargets = new Map();
+  const assertContractTest = (kind, file, entry) => {
+    if (entry.seam !== "external") {
+      assert(entry.test === undefined,
+        `(ae) ${file}: a "narrow-me" ${kind} entry is declared debt, not a proven seam — it must NOT name a contract test`);
+      return;
+    }
+    assert(typeof entry.test === "string" && /^[^:]+\.(test|spec)\.tsx?::.+$/.test(entry.test),
+      `(af) ${file}: every EXTERNAL ${kind} entry must name its contract test as "<spec path>::<test title>" — C031 permits an assertion only where one exists`);
+    const [specPath, title] = entry.test.split("::");
+    let specSource = seenTestTargets.get(specPath);
+    if (specSource === undefined) {
+      try {
+        specSource = readFileSync(join(ROOT, specPath), "utf8");
+      } catch {
+        specSource = null;
+      }
+      seenTestTargets.set(specPath, specSource);
+    }
+    assert(specSource !== null,
+      `(ag) ${file}: names ${specPath}, which is not on disk. A ledger that points at a deleted spec proves nothing`);
+    assert(typeof specSource === "string" && specSource.includes(title),
+      `(ah) ${file}: ${specPath} does not contain the test titled "${title}" — renaming or deleting a contract test must fail here, not silently un-cover the cast`);
+  };
+  for (const [file, entry] of DOUBLE_CAST_LEDGER) assertContractTest("double-cast", file, entry);
+  for (const [file, entry] of RAW_JSON_LEDGER) assertContractTest("raw-JSON", file, entry);
+
   const plainOf = (src) => countPlainAssertions("probe.ts", src);
 
   assert(plainOf("const a = b as Config;\n").asX === 1,
@@ -616,6 +660,10 @@ function runSelfTest() {
     "  (ab) every raw-JSON entry names a seam kind",
     "  (ac) every raw-JSON entry carries a written invariant",
     "  (ad) every raw-JSON invariant states its envelope handling",
+    "  (ae) a narrow-me entry names NO contract test  -> debt cannot masquerade as a proven seam",
+    "  (af) every EXTERNAL entry names one as path::title",
+    "  (ag) the named spec file is on disk             -> a dead pointer fails (gate bites)",
+    "  (ah) the named test title is IN that file       -> a rename fails (gate bites)",
     "  (ba) a plain `as X`                            -> counted (rule 4)",
     "  (bb) `as const`                                -> excluded by decision",
     "  (bc) `as unknown as`                           -> rule 2's, not double-ledgered",
@@ -682,6 +730,9 @@ function main() {
   console.log(`=== application files scanned: ${files} ===`);
   console.log(`=== \`as unknown as\`: ${total} site(s) in ${doubleCasts.size} file(s) ===`);
   console.log(`=== ledger: ${external} at a proven external seam, ${narrowMe} owed a narrowing ===`);
+  const externalEntries = [...DOUBLE_CAST_LEDGER, ...RAW_JSON_LEDGER].filter(([, e]) => e.seam === "external");
+  const covered = externalEntries.filter(([, e]) => typeof e.test === "string" && e.test.length > 0).length;
+  console.log(`=== C031 contract tests: ${covered}/${externalEntries.length} external entr(ies) across both ledgers name a negative/runtime test (self-test (ae)-(ah) proves each one exists and still bears that title) ===`);
   console.log(`=== raw \`fetch\` JSON casts: ${rawJsonTotal} site(s) in ${rawJson.size} file(s) ===`);
   console.log(`=== plain assertions under a zero-growth ceiling: ${plainTotal} (${plainAs} \`as X\` + ${plainNonNull} non-null \`!\`) in ${plain.size} file(s) ===`);
   console.log(`=== \`as const\` excluded by decision (a const assertion narrows, it does not force): ${asConstTotal} ===`);

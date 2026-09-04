@@ -100,6 +100,33 @@ export function formatINR(amount: string | number): string {
   }).format(num);
 }
 
+const ISO_CURRENCY_CODE = /^[A-Za-z]{3}$/;
+
+/**
+ * For a row that carries its own currency. `formatINR` hardcodes ₹, so using it
+ * on a stored amount renders a USD claim as rupees.
+ */
+export function formatAmountInCurrency(
+  amount: string | number,
+  currency: string | null | undefined,
+): string {
+  const num = Number(amount);
+  const value = Number.isFinite(num) ? num : 0;
+  const code = (currency ?? "").trim().toUpperCase() || "INR";
+  const hasFraction = value % 1 !== 0;
+  const digits = {
+    minimumFractionDigits: hasFraction ? 2 : 0,
+    maximumFractionDigits: 2,
+  };
+  if (!ISO_CURRENCY_CODE.test(code))
+    return `${code} ${new Intl.NumberFormat("en-IN", digits).format(value)}`;
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: code,
+    ...digits,
+  }).format(value);
+}
+
 export function formatINRCompact(amount: string | number): string {
   const num = Number(amount);
   if (Number.isNaN(num)) return "₹0";

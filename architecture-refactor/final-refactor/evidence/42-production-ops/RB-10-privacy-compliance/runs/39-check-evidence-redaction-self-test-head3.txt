@@ -1,0 +1,26 @@
+$ node src/scripts/check-evidence-redaction.mjs --self-test
+{
+  "selfTest": true,
+  "pass": true,
+  "checks": {
+    "corpusFindsTheSeal": true,
+    "corpusIncludesSealedFile": true,
+    "corpusIncludesTheSealItself": true,
+    "cleanTextHasNoFindings": true,
+    "everyPatternPassesItsOwnControls": true,
+    "patternFloorIsMet": true,
+    "floorsAreAboveZero": true,
+    "floorsAreNotArgvRaisable": true,
+    "bitesOnCredential": true,
+    "bitesOnRealEmail": true,
+    "bitesOnUrlPassword": true,
+    "bitesOnManagedHost": true,
+    "bitesOnPrivateKeyBlock": true,
+    "ignoresRedactedUrlPassword": true,
+    "ignoresReservedTldEmail": true,
+    "ignoresBareVendorWord": true,
+    "corpusIncludesUnsealedSiblings": true,
+    "staleDeclaredEntryIsDetected": true
+  }
+}
+EXIT_CODE=0

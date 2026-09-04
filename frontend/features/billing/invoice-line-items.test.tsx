@@ -17,6 +17,13 @@ jest.mock("@/hooks/api/invoice", () => ({
   useUpdateInvoice: () => ({ mutate: mockMutate, isPending: false }),
 }));
 
+// The dialog now gates itself on PATCH /invoices/{invoiceId}'s own key. These
+// tests are about the wire shape, so they run as a caller who holds it;
+// `invoice-write-surface-gates.test.tsx` owns the deny half.
+jest.mock("@/hooks/api/access", () => ({
+  useCan: (key: string) => key === "accounting:update",
+}));
+
 jest.mock("sonner", () => ({
   toast: { success: jest.fn(), error: jest.fn() },
 }));

@@ -1,0 +1,3 @@
+$ node src/scripts/drill-export.mjs --self-test
+SELF-TEST PASS: export vacuity guard requires two populated high-signal tables
+EXIT_CODE=0

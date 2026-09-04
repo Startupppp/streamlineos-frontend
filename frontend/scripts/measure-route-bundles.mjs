@@ -29,9 +29,20 @@ const BASELINE_ROUTE = "/dashboard";
 
 /** Every chunk path referenced by a route's client-reference manifest. */
 export function chunksFromManifestSource(source) {
-  // Skip the `globalThis.__RSC_MANIFEST = globalThis.__RSC_MANIFEST || {};` preamble —
-  // its `{}` would otherwise parse cleanly and measure every route as zero.
-  const assignment = /__RSC_MANIFEST\s*\[[^\]]*\]\s*=\s*/.exec(source);
+  /*
+    Skip the `globalThis.__RSC_MANIFEST = globalThis.__RSC_MANIFEST || {};` preamble — its `{}`
+    would otherwise parse cleanly and measure every route as zero.
+
+    The subscript is matched as a QUOTED STRING, not as "anything up to the first ]". Next keys this
+    map by route path, and a dynamic segment puts a `]` inside that string:
+    `__RSC_MANIFEST["/(authenticated)/accounting/assets/[assetId]/page"]`. A `[^\]]*` subscript ends
+    at the `]` of `[assetId`, the match fails, and this returned null — so EVERY dynamic route in the
+    build was "manifest could not be parsed". `measureRoute` turns that into a SKIP, and a skipped
+    route keeps whatever bytes the manifest already held, so the first dynamic route added to the
+    budget corpus would have carried a stale number that no run could refresh. Measured on this
+    build: 140 of 602 route manifests were unparseable for exactly this reason.
+  */
+  const assignment = /__RSC_MANIFEST\s*\[\s*"(?:[^"\\]|\\.)*"\s*\]\s*=\s*/.exec(source);
   if (!assignment) return null;
   const start = source.indexOf("{", assignment.index + assignment[0].length - 1);
   if (start === -1) return null;
@@ -162,13 +173,25 @@ function runSelfTest() {
   assert(braceInString !== null && braceInString.size === 1, "(c) a brace inside a module name must not end the object");
   console.log("  (c) a brace inside a string does not truncate the manifest");
 
+  const dynamicRoute = chunksFromManifestSource(
+    'globalThis.__RSC_MANIFEST = globalThis.__RSC_MANIFEST || {};\n' +
+      'globalThis.__RSC_MANIFEST["/(authenticated)/accounting/assets/[assetId]/page"] = ' +
+      JSON.stringify({ clientModules: { "a.js": { chunks: ["/_next/static/chunks/dyn.js"] } } }) +
+      ";\n",
+  );
+  assert(
+    dynamicRoute !== null && dynamicRoute.size === 1,
+    "(e) a dynamic route's key contains `]`, and must not truncate the subscript match",
+  );
+  console.log("  (e) a [param] route parses — the `]` inside the manifest key does not end the subscript");
+
   const empty = chunksFromManifestSource(
     'globalThis.__RSC_MANIFEST["/x"] = ' + JSON.stringify({ clientModules: {} }) + ";",
   );
   assert(empty !== null && empty.size === 0, "(d) an empty manifest is 0 chunks, not an error");
   console.log("  (d) an empty client-module map measures 0 chunks");
 
-  console.log("\n✔ 4 measurement fixtures passed — measure-route-bundles is live.\n");
+  console.log("\n✔ 5 measurement fixtures passed — measure-route-bundles is live.\n");
 }
 
 function runMeasure() {
@@ -227,5 +250,9 @@ function runMeasure() {
   console.log("\nWrote measured bytes into contracts/route-bundle-manifest.json.");
 }
 
-if (process.argv.includes("--self-test")) runSelfTest();
-else runMeasure();
+// Guarded, so importing `chunksFromManifestSource` to reproduce a measurement does not run the CLI.
+const isMain = process.argv[1] === fileURLToPath(import.meta.url);
+if (isMain) {
+  if (process.argv.includes("--self-test")) runSelfTest();
+  else runMeasure();
+}

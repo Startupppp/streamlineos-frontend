@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
 import { useAllAccounts } from "@/hooks/api/accounting";
-import { AccountListNotice } from "@/features/accounting/shared";
+import { AccountListNotice, SELECT_NONE_VALUE } from "@/features/accounting/shared";
 import { useCreateBankAccount } from "@/hooks/api/accounting/banking";
 import type { BankAccountType } from "@/hooks/api/accounting/banking";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -70,9 +70,10 @@ export function AddBankAccountSheet({ open, onOpenChange }: AddBankAccountSheetP
         currency: values.currency,
         openingBalance: values.openingBalance,
         openingBalanceDate: values.openingBalanceDate || undefined,
-        ledgerAccountId: values.ledgerAccountId
-          ? parseInt(values.ledgerAccountId, 10)
-          : undefined,
+        ledgerAccountId:
+          values.ledgerAccountId && values.ledgerAccountId !== SELECT_NONE_VALUE
+            ? parseInt(values.ledgerAccountId, 10)
+            : undefined,
       },
       {
         onSuccess: () => {
@@ -249,7 +250,7 @@ export function AddBankAccountSheet({ open, onOpenChange }: AddBankAccountSheetP
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value={SELECT_NONE_VALUE}>None</SelectItem>
                     {ledgerAccounts.map((a) => (
                       <SelectItem key={a.id} value={String(a.id)}>
                         {a.code} — {a.name}
