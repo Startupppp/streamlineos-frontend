@@ -1,0 +1,51 @@
+check-benchmark-manifest self-test
+
+  [pass] a well-formed manifest has no violations
+  [pass] a manifest that does not record the command that produced it is a violation
+  [pass] a manifest with no release SHA is a violation
+  [pass] a manifest measured as a BYPASSRLS role is rejected outright
+  [pass] a benchmark that resolves to no catalog entry is a violation
+  [pass] a complex statement with no approval cannot claim the looser ceiling
+  [pass] a module whose dataset is empty on every tenant is a violation
+  [pass] a module with rows on one tenant and none on another is reported as a seeding gap — it loses coverage; it does not produce a wrong number, so it is a warning not a failure
+  [pass] a benchmark measured over its own EMPTY subject table is a hard failure
+  [pass] a table the harness could not count is a violation, not a silent zero
+  [pass] staleness is UNKNOWN rather than assumed current when there is no SHA
+  [pass] a manifest measured at HEAD reports current
+  [pass] a manifest with no subject digests says UNKNOWN rather than claiming its SQL is current
+  [pass] a manifest whose recorded digest matches the file on disk reports no drift
+  [pass] a measured SQL catalog edited since capture is reported as DRIFTED, named, with both digests
+  [pass] a measured catalog that has been DELETED is drift, not a silent pass
+  [pass] a statement over its class ceiling is reported over
+  [pass] a vacuous benchmark is counted as unmeasured, never as a pass
+  [pass] an identical rerun produces no regression
+  [pass] one wobbly benchmark's instability does not widen a stable benchmark's band — buffers fire at +1 despite a 2,314-block global fallback; rows do not, because rows moved on their own
+  [pass] a benchmark the replicate study never covered is recorded but never ratcheted — the vector-ANN benchmarks re-randomise their query vector every run
+  [pass] one extra buffer block fires — the ratchet is exact because the replicate study measured zero swing
+  [pass] a 100× wall-clock movement does NOT fail the build while timing is disarmed — and it is still printed
+  [pass] a benchmark deleted from the fresh run is a regression, not silent coverage loss
+  [pass] a counted database-statement count above its ceiling is a breach and fails the gate
+  [pass] a DEFAULT ceiling nobody counted is reported unarmed, never failed on
+  [pass] verdict cannot be OK with an unmeasured slot
+  [pass] verdict is FAIL on a ceiling breach
+  [pass] verdict is FAIL on a regression
+  [pass] verdict is INCONCLUSIVE when nothing was measured
+  [pass] verdict is OK only when everything is measured and clean
+  [pass] a manifest with no requestLevel reports it as not measured, not as a pass
+  [pass] a clean request-level capture raises nothing
+  [pass] a tenant whose control probe did not hold is a VIOLATION — refusing to score the run
+  [pass] a request-level capture as a BYPASSRLS role is rejected
+  [pass] a request-level capture with no command is rejected
+  [pass] a route recorded as measured with no p95 is a violation
+  [pass] a heap figure taken without a forced collection is a violation, not a measurement
+  [pass] an ordinary route over 300 ms fails the PRD request ceiling
+  [pass] an approved complex aggregate at 301 ms does NOT fail — it has the looser ceiling
+  [pass] an excluded sweep at 5 s is recorded and NOT scored, and counted as excluded
+  [pass] a response bytes figure above its declared route budget is a breach
+  [pass] a downstream calls figure above its declared route budget is a breach
+  [pass] a resident heap figure above its declared route budget is a breach
+  [pass] a capture that is not at journal head warns rather than passing silently
+  [pass] a read-only capture says out loud that no mutation has a request-level number
+  [pass] a refused route is counted as refused, never as measured
+
+47/47 checks passed

@@ -1,0 +1,4 @@
+Declared SET NULL foreign keys 564  ·  requiring a column list 276  ·  unreachable 0
+Declaration half OK — every declared SET NULL key has at least one nullable member.
+Catalog SET NULL constraints 826
+Catalog half OK — every SET NULL column list matches the declaration.

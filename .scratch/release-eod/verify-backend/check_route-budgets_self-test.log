@@ -1,0 +1,43 @@
+Running self-test...
+  [pass] stale-key-detected — stale budget key not in OpenAPI is detected
+  [pass] live-key-passes — live budget key is not flagged as stale
+  [pass] negative-value-malformed — maxDbCalls=-1 is flagged as malformed
+  [pass] well-formed-passes — valid entry produces no malformed violations
+  [pass] buffer-negative-malformed — negative maxBufferBlocks is flagged as malformed
+  [pass] optional-fields-pass — well-formed maxBufferBlocks/maxReadPathP95Ms produce no violation
+  [pass] dangling-link-detected — a readCostBudgetId with no read-cost budget is flagged
+  [pass] ceiling-drift-detected — maxBufferBlocks disagreeing with the read-cost ceiling is flagged
+  [pass] matching-link-passes — a resolvable link with an agreeing ceiling produces no violation
+  [pass] exceeded-budget-bites — measured > max is detected
+  [pass] within-budget-passes — measured ≤ max produces no violation
+  [pass] null-measured-skipped — null measured values are skipped (not yet profiled)
+  [pass] buffer-exceeded-bites — measuredBufferBlocks > maxBufferBlocks is detected
+  [pass] read-path-exceeded-bites — measuredReadPathP95Ms > maxReadPathP95Ms is detected
+  [pass] batch-exceeded-bites — a worker batch over maxBatchSize is detected
+  [pass] per-org-fails-closed — maxDownstreamCallsPerOrg with no measured org count leaves the absolute ceiling in force
+  [pass] per-org-zero-orgs — an org count of 0 grants no allowance
+  [pass] per-org-boundary — 0 fixed + 1/org x 8 organisations admits exactly 8 downstream calls
+  [pass] per-org-bites — one call above the per-organisation allowance fires, and the issue names the derivation
+  [pass] per-org-composes — maxDownstreamCalls stays the fixed component and the allowance adds to it
+  [pass] per-org-validated — maxDownstreamCallsPerOrg must be a non-negative integer
+  [pass] coverage-counts-fields — coverage is counted per field, not per entry
+  [pass] partial-verdict — a partly measured manifest reports PARTIAL, never OK
+  [pass] inconclusive-verdict — a wholly unmeasured manifest reports INCONCLUSIVE
+  [pass] ok-verdict — OK only when every declared ceiling is measured and within budget
+  [pass] fail-verdict — any exceedance produces FAIL regardless of coverage
+  [pass] buffer-ceiling-falls-back — an undeclared maxBufferBlocks is enforced from the linked read-cost budget
+  [pass] per-org-dbcalls-fails-closed — maxDbCallsPerOrg with no measured org count leaves the absolute ceiling in force
+  [pass] per-org-dbcalls-boundary — 1 fixed + 3/org x 8 organisations admits exactly 25 database calls
+  [pass] per-org-dbcalls-bites — one statement above the per-organisation allowance fires and names the derivation
+  [pass] per-org-dbcalls-validated — maxDbCallsPerOrg must be a non-negative integer
+  [pass] per-org-scoped-to-two-fields — the per-organisation allowance applies only to the two fields that declare one
+  [pass] cron-parse — cron operations are read from @Controller("cron") only, and :param becomes {param}
+  [pass] batch-watermark-bites — cron batches above the undeclared watermark fail the gate
+  [pass] batch-watermark-holds — a census exactly at the recorded watermark passes
+  [pass] batch-census-classifies — a budget on either method covers the batch, and an out-of-scope reason removes it from the remainder
+  [pass] batch-stale-exclusion — an exclusion for a batch no cron controller serves is a violation
+  [pass] batch-scope-required — a manifest with no workerBatchScope cannot report a derived census
+  [pass] batch-not-in-openapi — a cron batch no OpenAPI operation describes is reported (it can never carry a budget)
+  [pass] read-cost-coverage — the read-cost guard's own coverage is computed and reportable
+
+SELF-TEST PASSED

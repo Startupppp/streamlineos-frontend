@@ -1,0 +1,20 @@
+{
+  "selfTest": true,
+  "pass": true,
+  "checks": {
+    "treatsAssignedChainAsFragment": true,
+    "treatsCombinatorArgumentAsFragment": true,
+    "doesNotTreatAStandaloneAwaitAsFragment": true,
+    "doesNotTreatAnEqualityComparisonAsAnAssignment": true,
+    "passesFragmentBoundToConst": true,
+    "flagsBrokenTeamJoin": true,
+    "flagsBrokenBareSelect": true,
+    "flagsBrokenRelational": true,
+    "passesFixedJoin": true,
+    "passesFixedRelational": true,
+    "ignoresRawSqlTemplate": true,
+    "importParserFindsSchemaNames": true,
+    "lineOfCountsNewlinesNotBytes": true,
+    "importParserIgnoresNonSchema": true
+  }
+}

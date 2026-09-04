@@ -1,0 +1,4 @@
+Spec files 2187  ·  files with a transaction double 285  ·  doubles 491
+  invokes 276  ·  declared-unreached 7  ·  rejects 0  ·  VOID 2
+
+OK — every spec that doubles db.transaction either runs the callback, rejects deliberately, or asserts the transaction is never reached. VOID 2 (ratchet 2).

@@ -1,0 +1,24 @@
+Running self-test for check-gated-reads...
+
+  (a) a permissioned route on a raw useQuery is caught → ok
+  (b) the same route with a useCan gate is not counted as ungated → ok
+  (c) useGatedQuery is not a useQuery call site at all → ok
+  (d) a universal route needs no gate → ok
+  (e) a PUBLIC route reached through a module-local helper is public, not permissioned → ok
+  (f) an in-service route needs no gate → ok
+  (g) a path built from a module BASE const still resolves → ok
+  (h) useInfiniteQuery and useSuspenseQuery are read call sites too → ok
+  (i) the generic form useQuery<T, E>({...}) is seen → ok
+  (j) a route absent from the contract is 'absent', never silently permissioned → ok
+  (k) a raw useQuery beside a gated one in the same hook is NOT laundered → ok
+  (l) an apostrophe in a comment does not swallow the queryFn → ok
+  (m) a bare useQuery import line is not a call site → ok
+  (p) a nested generic type argument does not hide the route → ok
+  (q) an object-literal type argument does not hide the route → ok
+  (r) a nested query-string template still resolves its route → ok
+  (s) a queryFn reached through a spread factory still resolves → ok
+  (o) a braced parameter type keeps the read attributed to its own hook → ok
+  (n) disagreeing sibling routes resolve to nothing rather than a guess → ok
+
+✔ 19 fixtures passed — check-gated-reads is live.
+

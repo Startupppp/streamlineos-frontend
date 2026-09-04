@@ -1,0 +1,139 @@
+Building import graph (scanning all TS/TSX files)...
+
+=== Dead Code Classification ===
+
+check-dead-code (knip findings): scanned 104 of 104 findings (100%) — the whole corpus
+check-dead-code (module graph): scanned 5408 of 5408 files (100%) — the whole corpus
+knip raw: binaries=1 dependencies=1 devDependencies=2 exports=36 files=4 types=60
+dependency groups read: unlisted, dependencies, devDependencies, optionalPeerDependencies, unresolved, binaries — 4 finding(s) over 114 declared dependencies
+
+DEAD (0):
+  (none)
+
+OUT-OF-SCOPE (2):
+  [file] .tmp-cookie.mjs  — generated, vendored or scratch path — not authored product source
+  [file] .tmp-decode-cookie.mjs  — generated, vendored or scratch path — not authored product source
+
+RETAINED-BY-CONTRACT (56):
+  [export] components/shared/index.ts:RichPanel  — named intentional barrel
+  [export] components/shared/index.ts:RichHero  — named intentional barrel
+  [export] components/shared/index.ts:RichQuickAction  — named intentional barrel
+  [export] components/shared/index.ts:RichSectionHeader  — named intentional barrel
+  [export] components/shared/index.ts:RichIconWell  — named intentional barrel
+  [export] components/shared/index.ts:RichPageContent  — named intentional barrel
+  [type] components/shared/index.ts:RichTone  — named intentional barrel
+  [type] components/shared/index.ts:RichWellTone  — named intentional barrel
+  [export] features/employee-self-service/index.ts:MyAttendancePage  — feature barrel extension point
+  [type] hooks/api/workflows.ts:TriggerType  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/workflows.ts:ApprovalStatus  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/workflows.ts:WorkflowSortField  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/workflows.ts:SortDirection  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/workflows.ts:WorkflowVersion  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/workflows.ts:WorkflowCursorPage  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/workflows.ts:WorkflowListParams  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/workflows.ts:ExecutionListParams  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/roles.ts:RoleRecord  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/roles.ts:RoleTemplate  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/user-api-tokens.ts:UserApiTokenPage  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/organization.ts:OrgMember  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/organization.ts:OrgMembersPage  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/accounting/ar-schema.ts:ArPaymentAllocation  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/payroll/setup-preview-schema.ts:ApprovalStage  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/payroll/setup-preview-schema.ts:CalendarPlan  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/payroll/runs-schema.ts:PayrollRunStatus  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/payroll/runs-schema.ts:PayrollWorkerType  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/payroll/runs-schema.ts:PayrollRunListItem  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/payroll/runs-schema.ts:PayrollRun  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/payroll/runs-schema.ts:PayrollChecklistItem  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/payroll/runs-schema.ts:RunEmployee  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/payroll/runs-schema.ts:RunEmployeesPage  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/payroll/ess-money-schema.ts:EssSalaryComponent  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/directory/workers-schema.ts:WorkerRecord  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/directory/workers-schema.ts:WorkersPageResponse  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/users/users-schema.ts:UserStats  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/accounting/core-coa-schema.ts:SetupStatus  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/user-api-tokens-schema.ts:UserApiTokenPage  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/subscription.ts:SubscriptionStatus  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/subscription.ts:SubscriptionPayment  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/subscription.ts:Subscription  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/accounting.ts:ListAccountsParams  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/module-access/index.ts:ModuleRolePermission  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/module-access/index.ts:ModuleMemberCandidate  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/module-access/index.ts:ModuleOwnership  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/module-access/index.ts:MemberGrant  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/module-access/index.ts:Pagination  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/module-access/index.ts:PaginatedResult  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/module-access/index.ts:CursorPaginatedResult  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/module-access/index.ts:AuditCursorPage  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/module-access/index.ts:ModuleMyPermissions  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/module-access/types.ts:PaginatedResult  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/hr/recruitment/interviews.ts:SlaReportStage  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/hr/recruitment/interviews.ts:SlaReportMonth  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/hr/recruitment/interviews.ts:SlaReportStageSummary  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+  [type] hooks/api/hr/recruitment/interviews.ts:BusyBlock  — type erased at the boundary: the inferred shape of a live data-layer contract, reached through the hook's return type rather than by name
+
+RETAINED-BY-CONVENTION (19):
+  [file] lib/backend-token-contract.ts  — AR-01 pre-implementation contract — consumers are being written in the token-authority lane; no importers yet is the expected state
+  [file] scripts/run-gate.mjs  — standalone executable script, not a module
+  [export] test-utils/backend-repo.ts:BACKEND_ROOT  — test-infrastructure utility; exports are available for all test suites
+  [export] test-utils/backend-repo.ts:backendAvailable  — test-infrastructure utility; exports are available for all test suites
+  [export] test-utils/index.ts:makeQueryClient  — test-infrastructure utility; exports are available for all test suites
+  [export] test-utils/index.ts:AllProviders  — test-infrastructure utility; exports are available for all test suites
+  [export] test-utils/index.ts:setViewport  — test-infrastructure utility; exports are available for all test suites
+  [export] test-utils/index.ts:setReducedMotion  — test-infrastructure utility; exports are available for all test suites
+  [export] test-utils/index.ts:BACKEND_ROOT  — test-infrastructure utility; exports are available for all test suites
+  [export] test-utils/index.ts:backendAvailable  — test-infrastructure utility; exports are available for all test suites
+  [export] test-utils/index.ts:backendPath  — test-infrastructure utility; exports are available for all test suites
+  [export] test-utils/index.ts:PERMISSION_CATALOG_PATH  — test-infrastructure utility; exports are available for all test suites
+  [export] test-utils/index.ts:backendPermissionNames  — test-infrastructure utility; exports are available for all test suites
+  [export] test-utils/index.ts:delegableModuleIds  — test-infrastructure utility; exports are available for all test suites
+  [export] test-utils/index.ts:memberDefaultPermissions  — test-infrastructure utility; exports are available for all test suites
+  [export] test-utils/index.ts:ownerOnlyOperations  — test-infrastructure utility; exports are available for all test suites
+  [export] test-utils/index.ts:permissionCatalog  — test-infrastructure utility; exports are available for all test suites
+  [type] test-utils/index.ts:ViewportName  — test-infrastructure utility; exports are available for all test suites
+  [type] test-utils/index.ts:VendoredPermissionCatalog  — test-infrastructure utility; exports are available for all test suites
+
+WIRE (0):
+  (none)
+
+DEFERRED (0):
+  (none)
+
+KEEP (15):
+  [dependencies] package.json:sharp  — Next.js's image optimiser loads sharp itself at runtime, by name, from the server bundle — there is no import of it in this repo and there must not be one. Removing it makes next/image fall back to the slow unoptimised path in production. Stale the day next/image is no longer used or Next bundles its own encoder
+  [devDependencies] package.json:@tailwindcss/typography  — same shape one line further down: globals.css line 3 is `@plugin "@tailwindcss/typography"`, a Tailwind 4 CSS-first plugin registration with no JS import anywhere. Stale the day that @plugin line is removed
+  [devDependencies] package.json:tailwindcss  — loaded by CSS, not by the module graph: globals.css line 1 is `@import "tailwindcss"`, resolved by @tailwindcss/postcss at build time. knip reads TypeScript imports and cannot see a CSS @import. Stale the day the project stops importing tailwind from CSS
+  [binaries] package.json:feedbucket-widget  — not a binary. knip parses package.json script strings as shell, and `check:cycles` passes madge `--exclude "node_modules|\.next|feedbucket-widget"`; the `|` characters read as pipeline separators, so the last alternative of the regex is reported as a command being run. It is a directory name inside a regex. Stale the day that --exclude pattern changes shape
+  [export] hooks/api/kb/page-ai.ts:useKbPageImprove  — the buffered POST /kb/pages/:id/ai/improve client, kept beside streamKbDocAi now that the KB page AI panel streams; the buffered route is still live and still published in the API contract, and this release does not delete a documented client the moment its own surface moves off it
+  [export] hooks/api/kb/page-ai.ts:useKbPageSuggestRelated  — the buffered POST /kb/pages/:id/ai/suggest-related client, kept beside streamKbDocAi now that the KB page AI panel streams; the buffered route is still live and still published in the API contract, and this release does not delete a documented client the moment its own surface moves off it
+  [export] hooks/api/kb/article-ai.ts:useKbArticleAsk  — the buffered POST /kb/articles/:id/ai/ask client, kept beside streamKbDocAi now that the KB article AI panel streams; the buffered route is still live and still published in the API contract, and this release does not delete a documented client the moment its own surface moves off it
+  [export] hooks/api/kb/article-ai.ts:useKbArticleImprove  — the buffered POST /kb/articles/:id/ai/improve client, kept beside streamKbDocAi now that the KB article AI panel streams; the buffered route is still live and still published in the API contract, and this release does not delete a documented client the moment its own surface moves off it
+  [export] hooks/api/kb/article-ai.ts:useKbArticleSuggestRelated  — the buffered POST /kb/articles/:id/ai/suggest-related client, kept beside streamKbDocAi now that the KB article AI panel streams; the buffered route is still live and still published in the API contract, and this release does not delete a documented client the moment its own surface moves off it
+  [export] hooks/api/meetings-ai.ts:useMeetingFollowUp  — the buffered POST /ai/meetings/follow-up client, deliberately kept beside streamMeetingFollowUp now that meeting-follow-up-panel streams; the buffered route returns a Zod-validated record this release does not stream, and a previous pass deleted a buffered hook before its surface had moved and broke the live panel
+  [export] hooks/api/offset-page-schema.ts:offsetPageContract  — the runtime Zod validator for the counted offset envelope, deliberately ahead of its callers and NOT yet wired to one. Its sibling TYPE, OffsetPage<T>, is consumed by 20+ hooks as the generic on apiClient.get<OffsetPage<T>>(...).items -- so the shape is asserted at COMPILE time everywhere and validated at RUNTIME nowhere, which is the same unarbitrated-response gap that lets a backend shape change reach a component as undefined. Wiring it means switching those hooks from apiClient.get<T> to a contract-parsing read, which changes runtime behaviour on live data (a drifted field would begin throwing where it currently renders blank) and is not a merge-eve change. Delete this entry the day a hook parses with it, or the day the offset envelope is retired -- either makes it stale and this gate will say so.
+  [type] lib/command-catalog.ts:NotificationCommandName  — keyof typeof NOTIFICATION_COMMANDS — available for consumers that need a typed command-name union without importing the full catalog
+  [type] lib/command-catalog.ts:ChatCommandName  — keyof typeof CHAT_COMMANDS — available for consumers that need a typed command-name union without importing the full catalog
+  [type] lib/command-catalog.ts:CommandDomain  — keyof typeof ALL_COMMANDS — available for consumers that iterate over command domains
+  [type] features/hr/expenses/expense-constants.ts:ReceiptFileKind  — re-exported type from lib/expense-receipts; provides stable import path for consumers that need the kind union without importing the full receipts module
+
+EXCLUDED (12):
+  [export] hooks/api/leads.ts:useCheckLeadDuplicates  — CRM/Inventory excluded from PRD scope; not counted in dead-code baseline
+  [export] hooks/api/crm/autonomy.ts:useAutonomyReviewQueue  — CRM/Inventory excluded from PRD scope; not counted in dead-code baseline
+  [export] hooks/api/crm/autonomy.ts:useMarkReviewed  — CRM/Inventory excluded from PRD scope; not counted in dead-code baseline
+  [export] hooks/api/crm/autonomy.ts:useAutonomySettings  — CRM/Inventory excluded from PRD scope; not counted in dead-code baseline
+  [export] hooks/api/crm/autonomy.ts:useUpdateAutonomySettings  — CRM/Inventory excluded from PRD scope; not counted in dead-code baseline
+  [export] hooks/api/crm/activity-timeline.ts:useActivityParticipants  — CRM/Inventory excluded from PRD scope; not counted in dead-code baseline
+  [export] hooks/api/crm/activity-timeline.ts:useLogActivity  — CRM/Inventory excluded from PRD scope; not counted in dead-code baseline
+  [type] types/crm/quotes.ts:QuoteFilters  — CRM/Inventory excluded from PRD scope; not counted in dead-code baseline
+  [type] hooks/api/inventory/reports.ts:StockSummaryParams  — CRM/Inventory excluded from PRD scope; not counted in dead-code baseline
+  [type] hooks/api/inventory/reports.ts:ReorderReportParams  — CRM/Inventory excluded from PRD scope; not counted in dead-code baseline
+  [type] hooks/api/inventory/reports-types.ts:StockSummaryParams  — CRM/Inventory excluded from PRD scope; not counted in dead-code baseline
+  [type] hooks/api/inventory/reports-types.ts:ReorderReportParams  — CRM/Inventory excluded from PRD scope; not counted in dead-code baseline
+
+UNCLASSIFIED (0):
+  (none)
+
+=== Baseline: files=0 exports=0 ===
+=== Current:  files=0 exports=0 ===
+
+PASS: dead code within baseline.

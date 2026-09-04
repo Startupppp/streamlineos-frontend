@@ -1,0 +1,12 @@
+{
+  "selfTest": true,
+  "pass": true,
+  "checks": {
+    "blocks_when_snapshot_is_stale": true,
+    "reports_fixture_drift_arithmetic": true,
+    "reads_the_real_chain": true,
+    "allows_when_snapshot_is_current": true,
+    "allows_when_explicitly_forced": true,
+    "allows_when_snapshot_is_ahead": true
+  }
+}

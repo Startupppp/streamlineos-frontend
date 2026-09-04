@@ -1,0 +1,33 @@
+check-api-contract-registry: registry v1 — 3662 operations (102 published, 3560 internal), 24 outbox events, 23 outbound webhook events (23 published)
+  REPORT: 14 retained entry/entries (operation removed from OpenAPI):
+    GET /settings/permissions
+    POST /ai/meeting-prep
+    GET /product-management/workspaces
+    POST /product-management/workspaces
+    GET /product-management/workspaces/{pmWorkspaceId}
+    PATCH /product-management/workspaces/{pmWorkspaceId}
+    DELETE /product-management/workspaces/{pmWorkspaceId}
+    GET /product-management/workspaces/{pmWorkspaceId}/members
+    POST /product-management/workspaces/{pmWorkspaceId}/members
+    DELETE /product-management/workspaces/{pmWorkspaceId}/members/{pmWorkspaceMembershipId}
+    GET /whiteboards
+    GET /billing/razorpay
+    POST /billing/razorpay
+    PATCH /billing/razorpay
+  These are retained on purpose: check-contract-breaking-change detects a removal
+  by finding exactly this state. Do not delete them to quieten the report — clear
+  each one by satisfying its deprecation window or reclassifying it as internal.
+  REPORT: 9 webhook event name(s) reached only through a variable dispatch,
+  declared by hand in contracts/published-contract-terms.json against the file that proves them:
+    survey.assessment.failed  <- src/modules/surveys/dto/survey-automation.schemas.ts
+    survey.assessment.passed  <- src/modules/surveys/dto/survey-automation.schemas.ts
+    survey.collector.completed_quota  <- src/modules/surveys/dto/survey-automation.schemas.ts
+    survey.lead.created  <- src/modules/surveys/dto/survey-automation.schemas.ts
+    survey.live.ended  <- src/modules/surveys/dto/survey-automation.schemas.ts
+    survey.live.started  <- src/modules/surveys/dto/survey-automation.schemas.ts
+    survey.published  <- src/modules/surveys/dto/survey-automation.schemas.ts
+    survey.response.started  <- src/modules/surveys/dto/survey-automation.schemas.ts
+    survey.response.submitted  <- src/modules/surveys/dto/survey-automation.schemas.ts
+  OK — all 3662 operations are classified
+  OK — all 102 published operations carry a version or dated deprecation window, a named consumer, an idempotency/replay rule and a parameter baseline
+  OK — all 23 outbound webhook event names are catalogued and versioned

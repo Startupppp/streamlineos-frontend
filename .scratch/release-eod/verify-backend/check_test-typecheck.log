@@ -1,0 +1,1 @@
+check-test-typecheck: test/ typechecks clean under the repo's strict settings (tsconfig.test.json). This is a hard gate at zero, not a baseline.

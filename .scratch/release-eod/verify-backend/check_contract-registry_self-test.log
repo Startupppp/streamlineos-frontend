@@ -1,0 +1,28 @@
+Running self-test...
+  [pass] all-classified-passes — all ops in registry produce 0 violations
+  [pass] missing-entries-detected — 2 ops absent from registry produce 2 violations
+  [pass] extra-op-fail-closed — extra op absent from registry → fail-closed (1 violation)
+  [pass] invalid-classification-flagged — invalid classification value produces a violation
+  [pass] duplicate-operationid-detected — duplicate operationId is reported
+  [pass] no-duplicate-passes — unique operationIds produce 0 duplicates
+  [pass] stale-entries-detected — registry entry for removed op is flagged as stale
+  [pass] count-by-classification — counts by classification are accurate
+  [pass] tombstone-classification-validated(internl) — a retained entry's classification is validated even though no live operation exists
+  [pass] tombstone-classification-validated(null) — a retained entry's classification is validated even though no live operation exists
+  [pass] tombstone-classification-validated(published ) — a retained entry's classification is validated even though no live operation exists
+  [pass] tombstone-classification-validated(Internal) — a retained entry's classification is validated even though no live operation exists
+  [pass] valid-entries-pass — well-formed entries produce 0 violations
+  [pass] invalid-override-flagged — an unrecognised classificationOverride is a violation
+  [pass] complete-published-entry-passes — a fully specified published entry produces 0 gaps
+  [pass] missing-idempotency-flagged — a published operation with no replay rule is a gap
+  [pass] missing-baseline-flagged — a published operation with no parameter baseline is a gap
+  [pass] no-consumer-flagged — a published operation naming no consumer is a gap
+  [pass] unversioned-without-window-flagged — no version and no dated deprecation window is a gap
+  [pass] deprecation-window-satisfies-versioning — a dated deprecation window is an accepted alternative to a version
+  [pass] path-version-mismatch-flagged — a registry version that disagrees with the path's /vN/ segment is a gap
+  [pass] internal-entries-exempt-from-terms — internal operations are not held to published contract terms
+  [pass] complete-webhook-passes — a versioned webhook event with a named consumer produces 0 gaps
+  [pass] unversioned-webhook-flagged — an unversioned published webhook event is a gap
+  [pass] webhook-classification-validated — an unrecognised webhook classification is a gap
+
+SELF-TEST PASSED

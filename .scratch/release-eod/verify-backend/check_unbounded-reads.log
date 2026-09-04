@@ -1,0 +1,24 @@
+Self-tests passed.
+Scanned 2883 service files across 3 roots:
+  src/modules : 2327 file(s) across 74 modules
+  src/common  : 192 file(s)
+  src/db      : 364 file(s)
+  offset pagination : 22
+  unbounded reads   : 765
+  unordered paging  : 0 — .offset() with no ORDER BY repeats and drops rows between pages
+
+Classification summary (by file):
+  offset     EXCLUDED-MODULE   : 14 file(s)
+  offset     FALSE-POSITIVE    : 2 file(s)
+  unbounded  FALSE-POSITIVE    : 319 file(s)
+  unbounded  ACTIONABLE        : 7 file(s)
+  unbounded  EXCLUDED-MODULE   : 53 file(s)
+
+Actionable instance counts (target: zero):
+  offset pagination : 0
+  unbounded reads   : 10
+
+Suppressed by a FALSE-POSITIVE justification: 651 unbounded read(s) [ceiling 651]
+
+OK — no gate violations.
+Ratchet progress: offset ACTIONABLE=0 (target 0) · unbounded ACTIONABLE=10 (target 0)

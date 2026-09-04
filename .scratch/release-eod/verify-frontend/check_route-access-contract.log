@@ -1,0 +1,5 @@
+Navigation source files   26
+Permission keys checked   204 (17 excluded as access rungs or non-permissions)
+x-permission in contract  633
+
+✔  every route-access permission names an endpoint in the generated contract.

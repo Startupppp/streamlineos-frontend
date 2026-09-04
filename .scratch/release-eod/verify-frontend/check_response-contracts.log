@@ -1,0 +1,11 @@
+Runtime response contracts at the fetch seam
+
+  Seam calls scanned:        2666   (hooks app features components lib)
+  Carrying a contract:       86   (3.2%)
+  Unparsed:                  2580   (baseline 2594)
+  Distinct routes:           1964, of which 74 are parsed somewhere
+  Unresolvable route sites:  18 in 15 file(s)
+  Risk-list routes held:     60
+
+PASS: 86/2666 parsed, unparsed at or below the recorded baseline.
+NOTE: 97.8% of the seam is still an unchecked cast. This gate freezes that debt; it does not retire it.

@@ -1,0 +1,12 @@
+Declared tables 873  ·  declared constraints/indexes 4951
+Live indexes 4372  ·  live constraints 5538  ·  tables compared 872  ·  declared-but-absent tables 1
+Reported, never failed — name drift 365  ·  partial-predicate mismatch 36  ·  live-but-undeclared 1271
+Integrity findings 137 (1 new)  ·  performance findings 52 (1 new)  ·  baseline 187
+
+FAIL — 1 declared constraint(s) do not exist at journal head. Duplicates or orphans are insertable and any 23505/23503 handler naming them is unreachable:
+  INTEGRITY public.inv_stock_levels.uniq_inv_stock_levels_natural_key — live "uniq_inv_stock_levels_natural_key" is on (org_id,product_variant_id,location_id,<expr>,<expr>,<expr>,ownership), not the declared (org_id,product_variant_id,location_id,<expr>,<expr>), and nothing live enforces uniqueness over (org_id,product_variant_id,location_id,<expr>,<expr>)
+
+FAIL — 1 declared index(es) do not exist at journal head:
+  PERFORMANCE public.inv_stock_transactions.idx_inv_txn_created — no live index on (created_at) and none covering it as a leading prefix
+
+Fix: write the migration and register it in migrations/meta/_journal.json. A .sql under migrations/pending/ never runs — that is the whole defect class this gate exists for.

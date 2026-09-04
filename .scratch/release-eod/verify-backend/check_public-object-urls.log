@@ -1,0 +1,12 @@
+check-public-object-urls: scanned 3688 source file(s)
+  public-base references   9 (9 declared)
+  upload-result url fields 0
+
+DECLARED — each reads a public base for a stated non-minting reason:
+  SKIP  src/common/region/region.config.ts  — reads the per-region public bases into the region binding; no key is ever concatenated onto them here
+  SKIP  src/config/env.validation.ts  — declares the env vars; a Zod schema entry cannot build a URL
+  SKIP  src/modules/email/branding.ts  — getEmailLogoUrl builds a public URL for a static, operator-configured brand asset (EMAIL_LOGO_PATH, default email-assets/logo-v2.png). No tenant data and no uploaded object reaches it, and an email client cannot present a signed URL
+  SKIP  src/modules/feedbucket/feedbucket-ai.service.ts  — getAllowedStorageHost derives a hostname to ALLOWLIST an outbound fetch of a legacy stored screenshot URL; it produces a host, not a URL, and new screenshots are read from the object store by key
+  SKIP  src/modules/storage/storage.service.ts  — getFileKeyFromUrl PARSES a stored legacy URL back to its key; it strips the base, never appends to it. The minting counterpart (publicUrlFor) was deleted in ticket 33 and storage-tenant-private.spec.ts pins its absence
+
+OK — no upload path mints a permanent public URL, and no upload result carries one.
