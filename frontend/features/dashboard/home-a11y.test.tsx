@@ -151,12 +151,10 @@ const dashboardAccess = {
   canViewCrmReports: true,
   canViewTickets: true,
   canViewPayrollSelf: true,
-  canViewPayrollAdmin: false,
   canViewOnboardingDocsSummary: true,
   canViewExpenses: true,
   canCreateExpenses: true,
   canApproveExpenses: false,
-  canViewInterviews: true,
   canViewSignEnvelopes: true,
 };
 

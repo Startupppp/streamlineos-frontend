@@ -28,12 +28,10 @@ export interface DashboardAccess {
   canViewCrmReports: boolean;
   canViewTickets: boolean;
   canViewPayrollSelf: boolean;
-  canViewPayrollAdmin: boolean;
   canViewOnboardingDocsSummary: boolean;
   canViewExpenses: boolean;
   canCreateExpenses: boolean;
   canApproveExpenses: boolean;
-  canViewInterviews: boolean;
   canViewSignEnvelopes: boolean;
 }
 
@@ -73,12 +71,10 @@ export function useDashboardAccess(): DashboardAccess {
       canViewCrmReports: can("crm:reports:view"),
       canViewTickets: canSection("recent-activity"),
       canViewPayrollSelf: can("self:payroll"),
-      canViewPayrollAdmin: can("payroll:runs:view"),
       canViewOnboardingDocsSummary: can("hr:onboarding:manage"),
       canViewExpenses: can("hr:expenses:view"),
       canCreateExpenses: can("hr:expenses:create"),
       canApproveExpenses: can("hr:expenses:approve"),
-      canViewInterviews: can("hr:interviews:view"),
       canViewSignEnvelopes: can("sign:envelope:view"),
     };
   }, [data, isLoading, refetch, enabledModules]);

@@ -302,6 +302,8 @@ export function useBulkUpdateTickets(projectId: number) {
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.tickets({ projectId }) });
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.columnCounts(projectId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.myIssues() });
     },
   });
 }

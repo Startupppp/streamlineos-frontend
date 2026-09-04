@@ -34,13 +34,6 @@ const ExpensesWidget = dynamic(
     })),
   { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
 );
-const RecruitmentWidget = dynamic(
-  () =>
-    import("@/features/dashboard/recruitment-widget").then((m) => ({
-      default: m.RecruitmentWidget,
-    })),
-  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
-);
 const AlertsWidget = dynamic(
   () =>
     import("@/features/dashboard/alerts-widget").then((m) => ({
@@ -144,9 +137,6 @@ export function HomeWidgetGrid({
       </HomeSectionBoundary>
       <HomeSectionBoundary sectionLabel="Expenses">
         <ExpensesWidget />
-      </HomeSectionBoundary>
-      <HomeSectionBoundary sectionLabel="Recruitment">
-        <RecruitmentWidget />
       </HomeSectionBoundary>
     </motion.div>
   );

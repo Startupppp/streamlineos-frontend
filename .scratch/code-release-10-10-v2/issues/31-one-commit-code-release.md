@@ -17,12 +17,12 @@
 - [ ] **PRD-C018** — Run disposable-database E2E for Organization/RBAC, Home, Settings, HRMS, Payroll, Build, Billing, Payments, Accounting, Chat, Calendar, Notifications, Knowledge, Workflows and Inbox/mail.
 - [x] **PRD-C019** — Record each command, release SHA, database identity, dataset shape, pass/fail/skip counts and failure artifacts.
 - [x] **PRD-C020** — At the same commit run backend build/typecheck, spec typecheck, frontend typecheck, OpenAPI freshness, cycle, file-size, dead-code, tenant-isolation, RLS, permission, cache, outbox, idempotency, migration, vulnerability, license and SBOM gates.
-- [ ] **PRD-C021** — Resolve every code-level P0/P1 finding and assign owner/deadline to accepted lower-severity residual risks.
+- [x] **PRD-C021** — Resolve every code-level P0/P1 finding and assign owner/deadline to accepted lower-severity residual risks.
 - [ ] **PRD-C156** — Every unchecked item under **Immediate code-level release candidate** is complete with fresh evidence.
 - [x] **PRD-C157** — CRM/Inventory remain excluded and public landing visuals/animations remain unchanged.
 - [ ] **PRD-C158** — Backend/frontend builds, typechecks, focused tests, disposable E2E and architecture gates pass at one commit.
 - [x] **PRD-C159** — Two empty bootstraps and an interrupted-then-resumed bootstrap produce the same expected database catalog from the new authorized baseline; no legacy watermark upgrade claim is required.
-- [ ] **PRD-C160** — No unresolved code-level P0/P1 finding remains.
+- [x] **PRD-C160** — No unresolved code-level P0/P1 finding remains.
 - [ ] **PRD-C161** — Release authority records commit, evidence, accepted code-level residual risks and date.
 
 ## Completion evidence

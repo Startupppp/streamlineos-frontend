@@ -4,7 +4,7 @@ import { renderHook, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
 import type { ReactNode } from "react";
-import { useCreateTicket, useDeleteTicket } from "./ticket-mutations";
+import { useCreateTicket, useDeleteTicket, useBulkUpdateTickets } from "./ticket-mutations";
 import { useUpdateSprint } from "./sprints";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -137,6 +137,47 @@ describe("useDeleteTicket — invalidation contract", () => {
 
     await act(async () => {
       await result.current.mutateAsync({ ticketId: 55 });
+    });
+
+    const invalidatedKeys = invalidateSpy.mock.calls.map(
+      (c) => JSON.stringify((c[0] as { queryKey: unknown }).queryKey),
+    );
+    expect(invalidatedKeys).toContain(
+      JSON.stringify(queryKeys.dashboard.myIssues()),
+    );
+  });
+});
+
+describe("useBulkUpdateTickets — invalidation contract", () => {
+  let client: QueryClient;
+  let invalidateSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    client = makeClient();
+    invalidateSpy = jest.spyOn(client, "invalidateQueries");
+  });
+
+  it("invalidates projectReports.all so sprint burndown reflects bulk status/sprint changes", async () => {
+    const { result } = renderHook(() => useBulkUpdateTickets(42), { wrapper: wrap(client) });
+
+    await act(async () => {
+      await result.current.mutateAsync({ ticketIds: [1, 2], status: "DONE" });
+    });
+
+    const invalidatedKeys = invalidateSpy.mock.calls.map(
+      (c) => JSON.stringify((c[0] as { queryKey: unknown }).queryKey),
+    );
+    expect(invalidatedKeys).toContain(
+      JSON.stringify(queryKeys.projectReports.all),
+    );
+  });
+
+  it("invalidates dashboard.myIssues() so My Issues widget reflects bulk assignee/status changes", async () => {
+    const { result } = renderHook(() => useBulkUpdateTickets(42), { wrapper: wrap(client) });
+
+    await act(async () => {
+      await result.current.mutateAsync({ ticketIds: [1, 2], assigneeId: "user-abc" });
     });
 
     const invalidatedKeys = invalidateSpy.mock.calls.map(

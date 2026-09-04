@@ -82,7 +82,6 @@ describe("every Home widget is individually contained", () => {
     "MyAttendanceWidget",
     "PayrollWidget",
     "ExpensesWidget",
-    "RecruitmentWidget",
     "LeavesTodayWidget",
     "TeamAttendanceWidget",
     "PendingApprovalsWidget",
@@ -116,5 +115,20 @@ describe("every Home widget is individually contained", () => {
         .includes("HomeSectionBoundary");
     });
     expect(unwrapped).toEqual([]);
+  });
+
+  it("does not mount RecruitmentWidget on Home (module destination, not universal work)", () => {
+    expect(source).not.toContain("<RecruitmentWidget");
+  });
+
+  it("keeps payroll administration off Home while preserving payroll self-service", () => {
+    const payrollWidget = readFileSync(
+      resolve(__dirname, "payroll-widget.tsx"),
+      "utf8",
+    );
+    expect(payrollWidget).not.toContain("useCommandCenter");
+    expect(payrollWidget).not.toContain("/payroll/runs");
+    expect(payrollWidget).toContain("PayrollSelfCard");
+    expect(payrollWidget).toContain("/me/pay");
   });
 });

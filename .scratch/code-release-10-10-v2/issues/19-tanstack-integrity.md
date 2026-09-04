@@ -13,7 +13,7 @@
 - [x] **PRD-C007** — **TanStack:** complete v2 ticket 19's permissioned-read, required-identifier, query-key, pagination, runtime parsing, cancellation, invalidation and optimistic-update criteria.
 - [x] **PRD-C095** — Verify one hierarchical query-key factory per domain includes organization, subject, scope, filters, sort and cursor dimensions as applicable.
 - [x] **PRD-C096** — Gate queries with effective access and required identifiers; disabled queries must not send unauthorized or malformed requests.
-- [ ] **PRD-C097** — Verify mutations invalidate or update every affected list/detail/count/dashboard key and roll back optimistic state safely on failure.
+- [x] **PRD-C097** — Verify mutations invalidate or update every affected list/detail/count/dashboard key and roll back optimistic state safely on failure.
 - [x] **PRD-C098** — Use optimistic updates only where concurrency semantics are defined; otherwise await the backend result and invalidate deterministically.
 - [x] **PRD-C099** — Verify cursor pagination does not duplicate/skip records and changing filter/sort resets pagination correctly.
 - [x] **PRD-C100** — Verify loading, background-refresh, empty, partial-error, full-error, offline, permission-denied and revoked-access states.

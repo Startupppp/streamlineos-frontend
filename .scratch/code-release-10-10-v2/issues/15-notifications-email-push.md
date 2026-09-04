@@ -10,7 +10,7 @@
 
 ## Acceptance criteria
 
-- [ ] **PRD-C132** — Re-verify provider-response schemas, tenant-fair delivery/backpressure, consent and suppression enforcement, durable retry/DLQ behavior, offline/revocation UI and cross-tenant notification delivery E2E at the release commit.
+- [x] **PRD-C132** — Re-verify provider-response schemas, tenant-fair delivery/backpressure, consent and suppression enforcement, durable retry/DLQ behavior, offline/revocation UI and cross-tenant notification delivery E2E at the release commit.
 
 ## Completion evidence
 
