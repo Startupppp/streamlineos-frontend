@@ -39,7 +39,17 @@ import { getStatusBadgeClass } from "@/components/shared/ticket-status-badge";
 import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import { renderFormattedContent } from "./formatted-message-content";
 import { TicketPill, CommentPill } from "./chat-entity-pills";
-import { MessageActions } from "./chat-message-actions";
+/**
+ * The hover toolbar renders for every message on the screen but its root is
+ * `absolute … opacity-0 group-hover:opacity-100 pointer-events-none`, so it
+ * occupies no layout box and is invisible until the row is hovered. That makes
+ * `loading: null` free of both layout shift and visible flash, while taking the
+ * toolbar out of the eager message-rendering path.
+ */
+const MessageActions = dynamic(
+  () => import("./chat-message-actions").then((m) => ({ default: m.MessageActions })),
+  { ssr: false, loading: () => null },
+);
 
 const ConvertToTaskDialog = dynamic(
   () =>

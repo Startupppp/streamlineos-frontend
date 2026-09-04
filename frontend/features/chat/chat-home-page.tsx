@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { useChatChannels } from "@/hooks/api/chat-core-read";
 import { useChatGlobalNotifications } from "@/hooks/api/chat-notifications";
 import { ChannelSidebar } from "@/features/chat/channel-sidebar";
-import { MessagePanel } from "@/features/chat/message-panel";
+
 import { EmptyChatState } from "@/features/chat/empty-chat-state";
 import { ChatAblyProvider } from "@/features/chat/ably-provider";
 import { useChatSidebarCollapse } from "@/features/chat/chat-shell";
@@ -19,6 +19,26 @@ import {
   ChatPanelFallback,
 } from "@/features/chat/chat-lazy-fallbacks";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+
+/**
+ * The message panel is the heaviest subtree in chat -- panel view, message list,
+ * bubbles, the composer and their data hooks -- and on a bare `/chat` landing it
+ * is never mounted at all: `activeChannelId` initialises only from `?channel=`,
+ * nothing auto-selects a first channel, and with no channel the branch below
+ * renders `EmptyChatState` instead. Loading it eagerly therefore put the entire
+ * conversation surface in the first-load chunk to render a zero-state.
+ *
+ * `ssr: false` with the panel skeleton keeps the `?channel=` deep link honest:
+ * that path pays one chunk fetch and shows the same skeleton the panel already
+ * uses while its own data loads, rather than a blank column.
+ */
+const MessagePanel = dynamic(
+  () =>
+    import("@/features/chat/message-panel").then((m) => ({
+      default: m.MessagePanel,
+    })),
+  { ssr: false, loading: () => <ChatPanelFallback label="Loading conversation" /> },
+);
 
 const ChannelInfoPanel = dynamic(
   () =>
