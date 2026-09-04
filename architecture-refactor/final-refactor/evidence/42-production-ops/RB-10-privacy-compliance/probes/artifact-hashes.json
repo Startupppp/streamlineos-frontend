@@ -9,6 +9,17 @@
   "verifiedBy": "cd streamlineos-backend && npm run check:evidence-seal",
   "fileCount": 1,
   "hashes": {
-    "search-vector-deletion-probe.sql": "2c04be67f88d8b4b3396ffa3fd248f5d9d01b74e97fbac35590a829701699adb"
+    "search-vector-deletion-probe.sql": "d174dd26a22efe3df32426afb876e656b288d9b47755f17d80a06ece9092c591"
+  },
+  "reseal2026-09-04": {
+    "date": "2026-09-04",
+    "reason": "Probe script updated during code-release-10-10-v2 gate closure.",
+    "previousHashesMatched": 0,
+    "previousHashesMoved": 1,
+    "filesChanged": [
+      "search-vector-deletion-probe.sql"
+    ],
+    "filesCarriedForwardUnchanged": [],
+    "note": "Re-sealed as part of code-release-10-10-v2 gate closure. All files verified to not contain secrets before resealing."
   }
 }

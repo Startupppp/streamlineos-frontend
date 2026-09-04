@@ -1,0 +1,2 @@
+check-drop-column-safety: 685 migration file(s), 126 dropped column(s), 350 schema file(s)
+  OK — no dropped column is still declared in the Drizzle schema

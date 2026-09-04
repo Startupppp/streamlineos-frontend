@@ -1,0 +1,13 @@
+check-test-typecheck: all test files typecheck clean under the repo's strict settings
+(tsconfig.test.json). This is a HARD GATE at zero, not a baseline — nothing is
+suppressed and nothing is ratcheted.
+
+=========================== NOT THIS GATE'S SCOPE ===========================
+4 error(s) in 1 file(s) OUTSIDE the test globs.
+These belong to `pnpm type-check`, which fails on them. Listed here so they
+are never silently swallowed, but they do not decide this gate's exit code.
+=============================================================================
+  .next/dev/types/routes.d.ts(715,8): error TS1109: Expression expected.
+  .next/dev/types/routes.d.ts(716,6): error TS1109: Expression expected.
+  .next/dev/types/routes.d.ts(717,4): error TS1109: Expression expected.
+  .next/dev/types/routes.d.ts(723,1): error TS1160: Unterminated template literal.

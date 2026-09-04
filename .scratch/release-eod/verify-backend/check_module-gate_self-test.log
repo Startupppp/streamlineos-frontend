@@ -1,0 +1,16 @@
+Running --self-test...
+
+  PASS  parseRegistry: finds 2 entries
+  PASS  parseRegistry: alpha is planGated
+  PASS  parseRegistry: beta is not planGated
+  PASS  WRONG_MODULE fires when @RequireModule says 'build' but folder is 'alpha'
+  PASS  No error when @RequireModule is correct
+  PASS  MISSING_GATE fires for plan-gated module with no @RequireModule
+  PASS  Class-level @Public() suppresses MISSING_GATE
+  PASS  No error for non-plan-gated module with no @RequireModule
+  PASS  Allowlisted file is skipped
+  PASS  STALE_ALLOWLIST fires for non-existent allowlist entry
+  PASS  VACUITY fires when controller count is below minimum
+  PASS  Anti-vacuity: real codebase has at least 200 controllers (found 392)
+
+--self-test: 12 passed, 0 failed

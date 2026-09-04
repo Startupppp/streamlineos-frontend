@@ -1,0 +1,10 @@
+  FAIL: an unreadable subtree reports reason=scan-error
+file:///D:/projects/personal/Streamlineos/frontend/scripts/check-file-sizes.mjs:488
+      assert("the scan error names the directory it could not read", unreadable.message.includes("features"));
+                                                                                        ^
+
+TypeError: Cannot read properties of undefined (reading 'includes')
+    at runSelfTests (file:///D:/projects/personal/Streamlineos/frontend/scripts/check-file-sizes.mjs:488:89)
+    at file:///D:/projects/personal/Streamlineos/frontend/scripts/check-file-sizes.mjs:599:49
+
+Node.js v24.15.0

@@ -1,0 +1,4 @@
+Rule 1 — well-formed: 704 permissions, 14 delegable modules, 50 member defaults, 9 owner-only operations.
+Rule 2 — every one of the 633 route-bound permissions in contracts/openapi.json is catalogued.
+Rule 3 — DRIFT: contracts/permission-catalog.json is not what the backend produces now.
+  Run `pnpm generate:permission-catalog` and commit the result.

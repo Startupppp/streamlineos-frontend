@@ -8,10 +8,12 @@
 
 **Source:** `architecture-refactor/PRD-10-10-CODE-RELEASE-TODO.md`
 
+**Human gate:** H08-H11 in `architecture-refactor/decisions/CODE-RELEASE-HUMAN-INPUTS.md`.
+
 ## Acceptance criteria
 
-- [ ] **PRD-C123** — Reconstruct current-head Build/PM evidence across workspace/project/ticket schema, tenant and record authorization, bounded boards/backlogs/search, cursor and cache contracts, async/realtime workflows, frontend states, folder cohesion and representative E2E.
-- [ ] **PRD-C124** — Reconstruct current-head Workflow evidence across definition/version/execution schema, permission rung, bounded execution history, idempotent queue/outbox processing, retry/DLQ/cancellation, secrets/redaction, frontend states and representative E2E.
+- [x] **PRD-C123** — Reconstruct current-head Build/PM evidence across workspace/project/ticket schema, tenant and record authorization, bounded boards/backlogs/search, cursor and cache contracts, async/realtime workflows, frontend states, folder cohesion and representative E2E.
+- [x] **PRD-C124** — Reconstruct current-head Workflow evidence across definition/version/execution schema, permission rung, bounded execution history, idempotent queue/outbox processing, retry/DLQ/cancellation, secrets/redaction, frontend states and representative E2E.
 
 ## Completion evidence
 

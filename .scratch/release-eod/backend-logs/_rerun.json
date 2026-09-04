@@ -1,0 +1,215 @@
+{
+  "label": "backend",
+  "results": [
+    {
+      "gate": "check:alert-ack",
+      "exitCode": 2,
+      "durationMs": 971,
+      "timedOut": false
+    },
+    {
+      "gate": "check:audit-log-privileges",
+      "exitCode": 2,
+      "durationMs": 996,
+      "timedOut": false
+    },
+    {
+      "gate": "check:bare-throw",
+      "exitCode": 1,
+      "durationMs": 3112,
+      "timedOut": false
+    },
+    {
+      "gate": "check:baseline-integrity:self-test",
+      "exitCode": 1,
+      "durationMs": 1084,
+      "timedOut": false
+    },
+    {
+      "gate": "check:benchmark-manifest",
+      "exitCode": 1,
+      "durationMs": 1164,
+      "timedOut": false
+    },
+    {
+      "gate": "check:cycles",
+      "exitCode": 1,
+      "durationMs": 540580,
+      "timedOut": false
+    },
+    {
+      "gate": "check:dead-code",
+      "exitCode": 0,
+      "durationMs": 26411,
+      "timedOut": false
+    },
+    {
+      "gate": "check:declaration-column-drift",
+      "exitCode": 2,
+      "durationMs": 12922,
+      "timedOut": false
+    },
+    {
+      "gate": "check:declaration-constraint-drift",
+      "exitCode": 2,
+      "durationMs": 12471,
+      "timedOut": false
+    },
+    {
+      "gate": "check:evidence-seal",
+      "exitCode": 1,
+      "durationMs": 3595,
+      "timedOut": false
+    },
+    {
+      "gate": "check:file-sizes:self-test",
+      "exitCode": 1,
+      "durationMs": 3164,
+      "timedOut": false
+    },
+    {
+      "gate": "check:gate-wiring",
+      "exitCode": 0,
+      "durationMs": 3728,
+      "timedOut": false
+    },
+    {
+      "gate": "check:gate-wiring:self-test",
+      "exitCode": 0,
+      "durationMs": 3404,
+      "timedOut": false
+    },
+    {
+      "gate": "check:licenses",
+      "exitCode": 0,
+      "durationMs": 6132,
+      "timedOut": false
+    },
+    {
+      "gate": "check:migration-immutability",
+      "exitCode": 1,
+      "durationMs": 4134,
+      "timedOut": false
+    },
+    {
+      "gate": "check:module-di:self-test",
+      "exitCode": 1,
+      "durationMs": 3175,
+      "timedOut": false
+    },
+    {
+      "gate": "check:n1-growing-loops:self-test",
+      "exitCode": 1,
+      "durationMs": 3663,
+      "timedOut": false
+    },
+    {
+      "gate": "check:openapi-coverage",
+      "exitCode": 1,
+      "durationMs": 3598,
+      "timedOut": false
+    },
+    {
+      "gate": "check:outbox-consumers:self-test",
+      "exitCode": 1,
+      "durationMs": 3141,
+      "timedOut": false
+    },
+    {
+      "gate": "check:over-300",
+      "exitCode": 1,
+      "durationMs": 4230,
+      "timedOut": false
+    },
+    {
+      "gate": "check:placement-bypass:self-test",
+      "exitCode": 1,
+      "durationMs": 3221,
+      "timedOut": false
+    },
+    {
+      "gate": "check:query-projections",
+      "exitCode": 1,
+      "durationMs": 20686,
+      "timedOut": false
+    },
+    {
+      "gate": "check:referential-action-drift",
+      "exitCode": 2,
+      "durationMs": 12360,
+      "timedOut": false
+    },
+    {
+      "gate": "check:replay-ledger",
+      "exitCode": 2,
+      "durationMs": 3558,
+      "timedOut": false
+    },
+    {
+      "gate": "check:replay-ledger:self-test",
+      "exitCode": 2,
+      "durationMs": 2988,
+      "timedOut": false
+    },
+    {
+      "gate": "check:route-budgets-http",
+      "exitCode": 1,
+      "durationMs": 2949,
+      "timedOut": false
+    },
+    {
+      "gate": "check:set-null-column-lists",
+      "exitCode": 2,
+      "durationMs": 9811,
+      "timedOut": false
+    },
+    {
+      "gate": "check:spec-typecheck",
+      "exitCode": 0,
+      "durationMs": 35886,
+      "timedOut": false
+    },
+    {
+      "gate": "check:tenant-relationships",
+      "exitCode": 2,
+      "durationMs": 3230,
+      "timedOut": false
+    },
+    {
+      "gate": "check:test-suppressions",
+      "exitCode": 1,
+      "durationMs": 1541,
+      "timedOut": false
+    },
+    {
+      "gate": "check:vacuous-assertions",
+      "exitCode": 1,
+      "durationMs": 4294,
+      "timedOut": false
+    },
+    {
+      "gate": "check:vacuous-assertions:self-test",
+      "exitCode": 1,
+      "durationMs": 1387,
+      "timedOut": false
+    },
+    {
+      "gate": "verify:chat-mentions",
+      "exitCode": 1,
+      "durationMs": 6607,
+      "timedOut": false
+    },
+    {
+      "gate": "verify:membership-revocation",
+      "exitCode": 1,
+      "durationMs": 61758,
+      "timedOut": false
+    },
+    {
+      "gate": "verify:multi-org-employment",
+      "exitCode": 1,
+      "durationMs": 137127,
+      "timedOut": false
+    }
+  ]
+}

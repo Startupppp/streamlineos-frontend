@@ -8,9 +8,11 @@
 
 **Source:** `architecture-refactor/PRD-10-10-CODE-RELEASE-TODO.md`
 
+**Human gate:** H12 in `architecture-refactor/decisions/CODE-RELEASE-HUMAN-INPUTS.md`.
+
 ## Acceptance criteria
 
-- [ ] **PRD-C125** — Reconstruct current-head Billing/Payments evidence across plans, subscriptions, entitlements, seats, proration, usage, immutable invoices, tax/currency, idempotent provider events, replay-safe webhooks, cached feature gates, authorization, frontend states and sandbox failure tests.
+- [x] **PRD-C125** — Reconstruct current-head Billing/Payments evidence across plans, subscriptions, entitlements, seats, proration, usage, immutable invoices, tax/currency, idempotent provider events, replay-safe webhooks, cached feature gates, authorization, frontend states and sandbox failure tests.
 
 ## Completion evidence
 

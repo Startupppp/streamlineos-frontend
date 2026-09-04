@@ -1,0 +1,1 @@
+check-feature-cycles self-test: detector sees a planted cycle and only that.

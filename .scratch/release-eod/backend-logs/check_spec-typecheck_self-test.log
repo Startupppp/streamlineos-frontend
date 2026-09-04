@@ -1,0 +1,3 @@
+check-spec-typecheck --self-test PASS: gate correctly caught the deliberate arity error.
+Fixture errors reported:
+  src/scripts/__tests__/_spec-typecheck-self-test.spec.ts(2,29): error TS2554: Expected 2 arguments, but got 1.

@@ -1,0 +1,4 @@
+[check:licenses] Scanning production dependency licenses...
+[check:licenses] 1 reviewed exception(s):
+  [LGPL-2.1] @ffmpeg-installer/ffmpeg: LGPL-2.1 — FFmpeg binary invoked via child_process (subprocess call, not library linking); LGPL copyleft does not extend to the calling application. Reviewed 2026-09-01.
+[check:licenses] OK — no disallowed licenses in production dependencies.

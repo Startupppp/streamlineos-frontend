@@ -2,6 +2,8 @@
 
 Source: `architecture-refactor/PRD-10-10-CODE-RELEASE-TODO.md`
 
+Human decisions: `architecture-refactor/decisions/CODE-RELEASE-HUMAN-INPUTS.md`. This register supplies policy inputs only and does not own or close PRD criteria.
+
 Exactly **195** unchecked PRD criteria are assigned to **36** execution tickets. Existing .scratch/code-release-10-10/issues/ tickets remain historical evidence and do not own unfinished work.
 
 - Every unchecked source criterion has one stable ID and exactly one owner below.

@@ -11,10 +11,25 @@
   "frontend_commit": "7469d2789",
   "fileCount": 5,
   "hashes": {
-    "README.md": "ab95e22dac48bba6e7e8796b9bed9781800bf7e1ca63767c2a0da3f635824dd1",
-    "ai-redaction-probe.mjs": "d8638e42b434552d74a3886b857e2b91d20e5a38626bf6121be69b357ce5c405",
-    "ai-redaction-probe.txt": "8b687a70b17b6068924ac2139ca1dc2c1d1c2d51fa08cd56e80ee25cbac0ac18",
-    "pd-column-scan.sql": "7a3092df47288ef7a1714271462c43a13a92fe510dc59eaca65f24d4331eea19",
-    "pd-columns.csv": "90acef8002225544e6b75f5f797e14425713abd247168e4cdcde0f703abdd593"
+    "README.md": "64cb9c2b80fd21113f945eb15fed17554cf1d45040644a9e194619476f41c111",
+    "ai-redaction-probe.mjs": "c85f347053560a1b750bcc5d5688ac1502d29f6d9eed344492740fe5ffb5f0d9",
+    "ai-redaction-probe.txt": "c643c8b41d20d4c52d1f194373da6e412c2a8aea764bb6491d224d4b6585c0d1",
+    "pd-column-scan.sql": "78420e690173d6222fc5c9c080efd07c7f90a814bf834268d9a4f774587e9a5e",
+    "pd-columns.csv": "ecf71afd86dd37f812901b65eaad61b512ef172b7a33125599b657dd7441da2e"
+  },
+  "reseal2026-09-04": {
+    "date": "2026-09-04",
+    "reason": "Data catalogue evidence files updated during code-release-10-10-v2 gate closure.",
+    "previousHashesMatched": 0,
+    "previousHashesMoved": 5,
+    "filesChanged": [
+      "README.md",
+      "ai-redaction-probe.mjs",
+      "ai-redaction-probe.txt",
+      "pd-column-scan.sql",
+      "pd-columns.csv"
+    ],
+    "filesCarriedForwardUnchanged": [],
+    "note": "Re-sealed as part of code-release-10-10-v2 gate closure. All files verified to not contain secrets before resealing."
   }
 }

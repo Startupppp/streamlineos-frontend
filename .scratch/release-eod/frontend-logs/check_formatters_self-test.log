@@ -1,0 +1,9 @@
+Running self-test...
+
+PASS: self-test (7 assertions)
+
+  (a) detects a local Intl.NumberFormat
+  (b) detects a whitespace-padded form
+  (c) no false positive on imports, DateTimeFormat or canonical helpers
+  (d) attributes the finding to the right line
+  (e) the walk reaches the tree (5411 files scanned)

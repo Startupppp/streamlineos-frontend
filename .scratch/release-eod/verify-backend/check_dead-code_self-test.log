@@ -1,0 +1,24 @@
+Running self-test...
+
+PASS: self-test (20 assertions)
+
+  (a) file with no live importers                 -> DEAD
+  (b) file reached by a side-effect import         -> RETAINED-BY-CONTRACT
+  (c) file reached through a live barrel           -> RETAINED-BY-CONTRACT
+  (d) schema file                                  -> RETAINED-BY-CONTRACT (never deleted on knip alone)
+  (e) *.module.ts                                  -> RETAINED-BY-CONVENTION
+  (f) src/scripts/*                                -> RETAINED-BY-CONVENTION
+  (g) CRM/Inventory file                           -> EXCLUDED
+  (h) dist/ path                                   -> OUT-OF-SCOPE
+  (i) finding with no verdict                      -> UNCLASSIFIED (gate bites)
+  (j) finding with a KEEP verdict                  -> KEEP
+  (k) finding inside an excluded module            -> EXCLUDED
+  (l) verdict knip no longer reports               -> STALE (gate bites)
+  (m) verdict knip still reports                   -> not stale
+  (n) importer map: named import edge
+  (o) importer map: side-effect import edge
+  (p) importer map: re-export edge
+  (q) importer map: dynamic import edge
+  (r) schemaNamesFor finds the schema behind an inferred type
+  (s) inferred type of a schema parsed elsewhere    -> RETAINED-BY-CONTRACT
+  (t) inferred type of a schema nobody parses with  -> UNCLASSIFIED (gate bites)

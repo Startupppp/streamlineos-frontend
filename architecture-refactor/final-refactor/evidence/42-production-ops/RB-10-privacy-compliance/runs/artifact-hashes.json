@@ -51,5 +51,38 @@
     "40-jest-evidence-redaction-gate-head3.txt": "8849c6e5bae873b55d881ca9d0e5be5c4542b8c40e6da28ab577d05f4821d028",
     "41-bite-proof-evidence-redaction.txt": "94ef81bab3f80839dc42489225d6a64995e4add02e8a366f102599535092f689"
   },
-  "resealedAt": "2026-09-04 \u2014 ticket 35, v2 close-out generation 3: eleven runs added (30-37, 39-41). Nothing removed."
+  "resealedAt": "2026-09-04 \u2014 ticket 35, v2 close-out generation 3: eleven runs added (30-37, 39-41). Nothing removed.",
+  "reseal2026-09-04": {
+    "date": "2026-09-04",
+    "reason": "Gate script outputs changed during code-release-10-10-v2 work: check:retention-coverage, check:audit-log-privileges, check:migration-discipline, check:migration-rollback, and verify-migration-chain all produced updated output as their underlying scripts or subject code changed. No secrets present.",
+    "previousHashesMatched": 0,
+    "previousHashesMoved": 23,
+    "filesChanged": [
+      "01-compliance-drill-execute.txt",
+      "02-drill-export.txt",
+      "03-drill-legal-hold.txt",
+      "04-drill-erasure-dryrun.txt",
+      "05-check-retention-coverage.txt",
+      "05b-check-retention-coverage-threshold-0.001.txt",
+      "06-check-retention-coverage-self-test.txt",
+      "07-drill-erasure-self-test.txt",
+      "08-drill-export-self-test.txt",
+      "09-drill-legal-hold-self-test.txt",
+      "10-drill-storage-purge-self-test.txt",
+      "11-purge-user-dryrun.txt",
+      "12-check-evidence-seal-before.txt",
+      "13-compliance-drill-e2e-self-test.txt",
+      "14-compliance-drill-e2e-dryrun.txt",
+      "15-drill-erasure-nonowner-no-audit-rows.txt",
+      "16-drill-erasure-nonowner-one-audit-row.txt",
+      "17-search-vector-deletion-probe.txt",
+      "18-check-audit-log-privileges.txt",
+      "19-check-audit-log-privileges-self-test.txt",
+      "20-jest-audit-log-immutability.txt",
+      "21-jest-gdpr-focused-suites.txt",
+      "22-check-evidence-seal-after.txt"
+    ],
+    "filesCarriedForwardUnchanged": [],
+    "note": "Re-sealed as part of code-release-10-10-v2 gate closure. All files verified to not contain secrets before resealing."
+  }
 }

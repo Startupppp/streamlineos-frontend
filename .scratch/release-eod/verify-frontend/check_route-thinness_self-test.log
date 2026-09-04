@@ -1,0 +1,14 @@
+Running self-test for check-route-module-thinness...
+
+  (a) a thin route module composing a feature component → thin
+  (b) a route module holding component state → thick: component state
+  (c) a route module fetching its own data → thick: data fetching
+  (d) a route module issuing a mutation with the generic form → thick: data fetching
+  (e) a route module calling apiClient directly → thick: direct apiClient call
+  (f) a route module owning a form → thick: form orchestration
+  (g) a thin but oversized route module → thick: 323 lines (limit 300)
+  (h) a name that merely contains a signal word is not a match → thin
+  (i) out-of-scope segment is identified, not filtered by substring
+
+✔ 9 thinness fixtures passed — check-route-module-thinness is live.
+

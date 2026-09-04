@@ -1,0 +1,22 @@
+  catalog: permission 'accounting:access:manage' administered by 'accounting', drift target 'blog', unadministered 'ai:chat:use'
+  PASS  [23503/fk_role_assignments_assigner_membership]  role_assignments: assigner from another organization — 23503 on fk_role_assignments_assigner_membership
+  PASS  [ACCEPT]  role_assignments: assigner from the same organization [control] — permitted
+  PASS  [ACCEPT]  role_assignments: no assigner [control] — permitted
+  PASS  [23503/fk_module_ownerships_module]  module_ownerships: module 'not_a_real_module' — 23503 on fk_module_ownerships_module
+  PASS  [ACCEPT]  module_ownerships: module 'accounting' [control] — permitted
+  PASS  [23503/fk_roles_module]  roles: module 'not_a_real_module' — 23503 on fk_roles_module
+  PASS  [ACCEPT]  roles: module 'accounting' [control] — permitted
+  PASS  [23503/fk_user_module_access_module]  user_module_access: module 'not_a_real_module' — 23503 on fk_user_module_access_module
+  PASS  [ACCEPT]  user_module_access: module 'accounting' [control] — permitted
+  PASS  [23503/fk_ownership_transfers_module]  ownership_transfers: module 'not_a_real_module' — 23503 on fk_ownership_transfers_module
+  PASS  [ACCEPT]  ownership_transfers: module 'accounting' [control] — permitted
+  PASS  [23503/fk_permissions_administering_module]  permissions: administering module 'not_a_real_module' — 23503 on fk_permissions_administering_module
+  PASS  [ACCEPT]  permissions: administering module 'accounting' [control] — permitted
+  PASS  [23503/fk_user_permission_grants_module]  user_permission_grants: 'accounting:access:manage' under module 'not_a_real_module' — 23503 on fk_user_permission_grants_module
+  PASS  [23503/fk_user_permission_grants_permission_module]  user_permission_grants: 'accounting:access:manage' under 'blog' instead of its administering 'accounting' — 23503 on fk_user_permission_grants_permission_module
+  PASS  [ACCEPT]  user_permission_grants: 'accounting:access:manage' under its administering 'accounting' [control] — permitted
+  PASS  [23503/fk_user_permission_grants_permission_module]  user_permission_grants: 'ai:chat:use' has no administering module and is not grantable — 23503 on fk_user_permission_grants_permission_module
+  PASS  [23503/fk_user_permission_grants_granter_membership]  user_permission_grants: granter from another organization ('accounting:access:manage') — 23503 on fk_user_permission_grants_granter_membership
+  PASS  [ACCEPT]  user_permission_grants: granter from the same organization ('accounting:access:manage') [control] — permitted
+
+OK — 19 probes over 9 constraints: every rejection carried the exact SQLSTATE and constraint claimed, and every control was permitted.

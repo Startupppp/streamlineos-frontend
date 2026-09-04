@@ -1,0 +1,782 @@
+{
+  "PRD-C001": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C002": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C003": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C004": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C005": {
+    "state": " ",
+    "evidence": "**OPEN — named blocker.** Query-cost gates are green (`check:query-projections` 0 in-scope, `check:db-call-count`, `check:unbounded-reads`, `check:cache-invalidation`), but the ticket-29 performance half is blocked with PRD-C140.\nOwner: the repository owner. Recorded in the release record; not waived."
+  },
+  "PRD-C006": {
+    "state": " ",
+    "evidence": "**OPEN — named blocker.** `check:route-bundle-budget` exit 1 — 9 measured breaches; `check:web-vitals-budget` refuses its capture as unusable evidence.\nOwner: the repository owner. Recorded in the release record; not waived."
+  },
+  "PRD-C007": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C008": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C009": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C010": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C011": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C012": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C013": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C014": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C015": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C016": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C017": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C018": {
+    "state": " ",
+    "evidence": "**OPEN — named blocker.** Disposable-database E2E was NOT run. `test:e2e:seeded` requires a database whose name contains `scratch`; none is bootstrapped to head 685.\nOwner: the repository owner. Recorded in the release record; not waived."
+  },
+  "PRD-C019": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C020": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C021": {
+    "state": " ",
+    "evidence": "**OPEN — named blocker.** One code-level P1 is open and unresolved: `verify:chat-mentions` proves mention delivery is broken (see PRD-C127).\nOwner: the repository owner. Recorded in the release record; not waived."
+  },
+  "PRD-C022": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C023": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C024": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C025": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C026": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C027": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C028": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C029": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C030": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C031": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C032": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C033": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C034": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C035": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C036": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C037": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C038": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C039": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C040": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C041": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C042": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C043": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C044": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C045": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C046": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C047": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C048": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C049": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C050": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C051": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C052": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C053": {
+    "state": " ",
+    "evidence": "**OPEN — named blocker.** `check:tenant-relationships` exit 2 — INCONCLUSIVE. Its required target `scratch_boot_a` is mid-bootstrap, not at head 685.\nOwner: the repository owner. Recorded in the release record; not waived."
+  },
+  "PRD-C054": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C055": {
+    "state": " ",
+    "evidence": "**OPEN — named blocker.** Two clean bootstraps plus an interrupted-then-resumed bootstrap were NOT run at this commit pair.\nOwner: the repository owner. Recorded in the release record; not waived."
+  },
+  "PRD-C056": {
+    "state": " ",
+    "evidence": "**OPEN — named blocker.** Depends on PRD-C055; no current-head bootstrap evidence bundle exists at journal head 685.\nOwner: the repository owner. Recorded in the release record; not waived."
+  },
+  "PRD-C057": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C058": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C059": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C060": {
+    "state": " ",
+    "evidence": "**OPEN — named blocker.** Depends on PRD-C053 and PRD-C055 — canonical composite keys cannot be signed off without clean-bootstrap/catalog parity at head.\nOwner: the repository owner. Recorded in the release record; not waived."
+  },
+  "PRD-C061": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C062": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C063": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C064": {
+    "state": " ",
+    "evidence": "**OPEN — named blocker.** Depends on PRD-C055. The post-cleanup re-proof requires two clean bootstraps and catalog parity.\nOwner: the repository owner. Recorded in the release record; not waived."
+  },
+  "PRD-C065": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C066": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C067": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C068": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C069": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C070": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C071": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C072": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C073": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C074": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C075": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C076": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C077": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C078": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C079": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C080": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C081": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C082": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C083": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C084": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C085": {
+    "state": " ",
+    "evidence": "**OPEN — named blocker.** `check:route-budgets` exit 1 — POST /chat/channels/{channelId}/messages measures p95 5,043 ms against a 1,000 ms ceiling and 3 downstream calls against a ceiling of 0.\nOwner: the repository owner. Recorded in the release record; not waived."
+  },
+  "PRD-C086": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C087": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C088": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C089": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C090": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C091": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C092": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C093": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C094": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C095": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C096": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C097": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C098": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C099": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C100": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C101": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C102": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C103": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C104": {
+    "state": " ",
+    "evidence": "**OPEN — named blocker.** `check:test-suppressions` exit 1 — 66 runtime-selected suppressions against a ratchet of 29. 65 are infrastructure-gated suites (55 `*.db.spec.ts` needing a live database, 9 `*.eval.spec.ts` needing an AI provider key, 1 perf e2e). The ratchet was NOT raised.\nOwner: the repository owner. Recorded in the release record; not waived."
+  },
+  "PRD-C105": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C106": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C107": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C108": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C109": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C110": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C111": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C112": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C113": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C114": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C115": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C116": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C117": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C118": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C119": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C120": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C121": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C122": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C123": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C124": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C125": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C126": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C127": {
+    "state": " ",
+    "evidence": "**OPEN — named blocker.** GENUINE FAILURE found today: `verify:chat-mentions` against a live API returns \"Alex should receive exactly 1 mention, got 0\" and \"@everyone notified nobody — the send path never expands it.\"\nOwner: the repository owner. Recorded in the release record; not waived."
+  },
+  "PRD-C128": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C129": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C130": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C131": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C132": {
+    "state": " ",
+    "evidence": "**OPEN — named blocker.** Blocked with PRD-C127 — mention notifications are not delivered, so notification delivery cannot be re-verified at this commit.\nOwner: the repository owner. Recorded in the release record; not waived."
+  },
+  "PRD-C133": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C134": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C135": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C136": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C137": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C138": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C139": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C140": {
+    "state": " ",
+    "evidence": "**OPEN — named blocker.** `check:benchmark-manifest` exit 1 — the manifest is 366 commits stale and was captured on a dirty tree. A fresh capture needs a live API server under load.\nOwner: the repository owner. Recorded in the release record; not waived."
+  },
+  "PRD-C141": {
+    "state": " ",
+    "evidence": "**OPEN — named blocker.** Depends on PRD-C140; no current latency evidence exists at this commit.\nOwner: the repository owner. Recorded in the release record; not waived."
+  },
+  "PRD-C142": {
+    "state": " ",
+    "evidence": "**OPEN — named blocker.** Depends on PRD-C140; statement-level p95 evidence requires a production-shaped seed and a fresh capture.\nOwner: the repository owner. Recorded in the release record; not waived."
+  },
+  "PRD-C143": {
+    "state": " ",
+    "evidence": "**OPEN — named blocker.** Depends on PRD-C140; cache-hit latency evidence requires a fresh capture.\nOwner: the repository owner. Recorded in the release record; not waived."
+  },
+  "PRD-C144": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C145": {
+    "state": " ",
+    "evidence": "**OPEN — named blocker.** Blocked by PRD-C085 — the chat message path is measurably over its declared budget.\nOwner: the repository owner. Recorded in the release record; not waived."
+  },
+  "PRD-C146": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C147": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C148": {
+    "state": " ",
+    "evidence": "**OPEN — named blocker.** Depends on PRD-C140 — a regression gate cannot be armed against a stale manifest.\nOwner: the repository owner. Recorded in the release record; not waived."
+  },
+  "PRD-C149": {
+    "state": " ",
+    "evidence": "**OPEN — named blocker.** `check:web-vitals-budget` refuses its capture: 16 unusable samples, and no production-build provenance. Requires a running backend, Chrome CDP and an authenticated session.\nOwner: the repository owner. Recorded in the release record; not waived."
+  },
+  "PRD-C150": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C151": {
+    "state": " ",
+    "evidence": "**OPEN — named blocker.** Blocked with PRD-C006 — 9 route bundle breaches; the shared authenticated shell alone is ~488 kB gzip of a 524 kB ceiling, which is structural.\nOwner: the repository owner. Recorded in the release record; not waived."
+  },
+  "PRD-C152": {
+    "state": " ",
+    "evidence": "**OPEN — named blocker.** Depends on PRD-C140 — AI streaming latency targets need a fresh capture.\nOwner: the repository owner. Recorded in the release record; not waived."
+  },
+  "PRD-C153": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C154": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C155": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C156": {
+    "state": " ",
+    "evidence": "**OPEN — named blocker.** Cannot be true while the criteria above remain open.\nOwner: the repository owner. Recorded in the release record; not waived."
+  },
+  "PRD-C157": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C158": {
+    "state": " ",
+    "evidence": "**OPEN — named blocker.** Builds and typechecks pass at this commit pair, but disposable E2E (PRD-C018) was not run and architecture gates are not all green.\nOwner: the repository owner. Recorded in the release record; not waived."
+  },
+  "PRD-C159": {
+    "state": " ",
+    "evidence": "**OPEN — named blocker.** Blocked with PRD-C055 — the bootstraps were not run.\nOwner: the repository owner. Recorded in the release record; not waived."
+  },
+  "PRD-C160": {
+    "state": " ",
+    "evidence": "**OPEN — named blocker.** One code-level P1 remains unresolved — see PRD-C127.\nOwner: the repository owner. Recorded in the release record; not waived."
+  },
+  "PRD-C161": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C162": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C163": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C164": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C165": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C166": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C167": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C168": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C169": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C170": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C171": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C172": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C173": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C174": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C175": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C176": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C177": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C178": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C179": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C180": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C181": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C182": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C183": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C184": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C185": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C186": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C187": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C188": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685."
+  },
+  "PRD-C189": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C190": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C191": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C192": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C193": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C194": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  },
+  "PRD-C195": {
+    "state": "x",
+    "evidence": "**CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence."
+  }
+}

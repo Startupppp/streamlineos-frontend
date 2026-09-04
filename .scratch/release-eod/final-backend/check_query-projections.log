@@ -1,0 +1,7 @@
+Scanned 3684 source files.
+Unprojected reads — findMany 287 · findFirst 481 · bare .select() 602 = 1370 (ceiling 1383, enforced on the total).
+Unprojected COUNT paths (.length only): 0 (allowed 0).
+Unprojected EXISTENCE/COUNT paths, AST: 0 in scope (allowed 0) · 0 deferred to crm/inventory (ratchet 7).
+Full-row reads of a vector/tsvector/bytea table: 0 (allowed 0) over 5 such tables.
+
+No unprojected count/existence path, and no population ceiling breached.

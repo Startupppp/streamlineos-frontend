@@ -26,6 +26,8 @@
  * printed rather than left for the reader to compute.
  */
 
+import { pathToFileURL } from "node:url";
+
 /** Percentage, never rounded up to a false "100%". */
 export function coveragePct(scanned, total) {
   if (total === 0) return "0%";
@@ -194,5 +196,5 @@ async function runSelfTest() {
 }
 
 const invokedDirectly =
-  process.argv[1] !== undefined && import.meta.url === new URL(`file://${process.argv[1]}`).href;
+  process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (invokedDirectly && process.argv.includes("--self-test")) await runSelfTest();

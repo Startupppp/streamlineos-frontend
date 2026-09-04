@@ -61,7 +61,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseDocument } from "yaml";
 
 const FRONTEND = fileURLToPath(new URL("..", import.meta.url));
@@ -972,7 +972,7 @@ export function runSelfTest() {
 
 const invokedDirectly =
   process.argv[1] !== undefined &&
-  import.meta.url === new URL(`file://${process.argv[1]}`).href;
+  import.meta.url === pathToFileURL(process.argv[1]).href;
 
 if (invokedDirectly) {
   if (process.argv.includes("--self-test")) runSelfTest();

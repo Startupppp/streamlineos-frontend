@@ -1,0 +1,4 @@
+Declared tables 873  ·  declared constraints/indexes 4951
+INCONCLUSIVE — the catalog half did not run. Whether a declared constraint exists is only in pg_constraint/pg_index; nothing static can see it, so all 4951 declared objects are UNVERIFIED.
+  Set CONSTRAINT_DRIFT_GATE_DATABASE_URL to a database bootstrapped to journal head to run it.
+  Or set STREAMLINE_ALLOW_PARTIAL_GATES=1 to accept a declaration-only run.

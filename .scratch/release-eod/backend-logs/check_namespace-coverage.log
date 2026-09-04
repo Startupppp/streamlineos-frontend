@@ -1,0 +1,13 @@
+
+=== namespace-coverage gate — 1076 service files, 75 read namespaces, 76 bump namespaces ===
+
+DEAD BUMPS (bumped but never read, non-blocking) — 1:
+  [chat:unread] Namespace "chat:unread" has invalidation calls but no corresponding cachedVersioned/cachedVersionedForOrg read — possibly dead code.
+
+UNRESOLVED READ EXPRESSIONS (module-local factories, non-blocking) — 4:
+  ACCT_STATEMENTS_NS(orgId)
+  ADMIN_POSTS_CACHE_NAMESPACE
+  CACHE_KEYS.hrEmployeesListNamespace(orgId)
+  PA_LIST_NAMESPACE(orgId)
+
+RESULT: PASS — 0 stale namespaces. 75 reads, 76 bumps. (5 warnings)

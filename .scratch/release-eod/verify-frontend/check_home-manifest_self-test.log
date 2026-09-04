@@ -1,0 +1,18 @@
+Running self-test for check-home-manifest...
+
+  PASS  clean manifest+controller produces no violations
+  PASS  controller has extra route → violation reported
+  PASS  manifest has extra endpoint → violation reported
+  PASS  permission drift is detected
+  PASS  module drift is detected
+  PASS  parser reads correct number of routes
+  PASS  parser flags @Universal() correctly
+  PASS  parser reads permission when present
+  PASS  external route inherits the class-level module
+  PASS  external route reads its method-level permission
+  PASS  external route is not marked universal
+  PASS  an undeclared route in the same controller resolves to null
+  PASS  permission drift on an external Home route is detected
+  PASS  a removed class-level module gate on an external route is detected
+
+Self-test complete: 14 passed, 0 failed.

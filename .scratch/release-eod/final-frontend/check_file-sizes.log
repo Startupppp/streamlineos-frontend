@@ -1,0 +1,5 @@
+check-file-sizes: scanned 4760 of 5401 files (88.13%) — 641 NOT scanned by this gate
+check-file-sizes: CRM/Inventory (out-of-scope, informational — 2 file(s) over 500 lines):
+  512 lines  app/(authenticated)/inventory/purchase-orders/[poId]/page.tsx
+  564 lines  features/crm/settings/automations/builder/automation-builder.tsx
+check-file-sizes: 4760 in-scope file(s) judged — all within 500 lines (0 exceptions registered; 641 CRM/Inventory file(s) held out of the decision, see the corpus line above)

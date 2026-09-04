@@ -1,0 +1,18 @@
+Running self-test with deliberately broken fixtures...
+
+  PASS  rule-1 fires on version mismatch
+  PASS  rule-1 fires when registry has module not in manifest
+  PASS  rule-1 fires when manifest has module not in registry
+  PASS  rule-1 fires on productKey drift
+  PASS  rule-1 fires on route drift
+  PASS  rule-2 fires on unknown product key
+  PASS  rule-2 does not fire for PRODUCT_KEY_EXCEPTIONS entries
+  PASS  rule-3 fires when sidebar key has no manifest route
+  PASS  rule-3 does not fire when all sidebar keys have manifest routes
+  PASS  rule-4 fires on EXPECTED_MANIFEST_VERSION mismatch
+  PASS  rule-4 does not fire when versions agree
+  PASS  parseRegistryVersion reads the declared version as a number
+  PASS  parseRegistryVersion returns null when the registry declares no version — rule-1 must go INCONCLUSIVE, not silently agree
+  PASS  parseRegistryVersion does not confuse a lookalike constant for the real one
+
+Self-test complete: 14 passed, 0 failed.

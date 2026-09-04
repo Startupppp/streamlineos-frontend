@@ -1,0 +1,5 @@
+check-test-typecheck --self-test FAIL: the typecheck failed but never named the planted spec, so the failure was something else and proves nothing.
+error TS6053: File 'D:/projects/personal/Streamlineos/backend/src/scripts/__tests__/_spec-typecheck-self-test.spec.ts' not found.
+  The file is in the program because:
+    Matched by include pattern '../src/**/*' in '.check-test-typecheck-selftest/tsconfig.selftest.json'
+

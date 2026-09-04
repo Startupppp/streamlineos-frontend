@@ -1,0 +1,26 @@
+Runtime response contracts at the fetch seam
+
+  Seam calls scanned:        2666   (hooks app features components lib)
+  Carrying a contract:       86   (3.2%)
+  Unparsed:                  2580   (baseline 2594)
+  Distinct routes:           1964, of which 74 are parsed somewhere
+  Unresolvable route sites:  18 in 15 file(s)
+  Risk-list routes held:     60
+
+FAIL: new unresolvable route — invisible to every route rule here and in check:gated-reads:
+    hooks\api\build\pm-workspaces.ts (2, not on the list)
+    hooks\api\chat-core-read.ts (1, not on the list)
+    hooks\api\crm\issues.ts (1, not on the list)
+    hooks\api\directory\workers.ts (1, not on the list)
+    hooks\api\hr\attendance.ts (1, not on the list)
+    hooks\api\hr\enterprise-ops-accommodations.ts (2, not on the list)
+    hooks\api\hr\expenses.ts (1, not on the list)
+    hooks\api\org-hierarchy.ts (1, not on the list)
+    hooks\api\users\bulk-mutations.ts (1, not on the list)
+    hooks\common\use-file-url.ts (1, not on the list)
+    features\crm\import\bulk-import-section.tsx (1, not on the list)
+    features\hr\document-review\upload-doc-sheet.tsx (1, not on the list)
+    features\settings\delegations\delegations-page.tsx (2, not on the list)
+    features\shared\import-export\import-export-grid.tsx (1, not on the list)
+    lib\ably.ts (1, not on the list)
+FAIL: stale UNRESOLVED_ROUTE_FILES entry (resolve it or delete the line): hooks/api/build/pm-workspaces.ts, hooks/api/chat-core-read.ts, hooks/api/crm/issues.ts, hooks/api/directory/workers.ts, hooks/api/hr/attendance.ts, hooks/api/hr/enterprise-ops-accommodations.ts, hooks/api/hr/expenses.ts, hooks/api/org-hierarchy.ts, hooks/api/users/bulk-mutations.ts, hooks/common/use-file-url.ts, features/crm/import/bulk-import-section.tsx, features/hr/document-review/upload-doc-sheet.tsx, features/settings/delegations/delegations-page.tsx, features/shared/import-export/import-export-grid.tsx, lib/ably.ts

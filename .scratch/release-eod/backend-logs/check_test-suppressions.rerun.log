@@ -1,0 +1,46 @@
+Spec files 2201  ·  suppression sites 20  ·  conditional aliases 65
+  conditional 66  ·  placeholder 13  ·  quarantine 6
+
+FAIL — 19 suppression(s) with no entry in baselines/test-suppressions.json. A skip whose blocker is not written down is indistinguishable from a hidden failure:
+  src\degradation\ai-provider.spec.ts:168  it.skip  integration: releasing a RESERVED reservation restores the org wallet balance — needs OutboxPublisherService / AiCreditsReservationService driven end to end; those services open their own transactions via runInNewTenantTransaction, so their writes cannot be rolled back on a database shared with concurrent sessions — asserting hand-written SQL state instead proves only that Postgres stores what was written  (PLACEHOLDER)
+  src\degradation\ai-provider.spec.ts:173  it.skip  integration: a sweep of expired reservations restores credits to all wallets atomically — same blocker as above  (PLACEHOLDER)
+  src\degradation\email-provider.spec.ts:112  it.skip  integration: a 503 from the provider increments retryCount and returns the event to PENDING — needs OutboxPublisherService / AiCreditsReservationService driven end to end; those services open their own transactions via runInNewTenantTransaction, so their writes cannot be rolled back on a database shared with concurrent sessions — asserting hand-written SQL state instead proves only that Postgres stores what was written  (PLACEHOLDER)
+  src\degradation\email-provider.spec.ts:117  it.skip  integration: reaching OUTBOX_MAX_RETRIES dead-letters the event while the request row stays committed — same blocker as above  (PLACEHOLDER)
+  src\degradation\email-provider.spec.ts:122  it.skip  integration: the request transaction commits before any delivery attempt — same blocker as above  (PLACEHOLDER)
+  src\degradation\object-storage.spec.ts:120  it.skip  unblocked by: a real S3/R2 storage endpoint configured in the test environment — once available, verify that an upload re-driven from the stored pre-generated key reaches the endpoint and the stored metadata row reflects completion without data loss  (PLACEHOLDER)
+  src\degradation\object-storage.spec.ts:125  it.skip  unblocked by: a real storage endpoint and a virus-scanner seam (e.g. ClamAV sidecar) — verify the scan PENDING→CLEAN state machine under real conditions so that CLEAN is never set before the scanner confirms the result  (PLACEHOLDER)
+  src\degradation\read-replica.spec.ts:164  it.skip  PHYSICAL REPLICA NOT PROVISIONED. The staleness behaviour below is proved against a REPEATABLE READ   (PLACEHOLDER)
+  src\degradation\realtime-adapter.spec.ts:175  it.skip  unblocked by: a real Ably account with a valid API key so a test client can subscribe to a channel and verify it receives messages from the DB lastReadAt watermark after reconnecting — the subscription and message history retrieval require Ably infrastructure that is not available in this environment  (PLACEHOLDER)
+  src\modules\ai\core\crm-copilot.service.phase2.spec.ts:174  describe.skip  stalePipelineDigest  (QUARANTINE)
+  src\modules\ai\core\crm-copilot.service.phase2.spec.ts:246  describe.skip  dataQualityCopilot  (QUARANTINE)
+  src\modules\ai\core\crm-copilot.service.phase2.spec.ts:313  describe.skip  nextBestActionWithEvidence (CrmScoringService)  (QUARANTINE)
+  src\modules\ai\core\crm-copilot.service.phase2.spec.ts:405  describe.skip  leadSummaryWithCitations  (QUARANTINE)
+  src\modules\ai\core\crm-copilot.service.phase2.spec.ts:435  describe.skip  predictDeal (estimateDisclaimer)  (QUARANTINE)
+  src\modules\ai\core\crm-copilot.service.phase2.spec.ts:478  describe.skip  meetingFollowUpDraft (CrmBriefService)  (QUARANTINE)
+  src\modules\ai\core\projects-ai.controller.e2e-spec.ts:233  it.todo  400 on non-numeric projectId (controller uses string param with no ParseIntPipe; NaN passes through to service; would need a pipe added to enforce this)  (PLACEHOLDER)
+  src\modules\ai\core\projects-ai.controller.e2e-spec.ts:245  it.todo  402 on plan gate fires before service (orgOwner bypass not needed — plan check is in controller)  (PLACEHOLDER)
+  src\modules\ai\core\projects-ai.controller.e2e-spec.ts:246  it.todo  503 on ensureLlm when LlmService.isConfigured() returns false (requires LlmService override)  (PLACEHOLDER)
+  src\modules\crm\core\crm-attribution-report.service.spec.ts:188  it.todo  last-touch uses a subquery (.as()) to find max occurredAt per lead — mock chain depth makes this an integration-level test; cover in e2e  (PLACEHOLDER)
+
+FAIL — 19 stale registry entry(ies); the suppression is gone. Remove them so the registry cannot rot into a permanent exemption:
+  src/degradation/ai-provider.spec.ts  "integration: releasing a RESERVED reservation restores the org wallet balance — needs OutboxPublisherService / AiCreditsReservationService driven end to end; those services open their own transactions via runInNewTenantTransaction, so their writes cannot be rolled back on a database shared with concurrent sessions — asserting hand-written SQL state instead proves only that Postgres stores what was written"
+  src/degradation/ai-provider.spec.ts  "integration: a sweep of expired reservations restores credits to all wallets atomically — same blocker as above"
+  src/degradation/email-provider.spec.ts  "integration: a 503 from the provider increments retryCount and returns the event to PENDING — needs OutboxPublisherService / AiCreditsReservationService driven end to end; those services open their own transactions via runInNewTenantTransaction, so their writes cannot be rolled back on a database shared with concurrent sessions — asserting hand-written SQL state instead proves only that Postgres stores what was written"
+  src/degradation/email-provider.spec.ts  "integration: reaching OUTBOX_MAX_RETRIES dead-letters the event while the request row stays committed — same blocker as above"
+  src/degradation/email-provider.spec.ts  "integration: the request transaction commits before any delivery attempt — same blocker as above"
+  src/degradation/object-storage.spec.ts  "unblocked by: a real S3/R2 storage endpoint configured in the test environment — once available, verify that an upload re-driven from the stored pre-generated key reaches the endpoint and the stored metadata row reflects completion without data loss"
+  src/degradation/object-storage.spec.ts  "unblocked by: a real storage endpoint and a virus-scanner seam (e.g. ClamAV sidecar) — verify the scan PENDING→CLEAN state machine under real conditions so that CLEAN is never set before the scanner confirms the result"
+  src/degradation/read-replica.spec.ts  "PHYSICAL REPLICA NOT PROVISIONED. The staleness behaviour below is proved against a REPEATABLE READ "
+  src/degradation/realtime-adapter.spec.ts  "unblocked by: a real Ably account with a valid API key so a test client can subscribe to a channel and verify it receives messages from the DB lastReadAt watermark after reconnecting — the subscription and message history retrieval require Ably infrastructure that is not available in this environment"
+  src/modules/ai/core/crm-copilot.service.phase2.spec.ts  "stalePipelineDigest"
+  src/modules/ai/core/crm-copilot.service.phase2.spec.ts  "dataQualityCopilot"
+  src/modules/ai/core/crm-copilot.service.phase2.spec.ts  "nextBestActionWithEvidence (CrmScoringService)"
+  src/modules/ai/core/crm-copilot.service.phase2.spec.ts  "leadSummaryWithCitations"
+  src/modules/ai/core/crm-copilot.service.phase2.spec.ts  "predictDeal (estimateDisclaimer)"
+  src/modules/ai/core/crm-copilot.service.phase2.spec.ts  "meetingFollowUpDraft (CrmBriefService)"
+  src/modules/ai/core/projects-ai.controller.e2e-spec.ts  "400 on non-numeric projectId (controller uses string param with no ParseIntPipe; NaN passes through to service; would need a pipe added to enforce this)"
+  src/modules/ai/core/projects-ai.controller.e2e-spec.ts  "402 on plan gate fires before service (orgOwner bypass not needed — plan check is in controller)"
+  src/modules/ai/core/projects-ai.controller.e2e-spec.ts  "503 on ensureLlm when LlmService.isConfigured() returns false (requires LlmService override)"
+  src/modules/crm/core/crm-attribution-report.service.spec.ts  "last-touch uses a subquery (.as()) to find max occurredAt per lead — mock chain depth makes this an integration-level test; cover in e2e"
+
+FAIL — 66 runtime-selected suppressions, above the ratchet of 29. This class is honest but it is also the easiest place to launder a hand-written skip, so it is capped.

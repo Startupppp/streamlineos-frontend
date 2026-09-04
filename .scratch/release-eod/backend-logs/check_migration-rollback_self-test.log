@@ -1,0 +1,32 @@
+check-migration-rollback self-test
+===================================
+
+Failure mode (a): migration above cutoff with no rollback and no declaration
+  PASS  missing rollback and no declaration is caught (above cutoff)
+
+Failure mode (a): migration below cutoff with no rollback → grandfathered, no violation
+  PASS  migration below cutoff is grandfathered
+
+Clean case: migration above cutoff with -- @irreversible declaration
+  PASS  @irreversible declaration satisfies the gate
+
+Clean case: migration above cutoff with -- @data-loss declaration
+  PASS  @data-loss declaration satisfies the gate
+
+Clean case: migration above cutoff with matching rollback (no CREATE TYPE)
+  PASS  rollback present with no CREATE TYPE passes
+
+Failure mode (b): rollback exists but DROP TYPE name mismatches CREATE TYPE name
+  PASS  rollback with mismatched DROP TYPE name is caught (0143-class defect)
+
+Clean case: rollback with correct DROP TYPE name
+  PASS  rollback with correct DROP TYPE name passes
+
+Type-mismatch check applies to historical migrations too (below cutoff)
+  PASS  type-mismatch caught for historical migration that has a rollback
+
+Injection: unjournalled file above cutoff is exempt
+  PASS  unjournalled file above cutoff is not flagged (no journal = never applies)
+
+Self-test: 9 passed, 0 failed
+SELF-TEST PASSED

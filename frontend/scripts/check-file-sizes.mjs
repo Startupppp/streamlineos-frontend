@@ -29,7 +29,6 @@
  */
 
 import {
-  chmodSync,
   readFileSync, readdirSync, statSync,
   mkdtempSync, mkdirSync, writeFileSync, rmSync,
 } from "node:fs";
@@ -86,10 +85,10 @@ function isCrmOrInventory(relPath) {
   );
 }
 
-function collectFiles(dir, files = []) {
+function collectFiles(dir, files = [], readdir = readdirSync) {
   let entries;
   try {
-    entries = readdirSync(dir);
+    entries = readdir(dir);
   } catch (error) {
     // Swallowing this returned a SHORT file list that then read as "nothing over the limit".
     // An unreadable directory is an unmeasured directory: fail loudly. The backend twin
@@ -109,7 +108,7 @@ function collectFiles(dir, files = []) {
       throw new Error(`cannot stat ${full}: ${error.code ?? error.message}`, { cause: error });
     }
     if (stat.isDirectory()) {
-      collectFiles(full, files);
+      collectFiles(full, files, readdir);
     } else if (stat.isFile()) {
       const ext = extname(entry);
       if (
@@ -191,7 +190,7 @@ function parseExceptions(doc) {
 function runCheck(
   rootDir,
   exceptionsPath,
-  { minFiles = MIN_FILES, requiredSubtrees = REQUIRED_SUBTREES } = {},
+  { minFiles = MIN_FILES, requiredSubtrees = REQUIRED_SUBTREES, readdir } = {},
 ) {
   let doc;
   try {
@@ -233,7 +232,7 @@ function runCheck(
 
   let files;
   try {
-    files = collectFiles(rootDir);
+    files = collectFiles(rootDir, [], readdir);
   } catch (error) {
     return {
       ok: false, reason: "scan-error",
@@ -459,6 +458,12 @@ async function runSelfTests() {
      * printed as a clean pass. Both halves are proved here on the same fixture: the corpus is
      * shaped like the real one — a big `features/` holding the violation, and enough small files
      * elsewhere to clear a floor that is a small fraction of the whole.
+     *
+     * A mock readdir is used instead of chmod 000 for portability: on Windows chmod is a no-op
+     * so the directory remained readable and the scan returned "violations" instead of "scan-error",
+     * causing the assertion to fail with a TypeError. The mock injects an EPERM error for exactly
+     * the target directory and proves the same path on all platforms without relying on OS-level
+     * permission enforcement.
      */
     const lostDir = join(tmpRoot, "lost-subtree");
     writeLines(join(lostDir, "features", "big", "huge.tsx"), 900);
@@ -471,26 +476,20 @@ async function runSelfTests() {
       lostVisible.violations.some((v) => v.path.includes("huge.tsx")),
     );
 
-    const lostFeatures = join(lostDir, "features");
-    chmodSync(lostFeatures, 0o000);
-    let unreadable;
-    try {
-      unreadable = runCheck(lostDir, join(lostDir, "exc.md"), { minFiles: 10, requiredSubtrees: [] });
-    } finally {
-      chmodSync(lostFeatures, 0o755);
-    }
-    // Running as root defeats a chmod, so only assert when the fixture is genuinely unreadable.
-    if (unreadable.reason === "ok") {
-      console.error("  SKIP: unreadable-subtree fixture is still readable (running as root?)");
-    } else {
-      assert("an unreadable subtree fails the gate", unreadable.ok === false);
-      assert("an unreadable subtree reports reason=scan-error", unreadable.reason === "scan-error");
-      assert("the scan error names the directory it could not read", unreadable.message.includes("features"));
-      assert(
-        "the scan error says a clean result would be vacuous, rather than reporting one",
-        unreadable.message.includes("vacuous"),
-      );
-    }
+    const lostFeaturesDir = join(lostDir, "features");
+    const throwingReaddir = (dir) => {
+      if (dir === lostFeaturesDir)
+        throw Object.assign(new Error(`EPERM: operation not permitted, scandir '${dir}'`), { code: "EPERM" });
+      return readdirSync(dir);
+    };
+    const unreadable = runCheck(lostDir, join(lostDir, "exc.md"), { minFiles: 10, requiredSubtrees: [], readdir: throwingReaddir });
+    assert("an unreadable subtree fails the gate", unreadable.ok === false);
+    assert("an unreadable subtree reports reason=scan-error", unreadable.reason === "scan-error");
+    assert("the scan error names the directory it could not read", unreadable.message.includes("features"));
+    assert(
+      "the scan error says a clean result would be vacuous, rather than reporting one",
+      unreadable.message.includes("vacuous"),
+    );
 
     // The other half: a subtree that is simply absent is readable, clears a low count floor, and
     // was invisible to the count check. REQUIRED_SUBTREES is what sees it.

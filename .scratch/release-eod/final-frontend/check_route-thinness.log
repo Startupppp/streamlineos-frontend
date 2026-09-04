@@ -1,0 +1,5 @@
+check-route-module-thinness: 588 authenticated route modules scanned
+  IN SCOPE thick:      0 (baseline 0)
+  OUT OF SCOPE thick:  67 (CRM/Inventory, outside the release)
+
+PASS: authenticated route-module thinness is within its ratchet.

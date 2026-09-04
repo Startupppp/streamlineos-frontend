@@ -311,7 +311,7 @@ function scanTree() {
   for (const dir of SCAN_DIRS)
     for (const file of sourceFiles(join(ROOT, dir)))
       calls.push(
-        ...scanSource(file, readFileSync(file, "utf8"), relative(ROOT, file)),
+        ...scanSource(file, readFileSync(file, "utf8"), relative(ROOT, file).replaceAll("\\", "/")),
       );
   return calls;
 }

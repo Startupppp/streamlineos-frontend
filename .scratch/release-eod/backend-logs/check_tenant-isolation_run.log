@@ -1,0 +1,668 @@
+{"timestamp":"2026-09-04T06:09:57.162Z","level":"info","message":"[build-daily-snapshots] sweep complete","meta":{"orgsVisited":1,"orgsFailed":0,"projectsProcessed":0,"projectsSkipped":0,"projectsFailed":0}}
+{"timestamp":"2026-09-04T06:09:57.166Z","level":"info","message":"[build-daily-snapshots] sweep complete","meta":{"orgsVisited":1,"orgsFailed":0,"projectsProcessed":0,"projectsSkipped":0,"projectsFailed":0}}
+{"timestamp":"2026-09-04T06:09:57.187Z","level":"info","message":"Certification expiry check complete","meta":{"fired":0}}
+{"timestamp":"2026-09-04T06:09:57.190Z","level":"info","message":"Certification expiry check complete","meta":{"fired":0}}
+[32m[Nest] 142292  - [39m04/09/2026, 11:40:04 [32m    LOG[39m [38;5;3m[CronKbChunkRetentionService] [39m[32mKB chunk retention: pruned 0 article chunks, 0 page chunks across 1 orgs[39m
+[32m[Nest] 142292  - [39m04/09/2026, 11:40:04 [32m    LOG[39m [38;5;3m[CronKbChunkRetentionService] [39m[32mKB chunk retention: pruned 0 article chunks, 0 page chunks across 1 orgs[39m
+{"timestamp":"2026-09-04T06:10:04.721Z","level":"info","message":"Daily notifications processed","meta":{"birthdayCount":0,"leaveCount":0,"anniversaryCount":0}}
+{"timestamp":"2026-09-04T06:10:04.723Z","level":"info","message":"Daily notifications processed","meta":{"birthdayCount":0,"leaveCount":0,"anniversaryCount":0}}
+{"timestamp":"2026-09-04T06:10:04.729Z","level":"info","message":"[cron-org-purge] attempting purge","meta":{"orgId":"org-owner"}}
+{"timestamp":"2026-09-04T06:10:04.743Z","level":"info","message":"Offer deadline reminders processed for org","meta":{"orgId":"org-attacker","due":0}}
+{"timestamp":"2026-09-04T06:10:04.743Z","level":"info","message":"Offer deadline reminder sweep complete","meta":{"remindedCount":0}}
+{"timestamp":"2026-09-04T06:10:04.745Z","level":"info","message":"Offer deadline reminders processed for org","meta":{"orgId":"org-owner","due":0}}
+{"timestamp":"2026-09-04T06:10:04.746Z","level":"info","message":"Offer deadline reminder sweep complete","meta":{"remindedCount":0}}
+[33m[Nest] 142292  - [39m04/09/2026, 11:40:12 [33m   WARN[39m [38;5;3m[CalendarProviderWebhookService] [39m[33mProvider drift: externalEventId=google-evt-shared (org=org-webhook-a) provider updated at 2026-09-01T12:00:05.000Z, local at 2026-09-01T12:00:00.000Z. Re-queued local UPDATE to restore authoritative state.[39m
+[33m[Nest] 142292  - [39m04/09/2026, 11:40:12 [33m   WARN[39m [38;5;3m[CalendarProviderWebhookService] [39m[33mProvider drift: externalEventId=google-evt-shared (org=org-webhook-a) provider updated at 2026-09-01T12:00:05.000Z, local at 2026-09-01T12:00:00.000Z. Re-queued local UPDATE to restore authoritative state.[39m
+[33m[Nest] 142292  - [39m04/09/2026, 11:40:12 [33m   WARN[39m [38;5;3m[CalendarProviderWebhookService] [39m[33mProvider drift: externalEventId=google-evt-shared (org=org-webhook-a) provider updated at 2026-09-01T12:00:05.000Z, local at 2026-09-01T12:00:00.000Z. Re-queued local UPDATE to restore authoritative state.[39m
+[33m[Nest] 142292  - [39m04/09/2026, 11:40:12 [33m   WARN[39m [38;5;3m[CalendarProviderWebhookService] [39m[33mProvider drift: externalEventId=google-evt-shared (org=org-webhook-a) provider updated at 2026-09-01T12:00:05.000Z, local at 2026-09-01T12:00:00.000Z. Re-queued local UPDATE to restore authoritative state.[39m
+[33m[Nest] 142292  - [39m04/09/2026, 11:40:12 [33m   WARN[39m [38;5;3m[CalendarProviderWebhookService] [39m[33mProvider drift: externalEventId=google-evt-shared (org=org-webhook-a) provider updated at 2026-09-01T12:00:05.000Z, local at 2026-09-01T12:00:00.000Z. Re-queued local UPDATE to restore authoritative state.[39m
+[32m[Nest] 128608  - [39m04/09/2026, 11:40:21 [32m    LOG[39m [38;5;3m[CronNotificationOutboxRetentionService] [39m[32m[notification-outbox-retention] orgs=3 deleted=3 truncated=false cutoff=2026-08-05T06:10:21.716Z[39m
+[32m[Nest] 128608  - [39m04/09/2026, 11:40:21 [32m    LOG[39m [38;5;3m[CronNotificationOutboxRetentionService] [39m[32m[notification-outbox-retention] orgs=2 deleted=5 truncated=false cutoff=2026-08-05T06:10:21.718Z[39m
+[32m[Nest] 128608  - [39m04/09/2026, 11:40:21 [32m    LOG[39m [38;5;3m[CronNotificationOutboxRetentionService] [39m[32m[notification-outbox-retention] orgs=5 deleted=0 truncated=false cutoff=2026-08-05T06:10:21.718Z[39m
+[32m[Nest] 128608  - [39m04/09/2026, 11:40:21 [32m    LOG[39m [38;5;3m[CronNotificationOutboxRetentionService] [39m[32m[notification-outbox-retention] orgs=2 deleted=0 truncated=false cutoff=2026-08-05T06:10:21.719Z[39m
+[32m[Nest] 128608  - [39m04/09/2026, 11:40:21 [32m    LOG[39m [38;5;3m[CronNotificationOutboxRetentionService] [39m[32m[notification-outbox-retention] orgs=1 deleted=1 truncated=false cutoff=2026-08-05T06:10:21.719Z[39m
+[32m[Nest] 128608  - [39m04/09/2026, 11:40:21 [32m    LOG[39m [38;5;3m[CronNotificationOutboxRetentionService] [39m[32m[notification-outbox-retention] orgs=1 deleted=0 truncated=false cutoff=2026-08-05T06:10:21.720Z[39m
+[32m[Nest] 128608  - [39m04/09/2026, 11:40:21 [32m    LOG[39m [38;5;3m[CronNotificationOutboxRetentionService] [39m[32m[notification-outbox-retention] orgs=1 deleted=500 truncated=false cutoff=2026-08-05T06:10:21.720Z[39m
+[33m[Nest] 128608  - [39m04/09/2026, 11:40:21 [33m   WARN[39m [38;5;3m[CronNotificationOutboxRetentionService] [39m[33m[notification-outbox-retention] org org-aaaa-fail-isolation-a hit the 50-batch cap — rerun the sweep[39m
+[32m[Nest] 128608  - [39m04/09/2026, 11:40:21 [32m    LOG[39m [38;5;3m[CronNotificationOutboxRetentionService] [39m[32m[notification-outbox-retention] orgs=1 deleted=25000 truncated=true cutoff=2026-08-05T06:10:21.721Z[39m
+[32m[Nest] 128608  - [39m04/09/2026, 11:40:21 [32m    LOG[39m [38;5;3m[CronNotificationOutboxRetentionService] [39m[32m[notification-outbox-retention] orgs=1 deleted=501 truncated=false cutoff=2026-08-05T06:10:21.723Z[39m
+[33m[Nest] 128608  - [39m04/09/2026, 11:40:21 [33m   WARN[39m [38;5;3m[CronNotificationOutboxRetentionService] [39m[33m[notification-outbox-retention] org org-aaaa-fail-isolation-a hit the 50-batch cap — rerun the sweep[39m
+[32m[Nest] 128608  - [39m04/09/2026, 11:40:21 [32m    LOG[39m [38;5;3m[CronNotificationOutboxRetentionService] [39m[32m[notification-outbox-retention] orgs=1 deleted=25000 truncated=true cutoff=2026-08-05T06:10:21.723Z[39m
+[32m[Nest] 142292  - [39m04/09/2026, 11:40:22 [32m    LOG[39m [38;5;3m[CronGdprExportRetentionService] [39m[32m[gdpr-export-retention] sweep complete: 1 orgs (0 failed), 0 stale jobs reclaimed, 0 artifacts expired, 0 objects deleted, 0 objects left orphaned, truncated=false[39m
+[32m[Nest] 142292  - [39m04/09/2026, 11:40:22 [32m    LOG[39m [38;5;3m[CronGdprExportRetentionService] [39m[32m[gdpr-export-retention] sweep complete: 2 orgs (0 failed), 0 stale jobs reclaimed, 0 artifacts expired, 0 objects deleted, 0 objects left orphaned, truncated=false[39m
+[32m[Nest] 142292  - [39m04/09/2026, 11:40:22 [32m    LOG[39m [38;5;3m[CronGdprExportRetentionService] [39m[32m[gdpr-export-retention] sweep complete: 1 orgs (0 failed), 0 stale jobs reclaimed, 0 artifacts expired, 0 objects deleted, 0 objects left orphaned, truncated=false[39m
+[32m[Nest] 142292  - [39m04/09/2026, 11:40:22 [32m    LOG[39m [38;5;3m[CronGdprExportRetentionService] [39m[32m[gdpr-export-retention] sweep complete: 1 orgs (0 failed), 0 stale jobs reclaimed, 0 artifacts expired, 0 objects deleted, 0 objects left orphaned, truncated=false[39m
+[32m[Nest] 142292  - [39m04/09/2026, 11:40:22 [32m    LOG[39m [38;5;3m[CronGdprExportRetentionService] [39m[32m[gdpr-export-retention] sweep complete: 1 orgs (0 failed), 0 stale jobs reclaimed, 1 artifacts expired, 1 objects deleted, 0 objects left orphaned, truncated=false[39m
+[32m[Nest] 142292  - [39m04/09/2026, 11:40:22 [32m    LOG[39m [38;5;3m[CronGdprExportRetentionService] [39m[32m[gdpr-export-retention] sweep complete: 1 orgs (0 failed), 0 stale jobs reclaimed, 1 artifacts expired, 1 objects deleted, 0 objects left orphaned, truncated=false[39m
+[32m[Nest] 141524  - [39m04/09/2026, 11:40:40 [32m    LOG[39m [38;5;3m[CronOutboxRetentionService] [39m[32m[outbox-retention] outbox_events deleted=0 inbox_records deleted=0 truncated=false cutoff=2026-08-05T06:10:40.900Z[39m
+[32m[Nest] 141524  - [39m04/09/2026, 11:40:40 [32m    LOG[39m [38;5;3m[CronOutboxRetentionService] [39m[32m[outbox-retention] outbox_events deleted=0 inbox_records deleted=0 truncated=false cutoff=2026-08-05T06:10:40.906Z[39m
+[32m[Nest] 141524  - [39m04/09/2026, 11:40:40 [32m    LOG[39m [38;5;3m[CronOutboxRetentionService] [39m[32m[outbox-retention] outbox_events deleted=0 inbox_records deleted=0 truncated=false cutoff=2026-08-05T06:10:40.908Z[39m
+[32m[Nest] 141524  - [39m04/09/2026, 11:40:40 [32m    LOG[39m [38;5;3m[CronOutboxRetentionService] [39m[32m[outbox-retention] outbox_events deleted=3 inbox_records deleted=3 truncated=false cutoff=2026-08-05T06:10:40.910Z[39m
+[32m[Nest] 141524  - [39m04/09/2026, 11:40:40 [32m    LOG[39m [38;5;3m[CronOutboxRetentionService] [39m[32m[outbox-retention] outbox_events deleted=0 inbox_records deleted=0 truncated=false cutoff=2026-08-05T06:10:40.911Z[39m
+[32m[Nest] 138056  - [39m04/09/2026, 11:40:44 [32m    LOG[39m [38;5;3m[CronHrRetentionService] [39m[32m[hr-retention] sweep complete: 2 orgs (0 failed, truncated=false), 0 employees soft-deleted, 0 cases soft-deleted, 0 attendance rows deleted, 0 documents deleted, 0 onboarding documents redacted, 0 stored objects deleted, 0 stored objects left orphaned, 0 document records protected, 0 payroll policies retained as immutable financial records[39m
+[32m[Nest] 138056  - [39m04/09/2026, 11:40:44 [32m    LOG[39m [38;5;3m[CronHrRetentionService] [39m[32m[hr-retention] sweep complete: 2 orgs (0 failed, truncated=false), 0 employees soft-deleted, 0 cases soft-deleted, 0 attendance rows deleted, 0 documents deleted, 0 onboarding documents redacted, 0 stored objects deleted, 0 stored objects left orphaned, 0 document records protected, 0 payroll policies retained as immutable financial records[39m
+[32m[Nest] 138056  - [39m04/09/2026, 11:40:44 [32m    LOG[39m [38;5;3m[CronHrRetentionService] [39m[32m[hr-retention] sweep complete: 1 orgs (0 failed, truncated=false), 0 employees soft-deleted, 0 cases soft-deleted, 0 attendance rows deleted, 0 documents deleted, 0 onboarding documents redacted, 0 stored objects deleted, 0 stored objects left orphaned, 0 document records protected, 0 payroll policies retained as immutable financial records[39m
+[95m[Nest] 141524  - [39m04/09/2026, 11:40:51 [95m  DEBUG[39m [38;5;3m[AccountingBillApprovedConsumerService] [39m[95maccounting.bill.approved evt-1: no approval request for bill 1 — skipping[39m
+[95m[Nest] 141524  - [39m04/09/2026, 11:40:51 [95m  DEBUG[39m [38;5;3m[AccountingBillApprovedConsumerService] [39m[95maccounting.bill.approved evt-1: no approval request for bill 1 — skipping[39m
+[32m[Nest] 138056  - [39m04/09/2026, 11:41:02 [32m    LOG[39m [38;5;3m[RoleGrantReconcilerService] [39m[32mRole grant reconcile: 2 organisation(s), 4 grant(s) inserted across 2 role(s); 0 role(s) left alone because an administrator has written their permissions[39m
+[32m[Nest] 138056  - [39m04/09/2026, 11:41:02 [32m    LOG[39m [38;5;3m[RoleGrantReconcilerService] [39m[32mRole grant reconcile: 2 organisation(s), 4 grant(s) inserted across 2 role(s); 0 role(s) left alone because an administrator has written their permissions[39m
+[32m[Nest] 138056  - [39m04/09/2026, 11:41:02 [32m    LOG[39m [38;5;3m[RoleGrantReconcilerService] [39m[32mRole grant reconcile: 2 organisation(s), 2 grant(s) inserted across 1 role(s); 1 role(s) left alone because an administrator has written their permissions[39m
+[32m[Nest] 138056  - [39m04/09/2026, 11:41:03 [32m    LOG[39m [38;5;3m[RoleGrantReconcilerService] [39m[32mRole grant reconcile: 2 organisation(s), 4 grant(s) inserted across 2 role(s); 0 role(s) left alone because an administrator has written their permissions[39m
+[32m[Nest] 138056  - [39m04/09/2026, 11:41:03 [32m    LOG[39m [38;5;3m[RoleGrantReconcilerService] [39m[32mRole grant reconcile: 2 organisation(s), 0 grant(s) inserted across 0 role(s); 0 role(s) left alone because an administrator has written their permissions[39m
+[95m[Nest] 138056  - [39m04/09/2026, 11:41:30 [95m  DEBUG[39m [38;5;3m[SurveyResponseSubmittedConsumerService] [39m[95msurvey.response.submitted evt-1: survey 5 not found in org org-attacker — skipping[39m
+[32m[Nest] 138056  - [39m04/09/2026, 11:41:30 [32m    LOG[39m [38;5;3m[SurveyResponseSubmittedConsumerService] [39m[32msurvey.response.submitted evt-1: notifications dispatched for session 42 org org-owner[39m
+[33m[Nest] 138056  - [39m04/09/2026, 11:41:54 [33m   WARN[39m [38;5;3m[BuildReleasePublishedConsumerService] [39m[33mbuild.release.published ev-owner has invalid payload: [
+  {
+    "expected": "number",
+    "code": "invalid_type",
+    "path": [
+      "projectId"
+    ],
+    "message": "Invalid input: expected number, received undefined"
+  },
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [
+      "orgId"
+    ],
+    "message": "Invalid input: expected string, received undefined"
+  }
+][39m
+[33m[Nest] 138056  - [39m04/09/2026, 11:41:54 [33m   WARN[39m [38;5;3m[BuildReleasePublishedConsumerService] [39m[33mbuild.release.published ev-other has invalid payload: [
+  {
+    "expected": "number",
+    "code": "invalid_type",
+    "path": [
+      "projectId"
+    ],
+    "message": "Invalid input: expected number, received undefined"
+  },
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [
+      "orgId"
+    ],
+    "message": "Invalid input: expected string, received undefined"
+  }
+][39m
+[33m[Nest] 138056  - [39m04/09/2026, 11:41:54 [33m   WARN[39m [38;5;3m[BuildReleasePublishedConsumerService] [39m[33mbuild.release.published ev1 has invalid payload: [
+  {
+    "expected": "number",
+    "code": "invalid_type",
+    "path": [
+      "projectId"
+    ],
+    "message": "Invalid input: expected number, received undefined"
+  },
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [
+      "orgId"
+    ],
+    "message": "Invalid input: expected string, received undefined"
+  }
+][39m
+[32m[Nest] 138788  - [39m04/09/2026, 11:42:19 [32m    LOG[39m [38;5;3m[CronNotificationOutboxRetentionService] [39m[32m[notification-outbox-retention] orgs=1 deleted=0 truncated=false cutoff=2026-08-05T06:12:19.550Z[39m
+[32m[Nest] 138788  - [39m04/09/2026, 11:42:19 [32m    LOG[39m [38;5;3m[CronNotificationOutboxRetentionService] [39m[32m[notification-outbox-retention] orgs=2 deleted=0 truncated=false cutoff=2026-08-05T06:12:19.554Z[39m
+[32m[Nest] 138788  - [39m04/09/2026, 11:42:19 [32m    LOG[39m [38;5;3m[CronNotificationOutboxRetentionService] [39m[32m[notification-outbox-retention] orgs=1 deleted=0 truncated=false cutoff=2026-08-05T06:12:19.555Z[39m
+[95m[Nest] 131036  - [39m04/09/2026, 11:42:21 [95m  DEBUG[39m [38;5;3m[DealClosedConsumerService] [39m[95mdeal.closed evt-1: no active offer-fulfillment mappings for org org-attacker — no SO created[39m
+[95m[Nest] 131036  - [39m04/09/2026, 11:42:21 [95m  DEBUG[39m [38;5;3m[DealClosedConsumerService] [39m[95mdeal.closed evt-2: no active offer-fulfillment mappings for org org-owner — no SO created[39m
+[33m[Nest] 138788  - [39m04/09/2026, 11:42:39 [33m   WARN[39m [38;5;3m[BuildSprintCompletedConsumerService] [39m[33mbuild.sprint.completed ev1 has invalid payload: [
+  {
+    "expected": "number",
+    "code": "invalid_type",
+    "path": [
+      "projectId"
+    ],
+    "message": "Invalid input: expected number, received undefined"
+  },
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [
+      "orgId"
+    ],
+    "message": "Invalid input: expected string, received undefined"
+  },
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [
+      "actorUserId"
+    ],
+    "message": "Invalid input: expected string, received undefined"
+  }
+][39m
+[33m[Nest] 138788  - [39m04/09/2026, 11:42:39 [33m   WARN[39m [38;5;3m[BuildSprintCompletedConsumerService] [39m[33mbuild.sprint.completed ev2 has invalid payload: [
+  {
+    "expected": "number",
+    "code": "invalid_type",
+    "path": [
+      "projectId"
+    ],
+    "message": "Invalid input: expected number, received undefined"
+  },
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [
+      "orgId"
+    ],
+    "message": "Invalid input: expected string, received undefined"
+  },
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [
+      "actorUserId"
+    ],
+    "message": "Invalid input: expected string, received undefined"
+  }
+][39m
+PASS src/modules/inventory/inv-stock-shipments-returns-isolation.spec.ts (11.388 s)
+PASS src/modules/hr/recruitment/recruitment-tenant-isolation.spec.ts (15.649 s)
+PASS src/modules/cron/cron-group-a-tenant-isolation.spec.ts (5.269 s)
+PASS src/modules/hr/time/time-tenant-isolation.spec.ts
+PASS src/modules/gdpr/gdpr-export-worker-tenant-isolation.spec.ts
+PASS src/modules/timesheets/core/__tests__/timesheets-services-tenant-isolation.spec.ts
+PASS src/modules/hr/directory/directory-tenant-isolation.spec.ts
+[31m[Nest] 128608  - [39m04/09/2026, 11:40:00 [31m  ERROR[39m [38;5;3m[DashboardPersonalService] [39m[31mHome section "upcomingEvents" failed for org org-iso-test-1[39m
+Error: DB timeout
+    at Object.limit (D:\projects\personal\Streamlineos\backend\src\modules\dashboard\dashboard-section-isolation.spec.ts:128:62)
+    at D:\projects\personal\Streamlineos\backend\src\modules\dashboard\dashboard-personal.service.ts:206:14
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+[31m[Nest] 128608  - [39m04/09/2026, 11:40:00 [31m  ERROR[39m [38;5;3m[DashboardPersonalService] [39m[31mHome section "upcomingEvents" failed for org org-iso-test-1[39m
+Error: DB timeout
+    at Object.limit (D:\projects\personal\Streamlineos\backend\src\modules\dashboard\dashboard-section-isolation.spec.ts:128:62)
+    at D:\projects\personal\Streamlineos\backend\src\modules\dashboard\dashboard-personal.service.ts:206:14
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+[31m[Nest] 128608  - [39m04/09/2026, 11:40:00 [31m  ERROR[39m [38;5;3m[DashboardPersonalService] [39m[31mHome section "upcomingEvents" failed for org org-iso-test-1[39m
+Error: DB timeout
+    at Object.limit (D:\projects\personal\Streamlineos\backend\src\modules\dashboard\dashboard-section-isolation.spec.ts:128:62)
+    at D:\projects\personal\Streamlineos\backend\src\modules\dashboard\dashboard-personal.service.ts:206:14
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+[31m[Nest] 128608  - [39m04/09/2026, 11:40:00 [31m  ERROR[39m [38;5;3m[DashboardPersonalService] [39m[31mHome section "upcomingEvents" failed for org org-iso-test-1[39m
+Error: DB timeout
+    at Object.limit (D:\projects\personal\Streamlineos\backend\src\modules\dashboard\dashboard-section-isolation.spec.ts:128:62)
+    at D:\projects\personal\Streamlineos\backend\src\modules\dashboard\dashboard-personal.service.ts:206:14
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+[31m[Nest] 128608  - [39m04/09/2026, 11:40:00 [31m  ERROR[39m [38;5;3m[DashboardStatsService] [39m[31mHome section "attendance" failed for org org-iso-test-1[39m
+Error: attendance DB failure
+    at Object.where (D:\projects\personal\Streamlineos\backend\src\modules\dashboard\dashboard-section-isolation.spec.ts:336:39)
+    at D:\projects\personal\Streamlineos\backend\src\modules\dashboard\dashboard-stats.service.ts:150:22
+    at Object.<anonymous> (D:\projects\personal\Streamlineos\backend\src\modules\dashboard\dashboard-section-isolation.spec.ts:275:18)
+    at D:\projects\personal\Streamlineos\backend\node_modules\.pnpm\jest-mock@29.7.0\node_modules\jest-mock\build\index.js:397:39
+    at Object.<anonymous> (D:\projects\personal\Streamlineos\backend\node_modules\.pnpm\jest-mock@29.7.0\node_modules\jest-mock\build\index.js:404:13)
+    at Object.mockConstructor [as cachedForOrg] (D:\projects\personal\Streamlineos\backend\node_modules\.pnpm\jest-mock@29.7.0\node_modules\jest-mock\build\index.js:148:19)
+    at D:\projects\personal\Streamlineos\backend\src\modules\dashboard\dashboard-stats.service.ts:143:33
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+[31m[Nest] 128608  - [39m04/09/2026, 11:40:00 [31m  ERROR[39m [38;5;3m[DashboardPersonalService] [39m[31mHome section "upcomingEvents" failed for org org-iso-test-1[39m
+Error: DB timeout
+    at Object.limit (D:\projects\personal\Streamlineos\backend\src\modules\dashboard\dashboard-section-isolation.spec.ts:128:62)
+    at D:\projects\personal\Streamlineos\backend\src\modules\dashboard\dashboard-personal.service.ts:206:14
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+PASS src/modules/dashboard/dashboard-section-isolation.spec.ts
+PASS src/modules/chat/chat-services-tenant-isolation.spec.ts
+{"timestamp":"2026-09-04T06:10:03.109Z","level":"error","message":"resignation-jobs:resignation.submitted failed","meta":{"error":{"name":"TypeError","message":"this.notifications.create is not a function","stack":"TypeError: this.notifications.create is not a function\n    at D:\\projects\\personal\\Streamlineos\\backend\\src\\modules\\hr\\lifecycle\\resignation-jobs.service.ts:107:28\n    at Array.map (<anonymous>)\n    at ResignationJobsService.fanOut (D:\\projects\\personal\\Streamlineos\\backend\\src\\modules\\hr\\lifecycle\\resignation-jobs.service.ts:106:20)\n    at D:\\projects\\personal\\Streamlineos\\backend\\src\\modules\\hr\\lifecycle\\resignation-jobs.service.ts:45:18"}}}
+PASS src/modules/hr/lifecycle/lifecycle-tenant-isolation.spec.ts
+PASS src/modules/hr/performance/performance-tenant-isolation.spec.ts
+PASS src/modules/hr/onboarding/core/onboarding-core-tenant-isolation.spec.ts
+{"timestamp":"2026-09-04T06:10:04.732Z","level":"error","message":"[cron-org-purge] purge failed","meta":{"orgId":"org-owner","err":{"name":"TypeError","message":"tx.execute is not a function","stack":"TypeError: tx.execute is not a function\n    at D:\\projects\\personal\\Streamlineos\\backend\\src\\common\\tenant\\with-tenant.ts:147:29\n    at Object.<anonymous> (D:\\projects\\personal\\Streamlineos\\backend\\src\\modules\\cron\\cron-group-b-tenant-isolation.spec.ts:73:96)\n    at D:\\projects\\personal\\Streamlineos\\backend\\node_modules\\.pnpm\\jest-mock@29.7.0\\node_modules\\jest-mock\\build\\index.js:397:39\n    at Object.<anonymous> (D:\\projects\\personal\\Streamlineos\\backend\\node_modules\\.pnpm\\jest-mock@29.7.0\\node_modules\\jest-mock\\build\\index.js:404:13)\n    at Object.mockConstructor [as transaction] (D:\\projects\\personal\\Streamlineos\\backend\\node_modules\\.pnpm\\jest-mock@29.7.0\\node_modules\\jest-mock\\build\\index.js:148:19)\n    at D:\\projects\\personal\\Streamlineos\\backend\\src\\common\\tenant\\with-tenant.ts:145:14\n    at D:\\projects\\personal\\Streamlineos\\backend\\src\\db\\pool-telemetry.ts:253:20\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)"}}}
+PASS src/modules/cron/cron-group-b-tenant-isolation.spec.ts
+PASS src/modules/inventory/inv-quality-counts-reports-isolation.spec.ts
+PASS src/modules/support/core/support-kb-engagement-tenant-isolation.spec.ts
+PASS src/modules/e-sign/__tests__/e-sign-services-tenant-isolation.spec.ts
+PASS src/modules/hr/interviews/hr-interview-new-services-tenant-isolation.spec.ts
+PASS src/modules/ai/core/services/ai-kb-blog-survey-tenant-isolation.spec.ts
+PASS src/modules/rbac/__tests__/role-seed-tenant-isolation.spec.ts
+PASS src/modules/inventory/inv-orders-isolation.spec.ts
+PASS src/modules/hr/core/hr-core-tenant-isolation.spec.ts
+PASS src/modules/hr/directory/employee-onboarding-tenant-isolation.spec.ts
+PASS src/modules/chat/chat-mutation-tenant-isolation.spec.ts
+PASS src/modules/crm/core/crm-core-b-tenant-isolation.spec.ts
+PASS src/modules/workflows/workflows-data-tenant-isolation.spec.ts
+PASS src/modules/workflows/workflows-crud-tenant-isolation.spec.ts
+PASS src/modules/calendar/calendar-provider-webhook-tenant-isolation.spec.ts
+PASS src/modules/payroll/setup/payroll-setup-tenant-isolation.spec.ts
+PASS src/modules/inventory/inv-products-warehouses-vendors-isolation.spec.ts
+PASS src/modules/billing/core/__tests__/billing-tenant-isolation.spec.ts
+PASS src/modules/payroll/payroll-new-services-tenant-isolation.spec.ts
+PASS src/modules/build/execution/workspace-tenant-isolation.spec.ts
+PASS src/modules/ai/core/services/ai-crm-services-tenant-isolation.spec.ts
+PASS src/modules/crm/core/crm-core-a-tenant-isolation.spec.ts
+PASS src/modules/ai/core/services/crm-content-copilot-pipeline-tenant-isolation.spec.ts
+PASS src/degradation/cell-resource-isolation.spec.ts
+PASS src/modules/e-sign/__tests__/esign-delete-tenant-isolation.spec.ts
+[31m[Nest] 128608  - [39m04/09/2026, 11:40:18 [31m  ERROR[39m [38;5;3m[OrgSetupCompletedConsumerService] [39m[31morganization.setup.completed 22222222-2222-4222-8222-222222222222: payload orgId does not match the event's organization (org-alpha) — refusing to provision[39m
+[31m[Nest] 128608  - [39m04/09/2026, 11:40:18 [31m  ERROR[39m [38;5;3m[OrgSetupCompletedConsumerService] [39m[31morganization.setup.completed 22222222-2222-4222-8222-222222222222: payload orgId does not match the event's organization (org-alpha) — refusing to provision[39m
+[31m[Nest] 128608  - [39m04/09/2026, 11:40:18 [31m  ERROR[39m [38;5;3m[OrgSetupCompletedConsumerService] [39m[31morganization.setup.completed 22222222-2222-4222-8222-222222222222: payload orgId does not match the event's organization (org-alpha) — refusing to provision[39m
+[31m[Nest] 128608  - [39m04/09/2026, 11:40:18 [31m  ERROR[39m [38;5;3m[OrgSetupCompletedConsumerService] [39m[31morganization.setup.completed 22222222-2222-4222-8222-222222222222: payload orgId does not match the event's organization (org-alpha) — refusing to provision[39m
+PASS src/modules/organization/setup/__tests__/org-setup-completed-tenant-isolation.spec.ts
+PASS src/modules/payroll/runs/payroll-runs-tenant-isolation.spec.ts
+PASS src/modules/build/core/projects-analytics-workspace-members-budget-tenant-isolation.spec.ts
+PASS src/modules/hr/config/hr-config-tenant-isolation.spec.ts
+PASS src/modules/accounting/core/accounting-payables-tenant-isolation.spec.ts
+PASS src/modules/kb/retrieval/kb-acl-isolation.spec.ts
+PASS src/modules/hr/enterprise-comp/hr-enterprise-comp-tenant-isolation.spec.ts
+PASS src/modules/e-sign/esign-inventory-tenant-isolation.spec.ts
+PASS src/modules/deals/deals-tenant-isolation.spec.ts
+PASS src/modules/payroll/runs/payroll-runs-c-tenant-isolation.spec.ts
+PASS src/modules/storage/storage-pending-purge-tenant-isolation.spec.ts
+PASS src/modules/cron/__tests__/cron-notification-outbox-retention-failure-isolation.spec.ts
+PASS src/modules/finance/tax/tax-compliance-tenant-isolation.spec.ts
+PASS src/modules/organization/setup/org-setup-tenant-isolation.spec.ts
+PASS src/modules/cron/__tests__/cron-gdpr-export-retention-tenant-isolation.spec.ts
+PASS src/modules/billing/payments/payment-services-tenant-isolation.spec.ts
+PASS src/modules/chat/__tests__/chat-message-timeline-isolation.spec.ts
+PASS src/modules/invoices/invoices-payment-tenant-isolation.spec.ts
+PASS src/modules/leads/leads-tenant-isolation.spec.ts
+PASS src/modules/hr/workflows/hr-workflows-tenant-isolation.spec.ts
+PASS src/modules/ai/core/services/ai-core-services-tenant-isolation.spec.ts
+PASS src/modules/accounting/settings/accounting-settings-services-tenant-isolation.spec.ts
+PASS src/modules/crm/core/__tests__/crm-customer360-tenant-isolation.spec.ts
+PASS src/modules/notifications/notification-fanout-isolation.spec.ts
+PASS src/modules/kb/retrieval/kb-retrieval-tenant-isolation.spec.ts
+PASS src/modules/hr/lifecycle/exit-write-tenant-isolation.spec.ts
+PASS src/modules/expenses/expenses-tenant-isolation.spec.ts
+PASS src/modules/clients/clients-tenant-isolation.spec.ts
+PASS src/modules/payroll/insights/payroll-insights-tenant-isolation.spec.ts
+PASS src/modules/auth/auth-tokens-tenant-isolation.spec.ts
+PASS src/modules/ai/core/services/blog-ai-tenant-isolation.spec.ts
+PASS src/modules/billing/core/coupon-tenant-isolation.spec.ts
+PASS src/modules/party/party-tenant-isolation.spec.ts
+PASS src/modules/chat/__tests__/chat-reactions-isolation.spec.ts
+PASS src/modules/hr/interviews/hr-interviews-tenant-isolation.spec.ts
+PASS src/modules/automation/automation-tenant-isolation.spec.ts
+PASS src/modules/build/core/build-core-services-tenant-isolation.spec.ts
+PASS src/modules/build/core/build-core-isolation.spec.ts
+PASS src/modules/hr/workflows/__tests__/hr-workflow-tenant-isolation.spec.ts
+PASS src/modules/accounting/core/accounting-core-tenant-isolation.spec.ts
+PASS src/modules/workflows/workflows-execution-tenant-isolation.spec.ts
+PASS src/modules/audit-log/audit-log-tenant-isolation.spec.ts
+PASS src/modules/timesheets/core/timesheets-analytics-tenant-isolation.spec.ts
+PASS src/modules/build/core/__tests__/projects-provision-tenant-isolation.spec.ts
+PASS src/modules/hr/onboarding/hr-onboarding-tenant-isolation.spec.ts
+PASS src/modules/build/client-portal/change-requests.isolation.spec.ts
+PASS src/modules/hr/onboarding/flow/onboarding-flow-new-tenant-isolation.spec.ts
+PASS src/modules/crm/metadata/crm-metadata-tenant-isolation.spec.ts
+PASS src/modules/crm/crm-automation-studio-tenant-isolation.spec.ts
+PASS src/modules/crm/core/crm-core-c-tenant-isolation.spec.ts
+PASS src/modules/hr/governance/hr-governance-tenant-isolation.spec.ts
+PASS src/modules/cron/__tests__/cron-outbox-retention-tenant-isolation.spec.ts
+PASS src/modules/accounting/gl/gl-tenant-isolation.spec.ts
+PASS src/modules/hr/import/hr-import-tenant-isolation.spec.ts
+PASS src/modules/csat/csat-tenant-isolation.spec.ts
+PASS src/modules/hr/cases/hr-cases-tenant-isolation.spec.ts
+PASS src/modules/hr/global/hr-global-tenant-isolation.spec.ts
+PASS src/modules/surveys/survey-assessment-tenant-isolation.spec.ts
+PASS src/modules/crm/custom-fields/crm-custom-fields-tenant-isolation.spec.ts
+PASS src/modules/hr/automations/hr-automations-tenant-isolation.spec.ts
+PASS src/modules/cron/__tests__/cron-hr-retention-tenant-isolation.spec.ts
+PASS src/modules/finance/reports/finance-report-export-worker-tenant-isolation.spec.ts
+PASS src/modules/mail/mail-metadata-isolation.spec.ts
+PASS src/modules/organization/core/org-lifecycle-tenant-isolation.spec.ts
+PASS src/modules/finance/ar/reminders-tenant-isolation.spec.ts
+PASS src/modules/notifications/unified-inbox-tenant-isolation.spec.ts
+PASS src/modules/organization/setup/announcements-tenant-isolation.spec.ts
+PASS src/modules/notifications/notification-dispatch-persistence-tenant-isolation.spec.ts
+PASS src/modules/gdpr/gdpr-tenant-isolation.spec.ts
+PASS src/modules/build/execution/modules-sprints-tenant-isolation.spec.ts
+PASS src/modules/build/core/projects-webhooks-tenant-isolation.spec.ts
+PASS src/modules/build/qa/test-management-tenant-isolation.spec.ts
+PASS src/modules/hr/core/__tests__/person-employment-sync-tenant-isolation.spec.ts
+PASS src/modules/calendar/calendar-export.isolation.spec.ts
+PASS src/modules/finance/ap/accounting-bill-approved-consumer-tenant-isolation.spec.ts
+PASS src/modules/rbac/roles-tenant-isolation.spec.ts
+PASS src/modules/build/core/projects-bulk-write-isolation.spec.ts
+PASS src/modules/push/push-tenant-isolation.spec.ts
+PASS src/modules/users/user-activity-tenant-isolation.spec.ts
+PASS src/modules/realtime/web-push-tenant-isolation.spec.ts
+PASS src/modules/surveys/survey-forms-tenant-isolation.spec.ts
+PASS src/modules/hr/payroll-inputs/payroll-inputs-tenant-isolation.spec.ts
+PASS src/modules/support/core/support-csat-tenant-isolation.spec.ts
+PASS src/modules/build/qa/test-runs-tenant-isolation.spec.ts
+PASS src/modules/build/core/projects-work-query-service-tenant-isolation.spec.ts
+PASS src/modules/build/workflow/workflow-tenant-isolation.spec.ts
+PASS src/modules/build/client-portal/client-visibility.isolation.spec.ts
+{"timestamp":"2026-09-04T06:10:55.171Z","level":"warn","message":"deals-import: deal create failed","meta":{"orgId":"org-attacker","cause":{"message":"this.crud.createDeal is not a function"}}}
+{"timestamp":"2026-09-04T06:10:55.174Z","level":"warn","message":"deals-import: deal create failed","meta":{"orgId":"org-owner","cause":{"message":"this.crud.createDeal is not a function"}}}
+PASS src/modules/deals/deals-import-export-tenant-isolation.spec.ts
+PASS src/modules/surveys/survey-logic-tenant-isolation.spec.ts
+PASS src/modules/billing/payments/payment-test-transaction-tenant-isolation.spec.ts
+PASS src/modules/hr/policies/hr-policies-tenant-isolation.spec.ts
+PASS src/modules/accounting/gl/accounting-gl-tenant-isolation.spec.ts
+PASS src/modules/build/core/projects-changelog-tenant-isolation.spec.ts
+PASS src/modules/branches/branches-tenant-isolation.spec.ts
+PASS src/modules/build/core/projects-ticket-links-tenant-isolation.spec.ts
+PASS src/modules/hr/enterprise-ops/event-stream/event-stream-tenant-isolation.spec.ts
+PASS src/modules/hr/helpdesk/hr-helpdesk-tenant-isolation.spec.ts
+PASS src/modules/hr/forms/hr-forms-tenant-isolation.spec.ts
+PASS src/modules/sales/sales-tenant-isolation.spec.ts
+PASS src/modules/mfa/mfa-tenant-isolation.spec.ts
+PASS src/modules/chat/chat-typing.isolation.spec.ts
+PASS src/modules/notifications/notifications-lifecycle-tenant-isolation.spec.ts
+PASS src/modules/goals/goals-tenant-isolation.spec.ts
+PASS src/modules/crm/crm-import-inbox-tenant-isolation.spec.ts
+PASS src/modules/dashboard/dashboard-personal-tenant-isolation.spec.ts
+PASS src/modules/build/forms/forms-tenant-isolation.spec.ts
+PASS src/modules/hr/lifecycle/__tests__/termination-lifecycle-tenant-isolation.spec.ts
+PASS src/modules/rbac/role-grant-reconciler-tenant-isolation.spec.ts
+PASS src/modules/inventory/purchase-orders/grn-receive-tenant-isolation.spec.ts
+PASS src/modules/payroll/payout/approval-actions-tenant-isolation.spec.ts
+PASS src/modules/party/party-revert-tenant-isolation.spec.ts
+PASS src/modules/kb/help-centre/kb-article-query-tenant-isolation.spec.ts
+PASS src/modules/autonomy/autonomy-review-tenant-isolation.spec.ts
+PASS src/modules/support/core/support-ai-translation-tenant-isolation.spec.ts
+PASS src/modules/gdpr/gdpr-rectification-tenant-isolation.spec.ts
+PASS src/modules/hr/templates/hr-templates-tenant-isolation.spec.ts
+PASS src/modules/deals/deals-forecast-tenant-isolation.spec.ts
+PASS src/modules/build/execution/epics-cycles-tenant-isolation.spec.ts
+PASS src/modules/inventory/webhooks/webhooks-tenant-isolation.spec.ts
+PASS src/modules/payroll/payout/payslip-bulk-publisher-tenant-isolation.spec.ts
+PASS src/modules/hr/templates/hr-template-render-tenant-isolation.spec.ts
+PASS src/modules/finance/ap/vendor-payments-allocations-tenant-isolation.spec.ts
+PASS src/modules/crm/inbox/__tests__/crm-inbox-tenant-isolation.spec.ts
+PASS src/modules/ai/summaries/ai-summaries-tenant-isolation.spec.ts
+PASS src/modules/payroll/payout/payslip-download-tenant-isolation.spec.ts
+PASS src/modules/integrations/core/integrations-tenant-isolation.spec.ts
+PASS src/modules/hr/enterprise-ops/accommodations/accommodations-tenant-isolation.spec.ts
+PASS src/modules/ai/core/services/crm-copilot-lead.isolation.spec.ts
+PASS src/modules/hr/enterprise-ops/emergency/emergency-tenant-isolation.spec.ts
+PASS src/modules/accounting/settings/accounting-settings-tenant-isolation.spec.ts
+PASS src/modules/surveys/survey-response-tenant-isolation.spec.ts
+PASS src/modules/rbac/roles-query-tenant-isolation.spec.ts
+PASS src/modules/hr/settings-hub/hr-settings-hub-tenant-isolation.spec.ts
+PASS src/modules/platform/platform-operator-access-tenant-isolation.spec.ts
+PASS src/modules/notifications/time-sweeps/notification-time-sweeps-tenant-isolation.spec.ts
+PASS src/modules/accounting/posting/posting-tenant-isolation.spec.ts
+PASS src/modules/timesheets/core/periods-read-tenant-isolation.spec.ts
+PASS src/modules/portal/access/portal-access-tenant-isolation.spec.ts
+PASS src/modules/hr/enterprise-ops/identity/identity-tenant-isolation.spec.ts
+PASS src/modules/feedbucket/feedbucket-tenant-isolation.spec.ts
+PASS src/modules/hr/enterprise-ops/simulator/simulator-tenant-isolation.spec.ts
+PASS src/modules/support/core/support-ai-triage-service-tenant-isolation.spec.ts (5.321 s)
+PASS src/modules/activities/activities-tenant-isolation.spec.ts
+PASS src/modules/build/teams/team-members.isolation.spec.ts (6.219 s)
+PASS src/modules/crm/crm-consent-pricebooks-tenant-isolation.spec.ts
+PASS src/modules/support/core/support-kb-tenant-isolation.spec.ts
+PASS src/modules/hr/directory/__tests__/org-chart-tenant-isolation.spec.ts
+PASS src/modules/billing/core/ai-credits-reservation-tenant-isolation.spec.ts
+PASS src/modules/mail/mail-sync-checkpoint-isolation.spec.ts
+PASS src/modules/support/kb-gap/support-kb-gap-tenant-isolation.spec.ts
+PASS src/modules/tasks/tasks-tenant-isolation.spec.ts
+PASS src/modules/kb/wiki/kb-page-duplicate-tenant-isolation.spec.ts
+PASS src/modules/hr/import/hr-export-file-tenant-isolation.spec.ts
+PASS src/modules/surveys/survey-response-submitted-consumer-tenant-isolation.spec.ts
+PASS src/modules/e-sign/sign-integrations-tenant-isolation.spec.ts
+PASS src/modules/autonomy/autonomy-hold-tenant-isolation.spec.ts
+PASS src/modules/support/core/support-ai-tenant-isolation.spec.ts
+PASS src/modules/issues/issues-tenant-isolation.spec.ts
+PASS src/modules/kb/help-centre/kb-comments-tenant-isolation.spec.ts
+PASS src/modules/hr/benefits/hr-benefits-tenant-isolation.spec.ts
+PASS src/modules/calendar/calendar-recurrence.isolation.spec.ts
+PASS src/modules/data-quality/data-quality-tenant-isolation.spec.ts
+PASS src/modules/finance/ar/credit-notes-tenant-isolation.spec.ts
+PASS src/modules/calendar/calendar-attendees.isolation.spec.ts
+PASS src/modules/payroll/hr-payroll/fnf-hr-payroll-tenant-isolation.spec.ts
+PASS src/modules/kb/wiki/kb-page-ai-tenant-isolation.spec.ts (6.662 s)
+PASS src/modules/support/core/support-workspace-tenant-isolation.spec.ts
+PASS src/modules/organization/core/invitations-read-tenant-isolation.spec.ts
+PASS src/modules/notifications/notifications-read-tenant-isolation.spec.ts
+PASS src/modules/module-access/module-access-group-crud-tenant-isolation.spec.ts
+PASS src/modules/surveys/survey-lead-automation-tenant-isolation.spec.ts
+PASS src/modules/integrations/git/git-connections-tenant-isolation.spec.ts
+PASS src/modules/finance/tax/tax-reports-tenant-isolation.spec.ts
+PASS src/modules/dashboard/dashboard-crm-tenant-isolation.spec.ts
+PASS src/modules/kb/wiki/kb-spaces-tenant-isolation.spec.ts
+PASS src/modules/invoices/invoices-write-tenant-isolation.spec.ts
+PASS src/modules/finance/banking/bank-accounts-tenant-isolation.spec.ts
+PASS src/modules/api-tokens/core/api-tokens-tenant-isolation.spec.ts
+PASS src/modules/calendar/external-calendar-events-tenant-isolation.spec.ts
+PASS src/modules/kb/wiki/kb-pages-tenant-isolation.spec.ts
+PASS src/modules/finance/banking/reconciliation-tenant-isolation.spec.ts
+PASS src/modules/leads/lead-status-tenant-isolation.spec.ts
+PASS src/modules/build/core/projects-tickets-read-tenant-isolation.spec.ts
+PASS src/modules/kb/wiki/kb-page-versions-tenant-isolation.spec.ts
+PASS src/modules/build/core/projects-work-query-tenant-isolation.spec.ts
+PASS src/modules/surveys/survey-version-tenant-isolation.spec.ts
+PASS src/modules/dashboard/dashboard-availability-tenant-isolation.spec.ts
+PASS src/modules/dashboard/dashboard-stats-tenant-isolation.spec.ts
+PASS src/modules/finance/planning/forecast-tenant-isolation.spec.ts
+PASS src/modules/payroll/runs/payroll-run-employees-tenant-isolation.spec.ts
+PASS src/modules/kb/help-centre/kb-article-ai-tenant-isolation.spec.ts
+PASS src/modules/support/kb-gap/support-kb-gap-detection-tenant-isolation.spec.ts
+PASS src/modules/e-sign/sign-public-form-tenant-isolation.spec.ts
+PASS src/modules/finance/tax/tax-dashboard-tenant-isolation.spec.ts
+PASS src/modules/kb/wiki/kb-page-visits-tenant-isolation.spec.ts
+PASS src/modules/kb/retrieval/kb-ask-tenant-isolation.spec.ts
+PASS src/modules/autonomy/autonomy-scoring-tenant-isolation.spec.ts
+PASS src/modules/finance/assets/depreciation-reverse-tenant-isolation.spec.ts
+PASS src/modules/finance/ap/bills-workflow-tenant-isolation.spec.ts
+PASS src/modules/surveys/survey-participant-tenant-isolation.spec.ts
+PASS src/modules/organization/onboarding/workspace-onboarding-tenant-isolation.spec.ts
+PASS src/modules/rbac/principal-groups-tenant-isolation.spec.ts
+PASS src/modules/finance/reports/analytics-reports-tenant-isolation.spec.ts
+PASS src/modules/organization/core/account-organization-index-tenant-isolation.spec.ts
+PASS src/modules/organization/core/organization-settings-tenant-isolation.spec.ts
+PASS src/modules/leads/lead-conversion-tenant-isolation.spec.ts
+PASS src/modules/kb/help-centre/kb-from-ticket-tenant-isolation.spec.ts
+PASS src/modules/payroll/runs/payroll-run-variance-tenant-isolation.spec.ts
+PASS src/modules/kb/wiki/kb-page-tree-tenant-isolation.spec.ts
+PASS src/modules/build/core/projects-tickets-update-tenant-isolation.spec.ts
+PASS src/modules/calendar/calendar-reminder-sweep-tenant-isolation.spec.ts
+PASS src/modules/hr/config/hr-time-off-config-tenant-isolation.spec.ts
+PASS src/modules/build/core/build-release-published-consumer-tenant-isolation.spec.ts
+PASS src/modules/billing/core/affiliate-tenant-isolation.spec.ts
+PASS src/modules/kb/wiki/kb-page-comments-tenant-isolation.spec.ts
+PASS src/modules/workflows/engine/workflow-runner-tenant-isolation.spec.ts
+PASS src/modules/leads/leads-reports-tenant-isolation.spec.ts
+PASS src/modules/autonomy/autonomy-reversal-tenant-isolation.spec.ts
+PASS src/modules/finance/expenses/categorize-suggest-tenant-isolation.spec.ts
+PASS src/modules/finance/reports/overview-tenant-isolation.spec.ts
+PASS src/modules/ai/core/services/hr-performance-ai-tenant-isolation.spec.ts
+PASS src/modules/ai/core/services/crm-nl-search.isolation.spec.ts
+PASS src/modules/autonomy/autonomy-actions-tenant-isolation.spec.ts
+PASS src/modules/payroll/runs/loan-adjustments-tenant-isolation.spec.ts
+PASS src/modules/leads/leads-import-tenant-isolation.spec.ts
+PASS src/modules/organization/core/org-profile-tenant-isolation.spec.ts
+PASS src/modules/ai/core/services/crm-meeting-brief.isolation.spec.ts
+PASS src/modules/kb/wiki/kb-page-record-links-tenant-isolation.spec.ts
+PASS src/modules/dashboard/dashboard-birthdays-tenant-isolation.spec.ts
+PASS src/modules/kb/help-centre/kb-articles-tenant-isolation.spec.ts
+PASS src/modules/finance/reports/statement-reports-tenant-isolation.spec.ts (9.221 s)
+PASS src/modules/public/public-careers-tenant-isolation.spec.ts
+PASS src/modules/payroll/payout/locking-tenant-isolation.spec.ts
+PASS src/modules/kb/wiki/kb-page-reviews-tenant-isolation.spec.ts
+PASS src/modules/kb/wiki/kb-page-status-tenant-isolation.spec.ts
+PASS src/modules/public/kb-tenant-isolation.spec.ts
+PASS src/modules/payroll/payout/batch-status-tenant-isolation.spec.ts
+PASS src/modules/organization/hierarchy/org-hierarchy-branches-tenant-isolation.spec.ts
+PASS src/modules/contacts/contacts-tenant-isolation.spec.ts
+PASS src/modules/organization/hierarchy/org-hierarchy-departments-tenant-isolation.spec.ts
+PASS src/modules/support/core/support-reports-tenant-isolation.spec.ts
+PASS src/modules/invoices/invoices-tenant-isolation.spec.ts
+PASS src/modules/finance/ar/ar-payments-tenant-isolation.spec.ts
+PASS src/modules/timesheets/payroll/payroll-exports-read-tenant-isolation.spec.ts
+PASS src/modules/calendar/calendar-provider-sync-sweep-tenant-isolation.spec.ts
+PASS src/modules/organization/hierarchy/org-hierarchy-business-units-tenant-isolation.spec.ts
+PASS src/modules/timesheets/core/periods-submit-tenant-isolation.spec.ts
+PASS src/modules/build/execution/whiteboard-sharing-tenant-isolation.spec.ts
+PASS src/modules/email/email-outbox-tenant-isolation.spec.ts
+PASS src/modules/kb/help-centre/kb-analytics-tenant-isolation.spec.ts
+PASS src/modules/organization/hierarchy/org-hierarchy-read-tenant-isolation.spec.ts
+PASS src/modules/kb/retrieval/kb-chat-history-tenant-isolation.spec.ts
+PASS src/modules/cron/__tests__/cron-notification-outbox-retention-tenant-isolation.spec.ts
+PASS src/modules/organization/hierarchy/org-hierarchy-teams-tenant-isolation.spec.ts
+PASS src/modules/organization/hierarchy/org-hierarchy-cost-centers-tenant-isolation.spec.ts
+PASS src/modules/leads/leads-reports-team-tenant-isolation.spec.ts
+PASS src/modules/dashboard/dashboard-announcements-tenant-isolation.spec.ts
+PASS src/modules/offer-fulfillment/deal-closed-consumer-tenant-isolation.spec.ts
+PASS src/modules/organization/hierarchy/org-hierarchy-locations-tenant-isolation.spec.ts
+PASS src/modules/workflows/workflows-analytics-tenant-isolation.spec.ts
+PASS src/modules/surveys/survey-export-tenant-isolation.spec.ts
+PASS src/modules/finance/reports/insights-finders-tenant-isolation.spec.ts
+PASS src/modules/notifications/notification-delivery-worker-tenant-isolation.spec.ts
+PASS src/modules/build/approvals/build-approvals-inbox.isolation.spec.ts
+PASS src/modules/organization/hierarchy/org-hierarchy-tree-source-tenant-isolation.spec.ts
+PASS src/modules/payroll/payout/payroll-approver-resolver-tenant-isolation.spec.ts
+PASS src/modules/auth/auth-membership-resolver-isolation.spec.ts
+PASS src/modules/surveys/survey-collector-tenant-isolation.spec.ts
+PASS src/modules/deals/deals-activities-tenant-isolation.spec.ts
+PASS src/modules/search/search-tenant-isolation.spec.ts
+PASS src/modules/payroll/runs/inputs-tenant-isolation.spec.ts
+PASS src/modules/goals/goal-links-tenant-isolation.spec.ts
+{"timestamp":"2026-09-04T06:12:25.855Z","level":"error","message":"Failed to process comment mentions","meta":{"error":{"name":"TypeError","message":"this.activity.processCommentMentions is not a function","stack":"TypeError: this.activity.processCommentMentions is not a function\n    at ProjectsTicketCommentsService.addComment (D:\\projects\\personal\\Streamlineos\\backend\\src\\modules\\build\\core\\projects-ticket-comments.service.ts:108:27)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at Object.<anonymous> (D:\\projects\\personal\\Streamlineos\\backend\\src\\modules\\build\\core\\projects-ticket-comments-tenant-isolation.spec.ts:53:5)"}}}
+PASS src/modules/build/core/projects-ticket-comments-tenant-isolation.spec.ts
+PASS src/modules/rbac/rbac-tenant-isolation.spec.ts
+PASS src/modules/billing/payments/payment-provider-setup-tenant-isolation.spec.ts
+PASS src/modules/finance/banking/matching-tenant-isolation.spec.ts
+PASS src/modules/notifications/notification-template-renderer-tenant-isolation.spec.ts
+PASS src/modules/organization/setup/org-members-tenant-isolation.spec.ts
+PASS src/modules/build/teams/team-projects.isolation.spec.ts
+PASS src/modules/notifications/notification-routing-tenant-isolation.spec.ts
+PASS src/modules/build/core/projects-templates-tenant-isolation.spec.ts
+PASS src/modules/build/core/projects-activity.isolation.spec.ts
+PASS src/modules/support/core/support-channels-tenant-isolation.spec.ts
+PASS src/modules/kb/help-centre/kb-verification-tenant-isolation.spec.ts
+PASS src/modules/ai/core/services/ticket-triage-ai-tenant-isolation.spec.ts
+PASS src/modules/deals/deals-analytics-tenant-isolation.spec.ts
+PASS src/modules/module-access/module-access-group-members-tenant-isolation.spec.ts
+PASS src/modules/directory/worker-engagements-tenant-isolation.spec.ts
+PASS src/modules/ingress/adapters/crm-mailbox-tenant-isolation.spec.ts
+PASS src/modules/settings/settings-automations-tenant-isolation.spec.ts
+PASS src/modules/accounting/core/accounting-aging-tenant-isolation.spec.ts
+PASS src/modules/build/core/projects-customers-tenant-isolation.spec.ts
+PASS src/modules/deals/deals-approvals-tenant-isolation.spec.ts
+PASS src/modules/finance/tax/tax-codes-tenant-isolation.spec.ts
+PASS src/modules/finance/tax/tax-payments-tenant-isolation.spec.ts
+PASS src/modules/build/core/projects-automations-tenant-isolation.spec.ts
+PASS src/modules/invoices/invoices-update-tenant-isolation.spec.ts
+PASS src/modules/notifications/notification-outbox-relay-tenant-isolation.spec.ts
+PASS src/modules/leads/leads-detail-tenant-isolation.spec.ts
+PASS src/modules/build/execution/build-sprint-completed-consumer-tenant-isolation.spec.ts
+PASS src/modules/accounting/core/accounting-receivables-tenant-isolation.spec.ts
+PASS src/modules/kb/core/kb-tags-tenant-isolation.spec.ts
+PASS src/modules/ingress/adapters/telephony-call-log-tenant-isolation.spec.ts
+PASS src/modules/kb/retrieval/kb-research-brief-tenant-isolation.spec.ts
+PASS src/modules/surveys/survey-analytics-tenant-isolation.spec.ts
+PASS src/modules/kb/wiki/kb-page-templates-tenant-isolation.spec.ts
+PASS src/modules/kb/article-conversion/kb-article-migration-tenant-isolation.spec.ts
+PASS src/modules/kb/core/kb-translations-tenant-isolation.spec.ts
+PASS src/modules/workflows/workflows-tenant-isolation.spec.ts
+PASS src/modules/crm/import/crm-connector-tenant-isolation.spec.ts
+PASS src/modules/build/teams/teams-tenant-isolation.spec.ts
+PASS src/modules/activities/my-tasks-tenant-isolation.spec.ts
+{"timestamp":"2026-09-04T06:12:46.897Z","level":"error","message":"webhook-emitter: dispatch loop failed","meta":{"orgId":"org-attacker","eventType":"inventory.product.created","cause":"matching is not iterable"}}
+{"timestamp":"2026-09-04T06:12:46.898Z","level":"error","message":"webhook-emitter: dispatch loop failed","meta":{"orgId":"org-owner","eventType":"inventory.product.created","cause":"matching is not iterable"}}
+PASS src/modules/inventory/webhooks/webhook-emitter-tenant-isolation.spec.ts
+PASS src/modules/integrations/git/integrations-git-tenant-isolation.spec.ts
+PASS src/modules/ai/core/services/hr-helpdesk-ai-tenant-isolation.spec.ts
+PASS src/modules/notifications/notification-event-registry-tenant-isolation.spec.ts
+PASS src/modules/rbac/role-member-tenant-isolation.spec.ts
+PASS src/modules/finance/ap/recurring-bills-tenant-isolation.spec.ts
+PASS src/modules/customer-executive/customer-executive-tenant-isolation.spec.ts
+PASS src/modules/build/comment-drafts/comment-drafts.isolation.spec.ts
+PASS src/modules/build/execution/timesheets-tenant-isolation.spec.ts
+PASS src/modules/notifications/notification-policy-tenant-isolation.spec.ts
+PASS src/modules/build/incidents/incidents-tenant-isolation.spec.ts
+PASS src/modules/notifications/notification-providers-tenant-isolation.spec.ts
+PASS src/modules/finance/banking/reconciliation-rules-tenant-isolation.spec.ts
+PASS src/modules/ai/core/services/hr-recruitment-ai-tenant-isolation.spec.ts
+PASS src/modules/kb/help-centre/kb-categories-tenant-isolation.spec.ts
+PASS src/modules/public/public-offers-tenant-isolation.spec.ts
+PASS src/modules/finance/ap/vendor-credits-tenant-isolation.spec.ts
+PASS src/modules/finance/banking/imports-tenant-isolation.spec.ts
+PASS src/modules/finance/banking/transfers-tenant-isolation.spec.ts
+PASS src/modules/notifications/notification-preferences-tenant-isolation.spec.ts
+PASS src/modules/finance/ap/bills-due-check-tenant-isolation.spec.ts
+PASS src/modules/webhooks/webhooks-dispatch-tenant-isolation.spec.ts
+PASS src/modules/quotes/quotes-lifecycle-tenant-isolation.spec.ts
+PASS src/modules/leads/leads-ops-tenant-isolation.spec.ts
+PASS src/modules/finance/ap/vendor-payments-list-tenant-isolation.spec.ts
+PASS src/modules/users/user-profile-tenant-isolation.spec.ts
+PASS src/modules/notifications/notification-preference-rules-tenant-isolation.spec.ts
+PASS src/modules/kb/wiki/kb-import-export-tenant-isolation.spec.ts
+PASS src/modules/organization/hierarchy/org-hierarchy-command-tenant-isolation.spec.ts
+PASS src/modules/kb/retrieval/kb-page-backfill-tenant-isolation.spec.ts
+PASS src/modules/billing/payments/payment-readiness-tenant-isolation.spec.ts
+PASS src/modules/kb/wiki/kb-sources-tenant-isolation.spec.ts (10.579 s)
+PASS src/modules/notifications/notification-templates-tenant-isolation.spec.ts
+PASS src/modules/payroll/payout/payout-validation-tenant-isolation.spec.ts
+PASS src/modules/build/core/projects-write-tenant-isolation.spec.ts
+PASS src/modules/auth/auth-passwordless-isolation.spec.ts (10.84 s)
+PASS src/modules/finance/banking/reconciliation-workspace-tenant-isolation.spec.ts
+PASS src/modules/public/roadmap-tenant-isolation.spec.ts
+PASS src/modules/finance/assets/assets-tenant-isolation.spec.ts
+PASS src/modules/kb/core/kb-settings-tenant-isolation.spec.ts
+PASS src/modules/finance/assets/asset-categories-tenant-isolation.spec.ts
+PASS src/modules/build/execution/whiteboards-tenant-isolation.spec.ts
+PASS src/modules/kb/core/kb-credits-tenant-isolation.spec.ts
+PASS src/modules/hr/analytics-plus/hr-analytics-plus-tenant-isolation.spec.ts
+PASS src/modules/finance/expenses/receipts-tenant-isolation.spec.ts
+PASS src/modules/invoices/invoices-lifecycle-tenant-isolation.spec.ts
+PASS src/modules/surveys/survey-live-participant-tenant-isolation.spec.ts
+PASS src/modules/finance/ar/recurring-invoices-tenant-isolation.spec.ts
+PASS src/modules/billing/payments/payment-manual-methods-tenant-isolation.spec.ts
+PASS src/modules/payroll/payout/publishing-tenant-isolation.spec.ts
+PASS src/modules/finance/assets/depreciation-runs-tenant-isolation.spec.ts
+PASS src/modules/billing/payments/payment-provider-resolver-tenant-isolation.spec.ts
+PASS src/modules/payroll/entities/entities-tenant-isolation.spec.ts
+PASS src/modules/finance/ar/collections-tenant-isolation.spec.ts
+PASS src/modules/finance/controls/approval-policies-tenant-isolation.spec.ts
+PASS src/modules/finance/expenses/expense-policies-tenant-isolation.spec.ts
+PASS src/modules/email/email-suppression-tenant-isolation.spec.ts
+PASS src/modules/finance/planning/bva-tenant-isolation.spec.ts
+PASS src/modules/payroll/hr-payroll/tax-tenant-isolation.spec.ts
+PASS src/modules/careers/careers-tenant-isolation.spec.ts
+PASS src/modules/public/crm-tenant-isolation.spec.ts
+PASS src/modules/finance/planning/scenarios-tenant-isolation.spec.ts
+PASS src/modules/rbac/role-permission-tenant-isolation.spec.ts
+PASS src/modules/billing/payments/payment-audit-tenant-isolation.spec.ts
+PASS src/modules/finance/controls/exchange-rates-tenant-isolation.spec.ts
+PASS src/modules/support/core/support-portal-tenant-isolation.spec.ts
+PASS src/modules/build/entity/build-entity-reads-tenant-isolation.spec.ts
+PASS src/modules/finance/controls/audit-surface-tenant-isolation.spec.ts
+PASS src/modules/surveys/survey-builder-tenant-isolation.spec.ts
+PASS src/modules/access/user-module-access-tenant-isolation.spec.ts
+PASS src/modules/finance/reports/insights-tenant-isolation.spec.ts
+PASS src/modules/public/public-referrers-tenant-isolation.spec.ts
+PASS src/modules/notifications/notification-digest-tenant-isolation.spec.ts
+PASS src/modules/tasks/task-analytics-tenant-isolation.spec.ts
+PASS src/modules/mail/mail-accounts-tenant-isolation.spec.ts
+PASS src/modules/api-tokens/user/user-api-tokens-isolation.spec.ts
+PASS src/modules/access/mfa-policy-tenant-isolation.spec.ts
+PASS src/modules/goals/goal-key-results-tenant-isolation.spec.ts
+PASS src/modules/platform/platform-tenant-isolation.spec.ts
+PASS src/modules/build/core/projects-ticket-subresources-tenant-isolation.spec.ts
+PASS src/modules/directory/directory-identity-tenant-isolation.spec.ts
+PASS src/modules/build/meetings/meetings-tenant-isolation.spec.ts
+PASS src/modules/tasks/task-sequences-tenant-isolation.spec.ts
+PASS src/modules/build/core/projects-query-tenant-isolation.spec.ts
+PASS src/modules/public/public-forms-tenant-isolation.spec.ts
+PASS src/modules/build/core/projects-tickets-detail-tenant-isolation.spec.ts
+PASS src/modules/build/meetings/action-items-tenant-isolation.spec.ts
+PASS src/modules/portal/client/portal-client-tenant-isolation.spec.ts
+PASS src/modules/support/core/support-integrations-tenant-isolation.spec.ts
+PASS src/modules/feedbucket/feedbucket-public-tenant-isolation.spec.ts
+PASS src/modules/build/forms/submissions-tenant-isolation.spec.ts
+PASS src/modules/build/core/build-due-sweep.isolation.spec.ts
+PASS src/modules/agent-access/agent-access-isolation.spec.ts
+PASS src/modules/finance/ar/statements-tenant-isolation.spec.ts
+PASS src/modules/build/portfolios/programs-tenant-isolation.spec.ts
+PASS src/modules/payroll/insights/manager-inbox-tenant-isolation.spec.ts
+PASS src/modules/support/core/support-ai-settings-tenant-isolation.spec.ts
+PASS src/modules/payroll/hr-payroll/salary-structure-templates-tenant-isolation.spec.ts
+PASS src/modules/dashboard/dashboard-project-tenant-isolation.spec.ts
+PASS src/modules/auth/auth-analytics-isolation.spec.ts
+PASS src/modules/support/core/support-drafts-tenant-isolation.spec.ts
+PASS src/modules/support/core/support-settings-audit-tenant-isolation.spec.ts
+PASS src/modules/public/org-tenant-isolation.spec.ts
+
+Test Suites: 452 passed, 452 total
+Tests:       1873 passed, 1873 total
+Snapshots:   0 total
+Time:        263.911 s
+Ran all test suites matching /tenant-isolation|isolation.spec/i.

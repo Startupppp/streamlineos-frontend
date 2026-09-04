@@ -1,0 +1,4 @@
+Self-tests passed.
+Scanned 194 HR service files.
+35 known violation(s), baseline 60 — OK (ratchet).
+Lower BASELINE to 35 to lock in the reduction.

@@ -1,0 +1,4 @@
+check:migration-rollback PASSED
+  685 migrations scanned
+  Compliance required for numeric prefix > 839
+  All rollback type-name checks passed

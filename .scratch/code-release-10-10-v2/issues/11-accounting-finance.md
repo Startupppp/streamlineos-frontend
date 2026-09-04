@@ -10,7 +10,7 @@
 
 ## Acceptance criteria
 
-- [ ] **PRD-C126** — Reconstruct current-head Accounting/Finance evidence across immutable tenant-safe ledgers, normalized expenses and reconciliation, bounded indexed reads, queue-backed exports/reminders, idempotent consumers, retention, authorization, frontend states and production-shaped workflow tests.
+- [x] **PRD-C126** — Reconstruct current-head Accounting/Finance evidence across immutable tenant-safe ledgers, normalized expenses and reconciliation, bounded indexed reads, queue-backed exports/reminders, idempotent consumers, retention, authorization, frontend states and production-shaped workflow tests.
 
 ## Completion evidence
 

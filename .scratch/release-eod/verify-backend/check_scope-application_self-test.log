@@ -1,0 +1,18 @@
+{
+  "selfTest": true,
+  "pass": true,
+  "checks": {
+    "findsTheDecorativeResolve": true,
+    "decorativeIsNamedByLine": true,
+    "cacheKeyDoesNotCountAsApplication": true,
+    "guardAgainstNoneDoesNotCountAsApplication": true,
+    "sqlTemplateInterpolationDoesCountAsApplication": true,
+    "appliedToAPredicatePasses": true,
+    "ternaryReturningTheScopeIsNotDecorative": true,
+    "guardAndSurvivingElseBranchOnOneLineIsSpent": true,
+    "comparisonAgainstAnotherScopeValueIsSpent": true,
+    "handedToAnotherFunctionPasses": true,
+    "readRequestScopeIsARecognisedSource": true,
+    "blockStopsAtTheMethodEnd": true
+  }
+}

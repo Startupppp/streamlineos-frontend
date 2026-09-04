@@ -1,0 +1,56 @@
+check-route-budgets: 93 declared budgets (70 routes + 23 worker batches)
+  Route surface: 93/3648 operations carry a budget (2.5% of the live OpenAPI surface).
+  NOTE: manifest records 3613 operations at the release commit; the live document has 3648. The fraction above uses the live number.
+  Measurement: 387/648 declared ceilings measured (59.7%) — 3 budgets fully measured, 66 partly, 24 not at all.
+  By field: DbCalls 3/93 · LatencyP95Ms 69/93 · DownstreamCalls 69/93 · ResponseBytes 69/93 · MemoryMb 69/93 · BufferBlocks 54/54 · ReadPathP95Ms 54/83 · BatchSize 0/23 · DurationMs 0/23
+  Read-cost guard: 71 read-cost budgets declared (0 excluded), covering 71/3648 operations at most (1.9%); 54/93 route budgets are backed by one (58.1%).
+  maxDbCalls basis: 19 counted from the call path · 19 declared estimate · 55 default ceiling · 0 undeclared.
+  Critical set, clause (d) DERIVED from 132 operations on @Controller("cron") classes: 68 scheduled batches — 23 declare a budget (33.8%), 2 declared out of scope with a reason, 43 UNDECLARED against a watermark of 43.
+  Undeclared scheduled batches (no ceiling of any kind is enforced on these):
+    /cron/account-org-index-rebuild
+    /cron/ai-jobs-flush
+    /cron/auto-checkout
+    /cron/auto-topup-flush
+    /cron/build-daily-snapshots
+    /cron/calendar-reminder-sweep
+    /cron/certification-expiry
+    /cron/chat-reply-reminders
+    /cron/crm-sequences-flush
+    /cron/crm-tasks-overdue-flush
+    /cron/daily-notifications
+    /cron/document-expiry
+    /cron/finance-depreciation
+    /cron/finance-due-checks
+    /cron/finance-recurring-flush
+    /cron/gdpr-export-artifact-retention
+    /cron/holiday-notifications
+    /cron/hr-engines-sweep
+    /cron/hr-engines-sweep/{sweepName}
+    /cron/interview-no-shows
+    /cron/invitation-expiry
+    /cron/invitation-expiry-sweep
+    /cron/kb-trash-purge
+    /cron/monthly-plan-grants
+    /cron/notification-time-sweeps
+    /cron/offer-deadline-reminders
+    /cron/onboarding-sweep
+    /cron/operator-grant-expiry
+    /cron/org-purge-worker
+    /cron/ownership-transfer-expiry
+    /cron/projects-recurring-flush
+    /cron/provider-webhook-redrive
+    /cron/retention-delete-sweep
+    /cron/session-revocation-prune
+    /cron/support-kb-gap-detect
+    /cron/support-sla-escalations
+    /cron/support-unsnooze
+    /cron/timesheets-exception-detection
+    /cron/trial-expiry
+    /cron/weekly-exec-recap
+    /cron/workflow-executions-sweep
+    /cron/workflow-schedules-tick
+    /cron/workflow-tick
+  EXCEEDED: 2 measured value(s) above declared ceiling:
+    POST /chat/channels/{channelId}/messages — measuredLatencyP95Ms=5043.126 exceeds maxLatencyP95Ms=1000
+    POST /chat/channels/{channelId}/messages — measuredDownstreamCalls=3 exceeds maxDownstreamCalls=0
+check-route-budgets: FAIL — 2 measured value(s) above ceiling. Raising a ceiling to make this green is itself a defect: fix the route or record the breach.

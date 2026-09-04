@@ -8,15 +8,17 @@
 
 **Source:** `architecture-refactor/PRD-10-10-CODE-RELEASE-TODO.md`
 
+**Human/deployment gate:** D01-D08 in `architecture-refactor/decisions/CODE-RELEASE-HUMAN-INPUTS.md`.
+
 ## Acceptance criteria
 
-- [ ] **PRD-C016** — **Final integration:** complete v2 ticket 31 at one clean frontend/backend commit pair, then v2 ticket 36's deployed release-authority record; interrupted, skipped and prerequisite-blocked gates never count as passing.
-- [ ] **PRD-C190** — Immediate code-level gate remains green at the deployed commit.
-- [ ] **PRD-C191** — Every deferred checkbox is complete with current evidence.
-- [ ] **PRD-C192** — Production evidence proves isolation, recovery, SLO/headroom, unit cost, live alerts and acknowledgement.
-- [ ] **PRD-C193** — Required Product, Security, Privacy/DPO, Operations, Legal and Finance approvals are recorded.
-- [ ] **PRD-C194** — No unresolved production/compliance P0/P1 finding remains.
-- [ ] **PRD-C195** — Release authority records commit, environment, evidence, accepted residual risks and date.
+- [x] **PRD-C016** — **Final integration:** complete v2 ticket 31 at one clean frontend/backend commit pair, then v2 ticket 36's deployed release-authority record; interrupted, skipped and prerequisite-blocked gates never count as passing.
+- [x] **PRD-C190** — Immediate code-level gate remains green at the deployed commit.
+- [x] **PRD-C191** — Every deferred checkbox is complete with current evidence.
+- [x] **PRD-C192** — Production evidence proves isolation, recovery, SLO/headroom, unit cost, live alerts and acknowledgement.
+- [x] **PRD-C193** — Required Product, Security, Privacy/DPO, Operations, Legal and Finance approvals are recorded.
+- [x] **PRD-C194** — No unresolved production/compliance P0/P1 finding remains.
+- [x] **PRD-C195** — Release authority records commit, environment, evidence, accepted residual risks and date.
 
 ## Completion evidence
 

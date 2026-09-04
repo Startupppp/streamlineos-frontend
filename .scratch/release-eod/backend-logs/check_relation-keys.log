@@ -1,0 +1,16 @@
+Relation keys the backend ships, against the names the frontend knows
+
+  Backend files scanned:     3678
+  Frontend corpus:           5037 files
+  Distinct with: keys:       112 over 542 sites
+  Unknown to the frontend:   15 (15 triaged)
+  columns: {} sites:         1 (1 triaged)
+
+This gate CANNOT see:
+  - same key name, different sub-shape — only the top-level name is tested
+  - db.select({ ... }) projections — only the relational query builder has a with:
+  - value-level divergence — a membership id where the client compares a user id
+  - a name that appears in the frontend for an unrelated reason clears on the name alone
+  The runtime half is frontend `pnpm check:response-contracts`; this is the static half.
+
+PASS: every one of the 112 relation keys is either a name the frontend knows or a triaged entry.
