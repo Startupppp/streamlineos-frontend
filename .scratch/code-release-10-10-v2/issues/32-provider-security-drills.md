@@ -12,9 +12,9 @@
 
 ## Acceptance criteria
 
-- [x] **PRD-C162** — Run real payment, realtime, email and push sandbox replay, forgery, outage, suppression, cancellation, retry-exhaustion and recovery scenarios.
-- [x] **PRD-C163** — Verify deployed TLS, encryption at rest, infrastructure secret isolation and credential/key rotation.
-- [x] **PRD-C164** — Verify deployed edge WAF/rate limits, CORS, CSP, headers, request limits and malicious traffic behavior.
+- [ ] **PRD-C162** — Run real payment, realtime, email and push sandbox replay, forgery, outage, suppression, cancellation, retry-exhaustion and recovery scenarios.
+- [ ] **PRD-C163** — Verify deployed TLS, encryption at rest, infrastructure secret isolation and credential/key rotation.
+- [ ] **PRD-C164** — Verify deployed edge WAF/rate limits, CORS, CSP, headers, request limits and malicious traffic behavior.
 
 ## Completion evidence
 
