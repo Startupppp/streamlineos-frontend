@@ -40,7 +40,7 @@ export function useKbConversations(enabled: boolean) {
     queryKey: queryKeys.kb.chatConversations(),
     queryFn: ({ pageParam, signal }) => {
       const params: Record<string, unknown> = { limit: HISTORY_PAGE_SIZE };
-      if (pageParam) params.cursor = pageParam;
+      if (pageParam !== undefined) params.cursor = pageParam;
       return apiClient.get<KbConversationListPage>("/kb/ask/conversations", params, signal);
     },
     initialPageParam: undefined as number | undefined,
@@ -80,7 +80,7 @@ export function useKbConversationMessages(conversationId: number | null, enabled
     queryKey: queryKeys.kb.chatConversationMessages(conversationId ?? 0),
     queryFn: ({ pageParam, signal }) => {
       const params: Record<string, unknown> = { limit: HISTORY_PAGE_SIZE };
-      if (pageParam) params.cursor = pageParam;
+      if (pageParam !== undefined) params.cursor = pageParam;
       return apiClient.get<KbChatHistoryPage>(
         `/kb/ask/conversations/${conversationId}/messages`,
         params,

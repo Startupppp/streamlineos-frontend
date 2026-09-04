@@ -1,0 +1,2 @@
+TICKET 07
+CODE criteria to verify (2): PRD-C118, PRD-C119

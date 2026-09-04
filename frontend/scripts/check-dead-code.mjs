@@ -48,12 +48,6 @@ const DATA_LAYER_CONTRACT_RE = /^hooks\/api\//;
 
 const TEST_INFRA_RE = /^test-utils\//;
 
-const PRE_IMPLEMENTATION_CONTRACTS = new Set([
-  "lib/backend-token-contract.ts",
-]);
-
-
-
 const BASELINE = { deadFiles: 0, deadExports: 0 };
 
 const SCAN_FLOOR = { knipTotal: 5, graphFiles: 100, graphEdges: 300 };
@@ -97,7 +91,6 @@ const EXPORT_VERDICTS = new Map([
   ["hooks/api/kb/article-ai.ts:useKbArticleImprove", { verdict: "KEEP", reason: "the buffered POST /kb/articles/:id/ai/improve client, kept beside streamKbDocAi now that the KB article AI panel streams; the buffered route is still live and still published in the API contract, and this release does not delete a documented client the moment its own surface moves off it" }],
   ["hooks/api/kb/article-ai.ts:useKbArticleSuggestRelated", { verdict: "KEEP", reason: "the buffered POST /kb/articles/:id/ai/suggest-related client, kept beside streamKbDocAi now that the KB article AI panel streams; the buffered route is still live and still published in the API contract, and this release does not delete a documented client the moment its own surface moves off it" }],
 
-  ["hooks/api/offset-page-schema.ts:offsetPageContract", { verdict: "KEEP", reason: "the runtime Zod validator for the counted offset envelope, deliberately ahead of its callers and NOT yet wired to one. Its sibling TYPE, OffsetPage<T>, is consumed by 20+ hooks as the generic on apiClient.get<OffsetPage<T>>(...).items -- so the shape is asserted at COMPILE time everywhere and validated at RUNTIME nowhere, which is the same unarbitrated-response gap that lets a backend shape change reach a component as undefined. Wiring it means switching those hooks from apiClient.get<T> to a contract-parsing read, which changes runtime behaviour on live data (a drifted field would begin throwing where it currently renders blank) and is not a merge-eve change. Delete this entry the day a hook parses with it, or the day the offset envelope is retired -- either makes it stale and this gate will say so."}],
 ]);
 
 function checkStaleVerdicts(verdicts, processedKeys) {
@@ -200,6 +193,61 @@ function buildImporterMap(root, stats = { walked: 0, read: 0 }) {
   return map;
 }
 
+/**
+ * Which symbols are actually imported THROUGH each barrel.
+ *
+ * PRD-C026 closes with "An exported symbol is not considered used merely because a barrel exports
+ * it." The gate used to do the literal inverse: every export of a named contract barrel and every
+ * export of a feature barrel was RETAINED-BY-CONTRACT by rule, so a re-export line nothing imports
+ * through was indistinguishable from one twenty files depend on. This index makes the difference
+ * visible, per symbol.
+ *
+ * `symbols` holds the names some file imported by name from that barrel path. `wildcard` is set
+ * when a file reached the barrel through `import * as ns from` or `export * from`, where the
+ * consumed names cannot be read off the statement; a wildcard retains the whole barrel. That is
+ * deliberately conservative — the tightening must never be able to delete a line that is genuinely
+ * reached — and it is why this index can only ever report FEWER retentions than the blanket rule,
+ * never more.
+ */
+function buildBarrelUseIndex(root) {
+  const map = new Map();
+
+  function touch(abs) {
+    const rel = toFwd(relative(root, abs));
+    if (!map.has(rel)) map.set(rel, { symbols: new Set(), wildcard: false });
+    return map.get(rel);
+  }
+
+  for (const file of walkTs(root)) {
+    let src;
+    try { src = readFileSync(file, "utf8"); } catch { continue; }
+    const fromDir = dirname(file);
+    let m;
+
+    const braceRe = /^\s*(?:import|export)\s+(?:type\s+)?\{([^}]*)\}\s*from\s*["']([^"']+)["']/gm;
+    while ((m = braceRe.exec(src)) !== null) {
+      const target = findFile(m[2], fromDir, root);
+      if (!target || target === file) continue;
+      const entry = touch(target);
+      for (const raw of m[1].split(",")) {
+        const piece = raw.trim().replace(/^type\s+/, "");
+        if (!piece) continue;
+        const name = piece.split(/\s+as\s+/)[0].trim();
+        if (name) entry.symbols.add(name);
+      }
+    }
+
+    const starRe = /^\s*(?:import\s+\*\s+as\s+\w+|export\s+\*(?:\s+as\s+\w+)?)\s+from\s*["']([^"']+)["']/gm;
+    while ((m = starRe.exec(src)) !== null) {
+      const target = findFile(m[1], fromDir, root);
+      if (!target || target === file) continue;
+      touch(target).wildcard = true;
+    }
+  }
+
+  return map;
+}
+
 function classifyFile(relPath, knipDeadSet, importerMap, root) {
   const stem = basename(relPath).replace(/\.[^.]+$/, "");
   // Path-classified, anchored: a file under a generated/scratch/vendor directory
@@ -216,9 +264,6 @@ function classifyFile(relPath, knipDeadSet, importerMap, root) {
   }
   if (TEST_INFRA_RE.test(relPath)) {
     return { cls: "RETAINED-BY-CONVENTION", reason: "test-infrastructure utility; no current consumer — the path exists for future tests" };
-  }
-  if (PRE_IMPLEMENTATION_CONTRACTS.has(relPath)) {
-    return { cls: "RETAINED-BY-CONVENTION", reason: "AR-01 pre-implementation contract — consumers are being written in the token-authority lane; no importers yet is the expected state" };
   }
 
   const absPath = join(root, ...relPath.split("/"));
@@ -271,7 +316,7 @@ function declaredDependencyCount(root) {
   }
 }
 
-function classifyExport(filePath, name, verdicts = EXPORT_VERDICTS, kind = "export", knipDeadSet = new Set(), depKey = false) {
+function classifyExport(filePath, name, verdicts = EXPORT_VERDICTS, kind = "export", knipDeadSet = new Set(), depKey = false, barrelUse = new Map()) {
   if (depKey) {
     // A package finding has no source path to classify by — package.json matches none of the
     // path rules below, and letting it fall through them would be classification by accident.
@@ -283,17 +328,25 @@ function classifyExport(filePath, name, verdicts = EXPORT_VERDICTS, kind = "expo
       reason: `no verdict recorded for dep:${name}; add a WIRE/KEEP entry to EXPORT_VERDICTS with a written reason, or remove the dependency`,
     };
   }
-  if (CONTRACT_BARRELS.has(filePath)) {
-    return { cls: "RETAINED-BY-CONTRACT", reason: "named intentional barrel" };
-  }
-  if (FEATURE_BARREL_RE.test(filePath)) {
-    return { cls: "RETAINED-BY-CONTRACT", reason: "feature barrel extension point" };
-  }
   if (TEST_INFRA_RE.test(filePath)) {
     return { cls: "RETAINED-BY-CONVENTION", reason: "test-infrastructure utility; exports are available for all test suites" };
   }
   if (CRM_INVENTORY_RE.test(filePath)) {
     return { cls: "EXCLUDED", reason: "CRM/Inventory excluded from PRD scope; not counted in dead-code baseline" };
+  }
+  if (CONTRACT_BARRELS.has(filePath) || FEATURE_BARREL_RE.test(filePath)) {
+    const kindLabel = CONTRACT_BARRELS.has(filePath) ? "named intentional barrel" : "feature barrel";
+    const use = barrelUse.get(filePath);
+    if (use && use.wildcard) {
+      return { cls: "RETAINED-BY-CONTRACT", reason: `${kindLabel} reached by a star import/re-export, whose consumed names cannot be read off the statement` };
+    }
+    if (use && use.symbols.has(name)) {
+      return { cls: "RETAINED-BY-CONTRACT", reason: `${kindLabel}: some live file imports \`${name}\` THROUGH this barrel` };
+    }
+    return {
+      cls: "UNCLASSIFIED",
+      reason: `${kindLabel} re-exports \`${name}\` but no file imports that name through it — PRD-C026: an export is not used merely because a barrel exports it. Delete the re-export line, or point a consumer at the barrel`,
+    };
   }
   if (
     kind === "type" &&
@@ -357,9 +410,61 @@ function runSelfTest() {
   assert(r3.cls === "RETAINED-BY-CONTRACT",
     `(c) reexport-source.ts → expected RETAINED-BY-CONTRACT, got ${r3.cls}`);
 
-  const r4 = classifyExport("features/some-feature/index.ts", "SomeThing");
+  /*
+   * PRD-C026: "An exported symbol is not considered used merely because a barrel exports it."
+   * (d) pins the retention to per-symbol evidence and (d1)/(d2) are its bite: the same barrel
+   * export with NO consumer, and a DIFFERENT symbol's consumer, must both fail. Before this the
+   * gate returned RETAINED-BY-CONTRACT for all three.
+   */
+  const barrelEvidence = new Map([
+    ["features/some-feature/index.ts", { symbols: new Set(["SomeThing"]), wildcard: false }],
+    ["components/shared/index.ts", { symbols: new Set(), wildcard: true }],
+  ]);
+
+  const r4 = classifyExport("features/some-feature/index.ts", "SomeThing", EXPORT_VERDICTS, "export", new Set(), false, barrelEvidence);
   assert(r4.cls === "RETAINED-BY-CONTRACT",
-    `(d) feature barrel export → expected RETAINED-BY-CONTRACT, got ${r4.cls}`);
+    `(d) feature barrel export imported THROUGH the barrel → expected RETAINED-BY-CONTRACT, got ${r4.cls}`);
+
+  const r4a = classifyExport("features/some-feature/index.ts", "Unreached", EXPORT_VERDICTS, "export", new Set(), false, barrelEvidence);
+  assert(r4a.cls === "UNCLASSIFIED",
+    `(d1) BITE: a feature-barrel re-export no file imports through → expected UNCLASSIFIED, got ${r4a.cls}`);
+
+  const r4b = classifyExport("components/shared/index.ts", "RichPanel", EXPORT_VERDICTS, "export", new Set(), false, new Map());
+  assert(r4b.cls === "UNCLASSIFIED",
+    `(d2) BITE: a named contract-barrel re-export with no consumer → expected UNCLASSIFIED, got ${r4b.cls}`);
+
+  const r4c = classifyExport("components/shared/index.ts", "RichPanel", EXPORT_VERDICTS, "export", new Set(), false, barrelEvidence);
+  assert(r4c.cls === "RETAINED-BY-CONTRACT",
+    `(d3) a barrel reached by a star re-export retains every symbol → expected RETAINED-BY-CONTRACT, got ${r4c.cls}`);
+
+  /*
+   * The index itself must record what an import statement actually consumes, or (d) would pass on
+   * an index that is simply always empty — and an always-empty index makes (d1)/(d2) vacuous too.
+   */
+  const barrelFixtureDir = join(tmpdir(), `dead-code-barrel-self-test-${Date.now()}`);
+  try {
+    mkdirSync(join(barrelFixtureDir, "bar"), { recursive: true });
+    writeFileSync(join(barrelFixtureDir, "bar", "index.ts"), 'export { Used, Unused } from "./impl";\n');
+    writeFileSync(join(barrelFixtureDir, "bar", "impl.ts"), "export const Used = 1;\nexport const Unused = 2;\n");
+    writeFileSync(join(barrelFixtureDir, "consumer.ts"), 'import { Used } from "./bar";\nexport const c = Used;\n');
+    writeFileSync(join(barrelFixtureDir, "star.ts"), 'export * from "./bar";\n');
+
+    const idx = buildBarrelUseIndex(barrelFixtureDir);
+    const barrelEntry = idx.get("bar/index.ts");
+    assert(barrelEntry !== undefined,
+      "(d4) buildBarrelUseIndex resolves a directory specifier to its index.ts");
+    assert(barrelEntry !== undefined && barrelEntry.symbols.has("Used"),
+      "(d5) buildBarrelUseIndex records the symbol a consumer imports through the barrel");
+    assert(barrelEntry !== undefined && !barrelEntry.symbols.has("Unused"),
+      "(d6) BITE: buildBarrelUseIndex does NOT record a barrel symbol nobody imports");
+    assert(barrelEntry !== undefined && barrelEntry.wildcard === true,
+      "(d7) buildBarrelUseIndex flags a star re-export as a wildcard consumer");
+    const implEntry = idx.get("bar/impl.ts");
+    assert(implEntry !== undefined && implEntry.symbols.has("Unused"),
+      "(d8) the barrel's own re-export line counts as a consumer of the SOURCE module, not of itself");
+  } finally {
+    rmSync(barrelFixtureDir, { recursive: true, force: true });
+  }
 
   const r5 = classifyExport("hooks/api/crm/metadata.ts", "SomeExport");
   assert(r5.cls === "EXCLUDED",
@@ -519,7 +624,10 @@ function runSelfTest() {
   console.log("  (a) file with no live importers                       → DEAD");
   console.log("  (b) file reachable via side-effect import             → RETAINED-BY-CONTRACT");
   console.log("  (c) file reachable via re-export from live barrel     → RETAINED-BY-CONTRACT");
-  console.log("  (d) export from feature barrel                        → RETAINED-BY-CONTRACT");
+  console.log("  (d) barrel export imported THROUGH the barrel         → RETAINED-BY-CONTRACT");
+  console.log("  (d1) barrel re-export no file imports through         → UNCLASSIFIED (gate bites)");
+  console.log("  (d2) named contract-barrel export with no consumer    → UNCLASSIFIED (gate bites)");
+  console.log("  (d6) the use index omits a symbol nobody imports      → per-symbol, not per-file");
   console.log("  (e) export from CRM domain                            → EXCLUDED");
   console.log("  (f) buildImporterMap: named import edge recorded");
   console.log("  (g) buildImporterMap: side-effect import edge recorded");
@@ -599,6 +707,7 @@ async function runMain() {
   console.log("Building import graph (scanning all TS/TSX files)...");
   const graphStats = { walked: 0, read: 0 };
   const importerMap = buildImporterMap(ROOT, graphStats);
+  const barrelUse = buildBarrelUseIndex(ROOT);
 
   const graphFileCount = importerMap.size;
   let graphEdgeCount = 0;
@@ -633,7 +742,7 @@ async function runMain() {
   const processedVerdictKeys = new Set();
 
   for (const ex of deadExportItems) {
-    const r = classifyExport(ex.file, ex.name, EXPORT_VERDICTS, ex.kind, knipDeadSet, ex.depKey === true);
+    const r = classifyExport(ex.file, ex.name, EXPORT_VERDICTS, ex.kind, knipDeadSet, ex.depKey === true, barrelUse);
     if (r.cls === "WIRE" || r.cls === "DEFERRED" || r.cls === "KEEP") {
       processedVerdictKeys.add(verdictKey(ex));
     }

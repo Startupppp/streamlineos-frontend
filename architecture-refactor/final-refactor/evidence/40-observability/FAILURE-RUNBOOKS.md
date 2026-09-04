@@ -280,6 +280,32 @@ node backend/src/scripts/check-outbox-consumers.mjs
 
 ---
 
+## #dead-notification-outbox
+
+**What fires:** `dead-notification-outbox` when any `notification_outbox` row reaches DEAD state inside a 24h window. `notification_outbox` is the durable record of "somebody is owed a notification"; a DEAD row is an intent that will now never be delivered, so the objective is zero.
+
+**Detection signal:** `alert-dead-notification-outbox.mjs` reads `notification_outbox` where `state = 'DEAD'`. `last_error` carries the terminal reason and `attempt_count` shows the retry ceiling was reached.
+
+**Why it is separate from `#dead-outbox`:** that alert reads `outbox_events`, a different table with a different relay. `notification_outbox` had no watcher at all until this alert existed, and the SLO registry declared the notification relay as draining `outbox_events`, which made the DEAD-letter objective for this queue unfailable.
+
+**First five minutes**
+
+```bash
+# 1. List the dead intents and their terminal errors
+node backend/src/scripts/alert-dead-notification-outbox.mjs --hours=24
+
+# 2. Group by event_key — one failing catalog entry or template produces one cluster
+# 3. An exit code of 2 means the table is empty, i.e. nothing was measured — not a clear
+```
+
+**Containment:** Fix the routing or provider fault before replaying. The relay is dedupe-keyed, so a replay cannot double-notify.
+
+**Recovery:** Reset the affected rows to `PENDING` with `attempt_count = 0` and let the relay drain them.
+
+**Verification:** `alert-dead-notification-outbox.mjs` exits 0 — with rows in the table and none DEAD in the window.
+
+---
+
 ## #dead-delivery
 
 **What fires:** `dead-delivery` when a delivery-channel row (notification, email, push) reaches DEAD state inside a 24h window.

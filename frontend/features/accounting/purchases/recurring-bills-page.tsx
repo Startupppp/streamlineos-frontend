@@ -48,6 +48,7 @@ import {
 } from "@/hooks/api/accounting/ap";
 import { RecurringBillFormSheet } from "@/features/accounting/purchases/recurring-bill-form-sheet";
 import { formatShortDate } from "@/lib/date-utils";
+import { useCan } from "@/hooks/api/access";
 
 const FREQUENCY_LABELS: Record<RecurringFrequency, string> = {
   DAILY: "Daily",
@@ -63,6 +64,7 @@ interface RowActionsProps {
 }
 
 function RecurringBillRowActions({ template, onEdit }: RowActionsProps) {
+  const canManage = useCan("accounting:recurring:manage");
   const runNow = useRunRecurringBillNow(template.id);
   const deleteMutation = useDeleteRecurringBill(template.id);
 
@@ -87,6 +89,8 @@ function RecurringBillRowActions({ template, onEdit }: RowActionsProps) {
   function handlePreventClose(e: Event): void {
     e.preventDefault();
   }
+
+  if (!canManage) return null;
 
   return (
     <AlertDialog>
@@ -140,6 +144,7 @@ export function RecurringBillsPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editTemplate, setEditTemplate] = useState<RecurringBillTemplate | undefined>();
   const [isActiveFilter, setIsActiveFilter] = useState<"all" | "true" | "false">("all");
+  const canManage = useCan("accounting:recurring:manage");
 
   const query = useRecurringBills({
     limit: 50,
@@ -256,10 +261,12 @@ export function RecurringBillsPage() {
       title="Recurring Bills"
       subtitle="Automate vendor bill creation on a schedule."
       actions={
-        <LoadingButton size="sm" onClick={handleNewClick} isPending={false}>
-          <Plus className="size-4 mr-1" />
-          New template
-        </LoadingButton>
+        canManage ? (
+          <LoadingButton size="sm" onClick={handleNewClick} isPending={false}>
+            <Plus className="size-4 mr-1" />
+            New template
+          </LoadingButton>
+        ) : null
       }
       filters={
         <Select value={isActiveFilter} onValueChange={handleActiveFilterChange}>
@@ -293,7 +300,11 @@ export function RecurringBillsPage() {
             }
             filtersActive={filtersActive}
             onClearFilters={handleClearFilters}
-            action={filtersActive ? undefined : { label: "New template", onClick: handleNewClick }}
+            action={
+              filtersActive || !canManage
+                ? undefined
+                : { label: "New template", onClick: handleNewClick }
+            }
           />
         ) : (
           <DataTable
@@ -307,11 +318,13 @@ export function RecurringBillsPage() {
         )}
       </div>
 
-      <RecurringBillFormSheet
-        open={sheetOpen}
-        onOpenChange={handleSheetClose}
-        template={editTemplate}
-      />
+      {canManage && (
+        <RecurringBillFormSheet
+          open={sheetOpen}
+          onOpenChange={handleSheetClose}
+          template={editTemplate}
+        />
+      )}
     </PageWrapper>
   );
 }

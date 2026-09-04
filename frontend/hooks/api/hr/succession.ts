@@ -35,7 +35,7 @@ export function useSuccessionPlans() {
     initialPageParam: null as string | null,
     queryFn: ({ pageParam, signal }) => {
       const params = new URLSearchParams({ limit: "30" });
-      if (pageParam) params.set("cursor", pageParam);
+      if (pageParam !== null) params.set("cursor", pageParam);
       return apiClient.get<SuccessionPage>(
         `/hr/succession?${params}`,
         undefined,

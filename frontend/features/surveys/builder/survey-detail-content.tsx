@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,7 +14,11 @@ interface SurveyDetailContentProps {
 }
 
 export function SurveyDetailContent({ surveyId }: SurveyDetailContentProps) {
-  const { data: survey, isLoading, isError } = useSurvey(surveyId);
+  const { data: survey, isLoading, isError, refetch } = useSurvey(surveyId);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   return (
     <PageWrapper
@@ -28,7 +33,10 @@ export function SurveyDetailContent({ surveyId }: SurveyDetailContentProps) {
             <Skeleton className="h-48 w-full" />
           </div>
         ) : isError || !survey ? (
-          <ErrorState description="Survey not found." />
+          <ErrorState
+            description="This survey did not load."
+            onRetry={handleRetry}
+          />
         ) : (
           <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
             <SurveyBuilderTabs survey={survey} />

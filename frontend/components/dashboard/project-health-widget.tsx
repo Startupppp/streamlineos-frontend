@@ -49,7 +49,9 @@ function BusinessPulseCard() {
     >
       {error ? (
         <div className="flex flex-col items-center gap-2 py-4">
-          <p className="text-sm text-destructive text-center">{getErrorMessage(error)}</p>
+          <p role="alert" className="text-sm text-destructive text-center">
+            {getErrorMessage(error)}
+          </p>
           <Button variant="ghost" size="sm" onClick={handleRetry}>
             <RefreshCw className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
             Retry

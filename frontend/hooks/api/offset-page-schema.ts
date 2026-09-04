@@ -1,6 +1,3 @@
-import { z } from "zod";
-import type { ResponseContract } from "@/lib/api-envelope";
-
 /**
  * The offset page the backend's shared `buildListResponse` helper emits. It is
  * `{ items, total, page, pageSize, totalPages }` — the counted sibling of the
@@ -18,16 +15,4 @@ export interface OffsetPage<T> {
   page: number;
   pageSize: number;
   totalPages: number;
-}
-
-export function offsetPageContract<T>(
-  item: ResponseContract<T>,
-): ResponseContract<OffsetPage<T>> {
-  return z.object({
-    items: z.array(item),
-    total: z.number(),
-    page: z.number(),
-    pageSize: z.number(),
-    totalPages: z.number(),
-  });
 }

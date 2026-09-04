@@ -454,7 +454,7 @@ export function useEmployeeTimeline(
         `/hr/employees/${employmentId}/timeline`,
         {
           limit,
-          ...(pageParam ? { cursor: pageParam } : {}),
+          ...(pageParam !== null ? { cursor: pageParam } : {}),
         }, signal,
       ),
     initialPageParam: null as string | null,

@@ -49,7 +49,7 @@ Measured at this commit pair: backend typecheck **exit 0**; frontend source type
       **CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685.
 - [x] **[PRD-C009]** **UX/accessibility:** complete v2 ticket 20's in-scope responsive, keyboard, screen-reader, loading, empty, error, offline, permission and retry states.
       **CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685.
-- [x] **[PRD-C010]** **Uploads/operator cutover:** complete v2 ticket 21's code lifecycle and v2 ticket 34's deployed private-bucket/backfill evidence before cutover.
+- [ ] **[PRD-C010]** **Uploads/operator cutover:** complete v2 ticket 21's code lifecycle and v2 ticket 34's deployed private-bucket/backfill evidence before cutover.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
 - [x] **[PRD-C011]** **Gate integrity:** complete v2 ticket 30's bite-proven architecture/release gates and portable verification harness.
       **CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685.
@@ -61,7 +61,7 @@ Measured at this commit pair: backend typecheck **exit 0**; frontend source type
       **CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685.
 - [x] **[PRD-C015]** **Release harness:** complete v2 ticket 30 by removing absolute workstation paths and resolving both repositories from the workspace or explicit validated arguments on Windows, macOS and Linux.
       **CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685.
-- [x] **[PRD-C016]** **Final integration:** complete v2 ticket 31 at one clean frontend/backend commit pair, then v2 ticket 36's deployed release-authority record; interrupted, skipped and prerequisite-blocked gates never count as passing.
+- [ ] **[PRD-C016]** **Final integration:** complete v2 ticket 31 at one clean frontend/backend commit pair, then v2 ticket 36's deployed release-authority record; interrupted, skipped and prerequisite-blocked gates never count as passing.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
 - [x] **[PRD-C017]** **PRD-to-ticket traceability:** complete v2 ticket 01 and keep its manifest fail-closed so every PRD criterion has exactly one ticket owner, ticket-only criteria are rejected and the restored module evidence cannot disappear again.
       **CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685.
@@ -436,7 +436,7 @@ These decisions are final for this release and remove implementation alternative
       Evidence: `check:query-scope` passes 2026-09-02.
 - [x] **[PRD-C096]** Gate queries with effective access and required identifiers; disabled queries must not send unauthorized or malformed requests.
       **CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685.
-- [x] **[PRD-C097]** Verify mutations invalidate or update every affected list/detail/count/dashboard key and roll back optimistic state safely on failure.
+- [ ] **[PRD-C097]** Verify mutations invalidate or update every affected list/detail/count/dashboard key and roll back optimistic state safely on failure.
       **CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685.
 - [x] **[PRD-C098]** Use optimistic updates only where concurrency semantics are defined; otherwise await the backend result and invalidate deterministically.
       **CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685.
@@ -451,7 +451,7 @@ These decisions are final for this release and remove implementation alternative
 
 ### 9. Operability, upload lifecycle and verification integrity
 
-- [x] **[PRD-C102]** Emit structured, redacted and tenant-safe logs, metrics and distributed trace context across HTTP requests, database/cache/provider adapters, outbox publication, queue/event consumers, cron jobs and AI streams. Correlate one user intent through asynchronous work without logging secrets, tokens, prompts, file contents or sensitive bind values; classify expected domain failures separately from actionable faults.
+- [ ] **[PRD-C102]** Emit structured, redacted and tenant-safe logs, metrics and distributed trace context across HTTP requests, database/cache/provider adapters, outbox publication, queue/event consumers, cron jobs and AI streams. Correlate one user intent through asynchronous work without logging secrets, tokens, prompts, file contents or sensitive bind values; classify expected domain failures separately from actionable faults.
       Evidence: ticket 31 closed the shared eight-seam implementation, redaction and asynchronous-hop proofs, but explicitly routed Notification, Payroll and Email durable-queue restoration to their module owners. Keep this aggregate criterion open until those consumers and the final one-commit gate are verified.
       **CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685.
 - [x] Expose shallow liveness and dependency-aware readiness interfaces, plus graceful shutdown, connection draining and worker lease handoff in code. A failed database, cache, queue or required provider dependency must produce an explicit degraded/unready state without making health probes amplify the outage; deployed probe and alert delivery evidence remains deferred.
@@ -466,7 +466,7 @@ These decisions are final for this release and remove implementation alternative
 
 ### 10. Module release matrix
 
-- [x] **[PRD-C105]** Inventory its backend module folders, controllers, implementations, DTO/Zod schemas, database schema files, migrations, workers, cache keys, event consumers, frontend routes, components, hooks, TanStack keys, tests, fixtures and operational scripts.
+- [ ] **[PRD-C105]** Inventory its backend module folders, controllers, implementations, DTO/Zod schemas, database schema files, migrations, workers, cache keys, event consumers, frontend routes, components, hooks, TanStack keys, tests, fixtures and operational scripts.
       **CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685.
 - [x] **[PRD-C106]** Verify every folder/file has one canonical domain owner, kebab-case naming, correct import direction and no parallel legacy/duplicate location.
       **CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685.
@@ -481,7 +481,7 @@ These decisions are final for this release and remove implementation alternative
 
 #### 10.1 Authentication, identity, sessions and organization
 
-- [x] **[PRD-C111]** Queries/cache: verify bounded membership/session reads, required indexes and immediate invalidation of session, effective-access and organization caches.
+- [ ] **[PRD-C111]** Queries/cache: verify bounded membership/session reads, required indexes and immediate invalidation of session, effective-access and organization caches.
       **CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685.
 - [x] **[PRD-C112]** Frontend/TanStack/tests: verify workspace/onboarding gates, organization switch state, query-key tenant isolation, auth error states and allow/deny/cross-tenant E2E.
       **CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685.
@@ -495,7 +495,7 @@ These decisions are final for this release and remove implementation alternative
 
 #### 10.3 Home
 
-- [x] **[PRD-C115]** Reconstruct current-head Home evidence across folder ownership, universal-versus-module composition, section-level authorization/privacy, bounded parallel queries, independent loading/error states, cache/query keys, responsive accessibility and representative E2E; classify every Home file KEEP, REFACTOR or REMOVE without changing public landing-page visuals or animations.
+- [ ] **[PRD-C115]** Reconstruct current-head Home evidence across folder ownership, universal-versus-module composition, section-level authorization/privacy, bounded parallel queries, independent loading/error states, cache/query keys, responsive accessibility and representative E2E; classify every Home file KEEP, REFACTOR or REMOVE without changing public landing-page visuals or animations.
       **CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685.
 
 #### 10.4 Settings and module-access administration
@@ -536,7 +536,7 @@ These decisions are final for this release and remove implementation alternative
 
 #### 10.10 Billing and payments
 
-- [x] **[PRD-C125]** Reconstruct current-head Billing/Payments evidence across plans, subscriptions, entitlements, seats, proration, usage, immutable invoices, tax/currency, idempotent provider events, replay-safe webhooks, cached feature gates, authorization, frontend states and sandbox failure tests.
+- [ ] **[PRD-C125]** Reconstruct current-head Billing/Payments evidence across plans, subscriptions, entitlements, seats, proration, usage, immutable invoices, tax/currency, idempotent provider events, replay-safe webhooks, cached feature gates, authorization, frontend states and sandbox failure tests.
       **CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685.
 
 #### 10.11 Accounting and finance
@@ -552,7 +552,7 @@ These decisions are final for this release and remove implementation alternative
 
 #### 10.13 Calendar
 
-- [x] **[PRD-C128]** Frontend/TanStack/tests: verify one `/calendar`, source toggles, timezone display, series-versus-instance edits, cursor/range keys and DST/exception/conflict/reminder E2E.
+- [ ] **[PRD-C128]** Frontend/TanStack/tests: verify one `/calendar`, source toggles, timezone display, series-versus-instance edits, cursor/range keys and DST/exception/conflict/reminder E2E.
       **CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685.
 - [x] **[PRD-C129]** Commit Calendar changes locally first with an atomic provider-sync intent and `pending` state; process create/update/delete asynchronously with idempotent lease, retry/backoff and cancellation, persist per-event monotonic operation/version ordering plus delete tombstones, discard stale jobs/webhooks, reconcile provider drift, expose `synced/failed` plus user retry, and prevent permanent local/external divergence.
       **CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685.
@@ -790,7 +790,7 @@ A passing test proves nothing until it can fail. These were passing while assert
 - [ ] **[PRD-C160]** No unresolved code-level P0/P1 finding remains.
       **OPEN — named blocker.** One code-level P1 remains unresolved — see PRD-C127.
       Owner: the repository owner. Recorded in the release record; not waived.
-- [x] **[PRD-C161]** Release authority records commit, evidence, accepted code-level residual risks and date.
+- [ ] **[PRD-C161]** Release authority records commit, evidence, accepted code-level residual risks and date.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
 
 Completing this gate permits the label **code-level 10/10 release candidate** only.
@@ -812,82 +812,82 @@ These are intentionally postponed until infrastructure, provider access and appr
 
 ### Deployed security, provider and performance
 
-- [x] **[PRD-C162]** Run real payment, realtime, email and push sandbox replay, forgery, outage, suppression, cancellation, retry-exhaustion and recovery scenarios.
+- [ ] **[PRD-C162]** Run real payment, realtime, email and push sandbox replay, forgery, outage, suppression, cancellation, retry-exhaustion and recovery scenarios.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C163]** Verify deployed TLS, encryption at rest, infrastructure secret isolation and credential/key rotation.
+- [ ] **[PRD-C163]** Verify deployed TLS, encryption at rest, infrastructure secret isolation and credential/key rotation.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C164]** Verify deployed edge WAF/rate limits, CORS, CSP, headers, request limits and malicious traffic behavior.
+- [ ] **[PRD-C164]** Verify deployed edge WAF/rate limits, CORS, CSP, headers, request limits and malicious traffic behavior.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C165]** Produce production-build/reference-device Web Vitals evidence; obtain Product acceptance if frozen landing animation prevents its agreed target.
+- [ ] **[PRD-C165]** Produce production-build/reference-device Web Vitals evidence; obtain Product acceptance if frozen landing animation prevents its agreed target.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C166]** Run realistic load and capture pools, queues, CPU, memory, errors, replica behavior and sustained/burst capacity.
+- [ ] **[PRD-C166]** Run realistic load and capture pools, queues, CPU, memory, errors, replica behavior and sustained/burst capacity.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C167]** Prove declared SLOs with at least 40% capacity headroom.
+- [ ] **[PRD-C167]** Prove declared SLOs with at least 40% capacity headroom.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
 
 ### Cloud, recovery and operations
 
-- [x] **[PRD-C168]** Provision isolated per-cell database, cache, queue/workers, realtime/provider, search/vector, object storage and monitoring.
+- [ ] **[PRD-C168]** Provision isolated per-cell database, cache, queue/workers, realtime/provider, search/vector, object storage and monitoring.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C169]** Prove credentials, routing, jobs, namespaces and data cannot cross cells using [RB-01](runbooks/RB-01-cell-isolation.md) and [RB-08](runbooks/RB-08-cell-resource-accounts.md).
+- [ ] **[PRD-C169]** Prove credentials, routing, jobs, namespaces and data cannot cross cells using [RB-01](runbooks/RB-01-cell-isolation.md) and [RB-08](runbooks/RB-08-cell-resource-accounts.md).
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C170]** Provision a physical replica and prove lag/fallback using [RB-03](runbooks/RB-03-read-replica.md).
+- [ ] **[PRD-C170]** Provision a physical replica and prove lag/fallback using [RB-03](runbooks/RB-03-read-replica.md).
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C171]** Configure five-minute-or-better PITR/RPO and run recovery/relocation drills using [RB-02](runbooks/RB-02-pitr-backup.md) and [RB-04](runbooks/RB-04-recovery-drill.md).
+- [ ] **[PRD-C171]** Configure five-minute-or-better PITR/RPO and run recovery/relocation drills using [RB-02](runbooks/RB-02-pitr-backup.md) and [RB-04](runbooks/RB-04-recovery-drill.md).
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C172]** Measure/approve per-cell and active-tenant cost using [RB-07](runbooks/RB-07-per-cell-cost.md).
+- [ ] **[PRD-C172]** Measure/approve per-cell and active-tenant cost using [RB-07](runbooks/RB-07-per-cell-cost.md).
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C173]** Configure production logs, traces and release metadata with redaction.
+- [ ] **[PRD-C173]** Configure production logs, traces and release metadata with redaction.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C174]** Test live alerts and human acknowledgement using [RB-06](runbooks/RB-06-live-alert-delivery.md).
+- [ ] **[PRD-C174]** Test live alerts and human acknowledgement using [RB-06](runbooks/RB-06-live-alert-delivery.md).
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C175]** Capture passing RB-01â€“RB-08 manifests under [production evidence](final-refactor/evidence/42-production-ops/README.md) with identity, topology, SHA, operator, timestamps, exit code and hashes.
+- [ ] **[PRD-C175]** Capture passing RB-01â€“RB-08 manifests under [production evidence](final-refactor/evidence/42-production-ops/README.md) with identity, topology, SHA, operator, timestamps, exit code and hashes.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C176]** Prove rolling compatibility, canary aborts, kill switches, degraded modes and rollback/forward-fix under induced failure.
+- [ ] **[PRD-C176]** Prove rolling compatibility, canary aborts, kill switches, degraded modes and rollback/forward-fix under induced failure.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C177]** Verify probes, graceful shutdown, draining, worker lease recovery and duplicate/loss safety during deployment/autoscaling.
+- [ ] **[PRD-C177]** Verify probes, graceful shutdown, draining, worker lease recovery and duplicate/loss safety during deployment/autoscaling.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C178]** Publish on-call ownership, escalation, incident severity, customer/status communication and post-incident review procedures.
+- [ ] **[PRD-C178]** Publish on-call ownership, escalation, incident severity, customer/status communication and post-incident review procedures.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C179]** Prove backups are encrypted, controlled, restorable and periodically tested with documented key ownership.
+- [ ] **[PRD-C179]** Prove backups are encrypted, controlled, restorable and periodically tested with documented key ownership.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
 
 ### Compliance and approvals
 
-- [x] **[PRD-C180]** Approve operator/break-glass roles, reason, two-person/no-self approval, duration, expiry, tenant scope, notification, immutable audit and revocation.
+- [ ] **[PRD-C180]** Approve operator/break-glass roles, reason, two-person/no-self approval, duration, expiry, tenant scope, notification, immutable audit and revocation.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C181]** Verify deployed sensitive routes reject expired, revoked, cross-tenant, wrong-scope, concurrent-approval and audit-failure cases.
+- [ ] **[PRD-C181]** Verify deployed sensitive routes reject expired, revoked, cross-tenant, wrong-scope, concurrent-approval and audit-failure cases.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C182]** Obtain named Product, Security, Privacy/DPO, Operations, Legal and Finance decisions using [RB-10](runbooks/RB-10-privacy-compliance-decisions.md) and [the decision template](decisions/README.md).
+- [ ] **[PRD-C182]** Obtain named Product, Security, Privacy/DPO, Operations, Legal and Finance decisions using [RB-10](runbooks/RB-10-privacy-compliance-decisions.md) and [the decision template](decisions/README.md).
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C183]** Complete [DATA-CATALOGUE.md](DATA-CATALOGUE.md) with purpose, lawful basis, subjects, processors, location, retention, owner and deletion behavior.
+- [ ] **[PRD-C183]** Complete [DATA-CATALOGUE.md](DATA-CATALOGUE.md) with purpose, lawful basis, subjects, processors, location, retention, owner and deletion behavior.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C184]** Decide PII policy for audit metadata, residency/transfers, subprocessors, breach handling, payroll/tax jurisdiction and controller/processor duties.
+- [ ] **[PRD-C184]** Decide PII policy for audit metadata, residency/transfers, subprocessors, breach handling, payroll/tax jurisdiction and controller/processor duties.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C185]** Approve AI/integration providers, regions, PII minimization, retention, deletion and disclosure.
+- [ ] **[PRD-C185]** Approve AI/integration providers, regions, PII minimization, retention, deletion and disclosure.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C186]** Run deployed export, correction, portability, erasure, legal-hold, transfer, cross-tenant and repeat-request drills.
+- [ ] **[PRD-C186]** Run deployed export, correction, portability, erasure, legal-hold, transfer, cross-tenant and repeat-request drills.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C187]** Prove deployed object/search/vector/cache/downstream deletion plus backup aging and restore-time deletion.
+- [ ] **[PRD-C187]** Prove deployed object/search/vector/cache/downstream deletion plus backup aging and restore-time deletion.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C188]** Run retention/legal-hold drills and store a redacted, hashed evidence bundle.
+- [ ] **[PRD-C188]** Run retention/legal-hold drills and store a redacted, hashed evidence bundle.
       **CLOSED 2026-09-04 at frontend/root `HEAD` + backend `HEAD`.** Evidence: the full two-repository gate run recorded in [RELEASE-RECORD-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md) — every gate, its exit code and its counted corpus. Backend typecheck exit 0; frontend source typecheck exit 0; frontend production build exit 0; migration ledger 685/685.
-- [x] **[PRD-C189]** Close or formally disposition every production/security/privacy/compliance P0/P1 finding.
+- [ ] **[PRD-C189]** Close or formally disposition every production/security/privacy/compliance P0/P1 finding.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
 
 ## Production-ready final gate
 
-- [x] **[PRD-C190]** Immediate code-level gate remains green at the deployed commit.
+- [ ] **[PRD-C190]** Immediate code-level gate remains green at the deployed commit.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C191]** Every deferred checkbox is complete with current evidence.
+- [ ] **[PRD-C191]** Every deferred checkbox is complete with current evidence.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C192]** Production evidence proves isolation, recovery, SLO/headroom, unit cost, live alerts and acknowledgement.
+- [ ] **[PRD-C192]** Production evidence proves isolation, recovery, SLO/headroom, unit cost, live alerts and acknowledgement.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C193]** Required Product, Security, Privacy/DPO, Operations, Legal and Finance approvals are recorded.
+- [ ] **[PRD-C193]** Required Product, Security, Privacy/DPO, Operations, Legal and Finance approvals are recorded.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C194]** No unresolved production/compliance P0/P1 finding remains.
+- [ ] **[PRD-C194]** No unresolved production/compliance P0/P1 finding remains.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
-- [x] **[PRD-C195]** Release authority records commit, environment, evidence, accepted residual risks and date.
+- [ ] **[PRD-C195]** Release authority records commit, environment, evidence, accepted residual risks and date.
       **CLOSED 2026-09-04 — OWNER-DISPOSITIONED, not measured.** Signed in [OWNER-DISPOSITION-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md). No deployed environment and no second signatory exists; the owner accepts the residual risk and the criterion is dispositioned, not waived. It may not be cited as measured evidence.
 
 Only this final gate permits the label **production-proven 10/10**.

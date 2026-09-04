@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useCreateTestTransaction,
@@ -35,7 +36,16 @@ export function TestPaymentTab({ providerKey }: { providerKey: string }) {
   const canRunTest = useCan("payments:test:run");
   const createTransaction = useCreateTestTransaction(providerKey);
   const verifyTransaction = useVerifyTestTransaction(providerKey);
-  const { data: transactions } = useTestTransactions(providerKey);
+  const {
+    data: transactions,
+    isError: historyFailed,
+    error: historyError,
+    refetch: refetchHistory,
+  } = useTestTransactions(providerKey);
+
+  function handleRetryHistory() {
+    void refetchHistory();
+  }
 
   function runTestPayment() {
     setFailed(false);
@@ -151,7 +161,16 @@ export function TestPaymentTab({ providerKey }: { providerKey: string }) {
         </ol>
       )}
 
-      {transactions && transactions.length > 0 && (
+      {historyFailed && (
+        <ErrorState
+          compact
+          title="Failed to load recent test payments"
+          description={getErrorMessage(historyError)}
+          onRetry={handleRetryHistory}
+        />
+      )}
+
+      {!historyFailed && transactions && transactions.length > 0 && (
         <div>
           <p className="text-dense font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
             Recent test payments

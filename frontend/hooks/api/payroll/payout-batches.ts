@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import type {
   ValidationItem,
   PayoutBatch,
@@ -12,7 +13,6 @@ import type {
   GetBatchResult,
   EmployeeBankDetails,
   BatchFormat,
-  BatchFileResult,
 } from "@/types/payroll";
 
 export function usePayoutValidation(runId: number) {
@@ -83,111 +83,129 @@ export function useCreatePayoutBatch() {
   });
 }
 
-export function useBatchFileUrl() {
-  return useAuthorizedMutation<BatchFileResult, Error, number>("payroll:bank:manage", {
+/**
+ * The bank file lists every payee's unmasked account number. It used to arrive
+ * as a one-hour presigned URL that the table opened in a new tab, so the bytes
+ * outlived the session that was allowed to see them. The route streams the file
+ * under the caller's own credential now, so this hook returns the blob itself
+ * and the caller saves it — nothing shareable is ever minted.
+ */
+export function useDownloadBatchFile() {
+  return useAuthorizedMutation<Blob, Error, number>("payroll:bank:manage", {
     mutationKey: ["payroll", "batch-file"],
     mutationFn: (batchId) =>
-      apiClient.get<BatchFileResult>(`/payroll/payout/batches/${batchId}/file`),
+      apiClient.download(`/payroll/payout/batches/${batchId}/file`),
   });
 }
 
-export function useMarkBatchSent() {
+/**
+ * Every payout mutation changes what the run list and the payroll command
+ * centre show, not just the batch it names. `queryKeys.payroll.run(id)` is
+ * `[...,"payroll","runs",id]` while `queryKeys.payroll.runs(params)` is
+ * `[...,"payroll","runs",params]`, so the two diverge at index 3 and the
+ * narrow key never reaches the list — which carries `staleTime: 60_000`.
+ * The `payroll/runs` prefix is what covers both.
+ */
+function useInvalidatePayoutSurfaces() {
   const qc = useQueryClient();
+  return (batchId: number, runId?: number) => {
+    void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatch(batchId) });
+    void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatches(runId) });
+    void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
+    void qc.invalidateQueries({ queryKey: queryKeys.payroll.commandCenterAll });
+  };
+}
+
+/**
+ * Every payout command below is `@Idempotent` on the server. The key identifies
+ * the OPERATION, so a retry after a timeout replays the first result instead of
+ * settling the same batch twice; `api-client` would otherwise mint a fresh key
+ * per HTTP attempt, which satisfies the header and defeats the fence.
+ */
+export function useMarkBatchSent() {
+  const invalidatePayoutSurfaces = useInvalidatePayoutSurfaces();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation<
     { success: boolean },
     Error,
     { batchId: number; runId?: number }
   >("payroll:bank:manage", {
     mutationKey: ["payroll", "mark-batch-sent"],
-    mutationFn: ({ batchId }) =>
+    mutationFn: (variables) =>
       apiClient.post<{ success: boolean }>(
-        `/payroll/payout/batches/${batchId}/mark-sent`,
+        `/payroll/payout/batches/${variables.batchId}/mark-sent`,
+        undefined,
+        operation.configFor(variables),
       ),
     onSuccess: (_, { batchId, runId }) => {
-      void qc.invalidateQueries({
-        queryKey: queryKeys.payroll.bankBatch(batchId),
-      });
-      void qc.invalidateQueries({
-        queryKey: queryKeys.payroll.bankBatches(runId),
-      });
+      operation.settle();
+      invalidatePayoutSurfaces(batchId, runId);
     },
   });
 }
 
 export function useMarkBatchPaid() {
-  const qc = useQueryClient();
+  const invalidatePayoutSurfaces = useInvalidatePayoutSurfaces();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation<
     { success: boolean },
     Error,
     { batchId: number; transactionRef: string; runId?: number }
   >("payroll:bank:manage", {
     mutationKey: ["payroll", "mark-batch-paid"],
-    mutationFn: ({ batchId, transactionRef }) =>
+    mutationFn: (variables) =>
       apiClient.post<{ success: boolean }>(
-        `/payroll/payout/batches/${batchId}/mark-paid`,
-        { transactionRef },
+        `/payroll/payout/batches/${variables.batchId}/mark-paid`,
+        { transactionRef: variables.transactionRef },
+        operation.configFor(variables),
       ),
     onSuccess: (_, { batchId, runId }) => {
-      void qc.invalidateQueries({
-        queryKey: queryKeys.payroll.bankBatch(batchId),
-      });
-      void qc.invalidateQueries({
-        queryKey: queryKeys.payroll.bankBatches(runId),
-      });
-      if (runId !== undefined)
-        void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
+      operation.settle();
+      invalidatePayoutSurfaces(batchId, runId);
     },
   });
 }
 
 export function useMarkItemPaid() {
-  const qc = useQueryClient();
+  const invalidatePayoutSurfaces = useInvalidatePayoutSurfaces();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation<
     { success: boolean },
     Error,
     { batchId: number; itemId: number; transactionRef: string; runId?: number }
   >("payroll:bank:manage", {
     mutationKey: ["payroll", "mark-item-paid"],
-    mutationFn: ({ batchId, itemId, transactionRef }) =>
+    mutationFn: (variables) =>
       apiClient.post<{ success: boolean }>(
-        `/payroll/payout/batches/${batchId}/items/${itemId}/mark-paid`,
-        { transactionRef },
+        `/payroll/payout/batches/${variables.batchId}/items/${variables.itemId}/mark-paid`,
+        { transactionRef: variables.transactionRef },
+        operation.configFor(variables),
       ),
     onSuccess: (_, { batchId, runId }) => {
-      void qc.invalidateQueries({
-        queryKey: queryKeys.payroll.bankBatch(batchId),
-      });
-      void qc.invalidateQueries({
-        queryKey: queryKeys.payroll.bankBatches(runId),
-      });
-      if (runId !== undefined)
-        void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
+      operation.settle();
+      invalidatePayoutSurfaces(batchId, runId);
     },
   });
 }
 
 export function useMarkItemFailed() {
-  const qc = useQueryClient();
+  const invalidatePayoutSurfaces = useInvalidatePayoutSurfaces();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation<
     { success: boolean },
     Error,
     { batchId: number; itemId: number; failureReason: string; runId?: number }
   >("payroll:bank:manage", {
     mutationKey: ["payroll", "mark-item-failed"],
-    mutationFn: ({ batchId, itemId, failureReason }) =>
+    mutationFn: (variables) =>
       apiClient.post<{ success: boolean }>(
-        `/payroll/payout/batches/${batchId}/items/${itemId}/mark-failed`,
-        { failureReason },
+        `/payroll/payout/batches/${variables.batchId}/items/${variables.itemId}/mark-failed`,
+        { failureReason: variables.failureReason },
+        operation.configFor(variables),
       ),
     onSuccess: (_, { batchId, runId }) => {
-      void qc.invalidateQueries({
-        queryKey: queryKeys.payroll.bankBatch(batchId),
-      });
-      void qc.invalidateQueries({
-        queryKey: queryKeys.payroll.bankBatches(runId),
-      });
-      if (runId !== undefined)
-        void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
+      operation.settle();
+      invalidatePayoutSurfaces(batchId, runId);
     },
   });
 }
@@ -204,26 +222,23 @@ export interface BankReturnImportResult {
 
 export function useImportBankReturn() {
   const qc = useQueryClient();
+  const invalidatePayoutSurfaces = useInvalidatePayoutSurfaces();
+  const operation = useIdempotentOperation();
   return useAuthorizedMutation<
     BankReturnImportResult,
     Error,
     { batchId: number; csv: string; runId?: number }
   >("payroll:bank:manage", {
     mutationKey: ["payroll", "import-bank-return"],
-    mutationFn: ({ batchId, csv }) =>
+    mutationFn: (variables) =>
       apiClient.post<BankReturnImportResult>(
-        `/payroll/payout/batches/${batchId}/import-return`,
-        { csv },
+        `/payroll/payout/batches/${variables.batchId}/import-return`,
+        { csv: variables.csv },
+        operation.configFor(variables),
       ),
     onSuccess: (_, { batchId, runId }) => {
-      void qc.invalidateQueries({
-        queryKey: queryKeys.payroll.bankBatch(batchId),
-      });
-      void qc.invalidateQueries({
-        queryKey: queryKeys.payroll.bankBatches(runId),
-      });
-      if (runId !== undefined)
-        void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
+      operation.settle();
+      invalidatePayoutSurfaces(batchId, runId);
       void qc.invalidateQueries({
         queryKey: queryKeys.payroll.journalBatchesAll,
       });

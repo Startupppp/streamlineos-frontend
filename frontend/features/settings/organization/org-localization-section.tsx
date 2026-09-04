@@ -233,72 +233,72 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
         <form onSubmit={form.handleSubmit(handleSave)} className="space-y-3">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-1">
-              <Label className="text-xs font-medium">Timezone</Label>
+              <Label htmlFor="org-localization-timezone" className="text-xs font-medium">Timezone</Label>
               <Select onValueChange={(v) => form.setValue("timezone", v)} value={form.watch("timezone")}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="org-localization-timezone"><SelectValue /></SelectTrigger>
                 <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                   {TIMEZONES.map((tz) => <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs font-medium">Currency</Label>
+              <Label htmlFor="org-localization-currency" className="text-xs font-medium">Currency</Label>
               <Select onValueChange={handleCurrencySelected} value={form.watch("currency")}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="org-localization-currency"><SelectValue /></SelectTrigger>
                 <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                   {CURRENCIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs font-medium">Fiscal year starts</Label>
+              <Label htmlFor="org-localization-fiscal-year-start" className="text-xs font-medium">Fiscal year starts</Label>
               <Select onValueChange={handleFiscalYearStartSelected} value={String(form.watch("fiscalYearStart"))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="org-localization-fiscal-year-start"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {MONTHS.map((m, i) => <SelectItem key={i + 1} value={String(i + 1)}>{m}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs font-medium">Language</Label>
+              <Label htmlFor="org-localization-language" className="text-xs font-medium">Language</Label>
               <Select onValueChange={(v) => form.setValue("language", v)} value={form.watch("language")}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="org-localization-language"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {LANGUAGES.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs font-medium">Date format</Label>
+              <Label htmlFor="org-localization-date-format" className="text-xs font-medium">Date format</Label>
               <Select onValueChange={(v) => form.setValue("dateFormat", v)} value={form.watch("dateFormat")}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="org-localization-date-format"><SelectValue /></SelectTrigger>
                 <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                   {DATE_FORMATS.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs font-medium">Time format</Label>
+              <Label htmlFor="org-localization-time-format" className="text-xs font-medium">Time format</Label>
               <Select onValueChange={(v) => form.setValue("timeFormat", v as "12h" | "24h")} value={form.watch("timeFormat")}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="org-localization-time-format"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {TIME_FORMATS.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs font-medium">Number format</Label>
+              <Label htmlFor="org-localization-number-format" className="text-xs font-medium">Number format</Label>
               <Select onValueChange={(v) => form.setValue("numberFormat", v)} value={form.watch("numberFormat")}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="org-localization-number-format"><SelectValue /></SelectTrigger>
                 <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                   {NUMBER_FORMATS.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs font-medium">Week starts on</Label>
+              <Label htmlFor="org-localization-week-start-day" className="text-xs font-medium">Week starts on</Label>
               <Select onValueChange={(v) => form.setValue("weekStartDay", v as "monday" | "sunday" | "saturday")} value={form.watch("weekStartDay")}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="org-localization-week-start-day"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {WEEK_START_DAYS.map((d) => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}
                 </SelectContent>

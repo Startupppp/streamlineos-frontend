@@ -58,6 +58,8 @@ export interface AiAction {
   onApply?: (text: string) => void;
   applyLabel?: string;
   surface?: AiResultSurface;
+  /** True only when `run` resolves with `citations`; gates the streaming source placeholder. */
+  expectsCitations?: boolean;
   disabledReason?: string;
   onInlineChange?: (session: AiInlineSession | null) => void;
 }
@@ -92,6 +94,7 @@ function buildInlineSession(
 ): AiInlineSession {
   return {
     actionKey: action.key,
+    expectsCitations: action.expectsCitations ?? false,
     state,
     apply: handlers.apply,
     reject: handlers.reject,
@@ -321,6 +324,7 @@ export function AiActionsMenu({
       applyLabel={active?.applyLabel ?? "Apply"}
       onRetry={handleRetry}
       onCancel={cancelRun}
+      expectsCitations={active?.expectsCitations ?? false}
     />
   );
 

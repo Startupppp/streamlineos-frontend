@@ -366,7 +366,7 @@ export function useHrMyLeaveRequestsInfinite(enabled = true) {
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<LeaveRequestsPage>("/me/time-off/requests", {
         limit: 50,
-        ...(pageParam ? { cursor: pageParam } : {}),
+        ...(pageParam !== null ? { cursor: pageParam } : {}),
       }, signal),
     initialPageParam: null as number | null,
     getNextPageParam: (lastPage) => lastPage.pageInfo.nextCursor ?? undefined,

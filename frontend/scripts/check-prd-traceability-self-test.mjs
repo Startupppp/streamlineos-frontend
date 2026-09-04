@@ -7,8 +7,14 @@
  * gate exits 1 *for that specific reason* — matching on the failure code, not merely on non-zero.
  * A gate that fails for the wrong reason is a gate that will pass for the wrong reason later.
  *
- * The final case is the control: the unmutated tree must exit 0. Without it, a gate that always
+ * The FIRST case is the control: the unmutated tree must exit 0. Without it, a gate that always
  * failed would score a perfect run here.
+ *
+ * Every distinct failure code the gate can emit has a case here, including the eight that an audit
+ * found had never been seen to fire — DUPLICATE PRD criterion, ORPHAN, MANIFEST-ONLY, MANIFEST
+ * ASSIGNS AN ABSENT CRITERION, RESTORED EVIDENCE UNOWNED, COVERAGE ROW FOR A MISSING TICKET,
+ * COVERAGE ROW MISSING and readOrDie's missing-file path. An unproven code is a code nobody can say
+ * still works.
  *
  * ── Why the restored-evidence cases are GENERATED ──────────────────────────────────────────────
  * This file used to pin exactly ONE of the ten restored ids (PRD-C127). MEASURED: a commit that
@@ -159,7 +165,7 @@ const cases = [
   // restored-evidence pin is the ONLY check left that can catch it. A mutation that deleted the PRD
   // line alone would be caught by UNOWNED and would prove nothing about the pin.
   ...RESTORED_IDS.map((id) => ({
-    name: `restored module evidence ${id} (${RESTORED_MODULE_EVIDENCE[id]}) is deleted rather than ticked`,
+    name: `restored module evidence ${id} (${RESTORED_MODULE_EVIDENCE[id].module}) is deleted rather than ticked`,
     mutate: (root) => {
       write(
         root,
@@ -198,6 +204,47 @@ const cases = [
       );
     },
     expect: "RESTORED EVIDENCE DELETED",
+  })),
+  // The second half of "cannot disappear", one case per pinned id. The deletion cases above prove
+  // the pin notices a missing id; these prove it notices an id whose criterion has been rewritten to
+  // be about a different module. Every substring that spells the module is scrubbed out of BOTH the
+  // PRD line and the owning ticket line, so the two sides still quote each other verbatim, TEXT
+  // DRIFT stays silent, every count the gate prints is unchanged, and the restored-evidence pin is
+  // the only check left that can bite. MEASURED before the pin compared text: this exact mutation on
+  // PRD-C127 gave exit 0.
+  ...RESTORED_IDS.map((id) => ({
+    name: `restored module evidence ${id} (${RESTORED_MODULE_EVIDENCE[id].module}) is repurposed into another module`,
+    mutate: (root) => {
+      const { match } = RESTORED_MODULE_EVIDENCE[id];
+      if (!Array.isArray(match) || match.length === 0)
+        throw new Error(`${id} declares no match substrings — the pin is disarmed, see the gate`);
+      const scrub = (line) =>
+        match.reduce(
+          (acc, needle) =>
+            acc.replace(new RegExp(needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), "redacted"),
+          line,
+        );
+      const prdLines = read(root, REL_PRD).split("\n");
+      const at = prdLines.findIndex((l) => l.includes(`**[${id}]**`));
+      if (at === -1) throw new Error(`${id} is not a PRD criterion line — the fixture is wrong`);
+      prdLines[at] = scrub(prdLines[at]);
+      write(root, REL_PRD, prdLines.join("\n"));
+      const issuesDir = join(root, REL_ISSUES);
+      const owner = readdirSync(issuesDir)
+        .filter((f) => /^\d{2}-.+\.md$/.test(f))
+        .find((f) => readFileSync(join(issuesDir, f), "utf8").includes(`**${id}**`));
+      if (!owner) throw new Error(`${id} is carried by no ticket file — the fixture is wrong`);
+      const rel = join(REL_ISSUES, owner);
+      write(
+        root,
+        rel,
+        read(root, rel)
+          .split("\n")
+          .map((l) => (l.includes(`**${id}**`) ? scrub(l) : l))
+          .join("\n"),
+      );
+    },
+    expect: "RESTORED EVIDENCE REPURPOSED",
   })),
   {
     name: "an id-less criterion is un-ticked, leaving an unowned acceptance criterion",
@@ -303,6 +350,100 @@ const cases = [
     },
     expect: "VACUITY FLOOR",
   },
+  // ── The remaining failure codes ────────────────────────────────────────────────────────────────
+  // Everything below this line closes the gap an audit found: eight of the gate's distinct failure
+  // codes had never been seen to fire, so nothing said they still could. Some of these mutations
+  // necessarily trip a second code as well — there is no tree in which a manifest row points at an
+  // absent id and nothing else is wrong — and that is fine: each case asserts on ITS code, so
+  // deleting that code from the gate still turns the case red.
+  {
+    name: "the same PRD id declares two criterion lines",
+    mutate: (root) => {
+      const lines = read(root, REL_PRD).split("\n");
+      const at = lines.findIndex((l) => l.includes("**[PRD-C050]**"));
+      if (at === -1) throw new Error("PRD-C050 is not in the PRD — the fixture is wrong");
+      lines.splice(at + 1, 0, lines[at]);
+      write(root, REL_PRD, lines.join("\n"));
+    },
+    expect: "DUPLICATE PRD criterion",
+  },
+  {
+    name: "PRD prose references an id that no criterion line declares",
+    mutate: (root) => {
+      // The residue of a half-deleted criterion: the id survives in prose, the criterion does not.
+      const lines = read(root, REL_PRD).split("\n");
+      const at = lines.findIndex((l) => /^\s*- \[[ x]\] \*\*\[PRD-C\d{3}\]\*\*/.test(l));
+      lines.splice(at, 0, "Superseded by PRD-C777, which is tracked elsewhere.");
+      write(root, REL_PRD, lines.join("\n"));
+    },
+    expect: "ORPHAN",
+  },
+  {
+    name: "the manifest carries a row for an id the PRD does not declare",
+    mutate: (root) => {
+      write(root, REL_MANIFEST, read(root, REL_MANIFEST).replace("| PRD-C050 | 02 |", "| PRD-C888 | 02 |"));
+    },
+    expect: "MANIFEST-ONLY",
+  },
+  {
+    name: "the manifest assigns a criterion that no ticket file lists",
+    mutate: (root) => {
+      const rel = join(REL_ISSUES, "02-schema-and-key-minimization.md");
+      write(root, rel, read(root, rel).split("\n").filter((l) => !l.includes("**PRD-C050**")).join("\n"));
+      write(root, REL_MANIFEST, read(root, REL_MANIFEST).replace("- Ticket 02: 9", "- Ticket 02: 8"));
+    },
+    expect: "MANIFEST ASSIGNS AN ABSENT CRITERION",
+  },
+  {
+    name: "a pinned restored criterion is dropped from its ticket but left in the PRD",
+    mutate: (root) => {
+      const id = RESTORED_IDS[0];
+      const issuesDir = join(root, REL_ISSUES);
+      const owner = readdirSync(issuesDir)
+        .filter((f) => /^\d{2}-.+\.md$/.test(f))
+        .find((f) => readFileSync(join(issuesDir, f), "utf8").includes(`**${id}**`));
+      if (!owner) throw new Error(`${id} is carried by no ticket file — the fixture is wrong`);
+      const rel = join(REL_ISSUES, owner);
+      write(root, rel, read(root, rel).split("\n").filter((l) => !l.includes(`**${id}**`)).join("\n"));
+      const ticket = owner.slice(0, 2);
+      write(
+        root,
+        REL_MANIFEST,
+        read(root, REL_MANIFEST).replace(
+          new RegExp(`^- Ticket ${ticket}: (\\d+)$`, "m"),
+          (_line, n) => `- Ticket ${ticket}: ${Number(n) - 1}`,
+        ),
+      );
+    },
+    expect: "RESTORED EVIDENCE UNOWNED",
+  },
+  {
+    name: "the coverage list declares a total for a ticket that does not exist",
+    mutate: (root) => {
+      write(root, REL_MANIFEST, read(root, REL_MANIFEST).replace(/^- Ticket 36: \d+$/m, (l) => `${l}\n- Ticket 37: 1`));
+    },
+    expect: "COVERAGE ROW FOR A MISSING TICKET",
+  },
+  {
+    name: "a ticket exists in issues/ but has no total in the coverage list",
+    mutate: (root) => {
+      write(
+        root,
+        REL_MANIFEST,
+        read(root, REL_MANIFEST).split("\n").filter((l) => !/^- Ticket 12: \d+$/.test(l)).join("\n"),
+      );
+    },
+    expect: "COVERAGE ROW MISSING",
+  },
+  {
+    name: "the manifest file is gone entirely",
+    mutate: (root) => {
+      // readOrDie's own path. A gate that silently treats an unreadable corpus as an empty one
+      // reports a clean mapping over nothing at all.
+      rmSync(join(root, REL_MANIFEST));
+    },
+    expect: "traceability manifest not found at",
+  },
 ];
 
 let passed = 0;
@@ -334,12 +475,38 @@ if (LEGACY_UNIDENTIFIED.length !== EXPECTED_LEGACY) {
   passed += 1;
   console.log(`  PASS  legacy id-less pin count — ${EXPECTED_LEGACY} lines frozen`);
 }
-const TOTAL_CASES = cases.length + 2;
+// A pin with no `match` substrings passes any rewrite of its criterion, so emptying one is the same
+// disarm as deleting the repurposing check. The gate refuses such a pin; this asserts the map that
+// GENERATES the repurposing cases never reaches that state in the first place.
+const PINS_WITHOUT_MATCH = RESTORED_IDS.filter((id) => {
+  const { match } = RESTORED_MODULE_EVIDENCE[id];
+  return !Array.isArray(match) || match.length === 0;
+});
+if (PINS_WITHOUT_MATCH.length > 0) {
+  problems.push(
+    `${PINS_WITHOUT_MATCH.join(", ")} declare no \`match\` substrings in RESTORED_MODULE_EVIDENCE. ` +
+      `A pin that constrains no words lets its criterion be rewritten into another module while the ` +
+      `id — and every count this gate prints — stays put. Restore the substrings that spell the module.`,
+  );
+  console.log(`  FAIL  restored-evidence match substrings — ${PINS_WITHOUT_MATCH.length} pin(s) assert nothing`);
+} else {
+  passed += 1;
+  console.log(`  PASS  restored-evidence match substrings — all ${RESTORED_IDS.length} pins constrain their module's words`);
+}
+
+const TOTAL_CASES = cases.length + 3;
 
 for (const c of cases) {
   const root = makeFixture();
   try {
-    c.mutate(root);
+    try {
+      c.mutate(root);
+    } catch (e) {
+      // A case that cannot plant its defect proves nothing, and must never be mistaken for a pass.
+      problems.push(`${c.name}: the mutation could not be planted — ${e.message}`);
+      console.log(`  FAIL  ${c.name} — could not plant the mutation`);
+      continue;
+    }
     const { code, output } = runGate(root);
     if (c.expect === null) {
       if (code === 0) {

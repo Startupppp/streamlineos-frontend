@@ -52,12 +52,7 @@ export const accountingAndSupportQueryKeys = {
     cashFlow: (params: { from: string; to: string }) =>
       [...base, "accounting", "cashFlow", params] as const,
     coaTemplates: () => [...base, "accounting", "coaTemplates"] as const,
-    setupProgress: () => [...base, "accounting", "setupProgress"] as const,
     apAll: [...base, "accounting", "ap"] as const,
-    apVendorPayments: (params?: Record<string, unknown>) =>
-      params === undefined
-        ? ([...base, "accounting", "ap", "vendor-payments"] as const)
-        : ([...base, "accounting", "ap", "vendor-payments", params] as const),
     arReminderPolicies: (params?: Record<string, unknown>) =>
       params === undefined
         ? ([...base, "accounting", "reminder-policies"] as const)
@@ -141,8 +136,6 @@ export const accountingAndSupportQueryKeys = {
     all: [...base, "kbAttachments"] as const,
     list: (articleId: number) =>
       [...base, "kbAttachments", "list", articleId] as const,
-    publicList: (orgId: string, slug: string) =>
-      [...base, "kbAttachments", "publicList", orgId, slug] as const,
   },
 
   playbook: {
@@ -162,10 +155,6 @@ export const accountingAndSupportQueryKeys = {
         : ([...base, "supportKb", "articles", params] as const),
     article: (articleId: number) =>
       [...base, "supportKb", "article", articleId] as const,
-    publicArticles: (params?: Record<string, unknown>) =>
-      params === undefined
-        ? ([...base, "supportKb", "publicArticles"] as const)
-        : ([...base, "supportKb", "publicArticles", params] as const),
     publicArticle: (orgId: string, slug: string) =>
       [...base, "supportKb", "publicArticle", orgId, slug] as const,
   },

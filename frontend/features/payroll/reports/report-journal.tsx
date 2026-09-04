@@ -104,8 +104,18 @@ export function ReportJournal({ month }: ReportJournalProps) {
   const lines = data?.lines ?? [];
   const unmappedCodes = data?.unmappedCodes ?? [];
 
-  const totalDebit = lines.reduce((s, l) => s + Number(l.debit), 0);
-  const totalCredit = lines.reduce((s, l) => s + Number(l.credit), 0);
+  // The server already summed both sides in integer paise across the whole run.
+  // Re-deriving them here from `lines` in float made this footer answer a
+  // different question — the total of what is on screen — and then print a
+  // balance verdict on it. Compare the server's own two figures, in paise, so
+  // "Balanced" means the journal balances rather than the table adding up.
+  const totalDebit = data?.totalDebits ?? 0;
+  const totalCredit = data?.totalCredits ?? 0;
+  const balanced = Math.round(totalDebit * 100) === Math.round(totalCredit * 100);
+  // `provisional` means the run behind these figures is not locked yet, so they
+  // can still move. A bare "Balanced" on a provisional journal reads as a final
+  // verdict and has been handed to accounting as one.
+  const provisional = data?.provisional ?? false;
 
   const footerNode =
     lines.length > 0 ? (
@@ -113,8 +123,13 @@ export function ReportJournal({ month }: ReportJournalProps) {
         Total Debit:{" "}
         <span className="font-mono">{formatMoney(totalDebit)}</span> · Total Credit:{" "}
         <span className="font-mono">{formatMoney(totalCredit)}</span>
-        {Math.abs(totalDebit - totalCredit) < 0.01 && (
+        {balanced && (
           <span className="ml-2 text-status-success-ink font-medium">✓ Balanced</span>
+        )}
+        {provisional && (
+          <span className="ml-2 text-status-warning-ink font-medium">
+            Provisional — the run is not locked
+          </span>
         )}
       </span>
     ) : undefined;

@@ -237,8 +237,7 @@ export function useEventCreateDialog({
         toast.success("Event updated");
       } else {
         const res = await createEvent.mutateAsync(result.payload);
-        if (res.syncError) toast.warning(`Event created, but calendar sync failed: ${res.syncError}`);
-        else if (res.meetingUrl) toast.success("Event created — meeting link added");
+        if (res.syncQueued) toast.success("Event created — syncing to your calendar");
         else toast.success("Event created");
         // The server scans for overlapping occurrences and approved leave on every
         // create; before this the result was discarded and a double-booking read

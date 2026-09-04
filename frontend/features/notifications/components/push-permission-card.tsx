@@ -23,7 +23,8 @@ import { useSession } from "next-auth/react";
  */
 export function PushPermissionCard() {
   const { data: session } = useSession();
-  const { permission, enable, isEnabling } = usePushSubscription(session?.user?.id);
+  const { permission, enable, disable, isEnabling, isDisabling, optedOut } =
+    usePushSubscription(session?.user?.id);
   const { iconRef, hoverHandlers } = useAnimatedIcon();
 
   async function handleEnable() {
@@ -37,19 +38,44 @@ export function PushPermissionCard() {
     }
   }
 
+  /**
+   * RT-005. Turning push off used to mean opening browser site settings and
+   * revoking the permission — which most browsers make permanent, so the only
+   * exit from push was one the app could never undo. This drops the browser
+   * subscription and deletes the server row, and leaves the permission alone.
+   */
+  async function handleDisable() {
+    try {
+      await disable();
+      toast.success("Push notifications are off for this browser.");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }
+
   if (permission === "unsupported") return null;
 
-  if (permission === "granted") {
+  if (permission === "granted" && !optedOut) {
     return (
-      <div className="flex items-start gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
-        <BellIcon ref={iconRef} size={16} className="mt-0.5 shrink-0 text-status-success-ink" />
-        <div className="min-w-0">
-          <p className="text-sm font-medium">Push notifications are on</p>
-          <p className="text-sm text-muted-foreground">
-            This browser will show alerts even when StreamlineOS is closed. Notifications never
-            include message content — open the app to read them.
-          </p>
+      <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-3 min-w-0">
+          <BellIcon ref={iconRef} size={16} className="mt-0.5 shrink-0 text-status-success-ink" />
+          <div className="min-w-0">
+            <p className="text-sm font-medium">Push notifications are on</p>
+            <p className="text-sm text-muted-foreground">
+              This browser will show alerts even when StreamlineOS is closed. Notifications never
+              include message content — open the app to read them.
+            </p>
+          </div>
         </div>
+        <LoadingButton
+          isPending={isDisabling}
+          onClick={handleDisable}
+          variant="outline"
+          className="w-full sm:w-auto"
+        >
+          Turn off
+        </LoadingButton>
       </div>
     );
   }

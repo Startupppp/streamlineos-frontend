@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import {
   Sheet,
@@ -93,7 +94,13 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
     data: docsData,
     isLoading: docsLoading,
     isFetching: docsFetching,
+    isError: docsFailed,
+    refetch: refetchDocs,
   } = useEmployeeOnboardingDocs(userId, docsCursor);
+
+  const handleRetryDocs = useCallback(() => {
+    void refetchDocs();
+  }, [refetchDocs]);
 
   const employeeDocs = docsData?.data;
 
@@ -234,6 +241,13 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
                     <Skeleton key={i} className="h-20 rounded-xl" />
                   ))}
                 </div>
+              ) : docsFailed ? (
+                <ErrorState
+                  title="Couldn’t load this employee’s documents"
+                  description="The submission list did not load, so an empty review queue would be misleading. Try again."
+                  onRetry={handleRetryDocs}
+                  compact
+                />
               ) : !employeeDocs || employeeDocs.length === 0 ? (
                 <EmptyState
                   illustration={<EmptyDocumentsIllustration className="h-24 w-24" />}

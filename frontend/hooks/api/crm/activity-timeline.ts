@@ -44,7 +44,7 @@ export function useActivityTimeline(anchor: TimelineAnchor | null, limit = 25) {
           `/crm/activities/timeline?${new URLSearchParams({
             ...params,
             limit: String(limit),
-            ...(pageParam ? { cursor: pageParam as string } : {}),
+            ...(pageParam !== undefined ? { cursor: pageParam as string } : {}),
           }).toString()}`,
           undefined,
           signal,
@@ -73,7 +73,7 @@ export function useMyActivityTasks(includeCompleted = false, limit = 25) {
           `/crm/activities/my-tasks?${new URLSearchParams({
             includeCompleted: String(includeCompleted),
             limit: String(limit),
-            ...(pageParam ? { cursor: pageParam as string } : {}),
+            ...(pageParam !== undefined ? { cursor: pageParam as string } : {}),
           }).toString()}`,
           undefined,
           signal,

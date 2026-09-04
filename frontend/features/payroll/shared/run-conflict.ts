@@ -12,9 +12,15 @@ export function isRunConflict(error: unknown): boolean {
 }
 
 /**
- * A 409 on a run lifecycle action means the run moved underneath this screen, so the
- * generic error toast leaves the operator staring at the stale state that caused it.
- * This refetches the run's surfaces before reporting, so the retry is against truth.
+ * A 409 on a run lifecycle OR payout action means the run moved underneath this
+ * screen, so the generic error toast leaves the operator staring at the stale
+ * state that caused it. This refetches the run's surfaces before reporting, so
+ * the retry is against truth.
+ *
+ * The payout batch keys hang off `payroll/payout/batches`, not `payroll/runs`,
+ * so the run prefix below never reaches them — and a batch 409 (a batch already
+ * sent, or migration 1049 refusing a second live instruction) is precisely a
+ * stale batch list.
  */
 export function useRunConflictHandler(runId: number): (error: unknown) => void {
   const queryClient = useQueryClient();
@@ -34,6 +40,8 @@ export function useRunConflictHandler(runId: number): (error: unknown) => void {
         queryKeys.payroll.runInputsAll(runId),
         queryKeys.payroll.runVariance(runId),
         queryKeys.payroll.commandCenterAll,
+        queryKeys.payroll.bankBatches(),
+        queryKeys.payroll.bankValidation(runId),
       ];
       for (const queryKey of keys) void queryClient.invalidateQueries({ queryKey });
 

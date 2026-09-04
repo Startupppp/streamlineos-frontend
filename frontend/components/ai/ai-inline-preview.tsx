@@ -20,6 +20,8 @@ import { cn } from "@/lib/utils";
 
 export interface AiInlineSession {
   actionKey: string;
+  /** Declared by the action; gates the streaming citation placeholder. */
+  expectsCitations?: boolean;
   state: AiActionResultState;
   apply: () => void;
   reject: () => void;
@@ -75,7 +77,12 @@ export function AiInlinePreview({
       )}
 
       {state.status === "streaming" && (
-        <AiStreamingOutput text={state.text} onCancel={session.cancel} variant="compact" />
+        <AiStreamingOutput
+          text={state.text}
+          onCancel={session.cancel}
+          variant="compact"
+          expectsCitations={session.expectsCitations ?? false}
+        />
       )}
 
       {state.status === "quota" && <AiQuotaEmptyState variant="compact" />}

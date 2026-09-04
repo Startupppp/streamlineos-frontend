@@ -1,11 +1,12 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export interface KbSource {
   id: number;
@@ -50,14 +51,38 @@ export function kbSourcePollInterval(
   return Math.min(POLL_MIN_MS * 2 ** Math.floor(waited / POLL_STEP_MS), POLL_MAX_MS);
 }
 
+export interface KbSourcePage {
+  data: KbSource[];
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
+}
+
+const SOURCES_PAGE_SIZE = 50;
+
+/**
+ * `GET /kb/sources` was a hard cap of 100 with no cursor: a tenant past 100 sources could
+ * never reach the rest, and the response was shaped exactly like a complete list, so
+ * nothing surfaced the loss. It is a keyset page now, and this is an infinite query so the
+ * cap is a page size rather than a ceiling.
+ *
+ * The poll still reads the flattened rows across every page, not just the first: a source
+ * still ingesting on page two has to keep the poll alive, or the list a user has scrolled
+ * into stops updating precisely where they are looking.
+ */
 export function useKbSources() {
   const canView = useCan("kb:pages:view");
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: queryKeys.kb.sources(),
-    queryFn: ({ signal }) => apiClient.get<KbSource[]>("/kb/sources", undefined, signal),
+    queryFn: ({ pageParam, signal }) => {
+      const params: Record<string, unknown> = { limit: SOURCES_PAGE_SIZE };
+      if (pageParam !== undefined) params.cursor = pageParam;
+      return apiClient.get<KbSourcePage>("/kb/sources", params, signal);
+    },
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     staleTime: 15_000,
     enabled: canView,
-    refetchInterval: (query) => kbSourcePollInterval(query.state.data),
+    refetchInterval: (query) =>
+      kbSourcePollInterval((query.state.data?.pages ?? []).flatMap((page) => page.data)),
   });
 }
 

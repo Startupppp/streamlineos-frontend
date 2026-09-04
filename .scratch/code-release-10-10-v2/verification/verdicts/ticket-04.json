@@ -1,0 +1,101 @@
+{
+  "ticket": "04",
+  "measured_at": {
+    "backend_head": "e1fd1d475e64a94f6b9273fc3d06608697375519",
+    "frontend_head": "31c3786a6",
+    "note": "GATE-STATUS.tsv records backend main as 31c3786a6; the backend working copy is actually at e1fd1d475 with 4 modified baseline files. All measurements below were taken by me at e1fd1d475 / 31c3786a6."
+  },
+  "criteria": [
+    {
+      "id": "PRD-C047",
+      "verdict": "REFUTED",
+      "evidence": "CLAIMED: reports/04-api-zod-openapi-contracts.md:71 states '**Closed.**' for C047. FOUND at head: clauses 1-3 hold — backend tsconfig.json:22-24 (strict/strictNullChecks/noImplicitAny) and frontend/tsconfig.json strict:true; `npm run check:type-assertions` exit 0 in BOTH repos with 'as any / @ts-ignore / @ts-expect-error / @ts-nocheck: 0'. But clause 4 fails on the gate's OWN ledger: backend prints '=== ledger: 22 at a proven external seam, 7 owed a Zod parse ==='; frontend prints '=== ledger: 2 at a proven external seam, 5 owed a narrowing ===' — 12 double casts are counted, not justified. Clause 5 ('parallel hand-written types that drift from schemas') fails with a live instance: hooks/api/hr/employees.ts:47-52 declares `LegacyDepartment[]` for `GET /hr/departments/legacy`, a route no controller declares (src/modules/hr/config/hr-departments.controller.ts:13,18,24 is `@Controller(\"hr/departments\")` + `@Get()`/`@Post()` only) and which is absent from openapi.json (only '/hr/departments' exists); it is rendered live at features/hr/work-logs/work-logs-page.tsx:99. The only cross-repo arbiter is check:contract-drift, whose whole corpus is 'Timesheets calls extracted: 49'; check:response-contracts reports 2,580 of 2,666 seam calls are unchecked casts.",
+      "blocker": "12 ledgered-but-unjustified double casts (7 backend 'owed a Zod parse', 5 frontend 'owed a narrowing'); no instrument arbitrates frontend hand-written types against backend Zod schemas outside Timesheets (49 calls); one live route-level drift.",
+      "clauses_failing": "unsafe double casts; parallel hand-written types that drift from schemas"
+    },
+    {
+      "id": "PRD-C048",
+      "verdict": "OPEN",
+      "evidence": "Request half is strong and I measured it myself over 550 controller files / 3,640 handlers, resolving @Validate({body,params,query}) per handler: @Body validated 1386/1389 (99.8%), @Param 1925/1933 (99.6%), @Query 561/597 (94.0%) — 47 unvalidated slots (e.g. src/modules/hr/benefits/hr-benefits.controller.ts:112, src/modules/crm/core/crm-products.controller.ts:39, src/modules/gdpr/gdpr.controller.ts:89,119,180, src/modules/public/public.controller.ts:138,351). check:body-binding exit 0 (1945 slots, UNBOUND 0); check:multipart-contracts exit 0 (551 controllers). But the 'external response' clause fails: I ran `npm run check:response-contracts` at head — exit 0, 'Seam calls scanned 2666, Carrying a contract 86 (3.2%), Unparsed 2580', and the gate itself prints 'NOTE: 97.8% of the seam is still an unchecked cast. This gate freezes that debt; it does not retire it.'",
+      "blocker": "Only 86 of 2,666 frontend fetch-seam calls validate the external response through Zod (3.2%); 47 controller slots bind a param/query with no schema and no pipe.",
+      "clauses_failing": "external response validation; query/param validation (47 slots)"
+    },
+    {
+      "id": "PRD-C049",
+      "verdict": "OPEN",
+      "evidence": "check:openapi-coverage is RED at head — /tmp/beg-check_openapi-coverage.log: 'response-schemas: 27/3648 ops declare a response body SCHEMA (0.74%) / 3621 uncovered [ceiling 3617]' and 'FAIL — 3621 operation(s) declare no response schema, above the ceiling of 3617'. I re-measured openapi.json independently: 3,648 operations, 3,647 with a 2xx key, only 26 with a 2xx content schema (0.71%). The gate corpus is NOT empty (3,648 ops, all exposure-stamped), so this is a real violation, not a vacuous pass. Live drift survives: `GET /hr/departments/legacy` is called from hooks/api/hr/employees.ts:52 and rendered at features/hr/work-logs/work-logs-page.tsx:99 with no backend route and no OpenAPI operation. The route-existence oracle frontend/test-utils/backend-routes.ts exists but is consumed by exactly 2 test files (hooks/api/__tests__/blog-admin-routes.test.ts, hooks/api/accounting/__tests__/banking-routes.test.ts). NOTE — two of the prior audit's three route drifts ARE fixed at head: '/blog/admin/categories' and '/finance/bank-accounts/{bankAccountId}' now exist in openapi.json; and prior finding F-4 (hr feedback stat cards) is REFUTED — src/modules/hr/performance/feedback.service.ts:239 now returns {subjectId,totalRequests,completedRequests,avgRating,requests,responses}, matching frontend hooks/api/hr/feedback.ts:34-45. check:contract-vendor exit 0 (vendored copy sha256 58c4909430722064 matches the backend).",
+      "blocker": "99.29% of operations publish no response schema, so the backend/OpenAPI half of the reconciliation does not exist for the frontend to be reconciled against; one live route drift (/hr/departments/legacy).",
+      "clauses_failing": "backend Zod/OpenAPI response contracts; frontend response types reconciled against them"
+    },
+    {
+      "id": "PRD-C085",
+      "verdict": "OPEN",
+      "evidence": "contracts/route-budgets.json holds 93 budget entries against 3,648 live operations (2.5%); all 93 declare all five ceilings (maxDbCalls/maxDownstreamCalls/maxLatencyP95Ms/maxResponseBytes/maxMemoryMb) — I counted this directly. Measurement is far thinner: measuredDbCalls non-null on 3/93, measuredLatencyP95Ms on 69/93 (check:route-budgets log agrees: 'DbCalls 3/93 · LatencyP95Ms 69/93'). The p50/p95/p99 clause: only 54/93 entries carry measuredReadPathP50Ms/P95Ms/P99Ms, and the HTTP measurement carries p95 ONLY — 0 entries have an HTTP p50 or p99. 'At the release commit' fails outright: httpMeasurement.commit = 295e55cb0c8f006a3e4abe7981c8ed603e0afd3a with workingTreeDirty:true, and `git rev-list --count 295e55cb..HEAD` = 269. check:benchmark-manifest is exit 1 ('measured 366 commit(s) BEHIND HEAD (ef3c1960 -> e1fd1d47)', 'subject: DRIFTED — 2 measured SQL catalog(s) changed on disk since capture'). check:route-budgets-http is exit 1 with 3 BREACHes (POST /chat/channels/{channelId}/messages p95 5043.126 > 1000; downstream 3 > 0; GET /cron/storage-sweep downstream 1 > 0). check:route-budgets also names 43 undeclared scheduled batches.",
+      "blocker": "2.5% budget coverage, measuredDbCalls on 3 of 93, no HTTP p50/p99 anywhere, and the capture is 269 commits behind HEAD on a dirty tree — so nothing is recorded 'at the release commit'. Two dependent gates are exit 1.",
+      "clauses_failing": "record p50/p95/p99 at the release commit; db-call and downstream budgets enforced (3 live breaches)"
+    },
+    {
+      "id": "PRD-C086",
+      "verdict": "OPEN",
+      "evidence": "The two gates that touch this pass: check:route-duplicates exit 0 (0 operationId duplicates, 0 ambiguous param-vs-param; 2 version inconsistencies reported only) and check:bounded-contracts exit 0 with 'Total in-scope violations: 0' (10 CRM/Inventory out of scope). But those gates only measure cursor/sort/bulk-id bounds and route naming — neither clause 2 ('no avoidable request waterfalls') nor clause 3 ('no oversized mega-responses') is measured by any instrument. Concrete counter-evidence for clause 2 at head: app/(authenticated)/build/[projectId]/layout.tsx:36 server-fetches `/build/${numId}`, and hooks/api/build/projects.ts:189 `useProject` refetches the same `GET /build/:id` on the client, with no HydrationBoundary anywhere under app/(authenticated)/build (grep returns nothing) — 29 files call useProject(. Counter-evidence for clause 3: src/modules/e-sign/sign-admin.controller.ts:35-38 returns SignSettingsService.getOrCreate() typed `typeof signOrgSettings.$inferSelect`, i.e. the whole row.",
+      "blocker": "No gate measures request waterfalls or response composition; a confirmed duplicate server+client round trip on GET /build/:id and a whole-row response on GET /sign/admin/settings stand at head.",
+      "clauses_failing": "no avoidable request waterfalls; unrelated domain implementation kept out of oversized responses"
+    },
+    {
+      "id": "PRD-C087",
+      "verdict": "CLOSED",
+      "evidence": "Read at head: src/modules/dashboard/dashboard-section-settle.ts:16 declares HOME_SECTION_DEADLINE_MS = 2_500 with a measured justification, and settleSection races each section against that deadline, always resolves, and degrades only the failing section (a rejection handler is kept on the abandoned promise). Row volume is capped by src/modules/dashboard/dashboard-read-limits.ts. Behavioural proof executed by me: `nice -n 15 npx jest --maxWorkers=1 --testPathPattern='dashboard-home-fanout'` -> 'PASS src/modules/dashboard/dashboard-home-fanout.spec.ts (13.561 s) / Test Suites: 1 passed / Tests: 14 passed, 14 total', EXIT=0. The run's own log shows independence directly: 'Home section \"upcomingEvents\" exceeded 2500ms and was abandoned for org org-fanout-1', 'Home section \"org\" exceeded 2500ms and was abandoned', etc., with the aggregate still returning. Every clause (bounded, parallel, independent section results, one slow source does not delay or fail every section) holds.",
+      "blocker": "",
+      "clauses_failing": ""
+    },
+    {
+      "id": "PRD-C088",
+      "verdict": "OPEN",
+      "evidence": "check:query-projections is exit 0 but only because it is a ratchet: 'Unprojected reads — findMany 287 · findFirst 488 · bare .select() 602 = 1377 (ceiling 1383, enforced on the total)' over 3,677 files — 6 units of headroom, i.e. the rule is suspended, not satisfied. check:relation-hydration exit 0 with 'Unprojected relation hydrations: 186 (ratchet 186)' and its own line 'this is a ratchet, not a clean repository', plus 'Base-table credential CANDIDATES (reported, not enforced): 71'. Concrete secret over-exposure confirmed at head: src/db/schema/e-sign/settings.ts:45 declares `webhookSecret: text(\"webhook_secret\")`; src/modules/e-sign/sign-settings.service.ts:39-53 `getOrCreate` returns `SignOrgSettings = typeof signOrgSettings.$inferSelect` (the whole row) from both the findFirst and the .returning(); src/modules/e-sign/sign-admin.controller.ts:35-38 `@Get(\"settings\")` returns it verbatim. Nothing strips webhookSecret on that path.",
+      "blocker": "1,377 unprojected reads and 186 unprojected relation hydrations held by ratchets, and a plaintext webhook secret reaching the wire on GET /sign/admin/settings.",
+      "clauses_failing": "explicit DTO projections; omit internal columns and secrets"
+    },
+    {
+      "id": "PRD-C089",
+      "verdict": "OPEN",
+      "evidence": "Clauses 1-3 hold and I read them: src/main.ts:9,10,99 `app.use(compression(httpCompressionOptions()))`; src/common/http/compression.config.ts declares COMPRESSION_THRESHOLD_BYTES = 1024, an explicit ALREADY_COMPRESSED prefix list (image/, video/, audio/, application/pdf, zip, gzip, 7z, rar, bzip, woff) with image/svg+xml carved back in, and BROTLI_QUALITY keyed on zlibConstants.BROTLI_PARAM_QUALITY. Clause 4 ('never compress secrets in a cross-origin reflection context') fails: `grep -rn 'NO_COMPRESSION_HEADER|x-no-compression' src --include='*.ts' | grep -vc compression.config` returns 0 — no handler anywhere adopts the opt-out — while src/main.ts:107-113 runs `app.enableCors({ credentials: true })` and src/modules/notifications/notifications.controller.ts:70 `@Post(\"events/token\")` returns a token in a compressible JSON body. The config file's own header says so: 'This supplies the mechanism, not the adoption.' check:compression is exit 0 but its entire output is 'compression: OK — compression middleware detected in main.ts or app.module.ts' — it inspects no threshold, no filter, no exclusion and no adoption.",
+      "blocker": "Zero adoption of the NO_COMPRESSION_HEADER opt-out on the secret-returning routes, with credentialed CORS live; the gate that reports green is presence-only.",
+      "clauses_failing": "never compress secrets in a cross-origin reflection context"
+    },
+    {
+      "id": "PRD-C090",
+      "verdict": "OPEN",
+      "evidence": "check:unbounded-reads is exit 0 but reports 'Actionable instance counts (target: zero): unbounded reads : 10' and 'Suppressed by a FALSE-POSITIVE justification: 651 unbounded read(s) [ceiling 651]' over 2,877 service files, with 341 files classified FALSE-POSITIVE per FILE in src/scripts/baselines/unbounded-reads-classification.json. I enumerated the 10 ACTIONABLE entries directly from that file: @common/tenant/for-each-org.ts, @common/tenant/org-admin-recipients.ts, @common/relocation/relocation-traffic-tracker.ts, /kb/wiki/kb-page-attachment-purge.ts ('GENUINELY UNBOUNDED, not a false positive'), /clients/clients.service.ts, /clients/client-accounts-crm-assignment.ts, /quotes/quotes-lifecycle.service.ts, /hr/import/hr-import.service.ts and /hr/time/attendance.service.ts (both carrying 'HR lane — deadline 2026-12-31'). Real streaming does exist and I verified three: src/modules/expenses/expense-export-worker.service.ts:24-38 is a durable job capped by EXPORT_ROW_CAP; src/modules/finance/tax/tax-reports.controller.ts:61 buffers a CursorPage that is cursor+limit bounded (tax-reports.service.ts:61); src/modules/crm/import/crm-export.service.ts:112 yields per page.",
+      "blocker": "10 ACTIONABLE unbounded reads stand against the gate's own stated target of zero, and the per-file FALSE-POSITIVE classification suppresses 651 more, so 'no growing payload is buffered' is asserted rather than measured.",
+      "clauses_failing": "do not buffer growing payloads"
+    },
+    {
+      "id": "PRD-C091",
+      "verdict": "OPEN",
+      "evidence": "The deadline is armed: src/common/tenant/tenant-context.interceptor.ts:72 `const REQUEST_DEADLINE_MS = resolveAdmissionConfig().maxExecutionMs` and :122 `createStreamAbortSignal(req, res, REQUEST_DEADLINE_MS)`, passed into runInTenantTransaction at :125. Propagation past that point does not exist, and the file says so itself at :63-71 — 'Aborting the signal does not itself cancel a running query or an in-flight provider call — only a consumer that reads the signal can do that, and today the only one is the AI gateway's ambient fallback.' Measured: `grep -c signal src/common/tenant/with-tenant.ts` = 0 (database), `grep -c signal src/common/cache/cache.service.ts` = 0 (cache), `grep -c signal src/common/outbound/call-provider.ts` = 0 (provider adapter). src/common/http/outbound-request.ts:11,30,42-44,69 composes a caller signal with AbortSignal.timeout correctly, but has only 2 call sites (src/modules/email/dispatch/twilio.gateway.ts:63, src/modules/billing/payments/adapters/razorpay.adapter.ts:124) and neither passes one. No concurrency-limiter dependency exists: p-limit, p-map, p-queue, bottleneck, async-sema, semaphore all ABSENT from package.json.",
+      "blocker": "Cancellation reaches neither the database, the cache, nor the generic provider adapter — all three have zero references to a signal; no general-purpose concurrency limiter exists.",
+      "clauses_failing": "propagate cancellation through database, cache and provider adapters; concurrency limits"
+    },
+    {
+      "id": "PRD-C092",
+      "verdict": "OPEN",
+      "evidence": "Measured directly from openapi.json at head: 2,135 mutating operations, 248 carry x-idempotent (11.6%), and ops declaring a 412 response = 0. In src/: `grep -rn PreconditionFailedException src --include='*.ts'` = 0 files, `grep -rn 'If-Match|ifMatch' src --include='*.ts'` = 0 hits. 'Stable 409/412 semantics' cannot hold when 412 is never emitted anywhere in the service. Optimistic concurrency exists on 3 operations only — src/modules/directory/worker-engagements.service.ts:383,471 (required expectedVersion, CAS in the WHERE) and src/modules/workflows/workflows-crud.service.ts:214-235 (I read it: the UPDATE does carry `eq(workflows.version, expectedVersion)` and throws ConflictException on zero rows, so the prior report's 'inert' finding is REFUTED — but expectedVersion is OPTIONAL per src/modules/workflows/dto/workflow.schemas.ts:24 and defaults to the version just read). check:idempotent-commands is exit 0 over an effectively EMPTY enforced corpus: 'Controllers scanned 547 / Handlers in scope 11', and all 11 are printed as SKIP on the exclusion allowlist — zero handlers are actually enforced.",
+      "blocker": "412 is never returned by any operation; only 3 of 2,135 mutating operations do a version check; the gate that reports green enforces zero handlers.",
+      "clauses_failing": "optimistic concurrency / version checks; stable 412 semantics"
+    },
+    {
+      "id": "PRD-C093",
+      "verdict": "OPEN",
+      "evidence": "check:n1-growing-loops is exit 0 but reports 'GROWING (one round trip per row): 100 site(s) across 75 file(s) [ratchet 102]' over 2,734 service files / 5,363 loop nodes, and states its own status: '100 site(s) remain against the ratchet of 102 — this is a ratchet to drive to zero, not a clean repository.' 'Cap parallel fanout' has no general mechanism: p-limit, p-map, p-queue, bottleneck, async-sema and semaphore are all ABSENT from backend package.json (checked directly). 'Use batch adapters where providers support them' fails concretely: `grep -rn 'emails.send|emails.batch' src --include='*.ts'` returns exactly one hit, src/modules/email/email.provider.ts:135 `resend.emails.send({` — one message per call; Resend's emails.batch.send appears nowhere in src/.",
+      "blocker": "100 growing per-row round trips held by a ratchet, no concurrency-limiting primitive in the dependency tree, and zero batch adapters despite the provider supporting one.",
+      "clauses_failing": "cap parallel fanout; use batch adapters"
+    },
+    {
+      "id": "PRD-C094",
+      "verdict": "OPEN",
+      "evidence": "The supporting gates pass and I ran all four at head: check:query-scope exit 0 ('No query-scope violations found (5411 files scanned)'), check:query-signal exit 0 ('Parsed 1057 queryFn blocks across 428 files'), check:effect-fetches exit 0, verify:server-data-seam exit 0 ('5 authenticated routes, 6 public routes'). But the criterion's own clause — no duplicate server/client fetch of the canonical request — is violated at head: app/(authenticated)/build/[projectId]/layout.tsx:36 does `await serverGet<ProjectWithDetails>(`/build/${numId}`)` and `grep -rn 'HydrationBoundary|dehydrate' 'app/(authenticated)/build'` returns NOTHING, while hooks/api/build/projects.ts:187-191 `useProject(id)` issues the same `GET /build/:id` client-side with queryKey projects.detail(id) — called from 29 files. Second instance: app/(authenticated)/build/workspaces/[pmWorkspaceId]/[projectId]/layout.tsx:24. Overall prefetch reach is 6 of 600 page.tsx routes carrying a HydrationBoundary (app/(authenticated)/layout.tsx, settings/roles, directory/workers, hr/documents, hr/assets, payroll/runs), and 9 serverGet call sites covering only /me/access, /payroll/runs, /roles and directory.",
+      "blocker": "The build project layout fetches GET /build/:id on the server and useProject refetches it on the client with no hydration bridge — a confirmed duplicate server/client fetch of the canonical request, in 2 layouts and 29 consumer files.",
+      "clauses_failing": "reuse/prefetch the canonical request instead of issuing duplicate server/client fetches"
+    }
+  ]
+}

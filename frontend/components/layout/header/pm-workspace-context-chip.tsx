@@ -19,18 +19,36 @@ interface PmWorkspaceContextChipProps {
   className?: string;
 }
 
+/**
+ * The route test gates the MOUNT, not an `enabled` flag inside the hook. The
+ * chip sits in the global header on every authenticated page, so calling
+ * `usePmWorkspaces` above an early return issued GET /build/pm-workspaces on
+ * every page load — org-wide, for every holder of `build:workspaces:view` — to
+ * render null. An `enabled` passed down would not have helped: a key warmed
+ * from the shell is a request either way.
+ */
 export function PmWorkspaceContextChip({ className }: PmWorkspaceContextChipProps) {
   const pathname = usePathname() ?? "";
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const isProductManagementRoute =
     pathname.startsWith("/build") || pathname.startsWith("/product-management");
+
+  if (!isProductManagementRoute) return null;
+  return <MountedPmWorkspaceContextChip pathname={pathname} className={className} />;
+}
+
+function MountedPmWorkspaceContextChip({
+  pathname,
+  className,
+}: {
+  pathname: string;
+  className?: string;
+}) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const { data } = usePmWorkspaces({
     limit: 20,
   });
-
-  if (!isProductManagementRoute) return null;
 
   const workspaces = data?.data ?? [];
   const pathWorkspaceId = parsePmWorkspaceIdFromPath(pathname);

@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { SELECT_NONE_VALUE } from "@/features/accounting/shared";
 import { DATE_FORMAT_OPTIONS } from "../lib/parse-csv";
 import type { ParsedCsv } from "../lib/parse-csv";
 
@@ -90,6 +91,10 @@ export function BankImportStep2({
 
   function handleAmountModeSelect(mode: "single" | "debit-credit") {
     onMappingChange("amountMode", mode);
+  }
+
+  function handleOptionalColumnChange(field: "reference" | "counterparty", value: string) {
+    onMappingChange(field, value === SELECT_NONE_VALUE ? "" : value);
   }
 
   return (
@@ -225,14 +230,14 @@ export function BankImportStep2({
         <div className="space-y-1.5">
           <Label className="text-xs">Reference (optional)</Label>
           <Select
-            value={mapping.reference}
-            onValueChange={(v) => onMappingChange("reference", v)}
+            value={mapping.reference || SELECT_NONE_VALUE}
+            onValueChange={(v) => handleOptionalColumnChange("reference", v)}
           >
             <SelectTrigger>
               <SelectValue placeholder="None" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value={SELECT_NONE_VALUE}>None</SelectItem>
               {columnOptions.map((o) => (
                 <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
               ))}
@@ -242,14 +247,14 @@ export function BankImportStep2({
         <div className="space-y-1.5">
           <Label className="text-xs">Counterparty (optional)</Label>
           <Select
-            value={mapping.counterparty}
-            onValueChange={(v) => onMappingChange("counterparty", v)}
+            value={mapping.counterparty || SELECT_NONE_VALUE}
+            onValueChange={(v) => handleOptionalColumnChange("counterparty", v)}
           >
             <SelectTrigger>
               <SelectValue placeholder="None" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value={SELECT_NONE_VALUE}>None</SelectItem>
               {columnOptions.map((o) => (
                 <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
               ))}

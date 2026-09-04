@@ -16,6 +16,7 @@ import {
   isTurnstileEnabled,
 } from "@/features/security/turnstile-widget";
 import { PublicFormField } from "./components/public-form-field";
+import { withCorrelation } from "@/lib/observability/with-correlation";
 
 type ContactTopic = "sales" | "support" | "partnership" | "press" | "other";
 
@@ -52,7 +53,7 @@ async function submitContactForm(
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/public/contact`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: withCorrelation(new Headers({ "Content-Type": "application/json" })),
       body: JSON.stringify(data),
     });
     if (res.ok) return { ok: true };

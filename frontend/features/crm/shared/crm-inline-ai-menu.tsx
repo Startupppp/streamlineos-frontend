@@ -88,7 +88,7 @@ export function LeadInlineAiMenu({
     }
 
     return [
-      { key: "summary", label: "Lead summary", run: runSummary },
+      { key: "summary", label: "Lead summary", run: runSummary, expectsCitations: true },
       { key: "next-action", label: "Next best action", run: runNextAction },
       {
         key: "email-draft",
@@ -177,7 +177,7 @@ export function DealInlineAiMenu({ dealId, dealName }: DealInlineAiMenuProps) {
     }
 
     return [
-      { key: "brief", label: "Deal brief", run: runBrief },
+      { key: "brief", label: "Deal brief", run: runBrief, expectsCitations: true },
       { key: "next-action", label: "Next best action", run: runNextAction },
       {
         key: "meeting-followup",
@@ -299,7 +299,7 @@ export function AccountInlineAiMenu({
     }
 
     return [
-      { key: "brief", label: "Account brief", run: runBrief },
+      { key: "brief", label: "Account brief", run: runBrief, expectsCitations: true },
       {
         key: "email-draft",
         label: "Draft email",

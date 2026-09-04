@@ -12,6 +12,17 @@ interface AiStreamingOutputProps {
   onCancel?: () => void;
   variant?: OutputVariant;
   className?: string;
+  /**
+   * Whether THIS surface will deliver sources when the answer lands.
+   *
+   * The shimmer used to be unconditional, so a "Loading sources" placeholder
+   * appeared on every streaming AI action and then resolved to nothing on all
+   * but two of them — measured over the corpus, 26 of the 28 files that define
+   * an `AiAction` never return a `citations` field at all. A placeholder that
+   * always resolves to nothing is not a loading state, it is a promise the
+   * product does not keep, so it is opt-in and defaults to off.
+   */
+  expectsCitations?: boolean;
 }
 
 export function AiStreamingOutput({
@@ -19,9 +30,10 @@ export function AiStreamingOutput({
   onCancel,
   variant = "fill",
   className,
+  expectsCitations = false,
 }: AiStreamingOutputProps) {
   return (
-    <AiDraftCard citationsPending className={cn(variant === "compact" && "shadow-none", className)}>
+    <AiDraftCard citationsPending={expectsCitations} className={cn(variant === "compact" && "shadow-none", className)}>
       <div role="status" aria-live="polite" aria-busy>
         <p
           className={cn(

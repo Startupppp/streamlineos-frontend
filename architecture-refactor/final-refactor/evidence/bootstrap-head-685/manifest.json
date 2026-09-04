@@ -1,0 +1,274 @@
+{
+  "bundle": "bootstrap-head-685",
+  "title": "Clean-bootstrap, interrupt/resume and catalog-parity evidence at migration journal head 685",
+  "capturedAt": "2026-09-04",
+  "recordedBy": "code-release-10-10-v2 ticket 03 (migration baseline and catalog parity)",
+  "criteria": ["PRD-C055", "PRD-C056"],
+  "supersedes": {
+    "bundle": "bootstrap-head-637",
+    "journalEntries": 637,
+    "note": "That bundle proves the FORMER head only. It stayed green under check:evidence-seal for the whole 637 -> 685 drift, because a seal proves bytes, not currency. check:bootstrap-evidence exists to make that drift fail."
+  },
+  "releaseIdentity": {
+    "gitCommandsRun": "read-only: git rev-parse HEAD, git rev-parse --abbrev-ref HEAD",
+    "backend": {
+      "repository": "streamlineos-backend",
+      "branchRef": "refs/heads/release/v2-closeout",
+      "shaAtProofCapture": "b40e5377d5bfee97ef93783239c36a66fc5d979a"
+    },
+    "frontend": {
+      "repository": "streamlineos-frontend",
+      "branchRef": "refs/heads/release/v2-closeout",
+      "shaAtProofCapture": "f71698306832f623aad1596845cfcf61f578854b"
+    },
+    "shaIsProvenanceOnly": "The SHA records WHO produced this bundle, not what invalidates it. Nine sibling agents commit to this branch continuously, so a gate keyed to the commit id would be red on every unrelated commit and would say nothing about the database. The invariant this bundle is checked against is the migration chain — see journalAtProofCapture — because that, and only that, determines the catalog a bootstrap reaches.",
+    "workingTreeCaveat": "At capture time both working trees carried this release's uncommitted wave-1 work from sibling agents. No uncommitted change touched migrations/: the 637 bundle's own chainDigest (c2f7f626...) and hashSetDigest (6651dc09...) were recomputed from the tree at capture and reproduced byte for byte, which proves entries 0..636 are unmodified since 2026-09-02."
+  },
+  "journalAtProofCapture": {
+    "entries": 685,
+    "firstTag": "0000_light_vance_astro",
+    "headTag": "1061_push_endpoint_cross_tenant_claim",
+    "headWhen": 1803000010136,
+    "sqlFilesOnDisk": 688,
+    "orphans": [
+      "1062_mail_metadata_unread_count_index",
+      "1063_invoice_item_immutability_trigger",
+      "1064_revenue_events_currency"
+    ],
+    "orphanNote": "Three .sql files are present on disk with NO _journal.json entry, so db:migrate never applies them and this bundle does not cover their DDL. They belong to sibling tickets in the same fix wave; migrations/meta/_journal.json is a serialized lane owned by the release orchestrator. check:migration-discipline and check:migration-chain both report them (logs/11-verify-migration-chain-RED.log, retained deliberately as a RED gate). This is a known pending condition, not a finding of this bundle.",
+    "journalFileSha256": "6e97e44ceb8f86d18548948bab084349148020254c41c3e0015f46e3d9d16b8e",
+    "chainSealSha256": "4cc2f7c3c5cc8a33c424d7ab80189cdb22decfc61232bd6daa8ce81e035a5516",
+    "chainDigest": "e441c2687b99cdfee5a4257d75185041a8f1df74af647c5e87f5857ff7504da4",
+    "hashSetDigest": "78d8216316669566292ac2534d1618be0dd683ffefb0495fa528bdcc5eea016d",
+    "uniqueFileHashes": 685,
+    "digestRecipe": {
+      "chainDigest": "sha256( join('\\n', ['<tag>:<sha256 of <tag>.sql>' for each entry in journal order]) ) — NO trailing newline",
+      "hashSetDigest": "sha256( join('\\n', sorted(unique(sha256 of each <tag>.sql))) ) — NO trailing newline",
+      "recipeProvenance": "Both recipes are the ones bootstrap-head-637/manifest.json recorded. They were validated by recomputing that bundle's own two digests from the current tree over its first 637 entries: c2f7f6264fa839d859a20f4985af063becf6dd26fe30c7f6b3b9d5f4cdded6d4 and 6651dc090097f64517b45295c34e02218c7b1d640aefd1b98c0aa263ce1bde9b, both exact.",
+      "supersededVariant": "A variant with a trailing newline yields 398a662ae5d752177ea5cc6d5ff7b3137bb394e71de34243fa6bc666c65ee6e8 over the same 685 files. That value appears in this release's ticket-03 triage; it is the same chain under a different recipe, and it is NOT the repository's canonical digest."
+    },
+    "perFileHashes": "journal-685-file-hashes.txt"
+  },
+  "databaseIdentity": {
+    "server": "PostgreSQL 18.4 (Homebrew) on aarch64-apple-darwin25.4.0",
+    "hostPort": "127.0.0.1:5432",
+    "connectingRole": "tarunchintakunta",
+    "roleNote": "OS superuser with no per-role search_path. db-bootstrap.mjs sets the migration search_path per session, so the chain resolves identically under any role.",
+    "connectionStringsRecorded": "none - by rule. Targets are identified by host/port/database/role only.",
+    "configuredRemoteUntouched": true,
+    "datasetShape": "No seed data. 0 organizations on every target at capture.",
+    "targets": [
+      {
+        "database": "scratch_t03w1_a",
+        "oid": 8651459,
+        "role": "tarunchintakunta",
+        "shape": "clean bootstrap #1",
+        "tablesBefore": 0,
+        "tablesAfter": 1027,
+        "ledgerRows": 685,
+        "ledgerWatermark": 1803000010136,
+        "organizations": 0,
+        "sizeMB": 106
+      },
+      {
+        "database": "scratch_t03w1_b",
+        "oid": 8651460,
+        "role": "tarunchintakunta",
+        "shape": "clean bootstrap #2, independent",
+        "tablesBefore": 0,
+        "tablesAfter": 1027,
+        "ledgerRows": 685,
+        "ledgerWatermark": 1803000010136,
+        "organizations": 0,
+        "sizeMB": 106
+      },
+      {
+        "database": "scratch_t03w1_ir",
+        "oid": 8651461,
+        "role": "tarunchintakunta",
+        "shape": "interrupted (SIGKILL x3 at 150/400/600) then resumed",
+        "tablesBefore": 0,
+        "tablesAfter": 1027,
+        "ledgerRows": 685,
+        "ledgerWatermark": 1803000010136,
+        "organizations": 0,
+        "sizeMB": 106
+      }
+    ],
+    "tableCountNote": "1027 counts every non-system relation including drizzle.__drizzle_migrations; the 944 figure quoted elsewhere in this release counts pg_tables in the public schema only.",
+    "estateWarning": "These are shared local scratch databases, not frozen artifacts. Re-running a comparison later measures the databases as they are then; the retained logs are the evidence."
+  },
+  "commands": [
+    {
+      "label": "clean bootstrap #1",
+      "command": "DATABASE_URL=<scratch_t03w1_a> node src/scripts/db-bootstrap.mjs",
+      "script": "src/scripts/db-bootstrap.mjs",
+      "exit": 0,
+      "log": "logs/01-clean-bootstrap-scratch_t03w1_a.log"
+    },
+    {
+      "label": "clean bootstrap #2",
+      "command": "DATABASE_URL=<scratch_t03w1_b> node src/scripts/db-bootstrap.mjs",
+      "script": "src/scripts/db-bootstrap.mjs",
+      "exit": 0,
+      "log": "logs/02-clean-bootstrap-scratch_t03w1_b.log"
+    },
+    {
+      "label": "interrupted then resumed bootstrap",
+      "command": "node src/scripts/bootstrap-interrupt-resume.mjs --url=<scratch_t03w1_ir> --kill-at=150,400,600 --json=<interrupt-resume-invariants.json>",
+      "script": "src/scripts/bootstrap-interrupt-resume.mjs",
+      "exit": 0,
+      "log": "logs/03-interrupt-resume-scratch_t03w1_ir.log"
+    },
+    {
+      "label": "catalog parity, clean #1 vs clean #2",
+      "command": "node src/scripts/compare-bootstraps.mjs --a=<scratch_t03w1_a> --b=<scratch_t03w1_b>",
+      "script": "src/scripts/compare-bootstraps.mjs",
+      "exit": 0,
+      "log": "logs/04-catalog-parity-a-vs-b.log"
+    },
+    {
+      "label": "catalog parity, clean #1 vs interrupted/resumed",
+      "command": "node src/scripts/compare-bootstraps.mjs --a=<scratch_t03w1_a> --b=<scratch_t03w1_ir>",
+      "script": "src/scripts/compare-bootstraps.mjs",
+      "exit": 0,
+      "log": "logs/05-catalog-parity-a-vs-ir.log"
+    },
+    {
+      "label": "ledger vs journal, per target",
+      "command": "DATABASE_URL=<target> node src/scripts/check-migration-ledger.mjs",
+      "script": "src/scripts/check-migration-ledger.mjs",
+      "exit": 0,
+      "log": "logs/06-check-migration-ledger-a.log"
+    },
+    {
+      "label": "migration immutability seal",
+      "command": "node src/scripts/check-migration-immutability.mjs",
+      "script": "src/scripts/check-migration-immutability.mjs",
+      "exit": 0,
+      "log": "logs/09-check-migration-immutability.log"
+    },
+    {
+      "label": "rollback file coverage",
+      "command": "node src/scripts/check-migration-rollback.mjs",
+      "script": "src/scripts/check-migration-rollback.mjs",
+      "exit": 0,
+      "log": "logs/10-check-migration-rollback.log"
+    },
+    {
+      "label": "migration chain (RED - retained deliberately)",
+      "command": "DATABASE_URL=<scratch_t03w1_a> node src/scripts/verify-migration-chain.mjs",
+      "script": "src/scripts/verify-migration-chain.mjs",
+      "exit": 1,
+      "log": "logs/11-verify-migration-chain-RED.log",
+      "note": "Exit 1 names the three unjournalled .sql files described in journalAtProofCapture.orphans. Retained rather than omitted: a bundle that only keeps its green logs is a press release."
+    }
+  ],
+  "commandsNote": "DATABASE_URL was exported per target in the environment; no connection string is recorded here or in any retained log. Every command was run from the backend repository root.",
+  "results": {
+    "cleanBootstraps": [
+      { "target": "scratch_t03w1_a", "log": "logs/01-clean-bootstrap-scratch_t03w1_a.log", "result": "REACHED_HEAD 685/685", "exit": 0 },
+      { "target": "scratch_t03w1_b", "log": "logs/02-clean-bootstrap-scratch_t03w1_b.log", "result": "REACHED_HEAD 685/685", "exit": 0 }
+    ],
+    "interruptedResume": {
+      "target": "scratch_t03w1_ir",
+      "log": "logs/03-interrupt-resume-scratch_t03w1_ir.log",
+      "invariants": "interrupt-resume-invariants.json",
+      "killAt": [150, 400, 600],
+      "signal": "SIGKILL",
+      "interruptions": 3,
+      "invariantFailures": 0,
+      "idempotentRerun": "0 ok + 685 skip",
+      "exit": 0
+    },
+    "catalogDiff": [
+      {
+        "label": "clean #1 vs clean #2",
+        "log": "logs/04-catalog-parity-a-vs-b.log",
+        "categories": 13,
+        "differences": 0,
+        "exit": 0,
+        "counts": {
+          "tables": 1027,
+          "columns": 13536,
+          "constraints": 14026,
+          "indexes": 4767,
+          "policies": 983,
+          "functions": 470,
+          "triggers": 169,
+          "extensions": 5,
+          "enums": 2325,
+          "rlsState": 983,
+          "sequences": 771,
+          "views": 0,
+          "migrationLedger": 685
+        }
+      },
+      {
+        "label": "clean #1 vs interrupted/resumed",
+        "log": "logs/05-catalog-parity-a-vs-ir.log",
+        "categories": 13,
+        "differences": 0,
+        "exit": 0,
+        "counts": {
+          "tables": 1027,
+          "columns": 13536,
+          "constraints": 14026,
+          "indexes": 4767,
+          "policies": 983,
+          "functions": 470,
+          "triggers": 169,
+          "extensions": 5,
+          "enums": 2325,
+          "rlsState": 983,
+          "sequences": 771,
+          "views": 0,
+          "migrationLedger": 685
+        }
+      }
+    ],
+    "migrationEvidenceGates": [
+      { "gate": "check:migration-ledger (scratch_t03w1_a)", "exit": 0, "log": "logs/06-check-migration-ledger-a.log" },
+      { "gate": "check:migration-ledger (scratch_t03w1_b)", "exit": 0, "log": "logs/07-check-migration-ledger-b.log" },
+      { "gate": "check:migration-ledger (scratch_t03w1_ir)", "exit": 0, "log": "logs/08-check-migration-ledger-ir.log" },
+      { "gate": "check:migration-immutability", "exit": 0, "log": "logs/09-check-migration-immutability.log" },
+      { "gate": "check:migration-rollback", "exit": 0, "log": "logs/10-check-migration-rollback.log" },
+      { "gate": "check:migration-chain", "exit": 1, "log": "logs/11-verify-migration-chain-RED.log" }
+    ]
+  },
+  "logs": [
+    { "file": "logs/01-clean-bootstrap-scratch_t03w1_a.log", "sanitized": true },
+    { "file": "logs/02-clean-bootstrap-scratch_t03w1_b.log", "sanitized": true },
+    { "file": "logs/03-interrupt-resume-scratch_t03w1_ir.log", "sanitized": true },
+    { "file": "logs/04-catalog-parity-a-vs-b.log", "sanitized": true },
+    { "file": "logs/05-catalog-parity-a-vs-ir.log", "sanitized": true },
+    { "file": "logs/06-check-migration-ledger-a.log", "sanitized": true },
+    { "file": "logs/07-check-migration-ledger-b.log", "sanitized": true },
+    { "file": "logs/08-check-migration-ledger-ir.log", "sanitized": true },
+    { "file": "logs/09-check-migration-immutability.log", "sanitized": true },
+    { "file": "logs/10-check-migration-rollback.log", "sanitized": true },
+    { "file": "logs/11-verify-migration-chain-RED.log", "sanitized": true }
+  ],
+  "sanitization": {
+    "method": "No redaction was applied. Every producing script identifies its target by host/port/database/role and never prints a connection string, so the bytes on disk are already free of credentials.",
+    "verifiedBy": "check:bootstrap-evidence re-scans every retained log on each run and fails the bundle if one matches its connection-string, credential, hosted-Postgres-hostname or TLS-mode-parameter patterns. Those literals are deliberately not spelled out here, because the same scan is applied to this manifest.",
+    "hashedAfterSanitization": true
+  },
+  "artifactHashes": {
+    "seal": "artifact-hashes.json",
+    "algorithm": "sha256 over the exact bytes on disk",
+    "verifiedBy": "pnpm check:evidence-seal",
+    "coverage": "every file in this directory tree except the seal itself; check:bootstrap-evidence independently asserts that no file is outside the seal"
+  },
+  "invalidatedBy": "Any change to the migration chain: a new journal entry, a removed one, or an edit to an applied .sql. check:bootstrap-evidence recomputes entries, headTag, headWhen, journalFileSha256, chainDigest, hashSetDigest and every per-file hash on each run and fails when any of them moves.",
+  "recapture": [
+    "createdb three fresh scratch databases",
+    "DATABASE_URL=<a> node src/scripts/db-bootstrap.mjs",
+    "DATABASE_URL=<b> node src/scripts/db-bootstrap.mjs",
+    "node src/scripts/bootstrap-interrupt-resume.mjs --url=<ir> --kill-at=150,400,600 --json=<bundle>/interrupt-resume-invariants.json",
+    "node src/scripts/compare-bootstraps.mjs --a=<a> --b=<b>   and   --a=<a> --b=<ir>",
+    "write a new evidence/bootstrap-head-<n>/ directory with this same manifest shape",
+    "reseal it (sha256 of every file into artifact-hashes.json)",
+    "node src/scripts/check-bootstrap-evidence.mjs must exit 0, and pnpm check:evidence-seal must stay 0"
+  ]
+}

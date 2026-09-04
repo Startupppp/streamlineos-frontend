@@ -22,13 +22,14 @@ import { ErrorState } from "@/components/shared";
 import type { ForecastWeek } from "@/types/accounting/planning";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyChartIllustration } from "@/components/illustrations";
-import { Money } from "@/features/accounting/shared";
+import { Money, SELECT_NONE_VALUE } from "@/features/accounting/shared";
 import {
   useForecast,
   useForecastCompare,
   useScenarios,
   useSeedDefaultScenarios,
 } from "@/hooks/api/accounting/planning";
+import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Skeleton } from "@/components/ui/skeleton";
 import dynamic from "next/dynamic";
@@ -151,9 +152,10 @@ export function ForecastPage() {
   const compareQuery = useForecastCompare(compareIdsArray);
 
   const seedMutation = useSeedDefaultScenarios();
+  const canManageForecast = useCan("accounting:forecast:manage");
 
   function handleScenarioChange(value: string): void {
-    setSelectedScenarioId(value === "" ? undefined : Number(value));
+    setSelectedScenarioId(value === SELECT_NONE_VALUE ? undefined : Number(value));
   }
 
   function handleWeeksChange(e: ChangeEvent<HTMLInputElement>): void {
@@ -218,14 +220,14 @@ export function ForecastPage() {
   const filtersNode = (
     <div className={FILTER_TOOLBAR_ROW}>
       <Select
-        value={selectedScenarioId !== undefined ? String(selectedScenarioId) : ""}
+        value={selectedScenarioId !== undefined ? String(selectedScenarioId) : SELECT_NONE_VALUE}
         onValueChange={handleScenarioChange}
       >
         <SelectTrigger className={`w-[180px] ${FILTER_SELECT_TRIGGER}`}>
           <SelectValue placeholder="Default scenario" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Default</SelectItem>
+          <SelectItem value={SELECT_NONE_VALUE}>Default</SelectItem>
           {scenarios.map((s) => (
             <SelectItem key={s.id} value={String(s.id)}>
               {s.name}
@@ -255,7 +257,7 @@ export function ForecastPage() {
         Compare Scenarios
       </Button>
 
-      {scenarios.length === 0 && (
+      {canManageForecast && scenarios.length === 0 && (
         <LoadingButton
           variant="outline"
           size="sm"

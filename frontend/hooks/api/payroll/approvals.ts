@@ -87,6 +87,18 @@ function useInvalidateRunWorkspace() {
     void qc.invalidateQueries({ queryKey: queryKeys.payroll.runEmployeesAll(runId) });
     void qc.invalidateQueries({ queryKey: queryKeys.payroll.runVariance(runId) });
     void qc.invalidateQueries({ queryKey: queryKeys.payroll.commandCenterAll });
+    // Lock/reopen/close change which payees are instructable, so the payout
+    // batch list and any open batch sheet are stale too. They hang off
+    // `payroll/payout/batches`, not `payroll/runs`, so the prefix above misses
+    // them; `bankValidation` does sit under `payroll/runs` and is covered.
+    void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatches() });
+    // Every payroll report response carries a `provisional` flag derived from
+    // the run's own status, and four report surfaces render it as "Figures are
+    // provisional until the run is locked". Lock/reopen/close are the exact
+    // transitions that flip it, and the reports hang off `payroll/reports`,
+    // which none of the prefixes above reaches — so at `staleTime: 60_000` the
+    // reports kept contradicting the lock that had just happened.
+    void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "reports"] });
   };
 }
 

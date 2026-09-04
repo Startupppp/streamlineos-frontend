@@ -21,8 +21,6 @@ export const supportAndWorkflowsQueryKeys = {
       activeOnly === undefined
         ? ([...base, "supportCustomFields", "list"] as const)
         : ([...base, "supportCustomFields", "list", activeOnly] as const),
-    ticketValues: (ticketId: number) =>
-      [...base, "supportCustomFields", "ticketValues", ticketId] as const,
     portalActive: () =>
       [...base, "supportCustomFields", "portalActive"] as const,
   },
@@ -188,8 +186,6 @@ export const supportAndWorkflowsQueryKeys = {
     analytics: () => [...base, "workflows", "analytics"] as const,
     schedules: (workflowId: string) =>
       [...base, "workflows", workflowId, "schedules"] as const,
-    secrets: (workflowId: string) =>
-      [...base, "workflows", workflowId, "secrets"] as const,
   },
 
   mfa: {

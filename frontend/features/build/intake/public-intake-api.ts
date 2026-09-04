@@ -5,6 +5,7 @@ import {
   type IntakeFormOutput,
   type IntakeSubmitResponse,
 } from "./public-intake-schema";
+import { withCorrelation } from "@/lib/observability/with-correlation";
 
 /**
  * Unauthenticated intake submit. The response goes through `parseApiResponse`
@@ -19,7 +20,7 @@ export async function submitIntake(
   const path = `/public/intake/${projectId}`;
   const res = await fetch(buildUrl(path), {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: withCorrelation(new Headers({ "Content-Type": "application/json" })),
     body: JSON.stringify(body),
   });
   if (!res.ok) {

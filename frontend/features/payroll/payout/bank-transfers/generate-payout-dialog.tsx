@@ -22,7 +22,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Label } from "@/components/ui/label";
 import { useCreatePayoutBatch } from "@/hooks/api/payroll/payout-batches";
 import { usePayrollPolicyCurrent } from "@/hooks/api/payroll/policies";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { useRunConflictHandler } from "@/features/payroll/shared/run-conflict";
 import type { BatchFormat } from "@/types/payroll";
 
 function getRecommendedFormat(currency: string | undefined): BatchFormat {
@@ -60,6 +60,7 @@ export function GeneratePayoutDialog({
   isDownloading,
 }: GeneratePayoutDialogProps) {
   const createMutation = useCreatePayoutBatch();
+  const handleError = useRunConflictHandler(runId);
   const { data: policyData } = usePayrollPolicyCurrent();
   const recommendedFormat = getRecommendedFormat(policyData?.policy?.currency);
 
@@ -80,7 +81,7 @@ export function GeneratePayoutDialog({
             onClose();
           }
         },
-        onError: (err) => toast.error(getErrorMessage(err)),
+        onError: handleError,
       },
     );
   }

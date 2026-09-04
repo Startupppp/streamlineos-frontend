@@ -65,6 +65,8 @@ class IntersectionObserverMock {
 function access(): DashboardAccess {
   return {
     accessLoading: false,
+    accessResolved: true,
+    refetchAccess: jest.fn(),
     hrEnabled: false,
     crmEnabled: false,
     projectsEnabled: true,

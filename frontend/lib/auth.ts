@@ -16,6 +16,7 @@ import {
   buildUserFromSessionData,
   unwrapBackend,
 } from "@/lib/auth-session";
+import { resolveSessionIsActive } from "@/lib/auth-is-active";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
@@ -201,7 +202,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           session.user.role = role;
           session.user.image =
             fresh?.image ?? (token.picture as string | null | undefined) ?? null;
-          session.user.isActive = fresh?.isActive ?? (token.isActive as boolean);
+          session.user.isActive = resolveSessionIsActive(fresh, token.isActive);
           session.user.isOrgOwner = isOrgOwner;
         }
         session.orgId = orgId;
@@ -258,7 +259,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           session.user.name =
             (token.name as string | null | undefined) ?? session.user.name ?? "";
           session.user.role = (token.role as string | undefined) ?? "";
-          session.user.isActive = (token.isActive as boolean | undefined) ?? true;
+          session.user.isActive = resolveSessionIsActive(null, token.isActive);
           session.user.isOrgOwner =
             (token.isOrgOwner as boolean | undefined) === true;
         }

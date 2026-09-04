@@ -20,6 +20,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { useAllAccounts } from "@/hooks/api/accounting";
 import { usePostOpeningBalances } from "@/hooks/api/accounting/core";
+import { useCan } from "@/hooks/api/access";
 
 interface EditorLine {
   id: string;
@@ -54,6 +55,7 @@ export function OpeningBalancesEditor({ onSuccess }: OpeningBalancesEditorProps)
   const accounts = accountsQuery.data?.data ?? [];
 
   const postMutation = usePostOpeningBalances();
+  const canPost = useCan("accounting:journal:create");
 
   const totalDebit = lines.reduce((sum, l) => sum + parseMoney(l.debit), 0);
   const totalCredit = lines.reduce((sum, l) => sum + parseMoney(l.credit), 0);
@@ -262,15 +264,17 @@ export function OpeningBalancesEditor({ onSuccess }: OpeningBalancesEditorProps)
           <Plus className="h-3.5 w-3.5 mr-1.5" />
           Add row
         </Button>
-        <LoadingButton
-          size="sm"
-          isPending={postMutation.isPending}
-          loadingText="Posting…"
-          onClick={handleSubmit}
-          type="button"
-        >
-          Post opening balances
-        </LoadingButton>
+        {canPost && (
+          <LoadingButton
+            size="sm"
+            isPending={postMutation.isPending}
+            loadingText="Posting…"
+            onClick={handleSubmit}
+            type="button"
+          >
+            Post opening balances
+          </LoadingButton>
+        )}
       </div>
     </div>
   );

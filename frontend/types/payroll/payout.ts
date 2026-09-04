@@ -109,11 +109,6 @@ export type CreateBatchResult = {
   replayed: boolean;
 };
 
-export type BatchFileResult = {
-  url: string;
-  batchNumber: string;
-};
-
 export type PayoutBatchItemPage = {
   data: PayoutBatchItem[];
   hasMore: boolean;

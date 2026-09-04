@@ -73,6 +73,7 @@ export interface ReplyMailBody {
   messageId: string;
   threadId?: string;
   bodyHtml: string;
+  to: string[];
   cc?: string[];
 }
 

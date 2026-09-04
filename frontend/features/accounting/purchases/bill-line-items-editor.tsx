@@ -13,7 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { GST_RATES, num, round2 } from "./bill-form-schemas";
+import { GST_RATES, lineAmount } from "./bill-form-schemas";
+import { formatLedgerAmount } from "@/lib/accounting/decimal";
 import type { NewBillFormValues } from "./bill-form-schemas";
 
 type ItemField = FieldArrayWithId<NewBillFormValues, "items"> & { _index: number };
@@ -156,11 +157,13 @@ export function BillLineItemsEditor({
       header: "Amount",
       headerClassName: "text-right w-[120px]",
       className: "w-[120px] text-right tabular-nums",
-      cell: (row) => {
-        const qty = num(watchedItems[row._index]?.quantity ?? "0");
-        const rate = num(watchedItems[row._index]?.rate ?? "0");
-        return round2(qty * rate).toFixed(2);
-      },
+      cell: (row) =>
+        formatLedgerAmount(
+          lineAmount(
+            watchedItems[row._index]?.quantity ?? "0",
+            watchedItems[row._index]?.rate ?? "0",
+          ),
+        ),
     },
     {
       key: "remove",

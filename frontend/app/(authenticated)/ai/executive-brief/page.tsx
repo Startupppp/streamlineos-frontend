@@ -7,6 +7,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { AiCitationChips } from "@/components/ai/ai-citation-chips";
 import { AiGeneratedLabel } from "@/components/ai/ai-generated-label";
 import { AiUsageChip } from "@/components/ai/ai-usage-chip";
+import { AiFailureBody } from "@/components/ai/ai-failure-body";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -27,7 +28,6 @@ export default function ExecutiveBriefPage() {
 
   function handleGenerate() {
     generate.mutate(undefined, {
-      onError: (err) => toast.error(getErrorMessage(err)),
       onSuccess: () => toast.success("Executive brief generated"),
     });
   }
@@ -47,6 +47,11 @@ export default function ExecutiveBriefPage() {
         </LoadingButton>
       }
     >
+      {!generate.isPending && generate.error && (
+        <div className="mb-4">
+          <AiFailureBody error={generate.error} onRetry={handleGenerate} compact={false} />
+        </div>
+      )}
       {isLoading && <BriefSkeleton />}
       {!isLoading && isError && (
         <ErrorState

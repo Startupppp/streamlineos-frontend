@@ -26,6 +26,7 @@ import {
   useDeleteRecurringTemplate,
 } from "@/hooks/api/accounting/ar";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
 import type { RecurringInvoiceTemplate } from "@/types/accounting/ar";
 
 interface RowActionsProps {
@@ -34,6 +35,7 @@ interface RowActionsProps {
 }
 
 export function TemplateRowActions({ template, onEdit }: RowActionsProps) {
+  const canManage = useCan("accounting:recurring:manage");
   const runMutation = useRunRecurringTemplate();
   const deleteMutation = useDeleteRecurringTemplate();
 
@@ -64,6 +66,8 @@ export function TemplateRowActions({ template, onEdit }: RowActionsProps) {
   function handlePreventClose(e: Event): void {
     e.preventDefault();
   }
+
+  if (!canManage) return null;
 
   return (
     <AlertDialog>

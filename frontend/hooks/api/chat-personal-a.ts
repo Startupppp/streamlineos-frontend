@@ -14,7 +14,7 @@ export function useSavedMessages() {
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<SavedMessagesPage>(
         "/chat/saved",
-        pageParam ? { cursor: pageParam } : undefined, signal,
+        pageParam !== undefined ? { cursor: pageParam } : undefined, signal,
       ),
     getNextPageParam: (last) => last.nextCursor,
     initialPageParam: undefined as number | undefined,

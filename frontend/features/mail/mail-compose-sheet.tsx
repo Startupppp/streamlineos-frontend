@@ -245,6 +245,7 @@ export function MailComposeSheet({
         messageId: data.messageId,
         threadId: data.threadId,
         bodyHtml: data.bodyHtml,
+        to: data.to,
         cc: data.cc?.length ? data.cc : undefined,
       });
       toast.success("Reply sent");

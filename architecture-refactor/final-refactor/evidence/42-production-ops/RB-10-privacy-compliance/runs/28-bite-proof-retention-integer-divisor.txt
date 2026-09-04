@@ -1,0 +1,78 @@
+BITE PROOF — the retention-gate regression test fails when the defect returns.
+The single-character defect is reintroduced IN PLACE in the shipped gate, the tests
+are re-run, and the file is restored. git diff is shown before and after.
+
+$ git diff --stat -- src/scripts/check-retention-coverage.mjs   # before
+(empty — the file is at HEAD)
+
+$ perl -pi -e 's{/ 1048576\.0"}{/ 1048576"}' src/scripts/check-retention-coverage.mjs
+$ grep -n 'TOTAL_MB_EXPRESSION = ' src/scripts/check-retention-coverage.mjs
+269:export const TOTAL_MB_EXPRESSION = "pg_total_relation_size(c.oid) / 1048576";
+
+$ node src/scripts/check-retention-coverage.mjs --self-test
+{"selfTest":true,"pass":false,"checks":{"auditLogsIsKeepForever":true,"payrollRunsIsKeepForever":true,"aiUsageLogsHasWorker":true,"chatMessagesHasWorker":true,"kbChunksHasWorker":true,"kbChatConversationsHasWorker":true,"webhookDeliveriesHaveWorker":true,"auditLogsHasNoWorker":true,"classifyUnknownIsUncovered":true,"classifyAuditLogsIsKeepForever":true,"partitionUsesParentDecision":true,"reportingLinesHaveDecision":true,"documentsHaveExistingWorker":true,"outboxTablesAreNowCovered":true,"decidedTablesAreNoLongerPending":true,"performanceReviewsIsKeepForever":true,"sizeDivisorIsNumericNotInteger":false,"catalogueQueryUsesTheExportedSizeExpression":true,"corpusFloorsAreAboveZero":true,"corpusFloorIsNotCommandLineRaisable":true,"invalidThresholdsFailClosed":true,"decimalThresholdIsAccepted":true,"everyMatrixEntryHasDecision":true,"everyMatrixEntryHasNotes":true,"keepForeverEntriesHaveNoWorker":true,"boundedEntriesHaveWorker":true}}
+EXIT_CODE=1
+
+$ COMPLIANCE_DB_TESTS=1 DATABASE_URL=... npx jest --runInBand --testPathPattern=retention-coverage-gate.db
+FAIL src/scripts/retention-coverage-gate.db.spec.ts
+  check:retention-coverage — the gate measures a corpus before it reports on one
+    ✓ (anti-vacuity) this spec itself is pointed at a migrated schema (2 ms)
+    defect 1 — integer division made every sub-megabyte table measure zero
+      ✓ the integer divisor loses tables the numeric divisor keeps (2327 ms)
+      ✕ the shipped query divides by a numeric literal, and is the one the gate runs (63 ms)
+      ✕ --threshold-mb below 1 now widens the selection instead of being inert (587 ms)
+    defect 2 — a corpus that classified nothing must not report clean
+      ✓ a threshold no table can clear is INCONCLUSIVE (2), never a pass (0) (320 ms)
+      ✓ an unmigrated schema is INCONCLUSIVE rather than a clean sweep of nothing (102 ms)
+      ✓ an absent DATABASE_URL is INCONCLUSIVE, not a silent fallback to .env (63 ms)
+    the report the gate emits is machine-readable
+      ✓ stdout parses as JSON with no banner ahead of it (302 ms)
+      ✓ a real corpus is classified, not merely scanned (262 ms)
+
+  ● check:retention-coverage — the gate measures a corpus before it reports on one › defect 1 — integer division made every sub-megabyte table measure zero › the shipped query divides by a numeric literal, and is the one the gate runs
+
+    expect(received).toMatch(expected)
+
+    Expected pattern: /\/\s*1048576\.\d/
+    Received string:  "pg_total_relation_size(c.oid) / 1048576"
+
+      139 |         catalogueQuery: string;
+      140 |       };
+    > 141 |       expect(printed.totalMbExpression).toMatch(/\/\s*1048576\.\d/);
+          |                                         ^
+      142 |       expect(printed.totalMbExpression).not.toMatch(/\/\s*1048576\s*(?![.\d])/);
+      143 |       expect(printed.catalogueQuery).toContain(printed.totalMbExpression);
+      144 |     });
+
+      at Object.<anonymous> (src/scripts/retention-coverage-gate.db.spec.ts:141:41)
+
+  ● check:retention-coverage — the gate measures a corpus before it reports on one › defect 1 — integer division made every sub-megabyte table measure zero › --threshold-mb below 1 now widens the selection instead of being inert
+
+    expect(received).toBeGreaterThan(expected)
+
+    Expected: > 41
+    Received:   41
+
+      153 |       expect([0, 1]).toContain(atOne.status);
+      154 |       expect([0, 1]).toContain(atOneTenth.status);
+    > 155 |       expect(summaryOf(atOneTenth).highGrowthTables).toBeGreaterThan(
+          |                                                      ^
+      156 |         summaryOf(atOne).highGrowthTables,
+      157 |       );
+      158 |     });
+
+      at Object.<anonymous> (src/scripts/retention-coverage-gate.db.spec.ts:155:54)
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 7 passed, 9 total
+Snapshots:   0 total
+Time:        4.689 s
+Ran all test suites matching /retention-coverage-gate.db/i.
+EXIT_CODE=1
+
+$ git diff --stat -- src/scripts/check-retention-coverage.mjs   # after restore
+(empty — the file is back at HEAD)
+
+$ node src/scripts/check-retention-coverage.mjs --self-test   # restored
+{"selfTest":true,"pass":true,"checks":{"auditLogsIsKeepForever":true,"payrollRunsIsKeepForever":true,"aiUsageLogsHasWorker":true,"chatMessagesHasWorker":true,"kbChunksHasWorker":true,"kbChatConversationsHasWorker":true,"webhookDeliveriesHaveWorker":true,"auditLogsHasNoWorker":true,"classifyUnknownIsUncovered":true,"classifyAuditLogsIsKeepForever":true,"partitionUsesParentDecision":true,"reportingLinesHaveDecision":true,"documentsHaveExistingWorker":true,"outboxTablesAreNowCovered":true,"decidedTablesAreNoLongerPending":true,"performanceReviewsIsKeepForever":true,"sizeDivisorIsNumericNotInteger":true,"catalogueQueryUsesTheExportedSizeExpression":true,"corpusFloorsAreAboveZero":true,"corpusFloorIsNotCommandLineRaisable":true,"invalidThresholdsFailClosed":true,"decimalThresholdIsAccepted":true,"everyMatrixEntryHasDecision":true,"everyMatrixEntryHasNotes":true,"keepForeverEntriesHaveNoWorker":true,"boundedEntriesHaveWorker":true}}
+EXIT_CODE=0

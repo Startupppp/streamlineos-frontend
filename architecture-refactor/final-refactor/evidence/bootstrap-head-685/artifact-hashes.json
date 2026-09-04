@@ -1,0 +1,32 @@
+{
+  "bundle": "bootstrap-head-685",
+  "generatedAt": "2026-09-04",
+  "generatedBy": "code-release-10-10-v2 ticket 03 (migration baseline and catalog parity)",
+  "sourceDir": "architecture-refactor/final-refactor/evidence/bootstrap-head-685",
+  "covers": "journal head 685 (1061_push_endpoint_cross_tenant_claim); see README.md and manifest.json. Every file in the tree is sealed - there are no declared-unsealed exceptions in this bundle.",
+  "algorithm": "sha256 over the exact bytes on disk - NO redaction was applied before hashing, because no retained file contains a connection string. See README.md > Sanitized logs.",
+  "recompute": "node -e \"const{readFileSync}=require('node:fs');const{createHash}=require('node:crypto');console.log(createHash('sha256').update(readFileSync(process.argv[1])).digest('hex'))\" <file>",
+  "verifiedBy": [
+    "pnpm check:evidence-seal",
+    "node src/scripts/check-bootstrap-evidence.mjs"
+  ],
+  "fileCount": 15,
+  "totalBytes": 173887,
+  "hashes": {
+    "README.md": "476e5a7e46f13fa01696897095eb2c51208c95482ba4e7e324e8ad8bbe899333",
+    "interrupt-resume-invariants.json": "5a5c05c371472810ec5919434bcf64c0764297a44a776b074428d4a12ee6a012",
+    "journal-685-file-hashes.txt": "4344d2618401a7df08c014d46e9f846ad1d7a3edf08869ca29f80c6bfe4ad619",
+    "logs/01-clean-bootstrap-scratch_t03w1_a.log": "ce650947b69b7b329e756721b46bb3270f930de7c236650bf15bfd6663241564",
+    "logs/02-clean-bootstrap-scratch_t03w1_b.log": "ce650947b69b7b329e756721b46bb3270f930de7c236650bf15bfd6663241564",
+    "logs/03-interrupt-resume-scratch_t03w1_ir.log": "03d7d52028c06f9fa6f3882ca9e0886b63c8e09db643793f347d5741318a6cab",
+    "logs/04-catalog-parity-a-vs-b.log": "708fd330495a594574807264d99e8542775556943ec4f944302b85e9bd3c9b6e",
+    "logs/05-catalog-parity-a-vs-ir.log": "0fd78b7ab0692213058e7dda269245d9b5de197ba0d281f9fe789e603d7a7d81",
+    "logs/06-check-migration-ledger-a.log": "d2a73cdd127668b477a645b922413c61e4c475bad9b56cce9bb0767e5cecb150",
+    "logs/07-check-migration-ledger-b.log": "d2a73cdd127668b477a645b922413c61e4c475bad9b56cce9bb0767e5cecb150",
+    "logs/08-check-migration-ledger-ir.log": "d2a73cdd127668b477a645b922413c61e4c475bad9b56cce9bb0767e5cecb150",
+    "logs/09-check-migration-immutability.log": "3dab62b8e41f6e22e5b20dd40b403f20244e75c2b53360804a9cdaa081a3c9ff",
+    "logs/10-check-migration-rollback.log": "63ac359b608e86ef24590621b6e94a2e33a6d43ce124b1cac6fb8e8eee743059",
+    "logs/11-verify-migration-chain-RED.log": "0c1683403a12373025d9b98cd4c5540bc2a3df3b9f376ad3435f676801a64b96",
+    "manifest.json": "50e55ae1d3935208c562e07c93729b3e4c3b7e8ac5b5daa61b3de1809389103e"
+  }
+}

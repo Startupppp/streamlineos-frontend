@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import { format } from "date-fns";
 import { PublicPageContentLoader } from "@/features/wiki/components/public-page-content-loader";
 import { BACKEND_URL } from "@/lib/backend-url";
+import { withCorrelation } from "@/lib/observability/with-correlation";
 
 export const dynamic = "force-dynamic";
 
@@ -69,6 +70,7 @@ async function fetchPageData(shareToken: string): Promise<PublicWikiData | null>
   try {
     const res = await fetch(`${BACKEND_URL}/public/wiki/${shareToken}`, {
       cache: "no-store",
+      headers: withCorrelation(new Headers()),
     });
     if (!res.ok) return null;
     const raw: unknown = await res.json();

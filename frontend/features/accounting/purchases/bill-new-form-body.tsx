@@ -16,7 +16,12 @@ import {
 import { BillHeaderFields } from "./bill-header-fields";
 import { BillGstFields } from "./bill-gst-fields";
 import { BillLineItemsEditor } from "./bill-line-items-editor";
-import { num } from "./bill-form-schemas";
+import {
+  compareDecimals,
+  formatLedgerAmount,
+  roundDecimal,
+  toDecimalInput,
+} from "@/lib/accounting/decimal";
 import type { NewBillFormValues, ComputedTotals } from "./bill-form-schemas";
 
 interface BillNewFormBodyProps {
@@ -118,33 +123,33 @@ export function BillNewFormBody({
           <div className="space-y-1 text-sm tabular-nums">
             <div className="flex justify-between">
               <span>Subtotal</span>
-              <span>{computed.subtotal.toFixed(2)}</span>
+              <span>{formatLedgerAmount(computed.subtotal)}</span>
             </div>
             <div className="flex justify-between">
               <span>Discount</span>
-              <span>&#x2212;{num(watchedDiscount).toFixed(2)}</span>
+              <span>&#x2212;{formatLedgerAmount(roundDecimal(toDecimalInput(watchedDiscount), 2))}</span>
             </div>
-            {computed.intra && computed.cgst > 0 && (
+            {computed.intra && compareDecimals(computed.cgst, "0") > 0 && (
               <div className="flex justify-between">
                 <span>CGST</span>
-                <span>{computed.cgst.toFixed(2)}</span>
+                <span>{formatLedgerAmount(computed.cgst)}</span>
               </div>
             )}
-            {computed.intra && computed.sgst > 0 && (
+            {computed.intra && compareDecimals(computed.sgst, "0") > 0 && (
               <div className="flex justify-between">
                 <span>SGST</span>
-                <span>{computed.sgst.toFixed(2)}</span>
+                <span>{formatLedgerAmount(computed.sgst)}</span>
               </div>
             )}
-            {!computed.intra && computed.igst > 0 && (
+            {!computed.intra && compareDecimals(computed.igst, "0") > 0 && (
               <div className="flex justify-between">
                 <span>IGST</span>
-                <span>{computed.igst.toFixed(2)}</span>
+                <span>{formatLedgerAmount(computed.igst)}</span>
               </div>
             )}
             <div className="border-t border-border pt-1 flex justify-between font-medium text-base">
               <span>Total</span>
-              <span>{computed.total.toFixed(2)}</span>
+              <span>{formatLedgerAmount(computed.total)}</span>
             </div>
           </div>
         </div>

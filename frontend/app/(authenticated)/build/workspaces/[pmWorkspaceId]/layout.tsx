@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { getServerAuth } from "@/lib/get-server-auth";
 import { BACKEND_URL } from "@/lib/backend-url";
+import { withCorrelation } from "@/lib/observability/with-correlation";
 
 interface PmWorkspaceLayoutProps {
   children: ReactNode;
@@ -22,9 +23,7 @@ export default async function PmWorkspaceLayout({
   }
 
   const response = await fetch(`${BACKEND_URL}/build/workspaces/${pmWorkspaceId}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    headers: withCorrelation(new Headers({ Authorization: `Bearer ${token}` })),
     cache: "no-store",
   });
 

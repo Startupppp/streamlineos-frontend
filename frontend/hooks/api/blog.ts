@@ -23,7 +23,7 @@ export function useInfiniteBlogFeed(
     queryKey: queryKeys.blog.feed(params),
     queryFn: ({ pageParam , signal }) => {
       const query: Record<string, unknown> = {};
-      if (pageParam) query.cursor = pageParam;
+      if (pageParam !== null) query.cursor = pageParam;
       if (params.category) query.category = params.category;
       if (params.tag) query.tag = params.tag;
       if (params.search) query.search = params.search;

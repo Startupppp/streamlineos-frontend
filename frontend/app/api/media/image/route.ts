@@ -58,10 +58,21 @@ export async function GET(request: Request): Promise<Response> {
 
   const upstreamType = contentTypeOf(upstream);
   const inline = INLINE_IMAGE_TYPES.has(upstreamType);
+  /**
+   * `immutable` promised the browser the bytes behind a key never change and
+   * that it need not revalidate for a day. Neither holds: an object can be
+   * REPLACED under the same key, and the permission that authorised this fetch
+   * can be revoked — with `immutable` the revoked viewer keeps serving the image
+   * out of its own cache for the rest of the day and no request ever reaches the
+   * authorization check. `Vary: Cookie` is the other half: without it a cache
+   * keyed on the URL alone can hand one session's entry to another, and the
+   * session cookie is the only thing distinguishing the two requests.
+   */
   const headers = new Headers({
     "Content-Type": inline ? upstreamType : "application/octet-stream",
     "Content-Disposition": inline ? "inline" : "attachment",
-    "Cache-Control": "private, max-age=86400, immutable",
+    "Cache-Control": "private, max-age=60, must-revalidate",
+    Vary: "Cookie",
     "X-Content-Type-Options": "nosniff",
     "Content-Security-Policy": "default-src 'none'; sandbox",
   });

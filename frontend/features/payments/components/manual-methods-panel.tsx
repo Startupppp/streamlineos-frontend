@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import {
@@ -158,7 +160,27 @@ function MethodEditor({ methodType, label, existing }: { methodType: ManualMetho
 }
 
 export function ManualMethodsPanel() {
-  const { data: methods, isLoading } = useManualMethods();
+  const canView = useCan("payments:providers:view");
+  const { data: methods, isLoading, isError, error, refetch } = useManualMethods();
+
+  function handleRetryLoad() {
+    void refetch();
+  }
+
+  // A denied or failed read settles to `methods === undefined`, which the
+  // editors below would render as five blank forms reading "Missing
+  // instructions" — an operator would conclude their live bank details were
+  // gone, and a Save from that state would overwrite them with blanks.
+  if (!canView) {
+    return (
+      <NoPermissionState
+        compact
+        permission="payments:providers:view"
+        title="Payment instructions hidden"
+        description="You do not have permission to view this organization's offline payment instructions."
+      />
+    );
+  }
 
   if (isLoading) {
     return (
@@ -167,6 +189,17 @@ export function ManualMethodsPanel() {
           <Skeleton key={i} className="h-32 rounded-lg" />
         ))}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        compact
+        title="Failed to load payment instructions"
+        description={getErrorMessage(error)}
+        onRetry={handleRetryLoad}
+      />
     );
   }
 

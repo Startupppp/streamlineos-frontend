@@ -22,8 +22,6 @@ export const collaborationQueryKeys = {
     onlineUsers: () => [...base, "chat", "onlineUsers"] as const,
     orgUsers: () => [...base, "chat", "orgUsers"] as const,
     search: (query: string) => [...base, "chat", "search", query] as const,
-    typing: (channelId: number) =>
-      [...base, "chat", "typing", channelId] as const,
     pins: (channelId: number) => [...base, "chat", "pins", channelId] as const,
     thread: (channelId: number, messageId: number) =>
       [...base, "chat", "thread", channelId, messageId] as const,

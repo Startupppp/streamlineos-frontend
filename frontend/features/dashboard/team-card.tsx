@@ -50,7 +50,9 @@ export const TeamCard = memo(function TeamCard({ members, isLoading, error, onRe
           </div>
         ) : error ? (
           <div className="space-y-2">
-            <p className="text-sm text-destructive">{getErrorMessage(error)}</p>
+            <p role="alert" className="text-sm text-destructive">
+              {getErrorMessage(error)}
+            </p>
             {onRetry && (
               <Button variant="ghost" size="sm" onClick={handleRetry}>
                 <RefreshCw className="h-3.5 w-3.5 mr-1" aria-hidden="true" />

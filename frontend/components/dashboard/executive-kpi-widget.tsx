@@ -16,7 +16,9 @@ export function ExecutiveKpiWidget() {
   if (error) {
     return (
       <div className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3">
-        <p className="flex-1 text-sm text-destructive">{getErrorMessage(error)}</p>
+        <p role="alert" className="flex-1 text-sm text-destructive">
+          {getErrorMessage(error)}
+        </p>
         <Button variant="ghost" size="sm" onClick={handleRetry} className="shrink-0">
           <RefreshCw className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
           Retry

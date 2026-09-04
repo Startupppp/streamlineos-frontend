@@ -6,6 +6,7 @@ import {
   type PublicFormDefinition,
   type PublicFormSubmitResponse,
 } from "./form-submission-schema";
+import { withCorrelation } from "@/lib/observability/with-correlation";
 
 /**
  * The public form is read with a bare `fetch` rather than `apiClient` because
@@ -38,7 +39,7 @@ export async function fetchPublicForm(
   token: string,
 ): Promise<PublicFormDefinition> {
   const path = `/public/forms/${token}`;
-  const res = await fetch(buildUrl(path));
+  const res = await fetch(buildUrl(path), { headers: withCorrelation(new Headers()) });
   if (!res.ok)
     throw new Error(
       await messageFrom(res, "Form not found or no longer active."),
@@ -54,7 +55,7 @@ export async function submitPublicForm(
   const path = `/public/forms/${token}/submit`;
   const res = await fetch(buildUrl(path), {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: withCorrelation(new Headers({ "Content-Type": "application/json" })),
     body: JSON.stringify({ values, submittedByName }),
   });
   if (!res.ok)

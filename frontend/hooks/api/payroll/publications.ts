@@ -33,6 +33,9 @@ export function usePublishPayslips() {
       void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.essPayslips() });
       void qc.invalidateQueries({ queryKey: queryKeys.payroll.commandCenterAll });
+      // Publishing drives the run to PAYSLIPS_PUBLISHED, a locked status, so
+      // the `provisional` flag every payroll report carries flips with it.
+      void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "reports"] });
     },
   });
 }

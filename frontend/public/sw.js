@@ -76,3 +76,49 @@ self.addEventListener("notificationclick", (event) => {
     }),
   );
 });
+
+// RT-005. Browsers rotate a push subscription without asking: an expiring VAPID
+// key, a storage eviction, a push-service migration. The event that announces it
+// is `pushsubscriptionchange`, and this worker had no listener for it — so the
+// old endpoint went dead, the row on the server kept being sent to until the push
+// service answered 410, and nothing re-registered until the user happened to open
+// a tab. The worker cannot call the API itself (the backend JWT is minted in the
+// page, not here), so it does the half only it can do — mint the replacement
+// subscription immediately, with the same application server key — and hands it
+// to every open client, which persists it. With no client open the page's own
+// mount-time POST is still the backstop, but the subscription now already exists
+// by then instead of being minted a page load late.
+self.addEventListener("pushsubscriptionchange", (event) => {
+  event.waitUntil(renewPushSubscription(event));
+});
+
+async function renewPushSubscription(event) {
+  const previous = event.oldSubscription || null;
+  let next = await self.registration.pushManager.getSubscription();
+  if (!next) {
+    const applicationServerKey =
+      (event.newSubscription && event.newSubscription.options && event.newSubscription.options.applicationServerKey) ||
+      (previous && previous.options && previous.options.applicationServerKey) ||
+      null;
+    if (!applicationServerKey) return;
+    next = await self.registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey,
+    });
+  }
+  if (!next) return;
+
+  const keys = (next.toJSON() || {}).keys || {};
+  if (!keys.p256dh || !keys.auth) return;
+
+  const windowClients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+  for (const client of windowClients) {
+    client.postMessage({
+      type: "push-subscription-changed",
+      endpoint: next.endpoint,
+      p256dh: keys.p256dh,
+      auth: keys.auth,
+      oldEndpoint: previous ? previous.endpoint : null,
+    });
+  }
+}

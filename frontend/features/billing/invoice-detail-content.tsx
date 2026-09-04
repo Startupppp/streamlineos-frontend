@@ -1,8 +1,11 @@
+"use client";
+
 import { format } from "date-fns";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { useCan } from "@/hooks/api/access";
 import type { Invoice, Payment } from "@/types/invoice";
 import { InvoiceLineItems } from "./invoice-line-items";
 import { formatInvoiceAmount } from "./invoice-detail-utils";
@@ -49,8 +52,11 @@ function Detail({ label, value, className }: DetailProps) {
 }
 
 function InvoicePayments({ invoice, onRecordPayment }: Pick<InvoiceDetailContentProps, "invoice" | "onRecordPayment">) {
+  // POST /invoices/:invoiceId/payments declares accounting:create.
+  const canCreatePayment = useCan("accounting:create");
   if (!invoice.payments?.length) return null;
-  const canRecordPayment = invoice.status === "ISSUED" || invoice.status === "FAILED";
+  const canRecordPayment =
+    canCreatePayment && (invoice.status === "ISSUED" || invoice.status === "FAILED");
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-card">
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
