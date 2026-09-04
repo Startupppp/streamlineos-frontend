@@ -29,6 +29,7 @@ import {
   useScenarios,
   useSeedDefaultScenarios,
 } from "@/hooks/api/accounting/planning";
+import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Skeleton } from "@/components/ui/skeleton";
 import dynamic from "next/dynamic";
@@ -151,6 +152,7 @@ export function ForecastPage() {
   const compareQuery = useForecastCompare(compareIdsArray);
 
   const seedMutation = useSeedDefaultScenarios();
+  const canManageForecast = useCan("accounting:forecast:manage");
 
   function handleScenarioChange(value: string): void {
     setSelectedScenarioId(value === "" ? undefined : Number(value));
@@ -255,7 +257,7 @@ export function ForecastPage() {
         Compare Scenarios
       </Button>
 
-      {scenarios.length === 0 && (
+      {canManageForecast && scenarios.length === 0 && (
         <LoadingButton
           variant="outline"
           size="sm"

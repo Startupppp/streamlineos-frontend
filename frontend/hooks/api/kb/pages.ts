@@ -166,6 +166,19 @@ export function useKbPagesTrash() {
   });
 }
 
+/**
+ * `/kb/pages/search` is a bounded top-N, not a page: paging a `ts_rank` ordering means
+ * re-ranking on every page, and a quick switcher that pages is a worse answer than one
+ * that tells you to type more. It used to return a bare array behind an undeclared
+ * `.limit(20)`, so a query matching 500 pages was indistinguishable from one matching 20;
+ * `hasMore` is what makes the cut visible to the caller.
+ */
+export interface KbPageSearchPage {
+  items: KbPageSearchResult[];
+  hasMore: boolean;
+  limit: number;
+}
+
 export function useKbPagesSearch(q: string) {
   const canView = useCan("kb:pages:view");
   const { data: spaces, isLoading: spacesLoading } = useKbSpaces();
@@ -175,7 +188,7 @@ export function useKbPagesSearch(q: string) {
   return useQuery({
     queryKey: queryKeys.kb.pagesSearch(q, aclVersion ?? ""),
     queryFn: ({ signal }) =>
-      apiClient.get<KbPageSearchResult[]>("/kb/pages/search", { q }, signal),
+      apiClient.get<KbPageSearchPage>("/kb/pages/search", { q }, signal),
     staleTime: 0,
     enabled: canView && q.length > 0 && aclVersion !== null,
   });

@@ -1,0 +1,22 @@
+$ COMPLIANCE_DB_TESTS=1 DATABASE_URL=postgres://neondb_owner@localhost:5432/scratch_gates_head npx jest --runInBand --testPathPattern=retention-coverage-gate.db
+PASS src/scripts/retention-coverage-gate.db.spec.ts
+  check:retention-coverage — the gate measures a corpus before it reports on one
+    ✓ (anti-vacuity) this spec itself is pointed at a migrated schema (2 ms)
+    defect 1 — integer division made every sub-megabyte table measure zero
+      ✓ the integer divisor loses tables the numeric divisor keeps (295 ms)
+      ✓ the shipped query divides by a numeric literal, and is the one the gate runs (63 ms)
+      ✓ --threshold-mb below 1 now widens the selection instead of being inert (485 ms)
+    defect 2 — a corpus that classified nothing must not report clean
+      ✓ a threshold no table can clear is INCONCLUSIVE (2), never a pass (0) (297 ms)
+      ✓ an unmigrated schema is INCONCLUSIVE rather than a clean sweep of nothing (89 ms)
+      ✓ an absent DATABASE_URL is INCONCLUSIVE, not a silent fallback to .env (55 ms)
+    the report the gate emits is machine-readable
+      ✓ stdout parses as JSON with no banner ahead of it (251 ms)
+      ✓ a real corpus is classified, not merely scanned (242 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       9 passed, 9 total
+Snapshots:   0 total
+Time:        2.259 s
+Ran all test suites matching /retention-coverage-gate.db/i.
+EXIT_CODE=0

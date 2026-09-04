@@ -13,12 +13,25 @@
  * anything beyond presenting what the server will compute belongs on the server.
  */
 const SCALE = 4;
-const FACTOR = 10000n;
+
+/**
+ * This file is the frontend's only BigInt user and `tsconfig.json` targets
+ * ES2018, where the `123n` literal syntax the backend's `money.util.ts` uses is
+ * a compile error (TS2737). The `lib` is `esnext`, so the BigInt *global* is
+ * typed and available — only the literal form is out of reach. These constants
+ * carry the values the literals would have, and every other site calls
+ * `BigInt(...)`, so the arithmetic is identical to the backend's.
+ */
+const ZERO = BigInt(0);
+const ONE = BigInt(1);
+const TWO = BigInt(2);
+const TEN = BigInt(10);
+const FACTOR = BigInt(10000);
 
 const DECIMAL_PATTERN = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/;
 
 function pow10(exponent: number): bigint {
-  return 10n ** BigInt(exponent);
+  return TEN ** BigInt(exponent);
 }
 
 function parseToScaled(value: string | undefined): bigint {
@@ -35,7 +48,7 @@ function parseToScaled(value: string | undefined): bigint {
 }
 
 function scaledToString(scaled: bigint, dp: number = SCALE): string {
-  const negative = scaled < 0n;
+  const negative = scaled < ZERO;
   const abs = negative ? -scaled : scaled;
   const intPart = abs / FACTOR;
   const fracPart = abs % FACTOR;
@@ -45,18 +58,18 @@ function scaledToString(scaled: bigint, dp: number = SCALE): string {
 }
 
 function renderRounded(scaled: bigint, dp: number): string {
-  const negative = scaled < 0n;
+  const negative = scaled < ZERO;
   const abs = negative ? -scaled : scaled;
   const divisor = pow10(Math.max(SCALE - dp, 0));
   const quotient = abs / divisor;
   const remainder = abs % divisor;
-  const units = remainder * 2n >= divisor ? quotient + 1n : quotient;
+  const units = remainder * TWO >= divisor ? quotient + ONE : quotient;
   const unitFactor = pow10(Math.min(dp, SCALE));
   const intPart = units / unitFactor;
   const fracDigits =
     dp === 0 ? "" : (units % unitFactor).toString().padStart(Math.min(dp, SCALE), "0").padEnd(dp, "0");
   const body = dp === 0 ? intPart.toString() : `${intPart.toString()}.${fracDigits}`;
-  return negative && units !== 0n ? `-${body}` : body;
+  return negative && units !== ZERO ? `-${body}` : body;
 }
 
 export function addDecimals(a: string, b: string): string {
@@ -69,20 +82,20 @@ export function subtractDecimals(a: string, b: string): string {
 
 export function multiplyDecimals(a: string, b: string): string {
   const product = parseToScaled(a) * parseToScaled(b);
-  const negative = product < 0n;
+  const negative = product < ZERO;
   const absProduct = negative ? -product : product;
-  const rounded = (absProduct + FACTOR / 2n) / FACTOR;
+  const rounded = (absProduct + FACTOR / TWO) / FACTOR;
   return scaledToString(negative ? -rounded : rounded);
 }
 
 export function divideDecimals(a: string, b: string): string {
   const sb = parseToScaled(b);
-  if (sb === 0n) throw new Error("Division by zero");
+  if (sb === ZERO) throw new Error("Division by zero");
   const numerator = parseToScaled(a) * FACTOR;
-  const negative = numerator < 0n !== sb < 0n;
-  const absNumerator = numerator < 0n ? -numerator : numerator;
-  const absDenominator = sb < 0n ? -sb : sb;
-  const quotient = (absNumerator * 2n + absDenominator) / (absDenominator * 2n);
+  const negative = numerator < ZERO !== sb < ZERO;
+  const absNumerator = numerator < ZERO ? -numerator : numerator;
+  const absDenominator = sb < ZERO ? -sb : sb;
+  const quotient = (absNumerator * TWO + absDenominator) / (absDenominator * TWO);
   return scaledToString(negative ? -quotient : quotient);
 }
 
@@ -112,7 +125,7 @@ export function toDecimalInput(value: string): string {
   const trimmed = (value ?? "").trim();
   if (trimmed === "" || !DECIMAL_PATTERN.test(trimmed)) return "0.0000";
   const scaled = parseToScaled(trimmed);
-  return scaledToString(scaled < 0n ? 0n : scaled);
+  return scaledToString(scaled < ZERO ? ZERO : scaled);
 }
 
 /**
@@ -127,7 +140,7 @@ export function toDecimalAmount(value: string | null | undefined): string {
 }
 
 export function sumDecimals(values: Iterable<string>): string {
-  let total = 0n;
+  let total = ZERO;
   for (const value of values) total += parseToScaled(value);
   return scaledToString(total);
 }
@@ -141,12 +154,12 @@ export function allocateDecimal(total: string, weights: ReadonlyArray<string>): 
   const scaledTotal = parseToScaled(total);
   const scaledWeights = weights.map((weight) => {
     const value = parseToScaled(weight);
-    return value < 0n ? -value : value;
+    return value < ZERO ? -value : value;
   });
-  const weightSum = scaledWeights.reduce((acc, weight) => acc + weight, 0n);
-  if (weightSum === 0n) return weights.map(() => "0.0000");
+  const weightSum = scaledWeights.reduce((acc, weight) => acc + weight, ZERO);
+  if (weightSum === ZERO) return weights.map(() => "0.0000");
 
-  const negative = scaledTotal < 0n;
+  const negative = scaledTotal < ZERO;
   const absTotal = negative ? -scaledTotal : scaledTotal;
 
   const parts = scaledWeights.map((weight) => {
@@ -154,15 +167,15 @@ export function allocateDecimal(total: string, weights: ReadonlyArray<string>): 
     return { base: numerator / weightSum, remainder: numerator % weightSum };
   });
 
-  let leftover = absTotal - parts.reduce((acc, part) => acc + part.base, 0n);
+  let leftover = absTotal - parts.reduce((acc, part) => acc + part.base, ZERO);
   const order = parts
     .map((part, index) => ({ index, remainder: part.remainder }))
     .sort((a, b) => (a.remainder === b.remainder ? a.index - b.index : a.remainder > b.remainder ? -1 : 1));
   for (const entry of order) {
-    if (leftover <= 0n) break;
+    if (leftover <= ZERO) break;
     const part = parts[entry.index];
-    if (part) part.base += 1n;
-    leftover -= 1n;
+    if (part) part.base += ONE;
+    leftover -= ONE;
   }
 
   return parts.map((part) => scaledToString(negative ? -part.base : part.base));

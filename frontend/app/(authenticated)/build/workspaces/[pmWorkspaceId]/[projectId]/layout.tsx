@@ -1,7 +1,8 @@
 import { type ReactNode } from "react";
 import { notFound } from "next/navigation";
+import { HydrationBoundary, type DehydratedState } from "@tanstack/react-query";
 import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
-import { serverGet } from "@/lib/server-fetch";
+import { prefetchBuildProject } from "@/lib/prefetch/build";
 import type { ProjectWithDetails } from "@/types/projects";
 import { RememberLastProject } from "@/features/build/sidebar/remember-last-project";
 
@@ -20,8 +21,13 @@ export default async function PmWorkspaceProjectLayout({
   if (Number.isNaN(numId)) notFound();
 
   let project: ProjectWithDetails | null = null;
+  let hydrated: DehydratedState | null = null;
   try {
-    project = await serverGet<ProjectWithDetails>(`/build/${numId}`);
+    // PRD-C094 — the twin of `/build/[projectId]/layout.tsx`; the same single read seeds
+    // the cache the client `useProject` callers below read from.
+    const prefetched = await prefetchBuildProject(numId);
+    project = prefetched.project;
+    hydrated = prefetched.state;
   } catch {
     notFound();
   }
@@ -31,9 +37,11 @@ export default async function PmWorkspaceProjectLayout({
   }
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-      <RememberLastProject projectId={projectId} />
-      {children}
-    </div>
+    <HydrationBoundary state={hydrated}>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <RememberLastProject projectId={projectId} />
+        {children}
+      </div>
+    </HydrationBoundary>
   );
 }

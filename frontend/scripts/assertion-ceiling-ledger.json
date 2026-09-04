@@ -1958,7 +1958,7 @@
       "nonNull": 0
     },
     "lib/auth.ts": {
-      "as": 32,
+      "as": 30,
       "nonNull": 0
     },
     "lib/billing/use-feature.ts": {

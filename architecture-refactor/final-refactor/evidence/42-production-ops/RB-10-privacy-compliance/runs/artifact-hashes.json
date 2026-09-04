@@ -2,12 +2,12 @@
   "generatedAt": "2026-09-03",
   "generatedBy": "code-release-10-10-v2 ticket 35 (35-erasure-drills) — PRD-C186/C187/C188 drill evidence",
   "sourceDir": "architecture-refactor/final-refactor/evidence/42-production-ops/RB-10-privacy-compliance/runs",
-  "covers": "the 23 verbatim command transcripts captured for ticket 35. Each file is the raw stdout+stderr of one really-executed command, terminated by its real EXIT_CODE line. It covers nothing outside this directory.",
+  "covers": "the 30 verbatim command transcripts captured for ticket 35, in two generations: 01-22 at backend 45f8a2e99 (2026-09-03) and 23-29 at backend dcd5a2071 (2026-09-04), the latter re-running the retention and legal-hold drills after the F-3 and F-11 fixes. Each file is the raw stdout+stderr of one really-executed command, terminated by its real EXIT_CODE line. Superseded generation-1 runs are kept, not replaced. It covers nothing outside this directory.",
   "redaction": "Every subject is synthetic and addressed on the reserved .invalid TLD. Before sealing, the tree was scanned for the local scratch password, the remote Neon host, the Upstash host and AWS-style key prefixes: zero matches. The words 'secret'/'key' appear only as environment-variable NAMES a drill prints when reporting what is absent.",
   "algorithm": "sha256 over the exact bytes on disk. No transform of any kind is applied before hashing.",
   "recompute": "node -e 'const{createHash}=require(\"crypto\"),fs=require(\"fs\");const s=JSON.parse(fs.readFileSync(\"artifact-hashes.json\",\"utf8\"));let m=0,x=0;for(const[f,h]of Object.entries(s.hashes)){const a=createHash(\"sha256\").update(fs.readFileSync(f)).digest(\"hex\");a===h?m++:(x++,console.log(\"MISMATCH\",f))}console.log(`match=${m} mismatch=${x} of ${Object.keys(s.hashes).length}`)'",
   "verifiedBy": "cd streamlineos-backend && npm run check:evidence-seal",
-  "fileCount": 23,
+  "fileCount": 30,
   "hashes": {
     "01-compliance-drill-execute.txt": "46413402f0dbbcd3eed54dc1dc1512e15c1163df3b8bb19360a60b76e275bfad",
     "02-drill-export.txt": "884336745c9593daf05ae71d9f160e3750dd13607f56b8c472017a6f92819575",
@@ -31,6 +31,14 @@
     "19-check-audit-log-privileges-self-test.txt": "39fcdc1c49714e63cd6db033af3dc6c2a3de5b14eaa994cfd630a9e8cff2690c",
     "20-jest-audit-log-immutability.txt": "8c13f43c2d50e730884168d53010e96faa8034738d5bc5a6087ce64b1449a69e",
     "21-jest-gdpr-focused-suites.txt": "93dbab745a78901def82321f6dbc90cc82fc020b24c0b31c276dbce2c17a7dfc",
-    "22-check-evidence-seal-after.txt": "6a1293864d1757ffcdb09c02ca1e8adf0b93767f77a46e5bfaa95571ad63181c"
-  }
+    "22-check-evidence-seal-after.txt": "6a1293864d1757ffcdb09c02ca1e8adf0b93767f77a46e5bfaa95571ad63181c",
+    "23-check-retention-coverage-head.txt": "2a5471ead39594b08218fb3d85500c103b90c86fc8519b5a462c71dc477f4e71",
+    "24-check-retention-coverage-self-test-head.txt": "dbfea1a90fba4f432c78a5f525bba5f4812d732ada63cccdf66f099bf7ed4d36",
+    "25-jest-retention-coverage-gate-db.txt": "243ce712c2e3570e03940e71b362bdb0fc6e15d5e42ca4f3eb4570323ab66a1c",
+    "26-drill-legal-hold-self-test-head.txt": "998017f8633e8a979384fb45d8802161e9dcd83c2d4ae7cc2f6b91cd11bea672",
+    "27-drill-legal-hold-head.txt": "5c69b02483180e9c801509a0ffa6350941cc667e8f2cff18187bf99a46642f7c",
+    "28-bite-proof-retention-integer-divisor.txt": "1076d7ea1f46c4fa7a79eb6274a9d6bd99d7d428b7ae62e4eae5e7b11906dc7c",
+    "29-bite-proof-legal-hold-gate-deleted.txt": "1799150794a32abdeb2ccc2d1acfcb2a220608358b749156a4d29bb2b18f3fa0"
+  },
+  "resealedAt": "2026-09-04 — ticket 35, v2 close-out: added runs/23-29 (generation 2) and re-hashed the directory."
 }

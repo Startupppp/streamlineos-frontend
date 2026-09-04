@@ -99,5 +99,11 @@ export async function uploadKbMedia(file: File, pageId?: number): Promise<Upload
   const fd = new FormData();
   fd.append('file', file);
   if (pageId != null) fd.append('pageId', String(pageId));
-  return apiClient.upload<UploadedKbMedia>('/kb/media', fd);
+
+  const signature = uploadSignature(file, pageId);
+  const uploaded = await apiClient.upload<UploadedKbMedia>('/kb/media', fd, undefined, {
+    headers: { [IDEMPOTENCY_HEADER]: idempotencyKeyFor(signature) },
+  });
+  mediaUploadKeys.delete(signature);
+  return uploaded;
 }

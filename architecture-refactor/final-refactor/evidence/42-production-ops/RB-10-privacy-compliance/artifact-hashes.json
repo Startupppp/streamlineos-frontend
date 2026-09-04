@@ -10,7 +10,8 @@
   "fileCount": 3,
   "hashes": {
     "C187-downstream-store-trace.md": "c075e551b13b5b3756241e3244961a023ed3e86b78694fe4e621686c7244bd33",
-    "FINDINGS.md": "cb8593ff76c253012d90b3a2921201ce7e45fd8c52d1edfc2a20e29d04c142e1",
-    "README.md": "061d71c25447965fa80e0883472b64100403873c7e2525b18b951d74afe50cf0"
-  }
+    "FINDINGS.md": "938fe7abdb570841a5f5bbe7eef519c4521b60ff0669ae30340ece2f43a63a35",
+    "README.md": "670adcc82aed453062cf29636c5e27ee44aabe90feb159055fd82404cbcd424b"
+  },
+  "resealedAt": "2026-09-04 — ticket 35, v2 close-out: README.md and FINDINGS.md updated for generation 2 (F-3 and F-11 fixed, F-12 opened) and re-hashed."
 }

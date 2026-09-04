@@ -1,7 +1,12 @@
 # Findings — ticket 35 / PRD-C186, C187, C188
 
-Backend `45f8a2e99494483526e357e27f18c76961ebf266`. Every finding below was **reproduced by a
-command whose output is in `runs/`**; none is inferred from reading alone.
+Backend `45f8a2e99494483526e357e27f18c76961ebf266` (generation 1) and
+`dcd5a20717dc6d5a6eb2ff40aa54ae58abe2bc8a` (generation 2, F-11 and F-12). Every finding below was
+**reproduced by a command whose output is in `runs/`**; none is inferred from reading alone.
+
+Findings are not deleted when they are fixed. F-3 and F-11 carry a **FIXED** header naming the
+commit and the run that re-measured them; their original evidence stays, because the record of a
+gate that used to report green over nothing is the reason the fix is trustworthy.
 
 Severity key: **P1** = a release blocker — a privacy obligation cannot be met, or the tool that
 proves it cannot run. **P2** = real defect, bounded impact or a gate that reports green over
@@ -69,6 +74,21 @@ whole-user purge path outside the org saga.
 repo) or delete `organization_members` before nulling, rather than nulling first.
 
 ## F-3 · P2 · `check:retention-coverage` passes green having measured **zero** tables
+
+> **FIXED at `dcd5a20717dc6d5a6eb2ff40aa54ae58abe2bc8a`.** The divisor is now `1048576.0`
+> (numeric, not integer) and two corpus floors — `MIN_TABLES_SCANNED = 200` and
+> `MIN_HIGH_GROWTH_TABLES = 1` — make an unmeasured corpus exit **2 (INCONCLUSIVE)** rather than
+> 0, the same shape as `MIN_SEALS`/`MIN_SEALED_FILES` in `check-evidence-seal.mjs`. The gate no
+> longer calls `dotenv.config()`, which used to substitute the `.env` connection string when
+> `DATABASE_URL` was unset (making the documented exit-2 path unreachable) and to write a banner
+> ahead of the JSON report. Re-measured in `runs/23`: 41 tables cleared 1 MB where generation 1
+> saw 0. Pinned by `src/scripts/retention-coverage-gate.db.spec.ts` (`runs/25`, 9 tests) and by
+> four new `--self-test` checks (`runs/24`). Bite-proved in `runs/28`: putting the single missing
+> decimal point back turns the self-test red and fails 2 of the 9 db-spec tests.
+>
+> The fix was **not** a lower `--threshold-mb`. Under integer division every sub-1 MB threshold
+> selects zero rows, so lowering the bar could not have reached one extra table; it would only
+> have hidden the arithmetic. The original evidence below is kept verbatim.
 
 `src/scripts/check-retention-coverage.mjs:291` and `:342-351`
 
@@ -241,10 +261,100 @@ drift again.
 
 ---
 
+## F-11 · P2 · The legal-hold drill asserted only against its own `INSERT`
+
+> **FIXED at `dcd5a20717dc6d5a6eb2ff40aa54ae58abe2bc8a`.** Re-run in `runs/27`; bite-proved in
+> `runs/29`.
+
+`src/scripts/drill-legal-hold.mjs:39-44` (at `45f8a2e99`)
+
+```js
+function holdCheck({ hrActive, orgActive }) {
+  return { erasureBlocked: hrActive, retentionBlocked: hrActive, ... };
+}
+```
+
+"Erasure is blocked" was **defined** as "an HR hold row is active". The run body INSERTed into
+`hr_legal_holds` at `:136-139`, then passed "Erasure blocked" on nothing but its own
+`activeHrHold()` SELECT (`:85-91`), and passed "Retention sweep blocked" on a second hand-written
+`SELECT 1 FROM hr_legal_holds … LIMIT 1`. The PASS string said so out loud: *"hold check query
+returns the active hold"*. `--self-test` asserted `holdCheck({hrActive:true}).erasureBlocked ===
+true` — a restatement of the identity function.
+
+The file named no service, no helper and no sweep. **All nine assertions in `runs/03` would have
+stayed green if every legal-hold guard in the product had been deleted**, which is exactly what
+`runs/29` now demonstrates by deleting one.
+
+This matters beyond the script: `runs/03` is the row this bundle offered as evidence that "hold
+blocks erasure, retention and org purge". That row was false when it was written.
+
+*Fix (landed):* the verdict now comes from `src/scripts/legal-hold-drill-probe.ts`, which
+constructs the real `RetentionService`, `GdprSubjectErasureService`, `GdprStoragePurgeService` and
+`LegalHoldsService` against a real database inside one rolled-back tenant transaction, and asks
+them. Fifteen checks across nine production paths, in three phases:
+
+- **control** — with no hold, `RetentionService.processRequest` must run an unheld delete request
+  through to `completed`. Without this phase "blocked" would also be the answer from a product
+  that erases nothing for anybody, and the drill would certify it.
+- **held** — `processRequest` must raise `ForbiddenException`, the request must stay `approved`,
+  `eraseSubject` and `buildManifest` must answer `blocked=true` with the real hold id and zero
+  work done, and `sweepStrandedDeleteRequests` must report `processed=0 skipped=1`. The
+  organisation-scoped hold is asserted separately, so it cannot ride on the HR one.
+- **released** — the same request must then complete.
+
+`drill-legal-hold.mjs` keeps no assertion of its own; it is argument handling, floors
+(`MIN_CHECKS`, `MIN_PRODUCTION_PATHS`, `REQUIRED_PHASES`) and an exit code. A run that covers too
+little of the contract is exit **2**, never 0. `--self-test` now resolves the eight production
+symbols on their real classes, so a rename fails the gate instead of silently emptying it.
+
+---
+
+## F-12 · P2 · 22 high-growth tables have no retention decision — **OPEN**
+
+`src/scripts/check-retention-coverage.mjs` `RETENTION_MATRIX`, measured in `runs/23`
+
+Fixing F-3 made the gate measure, and what it measured is a gap. Against `scratch_gates_head`
+(946 tables) 41 clear 1 MB: 17 COVERED, 2 KEEP-FOREVER and **22 UNCOVERED**, so the gate exits 1:
+
+`inv_stock_transactions` · `business_parties` · `event_attendees` · `calendar_events` ·
+`perf_jitter_pool` · `inv_product_variants` · `perf_topic_pool` · `leads` · `inv_products` ·
+`hr_leave_ledger` · `deals` · `contacts` · `inv_stock_levels` · `contact_party_map` · `kb_pages` ·
+`lead_party_map` · `calendar_event_exceptions` · `support_tickets` · `organization_people` ·
+`inv_purchase_orders` · `leave_requests` · `users`
+
+Most are core tenant business records (CRM parties, inventory movements, calendar, KB pages,
+leave). Two — `perf_jitter_pool` and `perf_topic_pool` — are scratch tables created in this
+database by a performance seeding script and are not product schema; their presence is a property
+of the measured database, not of the product, and is recorded here rather than filtered out,
+because filtering the corpus is the failure mode this whole finding is about.
+
+**This is not closed by adding matrix rows.** Each entry is a product decision — KEEP-FOREVER, or
+RETAIN-BOUNDED naming the worker that actually enforces it — and a KEEP-FOREVER written to turn
+the gate green without an owner is the allowlist-instead-of-a-fix that this release's closure
+definition rejects. The 22 need a named Privacy/DPO and Product decision per table, and any
+RETAIN-BOUNDED row needs a sweep that exists.
+
+Related and unfixed: 11 of the 16 retention/purge services under `src/modules/cron/` contain no
+reference to a legal hold at all (`cron-ai-usage-retention`, `cron-announcements-retention`,
+`cron-build-retention`, `cron-gdpr-export-retention`, `cron-kb-chunk-retention`, `cron-mail-retention`,
+`cron-notification-outbox-retention`, `cron-notification-retention`, `cron-outbox-retention`,
+`cron-retention-scheduler`, `cron-storage-sweep`). The shared helper
+`src/modules/hr/governance/legal-holds/legal-hold-check.helper.ts` has exactly one production
+importer, `retention.service.ts:18`. A hold is therefore opt-in per sweep rather than a
+precondition, which `runs/27` cannot see because it exercises the paths that do consult it.
+
+---
+
 ## Disposition (PRD-C189 input)
 
-None of these is closed. F-1, F-2 and F-7 are **P1** and, on the wording of PRD-C189 ("close or
-formally disposition every … P1 finding"), each needs either a fix or a named accepted-residual-risk
-record before release. F-3 through F-10 are **P2**. A decision-record author is required for any
-that are to be accepted rather than fixed; **no such record exists and this agent has not signed
-one.**
+Two of the twelve are closed by code at `dcd5a20717dc6d5a6eb2ff40aa54ae58abe2bc8a`: **F-3** and
+**F-11**, both defects in the drills rather than in the product, each with a regression test and a
+bite proof in `runs/28`/`runs/29`.
+
+The other ten are open. F-1, F-2 and F-7 are **P1** and, on the wording of PRD-C189 ("close or
+formally disposition every … P1 finding"), each needs either a fix or a named
+accepted-residual-risk record before release. F-4 through F-6, F-8 through F-10 and **F-12** are
+**P2**. F-12 did not exist as a visible finding until F-3 was fixed; it is the product gap the
+vacuous gate was concealing, and it is the reason `check:retention-coverage` now exits 1. A
+decision-record author is required for any of these that are to be accepted rather than fixed;
+**no such record exists and this agent has not signed one.**

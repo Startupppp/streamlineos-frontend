@@ -112,6 +112,10 @@ export function ReportJournal({ month }: ReportJournalProps) {
   const totalDebit = data?.totalDebits ?? 0;
   const totalCredit = data?.totalCredits ?? 0;
   const balanced = Math.round(totalDebit * 100) === Math.round(totalCredit * 100);
+  // `provisional` means the run behind these figures is not locked yet, so they
+  // can still move. A bare "Balanced" on a provisional journal reads as a final
+  // verdict and has been handed to accounting as one.
+  const provisional = data?.provisional ?? false;
 
   const footerNode =
     lines.length > 0 ? (
@@ -121,6 +125,11 @@ export function ReportJournal({ month }: ReportJournalProps) {
         <span className="font-mono">{formatMoney(totalCredit)}</span>
         {balanced && (
           <span className="ml-2 text-status-success-ink font-medium">✓ Balanced</span>
+        )}
+        {provisional && (
+          <span className="ml-2 text-status-warning-ink font-medium">
+            Provisional — the run is not locked
+          </span>
         )}
       </span>
     ) : undefined;

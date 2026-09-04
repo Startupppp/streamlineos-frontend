@@ -306,8 +306,18 @@ for (const [id, t] of ticketCriteria) {
 }
 
 // --- 9. PRD-C017: the restored module evidence cannot disappear ------------------------------------
-for (const [id, moduleName] of Object.entries(RESTORED_MODULE_EVIDENCE)) {
-  if (!prd.has(id)) {
+// Three assertions, because "cannot disappear" has three ways of being false: the id can be
+// deleted, it can be left in the PRD but carried by nobody, and — the one this gate missed until
+// now — the id can survive while the criterion underneath it is rewritten to be about a different
+// module. That last one is not hypothetical: rewriting PRD-C127's text from "current-head Chat
+// evidence" to "current-head Support evidence" in BOTH the PRD and 12-chat.md gave exit 0, because
+// existence held and TEXT DRIFT compares the two sides against each other, not against what the
+// criterion is supposed to be about. Chat's restored evidence was then gone in every sense except
+// the id.
+for (const [id, pin] of Object.entries(RESTORED_MODULE_EVIDENCE)) {
+  const moduleName = pin.module;
+  const criterion = prd.get(id);
+  if (!criterion) {
     fail(
       `RESTORED EVIDENCE DELETED: ${id} (${moduleName}) is gone from the PRD. These ten criteria were ` +
         `restored precisely because 60 carried "Proven" boxes had rested on deleted text. Record it \`[x]\`; do not remove it.`,
@@ -315,6 +325,29 @@ for (const [id, moduleName] of Object.entries(RESTORED_MODULE_EVIDENCE)) {
   }
   if (!ticketCriteria.has(id)) {
     fail(`RESTORED EVIDENCE UNOWNED: ${id} (${moduleName}) is carried by no ticket.`);
+  }
+  // An assertion over zero substrings passes everything, so emptying `match` is the same disarm as
+  // deleting the check below. Refuse the pin rather than run it vacuously.
+  if (!Array.isArray(pin.match) || pin.match.length === 0) {
+    fail(
+      `RESTORED EVIDENCE PIN DISARMED: ${id} (${moduleName}) declares no \`match\` substrings in ` +
+        `check-prd-traceability-pins.mjs, so nothing constrains what its criterion may be rewritten ` +
+        `to say. Restore the substrings that spell the module.`,
+    );
+    continue;
+  }
+  if (!criterion) continue;
+  const haystack = normalize(criterion.text).toLowerCase();
+  const missing = pin.match.filter((needle) => !haystack.includes(needle));
+  if (missing.length > 0) {
+    fail(
+      `RESTORED EVIDENCE REPURPOSED: ${id} still exists (PRD line ${criterion.line}) but its text no ` +
+        `longer names ${moduleName} — missing ${missing.map((n) => `"${n}"`).join(", ")}.\n` +
+        `    PRD: ${criterion.text}\n` +
+        `    An id kept while the criterion under it is rewritten to be about something else deletes ` +
+        `the ${moduleName} evidence exactly as surely as removing the line, and does it without ` +
+        `changing any count this gate prints. Restore the criterion, or give the new work its own id.`,
+    );
   }
 }
 
