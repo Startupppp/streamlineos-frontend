@@ -30,7 +30,7 @@ import {
   KbRotateCcwIcon,
   KbTrash2Icon,
 } from "@/features/wiki/lib/kb-icons";
-import type { KbPage } from "@/hooks/api/kb/pages";
+import type { KbPage } from "@/hooks/api/kb/page-types";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 
 function TrashRow({ page }: { page: KbPage }) {

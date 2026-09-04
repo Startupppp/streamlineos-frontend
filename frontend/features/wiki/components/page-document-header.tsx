@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useDeleteKbPage, useCreateKbPageTemplate } from "@/hooks/api/kb";
-import type { KbPageDetail } from "@/hooks/api/kb/pages";
+import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 import PageCommentsSheet from "./page-comments-sheet";
 import PageHistorySheet from "./page-history-sheet";
 import MovePageDialog from "./move-page-dialog";

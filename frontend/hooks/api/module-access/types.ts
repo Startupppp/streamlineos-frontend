@@ -2,7 +2,9 @@
 
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
-export type DataScope = "all" | "team" | "own" | "none";
+import type { DataScope } from "@/hooks/api/access-schema";
+
+export type { DataScope };
 
 export interface ModulePermission {
   name: string;

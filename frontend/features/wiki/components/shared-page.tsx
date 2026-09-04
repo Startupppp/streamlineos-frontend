@@ -12,7 +12,7 @@ import { useKbPagesTree } from "@/hooks/api/kb";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { pageHref } from "@/features/wiki/lib/knowledge-routes";
 import { KbUsersIcon } from "@/features/wiki/lib/kb-icons";
-import type { KbPageTreeNode } from "@/hooks/api/kb/pages";
+import type { KbPageTreeNode } from "@/hooks/api/kb/page-types";
 import {
   KB_STATUS_LABELS,
   KB_STATUS_BADGE_CLASS,

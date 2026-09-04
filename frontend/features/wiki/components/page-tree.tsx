@@ -9,7 +9,7 @@ import { useCreateKbPage } from "@/hooks/api/kb";
 import { pageHref } from "@/features/wiki/lib/knowledge-routes";
 import { KbPlusIcon } from "@/features/wiki/lib/kb-icons";
 import PageTreeItem from "./page-tree-item";
-import type { KbPageTreeNode } from "@/hooks/api/kb/pages";
+import type { KbPageTreeNode } from "@/hooks/api/kb/page-types";
 
 interface PageTreeProps {
   nodes: KbPageTreeNode[];

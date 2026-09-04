@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
@@ -226,7 +226,15 @@ function CreateSecretSheet({ open, onClose }: CreateSecretSheetProps) {
 }
 
 export function SecretsManagerPage() {
-  const { data: secrets, isLoading, isError, refetch } = useGlobalSecrets();
+  const {
+    data: secrets,
+    isLoading,
+    isError,
+    refetch,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useGlobalSecrets();
   const deleteSecret = useDeleteGlobalSecret();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<WorkflowSecret | null>(null);
@@ -262,7 +270,14 @@ export function SecretsManagerPage() {
     void refetch();
   }
 
-  const list = secrets?.data ?? [];
+  function handleLoadMore() {
+    void fetchNextPage();
+  }
+
+  const list = useMemo(
+    () => secrets?.pages.flatMap((page) => page.data) ?? [],
+    [secrets],
+  );
 
   return (
     <PageWrapper
@@ -304,6 +319,17 @@ export function SecretsManagerPage() {
                 onDelete={handleDeleteTarget}
               />
             ))}
+            {hasNextPage ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="self-center"
+                onClick={handleLoadMore}
+                disabled={isFetchingNextPage}
+              >
+                {isFetchingNextPage ? "Loading…" : "Load more secrets"}
+              </Button>
+            ) : null}
           </div>
         </AnimatePresence>
       )}

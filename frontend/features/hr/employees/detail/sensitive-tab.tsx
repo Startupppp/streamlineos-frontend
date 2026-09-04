@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useEmployeeEmployment, useEmployeeSensitive, useUpdateSensitive } from "@/hooks/api/hr/employees";
 import { useCan } from "@/hooks/api/access";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,104 +24,21 @@ import { Shield, Lock } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { EyeIcon, EyeOffIcon } from "@animateicons/react/lucide";
-import type { HrSensitiveData } from "@/types/hr/core";
 import type { Control } from "react-hook-form";
+import {
+  formToSensitive,
+  sensitiveSchema,
+  sensitiveToForm,
+  type SensitiveFormValues,
+} from "./sensitive-schema";
 
-const emptyOrValid = (schema: z.ZodString) =>
-  schema.or(z.literal(""));
-
-const sensitiveSchema = z.object({
-  salaryAmount: emptyOrValid(
-    z
-      .string()
-      .regex(/^\d{1,12}(?:\.\d{1,2})?$/, "Use an amount with at most 2 decimals"),
-  ),
-  salaryCurrency: emptyOrValid(
-    z.string().regex(/^[A-Za-z]{3}$/, "Use a 3-letter ISO currency code"),
-  ),
-  salaryFrequency: emptyOrValid(z.string().trim().min(1).max(30)),
-  bankAccountNumber: emptyOrValid(
-    z.string().refine(
-      (v) => /^\d{9,18}$/.test(v),
-      "Must be 9–18 digits"
-    )
-  ),
-  bankName: emptyOrValid(z.string().min(1).max(100)),
-  ifscCode: emptyOrValid(
-    z.string().regex(/^[A-Za-z]{4}0[A-Za-z0-9]{6}$/, "Invalid IFSC code")
-  ),
-  pfUanNumber: emptyOrValid(
-    z.string().regex(/^\d{12}$/, "UAN must be exactly 12 digits")
-  ),
-  esiIpNumber: emptyOrValid(z.string().max(20)),
-  taxId: emptyOrValid(z.string().min(1).max(100)),
-  panNumber: emptyOrValid(
-    z.string().regex(/^[A-Za-z]{5}\d{4}[A-Za-z]$/, "Invalid PAN number")
-  ),
-  passportNumber: emptyOrValid(
-    z.string().regex(/^[A-Za-z0-9]{6,9}$/, "Must be 6–9 alphanumeric characters")
-  ),
-  nationalId: emptyOrValid(z.string().min(1).max(100)),
-});
-
-type FormValues = z.infer<typeof sensitiveSchema>;
-
-function salaryCentsToInput(cents: number | null | undefined): string {
-  if (cents == null) return "";
-  const whole = Math.floor(cents / 100);
-  const fraction = String(cents % 100).padStart(2, "0");
-  return `${whole}.${fraction}`;
-}
-
-function salaryInputToCents(value: string): number | null {
-  if (value === "") return null;
-  const [whole, fraction = ""] = value.split(".");
-  return Number(whole) * 100 + Number(fraction.padEnd(2, "0"));
-}
-
-function sensitiveToForm(data: HrSensitiveData | undefined): FormValues {
-  return {
-    salaryAmount: salaryCentsToInput(data?.salaryAmountCents),
-    salaryCurrency: data?.salaryCurrency ?? "",
-    salaryFrequency: data?.salaryFrequency ?? "",
-    bankAccountNumber: data?.bankDetails?.accountNumber ?? "",
-    bankName: data?.bankDetails?.bankName ?? "",
-    ifscCode: data?.bankDetails?.ifsc ?? "",
-    pfUanNumber: data?.bankDetails?.pfUanNumber ?? "",
-    esiIpNumber: data?.bankDetails?.esiIpNumber ?? "",
-    taxId: data?.taxId ?? "",
-    panNumber: data?.panNumber ?? "",
-    passportNumber: data?.passportNumber ?? "",
-    nationalId: data?.nationalId ?? "",
-  };
-}
-
-function formToSensitive(values: FormValues, existing: HrSensitiveData | undefined): Partial<HrSensitiveData> {
-  return {
-    salaryAmountCents: salaryInputToCents(values.salaryAmount),
-    salaryCurrency: values.salaryCurrency === "" ? null : values.salaryCurrency.toUpperCase(),
-    salaryFrequency: values.salaryFrequency === "" ? null : values.salaryFrequency,
-    bankDetails: {
-      ...existing?.bankDetails,
-      accountNumber: values.bankAccountNumber || undefined,
-      bankName: values.bankName || undefined,
-      ifsc: values.ifscCode || undefined,
-      pfUanNumber: values.pfUanNumber || undefined,
-      esiIpNumber: values.esiIpNumber || undefined,
-    },
-    taxId: values.taxId === "" ? null : values.taxId,
-    panNumber: values.panNumber === "" ? null : values.panNumber,
-    passportNumber: values.passportNumber === "" ? null : values.passportNumber,
-    nationalId: values.nationalId === "" ? null : values.nationalId,
-  };
-}
 
 interface MaskedFieldProps {
   label: string;
   value: string | null | undefined;
   editMode: boolean;
-  fieldName: keyof FormValues;
-  control: Control<FormValues>;
+  fieldName: keyof SensitiveFormValues;
+  control: Control<SensitiveFormValues>;
 }
 
 function MaskedField({ label, value, editMode, fieldName, control }: MaskedFieldProps) {
@@ -196,7 +112,7 @@ export function EmployeeSensitiveTab({ userId }: Props) {
 
   const updateMutation = useUpdateSensitive(employment?.id ?? 0);
 
-  const form = useForm<FormValues>({
+  const form = useForm<SensitiveFormValues>({
     resolver: zodResolver(sensitiveSchema),
     values: sensitive !== undefined ? sensitiveToForm(sensitive) : undefined,
   });
@@ -239,7 +155,7 @@ export function EmployeeSensitiveTab({ userId }: Props) {
 
   const displayValues = sensitiveToForm(sensitive);
 
-  const fields: Array<{ label: string; key: keyof FormValues }> = [
+  const fields: Array<{ label: string; key: keyof SensitiveFormValues }> = [
     { label: "Salary Amount", key: "salaryAmount" },
     { label: "Salary Currency", key: "salaryCurrency" },
     { label: "Salary Frequency", key: "salaryFrequency" },

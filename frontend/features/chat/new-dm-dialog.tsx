@@ -23,9 +23,9 @@ import {
 } from "@/hooks/api";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { resolveImageUrl } from "@/lib/utils";
-import { getInitials } from "./chat-helpers";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ChatUserVirtualList } from "./chat-user-virtual-list";
+import { getInitials } from "@/lib/format-utils";
 
 const DM_LIST_BOX_HEIGHT = 340;
 const DM_LIST_PADDING = 8;

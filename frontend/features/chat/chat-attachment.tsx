@@ -9,7 +9,8 @@ import { cn } from "@/lib/utils";
 import { queryKeys } from "@/lib/query-keys";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
-import { formatFileSize, getFileColor, getFileExt, isImageMime } from "./chat-helpers";
+import { getFileColor, getFileExt, isImageMime } from "./chat-helpers";
+import { formatFileSize } from "@/lib/format-utils";
 
 function useAttachmentUrl(channelId: number, attachmentId: number) {
   const canRead = useCan("chat:messages:read");

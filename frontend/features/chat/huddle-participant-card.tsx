@@ -7,8 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import type { HuddleParticipant } from "@/types/chat";
-import { getInitials } from "./chat-helpers";
 import { useNetworkQuality } from "./use-network-quality";
+import { getInitials } from "@/lib/format-utils";
 
 interface HuddleParticipantCardProps {
   participant: HuddleParticipant;

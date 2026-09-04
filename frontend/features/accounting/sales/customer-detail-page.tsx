@@ -13,7 +13,7 @@ import { useCustomerLedger } from "@/hooks/api/accounting";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 import type { CustomerLedgerLine } from "@/types/accounting";
-import { formatCurrency } from "@/features/accounting/lib/format-currency";
+import { formatAccountingAmount } from "@/features/accounting/lib/format-currency";
 
 interface CustomerLedgerDetailPageProps {
   clientId: string;
@@ -87,7 +87,7 @@ const customerLedgerColumns: DataTableColumn<CustomerLedgerLine>[] = [
     headerClassName: "w-[120px] text-right",
     className: "text-right font-mono text-sm tabular-nums text-destructive",
     cell: (row) =>
-      Number(row.debit) > 0 ? formatCurrency(row.debit) : "—",
+      Number(row.debit) > 0 ? formatAccountingAmount(row.debit) : "—",
   },
   {
     key: "credit",
@@ -95,14 +95,14 @@ const customerLedgerColumns: DataTableColumn<CustomerLedgerLine>[] = [
     headerClassName: "w-[120px] text-right",
     className: "text-right font-mono text-sm tabular-nums text-status-success-ink",
     cell: (row) =>
-      Number(row.credit) > 0 ? formatCurrency(row.credit) : "—",
+      Number(row.credit) > 0 ? formatAccountingAmount(row.credit) : "—",
   },
   {
     key: "runningBalance",
     header: "Running Balance",
     headerClassName: "w-[140px] text-right",
     className: "text-right font-mono text-sm font-medium tabular-nums",
-    cell: (row) => formatCurrency(row.runningBalance),
+    cell: (row) => formatAccountingAmount(row.runningBalance),
   },
 ];
 
@@ -153,21 +153,21 @@ export function CustomerDetailPage({
         <StatCardGrid cols={3}>
           <StatCard
             label="Total Invoiced"
-            value={summary ? formatCurrency(summary.totalInvoiced) : "—"}
+            value={summary ? formatAccountingAmount(summary.totalInvoiced) : "—"}
             icon={Receipt}
             color="blue"
             index={0}
           />
           <StatCard
             label="Total Paid"
-            value={summary ? formatCurrency(summary.totalPaid) : "—"}
+            value={summary ? formatAccountingAmount(summary.totalPaid) : "—"}
             icon={Wallet}
             color="green"
             index={1}
           />
           <StatCard
             label="Outstanding"
-            value={summary ? formatCurrency(summary.outstanding) : "—"}
+            value={summary ? formatAccountingAmount(summary.outstanding) : "—"}
             icon={AlertCircle}
             color={summary && Number(summary.outstanding) > 0 ? "red" : "green"}
             index={2}

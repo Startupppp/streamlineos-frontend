@@ -2,9 +2,10 @@
 
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getInitials, formatMessageTime } from "./chat-helpers";
+import { formatMessageTime } from "./chat-helpers";
 import { renderFormattedContent } from "./formatted-message-content";
 import type { Message } from "@/types/chat";
+import { getInitials } from "@/lib/format-utils";
 
 interface ThreadMessageProps {
   message: Message;

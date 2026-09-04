@@ -25,7 +25,7 @@ const OverviewCharts = dynamic(
 import { ExportCsvButton } from "./export-csv-button";
 import { useSupportOverviewReport } from "@/hooks/api/support/reports";
 import type { SupportReportFilters } from "@/hooks/api/support/reports";
-import { formatMinutes, formatPercent, formatRatioPercent } from "./lib/format";
+import { formatMinutes, formatNullablePercent, formatRatioPercent } from "./lib/format";
 
 export function SupportOverviewPage() {
   const [filters, setFilters] = useState<SupportReportFilters>({});
@@ -91,7 +91,7 @@ export function SupportOverviewPage() {
             />
             <StatCard
               label="SLA Compliance"
-              value={formatPercent(data.slaCompliancePct)}
+              value={formatNullablePercent(data.slaCompliancePct)}
               icon={ShieldCheck}
               tone="emerald"
             />

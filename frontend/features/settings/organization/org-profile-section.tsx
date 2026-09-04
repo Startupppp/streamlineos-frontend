@@ -3,7 +3,6 @@
 import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Building2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
@@ -28,28 +27,12 @@ import {
   SettingsField,
   SettingsFieldGrid,
 } from "./org-settings-chrome";
+import {
+  INDUSTRIES,
+  orgGeneralSchema,
+  type OrgGeneralValues,
+} from "./org-profile-schema";
 
-const INDUSTRIES = [
-  "Technology", "Finance & Banking", "Healthcare", "Retail & E-commerce",
-  "Manufacturing", "Education", "Real Estate", "Logistics & Supply Chain",
-  "Marketing & Advertising", "Consulting", "Legal", "Media & Entertainment",
-  "Hospitality & Travel", "Non-profit", "Other",
-] as const;
-
-const orgGeneralSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100),
-  slug: z.string().min(1, "Slug is required").max(50).regex(/^[a-z0-9-]+$/, "Lowercase letters, numbers, hyphens only"),
-  legalName: z.string().max(200).optional(),
-  orgCode: z.string().max(20).optional(),
-  industry: z.string().optional(),
-  website: z.string().url("Must be a valid URL").or(z.literal("")).optional(),
-  registrationNumber: z.string().max(100).optional(),
-  taxNumber: z.string().max(100).optional(),
-  supportEmail: z.string().email("Must be a valid email").or(z.literal("")).optional(),
-  supportPhone: z.string().max(30).optional(),
-});
-
-type OrgGeneralValues = z.infer<typeof orgGeneralSchema>;
 
 interface OrgProfileSectionProps {
   org: OrgSettings;

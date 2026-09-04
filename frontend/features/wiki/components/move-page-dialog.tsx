@@ -15,7 +15,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useKbPagesTree, useMoveKbPage } from "@/hooks/api/kb";
 import { KbMoveRightIcon, KbFileTextIcon } from "@/features/wiki/lib/kb-icons";
-import type { KbPageTreeNode } from "@/hooks/api/kb/pages";
+import type { KbPageTreeNode } from "@/hooks/api/kb/page-types";
 
 function getPageDepth(nodes: KbPageTreeNode[], id: number): number {
   const parentMap = new Map(nodes.map((n) => [n.id, n.parentPageId]));

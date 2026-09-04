@@ -46,7 +46,7 @@ import {
   useKbPageBacklinks,
 } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
-import type { KbPageDetail } from "@/hooks/api/kb/pages";
+import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 import { KbPageAiActions } from "./kb-page-ai-actions";
 import PageSharePopover from "./page-share-popover";
 import { exportPageToHtml } from "@/features/wiki/lib/export-page";

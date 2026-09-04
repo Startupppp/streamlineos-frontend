@@ -15,7 +15,7 @@ import { EmptyTeamIllustration } from "@/components/illustrations";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCustomersOutstanding } from "@/hooks/api/accounting";
 import type { CustomerOutstanding } from "@/types/accounting";
-import { formatCurrency } from "@/features/accounting/lib/format-currency";
+import { formatAccountingAmount } from "@/features/accounting/lib/format-currency";
 
 const columns: DataTableColumn<CustomerOutstanding>[] = [
   {
@@ -58,7 +58,7 @@ const columns: DataTableColumn<CustomerOutstanding>[] = [
     sortValue: (row) => Number(row.outstanding),
     headerClassName: "text-right",
     className: "text-right font-mono font-medium tabular-nums",
-    cell: (row) => formatCurrency(row.outstanding),
+    cell: (row) => formatAccountingAmount(row.outstanding),
   },
   {
     key: "statement",

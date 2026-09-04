@@ -13,7 +13,7 @@ import { useVendorLedger } from "@/hooks/api/accounting";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 import { type VendorLedgerLine } from "@/types/accounting";
-import { formatCurrency } from "@/features/accounting/lib/format-currency";
+import { formatAccountingAmount } from "@/features/accounting/lib/format-currency";
 
 function formatSource(sourceType: string, sourceEvent: string | null): string {
   if (sourceEvent) return `${sourceType} · ${sourceEvent}`;
@@ -77,7 +77,7 @@ const vendorLedgerColumns: DataTableColumn<VendorLedgerLine>[] = [
     headerClassName: "w-[120px] text-right",
     className: "text-right font-mono text-sm tabular-nums text-destructive",
     cell: (row) => (
-      <>{Number(row.debit) > 0 ? formatCurrency(row.debit) : "—"}</>
+      <>{Number(row.debit) > 0 ? formatAccountingAmount(row.debit) : "—"}</>
     ),
   },
   {
@@ -86,7 +86,7 @@ const vendorLedgerColumns: DataTableColumn<VendorLedgerLine>[] = [
     headerClassName: "w-[120px] text-right",
     className: "text-right font-mono text-sm tabular-nums text-status-success-ink",
     cell: (row) => (
-      <>{Number(row.credit) > 0 ? formatCurrency(row.credit) : "—"}</>
+      <>{Number(row.credit) > 0 ? formatAccountingAmount(row.credit) : "—"}</>
     ),
   },
   {
@@ -94,7 +94,7 @@ const vendorLedgerColumns: DataTableColumn<VendorLedgerLine>[] = [
     header: "Running Balance",
     headerClassName: "w-[140px] text-right",
     className: "text-right font-mono text-sm font-medium tabular-nums",
-    cell: (row) => <>{formatCurrency(row.runningBalance)}</>,
+    cell: (row) => <>{formatAccountingAmount(row.runningBalance)}</>,
   },
 ];
 
@@ -153,21 +153,21 @@ export function VendorDetailPage({ vendorId: vendorIdParam }: VendorDetailPagePr
         <StatCardGrid cols={3}>
           <StatCard
             label="Total Billed"
-            value={summary ? formatCurrency(summary.totalBilled) : "—"}
+            value={summary ? formatAccountingAmount(summary.totalBilled) : "—"}
             icon={Receipt}
             color="blue"
             index={0}
           />
           <StatCard
             label="Total Paid"
-            value={summary ? formatCurrency(summary.totalPaid) : "—"}
+            value={summary ? formatAccountingAmount(summary.totalPaid) : "—"}
             icon={Wallet}
             color="green"
             index={1}
           />
           <StatCard
             label="Outstanding Payable"
-            value={summary ? formatCurrency(summary.outstanding) : "—"}
+            value={summary ? formatAccountingAmount(summary.outstanding) : "—"}
             icon={AlertCircle}
             color={summary && Number(summary.outstanding) > 0 ? "red" : "green"}
             index={2}

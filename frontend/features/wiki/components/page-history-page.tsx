@@ -27,7 +27,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useKbPage, useKbPageVersions, useKbPageVersion, useRestoreKbPageVersion } from "@/hooks/api/kb";
-import type { KbPageVersion } from "@/hooks/api/kb/pages";
+import type { KbPageVersion } from "@/hooks/api/kb/page-types";
 import { getErrorMessage } from "@/lib/get-error-message";
 import PublicPageContent from "./public-page-content";
 import { computeVersionDiff } from "@/features/wiki/lib/version-diff";

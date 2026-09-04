@@ -29,10 +29,10 @@ import {
   useUnmuteChannel,
 } from "@/hooks/api";
 import { resolveImageUrl } from "@/lib/utils";
-import { getInitials } from "./chat-helpers";
 import { ChannelInfoPanelProfile } from "./channel-info-panel-profile";
 import { ChannelMembersSection } from "./channel-members-section";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { getInitials } from "@/lib/format-utils";
 
 const CloseButton = React.forwardRef<
   HTMLButtonElement,

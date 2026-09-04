@@ -7,10 +7,10 @@ import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { resolveImageUrl } from "@/lib/utils";
-import { getInitials } from "./chat-helpers";
 import type { ChannelMember } from "@/types/chat";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { FLEX_TITLE_SLOT } from "@/lib/text-overflow";
+import { getInitials } from "@/lib/format-utils";
 
 const RemoveMemberButton = React.forwardRef<
   HTMLButtonElement,

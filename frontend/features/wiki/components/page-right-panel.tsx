@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useKbPageBacklinks } from "@/hooks/api/kb";
 import { useKbPageRecordLinks } from "@/hooks/api/kb/record-links";
-import type { KbPageDetail } from "@/hooks/api/kb/pages";
+import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import {
   KB_STATUS_LABELS,

@@ -20,7 +20,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { useSetKbPageVisibility } from "@/hooks/api/kb/pages";
-import type { KbPageDetail } from "@/hooks/api/kb/pages";
+import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 
 type Visibility = "private" | "org" | "public";
 

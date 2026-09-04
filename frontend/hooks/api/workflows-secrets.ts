@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import type { WorkflowSecret, WorkflowCursorPage } from "./workflows-types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -17,12 +18,24 @@ function assertPermission(allowed: boolean): void {
   if (!allowed) throw new Error("You do not have permission for this workflow action.");
 }
 
+/**
+ * `GET /workflows/secrets` is a keyset page, not a list. See `useAllSchedules` — the
+ * same silent truncation, on the surface where a missing row is a secret the operator
+ * believes they deleted.
+ */
 export function useGlobalSecrets() {
   const canManage = useCan("workflows:secrets:manage");
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: [...queryKeys.workflows.all, "global-secrets"] as const,
-    queryFn: ({ signal }) =>
-      apiClient.get<WorkflowCursorPage<WorkflowSecret>>("/workflows/secrets", undefined, signal),
+    queryFn: ({ pageParam, signal }) =>
+      apiClient.get<WorkflowCursorPage<WorkflowSecret>>(
+        "/workflows/secrets",
+        pageParam === undefined ? undefined : { cursor: pageParam },
+        signal,
+      ),
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (last) =>
+      last.pagination.hasMore ? (last.pagination.nextCursor ?? undefined) : undefined,
     staleTime: 30_000,
     enabled: canManage,
   });

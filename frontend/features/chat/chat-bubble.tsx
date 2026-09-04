@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import {
-  getInitials,
   formatMessageTime,
   formatMessageTimeFull,
   getForwardedDisplay,
@@ -39,6 +38,7 @@ import { getStatusBadgeClass } from "@/components/shared/ticket-status-badge";
 import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import { renderFormattedContent } from "./formatted-message-content";
 import { TicketPill, CommentPill } from "./chat-entity-pills";
+import { getInitials } from "@/lib/format-utils";
 /**
  * The hover toolbar renders for every message on the screen but its root is
  * `absolute … opacity-0 group-hover:opacity-100 pointer-events-none`, so it
