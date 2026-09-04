@@ -135,3 +135,56 @@ describe("QueryProvider scope isolation on org switch", () => {
     expect(scopedB.getQueryData(key)).toBeUndefined();
   });
 });
+
+describe("scopedQueryKeyHashFn canonicalises filter objects", () => {
+  const SCOPE = authenticatedScope(ORG_A, USER);
+  const hash = scopedQueryKeyHashFn(SCOPE);
+
+  it("hashes two orderings of the same params object identically", () => {
+    const insertionOrderA = ["streamlineos", "tickets", { limit: 20, cursor: "abc", status: "OPEN" }];
+    const insertionOrderB = ["streamlineos", "tickets", { status: "OPEN", cursor: "abc", limit: 20 }];
+
+    expect(hash(insertionOrderA)).toBe(hash(insertionOrderB));
+  });
+
+  it("canonicalises nested params objects too", () => {
+    const a = ["streamlineos", "tickets", { page: 1, filters: { sort: "asc", q: "x" } }];
+    const b = ["streamlineos", "tickets", { filters: { q: "x", sort: "asc" }, page: 1 }];
+
+    expect(hash(a)).toBe(hash(b));
+  });
+
+  it("a scoped QueryClient reads back data written under the other ordering", () => {
+    const DATA = { rows: [1, 2, 3] };
+    const written = ["streamlineos", "tickets", { limit: 20, cursor: "abc" }];
+    const read = ["streamlineos", "tickets", { cursor: "abc", limit: 20 }];
+
+    const client = new QueryClient({
+      defaultOptions: { queries: { queryKeyHashFn: hash } },
+    });
+    client.setQueryData(written, DATA);
+
+    expect(client.getQueryData(read)).toEqual(DATA);
+  });
+
+  it("proves the guard bites: raw JSON.stringify splits the same filter set in two", () => {
+    const written = ["streamlineos", "tickets", { limit: 20, cursor: "abc" }];
+    const read = ["streamlineos", "tickets", { cursor: "abc", limit: 20 }];
+
+    const insertionOrderHash = (queryKey: unknown) => JSON.stringify([SCOPE, queryKey]);
+    expect(insertionOrderHash(written)).not.toBe(insertionOrderHash(read));
+
+    const client = new QueryClient({
+      defaultOptions: { queries: { queryKeyHashFn: insertionOrderHash } },
+    });
+    client.setQueryData(written, { rows: [1, 2, 3] });
+
+    expect(client.getQueryData(read)).toBeUndefined();
+  });
+
+  it("still separates scopes and leaves object-free keys byte-identical", () => {
+    const key = queryKeys.notifications.unreadCount();
+    expect(hash(key)).toBe(JSON.stringify([SCOPE, key]));
+    expect(hash(key)).not.toBe(scopedQueryKeyHashFn(authenticatedScope(ORG_B, USER))(key));
+  });
+});
