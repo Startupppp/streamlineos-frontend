@@ -17,7 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { UomSelect } from "@/features/inventory/components/product-field-selects";
+import { UomSelect } from "@/features/inventory/components/uom-select";
 import type { EditFormValues } from "@/features/inventory/components/product-edit-schema";
 
 interface ProductCostingFieldsProps {

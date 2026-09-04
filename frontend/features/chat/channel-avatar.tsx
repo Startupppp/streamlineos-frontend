@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Hash } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { getInitials } from "./chat-helpers";
+import { getInitials } from "@/lib/format-utils";
 
 interface ChannelAvatarProps {
   type: string | undefined;

@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import type { WorkflowSchedule, WorkflowCursorPage } from "./workflows-types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -17,12 +18,27 @@ function assertPermission(allowed: boolean): void {
   if (!allowed) throw new Error("You do not have permission for this workflow action.");
 }
 
+/**
+ * `GET /workflows/schedules` is a keyset page, not a list.
+ *
+ * The hook read it with a plain `useQuery` and the page rendered `data.data`, so an
+ * organisation with more schedules than one page saw a silently truncated list with
+ * no indication anything was missing — `pagination.nextCursor` came back on every
+ * response and nothing ever asked for it.
+ */
 export function useAllSchedules() {
   const canManage = useCan("workflows:schedules:manage");
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: [...queryKeys.workflows.all, "all-schedules"] as const,
-    queryFn: ({ signal }) =>
-      apiClient.get<WorkflowCursorPage<WorkflowSchedule>>("/workflows/schedules", undefined, signal),
+    queryFn: ({ pageParam, signal }) =>
+      apiClient.get<WorkflowCursorPage<WorkflowSchedule>>(
+        "/workflows/schedules",
+        pageParam === undefined ? undefined : { cursor: pageParam },
+        signal,
+      ),
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (last) =>
+      last.pagination.hasMore ? (last.pagination.nextCursor ?? undefined) : undefined,
     staleTime: 30_000,
     enabled: canManage,
   });

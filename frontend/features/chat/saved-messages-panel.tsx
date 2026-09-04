@@ -12,9 +12,10 @@ import { cn, resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useSavedMessages, useUnsaveMessage, useChatOrgUsers } from "@/hooks/api";
-import { getInitials, formatMessageTime, buildChatUserMap, resolveChatUserName } from "./chat-helpers";
+import { formatMessageTime, buildChatUserMap, resolveChatUserName } from "./chat-helpers";
 import { panelRevealLabel, usePanelRenderWindow } from "./panel-render-window";
 import type { SavedMessage } from "@/types/chat";
+import { getInitials } from "@/lib/format-utils";
 
 const UnsaveButton = React.forwardRef<
   HTMLButtonElement,

@@ -4,10 +4,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import type { ProjectMilestone, ProjectBudget } from "@/types/projects";
+import type { ProjectMilestone, ProjectBudget, ProjectBudgetUpdate } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { queryKeyBase } from "@/lib/query-keys/base";
-export type { ProjectMilestone, ProjectBudget } from "@/types/projects";
+export type { ProjectMilestone, ProjectBudget, ProjectBudgetUpdate } from "@/types/projects";
 
 interface CreateMilestoneInput {
   name: string;
@@ -82,7 +82,7 @@ export function useUpdateProjectBudget(projectId: number) {
   return useAuthorizedMutation("build:manage", {
     mutationKey: ["projects", "budget", "update"],
     mutationFn: (budget: number) =>
-      apiClient.patch<{ id: number; budget: string }>(`/build/${projectId}/budget`, { budget }),
+      apiClient.patch<ProjectBudgetUpdate>(`/build/${projectId}/budget`, { budget }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.projects.budget(projectId) }),
   });
 }

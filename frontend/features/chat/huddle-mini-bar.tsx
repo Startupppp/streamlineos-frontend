@@ -6,8 +6,8 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { getInitials } from "./chat-helpers";
 import type { Huddle } from "@/types/chat";
+import { getInitials } from "@/lib/format-utils";
 
 interface HuddleMiniBarProps {
   participants: Huddle["participants"];

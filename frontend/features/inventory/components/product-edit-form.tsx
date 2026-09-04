@@ -27,7 +27,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { useUpdateProduct } from "@/hooks/api/inventory";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-client";
-import { CategorySelect } from "@/features/inventory/components/product-field-selects";
+import { CategorySelect } from "@/features/inventory/components/category-select";
 import {
   ProductCostingFields,
   ProductUomFields,

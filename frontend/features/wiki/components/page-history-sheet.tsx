@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useKbPageVersions, useKbPageVersion, useRestoreKbPageVersion } from "@/hooks/api/kb";
-import type { KbPageVersion } from "@/hooks/api/kb/pages";
+import type { KbPageVersion } from "@/hooks/api/kb/page-types";
 import { pageHistoryHref } from "@/features/wiki/lib/knowledge-routes";
 import { getErrorMessage } from "@/lib/get-error-message";
 

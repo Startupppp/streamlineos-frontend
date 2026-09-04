@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Clock, Link2, ToggleLeft, ToggleRight } from "lucide-react";
@@ -150,7 +150,15 @@ function ScheduleRow({
 }
 
 export function SchedulerPage() {
-  const { data: schedules, isLoading, isError, refetch } = useAllSchedules();
+  const {
+    data: schedules,
+    isLoading,
+    isError,
+    refetch,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useAllSchedules();
   const updateSchedule = useUpdateSchedule();
   const deleteSchedule = useDeleteSchedule();
   const [togglingId, setTogglingId] = useState<string | null>(null);
@@ -203,7 +211,14 @@ export function SchedulerPage() {
     void refetch();
   }
 
-  const list = schedules?.data ?? [];
+  function handleLoadMore() {
+    void fetchNextPage();
+  }
+
+  const list = useMemo(
+    () => schedules?.pages.flatMap((page) => page.data) ?? [],
+    [schedules],
+  );
   const activeCount = list.filter((s) => s.isEnabled).length;
 
   return (
@@ -243,6 +258,17 @@ export function SchedulerPage() {
               isToggling={togglingId === schedule.id}
             />
           ))}
+          {hasNextPage ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="self-center"
+              onClick={handleLoadMore}
+              disabled={isFetchingNextPage}
+            >
+              {isFetchingNextPage ? "Loading…" : "Load more schedules"}
+            </Button>
+          ) : null}
         </div>
       )}
 

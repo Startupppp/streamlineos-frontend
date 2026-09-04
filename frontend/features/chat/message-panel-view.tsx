@@ -25,8 +25,8 @@ import {
   ChatPanelFallback,
   ChatTriggerFallback,
 } from "./chat-lazy-fallbacks";
-import { getInitials } from "./chat-helpers";
 import type { Channel, ChannelMember, Huddle } from "@/types/chat";
+import { getInitials } from "@/lib/format-utils";
 
 const ThreadPanel = dynamic(
   () => import("./thread-panel").then((m) => ({ default: m.ThreadPanel })),

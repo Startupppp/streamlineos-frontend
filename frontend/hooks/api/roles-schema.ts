@@ -19,7 +19,6 @@ import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
  * is a valid `DataScope` elsewhere.
  */
 
-export const dataScopeContract = z.enum(["all", "team", "own", "none"]);
 export const simulatedScopeContract = z.enum(["all", "team", "own"]);
 
 const roleBaseShape = {
@@ -66,7 +65,6 @@ export const simulatedAccessContract = z.object({
   isOrgOwner: z.boolean(),
 });
 
-export type DataScope = z.infer<typeof dataScopeContract>;
 export type Role = z.infer<typeof roleContract>;
 export type RoleListItem = z.infer<typeof roleListItemContract>;
 export type SimulationCandidate = z.infer<typeof simulationCandidateContract>;

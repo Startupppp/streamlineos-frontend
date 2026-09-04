@@ -31,12 +31,12 @@ import {
 } from "@/hooks/api/accounting/planning";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { ScenarioFormFields } from "@/features/accounting/planning/scenario-form-fields";
 import {
-  scenarioSchema,
-  ScenarioFormFields,
   CREATE_DEFAULTS,
+  scenarioSchema,
   type ScenarioForm,
-} from "@/features/accounting/planning/scenario-form-fields";
+} from "@/features/accounting/planning/scenario-schema";
 import type { Scenario } from "@/types/accounting/planning";
 import { ScenarioCard } from "@/features/accounting/planning/scenario-card";
 

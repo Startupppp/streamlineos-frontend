@@ -20,15 +20,14 @@ import {
 } from "lucide-react";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import {
-  formatFileSize,
   getFileColor,
   getFileExt,
-  getInitials,
 } from "./chat-helpers";
 import type { Message } from "./chat-types";
 import type { TicketSearchResult } from "@/hooks/api/build";
 import { ChatPopoverFallback } from "./chat-lazy-fallbacks";
 import { getChatMobileComposerInsetClassName } from "@/components/layout/mobile/chat-mobile-chrome-layout";
+import { formatFileSize, getInitials } from "@/lib/format-utils";
 
 const TicketMentionPicker = dynamic(
   () =>

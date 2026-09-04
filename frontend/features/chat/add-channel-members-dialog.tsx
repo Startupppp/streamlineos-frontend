@@ -25,9 +25,9 @@ import {
   useRegenerateInviteLink,
 } from "@/hooks/api/chat-personal-b";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { getInitials } from "./chat-helpers";
 import { ChatUserVirtualList } from "./chat-user-virtual-list";
 import type { OrgUser } from "@/types/chat";
+import { getInitials } from "@/lib/format-utils";
 
 const MEMBER_LIST_BOX_HEIGHT = 280;
 const MEMBER_LIST_PADDING = 8;

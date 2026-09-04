@@ -6,10 +6,10 @@ import type { Document } from "@/types/hr";
 import {
   DOCUMENT_TYPES,
   TYPE_BADGE_COLORS,
-  formatFileSize,
   getFileIconConfig,
 } from "./document-table-constants";
 import { DocumentRowActions } from "./document-row-actions";
+import { formatFileSize } from "@/lib/format-utils";
 
 export function createDocumentColumns(
   onDelete: (documentId: number) => Promise<void>,
@@ -96,7 +96,7 @@ export function createDocumentColumns(
       headerClassName: "text-right",
       className: "text-sm text-muted-foreground text-right tabular-nums",
       cell(doc) {
-        return formatFileSize(doc.fileSize);
+        return doc.fileSize ? formatFileSize(doc.fileSize) : "—";
       },
     },
     {

@@ -3,10 +3,6 @@ import {
   getUserDisplayName,
   type NamedUser,
 } from "@/lib/person-display";
-import {
-  getInitials as _getInitials,
-  formatFileSize as _formatFileSize,
-} from "@/lib/format-utils";
 import { isStorageObjectKey } from "@/lib/utils";
 
 export type ChatOrgUser = {
@@ -41,10 +37,6 @@ export function resolveChatUserName(
   return "Unknown";
 }
 
-export function getInitials(name: string | null | undefined): string {
-  return _getInitials(name);
-}
-
 function toDate(date: Date | string | null): Date | null {
   if (!date) return null;
   if (date instanceof Date) return date;
@@ -75,10 +67,6 @@ export function formatChannelTime(date: Date | string | null) {
   if (isToday(d)) return format(d, "h:mm a");
   if (isYesterday(d)) return "Yesterday";
   return format(d, "MMM d");
-}
-
-export function formatFileSize(bytes: number): string {
-  return _formatFileSize(bytes);
 }
 
 export function getFileExt(name: string) {

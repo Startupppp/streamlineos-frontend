@@ -12,7 +12,7 @@ import {
   CommandGroup,
 } from "@/components/ui/command";
 import { useKbPagesSearch } from "@/hooks/api/kb";
-import type { KbPageSearchResult } from "@/hooks/api/kb/pages";
+import type { KbPageSearchResult } from "@/hooks/api/kb/page-types";
 import { pageHref } from "@/features/wiki/lib/knowledge-routes";
 import { KbFileTextIcon, KbLoader2Icon } from "@/features/wiki/lib/kb-icons";
 import { TruncatedText } from "@/components/ui/truncated-text";
