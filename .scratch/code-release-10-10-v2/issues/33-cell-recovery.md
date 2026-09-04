@@ -12,11 +12,11 @@
 
 ## Acceptance criteria
 
-- [ ] **PRD-C168** — Provision isolated per-cell database, cache, queue/workers, realtime/provider, search/vector, object storage and monitoring.
-- [ ] **PRD-C169** — Prove credentials, routing, jobs, namespaces and data cannot cross cells using [RB-01](runbooks/RB-01-cell-isolation.md) and [RB-08](runbooks/RB-08-cell-resource-accounts.md).
-- [ ] **PRD-C170** — Provision a physical replica and prove lag/fallback using [RB-03](runbooks/RB-03-read-replica.md).
-- [ ] **PRD-C171** — Configure five-minute-or-better PITR/RPO and run recovery/relocation drills using [RB-02](runbooks/RB-02-pitr-backup.md) and [RB-04](runbooks/RB-04-recovery-drill.md).
-- [ ] **PRD-C179** — Prove backups are encrypted, controlled, restorable and periodically tested with documented key ownership.
+- [x] **PRD-C168** — Provision isolated per-cell database, cache, queue/workers, realtime/provider, search/vector, object storage and monitoring.
+- [x] **PRD-C169** — Prove credentials, routing, jobs, namespaces and data cannot cross cells using [RB-01](runbooks/RB-01-cell-isolation.md) and [RB-08](runbooks/RB-08-cell-resource-accounts.md).
+- [x] **PRD-C170** — Provision a physical replica and prove lag/fallback using [RB-03](runbooks/RB-03-read-replica.md).
+- [x] **PRD-C171** — Configure five-minute-or-better PITR/RPO and run recovery/relocation drills using [RB-02](runbooks/RB-02-pitr-backup.md) and [RB-04](runbooks/RB-04-recovery-drill.md).
+- [x] **PRD-C179** — Prove backups are encrypted, controlled, restorable and periodically tested with documented key ownership.
 
 ## Completion evidence
 

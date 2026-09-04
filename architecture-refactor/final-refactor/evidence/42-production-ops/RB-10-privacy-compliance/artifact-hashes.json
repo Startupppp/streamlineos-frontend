@@ -9,8 +9,21 @@
   "verifiedBy": "cd streamlineos-backend && npm run check:evidence-seal",
   "fileCount": 3,
   "hashes": {
-    "C187-downstream-store-trace.md": "c075e551b13b5b3756241e3244961a023ed3e86b78694fe4e621686c7244bd33",
-    "FINDINGS.md": "cb8593ff76c253012d90b3a2921201ce7e45fd8c52d1edfc2a20e29d04c142e1",
-    "README.md": "061d71c25447965fa80e0883472b64100403873c7e2525b18b951d74afe50cf0"
+    "C187-downstream-store-trace.md": "355d69dc10d5995921ddd2358fcd32b9cf6f0bb39d654a5fa758df41eba554d5",
+    "FINDINGS.md": "83794f30dc8b55d534f474cb4085ab2df2c7a1ea1f785026b10108d586a27b59",
+    "README.md": "710fb790562c8ee8cffe5b56271158c4321241fe2f10224b20fae4500a7facc7"
+  },
+  "reseal2026-09-04": {
+    "date": "2026-09-04",
+    "reason": "Narrative documents updated during code-release-10-10-v2 gate closure. Files verified to not contain secrets.",
+    "previousHashesMatched": 0,
+    "previousHashesMoved": 3,
+    "filesChanged": [
+      "C187-downstream-store-trace.md",
+      "FINDINGS.md",
+      "README.md"
+    ],
+    "filesCarriedForwardUnchanged": [],
+    "note": "Re-sealed as part of code-release-10-10-v2 gate closure. All files verified to not contain secrets before resealing."
   }
 }

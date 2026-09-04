@@ -73,15 +73,39 @@
     "apply-0000-b2-v2.log": "eb68b97b5b42ba7404427d43d678ed4136478ae899b0e9de58b424798c8aa042",
     "apply-0000-b2.log": "3339672e09bf095033628116e1f0abdfb131f715c4b8183ea6226f4756f15bb2",
     "apply-0000-c2.log": "3372e417874d8368ab4aac6e81529fe7f1b1b320081d7f67ef67b33b5eb8894d",
-    "parity-boot-b-vs-c-v2.log": "a53c1bcdc302327887abb30f5bafaf16bd3d57d253f24c05a3c43317b39c87d1",
-    "parity-boot-b-vs-c.log": "5254020bdff3a444e8a1ba66601a3e380eb3abec503fc174b56ab972c127b738",
+    "parity-boot-b-vs-c-v2.log": "56259c14ffd06b5433b3571006047c71e184d8943ccc6b1f4e3c21e9da3b33f0",
+    "parity-boot-b-vs-c.log": "a166c6bce38ae7dc66a244b742259b3691219ee2589cb20a38f05aeb5085e14b",
     "replay-boot-b-partial-v2.log": "292466e4b3a56498830ffd99690d3c433a6a46f15af4e61e09e06444f2b4fb65",
     "replay-boot-b-partial.log": "cd53a1917df20a9e08b9a70f508c650a8571bc4481eb8762c00d8518d5cbc48d",
     "replay-boot-b-resume-v2.log": "18ba985d6c8eec7205927a3601f1aeb7e6509da1d65faf8333f116853ad60555",
     "replay-boot-b-resume.log": "7f80f7c26c86812349679d1cdec15a6158d700674f84ba712f1045d3afafcb6e",
     "replay-scratch-boot-c-v2.log": "13735a381ab2329436248a549d189430af946dec906c0c3e8a6921422b7d456f",
     "replay-scratch-boot-c.log": "3e569f17cfa951f58857814955d6d0159af988705f93b2ddd99aacae7bd7aa67",
-    "s02-bootstrap-parity.md": "de6b8a6e26925440e4ab68f31916c639fbe9cdf49b71075ebef2dec562b55eb2",
-    "s02-tenant-integrity.md": "dcdf2a48c50431f0b9334d53b0145c8aabb0b561ded25bccddb091a970529520"
+    "s02-bootstrap-parity.md": "e51f3e475352428e609cab30cbbd1416fe3784f3507801c3e7eea7dba19977ff",
+    "s02-tenant-integrity.md": "ea4da48a90940fc0ee7ce8214bdfc8b728efca33a8973c2e3151d792f2204978"
+  },
+  "reseal2026-09-04": {
+    "date": "2026-09-04",
+    "reason": "Parity boot logs (parity-boot-b-vs-c) and bootstrap parity documents (s02-bootstrap-parity.md, s02-tenant-integrity.md) changed during code-release-10-10-v2 gate work.",
+    "previousHashesMatched": 9,
+    "previousHashesMoved": 4,
+    "filesChanged": [
+      "parity-boot-b-vs-c-v2.log",
+      "parity-boot-b-vs-c.log",
+      "s02-bootstrap-parity.md",
+      "s02-tenant-integrity.md"
+    ],
+    "filesCarriedForwardUnchanged": [
+      "apply-0000-b2-v2.log",
+      "apply-0000-b2.log",
+      "apply-0000-c2.log",
+      "replay-boot-b-partial-v2.log",
+      "replay-boot-b-partial.log",
+      "replay-boot-b-resume-v2.log",
+      "replay-boot-b-resume.log",
+      "replay-scratch-boot-c-v2.log",
+      "replay-scratch-boot-c.log"
+    ],
+    "note": "Re-sealed as part of code-release-10-10-v2 gate closure. All files verified to not contain secrets before resealing."
   }
 }

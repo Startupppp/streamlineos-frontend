@@ -73,6 +73,15 @@ function runGate(root) {
 const read = (root, rel) => readFileSync(join(root, rel), "utf8");
 const write = (root, rel, s) => writeFileSync(join(root, rel), s);
 
+// A mutation that matches nothing plants no defect, so the gate passes and the case reads as
+// "cannot bite" when the truth is that the fixture rotted. Fail on the no-op instead.
+const swap = (root, rel, find, replace) => {
+  const before = read(root, rel);
+  if (!before.includes(find))
+    throw new Error(`self-test fixture is stale: ${rel} no longer contains ${JSON.stringify(find)}`);
+  write(root, rel, before.replace(find, replace));
+};
+
 /**
  * Each case: mutate the fixture, then assert the gate fails carrying `expect`.
  * `expect: null` means "must pass".
@@ -126,8 +135,12 @@ const cases = [
   {
     name: "a ticket is ticked ahead of its PRD box",
     mutate: (root) => {
-      const rel = join(REL_ISSUES, "02-schema-and-key-minimization.md");
-      write(root, rel, read(root, rel).replace("- [ ] **PRD-C050**", "- [x] **PRD-C050**"));
+      swap(
+        root,
+        join(REL_ISSUES, "03-migration-baseline-catalog-parity.md"),
+        "- [ ] **PRD-C053**",
+        "- [x] **PRD-C053**",
+      );
     },
     expect: "STATE DIVERGENCE",
   },

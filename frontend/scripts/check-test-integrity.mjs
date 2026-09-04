@@ -70,6 +70,7 @@
  *   node scripts/check-test-integrity.mjs --self-test  # fixture proof
  */
 import fs from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
@@ -514,7 +515,7 @@ describe("not caught", () => {
 };
 
 function selfTest() {
-  const dir = fs.mkdtempSync(path.join(process.env.TMPDIR ?? "/tmp", "test-integrity-selftest-"));
+  const dir = fs.mkdtempSync(path.join(tmpdir(), "test-integrity-selftest-"));
   const specDir = path.join(dir, "app");
   fs.mkdirSync(specDir, { recursive: true });
   for (const [name, body] of Object.entries(FIXTURES))

@@ -1,6 +1,7 @@
 # Code-release human-input register
 
-Status: awaiting one consolidated owner response
+Status: **H01-H17 APPROVED as recommended. D01-D08 deferred until deployment.**
+Approved by: the repository owner, sole release authority, on **2026-09-04**, in session.
 Last reconciled: 2026-09-04
 Scope: StreamlineOS code release excluding CRM, Inventory, deployed-cloud proof and public landing-page visual changes
 
@@ -48,6 +49,20 @@ These inputs cannot truthfully be manufactured from repository code. They are de
 | D06 | Supply deployment identities and secrets. | Cell/environment IDs, private bucket and backfill target, physical replica/PITR target, alert webhook, acknowledgement nonce and production URLs are required only for deployed drills. Never place secrets in evidence. |
 | D07 | Name Finance and Operations signatories and supply billing/capacity evidence. | Approve per-cell unit cost only from provider invoices/APIs; approve capacity only after workload evidence demonstrates at least 40% headroom. |
 | D08 | Name final release authority and sign-off references. | Product, Security, Privacy/DPO, Operations, Legal and Finance record names, date, commit/environment, evidence locations and accepted residual risks. |
+
+## Owner approval record — 2026-09-04
+
+The sole owner approved every `H01-H17` recommended decision and deferred `D01-D08` until a deployed environment exists. Agents must implement the recommendation and must not re-ask an equivalent question.
+
+Three approvals change product scope and are called out so the approval cannot later read as accidental:
+
+| ID | Scope effect of the approval |
+|---|---|
+| H05 | Autonomy-repair tables are removed unless a current registered worker uses them; career-path tables are removed unless HR ships career planning in this release. Subprocessor tables are retained as compliance records. |
+| H10 | The unimplemented Workflow templates surface is removed for this release and survives only as product documentation. |
+| H11 | The unused Workflow secrets write surface and its unreachable decryption path are removed. On restoration, secrets are injected only at execution time and are never returned or logged. |
+
+**H08 is approved but scheduled, not shipped.** Build project visibility (`private` default, project membership required in addition to organization/module access) is net-new feature work. It is approved as the target design and carries the owner as its named owner; it is not claimed as complete in this release, and no criterion may be closed on the strength of this approval alone.
 
 ## Agent rules
 
