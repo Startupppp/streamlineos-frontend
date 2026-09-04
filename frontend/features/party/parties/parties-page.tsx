@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import dynamic from "next/dynamic";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
@@ -11,8 +12,15 @@ import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import type { ReactNode } from "react";
-import { RecordList } from "@/features/renderer/record-list";
 import type { RecordValue } from "@/features/renderer/format-value";
+
+const RecordList = dynamic(
+  () =>
+    import("@/features/renderer/record-list").then((m) => ({
+      default: m.RecordList,
+    })),
+  { ssr: false },
+);
 import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
 import { PARTY_LAYOUT } from "@/lib/renderer/party-layout";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -28,22 +36,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PartyDetailSheet, PartyFormDialog } from "./parties-lazy";
+
+const PartyDeleteDialog = dynamic(
+  () =>
+    import("./party-delete-dialog").then((m) => ({
+      default: m.PartyDeleteDialog,
+    })),
+  { ssr: false },
+);
 import type { BusinessParty, PartyType } from "@/types/party/parties";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -368,27 +374,14 @@ export function PartiesPage() {
         <PartyDetailSheet partyId={openPartyId} onOpenChange={handleDetailOpenChange} />
       )}
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this party?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently remove{" "}
-              {deleteTarget ? deleteTarget.name : "this party"} from your
-              business directory. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              onClick={handleDeleteConfirm}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {deleteTarget && (
+        <PartyDeleteDialog
+          partyName={deleteTarget.name}
+          open
+          onOpenChange={handleDeleteDialogChange}
+          onConfirm={handleDeleteConfirm}
+        />
+      )}
     </PageWrapper>
   );
 }

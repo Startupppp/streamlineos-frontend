@@ -175,6 +175,116 @@ function callPositions(source, file, names) {
   return positions;
 }
 
+async function selfTest() {
+  process.stdout.write("=== verify:server-data-seam self-test ===\n");
+  const syntheticPath = "/synthetic/server-fetch.ts";
+
+  const goodContent = [
+    'import "server-only";',
+    'import { cache } from "react";',
+    "const TIMEOUT_MS = 10000;",
+    "const cachedFetch = cache(async (token: string, path: string) => {",
+    "  const headers = new Headers();",
+    "  headers.set(\"Authorization\", `Bearer ${token}`);",
+    '  return fetch(path, { cache: "no-store", signal: AbortSignal.timeout(TIMEOUT_MS), headers });',
+    "});",
+    "function getServerToken() { return Promise.resolve(\"tok\"); }",
+    "export async function serverGet(apiPath: string) {",
+    "  return cachedFetch(await getServerToken(), apiPath);",
+    "}",
+  ].join("\n");
+
+  let passed = 0;
+  let failed = 0;
+
+  const expectPass = (description, fn) => {
+    try {
+      fn();
+      process.stdout.write(`  PASS: ${description}\n`);
+      passed++;
+    } catch (e) {
+      process.stdout.write(`  FAIL: ${description} — unexpected throw: ${e?.message}\n`);
+      failed++;
+    }
+  };
+
+  const expectFail = (description, fn, fragment) => {
+    try {
+      fn();
+      process.stdout.write(`  FAIL: ${description} — did not throw\n`);
+      failed++;
+    } catch (e) {
+      if (e?.message?.includes(fragment)) {
+        process.stdout.write(`  PASS: ${description}\n`);
+        passed++;
+      } else {
+        process.stdout.write(`  FAIL: ${description} — wrong message: "${e?.message}"\n`);
+        failed++;
+      }
+    }
+  };
+
+  expectPass("valid server-fetch.ts passes verifyServerFetchSeam", () =>
+    verifyServerFetchSeam(goodContent, syntheticPath),
+  );
+
+  const badNoCache = goodContent.replace('import { cache } from "react";\n', "");
+  expectFail(
+    'missing cache() import rejected with expected message',
+    () => verifyServerFetchSeam(badNoCache, syntheticPath),
+    'must import { cache } from "react"',
+  );
+
+  const badExportedCache = goodContent.replace(
+    "const cachedFetch = cache(",
+    "export const cachedFetch = cache(",
+  );
+  expectFail(
+    "exported cache const rejected",
+    () => verifyServerFetchSeam(badExportedCache, syntheticPath),
+    "must keep",
+  );
+
+  const badNoServerGet = goodContent.replace(
+    "export async function serverGet(",
+    "async function serverGet(",
+  );
+  expectFail(
+    'missing serverGet export rejected with expected message',
+    () => verifyServerFetchSeam(badNoServerGet, syntheticPath),
+    "must export a serverGet function",
+  );
+
+  const badCredParam = goodContent.replace(
+    "export async function serverGet(apiPath: string)",
+    "export async function serverGet(token: string, apiPath: string)",
+  );
+  expectFail(
+    "serverGet with credential param rejected",
+    () => verifyServerFetchSeam(badCredParam, syntheticPath),
+    "must not accept a credential parameter",
+  );
+
+  process.stdout.write(`\n${passed} passed, ${failed} failed\n`);
+  if (failed > 0) {
+    process.exitCode = 1;
+    throw new Error(`${failed} self-test checks failed`);
+  }
+  process.stdout.write("✓ verify:server-data-seam detection logic bites on known violations\n");
+  process.stdout.write("NOTE: build-artifact checks (.next/BUILD_ID, app-paths-manifest.json) require a production\n");
+  process.stdout.write("      Next.js build and cannot be exercised without one. Those checks run in the main gate.\n");
+}
+
+if (process.argv.includes("--self-test")) {
+  try {
+    await selfTest();
+  } catch (err) {
+    process.stderr.write(`${err?.message ?? err}\n`);
+    process.exitCode = 1;
+  }
+  process.exit(process.exitCode ?? 0);
+}
+
 const serverFetch = await read(path.join(frontendRoot, "lib", "server-fetch.ts"));
 sourceHas(serverFetch, 'import "server-only"', path.join(frontendRoot, "lib", "server-fetch.ts"));
 sourceHas(serverFetch, "export async function serverGet", path.join(frontendRoot, "lib", "server-fetch.ts"));

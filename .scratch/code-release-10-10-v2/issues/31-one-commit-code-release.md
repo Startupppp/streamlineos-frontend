@@ -21,7 +21,7 @@
 - [ ] **PRD-C156** — Every unchecked item under **Immediate code-level release candidate** is complete with fresh evidence.
 - [x] **PRD-C157** — CRM/Inventory remain excluded and public landing visuals/animations remain unchanged.
 - [ ] **PRD-C158** — Backend/frontend builds, typechecks, focused tests, disposable E2E and architecture gates pass at one commit.
-- [ ] **PRD-C159** — Two empty bootstraps and an interrupted-then-resumed bootstrap produce the same expected database catalog from the new authorized baseline; no legacy watermark upgrade claim is required.
+- [x] **PRD-C159** — Two empty bootstraps and an interrupted-then-resumed bootstrap produce the same expected database catalog from the new authorized baseline; no legacy watermark upgrade claim is required.
 - [ ] **PRD-C160** — No unresolved code-level P0/P1 finding remains.
 - [x] **PRD-C161** — Release authority records commit, evidence, accepted code-level residual risks and date.
 

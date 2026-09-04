@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, Suspense } from "react";
+import dynamic from "next/dynamic";
 import { motion, AnimatePresence, useReducedMotion, type Variants } from "framer-motion";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -8,12 +9,20 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyInboxIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { useInbox, useInboxCounts, useSnoozeCrmTask, useCompleteCrmTask } from "@/hooks/api/crm/inbox";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InboxStatCards } from "@/features/crm/inbox/inbox-stat-cards";
-import { InboxSectionCard, InboxSectionCardSkeleton } from "@/features/crm/inbox/inbox-section-card";
 import { AiActionsSection } from "@/features/crm/inbox/ai-actions-section";
+
+const InboxSectionCard = dynamic(
+  () =>
+    import("@/features/crm/inbox/inbox-section-card").then((m) => ({
+      default: m.InboxSectionCard,
+    })),
+  { ssr: false },
+);
 
 const SECTION_ORDER = [
   "dueTasks",
@@ -35,6 +44,22 @@ const itemVariants: Variants = {
   hidden: { opacity: 0, y: 8 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" } },
 };
+
+function InboxSectionCardSkeleton() {
+  return (
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="flex h-8 items-center gap-2.5 px-3">
+        <Skeleton className="h-3.5 w-3.5 shrink-0 rounded-sm" />
+        <Skeleton className="h-3 w-24" />
+      </div>
+      <div className="border-t border-border/50">
+        <div className="flex h-10 items-center px-3">
+          <Skeleton className="h-3 w-16" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function InboxSectionListSkeleton() {
   return (

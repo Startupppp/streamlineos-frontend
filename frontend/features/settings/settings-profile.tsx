@@ -2,8 +2,6 @@
 
 import { useSession } from "next-auth/react";
 import { useState, useRef, useCallback } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -11,7 +9,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import dynamic from "next/dynamic";
 import { Camera, Loader2 } from "lucide-react";
-import { Trash2Icon, CheckIcon, XIcon } from "@animateicons/react/lucide";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { useUpdateMyProfile } from "@/hooks/api/auth";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -24,11 +22,11 @@ const AvatarCropDialog = dynamic(
   () => import("@/components/ui/avatar-crop-dialog").then((m) => ({ default: m.AvatarCropDialog })),
   { ssr: false },
 );
-import {
-  DISPLAY_NAME_MAX_LENGTH,
-  settingsDisplayNameSchema,
-  type SettingsDisplayNameValues,
-} from "./settings-profile-schema";
+
+const SettingsEditNameForm = dynamic(
+  () => import("./settings-edit-name-form").then((m) => ({ default: m.SettingsEditNameForm })),
+  { ssr: false },
+);
 
 export function SettingsProfile() {
   const { data: session, update: updateSession } = useSession();
@@ -41,15 +39,9 @@ export function SettingsProfile() {
 
   const [isEditingName, setIsEditingName] = useState(false);
 
-  const nameForm = useForm<SettingsDisplayNameValues>({
-    resolver: zodResolver(settingsDisplayNameSchema),
-    defaultValues: { name: "" },
-  });
-
   const updateProfile = useUpdateMyProfile();
 
   const isPhotoBusy = uploading;
-  const isSavingName = updateProfile.isPending && !uploading;
   const displayImage = previewUrl || resolveImageUrl(session?.user?.image);
   const name = session?.user?.name || "";
   const email = session?.user?.email || "";
@@ -142,53 +134,18 @@ export function SettingsProfile() {
     }
   }, [session, updateProfile, updateSession]);
 
-  const handleSaveName = nameForm.handleSubmit((values) => {
-    if (!session?.user?.id) return;
-    const nextName = values.name.trim();
-    updateProfile.mutate(
-      { name: nextName },
-      {
-        onSuccess: async () => {
-          await updateSession({ name: nextName });
-          toast.success("Name updated");
-          setIsEditingName(false);
-        },
-        onError: (err) => {
-          toast.error(getErrorMessage(err));
-        },
-      }
-    );
-  });
-
   const handleOpenFileInput = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
 
-  const handleNameKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      void handleSaveName();
-    }
-    if (e.key === "Escape") setIsEditingName(false);
-  }, [handleSaveName]);
+  const handleCloseEditName = useCallback(() => setIsEditingName(false), []);
 
-  const handleCancelEditName = useCallback(() => {
-    nameForm.reset({ name: "" });
-    setIsEditingName(false);
-  }, [nameForm]);
-
-  const handleStartEditName = useCallback(() => {
-    nameForm.reset({ name });
-    setIsEditingName(true);
-  }, [name, nameForm]);
+  const handleStartEditName = useCallback(() => setIsEditingName(true), []);
 
   const handleCropDialogChange = useCallback((open: boolean) => {
     setCropDialogOpen(open);
     if (!open) setCropImageSrc(null);
   }, []);
-
-  const watchedName = nameForm.watch("name");
-  const nameError = nameForm.formState.errors.name?.message;
 
   return (
     <>
@@ -262,45 +219,7 @@ export function SettingsProfile() {
         <div className="space-y-1.5">
           <Label htmlFor="display-name" className="text-label font-medium">Display name</Label>
           {isEditingName ? (
-            <div className="space-y-1">
-              <div className="flex gap-1.5">
-                <Input
-                  id="display-name"
-                  {...nameForm.register("name")}
-                  onKeyDown={handleNameKeyDown}
-                  placeholder="Your full name"
-                  maxLength={DISPLAY_NAME_MAX_LENGTH}
-                  autoFocus
-                  aria-invalid={!!nameError}
-                  aria-describedby={nameError ? "display-name-error" : undefined}
-                  className="flex-1"
-                />
-                <LoadingButton
-                  size="icon"
-                  className="h-9 w-9 shrink-0"
-                  onClick={handleSaveName}
-                  disabled={!watchedName.trim()}
-                  isPending={isSavingName}
-                  aria-label="Save name"
-                >
-                  {!isSavingName && <CheckIcon size={14} />}
-                </LoadingButton>
-                <AnimatedIconButton
-                  icon={XIcon}
-                  iconSize={14}
-                  size="icon"
-                  variant="ghost"
-                  className="h-9 w-9 shrink-0"
-                  onClick={handleCancelEditName}
-                  aria-label="Cancel editing"
-                />
-              </div>
-              {nameError ? (
-                <p id="display-name-error" className="text-dense font-medium text-destructive">
-                  {nameError}
-                </p>
-              ) : null}
-            </div>
+            <SettingsEditNameForm name={name} onClose={handleCloseEditName} />
           ) : (
             <button
               type="button"

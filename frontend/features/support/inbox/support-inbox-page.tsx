@@ -23,7 +23,6 @@ import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TicketList } from "@/features/support/inbox/ticket-list";
 import { QueueViewRail } from "@/features/support/inbox/queue-view-rail";
-import { SupportAblyProvider } from "@/features/support/inbox/support-ably-provider";
 import { useInboxShortcuts } from "@/features/support/inbox/use-inbox-shortcuts";
 import { AgentAvailabilityToggle } from "@/features/support/inbox/agent-availability-toggle";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
@@ -62,10 +61,10 @@ function CreateTicketSkeleton() {
   );
 }
 
-const TicketDetailSheet = dynamic(
+const TicketDetailWithAbly = dynamic(
   () =>
-    import("@/features/support/inbox/ticket-detail-sheet").then((m) => ({
-      default: m.TicketDetailSheet,
+    import("@/features/support/inbox/ticket-detail-with-ably").then((m) => ({
+      default: m.TicketDetailWithAbly,
     })),
   { ssr: false, loading: () => <TicketDetailSkeleton /> },
 );
@@ -258,7 +257,7 @@ function InboxContent() {
 
         <div className={cn("flex-1 flex flex-col", !selectedTicketId && "hidden md:flex")}>
           {selectedTicketId ? (
-            <TicketDetailSheet ticketId={selectedTicketId} onBack={handleBackFromTicket} />
+            <TicketDetailWithAbly ticketId={selectedTicketId} onBack={handleBackFromTicket} />
           ) : (
             <div className="flex-1 flex items-center justify-center text-center px-6">
               <div>
@@ -281,9 +280,7 @@ function InboxContent() {
 export function SupportInboxPage() {
   return (
     <DashboardGate permission="dashboard:support:view">
-      <SupportAblyProvider>
-        <InboxContent />
-      </SupportAblyProvider>
+      <InboxContent />
     </DashboardGate>
   );
 }
