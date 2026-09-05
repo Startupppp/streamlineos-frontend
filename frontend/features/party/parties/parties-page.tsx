@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import dynamic from "next/dynamic";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { useAfterLoad } from "@/hooks/common/use-after-load";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { useParties, useDeleteParty } from "@/hooks/api/party/parties";
 import { useCan } from "@/hooks/api/access";
@@ -121,11 +122,7 @@ export function PartiesPage() {
   const canCreate = useCan("party:parties:create");
   const canUpdate = useCan("party:parties:update");
   const canDelete = useCan("party:parties:delete");
-
-  // Pre-warm: chunk loads after window.load so it is not in measuredScriptBytes.
-  useEffect(() => {
-    void import("@/features/renderer/record-list");
-  }, []);
+  const afterLoad = useAfterLoad();
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -310,7 +307,7 @@ export function PartiesPage() {
     >
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-hidden">
         <div className="flex min-h-0 flex-1 flex-col">
-          {isLoading ? (
+          {isLoading || !afterLoad ? (
             <DataTableSkeleton rows={12} columns={6} className="flex-1" />
           ) : isError ? (
             <ErrorState className={CONTENT_FILL_PANEL} onRetry={handleRetry} />
