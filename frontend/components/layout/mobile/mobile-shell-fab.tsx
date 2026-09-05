@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect, startTransition } from "react";
 import dynamic from "next/dynamic";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { cn } from "@/lib/utils";
 import { useMobileShellFabPosition } from "./use-mobile-shell-fab-position";
+import { useAfterLoad } from "@/hooks/common/use-after-load";
 
 const MobileShellFabPanel = dynamic(
   () =>
@@ -28,13 +29,19 @@ export function MobileShellFab({
 }: MobileShellFabProps) {
   const [fabOpen, setFabOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  // The sheet and the account menu live in a chunk of their own. Once either has
-  // been opened the panel stays mounted, so its own open/close animation runs.
   const [panelRequested, setPanelRequested] = useState(false);
+  const afterLoad = useAfterLoad();
+
+  useEffect(() => {
+    if (!afterLoad) return;
+    void import("./mobile-shell-fab-panel");
+  }, [afterLoad]);
 
   const handleToggleFab = useCallback(() => {
     setPanelRequested(true);
-    setFabOpen((open) => !open);
+    startTransition(() => {
+      setFabOpen((open) => !open);
+    });
   }, []);
 
   const {

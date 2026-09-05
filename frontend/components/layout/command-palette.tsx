@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCommandPalette } from "@/components/command-palette";
+import { useAfterLoad } from "@/hooks/common/use-after-load";
 
 /**
  * Only the Cmd+K listener has to exist before first paint; cmdk, the global
@@ -54,6 +55,12 @@ const CommandPaletteDialogBody = dynamic(
 export function CommandPalette() {
   const { paletteOpen, setPaletteOpen } = useCommandPalette();
   const [isReady, setIsReady] = useState(false);
+  const afterLoad = useAfterLoad();
+
+  useEffect(() => {
+    if (!afterLoad) return;
+    void warmPalette();
+  }, [afterLoad]);
 
   const handleWarm = useCallback(() => {
     void warmPalette();
