@@ -58,9 +58,12 @@ bite-proved (`after: id + 1000000` → `Expected: > 0, Received: 0`).
 
 ## db-gates `.db.spec.ts`, run through the script CI actually invokes
 
-`51 passed, 3 failed, 2 skipped of 56` (282 tests passed, 5 failed, 23 skipped), then the
-two party suites repaired above → **53 passed, 1 failed**. The remaining failure is
-`crm-permissions-reach-somebody` — CRM, out of release scope under PRD-C157.
+`51 passed, 3 failed, 2 skipped of 56` (282 tests passed, 5 failed, 23 skipped). After the
+two party repairs above, re-run whole through the same script:
+**53 passed, 1 failed, 2 skipped of 56 — 286 tests passed, 1 failed, 23 skipped.**
+The remaining failure is `crm-permissions-reach-somebody` — CRM, out of release scope
+under PRD-C157. The ratchet stays at 29: `db-gates.yml` moves it only when the suites are
+green here and measured, and one is still red.
 
 ## What this does not cover
 
