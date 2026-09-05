@@ -61,7 +61,7 @@ export function isAiStreamAbort(error: unknown): boolean {
   );
 }
 
-async function errorFor(res: Response, path: string): Promise<ApiError> {
+export async function readAiStreamError(res: Response, path: string): Promise<ApiError> {
   let message = `${res.status} ${res.statusText}`;
   let code: string | undefined;
   try {
@@ -107,7 +107,7 @@ export async function streamAiText({
       { timeoutMs: AI_STREAM_TIMEOUT_MS },
     );
 
-    if (!res.ok) throw await errorFor(res, path);
+    if (!res.ok) throw await readAiStreamError(res, path);
 
     onHeaders?.(res.headers);
 
