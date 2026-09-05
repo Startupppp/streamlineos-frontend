@@ -8,14 +8,6 @@ import {
 } from "./form-submission-schema";
 import { withCorrelation } from "@/lib/observability/with-correlation";
 
-/**
- * The public form is read with a bare `fetch` rather than `apiClient` because
- * it is unauthenticated and must not drag the token cache or the auto-sign-out
- * behaviour onto a page a stranger opens. The response still goes through
- * `parseApiResponse`, which is what unwraps the backend's `{ success, data }`
- * envelope — reading `res.json()` directly resolved to the envelope and left
- * every declared field undefined.
- */
 async function messageFrom(res: Response, fallback: string): Promise<string> {
   try {
     const data = (await res.json()) as Record<string, unknown>;
@@ -35,10 +27,12 @@ async function messageFrom(res: Response, fallback: string): Promise<string> {
   return fallback;
 }
 
-export async function fetchPublicFormByPath(
+async function fetchPublicFormByPath(
   path: string,
 ): Promise<PublicFormDefinition> {
-  const res = await fetch(buildUrl(path), { headers: withCorrelation(new Headers()) });
+  const res = await fetch(buildUrl(path), {
+    headers: withCorrelation(new Headers()),
+  });
   if (!res.ok)
     throw new Error(
       await messageFrom(res, "Form not found or no longer active."),
@@ -60,7 +54,9 @@ export async function submitPublicForm(
   const path = `/public/forms/${token}/submit`;
   const res = await fetch(buildUrl(path), {
     method: "POST",
-    headers: withCorrelation(new Headers({ "Content-Type": "application/json" })),
+    headers: withCorrelation(
+      new Headers({ "Content-Type": "application/json" }),
+    ),
     body: JSON.stringify({ values, submittedByName }),
   });
   if (!res.ok)

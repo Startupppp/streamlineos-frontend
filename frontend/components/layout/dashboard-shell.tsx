@@ -28,6 +28,7 @@ import {
 import { isPortalChromelessPath } from "./sidebar/sidebar-nav-items";
 import { ShellOfflineBanner } from "./shell-offline-banner";
 import { useRouteFocus } from "@/hooks/common/use-route-focus";
+import { useIsDesktopViewport } from "@/hooks/common/use-mobile";
 import { cn } from "@/lib/utils";
 import { WELCOME_POP_KEY } from "@/lib/welcome-pop";
 
@@ -91,6 +92,7 @@ export function DashboardShell({
   const [enhancementsReady, setEnhancementsReady] = useState(false);
 
   const { hideSidebar, navGroups } = useProductSidebarVisibility();
+  const isDesktop = useIsDesktopViewport();
   const {
     data: access,
     error: accessErr,
@@ -181,7 +183,8 @@ export function DashboardShell({
 
   useEffect(() => {
     try {
-      if (sessionStorage.getItem(WELCOME_POP_KEY) === "1") setWelcomeToastActive(true);
+      if (sessionStorage.getItem(WELCOME_POP_KEY) === "1")
+        setWelcomeToastActive(true);
     } catch {}
   }, []);
 
@@ -242,7 +245,7 @@ export function DashboardShell({
             <ShellOfflineBanner />
 
             <div className="flex min-h-0 flex-1 overflow-hidden">
-              {!hideSidebar && (
+              {!hideSidebar && isDesktop && (
                 <aside
                   aria-label="Sidebar"
                   style={{ width: sidebarW }}

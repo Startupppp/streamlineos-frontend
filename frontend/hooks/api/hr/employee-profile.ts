@@ -41,7 +41,7 @@ export function useOnboardEmployee() {
     mutationKey: ["hr", "employee", "onboard"],
     mutationFn: (data: OnboardEmployeeInput) =>
       apiClient.post<{ success: boolean; userId: string }>("/hr/employees/onboard", data),
-    onSuccess: (result) => invalidateHrWorkforceQueries(qc, result.userId),
+    onSuccess: (result) => void invalidateHrWorkforceQueries(qc, result.userId),
   });
 }
 
@@ -55,7 +55,7 @@ export function useBulkOnboardEmployees() {
         { employees },
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
-    onSuccess: () => invalidateHrWorkforceQueries(qc),
+    onSuccess: () => void invalidateHrWorkforceQueries(qc),
   });
 }
 
@@ -111,7 +111,7 @@ export function useUpdateSensitive(employmentId: number) {
     mutationKey: ["hr", "employee", "sensitive", "update", employmentId],
     mutationFn: (data: Partial<HrSensitiveData>) =>
       apiClient.patch<{ success: boolean }>(`/hr/employees/${employmentId}/sensitive`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.employeeSensitive(employmentId) }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.employeeSensitive(employmentId) }),
   });
 }
 

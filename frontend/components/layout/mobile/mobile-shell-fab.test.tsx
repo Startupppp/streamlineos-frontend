@@ -1,24 +1,15 @@
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const panelMounted = jest.fn();
 
-jest.mock("next/dynamic", () =>
-  () =>
-    function DynamicFabPanel(props: Record<string, unknown>) {
-      panelMounted(props);
-      return null;
-    },
-);
-
-let mockAfterLoad = false;
-jest.mock("@/hooks/common/use-after-load", () => ({
-  useAfterLoad: () => mockAfterLoad,
-}));
-
-jest.mock("./mobile-shell-fab-panel", () => ({
-  MobileShellFabPanel: () => null,
-}));
+jest.mock("next/dynamic", () => () => {
+  function DynamicFabPanelBody(props: Record<string, unknown>) {
+    panelMounted(props);
+    return <div data-testid="fab-panel-body" />;
+  }
+  return DynamicFabPanelBody;
+});
 
 jest.mock("./use-mobile-shell-fab-position", () => ({
   useMobileShellFabPosition: ({ onTap }: { onTap: () => void }) => {
@@ -72,30 +63,31 @@ function renderFab() {
 
 beforeEach(() => {
   panelMounted.mockClear();
-  mockAfterLoad = false;
 });
 
 describe("MobileShellFab", () => {
-  it("does not mount the panel before the FAB is clicked", () => {
+  it("renders the sheet in the DOM before any click (always mounted)", () => {
     renderFab();
-    expect(panelMounted).not.toHaveBeenCalled();
+    expect(screen.getByRole("dialog", { hidden: true })).toBeInTheDocument();
   });
 
-  it("mounts the panel the first time the FAB is clicked", async () => {
+  it("opens the dialog when the FAB is clicked", async () => {
     renderFab();
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Open quick actions" }));
-    expect(panelMounted).toHaveBeenCalled();
+    expect(screen.getByRole("dialog", { hidden: false })).toBeInTheDocument();
   });
 
-  it("keeps the panel mounted on subsequent clicks", async () => {
+  it("mounts FabPanelBody after the RAF fires", async () => {
     renderFab();
     const user = userEvent.setup();
-    const btn = screen.getByRole("button", { name: "Open quick actions" });
-    await user.click(btn);
-    const countAfterFirst = panelMounted.mock.calls.length;
-    await user.click(btn);
-    expect(panelMounted.mock.calls.length).toBeGreaterThan(countAfterFirst);
+    await user.click(screen.getByRole("button", { name: "Open quick actions" }));
+    await waitFor(() => {
+      expect(screen.getByTestId("fab-panel-body")).toBeInTheDocument();
+    });
+    expect(panelMounted).toHaveBeenCalledWith(
+      expect.objectContaining({ onClose: expect.any(Function) }),
+    );
   });
 
   it("starts with aria-expanded false", () => {
@@ -124,28 +116,20 @@ describe("MobileShellFab", () => {
     expect(btn).toHaveAttribute("aria-expanded", "false");
   });
 
-  it("does not mount the panel when afterLoad fires without a click", async () => {
-    const { rerender } = renderFab();
-    expect(panelMounted).not.toHaveBeenCalled();
-
-    mockAfterLoad = true;
-    await act(async () => {
-      rerender(
-        <MobileShellFab
-          onOpenMobileMenu={jest.fn()}
-          showAboveBottomNav={false}
-        />,
-      );
-    });
-
-    expect(panelMounted).not.toHaveBeenCalled();
-  });
-
-  it("passes fabOpen=true to the panel once the transition completes", async () => {
-    renderFab();
+  it("passes onClose and onOpenMobileMenu to FabPanelBody", async () => {
+    const onOpenMobileMenu = jest.fn();
+    render(
+      <MobileShellFab
+        onOpenMobileMenu={onOpenMobileMenu}
+        showAboveBottomNav={false}
+      />,
+    );
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Open quick actions" }));
-    const lastCall = panelMounted.mock.calls.at(-1);
-    expect(lastCall?.[0]).toMatchObject({ fabOpen: true });
+    await waitFor(() => {
+      expect(panelMounted).toHaveBeenCalledWith(
+        expect.objectContaining({ onOpenMobileMenu }),
+      );
+    });
   });
 });

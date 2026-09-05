@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import {
   MenuIcon,
   SearchIcon,
@@ -9,14 +9,10 @@ import {
 import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { useAskOs } from "@/components/assistant/ask-os-context";
 import { useCommandPalette } from "@/components/command-palette";
-import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { UserAvatarMenu } from "../header/user-avatar-menu";
 
-interface MobileShellFabPanelProps {
-  fabOpen: boolean;
-  onFabOpenChange: (open: boolean) => void;
-  profileOpen: boolean;
-  onProfileOpenChange: (open: boolean) => void;
+interface FabPanelBodyProps {
+  onClose: () => void;
   onOpenMobileMenu: () => void;
 }
 
@@ -46,82 +42,65 @@ function FabMenuRow({
 }
 
 /**
- * Everything the floating action button opens, kept out of first load.
- *
- * The button itself is one icon; the sheet behind it carries the animated logo,
- * the drawer primitive and the whole account menu, and none of it can be seen
- * until someone taps. The parent mounts this module the first time either
- * surface opens, so a cold authenticated load never downloads it.
+ * The content rows rendered inside the FAB drawer once it has painted.
+ * Kept in its own chunk so the first tap only pays the overlay + skeleton;
+ * this module (animated icons, context hooks, avatar menu) loads in the rAF
+ * that fires after the drawer frame is on screen.
  */
-export function MobileShellFabPanel({
-  fabOpen,
-  onFabOpenChange,
-  profileOpen,
-  onProfileOpenChange,
-  onOpenMobileMenu,
-}: MobileShellFabPanelProps) {
+export function FabPanelBody({ onClose, onOpenMobileMenu }: FabPanelBodyProps) {
+  const [profileOpen, setProfileOpen] = useState(false);
   const { open: askOsOpen, toggle: toggleAskOs } = useAskOs();
   const { setPaletteOpen } = useCommandPalette();
 
-  const handleCloseFab = useCallback(() => {
-    onFabOpenChange(false);
-  }, [onFabOpenChange]);
-
   const handleAskOs = useCallback(() => {
-    handleCloseFab();
+    onClose();
     toggleAskOs();
-  }, [handleCloseFab, toggleAskOs]);
+  }, [onClose, toggleAskOs]);
 
   const handleMenu = useCallback(() => {
-    handleCloseFab();
+    onClose();
     onOpenMobileMenu();
-  }, [handleCloseFab, onOpenMobileMenu]);
+  }, [onClose, onOpenMobileMenu]);
 
   const handleSearch = useCallback(() => {
-    handleCloseFab();
+    onClose();
     setPaletteOpen(true);
-  }, [handleCloseFab, setPaletteOpen]);
+  }, [onClose, setPaletteOpen]);
 
   const handleProfile = useCallback(() => {
-    handleCloseFab();
-    onProfileOpenChange(true);
-  }, [handleCloseFab, onProfileOpenChange]);
+    onClose();
+    setProfileOpen(true);
+  }, [onClose]);
 
   return (
     <>
-      <Drawer open={fabOpen} onOpenChange={onFabOpenChange} modal>
-        <DrawerContent className="z-[70] gap-0 rounded-t-xl pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-          <DrawerTitle className="sr-only">Quick actions</DrawerTitle>
-          <div className="flex flex-row items-stretch justify-around gap-1 px-2 pb-2 pt-1">
-            <FabMenuRow
-              label="Search"
-              onClick={handleSearch}
-              icon={<SearchIcon size={18} />}
-            />
-            <FabMenuRow
-              label={askOsOpen ? "Close Ask OS" : "Ask OS"}
-              onClick={handleAskOs}
-              icon={
-                <AnimatedLogo size={20} gradient className="rounded-full" />
-              }
-            />
-            <FabMenuRow
-              label="Menu"
-              onClick={handleMenu}
-              icon={<MenuIcon size={18} />}
-            />
-            <FabMenuRow
-              label="Profile"
-              onClick={handleProfile}
-              icon={<UserIcon size={18} />}
-            />
-          </div>
-        </DrawerContent>
-      </Drawer>
-
+      <div className="flex flex-row items-stretch justify-around gap-1 px-2 pb-2 pt-1">
+        <FabMenuRow
+          label="Search"
+          onClick={handleSearch}
+          icon={<SearchIcon size={18} />}
+        />
+        <FabMenuRow
+          label={askOsOpen ? "Close Ask OS" : "Ask OS"}
+          onClick={handleAskOs}
+          icon={
+            <AnimatedLogo size={20} gradient className="rounded-full" />
+          }
+        />
+        <FabMenuRow
+          label="Menu"
+          onClick={handleMenu}
+          icon={<MenuIcon size={18} />}
+        />
+        <FabMenuRow
+          label="Profile"
+          onClick={handleProfile}
+          icon={<UserIcon size={18} />}
+        />
+      </div>
       <UserAvatarMenu
         open={profileOpen}
-        onOpenChange={onProfileOpenChange}
+        onOpenChange={setProfileOpen}
         hideTrigger
       />
     </>

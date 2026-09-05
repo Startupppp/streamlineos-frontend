@@ -7,7 +7,7 @@ import type {
   PublicFormSubmitResponse,
 } from "@/features/build/forms/form-submission-schema";
 import {
-  fetchPublicFormByPath,
+  fetchPublicForm,
   submitPublicForm,
 } from "@/features/build/forms/public-form-api";
 
@@ -16,7 +16,7 @@ export type { PublicFormDefinition, PublicFormSubmitResponse };
 export function usePublicForm(token: string) {
   return useQuery<PublicFormDefinition>({
     queryKey: buildWorkQueryKeys.projects.publicForms.token(token),
-    queryFn: () => fetchPublicFormByPath(`/public/forms/${token}`),
+    queryFn: () => fetchPublicForm(token),
     enabled: !!token,
     retry: false,
     staleTime: 60_000,

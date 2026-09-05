@@ -31,6 +31,7 @@ export function usePushSubscription(userId: string | undefined) {
   const [optedOut, setOptedOut] = useState(false);
 
   const { mutate: registerPushSubscription } = useMutation({
+    mutationKey: ["push", "subscribe"],
     mutationFn: ({
       endpoint,
       p256dh,

@@ -18,6 +18,7 @@ import { QuickCreateButton } from "./quick-create-button";
 import { UserAvatarMenu } from "./user-avatar-menu";
 import { SidebarCollapseToggle } from "./sidebar-collapse-toggle";
 import { useAfterLoad } from "@/hooks/common/use-after-load";
+import { useIsDesktopViewport } from "@/hooks/common/use-mobile";
 const NotificationBell = dynamic(
   () =>
     import("@/features/notifications/notification-bell").then(
@@ -195,17 +196,20 @@ export function GlobalHeader({
   mobileNavOpen?: boolean;
   hideAdminChrome?: boolean;
 }) {
+  const isDesktop = useIsDesktopViewport();
   return (
     <header className="h-14 border-b border-sidebar-border bg-sidebar text-sidebar-foreground shrink-0 z-40 relative">
       <TooltipProvider>
-        <div className="hidden md:block h-full">
-          <DesktopHeader
-            isSidebarCollapsed={isSidebarCollapsed}
-            onToggleSidebar={onToggleSidebar}
-            showSidebarToggle={showSidebarToggle}
-            hideAdminChrome={hideAdminChrome}
-          />
-        </div>
+        {isDesktop && (
+          <div className="hidden md:block h-full">
+            <DesktopHeader
+              isSidebarCollapsed={isSidebarCollapsed}
+              onToggleSidebar={onToggleSidebar}
+              showSidebarToggle={showSidebarToggle}
+              hideAdminChrome={hideAdminChrome}
+            />
+          </div>
+        )}
         <div className="md:hidden h-full">
           <MobileHeader hidden={mobileNavOpen} />
         </div>

@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
-import { isLocalUrl } from "@/hooks/common/use-file-url";
+import { isLocalUrl, storageReferenceParams } from "@/hooks/common/use-file-url";
 import { storageKeyFromUrl } from "@/lib/utils";
 
 export function useAttachmentSignedUrl(fileUrl: string) {
@@ -13,11 +13,8 @@ export function useAttachmentSignedUrl(fileUrl: string) {
       if (!fileUrl) return fileUrl;
       const reference = storageKeyFromUrl(fileUrl);
       if (isLocalUrl(reference)) return reference;
-      const params = /^https?:\/\//i.test(reference)
-        ? { url: reference }
-        : { key: reference };
       try {
-        const data = await apiClient.get<{ url: string }>("/storage/download", params);
+        const data = await apiClient.get<{ url: string }>("/storage/download", storageReferenceParams(reference));
         return data.url;
       } catch {
         return fileUrl;

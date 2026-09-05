@@ -1,0 +1,361 @@
+# Co-located measurement environment and captures — 2026-09-05
+
+Bears on PRD-C005, C006, C018, C085, C140, C141, C142, C143, C145, C148, C149, C151, C158.
+Verified results only. Anything not measured is recorded as not measured, never as passing.
+Figures below are filled in as each capture completes; a section without a table has not run.
+
+## Why this exists
+
+[LATENCY-FLOOR-2026-09-04.md](LATENCY-FLOOR-2026-09-04.md) established that from this machine every
+tenant transaction against Neon `ap-southeast-1` costs ~448 ms and one Upstash round trip ~120 ms, so
+PRD-C141 (p95 ≤ 300 ms) and PRD-C143 (cache hit p95 ≤ 100 ms) could not be judged remotely. The
+criteria call for a controlled, co-located PostgreSQL + Redis + backend + production frontend. That
+stack now exists on this machine, outside both repositories, in `D:\localstack`:
+
+| Component | Version | Provenance | Listen |
+|---|---|---|---|
+| PostgreSQL | **18.6** (x86_64-windows, msvc 19.44) | EDB `postgresql-18.6-1-windows-x64-binaries.zip` | 127.0.0.1:5432 |
+| pgvector | 0.8.6 for PG18 | `andreiramani/pgvector_pgsql_windows` release `0.8.6_18` | in-process |
+| Redis | 5.0.14.1 (Windows build) | `tporadowski/redis` zip | 127.0.0.1:6379 |
+| Upstash REST shim | `backend/src/scripts/local-upstash-shim.mjs` | this repository | 127.0.0.1:8079 |
+
+PostgreSQL 17 was tried first and **cannot run this schema**: the migration chain uses
+`ALTER TABLE … ADD CONSTRAINT <name> NOT NULL <column>`, which is PostgreSQL 18 syntax, and the Neon
+project reports `pg_version: 18`. The 17 cluster was stopped and replaced.
+
+The application talks to Redis only through `@upstash/redis` (REST). The shim serves that protocol on
+localhost and forwards each command verbatim to the local RESP server, so **no application code or
+configuration surface changed**: the run points `UPSTASH_REDIS_REST_URL` at the shim, and the committed
+`.env` keeps the real Upstash endpoint (retained by the owner; its plan is currently invalid).
+
+Cluster settings that change a plan (recorded because a percentile without them is not comparable):
+`shared_buffers=3GB`, `effective_cache_size=10GB`, `work_mem=32MB`, `random_page_cost=1.1`, `jit=off`,
+`fsync=off`, `synchronous_commit=off`, builtin `C.UTF-8` locale, superuser `neondb_owner` (migration
+`0431` pins that role name), `trust` auth on loopback.
+
+## Transit measured on the co-located stack
+
+| Operation | n | p50 | p95 |
+|---|---:|---:|---:|
+| Upstash-REST shim `GET` (200-byte value) from Node `fetch` | 50 | **1.95 ms** | 4.63 ms |
+| `GET /health` on the built backend (`dist/main.js`, `NODE_ENV=production`) | 1 | 27 ms (first request) | — |
+| `/health/ready` dependency latency reported by the API | 1 | database 3 ms · cache 5 ms | — |
+
+## Database build and seed
+
+| Step | Command | Result |
+|---|---|---|
+| Role | `CREATE ROLE streamline_app LOGIN NOBYPASSRLS` (same password as `.env`) | created before the chain — migration ~0166 GRANTs to it |
+| Cold build | `DATABASE_URL=<local owner> node src/scripts/apply-chain-cold.mjs` | `RESULT: REACHED_HEAD 691/691 already_present=0 chain_gaps=0` |
+| App role | `node src/scripts/db-bootstrap-app-role.mjs` | `tables granted: 1027/1027 … bypassrls=false … RESULT: READY` |
+| Layer 1 | `SCRATCH_DATABASE_URL=<local owner>?sslmode=disable node src/scripts/seed-scratch-e2e.mjs` | `All sections completed without errors.` in **13.0 s** (935 s on Neon) |
+| Layer 2 | `node test/perf/seed-heavy-query-load.mjs` | `Seed complete — every section succeeded.` chunks 13,560 · notifications 271,200 · event_attendees 120,144 |
+| Layer 3 | `node src/scripts/seed-perf-scratch.mjs` | *pending — first run exposed two new-section defects (reporting-line overlap, locked payroll run), fix in progress* |
+
+Two harness defects were found by the cold build and fixed in `apply-chain-cold.mjs`:
+1. A statement that raised a duplicate or "does not exist" error re-entered the retry loop forever
+   (`continue` inside `while (true)`); on Neon those branches had never fired. Now it advances.
+2. A single-session cold build fails at `0619` with `42883 current_org_id() does not exist` because
+   `0431`'s `ALTER ROLE … SET search_path` reaches only new sessions; rerunning the chain after `0431`
+   resumes it. Recorded, not yet patched into the script.
+
+## What the disposable local database found — fixture and application defects
+
+A database built from empty by the migration chain and filled only by the seeds exposes every
+assumption a long-lived scratch database hides. Fixed in the seed layers (backend commits
+`0c7c2a743`, `5006c67b5`):
+
+| # | Symptom on the local stack | Cause | Fix |
+|---|---|---|---|
+| 1 | every seed statement `read ECONNRESET`, swallowed as WARN; PG log `invalid length of startup packet` | seeds default to `ssl: "require"`; a local server speaks no TLS | `?sslmode=disable` on every local URL (documented in the environment memory, not a code change) |
+| 2 | every request for the mid tenant 401 ("has no region") | layer 2 created org `…0003` without an `organization_placement` row | layers 2 and 3 place every org they create or find unplaced |
+| 3 | `POST /deals`, `/leads`, `/invoices`, `/support` answered **402** on both tenants | no `subscriptions` row, so `PlanLimitsService` treated an 8,000-lead tenant as FREE | every seeded org carries an ACTIVE ENTERPRISE subscription |
+| 4 | every authenticated page redirected to `/org-setup`; the first Web Vitals capture measured the setup wizard on 64 samples and was refused by its own gate | `organizations.onboarding_completed_at` and `users.onboarding_completed_at` never stamped | both stamped (COALESCE) for every seeded org and user |
+| 5 | `search/*` read-cost budgets `42501 permission denied for schema app` on every profile | `db-bootstrap-app-role.mjs` granted `public,build,build_events` only; migration `0374` grants `app` only when the role already exists at that point of the chain | `app` added to the bootstrap-role defaults |
+| 6 | layer 3 `excl_hr_reporting_lines_no_overlap` and `payroll_line_items are immutable while run N is locked` on every profile | new sections inserted open-ended lines over existing ones and line items into CLOSED runs | overlap-safe two-phase reporting lines; DRAFT-then-CLOSED payroll runs |
+| 7 | seeded-e2e preflight "ledger does not match current 691-entry journal" over a database at head | another session's checkout flipped `0956_dashboard_read_path_indexes.sql` to CRLF after the chain hashed its LF bytes | bytes restored to the ledger's form; recorded in memory, no code change |
+
+Application defects the HTTP route capture surfaced, fixed with bite-proven unit tests (backend
+`1dba501a2`), plus the two the live BOLA sweep had found earlier (`50e973473`):
+
+| Route / worker | Failure | Root cause | Fix |
+|---|---|---|---|
+| worker `monthly-leave-reset` | SQLSTATE `42804` on every organisation, 82 of 82 samples | `UPDATE leave_balances … FROM (VALUES ($1,$2),…)` bound untyped, so Postgres inferred `text` against `numeric` | rows cast `::integer`/`::numeric` (`cron-leave.service.ts`) |
+| `POST /build/{projectId}/tickets` | 500, `23505 uniq_tickets_project_number` | `project_ticket_counters` behind `max(ticket_number)` after a bulk load; allocator trusted the counter | allocator self-heals from `GREATEST(counter, max+1)` under the existing lock |
+| `POST /timesheets/entries` | 500 | duplicate `(org, membership, date)` propagated as an unhandled `23505` | `ConflictException` (409) on `uniq_timesheets_work_log` |
+| `GET /hr/engagement/polls/{id}/results` | 500 `opts.map is not a function` | JSONB `options` read as an array without parsing | Zod `safeParse`, empty on mismatch |
+| `GET /hr/forms/{id}/submissions` · `POST …/submit` | 500 `formSchemaSnapshot.filter is not a function` | JSONB schema read as an array without parsing | Zod parse; a malformed stored schema now rejects a submission with 422 and masks every value for a non-sensitive viewer |
+
+## Captures
+
+### C143 — cache-hit latency and Redis outage
+
+Instrument: `pnpm -C backend measure:cache-hit` (`src/scripts/measure-cache-hit-latency.mjs`, self-test
+6/6). It signs an EdDSA probe token with the run's `AUTH_SIGNING_KEYS` for the seeded owner of the
+large tenant, warms each route, then records wall-clock per request over `n` samples at concurrency 1
+and 8 against the built API (`dist/main.js`, `NODE_ENV=production`, workers disabled). The three routes
+are the shell's cached reads: the access snapshot (`GET /me/access`, Redis under
+`(userId, permissionsVersion, isOrgOwner)`), `GET /organization` and `GET /billing/entitlements`.
+
+**Host condition during these runs: CPU at 100% from unrelated processes** (three `tsc` runs from
+other sessions and another project's jest suite). The concurrency-1 figures are the criterion's
+figures; the concurrency-8 rows are recorded as taken and are re-measured below once the host is quiet.
+
+Hit phase (`.artifacts/cache-hit-latency.json`, sha256 `411b34a3…fbc72d`), n=200 per row, warm-up 20:
+
+| Route | c | n | p50 ms | p95 ms | p99 ms | max ms | statuses |
+|---|---:|---:|---:|---:|---:|---:|---|
+| `/me/access` | 1 | 200 | 22.1 | **31.2** | 69.7 | 190.3 | `{"200":200}` |
+| `/me/access` | 8 | 200 | 163.6 | 533.4 | 555.2 | 864.6 | `{"200":200}` |
+| `/organization` | 1 | 200 | 23.9 | **33.3** | 41.7 | 53.4 | `{"200":200}` |
+| `/organization` | 8 | 200 | 239.8 | 589.5 | 778.6 | 780.5 | `{"200":200}` |
+| `/billing/entitlements` | 1 | 200 | 26.4 | **38.0** | 89.2 | 94.7 | `{"200":200}` |
+| `/billing/entitlements` | 8 | 200 | 218.8 | 396.9 | 581.0 | 582.9 | `{"200":200}` |
+
+Outage phase — the Upstash-REST shim process was killed (every Redis call fails with
+`ECONNREFUSED`), n=100 per row (`.artifacts/cache-outage-latency.json`, sha256 `1bf1fdad…765f226`):
+
+| Route | c | n | p50 ms | p95 ms | p99 ms | max ms | statuses |
+|---|---:|---:|---:|---:|---:|---:|---|
+| `/me/access` | 1 | 100 | 32.7 | 45.9 | 330.4 | 330.4 | `{"200":100}` |
+| `/me/access` | 8 | 100 | 272.0 | 488.3 | 489.7 | 489.7 | `{"200":100}` |
+| `/organization` | 1 | 100 | 43.1 | 58.5 | 277.5 | 277.5 | `{"200":100}` |
+| `/organization` | 8 | 100 | 423.2 | 737.9 | 774.7 | 774.7 | `{"200":100}` |
+| `/billing/entitlements` | 1 | 100 | 167.7 | 258.3 | 331.4 | 331.4 | `{"200":100}` |
+| `/billing/entitlements` | 8 | 100 | 425.9 | 625.1 | 630.0 | 630.0 | `{"200":100}` |
+
+Every request answered 200 with Redis unreachable; no request paid the 3,000 ms command timeout
+(worst single sample 774.7 ms under contention), and the API did not open more than one loader per
+key — the in-process single-flight plus the new circuit breaker (`CacheFiller`, opens after 5
+consecutive failures, probes every 5 s) are pinned by `src/common/cache/cache-prd-c143.spec.ts`
+(14 tests, including N concurrent callers → 1 loader and a bite-proof). This outage was a
+connection-refused outage; the slow-Redis (timeout) shape is covered by the unit tests, not by a live
+probe.
+
+Recovery phase — shim restarted, first probe 6 s later, n=100 (`.artifacts/cache-recovery-latency.json`,
+sha256 `813ddf0b…0a3f5`): `/me/access` p95 **27.8 ms**, `/organization` **30.7 ms`,
+`/billing/entitlements` **34.4 ms**, all 200 — the breaker closed on its next probe.
+
+Quiet-host re-measurement (02:08, host load 6%, backend rebuilt at `06462e062`, n=200 per row,
+`.artifacts/cache-hit-latency-quiet.json`):
+
+| Route | c | n | p50 ms | p95 ms | p99 ms | max ms | statuses |
+|---|---:|---:|---:|---:|---:|---:|---|
+| `/me/access` | 1 | 200 | 11.9 | **17.3** | 25.5 | 38.2 | `{"200":200}` |
+| `/me/access` | 8 | 200 | 44.7 | **60.3** | 160.7 | 162.3 | `{"200":200}` |
+| `/organization` | 1 | 200 | 12.9 | **18.1** | 29.1 | 35.5 | `{"200":200}` |
+| `/organization` | 8 | 200 | 58.2 | **75.0** | 82.7 | 83.9 | `{"200":200}` |
+| `/billing/entitlements` | 1 | 200 | 13.0 | **20.1** | 28.7 | 29.2 | `{"200":200}` |
+| `/billing/entitlements` | 8 | 200 | 48.6 | **63.8** | 68.8 | 74.2 | `{"200":200}` |
+
+Verdict on the criterion's own terms: cache-hit p95 is 17–20 ms at concurrency 1 and 60–75 ms at
+concurrency 8 against a 100 ms ceiling (`RESULT: PASS`; unmeasurable at 120 ms transit before);
+misses and an outage degrade to the loader with no non-2xx and no storm; invalidation is
+version-keyed and gate-checked (`check:cache-invalidation`, `check:cache-key-shapes` green), and
+the seeded corpus then caught the one authorization-bearing key that could outlive a revocation in
+the degraded path (`kb:acc-spaces:`, fixed in `7015c13a6`). The earlier concurrency-8 rows above
+were host-contention artefacts (the same routes, same code, 5–9× slower under 100% CPU).
+
+### C140 / C142 / C148 — benchmark manifest, statement ceilings, regression comparison
+
+Command (from `backend/`, HEAD `5006c67b5`, clean catalogs — `uncommittedAtCapture: []`):
+
+```
+APP_DATABASE_URL=postgresql://streamline_app:…@127.0.0.1:5432/scratch_local?sslmode=disable \
+DATABASE_URL=postgresql://neondb_owner@127.0.0.1:5432/scratch_local?sslmode=disable PGSSLMODE=disable \
+  node test/perf/measure-benchmark-manifest.mjs --samples=50 --replicates=3 --concurrency=8 --plans --write
+```
+
+Baseline `contracts/benchmark-manifest.json` (sha256 `4490013a…767d9`, 789,338 B, captured
+2026-09-05T19:11Z) and, on identical code, a fresh comparison capture
+`.artifacts/benchmark-manifest-local-fresh.json` (sha256 `823a7a27…7f9bd`) without `--plans`.
+Environment recorded in the manifest: `scratch_local` 962 MB, PostgreSQL 18.6, loopback TCP, role
+`streamline_app` (`bypassrls=false`, tenant GUC set inside a rolled-back transaction), AMD Ryzen 5
+5625U 12 threads, 32 GB, and the note that the box ran other agents concurrently.
+
+| Profile | Statement slots measured | Before (2026-09-04, Neon) |
+|---|---:|---:|
+| large (reference) | **75/75** read-cost · 105/105 with heavy plans | 58 |
+| mid | **73/75** | 3 |
+| small | **72/75** | 2 |
+| tiny | **61/75** | 0 |
+| total | **281/300 (93.7%)** | 63/300 (21.0%) |
+
+Plan signatures 75/75 on every profile; approved-complex plan text retained for 14 statements per
+profile in `test/perf/benchmark-plans/`. Every measured slot is inside its ceiling: on the reference
+tenant the worst ordinary statement p95 is **4.4 ms** (ceiling 50) and the worst approved-complex
+statement p95 is **2.4 ms** (ceiling 200); the per-module c1 p95 spans 1.1–7.9 ms (was 497–623 ms
+on Neon, which was the transaction floor). Error rate 0 across all 105 benchmarks.
+
+The 19 unmeasured slots, by name: 12 are CRM/Inventory (out of scope by PRD-C140's own text and
+recorded in `codeReleaseScope`: `crm/contacts-list`, `leads-active`, `leads-assigned-to-me`,
+`deals-pipeline`, `search-lead-party-sdf`, `search-deal-sdf`, `search-contact-party-sdf`,
+`search-client-party-sdf` on tiny; `inventory/inv-products-list`, `inv-stock-levels`,
+`inv-purchase-orders` on tiny; `inv-vendors-list` on small and tiny); 3 are
+`hr/employee-record-list-canonical` on mid/small/tiny (`minRows` 5,000 on `hr_employments` — a
+minority tenant with 5,000 employments would erase the skew the four-tenant seed exists to measure,
+so this is recorded as by-design unmeasurable on skewed tenants, not lowered); the remaining in-scope
+slot is `search/kb-page-id-probe-sdf`, vacuous on mid/small/tiny (fixture fix in progress).
+**No ceiling, floor, threshold, allowlist or denominator was changed.**
+
+Regression comparison (`node src/scripts/check-benchmark-manifest.mjs --against=.artifacts/benchmark-manifest-local-fresh.json`,
+277 benchmark×tenant pairs): db-calls 0 · downstream-calls 0 · buffers 0 (1 advisory) · rows 0 ·
+payload-size 0 · memory 0 regressions; latency 0 regressions with 260 advisories, all DISARMED
+because sub-millisecond statements swing 30–61% between replicates (0.27 → 0.30 ms). The arming rule
+is being made absolute-floor-aware (a move under `absFloorMs` = 1 ms is not a regression on a
+0.3 ms statement) and the comparison is re-run below.
+
+### C085 / C141 / C145 — route and worker budgets over HTTP
+
+Instrument: `test/perf/route-budget-http.seeded-e2e-spec.ts` through `test/helpers/run-seeded-e2e.ts
+scratch_local` (in-process Nest app on `APP_DATABASE_URL` as `streamline_app`, RLS live, journal
+head asserted 691/691, Redis off so every figure is the **cache-miss** ceiling, `--expose-gc` heap
+sampling, control probe with and without the token before and after every tenant, subject row-count
+hash before and after, 30 s deadline per send). Plan: `test/perf/route-budget-http-plan.ts` — 102
+budget entries (76 routes + 26 worker batches: every `GET /cron/<job>` plus `POST
+/cron/retention-delete-sweep`), 40 samples per read, 12 per write, 5 heap samples, on the reference
+tenant `…0001` and the minority tenant `…0002`. Four replicates were run back to back
+(`.artifacts/route-budget-http-local-{1,2,3,4}.json`, sha256 prefixes `9c069c1d…`, `b80153f2…`,
+`b09f76e4…`, `f6a68e05…`), each `93 measured / 9 refused / 0 failed of 102` on both tenants with the
+control probe HELD and the subject STABLE; `merge-http-measurement.mjs` folds them into
+`contracts/benchmark-manifest.json` `requestLevel` (186 of 204 unique route×tenant slots, n=3
+replicates) and `merge-http-route-budgets.mjs --write` fills `contracts/route-budgets.json`
+(sha256 `9ba688c5…dfe1ea`).
+
+| Dimension | Coverage | Result |
+|---|---:|---|
+| Latency p50/p95/p99 per route and worker | 93/102 entries; 26/26 workers | routes: median p95 **31.9 ms**, p90 50.8 ms; workers: median p95 28.8 ms, max 160.6 ms |
+| Request DB statements (`measuredRequestDbCalls`) | 93/102 | min 7 · median 12 · max 55 (`GET /calendar/events`) |
+| Downstream provider calls (foreground + after-commit accounted separately) | 93/102 | **0** on every measured entry |
+| Response bytes p50/p95/p99 | 93/102 | max 372,179 (`GET /calendar/events`), 160,258 (`GET /chat/channels`, minority) |
+| Memory p50/p95/p99 (heapUsed over a post-GC baseline) | 93/102 | max p95 55.6 MB |
+
+The critical set (shell paths + the 27 first-render operations of the 11 in-scope pages + the 58
+read-cost paths, CRM/Inventory excluded): 53 routes, **0 without a budget entry**, 2 unmeasured —
+the two realtime-token routes, declared unattemptable because the isolated process carries no
+Ably key (their database read path is measured at statement level). The 9 refusals per tenant are
+all declared: 6 mail routes are provider-backed (no connected mailbox exists in a seed), 2
+realtime-token routes, and `POST /timesheets/entries` (answered 409/400 — plan fix in progress).
+
+Against PRD-C141 (ordinary p95 ≤ 300 ms, approved complex ≤ 800 ms, application-controlled time
+only): **every measured ordinary route is under 100 ms p95** and one aggregate route breaches —
+`GET /calendar/events` at **989.7 ms** on the reference tenant (60,072 events in a two-month
+window, 55 statements: the range read issues per-item work). Against declared ceilings
+(`check:route-budgets`): one breach, `GET /chat/channels` 160,258 response bytes on the minority
+tenant against 131,072 (the channel list embeds per-channel collections). Both are real findings,
+both are owned and fixed below, and the routes are re-captured after the fix; nothing else exceeds
+a declared ceiling. The recorded 5,043 ms chat-send p95 from 2026-09-04 is gone:
+`POST /chat/channels/{channelId}/messages` now measures inside its 1,000 ms budget with 0
+foreground downstream calls.
+
+### C006 / C149 / C151 — production-build Web Vitals and payload budgets
+
+Stack: `next build` with `NEXT_PUBLIC_API_URL=http://localhost:1500` (`.env.production.local` would
+otherwise bake the deployed API into the bundle), `next start -p 1000`, build `9CLqL5fOFkidtMRbqd3Pq`,
+root HEAD `1693c93d`; backend `dist/main.js` on `:1500` against `scratch_local` and the shim; cookie
+minted by `scripts/mint-session-cookie.mjs` for the seeded owner `user-1@scratch-seed.test`.
+Driver `scripts/measure-web-vitals.mjs`, 11 in-scope routes × 6 repeats × desktop (1440×900, no
+throttling) and mobile (390×844, 4× CPU, ~1.6 Mbps/150 ms RTT); `--write-manifest` writes the
+over-the-wire byte fields into `contracts/route-bundle-manifest.json`.
+
+**Capture 1 (00:00) was refused by its own gate — correctly.** 64 samples landed on `/org-setup`
+and 26 rendered an unauthorised shell: the minted session token carried the seeded tenant's NULL
+`onboarding_completed_at`, and the wizard gate sent every route to setup until the token refreshed.
+Fixture defect #4 above; the tenant is now stamped by the seed and the cookie was re-minted.
+
+**Capture 2 (00:24–00:36, `.browser-driver-results.json`, 132 samples, 0 off-route, 0 unauthorised,
+0 hydration mismatches, provenance current).** p75 per route/profile (ms; CLS unitless):
+
+| Route | Profile | LCP p75 | INP p75 | CLS p75 | FCP p75 | TTFB p95 |
+|---|---|---:|---:|---:|---:|---:|
+| `/mail` | desktop | 948 | 64 | 0.002 | 193 | 57 |
+| `/mail` | mobile | 432 | **846** | 0.002 | 341 | 46 |
+| `/inbox` | desktop | 259 | 92 | 0.001 | 259 | 52 |
+| `/inbox` | mobile | 956 | **1044** | 0.000 | 494 | 47 |
+| `/build/inbox` | desktop | 232 | 72 | 0.014 | 232 | 68 |
+| `/build/inbox` | mobile | 567 | **1022** | 0.000 | 382 | 60 |
+| `/support/inbox` | desktop | 223 | 88 | 0.007 | 223 | 54 |
+| `/support/inbox` | mobile | 1316 | **798** | 0.000 | 576 | 61 |
+| `/dashboard` | desktop | 1370 | 102 | 0.003 | 217 | 65 |
+| `/dashboard` | mobile | 929 | **620** | 0.000 | 577 | 65 |
+| `/chat` | desktop | 218 | 134 | 0.001 | 218 | 54 |
+| `/chat` | mobile | 997 | **486** | 0.000 | 614 | 47 |
+| `/calendar` | desktop | **1585** | 134 | 0.002 | 252 | 340 |
+| `/calendar` | mobile | **4458** | **892** | 0.002 | 369 | 48 |
+| `/notifications` | desktop | 243 | 112 | 0.001 | 243 | 60 |
+| `/notifications` | mobile | 1057 | **1028** | 0.000 | 508 | 53 |
+| `/settings` | desktop | 1169 | 78 | 0.002 | 211 | 57 |
+| `/settings` | mobile | 804 | **670** | 0.007 | 428 | 57 |
+| `/build/my-work` | desktop | 266 | 200 | 0.001 | 266 | 78 |
+| `/build/my-work` | mobile | 1107 | **1022** | 0.001 | 911 | 66 |
+| `/parties` | desktop | **1556** | 80 | 0.050 | 278 | 53 |
+| `/parties` | mobile | 811 | **1262** | 0.000 | 517 | 52 |
+
+Budgets: desktop LCP ≤ 1500 · mobile LCP ≤ 2500 · INP ≤ 200 · CLS ≤ 0.1 · desktop FCP ≤ 1200 /
+mobile ≤ 1800 · TTFB p95 desktop ≤ 400 / mobile ≤ 600. **Bold = breach.** What moved since the
+2026-09-04 capture: TTFB, previously p50 503 ms and the dominant term of every metric, is now
+46–78 ms p95 on ten routes and 340 ms on `/calendar` — the access-snapshot cache plus a co-located
+database removed it as a factor; CLS and TTFB pass everywhere; desktop LCP passes on 9 of 11 routes.
+What remains is real frontend work, not transit: **mobile INP breaches on all 11 routes** (the
+driver's probe click on the shell's first interactive element costs 486–1262 ms at 4× CPU), desktop
+LCP on `/calendar` (1585) and `/parties` (1556), and mobile LCP on `/calendar` (4458 — the
+big-calendar chunk now mounts after the load event, so the grid, which is the LCP element, paints
+late). The gate additionally refused this capture because 2 of 6 mobile `/build/my-work` samples hit
+the 6 s settle cap (the DOM never went quiet), which it treats as a CLS floor. Both are assigned
+(shell interaction; calendar/parties/my-work) and the capture is repeated after those changes.
+
+Over-the-wire bytes before the load event (`measuredScriptBytes` ceiling 524,288; bytes):
+
+| Route | script | css | font | image | third-party | document | total |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `/mail` | 508,459 | 58,718 | 55,580 | 3,076 | 0 | 20,838 | 649,163 |
+| `/inbox` | 486,277 | 58,718 | 55,580 | 3,076 | 0 | 20,606 | 626,749 |
+| `/build/inbox` | 490,418 | 58,718 | 55,580 | 6,488 | 0 | 21,127 | 634,823 |
+| `/support/inbox` | 503,832 | 58,718 | 55,580 | 6,976 | 0 | 24,341 | 651,939 |
+| `/dashboard` | 496,819 | 58,718 | 55,580 | 3,076 | 0 | 20,869 | 637,554 |
+| `/chat` | **545,598** | 58,718 | 55,580 | 10,694 | 0 | 21,976 | 695,058 |
+| `/calendar` | **542,498** | 58,718 | 55,580 | 3,076 | 0 | 21,814 | 684,178 |
+| `/notifications` | 500,648 | 58,718 | 55,580 | 3,076 | 0 | 21,983 | 642,497 |
+| `/settings` | 477,793 | 58,718 | 55,580 | 3,076 | 0 | 22,499 | 620,158 |
+| `/build/my-work` | **535,278** | 58,718 | 55,580 | 3,076 | 0 | 23,236 | 678,380 |
+| `/parties` | 513,519 | 58,718 | 55,580 | 3,076 | 0 | 23,179 | 656,564 |
+
+Against the 2026-09-04 figures (`/notifications` 834,045, `/build/inbox` 818,251, `/inbox` 807,371,
+`/settings` 795,865, `/calendar` 779,636, `/dashboard` 684,705, `/build/my-work` 657,248, `/chat`
+627,049) eight in-scope breaches became three, by 10,990–21,310 bytes, after deferring the
+notification bell, the big-calendar chunk and the analytics tags past the load event (root
+`6816b6b91`). `check:route-bundle-budget` at this capture: 5 breaches, 2 of them the out-of-scope
+CRM routes. No ceiling was changed.
+
+### C018 — seeded E2E corpus and live cross-tenant BOLA sweep on the disposable local database
+
+The disposable database here is `scratch_local` itself: name contains `scratch` (every seed and
+harness guard keys on that), built from empty by `apply-chain-cold.mjs`, app-role grants verified,
+placement and onboarding stamped by the seeds, three seed layers, and two fixture organisations for
+the sweep (`…0001` source, `…0002` prober). Runner: `test/helpers/run-seeded-e2e.ts scratch_local
+<30 explicit in-scope spec files>` (CRM's three specs excluded by the criterion; the runner refuses
+them by path), which pins `DATABASE_URL`/`APP_DATABASE_URL` to the scratch server, strips every
+provider key, disables every background worker and asserts the ledger equals the journal before
+booting anything.
+
+**First full run (01:28–01:47, backend `8f8d17121`, journal 691):** 26 suites passed, 2 failed,
+2 skipped (both by design: `t15-own-tenant-500` is opt-in, and `bola-live-cross-tenant` runs in its
+own lane), 156 tests passed / 1 failed / 11 skipped. The two failures were worth the run:
+
+1. `kb/kb-acl-purge-reindex` — *"stops citing a space's article the moment the asker is removed"*
+   still cited the article. Root cause: with Redis absent (the isolated process strips it), every
+   cache fill is degraded and `CacheFiller.retainOrRelease` keeps a settled degraded promise for one
+   second unless the key is authorization-scoped; `kb:acc-spaces:` carried no such marker and
+   `invalidateNamespace` is a no-op without Redis, so the removed member's space list was served from
+   the memo. Fixed in `7015c13a6` (key marked authorization-scoped; revocation test bites); the spec
+   then passed 3/3 standalone.
+2. `perf/route-budget-http` — "Jest worker encountered 4 child process exceptions" inside the
+   30-suite in-band run, while the same spec had just completed four standalone replicates with 0
+   failed routes; it is a 12-minute measurement instrument rather than a domain suite and is
+   recorded from its standalone runs.
+
+The BOLA sweep queued after that run refused its preflight — *"ledger does not match current
+695-entry journal"* — because a concurrent session journaled three AR-02 accounting migrations
+(`5f4dc134d`) and this pass added `1068_c142_hr_leave_ledger_dedup_index` while the local database
+stood at 691; the chain was resumed to 695/695 and the corpus and sweep are re-run at the final
+commit below.

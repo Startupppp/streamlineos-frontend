@@ -27,7 +27,7 @@ export function isLocalUrl(url: string): boolean {
  * `/storage/download` validates `url` as a URL, so an object key has to travel
  * in `key`. Sending a key as `url` is a 400, not a lookup miss.
  */
-function storageReferenceParams(reference: string): { url: string } | { key: string } {
+export function storageReferenceParams(reference: string): { url: string } | { key: string } {
   return /^https?:\/\//i.test(reference) ? { url: reference } : { key: reference };
 }
 

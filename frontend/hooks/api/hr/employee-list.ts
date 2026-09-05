@@ -140,10 +140,6 @@ export function useInfiniteHrEmployees(
   });
 }
 
-/**
- * Convenience for employee pickers (selects, assign dialogs).
- * Fetches a large page and always returns a flat Employee[].
- */
 export function useHrEmployeeOptions(
   params?: Omit<HrEmployeesParams, "cursor"> & { enabled?: boolean },
 ) {
