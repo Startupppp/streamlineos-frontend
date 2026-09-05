@@ -6,24 +6,23 @@ import { useForm } from "react-hook-form";
 import { useSession } from "next-auth/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
+import { clearBackendTokenCache } from "@/lib/api-client";
 import {
   signInWithMagicToken,
   useAcceptInvitation,
   useDeclineInvitation,
+  useValidateInvitation,
 } from "@/hooks/common/auth-hooks";
 import { motion } from "framer-motion";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { ArrowRight } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import {
   InvitationCard,
   InvitationHero,
@@ -56,29 +55,18 @@ export default function InvitationPage() {
 
   const [declineOpen, setDeclineOpen] = useState(false);
 
-  const goToSignIn = useCallback(() => router.push("/signin"), [router]);
-
   const {
     data: invitation,
     error: invitationError,
     isPending: isValidating,
-  } = useQuery({
-    queryKey: platformCoreQueryKeys.invitation.token(token ?? ""),
-    queryFn: ({ signal }) =>
-      apiClient.get<{
-        email: string;
-        organizationName: string;
-        role: string;
-        userExists: boolean;
-      }>("/organization/invitations/validate", { token }, signal),
-    enabled: !!token,
-    retry: false,
-  });
+  } = useValidateInvitation(token);
 
   const acceptInvitation = useAcceptInvitation();
   const declineInvitation = useDeclineInvitation();
 
   const openDecline = useCallback(() => setDeclineOpen(true), []);
+
+  const goToSignIn = useCallback(() => router.push("/signin"), [router]);
 
   const confirmDecline = useCallback(() => {
     if (!token) return;
@@ -96,7 +84,6 @@ export default function InvitationPage() {
       },
     );
   }, [token, declineInvitation, router]);
-
 
   const autoLoginWithToken = useCallback(
     async (autoLoginToken: string): Promise<void> => {
@@ -253,7 +240,9 @@ export default function InvitationPage() {
                   variant="ghost"
                   className="h-10 w-full text-muted-foreground hover:text-foreground"
                   onClick={openDecline}
-                  disabled={acceptInvitation.isPending || declineInvitation.isPending}
+                  disabled={
+                    acceptInvitation.isPending || declineInvitation.isPending
+                  }
                 >
                   Decline invitation
                 </Button>
@@ -350,7 +339,9 @@ export default function InvitationPage() {
                   variant="ghost"
                   className="h-10 w-full text-muted-foreground hover:text-foreground"
                   onClick={openDecline}
-                  disabled={acceptInvitation.isPending || declineInvitation.isPending}
+                  disabled={
+                    acceptInvitation.isPending || declineInvitation.isPending
+                  }
                 >
                   Decline invitation
                 </Button>

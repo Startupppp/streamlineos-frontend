@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { UseMutationOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
@@ -52,6 +53,51 @@ export function useLoginHistory(params?: { page?: number; limit?: number; succes
       }, signal),
     staleTime: 30_000,
     placeholderData: (prev) => prev,
+  });
+}
+
+export interface RequestOtpResult {
+  message: string;
+}
+
+export function useRequestOtp(
+  options?: Omit<UseMutationOptions<RequestOtpResult, Error, string>, "mutationKey" | "mutationFn">,
+) {
+  return useMutation<RequestOtpResult, Error, string>({
+    mutationKey: ["auth", "request-otp"],
+    mutationFn: (email: string) =>
+      apiClient.post<RequestOtpResult>("/auth/email-otp", { email }),
+    ...options,
+  });
+}
+
+export interface VerifyOtpResult {
+  autoLoginToken: string;
+}
+
+export function useVerifyOtp(
+  options?: Omit<UseMutationOptions<VerifyOtpResult, Error, { email: string; code: string }>, "mutationKey" | "mutationFn">,
+) {
+  return useMutation<VerifyOtpResult, Error, { email: string; code: string }>({
+    mutationKey: ["auth", "verify-otp"],
+    mutationFn: (variables: { email: string; code: string }) =>
+      apiClient.post<VerifyOtpResult>("/auth/email-otp/verify", variables),
+    ...options,
+  });
+}
+
+export interface SendMagicLinkResult {
+  message: string;
+}
+
+export function useSendMagicLink(
+  options?: Omit<UseMutationOptions<SendMagicLinkResult, Error, string>, "mutationKey" | "mutationFn">,
+) {
+  return useMutation<SendMagicLinkResult, Error, string>({
+    mutationKey: ["auth", "magic-link"],
+    mutationFn: (email: string) =>
+      apiClient.post<SendMagicLinkResult>("/auth/magic-link", { email }),
+    ...options,
   });
 }
 

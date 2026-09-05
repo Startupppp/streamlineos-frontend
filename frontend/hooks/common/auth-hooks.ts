@@ -75,6 +75,24 @@ export function useVerifyEmail() {
   });
 }
 
+export interface InvitationValidation {
+  email: string;
+  organizationName: string;
+  role: string;
+  userExists: boolean;
+}
+
+export function useValidateInvitation(token: string) {
+  return useQuery<InvitationValidation>({
+    queryKey: platformCoreQueryKeys.invitation.token(token),
+    queryFn: ({ signal }) =>
+      apiClient.get("/organization/invitations/validate", { token }, signal),
+    staleTime: 60_000,
+    enabled: !!token,
+    retry: false,
+  });
+}
+
 export function useAcceptInvitation() {
   return useMutation({
     mutationKey: ["auth", "accept-invitation"],
@@ -144,6 +162,30 @@ export function useGetOrganizations(enabled = true) {
     placeholderData: keepPreviousData,
     refetchOnMount: "always",
     refetchOnWindowFocus: "always",
+  });
+}
+
+export function useGoogleSignIn(getCallbackUrl: () => string) {
+  return useMutation({
+    mutationKey: ["auth", "sign-in", "google"],
+    mutationFn: async () => {
+      await signIn("google", { callbackUrl: getCallbackUrl() });
+    },
+    onError: () => {
+      toast.error("Google sign-in failed. Please try again.");
+    },
+  });
+}
+
+export function useMicrosoftSignIn(getCallbackUrl: () => string) {
+  return useMutation({
+    mutationKey: ["auth", "sign-in", "microsoft"],
+    mutationFn: async () => {
+      await signIn("microsoft-entra-id", { callbackUrl: getCallbackUrl() });
+    },
+    onError: () => {
+      toast.error("Microsoft sign-in failed. Please try again.");
+    },
   });
 }
 

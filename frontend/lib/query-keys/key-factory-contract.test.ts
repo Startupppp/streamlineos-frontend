@@ -181,12 +181,12 @@ describe("no call site in the app under-supplies a key factory", () => {
     const sites: CallSite[] = [];
     for (const file of walk(FE_ROOT)) {
       const text = readFileSync(file, "utf8");
-      if (!text.includes("queryKeys.")) continue;
+      if (!text.includes("queryKeys.") && !text.includes("QueryKeys.")) continue;
       const src = ts.createSourceFile(file, text, ts.ScriptTarget.ESNext, true);
       const visit = (node: ts.Node): void => {
         if (ts.isCallExpression(node)) {
           const callee = node.expression.getText(src);
-          const match = /^queryKeys\.((?:[A-Za-z0-9_]+\.)*[A-Za-z0-9_]+)$/.exec(callee);
+          const match = /^(?:queryKeys|[A-Za-z][A-Za-z0-9]*QueryKeys)\.((?:[A-Za-z0-9_]+\.)*[A-Za-z0-9_]+)$/.exec(callee);
           const shape = match ? factories.get(match[1]) : undefined;
           const spread = node.arguments.some((a) => ts.isSpreadElement(a));
           if (shape && !spread && node.arguments.length < shape.params.length) {

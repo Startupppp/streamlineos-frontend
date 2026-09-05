@@ -4,15 +4,14 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp";
-import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { signInWithMagicToken } from "@/hooks/common/auth-hooks";
+import { useRequestOtp, useVerifyOtp, useSendMagicLink } from "@/hooks/api/auth";
 import { cn } from "@/lib/utils";
 
 const emailSchema = z.object({
@@ -60,9 +59,7 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
     }, 1000);
   }, []);
 
-  const requestOtpMutation = useMutation({
-    mutationFn: (email: string) =>
-      apiClient.post<{ message: string }>("/auth/email-otp", { email }),
+  const requestOtpMutation = useRequestOtp({
     onSuccess: (data, email) => {
       setSubmittedEmail(email);
       setStage("code");
@@ -76,9 +73,7 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
     },
   });
 
-  const verifyOtpMutation = useMutation({
-    mutationFn: (variables: { email: string; code: string }) =>
-      apiClient.post<{ autoLoginToken: string }>("/auth/email-otp/verify", variables),
+  const verifyOtpMutation = useVerifyOtp({
     onSuccess: async (data) => {
       const signedIn = await signInWithMagicToken(data.autoLoginToken);
       if (signedIn) {
@@ -94,9 +89,7 @@ export function PasswordlessSigninForm({ getCallbackUrl }: PasswordlessSigninFor
     },
   });
 
-  const magicLinkMutation = useMutation({
-    mutationFn: (email: string) =>
-      apiClient.post<{ message: string }>("/auth/magic-link", { email }),
+  const magicLinkMutation = useSendMagicLink({
     onSuccess: (data) => {
       setMagicLinkSent(true);
       toast.success(getErrorMessage(data));
