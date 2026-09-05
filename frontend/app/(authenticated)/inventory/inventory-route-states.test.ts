@@ -89,6 +89,57 @@ function ownsACollection(routeRel: string): boolean {
  */
 const IN_FLIGHT_ELSEWHERE = new Set<string>([]);
 
+/**
+ * Segments that must own an `error.tsx` of their own.
+ *
+ * The `error` marker above is satisfied by an in-component `ErrorState` or
+ * `isError` branch, which answers a *fetch* failure. A render throw is a
+ * different failure with a different mechanism: React unwinds to the nearest
+ * segment boundary, and if inventory owns none the unwind reaches
+ * `app/(authenticated)/error.tsx` and replaces the module with a generic page.
+ * The operator keeps the nav rail and loses everything else — including any
+ * sense of which screen failed. So the boundary is required, not inferred.
+ *
+ * Two entries, not eighty-two. Next.js resolves the nearest ancestor, so the
+ * module root covers the tree; a per-route boundary only earns its place where
+ * the recovery genuinely differs. RF is that place: it is a 375px handheld
+ * surface, and recovering it through the desktop `PageWrapper` shell is the
+ * exact regression `rf-surface.test.ts` exists to prevent.
+ */
+const OWN_ERROR_BOUNDARY: ReadonlyArray<{ route: string; reason: string }> = [
+  {
+    route: "inventory",
+    reason: "The module boundary. Without it a render throw anywhere under /inventory replaces the whole authenticated shell.",
+  },
+  {
+    route: "inventory/rf",
+    reason: "A handheld cannot recover through a desktop page shell; RF keeps its own one-column, one-action surface.",
+  },
+];
+
+/** The `(authenticated)` slash-path for a discovered route directory. */
+function routePath(routeDir: string): string {
+  return relative(join(FRONTEND_ROOT, "app", "(authenticated)"), routeDir).replace(/\\/g, "/");
+}
+
+/**
+ * The segment boundary a render throw in `routeDir` would actually unwind to.
+ *
+ * Walks the segment chain the way Next.js does and stops at the inventory root:
+ * a route whose nearest boundary lives *above* inventory is exactly the defect
+ * — it resolves, but to somebody else's error page.
+ */
+function nearestErrorBoundary(routeDir: string): string | null {
+  let dir = routeDir;
+  for (;;) {
+    if (existsSync(join(dir, "error.tsx"))) return dir;
+    if (dir === ROUTES_DIR) return null;
+    const parent = dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
+  }
+}
+
 function routeDirs(dir: string, acc: string[] = []): string[] {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     if (!entry.isDirectory()) continue;
@@ -247,6 +298,43 @@ describe("G8 — inventory routes answer all five states", () => {
     }
 
     expect(offenders).toEqual([]);
+  });
+
+  it("gives every inventory route a segment error.tsx inside inventory", () => {
+    // The guard on the guard, restated here: a walk that finds nothing reports
+    // zero uncovered routes, which reads exactly like full coverage.
+    expect(routes.length).toBeGreaterThan(40);
+
+    const uncovered = routes
+      .filter((routeDir) => nearestErrorBoundary(routeDir) === null)
+      .map(routePath);
+
+    expect(uncovered).toEqual([]);
+  });
+
+  it("keeps each named segment owning its own boundary", () => {
+    const missing = OWN_ERROR_BOUNDARY.filter(
+      ({ route }) =>
+        !existsSync(join(FRONTEND_ROOT, "app", "(authenticated)", route, "error.tsx")),
+    ).map(({ route, reason }) => `${route} — ${reason}`);
+
+    expect(missing).toEqual([]);
+  });
+
+  it("recovers the RF surface through the RF boundary, not the desktop one", () => {
+    // Deleting `rf/error.tsx` still leaves every RF route *covered* — by the
+    // module boundary, which renders a PageWrapper. That is a silent downgrade
+    // to a desktop shell on a scanner, so it is asserted separately from
+    // coverage rather than folded into it.
+    const rfRoot = join(ROUTES_DIR, "rf");
+    const rfRoutes = routes.filter((routeDir) => routeDir.startsWith(rfRoot));
+    expect(rfRoutes.length).toBeGreaterThan(0);
+
+    const escaped = rfRoutes
+      .filter((routeDir) => nearestErrorBoundary(routeDir) !== rfRoot)
+      .map(routePath);
+
+    expect(escaped).toEqual([]);
   });
 
   it("never lets denied collapse into empty on a route that gates a query", () => {
