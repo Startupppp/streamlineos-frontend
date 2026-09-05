@@ -143,9 +143,9 @@ const cases = [
     mutate: (root) => {
       swap(
         root,
-        join(REL_ISSUES, "03-migration-baseline-catalog-parity.md"),
-        "- [ ] **PRD-C053**",
-        "- [x] **PRD-C053**",
+        join(REL_ISSUES, "31-one-commit-code-release.md"),
+        "- [ ] **PRD-C018**",
+        "- [x] **PRD-C018**",
       );
     },
     expect: "STATE DIVERGENCE",
