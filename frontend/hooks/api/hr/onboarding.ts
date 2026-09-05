@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
@@ -159,4 +159,54 @@ export function useCreateHrOnboardingTemplate() {
   });
 }
 
+export interface OnboardingChecklistDoc {
+  id: number;
+  documentTypeId: number;
+  documentTypeName: string;
+  isMandatory: boolean;
+  hasFile: boolean;
+  fileName: string;
+  fileSize: number | null;
+  status: "PENDING" | "SUBMITTED" | "APPROVED" | "REJECTED" | "RE_UPLOAD_REQUESTED";
+  reviewedAt: string | null;
+  reviewerName: string | null;
+  remarks: string | null;
+  version: number | null;
+}
 
+interface OnboardingChecklistDocsResponse {
+  data: OnboardingChecklistDoc[];
+  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
+}
+
+export function useMyOnboardingDocList() {
+  const canViewOwnDocs = useCan("self:onboarding-docs");
+  return useQuery<OnboardingChecklistDoc[]>({
+    queryKey: humanResourcesQueryKeys.hr.myOnboardingDocs(),
+    queryFn: async ({ signal }) => {
+      const res = await apiClient.get<OnboardingChecklistDocsResponse>(
+        "/hr/onboarding-docs/me",
+        { limit: 100 },
+        signal,
+      );
+      return res.data;
+    },
+    staleTime: 60_000,
+    enabled: canViewOwnDocs,
+  });
+}
+
+export function useSubmitOnboardingDoc() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr", "onboarding-doc", "submit"],
+    mutationFn: (body: {
+      documentTypeId: number;
+      fileUrl: string;
+      fileName: string;
+    }) => apiClient.post("/hr/onboarding-docs/me", body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.myOnboardingDocs() });
+    },
+  });
+}

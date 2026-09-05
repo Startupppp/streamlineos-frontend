@@ -1,0 +1,123 @@
+"use client";
+
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import type { UseMutationOptions, UseQueryOptions } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
+import { apiClient } from "@/lib/api-client";
+import { useCan } from "@/hooks/api/access";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+
+export interface EmailTemplate {
+  id: number;
+  name: string;
+  subject: string;
+  body: string;
+  category: string | null;
+  variables: string[] | null;
+  createdAt: string | null;
+}
+
+export interface AiGenerateResult {
+  subject: string;
+  body: string;
+}
+
+export interface CreateEmailTemplateInput {
+  name: string;
+  subject: string;
+  body: string;
+  category?: string;
+}
+
+export interface UpdateEmailTemplateInput {
+  id: number;
+  name: string;
+  subject: string;
+  body: string;
+  category?: string;
+}
+
+export interface GenerateAiEmailTemplateInput {
+  name: string;
+  subject?: string;
+  category?: string;
+}
+
+export function useEmailTemplates(
+  options?: Omit<UseQueryOptions<EmailTemplate[], Error>, "queryKey" | "queryFn">,
+) {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+  const canManage = useCan("hr:email-templates:manage");
+  return useQuery<EmailTemplate[], Error>({
+    queryKey: humanResourcesQueryKeys.hr.emailTemplatesList(),
+    queryFn: ({ signal }) =>
+      apiClient.get<EmailTemplate[]>("/hr/email-templates", undefined, signal),
+    staleTime: 60_000,
+    ...options,
+    enabled: canManage && !!orgId && (options?.enabled ?? true),
+  });
+}
+
+export function useCreateEmailTemplate(
+  options?: UseMutationOptions<EmailTemplate, Error, CreateEmailTemplateInput>,
+) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr", "email-templates", "create"],
+    mutationFn: (data: CreateEmailTemplateInput) =>
+      apiClient.post<EmailTemplate>("/hr/email-templates", data),
+    ...options,
+    onSuccess: (data, variables, context) => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.emailTemplatesList() });
+      options?.onSuccess?.(data, variables, context);
+    },
+  });
+}
+
+export function useUpdateEmailTemplate(
+  options?: UseMutationOptions<EmailTemplate, Error, UpdateEmailTemplateInput>,
+) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr", "email-templates", "update"],
+    mutationFn: ({ id, ...data }: UpdateEmailTemplateInput) =>
+      apiClient.patch<EmailTemplate>(`/hr/email-templates/${id}`, data),
+    ...options,
+    onSuccess: (data, variables, context) => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.emailTemplatesList() });
+      options?.onSuccess?.(data, variables, context);
+    },
+  });
+}
+
+export function useDeleteEmailTemplate(
+  options?: UseMutationOptions<{ success: boolean }, Error, number>,
+) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr", "email-templates", "delete"],
+    mutationFn: (id: number) =>
+      apiClient.delete<{ success: boolean }>(`/hr/email-templates/${id}`),
+    ...options,
+    onSuccess: (data, variables, context) => {
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.emailTemplatesList() });
+      options?.onSuccess?.(data, variables, context);
+    },
+  });
+}
+
+export function useGenerateAiEmailTemplate(
+  options?: UseMutationOptions<AiGenerateResult, Error, GenerateAiEmailTemplateInput>,
+) {
+  return useMutation({
+    mutationKey: ["hr", "email-templates", "generate-ai"],
+    mutationFn: (data: GenerateAiEmailTemplateInput) =>
+      apiClient.post<AiGenerateResult>("/hr/email-templates/generate-ai", data),
+    ...options,
+  });
+}

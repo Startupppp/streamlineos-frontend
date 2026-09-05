@@ -284,6 +284,10 @@ export const buildWorkQueryKeys = {
         ? ([...base, "projects", "workspaceMembers", "list"] as const)
         : ([...base, "projects", "workspaceMembers", "list", params] as const),
     },
+    publicForms: {
+      token: (token: string) =>
+        [...base, "projects", "public-form", token] as const,
+    },
   },
 
 } as const;

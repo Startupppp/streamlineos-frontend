@@ -4,7 +4,6 @@ import { useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +17,7 @@ import {
   intakeFormSchema,
   type IntakeFormValues,
 } from "@/features/build/intake/public-intake-schema";
-import { submitIntake } from "@/features/build/intake/public-intake-api";
+import { useSubmitIntake } from "@/hooks/api/build/public-intake";
 
 const PRIORITY_OPTIONS = [
   { value: "low", label: "Low" },
@@ -48,16 +47,12 @@ export default function PublicIntakePage() {
     resolver: zodResolver(intakeFormSchema),
   });
 
-  const mutation = useMutation({
-    mutationFn: (values: IntakeFormValues) => {
-      const output = intakeFormSchema.parse(values);
-      return submitIntake(projectId, output);
-    },
-  });
+  const mutation = useSubmitIntake(projectId);
 
   const onSubmit = useCallback(
     (values: IntakeFormValues) => {
-      mutation.mutate(values);
+      const output = intakeFormSchema.parse(values);
+      mutation.mutate(output);
     },
     [mutation],
   );

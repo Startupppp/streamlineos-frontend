@@ -4,7 +4,6 @@ import { useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,15 +13,11 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Loader2, CheckCircle2, Send } from "lucide-react";
-import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import {
   type FormField,
   buildDynamicSchema,
 } from "@/features/build/forms/form-submission-schema";
-import {
-  fetchPublicForm,
-  submitPublicForm,
-} from "@/features/build/forms/public-form-api";
+import { usePublicForm, useSubmitPublicForm } from "@/hooks/api/build/public-form";
 
 function FieldInput({
   field,
@@ -130,12 +125,7 @@ export default function PublicFormPage() {
   const params = useParams<{ token: string }>();
   const token = params.token;
 
-  const formQuery = useQuery({
-    queryKey: humanResourcesQueryKeys.hr.hrPublicForm(token),
-    queryFn: () => fetchPublicForm(token),
-    retry: false,
-    staleTime: 60_000,
-  });
+  const formQuery = usePublicForm(token);
 
   const fields = useMemo(() => formQuery.data?.fields ?? [], [formQuery.data]);
 
@@ -154,27 +144,22 @@ export default function PublicFormPage() {
     defaultValues,
   });
 
-  const mutation = useMutation({
-    mutationFn: (values: Record<string, string>) => {
-      const formDef = formQuery.data;
-      if (!formDef) throw new Error("Form not loaded");
-      const payload: Record<string, string> = {};
-      for (const field of formDef.fields) {
-        const val = values[field.key];
-        if (val !== undefined) payload[field.key] = val;
-      }
-      return submitPublicForm(token, payload);
-    },
-  });
+  const mutation = useSubmitPublicForm(token);
+
+  const form = formQuery.data;
 
   const onSubmit = useCallback(
     (values: Record<string, string>) => {
-      mutation.mutate(values);
+      if (!form) return;
+      const payload: Record<string, string> = {};
+      for (const field of form.fields) {
+        const val = values[field.key];
+        if (val !== undefined) payload[field.key] = val;
+      }
+      mutation.mutate(payload);
     },
-    [mutation],
+    [mutation, form],
   );
-
-  const form = formQuery.data;
 
   return (
     <main className="min-h-dvh surface-soft flex items-start justify-center pt-8 sm:pt-12 px-4">

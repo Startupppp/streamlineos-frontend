@@ -1,12 +1,19 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
-import { apiClient } from "@/lib/api-client";
-import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useHrDepartments } from "@/hooks/api/hr";
 import { useRouter } from "next/navigation";
+import {
+  useHeadcountRequests,
+  useCreateHeadcountRequest,
+  useUpdateHeadcountRequest,
+  useRejectHeadcountRequest,
+  useApproveHeadcountRequest,
+  useCreateHeadcountJob,
+  type HeadcountRequest,
+  type HeadcountStatus,
+} from "@/hooks/api/hr/headcount";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyTeamIllustration } from "@/components/illustrations";
@@ -36,28 +43,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ErrorState } from "@/components/shared/error-state";
 
-type HeadcountStatus = "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED" | "JOB_CREATED";
-
-interface HeadcountRequest {
-  id: number;
-  orgId: string;
-  departmentId: number | null;
-  requestedBy: string;
-  requestedRole: string;
-  level: string | null;
-  justification: string | null;
-  targetDate: string | null;
-  status: HeadcountStatus;
-  approvedBy: string | null;
-  approvedAt: string | null;
-  rejectedReason: string | null;
-  linkedJobPostingId: number | null;
-  createdAt: string;
-  departmentName: string | null;
-  requesterName: string | null;
-  requesterEmail: string | null;
-}
-
 type BadgeVariant = "default" | "secondary" | "outline" | "destructive";
 
 const STATUS_COLORS: Record<HeadcountStatus, BadgeVariant> = {
@@ -78,7 +63,6 @@ interface RequestSheetProps {
 }
 
 function RequestSheet({ initial, onClose }: RequestSheetProps) {
-  const qc = useQueryClient();
   const { data: departments } = useHrDepartments();
   const [role, setRole] = useState(initial?.requestedRole ?? "");
   const [level, setLevel] = useState(initial?.level ?? "");
@@ -86,25 +70,13 @@ function RequestSheet({ initial, onClose }: RequestSheetProps) {
   const [justification, setJustification] = useState(initial?.justification ?? "");
   const [targetDate, setTargetDate] = useState(initial?.targetDate ?? "");
 
-  const create = useMutation({
-    mutationFn: (data: Record<string, unknown>) =>
-      apiClient.post("/hr/recruitment/headcount", data),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.headcountRequests() });
-      toast.success("Request created");
-      onClose();
-    },
+  const create = useCreateHeadcountRequest({
+    onSuccess: () => { toast.success("Request created"); onClose(); },
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 
-  const update = useMutation({
-    mutationFn: (data: Record<string, unknown>) =>
-      apiClient.patch(`/hr/recruitment/headcount/${initial?.id}`, data),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.headcountRequests() });
-      toast.success("Request updated");
-      onClose();
-    },
+  const update = useUpdateHeadcountRequest({
+    onSuccess: () => { toast.success("Request updated"); onClose(); },
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 
@@ -118,7 +90,7 @@ function RequestSheet({ initial, onClose }: RequestSheetProps) {
       targetDate: targetDate || undefined,
       status,
     };
-    if (initial) update.mutate(payload);
+    if (initial) update.mutate({ id: initial.id, ...payload });
     else create.mutate(payload);
   }, [role, level, deptId, justification, targetDate, initial, create, update]);
 
@@ -199,21 +171,15 @@ interface RejectDialogProps {
 }
 
 function RejectDialog({ requestId, onClose }: RejectDialogProps) {
-  const qc = useQueryClient();
   const [reason, setReason] = useState("");
-  const reject = useMutation({
-    mutationFn: () => apiClient.post(`/hr/recruitment/headcount/${requestId}/reject`, { reason }),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.headcountRequests() });
-      toast.success("Request rejected");
-      onClose();
-    },
+  const reject = useRejectHeadcountRequest({
+    onSuccess: () => { toast.success("Request rejected"); onClose(); },
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 
   function handleReasonChange(e: React.ChangeEvent<HTMLTextAreaElement>) { setReason(e.target.value); }
   function handleDialogOpenChange(v: boolean) { if (!v) onClose(); }
-  function handleRejectClick() { reject.mutate(); }
+  function handleRejectClick() { reject.mutate({ id: requestId, reason }); }
 
   return (
     <AlertDialog open onOpenChange={handleDialogOpenChange}>
@@ -314,35 +280,21 @@ function RequestCard({
 
 export function HeadcountPage() {
   const router = useRouter();
-  const qc = useQueryClient();
   const isHr = useCan("hr:employees:manage");
 
-  const canViewHeadcount = useCan("hr:employees:view");
-
-  const { data: requests = [], isLoading, isError, refetch } = useQuery({
-    queryKey: humanResourcesQueryKeys.hr.headcountRequests(),
-    queryFn: ({ signal }) => apiClient.get<HeadcountRequest[]>("/hr/recruitment/headcount", undefined, signal),
-    staleTime: 2 * 60_000,
-    enabled: canViewHeadcount,
-  });
+  const { data: requests = [], isLoading, isError, refetch } = useHeadcountRequests();
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingRequest, setEditingRequest] = useState<HeadcountRequest | null>(null);
   const [rejectingId, setRejectingId] = useState<number | null>(null);
 
-  const approve = useMutation({
-    mutationFn: (id: number) => apiClient.post(`/hr/recruitment/headcount/${id}/approve`, {}),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.headcountRequests() });
-      toast.success("Request approved");
-    },
+  const approve = useApproveHeadcountRequest({
+    onSuccess: () => { toast.success("Request approved"); },
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 
-  const createJob = useMutation({
-    mutationFn: (id: number) => apiClient.post<{ jobId: number }>(`/hr/recruitment/headcount/${id}/create-job`, {}),
+  const createJob = useCreateHeadcountJob({
     onSuccess: (data) => {
-      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.headcountRequests() });
       toast.success("Job posting created");
       router.push(`/hr/recruitment/jobs/${data.jobId}/edit`);
     },

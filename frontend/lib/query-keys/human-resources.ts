@@ -405,5 +405,8 @@ export const humanResourcesQueryKeys = {
     hrEnterpriseCostingAll: [...base, "hr", "enterprise", "comp", "costing"] as const,
     hrIdentityAll: [...base, "hr-identity"] as const,
     hrPublicForm: (token: string) => [...base, "hr", "public-form", token] as const,
+    emailTemplatesList: () => [...base, "hr", "email-templates", "list"] as const,
+    fnfList: () => [...base, "hr", "fnf", "list"] as const,
+    assetReturnsList: () => [...base, "hr", "asset-returns", "list"] as const,
   },
 } as const;

@@ -1,10 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
-import { getSignedFileUrl } from "@/hooks/common/use-file-url";
+import { useAttachmentSignedUrl } from "@/hooks/api/build/attachments";
 import { resolveImageUrl } from "@/lib/utils";
 
 interface AttachmentImageProps {
@@ -13,11 +11,7 @@ interface AttachmentImageProps {
 }
 
 export function AttachmentImage({ fileUrl, fileName }: AttachmentImageProps) {
-  const { data: imageSrc, isLoading } = useQuery({
-    queryKey: platformCoreQueryKeys.attachmentSignedUrl(fileUrl),
-    queryFn: () => getSignedFileUrl(fileUrl).catch(() => fileUrl),
-    staleTime: 4 * 60 * 1000,
-  });
+  const { data: imageSrc, isLoading } = useAttachmentSignedUrl(fileUrl);
 
   if (isLoading) {
     return (

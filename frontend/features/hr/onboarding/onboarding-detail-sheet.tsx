@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -28,7 +28,7 @@ import { apiClient } from "@/lib/api-client";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useHrDocumentTypes } from "@/hooks/api/hr/document-types";
-import { useCan } from "@/hooks/api/access";
+import { useMyOnboardingDocList, useSubmitOnboardingDoc } from "@/hooks/api/hr/onboarding";
 
 import {
   DocumentChecklistRow,
@@ -36,36 +36,6 @@ import {
   type OnboardingDoc,
 } from "./onboarding-document-checklist-row";
 import { UploadSheet, ACCEPTED_EXTENSIONS, validateDocumentFile } from "./onboarding-upload-sheet";
-
-interface OnboardingDocsResponse {
-  data: OnboardingDoc[];
-  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
-}
-
-function useMyOnboardingDocs() {
-  const canViewOwnDocs = useCan("self:onboarding-docs");
-  return useQuery<OnboardingDoc[]>({
-    queryKey: humanResourcesQueryKeys.hr.myOnboardingDocs(),
-    queryFn: async ({ signal }) => {
-      const res = await apiClient.get<OnboardingDocsResponse>("/hr/onboarding-docs/me", { limit: 100 }, signal);
-      return res.data;
-    },
-    staleTime: 60_000,
-    enabled: canViewOwnDocs,
-  });
-}
-
-function useSubmitOnboardingDoc() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["hr", "onboarding-doc", "submit"],
-    mutationFn: (body: { documentTypeId: number; fileUrl: string; fileName: string }) =>
-      apiClient.post("/hr/onboarding-docs/me", body),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.myOnboardingDocs() });
-    },
-  });
-}
 
 export type EmployeeDocumentsTabHandle = {
   submitPendingUploads: () => Promise<void>;
@@ -100,7 +70,7 @@ export const EmployeeDocumentsTab = forwardRef<
     isLoading: docsLoading,
     isError: docsFailed,
     refetch: refetchDocs,
-  } = useMyOnboardingDocs();
+  } = useMyOnboardingDocList();
   const {
     data: docTypes,
     isLoading: typesLoading,

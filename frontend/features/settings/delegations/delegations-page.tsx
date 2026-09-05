@@ -8,7 +8,7 @@ import {
   useRef,
   useTransition,
 } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { ShieldX } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -24,16 +24,19 @@ import {
   TABS_CONTENT_PAGE_BODY_CLASS,
 } from "@/components/ui/tabs";
 import { PlusIcon } from "@animateicons/react/lucide";
-import { apiClient } from "@/lib/api-client";
 import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan, useRbacDiscoveryMembers } from "@/hooks/api/access";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { toast } from "sonner";
-import { GrantDelegationSheet, type Member } from "./grant-delegation-sheet";
-import type { Delegation, DelegationPage } from "./delegation-schema";
 import {
-  buildDelegationListUrl,
+  useReceivedDelegations,
+  useGrantedDelegations,
+  useRevokeDelegation,
+  type Delegation,
+} from "@/hooks/api/delegations";
+import { GrantDelegationSheet, type Member } from "./grant-delegation-sheet";
+import {
   DELEGATION_URL_KEYS,
   readDelegationListState,
   type DelegationListKind,
@@ -162,20 +165,9 @@ export function DelegationsPage() {
     isError: receivedError,
     error: receivedQueryError,
     refetch: refetchReceived,
-  } = useQuery<DelegationPage>({
-    queryKey: supportAndWorkflowsQueryKeys.delegations.received({
-      ...receivedState,
-      cursor: receivedCursors.at(-1),
-    }),
-    queryFn: ({ signal }) =>
-      apiClient.get<DelegationPage>(
-        buildDelegationListUrl(
-          "/access/delegations",
-          receivedState,
-          receivedCursors.at(-1),
-        ), undefined, signal,
-      ),
-    staleTime: 60_000,
+  } = useReceivedDelegations({
+    ...receivedState,
+    cursor: receivedCursors.at(-1),
   });
 
   const {
@@ -184,30 +176,14 @@ export function DelegationsPage() {
     isError: givenError,
     error: givenQueryError,
     refetch: refetchGiven,
-  } = useQuery<DelegationPage>({
-    queryKey: supportAndWorkflowsQueryKeys.delegations.given({
-      ...grantedState,
-      cursor: grantedCursors.at(-1),
-    }),
-    queryFn: ({ signal }) =>
-      apiClient.get<DelegationPage>(
-        buildDelegationListUrl(
-          "/access/delegations/given",
-          grantedState,
-          grantedCursors.at(-1),
-        ), undefined, signal,
-      ),
-    staleTime: 60_000,
+  } = useGrantedDelegations({
+    ...grantedState,
+    cursor: grantedCursors.at(-1),
   });
 
-  const revokeMutation = useMutation({
-    mutationKey: [...supportAndWorkflowsQueryKeys.delegations.all, "revoke"],
-    mutationFn: (id: string) => apiClient.delete(`/access/delegations/${id}`),
+  const revokeMutation = useRevokeDelegation({
     onSuccess: () => {
       toast.success("Delegation revoked");
-      void queryClient.invalidateQueries({
-        queryKey: supportAndWorkflowsQueryKeys.delegations.all,
-      });
       setRevokeTarget(null);
       setRevokeError(null);
     },

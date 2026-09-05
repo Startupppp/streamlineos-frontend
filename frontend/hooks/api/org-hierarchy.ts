@@ -6,7 +6,8 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import type { UseQueryOptions } from "@tanstack/react-query";
+import type { UseMutationOptions, UseQueryOptions } from "@tanstack/react-query";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { apiClient } from "@/lib/api-client";
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 import { useCan } from "@/hooks/api/access";
@@ -357,5 +358,72 @@ export function useUpdateOrgCostCenter() {
     mutationFn: ({ id, ...data }: { id: string } & Record<string, unknown>) =>
       apiClient.patch<OrgCostCenter>(`/org-hierarchy/cost-centers/${id}`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
+  });
+}
+
+// ─── Organization Holidays ────────────────────────────────────────────────────
+
+export interface OrgHoliday {
+  id: string;
+  name: string;
+  date: string;
+  recurring: boolean;
+  createdAt: string;
+}
+
+export interface AddHolidayInput {
+  name: string;
+  date: string;
+  recurring?: boolean;
+}
+
+export function useOrgHolidays(
+  options?: Omit<UseQueryOptions<OrgHoliday[], Error>, "queryKey" | "queryFn">,
+) {
+  const canViewSettings = useCan("settings:view");
+  return useQuery<OrgHoliday[]>({
+    queryKey: platformCoreQueryKeys.organization.holidays,
+    queryFn: ({ signal }) =>
+      apiClient.get<OrgHoliday[]>("/organization/holidays", undefined, signal),
+    staleTime: 5 * 60_000,
+    ...options,
+    enabled: canViewSettings && (options?.enabled ?? true),
+  });
+}
+
+export function useCreateOrgHoliday(
+  options?: Omit<UseMutationOptions<OrgHoliday, Error, AddHolidayInput>, "mutationKey" | "mutationFn">,
+) {
+  const qc = useQueryClient();
+  return useMutation<OrgHoliday, Error, AddHolidayInput>({
+    mutationKey: ["org", "holidays", "create"],
+    mutationFn: (input: AddHolidayInput) =>
+      apiClient.post<OrgHoliday>("/organization/holidays", input),
+    ...options,
+    onSuccess: (data, variables, context) => {
+      void qc.invalidateQueries({ queryKey: platformCoreQueryKeys.organization.holidays });
+      options?.onSuccess?.(data, variables, context);
+    },
+    onError: (error, variables, context) => {
+      options?.onError?.(error, variables, context);
+    },
+  });
+}
+
+export function useDeleteOrgHoliday(
+  options?: Omit<UseMutationOptions<void, Error, string>, "mutationKey" | "mutationFn">,
+) {
+  const qc = useQueryClient();
+  return useMutation<void, Error, string>({
+    mutationKey: ["org", "holidays", "delete"],
+    mutationFn: (id: string) => apiClient.delete(`/organization/holidays/${id}`),
+    ...options,
+    onSuccess: (data, variables, context) => {
+      void qc.invalidateQueries({ queryKey: platformCoreQueryKeys.organization.holidays });
+      options?.onSuccess?.(data, variables, context);
+    },
+    onError: (error, variables, context) => {
+      options?.onError?.(error, variables, context);
+    },
   });
 }

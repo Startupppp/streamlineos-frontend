@@ -1,33 +1,14 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { ArrowDown, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
-import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { apiClient } from "@/lib/api-client";
-import { useCan } from "@/hooks/api/access";
+import { useAttachmentUrl } from "@/hooks/api/chat-shared";
 import { getFileColor, getFileExt, isImageMime } from "./chat-helpers";
 import { formatFileSize } from "@/lib/format-utils";
-
-function useAttachmentUrl(channelId: number, attachmentId: number) {
-  const canRead = useCan("chat:messages:read");
-  return useQuery({
-    queryKey: collaborationQueryKeys.chat.attachment(channelId, attachmentId),
-    queryFn: ({ signal }) =>
-      apiClient.get<{ url: string }>(
-        `/chat/channels/${channelId}/attachments/${attachmentId}`,
-        undefined,
-        signal,
-      ),
-    staleTime: 55 * 60 * 1000,
-    gcTime: 60 * 60 * 1000,
-    retry: 1,
-    enabled: canRead,
-  });
-}
 
 export interface ChatAttachmentProps {
   channelId: number;

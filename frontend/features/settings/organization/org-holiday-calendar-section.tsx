@@ -4,7 +4,6 @@ import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
@@ -30,21 +29,15 @@ import { InfoIcon, PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
-import { apiClient } from "@/lib/api-client";
-import { useCan } from "@/hooks/api/access";
-import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  useOrgHolidays,
+  useCreateOrgHoliday,
+  useDeleteOrgHoliday,
+} from "@/hooks/api/org-hierarchy";
 import { format, parseISO } from "date-fns";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { OrgSettingsCard } from "./org-settings-chrome";
-
-type OrgHoliday = {
-  id: string;
-  name: string;
-  date: string;
-  recurring: boolean;
-  createdAt: string;
-};
 
 const addHolidaySchema = z.object({
   name: z.string().min(1, "Name is required").max(200),
@@ -53,40 +46,6 @@ const addHolidaySchema = z.object({
 });
 
 type AddHolidayValues = z.infer<typeof addHolidaySchema>;
-
-function useOrgHolidays() {
-  const canViewSettings = useCan("settings:view");
-  return useQuery<OrgHoliday[]>({
-    queryKey: platformCoreQueryKeys.organization.holidays,
-    queryFn: ({ signal }) => apiClient.get<OrgHoliday[]>("/organization/holidays", undefined, signal),
-    enabled: canViewSettings,
-  });
-}
-
-function useCreateHoliday() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (input: AddHolidayValues) =>
-      apiClient.post<OrgHoliday>("/organization/holidays", input),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.organization.holidays });
-      toast.success("Holiday added");
-    },
-    onError: (err) => toast.error(getErrorMessage(err)),
-  });
-}
-
-function useDeleteHoliday() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => apiClient.delete(`/organization/holidays/${id}`),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.organization.holidays });
-      toast.success("Holiday removed");
-    },
-    onError: (err) => toast.error(getErrorMessage(err)),
-  });
-}
 
 interface OrgHolidayCalendarSectionProps {
   canEdit: boolean;
@@ -136,8 +95,14 @@ function HolidayUsageInfo() {
 
 export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSectionProps) {
   const { data: holidays, isLoading } = useOrgHolidays();
-  const createMutation = useCreateHoliday();
-  const deleteMutation = useDeleteHoliday();
+  const createMutation = useCreateOrgHoliday({
+    onSuccess: () => toast.success("Holiday added"),
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+  const deleteMutation = useDeleteOrgHoliday({
+    onSuccess: () => toast.success("Holiday removed"),
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
   const [showAdd, setShowAdd] = useState(false);
 
   const form = useForm<AddHolidayValues>({

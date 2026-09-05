@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { RefreshCw } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -25,56 +24,10 @@ import {
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 
-import { apiClient } from "@/lib/api-client";
-import { useCan } from "@/hooks/api/access";
-import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useEmployeeOnboardingDocs, useReviewDocument } from "@/hooks/api/hr/document-review";
 import { DocCard, type OnboardingDoc } from "./doc-card";
 import { UploadDocSheet } from "./upload-doc-sheet";
-
-const DOCS_PAGE_SIZE = 20;
-
-interface OnboardingDocsResponse {
-  data: OnboardingDoc[];
-  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
-}
-
-function useEmployeeOnboardingDocs(
-  userId: string | null,
-  cursor: string | undefined,
-) {
-  const canReviewDocs = useCan("hr:onboarding:manage");
-  return useQuery<OnboardingDocsResponse>({
-    queryKey: humanResourcesQueryKeys.hr.onboardingDocs({ userId: userId ?? undefined, cursor, limit: DOCS_PAGE_SIZE }),
-    queryFn: ({ signal }) =>
-      apiClient.get<OnboardingDocsResponse>("/hr/onboarding-docs", {
-        userId,
-        cursor,
-        limit: DOCS_PAGE_SIZE,
-      }, signal),
-    enabled: canReviewDocs && !!userId,
-    staleTime: 30_000,
-  });
-}
-
-function useReviewDocument() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      docId,
-      status,
-      remarks,
-    }: {
-      docId: number;
-      status: "APPROVED" | "RE_UPLOAD_REQUESTED";
-      remarks?: string;
-    }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/onboarding-docs/${docId}`, { status, remarks }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.onboardingDocsAll });
-    },
-  });
-}
 
 interface ReviewSheetProps {
   userId: string | null;

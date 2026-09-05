@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
 import { useHydrated } from "@/hooks/common/use-hydrated";
 import dynamic from "next/dynamic";
 import { EditEmployeeForm, type EmployeeData } from "@/features/hr/employees/detail/edit-employee-form";
@@ -14,11 +13,11 @@ import {
   useHrEmployeeProjects,
   useHrEmployeeTickets,
   useEmployeeEmployment,
+  useExportEmployeePdf,
 } from "@/hooks/api/hr";
 import { EmployeeTicketsList } from "@/components/hr/employee-tickets-list";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -154,37 +153,8 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const attritionRiskMutation = useAIAttritionRisk();
   const generateReviewMutation = useAIGenerateReview();
 
-  const exportPdfMutation = useMutation({
-    mutationKey: ["hr", "employees", employee.id, "profile-pdf"],
-    mutationFn: async () => {
-      const blob = await apiClient.download(`/hr/employees/${employee.id}/profile-pdf`);
-      const header = new Uint8Array(await blob.slice(0, 5).arrayBuffer());
-      const isPdf =
-        header.length >= 5 &&
-        header[0] === 0x25 &&
-        header[1] === 0x50 &&
-        header[2] === 0x44 &&
-        header[3] === 0x46 &&
-        header[4] === 0x2d;
-      if (!isPdf) {
-        throw new Error("Export did not return a valid PDF. Please try again.");
-      }
-      const pdfBlob =
-        blob.type === "application/pdf"
-          ? blob
-          : new Blob([blob], { type: "application/pdf" });
-      const url = URL.createObjectURL(pdfBlob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `employee-profile-${employeeName.replace(/\s+/g, "-").toLowerCase()}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    },
-    onError: (err) => {
-      toast.error(getErrorMessage(err));
-    },
+  const exportPdfMutation = useExportEmployeePdf(employee.id, employeeName, {
+    onError: (err) => toast.error(getErrorMessage(err)),
   });
 
   const handleExportPdf = useCallback(() => {

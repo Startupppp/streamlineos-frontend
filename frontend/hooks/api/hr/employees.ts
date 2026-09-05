@@ -2,6 +2,7 @@
 
 import {
   useInfiniteQuery,
+  useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
@@ -482,6 +483,42 @@ export function useUpdateSensitive(employmentId: number) {
     mutationFn: (data: Partial<HrSensitiveData>) =>
       apiClient.patch<{ success: boolean }>(`/hr/employees/${employmentId}/sensitive`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.employeeSensitive(employmentId) }),
+  });
+}
+
+export function useExportEmployeePdf(
+  employeeId: string,
+  employeeName: string,
+  options?: { onError?: (err: Error) => void },
+) {
+  return useMutation({
+    mutationKey: ["hr", "employees", employeeId, "profile-pdf"],
+    mutationFn: async () => {
+      const blob = await apiClient.download(`/hr/employees/${employeeId}/profile-pdf`);
+      const header = new Uint8Array(await blob.slice(0, 5).arrayBuffer());
+      const isPdf =
+        header.length >= 5 &&
+        header[0] === 0x25 &&
+        header[1] === 0x50 &&
+        header[2] === 0x44 &&
+        header[3] === 0x46 &&
+        header[4] === 0x2d;
+      if (!isPdf)
+        throw new Error("Export did not return a valid PDF. Please try again.");
+      const pdfBlob =
+        blob.type === "application/pdf"
+          ? blob
+          : new Blob([blob], { type: "application/pdf" });
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `employee-profile-${employeeName.replace(/\s+/g, "-").toLowerCase()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    },
+    onError: options?.onError,
   });
 }
 

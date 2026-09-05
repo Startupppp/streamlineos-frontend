@@ -3,7 +3,6 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Lock, MessageSquare, Ticket } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
@@ -18,7 +17,7 @@ import { useCan } from "@/hooks/api/access";
 import { isApiError } from "@/lib/api-client";
 import { useEntityAction } from "./entity-actions-context";
 import { useSubmitEntityAction } from "@/hooks/api/chat";
-import { ticketPermalinkQueryOptions } from "@/hooks/api/build/comment-permalink";
+import { useTicketPermalink } from "@/hooks/api/chat-previews";
 import { getStatusBadgeClass } from "@/components/shared/ticket-status-badge";
 import { formatTicketKey } from "@/components/shared/format-ticket-key";
 
@@ -42,7 +41,13 @@ function UnresolvedPill({ label }: { label: string }) {
   );
 }
 
-export function TicketPill({ entity, channelId }: { entity: TicketEntityRef; channelId: number }) {
+export function TicketPill({
+  entity,
+  channelId,
+}: {
+  entity: TicketEntityRef;
+  channelId: number;
+}) {
   const router = useRouter();
   const [currentStatus, setCurrentStatus] = useState(
     entity.card?.status ?? entity.status ?? "TODO",
@@ -59,7 +64,9 @@ export function TicketPill({ entity, channelId }: { entity: TicketEntityRef; cha
     (entity.projectKey && entity.ticketNumber
       ? `${entity.projectKey}-${entity.ticketNumber}`
       : `Ticket #${entity.id}`);
-  const hasFullInfo = Boolean(card?.subtitle) || Boolean(entity.projectKey && entity.ticketNumber);
+  const hasFullInfo =
+    Boolean(card?.subtitle) ||
+    Boolean(entity.projectKey && entity.ticketNumber);
   const ticketTitle = card?.title ?? entity.title;
 
   const handlePillClick = useCallback(() => {
@@ -67,7 +74,8 @@ export function TicketPill({ entity, channelId }: { entity: TicketEntityRef; cha
       router.push(card.href);
       return;
     }
-    if (entity.projectId) router.push(`/build/${entity.projectId}?ticket=${entity.id}`);
+    if (entity.projectId)
+      router.push(`/build/${entity.projectId}?ticket=${entity.id}`);
   }, [router, card?.href, entity.projectId, entity.id]);
 
   const handleStatusChange = useCallback(
@@ -85,15 +93,15 @@ export function TicketPill({ entity, channelId }: { entity: TicketEntityRef; cha
       } catch (err) {
         setCurrentStatus(prev);
         const code = isApiError(err) ? err.code : undefined;
-        if (code === "CHAT_ACTION_FORBIDDEN") {
-          toast.error("You don't have permission to change this ticket's status.");
-        } else if (code === "PROJECTS_TICKET_NOT_FOUND") {
+        if (code === "CHAT_ACTION_FORBIDDEN")
+          toast.error(
+            "You don't have permission to change this ticket's status.",
+          );
+        else if (code === "PROJECTS_TICKET_NOT_FOUND")
           toast.error("This ticket no longer exists.");
-        } else if (code === "CHAT_ACTION_TICKET_STATUS_FAILED") {
+        else if (code === "CHAT_ACTION_TICKET_STATUS_FAILED")
           toast.error("This status change isn't allowed.");
-        } else {
-          toast.error("Failed to update ticket status");
-        }
+        else toast.error("Failed to update ticket status");
       } finally {
         setIsChangingStatus(false);
       }
@@ -101,7 +109,8 @@ export function TicketPill({ entity, channelId }: { entity: TicketEntityRef; cha
     [currentStatus, channelId, entity],
   );
 
-  if (entity.card === null) return <UnresolvedPill label="A ticket you can't see" />;
+  if (entity.card === null)
+    return <UnresolvedPill label="A ticket you can't see" />;
 
   if (!hasFullInfo) {
     return (
@@ -154,20 +163,22 @@ export function TicketPill({ entity, channelId }: { entity: TicketEntityRef; cha
               {isChangingStatus ? (
                 <Loader2 className="h-3 w-3 animate-spin" />
               ) : (
-                TICKET_STATUS_DISPLAY[currentStatus] ?? currentStatus
+                (TICKET_STATUS_DISPLAY[currentStatus] ?? currentStatus)
               )}
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-36">
-            {(["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"] as const).map((s) => (
-              <DropdownMenuItem
-                key={s}
-                onClick={() => handleStatusChange(s)}
-                className={cn(s === currentStatus && "font-semibold")}
-              >
-                {TICKET_STATUS_DISPLAY[s]}
-              </DropdownMenuItem>
-            ))}
+            {(["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"] as const).map(
+              (s) => (
+                <DropdownMenuItem
+                  key={s}
+                  onClick={() => handleStatusChange(s)}
+                  className={cn(s === currentStatus && "font-semibold")}
+                >
+                  {TICKET_STATUS_DISPLAY[s]}
+                </DropdownMenuItem>
+              ),
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
@@ -187,10 +198,13 @@ export function TicketPill({ entity, channelId }: { entity: TicketEntityRef; cha
 export function CommentPill({ entity }: { entity: CommentEntityRef }) {
   const router = useRouter();
   const canViewTickets = useCan("build:tickets:view");
-  const { data: ticket } = useQuery({
-    ...ticketPermalinkQueryOptions(entity.projectId, entity.ticketId),
-    enabled: canViewTickets,
-  });
+  const { data: ticket } = useTicketPermalink(
+    entity.projectId,
+    entity.ticketId,
+    {
+      enabled: canViewTickets,
+    },
+  );
 
   const href = `/build/${entity.projectId}?ticket=${entity.ticketId}&comment=${entity.id}`;
   const label = ticket
@@ -213,4 +227,3 @@ export function CommentPill({ entity }: { entity: CommentEntityRef }) {
     </button>
   );
 }
-

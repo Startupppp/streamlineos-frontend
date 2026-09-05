@@ -3,11 +3,6 @@
 import { getErrorMessage } from "@/lib/get-error-message";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { useState, useCallback, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
-import { apiClient } from "@/lib/api-client";
-import { useCan } from "@/hooks/api/access";
-import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,23 +25,14 @@ import { FilterPill, FilterPillGroup } from "@/components/ui/filter-pill";
 import { EmptyMailIllustration } from "@/components/illustrations";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
-
-interface EmailTemplate {
-  id: number; name: string; subject: string; body: string;
-  category: string | null; variables: string[] | null;
-  createdAt: string | null;
-}
-
-interface AiGenerateResult {
-  subject: string;
-  body: string;
-}
-
-const ET_BASE = [...humanResourcesQueryKeys.hr.all, "email-templates"] as const;
-const etKeys = {
-  all: ET_BASE,
-  list: () => [...ET_BASE, "list"] as const,
-};
+import {
+  useEmailTemplates,
+  useCreateEmailTemplate,
+  useUpdateEmailTemplate,
+  useDeleteEmailTemplate,
+  useGenerateAiEmailTemplate,
+  type EmailTemplate,
+} from "@/hooks/api/hr/email-templates";
 
 const CATEGORIES = ["Onboarding", "Offboarding", "Leave", "Performance", "General", "Recruitment"];
 
@@ -109,43 +95,12 @@ function TemplateCard({ template, onCopy, onEdit, onDelete }: TemplateCardProps)
 }
 
 export function EmailTemplatesPageClient() {
-  const { data: session } = useSession();
-  const orgId = session?.orgId ?? "";
-  const qc = useQueryClient();
+  const { data: templates, isLoading, isError, refetch } = useEmailTemplates();
 
-  const canManageTemplates = useCan("hr:email-templates:manage");
-  const { data: templates, isLoading, isError, refetch } = useQuery({
-    queryKey: etKeys.list(),
-    queryFn: ({ signal }) => apiClient.get<EmailTemplate[]>("/hr/email-templates", undefined, signal),
-    enabled: canManageTemplates && !!orgId,
-    staleTime: 60 * 1000,
-  });
-
-  const create = useMutation({
-    mutationKey: [...etKeys.all, "create"],
-    mutationFn: (data: { name: string; subject: string; body: string; category?: string }) =>
-      apiClient.post<EmailTemplate>("/hr/email-templates", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: etKeys.list() }),
-  });
-
-  const update = useMutation({
-    mutationKey: [...etKeys.all, "update"],
-    mutationFn: ({ id, ...data }: { id: number; name: string; subject: string; body: string; category?: string }) =>
-      apiClient.patch<EmailTemplate>(`/hr/email-templates/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: etKeys.list() }),
-  });
-
-  const remove = useMutation({
-    mutationKey: [...etKeys.all, "remove"],
-    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/hr/email-templates/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: etKeys.list() }),
-  });
-
-  const generateAi = useMutation({
-    mutationKey: [...etKeys.all, "generate-ai"],
-    mutationFn: (data: { name: string; subject?: string; category?: string }) =>
-      apiClient.post<AiGenerateResult>("/hr/email-templates/generate-ai", data),
-  });
+  const create = useCreateEmailTemplate();
+  const update = useUpdateEmailTemplate();
+  const remove = useDeleteEmailTemplate();
+  const generateAi = useGenerateAiEmailTemplate();
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editTemplate, setEditTemplate] = useState<EmailTemplate | null>(null);

@@ -3,15 +3,14 @@
 import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useHydrated } from "@/hooks/common/use-hydrated";
-import { useQuery } from "@tanstack/react-query";
 import { ExternalLink, MessageSquare, Ticket } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { isApiError } from "@/lib/api-client";
 import {
-  commentPermalinkQueryOptions,
-  ticketPermalinkQueryOptions,
-} from "@/hooks/api/build/comment-permalink";
+  useCommentPermalink,
+  useTicketPermalink,
+} from "@/hooks/api/chat-previews";
 import { LinkPreviewCard } from "./link-preview-card";
 import { getStatusBadgeClass } from "@/components/shared/ticket-status-badge";
 import { formatTicketKey } from "@/components/shared/format-ticket-key";
@@ -111,9 +110,7 @@ function CommentPreviewCard({
   isOwn: boolean;
 }) {
   const router = useRouter();
-  const { data, isLoading, error } = useQuery(
-    commentPermalinkQueryOptions(projectId, ticketId, commentId),
-  );
+  const { data, isLoading, error } = useCommentPermalink(projectId, ticketId, commentId);
 
   const handleOpen = useCallback(() => router.push(href), [router, href]);
 
@@ -212,9 +209,7 @@ function TicketPreviewCard({
   isOwn: boolean;
 }) {
   const router = useRouter();
-  const { data, isLoading, error } = useQuery(
-    ticketPermalinkQueryOptions(projectId, ticketId),
-  );
+  const { data, isLoading, error } = useTicketPermalink(projectId, ticketId);
 
   const handleOpen = useCallback(() => router.push(href), [router, href]);
 

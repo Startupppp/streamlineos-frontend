@@ -4,7 +4,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 
-interface CommentPermalinkData {
+export interface CommentPermalinkData {
   id: string;
   content: string;
   createdAt: string | Date | null;
@@ -20,7 +20,7 @@ interface CommentPermalinkData {
   };
 }
 
-interface TicketPermalinkData {
+export interface TicketPermalinkData {
   id: number;
   title: string;
   status: string;
