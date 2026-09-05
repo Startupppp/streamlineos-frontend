@@ -105,8 +105,6 @@ export function TeamTable({ rows, weekStart, isLoading, onRowClick }: TeamTableP
     [days],
   );
 
-  const toolbar = undefined;
-
   return (
     <DataTable
       className="flex-1 min-h-0"
@@ -115,7 +113,6 @@ export function TeamTable({ rows, weekStart, isLoading, onRowClick }: TeamTableP
       getRowKey={(row) => row.userId}
       onRowClick={onRowClick}
       isLoading={isLoading}
-      toolbar={toolbar}
       minWidth="900px"
       emptyState={
         <EmptyState

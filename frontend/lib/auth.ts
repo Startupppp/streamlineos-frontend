@@ -32,7 +32,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       async authorize(credentials, request) {
         const magicToken = credentials?.magicToken;
-        if (typeof magicToken !== "string" || magicToken.length === 0) return null;
+        if (typeof magicToken !== "string" || magicToken.length === 0)
+          return null;
         try {
           const ua = request.headers.get("user-agent") ?? null;
           const rawIp =
@@ -51,8 +52,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               },
             },
           );
-          const data = unwrapBackend<{ userId?: string; sessionId?: string }>(raw);
-          if (typeof data?.userId !== "string" || data.userId.length === 0) return null;
+          const data = unwrapBackend<{ userId?: string; sessionId?: string }>(
+            raw,
+          );
+          if (typeof data?.userId !== "string" || data.userId.length === 0)
+            return null;
           const sessionData = await fetchSessionData(data.userId);
           if (!sessionData) return null;
           return {
@@ -83,8 +87,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           clientUserAgent = h.get("user-agent") ?? null;
           const rawIp = h.get("x-forwarded-for") ?? h.get("x-real-ip") ?? null;
           clientIp = rawIp ? rawIp.split(",")[0].trim() : null;
-        } catch {
-        }
+        } catch {}
         const googleResult = await resolveGoogleUser(
           user.email ?? "",
           account.providerAccountId,
@@ -99,7 +102,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (sessionId) user.sessionId = sessionId;
         const sessionData = await fetchSessionData(userId);
         if (sessionData) {
-          user.name = resolveSessionDisplayName(sessionData) || user.name || user.email || "";
+          user.name =
+            resolveSessionDisplayName(sessionData) ||
+            user.name ||
+            user.email ||
+            "";
           user.image = sessionData.image ?? user.image;
           user.role = sessionData.role ?? undefined;
           user.isActive = sessionData.isActive;
@@ -109,7 +116,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           user.plan = sessionData.plan ?? null;
           user.enabledModules = sessionData.enabledModules;
           user.orgOnboardingCompletedAt = sessionData.orgOnboardingCompletedAt;
-          user.userOnboardingCompletedAt = sessionData.userOnboardingCompletedAt;
+          user.userOnboardingCompletedAt =
+            sessionData.userOnboardingCompletedAt;
           user.organizationAccess = sessionData.organizationAccess;
           user.suspendedOrganizationName =
             sessionData.suspendedOrganizationName;
@@ -140,7 +148,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
 
       if (trigger === "update") {
-        const userId = token.id as string | undefined;
+        const userId = token.id;
         if (userId) {
           const fresh = await fetchSessionData(userId);
           if (fresh) {
@@ -152,8 +160,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.orgOnboardingCompletedAt = fresh.orgOnboardingCompletedAt;
             token.userOnboardingCompletedAt = fresh.userOnboardingCompletedAt;
             token.organizationAccess = fresh.organizationAccess;
-            token.suspendedOrganizationName =
-              fresh.suspendedOrganizationName;
+            token.suspendedOrganizationName = fresh.suspendedOrganizationName;
           } else if (
             session &&
             typeof session === "object" &&
@@ -175,75 +182,69 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
     async session({ session, token }) {
       try {
-        const tokenOrgId = (token.orgId as string | null | undefined) ?? null;
+        const tokenOrgId = token.orgId ?? null;
         const fresh = token.id
-          ? await fetchSessionDataCached(token.id as string, tokenOrgId)
+          ? await fetchSessionDataCached(token.id, tokenOrgId)
           : null;
 
-        const orgId = fresh
-          ? fresh.orgId
-          : ((token.orgId as string | null | undefined) ?? null);
+        const orgId = fresh ? fresh.orgId : (token.orgId ?? null);
         const isOrgOwner = fresh
           ? fresh.isOrgOwner
-          : ((token.isOrgOwner as boolean | undefined) ?? false);
+          : (token.isOrgOwner ?? false);
         const enabledModules = fresh?.enabledModules ?? [];
         const plan = fresh?.plan ?? null;
-        const role = fresh?.role ?? (token.role as string | undefined) ?? "";
+        const role = fresh?.role ?? token.role ?? "";
         const branchId = fresh?.branchId ?? null;
 
         if (session.user) {
-          session.user.id = token.id as string;
-          session.user.email = token.email as string;
+          session.user.id = token.id ?? session.user.id;
+          session.user.email = token.email ?? session.user.email;
           session.user.name = fresh
             ? resolveSessionDisplayName(fresh)
-            : ((token.name as string | null | undefined) ??
-              session.user.name ??
-              "");
+            : (token.name ?? session.user.name ?? "");
           session.user.role = role;
-          session.user.image =
-            fresh?.image ?? (token.picture as string | null | undefined) ?? null;
+          session.user.image = fresh?.image ?? token.picture ?? null;
           session.user.isActive = resolveSessionIsActive(fresh, token.isActive);
           session.user.isOrgOwner = isOrgOwner;
         }
         session.orgId = orgId;
         session.branchId = branchId;
-        session.sessionId = token.sessionId as string | undefined;
+        session.sessionId = token.sessionId;
         session.plan = plan;
         session.enabledModules = enabledModules;
         if (token.daysUntilExpiry !== undefined)
-          session.daysUntilExpiry = token.daysUntilExpiry as number;
-        session.authProvider =
-          (token.authProvider as string | undefined) ?? "credentials";
+          session.daysUntilExpiry = token.daysUntilExpiry;
+        session.authProvider = token.authProvider ?? "credentials";
         session.orgOnboardingCompletedAt =
           fresh?.orgOnboardingCompletedAt ??
-          (token.orgOnboardingCompletedAt as string | null | undefined) ??
+          token.orgOnboardingCompletedAt ??
           null;
         session.userOnboardingCompletedAt =
           fresh?.userOnboardingCompletedAt ??
-          (token.userOnboardingCompletedAt as string | null | undefined) ??
+          token.userOnboardingCompletedAt ??
           null;
         session.organizationAccess =
           fresh?.organizationAccess ??
-          (token.organizationAccess as
-            | "active"
-            | "suspended"
-            | "none"
-            | undefined) ??
+          token.organizationAccess ??
           (orgId ? "active" : "none");
         session.suspendedOrganizationName =
           fresh?.suspendedOrganizationName ??
-          (token.suspendedOrganizationName as string | null | undefined) ??
+          token.suspendedOrganizationName ??
           null;
 
-        const sessionId = (token.sessionId as string | undefined)?.trim();
+        const sessionId = token.sessionId?.trim();
         if (token.id && sessionId) {
-          const userId = token.id as string;
+          const userId = token.id;
           const jwtCacheKey = `${userId}:${orgId ?? ""}`;
           const cachedJwt = getBackendJwtFromStore(jwtCacheKey);
           if (cachedJwt) {
             session.backendJwt = cachedJwt;
           } else {
-            const exchanged = await exchangeSessionForBackendJwt(userId, sessionId, orgId);
+            const exchanged = await exchangeSessionForBackendJwt(
+              userId,
+              sessionId,
+              orgId,
+            );
             if (exchanged) {
               setBackendJwtInStore(jwtCacheKey, exchanged);
               session.backendJwt = exchanged;
@@ -254,32 +255,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return session;
       } catch {
         if (session.user) {
-          session.user.id = token.id as string;
-          session.user.email = token.email as string;
-          session.user.name =
-            (token.name as string | null | undefined) ?? session.user.name ?? "";
-          session.user.role = (token.role as string | undefined) ?? "";
+          session.user.id = token.id ?? session.user.id;
+          session.user.email = token.email ?? session.user.email;
+          session.user.name = token.name ?? session.user.name ?? "";
+          session.user.role = token.role ?? "";
           session.user.isActive = resolveSessionIsActive(null, token.isActive);
-          session.user.isOrgOwner =
-            (token.isOrgOwner as boolean | undefined) === true;
+          session.user.isOrgOwner = token.isOrgOwner === true;
         }
-        session.orgId =
-          (token.orgId as string | null | undefined) ?? null;
-        session.sessionId = token.sessionId as string | undefined;
+        session.orgId = token.orgId ?? null;
+        session.sessionId = token.sessionId;
         session.orgOnboardingCompletedAt =
-          (token.orgOnboardingCompletedAt as string | null | undefined) ?? null;
+          token.orgOnboardingCompletedAt ?? null;
         session.userOnboardingCompletedAt =
-          (token.userOnboardingCompletedAt as string | null | undefined) ?? null;
+          token.userOnboardingCompletedAt ?? null;
         session.organizationAccess =
-          (token.organizationAccess as
-            | "active"
-            | "suspended"
-            | "none"
-            | undefined) ??
-          (session.orgId ? "active" : "none");
+          token.organizationAccess ?? (session.orgId ? "active" : "none");
         session.suspendedOrganizationName =
-          (token.suspendedOrganizationName as string | null | undefined) ??
-          null;
+          token.suspendedOrganizationName ?? null;
         return session;
       }
     },

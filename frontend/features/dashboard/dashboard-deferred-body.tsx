@@ -248,7 +248,6 @@ export function DashboardDeferredBody({ access }: DashboardDeferredBodyProps) {
   const showHrTeamRow =
     hrEnabled && (canViewLeaves || canViewAttendance || canApproveLeaves);
   const showDocumentsCard = hrEnabled || (signEnabled && canViewSignEnvelopes);
-  const showProjectsRow = projectsEnabled;
   const showBottomRow =
     (projectsEnabled && canViewTickets) || (hrEnabled && canViewAttendance);
 
@@ -329,7 +328,7 @@ export function DashboardDeferredBody({ access }: DashboardDeferredBodyProps) {
           </motion.div>
         )}
 
-        {showProjectsRow && (
+        {projectsEnabled && (
           <motion.div
             variants={fadeUp}
             initial="hidden"
