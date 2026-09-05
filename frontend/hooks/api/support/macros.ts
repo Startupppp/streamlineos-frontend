@@ -224,7 +224,7 @@ export function useApplyMacro() {
 
 export function useRoutingRules() {
   return useGatedQuery("support:macros:view", {
-    queryKey: platformCoreQueryKeys.supportRouting.list(),
+    queryKey: supportAndWorkflowsQueryKeys.supportRouting.list(),
     queryFn: ({ signal }) => apiClient.get<SupportRoutingRule[]>("/support/routing-rules", undefined, signal),
     staleTime: 60_000,
   });
@@ -236,7 +236,7 @@ export function useCreateRoutingRule() {
     mutationKey: ["create", "routing", "rule"],
     mutationFn: (input: CreateRoutingRuleInput) =>
       apiClient.post<SupportRoutingRule>("/support/routing-rules", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: platformCoreQueryKeys.supportRouting.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportRouting.all }),
   });
 }
 
@@ -246,7 +246,7 @@ export function useUpdateRoutingRule() {
     mutationKey: ["update", "routing", "rule"],
     mutationFn: ({ id, ...input }: UpdateRoutingRuleInput & { id: number }) =>
       apiClient.patch<SupportRoutingRule>(`/support/routing-rules/${id}`, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: platformCoreQueryKeys.supportRouting.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportRouting.all }),
   });
 }
 
@@ -256,13 +256,13 @@ export function useDeleteRoutingRule() {
     mutationKey: ["delete", "routing", "rule"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/support/routing-rules/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: platformCoreQueryKeys.supportRouting.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportRouting.all }),
   });
 }
 
 export function useAgentSkills() {
   return useGatedQuery("support:macros:view", {
-    queryKey: platformCoreQueryKeys.supportAgentSkills.list(),
+    queryKey: supportAndWorkflowsQueryKeys.supportAgentSkills.list(),
     queryFn: ({ signal }) => apiClient.get<SupportAgentSkill[]>("/support/agent-skills", undefined, signal),
     staleTime: 60_000,
   });
@@ -274,13 +274,13 @@ export function useSetAgentSkills() {
     mutationKey: ["supportAgentSkills", "set"],
     mutationFn: ({ userId, skills }: { userId: string; skills: string[] }) =>
       apiClient.put<{ success: boolean; skills: string[] }>(`/support/agent-skills/${userId}`, { skills }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: platformCoreQueryKeys.supportAgentSkills.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportAgentSkills.all }),
   });
 }
 
 export function useAgentAvailability() {
   return useGatedQuery("support:macros:view", {
-    queryKey: platformCoreQueryKeys.supportAgentAvailability.list(),
+    queryKey: supportAndWorkflowsQueryKeys.supportAgentAvailability.list(),
     queryFn: ({ signal }) => apiClient.get<SupportAgentAvailability[]>("/support/agent-availability", undefined, signal),
     staleTime: 30_000,
   });
@@ -292,13 +292,13 @@ export function useSetMyAvailability() {
     mutationKey: ["supportAgentAvailability", "setMine"],
     mutationFn: (isAvailable: boolean) =>
       apiClient.put<SupportAgentAvailability>("/support/agent-availability/me", { isAvailable }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: platformCoreQueryKeys.supportAgentAvailability.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportAgentAvailability.all }),
   });
 }
 
 export function useVipClients() {
   return useGatedQuery("support:macros:view", {
-    queryKey: platformCoreQueryKeys.supportVipClients.list(),
+    queryKey: supportAndWorkflowsQueryKeys.supportVipClients.list(),
     queryFn: ({ signal }) => apiClient.get<SupportVipClient[]>("/support/vip-clients", undefined, signal),
     staleTime: 60_000,
   });
@@ -310,7 +310,7 @@ export function useAddVipClient() {
     mutationKey: ["supportVipClients", "add"],
     mutationFn: (clientId: number) =>
       apiClient.post<{ success: boolean }>("/support/vip-clients", { clientId }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: platformCoreQueryKeys.supportVipClients.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportVipClients.all }),
   });
 }
 
@@ -320,6 +320,6 @@ export function useRemoveVipClient() {
     mutationKey: ["supportVipClients", "remove"],
     mutationFn: (clientId: number) =>
       apiClient.delete<{ success: boolean }>(`/support/vip-clients/${clientId}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: platformCoreQueryKeys.supportVipClients.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportVipClients.all }),
   });
 }

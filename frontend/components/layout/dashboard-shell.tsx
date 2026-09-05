@@ -188,7 +188,7 @@ export function DashboardShell({
   useEffect(() => {
     if (access?.isOrgOwner !== true) return;
 
-    if ("requestIdleCallback" in window) {
+    if (typeof window.requestIdleCallback === "function") {
       const idleId = window.requestIdleCallback(
         () => setEnhancementsReady(true),
         { timeout: 1500 },

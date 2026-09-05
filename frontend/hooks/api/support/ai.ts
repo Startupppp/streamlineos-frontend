@@ -337,7 +337,7 @@ function reportParamsToRecord(params?: SupportAiReportParams): Record<string, un
 export function useSupportAiReport(params?: SupportAiReportParams) {
   const record = reportParamsToRecord(params);
   return useGatedQuery("support:ai:view", {
-    queryKey: platformCoreQueryKeys.supportAiReport.get(record),
+    queryKey: supportAndWorkflowsQueryKeys.supportAiReport.get(record),
     queryFn: ({ signal }) => apiClient.get<SupportAiReportResult>(`/support/ai/report`, record, signal),
     staleTime: 2 * 60_000,
   });
