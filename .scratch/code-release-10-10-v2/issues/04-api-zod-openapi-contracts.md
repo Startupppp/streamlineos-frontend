@@ -28,6 +28,9 @@
 
 ## Completion evidence
 
+- 2026-09-05 focused update: eight AI stream contracts are declared; four additional HR/Build raw-stream response declarations were repaired and the KB Idempotency-Key header is documented. OpenAPI generation, registry and frontend vendor checks pass. Response-schema ratchet passes at **54/3,665 covered, 3,611 uncovered**: this is a non-regression result, not exhaustive response-contract completion. See [current functional evidence](../../../architecture-refactor/final-refactor/evidence/42-production-ops/release-authority/FUNCTIONAL-STREAMING-2026-09-05.md). Do not use the green ratchet alone to certify PRD-C049.
+- PRD-C085 implementation now separates foreground and deferred after-commit downstream cost and declares eight additional AI route budgets. Merge self-tests pass 27/27; fresh release captures are still required.
+
 - PRD-C085 remains open because its p50/p95/p99 release figures require a fresh production-shaped capture at the final release commit. The budget contracts and measurement gates exist, but stored measurements from an earlier commit are not valid completion evidence; do not close this criterion from a local mock or verifier replay.
 - Record applicable frontend/root and backend commit SHAs, commands, pass/fail/skip counts, and artifact locations.
 - Update the source PRD checkbox states and the traceability manifest in the same completion commit.

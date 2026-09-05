@@ -144,7 +144,7 @@ Resolved on 2026-09-02 (S06 — backend API prefixes, not page routes):
 ## AI / Ask
 
 - [ ] `/ask` · **AI** · hooks: `→ feature/ask` · §8: States ?
-- [ ] `/ai/executive-brief` · **AI** · hooks: `→ feature/ai` · §8: States ?
+- [ ] `/ai/executive-brief` · **AI** · hooks: `lib/api/hooks/executive-brief` → `features/ai/executive-brief-page` · streaming/cancel/failure states covered by `features/ai/executive-brief-streaming.test.tsx`; full page acceptance remains open
 
 ---
 
