@@ -68,9 +68,39 @@ const INLINE_KEY_ALLOWLIST = new Set([
   "lib/query-scope.ts",        // scope isolation testing
   "lib/query-scope-isolation.test.tsx",
 ]);
-// Matches `queryKey:` followed (after optional whitespace/newline) by `[` whose
-// first non-whitespace element is NOT `...queryKeys` (spread of a factory).
-const INLINE_KEY_RE = /\bqueryKey\s*:\s*\[(?!\s*\.\.\.queryKeys)/g;
+
+// The accepted factory names are READ from lib/query-keys/, never hardcoded. This rule
+// matched only the literal `...queryKeys` and so went stale the moment that one factory
+// was split into the named per-domain ones, reporting 73 correct call sites as
+// violations while its own self-test stayed green on a `queryKeys` fixture.
+function readFactoryNames() {
+  const names = new Set();
+  const sources = [join(ROOT, "lib/query-keys.ts")];
+  const dir = join(ROOT, "lib/query-keys");
+  for (const entry of readdirSync(dir))
+    if (extname(entry) === ".ts" && !entry.endsWith(".test.ts")) sources.push(join(dir, entry));
+  for (const file of sources) {
+    const src = readFileSync(file, "utf8");
+    for (const m of src.matchAll(/export\s+const\s+([A-Za-z0-9_]*[Qq]ueryKeys)\b/g)) names.add(m[1]);
+  }
+  return names;
+}
+
+const FACTORY_NAMES = readFactoryNames();
+// An empty or near-empty set would make the negative lookahead match nothing and turn this
+// rule into a scanner that flags every call site, or — if inverted — none of them.
+if (FACTORY_NAMES.size < 2)
+  throw new Error(
+    `check-query-scope: found ${FACTORY_NAMES.size} query-key factories in lib/query-keys — ` +
+      `the reader is broken, not the corpus. Refusing to report over a factory set this rule cannot trust.`,
+  );
+
+// Matches `queryKey:` followed (after optional whitespace/newline) by `[` whose first
+// non-whitespace element is not a spread of one of the real factories.
+const INLINE_KEY_RE = new RegExp(
+  String.raw`\bqueryKey\s*:\s*\[(?!\s*\.\.\.(?:${[...FACTORY_NAMES].join("|")})\b)`,
+  "g",
+);
 
 function checkInlineQueryKey(content, relPath) {
   if (isTestFile(relPath)) return null;
@@ -292,14 +322,29 @@ function runSelfTest() {
     content: 'const q = useQuery({ queryKey: ["test", "key"], queryFn: () => fetch() });',
     detect: checkInlineQueryKey,
   };
+  // Pinned against the split factories by name. The previous fixtures exercised only the
+  // legacy `queryKeys`, so this rule reported green while rejecting every real call site.
+  const inlineKeyGoodSplitFactory = {
+    description: "rule 4 — spread of a split per-domain factory (should NOT be flagged)",
+    relPath: "hooks/api/tasks.ts",
+    content:
+      'const q = useQuery({ queryKey: [...accessAndCrmQueryKeys.tasks.all, "analytics", days] as const });',
+    detect: checkInlineQueryKey,
+  };
+  const inlineKeyUnknownFactory = {
+    description: "rule 4 — spread of a name that is not an exported factory",
+    relPath: "hooks/api/widgets.ts",
+    content: 'const q = useQuery({ queryKey: [...notARealQueryKeys.widgets.all, "x"] });',
+    detect: checkInlineQueryKey,
+  };
 
-  const r4bad = inlineKeyBad.detect(inlineKeyBad.content, inlineKeyBad.relPath);
-  if (typeof r4bad !== "string" || !r4bad.includes("inline queryKey array")) {
-    selfFailures.push(`self-test MISSED: ${inlineKeyBad.description} (got ${JSON.stringify(r4bad)})`);
-  } else {
-    console.log(`✔ self-test detected ${inlineKeyBad.description}`);
+  for (const bad of [inlineKeyBad, inlineKeyUnknownFactory]) {
+    const r = bad.detect(bad.content, bad.relPath);
+    if (typeof r !== "string" || !r.includes("inline queryKey array"))
+      selfFailures.push(`self-test MISSED: ${bad.description} (got ${JSON.stringify(r)})`);
+    else console.log(`✔ self-test detected ${bad.description}`);
   }
-  for (const f of [inlineKeyGoodFactory, inlineKeyGoodSpread, inlineKeyGoodTestFile]) {
+  for (const f of [inlineKeyGoodFactory, inlineKeyGoodSpread, inlineKeyGoodTestFile, inlineKeyGoodSplitFactory]) {
     const result = f.detect(f.content, f.relPath);
     if (result !== null) {
       selfFailures.push(`self-test WRONGLY FLAGGED: ${f.description}`);
