@@ -12,10 +12,10 @@ export function useSendMessage() {
   const { data: session } = useSession();
   return useAuthorizedMutation("chat:messages:write", {
     mutationKey: ["chat", "messages", "send"],
-    mutationFn: (input: SendMessageInput) =>
+    mutationFn: ({ channelId, ...body }: SendMessageInput) =>
       apiClient.post<Message>(
-        `/chat/channels/${input.channelId}/messages`,
-        input,
+        `/chat/channels/${channelId}/messages`,
+        body,
       ),
     onMutate: async (variables) => {
       await queryClient.cancelQueries({
