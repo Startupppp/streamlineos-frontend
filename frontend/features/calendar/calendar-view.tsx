@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import { useAfterLoad } from "@/hooks/common/use-after-load";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { startOfMonth, endOfMonth, addMonths, subMonths, format } from "date-fns";
@@ -111,6 +112,7 @@ const CalendarAccountsSheet = dynamic(
 const NO_CALENDAR_EVENTS: CalendarListItem[] = [];
 
 export function CalendarView() {
+  const afterLoad = useAfterLoad();
   const router = useRouter();
   const searchParams = useSearchParams();
   const {
@@ -312,19 +314,23 @@ export function CalendarView() {
               )}
             >
               {viewMode === "calendar" ? (
-                <BigCalendarWrapper
-                  events={allCalEvents}
-                  date={currentDate}
-                  view={view}
-                  calHeight={calHeight}
-                  onView={setView}
-                  onNavigate={setCurrentDate}
-                  onSelectSlot={
-                    isCalendarOverlayOpen ? undefined : guardedSelectSlot
-                  }
-                  onSelectEvent={handleSelectEvent}
-                  eventPropGetter={eventPropGetter}
-                />
+                afterLoad ? (
+                  <BigCalendarWrapper
+                    events={allCalEvents}
+                    date={currentDate}
+                    view={view}
+                    calHeight={calHeight}
+                    onView={setView}
+                    onNavigate={setCurrentDate}
+                    onSelectSlot={
+                      isCalendarOverlayOpen ? undefined : guardedSelectSlot
+                    }
+                    onSelectEvent={handleSelectEvent}
+                    eventPropGetter={eventPropGetter}
+                  />
+                ) : (
+                  <CalendarListFallback label="Loading calendar" />
+                )
               ) : (
                 <CalendarEventsPanel
                   mode={viewMode}

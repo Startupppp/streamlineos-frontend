@@ -78,4 +78,4 @@ docs/superpowers/
 .env*
 
 # minted test session token — never commit
-.capture-cookie
+.capture-cookie*

@@ -17,6 +17,7 @@ import { PmWorkspaceContextChip } from "./pm-workspace-context-chip";
 import { QuickCreateButton } from "./quick-create-button";
 import { UserAvatarMenu } from "./user-avatar-menu";
 import { SidebarCollapseToggle } from "./sidebar-collapse-toggle";
+import { useAfterLoad } from "@/hooks/common/use-after-load";
 const NotificationBell = dynamic(
   () =>
     import("@/features/notifications/notification-bell").then(
@@ -81,6 +82,10 @@ function HeaderIconLink({
   );
 }
 
+function NotificationBellPlaceholder() {
+  return <div className="size-8 rounded-lg shrink-0" aria-hidden="true" />;
+}
+
 function DesktopHeader({
   isSidebarCollapsed,
   onToggleSidebar,
@@ -92,6 +97,7 @@ function DesktopHeader({
   showSidebarToggle: boolean;
   hideAdminChrome?: boolean;
 }) {
+  const afterLoad = useAfterLoad();
   const showLabels = !isSidebarCollapsed || !showSidebarToggle;
 
   return (
@@ -135,7 +141,7 @@ function DesktopHeader({
           <MessageSquare className="h-4 w-4" />
         </HeaderIconLink>
 
-        <NotificationBell />
+        {afterLoad ? <NotificationBell /> : <NotificationBellPlaceholder />}
 
         {!hideAdminChrome && (
           <>
@@ -153,6 +159,7 @@ function DesktopHeader({
 }
 
 function MobileHeader({ hidden }: { hidden?: boolean }) {
+  const afterLoad = useAfterLoad();
   return (
     <div
       className={cn(
@@ -169,7 +176,7 @@ function MobileHeader({ hidden }: { hidden?: boolean }) {
           id="mobile-header-checklist-slot"
           className="relative inline-flex items-center"
         />
-        <NotificationBell />
+        {afterLoad ? <NotificationBell /> : <NotificationBellPlaceholder />}
       </div>
     </div>
   );
