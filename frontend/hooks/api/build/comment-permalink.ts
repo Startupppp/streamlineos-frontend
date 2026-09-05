@@ -30,22 +30,6 @@ export interface TicketPermalinkData {
   projectKey?: string;
 }
 
-export function commentPermalinkQueryOptions(
-  projectId: number,
-  ticketId: number,
-  commentId: string,
-) {
-  return queryOptions<CommentPermalinkData>({
-    queryKey: buildWorkQueryKeys.projects.commentPermalinkWithComment(projectId, ticketId, commentId),
-    queryFn: ({ signal }) =>
-      apiClient.get<CommentPermalinkData>(
-        `/build/${projectId}/tickets/${ticketId}/comments/${commentId}`, undefined, signal,
-      ),
-    staleTime: 60_000,
-    retry: false,
-  });
-}
-
 export function ticketPermalinkQueryOptions(projectId: number, ticketId: number) {
   return queryOptions<TicketPermalinkData>({
     queryKey: buildWorkQueryKeys.projects.commentPermalinkTicket(projectId, ticketId),
