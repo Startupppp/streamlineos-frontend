@@ -3,3 +3,6 @@
 .cursor/mcp.json
 .DS_Store
 **/.DS_Store
+
+# agent scratch space (tickets, evidence reports) — never committed
+.scratch/
