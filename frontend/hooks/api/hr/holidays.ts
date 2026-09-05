@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 
 export interface Holiday {
@@ -23,7 +23,7 @@ interface CreateHolidayInput {
 export function useHolidays() {
   const canView = useCan("self:attendance");
   return useQuery<Holiday[]>({
-    queryKey: queryKeys.hr.holidays(),
+    queryKey: humanResourcesQueryKeys.hr.holidays(),
     queryFn: ({ signal }) => apiClient.get<Holiday[]>("/me/attendance/holidays", undefined, signal),
     staleTime: 300_000,
     enabled: canView,
@@ -36,7 +36,7 @@ export function useCreateHoliday() {
     mutationKey: ["hr", "holidays", "create"],
     mutationFn: (data: CreateHolidayInput) =>
       apiClient.post<Holiday>("/hr/attendance/holidays", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.holidays() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.holidays() }),
   });
 }
 
@@ -46,7 +46,7 @@ export function useUpdateHoliday() {
     mutationKey: ["hr", "holidays", "update"],
     mutationFn: ({ id, ...data }: Partial<CreateHolidayInput> & { id: string }) =>
       apiClient.patch<Holiday>(`/hr/attendance/holidays/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.holidays() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.holidays() }),
   });
 }
 
@@ -56,6 +56,6 @@ export function useDeleteHoliday() {
     mutationKey: ["hr", "holidays", "delete"],
     mutationFn: (id: string) =>
       apiClient.delete<void>(`/hr/attendance/holidays/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.holidays() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.holidays() }),
   });
 }

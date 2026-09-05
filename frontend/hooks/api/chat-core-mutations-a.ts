@@ -3,7 +3,7 @@
 import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { Message, MessagesPage, SendMessageInput, EditMessageInput } from "@/types/chat";
 
@@ -19,11 +19,11 @@ export function useSendMessage() {
       ),
     onMutate: async (variables) => {
       await queryClient.cancelQueries({
-        queryKey: queryKeys.chat.messages(variables.channelId),
+        queryKey: collaborationQueryKeys.chat.messages(variables.channelId),
       });
 
       const previousData = queryClient.getQueryData<InfiniteData<MessagesPage>>(
-        queryKeys.chat.messages(variables.channelId),
+        collaborationQueryKeys.chat.messages(variables.channelId),
       );
 
       const optimisticMsg: Message = {
@@ -55,7 +55,7 @@ export function useSendMessage() {
             : page,
         );
         queryClient.setQueryData<InfiniteData<MessagesPage>>(
-          queryKeys.chat.messages(variables.channelId),
+          collaborationQueryKeys.chat.messages(variables.channelId),
           { ...previousData, pages },
         );
       }
@@ -65,16 +65,16 @@ export function useSendMessage() {
     onError: (_, variables, context) => {
       if (context?.previousData) {
         queryClient.setQueryData(
-          queryKeys.chat.messages(variables.channelId),
+          collaborationQueryKeys.chat.messages(variables.channelId),
           context.previousData,
         );
       }
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.messages(variables.channelId),
+        queryKey: collaborationQueryKeys.chat.messages(variables.channelId),
       });
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
     },
   });
 }
@@ -93,7 +93,7 @@ export function useEditMessage() {
         { content },
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.all });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.all });
     },
   });
 }
@@ -113,7 +113,7 @@ export function useDeleteMessage() {
         `/chat/channels/${channelId}/messages/${messageId}`,
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.all });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.all });
     },
   });
 }
@@ -125,8 +125,8 @@ export function useMarkChannelRead() {
     mutationFn: ({ channelId }: { channelId: number }) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/read`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.unreadTotal() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.unreadTotal() });
     },
   });
 }

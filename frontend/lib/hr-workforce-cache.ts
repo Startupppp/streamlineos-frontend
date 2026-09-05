@@ -1,5 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/query-keys";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 
 type QueryInvalidator = Pick<QueryClient, "invalidateQueries">;
 
@@ -12,18 +13,18 @@ export async function invalidateHrWorkforceQueries(
   userId?: string,
 ): Promise<void> {
   const keys: Array<readonly unknown[]> = [
-    queryKeys.hr.employees(),
-    queryKeys.hr.orgChart(),
-    queryKeys.hr.directory(),
-    queryKeys.hr.onboardingStatus(),
-    queryKeys.directory.peopleAll,
-    queryKeys.directory.workersAll,
+    humanResourcesQueryKeys.hr.employees(),
+    humanResourcesQueryKeys.hr.orgChart(),
+    humanResourcesQueryKeys.hr.directory(),
+    humanResourcesQueryKeys.hr.onboardingStatus(),
+    directoryAndOwnershipQueryKeys.directory.peopleAll,
+    directoryAndOwnershipQueryKeys.directory.workersAll,
   ];
   if (userId) {
     keys.push(
-      queryKeys.hr.employee(userId),
-      queryKeys.hr.employeeStats(userId),
-      queryKeys.hr.employeeEmployment(userId),
+      humanResourcesQueryKeys.hr.employee(userId),
+      humanResourcesQueryKeys.hr.employeeStats(userId),
+      humanResourcesQueryKeys.hr.employeeEmployment(userId),
     );
   }
 

@@ -9,7 +9,8 @@ import {
 } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useCan } from "@/hooks/api/access";
 import type { AuditCursorPage, DataScope, ModuleGroupMember, ModuleRoleGroup } from "./types";
 import { viewKey } from "./types";
@@ -26,7 +27,7 @@ const groupMembersContract = lazyContract(() =>
 export function useModuleRoleGroups(moduleKey: string) {
   const canView = useCan(viewKey(moduleKey));
   return useInfiniteQuery<AuditCursorPage<ModuleRoleGroup>, Error>({
-    queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
+    queryKey: directoryAndOwnershipQueryKeys.moduleAccess.roleGroups(moduleKey),
     queryFn: ({ pageParam, signal }) => {
       const params = new URLSearchParams({ limit: "100" });
       if (typeof pageParam === "string") params.set("cursor", pageParam);
@@ -52,7 +53,7 @@ export function useCreateModuleRoleGroup(moduleKey: string) {
       apiClient.post<ModuleRoleGroup>(`/module-access/${moduleKey}/groups`, body),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
+        queryKey: directoryAndOwnershipQueryKeys.moduleAccess.roleGroups(moduleKey),
         exact: true,
       });
     },
@@ -67,7 +68,7 @@ export function useRenameModuleRoleGroup(moduleKey: string) {
       apiClient.patch<ModuleRoleGroup>(`/module-access/${moduleKey}/groups/${id}`, { name }),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
+        queryKey: directoryAndOwnershipQueryKeys.moduleAccess.roleGroups(moduleKey),
         exact: true,
       });
     },
@@ -82,7 +83,7 @@ export function useDeleteModuleRoleGroup(moduleKey: string) {
       apiClient.delete<{ success: true }>(`/module-access/${moduleKey}/groups/${id}`),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
+        queryKey: directoryAndOwnershipQueryKeys.moduleAccess.roleGroups(moduleKey),
         exact: true,
       });
     },
@@ -104,7 +105,7 @@ export function useSetModuleGroupPermissions(moduleKey: string) {
       ),
     onSuccess: (data, variables) => {
       queryClient.setQueryData<InfiniteData<AuditCursorPage<ModuleRoleGroup>>>(
-        queryKeys.moduleAccess.roleGroups(moduleKey),
+        directoryAndOwnershipQueryKeys.moduleAccess.roleGroups(moduleKey),
         (old) =>
           old
             ? {
@@ -119,11 +120,11 @@ export function useSetModuleGroupPermissions(moduleKey: string) {
             : old,
       );
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
+        queryKey: directoryAndOwnershipQueryKeys.moduleAccess.roleGroups(moduleKey),
         exact: true,
       });
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.access.me(),
+        queryKey: platformCoreQueryKeys.access.me(),
         exact: true,
       });
     },
@@ -133,7 +134,7 @@ export function useSetModuleGroupPermissions(moduleKey: string) {
 export function useModuleGroupMembers(moduleKey: string, groupId: number | null) {
   const canView = useCan(viewKey(moduleKey));
   return useQuery<ModuleGroupMember[], Error>({
-    queryKey: queryKeys.moduleAccess.groupMembers(moduleKey, groupId ?? 0),
+    queryKey: directoryAndOwnershipQueryKeys.moduleAccess.groupMembers(moduleKey, groupId ?? 0),
     queryFn: ({ signal }) =>
       apiClient.get(
         `/module-access/${moduleKey}/groups/${groupId}/members`,
@@ -158,21 +159,21 @@ export function useAddModuleGroupMember(moduleKey: string) {
       ),
     onSuccess: (_, { groupId, userId }) => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.moduleAccess.groupMembers(moduleKey, groupId),
+        queryKey: directoryAndOwnershipQueryKeys.moduleAccess.groupMembers(moduleKey, groupId),
       });
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
+        queryKey: directoryAndOwnershipQueryKeys.moduleAccess.roleGroups(moduleKey),
         exact: true,
       });
       void queryClient.invalidateQueries({
-        queryKey: [...queryKeys.moduleAccess.all, moduleKey, "members"],
+        queryKey: [...directoryAndOwnershipQueryKeys.moduleAccess.all, moduleKey, "members"],
       });
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.moduleAccess.memberCandidatesAll(moduleKey),
+        queryKey: directoryAndOwnershipQueryKeys.moduleAccess.memberCandidatesAll(moduleKey),
       });
       if (userId === session?.user?.id) {
         void queryClient.invalidateQueries({
-          queryKey: queryKeys.access.me(),
+          queryKey: platformCoreQueryKeys.access.me(),
           exact: true,
         });
       }
@@ -191,21 +192,21 @@ export function useRemoveModuleGroupMember(moduleKey: string) {
       ),
     onSuccess: (_, { groupId, userId }) => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.moduleAccess.groupMembers(moduleKey, groupId),
+        queryKey: directoryAndOwnershipQueryKeys.moduleAccess.groupMembers(moduleKey, groupId),
       });
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.moduleAccess.roleGroups(moduleKey),
+        queryKey: directoryAndOwnershipQueryKeys.moduleAccess.roleGroups(moduleKey),
         exact: true,
       });
       void queryClient.invalidateQueries({
-        queryKey: [...queryKeys.moduleAccess.all, moduleKey, "members"],
+        queryKey: [...directoryAndOwnershipQueryKeys.moduleAccess.all, moduleKey, "members"],
       });
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.moduleAccess.memberCandidatesAll(moduleKey),
+        queryKey: directoryAndOwnershipQueryKeys.moduleAccess.memberCandidatesAll(moduleKey),
       });
       if (userId === session?.user?.id) {
         void queryClient.invalidateQueries({
-          queryKey: queryKeys.access.me(),
+          queryKey: platformCoreQueryKeys.access.me(),
           exact: true,
         });
       }

@@ -14,7 +14,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Loader2, CheckCircle2, Send } from "lucide-react";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import {
   type FormField,
   buildDynamicSchema,
@@ -131,7 +131,7 @@ export default function PublicFormPage() {
   const token = params.token;
 
   const formQuery = useQuery({
-    queryKey: queryKeys.hr.hrPublicForm(token),
+    queryKey: humanResourcesQueryKeys.hr.hrPublicForm(token),
     queryFn: () => fetchPublicForm(token),
     retry: false,
     staleTime: 60_000,

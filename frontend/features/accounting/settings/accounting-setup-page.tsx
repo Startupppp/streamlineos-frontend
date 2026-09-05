@@ -12,7 +12,7 @@ import { LoadingState, ErrorState, NoPermissionState } from "@/components/shared
 import { useCan } from "@/hooks/api/access";
 import { useSetupStatus } from "@/hooks/api/accounting/fin-settings";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { cn } from "@/lib/utils";
 import {
   StepCompanyCurrency,
@@ -162,7 +162,7 @@ export function AccountingSetupPage() {
 
   const invalidateSetupStatus = useCallback(() => {
     void queryClient.invalidateQueries({
-      queryKey: [...queryKeys.accounting.all, "fin-settings", "setup-status"],
+      queryKey: [...accountingAndSupportQueryKeys.accounting.all, "fin-settings", "setup-status"],
     });
   }, [queryClient]);
 

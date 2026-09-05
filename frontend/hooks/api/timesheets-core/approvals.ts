@@ -8,7 +8,7 @@ import {
 } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import type { CursorPage, PeriodStatus, TimesheetPeriod } from "@/features/timesheets/types";
@@ -32,7 +32,7 @@ export function useApprovals(query: ApprovalsQuery = {}, enabled = true) {
     limit: query.limit ?? 50,
   };
   return useInfiniteQuery<CursorPage<TimesheetPeriod>>({
-    queryKey: queryKeys.timesheets.approvals(filters),
+    queryKey: usersAndCommerceQueryKeys.timesheets.approvals(filters),
     queryFn: ({ pageParam , signal }) => {
       const params: Record<string, unknown> = { ...filters };
       if (typeof pageParam === "string") params.cursor = pageParam;
@@ -67,12 +67,12 @@ export function useApprovePeriod() {
     mutationFn: (periodId: number) =>
       apiClient.post<TimesheetPeriod>(`/timesheets/approvals/${periodId}/approve`),
     onMutate: async (periodId) => {
-      await qc.cancelQueries({ queryKey: queryKeys.timesheets.approvals() });
+      await qc.cancelQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.approvals() });
       const snapshots = qc.getQueriesData<InfiniteData<CursorPage<TimesheetPeriod>>>({
-        queryKey: queryKeys.timesheets.approvals(),
+        queryKey: usersAndCommerceQueryKeys.timesheets.approvals(),
       });
       qc.setQueriesData<InfiniteData<CursorPage<TimesheetPeriod>>>(
-        { queryKey: queryKeys.timesheets.approvals() },
+        { queryKey: usersAndCommerceQueryKeys.timesheets.approvals() },
         (prev) =>
           patchPeriodAcrossPages(prev, periodId, {
             status: "APPROVED",
@@ -90,8 +90,8 @@ export function useApprovePeriod() {
       toast.success("Timesheet approved");
     },
     onSettled: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.approvals() });
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.periods() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.approvals() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.periods() });
     },
   });
 }
@@ -103,12 +103,12 @@ export function useRejectPeriod() {
     mutationFn: ({ periodId, reason }: { periodId: number; reason: string }) =>
       apiClient.post<TimesheetPeriod>(`/timesheets/approvals/${periodId}/reject`, { reason }),
     onMutate: async ({ periodId, reason }) => {
-      await qc.cancelQueries({ queryKey: queryKeys.timesheets.approvals() });
+      await qc.cancelQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.approvals() });
       const snapshots = qc.getQueriesData<InfiniteData<CursorPage<TimesheetPeriod>>>({
-        queryKey: queryKeys.timesheets.approvals(),
+        queryKey: usersAndCommerceQueryKeys.timesheets.approvals(),
       });
       qc.setQueriesData<InfiniteData<CursorPage<TimesheetPeriod>>>(
-        { queryKey: queryKeys.timesheets.approvals() },
+        { queryKey: usersAndCommerceQueryKeys.timesheets.approvals() },
         (prev) =>
           patchPeriodAcrossPages(prev, periodId, {
             status: "REJECTED",
@@ -127,8 +127,8 @@ export function useRejectPeriod() {
       toast.success("Timesheet rejected");
     },
     onSettled: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.approvals() });
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.periods() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.approvals() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.periods() });
     },
   });
 }
@@ -140,8 +140,8 @@ export function useBulkApprove() {
     mutationFn: (periodIds: number[]) =>
       apiClient.post<{ approved: number }>("/timesheets/approvals/bulk-approve", { periodIds }),
     onSuccess: (res) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.approvals() });
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.periods() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.approvals() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.periods() });
       toast.success(`${res.approved} timesheet${res.approved === 1 ? "" : "s"} approved`);
     },
     onError: (error) => toast.error(getErrorMessage(error)),
@@ -155,8 +155,8 @@ export function useBulkReject() {
     mutationFn: ({ periodIds, reason }: { periodIds: number[]; reason: string }) =>
       apiClient.post<{ rejected: number }>("/timesheets/approvals/bulk-reject", { periodIds, reason }),
     onSuccess: (res) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.approvals() });
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.periods() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.approvals() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.periods() });
       toast.success(`${res.rejected} timesheet${res.rejected === 1 ? "" : "s"} rejected`);
     },
     onError: (error) => toast.error(getErrorMessage(error)),

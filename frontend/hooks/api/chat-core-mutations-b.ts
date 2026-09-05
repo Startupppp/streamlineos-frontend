@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   Channel,
@@ -22,7 +22,7 @@ export function useCreateDMChannel() {
       apiClient.post<Channel>("/chat/channels", { type: "DIRECT", ...input }),
     onSuccess: () => {
       refreshRealtimeCapability();
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
     },
   });
 }
@@ -35,7 +35,7 @@ export function useCreateGroupChannel() {
       apiClient.post<Channel>("/chat/channels", { type: "GROUP", ...input }),
     onSuccess: () => {
       refreshRealtimeCapability();
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
     },
   });
 }
@@ -48,9 +48,9 @@ export function useCreatePublicChannel() {
       apiClient.post<Channel>("/chat/channels", { type: "PUBLIC", ...input }),
     onSuccess: () => {
       refreshRealtimeCapability();
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.publicChannels(),
+        queryKey: collaborationQueryKeys.chat.publicChannels(),
       });
     },
   });
@@ -64,7 +64,7 @@ export function useCreatePrivateChannel() {
       apiClient.post<Channel>("/chat/channels", { type: "PRIVATE", ...input }),
     onSuccess: () => {
       refreshRealtimeCapability();
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
     },
   });
 }
@@ -77,9 +77,9 @@ export function useJoinChannel() {
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/join`),
     onSuccess: () => {
       refreshRealtimeCapability();
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.publicChannels(),
+        queryKey: collaborationQueryKeys.chat.publicChannels(),
       });
     },
   });
@@ -93,9 +93,9 @@ export function useLeaveChannel() {
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/leave`),
     onSuccess: () => {
       refreshRealtimeCapability();
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.publicChannels(),
+        queryKey: collaborationQueryKeys.chat.publicChannels(),
       });
     },
   });
@@ -117,7 +117,7 @@ export function useAddChannelMember() {
       }),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.channel(variables.channelId),
+        queryKey: collaborationQueryKeys.chat.channel(variables.channelId),
       });
     },
   });
@@ -139,9 +139,9 @@ export function useRemoveChannelMember() {
       ),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.channel(variables.channelId),
+        queryKey: collaborationQueryKeys.chat.channel(variables.channelId),
       });
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
     },
   });
 }
@@ -157,9 +157,9 @@ export function useUpdateChannel() {
       apiClient.patch<{ ok: boolean }>(`/chat/channels/${channelId}`, update),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.channel(variables.channelId),
+        queryKey: collaborationQueryKeys.chat.channel(variables.channelId),
       });
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
     },
   });
 }
@@ -183,7 +183,7 @@ export function useToggleReaction(channelId: number) {
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.messages(channelId),
+        queryKey: collaborationQueryKeys.chat.messages(channelId),
       });
     },
   });

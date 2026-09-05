@@ -2,7 +2,7 @@
 
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
@@ -36,7 +36,7 @@ type PreviewInput = {
 export function usePayrollTemplates(params?: TemplateListParams) {
   const canView = useCan("payroll:templates:view");
   return useQuery({
-    queryKey: queryKeys.payroll.templates(params as Record<string, unknown> | undefined),
+    queryKey: payrollQueryKeys.payroll.templates(params as Record<string, unknown> | undefined),
     queryFn: ({ signal }) =>
       apiClient.get<PaginatedResult<TemplateRow>>(
         "/payroll/templates",
@@ -68,8 +68,8 @@ export function useDeleteTemplate() {
     mutationFn: (templateId: number) =>
       apiClient.delete<void>(`/payroll/templates/${templateId}`),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "templates"] });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "template"] });
+      void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "templates"] });
+      void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "template"] });
     },
   });
 }
@@ -84,7 +84,7 @@ export function useDuplicateTemplate() {
         { name, description },
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "templates"] });
+      void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "templates"] });
     },
   });
 }

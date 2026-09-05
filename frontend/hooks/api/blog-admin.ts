@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
 import { useCan } from "@/hooks/api/access";
 import type { BlogCategory, BlogPostStatus } from "@/types/blog";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -48,7 +48,7 @@ export function useAdminBlogPosts(params: AdminBlogPostsParams) {
   const queryParams: Record<string, unknown> = { ...rest };
   if (status && status !== "all") queryParams.status = status;
   return useQuery({
-    queryKey: queryKeys.blogAdmin.posts(queryParams),
+    queryKey: accessAndCrmQueryKeys.blogAdmin.posts(queryParams),
     queryFn: ({ signal }) => apiClient.get<AdminBlogPostsResponse>("/blog/admin/posts", queryParams, signal),
     staleTime: 30_000,
     enabled: canManage,
@@ -58,7 +58,7 @@ export function useAdminBlogPosts(params: AdminBlogPostsParams) {
 export function useAdminBlogPost(postId: string) {
   const canManage = useCan("blog:posts:manage");
   return useQuery({
-    queryKey: queryKeys.blogAdmin.post(postId),
+    queryKey: accessAndCrmQueryKeys.blogAdmin.post(postId),
     queryFn: ({ signal }) => apiClient.get<AdminBlogPost>(`/blog/admin/posts/${postId}`, undefined, signal),
     staleTime: 60_000,
     enabled: canManage && !!postId,
@@ -90,7 +90,7 @@ export function useCreateBlogPost() {
     mutationFn: (data: CreateBlogPostInput) =>
       apiClient.post<AdminBlogPost>("/blog/admin/posts", data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.blogAdmin.all });
+      void qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.blogAdmin.all });
     },
   });
 }
@@ -102,8 +102,8 @@ export function useUpdateBlogPost() {
     mutationFn: ({ postId, ...data }: { postId: string } & UpdateBlogPostInput) =>
       apiClient.patch<AdminBlogPost>(`/blog/admin/posts/${postId}`, data),
     onSuccess: (_, { postId }) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.blogAdmin.all });
-      void qc.invalidateQueries({ queryKey: queryKeys.blogAdmin.post(postId), exact: true });
+      void qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.blogAdmin.all });
+      void qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.blogAdmin.post(postId), exact: true });
     },
   });
 }
@@ -114,7 +114,7 @@ export function useDeleteBlogPost() {
     mutationKey: ["blog", "admin", "posts", "delete"],
     mutationFn: (postId: string) => apiClient.delete(`/blog/admin/posts/${postId}`),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.blogAdmin.all });
+      void qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.blogAdmin.all });
     },
   });
 }
@@ -132,7 +132,7 @@ export interface AdminBlogCategory {
 export function useAdminBlogCategories() {
   const canManage = useCan("blog:categories:manage");
   return useQuery({
-    queryKey: queryKeys.blogAdmin.categories(),
+    queryKey: accessAndCrmQueryKeys.blogAdmin.categories(),
     queryFn: ({ signal }) => apiClient.get<AdminBlogCategory[]>("/blog/admin/categories", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canManage,
@@ -154,7 +154,7 @@ export function useCreateBlogCategory() {
     mutationFn: (data: CreateBlogCategoryInput) =>
       apiClient.post<AdminBlogCategory>("/blog/admin/categories", data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.blogAdmin.categories() });
+      void qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.blogAdmin.categories() });
     },
   });
 }
@@ -166,7 +166,7 @@ export function useUpdateBlogCategory() {
     mutationFn: ({ categoryId, ...data }: { categoryId: string } & UpdateBlogCategoryInput) =>
       apiClient.patch<AdminBlogCategory>(`/blog/admin/categories/${categoryId}`, data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.blogAdmin.categories() });
+      void qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.blogAdmin.categories() });
     },
   });
 }
@@ -178,7 +178,7 @@ export function useDeleteBlogCategory() {
     mutationFn: (categoryId: string) =>
       apiClient.delete(`/blog/admin/categories/${categoryId}`),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.blogAdmin.all });
+      void qc.invalidateQueries({ queryKey: accessAndCrmQueryKeys.blogAdmin.all });
     },
   });
 }

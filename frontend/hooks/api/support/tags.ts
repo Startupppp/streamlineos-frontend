@@ -2,7 +2,8 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
@@ -16,7 +17,7 @@ export interface SupportTag {
 
 export function useSupportTags() {
   return useGatedQuery("support:tickets:view", {
-    queryKey: queryKeys.supportTags.list(),
+    queryKey: supportAndWorkflowsQueryKeys.supportTags.list(),
     queryFn: ({ signal }) => apiClient.get<SupportTag[]>("/support/tags", undefined, signal),
     staleTime: 60_000,
   });
@@ -24,7 +25,7 @@ export function useSupportTags() {
 
 export function useTicketTags(ticketId: number) {
   return useGatedQuery("support:tickets:view", {
-    queryKey: [...queryKeys.support.detail(ticketId), "tags"] as const,
+    queryKey: [...platformCoreQueryKeys.support.detail(ticketId), "tags"] as const,
     queryFn: ({ signal }) => apiClient.get<SupportTag[]>(`/support/${ticketId}/tags`, undefined, signal),
     enabled: Number.isFinite(ticketId) && ticketId > 0,
     staleTime: 30_000,
@@ -37,7 +38,7 @@ export function useAttachTag() {
     mutationKey: ["attach", "tag"],
     mutationFn: ({ ticketId, tagId }: { ticketId: number; tagId: number }) =>
       apiClient.post<{ success: boolean }>(`/support/${ticketId}/tags/${tagId}`, {}),
-    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: queryKeys.support.detail(vars.ticketId) }),
+    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: platformCoreQueryKeys.support.detail(vars.ticketId) }),
   });
 }
 
@@ -47,6 +48,6 @@ export function useDetachTag() {
     mutationKey: ["detach", "tag"],
     mutationFn: ({ ticketId, tagId }: { ticketId: number; tagId: number }) =>
       apiClient.delete<{ success: boolean }>(`/support/${ticketId}/tags/${tagId}`),
-    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: queryKeys.support.detail(vars.ticketId) }),
+    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: platformCoreQueryKeys.support.detail(vars.ticketId) }),
   });
 }

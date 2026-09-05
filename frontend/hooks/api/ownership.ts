@@ -3,7 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useAccess, useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -59,7 +60,7 @@ export function useInitiateOrgTransfer() {
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.ownership.orgTransfers(),
+        queryKey: directoryAndOwnershipQueryKeys.ownership.orgTransfers(),
       });
     },
   });
@@ -69,7 +70,7 @@ export function usePendingOrgTransfers() {
   const canView = useCan("ownership:modules:view");
 
   return useQuery<OrgTransfersResponse, Error>({
-    queryKey: queryKeys.ownership.orgTransfers(),
+    queryKey: directoryAndOwnershipQueryKeys.ownership.orgTransfers(),
     queryFn: ({ signal }) =>
       apiClient.get<OrgTransfersResponse>("/ownership/transfers", {
         scope: "ORGANIZATION",
@@ -86,7 +87,7 @@ export function useIncomingOrgTransfers() {
   const canRespond = useCan("ownership:transfer:respond");
 
   return useQuery<IncomingTransfersResponse, Error>({
-    queryKey: queryKeys.ownership.incomingTransfers(),
+    queryKey: directoryAndOwnershipQueryKeys.ownership.incomingTransfers(),
     queryFn: ({ signal }) =>
       apiClient.get<IncomingTransfersResponse>("/ownership/transfers/incoming", undefined, signal),
     enabled: !accessPending && canRespond,
@@ -103,7 +104,7 @@ export function useCancelOrgTransfer() {
       apiClient.delete<{ success: true }>(`/ownership/transfers/${transferId}`),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.ownership.orgTransfers(),
+        queryKey: directoryAndOwnershipQueryKeys.ownership.orgTransfers(),
       });
     },
   });
@@ -121,11 +122,11 @@ export function useAcceptTransfer() {
       ),
     onSettled: () => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.ownership.all,
+        queryKey: directoryAndOwnershipQueryKeys.ownership.all,
       });
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.access.me() });
+      void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
       void update();
     },
   });
@@ -146,7 +147,7 @@ export function useDeclineTransfer() {
       ),
     onSettled: () => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.ownership.all,
+        queryKey: directoryAndOwnershipQueryKeys.ownership.all,
       });
     },
   });

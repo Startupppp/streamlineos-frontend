@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 
 export type OrgSetupPayload = {
   industry: string;
@@ -28,7 +28,7 @@ export type OrgSetupSession = {
 
 export function useOrgSetupSessionQuery(enabled = true) {
   return useQuery({
-    queryKey: queryKeys.orgSetup.session(),
+    queryKey: platformCoreQueryKeys.orgSetup.session(),
     queryFn: ({ signal }) => apiClient.get<OrgSetupSession>("/org/setup/session", undefined, signal),
     staleTime: 30_000,
     retry: false,

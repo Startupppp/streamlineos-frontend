@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -62,9 +62,9 @@ export function useImportKbPages() {
     mutationFn: (input: ImportKbPagesInput) =>
       apiClient.post<ImportResult>("/kb/pages/import", input),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.kb.pagesTree() });
-      qc.invalidateQueries({ queryKey: queryKeys.kb.kbPages() });
-      qc.invalidateQueries({ queryKey: queryKeys.kb.importJobs() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.kbPages() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs() });
     },
   });
 }
@@ -72,7 +72,7 @@ export function useImportKbPages() {
 export function useKbImportJobs() {
   const canImport = useCan("kb:pages:import");
   return useQuery({
-    queryKey: queryKeys.kb.importJobs(),
+    queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs(),
     queryFn: ({ signal }) => apiClient.get<KbImportJob[]>("/kb/import-jobs", undefined, signal),
     enabled: canImport,
     staleTime: 30_000,
@@ -82,7 +82,7 @@ export function useKbImportJobs() {
 export function useKbExportJobs() {
   const canExport = useCan("kb:pages:export");
   return useQuery({
-    queryKey: queryKeys.kb.exportJobs(),
+    queryKey: knowledgeAndSurveysQueryKeys.kb.exportJobs(),
     queryFn: ({ signal }) => apiClient.get<KbExportJob[]>("/kb/export-jobs", undefined, signal),
     enabled: canExport,
     staleTime: 30_000,

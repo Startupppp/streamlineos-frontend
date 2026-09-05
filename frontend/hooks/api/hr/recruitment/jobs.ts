@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
@@ -58,7 +58,7 @@ export interface JobShareLinks {
 export function useRecruitmentStats() {
   const canInterviews = useCan("hr:interviews:view");
   return useQuery({
-    queryKey: queryKeys.hr.recruitmentStats(),
+    queryKey: humanResourcesQueryKeys.hr.recruitmentStats(),
     queryFn: ({ signal }) => apiClient.get<RecruitmentStats>("/hr/recruitment/stats", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canInterviews,
@@ -84,7 +84,7 @@ export function useJobPostings(params?: JobPostingsParams) {
     pageSize,
   };
   return useQuery({
-    queryKey: queryKeys.hr.jobPostings(queryParams as Record<string, unknown>),
+    queryKey: humanResourcesQueryKeys.hr.jobPostings(queryParams as Record<string, unknown>),
     queryFn: async ({ signal }): Promise<JobPosting[]> => {
       const res = await apiClient.get<JobPosting[] | { items: JobPosting[] }>(
         "/hr/recruitment/jobs",
@@ -107,7 +107,7 @@ export function useJobPostingsPage(params?: JobPostingsParams) {
     pageSize,
   };
   return useGatedQuery("hr:employees:view", {
-    queryKey: [...queryKeys.hr.jobPostings(queryParams as Record<string, unknown>), "page"] as const,
+    queryKey: [...humanResourcesQueryKeys.hr.jobPostings(queryParams as Record<string, unknown>), "page"] as const,
     queryFn: ({ signal }): Promise<{
       items: JobPosting[];
       total: number;
@@ -126,14 +126,14 @@ export function useJobPostingsPage(params?: JobPostingsParams) {
 export function useJobPosting(id: number) {
   const enabled = Number.isFinite(id) && id > 0;
   return useGatedQuery("hr:employees:view", {
-    queryKey: queryKeys.hr.jobPosting(id),
+    queryKey: humanResourcesQueryKeys.hr.jobPosting(id),
     queryFn: ({ signal }) => apiClient.get<JobPosting>(`/hr/recruitment/jobs/${id}`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled,
   });
 }
 
-const JOB_POSTINGS_ROOT = [...queryKeys.hr.all, "jobPostings"] as const;
+const JOB_POSTINGS_ROOT = [...humanResourcesQueryKeys.hr.all, "jobPostings"] as const;
 
 export function useCreateJobPosting() {
   const qc = useQueryClient();
@@ -143,7 +143,7 @@ export function useCreateJobPosting() {
       apiClient.post<JobPosting>("/hr/recruitment/jobs", data),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: JOB_POSTINGS_ROOT });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentStats() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentStats() });
     },
   });
 }
@@ -156,8 +156,8 @@ export function useUpdateJobPosting() {
       apiClient.patch<{ success: boolean }>(`/hr/recruitment/jobs/${id}`, data),
     onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: JOB_POSTINGS_ROOT });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.jobPosting(vars.id) });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentStats() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.jobPosting(vars.id) });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentStats() });
     },
   });
 }
@@ -170,7 +170,7 @@ export function useDeleteJobPosting() {
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/jobs/${id}`),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: JOB_POSTINGS_ROOT });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentStats() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentStats() });
     },
   });
 }
@@ -183,7 +183,7 @@ export function useDuplicateJobPosting() {
       apiClient.post<JobPosting>(`/hr/recruitment/jobs/${id}/duplicate`, {}),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: JOB_POSTINGS_ROOT });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentStats() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentStats() });
     },
   });
 }
@@ -196,14 +196,14 @@ export function usePublishJobToBoards() {
       apiClient.post<PublishJobResult>(`/hr/recruitment/jobs/${jobId}/publish`, { platforms }),
     onSuccess: (_, vars) => {
       void qc.invalidateQueries({ queryKey: JOB_POSTINGS_ROOT });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.jobPosting(vars.jobId) });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.jobPosting(vars.jobId) });
     },
   });
 }
 
 export function useSourcePortals() {
   return useGatedQuery("hr:employees:manage", {
-    queryKey: [...queryKeys.hr.all, "sourcePortals"] as const,
+    queryKey: [...humanResourcesQueryKeys.hr.all, "sourcePortals"] as const,
     queryFn: ({ signal }) => apiClient.get<SourcePortal[]>("/hr/recruitment/portals", undefined, signal),
     staleTime: 2 * 60_000,
   });
@@ -216,13 +216,13 @@ export function useUpsertSourcePortal() {
     mutationFn: (data: UpsertPortalInput) =>
       apiClient.post<SourcePortal>("/hr/recruitment/portals", data),
     onSuccess: () =>
-      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "sourcePortals"] as const }),
+      void qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "sourcePortals"] as const }),
   });
 }
 
 export function useJobShareLinks(jobId: number) {
   return useGatedQuery("hr:employees:view", {
-    queryKey: [...queryKeys.hr.all, "jobShare", jobId] as const,
+    queryKey: [...humanResourcesQueryKeys.hr.all, "jobShare", jobId] as const,
     queryFn: ({ signal }) =>
       apiClient.get<JobShareLinks>(`/hr/recruitment/jobs/${jobId}/share`, undefined, signal),
     staleTime: 2 * 60_000,

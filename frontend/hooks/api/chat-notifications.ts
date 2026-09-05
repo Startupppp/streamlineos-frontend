@@ -6,7 +6,7 @@ import type { InboundMessage } from "ably";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { queryKeys } from "@/lib/query-keys";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
 import { chatChannelName, notificationsChannelName } from "@/lib/ably-channels";
 import { reauthorizeAblyClients } from "@/lib/ably";
@@ -69,11 +69,11 @@ export function useChatGlobalNotifications(
           if (!payload?.id || payload.senderId === currentUserIdRef.current) return;
 
           queryClient.invalidateQueries({
-            queryKey: queryKeys.chat.myChannels(),
+            queryKey: collaborationQueryKeys.chat.myChannels(),
             exact: true,
           });
           queryClient.invalidateQueries({
-            queryKey: queryKeys.chat.unreadTotal(),
+            queryKey: collaborationQueryKeys.chat.unreadTotal(),
             exact: true,
           });
 

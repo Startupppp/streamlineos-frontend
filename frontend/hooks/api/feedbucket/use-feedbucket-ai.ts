@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import type { FeedbucketAiAnalysis, FeedbucketAiTicketType } from "@/types/feedbucket";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -16,7 +16,7 @@ export function useAnalyzeFeedbucketSubmission() {
         { force: force ?? false },
       ),
     onSuccess: (_, { submissionId }) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.feedbucket.submission(submissionId) });
+      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.submission(submissionId) });
     },
   });
 }
@@ -30,8 +30,8 @@ export function useCreateTicketFromFeedbucketAi() {
         `/feedbucket/submissions/${submissionId}/ai-create-ticket`,
       ),
     onSuccess: (_, submissionId) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.feedbucket.submission(submissionId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.feedbucket.all });
+      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.submission(submissionId) });
+      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.all });
     },
   });
 }

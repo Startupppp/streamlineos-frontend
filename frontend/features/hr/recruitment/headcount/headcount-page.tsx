@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useHrDepartments } from "@/hooks/api/hr";
 import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -90,7 +90,7 @@ function RequestSheet({ initial, onClose }: RequestSheetProps) {
     mutationFn: (data: Record<string, unknown>) =>
       apiClient.post("/hr/recruitment/headcount", data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.headcountRequests() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.headcountRequests() });
       toast.success("Request created");
       onClose();
     },
@@ -101,7 +101,7 @@ function RequestSheet({ initial, onClose }: RequestSheetProps) {
     mutationFn: (data: Record<string, unknown>) =>
       apiClient.patch(`/hr/recruitment/headcount/${initial?.id}`, data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.headcountRequests() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.headcountRequests() });
       toast.success("Request updated");
       onClose();
     },
@@ -204,7 +204,7 @@ function RejectDialog({ requestId, onClose }: RejectDialogProps) {
   const reject = useMutation({
     mutationFn: () => apiClient.post(`/hr/recruitment/headcount/${requestId}/reject`, { reason }),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.headcountRequests() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.headcountRequests() });
       toast.success("Request rejected");
       onClose();
     },
@@ -320,7 +320,7 @@ export function HeadcountPage() {
   const canViewHeadcount = useCan("hr:employees:view");
 
   const { data: requests = [], isLoading, isError, refetch } = useQuery({
-    queryKey: queryKeys.hr.headcountRequests(),
+    queryKey: humanResourcesQueryKeys.hr.headcountRequests(),
     queryFn: ({ signal }) => apiClient.get<HeadcountRequest[]>("/hr/recruitment/headcount", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canViewHeadcount,
@@ -333,7 +333,7 @@ export function HeadcountPage() {
   const approve = useMutation({
     mutationFn: (id: number) => apiClient.post(`/hr/recruitment/headcount/${id}/approve`, {}),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.headcountRequests() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.headcountRequests() });
       toast.success("Request approved");
     },
     onError: (e) => toast.error(getErrorMessage(e)),
@@ -342,7 +342,7 @@ export function HeadcountPage() {
   const createJob = useMutation({
     mutationFn: (id: number) => apiClient.post<{ jobId: number }>(`/hr/recruitment/headcount/${id}/create-job`, {}),
     onSuccess: (data) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.headcountRequests() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.headcountRequests() });
       toast.success("Job posting created");
       router.push(`/hr/recruitment/jobs/${data.jobId}/edit`);
     },

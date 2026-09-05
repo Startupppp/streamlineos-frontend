@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import type { OffsetPage } from "@/hooks/api/offset-page-schema";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type {
   NotificationTemplate,
   SetTemplateApprovalInput,
@@ -23,7 +23,7 @@ export const useNotificationTemplates = (
   const canView = useCan("notifications:templates:view");
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<NotificationTemplate[], Error>({
-    queryKey: queryKeys.notifications.templates(params),
+    queryKey: platformCoreQueryKeys.notifications.templates(params),
     queryFn: async ({ signal }) =>
       (await apiClient.get<OffsetPage<NotificationTemplate>>(
         "/notification-templates",
@@ -41,7 +41,7 @@ export const useCreateNotificationTemplate = () => {
     mutationKey: ["notifications", "templates", "create"],
     mutationFn: (dto) => apiClient.post<NotificationTemplate>("/notification-templates", dto),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.templates() });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.templates() });
     },
   });
 };
@@ -53,8 +53,8 @@ export const useUpdateNotificationTemplate = () => {
     mutationFn: ({ id, ...dto }) =>
       apiClient.patch<NotificationTemplate>(`/notification-templates/${id}`, dto),
     onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.templates() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.template(vars.id) });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.templates() });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.template(vars.id) });
     },
   });
 };
@@ -66,8 +66,8 @@ export const useSetTemplateApproval = () => {
     mutationFn: ({ id, ...dto }) =>
       apiClient.patch<NotificationTemplate>(`/notification-templates/${id}/approval`, dto),
     onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.templates() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.template(vars.id) });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.templates() });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.template(vars.id) });
     },
   });
 };
@@ -78,7 +78,7 @@ export const useDeleteNotificationTemplate = () => {
     mutationKey: ["notifications", "templates", "delete"],
     mutationFn: (id) => apiClient.delete<{ success: boolean }>(`/notification-templates/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.templates() });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.templates() });
     },
   });
 };

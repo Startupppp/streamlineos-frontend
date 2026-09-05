@@ -3,7 +3,7 @@
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -36,7 +36,7 @@ export function useTimesheetPayrollSummary(params: SummaryParams, enabled: boole
   if (params.includeExported) queryParams.includeExported = "true";
 
   return useQuery({
-    queryKey: queryKeys.timesheets.payroll.summary(queryParams),
+    queryKey: usersAndCommerceQueryKeys.timesheets.payroll.summary(queryParams),
     queryFn: ({ signal }) =>
       apiClient.get<PayrollSummaryResponse>("/timesheets/payroll/period-summary", queryParams, signal),
     staleTime: 30_000,
@@ -48,7 +48,7 @@ export function useTimesheetPayrollSummary(params: SummaryParams, enabled: boole
 export function useTimesheetPayrollSettings() {
   const canView = useCan("timesheets:payroll:view");
   return useQuery({
-    queryKey: queryKeys.timesheets.payroll.settings(),
+    queryKey: usersAndCommerceQueryKeys.timesheets.payroll.settings(),
     queryFn: ({ signal }) => apiClient.get<PayrollSettings>("/timesheets/payroll/settings", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canView,
@@ -62,7 +62,7 @@ export function useUpdateTimesheetPayrollSettings() {
     mutationFn: (data: Partial<PayrollSettings>) =>
       apiClient.patch<PayrollSettings>("/timesheets/payroll/settings", data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.payroll.settings() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.payroll.settings() });
       toast.success("Payroll settings saved");
     },
     onError: (error) => toast.error(getErrorMessage(error)),
@@ -76,7 +76,7 @@ export function useCreateTimesheetPayrollExport() {
     mutationFn: (data: CreateExportBody) =>
       apiClient.post<CreateExportResponse>("/timesheets/payroll/export", data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.payroll.all });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.payroll.all });
     },
     onError: (error) => toast.error(getErrorMessage(error)),
   });
@@ -85,7 +85,7 @@ export function useCreateTimesheetPayrollExport() {
 export function useTimesheetPayrollExports(limit = 20) {
   const canView = useCan("timesheets:payroll:view");
   return useInfiniteQuery<ExportHistoryResponse>({
-    queryKey: queryKeys.timesheets.payroll.exports(limit),
+    queryKey: usersAndCommerceQueryKeys.timesheets.payroll.exports(limit),
     queryFn: ({ pageParam , signal }) => {
       const params: Record<string, unknown> = { limit };
       if (typeof pageParam === "string") params.cursor = pageParam;
@@ -105,7 +105,7 @@ export function useAckPayrollExport() {
     mutationFn: ({ exportId, data }: { exportId: number; data: AckExportInput }) =>
       apiClient.patch<AckExportResponse>(`/timesheets/payroll/exports/${exportId}/ack`, data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: [...queryKeys.timesheets.all, "payroll", "exports"] });
+      void qc.invalidateQueries({ queryKey: [...usersAndCommerceQueryKeys.timesheets.all, "payroll", "exports"] });
       toast.success("Acknowledgement recorded");
     },
     onError: (error) => toast.error(getErrorMessage(error)),
@@ -114,7 +114,7 @@ export function useAckPayrollExport() {
 
 export function payrollExportRowsQueryOptions(exportId: number) {
   return {
-    queryKey: queryKeys.timesheets.payroll.exportRows(exportId),
+    queryKey: usersAndCommerceQueryKeys.timesheets.payroll.exportRows(exportId),
     queryFn: ({ signal }: { signal?: AbortSignal }) =>
       apiClient.get<ExportRowsResponse>(`/timesheets/payroll/exports/${exportId}/rows`, undefined, signal),
     staleTime: 5 * 60_000,

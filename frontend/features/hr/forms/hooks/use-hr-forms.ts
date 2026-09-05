@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import type {
   CreateHrFormPayload,
   HrForm,
@@ -38,7 +38,7 @@ export function useHrForms(params?: { status?: string; audience?: string; cursor
 export function useHrForm(formId: number | undefined) {
   const canViewForms = useCan("hr:forms:view");
   return useQuery<HrForm>({
-    queryKey: [...queryKeys.hr.hrFormsAll, formId],
+    queryKey: [...humanResourcesQueryKeys.hr.hrFormsAll, formId],
     queryFn: ({ signal }) => apiClient.get<HrForm>(`/hr/forms/${formId}`, undefined, signal),
     enabled: canViewForms && formId !== undefined,
     staleTime: 30_000,
@@ -62,7 +62,7 @@ export function useUpdateHrForm(formId: number) {
       apiClient.patch<HrForm>(`/hr/forms/${formId}`, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: FORMS_KEY });
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.hrFormsAll, formId] });
+      qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.hrFormsAll, formId] });
     },
   });
 }

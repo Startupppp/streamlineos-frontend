@@ -20,7 +20,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { queryKeys } from "@/lib/query-keys";
+import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { MonthPicker } from "@/features/payroll/shared/month-picker";
 import {
   FILING_EXPORT_TERMINAL,
@@ -75,7 +75,7 @@ export function FilingExportDialog({
     if (exportJob.jobId === reportedJobRef.current) return;
     reportedJobRef.current = exportJob.jobId;
     if (exportJob.status === "SUCCEEDED") {
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.filingsAll });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.filingsAll });
       toast.success(exportJob.statusLabel, {
         description: "The CSV is ready to download from the list below.",
       });

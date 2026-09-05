@@ -2,7 +2,9 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { customerWorkQueryKeys } from "@/lib/query-keys/customer-work";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 import { useCan } from "@/hooks/api/access";
 import type {
   LeadScoreResult, EmailTone, GeneratedEmail, DealPredictionResult,
@@ -29,8 +31,8 @@ export function useAIScoreLead() {
     },
     onSuccess: (_, input) => {
       const { value: leadId } = readAiAbortableScalar(input);
-      qc.invalidateQueries({ queryKey: queryKeys.leads.detail(leadId) });
-      qc.invalidateQueries({ queryKey: queryKeys.leads.all });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.leads.detail(leadId) });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.leads.all });
     },
   });
 }
@@ -45,7 +47,7 @@ export function useAIBatchScoreLeads() {
         { leadIds },
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.leads.all });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.leads.all });
     },
   });
 }
@@ -78,8 +80,8 @@ export function usePredictDeal() {
     mutationFn: ({ dealId, signal }: { dealId: number } & AiAbortInput) =>
       apiClient.post<DealPredictionResult>("/ai/predict-deal", { dealId }, { signal }),
     onSuccess: (_, { dealId }) => {
-      qc.invalidateQueries({ queryKey: queryKeys.deals.detail(dealId) });
-      qc.invalidateQueries({ queryKey: queryKeys.deals.all });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.detail(dealId) });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.deals.all });
     },
   });
 }
@@ -113,7 +115,7 @@ export function useAIScoreCandidate() {
     }: { candidateId: number; jobId?: number } & AiAbortInput) =>
       apiClient.post<CandidateScoreResult>("/ai/score-candidate", input, { signal }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidates() });
     },
   });
 }
@@ -207,7 +209,7 @@ export interface OrgFeatureFlags {
 
 export function useOrgFeatureFlags() {
   return useGatedQuery("settings:view", {
-    queryKey: queryKeys.settings.featureFlags(),
+    queryKey: platformHierarchyQueryKeys.settings.featureFlags(),
     queryFn: ({ signal }) => apiClient.get<OrgFeatureFlags>("/settings/feature-flags", undefined, signal),
     staleTime: 30_000,
   });
@@ -223,7 +225,7 @@ export function useUpdateFeatureFlag() {
         data,
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.settings.featureFlags() });
+      qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.settings.featureFlags() });
     },
   });
 }
@@ -260,7 +262,7 @@ export interface AiUsageData {
 export function useAiUsage() {
   const canView = useCan("ai:usage:view");
   return useQuery({
-    queryKey: queryKeys.settings.aiUsage(),
+    queryKey: platformHierarchyQueryKeys.settings.aiUsage(),
     queryFn: ({ signal }) => apiClient.get<AiUsageData>("/settings/ai-usage", undefined, signal),
     enabled: canView,
     staleTime: 5 * 60_000,
@@ -301,7 +303,7 @@ export function useAcceptCandidateScore() {
     mutationFn: (input: { candidateId: number; aiScore: number }) =>
       apiClient.post<{ accepted: boolean }>("/ai/hr/accept-candidate-score", input),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidates() });
     },
   });
 }

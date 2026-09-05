@@ -2,7 +2,8 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { AiAbortInput } from "@/hooks/api/ai-abort";
 import { useGatedQuery } from "@/hooks/api/gated-query";
@@ -163,12 +164,12 @@ interface ResolveAiSuggestionInput {
 }
 
 function invalidateSuggestions(qc: ReturnType<typeof useQueryClient>, ticketId: number) {
-  qc.invalidateQueries({ queryKey: queryKeys.supportAiSuggestions.list(ticketId) });
+  qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportAiSuggestions.list(ticketId) });
 }
 
 export function useTicketAiSuggestions(ticketId: number) {
   return useGatedQuery("support:tickets:view", {
-    queryKey: queryKeys.supportAiSuggestions.list(ticketId),
+    queryKey: supportAndWorkflowsQueryKeys.supportAiSuggestions.list(ticketId),
     queryFn: ({ signal }) => apiClient.get<AiSuggestion[]>(`/support/${ticketId}/ai/suggestions`, undefined, signal),
     enabled: Number.isFinite(ticketId) && ticketId > 0,
     staleTime: 30_000,
@@ -265,7 +266,7 @@ export function useResolveAiSuggestion(ticketId: number) {
       apiClient.post<AiSuggestion>(`/support/ai-suggestions/${suggestionId}/resolve`, { status, feedback }),
     onSuccess: () => {
       invalidateSuggestions(qc, ticketId);
-      qc.invalidateQueries({ queryKey: queryKeys.support.detail(ticketId) });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.support.detail(ticketId) });
     },
   });
 }
@@ -336,7 +337,7 @@ function reportParamsToRecord(params?: SupportAiReportParams): Record<string, un
 export function useSupportAiReport(params?: SupportAiReportParams) {
   const record = reportParamsToRecord(params);
   return useGatedQuery("support:ai:view", {
-    queryKey: queryKeys.supportAiReport.get(record),
+    queryKey: platformCoreQueryKeys.supportAiReport.get(record),
     queryFn: ({ signal }) => apiClient.get<SupportAiReportResult>(`/support/ai/report`, record, signal),
     staleTime: 2 * 60_000,
   });

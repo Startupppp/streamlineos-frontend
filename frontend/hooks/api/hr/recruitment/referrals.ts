@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { CandidateReferral, CreateReferralInput } from "@/types/hr/recruitment";
@@ -10,7 +10,7 @@ import type { CandidateReferral, CreateReferralInput } from "@/types/hr/recruitm
 export function useAllReferrals() {
   const canEmployees = useCan("hr:employees:view");
   return useQuery({
-    queryKey: queryKeys.hr.referrals(),
+    queryKey: humanResourcesQueryKeys.hr.referrals(),
     queryFn: ({ signal }) => apiClient.get<CandidateReferral[]>("/hr/recruitment/referrals", undefined, signal),
     staleTime: 60_000,
     enabled: canEmployees,
@@ -24,7 +24,7 @@ export function useSubmitReferral() {
     mutationFn: (data: CreateReferralInput) =>
       apiClient.post<CandidateReferral>("/hr/recruitment/referrals", data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.referrals() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.referrals() });
     },
   });
 }
@@ -36,7 +36,7 @@ export function useUpdateReferralStatus() {
     mutationFn: ({ id, ...data }: { id: number; status?: string; bonusAmount?: number; bonusEligible?: boolean; notes?: string }) =>
       apiClient.patch<CandidateReferral>(`/hr/recruitment/referrals/${id}`, data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.referrals() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.referrals() });
     },
   });
 }

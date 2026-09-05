@@ -7,7 +7,7 @@ import {
   keepPreviousData,
 } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
@@ -23,7 +23,7 @@ import type {
 export function useChatPins(channelId: number) {
   const canRead = useCan("chat:messages:read");
   return useQuery({
-    queryKey: queryKeys.chat.pins(channelId),
+    queryKey: collaborationQueryKeys.chat.pins(channelId),
     queryFn: ({ signal }) =>
       apiClient.get<PinnedMessage[]>(`/chat/channels/${channelId}/pins`, undefined, signal),
     staleTime: 2 * 60_000,
@@ -47,7 +47,7 @@ export function usePinMessage() {
       }),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.pins(variables.channelId),
+        queryKey: collaborationQueryKeys.chat.pins(variables.channelId),
       });
     },
   });
@@ -69,7 +69,7 @@ export function useUnpinMessage() {
       ),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.pins(variables.channelId),
+        queryKey: collaborationQueryKeys.chat.pins(variables.channelId),
       });
     },
   });
@@ -78,7 +78,7 @@ export function useUnpinMessage() {
 export function useThreadReplies(channelId: number, messageId: number) {
   const canRead = useCan("chat:messages:read");
   return useInfiniteQuery({
-    queryKey: queryKeys.chat.thread(channelId, messageId),
+    queryKey: collaborationQueryKeys.chat.thread(channelId, messageId),
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<ThreadPage>(
         `/chat/channels/${channelId}/messages/${messageId}/thread`,
@@ -101,7 +101,7 @@ export function useSendThreadReply(channelId: number, parentMessageId: number) {
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.thread(channelId, parentMessageId),
+        queryKey: collaborationQueryKeys.chat.thread(channelId, parentMessageId),
       });
     },
   });
@@ -110,7 +110,7 @@ export function useSendThreadReply(channelId: number, parentMessageId: number) {
 export function useSearchMessages(query: string, enabled: boolean) {
   const canRead = useCan("chat:messages:read");
   return useQuery({
-    queryKey: [...queryKeys.chat.all, "search", "messages", query] as const,
+    queryKey: [...collaborationQueryKeys.chat.all, "search", "messages", query] as const,
     queryFn: ({ signal }) =>
       apiClient.get<SearchMessagesResult>("/chat/search/messages", {
         q: query,
@@ -124,7 +124,7 @@ export function useSearchMessages(query: string, enabled: boolean) {
 export function useSearchChannels(query: string, enabled: boolean) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
-    queryKey: [...queryKeys.chat.all, "search", "channels", query] as const,
+    queryKey: [...collaborationQueryKeys.chat.all, "search", "channels", query] as const,
     queryFn: ({ signal }) =>
       apiClient.get<SearchChannelResult[]>("/chat/search/channels", {
         q: query,
@@ -138,7 +138,7 @@ export function useSearchChannels(query: string, enabled: boolean) {
 export function useSearchUsers(query: string, enabled: boolean) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
-    queryKey: [...queryKeys.chat.all, "search", "users", query] as const,
+    queryKey: [...collaborationQueryKeys.chat.all, "search", "users", query] as const,
     queryFn: ({ signal }) =>
       apiClient.get<SearchUserResult[]>("/chat/search/users", { q: query }, signal),
     enabled: enabled && canRead && query.trim().length >= 1,

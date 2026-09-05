@@ -5,7 +5,7 @@ import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useCan } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type {
   CursorPage,
@@ -17,14 +17,14 @@ import type {
 } from "@/features/timesheets/types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-const exceptionsListPrefix = queryKeys.timesheets
+const exceptionsListPrefix = usersAndCommerceQueryKeys.timesheets
   .exceptions(undefined)
   .slice(0, -1);
 
 function invalidateExceptionQueries(qc: QueryClient) {
   void qc.invalidateQueries({ queryKey: exceptionsListPrefix });
   void qc.invalidateQueries({
-    queryKey: queryKeys.timesheets.exceptionsSummary(),
+    queryKey: usersAndCommerceQueryKeys.timesheets.exceptionsSummary(),
   });
 }
 
@@ -41,7 +41,7 @@ export function useTimesheetExceptions(
     limit: query.limit ?? 50,
   };
   return useInfiniteQuery<CursorPage<TimesheetException>>({
-    queryKey: queryKeys.timesheets.exceptions(filters),
+    queryKey: usersAndCommerceQueryKeys.timesheets.exceptions(filters),
     queryFn: ({ pageParam , signal }) => {
       const params: Record<string, unknown> = { ...filters };
       if (typeof pageParam === "string") params.cursor = pageParam;
@@ -59,7 +59,7 @@ export function useTimesheetExceptions(
 
 export function useExceptionsSummary(enabled = true) {
   return useGatedQuery("timesheets:exceptions:view", {
-    queryKey: queryKeys.timesheets.exceptionsSummary(),
+    queryKey: usersAndCommerceQueryKeys.timesheets.exceptionsSummary(),
     queryFn: ({ signal }) =>
       apiClient.get<ExceptionsSummary>("/timesheets/exceptions/summary", undefined, signal),
     staleTime: 60_000,

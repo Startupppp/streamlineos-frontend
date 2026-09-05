@@ -1,7 +1,8 @@
 "use client";
 
 import type { InfiniteData, QueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/query-keys";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type { MailActionBody, MailListResponse, MailMessageSummary } from "@/types/mail";
 import type { UnifiedInboxItem, UnifiedInboxResponse } from "@/types/inbox";
 
@@ -35,10 +36,10 @@ export async function applyMailActionToCaches(
   body: MailActionBody,
 ): Promise<MailActionCacheContext> {
   const { action, accountId } = body;
-  const messagesPrefix = [...queryKeys.mail.all, "messages"] as const;
-  const unifiedPrefix = [...queryKeys.inbox.all, "unified"] as const;
+  const messagesPrefix = [...directoryAndOwnershipQueryKeys.mail.all, "messages"] as const;
+  const unifiedPrefix = [...platformCoreQueryKeys.inbox.all, "unified"] as const;
 
-  await qc.cancelQueries({ queryKey: queryKeys.mail.all });
+  await qc.cancelQueries({ queryKey: directoryAndOwnershipQueryKeys.mail.all });
   await qc.cancelQueries({ queryKey: unifiedPrefix });
 
   const snapshots: MailCacheSnapshot[] = [];

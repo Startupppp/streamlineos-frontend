@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { getSignedFileUrl } from "@/hooks/common/use-file-url";
 import { resolveImageUrl } from "@/lib/utils";
 
@@ -14,7 +14,7 @@ interface AttachmentImageProps {
 
 export function AttachmentImage({ fileUrl, fileName }: AttachmentImageProps) {
   const { data: imageSrc, isLoading } = useQuery({
-    queryKey: queryKeys.attachmentSignedUrl(fileUrl),
+    queryKey: platformCoreQueryKeys.attachmentSignedUrl(fileUrl),
     queryFn: () => getSignedFileUrl(fileUrl).catch(() => fileUrl),
     staleTime: 4 * 60 * 1000,
   });

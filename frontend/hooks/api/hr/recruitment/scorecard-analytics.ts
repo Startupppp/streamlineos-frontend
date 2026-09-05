@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 
 export interface InterviewerStat {
@@ -26,7 +26,7 @@ export interface ScorecardAnalytics {
 export function useScorecardAnalytics(params: { days: string }) {
   const can = useCan("hr:interviews:view");
   return useQuery({
-    queryKey: queryKeys.hr.scorecardAnalytics({ days: params.days }),
+    queryKey: humanResourcesQueryKeys.hr.scorecardAnalytics({ days: params.days }),
     queryFn: ({ signal }) =>
       apiClient.get<ScorecardAnalytics>(
         `/hr/recruitment/scorecard-analytics?days=${params.days}`,

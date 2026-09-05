@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import {
@@ -19,7 +19,7 @@ export function usePayrollRuns(params?: {
 }) {
   const canView = useCan("payroll:runs:view");
   return useQuery<RunsPage, Error>({
-    queryKey: queryKeys.payroll.runs(params as Record<string, unknown> | undefined),
+    queryKey: payrollQueryKeys.payroll.runs(params as Record<string, unknown> | undefined),
     queryFn: ({ signal }) =>
       apiClient.get("/payroll/runs", params as Record<string, string | number> | undefined, signal, payrollRunsPageContract),
     staleTime: 60_000,
@@ -30,7 +30,7 @@ export function usePayrollRuns(params?: {
 export function usePayrollRun(runId: number) {
   const canView = useCan("payroll:runs:view");
   return useQuery<RunDetail, Error>({
-    queryKey: queryKeys.payroll.run(runId),
+    queryKey: payrollQueryKeys.payroll.run(runId),
     queryFn: ({ signal }) => apiClient.get(`/payroll/runs/${runId}`, undefined, signal, payrollRunDetailContract),
     staleTime: 30_000,
     enabled: canView && runId > 0,
@@ -63,8 +63,8 @@ export function useCreateRun() {
       return apiClient.post<{ runId: number }>("/payroll/runs", body);
     },
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.commandCenterAll });
+      void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "runs"] });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.commandCenterAll });
     },
   });
 }
@@ -76,12 +76,12 @@ export function useGenerateRun() {
     mutationFn: (runId: number) =>
       apiClient.post<{ ok: boolean }>(`/payroll/runs/${runId}/generate`),
     onSuccess: (_, runId) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runEmployeesAll(runId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runExceptionsAll(runId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runVariance(runId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.commandCenterAll });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.run(runId) });
+      void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "runs"] });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runEmployeesAll(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runExceptionsAll(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runVariance(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.commandCenterAll });
     },
   });
 }
@@ -93,11 +93,11 @@ export function useRecalculateRun() {
     mutationFn: (runId: number) =>
       apiClient.post<{ ok: boolean }>(`/payroll/runs/${runId}/recalculate`),
     onSuccess: (_, runId) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runEmployeesAll(runId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runExceptionsAll(runId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runVariance(runId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.commandCenterAll });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.run(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runEmployeesAll(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runExceptionsAll(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runVariance(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.commandCenterAll });
     },
   });
 }

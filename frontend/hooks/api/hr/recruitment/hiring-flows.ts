@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import type {
@@ -17,7 +17,7 @@ import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export function useHiringFlows() {
   return useGatedQuery("hr:interviews:view", {
-    queryKey: queryKeys.hr.hiringFlows(),
+    queryKey: humanResourcesQueryKeys.hr.hiringFlows(),
     queryFn: async ({ signal }) =>
       (await apiClient.get<OffsetPage<HiringFlow>>("/hr/recruitment/hiring-flows", undefined, signal)).items,
     staleTime: 2 * 60_000,
@@ -31,7 +31,7 @@ export function useCreateHiringFlow() {
     mutationFn: (data: CreateHiringFlowInput) =>
       apiClient.post<HiringFlow>("/hr/recruitment/hiring-flows", data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hiringFlows() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hiringFlows() });
     },
   });
 }
@@ -43,8 +43,8 @@ export function useUpdateHiringFlow() {
     mutationFn: ({ id, ...data }: UpdateHiringFlowInput & { id: number }) =>
       apiClient.patch<HiringFlow>(`/hr/recruitment/hiring-flows/${id}`, data),
     onSuccess: (_, { id }) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hiringFlows() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hiringFlow(id) });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hiringFlows() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hiringFlow(id) });
     },
   });
 }
@@ -56,7 +56,7 @@ export function useDeleteHiringFlow() {
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/hiring-flows/${id}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hiringFlows() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hiringFlows() });
     },
   });
 }
@@ -68,9 +68,9 @@ export function useCreateHiringFlowRound() {
     mutationFn: ({ flowId, ...data }: CreateHiringFlowRoundInput & { flowId: number }) =>
       apiClient.post<HiringFlowRound>(`/hr/recruitment/hiring-flows/${flowId}/rounds`, data),
     onSuccess: (_, { flowId }) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hiringFlows() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hiringFlow(flowId) });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hiringFlowRounds(flowId) });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hiringFlows() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hiringFlow(flowId) });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hiringFlowRounds(flowId) });
     },
   });
 }
@@ -82,9 +82,9 @@ export function useUpdateHiringFlowRound() {
     mutationFn: ({ flowId, roundId, ...data }: UpdateHiringFlowRoundInput & { flowId: number; roundId: number }) =>
       apiClient.patch<HiringFlowRound>(`/hr/recruitment/hiring-flows/${flowId}/rounds/${roundId}`, data),
     onSuccess: (_, { flowId }) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hiringFlows() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hiringFlow(flowId) });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hiringFlowRounds(flowId) });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hiringFlows() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hiringFlow(flowId) });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hiringFlowRounds(flowId) });
     },
   });
 }
@@ -96,9 +96,9 @@ export function useDeleteHiringFlowRound() {
     mutationFn: ({ flowId, roundId }: { flowId: number; roundId: number }) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/hiring-flows/${flowId}/rounds/${roundId}`),
     onSuccess: (_, { flowId }) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hiringFlows() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hiringFlow(flowId) });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hiringFlowRounds(flowId) });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hiringFlows() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hiringFlow(flowId) });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hiringFlowRounds(flowId) });
     },
   });
 }

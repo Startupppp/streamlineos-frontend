@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import type { AnswerValue } from "@/features/surveys/respondent/answer-value";
 
 export interface PublicSurveyQuestionChoice {
@@ -65,7 +65,7 @@ export interface StartSessionResponse {
 
 export function usePublicSurvey(collectorToken: string) {
   return useQuery({
-    queryKey: queryKeys.surveys.publicSurvey(collectorToken),
+    queryKey: knowledgeAndSurveysQueryKeys.surveys.publicSurvey(collectorToken),
     queryFn: ({ signal }) => apiClient.get<PublicSurveyResponse>(`/public/surveys/${collectorToken}`, undefined, signal),
     enabled: Boolean(collectorToken),
     retry: false,

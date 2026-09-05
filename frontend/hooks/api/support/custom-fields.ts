@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
@@ -45,7 +45,7 @@ export interface UpdateCustomFieldInput {
 
 export function useSupportCustomFields(activeOnly?: boolean) {
   return useGatedQuery("support:tickets:view", {
-    queryKey: queryKeys.supportCustomFields.list(activeOnly),
+    queryKey: supportAndWorkflowsQueryKeys.supportCustomFields.list(activeOnly),
     queryFn: ({ signal }) =>
       apiClient.get<SupportCustomField[]>("/support/custom-fields", activeOnly ? { activeOnly: "true" } : undefined, signal),
     staleTime: 60_000,
@@ -54,7 +54,7 @@ export function useSupportCustomFields(activeOnly?: boolean) {
 
 export function usePortalActiveCustomFields() {
   return useGatedQuery("support:portal:tickets:create", {
-    queryKey: queryKeys.supportCustomFields.portalActive(),
+    queryKey: supportAndWorkflowsQueryKeys.supportCustomFields.portalActive(),
     queryFn: ({ signal }) => apiClient.get<SupportCustomField[]>("/support/portal/custom-fields", undefined, signal),
     staleTime: 60_000,
   });
@@ -66,7 +66,7 @@ export function useCreateCustomField() {
     mutationKey: ["supportCustomFields", "create"] as const,
     mutationFn: (input: CreateCustomFieldInput) =>
       apiClient.post<SupportCustomField>("/support/custom-fields", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportCustomFields.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportCustomFields.all }),
   });
 }
 
@@ -76,7 +76,7 @@ export function useUpdateCustomField() {
     mutationKey: ["supportCustomFields", "update"] as const,
     mutationFn: ({ id, input }: { id: number; input: UpdateCustomFieldInput }) =>
       apiClient.patch<SupportCustomField>(`/support/custom-fields/${id}`, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportCustomFields.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportCustomFields.all }),
   });
 }
 
@@ -85,6 +85,6 @@ export function useDeleteCustomField() {
   return useAuthorizedMutation("support:settings:manage", {
     mutationKey: ["supportCustomFields", "delete"] as const,
     mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/support/custom-fields/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportCustomFields.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportCustomFields.all }),
   });
 }

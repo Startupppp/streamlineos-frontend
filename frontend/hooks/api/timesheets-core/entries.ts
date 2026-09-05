@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -33,7 +33,7 @@ export function useTimesheetEntries(query: EntriesQuery = {}, enabled = true) {
   const canView = useCan("timesheets:entries:view");
   const params = toParams(query);
   return useQuery({
-    queryKey: queryKeys.timesheets.entries(params),
+    queryKey: usersAndCommerceQueryKeys.timesheets.entries(params),
     queryFn: ({ signal }) => apiClient.get<CursorPage<TimesheetEntry>>("/timesheets/entries", params, signal),
     staleTime: 30_000,
     placeholderData: (prev) => prev,
@@ -48,8 +48,8 @@ export function useCreateTimesheetEntry() {
     mutationFn: (data: CreateEntryInput) =>
       apiClient.post<TimesheetEntry>("/timesheets/entries", data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.entries() });
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.periodCurrent() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.periodCurrent() });
       toast.success("Time logged");
     },
     onError: (error) => toast.error(getErrorMessage(error)),
@@ -63,12 +63,12 @@ export function useUpdateTimesheetEntry() {
     mutationFn: ({ entryId, data }: { entryId: number; data: UpdateEntryInput }) =>
       apiClient.patch<TimesheetEntry>(`/timesheets/entries/${entryId}`, data),
     onMutate: async ({ entryId, data }) => {
-      await qc.cancelQueries({ queryKey: queryKeys.timesheets.entries() });
+      await qc.cancelQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });
       const snapshots = qc.getQueriesData<CursorPage<TimesheetEntry>>({
-        queryKey: queryKeys.timesheets.entries(),
+        queryKey: usersAndCommerceQueryKeys.timesheets.entries(),
       });
       qc.setQueriesData<CursorPage<TimesheetEntry>>(
-        { queryKey: queryKeys.timesheets.entries() },
+        { queryKey: usersAndCommerceQueryKeys.timesheets.entries() },
         (prev) =>
           prev
             ? {
@@ -100,8 +100,8 @@ export function useUpdateTimesheetEntry() {
       toast.success("Entry updated");
     },
     onSettled: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.entries() });
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.periodCurrent() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.periodCurrent() });
     },
   });
 }
@@ -113,12 +113,12 @@ export function useVoidTimesheetEntry() {
     mutationFn: ({ entryId, reason }: { entryId: number; reason: string }) =>
       apiClient.post<{ success: boolean }>(`/timesheets/entries/${entryId}/void`, { reason }),
     onMutate: async ({ entryId }) => {
-      await qc.cancelQueries({ queryKey: queryKeys.timesheets.entries() });
+      await qc.cancelQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });
       const snapshots = qc.getQueriesData<CursorPage<TimesheetEntry>>({
-        queryKey: queryKeys.timesheets.entries(),
+        queryKey: usersAndCommerceQueryKeys.timesheets.entries(),
       });
       qc.setQueriesData<CursorPage<TimesheetEntry>>(
-        { queryKey: queryKeys.timesheets.entries() },
+        { queryKey: usersAndCommerceQueryKeys.timesheets.entries() },
         (prev) =>
           prev
             ? {
@@ -142,8 +142,8 @@ export function useVoidTimesheetEntry() {
       toast.success("Entry voided");
     },
     onSettled: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.entries() });
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.periodCurrent() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.periodCurrent() });
     },
   });
 }

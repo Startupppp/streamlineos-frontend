@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { useCan } from "@/hooks/api/access";
 import type {
   CreateSubjectInput,
@@ -28,7 +28,7 @@ export function useSubjectTypes(options?: { enabled?: boolean }) {
   const canView = useCan("party:subjects:view");
 
   return useQuery({
-    queryKey: queryKeys.party.subjectTypes,
+    queryKey: directoryAndOwnershipQueryKeys.party.subjectTypes,
     queryFn: ({ signal }) =>
       apiClient.get<{ data: SubjectType[] }>(
         "/party/subject-types",
@@ -46,7 +46,7 @@ export function useSubjects(params: UseSubjectsParams = {}) {
   const { subjectTypeId, search, cursor, limit = 20 } = params;
 
   return useQuery({
-    queryKey: queryKeys.party.subjects({
+    queryKey: directoryAndOwnershipQueryKeys.party.subjects({
       subjectTypeId,
       search,
       cursor,
@@ -72,7 +72,7 @@ export function useSubject(subjectId: string | null) {
   const canView = useCan("party:subjects:view");
 
   return useQuery({
-    queryKey: queryKeys.party.subject(subjectId ?? ""),
+    queryKey: directoryAndOwnershipQueryKeys.party.subject(subjectId ?? ""),
     queryFn: ({ signal }) =>
       apiClient.get<SubjectWithParties>(
         `/party/subjects/${subjectId}`,
@@ -89,7 +89,7 @@ export function usePartySubjects(partyId: string | null) {
   const canView = useCan("party:subjects:view");
 
   return useQuery({
-    queryKey: queryKeys.party.partySubjects(partyId ?? ""),
+    queryKey: directoryAndOwnershipQueryKeys.party.partySubjects(partyId ?? ""),
     queryFn: ({ signal }) =>
       apiClient.get<{ data: PartySubjectLink[] }>(
         `/party/parties/${partyId}/subjects`,
@@ -108,7 +108,7 @@ export function useCreateSubjectType() {
     mutationFn: (input: CreateSubjectTypeInput) =>
       apiClient.post<SubjectType>("/party/subject-types", input),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.party.subjectTypes });
+      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.party.subjectTypes });
     },
   });
 }
@@ -126,10 +126,10 @@ export function useUpdateSubjectType() {
         input,
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.party.subjectTypes });
+      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.party.subjectTypes });
       // Every rendered surface for this type is derived from the declaration,
       // so a change to it invalidates the records drawn from it too.
-      void qc.invalidateQueries({ queryKey: queryKeys.party.subjects() });
+      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.party.subjects() });
     },
   });
 }
@@ -141,7 +141,7 @@ export function useDeleteSubjectType() {
     mutationFn: (subjectTypeId: string) =>
       apiClient.delete(`/party/subject-types/${subjectTypeId}`),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.party.subjectTypes });
+      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.party.subjectTypes });
     },
   });
 }
@@ -153,7 +153,7 @@ export function useCreateSubject() {
     mutationFn: (input: CreateSubjectInput) =>
       apiClient.post<Subject>("/party/subjects", input),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.party.subjects() });
+      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.party.subjects() });
     },
   });
 }
@@ -169,9 +169,9 @@ export function useUpdateSubject() {
       apiClient.patch<Subject>(`/party/subjects/${subjectId}`, input),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({
-        queryKey: queryKeys.party.subject(variables.subjectId),
+        queryKey: directoryAndOwnershipQueryKeys.party.subject(variables.subjectId),
       });
-      void qc.invalidateQueries({ queryKey: queryKeys.party.subjects() });
+      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.party.subjects() });
     },
   });
 }
@@ -188,10 +188,10 @@ export function useLinkParty() {
     onSuccess: (_, variables) => {
       // Both ends of the link are cached separately, so both are invalidated.
       void qc.invalidateQueries({
-        queryKey: queryKeys.party.subject(variables.subjectId),
+        queryKey: directoryAndOwnershipQueryKeys.party.subject(variables.subjectId),
       });
       void qc.invalidateQueries({
-        queryKey: queryKeys.party.partySubjects(variables.partyId),
+        queryKey: directoryAndOwnershipQueryKeys.party.partySubjects(variables.partyId),
       });
     },
   });
@@ -209,9 +209,9 @@ export function useUnlinkParty() {
     }) => apiClient.delete(`/party/subject-links/${subjectPartyLinkId}`),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({
-        queryKey: queryKeys.party.subject(variables.subjectId),
+        queryKey: directoryAndOwnershipQueryKeys.party.subject(variables.subjectId),
       });
-      void qc.invalidateQueries({ queryKey: queryKeys.party.all });
+      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.party.all });
     },
   });
 }

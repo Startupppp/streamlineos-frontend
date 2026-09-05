@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -23,7 +23,7 @@ export function useBillingUninvoiced(query: UninvoicedQuery = {}, enabled = true
   const canView = useCan("timesheets:billing:view");
   const params = { startDate: query.startDate, endDate: query.endDate, projectId: query.projectId };
   return useQuery({
-    queryKey: queryKeys.timesheets.billingUninvoiced(params),
+    queryKey: usersAndCommerceQueryKeys.timesheets.billingUninvoiced(params),
     queryFn: ({ signal }) => apiClient.get<BillingUninvoiced>("/timesheets/billing/uninvoiced", params, signal),
     staleTime: 30_000,
     placeholderData: (prev) => prev,
@@ -54,8 +54,8 @@ export function useCreateInvoiceDraft() {
         data,
       ),
     onSuccess: (res) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.billingUninvoiced() });
-      void qc.invalidateQueries({ queryKey: queryKeys.timesheets.entries() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.billingUninvoiced() });
+      void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });
       toast.success(`Invoice draft created for ${res.entryCount} entries`);
     },
     onError: (error) => toast.error(getErrorMessage(error)),

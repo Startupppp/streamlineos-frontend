@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -24,7 +24,7 @@ export interface InternalJob {
 export function useInternalJobs() {
   const can = useCan("hr:employees:view");
   return useQuery({
-    queryKey: queryKeys.hr.hrInternalJobs,
+    queryKey: humanResourcesQueryKeys.hr.hrInternalJobs,
     queryFn: ({ signal }) =>
       apiClient.get<InternalJob[]>("/hr/recruitment/internal-jobs", undefined, signal),
     staleTime: 2 * 60_000,
@@ -41,7 +41,7 @@ export function useApplyToInternalJob(jobId: number) {
       mutationFn: (data) =>
         apiClient.post(`/hr/recruitment/internal-jobs/${jobId}/apply`, data),
       onSuccess: () => {
-        void qc.invalidateQueries({ queryKey: queryKeys.hr.hrInternalJobs });
+        void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrInternalJobs });
       },
     },
   );

@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 
 export interface ChatMessage {
   id: number;
@@ -37,7 +37,7 @@ export function useStartChatSession(orgId: string) {
 
 export function useChatSession(orgId: string, sessionToken: string | null) {
   return useQuery({
-    queryKey: queryKeys.supportChatWidget.session(orgId, sessionToken ?? ""),
+    queryKey: supportAndWorkflowsQueryKeys.supportChatWidget.session(orgId, sessionToken ?? ""),
     queryFn: ({ signal }) => apiClient.get<ChatSession>(`/support/chat/${orgId}/${sessionToken}/messages`, undefined, signal),
     enabled: Boolean(orgId) && Boolean(sessionToken),
     refetchInterval: 30_000,
@@ -56,7 +56,7 @@ export function useSendChatMessage(orgId: string, sessionToken: string | null) {
       ),
     onSuccess: () => {
       if (sessionToken) {
-        void qc.invalidateQueries({ queryKey: queryKeys.supportChatWidget.session(orgId, sessionToken) });
+        void qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportChatWidget.session(orgId, sessionToken) });
       }
     },
   });

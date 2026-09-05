@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
@@ -52,7 +52,7 @@ interface SubmitCsatResponseResult {
 
 export function useCsatReport() {
   return useGatedQuery("support:reports:view", {
-    queryKey: queryKeys.supportCsat.report(),
+    queryKey: supportAndWorkflowsQueryKeys.supportCsat.report(),
     queryFn: ({ signal }) => apiClient.get<CsatReport>("/support/reports/csat", undefined, signal),
     staleTime: 60_000,
   });
@@ -60,7 +60,7 @@ export function useCsatReport() {
 
 export function usePublicCsatSurvey(token: string) {
   return useQuery({
-    queryKey: queryKeys.supportCsat.survey(token),
+    queryKey: supportAndWorkflowsQueryKeys.supportCsat.survey(token),
     queryFn: ({ signal }) => apiClient.get<PublicCsatSurvey>(`/support/csat/${token}`, undefined, signal),
     enabled: Boolean(token),
     retry: false,

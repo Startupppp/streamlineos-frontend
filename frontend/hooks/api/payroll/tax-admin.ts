@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { downloadBlob } from "@/lib/download-blob";
@@ -14,7 +14,7 @@ export function useTaxDeclarationsAdmin(params: {
 }) {
   const canView = useCan("payroll:tax:view");
   return useQuery({
-    queryKey: queryKeys.payroll.taxDeclarations(params as Record<string, unknown> | undefined),
+    queryKey: payrollQueryKeys.payroll.taxDeclarations(params as Record<string, unknown> | undefined),
     queryFn: ({ signal }) => apiClient.get<TaxDeclarationAdmin[]>("/payroll/tax/declarations", params, signal),
     staleTime: 60_000,
     enabled: canView,
@@ -30,7 +30,7 @@ export function useApproveDeclaration() {
         `/payroll/tax/declarations/${declarationId}/approve`,
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.payroll.taxDeclarationsAll });
+      qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.taxDeclarationsAll });
     },
   });
 }
@@ -45,7 +45,7 @@ export function useRejectDeclaration() {
         { note },
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.payroll.taxDeclarationsAll });
+      qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.taxDeclarationsAll });
     },
   });
 }

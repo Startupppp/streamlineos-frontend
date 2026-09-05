@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type ExternalEntityType = "project" | "invoice" | "calendar_event" | "chat_channel";
@@ -21,7 +21,7 @@ export interface SupportTicketExternalLink {
 
 export function useSupportTicketExternalLinks(ticketId: number) {
   return useGatedQuery("support:tickets:view", {
-    queryKey: [...queryKeys.support.detail(ticketId), "external-links"] as const,
+    queryKey: [...platformCoreQueryKeys.support.detail(ticketId), "external-links"] as const,
     queryFn: ({ signal }) => apiClient.get<SupportTicketExternalLink[]>(`/support/${ticketId}/external-links`, undefined, signal),
     enabled: Number.isFinite(ticketId) && ticketId > 0,
     staleTime: 30_000,
@@ -46,7 +46,7 @@ export function useAddExternalLink() {
         entityId,
       }),
     onSuccess: (_, vars) =>
-      qc.invalidateQueries({ queryKey: [...queryKeys.support.detail(vars.ticketId), "external-links"] }),
+      qc.invalidateQueries({ queryKey: [...platformCoreQueryKeys.support.detail(vars.ticketId), "external-links"] }),
   });
 }
 
@@ -57,6 +57,6 @@ export function useRemoveExternalLink() {
     mutationFn: ({ ticketId, linkId }: { ticketId: number; linkId: number }) =>
       apiClient.delete<{ success: boolean }>(`/support/${ticketId}/external-links/${linkId}`),
     onSuccess: (_, vars) =>
-      qc.invalidateQueries({ queryKey: [...queryKeys.support.detail(vars.ticketId), "external-links"] }),
+      qc.invalidateQueries({ queryKey: [...platformCoreQueryKeys.support.detail(vars.ticketId), "external-links"] }),
   });
 }

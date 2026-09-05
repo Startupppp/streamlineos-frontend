@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type { TimeEntry, LogTimeInput } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -18,10 +18,10 @@ export function useLogTime(options?: Parameters<typeof useMutation>[0]) {
       ),
     onSuccess: (_: unknown, variables: LogTimeInput) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.timeEntries(),
+        queryKey: buildWorkQueryKeys.projects.timeEntries(),
       });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.ticket(variables.ticketId),
+        queryKey: buildWorkQueryKeys.projects.ticket(variables.ticketId),
       });
     },
   });

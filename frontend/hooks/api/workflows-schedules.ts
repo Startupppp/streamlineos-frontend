@@ -2,7 +2,7 @@
 
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useCan } from "@/hooks/api/access";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import type { WorkflowSchedule, WorkflowCursorPage } from "./workflows-types";
@@ -29,7 +29,7 @@ function assertPermission(allowed: boolean): void {
 export function useAllSchedules() {
   const canManage = useCan("workflows:schedules:manage");
   return useInfiniteQuery({
-    queryKey: [...queryKeys.workflows.all, "all-schedules"] as const,
+    queryKey: [...supportAndWorkflowsQueryKeys.workflows.all, "all-schedules"] as const,
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<WorkflowCursorPage<WorkflowSchedule>>(
         "/workflows/schedules",
@@ -61,7 +61,7 @@ export function useUpdateSchedule() {
       );
     },
     onSuccess: (_, variables) =>
-      qc.invalidateQueries({ queryKey: queryKeys.workflows.schedules(variables.workflowId) }),
+      qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.workflows.schedules(variables.workflowId) }),
   });
 }
 
@@ -77,6 +77,6 @@ export function useDeleteSchedule() {
       );
     },
     onSuccess: (_, variables) =>
-      qc.invalidateQueries({ queryKey: queryKeys.workflows.schedules(variables.workflowId) }),
+      qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.workflows.schedules(variables.workflowId) }),
   });
 }

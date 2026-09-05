@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/tabs";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan, useRbacDiscoveryMembers } from "@/hooks/api/access";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
@@ -163,7 +163,7 @@ export function DelegationsPage() {
     error: receivedQueryError,
     refetch: refetchReceived,
   } = useQuery<DelegationPage>({
-    queryKey: queryKeys.delegations.received({
+    queryKey: supportAndWorkflowsQueryKeys.delegations.received({
       ...receivedState,
       cursor: receivedCursors.at(-1),
     }),
@@ -185,7 +185,7 @@ export function DelegationsPage() {
     error: givenQueryError,
     refetch: refetchGiven,
   } = useQuery<DelegationPage>({
-    queryKey: queryKeys.delegations.given({
+    queryKey: supportAndWorkflowsQueryKeys.delegations.given({
       ...grantedState,
       cursor: grantedCursors.at(-1),
     }),
@@ -201,12 +201,12 @@ export function DelegationsPage() {
   });
 
   const revokeMutation = useMutation({
-    mutationKey: [...queryKeys.delegations.all, "revoke"],
+    mutationKey: [...supportAndWorkflowsQueryKeys.delegations.all, "revoke"],
     mutationFn: (id: string) => apiClient.delete(`/access/delegations/${id}`),
     onSuccess: () => {
       toast.success("Delegation revoked");
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.delegations.all,
+        queryKey: supportAndWorkflowsQueryKeys.delegations.all,
       });
       setRevokeTarget(null);
       setRevokeError(null);
@@ -295,7 +295,7 @@ export function DelegationsPage() {
 
   const handleGrantSuccess = useCallback(() => {
     setSheetOpen(false);
-    void queryClient.invalidateQueries({ queryKey: queryKeys.delegations.all });
+    void queryClient.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.delegations.all });
   }, [queryClient]);
 
   const received = receivedPage?.data ?? [];

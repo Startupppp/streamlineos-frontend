@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import type { BuildCustomersPage } from "@/types/crm";
 
@@ -22,7 +22,7 @@ export function useProjectCustomers(filters?: ProjectCustomersFilters) {
   if (filters?.search) params["search"] = filters.search;
   if (filters?.industry) params["industry"] = filters.industry;
   return useQuery({
-    queryKey: queryKeys.projects.customers.list(filters as Record<string, unknown>),
+    queryKey: buildWorkQueryKeys.projects.customers.list(filters as Record<string, unknown>),
     queryFn: ({ signal }) =>
       apiClient.get<BuildCustomersPage>("/build/customers", params, signal),
     enabled: canView,

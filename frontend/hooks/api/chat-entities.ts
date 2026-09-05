@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
@@ -18,7 +18,7 @@ interface LinkMeta {
 export function useLinkPreview(url: string | null) {
   const canRead = useCan("chat:messages:read");
   return useQuery({
-    queryKey: [...queryKeys.chat.all, "linkPreview", url] as const,
+    queryKey: [...collaborationQueryKeys.chat.all, "linkPreview", url] as const,
     queryFn: ({ signal }) => apiClient.get<LinkMeta>("/chat/link-preview", { url: url! }, signal),
     enabled: canRead && Boolean(url) && url!.startsWith("http"),
     staleTime: 10 * 60_000,
@@ -78,7 +78,7 @@ export function useEntityActions(
 ) {
   const referenceKeys = references.map(entityReferenceKey).sort().join(",");
   return useQuery({
-    queryKey: queryKeys.chat.entityActions(channelId, referenceKeys),
+    queryKey: collaborationQueryKeys.chat.entityActions(channelId, referenceKeys),
     queryFn: ({ signal }) =>
       apiClient.post<EntityActionsResponse>("/chat/entity-actions/available", {
         channelId,
@@ -121,7 +121,7 @@ export function useSubmitEntityAction() {
     onSuccess: (_, variables) => {
       operation.settle();
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.messages(variables.channelId),
+        queryKey: collaborationQueryKeys.chat.messages(variables.channelId),
       });
     },
   });
@@ -155,7 +155,7 @@ export function useCreateTaskFromMessage() {
     onSuccess: (_, variables) => {
       operation.settle();
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.messages(variables.channelId),
+        queryKey: collaborationQueryKeys.chat.messages(variables.channelId),
       });
     },
   });
@@ -177,7 +177,7 @@ export function useEntityActionOptions(
   source: EntityReferenceInput | null | undefined,
 ) {
   return useQuery({
-    queryKey: queryKeys.chat.entityActionOptions(
+    queryKey: collaborationQueryKeys.chat.entityActionOptions(
       channelId,
       source ? entityReferenceKey(source) : "",
     ),

@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { useCan } from "@/hooks/api/access";
 import type {
   ProjectClientGrant,
@@ -16,7 +16,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 export function usePortalMemberships(params?: { cursor?: string; limit?: number; status?: string }) {
   const canView = useCan("build:portal:view");
   return useQuery<PortalMembershipsPage>({
-    queryKey: queryKeys.portalAccess.memberships(params),
+    queryKey: directoryAndOwnershipQueryKeys.portalAccess.memberships(params),
     queryFn: ({ signal }) => apiClient.get<PortalMembershipsPage>("/portal-access/memberships", { params }, signal),
     enabled: canView,
     staleTime: 30_000,
@@ -26,7 +26,7 @@ export function usePortalMemberships(params?: { cursor?: string; limit?: number;
 export function useProjectClientGrants(params?: { cursor?: string; limit?: number; projectId?: number }) {
   const canView = useCan("build:portal:view");
   return useQuery<ProjectClientGrantsPage>({
-    queryKey: queryKeys.portalAccess.grants(params),
+    queryKey: directoryAndOwnershipQueryKeys.portalAccess.grants(params),
     queryFn: ({ signal }) => apiClient.get<ProjectClientGrantsPage>("/portal-access/grants", { params }, signal),
     enabled: canView,
     staleTime: 30_000,
@@ -40,7 +40,7 @@ export function useCreateGrant() {
     mutationFn: (data: CreateGrantInput) =>
       apiClient.post<ProjectClientGrant>("/portal-access/grants", data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.portalAccess.grants() });
+      qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.portalAccess.grants() });
     },
   });
 }
@@ -55,8 +55,8 @@ export function useUpdateGrant(projectClientGrantId: string) {
         data,
       ),
     onSuccess: (updated) => {
-      qc.setQueryData(queryKeys.portalAccess.grant(projectClientGrantId), updated);
-      qc.invalidateQueries({ queryKey: queryKeys.portalAccess.grants() });
+      qc.setQueryData(directoryAndOwnershipQueryKeys.portalAccess.grant(projectClientGrantId), updated);
+      qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.portalAccess.grants() });
     },
   });
 }
@@ -71,8 +71,8 @@ export function useRevokeGrant(projectClientGrantId: string) {
         {},
       ),
     onSuccess: (updated) => {
-      qc.setQueryData(queryKeys.portalAccess.grant(projectClientGrantId), updated);
-      qc.invalidateQueries({ queryKey: queryKeys.portalAccess.grants() });
+      qc.setQueryData(directoryAndOwnershipQueryKeys.portalAccess.grant(projectClientGrantId), updated);
+      qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.portalAccess.grants() });
     },
   });
 }

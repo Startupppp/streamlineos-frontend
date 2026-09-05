@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -13,7 +13,7 @@ export type KbSettings = {
 export function useKbSettings() {
   const canManageSettings = useCan("kb:settings:manage");
   return useQuery({
-    queryKey: queryKeys.kb.settings(),
+    queryKey: knowledgeAndSurveysQueryKeys.kb.settings(),
     queryFn: ({ signal }) => apiClient.get<KbSettings>("/kb/settings", undefined, signal),
     staleTime: 300_000,
     enabled: canManageSettings,
@@ -27,7 +27,7 @@ export function useUpdateKbSettings() {
     mutationFn: (data: Partial<KbSettings>) =>
       apiClient.patch<KbSettings>("/kb/settings", data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.kb.settings() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.settings() });
     },
   });
 }

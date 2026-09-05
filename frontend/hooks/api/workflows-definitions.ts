@@ -2,7 +2,7 @@
 
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useCan } from "@/hooks/api/access";
 import type {
   Workflow,
@@ -35,7 +35,7 @@ function assertPermission(allowed: boolean): void {
 export function useWorkflows(params?: WorkflowListParams) {
   const canView = useCan("workflows:workflows:view");
   return useQuery({
-    queryKey: queryKeys.workflows.list(params as Record<string, unknown>),
+    queryKey: supportAndWorkflowsQueryKeys.workflows.list(params as Record<string, unknown>),
     queryFn: ({ signal }) =>
       apiClient.get<WorkflowCursorPage<Workflow>>("/workflows", params as Record<string, unknown>, signal),
     staleTime: 30_000,
@@ -47,7 +47,7 @@ export function useWorkflows(params?: WorkflowListParams) {
 export function useWorkflow(workflowId: string) {
   const canView = useCan("workflows:workflows:view");
   return useQuery({
-    queryKey: queryKeys.workflows.detail(workflowId),
+    queryKey: supportAndWorkflowsQueryKeys.workflows.detail(workflowId),
     queryFn: ({ signal }) => apiClient.get<Workflow>(`/workflows/${workflowId}`, undefined, signal),
     enabled: canView && workflowId.length > 0,
     staleTime: 30_000,
@@ -63,7 +63,7 @@ export function useCreateWorkflow() {
       assertPermission(canCreate);
       return apiClient.post<Workflow>("/workflows", input);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.workflows.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.workflows.all }),
   });
 }
 
@@ -76,7 +76,7 @@ export function useUpdateWorkflow() {
       assertPermission(canUpdate);
       return apiClient.patch<Workflow>(`/workflows/${id}`, input);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.workflows.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.workflows.all }),
   });
 }
 
@@ -89,7 +89,7 @@ export function useDeleteWorkflow() {
       assertPermission(canDelete);
       return apiClient.delete<{ success: boolean }>(`/workflows/${id}`);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.workflows.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.workflows.all }),
   });
 }
 
@@ -102,7 +102,7 @@ export function usePublishWorkflow() {
       assertPermission(canPublish);
       return apiClient.post<WorkflowVersion>(`/workflows/${id}/publish`, input);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.workflows.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.workflows.all }),
   });
 }
 
@@ -115,6 +115,6 @@ export function useDuplicateWorkflow() {
       assertPermission(canCreate);
       return apiClient.post<Workflow>(`/workflows/${id}/duplicate`);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.workflows.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.workflows.all }),
   });
 }

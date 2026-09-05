@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type {
   WorkflowTransition,
   CreateTransitionInput,
@@ -23,7 +23,7 @@ function customStateKeys(projectId: number) {
 export function useWorkflowTransitions(projectId: number) {
   const canView = useCan("build:workflow:view");
   return useQuery<WorkflowTransition[]>({
-    queryKey: queryKeys.projects.workflow.transitions(projectId),
+    queryKey: buildWorkQueryKeys.projects.workflow.transitions(projectId),
     queryFn: ({ signal }) =>
       apiClient.get<WorkflowTransition[]>(`/build/${projectId}/workflow/transitions`, undefined, signal),
     enabled: canView && !!projectId,
@@ -41,7 +41,7 @@ export function useCreateTransition(projectId: number) {
       return apiClient.post<WorkflowTransition>(`/build/${projectId}/workflow/transitions`, data);
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.workflow.transitions(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.workflow.transitions(projectId) });
     },
   });
 }
@@ -59,7 +59,7 @@ export function useUpdateTransition(projectId: number) {
       );
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.workflow.transitions(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.workflow.transitions(projectId) });
     },
   });
 }
@@ -74,7 +74,7 @@ export function useDeleteTransition(projectId: number) {
       return apiClient.delete(`/build/${projectId}/workflow/transitions/${id}`);
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.workflow.transitions(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.workflow.transitions(projectId) });
     },
   });
 }
@@ -90,7 +90,7 @@ export function useUpdateStatusWip(projectId: number) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: customStateKeys(projectId) });
-      qc.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.detail(projectId) });
     },
   });
 }

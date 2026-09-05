@@ -88,6 +88,7 @@ export function DashboardShell({
   const [productSwitcherOpen, setProductSwitcherOpen] = useState(false);
   const [isChatConversationOpen, setIsChatConversationOpen] = useState(false);
   const [welcomeToastActive, setWelcomeToastActive] = useState(false);
+  const [enhancementsReady, setEnhancementsReady] = useState(false);
 
   const { hideSidebar, navGroups } = useProductSidebarVisibility();
   const {
@@ -184,6 +185,21 @@ export function DashboardShell({
     } catch {}
   }, []);
 
+  useEffect(() => {
+    if (access?.isOrgOwner !== true) return;
+
+    if ("requestIdleCallback" in window) {
+      const idleId = window.requestIdleCallback(
+        () => setEnhancementsReady(true),
+        { timeout: 1500 },
+      );
+      return () => window.cancelIdleCallback(idleId);
+    }
+
+    const timeoutId = window.setTimeout(() => setEnhancementsReady(true), 250);
+    return () => window.clearTimeout(timeoutId);
+  }, [access?.isOrgOwner]);
+
   if ((accessLoading && !access) || (accessError && !access))
     return (
       <div className="flex h-dvh flex-col overflow-hidden">
@@ -255,7 +271,7 @@ export function DashboardShell({
                     {children}
                   </div>
                   {welcomeToastActive && <WelcomeToast />}
-                  {access?.isOrgOwner === true && <SuccessChecklist />}
+                  {enhancementsReady ? <SuccessChecklist /> : null}
                 </div>
               </main>
             </div>

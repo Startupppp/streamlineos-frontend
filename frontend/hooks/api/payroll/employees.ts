@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { EmployeeSalaryProfile, EmployeeProfileDetail } from "@/types/payroll/runs";
@@ -38,7 +38,7 @@ export function useEmployeeProfiles(params?: {
 }) {
   const canView = useCan("payroll:salaries:view");
   return useQuery({
-    queryKey: queryKeys.payroll.employees(params as Record<string, unknown> | undefined),
+    queryKey: payrollQueryKeys.payroll.employees(params as Record<string, unknown> | undefined),
     queryFn: ({ signal }) =>
       apiClient.get<PaginatedProfiles>(
         "/payroll/employees",
@@ -52,7 +52,7 @@ export function useEmployeeProfiles(params?: {
 export function useEmployeeProfile(employeeUserId: string) {
   const canView = useCan("payroll:salaries:view");
   return useQuery({
-    queryKey: queryKeys.payroll.employee(employeeUserId),
+    queryKey: payrollQueryKeys.payroll.employee(employeeUserId),
     queryFn: ({ signal }) =>
       apiClient.get<EmployeeProfileDetail>(`/payroll/employees/${employeeUserId}`, undefined, signal),
     staleTime: 60_000,
@@ -63,7 +63,7 @@ export function useEmployeeProfile(employeeUserId: string) {
 export function useEmployeeProfileHistory(employeeUserId: string) {
   const canView = useCan("payroll:salaries:view");
   return useQuery({
-    queryKey: queryKeys.payroll.employeeHistory(employeeUserId),
+    queryKey: payrollQueryKeys.payroll.employeeHistory(employeeUserId),
     queryFn: ({ signal }) =>
       apiClient.get<EmployeeSalaryProfile[]>(`/payroll/employees/${employeeUserId}/history`, undefined, signal),
     staleTime: 60_000,
@@ -78,8 +78,8 @@ export function useCreateWorkerProfile(workerId: string) {
     mutationFn: (body: CreateProfileBody) =>
       apiClient.post<{ profileId: number }>(`/payroll/workers/${workerId}/profiles`, body),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.worker(workerId) });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "employees"] });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.worker(workerId) });
+      void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "employees"] });
     },
   });
 }
@@ -94,8 +94,8 @@ export function usePatchWorkerProfile(workerId: string) {
         body,
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.worker(workerId) });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "employees"] });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.worker(workerId) });
+      void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "employees"] });
     },
   });
 }
@@ -103,7 +103,7 @@ export function usePatchWorkerProfile(workerId: string) {
 export function useWorkerProfile(workerId: string) {
   const canView = useCan("payroll:salaries:view");
   return useQuery({
-    queryKey: queryKeys.payroll.worker(workerId),
+    queryKey: payrollQueryKeys.payroll.worker(workerId),
     queryFn: ({ signal }) =>
       apiClient.get<EmployeeProfileDetail>(`/payroll/workers/${workerId}`, undefined, signal),
     staleTime: 60_000,
@@ -114,7 +114,7 @@ export function useWorkerProfile(workerId: string) {
 export function useWorkerProfileHistory(workerId: string) {
   const canView = useCan("payroll:salaries:view");
   return useQuery({
-    queryKey: [...queryKeys.payroll.worker(workerId), "history"],
+    queryKey: [...payrollQueryKeys.payroll.worker(workerId), "history"],
     queryFn: ({ signal }) =>
       apiClient.get<EmployeeSalaryProfile[]>(`/payroll/workers/${workerId}/history`, undefined, signal),
     staleTime: 60_000,
@@ -129,9 +129,9 @@ export function useCreateProfile(employeeUserId: string) {
     mutationFn: (body: CreateProfileBody) =>
       apiClient.post<{ id: number }>(`/payroll/employees/${employeeUserId}/profiles`, body),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.employee(employeeUserId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.employeeHistory(employeeUserId) });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "employees"] });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.employee(employeeUserId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.employeeHistory(employeeUserId) });
+      void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "employees"] });
     },
   });
 }
@@ -146,9 +146,9 @@ export function usePatchProfile(employeeUserId: string) {
         body,
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.employee(employeeUserId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.employeeHistory(employeeUserId) });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "employees"] });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.employee(employeeUserId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.employeeHistory(employeeUserId) });
+      void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "employees"] });
     },
   });
 }

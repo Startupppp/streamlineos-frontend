@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 import { useCan } from "@/hooks/api/access";
 
 export interface CalendarOrgMember {
@@ -29,8 +29,8 @@ export function useCalendarMemberLookup({
   const isSearch = term.length > 0;
   return useQuery({
     queryKey: isSearch
-      ? queryKeys.calendar.memberSearch(term)
-      : queryKeys.calendar.orgMembers(),
+      ? platformHierarchyQueryKeys.calendar.memberSearch(term)
+      : platformHierarchyQueryKeys.calendar.orgMembers(),
     queryFn: ({ signal }) =>
       apiClient.get<CalendarOrgMember[]>(
         "/org/members",
@@ -259,7 +259,7 @@ export function useCalendarEvents(start: Date, end: Date) {
       ? undefined
       : sources.filter((source) => source.enabled).map((source) => source.key).sort();
   return useQuery({
-    queryKey: queryKeys.calendar.events(
+    queryKey: platformHierarchyQueryKeys.calendar.events(
       start.toISOString(),
       end.toISOString(),
       enabledSources,
@@ -281,7 +281,7 @@ export function useCreateCalendarEvent() {
     mutationFn: (payload: CreateCalendarEventPayload) =>
       apiClient.post<MutateCalendarEventResponse>("/calendar/events", payload),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.calendar.all, exact: false }),
+      qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all, exact: false }),
   });
 }
 
@@ -292,7 +292,7 @@ export function useUpdateCalendarEvent() {
     mutationFn: ({ id, ...payload }: UpdateCalendarEventPayload) =>
       apiClient.put<CalendarEvent>(`/calendar/events/${id}`, payload),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.calendar.all, exact: false }),
+      qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all, exact: false }),
   });
 }
 
@@ -302,7 +302,7 @@ export function useDeleteCalendarEvent() {
     mutationKey: ["calendar", "events", "delete"],
     mutationFn: (id: number) => apiClient.delete<{ deleted: boolean }>(`/calendar/events/${id}`),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.calendar.all, exact: false }),
+      qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all, exact: false }),
   });
 }
 
@@ -316,7 +316,7 @@ export function useUpsertOccurrenceException() {
         body,
       ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.calendar.all, exact: false }),
+      qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all, exact: false }),
   });
 }
 
@@ -329,7 +329,7 @@ export function useCancelOccurrence() {
         `/calendar/events/${eventId}/occurrences/${encodeURIComponent(occurrenceStart)}`,
       ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.calendar.all, exact: false }),
+      qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all, exact: false }),
   });
 }
 
@@ -353,7 +353,7 @@ interface EventAttendee {
 export function useEventAttendees(eventId: number | null) {
   const can = useCan("calendar:read");
   return useQuery({
-    queryKey: queryKeys.calendar.attendees(eventId ?? 0),
+    queryKey: platformHierarchyQueryKeys.calendar.attendees(eventId ?? 0),
     queryFn: ({ signal }) => apiClient.get<EventAttendee[]>(`/calendar/events/${eventId}/rsvp`, undefined, signal),
     enabled: can && eventId !== null,
     staleTime: 60 * 1000,
@@ -367,8 +367,8 @@ export function useRsvpCalendarEvent() {
     mutationFn: ({ eventId, status }: { eventId: number; status: RsvpStatus }) =>
       apiClient.post<EventAttendee>(`/calendar/events/${eventId}/rsvp`, { status }),
     onSuccess: (_, { eventId }) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.calendar.attendees(eventId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.calendar.all });
+      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.attendees(eventId) });
+      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all });
     },
   });
 }
@@ -396,7 +396,7 @@ export interface ExternalCalendarEventsResponse {
 export function useExternalCalendarEvents(start: Date, end: Date, enabled: boolean) {
   const canView = useCan("calendar:read");
   return useQuery({
-    queryKey: queryKeys.calendar.externalEvents(start.toISOString(), end.toISOString()),
+    queryKey: platformHierarchyQueryKeys.calendar.externalEvents(start.toISOString(), end.toISOString()),
     queryFn: ({ signal }) =>
       apiClient.get<ExternalCalendarEventsResponse>("/calendar/external-events", {
         start: start.toISOString(),
@@ -417,7 +417,7 @@ export interface CalendarSource {
 export function useCalendarSources() {
   const canView = useCan("calendar:read");
   return useQuery({
-    queryKey: queryKeys.calendar.sources(),
+    queryKey: platformHierarchyQueryKeys.calendar.sources(),
     queryFn: ({ signal }) => apiClient.get<CalendarSource[]>("/calendar/sources", undefined, signal),
     staleTime: 30_000,
     enabled: canView,
@@ -434,7 +434,7 @@ export function useSetCalendarSourcePreference() {
         { enabled },
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.calendar.all, exact: false });
+      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all, exact: false });
     },
   });
 }
@@ -450,7 +450,7 @@ export interface EventSyncStatusResponse {
 }
 
 const calendarSyncStatusKey = (eventId: number) =>
-  [...queryKeys.calendar.all, "sync-status", eventId] as const;
+  [...platformHierarchyQueryKeys.calendar.all, "sync-status", eventId] as const;
 
 export function useEventSyncStatus(eventId: number | null) {
   return useQuery({

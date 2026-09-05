@@ -3,7 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import {
@@ -36,7 +37,7 @@ export function usePrincipalGroups(
 ) {
   const canManage = useCan("settings:rbac:manage");
   return useQuery<PaginatedGroupsResponse, Error>({
-    queryKey: queryKeys.principalGroups.list(params),
+    queryKey: accessAndCrmQueryKeys.principalGroups.list(params),
     queryFn: ({ signal }) =>
       apiClient.get(
         "/principal-groups",
@@ -56,7 +57,7 @@ export function useGroupMembers(
 ) {
   const canManage = useCan("settings:rbac:manage");
   return useQuery<GroupMember[], Error>({
-    queryKey: queryKeys.principalGroups.members(groupId),
+    queryKey: accessAndCrmQueryKeys.principalGroups.members(groupId),
     queryFn: ({ signal }) =>
       apiClient.get(
         `/principal-groups/${groupId}/members`,
@@ -76,7 +77,7 @@ export function useGroupRoles(
 ) {
   const canManage = useCan("settings:rbac:manage");
   return useQuery<GroupRole[], Error>({
-    queryKey: queryKeys.principalGroups.roles(groupId),
+    queryKey: accessAndCrmQueryKeys.principalGroups.roles(groupId),
     queryFn: ({ signal }) =>
       apiClient.get(
         `/principal-groups/${groupId}/roles`,
@@ -96,7 +97,7 @@ export function useCreateGroup() {
     mutationKey: ["principalGroups", "create"],
     mutationFn: (data) => apiClient.post<PrincipalGroup>("/principal-groups", data),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.principalGroups.all });
+      void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.principalGroups.all });
     },
   });
 }
@@ -108,7 +109,7 @@ export function useRenameGroup(groupId: string) {
     mutationFn: (data) =>
       apiClient.patch<{ success: true }>(`/principal-groups/${groupId}`, data),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.principalGroups.all });
+      void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.principalGroups.all });
     },
   });
 }
@@ -121,9 +122,9 @@ export function useAddGroupMember(groupId: string) {
       apiClient.post<{ success: true }>(`/principal-groups/${groupId}/members`, data),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.principalGroups.members(groupId),
+        queryKey: accessAndCrmQueryKeys.principalGroups.members(groupId),
       });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.principalGroups.list() });
+      void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.principalGroups.list() });
     },
   });
 }
@@ -138,9 +139,9 @@ export function useRemoveGroupMember(groupId: string) {
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.principalGroups.members(groupId),
+        queryKey: accessAndCrmQueryKeys.principalGroups.members(groupId),
       });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.principalGroups.list() });
+      void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.principalGroups.list() });
     },
   });
 }
@@ -153,10 +154,10 @@ export function useAssignGroupRole(groupId: string) {
       apiClient.post<{ success: true }>(`/principal-groups/${groupId}/roles`, data),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.principalGroups.roles(groupId),
+        queryKey: accessAndCrmQueryKeys.principalGroups.roles(groupId),
       });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.principalGroups.list() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.access.me() });
+      void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.principalGroups.list() });
+      void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
     },
   });
 }
@@ -171,10 +172,10 @@ export function useUnassignGroupRole(groupId: string) {
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.principalGroups.roles(groupId),
+        queryKey: accessAndCrmQueryKeys.principalGroups.roles(groupId),
       });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.principalGroups.list() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.access.me() });
+      void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.principalGroups.list() });
+      void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
     },
   });
 }

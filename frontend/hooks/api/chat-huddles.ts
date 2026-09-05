@@ -3,7 +3,8 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
+import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
@@ -26,7 +27,7 @@ const huddleContract = lazyContract(() =>
 export function useActiveHuddle(channelId: number) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
-    queryKey: queryKeys.chat.huddle(channelId),
+    queryKey: collaborationQueryKeys.chat.huddle(channelId),
     queryFn: ({ signal }) =>
       apiClient.get<Huddle | null>(
         `/chat/channels/${channelId}/huddle`,
@@ -51,8 +52,8 @@ export function useStartHuddle() {
         huddleContract,
       ),
     onSuccess: (_, channelId) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(channelId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.calendar.all, exact: false });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.huddle(channelId) });
+      queryClient.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all, exact: false });
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));
@@ -67,7 +68,7 @@ export function useJoinHuddle() {
     mutationFn: ({ huddleId }: { huddleId: number; channelId: number }) =>
       apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/join`),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(variables.channelId) });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.huddle(variables.channelId) });
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));
@@ -82,8 +83,8 @@ export function useLeaveHuddle() {
     mutationFn: ({ huddleId }: { huddleId: number; channelId: number }) =>
       apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/leave`),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(variables.channelId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.calendar.all, exact: false });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.huddle(variables.channelId) });
+      queryClient.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all, exact: false });
     },
   });
 }
@@ -103,7 +104,7 @@ export function useSetHuddleMute() {
     mutationFn: ({ huddleId, muted }: { huddleId: number; channelId: number; muted: boolean }) =>
       apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/mute`, { muted }),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(variables.channelId) });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.huddle(variables.channelId) });
     },
   });
 }
@@ -115,7 +116,7 @@ export function useRaiseHand() {
     mutationFn: ({ huddleId, raised }: { huddleId: number; channelId: number; raised: boolean }) =>
       apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/hand`, { raised }),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(variables.channelId) });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.huddle(variables.channelId) });
     },
   });
 }
@@ -135,7 +136,7 @@ export function useSetHuddleScreenShare() {
     mutationFn: ({ huddleId, isScreenSharing }: { huddleId: number; channelId: number; isScreenSharing: boolean }) =>
       apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/screenshare`, { isScreenSharing }),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(variables.channelId) });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.huddle(variables.channelId) });
     },
   });
 }
@@ -147,7 +148,7 @@ export function useKickParticipant() {
     mutationFn: ({ huddleId, targetUserId }: { huddleId: number; channelId: number; targetUserId: string }) =>
       apiClient.post<{ ok: boolean }>(`/chat/huddles/${huddleId}/kick`, { targetUserId }),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(variables.channelId) });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.huddle(variables.channelId) });
     },
   });
 }
@@ -159,7 +160,7 @@ export function useSetHuddleDeafen() {
     mutationFn: ({ huddleId, deafened }: { huddleId: number; channelId: number; deafened: boolean }) =>
       apiClient.patch<{ ok: boolean }>(`/chat/huddles/${huddleId}/deafen`, { deafened }),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.huddle(variables.channelId) });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.huddle(variables.channelId) });
     },
   });
 }

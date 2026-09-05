@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -95,7 +95,7 @@ interface SectionParams {
 export function usePayrollInputPeriods(params?: { cursor?: string; limit?: number; status?: HrPayrollInputStatus }) {
   const canView = useCan("hr:payroll:view");
   return useQuery({
-    queryKey: queryKeys.hrPayrollInputs.periods(params as Record<string, unknown> | undefined),
+    queryKey: payrollQueryKeys.hrPayrollInputs.periods(params as Record<string, unknown> | undefined),
     queryFn: ({ signal }) =>
       apiClient.get<PaginatedPeriods>("/hr/payroll-inputs/periods", params as Record<string, string | number> | undefined, signal),
     staleTime: 30_000,
@@ -110,7 +110,7 @@ export function useCreatePayrollInputPeriod() {
     mutationFn: (data: { periodKey: string; cutoffDate?: string }) =>
       apiClient.post<PayrollInputPeriod>("/hr/payroll-inputs/periods", data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.periods() });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.hrPayrollInputs.periods() });
       toast.success("Period created");
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -124,8 +124,8 @@ export function useBuildPayrollInputPeriod() {
     mutationFn: (periodId: number) =>
       apiClient.post<PayrollInputPeriod>(`/hr/payroll-inputs/periods/${periodId}/build`),
     onSuccess: (_, periodId) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.period(periodId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.periods() });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.hrPayrollInputs.period(periodId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.hrPayrollInputs.periods() });
       toast.success("Period built — snapshots captured");
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -139,8 +139,8 @@ export function useLockPayrollInputPeriod() {
     mutationFn: (periodId: number) =>
       apiClient.post<PayrollInputPeriod>(`/hr/payroll-inputs/periods/${periodId}/lock`),
     onSuccess: (_, periodId) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.period(periodId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.periods() });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.hrPayrollInputs.period(periodId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.hrPayrollInputs.periods() });
       toast.success("Period locked");
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -154,8 +154,8 @@ export function useUnlockPayrollInputPeriod() {
     mutationFn: (periodId: number) =>
       apiClient.post<PayrollInputPeriod>(`/hr/payroll-inputs/periods/${periodId}/unlock`),
     onSuccess: (_, periodId) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.period(periodId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.periods() });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.hrPayrollInputs.period(periodId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.hrPayrollInputs.periods() });
       toast.success("Period unlocked");
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -170,7 +170,7 @@ function makeSectionHook(section: string) {
       ...(params?.limit !== undefined && { limit: params.limit }),
     };
     return useQuery({
-      queryKey: queryKeys.hrPayrollInputs.section(periodId, section, queryParams),
+      queryKey: payrollQueryKeys.hrPayrollInputs.section(periodId, section, queryParams),
       queryFn: ({ signal }) =>
         apiClient.get<PaginatedSnapshots>(`/hr/payroll-inputs/periods/${periodId}/${section}`, queryParams as Record<string, string | number>, signal),
       staleTime: 60_000,
@@ -187,7 +187,7 @@ export const useReimbursementSnapshot = makeSectionHook("reimbursements");
 export function usePayrollAdjustments(periodId: number, params?: { cursor?: string; limit?: number }) {
   const canView = useCan("hr:payroll:view");
   return useQuery({
-    queryKey: queryKeys.hrPayrollInputs.adjustments(periodId, params as Record<string, unknown> | undefined),
+    queryKey: payrollQueryKeys.hrPayrollInputs.adjustments(periodId, params as Record<string, unknown> | undefined),
     queryFn: ({ signal }) =>
       apiClient.get<PaginatedAdjustments>(
         `/hr/payroll-inputs/periods/${periodId}/adjustments`,
@@ -214,9 +214,9 @@ export function useCreatePayrollAdjustment() {
     }) => apiClient.post<PayrollAdjustment>("/hr/payroll-inputs/adjustments", data),
     onSuccess: (_, vars) => {
       if (vars.periodId) {
-        void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.adjustments(vars.periodId) });
+        void qc.invalidateQueries({ queryKey: payrollQueryKeys.hrPayrollInputs.adjustments(vars.periodId) });
       }
-      void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.all });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.hrPayrollInputs.all });
       toast.success("Adjustment created");
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -230,7 +230,7 @@ export function useApprovePayrollAdjustment() {
     mutationFn: (adjustmentId: number) =>
       apiClient.patch<PayrollAdjustment>(`/hr/payroll-inputs/adjustments/${adjustmentId}/approve`),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hrPayrollInputs.all });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.hrPayrollInputs.all });
       toast.success("Adjustment approved");
     },
     onError: (err) => toast.error(getErrorMessage(err)),

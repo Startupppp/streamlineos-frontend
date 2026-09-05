@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import type { SupportTicketStatus, SupportTicketPriority, SupportMessageAttachment } from "@/types/support";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
@@ -57,7 +57,7 @@ export interface ReplyPortalTicketInput {
 
 export function usePortalTickets() {
   return useGatedQuery("support:portal:tickets:view", {
-    queryKey: queryKeys.supportPortalTickets.list(),
+    queryKey: supportAndWorkflowsQueryKeys.supportPortalTickets.list(),
     queryFn: ({ signal }) => apiClient.get<PortalTicket[]>("/support/portal/tickets", undefined, signal),
     staleTime: 30_000,
   });
@@ -70,14 +70,14 @@ export function useCreatePortalTicket() {
     mutationFn: (input: CreatePortalTicketInput) =>
       apiClient.post<PortalTicket>("/support/portal/tickets", input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.supportPortalTickets.all });
+      queryClient.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportPortalTickets.all });
     },
   });
 }
 
 export function usePortalTicket(ticketId: number) {
   return useGatedQuery("support:portal:tickets:view", {
-    queryKey: queryKeys.supportPortalTickets.detail(ticketId),
+    queryKey: supportAndWorkflowsQueryKeys.supportPortalTickets.detail(ticketId),
     queryFn: ({ signal }) => apiClient.get<PortalTicketDetail>(`/support/portal/tickets/${ticketId}`, undefined, signal),
     enabled: Number.isFinite(ticketId) && ticketId > 0,
     staleTime: 15_000,
@@ -91,7 +91,7 @@ export function useReplyToPortalTicket(ticketId: number) {
     mutationFn: (input: ReplyPortalTicketInput) =>
       apiClient.post<PortalMessage>(`/support/portal/tickets/${ticketId}/messages`, input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.supportPortalTickets.detail(ticketId) });
+      queryClient.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportPortalTickets.detail(ticketId) });
     },
   });
 }

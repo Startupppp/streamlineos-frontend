@@ -3,7 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import type { OffsetPage } from "@/hooks/api/offset-page-schema";
-import { queryKeys } from "@/lib/query-keys";
+import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { downloadBlob } from "@/lib/download-blob";
@@ -12,7 +12,7 @@ import type { FnfSettlement, FnfStatement } from "@/types/payroll/reports";
 export function useFnfSettlements() {
   const canView = useCan("payroll:fnf:view");
   return useQuery({
-    queryKey: queryKeys.payroll.fnfList(),
+    queryKey: payrollQueryKeys.payroll.fnfList(),
     queryFn: async ({ signal }) =>
       (await apiClient.get<OffsetPage<FnfSettlement>>("/payroll/fnf", undefined, signal)).items,
     staleTime: 60_000,
@@ -23,7 +23,7 @@ export function useFnfSettlements() {
 export function useFnfSettlement(settlementId: number) {
   const canView = useCan("payroll:fnf:view");
   return useQuery({
-    queryKey: queryKeys.payroll.fnfSettlement(settlementId),
+    queryKey: payrollQueryKeys.payroll.fnfSettlement(settlementId),
     queryFn: ({ signal }) => apiClient.get<FnfSettlement>(`/payroll/fnf/${settlementId}`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && settlementId > 0,
@@ -33,7 +33,7 @@ export function useFnfSettlement(settlementId: number) {
 export function useFnfStatement(settlementId: number) {
   const canView = useCan("payroll:fnf:view");
   return useQuery({
-    queryKey: queryKeys.payroll.fnfStatement(settlementId),
+    queryKey: payrollQueryKeys.payroll.fnfStatement(settlementId),
     queryFn: ({ signal }) =>
       apiClient.get<FnfStatement>(`/payroll/fnf/${settlementId}/statement`, undefined, signal),
     staleTime: 60_000,
@@ -66,7 +66,7 @@ export function useApproveFnf() {
         notes,
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.payroll.fnfAll });
+      qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.fnfAll });
     },
   });
 }

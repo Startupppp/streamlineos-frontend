@@ -5,7 +5,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { permissionCatalogContract } from "@/hooks/api/access-schema";
@@ -24,7 +24,7 @@ export type {
 
 export function useUserApiTokens(params: { cursor?: string; limit: number }) {
   return useGatedQuery("settings:api-tokens:read", {
-    queryKey: queryKeys.userApiTokens.list(params),
+    queryKey: usersAndCommerceQueryKeys.userApiTokens.list(params),
     queryFn: ({ signal }) =>
       apiClient.get(
         "/me/api-tokens",
@@ -41,7 +41,7 @@ export function useUserApiTokens(params: { cursor?: string; limit: number }) {
 
 export function useGrantableUserApiTokenPermissions() {
   return useGatedQuery("settings:api-tokens:read", {
-    queryKey: queryKeys.userApiTokens.permissions(),
+    queryKey: usersAndCommerceQueryKeys.userApiTokens.permissions(),
     queryFn: ({ signal }) =>
       apiClient.get(
         "/me/api-tokens/permissions",
@@ -65,7 +65,7 @@ export function useCreateUserApiToken() {
         createUserApiTokenResponseContract,
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.userApiTokens.all });
+      qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.userApiTokens.all });
     },
   });
 }
@@ -77,7 +77,7 @@ export function useRevokeUserApiToken() {
     mutationFn: (tokenId: string) =>
       apiClient.delete<void>(`/me/api-tokens/${tokenId}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.userApiTokens.all });
+      qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.userApiTokens.all });
     },
   });
 }

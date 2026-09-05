@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useUpdateTicket } from "@/hooks/api/build";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { activationProps } from "@/lib/keyboard-activation";
@@ -107,7 +107,7 @@ export function EditEpicDialog({
   const updateTicket = useUpdateTicket(projectId, {
     onSuccess: () => {
       toast.success("Epic updated");
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
+      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.detail(projectId) });
       setOpen(false);
     },
     onError: (error) => toast.error(getErrorMessage(error)),

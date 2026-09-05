@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useCan } from "@/hooks/api/access";
 import type { CursorPage } from "@/hooks/api/accounting";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -154,7 +154,7 @@ export function useExecutePaymentRun(runId: number) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: apRunKeys.paymentRun(runId) });
       void queryClient.invalidateQueries({ queryKey: apRunKeys.paymentRuns(), exact: false });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+      void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
     },
   });
 }
@@ -196,7 +196,7 @@ export function useCreateVendorPaymentAllocation() {
     mutationFn: (body) =>
       apiClient.post<{ success: boolean }>("/accounting/vendor-payments/allocations", body),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+      void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
     },
   });
 }

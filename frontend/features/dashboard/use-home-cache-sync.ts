@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAccess } from "@/hooks/api/access";
-import { queryKeys } from "@/lib/query-keys";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 
 export function useHomeCacheSync(): void {
   const queryClient = useQueryClient();
@@ -19,6 +19,6 @@ export function useHomeCacheSync(): void {
     }
     if (seenVersion.current === version) return;
     seenVersion.current = version;
-    void queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
+    void queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.dashboard.all });
   }, [version, queryClient]);
 }

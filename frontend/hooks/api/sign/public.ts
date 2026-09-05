@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { buildUrl } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import type { SignPublicSession } from "@/types/sign";
 import { withCorrelation } from "@/lib/observability/with-correlation";
 
@@ -45,7 +45,7 @@ async function publicPost<T>(path: string, body: unknown, fallback: string): Pro
 
 export function useSignPublicSession(token: string) {
   return useQuery({
-    queryKey: queryKeys.signPublic.session(token),
+    queryKey: growthAndSignQueryKeys.signPublic.session(token),
     queryFn: () => publicGet<SignPublicSession>(`/public/sign/${token}/session`, "This signing link is invalid."),
     staleTime: 5_000,
   });
@@ -53,7 +53,7 @@ export function useSignPublicSession(token: string) {
 
 export function useSignPublicDocumentPreview(token: string, documentId: number | undefined) {
   return useQuery({
-    queryKey: [...queryKeys.signPublic.session(token), "document", documentId] as const,
+    queryKey: [...growthAndSignQueryKeys.signPublic.session(token), "document", documentId] as const,
     queryFn: () => publicGet<{ url: string }>(`/public/sign/${token}/documents/${documentId}/preview`, "Unable to load document."),
     enabled: documentId !== undefined,
     staleTime: 60_000,
@@ -62,7 +62,7 @@ export function useSignPublicDocumentPreview(token: string, documentId: number |
 
 function useInvalidateSession(token: string) {
   const qc = useQueryClient();
-  return () => qc.invalidateQueries({ queryKey: queryKeys.signPublic.session(token) });
+  return () => qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signPublic.session(token) });
 }
 
 export function useRequestSignOtp(token: string) {

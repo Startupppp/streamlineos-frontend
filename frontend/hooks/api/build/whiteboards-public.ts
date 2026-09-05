@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import type { ExcalidrawSceneData } from "./whiteboards";
 
 export interface PublicWhiteboard {
@@ -15,7 +15,7 @@ export interface PublicWhiteboard {
 
 export function usePublicWhiteboard(token: string) {
   return useQuery({
-    queryKey: queryKeys.whiteboards.publicLink(token),
+    queryKey: accountingAndSupportQueryKeys.whiteboards.publicLink(token),
     queryFn: ({ signal }) => apiClient.get<PublicWhiteboard>(`/public/whiteboard-links/${token}`, undefined, signal),
     enabled: !!token,
     staleTime: 30_000,
@@ -42,7 +42,7 @@ export function useUpdatePublicWhiteboard(token: string) {
       ),
     onSuccess: (result, data) => {
       queryClient.setQueryData<PublicWhiteboard>(
-        queryKeys.whiteboards.publicLink(token),
+        accountingAndSupportQueryKeys.whiteboards.publicLink(token),
         (previous) =>
           previous ? { ...previous, data, updatedAt: result.updatedAt } : previous,
       );

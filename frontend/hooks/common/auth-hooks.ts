@@ -15,7 +15,7 @@ import {
 } from "@/lib/api-client";
 import { clearGateCookies } from "@/lib/onboarding-gate";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { lazyContract } from "@/lib/api-envelope";
 import type { UserOrganization } from "@/hooks/api/organization-schema";
 import { toast } from "sonner";
@@ -136,7 +136,7 @@ export function useSignOut() {
 export function useGetOrganizations(enabled = true) {
   const { status } = useSession();
   return useQuery<UserOrganization[]>({
-    queryKey: queryKeys.organization.all,
+    queryKey: platformCoreQueryKeys.organization.all,
     queryFn: ({ signal }) =>
       apiClient.get("/organization", undefined, signal, organizationsContract),
     staleTime: 60_000,

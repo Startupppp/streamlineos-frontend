@@ -5,7 +5,7 @@ import { useAbly } from "ably/react";
 import type { InboundMessage } from "ably";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
 import { supportChannelName } from "@/lib/ably-channels";
 
@@ -56,14 +56,14 @@ export function useSupportRealtime(ticketId: number | null): { isConnected: bool
     const ticketUpdatedHandler = (msg: InboundMessage) => {
       const payload = msg.data as TicketUpdatedPayload;
       if (!payload?.ticketId) return;
-      queryClient.invalidateQueries({ queryKey: queryKeys.support.detail(payload.ticketId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.support.all });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.support.detail(payload.ticketId) });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.support.all });
     };
 
     const messageHandler = (msg: InboundMessage) => {
       const payload = msg.data as MessageCreatedPayload;
       if (!payload?.ticketId) return;
-      queryClient.invalidateQueries({ queryKey: queryKeys.support.detail(payload.ticketId) });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.support.detail(payload.ticketId) });
     };
 
     let cancelled = false;

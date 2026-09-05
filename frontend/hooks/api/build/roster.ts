@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 
 export interface RosterTeam {
@@ -35,7 +35,7 @@ export function useProjectRoster(
   const enabled = canView && !!projectId && (callerEnabled ?? true);
 
   return useQuery<ProjectRoster, Error>({
-    queryKey: queryKeys.projects.roster.detail(projectId),
+    queryKey: buildWorkQueryKeys.projects.roster.detail(projectId),
     queryFn: ({ signal }) => apiClient.get<ProjectRoster>(`/build/${projectId}/roster`, undefined, signal),
     staleTime: 30_000,
     enabled,

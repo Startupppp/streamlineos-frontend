@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface KbArticleComment {
@@ -19,7 +19,7 @@ interface KbArticleComment {
 
 export function useSupportKbComments(articleId: number) {
   return useGatedQuery("support:kb:view", {
-    queryKey: queryKeys.kbComments.list(articleId),
+    queryKey: accountingAndSupportQueryKeys.kbComments.list(articleId),
     queryFn: ({ signal }) =>
       apiClient.get<KbArticleComment[]>(
         `/support/kb/articles/${articleId}/comments`
@@ -39,7 +39,7 @@ export function useAddSupportKbComment(articleId: number) {
         { body }
       ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.kbComments.list(articleId) }),
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.kbComments.list(articleId) }),
   });
 }
 
@@ -52,6 +52,6 @@ export function useDeleteSupportKbComment(articleId: number) {
         `/support/kb/articles/${articleId}/comments/${commentId}`
       ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.kbComments.list(articleId) }),
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.kbComments.list(articleId) }),
   });
 }

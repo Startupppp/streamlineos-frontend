@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type { NotificationListParams } from "@/types/notifications";
 
 export const SHARED_UNREAD_PARAMS: NotificationListParams = {
@@ -17,14 +17,14 @@ export function useNotificationInboxInvalidation() {
 
   function invalidateInbox() {
     void queryClient.invalidateQueries({
-      queryKey: queryKeys.notifications.lists(),
+      queryKey: platformCoreQueryKeys.notifications.lists(),
     });
     void queryClient.invalidateQueries({
-      queryKey: queryKeys.notifications.unreadCount(),
+      queryKey: platformCoreQueryKeys.notifications.unreadCount(),
       exact: true,
     });
     void queryClient.invalidateQueries({
-      queryKey: queryKeys.inbox.all,
+      queryKey: platformCoreQueryKeys.inbox.all,
     });
   }
 

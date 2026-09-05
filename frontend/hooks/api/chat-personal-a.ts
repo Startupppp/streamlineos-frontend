@@ -2,7 +2,7 @@
 
 import { useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { SavedMessagesPage } from "@/types/chat";
@@ -10,7 +10,7 @@ import type { SavedMessagesPage } from "@/types/chat";
 export function useSavedMessages() {
   const canRead = useCan("chat:messages:read");
   return useInfiniteQuery({
-    queryKey: queryKeys.chat.savedMessages(),
+    queryKey: collaborationQueryKeys.chat.savedMessages(),
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<SavedMessagesPage>(
         "/chat/saved",
@@ -31,7 +31,7 @@ export function useSaveMessage() {
       apiClient.post<{ ok: boolean }>(`/chat/saved/${messageId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.savedMessages(),
+        queryKey: collaborationQueryKeys.chat.savedMessages(),
       });
     },
   });
@@ -45,7 +45,7 @@ export function useUnsaveMessage() {
       apiClient.delete<{ ok: boolean }>(`/chat/saved/${messageId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.savedMessages(),
+        queryKey: collaborationQueryKeys.chat.savedMessages(),
       });
     },
   });

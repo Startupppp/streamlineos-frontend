@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useBillSubmitApproval(billId: number) {
@@ -15,8 +15,8 @@ export function useBillSubmitApproval(billId: number) {
         body,
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.purchaseBill(billId) });
+      queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
+      queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.purchaseBill(billId) });
     },
   });
 }
@@ -30,8 +30,8 @@ export function useBillApprove(billId: number) {
         `/accounting/purchase-bills/${billId}/approve`,
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.purchaseBill(billId) });
+      queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
+      queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.purchaseBill(billId) });
     },
   });
 }
@@ -46,8 +46,8 @@ export function useBillCancel(billId: number) {
         body,
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.purchaseBill(billId) });
+      queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
+      queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.purchaseBill(billId) });
     },
   });
 }

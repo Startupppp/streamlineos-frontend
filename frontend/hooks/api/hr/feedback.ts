@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -48,7 +48,7 @@ export function useFeedbackCycles() {
   const canView = useCan("hr:performance:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: queryKeys.hr.feedbackCycles(),
+    queryKey: humanResourcesQueryKeys.hr.feedbackCycles(),
     queryFn: ({ signal }) => apiClient.get<FeedbackCycle[]>("/hr/feedback/cycles", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canView && hrEnabled,
@@ -63,7 +63,7 @@ export function useCreateFeedbackCycle() {
       data: Omit<FeedbackCycle, "id" | "orgId" | "status" | "createdAt">,
     ) => apiClient.post<FeedbackCycle>("/hr/feedback/cycles", data),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.feedbackCycles() }),
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.feedbackCycles() }),
   });
 }
 
@@ -74,9 +74,9 @@ export function useUpdateFeedbackCycleStatus() {
     mutationFn: ({ id, status }: { id: number; status: string }) =>
       apiClient.patch<FeedbackCycle>(`/hr/feedback/cycles/${id}`, { status }),
     onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.feedbackCycles() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.feedbackCycles() });
       qc.invalidateQueries({
-        queryKey: queryKeys.hr.feedbackCycle(variables.id),
+        queryKey: humanResourcesQueryKeys.hr.feedbackCycle(variables.id),
       });
     },
   });
@@ -86,7 +86,7 @@ export function useMyPendingReviews() {
   const canView = useCan("hr:performance:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: queryKeys.hr.myPendingReviews(),
+    queryKey: humanResourcesQueryKeys.hr.myPendingReviews(),
     queryFn: ({ signal }) =>
       apiClient.get<FeedbackCycleRequest[]>("/hr/feedback/my-reviews", undefined, signal),
     staleTime: 30_000,
@@ -112,7 +112,7 @@ export function useSubmitFeedbackResponse() {
         { responses, overallRating },
       ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.myPendingReviews() }),
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.myPendingReviews() }),
   });
 }
 
@@ -120,7 +120,7 @@ export function useFeedbackResults(subjectId: string) {
   const canView = useCan("hr:performance:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: queryKeys.hr.feedbackResults(subjectId),
+    queryKey: humanResourcesQueryKeys.hr.feedbackResults(subjectId),
     queryFn: ({ signal }) =>
       apiClient.get<FeedbackResult>(`/hr/feedback/results/${subjectId}`, undefined, signal),
     staleTime: 2 * 60_000,

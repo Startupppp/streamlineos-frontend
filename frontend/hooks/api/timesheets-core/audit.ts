@@ -2,7 +2,7 @@
 
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { useCan } from "@/hooks/api/access";
 import type { AuditEvent, CursorPage } from "@/features/timesheets/types";
 
@@ -22,7 +22,7 @@ export function useAuditEvents(query: AuditQuery = {}, enabled = true) {
     limit: query.limit ?? 20,
   };
   return useInfiniteQuery<CursorPage<AuditEvent>>({
-    queryKey: queryKeys.timesheets.audit(filters),
+    queryKey: usersAndCommerceQueryKeys.timesheets.audit(filters),
     queryFn: ({ pageParam , signal }) => {
       const params: Record<string, unknown> = { ...filters };
       if (typeof pageParam === "string") params.cursor = pageParam;

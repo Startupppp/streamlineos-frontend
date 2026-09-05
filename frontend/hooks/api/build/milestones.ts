@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type { ProjectMilestone, ProjectBudget, ProjectBudgetUpdate } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { queryKeyBase } from "@/lib/query-keys/base";
@@ -70,7 +70,7 @@ export function useDeleteMilestone(projectId: number) {
 export function useProjectBudget(projectId: number) {
   const canManage = useCan("build:manage");
   return useQuery({
-    queryKey: queryKeys.projects.budget(projectId),
+    queryKey: buildWorkQueryKeys.projects.budget(projectId),
     queryFn: ({ signal }) => apiClient.get<ProjectBudget>(`/build/${projectId}/budget`, undefined, signal),
     enabled: canManage && !!projectId,
     staleTime: 60_000,
@@ -83,6 +83,6 @@ export function useUpdateProjectBudget(projectId: number) {
     mutationKey: ["projects", "budget", "update"],
     mutationFn: (budget: number) =>
       apiClient.patch<ProjectBudgetUpdate>(`/build/${projectId}/budget`, { budget }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.projects.budget(projectId) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.budget(projectId) }),
   });
 }

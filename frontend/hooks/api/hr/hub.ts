@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import type {
   Holiday,
   Interview,
@@ -155,7 +155,7 @@ export function useHrHubSnapshot() {
   const today = localDateKey();
 
   return useQuery({
-    queryKey: queryKeys.hr.hub(today),
+    queryKey: humanResourcesQueryKeys.hr.hub(today),
     queryFn: ({ signal }) => apiClient.get<HrHubSnapshot>("/hr/hub", { today }, signal),
     enabled: Boolean(orgId && userId),
     staleTime: 30_000,

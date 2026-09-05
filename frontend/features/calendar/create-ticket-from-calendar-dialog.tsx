@@ -38,7 +38,7 @@ import { toast } from "sonner";
 import { FolderOpenIcon } from "@animateicons/react/lucide";
 import Link from "next/link";
 import { useProjects, useCreateTicket } from "@/hooks/api/build";
-import { queryKeys } from "@/lib/query-keys";
+import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 import type { CreateTicketInput } from "@/types/projects";
 import {
   createTicketFromCalendarSchema,
@@ -113,7 +113,7 @@ export function CreateTicketFromCalendarDialog({
       try {
         const ticket = await createTicket.mutateAsync(ticketInput);
         await queryClient.invalidateQueries({
-          queryKey: queryKeys.calendar.all,
+          queryKey: platformHierarchyQueryKeys.calendar.all,
           exact: false,
         });
         const targetProjectId = ticket.projectId ?? numericProjectId;

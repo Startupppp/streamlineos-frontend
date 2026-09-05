@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { toQuery, type CursorPage } from "@/hooks/api/accounting/cursor-page";
@@ -27,7 +27,7 @@ export interface ListAccountsParams {
  */
 export function useAccounts(params: ListAccountsParams = {}) {
   return useGatedQuery<CursorPage<Account>, Error>("accounting:accounts:read", {
-    queryKey: queryKeys.accounting.accounts(params),
+    queryKey: accountingAndSupportQueryKeys.accounting.accounts(params),
     queryFn: ({ signal }) =>
       apiClient.get<CursorPage<Account>>("/accounting/accounts", toQuery(params), signal),
     staleTime: 60_000,
@@ -61,7 +61,7 @@ export function useAllAccounts(
   params: Omit<ListAccountsParams, "cursor" | "limit"> = {},
 ) {
   return useGatedQuery<CursorPage<Account>, Error>("accounting:accounts:read", {
-    queryKey: queryKeys.accounting.accounts({ ...params, complete: true }),
+    queryKey: accountingAndSupportQueryKeys.accounting.accounts({ ...params, complete: true }),
     queryFn: async ({ signal }) => {
       const rows: Account[] = [];
       let cursor: string | undefined = undefined;
@@ -109,7 +109,7 @@ export function useCreateAccount() {
     mutationKey: ["create", "account"],
     mutationFn: (data) => apiClient.post<Account>("/accounting/accounts", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+      queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
     },
   });
 }
@@ -126,7 +126,7 @@ export function useUpdateAccount(accountId: number) {
     mutationKey: ["update", "account"],
     mutationFn: (data) => apiClient.patch<Account>(`/accounting/accounts/${accountId}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+      queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
     },
   });
 }

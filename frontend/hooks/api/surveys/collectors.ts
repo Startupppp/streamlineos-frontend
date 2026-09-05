@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
@@ -51,7 +51,7 @@ export interface PatchCollectorInput {
 
 export function useCollectors(surveyId: number) {
   return useGatedQuery("surveys:participants:view", {
-    queryKey: queryKeys.surveys.collectors(surveyId),
+    queryKey: knowledgeAndSurveysQueryKeys.surveys.collectors(surveyId),
     queryFn: ({ signal }) => apiClient.get<SurveyCollector[]>(`/surveys/${surveyId}/collectors`, undefined, signal),
     staleTime: 15_000,
   });
@@ -62,7 +62,7 @@ export function useCreateCollector(surveyId: number) {
   return useAuthorizedMutation("surveys:participants:manage", {
     mutationKey: ["surveys", "collectors", "create", surveyId] as const,
     mutationFn: (input: CreateCollectorInput) => apiClient.post<SurveyCollector>(`/surveys/${surveyId}/collectors`, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.surveys.collectors(surveyId) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.surveys.collectors(surveyId) }),
   });
 }
 
@@ -72,6 +72,6 @@ export function usePatchCollector(surveyId: number) {
     mutationKey: ["surveys", "collectors", "patch", surveyId] as const,
     mutationFn: ({ collectorId, input }: { collectorId: number; input: PatchCollectorInput }) =>
       apiClient.patch<SurveyCollector>(`/surveys/${surveyId}/collectors/${collectorId}`, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.surveys.collectors(surveyId) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.surveys.collectors(surveyId) }),
   });
 }

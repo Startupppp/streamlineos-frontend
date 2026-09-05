@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -25,7 +25,7 @@ export type MigrationResult = {
 export function useArticleMigrationPreview() {
   const canManageSettings = useCan("kb:settings:manage");
   return useQuery({
-    queryKey: queryKeys.kb.articleMigrationPreview(),
+    queryKey: knowledgeAndSurveysQueryKeys.kb.articleMigrationPreview(),
     queryFn: ({ signal }) => apiClient.get<ArticleMigrationPreview>("/kb/article-migration/preview", undefined, signal),
     staleTime: 60_000,
     enabled: canManageSettings,
@@ -39,9 +39,9 @@ export function useRunArticleMigration() {
     mutationFn: (body: { dryRun?: boolean }) =>
       apiClient.post<MigrationResult>("/kb/article-migration/run", body),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.kb.pagesTree() });
-      qc.invalidateQueries({ queryKey: queryKeys.kb.importJobs() });
-      qc.invalidateQueries({ queryKey: queryKeys.kb.articleMigrationPreview() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.importJobs() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.articleMigrationPreview() });
     },
   });
 }

@@ -2,7 +2,8 @@
 
 import { useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import type { SupportTicketStatus } from "@/types/support";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
@@ -155,7 +156,7 @@ interface UpdateRoutingRuleInput {
 export function useSupportMacros(params?: MacrosParams) {
   const queryParams: Record<string, unknown> = { ...params };
   return useGatedQuery("support:macros:view", {
-    queryKey: queryKeys.supportMacros.list(queryParams),
+    queryKey: supportAndWorkflowsQueryKeys.supportMacros.list(queryParams),
     queryFn: ({ signal }) => apiClient.get<SupportMacro[]>("/support/macros", queryParams, signal),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
@@ -168,7 +169,7 @@ export function useCreateMacro() {
     mutationKey: ["create", "macro"],
     mutationFn: (input: CreateMacroInput) =>
       apiClient.post<SupportMacro>("/support/macros", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportMacros.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportMacros.all }),
   });
 }
 
@@ -178,7 +179,7 @@ export function useUpdateMacro() {
     mutationKey: ["update", "macro"],
     mutationFn: ({ id, ...input }: UpdateMacroInput & { id: number }) =>
       apiClient.patch<SupportMacro>(`/support/macros/${id}`, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportMacros.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportMacros.all }),
   });
 }
 
@@ -188,13 +189,13 @@ export function useDeleteMacro() {
     mutationKey: ["delete", "macro"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/support/macros/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportMacros.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportMacros.all }),
   });
 }
 
 export function useMacroUsage() {
   return useGatedQuery("support:macros:view", {
-    queryKey: queryKeys.supportMacros.usage(),
+    queryKey: supportAndWorkflowsQueryKeys.supportMacros.usage(),
     queryFn: ({ signal }) => apiClient.get<MacroUsage[]>("/support/macros/usage", undefined, signal),
     staleTime: 30_000,
   });
@@ -215,15 +216,15 @@ export function useApplyMacro() {
     mutationFn: ({ macroId, ticketId }: ApplyMacroInput) =>
       apiClient.post<ApplyMacroResult>(`/support/macros/${macroId}/apply`, { ticketId }),
     onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.supportMacros.usage() });
-      qc.invalidateQueries({ queryKey: queryKeys.support.detail(variables.ticketId) });
+      qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportMacros.usage() });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.support.detail(variables.ticketId) });
     },
   });
 }
 
 export function useRoutingRules() {
   return useGatedQuery("support:macros:view", {
-    queryKey: queryKeys.supportRouting.list(),
+    queryKey: platformCoreQueryKeys.supportRouting.list(),
     queryFn: ({ signal }) => apiClient.get<SupportRoutingRule[]>("/support/routing-rules", undefined, signal),
     staleTime: 60_000,
   });
@@ -235,7 +236,7 @@ export function useCreateRoutingRule() {
     mutationKey: ["create", "routing", "rule"],
     mutationFn: (input: CreateRoutingRuleInput) =>
       apiClient.post<SupportRoutingRule>("/support/routing-rules", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportRouting.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: platformCoreQueryKeys.supportRouting.all }),
   });
 }
 
@@ -245,7 +246,7 @@ export function useUpdateRoutingRule() {
     mutationKey: ["update", "routing", "rule"],
     mutationFn: ({ id, ...input }: UpdateRoutingRuleInput & { id: number }) =>
       apiClient.patch<SupportRoutingRule>(`/support/routing-rules/${id}`, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportRouting.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: platformCoreQueryKeys.supportRouting.all }),
   });
 }
 
@@ -255,13 +256,13 @@ export function useDeleteRoutingRule() {
     mutationKey: ["delete", "routing", "rule"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/support/routing-rules/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportRouting.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: platformCoreQueryKeys.supportRouting.all }),
   });
 }
 
 export function useAgentSkills() {
   return useGatedQuery("support:macros:view", {
-    queryKey: queryKeys.supportAgentSkills.list(),
+    queryKey: platformCoreQueryKeys.supportAgentSkills.list(),
     queryFn: ({ signal }) => apiClient.get<SupportAgentSkill[]>("/support/agent-skills", undefined, signal),
     staleTime: 60_000,
   });
@@ -273,13 +274,13 @@ export function useSetAgentSkills() {
     mutationKey: ["supportAgentSkills", "set"],
     mutationFn: ({ userId, skills }: { userId: string; skills: string[] }) =>
       apiClient.put<{ success: boolean; skills: string[] }>(`/support/agent-skills/${userId}`, { skills }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportAgentSkills.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: platformCoreQueryKeys.supportAgentSkills.all }),
   });
 }
 
 export function useAgentAvailability() {
   return useGatedQuery("support:macros:view", {
-    queryKey: queryKeys.supportAgentAvailability.list(),
+    queryKey: platformCoreQueryKeys.supportAgentAvailability.list(),
     queryFn: ({ signal }) => apiClient.get<SupportAgentAvailability[]>("/support/agent-availability", undefined, signal),
     staleTime: 30_000,
   });
@@ -291,13 +292,13 @@ export function useSetMyAvailability() {
     mutationKey: ["supportAgentAvailability", "setMine"],
     mutationFn: (isAvailable: boolean) =>
       apiClient.put<SupportAgentAvailability>("/support/agent-availability/me", { isAvailable }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportAgentAvailability.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: platformCoreQueryKeys.supportAgentAvailability.all }),
   });
 }
 
 export function useVipClients() {
   return useGatedQuery("support:macros:view", {
-    queryKey: queryKeys.supportVipClients.list(),
+    queryKey: platformCoreQueryKeys.supportVipClients.list(),
     queryFn: ({ signal }) => apiClient.get<SupportVipClient[]>("/support/vip-clients", undefined, signal),
     staleTime: 60_000,
   });
@@ -309,7 +310,7 @@ export function useAddVipClient() {
     mutationKey: ["supportVipClients", "add"],
     mutationFn: (clientId: number) =>
       apiClient.post<{ success: boolean }>("/support/vip-clients", { clientId }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportVipClients.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: platformCoreQueryKeys.supportVipClients.all }),
   });
 }
 
@@ -319,6 +320,6 @@ export function useRemoveVipClient() {
     mutationKey: ["supportVipClients", "remove"],
     mutationFn: (clientId: number) =>
       apiClient.delete<{ success: boolean }>(`/support/vip-clients/${clientId}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportVipClients.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: platformCoreQueryKeys.supportVipClients.all }),
   });
 }

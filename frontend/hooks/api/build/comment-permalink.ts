@@ -2,7 +2,7 @@
 
 import { queryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 
 interface CommentPermalinkData {
   id: string;
@@ -36,7 +36,7 @@ export function commentPermalinkQueryOptions(
   commentId: string,
 ) {
   return queryOptions<CommentPermalinkData>({
-    queryKey: queryKeys.projects.commentPermalinkWithComment(projectId, ticketId, commentId),
+    queryKey: buildWorkQueryKeys.projects.commentPermalinkWithComment(projectId, ticketId, commentId),
     queryFn: ({ signal }) =>
       apiClient.get<CommentPermalinkData>(
         `/build/${projectId}/tickets/${ticketId}/comments/${commentId}`, undefined, signal,
@@ -48,7 +48,7 @@ export function commentPermalinkQueryOptions(
 
 export function ticketPermalinkQueryOptions(projectId: number, ticketId: number) {
   return queryOptions<TicketPermalinkData>({
-    queryKey: queryKeys.projects.commentPermalinkTicket(projectId, ticketId),
+    queryKey: buildWorkQueryKeys.projects.commentPermalinkTicket(projectId, ticketId),
     queryFn: ({ signal }) =>
       apiClient.get<TicketPermalinkData>(`/build/${projectId}/tickets/${ticketId}`, undefined, signal),
     staleTime: 60_000,

@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { Channel, ChatNotificationPreference } from "@/types/chat";
@@ -14,11 +14,11 @@ export function useArchiveChannel() {
     mutationFn: (channelId: number) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/archive`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.archivedChannels(),
+        queryKey: collaborationQueryKeys.chat.archivedChannels(),
       });
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.unreadTotal() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.unreadTotal() });
     },
   });
 }
@@ -30,11 +30,11 @@ export function useUnarchiveChannel() {
     mutationFn: (channelId: number) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/unarchive`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.archivedChannels(),
+        queryKey: collaborationQueryKeys.chat.archivedChannels(),
       });
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.unreadTotal() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.unreadTotal() });
     },
   });
 }
@@ -48,8 +48,8 @@ export function useMarkChannelUnread() {
         `/chat/channels/${channelId}/mark-unread`,
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.unreadTotal() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.unreadTotal() });
     },
   });
 }
@@ -60,7 +60,7 @@ export function useEntityChannel(
 ) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
-    queryKey: [...queryKeys.chat.all, "entity", entityType, entityId] as const,
+    queryKey: [...collaborationQueryKeys.chat.all, "entity", entityType, entityId] as const,
     queryFn: ({ signal }) =>
       apiClient.get<Channel>(`/chat/channels/entity/${entityType}/${entityId}`, undefined, signal),
     enabled: canRead && Boolean(entityType && entityId),
@@ -84,7 +84,7 @@ export function useMuteChannel() {
         { duration },
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
     },
   });
 }
@@ -96,7 +96,7 @@ export function useUnmuteChannel() {
     mutationFn: (channelId: number) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/unmute`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
     },
   });
 }
@@ -108,7 +108,7 @@ export function useFavoriteChannel() {
     mutationFn: (channelId: number) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/favorite`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
     },
   });
 }
@@ -120,7 +120,7 @@ export function useUnfavoriteChannel() {
     mutationFn: (channelId: number) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/unfavorite`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
     },
   });
 }
@@ -128,7 +128,7 @@ export function useUnfavoriteChannel() {
 export function useChannelInviteLink(channelId: number, enabled: boolean) {
   const canManage = useCan("chat:invite-links:manage");
   return useQuery({
-    queryKey: queryKeys.chat.inviteLink(channelId),
+    queryKey: collaborationQueryKeys.chat.inviteLink(channelId),
     queryFn: ({ signal }) =>
       apiClient.post<{ token: string }>(
         `/chat/channels/${channelId}/invite-link`,
@@ -150,7 +150,7 @@ export function useRegenerateInviteLink() {
       ),
     onSuccess: (_, channelId) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.chat.inviteLink(channelId),
+        queryKey: collaborationQueryKeys.chat.inviteLink(channelId),
       });
     },
   });
@@ -165,7 +165,7 @@ export function useJoinViaInviteLink() {
         `/chat/invite-links/${token}/join`,
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
     },
   });
 }
@@ -186,7 +186,7 @@ export function useSetNotificationPreference() {
         notificationPreference: ChatNotificationPreference;
       }>(`/chat/channels/${channelId}/notification-preference`, { preference }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
     },
   });
 }
@@ -203,7 +203,7 @@ export interface ChannelFile {
 export function useChannelFiles(channelId: number) {
   const canRead = useCan("chat:messages:read");
   return useInfiniteQuery({
-    queryKey: [...queryKeys.chat.all, "channelFiles", channelId] as const,
+    queryKey: [...collaborationQueryKeys.chat.all, "channelFiles", channelId] as const,
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<{ files: ChannelFile[]; nextCursor?: number }>(
         `/chat/channels/${channelId}/files`,

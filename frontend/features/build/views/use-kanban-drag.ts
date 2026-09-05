@@ -7,7 +7,7 @@ import {
   type SetStateAction,
 } from "react";
 import { useRankTicket, useReorderCustomStates } from "@/hooks/api";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useQueryClient } from "@tanstack/react-query";
@@ -65,7 +65,7 @@ export function useKanbanDrag({
   dragStartRef,
 }: KanbanDragParams) {
   const queryClient = useQueryClient();
-  const boardTicketsKey = queryKeys.projects.tickets({ projectId, view: "board" });
+  const boardTicketsKey = buildWorkQueryKeys.projects.tickets({ projectId, view: "board" });
   const reorderStates = useReorderCustomStates(projectId);
 
   const rankTicket = useRankTicket<RankDragContext>({

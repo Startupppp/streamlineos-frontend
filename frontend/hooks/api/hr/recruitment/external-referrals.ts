@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
@@ -45,7 +45,7 @@ export interface UpdateExternalReferralInput {
 
 export function useExternalReferrals() {
   return useGatedQuery("hr:employees:view", {
-    queryKey: queryKeys.hr.externalReferrals(),
+    queryKey: humanResourcesQueryKeys.hr.externalReferrals(),
     queryFn: ({ signal }) => apiClient.get<ExternalReferral[]>("/hr/recruitment/external-referrals", undefined, signal),
     staleTime: 60_000,
   });
@@ -58,14 +58,14 @@ export function useUpdateExternalReferral() {
     mutationFn: ({ id, ...data }: { id: number } & UpdateExternalReferralInput) =>
       apiClient.patch<ExternalReferral>(`/hr/recruitment/external-referrals/${id}`, data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.externalReferrals() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.externalReferrals() });
     },
   });
 }
 
 export function useExternalReferrers() {
   return useGatedQuery("hr:employees:view", {
-    queryKey: queryKeys.hr.externalReferrers(),
+    queryKey: humanResourcesQueryKeys.hr.externalReferrers(),
     queryFn: ({ signal }) => apiClient.get<ExternalReferrer[]>("/hr/recruitment/external-referrers", undefined, signal),
     staleTime: 60_000,
   });
@@ -78,8 +78,8 @@ export function useUpdateExternalReferrerStatus(referrerId: number) {
     mutationFn: (status: ExternalReferrerStatus) =>
       apiClient.patch<ExternalReferrer>(`/hr/recruitment/external-referrers/${referrerId}`, { status }),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.externalReferrers() });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.externalReferrals() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.externalReferrers() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.externalReferrals() });
     },
   });
 }

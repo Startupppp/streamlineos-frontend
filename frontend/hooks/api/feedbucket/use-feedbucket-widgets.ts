@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import type {
   FeedbucketWidget,
   CreateFeedbucketWidgetInput,
@@ -13,7 +13,7 @@ import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export function useFeedbucketWidgets() {
   return useGatedQuery("feedbucket:widgets:view", {
-    queryKey: queryKeys.feedbucket.widgets(),
+    queryKey: growthAndSignQueryKeys.feedbucket.widgets(),
     queryFn: ({ signal }) => apiClient.get<FeedbucketWidget[]>("/feedbucket/widgets", undefined, signal),
     staleTime: 30_000,
   });
@@ -26,7 +26,7 @@ export function useCreateFeedbucketWidget() {
     mutationFn: (input: CreateFeedbucketWidgetInput) =>
       apiClient.post<FeedbucketWidget>("/feedbucket/widgets", input),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.feedbucket.widgets() });
+      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.widgets() });
     },
   });
 }
@@ -38,8 +38,8 @@ export function useUpdateFeedbucketWidget() {
     mutationFn: ({ widgetId, input }: { widgetId: number; input: UpdateFeedbucketWidgetInput }) =>
       apiClient.patch<FeedbucketWidget>(`/feedbucket/widgets/${widgetId}`, input),
     onSuccess: (_, { widgetId }) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.feedbucket.widgets() });
-      void qc.invalidateQueries({ queryKey: queryKeys.feedbucket.widget(widgetId) });
+      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.widgets() });
+      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.widget(widgetId) });
     },
   });
 }
@@ -51,8 +51,8 @@ export function useRotateFeedbucketWidgetKey() {
     mutationFn: (widgetId: number) =>
       apiClient.post<FeedbucketWidget>(`/feedbucket/widgets/${widgetId}/rotate-key`),
     onSuccess: (_, widgetId) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.feedbucket.widgets() });
-      void qc.invalidateQueries({ queryKey: queryKeys.feedbucket.widget(widgetId) });
+      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.widgets() });
+      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.widget(widgetId) });
     },
   });
 }

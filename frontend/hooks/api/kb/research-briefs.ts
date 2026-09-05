@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import type {
   KbResearchBrief,
@@ -19,7 +19,7 @@ interface BriefListResponse {
 export function useKbResearchBriefs(limit = 20) {
   const canViewPages = useCan("kb:pages:view");
   return useInfiniteQuery({
-    queryKey: queryKeys.kb.researchBriefs(limit),
+    queryKey: knowledgeAndSurveysQueryKeys.kb.researchBriefs(limit),
     queryFn: ({ pageParam, signal }) => {
       const params: Record<string, unknown> = { limit };
       if (pageParam !== undefined) params.cursor = pageParam;
@@ -35,7 +35,7 @@ export function useKbResearchBriefs(limit = 20) {
 export function useKbResearchBrief(briefId: number | undefined) {
   const canViewPages = useCan("kb:pages:view");
   return useQuery({
-    queryKey: queryKeys.kb.researchBrief(briefId ?? 0),
+    queryKey: knowledgeAndSurveysQueryKeys.kb.researchBrief(briefId ?? 0),
     queryFn: ({ signal }) => apiClient.get<KbResearchBrief>(`/kb/research-briefs/${briefId}`, undefined, signal),
     enabled: canViewPages && briefId !== undefined && briefId > 0,
     staleTime: 10_000,
@@ -53,7 +53,7 @@ export function useCreateResearchBrief() {
     mutationKey: ["kb", "research-briefs", "create"],
     mutationFn: (input: CreateResearchBriefInput) =>
       apiClient.post<{ briefId: number; jobId: number }>("/kb/research-briefs", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.kb.researchBriefs() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBriefs() }),
   });
 }
 
@@ -64,8 +64,8 @@ export function useRateResearchBrief() {
     mutationFn: ({ briefId, rating }: { briefId: number; rating: "helpful" | "not_helpful" }) =>
       apiClient.post<{ success: boolean }>(`/kb/research-briefs/${briefId}/rate`, { rating }),
     onSuccess: (_, { briefId }) => {
-      qc.invalidateQueries({ queryKey: queryKeys.kb.researchBrief(briefId) });
-      qc.invalidateQueries({ queryKey: queryKeys.kb.researchBriefs() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBrief(briefId) });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.researchBriefs() });
     },
   });
 }

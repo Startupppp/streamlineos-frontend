@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import type { PeriodStatus } from "@/features/accounting/shared";
 import { useCan } from "@/hooks/api/access";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { coreKeys } from "./core-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -82,7 +82,7 @@ export function useGeneratePeriods() {
       apiClient.post<{ created: number; total: number }>("/accounting/periods", body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+      void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
     },
   });
 }
@@ -106,7 +106,7 @@ export function useClosePeriod(periodId: number) {
       apiClient.post<AccountingPeriod>(`/accounting/periods/${periodId}/close`),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+      void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
     },
   });
 }
@@ -119,7 +119,7 @@ export function useLockPeriod(periodId: number) {
       apiClient.post<AccountingPeriod>(`/accounting/periods/${periodId}/lock`),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+      void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
     },
   });
 }
@@ -132,7 +132,7 @@ export function useReopenPeriod(periodId: number) {
       apiClient.post<AccountingPeriod>(`/accounting/periods/${periodId}/reopen`),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+      void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
     },
   });
 }
@@ -155,7 +155,7 @@ export function usePostOpeningBalances() {
       apiClient.post<{ reimported: boolean }>("/accounting/opening-balances", body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+      void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
     },
   });
 }

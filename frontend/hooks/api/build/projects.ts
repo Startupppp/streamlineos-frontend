@@ -13,7 +13,8 @@ import type {
   UseMutationOptions,
 } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useCan } from "@/hooks/api/access";
 import type {
   Project,
@@ -91,12 +92,12 @@ function getWorkspaceUsersFromCache(
   queryClient: ReturnType<typeof useQueryClient>,
 ): WorkspaceUser[] {
   const workspaceEntries = queryClient.getQueriesData<{ data: WorkspaceUser[] }>({
-    queryKey: queryKeys.projects.workspaceMembers.all,
+    queryKey: buildWorkQueryKeys.projects.workspaceMembers.all,
   });
   const fromWorkspace = workspaceEntries.flatMap(([, data]) => data?.data ?? []);
 
   const orgEntries = queryClient.getQueriesData<{ data: OrgMember[] }>({
-    queryKey: queryKeys.organization.members(),
+    queryKey: platformCoreQueryKeys.organization.members(),
   });
   const fromOrg = orgEntries.flatMap(([, data]) =>
     (data?.data ?? []).map((m) => ({
@@ -124,7 +125,7 @@ export function useProjects(
 ) {
   const canView = useCan("build:view");
   return useQuery<ProjectListResponse>({
-    queryKey: queryKeys.projects.list(filters ? { ...filters } : undefined),
+    queryKey: buildWorkQueryKeys.projects.list(filters ? { ...filters } : undefined),
     queryFn: ({ signal }) =>
       apiClient.get<ProjectListResponse>(
         "/build",
@@ -160,7 +161,7 @@ export function useInfiniteProjects(
   const canView = useCan("build:view");
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useInfiniteQuery({
-    queryKey: queryKeys.projects.listInfinite({ ...filters }),
+    queryKey: buildWorkQueryKeys.projects.listInfinite({ ...filters }),
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<ProjectListResponse>(
         "/build",
@@ -185,7 +186,7 @@ export function useProject(
 ) {
   const canView = useCan("build:view");
   return useQuery<ProjectWithDetails | null>({
-    queryKey: queryKeys.projects.detail(id),
+    queryKey: buildWorkQueryKeys.projects.detail(id),
     queryFn: ({ signal }) => apiClient.get<ProjectWithDetails | null>(`/build/${id}`, undefined, signal),
     enabled: canView && !!id,
     staleTime: 30_000,
@@ -206,7 +207,7 @@ export function useCreateProject(
     mutationFn: (data: CreateProjectInput) =>
       apiClient.post<Project>("/build", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
+      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.all });
     },
   });
 }
@@ -223,7 +224,7 @@ type ProjectListCache = ProjectListResponse | InfiniteData<ProjectListResponse>;
 
 interface UpdateProjectContext {
   listSnapshots: [readonly unknown[], ProjectListCache | undefined][];
-  detailKey: ReturnType<typeof queryKeys.projects.detail>;
+  detailKey: ReturnType<typeof buildWorkQueryKeys.projects.detail>;
   previousDetail: ProjectWithDetails | null | undefined;
 }
 
@@ -309,16 +310,16 @@ export function useUpdateProject(
       apiClient.patch<ProjectWithDetails>(`/build/${projectId}`, data),
     onMutate: async (variables) => {
       const { projectId, ...patch } = variables;
-      await queryClient.cancelQueries({ queryKey: queryKeys.projects.all });
+      await queryClient.cancelQueries({ queryKey: buildWorkQueryKeys.projects.all });
       const workspaceUsers = getWorkspaceUsersFromCache(queryClient);
       const listSnapshots = queryClient.getQueriesData<ProjectListCache>({
-        queryKey: queryKeys.projects.all,
+        queryKey: buildWorkQueryKeys.projects.all,
       });
       queryClient.setQueriesData<ProjectListCache>(
-        { queryKey: queryKeys.projects.all },
+        { queryKey: buildWorkQueryKeys.projects.all },
         (old) => patchProjectListCache(old, projectId, patch, workspaceUsers),
       );
-      const detailKey = queryKeys.projects.detail(projectId);
+      const detailKey = buildWorkQueryKeys.projects.detail(projectId);
       const previousDetail =
         queryClient.getQueryData<ProjectWithDetails | null>(detailKey);
       if (previousDetail) {
@@ -339,12 +340,12 @@ export function useUpdateProject(
     },
     onSettled: (data, error, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.detail(variables.projectId),
+        queryKey: buildWorkQueryKeys.projects.detail(variables.projectId),
       });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.members(variables.projectId),
+        queryKey: buildWorkQueryKeys.projects.members(variables.projectId),
       });
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
+      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.all });
       options?.onSettled?.(data, error, variables, context, mutFnCtx);
     },
   });
@@ -363,7 +364,7 @@ export function useDeleteProject(
     mutationFn: ({ projectId }) =>
       apiClient.delete<{ success: boolean }>(`/build/${projectId}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
+      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.all });
     },
   });
 }
@@ -392,9 +393,9 @@ export function useArchiveProject(
       }),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.detail(variables.projectId),
+        queryKey: buildWorkQueryKeys.projects.detail(variables.projectId),
       });
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
+      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.all });
     },
   });
 }
@@ -408,7 +409,7 @@ export function useProjectMembers(
 ) {
   const canView = useCan("build:view");
   return useQuery<ProjectMemberRecord[]>({
-    queryKey: queryKeys.projects.members(projectId),
+    queryKey: buildWorkQueryKeys.projects.members(projectId),
     queryFn: ({ signal }) =>
       apiClient.get<ProjectMemberRecord[]>(`/build/${projectId}/members`, undefined, signal),
     enabled: canView && !!projectId,
@@ -431,7 +432,7 @@ export function useAddProjectMember(
       apiClient.post<ProjectMember>(`/build/${projectId}/members`, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.members(variables.projectId),
+        queryKey: buildWorkQueryKeys.projects.members(variables.projectId),
       });
     },
   });
@@ -469,7 +470,7 @@ export function useUpdateProjectMemberRole(
       ),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.members(variables.projectId),
+        queryKey: buildWorkQueryKeys.projects.members(variables.projectId),
       });
     },
   });
@@ -481,7 +482,7 @@ export function useProjectLabels(
 ) {
   const canView = useCan("build:view");
   return useQuery<TicketLabel[]>({
-    queryKey: queryKeys.projects.labels(projectId),
+    queryKey: buildWorkQueryKeys.projects.labels(projectId),
     queryFn: ({ signal }) =>
       projectId
         ? apiClient.get<TicketLabel[]>(`/build/${projectId}/labels`, undefined, signal)

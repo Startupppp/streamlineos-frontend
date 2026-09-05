@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import type { SignAuthMethod, SignRecipient, SignRecipientType } from "@/types/sign";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -18,7 +18,7 @@ export interface CreateSignRecipientInput {
 }
 
 function invalidateEnvelope(qc: ReturnType<typeof useQueryClient>, envelopeId: number) {
-  qc.invalidateQueries({ queryKey: queryKeys.signEnvelopes.detail(envelopeId) });
+  qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signEnvelopes.detail(envelopeId) });
 }
 
 export function useAddSignRecipient(envelopeId: number) {

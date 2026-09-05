@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { consumeNotificationStream, type IncomingNotification } from "./notification-event-stream";
 import { withCorrelation } from "@/lib/observability/with-correlation";
 
@@ -65,8 +65,8 @@ export function useNotificationEvents(): void {
     let retryTimer: ReturnType<typeof setTimeout> | undefined;
 
     const invalidate = () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount(), exact: true });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadList(), exact: true });
+      void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.unreadCount(), exact: true });
+      void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.unreadList(), exact: true });
     };
 
     const scheduleRetry = () => {

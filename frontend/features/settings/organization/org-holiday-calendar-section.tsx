@@ -32,7 +32,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { format, parseISO } from "date-fns";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -57,7 +57,7 @@ type AddHolidayValues = z.infer<typeof addHolidaySchema>;
 function useOrgHolidays() {
   const canViewSettings = useCan("settings:view");
   return useQuery<OrgHoliday[]>({
-    queryKey: queryKeys.organization.holidays,
+    queryKey: platformCoreQueryKeys.organization.holidays,
     queryFn: ({ signal }) => apiClient.get<OrgHoliday[]>("/organization/holidays", undefined, signal),
     enabled: canViewSettings,
   });
@@ -69,7 +69,7 @@ function useCreateHoliday() {
     mutationFn: (input: AddHolidayValues) =>
       apiClient.post<OrgHoliday>("/organization/holidays", input),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.organization.holidays });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.organization.holidays });
       toast.success("Holiday added");
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -81,7 +81,7 @@ function useDeleteHoliday() {
   return useMutation({
     mutationFn: (id: string) => apiClient.delete(`/organization/holidays/${id}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.organization.holidays });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.organization.holidays });
       toast.success("Holiday removed");
     },
     onError: (err) => toast.error(getErrorMessage(err)),

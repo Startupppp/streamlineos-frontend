@@ -3,7 +3,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { apiClient, authedFetch, buildUrl } from "@/lib/api-client";
 import type { OffsetPage } from "@/hooks/api/offset-page-schema";
-import { queryKeys } from "@/lib/query-keys";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface SurveyAnalyticsOverview {
@@ -67,7 +67,7 @@ export interface ListResponsesParams {
 
 export function useAnalyticsOverview(surveyId: number) {
   return useGatedQuery("surveys:analytics:view", {
-    queryKey: queryKeys.surveys.analyticsOverview(surveyId),
+    queryKey: knowledgeAndSurveysQueryKeys.surveys.analyticsOverview(surveyId),
     queryFn: ({ signal }) => apiClient.get<SurveyAnalyticsOverview>(`/surveys/${surveyId}/analytics/overview`, undefined, signal),
     staleTime: 15_000,
   });
@@ -75,7 +75,7 @@ export function useAnalyticsOverview(surveyId: number) {
 
 export function useQuestionAnalytics(surveyId: number) {
   return useGatedQuery("surveys:analytics:view", {
-    queryKey: queryKeys.surveys.analyticsQuestions(surveyId),
+    queryKey: knowledgeAndSurveysQueryKeys.surveys.analyticsQuestions(surveyId),
     queryFn: ({ signal }) => apiClient.get<QuestionAnalytics[]>(`/surveys/${surveyId}/analytics/questions`, undefined, signal),
     staleTime: 15_000,
   });
@@ -83,7 +83,7 @@ export function useQuestionAnalytics(surveyId: number) {
 
 export function useSurveyResponses(surveyId: number, params?: ListResponsesParams) {
   return useGatedQuery("surveys:responses:view", {
-    queryKey: queryKeys.surveys.responses(surveyId, params as Record<string, unknown>),
+    queryKey: knowledgeAndSurveysQueryKeys.surveys.responses(surveyId, params as Record<string, unknown>),
     queryFn: async ({ signal }) =>
       (await apiClient.get<OffsetPage<SurveyResponseSession>>(`/surveys/${surveyId}/responses`, params as Record<string, unknown>, signal)).items,
     staleTime: 15_000,
@@ -92,7 +92,7 @@ export function useSurveyResponses(surveyId: number, params?: ListResponsesParam
 
 export function useSurveyResponse(surveyId: number, sessionId: number | undefined) {
   return useGatedQuery("surveys:responses:view", {
-    queryKey: queryKeys.surveys.response(surveyId, sessionId ?? -1),
+    queryKey: knowledgeAndSurveysQueryKeys.surveys.response(surveyId, sessionId ?? -1),
     queryFn: ({ signal }) =>
       apiClient.get<{ session: SurveyResponseSession; answers: SurveyResponseAnswer[] }>(
         `/surveys/${surveyId}/responses/${sessionId}`, undefined, signal,

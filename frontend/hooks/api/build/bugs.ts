@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import type { Bug, CreateBugInput, UpdateBugInput } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -23,7 +23,7 @@ export function useBugs(projectId?: number, filters?: BugFilters) {
   if (filters?.q) params["q"] = filters.q;
 
   return useQuery<Bug[]>({
-    queryKey: queryKeys.projects.bugs.list(projectId ?? 0, filters),
+    queryKey: buildWorkQueryKeys.projects.bugs.list(projectId ?? 0, filters),
     queryFn: ({ signal }) => apiClient.get<Bug[]>(`/build/${projectId}/bugs`, params, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
@@ -38,7 +38,7 @@ export function useCreateBug() {
     mutationFn: ({ projectId, ...data }: CreateBugInput & { projectId: number }) =>
       apiClient.post<Bug>(`/build/${projectId}/bugs`, data),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.bugs.list(vars.projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.bugs.list(vars.projectId) });
     },
   });
 }
@@ -54,8 +54,8 @@ export function useUpdateBug() {
     }: UpdateBugInput & { projectId: number; id: number }) =>
       apiClient.patch<Bug>(`/build/${projectId}/bugs/${id}`, data),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.bugs.list(vars.projectId) });
-      qc.invalidateQueries({ queryKey: queryKeys.projects.bugs.detail(vars.projectId, vars.id) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.bugs.list(vars.projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.bugs.detail(vars.projectId, vars.id) });
     },
   });
 }
@@ -67,7 +67,7 @@ export function useDeleteBug() {
     mutationFn: ({ projectId, id }: { projectId: number; id: number }) =>
       apiClient.delete<unknown>(`/build/${projectId}/bugs/${id}`),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.bugs.list(vars.projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.bugs.list(vars.projectId) });
     },
   });
 }

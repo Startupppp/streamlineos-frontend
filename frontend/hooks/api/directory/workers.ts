@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { workersListParams } from "@/lib/query-keys/directory-workers-list";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -31,7 +31,7 @@ export function useWorkers(params: UseWorkersParams = {}) {
   const queryParams = workersListParams(params);
 
   return useQuery<WorkersPage, Error>({
-    queryKey: queryKeys.directory.workers(queryParams),
+    queryKey: directoryAndOwnershipQueryKeys.directory.workers(queryParams),
     queryFn: ({ signal }) => {
       const searchParams = new URLSearchParams({
         limit: String(limit),
@@ -54,8 +54,8 @@ export function useCreateWorker() {
     mutationFn: (input: CreateWorkerInput) =>
       apiClient.post<Worker>("/directory/workers", input),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.directory.workersAll });
-      qc.invalidateQueries({ queryKey: queryKeys.directory.peopleAll });
+      qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.directory.workersAll });
+      qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.directory.peopleAll });
     },
   });
 }
@@ -63,7 +63,7 @@ export function useCreateWorker() {
 export function useWorkerEngagements(workerId: string) {
   const canView = useCan("directory:workers:view");
   return useQuery({
-    queryKey: queryKeys.directory.engagements(workerId),
+    queryKey: directoryAndOwnershipQueryKeys.directory.engagements(workerId),
     queryFn: ({ signal }) =>
       apiClient.get<WorkerEngagement[]>(`/directory/workers/${workerId}/engagements`, undefined, signal),
     staleTime: 60_000,
@@ -82,15 +82,15 @@ export function useCreateEngagement() {
       ),
     onSuccess: (created, variables) => {
       qc.setQueryData<WorkerEngagement[]>(
-        queryKeys.directory.engagements(variables.workerId),
+        directoryAndOwnershipQueryKeys.directory.engagements(variables.workerId),
         (old) => (old ? [...old, created] : old),
       );
       qc.invalidateQueries({
-        queryKey: queryKeys.directory.engagements(variables.workerId),
+        queryKey: directoryAndOwnershipQueryKeys.directory.engagements(variables.workerId),
         refetchType: "none",
       });
       qc.invalidateQueries({
-        queryKey: queryKeys.directory.worker(variables.workerId),
+        queryKey: directoryAndOwnershipQueryKeys.directory.worker(variables.workerId),
       });
     },
   });
@@ -111,7 +111,7 @@ export function useUpdateEngagement() {
       ),
     onSuccess: (updated, variables) => {
       qc.setQueryData<WorkerEngagement[]>(
-        queryKeys.directory.engagements(variables.workerId),
+        directoryAndOwnershipQueryKeys.directory.engagements(variables.workerId),
         (old) =>
           old?.map((engagement) =>
             engagement.workerEngagementId === variables.workerEngagementId
@@ -120,7 +120,7 @@ export function useUpdateEngagement() {
           ),
       );
       qc.invalidateQueries({
-        queryKey: queryKeys.directory.worker(variables.workerId),
+        queryKey: directoryAndOwnershipQueryKeys.directory.worker(variables.workerId),
       });
     },
   });
@@ -141,7 +141,7 @@ export function useTerminateEngagement() {
       ),
     onSuccess: (updated, variables) => {
       qc.setQueryData<WorkerEngagement[]>(
-        queryKeys.directory.engagements(variables.workerId),
+        directoryAndOwnershipQueryKeys.directory.engagements(variables.workerId),
         (old) =>
           old?.map((e) =>
             e.workerEngagementId === variables.workerEngagementId
@@ -150,7 +150,7 @@ export function useTerminateEngagement() {
           ),
       );
       qc.invalidateQueries({
-        queryKey: queryKeys.directory.worker(variables.workerId),
+        queryKey: directoryAndOwnershipQueryKeys.directory.worker(variables.workerId),
       });
     },
   });
@@ -171,7 +171,7 @@ export function useCancelEngagement() {
       ),
     onSuccess: (updated, variables) => {
       qc.setQueryData<WorkerEngagement[]>(
-        queryKeys.directory.engagements(variables.workerId),
+        directoryAndOwnershipQueryKeys.directory.engagements(variables.workerId),
         (old) =>
           old?.map((engagement) =>
             engagement.workerEngagementId === variables.workerEngagementId
@@ -180,7 +180,7 @@ export function useCancelEngagement() {
           ),
       );
       qc.invalidateQueries({
-        queryKey: queryKeys.directory.worker(variables.workerId),
+        queryKey: directoryAndOwnershipQueryKeys.directory.worker(variables.workerId),
       });
     },
   });

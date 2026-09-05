@@ -13,7 +13,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Upload, FileText, CheckCircle, XCircle, AlertTriangle, Users, UserCheck, UserMinus } from "lucide-react";
@@ -101,9 +101,9 @@ export function UserImportDialog({ open, onOpenChange }: UserImportDialogProps) 
     onSuccess: (result) => {
       setImportResult(result);
       if (result.succeeded > 0) {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
-        void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
-        void queryClient.invalidateQueries({ queryKey: queryKeys.users.invitations() });
+        void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
+        void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.stats() });
+        void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.invitations() });
       }
     },
     onError: (e) => toast.error(getErrorMessage(e)),

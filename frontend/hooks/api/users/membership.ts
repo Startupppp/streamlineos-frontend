@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import type {
   LoginHistoryResponse,
   UpdateUserMembershipPayload,
@@ -19,7 +19,7 @@ export const useUserLoginHistory = (
 ) => {
   const canManage = useCan("settings:organization:manage");
   return useQuery<LoginHistoryResponse, Error>({
-    queryKey: queryKeys.users.loginHistory(
+    queryKey: usersAndCommerceQueryKeys.users.loginHistory(
       userId,
       params as Record<string, unknown> | undefined,
     ),
@@ -41,7 +41,7 @@ export const useUserMembership = (
 ) => {
   const canView = useCan("settings:view");
   return useQuery<UserMembership, Error>({
-    queryKey: queryKeys.users.membership(userId),
+    queryKey: usersAndCommerceQueryKeys.users.membership(userId),
     queryFn: ({ signal }) => apiClient.get<UserMembership>(`/users/${userId}/membership`, undefined, signal),
     staleTime: 30_000,
     ...options,
@@ -60,9 +60,9 @@ export const useUpdateUserMembership = () => {
     mutationFn: ({ userId, data }) =>
       apiClient.patch<{ success: boolean }>(`/users/${userId}/membership`, data),
     onSuccess: (_, { userId }) => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.users.membership(userId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.users.detail(userId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.membership(userId) });
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.detail(userId) });
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
     },
   });
 };

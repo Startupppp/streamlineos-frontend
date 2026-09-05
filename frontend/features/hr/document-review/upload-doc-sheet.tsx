@@ -27,7 +27,7 @@ import { useMyOnboardingDocs } from "@/hooks/api/hr/documents";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 
 interface UploadDocSheetProps {
   open: boolean;
@@ -55,7 +55,7 @@ function useUploadOnboardingDoc(selfUpload: boolean) {
       targetUserId?: string;
     }) => apiClient.post(selfUpload ? "/hr/onboarding-docs/me" : "/hr/onboarding-docs", data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.onboardingDocsAll });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.onboardingDocsAll });
     },
   });
 }

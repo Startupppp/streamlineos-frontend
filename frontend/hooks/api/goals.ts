@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import type { OffsetPage } from "@/hooks/api/offset-page-schema";
@@ -145,7 +145,7 @@ interface AddGoalLinkInput {
 }
 
 function goalLinksKey(goalId: number) {
-  return [...queryKeys.goals.detail(goalId), "links"] as const;
+  return [...accountingAndSupportQueryKeys.goals.detail(goalId), "links"] as const;
 }
 
 function toQueryParams(params?: GoalsParams): Record<string, unknown> | undefined {
@@ -156,7 +156,7 @@ function toQueryParams(params?: GoalsParams): Record<string, unknown> | undefine
 export function useGoals(params?: GoalsParams) {
   const queryParams = toQueryParams(params);
   return useGatedQuery("build:goals:view", {
-    queryKey: queryKeys.goals.list(queryParams),
+    queryKey: accountingAndSupportQueryKeys.goals.list(queryParams),
     queryFn: async ({ signal }) =>
       (await apiClient.get<OffsetPage<GoalListItem>>("/goals", queryParams, signal)).items,
     staleTime: 30_000,
@@ -166,7 +166,7 @@ export function useGoals(params?: GoalsParams) {
 
 export function useGoal(id: number) {
   return useGatedQuery("build:goals:view", {
-    queryKey: queryKeys.goals.detail(id),
+    queryKey: accountingAndSupportQueryKeys.goals.detail(id),
     queryFn: ({ signal }) => apiClient.get<GoalDetail>(`/goals/${id}`, undefined, signal),
     enabled: id > 0,
     staleTime: 30_000,
@@ -175,7 +175,7 @@ export function useGoal(id: number) {
 
 export function useGoalStats() {
   return useGatedQuery("build:goals:view", {
-    queryKey: queryKeys.goals.stats(),
+    queryKey: accountingAndSupportQueryKeys.goals.stats(),
     queryFn: ({ signal }) => apiClient.get<GoalStats>("/goals/stats", undefined, signal),
     staleTime: 60_000,
   });
@@ -187,7 +187,7 @@ export function useCreateGoal() {
     mutationKey: ["create", "goal"],
     mutationFn: (input: CreateGoalInput) => apiClient.post<GoalListItem>("/goals", input),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.goals.all });
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.all });
     },
   });
 }
@@ -199,8 +199,8 @@ export function useUpdateGoal() {
     mutationFn: ({ id, ...input }: UpdateGoalInput & { id: number }) =>
       apiClient.patch<GoalListItem>(`/goals/${id}`, input),
     onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.goals.all });
-      qc.invalidateQueries({ queryKey: queryKeys.goals.detail(variables.id) });
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.all });
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.detail(variables.id) });
     },
   });
 }
@@ -211,7 +211,7 @@ export function useDeleteGoal() {
     mutationKey: ["delete", "goal"],
     mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/goals/${id}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.goals.all });
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.all });
     },
   });
 }
@@ -223,9 +223,9 @@ export function useCheckIn(goalId: number) {
     mutationFn: (input: CheckInInput) =>
       apiClient.post<GoalListItem>(`/goals/${goalId}/check-in`, input),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.goals.detail(goalId) });
-      qc.invalidateQueries({ queryKey: queryKeys.goals.all });
-      qc.invalidateQueries({ queryKey: queryKeys.goals.stats() });
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.detail(goalId) });
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.all });
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.stats() });
     },
   });
 }
@@ -238,7 +238,7 @@ export function useAddGoalLink(goalId: number) {
       apiClient.post<GoalLink>(`/goals/${goalId}/links`, input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: goalLinksKey(goalId) });
-      qc.invalidateQueries({ queryKey: queryKeys.goals.detail(goalId) });
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.detail(goalId) });
     },
   });
 }
@@ -251,7 +251,7 @@ export function useRemoveGoalLink(goalId: number) {
       apiClient.delete<{ success: boolean }>(`/goals/${goalId}/links?linkId=${linkId}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: goalLinksKey(goalId) });
-      qc.invalidateQueries({ queryKey: queryKeys.goals.detail(goalId) });
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.goals.detail(goalId) });
     },
   });
 }

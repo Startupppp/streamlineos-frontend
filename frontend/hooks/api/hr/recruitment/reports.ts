@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
@@ -56,7 +56,7 @@ export function useGenerateReport() {
 
 export function useScheduledReports() {
   return useGatedQuery("hr:interviews:view", {
-    queryKey: queryKeys.hr.scheduledReports(),
+    queryKey: humanResourcesQueryKeys.hr.scheduledReports(),
     queryFn: ({ signal }) => apiClient.get<ScheduledReport[]>("/hr/recruitment/reports/scheduled", undefined, signal),
     staleTime: 5 * 60_000,
   });
@@ -69,7 +69,7 @@ export function useCreateScheduledReport() {
     mutationFn: (data: CreateScheduledReportInput) =>
       apiClient.post<ScheduledReport>("/hr/recruitment/reports/scheduled", data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.scheduledReports() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.scheduledReports() });
     },
   });
 }
@@ -80,7 +80,7 @@ export function useDeleteScheduledReport() {
     mutationKey: ["hr", "recruitment", "reports", "delete-scheduled"],
     mutationFn: (id: number) => apiClient.delete(`/hr/recruitment/reports/scheduled/${id}`),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.scheduledReports() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.scheduledReports() });
     },
   });
 }
@@ -159,7 +159,7 @@ export function useDiversityReport(filters: DiversityFilters) {
   if (filters.departmentIds.length > 0) params.departmentIds = filters.departmentIds.join(",");
 
   return useGatedQuery<DiversityReport>("hr:employees:view", {
-    queryKey: [...queryKeys.hr.diversityReport(), params],
+    queryKey: [...humanResourcesQueryKeys.hr.diversityReport(), params],
     queryFn: ({ signal }) => apiClient.get<DiversityReport>("/hr/recruitment/diversity-report", params, signal),
     staleTime: 5 * 60_000,
   });

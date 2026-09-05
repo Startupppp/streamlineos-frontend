@@ -6,7 +6,7 @@ import {
   bankAccountsPageContract,
   type BankAccountRecord,
 } from "@/hooks/api/accounting/banking-schema";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useCan } from "@/hooks/api/access";
 import type {
   FinReceiptInboxItem,
@@ -24,14 +24,14 @@ import type { ExpenseWithRelations, ExpenseStats, ExpenseCategoryRecord } from "
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const expenseKeys = {
-  all: [...queryKeys.accounting.all, "expenses"] as const,
-  team: (params?: object) => [...queryKeys.accounting.all, "expenses", "team", params] as const,
-  receipts: (params?: object) => [...queryKeys.accounting.all, "expenses", "receipts", params] as const,
-  batches: (params?: object) => [...queryKeys.accounting.all, "expenses", "batches", params] as const,
-  batch: (id: number) => [...queryKeys.accounting.all, "expenses", "batches", id] as const,
-  policies: () => [...queryKeys.accounting.all, "expenses", "policies"] as const,
-  bankAccounts: () => [...queryKeys.accounting.all, "expenses", "bankAccounts"] as const,
-  pendingForBatch: () => [...queryKeys.accounting.all, "expenses", "pendingForBatch"] as const,
+  all: [...accountingAndSupportQueryKeys.accounting.all, "expenses"] as const,
+  team: (params?: object) => [...accountingAndSupportQueryKeys.accounting.all, "expenses", "team", params] as const,
+  receipts: (params?: object) => [...accountingAndSupportQueryKeys.accounting.all, "expenses", "receipts", params] as const,
+  batches: (params?: object) => [...accountingAndSupportQueryKeys.accounting.all, "expenses", "batches", params] as const,
+  batch: (id: number) => [...accountingAndSupportQueryKeys.accounting.all, "expenses", "batches", id] as const,
+  policies: () => [...accountingAndSupportQueryKeys.accounting.all, "expenses", "policies"] as const,
+  bankAccounts: () => [...accountingAndSupportQueryKeys.accounting.all, "expenses", "bankAccounts"] as const,
+  pendingForBatch: () => [...accountingAndSupportQueryKeys.accounting.all, "expenses", "pendingForBatch"] as const,
 } as const;
 
 function toQuery<P extends object>(params: P): Record<string, string> {
@@ -95,8 +95,8 @@ export function usePatchReceiptMetadata(expenseId: number) {
     mutationFn: (data) =>
       apiClient.patch<{ success: boolean }>(`/accounting/expenses/receipts/${expenseId}`, data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: [...queryKeys.accounting.all, "expenses", "receipts"] });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.accounting.all, "expenses", "team"] });
+      void qc.invalidateQueries({ queryKey: [...accountingAndSupportQueryKeys.accounting.all, "expenses", "receipts"] });
+      void qc.invalidateQueries({ queryKey: [...accountingAndSupportQueryKeys.accounting.all, "expenses", "team"] });
     },
   });
 }
@@ -136,9 +136,9 @@ export function useCreateReimbursementBatch() {
     mutationFn: (data) =>
       apiClient.post<FinReimbursementBatch>("/accounting/reimbursements", data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: [...queryKeys.accounting.all, "expenses", "batches"] });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.accounting.all, "expenses", "pendingForBatch"] });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.accounting.all, "expenses", "team"] });
+      void qc.invalidateQueries({ queryKey: [...accountingAndSupportQueryKeys.accounting.all, "expenses", "batches"] });
+      void qc.invalidateQueries({ queryKey: [...accountingAndSupportQueryKeys.accounting.all, "expenses", "pendingForBatch"] });
+      void qc.invalidateQueries({ queryKey: [...accountingAndSupportQueryKeys.accounting.all, "expenses", "team"] });
     },
   });
 }
@@ -151,7 +151,7 @@ export function useApproveBatch(batchId: number) {
       apiClient.post<{ success: boolean }>(`/accounting/reimbursements/${batchId}/approve`),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: expenseKeys.batch(batchId) });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.accounting.all, "expenses", "batches"] });
+      void qc.invalidateQueries({ queryKey: [...accountingAndSupportQueryKeys.accounting.all, "expenses", "batches"] });
     },
   });
 }
@@ -164,8 +164,8 @@ export function usePayBatch(batchId: number) {
       apiClient.post<{ success: boolean; entryId?: number }>(`/accounting/reimbursements/${batchId}/pay`, data),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: expenseKeys.batch(batchId) });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.accounting.all, "expenses", "batches"] });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.accounting.all, "expenses", "team"] });
+      void qc.invalidateQueries({ queryKey: [...accountingAndSupportQueryKeys.accounting.all, "expenses", "batches"] });
+      void qc.invalidateQueries({ queryKey: [...accountingAndSupportQueryKeys.accounting.all, "expenses", "team"] });
     },
   });
 }
@@ -265,7 +265,7 @@ export function useApproveExpense(expenseId: number) {
     mutationFn: () =>
       apiClient.post<{ success: boolean }>(`/hr/expenses/${expenseId}/approve`),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: [...queryKeys.accounting.all, "expenses", "team"] });
+      void qc.invalidateQueries({ queryKey: [...accountingAndSupportQueryKeys.accounting.all, "expenses", "team"] });
     },
   });
 }
@@ -277,7 +277,7 @@ export function useRejectExpense(expenseId: number) {
     mutationFn: (data) =>
       apiClient.post<{ success: boolean }>(`/hr/expenses/${expenseId}/reject`, data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: [...queryKeys.accounting.all, "expenses", "team"] });
+      void qc.invalidateQueries({ queryKey: [...accountingAndSupportQueryKeys.accounting.all, "expenses", "team"] });
     },
   });
 }

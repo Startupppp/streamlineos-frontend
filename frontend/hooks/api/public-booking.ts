@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
 
 interface InterviewBookingData {
   candidateName: string;
@@ -22,7 +22,7 @@ export class InterviewBookingExpiredError extends Error {
 
 export function usePublicInterviewBooking(token: string) {
   return useQuery<InterviewBookingData, Error>({
-    queryKey: queryKeys.publicBooking.detail(token),
+    queryKey: accessAndCrmQueryKeys.publicBooking.detail(token),
     queryFn: async ({ signal }) => {
       try {
         return await apiClient.get<InterviewBookingData>(`/public/interview-booking/${token}`, undefined, signal);

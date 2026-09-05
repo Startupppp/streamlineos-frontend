@@ -3,7 +3,7 @@
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -39,7 +39,7 @@ interface PoolMembersParams {
   limit?: number;
 }
 
-const poolsKey = queryKeys.hr.talentPools();
+const poolsKey = humanResourcesQueryKeys.hr.talentPools();
 const poolMembersKey = (poolId: number) => ["hr", "talentPools", poolId, "members"] as const;
 
 export function useTalentPools() {
@@ -73,7 +73,7 @@ export function useDeleteTalentPool() {
 
 export function usePoolMembers(poolId: number, params?: PoolMembersParams) {
   return useGatedQuery("hr:employees:view", {
-    queryKey: [...queryKeys.hr.hrTalentPoolMembersAll(poolId), params] as const,
+    queryKey: [...humanResourcesQueryKeys.hr.hrTalentPoolMembersAll(poolId), params] as const,
     queryFn: ({ signal }) => {
       const search: { cursor?: string; limit?: number } = {};
       if (params?.cursor) search.cursor = params.cursor;

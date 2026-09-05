@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import type {
   Program,
@@ -22,7 +22,7 @@ export function usePrograms(filters?: ListFilters) {
   if (filters?.status) params["status"] = filters.status;
   if (filters?.portfolioId) params["portfolioId"] = String(filters.portfolioId);
   return useQuery<Program[]>({
-    queryKey: queryKeys.projects.programs.list(
+    queryKey: buildWorkQueryKeys.projects.programs.list(
       Object.keys(params).length > 0 ? params : undefined,
     ),
     queryFn: ({ signal }) => apiClient.get<Program[]>("/build/programs", params, signal),
@@ -38,7 +38,7 @@ export function useCreateProgram() {
     mutationFn: (data: CreateProgramInput) =>
       apiClient.post<Program>("/build/programs", data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.programs.list() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.programs.list() });
     },
   });
 }
@@ -50,9 +50,9 @@ export function useUpdateProgram() {
     mutationFn: ({ id, ...data }: UpdateProgramInput & { id: number }) =>
       apiClient.patch<Program>(`/build/programs/${id}`, data),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.programs.list() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.programs.list() });
       qc.invalidateQueries({
-        queryKey: queryKeys.projects.programs.detail(vars.id),
+        queryKey: buildWorkQueryKeys.projects.programs.detail(vars.id),
       });
     },
   });
@@ -64,7 +64,7 @@ export function useDeleteProgram() {
     mutationKey: ["projects", "programs", "delete"],
     mutationFn: (id: number) => apiClient.delete<void>(`/build/programs/${id}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.programs.list() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.programs.list() });
     },
   });
 }

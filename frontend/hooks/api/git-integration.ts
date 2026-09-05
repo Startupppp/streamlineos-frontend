@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
@@ -57,7 +57,7 @@ export function useGitConnections() {
   // `settings:manage` could therefore create, edit and delete connections while the list itself
   // stayed empty.
   return useGatedQuery("integrations:git:view", {
-    queryKey: queryKeys.gitIntegration.connections(),
+    queryKey: accountingAndSupportQueryKeys.gitIntegration.connections(),
     queryFn: ({ signal }) => apiClient.get<GitConnection[]>("/settings/integrations/git", undefined, signal),
     staleTime: 60_000,
   });
@@ -69,7 +69,7 @@ export function useCreateGitConnection() {
     mutationKey: ["create", "git", "connection"],
     mutationFn: (input: CreateGitConnectionInput) =>
       apiClient.post<CreatedGitConnection>("/settings/integrations/git", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.gitIntegration.connections() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.gitIntegration.connections() }),
   });
 }
 
@@ -79,7 +79,7 @@ export function useUpdateGitConnection() {
     mutationKey: ["update", "git", "connection"],
     mutationFn: ({ id, ...input }: UpdateGitConnectionInput) =>
       apiClient.patch<GitConnection>(`/settings/integrations/git/${id}`, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.gitIntegration.connections() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.gitIntegration.connections() }),
   });
 }
 
@@ -89,7 +89,7 @@ export function useDeleteGitConnection() {
     mutationKey: ["delete", "git", "connection"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/settings/integrations/git/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.gitIntegration.connections() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.gitIntegration.connections() }),
   });
 }
 
@@ -109,7 +109,7 @@ export interface TicketGitLink {
 
 export function useTicketGitLinks(projectId: number, ticketId: number) {
   return useGatedQuery("build:tickets:view", {
-    queryKey: queryKeys.gitIntegration.ticketLinks(ticketId),
+    queryKey: accountingAndSupportQueryKeys.gitIntegration.ticketLinks(ticketId),
     queryFn: ({ signal }) =>
       apiClient.get<TicketGitLink[]>(
         `/build/${projectId}/tickets/${ticketId}/git-links`, undefined, signal,

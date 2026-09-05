@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   HrWorkflowDefinition,
@@ -24,7 +24,7 @@ const DELEGATIONS_KEY = [...queryKeyBase, "hr", "workflow-delegations"] as const
 
 export function useHrWorkflowDefinitions(params?: { objectType?: HrWorkflowObjectType; status?: HrWorkflowStatus; page?: number; limit?: number }) {
   return useGatedQuery("hr:workflows:view", {
-    queryKey: [...queryKeys.hr.hrWorkflowsAll, params],
+    queryKey: [...humanResourcesQueryKeys.hr.hrWorkflowsAll, params],
     queryFn: ({ signal }) => apiClient.get<PaginatedResult<HrWorkflowDefinition>>("/hr/workflows", params, signal),
     staleTime: 2 * 60_000,
   });
@@ -32,7 +32,7 @@ export function useHrWorkflowDefinitions(params?: { objectType?: HrWorkflowObjec
 
 export function useHrWorkflowDefinition(workflowId: number | null) {
   return useGatedQuery("hr:workflows:view", {
-    queryKey: [...queryKeys.hr.hrWorkflowsAll, workflowId],
+    queryKey: [...humanResourcesQueryKeys.hr.hrWorkflowsAll, workflowId],
     queryFn: ({ signal }) => apiClient.get<HrWorkflowDefinition>(`/hr/workflows/${workflowId}`, undefined, signal),
     enabled: workflowId !== null,
     staleTime: 2 * 60_000,
@@ -152,7 +152,7 @@ export function useDeleteWorkflow() {
 
 export function useWorkflowInbox(page = 1, limit = 50) {
   return useGatedQuery("hr:workflows:approve", {
-    queryKey: [...queryKeys.hr.hrWorkflowInstancesAll, "inbox", page, limit],
+    queryKey: [...humanResourcesQueryKeys.hr.hrWorkflowInstancesAll, "inbox", page, limit],
     queryFn: ({ signal }) => apiClient.get<PaginatedResult<HrWorkflowInstance>>("/hr/workflows/instances/inbox", { page, limit }, signal),
     staleTime: 30_000,
   });
@@ -163,7 +163,7 @@ export function useWorkflowActed(
   options?: { enabled?: boolean },
 ) {
   return useGatedQuery("hr:workflows:approve", {
-    queryKey: [...queryKeys.hr.hrWorkflowInstancesAll, "acted", params],
+    queryKey: [...humanResourcesQueryKeys.hr.hrWorkflowInstancesAll, "acted", params],
     queryFn: ({ signal }) =>
       apiClient.get<CursorPaginatedResult<HrWorkflowInstance>>(
         "/hr/workflows/instances/acted",
@@ -176,7 +176,7 @@ export function useWorkflowActed(
 
 export function useWorkflowInstanceDetail(instanceId: number | null) {
   return useGatedQuery("hr:workflows:view", {
-    queryKey: [...queryKeys.hr.hrWorkflowInstancesAll, "detail", instanceId],
+    queryKey: [...humanResourcesQueryKeys.hr.hrWorkflowInstancesAll, "detail", instanceId],
     queryFn: ({ signal }) => apiClient.get<HrWorkflowInstance>(`/hr/workflows/instances/${instanceId}`, undefined, signal),
     enabled: instanceId !== null,
     staleTime: 30_000,
@@ -212,7 +212,7 @@ export function useRejectInstance() {
 
 export function useMyDelegations(options?: { enabled?: boolean }) {
   return useGatedQuery("hr:workflows:view", {
-    queryKey: [...queryKeys.hr.hrWorkflowDelegationsAll, "mine"],
+    queryKey: [...humanResourcesQueryKeys.hr.hrWorkflowDelegationsAll, "mine"],
     queryFn: ({ signal }) => apiClient.get<HrWorkflowDelegation[]>("/hr/workflows/delegations/mine", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: options?.enabled ?? true,

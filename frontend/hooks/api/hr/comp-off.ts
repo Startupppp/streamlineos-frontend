@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 
 export interface CompOffRecord {
@@ -13,7 +13,7 @@ export function useCompOff() {
   const canView = useCan("hr:attendance:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<CompOffRecord[]>({
-    queryKey: queryKeys.hr.compOff(),
+    queryKey: humanResourcesQueryKeys.hr.compOff(),
     queryFn: ({ signal }) => apiClient.get<CompOffRecord[]>("/hr/overtime/comp-off", undefined, signal),
     staleTime: 60_000,
     enabled: hrEnabled && canView,

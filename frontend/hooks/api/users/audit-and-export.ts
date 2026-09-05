@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import type { AuditResponse } from "./types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -15,7 +15,7 @@ export const useUserAuditLog = (
 ) => {
   const canManage = useCan("settings:organization:manage");
   return useQuery<AuditResponse, Error>({
-    queryKey: [...queryKeys.users.detail(userId), "audit", params] as readonly unknown[],
+    queryKey: [...usersAndCommerceQueryKeys.users.detail(userId), "audit", params] as readonly unknown[],
     queryFn: ({ signal }) =>
       apiClient.get<AuditResponse>(`/users/${userId}/audit`, {
         ...(params?.cursor ? { cursor: params.cursor } : {}),

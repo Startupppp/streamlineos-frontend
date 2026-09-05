@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
@@ -99,7 +99,7 @@ export interface UpdateSubmissionInput {
 
 export function useRecruitmentVendors() {
   return useGatedQuery("hr:employees:view", {
-    queryKey: queryKeys.hr.recruitmentVendors(),
+    queryKey: humanResourcesQueryKeys.hr.recruitmentVendors(),
     queryFn: ({ signal }) => apiClient.get<RecruitmentVendor[]>("/hr/recruitment/vendors", undefined, signal),
     staleTime: 2 * 60_000,
   });
@@ -111,7 +111,7 @@ export function useCreateVendor() {
     mutationKey: ["hr", "recruitment", "vendors", "create"],
     mutationFn: (data: CreateVendorInput) => apiClient.post<RecruitmentVendor>("/hr/recruitment/vendors", data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentVendors() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentVendors() });
     },
   });
 }
@@ -123,7 +123,7 @@ export function useUpdateVendor(id: number) {
     mutationFn: (data: UpdateVendorInput) =>
       apiClient.patch<RecruitmentVendor>(`/hr/recruitment/vendors/${id}`, data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentVendors() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentVendors() });
     },
   });
 }
@@ -134,14 +134,14 @@ export function useDeleteVendor() {
     mutationKey: ["hr", "recruitment", "vendors", "delete"],
     mutationFn: (id: number) => apiClient.delete(`/hr/recruitment/vendors/${id}`),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentVendors() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentVendors() });
     },
   });
 }
 
 export function useVendorSubmissions(vendorId: number) {
   return useGatedQuery("hr:employees:view", {
-    queryKey: queryKeys.hr.vendorSubmissions(vendorId),
+    queryKey: humanResourcesQueryKeys.hr.vendorSubmissions(vendorId),
     queryFn: ({ signal }) => apiClient.get<VendorSubmission[]>(`/hr/recruitment/vendors/${vendorId}/submissions`, undefined, signal),
     enabled: vendorId > 0,
     staleTime: 60_000,
@@ -155,8 +155,8 @@ export function useCreateVendorSubmission(vendorId: number) {
     mutationFn: (data: CreateSubmissionInput) =>
       apiClient.post<VendorSubmission>(`/hr/recruitment/vendors/${vendorId}/submissions`, data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.vendorSubmissions(vendorId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentVendors() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.vendorSubmissions(vendorId) });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentVendors() });
     },
   });
 }
@@ -171,8 +171,8 @@ export function useUpdateVendorSubmission(vendorId: number) {
         data,
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.vendorSubmissions(vendorId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentVendors() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.vendorSubmissions(vendorId) });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentVendors() });
     },
   });
 }

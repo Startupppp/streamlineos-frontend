@@ -3,7 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
@@ -50,12 +50,12 @@ export interface AttritionForecast {
 }
 
 const workforceKeys = {
-  all: [...queryKeys.hr.all, "workforce"] as const,
-  plans: () => [...queryKeys.hr.all, "workforce", "plans"] as const,
-  budgetVsActual: () => [...queryKeys.hr.all, "workforce", "budgetVsActual"] as const,
-  skillsGap: () => [...queryKeys.hr.all, "workforce", "skillsGap"] as const,
-  successionRisk: () => [...queryKeys.hr.all, "workforce", "successionRisk"] as const,
-  attritionForecast: () => [...queryKeys.hr.all, "workforce", "attritionForecast"] as const,
+  all: [...humanResourcesQueryKeys.hr.all, "workforce"] as const,
+  plans: () => [...humanResourcesQueryKeys.hr.all, "workforce", "plans"] as const,
+  budgetVsActual: () => [...humanResourcesQueryKeys.hr.all, "workforce", "budgetVsActual"] as const,
+  skillsGap: () => [...humanResourcesQueryKeys.hr.all, "workforce", "skillsGap"] as const,
+  successionRisk: () => [...humanResourcesQueryKeys.hr.all, "workforce", "successionRisk"] as const,
+  attritionForecast: () => [...humanResourcesQueryKeys.hr.all, "workforce", "attritionForecast"] as const,
 };
 
 export function useHrWorkforcePlans() {

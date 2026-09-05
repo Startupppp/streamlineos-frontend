@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { streamAiText } from "@/hooks/api/ai-text-stream";
 import type { AiResultStreamOptions } from "@/hooks/api/ai-result-stream";
@@ -66,7 +66,7 @@ export function usePublicAskSupportKb() {
 
 export function useSupportKbIndexStatus(id: number) {
   return useGatedQuery("support:kb:view", {
-    queryKey: [...queryKeys.supportKb.article(id), "index-status"] as const,
+    queryKey: [...accountingAndSupportQueryKeys.supportKb.article(id), "index-status"] as const,
     queryFn: ({ signal }) =>
       apiClient.get<KbIndexStatus>(`/support/kb/articles/${id}/index-status`, undefined, signal),
     enabled: Number.isFinite(id) && id > 0,
@@ -82,7 +82,7 @@ export function useReindexSupportKbArticle() {
       apiClient.post<ReindexResult>(`/support/kb/articles/${id}/reindex`, {}),
     onSuccess: (_, id) => {
       qc.invalidateQueries({
-        queryKey: [...queryKeys.supportKb.article(id), "index-status"],
+        queryKey: [...accountingAndSupportQueryKeys.supportKb.article(id), "index-status"],
       });
     },
   });
@@ -93,6 +93,6 @@ export function useReindexAllSupportKb() {
   return useAuthorizedMutation("support:kb:manage", {
     mutationKey: ["supportKb", "rag", "reindex-all"],
     mutationFn: () => apiClient.post<IndexAllResult>("/support/kb/reindex-all", {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportKb.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.supportKb.all }),
   });
 }

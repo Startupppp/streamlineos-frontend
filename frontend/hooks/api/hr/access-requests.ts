@@ -3,7 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { queryKeyBase } from "@/lib/query-keys/base";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
@@ -35,7 +35,7 @@ const AR_KEY = [...queryKeyBase, "hr", "access-requests"] as const;
 
 export function useAccessRequests(employeeId?: string) {
   return useGatedQuery<AccessRequest[]>("hr:assets:view", {
-    queryKey: queryKeys.hr.hrAccessRequests({ employeeId }),
+    queryKey: humanResourcesQueryKeys.hr.hrAccessRequests({ employeeId }),
     queryFn: ({ signal }) =>
       apiClient.get<AccessRequest[]>("/hr/access-requests", employeeId ? { employeeId } : undefined, signal),
     staleTime: 60_000,

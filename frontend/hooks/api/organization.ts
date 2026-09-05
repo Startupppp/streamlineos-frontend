@@ -3,7 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient, setAutoSignOutSuppressed } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import type { OrgSettings } from "@/types/organization";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -31,7 +32,7 @@ export const useOrgSettings = (
   const canViewSettings = useCan("settings:view");
   const { enabled: callerEnabled, ...restOptions } = options ?? {};
   return useQuery<OrgSettings, Error>({
-    queryKey: queryKeys.organization.settings(),
+    queryKey: platformCoreQueryKeys.organization.settings(),
     queryFn: ({ signal }) => apiClient.get<OrgSettings>("/organization/settings", undefined, signal),
     staleTime: 30 * 60_000,
     ...restOptions,
@@ -60,7 +61,7 @@ export const useOrgMembers = (
   const { enabled: callerEnabled, ...restOptions } = options ?? {};
   return useQuery<MembersResponse, Error>({
     queryKey: [
-      ...queryKeys.organization.members(),
+      ...platformCoreQueryKeys.organization.members(),
       { page, limit: safeLimit, search, includeInactive: false },
     ] as const,
     queryFn: ({ signal }) =>
@@ -86,7 +87,7 @@ export const useOrgMembersByIds = (
   const { enabled: callerEnabled, ...restOptions } = options ?? {};
   return useQuery<MembersResponse, Error>({
     queryKey: [
-      ...queryKeys.organization.members(),
+      ...platformCoreQueryKeys.organization.members(),
       { userIds: ids, includeInactive: true },
     ] as const,
     queryFn: ({ signal }) =>
@@ -108,10 +109,10 @@ export const useRemoveOrgMember = () => {
     mutationFn: (userId) => apiClient.delete<void>(`/organization/members/${userId}`),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.organization.members(),
+        queryKey: platformCoreQueryKeys.organization.members(),
       });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.stats() });
     },
   });
 };
@@ -159,10 +160,10 @@ export const useUpdateOrgSettings = () => {
       apiClient.patch<{ success: boolean }>("/organization/settings", data),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.organization.settings(),
+        queryKey: platformCoreQueryKeys.organization.settings(),
       });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.organization.display(),
+        queryKey: platformCoreQueryKeys.organization.display(),
       });
     },
   });
@@ -183,7 +184,7 @@ export const useUpdateOrgSecurity = () => {
       apiClient.patch<{ success: boolean }>("/organization/security", data),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.organization.settings(),
+        queryKey: platformCoreQueryKeys.organization.settings(),
       });
     },
   });
@@ -203,7 +204,7 @@ export const useArchivedOrganizations = (
 ) => {
   const { enabled: callerEnabled, ...restOptions } = options ?? {};
   return useQuery<ArchivedOrganization[], Error>({
-    queryKey: queryKeys.organization.archived(),
+    queryKey: platformCoreQueryKeys.organization.archived(),
     queryFn: ({ signal }) =>
       apiClient.get<ArchivedOrganization[]>("/organization/archived", undefined, signal),
     staleTime: 30_000,
@@ -247,13 +248,13 @@ export const useRestoreOrg = () => {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.organization.all,
+        queryKey: platformCoreQueryKeys.organization.all,
       });
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.organization.archived(),
+        queryKey: platformCoreQueryKeys.organization.archived(),
       });
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.organization.settings(),
+        queryKey: platformCoreQueryKeys.organization.settings(),
       });
     },
     onSettled: () => {
@@ -280,7 +281,7 @@ export const useCreateOrganization = () => {
       apiClient.post<CreateOrganizationResult>("/organization", data),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.organization.all,
+        queryKey: platformCoreQueryKeys.organization.all,
       });
     },
   });

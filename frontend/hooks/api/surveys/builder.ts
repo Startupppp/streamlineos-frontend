@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import type { SurveyQuestionType } from "@/features/surveys/shared/question-type-meta";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -94,12 +94,12 @@ export interface ReorderInput {
 
 function useInvalidateBuilder(surveyId: number) {
   const qc = useQueryClient();
-  return () => qc.invalidateQueries({ queryKey: queryKeys.surveys.builder(surveyId) });
+  return () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.surveys.builder(surveyId) });
 }
 
 export function useSurveyBuilder(surveyId: number | undefined) {
   return useGatedQuery("surveys:view", {
-    queryKey: queryKeys.surveys.builder(surveyId ?? -1),
+    queryKey: knowledgeAndSurveysQueryKeys.surveys.builder(surveyId ?? -1),
     queryFn: ({ signal }) => apiClient.get<SurveyBuilderData>(`/surveys/${surveyId}/builder`, undefined, signal),
     enabled: typeof surveyId === "number",
     staleTime: 10_000,

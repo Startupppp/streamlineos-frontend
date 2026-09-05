@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useCan } from "@/hooks/api/access";
 import {
   simulatedAccessContract,
@@ -20,7 +20,7 @@ export function useSimulationCandidates(search: string) {
   const canManageRbac = useCan("settings:rbac:manage");
   const params = { limit: 100, ...(search ? { search } : {}) };
   return useQuery<SimulationCandidatesPage, Error>({
-    queryKey: queryKeys.access.simulationCandidates(params),
+    queryKey: platformCoreQueryKeys.access.simulationCandidates(params),
     queryFn: ({ signal }) =>
       apiClient.get("/roles/simulate/candidates", params, signal, simulationCandidatesPageContract),
     enabled: !!orgId && canManageRbac,
@@ -33,7 +33,7 @@ export function useSimulateAccess(targetUserId: string | undefined) {
   const orgId = session?.orgId ?? "";
   const canManageRbac = useCan("settings:rbac:manage");
   return useQuery<SimulatedAccess, Error>({
-    queryKey: queryKeys.access.simulate(targetUserId ?? ""),
+    queryKey: platformCoreQueryKeys.access.simulate(targetUserId ?? ""),
     queryFn: ({ signal }) =>
       apiClient.get(`/roles/simulate/${targetUserId}`, undefined, signal, simulatedAccessContract),
     enabled: !!orgId && canManageRbac && !!targetUserId,

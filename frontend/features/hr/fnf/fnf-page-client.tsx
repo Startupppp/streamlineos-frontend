@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import { useCan } from "@/hooks/api/access";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -41,7 +41,7 @@ interface FnfSettlement {
 }
 
 const fnfKeys = {
-  all: [...queryKeys.hr.all, "fnf"] as const,
+  all: [...humanResourcesQueryKeys.hr.all, "fnf"] as const,
   list: () => [...fnfKeys.all, "list"] as const,
 };
 

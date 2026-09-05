@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
@@ -20,7 +20,7 @@ export interface OfferLetterTemplate {
 
 export function useOfferTemplates() {
   return useGatedQuery("hr:offers:view", {
-    queryKey: queryKeys.hr.offerTemplates(),
+    queryKey: humanResourcesQueryKeys.hr.offerTemplates(),
     queryFn: ({ signal }) => apiClient.get<OfferLetterTemplate[]>("/hr/recruitment/offer-templates", undefined, signal),
     staleTime: 5 * 60_000,
   });
@@ -33,7 +33,7 @@ export function useCreateOfferTemplate() {
     mutationFn: (data: { name: string; htmlContent: string; isDefault?: boolean }) =>
       apiClient.post<OfferLetterTemplate>("/hr/recruitment/offer-templates", data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.offerTemplates() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.offerTemplates() });
     },
   });
 }
@@ -45,7 +45,7 @@ export function useUpdateOfferTemplate(id: number) {
     mutationFn: (data: { name?: string; htmlContent?: string; isDefault?: boolean }) =>
       apiClient.patch<OfferLetterTemplate>(`/hr/recruitment/offer-templates/${id}`, data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.offerTemplates() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.offerTemplates() });
     },
   });
 }
@@ -57,7 +57,7 @@ export function useDeleteOfferTemplate() {
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/offer-templates/${id}`),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.offerTemplates() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.offerTemplates() });
     },
   });
 }

@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type {
   SupportTicket,
   SupportMessage,
@@ -69,7 +69,7 @@ export const useSupportTickets = (
   >
 ) => {
   return useGatedQuery<SupportTicketsResponse, Error>("support:tickets:view", {
-    queryKey: queryKeys.support.list(filters as Record<string, unknown>),
+    queryKey: platformCoreQueryKeys.support.list(filters as Record<string, unknown>),
     queryFn: ({ signal }) =>
       apiClient.get<SupportTicketsResponse>("/support", {
         ...(filters?.status ? { status: filters.status } : {}),
@@ -94,7 +94,7 @@ export const useSupportTicket = (
   >
 ) => {
   return useGatedQuery<SupportTicket, Error>("support:tickets:view", {
-    queryKey: queryKeys.support.detail(id),
+    queryKey: platformCoreQueryKeys.support.detail(id),
     queryFn: ({ signal }) => apiClient.get<SupportTicket>(`/support/${id}`, undefined, signal),
     enabled: id > 0,
     staleTime: 2 * 60_000,
@@ -108,7 +108,7 @@ export const useCreateSupportTicket = () => {
     mutationKey: ["create", "support", "ticket"],
     mutationFn: (data) => apiClient.post<SupportTicket>("/support", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.support.all });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.support.all });
     },
   });
 };
@@ -120,8 +120,8 @@ export const useUpdateSupportTicket = () => {
     mutationFn: ({ id, ...data }) =>
       apiClient.patch<UpdateTicketResult>(`/support/${id}`, data),
     onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.support.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.support.detail(vars.id) });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.support.all });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.support.detail(vars.id) });
     },
   });
 };
@@ -134,7 +134,7 @@ export const useAddSupportMessage = () => {
       apiClient.post<SupportMessage>(`/support/${ticketId}/messages`, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.support.detail(variables.ticketId),
+        queryKey: platformCoreQueryKeys.support.detail(variables.ticketId),
       });
     },
   });
@@ -153,7 +153,7 @@ export const useSupportStats = (
   options?: Omit<UseQueryOptions<SupportStats, Error>, "queryKey" | "queryFn">
 ) => {
   return useGatedQuery<SupportStats, Error>("support:tickets:view", {
-    queryKey: [...queryKeys.support.all, "stats"] as const,
+    queryKey: [...platformCoreQueryKeys.support.all, "stats"] as const,
     queryFn: ({ signal }) => apiClient.get<SupportStats>("/support/stats", undefined, signal),
     staleTime: 5 * 60_000,
     ...options,

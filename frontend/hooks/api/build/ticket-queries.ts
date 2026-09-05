@@ -5,7 +5,7 @@ import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-quer
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type {
   Ticket,
   TicketLabel,
@@ -24,7 +24,7 @@ export function useTickets(
 ) {
   const canView = useCan("build:tickets:view");
   return useQuery<CursorPageResponse<Ticket>>({
-    queryKey: queryKeys.projects.tickets({ projectId, ...filters }),
+    queryKey: buildWorkQueryKeys.projects.tickets({ projectId, ...filters }),
     queryFn: ({ signal }) =>
       apiClient.get<CursorPageResponse<Ticket>>(`/build/${projectId}/tickets`, filters ? { ...filters } : undefined, signal),
     enabled: canView && !!projectId,
@@ -61,7 +61,7 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
   );
 
   const query = useInfiniteQuery<CursorPageResponse<Ticket>>({
-    queryKey: queryKeys.projects.tickets({ projectId, view: "board", ...filters }),
+    queryKey: buildWorkQueryKeys.projects.tickets({ projectId, view: "board", ...filters }),
     queryFn: ({ pageParam , signal }) => {
       const params: Record<string, unknown> = {
         limit: BOARD_PAGE_SIZE,
@@ -116,7 +116,7 @@ export function useTicket(
 ) {
   const canView = useCan("build:tickets:view");
   return useQuery<Ticket | null>({
-    queryKey: queryKeys.projects.ticket(ticketId),
+    queryKey: buildWorkQueryKeys.projects.ticket(ticketId),
     queryFn: ({ signal }) =>
       apiClient.get<Ticket | null>(`/build/${projectId}/tickets/${ticketId}`, undefined, signal),
     enabled: canView && !!ticketId && !!projectId,
@@ -133,13 +133,13 @@ export function useTicketByKey(
   const canView = useCan("build:tickets:view");
   const queryClient = useQueryClient();
   return useQuery<Ticket | null>({
-    queryKey: queryKeys.projects.ticketByKey(projectId, ticketNumber ?? 0),
+    queryKey: buildWorkQueryKeys.projects.ticketByKey(projectId, ticketNumber ?? 0),
     queryFn: async ({ signal }) => {
       const ticket = await apiClient.get<Ticket | null>(
         `/build/${projectId}/tickets/key/${ticketNumber}`, undefined, signal,
       );
       if (ticket) {
-        queryClient.setQueryData(queryKeys.projects.ticket(ticket.id), ticket);
+        queryClient.setQueryData(buildWorkQueryKeys.projects.ticket(ticket.id), ticket);
       }
       return ticket;
     },
@@ -160,7 +160,7 @@ export function useSubtasks(
 ) {
   const canView = useCan("build:tickets:view");
   return useQuery<Ticket[]>({
-    queryKey: queryKeys.projects.subtasks(ticketId),
+    queryKey: buildWorkQueryKeys.projects.subtasks(ticketId),
     queryFn: ({ signal }) => apiClient.get<Ticket[]>(`/build/${projectId ?? 0}/tickets/${ticketId}/subtasks`, undefined, signal),
     enabled: canView && ticketId > 0 && (projectId ?? 0) > 0,
     staleTime: 30_000,
@@ -171,7 +171,7 @@ export function useSubtasks(
 export function useTicketColumnCounts(projectId: number) {
   const canView = useCan("build:tickets:view");
   return useQuery<Record<string, number>>({
-    queryKey: queryKeys.projects.columnCounts(projectId),
+    queryKey: buildWorkQueryKeys.projects.columnCounts(projectId),
     queryFn: ({ signal }) =>
       apiClient.get<Record<string, number>>(`/build/${projectId}/tickets/column-counts`, undefined, signal),
     enabled: canView && projectId > 0,

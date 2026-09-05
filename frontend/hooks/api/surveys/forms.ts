@@ -3,7 +3,7 @@
 import { keepPreviousData, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import type { OffsetPage } from "@/hooks/api/offset-page-schema";
-import { queryKeys } from "@/lib/query-keys";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
@@ -79,12 +79,12 @@ export interface SurveyTemplate {
 }
 
 function invalidateSurveyLists(qc: ReturnType<typeof useQueryClient>) {
-  qc.invalidateQueries({ queryKey: queryKeys.surveys.all });
+  qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.surveys.all });
 }
 
 export function useSurveys(params?: ListSurveysParams) {
   return useGatedQuery("surveys:view", {
-    queryKey: queryKeys.surveys.list(params as Record<string, unknown>),
+    queryKey: knowledgeAndSurveysQueryKeys.surveys.list(params as Record<string, unknown>),
     queryFn: async ({ signal }) =>
       (await apiClient.get<OffsetPage<SurveyForm>>("/surveys", params as Record<string, unknown>, signal)).items,
     staleTime: 30_000,
@@ -94,7 +94,7 @@ export function useSurveys(params?: ListSurveysParams) {
 
 export function useSurvey(surveyId: number | undefined) {
   return useGatedQuery("surveys:view", {
-    queryKey: queryKeys.surveys.detail(surveyId ?? -1),
+    queryKey: knowledgeAndSurveysQueryKeys.surveys.detail(surveyId ?? -1),
     queryFn: ({ signal }) => apiClient.get<SurveyForm>(`/surveys/${surveyId}`, undefined, signal),
     enabled: typeof surveyId === "number",
     staleTime: 15_000,
@@ -103,7 +103,7 @@ export function useSurvey(surveyId: number | undefined) {
 
 export function useSurveyTemplates() {
   return useGatedQuery("surveys:view", {
-    queryKey: queryKeys.surveys.templates(),
+    queryKey: knowledgeAndSurveysQueryKeys.surveys.templates(),
     queryFn: ({ signal }) => apiClient.get<SurveyTemplate[]>("/surveys/templates", undefined, signal),
     staleTime: 5 * 60_000,
   });
@@ -124,7 +124,7 @@ export function usePatchSurvey(surveyId: number) {
     mutationKey: ["surveys", "patch", surveyId] as const,
     mutationFn: (input: PatchSurveyInput) => apiClient.patch<SurveyForm>(`/surveys/${surveyId}`, input),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.surveys.detail(surveyId) });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.surveys.detail(surveyId) });
       invalidateSurveyLists(qc);
     },
   });
@@ -136,7 +136,7 @@ function useSurveyLifecycleAction(action: "publish" | "pause" | "close" | "archi
     mutationKey: ["surveys", action] as const,
     mutationFn: (surveyId: number) => apiClient.post<SurveyForm>(`/surveys/${surveyId}/${action}`),
     onSuccess: (_, surveyId) => {
-      qc.invalidateQueries({ queryKey: queryKeys.surveys.detail(surveyId) });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.surveys.detail(surveyId) });
       invalidateSurveyLists(qc);
     },
   });

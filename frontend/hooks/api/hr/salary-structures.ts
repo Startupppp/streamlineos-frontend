@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -30,7 +30,7 @@ export function useSalaryStructureTemplates(options?: { enabled?: boolean }) {
   const canView = useCan("hr:salary:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<SalaryStructureTemplate[]>({
-    queryKey: queryKeys.hr.salaryStructureTemplates(),
+    queryKey: humanResourcesQueryKeys.hr.salaryStructureTemplates(),
     queryFn: ({ signal }) => apiClient.get<SalaryStructureTemplate[]>("/hr/payroll/salary-structures", undefined, signal),
     staleTime: 120_000,
     enabled: canView && hrEnabled && (options?.enabled ?? true),
@@ -43,7 +43,7 @@ export function useCreateSalaryTemplate() {
     mutationKey: ["hr", "salary-structure-templates", "create"],
     mutationFn: (data: CreateSalaryTemplateInput) =>
       apiClient.post<SalaryStructureTemplate>("/hr/payroll/salary-structures", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.salaryStructureTemplates() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.salaryStructureTemplates() }),
   });
 }
 
@@ -53,7 +53,7 @@ export function useUpdateSalaryTemplate() {
     mutationKey: ["hr", "salary-structure-templates", "update"],
     mutationFn: ({ id, ...data }: Partial<CreateSalaryTemplateInput> & { id: number }) =>
       apiClient.patch<SalaryStructureTemplate>(`/hr/payroll/salary-structures/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.salaryStructureTemplates() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.salaryStructureTemplates() }),
   });
 }
 
@@ -62,6 +62,6 @@ export function useDeleteSalaryTemplate() {
   return useAuthorizedMutation("hr:salary:manage", {
     mutationKey: ["hr", "salary-structure-templates", "delete"],
     mutationFn: (id: number) => apiClient.delete<void>(`/hr/payroll/salary-structures/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.salaryStructureTemplates() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.salaryStructureTemplates() }),
   });
 }

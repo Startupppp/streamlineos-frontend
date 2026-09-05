@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import {
@@ -38,7 +38,7 @@ export function usePerson(
 ) {
   const canView = useCan("directory:people:view");
   return useQuery({
-    queryKey: queryKeys.directory.person(organizationPersonId),
+    queryKey: directoryAndOwnershipQueryKeys.directory.person(organizationPersonId),
     queryFn: ({ signal }) =>
       apiClient.get(
         `/directory/people/${organizationPersonId}`,
@@ -58,7 +58,7 @@ export function usePeople(params: UsePeopleParams = {}) {
   if (search) queryParams.search = search;
 
   return useQuery({
-    queryKey: queryKeys.directory.people(queryParams),
+    queryKey: directoryAndOwnershipQueryKeys.directory.people(queryParams),
     queryFn: ({ signal }) => {
       const searchParams = new URLSearchParams({
         limit: String(limit),
@@ -85,10 +85,10 @@ export function useCreatePerson() {
       apiClient.post("/directory/people", input, undefined, organizationPersonContract),
     onSuccess: (created) => {
       qc.setQueryData(
-        queryKeys.directory.person(created.organizationPersonId),
+        directoryAndOwnershipQueryKeys.directory.person(created.organizationPersonId),
         created,
       );
-      qc.invalidateQueries({ queryKey: queryKeys.directory.peopleAll });
+      qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.directory.peopleAll });
     },
   });
 }
@@ -109,11 +109,11 @@ export function useUpdatePerson() {
       ),
     onSuccess: (updated, variables) => {
       qc.setQueryData<OrganizationPerson>(
-        queryKeys.directory.person(variables.organizationPersonId),
+        directoryAndOwnershipQueryKeys.directory.person(variables.organizationPersonId),
         (old) => (old ? { ...old, ...updated } : updated),
       );
       qc.setQueriesData(
-        { queryKey: queryKeys.directory.peopleAll },
+        { queryKey: directoryAndOwnershipQueryKeys.directory.peopleAll },
         (old: unknown) => {
           if (!isPeoplePage(old)) return old;
           if (
@@ -144,7 +144,7 @@ export function useDeletePerson() {
       apiClient.delete(`/directory/people/${organizationPersonId}`),
     onSuccess: (_, organizationPersonId) => {
       qc.setQueriesData(
-        { queryKey: queryKeys.directory.peopleAll },
+        { queryKey: directoryAndOwnershipQueryKeys.directory.peopleAll },
         (old: unknown) => {
           if (!isPeoplePage(old)) return old;
           if (
@@ -162,10 +162,10 @@ export function useDeletePerson() {
         },
       );
       qc.removeQueries({
-        queryKey: queryKeys.directory.person(organizationPersonId),
+        queryKey: directoryAndOwnershipQueryKeys.directory.person(organizationPersonId),
       });
       qc.invalidateQueries({
-        queryKey: queryKeys.directory.peopleAll,
+        queryKey: directoryAndOwnershipQueryKeys.directory.peopleAll,
         refetchType: "none",
       });
     },

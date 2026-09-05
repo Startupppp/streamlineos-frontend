@@ -6,7 +6,7 @@ import { ArrowDown, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
-import { queryKeys } from "@/lib/query-keys";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import { getFileColor, getFileExt, isImageMime } from "./chat-helpers";
@@ -15,7 +15,7 @@ import { formatFileSize } from "@/lib/format-utils";
 function useAttachmentUrl(channelId: number, attachmentId: number) {
   const canRead = useCan("chat:messages:read");
   return useQuery({
-    queryKey: queryKeys.chat.attachment(channelId, attachmentId),
+    queryKey: collaborationQueryKeys.chat.attachment(channelId, attachmentId),
     queryFn: ({ signal }) =>
       apiClient.get<{ url: string }>(
         `/chat/channels/${channelId}/attachments/${attachmentId}`,

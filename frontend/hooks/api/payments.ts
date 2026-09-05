@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type PaymentEnvironment = "test" | "live";
@@ -59,7 +59,7 @@ export type PaymentProvider = {
 export function usePaymentCatalog() {
   const canView = useCan("payments:providers:view");
   return useQuery({
-    queryKey: queryKeys.payments.catalog(),
+    queryKey: platformCoreQueryKeys.payments.catalog(),
     queryFn: ({ signal }) => apiClient.get<PaymentProviderCatalogEntry[]>("/payments/providers/catalog", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canView,
@@ -69,7 +69,7 @@ export function usePaymentCatalog() {
 export function usePaymentProviders() {
   const canView = useCan("payments:providers:view");
   return useQuery({
-    queryKey: queryKeys.payments.providers(),
+    queryKey: platformCoreQueryKeys.payments.providers(),
     queryFn: ({ signal }) => apiClient.get<PaymentProvider[]>("/payments/providers", undefined, signal),
     staleTime: 30_000,
     enabled: canView,
@@ -82,7 +82,7 @@ export function useCreatePaymentProvider() {
     mutationKey: ["create", "payment", "provider"],
     mutationFn: (providerKey: string) =>
       apiClient.post<PaymentProvider>("/payments/providers", { providerKey }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.payments.providers() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: platformCoreQueryKeys.payments.providers() }),
   });
 }
 
@@ -103,8 +103,8 @@ export function useSavePaymentCredentials(providerKey: string) {
         payload,
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.payments.providers() });
-      qc.invalidateQueries({ queryKey: queryKeys.payments.readiness(providerKey) });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.payments.providers() });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.payments.readiness(providerKey) });
     },
   });
 }
@@ -116,8 +116,8 @@ export function useDisconnectPaymentCredentials(providerKey: string) {
     mutationFn: (environment: PaymentEnvironment) =>
       apiClient.post(`/payments/providers/${providerKey}/disconnect`, { environment }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.payments.providers() });
-      qc.invalidateQueries({ queryKey: queryKeys.payments.readiness(providerKey) });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.payments.providers() });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.payments.readiness(providerKey) });
     },
   });
 }
@@ -140,7 +140,7 @@ export type PaymentTestTransaction = {
 export function useTestTransactions(providerKey: string, enabled = true) {
   const canView = useCan("payments:providers:view");
   return useQuery({
-    queryKey: queryKeys.payments.testTransactions(providerKey),
+    queryKey: platformCoreQueryKeys.payments.testTransactions(providerKey),
     queryFn: ({ signal }) => apiClient.get<PaymentTestTransaction[]>(`/payments/providers/${providerKey}/test-transactions`, undefined, signal),
     staleTime: 15_000,
     enabled: canView && enabled,
@@ -153,7 +153,7 @@ export function useCreateTestTransaction(providerKey: string) {
     mutationKey: ["create", "test", "transaction"],
     mutationFn: (payload: { amount: string; currency: string }) =>
       apiClient.post<PaymentTestTransaction>(`/payments/providers/${providerKey}/test-transactions`, payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.payments.testTransactions(providerKey) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: platformCoreQueryKeys.payments.testTransactions(providerKey) }),
   });
 }
 
@@ -167,8 +167,8 @@ export function useVerifyTestTransaction(providerKey: string) {
         signature,
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.payments.testTransactions(providerKey) });
-      qc.invalidateQueries({ queryKey: queryKeys.payments.readiness(providerKey) });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.payments.testTransactions(providerKey) });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.payments.readiness(providerKey) });
     },
   });
 }
@@ -190,7 +190,7 @@ export function useGenerateWebhook(providerKey: string) {
     mutationKey: ["generate", "webhook"],
     mutationFn: (environment: PaymentEnvironment) =>
       apiClient.post<PaymentWebhookEndpoint>(`/payments/providers/${providerKey}/webhooks/generate`, { environment }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.payments.readiness(providerKey) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: platformCoreQueryKeys.payments.readiness(providerKey) }),
   });
 }
 
@@ -210,7 +210,7 @@ export type PaymentWebhookEvent = {
 export function useWebhookEvents(providerKey: string, enabled = true) {
   const canView = useCan("payments:webhooks:view");
   return useQuery({
-    queryKey: queryKeys.payments.webhookEvents(providerKey),
+    queryKey: platformCoreQueryKeys.payments.webhookEvents(providerKey),
     queryFn: ({ signal }) => apiClient.get<PaymentWebhookEvent[]>(`/payments/providers/${providerKey}/webhooks/events`, undefined, signal),
     staleTime: 15_000,
     enabled: canView && enabled,
@@ -223,7 +223,7 @@ export function useRetryWebhookEvent(providerKey: string) {
     mutationKey: ["retry", "webhook", "event"],
     mutationFn: (eventId: number) =>
       apiClient.post(`/payments/providers/${providerKey}/webhooks/events/${eventId}/retry`, {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.payments.webhookEvents(providerKey) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: platformCoreQueryKeys.payments.webhookEvents(providerKey) }),
   });
 }
 
@@ -237,7 +237,7 @@ export type PaymentReadiness = {
 export function usePaymentReadiness(providerKey: string, enabled = true) {
   const canView = useCan("payments:providers:view");
   return useQuery({
-    queryKey: queryKeys.payments.readiness(providerKey),
+    queryKey: platformCoreQueryKeys.payments.readiness(providerKey),
     queryFn: ({ signal }) => apiClient.get<PaymentReadiness>(`/payments/providers/${providerKey}/readiness`, undefined, signal),
     staleTime: 10_000,
     enabled: canView && enabled,
@@ -250,8 +250,8 @@ export function useActivateLivePayments(providerKey: string) {
     mutationKey: ["activate", "live", "payments"],
     mutationFn: () => apiClient.post<PaymentProvider>(`/payments/providers/${providerKey}/activate-live`, {}),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.payments.providers() });
-      qc.invalidateQueries({ queryKey: queryKeys.payments.readiness(providerKey) });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.payments.providers() });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.payments.readiness(providerKey) });
     },
   });
 }
@@ -270,7 +270,7 @@ export type PaymentAuditEvent = {
 export function usePaymentAudit(providerKey: string, enabled = true) {
   const canView = useCan("payments:audit:view");
   return useQuery({
-    queryKey: queryKeys.payments.audit(providerKey),
+    queryKey: platformCoreQueryKeys.payments.audit(providerKey),
     queryFn: ({ signal }) => apiClient.get<PaymentAuditEvent[]>(`/payments/providers/${providerKey}/audit`, undefined, signal),
     staleTime: 30_000,
     enabled: canView && enabled,
@@ -311,7 +311,7 @@ export type SaveManualMethodPayload = {
 export function useManualMethods() {
   const canView = useCan("payments:providers:view");
   return useQuery({
-    queryKey: [...queryKeys.payments.all, "manual-methods"],
+    queryKey: [...platformCoreQueryKeys.payments.all, "manual-methods"],
     queryFn: ({ signal }) => apiClient.get<PaymentManualMethod[]>("/payments/manual-methods", undefined, signal),
     staleTime: 30_000,
     enabled: canView,
@@ -324,7 +324,7 @@ export function useSaveManualMethod() {
     mutationKey: ["save", "manual", "method"],
     mutationFn: (payload: SaveManualMethodPayload) =>
       apiClient.post<PaymentManualMethod>("/payments/manual-methods", payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.payments.all, "manual-methods"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...platformCoreQueryKeys.payments.all, "manual-methods"] }),
   });
 }
 
@@ -333,6 +333,6 @@ export function useDisableManualMethod() {
   return useAuthorizedMutation("payments:manual-methods:manage", {
     mutationKey: ["disable", "manual", "method"],
     mutationFn: (id: number) => apiClient.post(`/payments/manual-methods/${id}/disable`, {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.payments.all, "manual-methods"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...platformCoreQueryKeys.payments.all, "manual-methods"] }),
   });
 }

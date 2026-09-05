@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import type {
   ClientPortalProject,
@@ -16,7 +16,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 export function usePortalProjects() {
   const canView = useCan("build:portal:view");
   return useQuery<ClientPortalProject[]>({
-    queryKey: queryKeys.projects.clientPortal.projects(),
+    queryKey: buildWorkQueryKeys.projects.clientPortal.projects(),
     queryFn: ({ signal }) => apiClient.get<ClientPortalProject[]>("/build/portal/projects", undefined, signal),
     enabled: canView,
     staleTime: 60_000,
@@ -26,7 +26,7 @@ export function usePortalProjects() {
 export function usePortalProjectOverview(projectId: number) {
   const canView = useCan("build:portal:view");
   return useQuery<ClientPortalOverview>({
-    queryKey: queryKeys.projects.clientPortal.overview(projectId),
+    queryKey: buildWorkQueryKeys.projects.clientPortal.overview(projectId),
     queryFn: ({ signal }) =>
       apiClient.get<ClientPortalOverview>(`/build/portal/projects/${projectId}/overview`, undefined, signal),
     enabled: canView && !!projectId,
@@ -37,7 +37,7 @@ export function usePortalProjectOverview(projectId: number) {
 export function usePortalChangeRequests(projectId: number) {
   const canView = useCan("build:changerequests:view");
   return useQuery<ChangeRequest[]>({
-    queryKey: queryKeys.projects.clientPortal.changeRequests(projectId),
+    queryKey: buildWorkQueryKeys.projects.clientPortal.changeRequests(projectId),
     queryFn: ({ signal }) =>
       apiClient.get<ChangeRequest[]>(`/build/portal/projects/${projectId}/change-requests`, undefined, signal),
     enabled: canView && !!projectId,
@@ -56,7 +56,7 @@ export function useSubmitPortalChangeRequest(projectId: number) {
       ),
     onSuccess: () => {
       qc.invalidateQueries({
-        queryKey: queryKeys.projects.clientPortal.changeRequests(projectId),
+        queryKey: buildWorkQueryKeys.projects.clientPortal.changeRequests(projectId),
       });
     },
   });
@@ -65,7 +65,7 @@ export function useSubmitPortalChangeRequest(projectId: number) {
 export function useClientVisibility(projectId: number) {
   const canManage = useCan("build:clientvisibility:manage");
   return useQuery<ClientVisibilitySummary>({
-    queryKey: queryKeys.projects.clientPortal.visibility(projectId),
+    queryKey: buildWorkQueryKeys.projects.clientPortal.visibility(projectId),
     queryFn: ({ signal }) =>
       apiClient.get<ClientVisibilitySummary>(`/build/${projectId}/client-visibility`, undefined, signal),
     enabled: canManage && !!projectId,
@@ -83,7 +83,7 @@ export function useUpdateTicketVisibility(projectId: number) {
         { clientVisible },
       ),
     onMutate: async ({ id, clientVisible }) => {
-      const key = queryKeys.projects.clientPortal.visibility(projectId);
+      const key = buildWorkQueryKeys.projects.clientPortal.visibility(projectId);
       await qc.cancelQueries({ queryKey: key });
       const prev = qc.getQueryData<ClientVisibilitySummary>(key);
       if (prev) {
@@ -96,11 +96,11 @@ export function useUpdateTicketVisibility(projectId: number) {
     },
     onError: (_, _vars, ctx) => {
       if (ctx?.prev) {
-        qc.setQueryData(queryKeys.projects.clientPortal.visibility(projectId), ctx.prev);
+        qc.setQueryData(buildWorkQueryKeys.projects.clientPortal.visibility(projectId), ctx.prev);
       }
     },
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.clientPortal.visibility(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.clientPortal.visibility(projectId) });
     },
   });
 }
@@ -115,7 +115,7 @@ export function useUpdateMilestoneVisibility(projectId: number) {
         { clientVisible },
       ),
     onMutate: async ({ id, clientVisible }) => {
-      const key = queryKeys.projects.clientPortal.visibility(projectId);
+      const key = buildWorkQueryKeys.projects.clientPortal.visibility(projectId);
       await qc.cancelQueries({ queryKey: key });
       const prev = qc.getQueryData<ClientVisibilitySummary>(key);
       if (prev) {
@@ -128,11 +128,11 @@ export function useUpdateMilestoneVisibility(projectId: number) {
     },
     onError: (_, _vars, ctx) => {
       if (ctx?.prev) {
-        qc.setQueryData(queryKeys.projects.clientPortal.visibility(projectId), ctx.prev);
+        qc.setQueryData(buildWorkQueryKeys.projects.clientPortal.visibility(projectId), ctx.prev);
       }
     },
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.clientPortal.visibility(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.clientPortal.visibility(projectId) });
     },
   });
 }

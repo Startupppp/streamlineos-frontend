@@ -2,7 +2,7 @@
 
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 
 export interface EffectiveRuleItem {
   policyType: string;
@@ -48,7 +48,7 @@ export interface VersionsResponse {
 
 export function useEffectiveRules(params: { employeeId: string; date: string } | null) {
   return useGatedQuery("hr:policies:view", {
-    queryKey: queryKeys.hr.settingsHubRules(params),
+    queryKey: humanResourcesQueryKeys.hr.settingsHubRules(params),
     queryFn: ({ signal }) => {
       const qs = new URLSearchParams({
         employeeId: params!.employeeId,
@@ -63,7 +63,7 @@ export function useEffectiveRules(params: { employeeId: string; date: string } |
 
 export function useEntityVersions(entity: VersionEntity, id: number | null) {
   return useGatedQuery("hr:policies:view", {
-    queryKey: queryKeys.hr.settingsHubVersions(entity, id),
+    queryKey: humanResourcesQueryKeys.hr.settingsHubVersions(entity, id),
     queryFn: ({ signal }) => {
       const qs = new URLSearchParams({ entity, id: String(id) });
       return apiClient.get<VersionsResponse>(`/hr/settings-hub/versions?${qs}`, undefined, signal);

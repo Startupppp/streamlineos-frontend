@@ -3,7 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { invalidateHrWorkforceQueries } from "@/lib/hr-workforce-cache";
 
@@ -86,7 +86,7 @@ export interface UseTerminationsParams {
 }
 
 const terminationKeys = {
-  all: [...queryKeys.hr.all, "termination"] as const,
+  all: [...humanResourcesQueryKeys.hr.all, "termination"] as const,
   list: (
     params: Required<Omit<UseTerminationsParams, "status">> & {
       status: string;

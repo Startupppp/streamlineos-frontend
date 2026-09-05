@@ -18,7 +18,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -228,7 +228,7 @@ export function BulkImportPage() {
       );
       setImportResult(data);
       setStep("done");
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidates() });
     } catch (err) {
       toast.error(getErrorMessage(err));
     } finally {

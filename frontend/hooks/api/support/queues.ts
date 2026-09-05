@@ -1,7 +1,7 @@
 "use client";
 
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface SupportQueue {
@@ -19,7 +19,7 @@ export interface SupportQueue {
 
 export function useSupportQueues() {
   return useGatedQuery("support:tickets:view", {
-    queryKey: queryKeys.supportQueues.list(),
+    queryKey: supportAndWorkflowsQueryKeys.supportQueues.list(),
     queryFn: ({ signal }) => apiClient.get<SupportQueue[]>("/support/queues", undefined, signal),
     staleTime: 60_000,
   });

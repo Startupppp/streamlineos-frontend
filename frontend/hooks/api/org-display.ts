@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { DEFAULT_MONEY_DISPLAY, type MoneyDisplay } from "@/lib/format-utils";
 import { lazyContract } from "@/lib/api-envelope";
 
@@ -24,7 +24,7 @@ const displayContract = lazyContract(() =>
  */
 export function useOrgDisplay(): MoneyDisplay {
   const { data } = useQuery<MoneyDisplay, Error>({
-    queryKey: queryKeys.organization.display(),
+    queryKey: platformCoreQueryKeys.organization.display(),
     queryFn: ({ signal }) =>
       apiClient.get("/me/org-display", undefined, signal, displayContract),
     staleTime: 30 * 60_000,

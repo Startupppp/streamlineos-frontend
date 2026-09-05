@@ -4,7 +4,7 @@ import { useInfiniteQuery, useQuery, useMutation } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type {
   Notification,
   UnreadCount,
@@ -43,7 +43,7 @@ export const useNotifications = (
   const orgId = session?.orgId;
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<Notification[], Error>({
-    queryKey: queryKeys.notifications.list(params as Record<string, unknown>),
+    queryKey: platformCoreQueryKeys.notifications.list(params as Record<string, unknown>),
     queryFn: async ({ signal }) =>
       (await apiClient.get<IdCursorPage<Notification>>(
         "/notifications",
@@ -84,7 +84,7 @@ export const useInfiniteNotifications = (
   // continuation is still the lowest id the page carried — `nextCursor` from the
   // body would say the same thing.
   return useInfiniteQuery<Notification[], Error>({
-    queryKey: queryKeys.notifications.list({
+    queryKey: platformCoreQueryKeys.notifications.list({
       ...(params as Record<string, unknown>),
       infinite: true,
     }),
@@ -114,7 +114,7 @@ export const useUnreadNotifications = (
   const { enabled: enabledOption, ...restOptions } = options ?? {};
 
   return useQuery<Notification[], Error>({
-    queryKey: queryKeys.notifications.unreadList(),
+    queryKey: platformCoreQueryKeys.notifications.unreadList(),
     queryFn: async ({ signal }) =>
       (await apiClient.get<IdCursorPage<Notification>>(
         "/notifications",
@@ -133,7 +133,7 @@ export const useUnreadNotificationCount = (
   const { data: session } = useSession();
   const orgId = session?.orgId;
   return useQuery<UnreadCount, Error>({
-    queryKey: queryKeys.notifications.unreadCount(),
+    queryKey: platformCoreQueryKeys.notifications.unreadCount(),
     queryFn: ({ signal }) =>
       apiClient.get<UnreadCount>("/notifications/unread-count", undefined, signal),
     staleTime: NOTIFICATION_FALLBACK_INTERVAL_MS,
@@ -157,7 +157,7 @@ export const useMarkNotificationRead = () => {
         ...snapshotAndPatchLists(queryClient, listKey, (n) =>
           n.id === id ? { ...n, isRead: true } : n,
         ),
-        ...snapshotAndPatchUnified(queryClient, queryKeys.inbox.all, (item) =>
+        ...snapshotAndPatchUnified(queryClient, platformCoreQueryKeys.inbox.all, (item) =>
           item.id === id ? { ...item, isRead: true } : item,
         ),
       ];
@@ -178,7 +178,7 @@ export const useMarkAllNotificationsRead = () => {
       const { listKey, unreadKey, previousCount } = await beginInboxPatch(queryClient);
       const previousLists = [
         ...snapshotAndPatchLists(queryClient, listKey, (n) => ({ ...n, isRead: true })),
-        ...snapshotAndPatchUnified(queryClient, queryKeys.inbox.all, (item) => ({
+        ...snapshotAndPatchUnified(queryClient, platformCoreQueryKeys.inbox.all, (item) => ({
           ...item,
           isRead: true,
         })),
@@ -203,7 +203,7 @@ export const useArchiveNotification = () => {
         ...snapshotAndPatchLists(queryClient, listKey, (n) =>
           n.id === id ? { ...n, archivedAt: new Date().toISOString() } : n,
         ),
-        ...snapshotAndRemoveFromUnified(queryClient, queryKeys.inbox.all, new Set([id])),
+        ...snapshotAndRemoveFromUnified(queryClient, platformCoreQueryKeys.inbox.all, new Set([id])),
       ];
       applyUnreadDelta(queryClient, unreadKey, cleared);
       return { previousLists, previousCount };
@@ -276,7 +276,7 @@ export const useBulkMarkRead = () => {
         ...snapshotAndPatchLists(queryClient, listKey, (n) =>
           idSet.has(n.id) ? { ...n, isRead: true } : n,
         ),
-        ...snapshotAndPatchUnified(queryClient, queryKeys.inbox.all, (item) =>
+        ...snapshotAndPatchUnified(queryClient, platformCoreQueryKeys.inbox.all, (item) =>
           idSet.has(item.id) ? { ...item, isRead: true } : item,
         ),
       ];
@@ -303,7 +303,7 @@ export const useBulkArchive = () => {
         ...snapshotAndPatchLists(queryClient, listKey, (n) =>
           idSet.has(n.id) ? { ...n, archivedAt } : n,
         ),
-        ...snapshotAndRemoveFromUnified(queryClient, queryKeys.inbox.all, idSet),
+        ...snapshotAndRemoveFromUnified(queryClient, platformCoreQueryKeys.inbox.all, idSet),
       ];
       applyUnreadDelta(queryClient, unreadKey, cleared);
       return { previousLists, previousCount };

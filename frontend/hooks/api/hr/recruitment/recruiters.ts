@@ -1,7 +1,7 @@
 "use client";
 
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
 type RecruiterActivityAction =
@@ -37,7 +37,7 @@ export interface RecruiterActivityEntry {
 
 export function useRecruiters() {
   return useGatedQuery("hr:employees:view", {
-    queryKey: queryKeys.hr.recruiters(),
+    queryKey: humanResourcesQueryKeys.hr.recruiters(),
     queryFn: ({ signal }) => apiClient.get<RecruiterSummary[]>("/hr/recruitment/recruiters", undefined, signal),
     staleTime: 2 * 60_000,
   });
@@ -45,7 +45,7 @@ export function useRecruiters() {
 
 export function useRecruiterActivity(params?: { recruiterId?: string; limit?: number }) {
   return useGatedQuery("hr:employees:view", {
-    queryKey: queryKeys.hr.recruiterActivity(params),
+    queryKey: humanResourcesQueryKeys.hr.recruiterActivity(params),
     queryFn: ({ signal }) => {
       const sp = new URLSearchParams();
       if (params?.recruiterId) sp.set("recruiterId", params.recruiterId);

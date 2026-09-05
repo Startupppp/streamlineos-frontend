@@ -7,7 +7,7 @@ import { useSession } from "next-auth/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { isApiError } from "@/lib/api-client";
 import { isContractViolation } from "@/lib/api-envelope";
-import { queryKeys } from "@/lib/query-keys";
+import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import { registerQueryCacheClearer } from "@/lib/query-cache-control";
 import { readErrorReachesBoundary } from "@/lib/query-error-policy";
 import {
@@ -60,7 +60,7 @@ export function createAppQueryClient(scope = "unscoped"): QueryClient {
   const mutationCache = new MutationCache({
     onSuccess: (data) => {
       if (!carriesAiCharge(data)) return;
-      void client.invalidateQueries({ queryKey: queryKeys.billing.aiCredits() });
+      void client.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.aiCredits() });
     },
   });
 

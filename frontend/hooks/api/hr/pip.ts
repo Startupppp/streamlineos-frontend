@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -24,7 +24,7 @@ export interface PIP {
   hrRep?: { id: string; name: string | null } | null;
 }
 
-const pipKeys = { all: [...queryKeys.hr.all, "pip"] as const, list: () => [...pipKeys.all, "list"] as const };
+const pipKeys = { all: [...humanResourcesQueryKeys.hr.all, "pip"] as const, list: () => [...pipKeys.all, "list"] as const };
 
 export function usePIPs() {
   const canView = useCan("hr:performance:view");

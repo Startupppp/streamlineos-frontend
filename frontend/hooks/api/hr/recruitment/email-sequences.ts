@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   EmailSequence,
@@ -13,7 +13,7 @@ import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export function useEmailSequences() {
   return useGatedQuery("hr:employees:view", {
-    queryKey: queryKeys.hr.emailSequences(),
+    queryKey: humanResourcesQueryKeys.hr.emailSequences(),
     queryFn: ({ signal }) => apiClient.get<EmailSequence[]>("/hr/recruitment/email-sequences", undefined, signal),
     staleTime: 2 * 60_000,
   });
@@ -26,7 +26,7 @@ export function useCreateEmailSequence() {
     mutationFn: (data: CreateEmailSequenceInput) =>
       apiClient.post<EmailSequence>("/hr/recruitment/email-sequences", data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.emailSequences() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.emailSequences() });
     },
   });
 }
@@ -38,8 +38,8 @@ export function useUpdateEmailSequence(id: number) {
     mutationFn: (data: UpdateEmailSequenceInput) =>
       apiClient.patch<EmailSequence>(`/hr/recruitment/email-sequences/${id}`, data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.emailSequences() });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.emailSequence(id) });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.emailSequences() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.emailSequence(id) });
     },
   });
 }
@@ -51,7 +51,7 @@ export function useDeleteEmailSequence() {
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/email-sequences/${id}`),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.emailSequences() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.emailSequences() });
     },
   });
 }

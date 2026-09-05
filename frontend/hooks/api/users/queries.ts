@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { userStatsContract } from "@/hooks/api/users/users-schema";
 import type {
   User,
@@ -21,7 +21,7 @@ export const useUsers = (
 ) => {
   const canView = useCan("settings:view");
   return useQuery<UsersResponse, Error>({
-    queryKey: queryKeys.users.list(params as Record<string, unknown> | undefined),
+    queryKey: usersAndCommerceQueryKeys.users.list(params as Record<string, unknown> | undefined),
     queryFn: ({ signal }) =>
       apiClient.get<UsersResponse>("/v2/users", {
         ...(params?.cursor ? { cursor: params.cursor } : {}),
@@ -48,7 +48,7 @@ export const useUser = (
 ) => {
   const canView = useCan("settings:view");
   return useQuery<User, Error>({
-    queryKey: queryKeys.users.detail(userId),
+    queryKey: usersAndCommerceQueryKeys.users.detail(userId),
     queryFn: ({ signal }) => apiClient.get<User>(`/v2/users/${userId}`, undefined, signal),
     staleTime: 30_000,
     ...options,
@@ -62,7 +62,7 @@ export const useUserSessions = (
 ) => {
   const canManage = useCan("settings:organization:manage");
   return useQuery<UserSession[], Error>({
-    queryKey: queryKeys.users.sessions(userId),
+    queryKey: usersAndCommerceQueryKeys.users.sessions(userId),
     queryFn: ({ signal }) => apiClient.get<UserSession[]>(`/users/${userId}/sessions`, undefined, signal),
     staleTime: 30_000,
     ...options,
@@ -76,7 +76,7 @@ export const useUserPreferences = (
 ) => {
   const canView = useCan("settings:view");
   return useQuery<UserPreferences, Error>({
-    queryKey: queryKeys.users.preferences(userId),
+    queryKey: usersAndCommerceQueryKeys.users.preferences(userId),
     queryFn: ({ signal }) => apiClient.get<UserPreferences>(`/users/${userId}/preferences`, undefined, signal),
     staleTime: 30_000,
     ...options,
@@ -89,7 +89,7 @@ export const useUserStats = (
 ) => {
   const canView = useCan("settings:view");
   return useQuery<UserStats, Error>({
-    queryKey: queryKeys.users.stats(),
+    queryKey: usersAndCommerceQueryKeys.users.stats(),
     queryFn: ({ signal }) => apiClient.get("/users/stats", undefined, signal, userStatsContract),
     staleTime: 60_000,
     ...options,

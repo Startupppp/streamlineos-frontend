@@ -3,7 +3,8 @@
 import { useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type { Invoice, InvoiceStats, InvoiceStatus, PatchableInvoiceStatus, Payment, PaymentMethod } from "@/types/invoice";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
@@ -78,7 +79,7 @@ export const useInvoices = (
   >
 ) => {
   return useGatedQuery<InvoicesResponse, Error>("accounting:read", {
-    queryKey: queryKeys.invoice.list(filters as Record<string, unknown>),
+    queryKey: platformCoreQueryKeys.invoice.list(filters as Record<string, unknown>),
     queryFn: ({ signal }) =>
       apiClient.get("/invoices", {
         ...(filters?.status ? { status: filters.status } : {}),
@@ -99,7 +100,7 @@ export const useInvoice = (
   >
 ) => {
   return useGatedQuery<Invoice, Error>("accounting:read", {
-    queryKey: queryKeys.invoice.detail(id),
+    queryKey: platformCoreQueryKeys.invoice.detail(id),
     queryFn: ({ signal }) => apiClient.get(`/invoices/${id}`, undefined, signal, oneInvoiceContract),
     enabled: id > 0,
     staleTime: 2 * 60_000,
@@ -114,7 +115,7 @@ export const useInvoiceStats = (
   >
 ) => {
   return useGatedQuery<InvoiceStats, Error>("accounting:read", {
-    queryKey: queryKeys.invoice.stats(),
+    queryKey: platformCoreQueryKeys.invoice.stats(),
     queryFn: ({ signal }) => apiClient.get("/invoices/stats", undefined, signal, statsContract),
     staleTime: 5 * 60_000,
     ...options,
@@ -127,7 +128,7 @@ export const useCreateInvoice = () => {
     mutationKey: ["create", "invoice"],
     mutationFn: (data) => apiClient.post<Invoice>("/invoices", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.invoice.all });
     },
   });
 };
@@ -139,9 +140,9 @@ export const useUpdateInvoice = () => {
     mutationFn: ({ id, ...data }) =>
       apiClient.patch<{ success: boolean }>(`/invoices/${id}`, data),
     onSuccess: (_, vars) => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.invoice.detail(vars.id) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.invoice.stats() });
+      void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.invoice.all });
+      void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.invoice.detail(vars.id) });
+      void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.invoice.stats() });
     },
   });
 };
@@ -153,10 +154,10 @@ export const useVoidInvoice = () => {
     mutationFn: (id) =>
       apiClient.post<{ success: boolean }>(`/invoices/${id}/void`),
     onSuccess: (_, id) => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.invoice.detail(id) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.invoice.stats() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+      void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.invoice.all });
+      void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.invoice.detail(id) });
+      void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.invoice.stats() });
+      void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
     },
   });
 };
@@ -177,9 +178,9 @@ export const useRecordPayment = () => {
     mutationFn: ({ invoiceId, ...data }) =>
       apiClient.post<Payment>(`/invoices/${invoiceId}/payments`, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.invoice.all });
       queryClient.invalidateQueries({
-        queryKey: [...queryKeys.invoice.detail(variables.invoiceId), "payments"],
+        queryKey: [...platformCoreQueryKeys.invoice.detail(variables.invoiceId), "payments"],
       });
     },
   });

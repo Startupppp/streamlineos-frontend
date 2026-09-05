@@ -8,7 +8,7 @@ import {
   type ContractSource,
   type LazyResponseContract,
 } from "@/lib/api-envelope";
-import { queryKeys } from "@/lib/query-keys";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { reportError } from "@/lib/observability/error-reporter";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import type {
@@ -110,7 +110,7 @@ export function useChatChannels(enabled = true) {
   const canRead = useCan("chat:channels:read");
   const chatEnabled = useModuleEnabled("chat");
   return useQuery({
-    queryKey: queryKeys.chat.myChannels(),
+    queryKey: collaborationQueryKeys.chat.myChannels(),
     queryFn: ({ signal }) =>
       drainChannelPages<Channel>("/chat/channels", signal, myChannelsContract),
     staleTime: 300_000,
@@ -122,7 +122,7 @@ export function useChatChannels(enabled = true) {
 export function useArchivedChannels(enabled = true) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
-    queryKey: queryKeys.chat.archivedChannels(),
+    queryKey: collaborationQueryKeys.chat.archivedChannels(),
     queryFn: ({ signal }) =>
       drainChannelPages<Channel>(
         "/chat/channels/archived",
@@ -137,7 +137,7 @@ export function useArchivedChannels(enabled = true) {
 export function usePublicChannels(enabled = true) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
-    queryKey: queryKeys.chat.publicChannels(),
+    queryKey: collaborationQueryKeys.chat.publicChannels(),
     queryFn: ({ signal }) =>
       drainChannelPages<PublicChannel>(
         "/chat/channels/public",
@@ -152,7 +152,7 @@ export function usePublicChannels(enabled = true) {
 export function useChatChannel(channelId: number) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
-    queryKey: queryKeys.chat.channel(channelId),
+    queryKey: collaborationQueryKeys.chat.channel(channelId),
     queryFn: ({ signal }) => apiClient.get<Channel>(`/chat/channels/${channelId}`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canRead && channelId > 0,
@@ -162,7 +162,7 @@ export function useChatChannel(channelId: number) {
 export function useChatMessages(channelId: number) {
   const canRead = useCan("chat:messages:read");
   return useInfiniteQuery({
-    queryKey: queryKeys.chat.messages(channelId),
+    queryKey: collaborationQueryKeys.chat.messages(channelId),
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<MessagesPage>(
         `/chat/channels/${channelId}/messages`,
@@ -192,7 +192,7 @@ export function useChatPoll(
 ) {
   const canRead = useCan("chat:messages:read");
   return useQuery({
-    queryKey: queryKeys.chat.poll(channelId, since),
+    queryKey: collaborationQueryKeys.chat.poll(channelId, since),
     queryFn: ({ signal }) =>
       apiClient.get<PollPage>(
         `/chat/channels/${channelId}/messages/poll`,
@@ -212,7 +212,7 @@ export function useChatUnreadTotal(enabled = true) {
   const canRead = useCan("chat:messages:read");
   const chatEnabled = useModuleEnabled("chat");
   return useQuery({
-    queryKey: queryKeys.chat.unreadTotal(),
+    queryKey: collaborationQueryKeys.chat.unreadTotal(),
     queryFn: ({ signal }) => apiClient.get<{ total: number }>("/chat/unread", undefined, signal),
     staleTime: 300_000,
     refetchOnWindowFocus: true,
@@ -223,7 +223,7 @@ export function useChatUnreadTotal(enabled = true) {
 export function useChatOnlineUsers(enabled = true) {
   const canRead = useCan("chat:messages:read");
   return useQuery({
-    queryKey: queryKeys.chat.onlineUsers(),
+    queryKey: collaborationQueryKeys.chat.onlineUsers(),
     queryFn: ({ signal }) => apiClient.get<OnlineUser[]>("/chat/presence/online", undefined, signal),
     refetchInterval: 60_000,
     staleTime: 65_000,
@@ -234,7 +234,7 @@ export function useChatOnlineUsers(enabled = true) {
 export function useChatOrgUsers(enabled = true) {
   const canRead = useCan("chat:channels:read");
   return useQuery({
-    queryKey: queryKeys.chat.orgUsers(),
+    queryKey: collaborationQueryKeys.chat.orgUsers(),
     queryFn: ({ signal }) => apiClient.get<OrgUser[]>("/chat/users", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: enabled && canRead,

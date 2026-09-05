@@ -2,7 +2,7 @@
 
 import { queryOptions, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -26,7 +26,7 @@ export interface LatestBriefResponse {
 }
 
 const briefQueryOptions = queryOptions({
-  queryKey: queryKeys.executiveBrief,
+  queryKey: platformCoreQueryKeys.executiveBrief,
   queryFn: ({ signal }) => apiClient.get<LatestBriefResponse>("/ai/executive-brief", undefined, signal),
   staleTime: 5 * 60 * 1000,
 });

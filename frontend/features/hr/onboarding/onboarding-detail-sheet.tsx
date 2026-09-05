@@ -25,7 +25,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { EmptyUploadIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useHrDocumentTypes } from "@/hooks/api/hr/document-types";
 import { useCan } from "@/hooks/api/access";
@@ -45,7 +45,7 @@ interface OnboardingDocsResponse {
 function useMyOnboardingDocs() {
   const canViewOwnDocs = useCan("self:onboarding-docs");
   return useQuery<OnboardingDoc[]>({
-    queryKey: queryKeys.hr.myOnboardingDocs(),
+    queryKey: humanResourcesQueryKeys.hr.myOnboardingDocs(),
     queryFn: async ({ signal }) => {
       const res = await apiClient.get<OnboardingDocsResponse>("/hr/onboarding-docs/me", { limit: 100 }, signal);
       return res.data;
@@ -62,7 +62,7 @@ function useSubmitOnboardingDoc() {
     mutationFn: (body: { documentTypeId: number; fileUrl: string; fileName: string }) =>
       apiClient.post("/hr/onboarding-docs/me", body),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.myOnboardingDocs() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.myOnboardingDocs() });
     },
   });
 }
@@ -211,7 +211,7 @@ export const EmployeeDocumentsTab = forwardRef<
       });
     }
 
-    await qc.invalidateQueries({ queryKey: queryKeys.hr.myOnboardingDocs() });
+    await qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.myOnboardingDocs() });
     setPendingFiles(new Map());
   }, [pendingFiles, qc]);
 

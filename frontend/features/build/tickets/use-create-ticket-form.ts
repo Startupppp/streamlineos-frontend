@@ -10,7 +10,7 @@ import { useProjectMembers } from "@/hooks/api/build/projects";
 import { useAddLabelToTicket } from "@/hooks/api/build/tickets";
 import { useAddRelatedLink } from "@/hooks/api/build/ticket-related-links";
 import type { RelatedLinkDraft } from "./ticket-related-links-editor";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { createTicketInputSchema } from "@/lib/validation/projects";
@@ -165,9 +165,9 @@ export function useCreateTicketForm({
 
   const finishCreation = useCallback(() => {
     if (projectId != null) {
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.tickets({ projectId }) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.sprints(projectId) });
+      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.tickets({ projectId }) });
+      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.detail(projectId) });
+      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.sprints(projectId) });
     }
     onCreated?.();
     if (createMore) {

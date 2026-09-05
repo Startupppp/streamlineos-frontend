@@ -6,7 +6,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
@@ -37,7 +37,7 @@ export function useHrPolicies(params?: {
   const qs = query.toString();
 
   return useQuery({
-    queryKey: queryKeys.hr.hrPoliciesList(params),
+    queryKey: humanResourcesQueryKeys.hr.hrPoliciesList(params),
     queryFn: ({ signal }) =>
       apiClient.get<PoliciesListResponse>(
         `/hr/policies${qs ? `?${qs}` : ""}`,
@@ -57,7 +57,7 @@ export function useCreateHrPolicy() {
     mutationFn: (data: CreatePolicyInput) =>
       apiClient.post<HrPolicy>("/hr/policies", data),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hrPoliciesAll }),
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrPoliciesAll }),
   });
 }
 
@@ -68,8 +68,8 @@ export function useUpdateHrPolicy() {
     mutationFn: ({ id, ...data }: UpdatePolicyInput & { id: number }) =>
       apiClient.patch<HrPolicy>(`/hr/policies/${id}`, data),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hrPoliciesAll });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hrPolicyDetail(vars.id) });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrPoliciesAll });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrPolicyDetail(vars.id) });
     },
   });
 }
@@ -81,7 +81,7 @@ export function useCreatePolicyVersion() {
     mutationFn: (policyId: number) =>
       apiClient.post<HrPolicy>(`/hr/policies/${policyId}/versions`, {}),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hrPoliciesAll }),
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrPoliciesAll }),
   });
 }
 
@@ -97,9 +97,9 @@ export function useActivatePolicy() {
       });
     },
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.hrPoliciesAll });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrPoliciesAll });
       void qc.invalidateQueries({
-        queryKey: queryKeys.hr.settingsHubVersionsAll,
+        queryKey: humanResourcesQueryKeys.hr.settingsHubVersionsAll,
       });
     },
   });
@@ -119,7 +119,7 @@ export function usePolicyConflicts(policyId: number) {
   const canView = useCan("hr:policies:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...queryKeys.hr.hrPoliciesAll, "conflicts", policyId] as const,
+    queryKey: [...humanResourcesQueryKeys.hr.hrPoliciesAll, "conflicts", policyId] as const,
     queryFn: ({ signal }) =>
       apiClient.get<{ conflicts: PolicyConflict[]; canActivate: boolean }>(
         `/hr/policies/${policyId}/conflicts`,
@@ -136,7 +136,7 @@ export function useOrgPolicyConflicts(type?: HrPolicyType) {
   const hrEnabled = useModuleEnabled("hr");
   const qs = type ? `?type=${encodeURIComponent(type)}` : "";
   return useQuery({
-    queryKey: [...queryKeys.hr.hrPoliciesAll, "org-conflicts", type] as const,
+    queryKey: [...humanResourcesQueryKeys.hr.hrPoliciesAll, "org-conflicts", type] as const,
     queryFn: ({ signal }) =>
       apiClient.get<{ conflicts: PolicyConflict[] }>(
         `/hr/policies/conflicts${qs}`,
@@ -158,7 +158,7 @@ export function useArchivePolicy() {
         {},
       ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hrPoliciesAll }),
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrPoliciesAll }),
   });
 }
 
@@ -170,7 +170,7 @@ export function usePolicyPreview(
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [
-      ...queryKeys.hr.hrPoliciesAll,
+      ...humanResourcesQueryKeys.hr.hrPoliciesAll,
       "preview",
       policyId,
       params,
@@ -206,6 +206,6 @@ export function useSeedDefaultPolicies() {
         {},
       ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hrPoliciesAll }),
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrPoliciesAll }),
   });
 }

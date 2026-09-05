@@ -4,7 +4,7 @@ import { useMemo, useCallback, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { AllWorkTicket } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -72,7 +72,7 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
     },
     onSuccess: (totalUpdated) => {
       toast.success(`${totalUpdated} ticket${totalUpdated === 1 ? "" : "s"} updated`);
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.allWorkAll });
+      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.allWorkAll });
       setTableSelection(new Set());
     },
     onError: (err) => {

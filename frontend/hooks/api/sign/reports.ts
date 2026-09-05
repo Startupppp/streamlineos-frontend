@@ -1,7 +1,7 @@
 "use client";
 
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import type { SignAuditEvent } from "@/types/sign";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
@@ -29,7 +29,7 @@ export interface SignSummaryStats {
 
 export function useSignDashboard() {
   return useGatedQuery("sign:envelope:view", {
-    queryKey: [...queryKeys.signEnvelopes.all, "dashboard"] as const,
+    queryKey: [...growthAndSignQueryKeys.signEnvelopes.all, "dashboard"] as const,
     queryFn: ({ signal }) => apiClient.get<SignDashboardStats>("/sign/reports/dashboard", undefined, signal),
     staleTime: 30_000,
   });
@@ -37,7 +37,7 @@ export function useSignDashboard() {
 
 export function useSignSummary() {
   return useGatedQuery("sign:audit:view", {
-    queryKey: [...queryKeys.signEnvelopes.all, "summary"] as const,
+    queryKey: [...growthAndSignQueryKeys.signEnvelopes.all, "summary"] as const,
     queryFn: ({ signal }) => apiClient.get<SignSummaryStats>("/sign/reports/summary", undefined, signal),
     staleTime: 60_000,
   });

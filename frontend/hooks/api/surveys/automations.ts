@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
@@ -38,7 +38,7 @@ export interface CreateAutomationInput {
 
 export function useSurveyAutomations(surveyId: number) {
   return useGatedQuery("surveys:automations:manage", {
-    queryKey: queryKeys.surveys.automations(surveyId),
+    queryKey: knowledgeAndSurveysQueryKeys.surveys.automations(surveyId),
     queryFn: ({ signal }) => apiClient.get<AutomationRule[]>(`/surveys/${surveyId}/automations`, undefined, signal),
     staleTime: 30_000,
   });
@@ -46,7 +46,7 @@ export function useSurveyAutomations(surveyId: number) {
 
 function useInvalidateAutomations(surveyId: number) {
   const qc = useQueryClient();
-  return () => qc.invalidateQueries({ queryKey: queryKeys.surveys.automations(surveyId) });
+  return () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.surveys.automations(surveyId) });
 }
 
 export function useCreateAutomation(surveyId: number) {

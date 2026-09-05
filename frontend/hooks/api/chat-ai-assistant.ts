@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useAiTextStream } from "@/hooks/api/ai-text-stream";
-import { queryKeys } from "@/lib/query-keys";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -42,7 +42,7 @@ const HISTORY_PAGE_SIZE = 30;
 export function useAiConversations(enabled: boolean) {
   const canAi = useCan("ai:chat:use");
   return useInfiniteQuery({
-    queryKey: queryKeys.aiChat.conversations(),
+    queryKey: collaborationQueryKeys.aiChat.conversations(),
     queryFn: ({ pageParam , signal }) => {
       const params: Record<string, unknown> = { limit: HISTORY_PAGE_SIZE };
       if (pageParam !== undefined) params.cursor = pageParam;
@@ -62,7 +62,7 @@ export function useCreateAiConversation() {
     mutationFn: (input: { title?: string }) =>
       apiClient.post<AiConversation>("/chat/conversations", input),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.aiChat.conversations() });
+      qc.invalidateQueries({ queryKey: collaborationQueryKeys.aiChat.conversations() });
     },
   });
 }
@@ -74,7 +74,7 @@ export function useRenameAiConversation() {
     mutationFn: ({ id, title }: { id: number; title: string }) =>
       apiClient.patch<AiConversation>(`/chat/conversations/${id}`, { title }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.aiChat.conversations() });
+      qc.invalidateQueries({ queryKey: collaborationQueryKeys.aiChat.conversations() });
     },
   });
 }
@@ -86,7 +86,7 @@ export function useDeleteAiConversation() {
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/chat/conversations/${id}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.aiChat.conversations() });
+      qc.invalidateQueries({ queryKey: collaborationQueryKeys.aiChat.conversations() });
     },
   });
 }
@@ -94,7 +94,7 @@ export function useDeleteAiConversation() {
 export function useAiConversationMessages(conversationId: number | null, enabled: boolean) {
   const canAi = useCan("ai:chat:use");
   return useInfiniteQuery({
-    queryKey: queryKeys.aiChat.conversationMessages(conversationId ?? 0),
+    queryKey: collaborationQueryKeys.aiChat.conversationMessages(conversationId ?? 0),
     queryFn: ({ pageParam , signal }) => {
       const params: Record<string, unknown> = { limit: HISTORY_PAGE_SIZE };
       if (pageParam !== undefined) params.cursor = pageParam;

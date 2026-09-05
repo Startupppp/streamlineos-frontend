@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type {
   NotificationProvider,
   CreateProviderInput,
@@ -27,7 +27,7 @@ export const useNotificationProviders = (
   const canView = useCan("notifications:providers:view");
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<NotificationProvider[], Error>({
-    queryKey: queryKeys.notifications.providers(),
+    queryKey: platformCoreQueryKeys.notifications.providers(),
     queryFn: ({ signal }) => apiClient.get<NotificationProvider[]>("/notifications/admin/providers", undefined, signal),
     staleTime: 60_000,
     ...restOptions,
@@ -41,7 +41,7 @@ export const useCreateNotificationProvider = () => {
     mutationKey: ["notifications", "providers", "create"],
     mutationFn: (dto) => apiClient.post<NotificationProvider>("/notifications/admin/providers", dto),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.providers() });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.providers() });
     },
   });
 };
@@ -53,7 +53,7 @@ export const useUpdateNotificationProvider = () => {
     mutationFn: ({ id, ...dto }) =>
       apiClient.patch<NotificationProvider>(`/notifications/admin/providers/${id}`, dto),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.providers() });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.providers() });
     },
   });
 };
@@ -64,7 +64,7 @@ export const useDeleteNotificationProvider = () => {
     mutationKey: ["notifications", "providers", "delete"],
     mutationFn: (id) => apiClient.delete<{ success: boolean }>(`/notifications/admin/providers/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.providers() });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.providers() });
     },
   });
 };
@@ -76,7 +76,7 @@ export const useTestNotificationProvider = () => {
     mutationFn: ({ id, ...dto }) =>
       apiClient.post<TestProviderResult>(`/notifications/admin/providers/${id}/test`, dto),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.providers() });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.providers() });
     },
   });
 };
@@ -87,7 +87,7 @@ export const useNotificationEventCatalog = (
   const canView = useCan("notifications:events:view");
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<NotificationEventDefinition[], Error>({
-    queryKey: queryKeys.notifications.events(),
+    queryKey: platformCoreQueryKeys.notifications.events(),
     queryFn: ({ signal }) => apiClient.get<NotificationEventDefinition[]>("/notifications/admin/events", undefined, signal),
     staleTime: 60_000,
     ...restOptions,
@@ -109,7 +109,7 @@ export const useUpdateNotificationEventPolicy = () => {
         dto,
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.events() });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.events() });
     },
   });
 };
@@ -129,7 +129,7 @@ export const useNotificationPolicies = (
   const canView = useCan("notifications:policy:view");
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<NotificationPolicyDefault[], Error>({
-    queryKey: queryKeys.notifications.policy(),
+    queryKey: platformCoreQueryKeys.notifications.policy(),
     queryFn: ({ signal }) => apiClient.get<NotificationPolicyDefault[]>("/notifications/admin/policy", undefined, signal),
     staleTime: 60_000,
     ...restOptions,
@@ -143,7 +143,7 @@ export const useUpsertNotificationPolicy = () => {
     mutationKey: ["notifications", "policy", "upsert"],
     mutationFn: (dto) => apiClient.put<NotificationPolicyDefault>("/notifications/admin/policy", dto),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.policy() });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.policy() });
     },
   });
 };

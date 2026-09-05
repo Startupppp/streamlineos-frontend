@@ -3,7 +3,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseMutationOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import type {
   Ticket,
   CursorPageResponse,
@@ -86,19 +88,19 @@ export function useCreateTicket(
       apiClient.post<Ticket>(`/build/${projectId}/tickets`, data),
     onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.tickets({ projectId: variables.projectId }),
+        queryKey: buildWorkQueryKeys.projects.tickets({ projectId: variables.projectId }),
       });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.detail(variables.projectId),
+        queryKey: buildWorkQueryKeys.projects.detail(variables.projectId),
       });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.sprints(variables.projectId),
+        queryKey: buildWorkQueryKeys.projects.sprints(variables.projectId),
       });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.columnCounts(variables.projectId),
+        queryKey: buildWorkQueryKeys.projects.columnCounts(variables.projectId),
       });
-      queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.myIssues() });
+      queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.projectReports.all });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.dashboard.myIssues() });
       options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
@@ -121,20 +123,20 @@ export function useUpdateTicket(
         data
       ),
     onMutate: async (variables) => {
-      const detailKey = queryKeys.projects.detail(projectId);
-      const ticketKey = queryKeys.projects.ticket(variables.ticketId);
-      const boardKey = queryKeys.projects.tickets({ projectId, view: "board" });
+      const detailKey = buildWorkQueryKeys.projects.detail(projectId);
+      const ticketKey = buildWorkQueryKeys.projects.ticket(variables.ticketId);
+      const boardKey = buildWorkQueryKeys.projects.tickets({ projectId, view: "board" });
       await Promise.all([
         queryClient.cancelQueries({ queryKey: detailKey }),
         queryClient.cancelQueries({ queryKey: boardKey }),
-        queryClient.cancelQueries({ queryKey: queryKeys.projects.tickets({ projectId }) }),
+        queryClient.cancelQueries({ queryKey: buildWorkQueryKeys.projects.tickets({ projectId }) }),
       ]);
       const previousDetail = queryClient.getQueryData<ProjectWithDetails | null>(detailKey);
       const previousTicket = queryClient.getQueryData<Ticket | null>(ticketKey);
       const previousBoard = queryClient.getQueryData<Ticket[]>(boardKey);
       const members = previousDetail?.members ?? [];
       const listSnapshots = queryClient.getQueriesData<CursorPageResponse<Ticket>>({
-        queryKey: queryKeys.projects.tickets({ projectId }),
+        queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
       });
 
       if (previousDetail?.tickets) {
@@ -194,13 +196,13 @@ export function useUpdateTicket(
     },
     onSettled: (data, error, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.ticket(variables.ticketId),
+        queryKey: buildWorkQueryKeys.projects.ticket(variables.ticketId),
       });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.tickets({ projectId }),
+        queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
       });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.ticketActivity.list(variables.ticketId),
+        queryKey: accountingAndSupportQueryKeys.ticketActivity.list(variables.ticketId),
       });
       const affectsSprintAggregates =
         variables.status !== undefined ||
@@ -210,15 +212,15 @@ export function useUpdateTicket(
         variables.assigneeId !== undefined || variables.assigneeIds !== undefined;
       if (variables.status !== undefined) {
         queryClient.invalidateQueries({
-          queryKey: queryKeys.projects.columnCounts(projectId),
+          queryKey: buildWorkQueryKeys.projects.columnCounts(projectId),
         });
       }
       if (affectsSprintAggregates) {
-        queryClient.invalidateQueries({ queryKey: queryKeys.projects.sprints(projectId) });
-        queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
+        queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.sprints(projectId) });
+        queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.projectReports.all });
       }
       if (affectsSprintAggregates || affectsAssignment) {
-        queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.myIssues() });
+        queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.dashboard.myIssues() });
       }
       options?.onSettled?.(data, error, variables, context, mutFnCtx);
     },
@@ -239,19 +241,19 @@ export function useDeleteTicket(
       ),
     onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.tickets({ projectId }),
+        queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
       });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.detail(projectId),
+        queryKey: buildWorkQueryKeys.projects.detail(projectId),
       });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.sprints(projectId),
+        queryKey: buildWorkQueryKeys.projects.sprints(projectId),
       });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.columnCounts(projectId),
+        queryKey: buildWorkQueryKeys.projects.columnCounts(projectId),
       });
-      queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.myIssues() });
+      queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.projectReports.all });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.dashboard.myIssues() });
       options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
@@ -299,11 +301,11 @@ export function useBulkUpdateTickets(projectId: number) {
         data
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.tickets({ projectId }) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.columnCounts(projectId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.myIssues() });
+      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.detail(projectId) });
+      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.tickets({ projectId }) });
+      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.columnCounts(projectId) });
+      queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.projectReports.all });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.dashboard.myIssues() });
     },
   });
 }

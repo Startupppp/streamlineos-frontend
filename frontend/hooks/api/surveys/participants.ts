@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import type { OffsetPage } from "@/hooks/api/offset-page-schema";
-import { queryKeys } from "@/lib/query-keys";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
@@ -52,7 +52,7 @@ export interface ParticipantImportRow {
 
 export function useParticipants(surveyId: number, params?: ListParticipantsParams) {
   return useGatedQuery("surveys:participants:view", {
-    queryKey: queryKeys.surveys.participants(surveyId, params as Record<string, unknown>),
+    queryKey: knowledgeAndSurveysQueryKeys.surveys.participants(surveyId, params as Record<string, unknown>),
     queryFn: async ({ signal }) =>
       (await apiClient.get<OffsetPage<SurveyParticipant>>(`/surveys/${surveyId}/participants`, params as Record<string, unknown>, signal)).items,
     staleTime: 15_000,
@@ -61,7 +61,7 @@ export function useParticipants(surveyId: number, params?: ListParticipantsParam
 
 function useInvalidateParticipants(surveyId: number) {
   const qc = useQueryClient();
-  return () => qc.invalidateQueries({ queryKey: [...queryKeys.surveys.all, "participants", surveyId] });
+  return () => qc.invalidateQueries({ queryKey: [...knowledgeAndSurveysQueryKeys.surveys.all, "participants", surveyId] });
 }
 
 export function useImportParticipants(surveyId: number) {

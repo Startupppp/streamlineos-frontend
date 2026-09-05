@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 
@@ -53,7 +53,7 @@ interface ApplyProjectTemplateInput {
   endDate?: string;
 }
 
-const TEMPLATES_KEY = queryKeys.projects.templates();
+const TEMPLATES_KEY = buildWorkQueryKeys.projects.templates();
 
 
 export function useProjectTemplates() {
@@ -96,7 +96,7 @@ export function useApplyProjectTemplate() {
         input,
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.projects.all });
+      void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.all });
     },
   });
 }

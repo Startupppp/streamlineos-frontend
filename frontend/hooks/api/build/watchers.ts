@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { lazyContract } from "@/lib/api-envelope";
 import type { TicketWatcher } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -21,7 +21,7 @@ export function useWatchers(
 ) {
   const canView = useCan("build:tickets:view");
   return useQuery<TicketWatcher[]>({
-    queryKey: queryKeys.projects.watchers(ticketId),
+    queryKey: buildWorkQueryKeys.projects.watchers(ticketId),
     queryFn: ({ signal }) =>
       apiClient.get<TicketWatcher[]>(
         `/build/${projectId}/tickets/${ticketId}/watchers`,
@@ -58,7 +58,7 @@ export function useToggleWatch(projectId: number) {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.watchers(variables.ticketId),
+        queryKey: buildWorkQueryKeys.projects.watchers(variables.ticketId),
       });
     },
   });
@@ -81,7 +81,7 @@ export function useAddWatcher(projectId: number) {
       ),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.watchers(variables.ticketId),
+        queryKey: buildWorkQueryKeys.projects.watchers(variables.ticketId),
       });
     },
   });

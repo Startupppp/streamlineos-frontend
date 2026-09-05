@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type {
   Meeting,
   MeetingDetail,
@@ -42,7 +42,7 @@ export function useMeetings(projectId: number, filters?: MeetingFilters) {
   const hasParams = Object.keys(params).length > 0;
 
   return useQuery<Meeting[]>({
-    queryKey: queryKeys.projects.meetings.list(projectId, hasParams ? params : undefined),
+    queryKey: buildWorkQueryKeys.projects.meetings.list(projectId, hasParams ? params : undefined),
     queryFn: ({ signal }) => apiClient.get<Meeting[]>(`/build/${projectId}/meetings`, hasParams ? params : undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
@@ -52,7 +52,7 @@ export function useMeetings(projectId: number, filters?: MeetingFilters) {
 export function useMeeting(projectId: number, meetingId: number) {
   const canView = useCan("build:meetings:view");
   return useQuery<MeetingDetail>({
-    queryKey: queryKeys.projects.meetings.detail(projectId, meetingId),
+    queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, meetingId),
     queryFn: ({ signal }) => apiClient.get<MeetingDetail>(`/build/${projectId}/meetings/${meetingId}`, undefined, signal),
     enabled: canView && !!projectId && !!meetingId,
     staleTime: 60_000,
@@ -66,7 +66,7 @@ export function useCreateMeeting(projectId: number) {
     mutationFn: (data: CreateMeetingInput) =>
       apiClient.post<Meeting>(`/build/${projectId}/meetings`, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.meetings.list(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.list(projectId) });
     },
   });
 }
@@ -78,8 +78,8 @@ export function useUpdateMeeting(projectId: number) {
     mutationFn: ({ id, ...data }: UpdateMeetingInput) =>
       apiClient.patch<Meeting>(`/build/${projectId}/meetings/${id}`, data),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.meetings.list(projectId) });
-      qc.invalidateQueries({ queryKey: queryKeys.projects.meetings.detail(projectId, vars.id) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.list(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, vars.id) });
     },
   });
 }
@@ -91,7 +91,7 @@ export function useDeleteMeeting(projectId: number) {
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/build/${projectId}/meetings/${id}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.meetings.list(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.list(projectId) });
     },
   });
 }
@@ -103,7 +103,7 @@ export function useAddAttendee(projectId: number, meetingId: number) {
     mutationFn: (data: AddAttendeeInput) =>
       apiClient.post<MeetingAttendee>(`/build/${projectId}/meetings/${meetingId}/attendees`, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.meetings.detail(projectId, meetingId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, meetingId) });
     },
   });
 }
@@ -115,7 +115,7 @@ export function useRemoveAttendee(projectId: number, meetingId: number) {
     mutationFn: (userId: string) =>
       apiClient.delete<{ success: boolean }>(`/build/${projectId}/meetings/${meetingId}/attendees/${userId}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.meetings.detail(projectId, meetingId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, meetingId) });
     },
   });
 }
@@ -127,7 +127,7 @@ export function useUpsertStandup(projectId: number, meetingId: number) {
     mutationFn: (data: UpsertStandupInput) =>
       apiClient.put<StandupEntry>(`/build/${projectId}/meetings/${meetingId}/standup`, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.meetings.detail(projectId, meetingId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, meetingId) });
     },
   });
 }
@@ -139,7 +139,7 @@ export function useCreateActionItem(projectId: number, meetingId: number) {
     mutationFn: (data: CreateActionItemInput) =>
       apiClient.post<ActionItem>(`/build/${projectId}/meetings/${meetingId}/action-items`, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.meetings.detail(projectId, meetingId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, meetingId) });
     },
   });
 }
@@ -151,7 +151,7 @@ export function useUpdateActionItem(projectId: number, meetingId: number) {
     mutationFn: ({ id, ...data }: UpdateActionItemInput) =>
       apiClient.patch<ActionItem>(`/build/${projectId}/meetings/${meetingId}/action-items/${id}`, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.meetings.detail(projectId, meetingId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, meetingId) });
     },
   });
 }
@@ -163,7 +163,7 @@ export function useDeleteActionItem(projectId: number, meetingId: number) {
     mutationFn: (itemId: number) =>
       apiClient.delete<{ success: boolean }>(`/build/${projectId}/meetings/${meetingId}/action-items/${itemId}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.meetings.detail(projectId, meetingId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, meetingId) });
     },
   });
 }
@@ -178,7 +178,7 @@ export function useConvertActionItemToTask(projectId: number, meetingId: number)
         {},
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.meetings.detail(projectId, meetingId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, meetingId) });
     },
   });
 }

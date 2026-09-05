@@ -4,7 +4,7 @@ import { QueryClient, dehydrate } from "@tanstack/react-query";
 import { getServerAuth } from "@/lib/get-server-auth";
 import { createServerQueryClient } from "./server-query-client";
 import { getServerAccessResult } from "@/lib/rbac/get-server-access";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 
 const ACCESS_STALE_TIME = 30_000;
 
@@ -19,7 +19,7 @@ export async function prefetchAccess() {
 
   const queryClient = await createServerQueryClient();
   await queryClient.fetchQuery({
-    queryKey: queryKeys.access.me(),
+    queryKey: platformCoreQueryKeys.access.me(),
     queryFn: () => result.access,
     staleTime: ACCESS_STALE_TIME,
   });

@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -46,7 +46,7 @@ const REQUESTS_KEY = [...RETENTION_KEY, "requests"] as const;
 export function useRetentionPolicies(params?: { recordType?: string; active?: boolean; page?: number; limit?: number }) {
   const canManageRetention = useCan("hr:retention:manage");
   return useQuery<RetentionListResponse<RetentionPolicy>>({
-    queryKey: [...queryKeys.hr.hrRetentionPoliciesAll, params],
+    queryKey: [...humanResourcesQueryKeys.hr.hrRetentionPoliciesAll, params],
     queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
       if (params?.recordType) p["recordType"] = params.recordType;
@@ -63,7 +63,7 @@ export function useRetentionPolicies(params?: { recordType?: string; active?: bo
 export function useDataRequests(params?: { status?: string; type?: string; page?: number; limit?: number }) {
   const canManageRetention = useCan("hr:retention:manage");
   return useQuery<RetentionListResponse<DataRequest>>({
-    queryKey: [...queryKeys.hr.hrRetentionRequestsAll, params],
+    queryKey: [...humanResourcesQueryKeys.hr.hrRetentionRequestsAll, params],
     queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
       if (params?.status) p["status"] = params.status;

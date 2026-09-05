@@ -24,7 +24,7 @@ import { cn, resolveImageUrl } from "@/lib/utils";
 import { useCreateTicket } from "@/hooks/api";
 import { useProjectMembers } from "@/hooks/api/build/projects";
 import { useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PriorityBadge } from "../shared/priority-badge";
@@ -70,7 +70,7 @@ export function SubtaskComposer({ ticketId, projectId, projectStatuses }: Subtas
       ? projectStatuses.map((s) => s.name)
       : ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"];
 
-  const subtaskQueryKey = [...queryKeys.projects.all, "subtasks", { ticketId }];
+  const subtaskQueryKey = [...buildWorkQueryKeys.projects.all, "subtasks", { ticketId }];
 
   const createSubtask = useCreateTicket({
     onSuccess: () => {
@@ -79,8 +79,8 @@ export function SubtaskComposer({ ticketId, projectId, projectStatuses }: Subtas
       setPriority(null);
       setStatus(null);
       queryClient.invalidateQueries({ queryKey: subtaskQueryKey });
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.ticket(ticketId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
+      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.ticket(ticketId) });
+      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.detail(projectId) });
       inputRef.current?.focus();
     },
     onError: (error) => toast.error(getErrorMessage(error)),

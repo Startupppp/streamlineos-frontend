@@ -2,7 +2,7 @@
 
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
@@ -71,7 +71,7 @@ const SOURCES_PAGE_SIZE = 50;
 export function useKbSources() {
   const canView = useCan("kb:pages:view");
   return useInfiniteQuery({
-    queryKey: queryKeys.kb.sources(),
+    queryKey: knowledgeAndSurveysQueryKeys.kb.sources(),
     queryFn: ({ pageParam, signal }) => {
       const params: Record<string, unknown> = { limit: SOURCES_PAGE_SIZE };
       if (pageParam !== undefined) params.cursor = pageParam;
@@ -109,7 +109,7 @@ export function useUploadKbSource() {
     },
     onSuccess: () => {
       operation.settle();
-      return qc.invalidateQueries({ queryKey: queryKeys.kb.sources() });
+      return qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.sources() });
     },
   });
 }
@@ -123,7 +123,7 @@ export function useCreateKbSourceNote() {
       apiClient.post<KbSource>("/kb/sources/note", input, operation.configFor(input)),
     onSuccess: () => {
       operation.settle();
-      return qc.invalidateQueries({ queryKey: queryKeys.kb.sources() });
+      return qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.sources() });
     },
   });
 }
@@ -134,6 +134,6 @@ export function useDeleteKbSource() {
     mutationKey: ["delete", "kb", "source"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/kb/sources/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.kb.sources() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.sources() }),
   });
 }

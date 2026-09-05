@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -27,7 +27,7 @@ export type CreateKbPageTemplateInput = {
 export function useKbPageTemplates() {
   const canViewPages = useCan("kb:pages:view");
   return useQuery({
-    queryKey: queryKeys.kb.pageTemplates(),
+    queryKey: knowledgeAndSurveysQueryKeys.kb.pageTemplates(),
     queryFn: ({ signal }) => apiClient.get<KbPageTemplate[]>("/kb/page-templates", undefined, signal),
     enabled: canViewPages,
     staleTime: 300_000,
@@ -41,7 +41,7 @@ export function useCreateKbPageTemplate() {
     mutationFn: (input: CreateKbPageTemplateInput) =>
       apiClient.post<KbPageTemplate>("/kb/page-templates", input),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.kb.pageTemplates() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageTemplates() });
     },
   });
 }
@@ -53,7 +53,7 @@ export function useDeleteKbPageTemplate() {
     mutationFn: (templateId: number) =>
       apiClient.delete<void>(`/kb/page-templates/${templateId}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.kb.pageTemplates() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageTemplates() });
     },
   });
 }

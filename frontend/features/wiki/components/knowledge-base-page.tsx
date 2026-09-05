@@ -39,7 +39,7 @@ import {
   buildKbHistoryRows,
   type ChatMessage,
 } from "@/features/wiki/components/kb-chat-parts";
-import { queryKeys } from "@/lib/query-keys";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 interface Pending {
@@ -195,14 +195,14 @@ export default function KnowledgeBasePage() {
           const now = new Date().toISOString();
           const userMsg: KbChatHistoryMessage = { id: (tempIdRef.current -= 1), role: "user", content: trimmed, citations: null, createdAt: now };
           const assistantMsg: KbChatHistoryMessage = { id: (tempIdRef.current -= 1), role: "assistant", content: data.answer, citations: data.citations ?? null, createdAt: now };
-          qc.setQueryData<InfiniteData<KbChatHistoryPage>>(queryKeys.kb.chatConversationMessages(convId), (old) => {
+          qc.setQueryData<InfiniteData<KbChatHistoryPage>>(knowledgeAndSurveysQueryKeys.kb.chatConversationMessages(convId), (old) => {
             if (!old || old.pages.length === 0) {
               return { pages: [{ messages: [assistantMsg, userMsg], nextCursor: null }], pageParams: [undefined] };
             }
             return { ...old, pages: old.pages.map((page, i) => i === 0 ? { ...page, messages: [assistantMsg, userMsg, ...page.messages] } : page) };
           });
           if (activeConversationId === null) setConversation(data.conversationId);
-          void qc.invalidateQueries({ queryKey: queryKeys.kb.chatConversations() });
+          void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversations() });
           setPending(null);
         },
         onError: (error) => {
@@ -246,7 +246,7 @@ export default function KnowledgeBasePage() {
     deleteConversation.mutate(id, {
       onSuccess: () => {
         if (id === activeConversationId) setConversation(null);
-        void qc.invalidateQueries({ queryKey: queryKeys.kb.chatConversations() });
+        void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversations() });
       },
       onError: (error) => toast.error("Couldn't delete conversation", { description: getErrorMessage(error) }),
     });

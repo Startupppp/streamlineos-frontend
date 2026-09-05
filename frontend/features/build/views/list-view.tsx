@@ -14,7 +14,7 @@ import {
 } from "@hello-pangea/dnd";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUpdateTicket, useRankTicket } from "@/hooks/api";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import {
@@ -71,7 +71,7 @@ export const ListView = memo(function ListView({
     onMutate: async (): Promise<ReorderContext> => {
       if (projectId == null) return { previousTickets: optimisticTickets };
       await queryClient.cancelQueries({
-        queryKey: queryKeys.projects.tickets({ projectId }),
+        queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
       });
       return { previousTickets: optimisticTickets };
     },
@@ -87,7 +87,7 @@ export const ListView = memo(function ListView({
       }
       if (projectId == null) return;
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.tickets({ projectId }),
+        queryKey: buildWorkQueryKeys.projects.tickets({ projectId }),
       });
     },
   });

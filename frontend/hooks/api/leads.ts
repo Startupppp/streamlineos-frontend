@@ -2,7 +2,8 @@
 
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
+import { customerWorkQueryKeys } from "@/lib/query-keys/customer-work";
 import type {
   PaginatedLeads,
   Lead,
@@ -30,7 +31,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useLeads(filters?: LeadFilters, options?: { enabled?: boolean }) {
   return useQuery({
-    queryKey: queryKeys.leads.list(filters as Record<string, unknown>),
+    queryKey: customerWorkQueryKeys.leads.list(filters as Record<string, unknown>),
     queryFn: ({ signal }) =>
       apiClient.get<PaginatedLeads>("/leads", filters as Record<string, unknown>, signal),
     staleTime: 2 * 60_000,
@@ -41,7 +42,7 @@ export function useLeads(filters?: LeadFilters, options?: { enabled?: boolean })
 
 export function useLeadDetail(id: number) {
   return useQuery({
-    queryKey: queryKeys.leads.detail(id),
+    queryKey: customerWorkQueryKeys.leads.detail(id),
     queryFn: ({ signal }) => apiClient.get<LeadWithActivities>(`/leads/${id}`, undefined, signal),
     staleTime: 2 * 60_000,
     enabled: id > 0,
@@ -50,7 +51,7 @@ export function useLeadDetail(id: number) {
 
 export function useLeadBoard() {
   return useQuery({
-    queryKey: queryKeys.leads.board(),
+    queryKey: customerWorkQueryKeys.leads.board(),
     queryFn: ({ signal }) => apiClient.get<LeadBoard>("/leads/board", undefined, signal),
     staleTime: 2 * 60_000,
   });
@@ -58,7 +59,7 @@ export function useLeadBoard() {
 
 export function useLeadStats(filters?: { dateFrom?: string; dateTo?: string }) {
   return useQuery({
-    queryKey: queryKeys.leads.stats(filters),
+    queryKey: customerWorkQueryKeys.leads.stats(filters),
     queryFn: ({ signal }) =>
       apiClient.get<LeadStats>("/leads/stats", filters as Record<string, unknown>, signal),
     staleTime: 2 * 60_000,
@@ -67,7 +68,7 @@ export function useLeadStats(filters?: { dateFrom?: string; dateTo?: string }) {
 
 export function useLeadTimeline(leadId: number, limit?: number) {
   return useQuery({
-    queryKey: queryKeys.leads.timeline(leadId),
+    queryKey: customerWorkQueryKeys.leads.timeline(leadId),
     queryFn: ({ signal }) =>
       apiClient.get<TimelineItem[]>(`/leads/${leadId}/timeline`, limit ? { limit } : undefined, signal),
     staleTime: 2 * 60_000,
@@ -77,7 +78,7 @@ export function useLeadTimeline(leadId: number, limit?: number) {
 
 export function useLeadSlaAlerts() {
   return useQuery({
-    queryKey: queryKeys.leads.slaAlerts(),
+    queryKey: customerWorkQueryKeys.leads.slaAlerts(),
     queryFn: ({ signal }) => apiClient.get<SlaAlertResponse>("/leads/sla-alerts", undefined, signal),
     staleTime: 2 * 60_000,
   });
@@ -88,7 +89,7 @@ export function useLeadAnalyticsSummary(filters?: {
   dateTo?: string;
 }) {
   return useQuery({
-    queryKey: queryKeys.leads.analyticsSummary(filters),
+    queryKey: customerWorkQueryKeys.leads.analyticsSummary(filters),
     queryFn: ({ signal }) =>
       apiClient.get<LeadAnalyticsSummary>("/leads/analytics", filters as Record<string, unknown>, signal),
     staleTime: 2 * 60_000,
@@ -102,7 +103,7 @@ export function useCreateLead() {
     mutationFn: (input: CreateLeadInput) =>
       apiClient.post<Lead>("/leads", input),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.leads.all });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.leads.all });
     },
   });
 }
@@ -114,10 +115,10 @@ export function useUpdateLead() {
     mutationFn: ({ id, ...data }: UpdateLeadInput) =>
       apiClient.patch<Lead>(`/leads/${id}`, data),
     onMutate: async (vars) => {
-      await qc.cancelQueries({ queryKey: queryKeys.leads.list() });
-      const previousList = qc.getQueryData<PaginatedLeads>(queryKeys.leads.list());
+      await qc.cancelQueries({ queryKey: customerWorkQueryKeys.leads.list() });
+      const previousList = qc.getQueryData<PaginatedLeads>(customerWorkQueryKeys.leads.list());
       if (previousList) {
-        qc.setQueryData<PaginatedLeads>(queryKeys.leads.list(), {
+        qc.setQueryData<PaginatedLeads>(customerWorkQueryKeys.leads.list(), {
           ...previousList,
           leads: previousList.leads.map((l) =>
             l.id === vars.id ? { ...l, ...vars } : l,
@@ -128,12 +129,12 @@ export function useUpdateLead() {
     },
     onError: (_, _vars, ctx) => {
       if (ctx?.previousList) {
-        qc.setQueryData(queryKeys.leads.list(), ctx.previousList);
+        qc.setQueryData(customerWorkQueryKeys.leads.list(), ctx.previousList);
       }
     },
     onSettled: (_, _err, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.leads.all });
-      qc.invalidateQueries({ queryKey: queryKeys.leads.detail(vars.id) });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.leads.all });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.leads.detail(vars.id) });
     },
   });
 }
@@ -145,8 +146,8 @@ export function useUpdateLeadStatus() {
     mutationFn: (input: UpdateLeadStatusInput) =>
       apiClient.patch<Lead>(`/leads/${input.leadId}/status`, input),
     onMutate: async (vars) => {
-      await qc.cancelQueries({ queryKey: queryKeys.leads.board() });
-      const previousBoard = qc.getQueryData<LeadBoard>(queryKeys.leads.board());
+      await qc.cancelQueries({ queryKey: customerWorkQueryKeys.leads.board() });
+      const previousBoard = qc.getQueryData<LeadBoard>(customerWorkQueryKeys.leads.board());
       if (previousBoard && vars.expectedStatus) {
         const from: string = vars.expectedStatus;
         const to: string = vars.status;
@@ -154,7 +155,7 @@ export function useUpdateLeadStatus() {
         const lead = fromCol?.leads.find((l) => l.id === vars.leadId);
         if (lead && fromCol) {
           const toCol = previousBoard[to];
-          qc.setQueryData<LeadBoard>(queryKeys.leads.board(), {
+          qc.setQueryData<LeadBoard>(customerWorkQueryKeys.leads.board(), {
             ...previousBoard,
             [from]: { leads: fromCol.leads.filter((l) => l.id !== vars.leadId), total: fromCol.total - 1 },
             [to]: { leads: [...(toCol?.leads ?? []), { ...lead, status: vars.status }], total: (toCol?.total ?? 0) + 1 },
@@ -165,15 +166,15 @@ export function useUpdateLeadStatus() {
     },
     onError: (_, _vars, ctx) => {
       if (ctx?.previousBoard) {
-        qc.setQueryData(queryKeys.leads.board(), ctx.previousBoard);
+        qc.setQueryData(customerWorkQueryKeys.leads.board(), ctx.previousBoard);
       }
     },
     onSettled: (_, _err, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.leads.board() });
-      qc.invalidateQueries({ queryKey: queryKeys.leads.detail(vars.leadId) });
-      qc.invalidateQueries({ queryKey: queryKeys.leads.all });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.leads.board() });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.leads.detail(vars.leadId) });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.leads.all });
       if (vars.status === "CONVERTED") {
-        qc.invalidateQueries({ queryKey: queryKeys.clients.all });
+        qc.invalidateQueries({ queryKey: customerWorkQueryKeys.clients.all });
       }
     },
   });
@@ -186,9 +187,9 @@ export function useLogLeadActivity() {
     mutationFn: (input: LogActivityInput) =>
       apiClient.post<LeadActivity>(`/leads/${input.leadId}/activities`, input),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.leads.activities(vars.leadId) });
-      qc.invalidateQueries({ queryKey: queryKeys.leads.detail(vars.leadId) });
-      qc.invalidateQueries({ queryKey: queryKeys.leads.timeline(vars.leadId) });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.leads.activities(vars.leadId) });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.leads.detail(vars.leadId) });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.leads.timeline(vars.leadId) });
     },
   });
 }
@@ -200,7 +201,7 @@ export function useBulkUpdateLeads() {
     mutationFn: (input: BulkUpdateLeadsInput) =>
       apiClient.patch<{ updated: number }>("/leads/bulk", input),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.leads.all });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.leads.all });
     },
   });
 }
@@ -212,7 +213,7 @@ export function useBulkDeleteLeads() {
     mutationFn: (input: BulkDeleteLeadsInput) =>
       apiClient.delete<{ deleted: number }>("/leads/bulk", input),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.leads.all });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.leads.all });
     },
   });
 }
@@ -224,7 +225,7 @@ export function useDistributeLeads() {
     mutationFn: (input: DistributeLeadsInput) =>
       apiClient.post<DistributeResult>("/leads/distribute", input),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.leads.all });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.leads.all });
     },
   });
 }
@@ -236,7 +237,7 @@ export function useSelfAssignLead() {
     mutationFn: (leadId: number) =>
       apiClient.patch<Lead>(`/leads/${leadId}/self-assign`, {}),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.leads.all });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.leads.all });
     },
   });
 }
@@ -248,14 +249,14 @@ export function useAssignLead() {
     mutationFn: (input: AssignLeadInput) =>
       apiClient.patch<Lead>(`/leads/${input.leadId}/assign`, { assignedToId: input.assignedToId }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.leads.all });
+      qc.invalidateQueries({ queryKey: customerWorkQueryKeys.leads.all });
     },
   });
 }
 
 export function useSalesLeaderboard() {
   return useQuery({
-    queryKey: queryKeys.salesLeaderboard.list(),
+    queryKey: accessAndCrmQueryKeys.salesLeaderboard.list(),
     queryFn: ({ signal }) =>
       apiClient.get<SalesLeaderboardEntry[]>("/leads/sales-leaderboard", undefined, signal),
     staleTime: 2 * 60_000,
@@ -264,7 +265,7 @@ export function useSalesLeaderboard() {
 
 export function useSalesTeamCapacity() {
   return useQuery({
-    queryKey: queryKeys.salesTeamCapacity.list(),
+    queryKey: accessAndCrmQueryKeys.salesTeamCapacity.list(),
     queryFn: ({ signal }) =>
       apiClient.get<SalesTeamCapacityEntry[]>("/leads/sales-team-capacity", undefined, signal),
     staleTime: 2 * 60_000,
@@ -286,7 +287,7 @@ interface DuplicateCheckResult {
 export function useCheckLeadDuplicates(params: { email?: string; phone?: string }, options?: { enabled?: boolean }) {
   const hasParams = !!(params.email || params.phone);
   return useQuery({
-    queryKey: [...queryKeys.leads.all, "duplicateCheck", params] as const,
+    queryKey: [...customerWorkQueryKeys.leads.all, "duplicateCheck", params] as const,
     queryFn: ({ signal }) => apiClient.get<DuplicateCheckResult>("/leads/check-duplicates", params as Record<string, unknown>, signal),
     enabled: hasParams && (options?.enabled !== false),
     staleTime: 30_000,
@@ -301,7 +302,7 @@ interface ScoreExplanation {
 
 export function useLeadScoreExplanation(leadId: number, enabled: boolean) {
   return useQuery({
-    queryKey: [...queryKeys.leads.all, "scoreExplanation", leadId] as const,
+    queryKey: [...customerWorkQueryKeys.leads.all, "scoreExplanation", leadId] as const,
     queryFn: ({ signal }) => apiClient.get<ScoreExplanation>(`/leads/${leadId}/score-explanation`, undefined, signal),
     enabled,
     staleTime: 60_000,

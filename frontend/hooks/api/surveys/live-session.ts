@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
@@ -51,13 +51,13 @@ export function useCreateLiveSession(surveyId: number) {
   return useAuthorizedMutation("surveys:live:host", {
     mutationKey: ["surveys", "live", "create", surveyId] as const,
     mutationFn: () => apiClient.post<SurveyLiveSession>(`/surveys/${surveyId}/live-sessions`, {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.surveys.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.surveys.all }),
   });
 }
 
 export function useLiveSession(sessionId: number) {
   return useGatedQuery("surveys:live:host", {
-    queryKey: queryKeys.surveys.liveSession(sessionId),
+    queryKey: knowledgeAndSurveysQueryKeys.surveys.liveSession(sessionId),
     queryFn: ({ signal }) => apiClient.get<SurveyLiveSession>(`/surveys/live-sessions/${sessionId}`, undefined, signal),
     refetchInterval: LIVE_POLL_INTERVAL,
   });
@@ -65,7 +65,7 @@ export function useLiveSession(sessionId: number) {
 
 export function useLiveSessionResults(sessionId: number) {
   return useGatedQuery("surveys:live:host", {
-    queryKey: [...queryKeys.surveys.liveSession(sessionId), "results"],
+    queryKey: [...knowledgeAndSurveysQueryKeys.surveys.liveSession(sessionId), "results"],
     queryFn: ({ signal }) => apiClient.get<LiveSessionResults>(`/surveys/live-sessions/${sessionId}/results`, undefined, signal),
     refetchInterval: LIVE_POLL_INTERVAL,
   });
@@ -76,7 +76,7 @@ function useLiveSessionAction(action: "start" | "next" | "reveal" | "end") {
   return useMutation({
     mutationKey: ["surveys", "live", action] as const,
     mutationFn: (sessionId: number) => apiClient.post<SurveyLiveSession>(`/surveys/live-sessions/${sessionId}/${action}`),
-    onSuccess: (_, sessionId) => qc.invalidateQueries({ queryKey: queryKeys.surveys.liveSession(sessionId) }),
+    onSuccess: (_, sessionId) => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.surveys.liveSession(sessionId) }),
   });
 }
 
@@ -95,7 +95,7 @@ export function useEndLiveSession() {
 
 export function usePublicLiveSession(sessionCode: string) {
   return useQuery({
-    queryKey: queryKeys.surveys.publicLiveSession(sessionCode),
+    queryKey: knowledgeAndSurveysQueryKeys.surveys.publicLiveSession(sessionCode),
     queryFn: ({ signal }) => apiClient.get<PublicLiveSession>(`/public/surveys/live/${sessionCode}`, undefined, signal),
     enabled: Boolean(sessionCode),
     refetchInterval: LIVE_POLL_INTERVAL,

@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -47,7 +47,7 @@ interface ToggleAutomationInput {
 export function useRecruitmentAutomations() {
   const can = useCan("hr:employees:view");
   return useQuery({
-    queryKey: queryKeys.hr.pipelineAutomations(),
+    queryKey: humanResourcesQueryKeys.hr.pipelineAutomations(),
     queryFn: ({ signal }) =>
       apiClient.get<PipelineAutomation[]>("/hr/recruitment/automations", undefined, signal),
     staleTime: 60_000,
@@ -64,7 +64,7 @@ export function useCreateRecruitmentAutomation() {
       mutationFn: (data) =>
         apiClient.post<PipelineAutomation>("/hr/recruitment/automations", data),
       onSuccess: () => {
-        void qc.invalidateQueries({ queryKey: queryKeys.hr.pipelineAutomations() });
+        void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.pipelineAutomations() });
       },
     },
   );
@@ -79,7 +79,7 @@ export function useToggleRecruitmentAutomation() {
       mutationFn: ({ id, isActive }) =>
         apiClient.patch<PipelineAutomation>(`/hr/recruitment/automations/${id}`, { isActive }),
       onSuccess: () => {
-        void qc.invalidateQueries({ queryKey: queryKeys.hr.pipelineAutomations() });
+        void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.pipelineAutomations() });
       },
     },
   );
@@ -92,7 +92,7 @@ export function useDeleteRecruitmentAutomation() {
     mutationFn: (id) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/automations/${id}`),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.pipelineAutomations() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.pipelineAutomations() });
     },
   });
 }

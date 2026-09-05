@@ -4,7 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import type { UseQueryOptions, UseQueryResult } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { lazyContract } from "@/lib/api-envelope";
 import type {
   AccessResponse,
@@ -64,7 +65,7 @@ export const useAccess = (
     refetchOnMount: true,
     refetchOnWindowFocus: "always",
     refetchOnReconnect: "always",
-    queryKey: queryKeys.access.me(),
+    queryKey: platformCoreQueryKeys.access.me(),
     queryFn: ({ signal }) =>
       apiClient.get("/me/access", undefined, signal, accessContract),
     ...restOptions,
@@ -123,7 +124,7 @@ export const usePermissionCatalog = (
 ): Gated<UseQueryResult<Permission[], Error>> => {
   const access = usePermissionGate("settings:rbac:manage");
   const query = useQuery<Permission[], Error>({
-    queryKey: queryKeys.roles.permissionCatalog(),
+    queryKey: accessAndCrmQueryKeys.roles.permissionCatalog(),
     queryFn: ({ signal }) =>
       apiClient.get("/rbac/permissions", undefined, signal, catalogContract),
     staleTime: 30 * 60_000,
@@ -145,7 +146,7 @@ export const useRbacDiscoveryGrantable = (
   >,
 ) =>
   useQuery<RbacDiscoveryGrantable, Error>({
-    queryKey: queryKeys.roles.discoveryGrantable(),
+    queryKey: accessAndCrmQueryKeys.roles.discoveryGrantable(),
     queryFn: ({ signal }) =>
       apiClient.get(
         "/rbac/discovery/grantable",
@@ -165,7 +166,7 @@ export const useRbacDiscoveryMembers = (
 ): Gated<UseQueryResult<RbacDiscoveryMember[], Error>> => {
   const access = usePermissionGate("settings:rbac:manage");
   const query = useQuery<RbacDiscoveryMember[], Error>({
-    queryKey: queryKeys.roles.discoveryMembers(),
+    queryKey: accessAndCrmQueryKeys.roles.discoveryMembers(),
     queryFn: ({ signal }) =>
       apiClient.get(
         "/rbac/discovery/members",

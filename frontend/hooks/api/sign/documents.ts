@@ -3,13 +3,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import type { SignDocument } from "@/types/sign";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useSignDocumentPreview(documentId: number | undefined) {
   return useGatedQuery("sign:documents:view", {
-    queryKey: queryKeys.signDocuments.preview(documentId ?? 0),
+    queryKey: growthAndSignQueryKeys.signDocuments.preview(documentId ?? 0),
     queryFn: ({ signal }) => apiClient.get<{ url: string; expiresInSeconds: number }>(`/sign/documents/${documentId}/preview`, undefined, signal),
     enabled: documentId !== undefined,
     staleTime: 60_000,
@@ -26,8 +26,8 @@ export function useUploadSignDocument(envelopeId: number) {
       return apiClient.upload<SignDocument>(`/sign/documents/upload?envelopeId=${envelopeId}`, formData);
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.signDocuments.list(envelopeId) });
-      qc.invalidateQueries({ queryKey: queryKeys.signEnvelopes.detail(envelopeId) });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signDocuments.list(envelopeId) });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signEnvelopes.detail(envelopeId) });
     },
   });
 }
@@ -38,8 +38,8 @@ export function useDeleteSignDocument(envelopeId: number) {
     mutationKey: ["signDocuments", "delete", envelopeId],
     mutationFn: (documentId: number) => apiClient.delete<{ success: true }>(`/sign/documents/${documentId}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.signDocuments.list(envelopeId) });
-      qc.invalidateQueries({ queryKey: queryKeys.signEnvelopes.detail(envelopeId) });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signDocuments.list(envelopeId) });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signEnvelopes.detail(envelopeId) });
     },
   });
 }

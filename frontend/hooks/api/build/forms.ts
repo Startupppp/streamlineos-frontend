@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import type {
   ProjectForm,
@@ -28,7 +28,7 @@ export function useForms(projectId: number, filters?: FormFilters) {
   if (filters?.isActive !== undefined) params["isActive"] = String(filters.isActive);
 
   return useQuery<ProjectForm[]>({
-    queryKey: queryKeys.projects.forms.list(
+    queryKey: buildWorkQueryKeys.projects.forms.list(
       projectId,
       Object.keys(params).length > 0 ? params : undefined,
     ),
@@ -41,7 +41,7 @@ export function useForms(projectId: number, filters?: FormFilters) {
 export function useForm(projectId: number, formId: number) {
   const canView = useCan("build:forms:view");
   return useQuery<ProjectForm>({
-    queryKey: queryKeys.projects.forms.detail(projectId, formId),
+    queryKey: buildWorkQueryKeys.projects.forms.detail(projectId, formId),
     queryFn: ({ signal }) => apiClient.get<ProjectForm>(`/build/${projectId}/forms/${formId}`, undefined, signal),
     enabled: canView && !!projectId && !!formId,
     staleTime: 60_000,
@@ -55,7 +55,7 @@ export function useCreateForm(projectId: number) {
     mutationFn: (data: CreateFormInput) =>
       apiClient.post<ProjectForm>(`/build/${projectId}/forms`, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.forms.list(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.forms.list(projectId) });
     },
   });
 }
@@ -67,8 +67,8 @@ export function useUpdateForm(projectId: number) {
     mutationFn: ({ id, ...data }: UpdateFormInput & { id: number }) =>
       apiClient.patch<ProjectForm>(`/build/${projectId}/forms/${id}`, data),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.forms.list(projectId) });
-      qc.invalidateQueries({ queryKey: queryKeys.projects.forms.detail(projectId, vars.id) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.forms.list(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.forms.detail(projectId, vars.id) });
     },
   });
 }
@@ -80,7 +80,7 @@ export function useDeleteForm(projectId: number) {
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/build/${projectId}/forms/${id}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.forms.list(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.forms.list(projectId) });
     },
   });
 }
@@ -88,7 +88,7 @@ export function useDeleteForm(projectId: number) {
 export function useFormSubmissions(projectId: number, formId: number) {
   const canManage = useCan("build:forms:manage");
   return useQuery<FormSubmission[]>({
-    queryKey: queryKeys.projects.forms.submissions(projectId, formId),
+    queryKey: buildWorkQueryKeys.projects.forms.submissions(projectId, formId),
     queryFn: ({ signal }) =>
       apiClient.get<FormSubmission[]>(`/build/${projectId}/forms/${formId}/submissions`, undefined, signal),
     enabled: canManage && !!projectId && !!formId,
@@ -107,7 +107,7 @@ export function useSubmitForm(projectId: number, formId: number) {
       ),
     onSuccess: () => {
       qc.invalidateQueries({
-        queryKey: queryKeys.projects.forms.submissions(projectId, formId),
+        queryKey: buildWorkQueryKeys.projects.forms.submissions(projectId, formId),
       });
     },
   });
@@ -124,7 +124,7 @@ export function useUpdateSubmission(projectId: number, formId: number) {
       ),
     onSuccess: () => {
       qc.invalidateQueries({
-        queryKey: queryKeys.projects.forms.submissions(projectId, formId),
+        queryKey: buildWorkQueryKeys.projects.forms.submissions(projectId, formId),
       });
     },
   });

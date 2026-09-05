@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import type { SignEnvelope, SignTemplate } from "@/types/sign";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
@@ -24,7 +24,7 @@ export interface CreateEnvelopeFromTemplateInput {
 
 export function useSignTemplates() {
   return useGatedQuery("sign:template:manage", {
-    queryKey: queryKeys.signTemplates.list(),
+    queryKey: growthAndSignQueryKeys.signTemplates.list(),
     queryFn: ({ signal }) => apiClient.get<SignTemplate[]>("/sign/templates", undefined, signal),
     staleTime: 30_000,
   });
@@ -35,7 +35,7 @@ export function useSaveEnvelopeAsTemplate(envelopeId: number) {
   return useAuthorizedMutation("sign:template:manage", {
     mutationKey: ["signTemplates", "save-as-template", envelopeId],
     mutationFn: (name: string) => apiClient.post<SignTemplate>(`/sign/envelopes/${envelopeId}/save-as-template`, { name }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.signTemplates.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signTemplates.all }),
   });
 }
 
@@ -46,8 +46,8 @@ export function useUpdateSignTemplate(id: number) {
     mutationFn: (input: Partial<CreateSignTemplateInput> & { status?: "draft" | "published" | "archived" }) =>
       apiClient.patch<SignTemplate>(`/sign/templates/${id}`, input),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.signTemplates.detail(id) });
-      qc.invalidateQueries({ queryKey: queryKeys.signTemplates.all });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signTemplates.detail(id) });
+      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signTemplates.all });
     },
   });
 }
@@ -57,7 +57,7 @@ export function useDuplicateSignTemplate() {
   return useAuthorizedMutation("sign:template:manage", {
     mutationKey: ["signTemplates", "duplicate"],
     mutationFn: (id: number) => apiClient.post<SignTemplate>(`/sign/templates/${id}/duplicate`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.signTemplates.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signTemplates.all }),
   });
 }
 
@@ -66,6 +66,6 @@ export function useCreateEnvelopeFromTemplate(templateId: number) {
   return useAuthorizedMutation("sign:envelope:create", {
     mutationKey: ["signTemplates", "create-envelope", templateId],
     mutationFn: (input: CreateEnvelopeFromTemplateInput) => apiClient.post<SignEnvelope>(`/sign/templates/${templateId}/create-envelope`, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.signEnvelopes.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signEnvelopes.all }),
   });
 }

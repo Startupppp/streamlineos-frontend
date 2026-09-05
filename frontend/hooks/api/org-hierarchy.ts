@@ -8,7 +8,7 @@ import {
 } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 import { useCan } from "@/hooks/api/access";
 import type {
   OrgBusinessUnit,
@@ -70,7 +70,7 @@ export function useHierarchyParentOptions(
   const normalizedSearch = search.trim();
 
   return useInfiniteQuery({
-    queryKey: queryKeys.hierarchy.parentOptions(parentKind, normalizedSearch),
+    queryKey: platformHierarchyQueryKeys.hierarchy.parentOptions(parentKind, normalizedSearch),
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<CursorResponse<HierarchyParentRecord>>(
         HIERARCHY_PARENT_ENDPOINTS[parentKind],
@@ -107,7 +107,7 @@ export function getOrgUnitDependencyPreview(
 export function useOrgTree() {
   const canView = useCan("settings:view");
   return useQuery({
-    queryKey: queryKeys.hierarchy.tree(),
+    queryKey: platformHierarchyQueryKeys.hierarchy.tree(),
     queryFn: ({ signal }) => apiClient.get<OrgTreeNode[]>("/org-hierarchy/tree", undefined, signal),
     staleTime: 30_000,
     enabled: canView,
@@ -118,7 +118,7 @@ export function useOrgHierarchyOverview(
   options?: Omit<UseQueryOptions<OrgHierarchyOverview, Error>, "queryKey" | "queryFn">,
 ) {
   return useGatedQuery("settings:view", {
-    queryKey: queryKeys.hierarchy.all,
+    queryKey: platformHierarchyQueryKeys.hierarchy.all,
     queryFn: ({ signal }) => apiClient.get<OrgHierarchyOverview>("/org-hierarchy/overview", undefined, signal),
     staleTime: 60_000,
     ...options,
@@ -129,7 +129,7 @@ export function useOrgHierarchyOverview(
 
 export function useBusinessUnits(query?: ListQuery) {
   return useGatedQuery("settings:view", {
-    queryKey: queryKeys.hierarchy.businessUnits(query),
+    queryKey: platformHierarchyQueryKeys.hierarchy.businessUnits(query),
     queryFn: ({ signal }) =>
       apiClient.get<CursorResponse<OrgBusinessUnit>>("/org-hierarchy/business-units", {
         ...(query?.cursor ? { cursor: query.cursor } : {}),
@@ -147,7 +147,7 @@ export function useCreateBusinessUnit() {
     mutationKey: ["create", "business", "unit"],
     mutationFn: (data: { name: string; code: string; description?: string }) =>
       apiClient.post<OrgBusinessUnit>("/org-hierarchy/business-units", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
   });
 }
 
@@ -157,7 +157,7 @@ export function useUpdateBusinessUnit() {
     mutationKey: ["update", "business", "unit"],
     mutationFn: ({ id, ...data }: { id: string; name?: string; code?: string; description?: string; status?: string }) =>
       apiClient.patch<OrgBusinessUnit>(`/org-hierarchy/business-units/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
   });
 }
 
@@ -169,7 +169,7 @@ export function useOrgBranches(
 ) {
   const canView = useCan("settings:view");
   return useQuery({
-    queryKey: queryKeys.hierarchy.orgBranches(query),
+    queryKey: platformHierarchyQueryKeys.hierarchy.orgBranches(query),
     queryFn: ({ signal }) =>
       apiClient.get<CursorResponse<OrgBranch>>("/org-hierarchy/branches", {
         ...(query?.cursor ? { cursor: query.cursor } : {}),
@@ -189,7 +189,7 @@ export function useCreateOrgBranch() {
     mutationKey: ["create", "org", "branch"],
     mutationFn: (data: Record<string, unknown>) =>
       apiClient.post<OrgBranch>("/org-hierarchy/branches", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
   });
 }
 
@@ -199,7 +199,7 @@ export function useUpdateOrgBranch() {
     mutationKey: ["update", "org", "branch"],
     mutationFn: ({ branchId, ...data }: { branchId: string } & Record<string, unknown>) =>
       apiClient.patch<OrgBranch>(`/org-hierarchy/branches/${branchId}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
   });
 }
 
@@ -211,7 +211,7 @@ export function useOrgDepartments(
 ) {
   const canView = useCan("settings:view");
   return useQuery({
-    queryKey: queryKeys.hierarchy.departments(query),
+    queryKey: platformHierarchyQueryKeys.hierarchy.departments(query),
     queryFn: ({ signal }) =>
       apiClient.get<CursorResponse<OrgDepartment>>("/org-hierarchy/departments", {
         ...(query?.cursor ? { cursor: query.cursor } : {}),
@@ -231,7 +231,7 @@ export function useCreateOrgDepartment() {
     mutationKey: ["create", "org", "department"],
     mutationFn: (data: { name: string; code: string; branchId?: string; headUserId?: string; description?: string }) =>
       apiClient.post<OrgDepartment>("/org-hierarchy/departments", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
   });
 }
 
@@ -241,7 +241,7 @@ export function useUpdateOrgDepartment() {
     mutationKey: ["update", "org", "department"],
     mutationFn: ({ departmentId, ...data }: { departmentId: string } & Record<string, unknown>) =>
       apiClient.patch<OrgDepartment>(`/org-hierarchy/departments/${departmentId}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
   });
 }
 
@@ -250,7 +250,7 @@ export function useUpdateOrgDepartment() {
 export function useOrgTeams(query?: ListQuery) {
   const canView = useCan("settings:view");
   return useQuery({
-    queryKey: queryKeys.hierarchy.teams(query),
+    queryKey: platformHierarchyQueryKeys.hierarchy.teams(query),
     queryFn: ({ signal }) =>
       apiClient.get<CursorResponse<OrgTeam>>("/org-hierarchy/teams", {
         ...(query?.cursor ? { cursor: query.cursor } : {}),
@@ -270,7 +270,7 @@ export function useCreateOrgTeam() {
     mutationFn: (data: { name: string; code: string; departmentId: string; leadUserId?: string; description?: string; capacity?: number }) =>
       apiClient.post<OrgTeam>("/org-hierarchy/teams", data),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
+      qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
   });
 }
 
@@ -281,7 +281,7 @@ export function useUpdateOrgTeam() {
     mutationFn: ({ teamId, ...data }: { teamId: string } & Record<string, unknown>) =>
       apiClient.patch<OrgTeam>(`/org-hierarchy/teams/${teamId}`, data),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
+      qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
   });
 }
 
@@ -289,7 +289,7 @@ export function useUpdateOrgTeam() {
 
 export function useOrgLocations(query?: ListQuery) {
   return useGatedQuery("settings:view", {
-    queryKey: queryKeys.hierarchy.locations(query),
+    queryKey: platformHierarchyQueryKeys.hierarchy.locations(query),
     queryFn: ({ signal }) =>
       apiClient.get<CursorResponse<OrgLocation>>("/org-hierarchy/locations", {
         ...(query?.cursor ? { cursor: query.cursor } : {}),
@@ -307,7 +307,7 @@ export function useCreateOrgLocation() {
     mutationKey: ["create", "org", "location"],
     mutationFn: (data: { name: string; type?: string; address?: string; latitude?: number; longitude?: number }) =>
       apiClient.post<OrgLocation>("/org-hierarchy/locations", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
   });
 }
 
@@ -317,7 +317,7 @@ export function useUpdateOrgLocation() {
     mutationKey: ["update", "org", "location"],
     mutationFn: ({ id, ...data }: { id: string } & Record<string, unknown>) =>
       apiClient.patch<OrgLocation>(`/org-hierarchy/locations/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
   });
 }
 
@@ -325,7 +325,7 @@ export function useUpdateOrgLocation() {
 
 export function useOrgCostCenters(query?: ListQuery) {
   return useGatedQuery("settings:view", {
-    queryKey: queryKeys.hierarchy.costCenters(query),
+    queryKey: platformHierarchyQueryKeys.hierarchy.costCenters(query),
     queryFn: ({ signal }) =>
       apiClient.get<CursorResponse<OrgCostCenter>>(
         "/org-hierarchy/cost-centers",
@@ -346,7 +346,7 @@ export function useCreateOrgCostCenter() {
     mutationKey: ["create", "org", "cost", "center"],
     mutationFn: (data: { code: string; name: string; description?: string }) =>
       apiClient.post<OrgCostCenter>("/org-hierarchy/cost-centers", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
   });
 }
 
@@ -356,6 +356,6 @@ export function useUpdateOrgCostCenter() {
     mutationKey: ["update", "org", "cost", "center"],
     mutationFn: ({ id, ...data }: { id: string } & Record<string, unknown>) =>
       apiClient.patch<OrgCostCenter>(`/org-hierarchy/cost-centers/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hierarchy.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all }),
   });
 }

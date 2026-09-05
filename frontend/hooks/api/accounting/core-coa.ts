@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { coreKeys } from "./core-keys";
 import {
   coaTreeContract,
@@ -59,7 +59,7 @@ export function useDeactivateAccount(accountId: number) {
       apiClient.post<{ id: number; isActive: false }>(`/accounting/coa/${accountId}/deactivate`),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+      void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
     },
   });
 }
@@ -72,7 +72,7 @@ export function useActivateAccount(accountId: number) {
       apiClient.post<{ id: number; isActive: true }>(`/accounting/coa/${accountId}/activate`),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+      void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
     },
   });
 }
@@ -85,7 +85,7 @@ export function useDeleteAccount(accountId: number) {
       apiClient.delete<{ id: number; isActive: boolean }>(`/accounting/coa/${accountId}`),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+      void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
     },
   });
 }
@@ -101,7 +101,7 @@ export function useApplyTemplate() {
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+      void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
     },
   });
 }
@@ -114,7 +114,7 @@ export function useSubmitJournalApproval(entryId: number) {
       apiClient.post<{ id: number; status: string }>(`/accounting/journal/${entryId}/submit-approval`),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+      void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
     },
   });
 }
@@ -127,7 +127,7 @@ export function useApproveJournal(entryId: number) {
       apiClient.post<{ id: number; status: string }>(`/accounting/journal/${entryId}/approve`, body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+      void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
     },
   });
 }
@@ -140,7 +140,7 @@ export function useRejectJournal(entryId: number) {
       apiClient.post<{ id: number; status: string }>(`/accounting/journal/${entryId}/reject`, body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: coreKeys.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+      void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
     },
   });
 }

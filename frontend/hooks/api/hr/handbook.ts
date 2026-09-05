@@ -3,7 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface HandbookVersion {
@@ -34,7 +34,7 @@ interface UpdateHandbookVersionInput {
 }
 
 const handbookKeys = {
-  all: [...queryKeys.hr.all, "handbook"] as const,
+  all: [...humanResourcesQueryKeys.hr.all, "handbook"] as const,
   list: () => [...handbookKeys.all, "list"] as const,
 };
 

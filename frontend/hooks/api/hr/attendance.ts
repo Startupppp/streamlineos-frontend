@@ -10,7 +10,8 @@ import type { UseMutationOptions } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import type {
   AttendanceStatusResult,
@@ -75,7 +76,7 @@ export function useHrAttendanceStatus(
   const canAttendance = useCan("self:attendance");
   const { enabled: optEnabled, ...restOptions } = options ?? {};
   return useQuery({
-    queryKey: queryKeys.hr.attendanceStatus(),
+    queryKey: humanResourcesQueryKeys.hr.attendanceStatus(),
     queryFn: ({ signal }) =>
       apiClient.get<AttendanceStatusResult>("/me/attendance/status", undefined, signal),
     staleTime: 2 * 60_000,
@@ -92,7 +93,7 @@ export function useHrAttendanceHistory(page: number, limit: number) {
   const canAttendance = useCan("self:attendance");
   const params = { page, limit };
   return useQuery({
-    queryKey: queryKeys.hr.attendanceHistory(params),
+    queryKey: humanResourcesQueryKeys.hr.attendanceHistory(params),
     queryFn: async ({ signal }) => {
       try {
         return await apiClient.get<AttendanceHistoryResponse>(
@@ -131,7 +132,7 @@ export function useHrCheckIn(
   const qc = useQueryClient();
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
-  const statusKey = queryKeys.hr.attendanceStatus();
+  const statusKey = humanResourcesQueryKeys.hr.attendanceStatus();
   return useMutation({
     mutationKey: ["hr", "attendance", "check-in"],
     mutationFn: (data: CheckInInput) =>
@@ -182,13 +183,13 @@ export function useHrCheckIn(
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: statusKey, exact: true });
       void qc.invalidateQueries({
-        queryKey: [...queryKeys.hr.all, "attendanceHistory"],
+        queryKey: [...humanResourcesQueryKeys.hr.all, "attendanceHistory"],
       });
       void qc.invalidateQueries({
-        queryKey: [...queryKeys.hr.all, "monthlyAttendance"],
+        queryKey: [...humanResourcesQueryKeys.hr.all, "monthlyAttendance"],
       });
       void qc.invalidateQueries({
-        queryKey: queryKeys.dashboard.teamAttendance(),
+        queryKey: collaborationQueryKeys.dashboard.teamAttendance(),
         exact: true,
       });
     },
@@ -205,7 +206,7 @@ export function useHrCheckOut(
   const qc = useQueryClient();
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
-  const statusKey = queryKeys.hr.attendanceStatus();
+  const statusKey = humanResourcesQueryKeys.hr.attendanceStatus();
   return useMutation({
     mutationKey: ["hr", "attendance", "check-out"],
     mutationFn: () =>
@@ -238,13 +239,13 @@ export function useHrCheckOut(
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: statusKey, exact: true });
       void qc.invalidateQueries({
-        queryKey: [...queryKeys.hr.all, "attendanceHistory"],
+        queryKey: [...humanResourcesQueryKeys.hr.all, "attendanceHistory"],
       });
       void qc.invalidateQueries({
-        queryKey: [...queryKeys.hr.all, "monthlyAttendance"],
+        queryKey: [...humanResourcesQueryKeys.hr.all, "monthlyAttendance"],
       });
       void qc.invalidateQueries({
-        queryKey: queryKeys.dashboard.teamAttendance(),
+        queryKey: collaborationQueryKeys.dashboard.teamAttendance(),
         exact: true,
       });
     },
@@ -260,7 +261,7 @@ export function useHrToggleBreak(
 ) {
   const qc = useQueryClient();
   const { data: session } = useSession();
-  const statusKey = queryKeys.hr.attendanceStatus();
+  const statusKey = humanResourcesQueryKeys.hr.attendanceStatus();
   return useMutation({
     mutationKey: ["hr", "attendance", "toggle-break"],
     mutationFn: () =>
@@ -278,7 +279,7 @@ export function useHrToggleBreak(
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: statusKey, exact: true });
       void qc.invalidateQueries({
-        queryKey: [...queryKeys.hr.all, "monthlyAttendance"],
+        queryKey: [...humanResourcesQueryKeys.hr.all, "monthlyAttendance"],
       });
     },
     onSuccess: options?.onSuccess,
@@ -292,7 +293,7 @@ export function useHrMonthlyAttendance(params: GetMonthlyAttendanceInput) {
   const hrEnabled = useModuleEnabled("hr");
   const isOtherUser = params.userId !== undefined;
   return useQuery({
-    queryKey: queryKeys.hr.monthlyAttendance(params),
+    queryKey: humanResourcesQueryKeys.hr.monthlyAttendance(params),
     queryFn: ({ signal }) =>
       apiClient.get<AttendanceLog[]>(
         isOtherUser ? "/hr/attendance/monthly" : "/me/attendance/monthly",
@@ -320,7 +321,7 @@ export function useGetWorkLogs(input: GetWorkLogsInput) {
   if (input.dateTo) params.dateTo = input.dateTo;
 
   return useQuery({
-    queryKey: queryKeys.hr.workLogs(params),
+    queryKey: humanResourcesQueryKeys.hr.workLogs(params),
     queryFn: ({ signal }) => apiClient.get<WorkLog[]>("/hr/work-logs", params, signal),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canAttendance,
@@ -340,7 +341,7 @@ export function useUpsertWorkLog(
     mutationFn: (data: UpsertWorkLogInput) =>
       apiClient.post<WorkLog>("/hr/work-logs", data),
     onSuccess: (...args) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.workLogs() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.workLogs() });
       options?.onSuccess?.(...args);
     },
     onError: options?.onError,
@@ -354,7 +355,7 @@ export function useHrTeamAttendanceStatus(params?: TeamAttendanceStatusQuery) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: [
-      ...queryKeys.hr.all,
+      ...humanResourcesQueryKeys.hr.all,
       orgId,
       "team-attendance-status",
       params ?? {},
@@ -392,7 +393,7 @@ export function useCreateRegularization(
       ),
     onSuccess: (...args) => {
       qc.invalidateQueries({
-        queryKey: [...queryKeys.hr.all, "regularizations"],
+        queryKey: [...humanResourcesQueryKeys.hr.all, "regularizations"],
       });
       options?.onSuccess?.(...args);
     },

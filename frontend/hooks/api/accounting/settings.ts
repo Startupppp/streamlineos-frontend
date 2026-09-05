@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useCan } from "@/hooks/api/access";
 import type { CursorPage } from "@/hooks/api/accounting";
 import type {
@@ -15,18 +15,18 @@ import type {
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const settingsKeys = {
-  all: [...queryKeys.accounting.all, "settings"] as const,
+  all: [...accountingAndSupportQueryKeys.accounting.all, "settings"] as const,
   policies: (params?: object) =>
-    [...queryKeys.accounting.all, "settings", "policies", params] as const,
+    [...accountingAndSupportQueryKeys.accounting.all, "settings", "policies", params] as const,
   rates: (params?: object) =>
-    [...queryKeys.accounting.all, "settings", "exchange-rates", params] as const,
+    [...accountingAndSupportQueryKeys.accounting.all, "settings", "exchange-rates", params] as const,
 };
 
 const approvalsKeys = {
-  all: [...queryKeys.accounting.all, "approvals"] as const,
+  all: [...accountingAndSupportQueryKeys.accounting.all, "approvals"] as const,
   list: (params?: object) =>
-    [...queryKeys.accounting.all, "approvals", "list", params] as const,
-  counts: [...queryKeys.accounting.all, "approvals", "counts"] as const,
+    [...accountingAndSupportQueryKeys.accounting.all, "approvals", "list", params] as const,
+  counts: [...accountingAndSupportQueryKeys.accounting.all, "approvals", "counts"] as const,
 };
 
 function toQuery<P extends object>(params: P): Record<string, string> {

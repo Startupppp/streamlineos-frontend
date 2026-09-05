@@ -2,7 +2,7 @@
 
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import type {
   Expense,
@@ -53,7 +53,7 @@ export function useExpensePageData(
     // It sits INSIDE the `hr.expenses()` prefix so both entries still answer to
     // the invalidation every expense mutation issues.
     queryKey: [
-      ...queryKeys.hr.expenses(),
+      ...humanResourcesQueryKeys.hr.expenses(),
       "pageData",
       options?.selfService ? "self" : "org",
       params,
@@ -87,7 +87,7 @@ export function useCreateExpense() {
     mutationFn: (data: CreateExpenseInput) =>
       apiClient.post<Expense>("/me/expenses", data),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.expenses() }),
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.expenses() }),
   });
 }
 
@@ -98,7 +98,7 @@ export function useUpdateExpenseStatus() {
     mutationFn: ({ expenseId, ...data }: UpdateExpenseStatusInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/expenses/${expenseId}`, data),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.expenses() }),
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.expenses() }),
   });
 }
 
@@ -125,7 +125,7 @@ export function useUpdateExpense(options?: { selfService?: boolean }) {
         data,
       ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.expenses() }),
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.expenses() }),
   });
 }
 
@@ -173,7 +173,7 @@ export function useCreateExpenseExportJob() {
 export function useExpenseExportJob(jobId: string | null) {
   const canRead = useCan("hr:expenses:read");
   return useQuery<ExpenseExportJob, Error>({
-    queryKey: queryKeys.hr.expenseExportJob(jobId ?? ""),
+    queryKey: humanResourcesQueryKeys.hr.expenseExportJob(jobId ?? ""),
     queryFn: ({ signal }) =>
       apiClient.get<ExpenseExportJob>(`/hr/expenses/export/jobs/${jobId}`, undefined, signal),
     enabled: canRead && !!jobId,

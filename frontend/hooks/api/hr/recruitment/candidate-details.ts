@@ -3,7 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -146,7 +146,7 @@ export interface CandidateActivityEvent {
 export function useCandidateActivity(candidateId: number) {
   const canView = useCan("hr:employees:view");
   return useQuery({
-    queryKey: [...queryKeys.hr.candidate(candidateId), "activity"],
+    queryKey: [...humanResourcesQueryKeys.hr.candidate(candidateId), "activity"],
     queryFn: ({ signal }) => apiClient.get<CandidateActivityEvent[]>(`/hr/recruitment/candidates/${candidateId}/activity`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && !!candidateId,
@@ -156,7 +156,7 @@ export function useCandidateActivity(candidateId: number) {
 export function useCandidateVault(candidateId: number) {
   const canViewVault = useCan("hr:employees:manage");
   return useQuery({
-    queryKey: queryKeys.hr.candidateVault(candidateId),
+    queryKey: humanResourcesQueryKeys.hr.candidateVault(candidateId),
     queryFn: ({ signal }) =>
       apiClient.get<VaultDocument[]>(`/hr/recruitment/candidates/${candidateId}/vault`, undefined, signal),
     staleTime: 2 * 60_000,
@@ -178,7 +178,7 @@ export function useAddVaultDocument(candidateId: number) {
     }) =>
       apiClient.post<VaultDocument>(`/hr/recruitment/candidates/${candidateId}/vault`, data),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.candidateVault(candidateId) }),
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidateVault(candidateId) }),
   });
 }
 
@@ -191,13 +191,13 @@ export function useDeleteVaultDocument(candidateId: number) {
         `/hr/recruitment/candidates/${candidateId}/vault/${documentId}`
       ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.candidateVault(candidateId) }),
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidateVault(candidateId) }),
   });
 }
 
 export function useRolloutDocuments(candidateId: number) {
   return useGatedQuery("hr:employees:view", {
-    queryKey: queryKeys.hr.rolloutDocuments(candidateId),
+    queryKey: humanResourcesQueryKeys.hr.rolloutDocuments(candidateId),
     queryFn: ({ signal }) =>
       apiClient.get<RolloutDocumentRecord[]>(
         `/hr/recruitment/candidates/${candidateId}/rollout-documents`
@@ -217,8 +217,8 @@ export function useGenerateAndRollout(candidateId: number) {
         data
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.rolloutDocuments(candidateId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.candidateDocuments(candidateId) });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.rolloutDocuments(candidateId) });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidateDocuments(candidateId) });
     },
   });
 }
@@ -230,13 +230,13 @@ export function useUpdateCandidateBgv(candidateId: number) {
     mutationFn: (data: UpdateBgvInput) =>
       apiClient.patch<{ id: number; bgvStatus: BgvStatus }>(`/hr/recruitment/candidates/${candidateId}/bgv-status`, data),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.candidate(candidateId) }),
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidate(candidateId) }),
   });
 }
 
 export function useVaultAccessLogs(candidateId: number) {
   return useGatedQuery("hr:employees:manage", {
-    queryKey: [...queryKeys.hr.all, "vaultAccessLogs", candidateId] as const,
+    queryKey: [...humanResourcesQueryKeys.hr.all, "vaultAccessLogs", candidateId] as const,
     queryFn: ({ signal }) =>
       apiClient.get<VaultAccessLog[]>(
         `/hr/recruitment/candidates/${candidateId}/vault/access-logs`
@@ -249,7 +249,7 @@ export function useVaultAccessLogs(candidateId: number) {
 export function useBgvComplianceDashboard() {
   const canSensitive = useCan("hr:sensitive:view");
   return useQuery({
-    queryKey: [...queryKeys.hr.all, "bgv-compliance"],
+    queryKey: [...humanResourcesQueryKeys.hr.all, "bgv-compliance"],
     queryFn: ({ signal }) => apiClient.get<BgvComplianceRow[]>("/hr/recruitment/bgv-compliance", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canSensitive,
@@ -259,7 +259,7 @@ export function useBgvComplianceDashboard() {
 export function useCandidateReferrals(candidateId: number) {
   const canView = useCan("hr:employees:view");
   return useQuery<CandidateReferral[]>({
-    queryKey: [...queryKeys.hr.candidate(candidateId), "referrals"],
+    queryKey: [...humanResourcesQueryKeys.hr.candidate(candidateId), "referrals"],
     queryFn: ({ signal }) =>
       apiClient.get<CandidateReferral[]>(`/hr/recruitment/candidates/${candidateId}/referral`, undefined, signal),
     enabled: canView && candidateId > 0,
@@ -279,7 +279,7 @@ export function useCreateReferral(candidateId: number) {
       bonusAmount?: number;
     }) => apiClient.post<CandidateReferral>(`/hr/recruitment/candidates/${candidateId}/referral`, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.candidate(candidateId), "referrals"] });
+      qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.candidate(candidateId), "referrals"] });
     },
   });
 }
@@ -296,14 +296,14 @@ export function useUpdateReferral(candidateId: number) {
       notes?: string | null;
     }) => apiClient.patch<CandidateReferral>(`/hr/recruitment/candidates/${candidateId}/referral`, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.candidate(candidateId), "referrals"] });
+      qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.candidate(candidateId), "referrals"] });
     },
   });
 }
 
 export function useCalibrationSessions(candidateId: number) {
   return useGatedQuery<CalibrationSession[]>("hr:employees:view", {
-    queryKey: [...queryKeys.hr.candidate(candidateId), "calibration"],
+    queryKey: [...humanResourcesQueryKeys.hr.candidate(candidateId), "calibration"],
     queryFn: ({ signal }) =>
       apiClient.get<CalibrationSession[]>(`/hr/recruitment/candidates/${candidateId}/calibration`, undefined, signal),
     enabled: candidateId > 0,
@@ -322,7 +322,7 @@ export function useCreateCalibration(candidateId: number) {
       notes?: string;
     }) => apiClient.post<CalibrationSession>(`/hr/recruitment/candidates/${candidateId}/calibration`, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.candidate(candidateId), "calibration"] });
+      qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.candidate(candidateId), "calibration"] });
     },
   });
 }
@@ -340,14 +340,14 @@ export function useUpdateCalibration(candidateId: number) {
       participantIds?: string[];
     }) => apiClient.patch<CalibrationSession>(`/hr/recruitment/candidates/${candidateId}/calibration`, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.candidate(candidateId), "calibration"] });
+      qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.candidate(candidateId), "calibration"] });
     },
   });
 }
 
 export function useReferenceChecks(candidateId: number) {
   return useGatedQuery("hr:employees:view", {
-    queryKey: [...queryKeys.hr.all, "referenceChecks", candidateId] as const,
+    queryKey: [...humanResourcesQueryKeys.hr.all, "referenceChecks", candidateId] as const,
     queryFn: ({ signal }) =>
       apiClient.get<ReferenceCheck[]>(`/hr/recruitment/candidates/${candidateId}/reference-checks`, undefined, signal),
     staleTime: 2 * 60_000,
@@ -365,7 +365,7 @@ export function useCreateReferenceCheck(candidateId: number) {
         data
       ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "referenceChecks", candidateId] }),
+      qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "referenceChecks", candidateId] }),
   });
 }
 
@@ -384,7 +384,7 @@ export function useUpdateReferenceCheck(candidateId: number, checkId: number) {
         data
       ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "referenceChecks", candidateId] }),
+      qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "referenceChecks", candidateId] }),
   });
 }
 
@@ -397,6 +397,6 @@ export function useDeleteReferenceCheck(candidateId: number, checkId: number) {
         `/hr/recruitment/candidates/${candidateId}/reference-checks/${checkId}`
       ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "referenceChecks", candidateId] }),
+      qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "referenceChecks", candidateId] }),
   });
 }

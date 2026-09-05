@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -21,7 +21,7 @@ export interface BackgroundVerification {
 }
 
 const bgvKeys = {
-  all: [...queryKeys.hr.all, "bgv"] as const,
+  all: [...humanResourcesQueryKeys.hr.all, "bgv"] as const,
   list: () => [...bgvKeys.all, "list"] as const,
 };
 

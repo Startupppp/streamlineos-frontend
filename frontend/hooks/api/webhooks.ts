@@ -2,7 +2,7 @@
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -68,7 +68,7 @@ export interface CreateWebhookInput {
 export function useWebhooks(params: { cursor?: string; limit: number }) {
   const canManage = useCan("settings:webhooks:manage");
   return useQuery({
-    queryKey: queryKeys.webhooks.list(params),
+    queryKey: supportAndWorkflowsQueryKeys.webhooks.list(params),
     queryFn: ({ signal }) =>
       apiClient.get<WebhooksPageResponse>("/webhooks", {
         ...(params.cursor ? { cursor: params.cursor } : {}),
@@ -86,7 +86,7 @@ export function useWebhookLogs(
 ) {
   const canManage = useCan("settings:webhooks:manage");
   return useQuery({
-    queryKey: queryKeys.webhooks.logs(endpointId ?? 0, params),
+    queryKey: supportAndWorkflowsQueryKeys.webhooks.logs(endpointId ?? 0, params),
     queryFn: ({ signal }) =>
       apiClient.get<WebhookLogsResponse>(`/webhooks/${endpointId}/logs`, {
         ...(params.cursor ? { cursor: params.cursor } : {}),
@@ -104,7 +104,7 @@ export function useCreateWebhook() {
     mutationKey: ["webhooks", "create"] as const,
     mutationFn: (data: CreateWebhookInput) =>
       apiClient.post<WebhookEndpoint & WebhookSecretReveal>("/webhooks", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.webhooks.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.webhooks.all }),
   });
 }
 
@@ -117,7 +117,7 @@ export function useRotateWebhookSecret() {
         `/webhooks/${id}/rotate-secret`,
         {},
       ),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.webhooks.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.webhooks.all }),
   });
 }
 
@@ -127,7 +127,7 @@ export function useToggleWebhook() {
     mutationKey: ["webhooks", "toggle"] as const,
     mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) =>
       apiClient.patch(`/webhooks/${id}`, { isActive }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.webhooks.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.webhooks.all }),
   });
 }
 
@@ -136,7 +136,7 @@ export function useDeleteWebhook() {
   return useAuthorizedMutation("settings:webhooks:manage", {
     mutationKey: ["webhooks", "delete"] as const,
     mutationFn: (id: number) => apiClient.delete(`/webhooks/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.webhooks.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.webhooks.all }),
   });
 }
 
@@ -151,6 +151,6 @@ export function useRetryDelivery(endpointId: number) {
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.webhooks.logs(endpointId) }),
+      qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.webhooks.logs(endpointId) }),
   });
 }

@@ -4,7 +4,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseMutationOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type { TicketLabel, CreateLabelInput } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -29,10 +30,10 @@ export function useAddComment(
       ),
     onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.ticket(variables.ticketId),
+        queryKey: buildWorkQueryKeys.projects.ticket(variables.ticketId),
       });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.ticketActivity.list(variables.ticketId),
+        queryKey: accountingAndSupportQueryKeys.ticketActivity.list(variables.ticketId),
       });
       options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
@@ -50,11 +51,11 @@ export function useAddLabelToTicket(
       apiClient.post<{ success: boolean }>(`/build/${projectId}/tickets/${ticketId}/labels`, { labelId }),
     onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.ticket(variables.ticketId),
+        queryKey: buildWorkQueryKeys.projects.ticket(variables.ticketId),
       });
       if (variables.projectId) {
         queryClient.invalidateQueries({
-          queryKey: queryKeys.projects.tickets({ projectId: variables.projectId }),
+          queryKey: buildWorkQueryKeys.projects.tickets({ projectId: variables.projectId }),
         });
       }
       options?.onSuccess?.(data, variables, context, mutFnCtx);
@@ -75,11 +76,11 @@ export function useRemoveLabelFromTicket(
       ),
     onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.ticket(variables.ticketId),
+        queryKey: buildWorkQueryKeys.projects.ticket(variables.ticketId),
       });
       if (variables.projectId) {
         queryClient.invalidateQueries({
-          queryKey: queryKeys.projects.tickets({ projectId: variables.projectId }),
+          queryKey: buildWorkQueryKeys.projects.tickets({ projectId: variables.projectId }),
         });
       }
       options?.onSuccess?.(data, variables, context, mutFnCtx);
@@ -97,7 +98,7 @@ export function useCreateOrgLabel(
     mutationFn: (data) =>
       apiClient.post<TicketLabel>("/build/labels", data),
     onSuccess: (data, variables, context, mutFnCtx) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.labels() });
+      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.labels() });
       options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
@@ -128,7 +129,7 @@ export function useAddAttachment(
       }),
     onSuccess: (data, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.ticket(variables.ticketId),
+        queryKey: buildWorkQueryKeys.projects.ticket(variables.ticketId),
       });
       options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
@@ -168,7 +169,7 @@ export interface TicketRelation {
 export function useTicketRelations(ticketId: number, projectId: number) {
   const canView = useCan("build:tickets:view");
   return useQuery({
-    queryKey: queryKeys.projects.ticketRelations(ticketId),
+    queryKey: buildWorkQueryKeys.projects.ticketRelations(ticketId),
     queryFn: ({ signal }) =>
       apiClient.get<TicketRelation[]>(`/build/${projectId}/tickets/${ticketId}/relations`, undefined, signal),
     staleTime: 2 * 60_000,
@@ -184,7 +185,7 @@ export function useAddTicketRelation(ticketId: number, projectId: number) {
       apiClient.post<{ id: number }>(`/build/${projectId}/tickets/${ticketId}/relations`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.ticketRelations(ticketId),
+        queryKey: buildWorkQueryKeys.projects.ticketRelations(ticketId),
       });
     },
   });
@@ -200,7 +201,7 @@ export function useRemoveTicketRelation(ticketId: number, projectId: number) {
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.ticketRelations(ticketId),
+        queryKey: buildWorkQueryKeys.projects.ticketRelations(ticketId),
       });
     },
   });

@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import type { PayslipPublication, PublishResult } from "@/types/payroll";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -11,7 +11,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 export function useRunPublications(runId: number) {
   const canView = useCan("payroll:payslips:view");
   return useQuery<PayslipPublication[]>({
-    queryKey: queryKeys.payroll.runPublications(runId),
+    queryKey: payrollQueryKeys.payroll.runPublications(runId),
     queryFn: ({ signal }) =>
       apiClient.get<PayslipPublication[]>(`/payroll/runs/${runId}/payslips`, undefined, signal),
     staleTime: 30_000,
@@ -28,14 +28,14 @@ export function usePublishPayslips() {
         userIds,
       }),
     onSuccess: (_, { runId }) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runPublications(runId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.essPayslips() });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.commandCenterAll });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runPublications(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.run(runId) });
+      void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "runs"] });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.essPayslips() });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.commandCenterAll });
       // Publishing drives the run to PAYSLIPS_PUBLISHED, a locked status, so
       // the `provisional` flag every payroll report carries flips with it.
-      void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "reports"] });
+      void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "reports"] });
     },
   });
 }

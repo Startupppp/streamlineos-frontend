@@ -7,7 +7,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -42,7 +42,7 @@ interface AiGenerateResult {
   body: string;
 }
 
-const ET_BASE = [...queryKeys.hr.all, "email-templates"] as const;
+const ET_BASE = [...humanResourcesQueryKeys.hr.all, "email-templates"] as const;
 const etKeys = {
   all: ET_BASE,
   list: () => [...ET_BASE, "list"] as const,

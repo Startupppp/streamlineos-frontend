@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useCan } from "@/hooks/api/access";
 import type { CursorPage } from "@/hooks/api/accounting";
 import type {
@@ -26,19 +26,19 @@ interface ListResponse<T> {
 }
 
 const taxKeys = {
-  all: [...queryKeys.accounting.all, "taxes"] as const,
+  all: [...accountingAndSupportQueryKeys.accounting.all, "taxes"] as const,
   codes: (params?: object) =>
-    [...queryKeys.accounting.all, "taxes", "codes", params] as const,
+    [...accountingAndSupportQueryKeys.accounting.all, "taxes", "codes", params] as const,
   dashboard: (from: string, to: string) =>
-    [...queryKeys.accounting.all, "taxes", "dashboard", from, to] as const,
+    [...accountingAndSupportQueryKeys.accounting.all, "taxes", "dashboard", from, to] as const,
   reportOutput: (params?: object) =>
-    [...queryKeys.accounting.all, "taxes", "report-output", params] as const,
+    [...accountingAndSupportQueryKeys.accounting.all, "taxes", "report-output", params] as const,
   reportInput: (params?: object) =>
-    [...queryKeys.accounting.all, "taxes", "report-input", params] as const,
+    [...accountingAndSupportQueryKeys.accounting.all, "taxes", "report-input", params] as const,
   liabilitySummary: (from: string, to: string) =>
-    [...queryKeys.accounting.all, "taxes", "liability-summary", from, to] as const,
+    [...accountingAndSupportQueryKeys.accounting.all, "taxes", "liability-summary", from, to] as const,
   payments: (params?: object) =>
-    [...queryKeys.accounting.all, "taxes", "payments", params] as const,
+    [...accountingAndSupportQueryKeys.accounting.all, "taxes", "payments", params] as const,
 };
 
 function toQuery<P extends object>(params: P): Record<string, string> {
@@ -232,7 +232,7 @@ export function useCreateTaxAdjustment() {
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taxKeys.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+      queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
     },
   });
 }

@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { setupStatusContract } from "@/hooks/api/accounting/core-coa-schema";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useCan } from "@/hooks/api/access";
 import type {
   AccountingSettings,
@@ -18,12 +18,12 @@ import type {
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const finSettingsKeys = {
-  all: [...queryKeys.accounting.all, "fin-settings"] as const,
-  settings: () => [...queryKeys.accounting.all, "fin-settings", "settings"] as const,
-  setupStatus: () => [...queryKeys.accounting.all, "fin-settings", "setup-status"] as const,
-  sequences: () => [...queryKeys.accounting.all, "fin-settings", "sequences"] as const,
-  systemAccounts: () => [...queryKeys.accounting.all, "fin-settings", "system-accounts"] as const,
-  paymentTerms: () => [...queryKeys.accounting.all, "fin-settings", "payment-terms"] as const,
+  all: [...accountingAndSupportQueryKeys.accounting.all, "fin-settings"] as const,
+  settings: () => [...accountingAndSupportQueryKeys.accounting.all, "fin-settings", "settings"] as const,
+  setupStatus: () => [...accountingAndSupportQueryKeys.accounting.all, "fin-settings", "setup-status"] as const,
+  sequences: () => [...accountingAndSupportQueryKeys.accounting.all, "fin-settings", "sequences"] as const,
+  systemAccounts: () => [...accountingAndSupportQueryKeys.accounting.all, "fin-settings", "system-accounts"] as const,
+  paymentTerms: () => [...accountingAndSupportQueryKeys.accounting.all, "fin-settings", "payment-terms"] as const,
 };
 
 export function useAccountingSettings() {

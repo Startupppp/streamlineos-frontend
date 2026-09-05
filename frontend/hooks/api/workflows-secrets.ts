@@ -2,7 +2,7 @@
 
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useCan } from "@/hooks/api/access";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import type { WorkflowSecret, WorkflowCursorPage } from "./workflows-types";
@@ -26,7 +26,7 @@ function assertPermission(allowed: boolean): void {
 export function useGlobalSecrets() {
   const canManage = useCan("workflows:secrets:manage");
   return useInfiniteQuery({
-    queryKey: [...queryKeys.workflows.all, "global-secrets"] as const,
+    queryKey: [...supportAndWorkflowsQueryKeys.workflows.all, "global-secrets"] as const,
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<WorkflowCursorPage<WorkflowSecret>>(
         "/workflows/secrets",
@@ -51,7 +51,7 @@ export function useCreateGlobalSecret() {
       return apiClient.post<WorkflowSecret>("/workflows/secrets", input);
     },
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: [...queryKeys.workflows.all, "global-secrets"] }),
+      qc.invalidateQueries({ queryKey: [...supportAndWorkflowsQueryKeys.workflows.all, "global-secrets"] }),
   });
 }
 
@@ -65,7 +65,7 @@ export function useDeleteGlobalSecret() {
       return apiClient.delete<{ success: boolean }>(`/workflows/secrets/${secretId}`);
     },
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: [...queryKeys.workflows.all, "global-secrets"] }),
+      qc.invalidateQueries({ queryKey: [...supportAndWorkflowsQueryKeys.workflows.all, "global-secrets"] }),
   });
 }
 

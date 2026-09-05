@@ -1,7 +1,7 @@
 "use client";
 
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/query-keys";
+import { hrEngagementQueryKeys } from "@/lib/query-keys/hr-engagement";
 import { apiClient } from "@/lib/api-client";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -99,7 +99,7 @@ export function useEngagementOverview() {
   const canView = useCan("hr:engagement:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<EngagementOverview>({
-    queryKey: queryKeys.hrEngagementHub.overview(),
+    queryKey: hrEngagementQueryKeys.hrEngagementHub.overview(),
     queryFn: ({ signal }) => apiClient.get<EngagementOverview>("/hr/engagement/overview", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canView && hrEnabled,
@@ -110,7 +110,7 @@ export function useMyMoodHistory() {
   const canView = useCan("hr:engagement:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<MoodCheckin[]>({
-    queryKey: queryKeys.hrEngagementHub.moodHistory(),
+    queryKey: hrEngagementQueryKeys.hrEngagementHub.moodHistory(),
     queryFn: ({ signal }) => apiClient.get<MoodCheckin[]>("/hr/engagement/mood/history", undefined, signal),
     staleTime: 60_000,
     enabled: canView && hrEnabled,
@@ -121,7 +121,7 @@ export function useOrgMoodAggregate() {
   const canManage = useCan("hr:engagement:manage");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<MoodAggregate[]>({
-    queryKey: queryKeys.hrEngagementHub.moodAggregate(),
+    queryKey: hrEngagementQueryKeys.hrEngagementHub.moodAggregate(),
     queryFn: ({ signal }) => apiClient.get<MoodAggregate[]>("/hr/engagement/mood/aggregate", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canManage && hrEnabled,
@@ -134,7 +134,7 @@ export function useMoodCheckin() {
     mutationKey: ["hr", "engagement", "mood", "checkin"],
     mutationFn: (data: { mood: number; note?: string; date?: string }) =>
       apiClient.post<MoodCheckin>("/hr/engagement/mood", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hrEngagementHub.moodHistory() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.moodHistory() }),
   });
 }
 
@@ -142,7 +142,7 @@ export function useEngagementBadges() {
   const canView = useCan("hr:engagement:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<HrBadge[]>({
-    queryKey: queryKeys.hrEngagementHub.badges(),
+    queryKey: hrEngagementQueryKeys.hrEngagementHub.badges(),
     queryFn: ({ signal }) => apiClient.get<HrBadge[]>("/hr/engagement/badges", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canView && hrEnabled,
@@ -156,8 +156,8 @@ export function useAwardBadge() {
     mutationFn: ({ badgeId, ...data }: { badgeId: number; userId: string; reason?: string }) =>
       apiClient.post<HrBadgeAward>(`/hr/engagement/badges/${badgeId}/award`, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hrEngagementHub.myBadges() });
-      qc.invalidateQueries({ queryKey: queryKeys.hrEngagementHub.leaderboard() });
+      qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.myBadges() });
+      qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.leaderboard() });
     },
   });
 }
@@ -166,7 +166,7 @@ export function useLeaderboard(top = 20) {
   const canView = useCan("hr:engagement:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<LeaderboardEntry[]>({
-    queryKey: queryKeys.hrEngagementHub.leaderboard(top),
+    queryKey: hrEngagementQueryKeys.hrEngagementHub.leaderboard(top),
     queryFn: ({ signal }) => apiClient.get<LeaderboardEntry[]>(`/hr/engagement/points/leaderboard?top=${top}`, undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canView && hrEnabled,
@@ -177,7 +177,7 @@ export function useEngagementPolls() {
   const canView = useCan("hr:engagement:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<HrPoll[]>({
-    queryKey: queryKeys.hrEngagementHub.polls(),
+    queryKey: hrEngagementQueryKeys.hrEngagementHub.polls(),
     queryFn: ({ signal }) => apiClient.get<HrPoll[]>("/hr/engagement/polls", undefined, signal),
     staleTime: 60_000,
     enabled: canView && hrEnabled,
@@ -190,7 +190,7 @@ export function useCreatePoll() {
     mutationKey: ["hr", "engagement", "polls", "create"],
     mutationFn: (data: { question: string; options: string[]; anonymous?: boolean; closesAt?: string }) =>
       apiClient.post<HrPoll>("/hr/engagement/polls", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hrEngagementHub.polls() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.polls() }),
   });
 }
 
@@ -200,7 +200,7 @@ export function useUpdatePoll() {
     mutationKey: ["hr", "engagement", "polls", "update"],
     mutationFn: ({ id, ...data }: { id: number; status?: string; question?: string }) =>
       apiClient.patch<{ success: boolean }>(`/hr/engagement/polls/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hrEngagementHub.polls() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.polls() }),
   });
 }
 
@@ -211,8 +211,8 @@ export function useVotePoll() {
     mutationFn: ({ pollId, optionIndex }: { pollId: number; optionIndex: number }) =>
       apiClient.post<{ id: number }>(`/hr/engagement/polls/${pollId}/vote`, { optionIndex }),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hrEngagementHub.polls() });
-      qc.invalidateQueries({ queryKey: queryKeys.hrEngagementHub.pollResults(vars.pollId) });
+      qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.polls() });
+      qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.pollResults(vars.pollId) });
     },
   });
 }
@@ -221,7 +221,7 @@ export function usePollResults(pollId: number) {
   const canView = useCan("hr:engagement:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<PollResults>({
-    queryKey: queryKeys.hrEngagementHub.pollResults(pollId),
+    queryKey: hrEngagementQueryKeys.hrEngagementHub.pollResults(pollId),
     queryFn: ({ signal }) => apiClient.get<PollResults>(`/hr/engagement/polls/${pollId}/results`, undefined, signal),
     staleTime: 30_000,
     enabled: pollId > 0 && canView && hrEnabled,
@@ -237,7 +237,7 @@ export function useEngagementCommunities() {
   const canView = useCan("hr:engagement:view");
   const hrEnabled = useModuleEnabled("hr");
   return useInfiniteQuery({
-    queryKey: queryKeys.hrEngagementHub.communities(),
+    queryKey: hrEngagementQueryKeys.hrEngagementHub.communities(),
     initialPageParam: null as string | null,
     queryFn: ({ pageParam , signal }) => {
       const params = new URLSearchParams({ limit: "30" });
@@ -256,7 +256,7 @@ export function useCreateCommunity() {
     mutationKey: ["hr", "engagement", "communities", "create"],
     mutationFn: (data: { name: string; description?: string }) =>
       apiClient.post<HrCommunity>("/hr/engagement/communities", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hrEngagementHub.communities() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.communities() }),
   });
 }
 
@@ -266,7 +266,7 @@ export function useJoinCommunity() {
     mutationKey: ["hr", "engagement", "communities", "join"],
     mutationFn: (communityId: number) =>
       apiClient.post<{ success: boolean }>(`/hr/engagement/communities/${communityId}/join`, {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hrEngagementHub.communities() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.communities() }),
   });
 }
 
@@ -276,7 +276,7 @@ export function useLeaveCommunity() {
     mutationKey: ["hr", "engagement", "communities", "leave"],
     mutationFn: (communityId: number) =>
       apiClient.post<{ success: boolean }>(`/hr/engagement/communities/${communityId}/leave`, {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hrEngagementHub.communities() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.communities() }),
   });
 }
 
@@ -284,7 +284,7 @@ export function useEngagementCampaigns() {
   const canView = useCan("hr:engagement:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<HrCampaign[]>({
-    queryKey: queryKeys.hrEngagementHub.campaigns(),
+    queryKey: hrEngagementQueryKeys.hrEngagementHub.campaigns(),
     queryFn: ({ signal }) => apiClient.get<HrCampaign[]>("/hr/engagement/campaigns", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canView && hrEnabled,
@@ -306,7 +306,7 @@ export function useCreateCampaign() {
     mutationKey: ["hr", "engagement", "campaigns", "create"],
     mutationFn: (data: CreateCampaignData) =>
       apiClient.post<HrCampaign>("/hr/engagement/campaigns", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hrEngagementHub.campaigns() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.campaigns() }),
   });
 }
 
@@ -316,7 +316,7 @@ export function useUpdateCampaign() {
     mutationKey: ["hr", "engagement", "campaigns", "update"],
     mutationFn: ({ id, ...data }: Partial<HrCampaign> & { id: number }) =>
       apiClient.patch<HrCampaign>(`/hr/engagement/campaigns/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hrEngagementHub.campaigns() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.campaigns() }),
   });
 }
 
@@ -326,7 +326,7 @@ export function useDeleteCampaign() {
     mutationKey: ["hr", "engagement", "campaigns", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/engagement/campaigns/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hrEngagementHub.campaigns() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.campaigns() }),
   });
 }
 

@@ -10,7 +10,7 @@ import {
   type BankAccountsPage,
   type BankAccountType as BankAccountTypeValue,
 } from "@/hooks/api/accounting/banking-schema";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import type { CursorPage } from "@/hooks/api/accounting";
@@ -106,7 +106,7 @@ export interface BankImportResult {
   errors: string[];
 }
 
-const accountingBase = [...queryKeys.accounting.all] as const;
+const accountingBase = [...accountingAndSupportQueryKeys.accounting.all] as const;
 
 export const bankingKeys = {
   all: [...accountingBase, "banking"] as const,

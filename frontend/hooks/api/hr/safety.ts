@@ -3,7 +3,7 @@
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useGatedQuery } from "@/hooks/api/gated-query";
@@ -67,7 +67,7 @@ export type ListIncidentsParams = {
 
 export function useSafetyIncidents(params: ListIncidentsParams = {}) {
   return useGatedQuery("hr:safety:view", {
-    queryKey: queryKeys.hrSafety.incidents(params),
+    queryKey: directoryAndOwnershipQueryKeys.hrSafety.incidents(params),
     queryFn: ({ signal }) => apiClient.get<CursorPage<SafetyIncident>>("/hr/safety/incidents", params, signal),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
@@ -88,7 +88,7 @@ export function useReportIncident() {
       confidentialMedicalNote?: string;
     }) => apiClient.post<SafetyIncident>("/hr/safety/incidents", body),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hrSafety.all });
+      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.hrSafety.all });
       toast.success("Incident reported");
     },
     onError: (e) => toast.error(getErrorMessage(e)),
@@ -102,7 +102,7 @@ export function useSubmitCheckin() {
     mutationFn: (body: { date: string; score: number; flags?: string[] }) =>
       apiClient.post<WellnessCheckin>("/hr/safety/wellness/checkin", body),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hrSafety.wellnessAll });
+      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.hrSafety.wellnessAll });
       toast.success("Wellness check-in submitted");
     },
     onError: (e) => toast.error(getErrorMessage(e)),
@@ -111,7 +111,7 @@ export function useSubmitCheckin() {
 
 export function useMyCheckins(fromDate?: string, toDate?: string) {
   return useGatedQuery("hr:safety:view", {
-    queryKey: queryKeys.hrSafety.myCheckins(fromDate, toDate),
+    queryKey: directoryAndOwnershipQueryKeys.hrSafety.myCheckins(fromDate, toDate),
     queryFn: ({ signal }) =>
       apiClient.get<WellnessCheckin[]>("/hr/safety/wellness/my", { fromDate, toDate }, signal),
     staleTime: 60_000,
@@ -120,7 +120,7 @@ export function useMyCheckins(fromDate?: string, toDate?: string) {
 
 export function useWellnessTrend(fromDate?: string, toDate?: string) {
   return useGatedQuery("hr:safety:manage", {
-    queryKey: queryKeys.hrSafety.wellnessTrend(fromDate, toDate),
+    queryKey: directoryAndOwnershipQueryKeys.hrSafety.wellnessTrend(fromDate, toDate),
     queryFn: ({ signal }) =>
       apiClient.get<WellnessTrendPoint[]>("/hr/safety/wellness/trend", { fromDate, toDate }, signal),
     staleTime: 120_000,
@@ -129,7 +129,7 @@ export function useWellnessTrend(fromDate?: string, toDate?: string) {
 
 export function useBurnoutFlags() {
   return useGatedQuery("hr:safety:manage", {
-    queryKey: queryKeys.hrSafety.burnout,
+    queryKey: directoryAndOwnershipQueryKeys.hrSafety.burnout,
     queryFn: ({ signal }) => apiClient.get<BurnoutFlag[]>("/hr/safety/wellness/burnout", undefined, signal),
     staleTime: 120_000,
   });
@@ -149,7 +149,7 @@ export interface WellnessPulse {
 
 export function useWellnessPulse(enabled = true) {
   return useGatedQuery("hr:safety:manage", {
-    queryKey: queryKeys.hrSafety.wellnessPulse,
+    queryKey: directoryAndOwnershipQueryKeys.hrSafety.wellnessPulse,
     queryFn: ({ signal }) => apiClient.get<WellnessPulse>("/hr/safety/wellness/pulse", undefined, signal),
     staleTime: 120_000,
     enabled,

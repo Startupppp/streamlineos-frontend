@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
@@ -32,7 +32,7 @@ const recruitmentKey = ["employee-self-service", "recruitment"] as const;
 
 export function useAssignedInterviews(page: number) {
   return useGatedQuery("self:recruitment", {
-    queryKey: queryKeys.hr.hrAssignedInterviews(page),
+    queryKey: humanResourcesQueryKeys.hr.hrAssignedInterviews(page),
     queryFn: ({ signal }) =>
       apiClient.get<AssignedInterviewsResponse>("/me/recruitment", {
         page,

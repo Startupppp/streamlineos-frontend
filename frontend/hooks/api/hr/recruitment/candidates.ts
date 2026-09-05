@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import type {
   Candidate,
@@ -79,7 +79,7 @@ export interface RecruitmentAnalytics {
   totalHired: number;
 }
 
-const ATS_KANBAN_KEY = queryKeys.hr.atsKanban();
+const ATS_KANBAN_KEY = humanResourcesQueryKeys.hr.atsKanban();
 
 export type CandidatesParams = {
   status?: string;
@@ -112,7 +112,7 @@ export function useCandidates(params?: CandidatesParams) {
   if (params?.search?.trim()) queryParams.search = params.search.trim();
 
   return useGatedQuery("hr:employees:view", {
-    queryKey: queryKeys.hr.candidates(queryParams),
+    queryKey: humanResourcesQueryKeys.hr.candidates(queryParams),
     queryFn: async ({ signal }): Promise<Candidate[]> => {
       const res = await apiClient.get<Candidate[] | CandidatesListResponse>(
         "/hr/recruitment/candidates",
@@ -136,7 +136,7 @@ export function useCandidatesPage(params?: CandidatesParams) {
   if (params?.search?.trim()) queryParams.search = params.search.trim();
 
   return useGatedQuery("hr:employees:view", {
-    queryKey: [...queryKeys.hr.candidates(queryParams), "page"] as const,
+    queryKey: [...humanResourcesQueryKeys.hr.candidates(queryParams), "page"] as const,
     queryFn: async ({ signal }): Promise<CandidatesListResponse> => {
       const res = await apiClient.get<Candidate[] | CandidatesListResponse>(
         "/hr/recruitment/candidates",
@@ -170,7 +170,7 @@ export interface DuplicateCandidateGroup {
 
 export function useCandidateDuplicates() {
   return useGatedQuery("hr:employees:view", {
-    queryKey: [...queryKeys.hr.all, "candidateDuplicates"] as const,
+    queryKey: [...humanResourcesQueryKeys.hr.all, "candidateDuplicates"] as const,
     queryFn: ({ signal }) => apiClient.get<DuplicateCandidateGroup[]>("/hr/recruitment/candidates/duplicates", undefined, signal),
     staleTime: 60_000,
   });
@@ -183,8 +183,8 @@ export function useLinkDuplicateCandidate() {
     mutationFn: ({ candidateId, duplicateOfId }: { candidateId: number; duplicateOfId: number }) =>
       apiClient.post<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/link-duplicate`, { duplicateOfId }),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "candidateDuplicates"] });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidates() });
+      void qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "candidateDuplicates"] });
     },
   });
 }
@@ -196,7 +196,7 @@ export function useBulkShortlistCandidates() {
     mutationFn: (candidateIds: number[]) =>
       apiClient.post<{ shortlisted: number; skipped: number }>("/hr/recruitment/candidates/bulk-shortlist", { candidateIds }),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidates() });
       void qc.invalidateQueries({ queryKey: ATS_KANBAN_KEY });
     },
   });
@@ -206,7 +206,7 @@ export function useCandidate(id: number) {
   const canView = useCan("hr:employees:view");
   const enabled = canView && Number.isFinite(id) && id > 0;
   return useQuery({
-    queryKey: queryKeys.hr.candidate(id),
+    queryKey: humanResourcesQueryKeys.hr.candidate(id),
     queryFn: ({ signal }) =>
       apiClient.get<
         Candidate & {
@@ -230,8 +230,8 @@ export function useGenerateCandidateAiScore() {
         {}
       ),
     onSuccess: (_, candidateId) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.candidate(candidateId) });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidate(candidateId) });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidates() });
     },
   });
 }
@@ -254,8 +254,8 @@ export function useCreateCandidate() {
     mutationFn: (data: CreateCandidateInput) =>
       apiClient.post<Candidate>("/hr/recruitment/candidates", data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentStats() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidates() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentStats() });
     },
   });
 }
@@ -267,9 +267,9 @@ export function useUpdateCandidate() {
     mutationFn: ({ id, ...data }: UpdateCandidateInput & { id: number }) =>
       apiClient.patch<{ success: boolean }>(`/hr/recruitment/candidates/${id}`, data),
     onSuccess: (_, { id }) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.candidate(id) });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentPipeline() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidates() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidate(id) });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentPipeline() });
     },
   });
 }
@@ -281,9 +281,9 @@ export function useDeleteCandidate() {
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/candidates/${id}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentStats() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentPipeline() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidates() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentStats() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentPipeline() });
     },
   });
 }
@@ -298,8 +298,8 @@ export function useCreateApplication() {
         data
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.jobPostings() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidates() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.jobPostings() });
     },
   });
 }
@@ -363,9 +363,9 @@ export function useUpdateCandidateStage() {
     },
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: ATS_KANBAN_KEY });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentPipeline() });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentStats() });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentPipeline() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.recruitmentStats() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidates() });
     },
   });
 }
@@ -380,7 +380,7 @@ export function useBulkRejectCandidates() {
         data
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidates() });
       void qc.invalidateQueries({ queryKey: ATS_KANBAN_KEY });
     },
   });
@@ -389,7 +389,7 @@ export function useBulkRejectCandidates() {
 export function useRecruitmentAnalytics() {
   const canInterviews = useCan("hr:interviews:view");
   return useQuery({
-    queryKey: [...queryKeys.hr.all, "recruitmentAnalytics"] as const,
+    queryKey: [...humanResourcesQueryKeys.hr.all, "recruitmentAnalytics"] as const,
     queryFn: ({ signal }) => apiClient.get<RecruitmentAnalytics>("/hr/recruitment/analytics", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canInterviews,

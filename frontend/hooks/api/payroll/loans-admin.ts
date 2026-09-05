@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { OffsetPage } from "@/hooks/api/offset-page-schema";
@@ -35,7 +35,7 @@ export interface LoanAdminItem {
 export function useAdminLoans() {
   const canView = useCan("hr:payroll:view");
   return useQuery({
-    queryKey: queryKeys.payroll.loansAdmin(),
+    queryKey: payrollQueryKeys.payroll.loansAdmin(),
     queryFn: async ({ signal }) =>
       (await apiClient.get<OffsetPage<LoanAdminItem>>("/hr/loans", undefined, signal)).items,
     staleTime: 30_000,
@@ -55,7 +55,7 @@ export function useUpdateLoanStatus() {
     mutationFn: ({ loanId, status }: UpdateLoanStatusInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/loans/${loanId}`, { status }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.payroll.loansAdmin() });
+      qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.loansAdmin() });
     },
   });
 }

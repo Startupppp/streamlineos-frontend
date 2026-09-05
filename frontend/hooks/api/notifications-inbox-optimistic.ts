@@ -2,7 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 import type { QueryClient, QueryKey } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type { Notification, UnreadCount } from "@/types/notifications";
 import { useNotificationInboxInvalidation } from "./notifications-shared";
 import {
@@ -40,8 +40,8 @@ type InboxPatchScope = {
 export async function beginInboxPatch(
   queryClient: QueryClient,
 ): Promise<InboxPatchScope> {
-  const listKey = queryKeys.notifications.lists();
-  const unreadKey = queryKeys.notifications.unreadCount();
+  const listKey = platformCoreQueryKeys.notifications.lists();
+  const unreadKey = platformCoreQueryKeys.notifications.unreadCount();
   await queryClient.cancelQueries({ queryKey: listKey });
   await queryClient.cancelQueries({ queryKey: unreadKey });
   return {
@@ -110,7 +110,7 @@ export function restoreInboxSnapshot(
   restoreListSnapshots(queryClient, context.previousLists);
   if (context.previousCount !== undefined)
     queryClient.setQueryData(
-      queryKeys.notifications.unreadCount(),
+      platformCoreQueryKeys.notifications.unreadCount(),
       context.previousCount,
     );
 }
@@ -134,7 +134,7 @@ export function useNotificationRowPatch<TVars>(
     mutationKey: spec.mutationKey,
     mutationFn: spec.request,
     onMutate: async (vars) => {
-      const listKey = queryKeys.notifications.lists();
+      const listKey = platformCoreQueryKeys.notifications.lists();
       await queryClient.cancelQueries({ queryKey: listKey });
       return {
         previousLists: snapshotAndPatchLists(queryClient, listKey, spec.patch(vars)),

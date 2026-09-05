@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import type { OffsetPage } from "@/hooks/api/offset-page-schema";
-import { queryKeys } from "@/lib/query-keys";
+import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import type { SignAuditEvent, SignEnvelope, SignEnvelopeFull } from "@/types/sign";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
@@ -31,13 +31,13 @@ export interface EnvelopeValidationResult {
 }
 
 function invalidateEnvelope(qc: ReturnType<typeof useQueryClient>, id: number) {
-  qc.invalidateQueries({ queryKey: queryKeys.signEnvelopes.detail(id) });
-  qc.invalidateQueries({ queryKey: queryKeys.signEnvelopes.all });
+  qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signEnvelopes.detail(id) });
+  qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signEnvelopes.all });
 }
 
 export function useSignEnvelopes(params?: { status?: string; page?: number; limit?: number }) {
   return useGatedQuery("sign:envelope:view", {
-    queryKey: queryKeys.signEnvelopes.list(params),
+    queryKey: growthAndSignQueryKeys.signEnvelopes.list(params),
     queryFn: async ({ signal }) =>
       (await apiClient.get<OffsetPage<SignEnvelope>>("/sign/envelopes", params, signal)).items,
     staleTime: 30_000,
@@ -46,7 +46,7 @@ export function useSignEnvelopes(params?: { status?: string; page?: number; limi
 
 export function useSignEnvelope(id: number | undefined) {
   return useGatedQuery("sign:envelope:view", {
-    queryKey: queryKeys.signEnvelopes.detail(id ?? 0),
+    queryKey: growthAndSignQueryKeys.signEnvelopes.detail(id ?? 0),
     queryFn: ({ signal }) => apiClient.get<SignEnvelopeFull>(`/sign/envelopes/${id}`, undefined, signal),
     enabled: id !== undefined,
     staleTime: 15_000,
@@ -58,7 +58,7 @@ export function useCreateSignEnvelope() {
   return useAuthorizedMutation("sign:envelope:create", {
     mutationKey: ["signEnvelopes", "create"],
     mutationFn: (input: CreateSignEnvelopeInput) => apiClient.post<SignEnvelope>("/sign/envelopes", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.signEnvelopes.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signEnvelopes.all }),
   });
 }
 
@@ -76,7 +76,7 @@ export function useDeleteSignEnvelope() {
   return useAuthorizedMutation("sign:envelope:create", {
     mutationKey: ["signEnvelopes", "delete"],
     mutationFn: (id: number) => apiClient.delete<{ success: true }>(`/sign/envelopes/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.signEnvelopes.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signEnvelopes.all }),
   });
 }
 
@@ -125,7 +125,7 @@ export function useSendSignEnvelopeReminder(id: number) {
 
 export function useSignEnvelopeAudit(id: number | undefined) {
   return useGatedQuery("sign:audit:view", {
-    queryKey: queryKeys.signEnvelopes.audit(id ?? 0),
+    queryKey: growthAndSignQueryKeys.signEnvelopes.audit(id ?? 0),
     queryFn: ({ signal }) => apiClient.get<SignAuditEvent[]>(`/sign/envelopes/${id}/audit`, undefined, signal),
     enabled: id !== undefined,
     staleTime: 15_000,

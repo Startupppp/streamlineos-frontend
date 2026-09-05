@@ -2,7 +2,7 @@
 
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 
 export interface EmploymentFacts {
   userId: string;
@@ -23,7 +23,7 @@ export const useEmploymentFacts = (userIds: readonly string[]) => {
   const wanted = [...new Set(userIds.filter(Boolean))].slice(0, 100);
 
   const query = useGatedQuery<EmploymentFactsResponse, Error>("settings:view", {
-    queryKey: queryKeys.directory.employment(wanted),
+    queryKey: directoryAndOwnershipQueryKeys.directory.employment(wanted),
     queryFn: ({ signal }) =>
       apiClient.get<EmploymentFactsResponse>("/directory/employment", {
         userIds: wanted.join(","),

@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import type {
   Incident,
@@ -26,7 +26,7 @@ export function useIncidents(projectId?: number, filters?: IncidentFilters) {
   if (filters?.severity) params["severity"] = filters.severity;
 
   return useQuery<Incident[]>({
-    queryKey: queryKeys.projects.incidents.list(projectId ?? 0, filters),
+    queryKey: buildWorkQueryKeys.projects.incidents.list(projectId ?? 0, filters),
     queryFn: ({ signal }) => apiClient.get<Incident[]>(`/build/${projectId}/incidents`, params, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
@@ -36,7 +36,7 @@ export function useIncidents(projectId?: number, filters?: IncidentFilters) {
 export function useIncident(projectId?: number, incidentId?: number) {
   const canView = useCan("build:incidents:view");
   return useQuery<IncidentDetail>({
-    queryKey: queryKeys.projects.incidents.detail(projectId ?? 0, incidentId ?? 0),
+    queryKey: buildWorkQueryKeys.projects.incidents.detail(projectId ?? 0, incidentId ?? 0),
     queryFn: ({ signal }) =>
       apiClient.get<IncidentDetail>(`/build/${projectId}/incidents/${incidentId}`, undefined, signal),
     enabled: canView && !!projectId && !!incidentId,
@@ -51,7 +51,7 @@ export function useCreateIncident() {
     mutationFn: ({ projectId, ...data }: CreateIncidentInput & { projectId: number }) =>
       apiClient.post<Incident>(`/build/${projectId}/incidents`, data),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.incidents.list(vars.projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.incidents.list(vars.projectId) });
     },
   });
 }
@@ -67,9 +67,9 @@ export function useUpdateIncident() {
     }: UpdateIncidentInput & { projectId: number; id: number }) =>
       apiClient.patch<Incident>(`/build/${projectId}/incidents/${id}`, data),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.incidents.list(vars.projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.incidents.list(vars.projectId) });
       qc.invalidateQueries({
-        queryKey: queryKeys.projects.incidents.detail(vars.projectId, vars.id),
+        queryKey: buildWorkQueryKeys.projects.incidents.detail(vars.projectId, vars.id),
       });
     },
   });
@@ -82,7 +82,7 @@ export function useDeleteIncident() {
     mutationFn: ({ projectId, id }: { projectId: number; id: number }) =>
       apiClient.delete<unknown>(`/build/${projectId}/incidents/${id}`),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.incidents.list(vars.projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.incidents.list(vars.projectId) });
     },
   });
 }
@@ -102,9 +102,9 @@ export function useAddIncidentUpdate() {
       ),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({
-        queryKey: queryKeys.projects.incidents.detail(vars.projectId, vars.incidentId),
+        queryKey: buildWorkQueryKeys.projects.incidents.detail(vars.projectId, vars.incidentId),
       });
-      qc.invalidateQueries({ queryKey: queryKeys.projects.incidents.list(vars.projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.incidents.list(vars.projectId) });
     },
   });
 }

@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { PayrollException, PayrollExceptionSeverity, PayrollExceptionStatus } from "@/types/payroll/runs";
@@ -13,7 +13,7 @@ export function useRunExceptions(
 ) {
   const canView = useCan("payroll:runs:view");
   return useQuery({
-    queryKey: queryKeys.payroll.runExceptions(runId, params as Record<string, unknown> | undefined),
+    queryKey: payrollQueryKeys.payroll.runExceptions(runId, params as Record<string, unknown> | undefined),
     queryFn: ({ signal }) =>
       apiClient.get<PayrollException[]>(`/payroll/runs/${runId}/exceptions`, params, signal),
     staleTime: 30_000,
@@ -31,9 +31,9 @@ export function useResolveException(runId: number) {
         { note },
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runExceptionsAll(runId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.commandCenterAll });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runExceptionsAll(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.run(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.commandCenterAll });
     },
   });
 }
@@ -48,9 +48,9 @@ export function useOverrideException(runId: number) {
         { reason },
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.runExceptionsAll(runId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.run(runId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.commandCenterAll });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.runExceptionsAll(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.run(runId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.commandCenterAll });
     },
   });
 }

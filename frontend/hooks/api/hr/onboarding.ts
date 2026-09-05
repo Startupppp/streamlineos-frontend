@@ -3,7 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { invalidateHrWorkforceQueries } from "@/lib/hr-workforce-cache";
 
@@ -36,7 +36,7 @@ export interface OnboardingTask {
 export function useOnboardingStatus() {
   const canManage = useCan("hr:onboarding:manage");
   return useQuery<OnboardingStatus[]>({
-    queryKey: queryKeys.hr.onboardingStatus(),
+    queryKey: humanResourcesQueryKeys.hr.onboardingStatus(),
     queryFn: ({ signal }) => apiClient.get<OnboardingStatus[]>("/onboarding", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canManage,
@@ -47,7 +47,7 @@ export function useOnboardingStatus() {
 export function useUserOnboarding(userId: string) {
   const canViewTasks = useCan("hr:onboarding:tasks:view");
   return useQuery<OnboardingTask[]>({
-    queryKey: queryKeys.hr.onboardingUser(userId),
+    queryKey: humanResourcesQueryKeys.hr.onboardingUser(userId),
     queryFn: ({ signal }) => apiClient.get<OnboardingTask[]>(`/onboarding/${userId}`, undefined, signal),
     enabled: !!userId && canViewTasks,
     staleTime: 60_000,
@@ -58,7 +58,7 @@ export function useMyOnboarding() {
   const canViewOwnTasks = useCan("self:onboarding-tasks");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<OnboardingTask[]>({
-    queryKey: queryKeys.hr.onboardingUser("me"),
+    queryKey: humanResourcesQueryKeys.hr.onboardingUser("me"),
     queryFn: ({ signal }) => apiClient.get<OnboardingTask[]>("/onboarding/me", undefined, signal),
     staleTime: 60_000,
     enabled: hrEnabled && canViewOwnTasks,
@@ -73,7 +73,7 @@ export function useCompleteOnboardingTask() {
     mutationFn: ({ taskId, status }: { taskId: number; status: "COMPLETED" | "PENDING" }) =>
       apiClient.patch<{ success: boolean }>(`/onboarding/tasks/${taskId}`, { status }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.onboardingAll });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.onboardingAll });
     },
   });
 }
@@ -126,7 +126,7 @@ export interface OnboardingTemplateDepartment {
 export function useOnboardingTemplateDepartments() {
   const canManage = useCan("hr:onboarding:manage");
   return useQuery<OnboardingTemplateDepartment[]>({
-    queryKey: queryKeys.hr.onboardingTemplateDepartments(),
+    queryKey: humanResourcesQueryKeys.hr.onboardingTemplateDepartments(),
     queryFn: ({ signal }) =>
       apiClient.get<OnboardingTemplateDepartment[]>("/onboarding/templates/departments", undefined, signal),
     staleTime: 5 * 60_000,
@@ -140,7 +140,7 @@ export function useOnboardingTemplateDepartments() {
 export function useHrOnboardingTemplates() {
   const canManage = useCan("hr:onboarding:manage");
   return useQuery<OnboardingTemplate[]>({
-    queryKey: queryKeys.hr.onboardingTemplates(),
+    queryKey: humanResourcesQueryKeys.hr.onboardingTemplates(),
     queryFn: ({ signal }) => apiClient.get<OnboardingTemplate[]>("/onboarding/templates", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canManage,
@@ -154,7 +154,7 @@ export function useCreateHrOnboardingTemplate() {
     mutationFn: (data: CreateOnboardingTemplateInput) =>
       apiClient.post<OnboardingTemplate>("/onboarding/templates", data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.onboardingTemplates() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.onboardingTemplates() });
     },
   });
 }

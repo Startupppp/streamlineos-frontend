@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { useCan } from "@/hooks/api/access";
 import type {
   BusinessParty,
@@ -30,7 +30,7 @@ export function useParties(params: UsePartiesParams = {}) {
   if (search) queryParams.search = search;
 
   return useQuery({
-    queryKey: queryKeys.party.parties(queryParams),
+    queryKey: directoryAndOwnershipQueryKeys.party.parties(queryParams),
     queryFn: ({ signal }) => {
       const searchParams = new URLSearchParams({
         page: String(page),
@@ -50,7 +50,7 @@ export function useParty(partyId: string | null) {
   const canView = useCan("party:parties:view");
 
   return useQuery({
-    queryKey: queryKeys.party.party(partyId ?? ""),
+    queryKey: directoryAndOwnershipQueryKeys.party.party(partyId ?? ""),
     queryFn: ({ signal }) => apiClient.get<BusinessParty>(`/party/parties/${partyId}`, undefined, signal),
     staleTime: 60_000,
     enabled: canView && !!partyId,
@@ -64,7 +64,7 @@ export function useCreateParty() {
     mutationFn: (input: CreatePartyInput) =>
       apiClient.post<BusinessParty>("/party/parties", input),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.party.all });
+      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.party.all });
     },
   });
 }
@@ -77,9 +77,9 @@ export function useUpdateParty() {
       apiClient.patch<BusinessParty>(`/party/parties/${partyId}`, input),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({
-        queryKey: queryKeys.party.party(variables.partyId),
+        queryKey: directoryAndOwnershipQueryKeys.party.party(variables.partyId),
       });
-      void qc.invalidateQueries({ queryKey: queryKeys.party.parties() });
+      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.party.parties() });
     },
   });
 }
@@ -91,7 +91,7 @@ export function useDeleteParty() {
     mutationFn: (partyId: string) =>
       apiClient.delete(`/party/parties/${partyId}`),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.party.parties() });
+      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.party.parties() });
     },
   });
 }

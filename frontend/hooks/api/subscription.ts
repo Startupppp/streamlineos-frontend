@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
-import { queryKeys } from "@/lib/query-keys";
+import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
 import type {
@@ -86,7 +86,7 @@ export function useSubscription() {
   const orgId = session?.orgId;
   const canViewSubscription = useCan("billing:subscription:view");
   return useQuery<SubscriptionResponse, Error>({
-    queryKey: queryKeys.billing.subscription(),
+    queryKey: growthAndSignQueryKeys.billing.subscription(),
     queryFn: ({ signal }) => apiClient.get("/billing", undefined, signal, subscriptionContractSource),
     staleTime: 5 * 60_000,
     enabled: !!orgId && canViewSubscription,
@@ -106,17 +106,17 @@ export function useVerifySubscription() {
     mutationKey: ["billing", "checkout", "confirm"],
     mutationFn: (data) => apiClient.patch<VerifySubscriptionResponse>("/billing/checkout", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.billing.subscription() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.billing.summary() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.billing.entitlements() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.billing.seats() });
+      queryClient.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.subscription() });
+      queryClient.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.summary() });
+      queryClient.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.entitlements() });
+      queryClient.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.seats() });
     },
   });
 }
 
 export function useBillingPlans() {
   return useQuery<BillingPlansResponse, Error>({
-    queryKey: queryKeys.billing.plans(),
+    queryKey: growthAndSignQueryKeys.billing.plans(),
     queryFn: ({ signal }) => apiClient.get("/billing/plans", undefined, signal, plansContract),
     staleTime: 60 * 60_000,
   });
@@ -125,7 +125,7 @@ export function useBillingPlans() {
 export function useValidateCoupon(code: string, plan: SubscriptionPlan | null) {
   const canManage = useCan("billing:subscription:manage");
   return useQuery<CouponValidationResult, Error>({
-    queryKey: queryKeys.billing.coupon(code, plan),
+    queryKey: growthAndSignQueryKeys.billing.coupon(code, plan),
     queryFn: ({ signal }) =>
       apiClient.get(
         `/billing/coupons/validate?code=${encodeURIComponent(code)}&plan=${plan ?? ""}`,
@@ -142,7 +142,7 @@ export function useValidateCoupon(code: string, plan: SubscriptionPlan | null) {
 export function useBillingProfile() {
   const canViewProfile = useCan("billing:profile:view");
   return useQuery<BillingProfile>({
-    queryKey: queryKeys.billing.profile(),
+    queryKey: growthAndSignQueryKeys.billing.profile(),
     queryFn: ({ signal }) => apiClient.get("/billing/profile", undefined, signal, profileContract),
     staleTime: 5 * 60 * 1000,
     enabled: canViewProfile,
@@ -156,7 +156,7 @@ export function useUpdateBillingProfile() {
     mutationFn: (data: Partial<BillingProfile>) =>
       apiClient.patch<BillingProfile>("/billing/profile", data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.billing.profile() });
+      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.profile() });
     },
   });
 }
@@ -164,7 +164,7 @@ export function useUpdateBillingProfile() {
 export function useSeatInfo() {
   const canViewSeats = useCan("billing:seats:view");
   return useQuery<SeatInfo>({
-    queryKey: queryKeys.billing.seats(),
+    queryKey: growthAndSignQueryKeys.billing.seats(),
     queryFn: ({ signal }) => apiClient.get("/billing/seats", undefined, signal, seatsContract),
     staleTime: 2 * 60 * 1000,
     enabled: canViewSeats,

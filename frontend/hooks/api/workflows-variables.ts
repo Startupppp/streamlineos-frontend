@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useCan } from "@/hooks/api/access";
 import type { WorkflowVariable } from "./workflows-types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -14,7 +14,7 @@ function assertPermission(allowed: boolean): void {
 export function useGlobalVariables() {
   const canManage = useCan("workflows:variables:manage");
   return useQuery({
-    queryKey: [...queryKeys.workflows.all, "global-variables"] as const,
+    queryKey: [...supportAndWorkflowsQueryKeys.workflows.all, "global-variables"] as const,
     queryFn: ({ signal }) => apiClient.get<WorkflowVariable[]>("/workflows/variables", undefined, signal),
     staleTime: 30_000,
     enabled: canManage,
@@ -31,6 +31,6 @@ export function useDeleteGlobalVariable() {
       return apiClient.delete<{ success: boolean }>(`/workflows/variables/${variableId}`);
     },
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: [...queryKeys.workflows.all, "global-variables"] }),
+      qc.invalidateQueries({ queryKey: [...supportAndWorkflowsQueryKeys.workflows.all, "global-variables"] }),
   });
 }

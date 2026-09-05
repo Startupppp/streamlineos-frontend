@@ -8,7 +8,7 @@ import {
   type ArPaymentsPage,
   type CreditNotesPage,
 } from "@/hooks/api/accounting/ar-schema";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useCan } from "@/hooks/api/access";
 import type { CursorPage } from "@/hooks/api/accounting";
 import type {
@@ -133,7 +133,7 @@ export function useVoidInvoice() {
         `/invoices/${invoiceId}/void`,
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.invoice.all });
     },
   });
 }
@@ -149,7 +149,7 @@ export function useRecordPaymentWithAllocations() {
     mutationFn: ({ invoiceId, ...body }) =>
       apiClient.post<{ id: number }>(`/invoices/${invoiceId}/payments`, body),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.invoice.all });
     },
   });
 }
@@ -211,7 +211,7 @@ export function useApplyCreditNote() {
         queryKey: arKeys.creditNotes.all,
         exact: false,
       });
-      queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.invoice.all });
     },
   });
 }
@@ -300,7 +300,7 @@ export function useRunRecurringTemplate() {
         queryKey: arKeys.recurringTemplates.all,
         exact: false,
       });
-      queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.invoice.all });
     },
   });
 }

@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { useCan } from "@/hooks/api/access";
 import type { TimesheetPeriod } from "@/features/timesheets/types";
 
@@ -26,7 +26,7 @@ export function useTeamWeekSummary(
   const canView = useCan("timesheets:team:view");
   const params = { userIds: userIds.join(","), startDate, endDate };
   return useQuery({
-    queryKey: queryKeys.timesheets.teamWeekSummary(params),
+    queryKey: usersAndCommerceQueryKeys.timesheets.teamWeekSummary(params),
     queryFn: ({ signal }) =>
       apiClient.get<TeamWeekSummaryResponse>("/timesheets/team/week-summary", params, signal),
     staleTime: 30_000,

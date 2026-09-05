@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useCan } from "@/hooks/api/access";
 import type { LayoutAdjustment } from "@/lib/renderer/layout-adjustment";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -60,7 +60,7 @@ export function useLayoutAdjustment(layoutKey: string) {
   const orgId = useLayoutTenant();
 
   return useQuery({
-    queryKey: queryKeys.recordLayouts.adjustment(orgId, layoutKey),
+    queryKey: platformCoreQueryKeys.recordLayouts.adjustment(orgId, layoutKey),
     queryFn: ({ signal }) =>
       apiClient.get<LayoutAdjustment | null>(
         `/renderer/layouts/${encodeURIComponent(layoutKey)}`, undefined, signal,
@@ -109,10 +109,10 @@ export function useSaveLayoutAdjustment(layoutKey: string) {
       ),
     onSuccess: (saved) => {
       queryClient.setQueryData(
-        queryKeys.recordLayouts.adjustment(orgId, layoutKey),
+        platformCoreQueryKeys.recordLayouts.adjustment(orgId, layoutKey),
         saved,
       );
-      void queryClient.invalidateQueries({ queryKey: queryKeys.recordLayouts.all });
+      void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.recordLayouts.all });
     },
   });
 }
@@ -127,10 +127,10 @@ export function useResetLayoutAdjustment(layoutKey: string) {
       apiClient.delete<null>(`/renderer/layouts/${encodeURIComponent(layoutKey)}`),
     onSuccess: () => {
       queryClient.setQueryData(
-        queryKeys.recordLayouts.adjustment(orgId, layoutKey),
+        platformCoreQueryKeys.recordLayouts.adjustment(orgId, layoutKey),
         null,
       );
-      void queryClient.invalidateQueries({ queryKey: queryKeys.recordLayouts.all });
+      void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.recordLayouts.all });
     },
   });
 }
@@ -140,7 +140,7 @@ export function useLayoutUsage(layoutKey: string, options?: { enabled?: boolean 
   const canReadUsage = useCan("settings:record-layouts:manage");
 
   return useQuery({
-    queryKey: queryKeys.recordLayouts.usage(orgId, layoutKey),
+    queryKey: platformCoreQueryKeys.recordLayouts.usage(orgId, layoutKey),
     queryFn: ({ signal }) =>
       apiClient.get<LayoutUsage>(
         `/renderer/layouts/${encodeURIComponent(layoutKey)}/usage`, undefined, signal,

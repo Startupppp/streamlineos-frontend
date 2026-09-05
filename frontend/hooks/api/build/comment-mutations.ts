@@ -2,7 +2,8 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 interface UpdateCommentInput {
@@ -29,10 +30,10 @@ export function useUpdateComment() {
       ),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.ticket(variables.ticketId),
+        queryKey: buildWorkQueryKeys.projects.ticket(variables.ticketId),
       });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.ticketActivity.list(variables.ticketId),
+        queryKey: accountingAndSupportQueryKeys.ticketActivity.list(variables.ticketId),
       });
     },
   });
@@ -48,10 +49,10 @@ export function useDeleteComment() {
       ),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.ticket(variables.ticketId),
+        queryKey: buildWorkQueryKeys.projects.ticket(variables.ticketId),
       });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.ticketActivity.list(variables.ticketId),
+        queryKey: accountingAndSupportQueryKeys.ticketActivity.list(variables.ticketId),
       });
     },
   });

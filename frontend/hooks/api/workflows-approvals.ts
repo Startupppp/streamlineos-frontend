@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useCan } from "@/hooks/api/access";
 import type { WorkflowApproval } from "./workflows-types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -19,7 +19,7 @@ function assertPermission(allowed: boolean): void {
 export function usePendingApprovals() {
   const canView = useCan("workflows:approvals:view");
   return useQuery({
-    queryKey: queryKeys.workflows.approvals(),
+    queryKey: supportAndWorkflowsQueryKeys.workflows.approvals(),
     queryFn: ({ signal }) => apiClient.get<WorkflowApproval[]>("/workflows/approvals/pending", undefined, signal),
     staleTime: 120_000,
     refetchInterval: 120_000,
@@ -38,8 +38,8 @@ export function useHandleApproval() {
       return apiClient.post<WorkflowApproval>(`/workflows/approvals/${approvalId}/action`, input);
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.workflows.approvals() });
-      qc.invalidateQueries({ queryKey: queryKeys.workflows.all });
+      qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.workflows.approvals() });
+      qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.workflows.all });
     },
   });
 }

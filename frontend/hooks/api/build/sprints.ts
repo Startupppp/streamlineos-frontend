@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type {
   Sprint,
   CreateSprintInput,
@@ -18,7 +18,7 @@ export function useSprints(
 ) {
   const canView = useCan("build:sprints:view");
   return useQuery<Sprint[]>({
-    queryKey: queryKeys.projects.sprints(projectId),
+    queryKey: buildWorkQueryKeys.projects.sprints(projectId),
     queryFn: ({ signal }) =>
       apiClient.get<Sprint[]>(`/build/${projectId}/sprints`, undefined, signal),
     enabled: canView && !!projectId,
@@ -36,7 +36,7 @@ export function useCreateSprint(options?: Parameters<typeof useMutation>[0]) {
       apiClient.post<Sprint>(`/build/${projectId}/sprints`, data),
     onSuccess: (_: unknown, variables: CreateSprintInput) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.sprints(variables.projectId),
+        queryKey: buildWorkQueryKeys.projects.sprints(variables.projectId),
       });
     },
   });
@@ -57,7 +57,7 @@ export function useUpdateSprint(
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.sprints(projectId),
+        queryKey: buildWorkQueryKeys.projects.sprints(projectId),
       });
     },
   });

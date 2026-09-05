@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useKbSpaces } from "./spaces";
 import type { KbSearchParams, KbSearchResponse } from "@/types/kb";
@@ -20,7 +20,7 @@ export function useKbSearch(params: KbSearchParams, options?: { enabled?: boolea
   const cacheParams: Record<string, unknown> = { ...params, aclVersion: aclVersion ?? "" };
   const apiParams: Record<string, unknown> = { ...params };
   return useQuery({
-    queryKey: queryKeys.kb.search(cacheParams),
+    queryKey: knowledgeAndSurveysQueryKeys.kb.search(cacheParams),
     queryFn: ({ signal }) =>
       apiClient.get<KbSearchResponse>("/kb/search", apiParams, signal),
     staleTime: 0,

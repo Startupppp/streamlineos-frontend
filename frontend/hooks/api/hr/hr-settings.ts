@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
@@ -27,7 +27,7 @@ export function useCreateAsset() {
     mutationKey: ["hr", "assets", "create"],
     mutationFn: (data: CreateAssetInput) =>
       apiClient.post<Asset>("/hr/assets", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.assets() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assets() }),
   });
 }
 
@@ -37,7 +37,7 @@ export function useUpdateAsset() {
     mutationKey: ["hr", "assets", "update"],
     mutationFn: ({ assetId, ...data }: UpdateAssetInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/assets/${assetId}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.assets() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assets() }),
   });
 }
 
@@ -47,7 +47,7 @@ export function useAssignAsset() {
     mutationKey: ["hr", "assets", "assign"],
     mutationFn: (data: AssignAssetInput) =>
       apiClient.patch<{ success: boolean }>("/hr/assets", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.assets() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assets() }),
   });
 }
 
@@ -58,9 +58,9 @@ export function useCreateDocument() {
     mutationFn: (data: CreateDocumentInput) =>
       apiClient.post<Document>("/hr/documents", data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.documentsAll });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.documentsStats() });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.documentsExpiryAll });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsAll });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsStats() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsExpiryAll });
     },
   });
 }
@@ -72,9 +72,9 @@ export function useUpdateDocument() {
     mutationFn: ({ id, ...data }: { id: number; name?: string; description?: string | null; type?: string; category?: string | null; userId?: string | null; isPublic?: boolean; tags?: string[]; expiryDate?: string | null }) =>
       apiClient.patch<Document>(`/hr/documents/${id}`, data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.documentsAll });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.documentsStats() });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.documentsExpiryAll });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsAll });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsStats() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsExpiryAll });
     },
   });
 }
@@ -86,9 +86,9 @@ export function useDeleteDocument() {
     mutationFn: (documentId: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/documents/${documentId}`),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.documentsAll });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.documentsStats() });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.documentsExpiryAll });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsAll });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsStats() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsExpiryAll });
     },
   });
 }
@@ -112,7 +112,7 @@ export function useHrPerformanceReviews(params?: HrPerformanceReviewParams) {
     ...(params?.cursor ? { cursor: params.cursor } : {}),
   };
   return useQuery({
-    queryKey: queryKeys.hr.performanceReviews(queryParams),
+    queryKey: humanResourcesQueryKeys.hr.performanceReviews(queryParams),
     queryFn: ({ signal }) =>
       apiClient.get<PerformanceReviewPage>("/hr/performance/reviews", queryParams, signal),
     staleTime: 2 * 60_000,
@@ -129,7 +129,7 @@ export function useCreateGoal() {
       apiClient.post<Goal>("/hr/performance/goals", data),
     onSuccess: () =>
       qc.invalidateQueries({
-        queryKey: [...queryKeys.hr.all, "goals"],
+        queryKey: [...humanResourcesQueryKeys.hr.all, "goals"],
         exact: false,
       }),
   });
@@ -138,7 +138,7 @@ export function useCreateGoal() {
 export function useHrWfhRequests() {
   const canSelf = useCan("self:attendance");
   return useQuery({
-    queryKey: queryKeys.hr.wfhRequests(),
+    queryKey: humanResourcesQueryKeys.hr.wfhRequests(),
     queryFn: ({ signal }) => apiClient.get<WfhRequest[]>("/me/time-off/wfh", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: canSelf,
@@ -149,7 +149,7 @@ export function useHrPendingWfhRequests(options?: { enabled?: boolean }) {
   const canAttendance = useCan("hr:attendance:manage");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: queryKeys.hr.pendingWfhRequests(),
+    queryKey: humanResourcesQueryKeys.hr.pendingWfhRequests(),
     queryFn: ({ signal }) => apiClient.get<WfhRequest[]>("/hr/wfh/pending", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canAttendance && (options?.enabled ?? true),
@@ -163,8 +163,8 @@ export function useCreateWfhRequest() {
     mutationFn: (data: CreateWfhRequestInput) =>
       apiClient.post<{ success: boolean }>("/me/time-off/wfh", data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.wfhRequests() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.pendingWfhRequests() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.wfhRequests() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.pendingWfhRequests() });
     },
   });
 }
@@ -176,8 +176,8 @@ export function useProcessWfhRequest() {
     mutationFn: ({ requestId, ...data }: ProcessWfhRequestInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/wfh/${requestId}`, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.wfhRequests() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.pendingWfhRequests() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.wfhRequests() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.pendingWfhRequests() });
     },
   });
 }

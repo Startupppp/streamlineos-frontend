@@ -3,7 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 
 export type ProbationStatus = "in_probation" | "review_due" | "extended" | "confirmed" | "terminated";
@@ -25,8 +25,8 @@ export interface ProbationReview {
 }
 
 const probationKeys = {
-  all: [...queryKeys.hr.all, "probation"] as const,
-  list: (params: ProbationListParams) => [...queryKeys.hr.all, "probation", "list", params] as const,
+  all: [...humanResourcesQueryKeys.hr.all, "probation"] as const,
+  list: (params: ProbationListParams) => [...humanResourcesQueryKeys.hr.all, "probation", "list", params] as const,
 };
 
 export interface ProbationListParams {

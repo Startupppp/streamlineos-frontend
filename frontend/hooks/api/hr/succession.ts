@@ -3,7 +3,7 @@
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
-import { queryKeys } from "@/lib/query-keys";
+import { hrEngagementQueryKeys } from "@/lib/query-keys/hr-engagement";
 import { apiClient } from "@/lib/api-client";
 
 export type SuccessionReadiness = "ready_now" | "1_2_years" | "3_plus";
@@ -31,7 +31,7 @@ export function useSuccessionPlans() {
   const canView = useCan("hr:succession:view");
   const hrEnabled = useModuleEnabled("hr");
   return useInfiniteQuery({
-    queryKey: queryKeys.hrSuccession.list(),
+    queryKey: hrEngagementQueryKeys.hrSuccession.list(),
     initialPageParam: null as string | null,
     queryFn: ({ pageParam, signal }) => {
       const params = new URLSearchParams({ limit: "30" });
@@ -58,7 +58,7 @@ export function useCreateSuccessionPlan() {
         "id" | "orgId" | "createdBy" | "createdAt" | "updatedAt"
       >,
     ) => apiClient.post<SuccessionPlan>("/hr/succession", body),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hrSuccession.list() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrSuccession.list() }),
   });
 }
 
@@ -68,6 +68,6 @@ export function useDeleteSuccessionPlan() {
     mutationKey: ["hr", "succession", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/succession/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hrSuccession.list() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrSuccession.list() }),
   });
 }

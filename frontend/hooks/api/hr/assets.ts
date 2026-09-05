@@ -2,7 +2,7 @@
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import type { Asset } from "@/types/hr";
 
@@ -26,7 +26,7 @@ export interface HrAssetListResponse {
   pagination: { page: number; limit: number; total: number; totalPages: number };
 }
 
-export const hrAssetListPrefix = [...queryKeys.hr.all, "assets"] as const;
+export const hrAssetListPrefix = [...humanResourcesQueryKeys.hr.all, "assets"] as const;
 
 export function useHrAssetList(params?: HrAssetListParams) {
   const canAssets = useCan("hr:assets:view");
@@ -36,7 +36,7 @@ export function useHrAssetList(params?: HrAssetListParams) {
     ...(params?.status ? { status: params.status } : {}),
   };
   return useQuery({
-    queryKey: queryKeys.hr.assets(queryParams),
+    queryKey: humanResourcesQueryKeys.hr.assets(queryParams),
     queryFn: ({ signal }) => apiClient.get<HrAssetListResponse>("/hr/assets", queryParams, signal),
     staleTime: 60_000,
     placeholderData: keepPreviousData,

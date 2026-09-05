@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -53,7 +53,7 @@ const LABOR_KEY = ["hr", "governance", "labor"] as const;
 export function useUnionMemberships(params?: { unionName?: string; status?: string; page?: number; limit?: number }) {
   const canViewLabor = useCan("hr:labor:view");
   return useQuery<LaborListResponse<UnionMembership>>({
-    queryKey: [...queryKeys.hr.hrLaborMembershipsAll, params],
+    queryKey: [...humanResourcesQueryKeys.hr.hrLaborMembershipsAll, params],
     queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
       if (params?.unionName) p["unionName"] = params.unionName;
@@ -70,7 +70,7 @@ export function useUnionMemberships(params?: { unionName?: string; status?: stri
 export function useCollectiveAgreements(params?: { status?: string; unionName?: string; page?: number; limit?: number }) {
   const canViewLabor = useCan("hr:labor:view");
   return useQuery<LaborListResponse<CollectiveAgreement>>({
-    queryKey: [...queryKeys.hr.hrLaborAgreementsAll, params],
+    queryKey: [...humanResourcesQueryKeys.hr.hrLaborAgreementsAll, params],
     queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
       if (params?.status) p["status"] = params.status;
@@ -87,7 +87,7 @@ export function useCollectiveAgreements(params?: { status?: string; unionName?: 
 export function useExpiringAgreements(days = 30) {
   const canViewLabor = useCan("hr:labor:view");
   return useQuery<{ data: CollectiveAgreement[]; daysWindow: number }>({
-    queryKey: queryKeys.hr.hrLaborAgreementsExpiring(days),
+    queryKey: humanResourcesQueryKeys.hr.hrLaborAgreementsExpiring(days),
     queryFn: ({ signal }) =>
       apiClient.get<{ data: CollectiveAgreement[]; daysWindow: number }>("/hr/governance/labor/agreements/expiring", { days }, signal),
     staleTime: 60_000,
@@ -98,7 +98,7 @@ export function useExpiringAgreements(days = 30) {
 export function useLaborCases(params?: { status?: string; unionName?: string; page?: number; limit?: number }) {
   const canViewLabor = useCan("hr:labor:view");
   return useQuery<LaborListResponse<LaborCase>>({
-    queryKey: [...queryKeys.hr.hrLaborCasesAll, params],
+    queryKey: [...humanResourcesQueryKeys.hr.hrLaborCasesAll, params],
     queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
       if (params?.status) p["status"] = params.status;
@@ -118,7 +118,7 @@ export function useCreateUnionMembership() {
     mutationKey: [...LABOR_KEY, "memberships", "create"],
     mutationFn: (payload) => apiClient.post<UnionMembership>("/hr/governance/labor/memberships", payload),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hrLaborMembershipsAll });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrLaborMembershipsAll });
       toast.success("Union membership created");
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -131,7 +131,7 @@ export function useDeleteUnionMembership() {
     mutationKey: [...LABOR_KEY, "memberships", "delete"],
     mutationFn: (membershipId) => apiClient.delete<void>(`/hr/governance/labor/memberships/${membershipId}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hrLaborMembershipsAll });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrLaborMembershipsAll });
       toast.success("Union membership deleted");
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -144,7 +144,7 @@ export function useCreateCollectiveAgreement() {
     mutationKey: [...LABOR_KEY, "agreements", "create"],
     mutationFn: (payload) => apiClient.post<CollectiveAgreement>("/hr/governance/labor/agreements", payload),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hrLaborAgreementsAll });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrLaborAgreementsAll });
       toast.success("Collective agreement created");
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -157,7 +157,7 @@ export function useDeleteCollectiveAgreement() {
     mutationKey: [...LABOR_KEY, "agreements", "delete"],
     mutationFn: (agreementId) => apiClient.delete<void>(`/hr/governance/labor/agreements/${agreementId}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hrLaborAgreementsAll });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrLaborAgreementsAll });
       toast.success("Collective agreement deleted");
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -170,7 +170,7 @@ export function useCreateLaborCase() {
     mutationKey: [...LABOR_KEY, "cases", "create"],
     mutationFn: (payload) => apiClient.post<LaborCase>("/hr/governance/labor/cases", payload),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hrLaborCasesAll });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrLaborCasesAll });
       toast.success("Labor case created");
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -183,7 +183,7 @@ export function useDeleteLaborCase() {
     mutationKey: [...LABOR_KEY, "cases", "delete"],
     mutationFn: (caseId) => apiClient.delete<void>(`/hr/governance/labor/cases/${caseId}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hrLaborCasesAll });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrLaborCasesAll });
       toast.success("Labor case deleted");
     },
     onError: (err) => toast.error(getErrorMessage(err)),

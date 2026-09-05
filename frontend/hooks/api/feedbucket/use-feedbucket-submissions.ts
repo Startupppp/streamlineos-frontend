@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import type {
   FeedbucketSubmission,
   PaginatedFeedbucketSubmissions,
@@ -14,7 +14,7 @@ import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export function useFeedbucketSubmissions(params?: ListFeedbucketSubmissionsQuery) {
   return useGatedQuery("feedbucket:submissions:view", {
-    queryKey: queryKeys.feedbucket.submissions(params as Record<string, unknown>),
+    queryKey: growthAndSignQueryKeys.feedbucket.submissions(params as Record<string, unknown>),
     queryFn: ({ signal }) =>
       apiClient.get<PaginatedFeedbucketSubmissions>(
         "/feedbucket/submissions",
@@ -26,7 +26,7 @@ export function useFeedbucketSubmissions(params?: ListFeedbucketSubmissionsQuery
 
 export function useFeedbucketSubmission(submissionId: number) {
   return useGatedQuery("feedbucket:submissions:view", {
-    queryKey: queryKeys.feedbucket.submission(submissionId),
+    queryKey: growthAndSignQueryKeys.feedbucket.submission(submissionId),
     queryFn: ({ signal }) =>
       apiClient.get<FeedbucketSubmission>(`/feedbucket/submissions/${submissionId}`, undefined, signal),
     staleTime: 30_000,
@@ -50,8 +50,8 @@ export function useUpdateFeedbucketSubmission() {
         input,
       ),
     onSuccess: (_, { submissionId }) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.feedbucket.submission(submissionId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.feedbucket.all });
+      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.submission(submissionId) });
+      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.all });
     },
   });
 }
@@ -65,8 +65,8 @@ export function useConvertFeedbucketToTicket() {
         `/feedbucket/submissions/${submissionId}/convert-to-ticket`,
       ),
     onSuccess: (_, submissionId) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.feedbucket.submission(submissionId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.feedbucket.all });
+      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.submission(submissionId) });
+      void qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.feedbucket.all });
     },
   });
 }

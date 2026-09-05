@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -65,7 +65,7 @@ const SCENARIOS_KEY = ["hr", "governance", "scenarios"] as const;
 export function usePositions(params?: { status?: string; departmentId?: number; page?: number; limit?: number }) {
   const canViewPositions = useCan("hr:positions:view");
   return useQuery<PositionsListResponse>({
-    queryKey: [...queryKeys.hr.hrPositionsAll, params],
+    queryKey: [...humanResourcesQueryKeys.hr.hrPositionsAll, params],
     queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
       if (params?.status) p["status"] = params.status;
@@ -82,7 +82,7 @@ export function usePositions(params?: { status?: string; departmentId?: number; 
 export function useReorgScenarios(params?: { status?: string; page?: number; limit?: number }) {
   const canViewPositions = useCan("hr:positions:view");
   return useQuery<ScenariosListResponse>({
-    queryKey: [...queryKeys.hr.hrScenariosAll, params],
+    queryKey: [...humanResourcesQueryKeys.hr.hrScenariosAll, params],
     queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
       if (params?.status) p["status"] = params.status;
@@ -98,7 +98,7 @@ export function useReorgScenarios(params?: { status?: string; page?: number; lim
 export function useSimulateScenario(scenarioId: number | undefined) {
   const canViewPositions = useCan("hr:positions:view");
   return useQuery<SimulationResult>({
-    queryKey: [...queryKeys.hr.hrScenariosAll, scenarioId, "simulate"],
+    queryKey: [...humanResourcesQueryKeys.hr.hrScenariosAll, scenarioId, "simulate"],
     queryFn: ({ signal }) => apiClient.get<SimulationResult>(`/hr/governance/scenarios/${scenarioId}/simulate`, undefined, signal),
     enabled: canViewPositions && scenarioId !== undefined,
     staleTime: 0,

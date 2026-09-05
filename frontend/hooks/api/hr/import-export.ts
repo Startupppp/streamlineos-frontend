@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useAccess, useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -128,7 +128,7 @@ export function useHrImportJobs(
   const cursor = pagination?.cursor;
   const limit = pagination?.limit ?? 20;
   return useQuery<PaginatedJobs>({
-    queryKey: [...queryKeys.hr.importJobs(entity), cursor, limit] as const,
+    queryKey: [...humanResourcesQueryKeys.hr.importJobs(entity), cursor, limit] as const,
     queryFn: ({ signal }) =>
       apiClient.get<PaginatedJobs>("/hr/import/jobs", {
         ...(cursor ? { cursor } : {}),
@@ -144,7 +144,7 @@ export function useHrImportJob(jobId: string | null) {
   const canImport = useCan("hr:import:manage");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<HrImportJobDetail>({
-    queryKey: queryKeys.hr.importJob(jobId ?? ""),
+    queryKey: humanResourcesQueryKeys.hr.importJob(jobId ?? ""),
     queryFn: ({ signal }) =>
       apiClient.get<HrImportJobDetail>(`/hr/import/jobs/${jobId}`, undefined, signal),
     enabled: hrEnabled && canImport && !!jobId,
@@ -159,7 +159,7 @@ export function useCreateImportJob() {
     mutationFn: (body) =>
       apiClient.post<CreateImportJobResult>("/hr/import/jobs", body),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.importJobs() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.importJobs() });
     },
   });
 }
@@ -171,8 +171,8 @@ export function useCommitImportJob() {
     mutationFn: ({ jobId }) =>
       apiClient.post<HrImportJob>(`/hr/import/jobs/${jobId}/commit`, {}),
     onSuccess: (_, { jobId }) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.importJobs() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.importJob(jobId) });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.importJobs() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.importJob(jobId) });
     },
   });
 }
@@ -184,8 +184,8 @@ export function useRollbackImportJob() {
     mutationFn: ({ jobId }) =>
       apiClient.post<HrImportJob>(`/hr/import/jobs/${jobId}/rollback`, {}),
     onSuccess: (_, { jobId }) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.importJobs() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.importJob(jobId) });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.importJobs() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.importJob(jobId) });
     },
   });
 }
@@ -221,7 +221,7 @@ export function useHrEmployeeExportJob(exportJobId: string | null) {
   const accessVersion = access?.version ?? 0;
 
   return useQuery<HrEmployeeExportJob, Error>({
-    queryKey: queryKeys.hr.employeeExportJob(
+    queryKey: humanResourcesQueryKeys.hr.employeeExportJob(
       orgId,
       actorUserId,
       accessVersion,

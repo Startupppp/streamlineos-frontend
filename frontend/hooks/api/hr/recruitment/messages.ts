@@ -3,7 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
@@ -49,7 +49,7 @@ export interface SendCandidateMessageInput {
 export function useCandidateMessages(candidateId?: number) {
   const canView = useCan("hr:employees:view");
   return useQuery({
-    queryKey: queryKeys.hr.candidateMessages(candidateId),
+    queryKey: humanResourcesQueryKeys.hr.candidateMessages(candidateId),
     queryFn: ({ signal }) => {
       const params = candidateId ? `?candidateId=${candidateId}` : "";
       return apiClient.get<CandidateMessage[]>(`/hr/recruitment/messages${params}`, undefined, signal);
@@ -61,7 +61,7 @@ export function useCandidateMessages(candidateId?: number) {
 
 export function useMessageThreads() {
   return useGatedQuery("hr:employees:view", {
-    queryKey: queryKeys.hr.messageThreads(),
+    queryKey: humanResourcesQueryKeys.hr.messageThreads(),
     queryFn: ({ signal }) => apiClient.get<MessageThread[]>("/hr/recruitment/messages/threads", undefined, signal),
     staleTime: 65_000,
     refetchInterval: 60_000,
@@ -75,8 +75,8 @@ export function useSendCandidateMessage() {
     mutationFn: (data: SendCandidateMessageInput) =>
       apiClient.post<CandidateMessage>("/hr/recruitment/messages", data),
     onSuccess: (_, variables) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.candidateMessages(variables.candidateId) });
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.messageThreads() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.candidateMessages(variables.candidateId) });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.messageThreads() });
     },
   });
 }

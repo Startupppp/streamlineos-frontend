@@ -2,7 +2,7 @@
 
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -64,7 +64,7 @@ interface ResignationListParams {
 }
 
 const exitKeys = {
-  all: [...queryKeys.hr.all, "exit"] as const,
+  all: [...humanResourcesQueryKeys.hr.all, "exit"] as const,
   list: (params?: ResignationListParams) => [...exitKeys.all, "list", params] as const,
   progress: (resignationId: number) =>
     [...exitKeys.all, "progress", resignationId] as const,

@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 
 export interface LetterRender {
   id: number;
@@ -45,13 +45,13 @@ export interface SaveLetterInput {
   contextSnapshot?: Record<string, unknown>;
 }
 
-const LETTERS_KEY = [...queryKeys.hr.all, "letters"] as const;
+const LETTERS_KEY = [...humanResourcesQueryKeys.hr.all, "letters"] as const;
 
 export function useLetters(employmentId?: number) {
   const canView = useCan("hr:documents:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<LetterRender[]>({
-    queryKey: [...queryKeys.hr.all, "letters", { employmentId }],
+    queryKey: [...humanResourcesQueryKeys.hr.all, "letters", { employmentId }],
     queryFn: ({ signal }) =>
       apiClient.get<LetterRender[]>(
         "/hr/documents/letters",

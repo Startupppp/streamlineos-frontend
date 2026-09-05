@@ -3,7 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useCan } from "@/hooks/api/access";
 import type { Role } from "@/types/organization";
 import type {
@@ -57,7 +58,7 @@ export const useRoles = (
 ) => {
   const canManage = useCan("settings:rbac:manage");
   return useQuery<RoleListItem[], Error>({
-    queryKey: queryKeys.roles.selectorList(),
+    queryKey: accessAndCrmQueryKeys.roles.selectorList(),
     queryFn: async ({ signal }) => {
       const response = await apiClient.get(
         "/roles",
@@ -80,7 +81,7 @@ export const usePaginatedRoles = (
 ) => {
   const canManage = useCan("settings:rbac:manage");
   return useQuery<PaginatedRolesResponse, Error>({
-    queryKey: queryKeys.roles.list(params),
+    queryKey: accessAndCrmQueryKeys.roles.list(params),
     queryFn: ({ signal }) =>
       apiClient.get("/roles", {
         cursor: params.cursor,
@@ -102,7 +103,7 @@ export const useRole = (
 ) => {
   const canManage = useCan("settings:rbac:manage");
   return useQuery<RoleRecordType, Error>({
-    queryKey: queryKeys.roles.detail(id),
+    queryKey: accessAndCrmQueryKeys.roles.detail(id),
     queryFn: ({ signal }) => apiClient.get(`/roles/${id}`, undefined, signal, roleContract),
     staleTime: 30 * 60_000,
     ...options,
@@ -118,7 +119,7 @@ export const useDeleteRole = () => {
     mutationFn: (id) =>
       apiClient.delete<{ success: boolean }>(`/roles/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.roles.all });
+      queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.all });
     },
   });
 };
@@ -130,9 +131,9 @@ export const useUpdateRole = (roleId: number) => {
     mutationFn: ({ name }) =>
       apiClient.patch<{ success: boolean }>(`/roles/${roleId}`, { name }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.roles.all });
+      queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.all });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.roles.detail(roleId),
+        queryKey: accessAndCrmQueryKeys.roles.detail(roleId),
       });
     },
   });
@@ -143,7 +144,7 @@ export function useMaterializeRoleTemplate() {
   return useAuthorizedMutation<Role, Error, { templateId: string }>("settings:rbac:manage", {
     mutationKey: ["roles", "materialize-template"],
     mutationFn: (data) => apiClient.post<Role>("/roles/templates", data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.roles.all }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.all }),
   });
 }
 
@@ -162,7 +163,7 @@ export function useSeedDefaultRoles() {
     mutationFn: () =>
       apiClient.post<{ created: string[]; skipped: string[] }>("/roles/seed-defaults"),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.roles.all });
+      void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.all });
     },
   });
 }
@@ -177,7 +178,7 @@ export const useRolePermissionGrants = (
 ) => {
   const canManage = useCan("settings:rbac:manage");
   return useQuery<RolePermissionGrant[], Error>({
-    queryKey: queryKeys.roles.permissions(roleId),
+    queryKey: accessAndCrmQueryKeys.roles.permissions(roleId),
     queryFn: ({ signal }) =>
       apiClient.get<RolePermissionGrant[]>(`/roles/${roleId}/permissions`, undefined, signal),
     staleTime: 5 * 60_000,
@@ -194,14 +195,14 @@ export const useSetRolePermissions = () => {
       apiClient.put<{ success: true; version: number }>(`/roles/${roleId}/permissions`, { version, items }),
     onSuccess: (data, variables) => {
       queryClient.setQueryData<import("@/types/organization").Role>(
-        queryKeys.roles.detail(variables.roleId),
+        accessAndCrmQueryKeys.roles.detail(variables.roleId),
         (old) => (old ? { ...old, version: data.version } : old),
       );
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.roles.permissions(variables.roleId),
+        queryKey: accessAndCrmQueryKeys.roles.permissions(variables.roleId),
       });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.roles.list() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.access.me() });
+      void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.list() });
+      void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
     },
   });
 };
@@ -215,7 +216,7 @@ export const useRoleMembers = (
 ) => {
   const canManage = useCan("settings:rbac:manage");
   return useQuery<RoleMember[], Error>({
-    queryKey: queryKeys.roles.members(roleId),
+    queryKey: accessAndCrmQueryKeys.roles.members(roleId),
     queryFn: ({ signal }) => apiClient.get<RoleMember[]>(`/roles/${roleId}/members`, undefined, signal),
     staleTime: 5 * 60_000,
     ...options,
@@ -231,10 +232,10 @@ export const useAssignRoleMember = () => {
       apiClient.post<{ success: boolean }>(`/roles/${roleId}/members`, body),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.roles.members(variables.roleId),
+        queryKey: accessAndCrmQueryKeys.roles.members(variables.roleId),
       });
-      queryClient.invalidateQueries({ queryKey: queryKeys.roles.list() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.access.me() });
+      queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.list() });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
     },
   });
 };
@@ -247,10 +248,10 @@ export const useUnassignRoleMember = () => {
       apiClient.delete<{ success: boolean }>(`/roles/${roleId}/members`, body),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.roles.members(variables.roleId),
+        queryKey: accessAndCrmQueryKeys.roles.members(variables.roleId),
       });
-      queryClient.invalidateQueries({ queryKey: queryKeys.roles.list() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.access.me() });
+      queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.roles.list() });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
     },
   });
 };
@@ -269,7 +270,7 @@ export function useRolesAnalytics(
 ) {
   const canManage = useCan("settings:rbac:manage");
   return useQuery<RolesAnalytics, Error>({
-    queryKey: queryKeys.roles.analytics(),
+    queryKey: accessAndCrmQueryKeys.roles.analytics(),
     queryFn: ({ signal }) => apiClient.get<RolesAnalytics>("/roles/analytics", undefined, signal),
     staleTime: 2 * 60_000,
     ...options,
@@ -287,7 +288,7 @@ export function useAssignableDepartments(
 ) {
   const canManage = useCan("settings:rbac:manage");
   return useQuery<AssignableDepartment[], Error>({
-    queryKey: queryKeys.roles.departments(),
+    queryKey: accessAndCrmQueryKeys.roles.departments(),
     queryFn: ({ signal }) => apiClient.get<AssignableDepartment[]>("/roles/departments", undefined, signal),
     staleTime: 5 * 60_000,
     ...options,

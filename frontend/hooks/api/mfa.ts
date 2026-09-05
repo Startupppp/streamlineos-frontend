@@ -1,11 +1,12 @@
 "use client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 
 export function useMfaStatus() {
   return useQuery({
-    queryKey: queryKeys.mfa.status(),
+    queryKey: supportAndWorkflowsQueryKeys.mfa.status(),
     queryFn: ({ signal }) => apiClient.get<{ enabled: boolean }>("/auth/mfa/status", undefined, signal),
     staleTime: 2 * 60_000,
   });
@@ -31,8 +32,8 @@ export function useMfaVerify() {
     mutationFn: (data: { token: string } | { backupCode: string }) =>
       apiClient.post<{ enabled: boolean }>("/auth/mfa/verify", data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.mfa.all });
-      qc.invalidateQueries({ queryKey: queryKeys.access.me() });
+      qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.mfa.all });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
     },
   });
 }
@@ -44,8 +45,8 @@ export function useMfaDisable() {
     mutationFn: (token: string) =>
       apiClient.post<{ disabled: boolean }>("/auth/mfa/disable", { token }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.mfa.all });
-      qc.invalidateQueries({ queryKey: queryKeys.access.me() });
+      qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.mfa.all });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
     },
   });
 }

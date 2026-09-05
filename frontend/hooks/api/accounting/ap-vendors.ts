@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useCan } from "@/hooks/api/access";
 import type { CursorPage } from "@/hooks/api/accounting";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -217,8 +217,8 @@ export function useApplyVendorCredit(creditId: number) {
         body,
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.apAll });
-      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+      queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.apAll });
+      queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
     },
   });
 }
@@ -291,7 +291,7 @@ export function useRunRecurringBillNow(templateId: number) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: apVendorKeys.recurringBills(), exact: false });
       queryClient.invalidateQueries({ queryKey: apVendorKeys.recurringBill(templateId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.accounting.all });
+      queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
     },
   });
 }

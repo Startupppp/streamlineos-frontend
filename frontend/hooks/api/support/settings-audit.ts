@@ -1,7 +1,7 @@
 "use client";
 
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export type SettingsAuditEntityType =
@@ -29,7 +29,7 @@ export interface SettingsAuditLogEntry {
 
 export function useSettingsAuditLog(entityType?: SettingsAuditEntityType) {
   return useGatedQuery("support:settings:manage", {
-    queryKey: queryKeys.supportSettingsAuditLog.list(entityType),
+    queryKey: supportAndWorkflowsQueryKeys.supportSettingsAuditLog.list(entityType),
     queryFn: ({ signal }) =>
       apiClient.get<SettingsAuditLogEntry[]>(
         "/support/settings/audit-log",

@@ -2,7 +2,7 @@
 
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
 import type {
   BlogPostWithRelations,
   FeedResponse,
@@ -20,7 +20,7 @@ export function useInfiniteBlogFeed(
   initial?: { posts: BlogPostWithRelations[]; nextCursor: string | null; hasMore: boolean },
 ) {
   return useInfiniteQuery<FeedResponse, Error>({
-    queryKey: queryKeys.blog.feed(params),
+    queryKey: accessAndCrmQueryKeys.blog.feed(params),
     queryFn: ({ pageParam , signal }) => {
       const query: Record<string, unknown> = {};
       if (pageParam !== null) query.cursor = pageParam;

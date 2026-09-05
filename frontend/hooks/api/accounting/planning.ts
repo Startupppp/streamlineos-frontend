@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useCan } from "@/hooks/api/access";
 import type { CursorPage } from "@/hooks/api/accounting";
 import type {
@@ -49,21 +49,21 @@ export interface ForecastParams {
 }
 
 const planningKeys = {
-  all: [...queryKeys.accounting.all, "planning"] as const,
+  all: [...accountingAndSupportQueryKeys.accounting.all, "planning"] as const,
   budgets: (params?: object) =>
-    [...queryKeys.accounting.all, "planning", "budgets", params] as const,
+    [...accountingAndSupportQueryKeys.accounting.all, "planning", "budgets", params] as const,
   budget: (id: number) =>
-    [...queryKeys.accounting.all, "planning", "budgets", id] as const,
+    [...accountingAndSupportQueryKeys.accounting.all, "planning", "budgets", id] as const,
   budgetRevisions: (id: number) =>
-    [...queryKeys.accounting.all, "planning", "budgets", id, "revisions"] as const,
+    [...accountingAndSupportQueryKeys.accounting.all, "planning", "budgets", id, "revisions"] as const,
   bva: (id: number, params?: object) =>
-    [...queryKeys.accounting.all, "planning", "budgets", id, "vs-actual", params] as const,
+    [...accountingAndSupportQueryKeys.accounting.all, "planning", "budgets", id, "vs-actual", params] as const,
   forecast: (params?: object) =>
-    [...queryKeys.accounting.all, "planning", "forecast", params] as const,
+    [...accountingAndSupportQueryKeys.accounting.all, "planning", "forecast", params] as const,
   forecastCompare: (scenarioIds: number[]) =>
-    [...queryKeys.accounting.all, "planning", "forecast", "compare", scenarioIds] as const,
+    [...accountingAndSupportQueryKeys.accounting.all, "planning", "forecast", "compare", scenarioIds] as const,
   scenarios: () =>
-    [...queryKeys.accounting.all, "planning", "scenarios"] as const,
+    [...accountingAndSupportQueryKeys.accounting.all, "planning", "scenarios"] as const,
 };
 
 function toQuery<P extends object>(params: P): Record<string, string> {

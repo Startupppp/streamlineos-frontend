@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -41,14 +41,14 @@ function invalidateStateCaches(
   qc: ReturnType<typeof useQueryClient>,
   projectId: number,
 ) {
-  void qc.invalidateQueries({ queryKey: queryKeys.projects.customStates(projectId) });
-  void qc.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
+  void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.customStates(projectId) });
+  void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.detail(projectId) });
 }
 
 export function useCustomStates(projectId: number) {
   const canView = useCan("build:view");
   return useQuery<CustomState[]>({
-    queryKey: queryKeys.projects.customStates(projectId),
+    queryKey: buildWorkQueryKeys.projects.customStates(projectId),
     queryFn: ({ signal }) =>
       apiClient.get<CustomState[]>(`/build/${projectId}/custom-states`, undefined, signal),
     enabled: canView && !!projectId,
@@ -82,9 +82,9 @@ export function useUpdateCustomState(projectId: number) {
         data,
       ),
     onMutate: async (vars): Promise<UpdateContext> => {
-      await qc.cancelQueries({ queryKey: queryKeys.projects.customStates(projectId) });
-      const previous = qc.getQueryData<CustomState[]>(queryKeys.projects.customStates(projectId));
-      qc.setQueryData<CustomState[]>(queryKeys.projects.customStates(projectId), (old) =>
+      await qc.cancelQueries({ queryKey: buildWorkQueryKeys.projects.customStates(projectId) });
+      const previous = qc.getQueryData<CustomState[]>(buildWorkQueryKeys.projects.customStates(projectId));
+      qc.setQueryData<CustomState[]>(buildWorkQueryKeys.projects.customStates(projectId), (old) =>
         old?.map((s) => {
           if (s.id !== vars.stateId) return s;
           return {
@@ -100,7 +100,7 @@ export function useUpdateCustomState(projectId: number) {
     },
     onError: (_, _vars, context) => {
       if (context?.previous)
-        qc.setQueryData(queryKeys.projects.customStates(projectId), context.previous);
+        qc.setQueryData(buildWorkQueryKeys.projects.customStates(projectId), context.previous);
     },
     onSettled: () => {
       invalidateStateCaches(qc, projectId);
@@ -129,13 +129,13 @@ export function useReorderCustomStates(projectId: number) {
       );
     },
     onMutate: async (items): Promise<ReorderContext> => {
-      await qc.cancelQueries({ queryKey: queryKeys.projects.customStates(projectId) });
+      await qc.cancelQueries({ queryKey: buildWorkQueryKeys.projects.customStates(projectId) });
       const previousStates = qc.getQueryData<CustomState[]>(
-        queryKeys.projects.customStates(projectId),
+        buildWorkQueryKeys.projects.customStates(projectId),
       );
       snapshotRef.current = previousStates;
       const orderMap = new Map(items.map((i) => [i.stateId, i.order]));
-      qc.setQueryData<CustomState[]>(queryKeys.projects.customStates(projectId), (old) => {
+      qc.setQueryData<CustomState[]>(buildWorkQueryKeys.projects.customStates(projectId), (old) => {
         if (!old) return old;
         return [...old]
           .map((s) => ({ ...s, order: orderMap.get(s.id) ?? s.order }))
@@ -145,7 +145,7 @@ export function useReorderCustomStates(projectId: number) {
     },
     onError: (_, __, context) => {
       if (context?.previousStates !== undefined)
-        qc.setQueryData(queryKeys.projects.customStates(projectId), context.previousStates);
+        qc.setQueryData(buildWorkQueryKeys.projects.customStates(projectId), context.previousStates);
     },
     onSettled: () => invalidateStateCaches(qc, projectId),
   });
@@ -158,16 +158,16 @@ export function useDeleteCustomState(projectId: number) {
     mutationFn: (stateId: number) =>
       apiClient.delete(`/build/${projectId}/custom-states/${stateId}`),
     onMutate: async (stateId): Promise<UpdateContext> => {
-      await qc.cancelQueries({ queryKey: queryKeys.projects.customStates(projectId) });
-      const previous = qc.getQueryData<CustomState[]>(queryKeys.projects.customStates(projectId));
-      qc.setQueryData<CustomState[]>(queryKeys.projects.customStates(projectId), (old) =>
+      await qc.cancelQueries({ queryKey: buildWorkQueryKeys.projects.customStates(projectId) });
+      const previous = qc.getQueryData<CustomState[]>(buildWorkQueryKeys.projects.customStates(projectId));
+      qc.setQueryData<CustomState[]>(buildWorkQueryKeys.projects.customStates(projectId), (old) =>
         old?.filter((s) => s.id !== stateId),
       );
       return { previous };
     },
     onError: (_, _stateId, context) => {
       if (context?.previous)
-        qc.setQueryData(queryKeys.projects.customStates(projectId), context.previous);
+        qc.setQueryData(buildWorkQueryKeys.projects.customStates(projectId), context.previous);
     },
     onSettled: () => {
       invalidateStateCaches(qc, projectId);

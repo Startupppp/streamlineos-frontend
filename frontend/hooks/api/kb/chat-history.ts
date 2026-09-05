@@ -2,7 +2,7 @@
 
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import type { KbAskCitation } from "@/types/kb";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -37,7 +37,7 @@ const HISTORY_PAGE_SIZE = 30;
 export function useKbConversations(enabled: boolean) {
   const canViewPages = useCan("kb:pages:view");
   return useInfiniteQuery({
-    queryKey: queryKeys.kb.chatConversations(),
+    queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversations(),
     queryFn: ({ pageParam, signal }) => {
       const params: Record<string, unknown> = { limit: HISTORY_PAGE_SIZE };
       if (pageParam !== undefined) params.cursor = pageParam;
@@ -57,7 +57,7 @@ export function useRenameKbConversation() {
     mutationFn: ({ id, title }: { id: number; title: string }) =>
       apiClient.patch<KbConversation>(`/kb/ask/conversations/${id}`, { title }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.kb.chatConversations() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversations() });
     },
   });
 }
@@ -69,7 +69,7 @@ export function useDeleteKbConversation() {
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/kb/ask/conversations/${id}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.kb.chatConversations() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversations() });
     },
   });
 }
@@ -77,7 +77,7 @@ export function useDeleteKbConversation() {
 export function useKbConversationMessages(conversationId: number | null, enabled: boolean) {
   const canViewPages = useCan("kb:pages:view");
   return useInfiniteQuery({
-    queryKey: queryKeys.kb.chatConversationMessages(conversationId ?? 0),
+    queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversationMessages(conversationId ?? 0),
     queryFn: ({ pageParam, signal }) => {
       const params: Record<string, unknown> = { limit: HISTORY_PAGE_SIZE };
       if (pageParam !== undefined) params.cursor = pageParam;

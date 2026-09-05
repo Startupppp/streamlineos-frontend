@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { PolicyRow } from "@/types/payroll/setup";
 
@@ -18,6 +18,6 @@ export function useUpdateFxRates() {
     mutationFn: ({ policyId, fxRates }: UpdateFxRatesInput) =>
       apiClient.patch<PolicyRow>(`/payroll/policies/${policyId}`, { fxRates }),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.payroll.policy() }),
+      qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.policy() }),
   });
 }

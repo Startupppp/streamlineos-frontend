@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
@@ -18,7 +18,7 @@ import type {
 export function usePayoutValidation(runId: number) {
   const canManage = useCan("payroll:bank:manage");
   return useQuery<ValidationItem[]>({
-    queryKey: queryKeys.payroll.bankValidation(runId),
+    queryKey: payrollQueryKeys.payroll.bankValidation(runId),
     queryFn: ({ signal }) =>
       apiClient.get<ValidationItem[]>(
         `/payroll/runs/${runId}/payout/validation`, undefined, signal,
@@ -36,7 +36,7 @@ type PayoutBatchesPage = {
 export function usePayoutBatches(runId?: number) {
   const canManage = useCan("payroll:bank:manage");
   return useQuery<PayoutBatchesPage>({
-    queryKey: queryKeys.payroll.bankBatches(runId),
+    queryKey: payrollQueryKeys.payroll.bankBatches(runId),
     queryFn: ({ signal }) =>
       apiClient.get<PayoutBatchesPage>(
         "/payroll/payout/batches",
@@ -50,7 +50,7 @@ export function usePayoutBatches(runId?: number) {
 export function usePayoutBatch(batchId: number) {
   const canManage = useCan("payroll:bank:manage");
   return useQuery<GetBatchResult>({
-    queryKey: queryKeys.payroll.bankBatch(batchId),
+    queryKey: payrollQueryKeys.payroll.bankBatch(batchId),
     queryFn: ({ signal }) =>
       apiClient.get<GetBatchResult>(`/payroll/payout/batches/${batchId}`, undefined, signal),
     staleTime: 30_000,
@@ -76,9 +76,9 @@ export function useCreatePayoutBatch() {
       ),
     onSuccess: (_, { runId }) => {
       void qc.invalidateQueries({
-        queryKey: queryKeys.payroll.bankBatches(runId),
+        queryKey: payrollQueryKeys.payroll.bankBatches(runId),
       });
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatches() });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.bankBatches() });
     },
   });
 }
@@ -100,8 +100,8 @@ export function useDownloadBatchFile() {
 
 /**
  * Every payout mutation changes what the run list and the payroll command
- * centre show, not just the batch it names. `queryKeys.payroll.run(id)` is
- * `[...,"payroll","runs",id]` while `queryKeys.payroll.runs(params)` is
+ * centre show, not just the batch it names. `payrollQueryKeys.payroll.run(id)` is
+ * `[...,"payroll","runs",id]` while `payrollQueryKeys.payroll.runs(params)` is
  * `[...,"payroll","runs",params]`, so the two diverge at index 3 and the
  * narrow key never reaches the list — which carries `staleTime: 60_000`.
  * The `payroll/runs` prefix is what covers both.
@@ -109,10 +109,10 @@ export function useDownloadBatchFile() {
 function useInvalidatePayoutSurfaces() {
   const qc = useQueryClient();
   return (batchId: number, runId?: number) => {
-    void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatch(batchId) });
-    void qc.invalidateQueries({ queryKey: queryKeys.payroll.bankBatches(runId) });
-    void qc.invalidateQueries({ queryKey: [...queryKeys.payroll.all, "runs"] });
-    void qc.invalidateQueries({ queryKey: queryKeys.payroll.commandCenterAll });
+    void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.bankBatch(batchId) });
+    void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.bankBatches(runId) });
+    void qc.invalidateQueries({ queryKey: [...payrollQueryKeys.payroll.all, "runs"] });
+    void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.commandCenterAll });
   };
 }
 
@@ -240,7 +240,7 @@ export function useImportBankReturn() {
       operation.settle();
       invalidatePayoutSurfaces(batchId, runId);
       void qc.invalidateQueries({
-        queryKey: queryKeys.payroll.journalBatchesAll,
+        queryKey: payrollQueryKeys.payroll.journalBatchesAll,
       });
     },
   });
@@ -252,7 +252,7 @@ export function useEmployeeBankDetails(
 ) {
   const canView = useCan("payroll:bank:view");
   return useQuery<EmployeeBankDetails>({
-    queryKey: queryKeys.payroll.employeeBank(employeeUserId),
+    queryKey: payrollQueryKeys.payroll.employeeBank(employeeUserId),
     queryFn: ({ signal }) =>
       apiClient.get<EmployeeBankDetails>(
         `/payroll/employees/${employeeUserId}/bank`, undefined, signal,

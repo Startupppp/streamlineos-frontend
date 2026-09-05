@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { downloadBlob } from "@/lib/download-blob";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -89,7 +89,7 @@ export interface FilingCapability {
 export function usePayrollFilings() {
   const canView = useCan("payroll:tax:view");
   return useQuery({
-    queryKey: queryKeys.payroll.filingsAll,
+    queryKey: payrollQueryKeys.payroll.filingsAll,
     queryFn: ({ signal }) => apiClient.get<PayrollFiling[]>("/payroll/filings", undefined, signal),
     staleTime: 60_000,
     enabled: canView,
@@ -99,7 +99,7 @@ export function usePayrollFilings() {
 export function useFilingCapabilities() {
   const canView = useCan("payroll:tax:view");
   return useQuery({
-    queryKey: queryKeys.payroll.filingCapabilities(),
+    queryKey: payrollQueryKeys.payroll.filingCapabilities(),
     queryFn: ({ signal }) => apiClient.get<FilingCapability>("/payroll/filings/capabilities", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canView,
@@ -126,7 +126,7 @@ export function usePrepareFilingExport() {
 export function useFilingExportJob(jobId: number | null) {
   const canView = useCan("payroll:tax:view");
   return useQuery({
-    queryKey: queryKeys.payroll.filingExportJob(jobId ?? 0),
+    queryKey: payrollQueryKeys.payroll.filingExportJob(jobId ?? 0),
     queryFn: ({ signal }) =>
       apiClient.get<FilingExportJob>(
         `/payroll/filings/export/jobs/${jobId}`,
@@ -159,7 +159,7 @@ export function useAttachAcknowledgement() {
         { challanRef, acknowledgementRef },
       ),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.filingsAll });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.filingsAll });
     },
   });
 }

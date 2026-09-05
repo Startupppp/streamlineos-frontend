@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import type {
   ChangeRequest,
@@ -21,7 +21,7 @@ export function useChangeRequests(projectId: number, filters?: CrFilters) {
   if (filters?.status) params["status"] = filters.status;
 
   return useQuery<ChangeRequest[]>({
-    queryKey: queryKeys.projects.changeRequests.list(
+    queryKey: buildWorkQueryKeys.projects.changeRequests.list(
       projectId,
       filters?.status ? { status: filters.status } : undefined,
     ),
@@ -39,7 +39,7 @@ export function useCreateChangeRequest(projectId: number) {
     mutationFn: (data: CreateChangeRequestInput) =>
       apiClient.post<ChangeRequest>(`/build/${projectId}/change-requests`, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.changeRequests.list(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.changeRequests.list(projectId) });
     },
   });
 }
@@ -51,9 +51,9 @@ export function useUpdateChangeRequest(projectId: number) {
     mutationFn: ({ id, ...data }: UpdateChangeRequestInput & { id: number }) =>
       apiClient.patch<ChangeRequest>(`/build/${projectId}/change-requests/${id}`, data),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.changeRequests.list(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.changeRequests.list(projectId) });
       qc.invalidateQueries({
-        queryKey: queryKeys.projects.changeRequests.detail(projectId, vars.id),
+        queryKey: buildWorkQueryKeys.projects.changeRequests.detail(projectId, vars.id),
       });
     },
   });
@@ -68,7 +68,7 @@ export function useDeleteChangeRequest(projectId: number) {
         `/build/${projectId}/change-requests/${crId}`,
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.changeRequests.list(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.changeRequests.list(projectId) });
     },
   });
 }

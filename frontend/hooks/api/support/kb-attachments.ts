@@ -3,7 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface KbAttachment {
@@ -32,7 +32,7 @@ const KB_ATTACHMENT_FOLDER = "kb-attachments";
 
 export function useSupportKbAttachments(articleId: number) {
   return useGatedQuery("support:kb:view", {
-    queryKey: queryKeys.kbAttachments.list(articleId),
+    queryKey: accountingAndSupportQueryKeys.kbAttachments.list(articleId),
     queryFn: ({ signal }) =>
       apiClient.get<KbAttachment[]>(
         `/support/kb/articles/${articleId}/attachments`,
@@ -70,7 +70,7 @@ export function useUploadSupportKbAttachment(articleId: number) {
     },
     onSuccess: () =>
       qc.invalidateQueries({
-        queryKey: queryKeys.kbAttachments.list(articleId),
+        queryKey: accountingAndSupportQueryKeys.kbAttachments.list(articleId),
       }),
   });
 }
@@ -85,7 +85,7 @@ export function useDeleteSupportKbAttachment(articleId: number) {
       ),
     onSuccess: () =>
       qc.invalidateQueries({
-        queryKey: queryKeys.kbAttachments.list(articleId),
+        queryKey: accountingAndSupportQueryKeys.kbAttachments.list(articleId),
       }),
   });
 }

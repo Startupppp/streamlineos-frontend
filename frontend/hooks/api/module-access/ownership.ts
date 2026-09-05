@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { useCan } from "@/hooks/api/access";
 import type { ModuleOwnership } from "./types";
 import { viewKey } from "./types";
@@ -16,7 +16,7 @@ const ownershipContract = lazyContract(() =>
 export function useModuleOwnership(moduleKey: string) {
   const canView = useCan(viewKey(moduleKey));
   return useQuery<ModuleOwnership, Error>({
-    queryKey: queryKeys.moduleAccess.ownership(moduleKey),
+    queryKey: directoryAndOwnershipQueryKeys.moduleAccess.ownership(moduleKey),
     queryFn: ({ signal }) =>
       apiClient.get(
         `/module-access/${moduleKey}/ownership`,
@@ -41,7 +41,7 @@ export function useTransferModuleOwnership(moduleKey: string) {
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.moduleAccess.ownership(moduleKey),
+        queryKey: directoryAndOwnershipQueryKeys.moduleAccess.ownership(moduleKey),
       });
     },
   });
@@ -59,7 +59,7 @@ export function useCancelModuleOwnershipTransfer(moduleKey: string) {
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.moduleAccess.ownership(moduleKey),
+        queryKey: directoryAndOwnershipQueryKeys.moduleAccess.ownership(moduleKey),
       });
     },
   });

@@ -11,7 +11,8 @@ import {
   useSprints,
   useSubtasks,
 } from "@/hooks/api";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { isApiError, getApiErrorCode } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { ProjectMember } from "./types";
@@ -88,12 +89,12 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
 
   const invalidateAll = useCallback(() => {
     queryClient.invalidateQueries({
-      queryKey: queryKeys.projects.detail(projectId),
+      queryKey: buildWorkQueryKeys.projects.detail(projectId),
       refetchType: "none",
     });
     if (ticketId !== null) {
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.ticket(ticketId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.ticketActivity.list(ticketId) });
+      queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.ticket(ticketId) });
+      queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.ticketActivity.list(ticketId) });
     }
   }, [queryClient, projectId, ticketId]);
 
@@ -108,7 +109,7 @@ export function useTicketDetail({ projectId, ticketId, onDeleted }: UseTicketDet
       if (isApiError(error) && getApiErrorCode(error) === "PROJECTS_TICKET_CONFLICT") {
         toast.warning("This ticket was changed elsewhere — refreshed with the latest version.");
         if (ticketId !== null) {
-          queryClient.invalidateQueries({ queryKey: queryKeys.projects.ticket(ticketId) });
+          queryClient.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.ticket(ticketId) });
         }
         return;
       }

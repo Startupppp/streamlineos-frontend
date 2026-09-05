@@ -7,7 +7,7 @@ import { useCan } from "@/hooks/api/access";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { useHrWfhRequests } from "@/hooks/api/hr";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import type { AttendanceLog } from "@/types/hr";
 
 function toTimestamp(value: Date | string | null): number {
@@ -35,7 +35,7 @@ export function useAttendanceCalendarEvents(
         month: month.getMonth(),
       };
       return {
-        queryKey: queryKeys.hr.monthlyAttendance(params),
+        queryKey: humanResourcesQueryKeys.hr.monthlyAttendance(params),
         queryFn: ({ signal }) =>
           apiClient.get<AttendanceLog[]>("/me/attendance/monthly", params, signal),
         staleTime: 2 * 60_000,

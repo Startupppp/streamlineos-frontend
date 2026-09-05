@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { inventoryQueryKeys } from "@/lib/query-keys/inventory";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface ExplainFactor {
@@ -88,14 +88,14 @@ export function useConfirmReorderProposal() {
     mutationFn: (body) =>
       apiClient.post<unknown>("/inventory/ai/reorder-proposal/confirm", body),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.inventory.aiInsights() });
+      void qc.invalidateQueries({ queryKey: inventoryQueryKeys.inventory.aiInsights() });
     },
   });
 }
 
 export function useSupplierDelayBriefing(vendorId?: string) {
   return useQuery<SupplierDelayBriefing, Error>({
-    queryKey: queryKeys.inventory.supplierDelayBriefing(vendorId),
+    queryKey: inventoryQueryKeys.inventory.supplierDelayBriefing(vendorId),
     queryFn: ({ signal }) =>
       apiClient.get<SupplierDelayBriefing>(
         "/inventory/ai/supplier-delay",

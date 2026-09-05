@@ -7,7 +7,7 @@ import type {
   UseQueryOptions,
 } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type { AllWorkFilters, AllWorkTicket, CursorPaginatedResponse } from "@/types/projects";
 import { useCan } from "@/hooks/api/access";
 
@@ -28,7 +28,7 @@ export function useAllWork(
   const canView = useCan("build:tickets:view");
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<CursorPaginatedResponse<AllWorkTicket>>({
-    queryKey: queryKeys.projects.allWork(filters ? { ...filters } : undefined),
+    queryKey: buildWorkQueryKeys.projects.allWork(filters ? { ...filters } : undefined),
     queryFn: ({ signal }) =>
       apiClient.get<CursorPaginatedResponse<AllWorkTicket>>("/build/all-work", filters ? { ...filters } : undefined, signal),
     staleTime: 30_000,
@@ -54,7 +54,7 @@ export function useInfiniteAllWork(
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   const canView = useCan("build:tickets:view");
   return useInfiniteQuery({
-    queryKey: queryKeys.projects.allWorkInfinite({ ...filters }),
+    queryKey: buildWorkQueryKeys.projects.allWorkInfinite({ ...filters }),
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<CursorPaginatedResponse<AllWorkTicket>>("/build/all-work", {
         ...filters,

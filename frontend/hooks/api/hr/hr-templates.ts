@@ -2,7 +2,7 @@
 
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
@@ -26,7 +26,7 @@ export function useHrTemplates(params?: ListParams) {
   const canView = useCan("hr:templates:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: queryKeys.hr.hrTemplates(params as Record<string, unknown> | undefined),
+    queryKey: humanResourcesQueryKeys.hr.hrTemplates(params as Record<string, unknown> | undefined),
     queryFn: ({ signal }) =>
       apiClient.get<TemplateListResponse>("/hr/templates", params as Record<string, unknown> | undefined, signal),
     staleTime: 60_000,
@@ -39,7 +39,7 @@ export function useHrTemplate(templateId: number) {
   const canView = useCan("hr:templates:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: queryKeys.hr.hrTemplate(templateId),
+    queryKey: humanResourcesQueryKeys.hr.hrTemplate(templateId),
     queryFn: ({ signal }) => apiClient.get<HrTemplate>(`/hr/templates/${templateId}`, undefined, signal),
     staleTime: 60_000,
     enabled: hrEnabled && canView && !!templateId,
@@ -50,7 +50,7 @@ export function useHrTemplateVariables() {
   const canView = useCan("hr:templates:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: queryKeys.hr.hrTemplateVariables(),
+    queryKey: humanResourcesQueryKeys.hr.hrTemplateVariables(),
     queryFn: ({ signal }) => apiClient.get<TemplateVariable[]>("/hr/templates/variables", undefined, signal),
     staleTime: 10 * 60_000,
     enabled: hrEnabled && canView,
@@ -72,7 +72,7 @@ export function useCreateHrTemplate() {
     mutationKey: ["hr", "templates", "create"],
     mutationFn: (data: CreateTemplateInput) =>
       apiClient.post<HrTemplate>("/hr/templates", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplates() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrTemplates() }),
   });
 }
 
@@ -92,8 +92,8 @@ export function useUpdateHrTemplate() {
     mutationFn: ({ templateId, ...data }: UpdateTemplateInput) =>
       apiClient.patch<HrTemplate>(`/hr/templates/${templateId}`, data),
     onSuccess: (_, { templateId }) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplates() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplate(templateId) });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrTemplates() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrTemplate(templateId) });
     },
   });
 }
@@ -105,8 +105,8 @@ export function useTransitionHrTemplate() {
     mutationFn: ({ templateId, to }: { templateId: number; to: HrTemplateStatus }) =>
       apiClient.post<HrTemplate>(`/hr/templates/${templateId}/transition`, { to }),
     onSuccess: (_, { templateId }) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplates() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplate(templateId) });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrTemplates() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrTemplate(templateId) });
     },
   });
 }
@@ -124,7 +124,7 @@ export function useRenderHrTemplate() {
     mutationFn: ({ templateId, ...body }: RenderInput & { templateId: number }) =>
       apiClient.post<RenderResponse>(`/hr/templates/${templateId}/render`, body),
     onSuccess: (_, { templateId }) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplateRenders(templateId) });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrTemplateRenders(templateId) });
     },
   });
 }
@@ -134,6 +134,6 @@ export function useSeedHrTemplateDefaults() {
   return useAuthorizedMutation("hr:templates:manage", {
     mutationKey: ["hr", "templates", "seed"],
     mutationFn: () => apiClient.post<{ seeded: boolean; count?: number }>("/hr/templates/seed-defaults", {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.hrTemplates() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrTemplates() }),
   });
 }

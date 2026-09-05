@@ -27,7 +27,7 @@ import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { DocCard, type OnboardingDoc } from "./doc-card";
 import { UploadDocSheet } from "./upload-doc-sheet";
@@ -45,7 +45,7 @@ function useEmployeeOnboardingDocs(
 ) {
   const canReviewDocs = useCan("hr:onboarding:manage");
   return useQuery<OnboardingDocsResponse>({
-    queryKey: queryKeys.hr.onboardingDocs({ userId: userId ?? undefined, cursor, limit: DOCS_PAGE_SIZE }),
+    queryKey: humanResourcesQueryKeys.hr.onboardingDocs({ userId: userId ?? undefined, cursor, limit: DOCS_PAGE_SIZE }),
     queryFn: ({ signal }) =>
       apiClient.get<OnboardingDocsResponse>("/hr/onboarding-docs", {
         userId,
@@ -71,7 +71,7 @@ function useReviewDocument() {
     }) =>
       apiClient.patch<{ success: boolean }>(`/hr/onboarding-docs/${docId}`, { status, remarks }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.onboardingDocsAll });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.onboardingDocsAll });
     },
   });
 }

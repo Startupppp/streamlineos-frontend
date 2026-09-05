@@ -25,7 +25,7 @@ import {
   type AskAiHistoryMessage,
   type AskAiHistoryPage,
 } from "@/hooks/api";
-import { queryKeys } from "@/lib/query-keys";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { cn } from "@/lib/utils";
 import { classifyAiError, type AiFailureState } from "@/components/ai";
 import { useHydrated } from "@/hooks/common/use-hydrated";
@@ -245,7 +245,7 @@ export function GlobalAskOs() {
           createdAt: new Date().toISOString(),
         };
         queryClient.setQueryData<InfiniteData<AskAiHistoryPage>>(
-          queryKeys.aiChat.conversationMessages(conversationId),
+          collaborationQueryKeys.aiChat.conversationMessages(conversationId),
           (previous) => {
             if (!previous || previous.pages.length === 0)
               return {
@@ -275,7 +275,7 @@ export function GlobalAskOs() {
           },
         );
         void queryClient.invalidateQueries({
-          queryKey: queryKeys.aiChat.conversations(),
+          queryKey: collaborationQueryKeys.aiChat.conversations(),
         });
         setDraft(null);
       } catch (error) {

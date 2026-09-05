@@ -31,7 +31,7 @@ import {
 } from "@/features/build/comments/mention-textarea";
 import { CommentItem } from "./comment-item";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 
 const COMMENT_RENDER_PAGE_SIZE = 20;
 
@@ -236,7 +236,7 @@ export function ActivityFeed({
   const createTicket = useCreateTicket({
     onSuccess: (ticket) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.ticketActivity.list(ticketId),
+        queryKey: accountingAndSupportQueryKeys.ticketActivity.list(ticketId),
       });
       toast.success("Issue created");
       if (ticket.projectId != null && ticket.ticketNumber != null) {

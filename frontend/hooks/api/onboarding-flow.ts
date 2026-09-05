@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type OnboardingFlowSession = {
@@ -22,7 +22,7 @@ export type OnboardingSessionPatch = {
 
 export function useOnboardingSessionQuery(enabled = true) {
   return useQuery({
-    queryKey: queryKeys.onboardingFlow.session(),
+    queryKey: platformCoreQueryKeys.onboardingFlow.session(),
     queryFn: ({ signal }) => apiClient.get<OnboardingFlowSession>("/onboarding/session", undefined, signal),
     staleTime: 30_000,
     retry: false,
@@ -38,7 +38,7 @@ export function usePatchOnboardingSessionMutation() {
       apiClient.patch<OnboardingFlowSession>("/onboarding/session", payload),
     retry: false,
     onSuccess: (session) => {
-      queryClient.setQueryData(queryKeys.onboardingFlow.session(), session);
+      queryClient.setQueryData(platformCoreQueryKeys.onboardingFlow.session(), session);
     },
   });
 }
@@ -68,7 +68,7 @@ export type ModuleChecklist = {
 
 export function useModuleChecklists(enabled = true) {
   return useGatedQuery("onboarding:module-checklists:view", {
-    queryKey: queryKeys.onboardingFlow.moduleChecklists(),
+    queryKey: platformCoreQueryKeys.onboardingFlow.moduleChecklists(),
     queryFn: ({ signal }) => apiClient.get<ModuleChecklist[]>("/onboarding/module-checklists", undefined, signal),
     staleTime: 30_000,
     enabled,
@@ -76,8 +76,8 @@ export function useModuleChecklists(enabled = true) {
 }
 
 function invalidateChecklist(queryClient: ReturnType<typeof useQueryClient>, moduleKey: string) {
-  void queryClient.invalidateQueries({ queryKey: queryKeys.onboardingFlow.moduleChecklists() });
-  void queryClient.invalidateQueries({ queryKey: queryKeys.onboardingFlow.moduleChecklist(moduleKey) });
+  void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.onboardingFlow.moduleChecklists() });
+  void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.onboardingFlow.moduleChecklist(moduleKey) });
 }
 
 export function useCompleteChecklistItem() {
@@ -118,7 +118,7 @@ export type GuidedTour = {
 
 export function useGuidedTours(enabled = true) {
   return useGatedQuery("onboarding:tours:view", {
-    queryKey: queryKeys.onboardingFlow.tours(),
+    queryKey: platformCoreQueryKeys.onboardingFlow.tours(),
     queryFn: ({ signal }) => apiClient.get<GuidedTour[]>("/onboarding/tours", undefined, signal),
     staleTime: 30_000,
     enabled,
@@ -132,7 +132,7 @@ export function useSaveTourProgress() {
     mutationFn: ({ tourKey, currentStep }: { tourKey: string; currentStep: number }) =>
       apiClient.post<GuidedTourProgress>(`/onboarding/tours/${tourKey}/progress`, { currentStep }),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.onboardingFlow.tours() });
+      void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.onboardingFlow.tours() });
     },
   });
 }
@@ -144,7 +144,7 @@ export function useDismissTour() {
     mutationFn: (tourKey: string) =>
       apiClient.post<GuidedTourProgress>(`/onboarding/tours/${tourKey}/dismiss`, {}),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.onboardingFlow.tours() });
+      void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.onboardingFlow.tours() });
     },
   });
 }

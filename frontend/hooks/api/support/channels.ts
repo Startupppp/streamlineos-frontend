@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
@@ -34,7 +34,7 @@ export interface UpdateSupportChannelInput {
 
 export function useSupportChannels() {
   return useGatedQuery("support:channels:manage", {
-    queryKey: queryKeys.supportChannels.list(),
+    queryKey: supportAndWorkflowsQueryKeys.supportChannels.list(),
     queryFn: ({ signal }) => apiClient.get<SupportChannel[]>("/support/channels", undefined, signal),
     staleTime: 60_000,
   });
@@ -46,7 +46,7 @@ export function useCreateSupportChannel() {
     mutationKey: ["support", "channels", "create"],
     mutationFn: (input: CreateSupportChannelInput) =>
       apiClient.post<SupportChannel>("/support/channels", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportChannels.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportChannels.all }),
   });
 }
 
@@ -56,7 +56,7 @@ export function useUpdateSupportChannel() {
     mutationKey: ["support", "channels", "update"],
     mutationFn: ({ id, ...input }: UpdateSupportChannelInput & { id: number }) =>
       apiClient.patch<SupportChannel>(`/support/channels/${id}`, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportChannels.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportChannels.all }),
   });
 }
 
@@ -65,6 +65,6 @@ export function useDeleteSupportChannel() {
   return useAuthorizedMutation("support:channels:manage", {
     mutationKey: ["support", "channels", "delete"],
     mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/support/channels/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportChannels.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportChannels.all }),
   });
 }

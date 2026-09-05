@@ -3,7 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface HrGoal {
@@ -26,7 +26,7 @@ export interface HrGoal {
 
 export function useHrGoals(params?: { userId?: string }) {
   return useGatedQuery("hr:performance:view", {
-    queryKey: queryKeys.hr.goals(params?.userId),
+    queryKey: humanResourcesQueryKeys.hr.goals(params?.userId),
     queryFn: ({ signal }) =>
       apiClient.get<HrGoal[]>(
         "/hr/performance/goals",
@@ -50,6 +50,6 @@ export function useCreateHrGoal() {
       targetValue?: string;
       unit?: string;
     }) => apiClient.post<HrGoal>("/hr/performance/goals", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.goals() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.goals() }),
   });
 }

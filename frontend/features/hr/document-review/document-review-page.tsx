@@ -17,7 +17,7 @@ import { ReviewTable, type EmployeeDocSummary } from "@/features/hr/document-rev
 import { ReviewSheet } from "@/features/hr/document-review/review-sheet";
 
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 
 const PAGE_SIZE = 20;
@@ -38,7 +38,7 @@ function useDocReviewSummary(cursor: string | undefined, search: string, status:
   if (status !== "ALL") params.status = status;
   const canReviewDocs = useCan("hr:onboarding:manage");
   return useQuery<DocReviewSummaryResponse>({
-    queryKey: queryKeys.hr.onboardingDocsSummary(params),
+    queryKey: humanResourcesQueryKeys.hr.onboardingDocsSummary(params),
     queryFn: ({ signal }) => apiClient.get<DocReviewSummaryResponse>("/hr/onboarding-docs/summary", params, signal),
     placeholderData: keepPreviousData,
     staleTime: 30_000,

@@ -2,7 +2,7 @@
 
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { AutomationTrigger } from "@/lib/automations/automation-triggers";
@@ -108,7 +108,7 @@ interface AutomationListParams {
 export function useAutomations(params?: AutomationListParams) {
   const canView = useCan("settings:automations:view");
   return useQuery({
-    queryKey: [...queryKeys.automations.all, "list", params] as const,
+    queryKey: [...knowledgeAndSurveysQueryKeys.automations.all, "list", params] as const,
     queryFn: ({ signal }) => {
       const search = new URLSearchParams();
       if (params?.cursor) search.set("cursor", params.cursor);
@@ -125,7 +125,7 @@ export function useAutomations(params?: AutomationListParams) {
 export function useAutomationRuns(ruleId: number) {
   const canView = useCan("settings:automations:view");
   return useQuery({
-    queryKey: queryKeys.automations.runs(ruleId),
+    queryKey: knowledgeAndSurveysQueryKeys.automations.runs(ruleId),
     queryFn: ({ signal }) => apiClient.get<AutomationRun[]>(`/settings/automations/${ruleId}/runs`, undefined, signal),
     enabled: canView && Number.isFinite(ruleId) && ruleId > 0,
     staleTime: 35_000,
@@ -143,7 +143,7 @@ export function useCreateAutomation() {
       assertPermission(canManage);
       return apiClient.post<AutomationRule>("/settings/automations", input);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.automations.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.automations.all }),
   });
 }
 
@@ -156,7 +156,7 @@ export function useUpdateAutomation() {
       assertPermission(canManage);
       return apiClient.patch<AutomationRule>(`/settings/automations/${id}`, input);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.automations.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.automations.all }),
   });
 }
 
@@ -169,7 +169,7 @@ export function useToggleAutomation() {
       assertPermission(canManage);
       return apiClient.patch<AutomationRule>(`/settings/automations/${id}`, { isEnabled });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.automations.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.automations.all }),
   });
 }
 
@@ -182,7 +182,7 @@ export function useDeleteAutomation() {
       assertPermission(canManage);
       return apiClient.delete<{ success: boolean }>(`/settings/automations/${id}`);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.automations.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.automations.all }),
   });
 }
 
@@ -196,8 +196,8 @@ export function useTestAutomation() {
       return apiClient.post<AutomationTestResult>(`/settings/automations/${id}/test`, { payload });
     },
     onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.automations.runs(variables.id) });
-      qc.invalidateQueries({ queryKey: queryKeys.automations.all });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.automations.runs(variables.id) });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.automations.all });
     },
   });
 }

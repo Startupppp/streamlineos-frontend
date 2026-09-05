@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type {
   NotificationPreferences,
   UpdatePreferencesInput,
@@ -19,7 +19,7 @@ export const useNotificationPreferences = (
   const orgId = session?.orgId;
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<NotificationPreferences, Error>({
-    queryKey: queryKeys.notifications.preferences(),
+    queryKey: platformCoreQueryKeys.notifications.preferences(),
     queryFn: ({ signal }) => apiClient.get<NotificationPreferences>("/notification-preferences", undefined, signal),
     staleTime: 5 * 60_000,
     ...restOptions,
@@ -33,7 +33,7 @@ export const useUpdateNotificationPreferences = () => {
     mutationKey: ["notifications", "preferences", "update"],
     mutationFn: (dto) => apiClient.patch<NotificationPreferences>("/notification-preferences", dto),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.preferences() });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.preferences() });
     },
   });
 };
@@ -45,7 +45,7 @@ export const useSuppressions = (
   const orgId = session?.orgId;
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<SuppressionRule[], Error>({
-    queryKey: queryKeys.notifications.suppressions(),
+    queryKey: platformCoreQueryKeys.notifications.suppressions(),
     queryFn: ({ signal }) => apiClient.get<SuppressionRule[]>("/notification-preferences/suppressions", undefined, signal),
     staleTime: 60_000,
     ...restOptions,
@@ -60,7 +60,7 @@ export const useCreateSuppression = () => {
     mutationFn: (dto) =>
       apiClient.post<SuppressionRule>("/notification-preferences/suppressions", dto),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.suppressions() });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.suppressions() });
     },
   });
 };
@@ -74,7 +74,7 @@ export const useRemoveSuppression = () => {
         `/notification-preferences/suppressions/${suppressionId}`,
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.suppressions() });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.suppressions() });
     },
   });
 };

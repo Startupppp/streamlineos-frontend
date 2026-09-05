@@ -3,7 +3,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
+import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type IntegrationToolkit = "googlecalendar" | "outlook" | "gmail";
@@ -21,7 +22,7 @@ export interface IntegrationConnection {
 
 export function useIntegrationConnections(options?: { enabled?: boolean }) {
   return useGatedQuery("integrations:connections:view", {
-    queryKey: queryKeys.integrations.connections(),
+    queryKey: platformHierarchyQueryKeys.integrations.connections(),
     queryFn: ({ signal }) => apiClient.get<IntegrationConnection[]>("/integrations/connections", undefined, signal),
     staleTime: 60_000,
     enabled: options?.enabled ?? true,
@@ -47,11 +48,11 @@ export function useFinalizeIntegrationConnection() {
       apiClient.post<IntegrationConnection>("/integrations/connections/finalize", { connectedAccountId }),
     onSuccess: () => {
       void qc.invalidateQueries({
-        queryKey: queryKeys.integrations.connections(),
+        queryKey: platformHierarchyQueryKeys.integrations.connections(),
         exact: true,
       });
-      void qc.invalidateQueries({ queryKey: queryKeys.calendar.all });
-      void qc.invalidateQueries({ queryKey: queryKeys.mail.all });
+      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all });
+      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.mail.all });
     },
   });
 }
@@ -64,11 +65,11 @@ export function useDisconnectIntegration() {
       apiClient.delete<{ deleted: boolean }>(`/integrations/connections/${connectionId}`),
     onSuccess: () => {
       void qc.invalidateQueries({
-        queryKey: queryKeys.integrations.connections(),
+        queryKey: platformHierarchyQueryKeys.integrations.connections(),
         exact: true,
       });
-      void qc.invalidateQueries({ queryKey: queryKeys.calendar.all });
-      void qc.invalidateQueries({ queryKey: queryKeys.mail.all });
+      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all });
+      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.mail.all });
     },
   });
 }
@@ -81,7 +82,7 @@ export function useSetPrimaryIntegration() {
       apiClient.patch<IntegrationConnection>(`/integrations/connections/${connectionId}/primary`, {}),
     onSuccess: () => {
       void qc.invalidateQueries({
-        queryKey: queryKeys.integrations.connections(),
+        queryKey: platformHierarchyQueryKeys.integrations.connections(),
         exact: true,
       });
     },

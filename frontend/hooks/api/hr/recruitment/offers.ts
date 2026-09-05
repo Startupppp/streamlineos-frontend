@@ -3,7 +3,7 @@
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -88,7 +88,7 @@ export function useAllOffers(params?: AllOffersParams) {
   if (params?.status) queryParams.status = params.status;
 
   return useQuery({
-    queryKey: [...queryKeys.hr.all, "allOffers", queryParams] as const,
+    queryKey: [...humanResourcesQueryKeys.hr.all, "allOffers", queryParams] as const,
     queryFn: ({ signal }): Promise<{
       items: OfferListItem[];
       total: number;
@@ -108,7 +108,7 @@ export function useAllOffers(params?: AllOffersParams) {
 
 export function useOfferVersions(candidateId: number, offerId: number) {
   return useGatedQuery("hr:offers:view", {
-    queryKey: [...queryKeys.hr.all, "offerVersions", offerId] as const,
+    queryKey: [...humanResourcesQueryKeys.hr.all, "offerVersions", offerId] as const,
     queryFn: ({ signal }) =>
       apiClient.get<OfferVersion[]>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/versions`, undefined, signal),
     enabled: candidateId > 0 && offerId > 0,
@@ -118,7 +118,7 @@ export function useOfferVersions(candidateId: number, offerId: number) {
 
 export function useOfferNegotiations(candidateId: number, offerId: number) {
   return useGatedQuery("hr:offers:view", {
-    queryKey: [...queryKeys.hr.all, "offerNegotiations", offerId] as const,
+    queryKey: [...humanResourcesQueryKeys.hr.all, "offerNegotiations", offerId] as const,
     queryFn: ({ signal }) =>
       apiClient.get<OfferNegotiation[]>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/negotiations`, undefined, signal),
     enabled: candidateId > 0 && offerId > 0,
@@ -145,9 +145,9 @@ export function useRespondToNegotiation(candidateId: number) {
         data,
       ),
     onSuccess: (_, variables) => {
-      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "offerNegotiations", variables.offerId] });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "offerVersions", variables.offerId] });
-      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "candidateOffers", candidateId] });
+      void qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "offerNegotiations", variables.offerId] });
+      void qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "offerVersions", variables.offerId] });
+      void qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "candidateOffers", candidateId] });
     },
   });
 }
@@ -155,7 +155,7 @@ export function useRespondToNegotiation(candidateId: number) {
 export function useCandidateOffers(candidateId: number) {
   const canView = useCan("hr:offers:view");
   return useQuery({
-    queryKey: [...queryKeys.hr.all, "candidateOffers", candidateId] as const,
+    queryKey: [...humanResourcesQueryKeys.hr.all, "candidateOffers", candidateId] as const,
     queryFn: ({ signal }) =>
       apiClient.get<CandidateOffer[]>(`/hr/recruitment/candidates/${candidateId}/offers`, undefined, signal),
     staleTime: 2 * 60_000,
@@ -177,7 +177,7 @@ export function useCreateCandidateOffer(candidateId: number) {
       notes?: string;
     }) => apiClient.post<CandidateOffer>(`/hr/recruitment/candidates/${candidateId}/offers`, data),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "candidateOffers", candidateId] }),
+      qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "candidateOffers", candidateId] }),
   });
 }
 
@@ -188,7 +188,7 @@ export function useUpdateCandidateOffer(candidateId: number) {
     mutationFn: ({ offerId, ...data }: { offerId: number; offerStatus?: CandidateOffer["offerStatus"]; notes?: string; joiningDate?: string; validUntil?: string; offeredSalary?: number; offeredDesignation?: string }) =>
       apiClient.patch<CandidateOffer>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}`, data),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "candidateOffers", candidateId] }),
+      qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "candidateOffers", candidateId] }),
   });
 }
 
@@ -199,7 +199,7 @@ export function useDeleteCandidateOffer(candidateId: number) {
     mutationFn: (offerId: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}`),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "candidateOffers", candidateId] }),
+      qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "candidateOffers", candidateId] }),
   });
 }
 
@@ -210,7 +210,7 @@ export function useSubmitOfferForApproval(candidateId: number) {
     mutationFn: (offerId: number) =>
       apiClient.post<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/submit-for-approval`, {}),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "candidateOffers", candidateId] }),
+      qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "candidateOffers", candidateId] }),
   });
 }
 
@@ -221,7 +221,7 @@ export function useApproveOffer(candidateId: number) {
     mutationFn: ({ offerId, remarks }: { offerId: number; remarks?: string }) =>
       apiClient.post<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/approve`, { remarks }),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "candidateOffers", candidateId] }),
+      qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "candidateOffers", candidateId] }),
   });
 }
 
@@ -232,6 +232,6 @@ export function useRejectOfferApproval(candidateId: number) {
     mutationFn: ({ offerId, remarks }: { offerId: number; remarks?: string }) =>
       apiClient.post<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}/reject-approval`, { remarks }),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "candidateOffers", candidateId] }),
+      qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "candidateOffers", candidateId] }),
   });
 }

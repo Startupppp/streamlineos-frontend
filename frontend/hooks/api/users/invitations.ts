@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { invalidatePersonAccountAccess } from "./cache";
 import type {
   InvitationsResponse,
@@ -26,9 +26,9 @@ export const useInviteUser = () => {
         invitation,
       ),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.users.invitations() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.invitations() });
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.stats() });
       invalidatePersonAccountAccess(queryClient);
     },
   });
@@ -52,9 +52,9 @@ export const useBulkInviteUsers = () => {
         }>;
       }>("/users/bulk-invite", invitationBatch),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.users.invitations() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.invitations() });
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.stats() });
       invalidatePersonAccountAccess(queryClient);
     },
   });
@@ -72,7 +72,7 @@ export const useInvitations = (
 ) => {
   const canView = useCan("settings:organization:manage");
   return useQuery<InvitationsResponse, Error>({
-    queryKey: queryKeys.users.invitations(params as Record<string, unknown> | undefined),
+    queryKey: usersAndCommerceQueryKeys.users.invitations(params as Record<string, unknown> | undefined),
     queryFn: ({ signal }) =>
       apiClient.get<InvitationsResponse>("/users/invitations", {
         ...(params?.page ? { page: String(params.page) } : {}),
@@ -95,8 +95,8 @@ export const useResendInvite = () => {
     mutationFn: (invitationId) =>
       apiClient.post<{ success: boolean }>(`/users/invitations/${invitationId}/resend`, {}),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.users.invitations() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.invitations() });
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.stats() });
       invalidatePersonAccountAccess(queryClient);
     },
   });
@@ -112,7 +112,7 @@ export const useChangeInvitationRole = () => {
         { role },
       ),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.users.invitations() });
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.invitations() });
       invalidatePersonAccountAccess(queryClient);
     },
   });
@@ -125,8 +125,8 @@ export const useCancelInvitation = () => {
     mutationFn: (invitationId) =>
       apiClient.delete<{ success: boolean }>(`/users/invitations/${invitationId}`),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.users.invitations() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() });
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.invitations() });
+      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.stats() });
       invalidatePersonAccountAccess(queryClient);
     },
   });

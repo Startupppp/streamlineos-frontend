@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -61,7 +61,7 @@ interface CriticalPathReport {
 export function useVelocityReport(projectId: number) {
   const canView = useCan("build:view");
   return useQuery({
-    queryKey: queryKeys.projectReports.velocity(projectId),
+    queryKey: accountingAndSupportQueryKeys.projectReports.velocity(projectId),
     queryFn: ({ signal }) => apiClient.get<VelocitySprint[]>(`/build/${projectId}/reports/velocity`, undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
@@ -71,7 +71,7 @@ export function useVelocityReport(projectId: number) {
 export function useBurnupReport(projectId: number, sprintId?: number) {
   const canView = useCan("build:view");
   return useQuery({
-    queryKey: queryKeys.projectReports.burnup(projectId, sprintId),
+    queryKey: accountingAndSupportQueryKeys.projectReports.burnup(projectId, sprintId),
     queryFn: ({ signal }) =>
       apiClient.get<BurnupPoint[]>(
         `/build/${projectId}/reports/burnup`,
@@ -85,7 +85,7 @@ export function useBurnupReport(projectId: number, sprintId?: number) {
 export function useCfdReport(projectId: number, days = 30) {
   const canView = useCan("build:view");
   return useQuery({
-    queryKey: queryKeys.projectReports.cfd(projectId, { days }),
+    queryKey: accountingAndSupportQueryKeys.projectReports.cfd(projectId, { days }),
     queryFn: ({ signal }) =>
       apiClient.get<CfdReport>(`/build/${projectId}/reports/cfd`, { days }, signal),
     enabled: canView && !!projectId,
@@ -96,7 +96,7 @@ export function useCfdReport(projectId: number, days = 30) {
 export function useCriticalPath(projectId: number) {
   const canView = useCan("build:view");
   return useQuery({
-    queryKey: queryKeys.projectReports.criticalPath(projectId),
+    queryKey: accountingAndSupportQueryKeys.projectReports.criticalPath(projectId),
     queryFn: ({ signal }) =>
       apiClient.get<CriticalPathReport>(`/build/${projectId}/reports/critical-path`, undefined, signal),
     enabled: canView && !!projectId,
@@ -107,7 +107,7 @@ export function useCriticalPath(projectId: number) {
 export function useCycleTimeReport(projectId: number) {
   const canView = useCan("build:view");
   return useQuery<Array<{ week: string; avgDays: number; count: number }>>({
-    queryKey: queryKeys.projectReports.cycleTime(projectId),
+    queryKey: accountingAndSupportQueryKeys.projectReports.cycleTime(projectId),
     queryFn: ({ signal }) => apiClient.get(`/build/${projectId}/reports/cycle-time`, undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
@@ -117,7 +117,7 @@ export function useCycleTimeReport(projectId: number) {
 export function useLeadTimeReport(projectId: number) {
   const canView = useCan("build:view");
   return useQuery<Array<{ week: string; avgDays: number; p50Days: number; p90Days: number; count: number }>>({
-    queryKey: queryKeys.projectReports.leadTime(projectId),
+    queryKey: accountingAndSupportQueryKeys.projectReports.leadTime(projectId),
     queryFn: ({ signal }) => apiClient.get(`/build/${projectId}/reports/lead-time`, undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
@@ -131,7 +131,7 @@ export function useCaptureSnapshot(projectId: number) {
     mutationFn: () =>
       apiClient.post<CaptureSnapshotResult>(`/build/${projectId}/reports/snapshot`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projectReports.cfd(projectId) });
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.projectReports.cfd(projectId) });
     },
   });
 }

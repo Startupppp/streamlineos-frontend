@@ -5,7 +5,7 @@ import { useAbly } from "ably/react";
 import type { InboundMessage, ConnectionState, ConnectionStateChange } from "ably";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { queryKeys } from "@/lib/query-keys";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
 import { chatChannelName } from "@/lib/ably-channels";
 import type {
@@ -149,11 +149,11 @@ export function useChatRealtime(channelId: number | null): {
 
       if (wasDisconnected && channelId && channelId > 0) {
         queryClient.invalidateQueries({
-          queryKey: queryKeys.chat.messages(channelId),
+          queryKey: collaborationQueryKeys.chat.messages(channelId),
           exact: false,
         });
-        queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
-        queryClient.invalidateQueries({ queryKey: queryKeys.chat.unreadTotal() });
+        queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
+        queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.unreadTotal() });
       }
     };
     const handleDisconnected = (stateChange: ConnectionStateChange) => {
@@ -190,7 +190,7 @@ export function useChatRealtime(channelId: number | null): {
       if (!parsed.success) return;
       const payload = parsed.data;
 
-      const cacheKey = queryKeys.chat.messages(channelId);
+      const cacheKey = collaborationQueryKeys.chat.messages(channelId);
 
       queryClient.setQueryData<InfiniteData<MessagesPage>>(cacheKey, (old) => {
         if (!old) return old;
@@ -210,12 +210,12 @@ export function useChatRealtime(channelId: number | null): {
 
       if (payload.replyToId) {
         queryClient.invalidateQueries({
-          queryKey: queryKeys.chat.thread(channelId, payload.replyToId),
+          queryKey: collaborationQueryKeys.chat.thread(channelId, payload.replyToId),
         });
       }
 
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.unreadTotal() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.unreadTotal() });
 
       if (
         payload.senderId !== currentUserId &&
@@ -234,7 +234,7 @@ export function useChatRealtime(channelId: number | null): {
       if (!parsed.success) return;
       const payload = parsed.data;
 
-      const cacheKey = queryKeys.chat.messages(channelId);
+      const cacheKey = collaborationQueryKeys.chat.messages(channelId);
       patchMessagesCache(queryClient, cacheKey, (m) => {
         if (m.id !== payload.id) return m;
         return {
@@ -251,7 +251,7 @@ export function useChatRealtime(channelId: number | null): {
       if (!parsed.success) return;
       const payload = parsed.data;
 
-      const cacheKey = queryKeys.chat.messages(channelId);
+      const cacheKey = collaborationQueryKeys.chat.messages(channelId);
       patchMessagesCache(queryClient, cacheKey, (m) => {
         if (m.id !== payload.id) return m;
         return { ...m, isDeleted: true, content: null };
@@ -263,14 +263,14 @@ export function useChatRealtime(channelId: number | null): {
       if (!parsed.success) return;
       const payload = parsed.data;
 
-      const cacheKey = queryKeys.chat.messages(channelId);
+      const cacheKey = collaborationQueryKeys.chat.messages(channelId);
       patchMessagesCache(queryClient, cacheKey, (m) => {
         if (m.id !== payload.messageId) return m;
         return { ...m, reactions: payload.reactions };
       });
 
       queryClient.setQueryData<InfiniteData<ThreadPage>>(
-        queryKeys.chat.thread(channelId, payload.messageId),
+        collaborationQueryKeys.chat.thread(channelId, payload.messageId),
         (old) => {
           if (!old) return old;
           let changed = false;

@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { supportTicketWatchersContract } from "@/hooks/api/watchers-schema";
 
@@ -18,7 +18,7 @@ export interface SupportTicketWatcher {
 
 export function useSupportWatchers(ticketId: number) {
   return useGatedQuery("support:tickets:view", {
-    queryKey: queryKeys.supportWatchers.list(ticketId),
+    queryKey: supportAndWorkflowsQueryKeys.supportWatchers.list(ticketId),
     queryFn: ({ signal }) =>
       apiClient.get<SupportTicketWatcher[]>(
         `/support/${ticketId}/watchers`,
@@ -37,7 +37,7 @@ export function useFollowTicket() {
     mutationKey: ["follow", "ticket"],
     mutationFn: (ticketId: number) => apiClient.post<{ success: boolean }>(`/support/${ticketId}/follow`, {}),
     onSuccess: (_, ticketId) =>
-      qc.invalidateQueries({ queryKey: queryKeys.supportWatchers.list(ticketId) }),
+      qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportWatchers.list(ticketId) }),
   });
 }
 
@@ -47,6 +47,6 @@ export function useUnfollowTicket() {
     mutationKey: ["unfollow", "ticket"],
     mutationFn: (ticketId: number) => apiClient.delete<{ success: boolean }>(`/support/${ticketId}/follow`),
     onSuccess: (_, ticketId) =>
-      qc.invalidateQueries({ queryKey: queryKeys.supportWatchers.list(ticketId) }),
+      qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.supportWatchers.list(ticketId) }),
   });
 }

@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -45,7 +45,7 @@ const HOLDS_KEY = ["hr", "governance", "legal-holds"] as const;
 export function useLegalHolds(params?: { status?: string; subjectUserId?: string; page?: number; limit?: number }) {
   const canViewHolds = useCan("hr:legalhold:view");
   return useQuery<LegalHoldsListResponse>({
-    queryKey: [...queryKeys.hr.hrLegalHoldsBase, params],
+    queryKey: [...humanResourcesQueryKeys.hr.hrLegalHoldsBase, params],
     queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
       if (params?.status) p["status"] = params.status;
@@ -62,7 +62,7 @@ export function useLegalHolds(params?: { status?: string; subjectUserId?: string
 export function useHoldItems(holdId: number | undefined) {
   const canViewHolds = useCan("hr:legalhold:view");
   return useQuery<HoldItem[]>({
-    queryKey: [...queryKeys.hr.hrLegalHoldsBase, holdId, "items"],
+    queryKey: [...humanResourcesQueryKeys.hr.hrLegalHoldsBase, holdId, "items"],
     queryFn: ({ signal }) => apiClient.get<HoldItem[]>(`/hr/governance/legal-holds/${holdId}/items`, undefined, signal),
     enabled: canViewHolds && holdId !== undefined,
     staleTime: 30_000,
@@ -115,7 +115,7 @@ export function useAttachHoldItem() {
     mutationFn: ({ holdId, ...payload }) =>
       apiClient.post<HoldItem>(`/hr/governance/legal-holds/${holdId}/items`, payload),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.hrLegalHoldsBase, vars.holdId, "items"] });
+      qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.hrLegalHoldsBase, vars.holdId, "items"] });
       toast.success("Item attached to hold");
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -129,7 +129,7 @@ export function useDetachHoldItem() {
     mutationFn: ({ holdId, itemId }) =>
       apiClient.delete<void>(`/hr/governance/legal-holds/${holdId}/items/${itemId}`),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: [...queryKeys.hr.hrLegalHoldsBase, vars.holdId, "items"] });
+      qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.hrLegalHoldsBase, vars.holdId, "items"] });
       toast.success("Item removed from hold");
     },
     onError: (err) => toast.error(getErrorMessage(err)),

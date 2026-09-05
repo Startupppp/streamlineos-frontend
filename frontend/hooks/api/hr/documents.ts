@@ -2,7 +2,7 @@
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import type { Document, DocumentType } from "@/types/hr";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 
@@ -20,7 +20,7 @@ export interface HrDocumentListResponse {
   pageInfo: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
-export const hrDocumentListPrefix = queryKeys.hr.documentsAll;
+export const hrDocumentListPrefix = humanResourcesQueryKeys.hr.documentsAll;
 
 export function useHrDocumentList(params?: HrDocumentListParams) {
   const canDocs = useCan("hr:documents:view");
@@ -36,7 +36,7 @@ export function useHrDocumentList(params?: HrDocumentListParams) {
       : {}),
   };
   return useQuery({
-    queryKey: queryKeys.hr.documents(queryParams),
+    queryKey: humanResourcesQueryKeys.hr.documents(queryParams),
     queryFn: ({ signal }) => apiClient.get<HrDocumentListResponse>("/hr/documents", queryParams, signal),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
@@ -56,7 +56,7 @@ export function useHrDocumentStats(options?: { enabled?: boolean }) {
   const canDocs = useCan("hr:documents:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: queryKeys.hr.documentsStats(),
+    queryKey: humanResourcesQueryKeys.hr.documentsStats(),
     queryFn: ({ signal }) => apiClient.get<HrDocumentStats>("/hr/documents/stats", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canDocs && (options?.enabled ?? true),
@@ -83,7 +83,7 @@ export function useHrDocumentExpiry(
   const canDocs = useCan("hr:documents:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: queryKeys.hr.documentsExpiry(days),
+    queryKey: humanResourcesQueryKeys.hr.documentsExpiry(days),
     queryFn: ({ signal }) =>
       apiClient.get<HrDocumentExpiryResponse>("/hr/document-expiry", { days }, signal),
     staleTime: 2 * 60_000,
@@ -120,7 +120,7 @@ export function useMyOnboardingDocs(options?: { enabled?: boolean }) {
   const canView = useCan("self:onboarding-docs");
   const params = { limit: MY_DOCS_LIMIT };
   return useQuery({
-    queryKey: queryKeys.hr.onboardingDocs(params),
+    queryKey: humanResourcesQueryKeys.hr.onboardingDocs(params),
     queryFn: ({ signal }) =>
       apiClient.get<MyOnboardingDocsResponse>("/hr/onboarding-docs/me", params, signal),
     staleTime: 60_000,
@@ -137,7 +137,7 @@ export function useMissingOnboardingDocsCount(options?: { enabled?: boolean }) {
   const enabled = canOnboarding && (options?.enabled ?? true);
 
   const totalQuery = useQuery({
-    queryKey: queryKeys.hr.onboardingDocsSummary({ limit: 1 }),
+    queryKey: humanResourcesQueryKeys.hr.onboardingDocsSummary({ limit: 1 }),
     queryFn: ({ signal }) =>
       apiClient.get<OnboardingDocsSummaryTotals>("/hr/onboarding-docs/summary", {
         limit: 1,
@@ -146,7 +146,7 @@ export function useMissingOnboardingDocsCount(options?: { enabled?: boolean }) {
     enabled,
   });
   const approvedQuery = useQuery({
-    queryKey: queryKeys.hr.onboardingDocsSummary({ limit: 1, status: "APPROVED" }),
+    queryKey: humanResourcesQueryKeys.hr.onboardingDocsSummary({ limit: 1, status: "APPROVED" }),
     queryFn: ({ signal }) =>
       apiClient.get<OnboardingDocsSummaryTotals>("/hr/onboarding-docs/summary", {
         limit: 1,

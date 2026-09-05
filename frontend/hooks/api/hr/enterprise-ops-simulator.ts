@@ -3,7 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useGatedQuery } from "@/hooks/api/gated-query";
-import { queryKeys } from "@/lib/query-keys";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -29,7 +29,7 @@ const BASE = "/hr/enterprise/ops/simulator";
 
 export function useSimulationHistory(params: { cursor?: string; type?: SimulationType } = {}) {
   return useGatedQuery("hr:policies:manage", {
-    queryKey: queryKeys.hrSimulations.history(params as Record<string, unknown>),
+    queryKey: directoryAndOwnershipQueryKeys.hrSimulations.history(params as Record<string, unknown>),
     queryFn: ({ signal }) => apiClient.get<PaginatedResult<SimulationRecord>>(`${BASE}/history`, params as Record<string, unknown>, signal),
     staleTime: 30_000,
   });
@@ -44,7 +44,7 @@ export function useSimulatePolicy() {
       policyType: string;
       hypotheticalContext: Record<string, unknown>;
     }) => apiClient.post<Record<string, unknown>>(`${BASE}/simulate/policy`, body),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: queryKeys.hrSimulations.all }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.hrSimulations.all }),
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 }
@@ -59,7 +59,7 @@ export function useSimulateLeaveBalance() {
       hypotheticalAccrualRate?: number;
       projectionDate: string;
     }) => apiClient.post<Record<string, unknown>>(`${BASE}/simulate/leave-balance`, body),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: queryKeys.hrSimulations.all }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.hrSimulations.all }),
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 }
@@ -73,7 +73,7 @@ export function useSimulateApprovalRouting() {
       hypotheticalContext: Record<string, unknown>;
       employeeId: string;
     }) => apiClient.post<Record<string, unknown>>(`${BASE}/simulate/approval-routing`, body),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: queryKeys.hrSimulations.all }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.hrSimulations.all }),
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 }
@@ -87,7 +87,7 @@ export function useSimulatePayrollImpact() {
       hypotheticalComponents: Array<{ name: string; amount: number; type: "earning" | "deduction" }>;
       effectiveDate: string;
     }) => apiClient.post<Record<string, unknown>>(`${BASE}/simulate/payroll-impact`, body),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: queryKeys.hrSimulations.all }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.hrSimulations.all }),
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 }
@@ -99,7 +99,7 @@ export function useComparePolicy(params: {
   policyType: string;
 } | null) {
   return useGatedQuery("hr:policies:manage", {
-    queryKey: queryKeys.hrSimulations.compare(params),
+    queryKey: directoryAndOwnershipQueryKeys.hrSimulations.compare(params),
     queryFn: ({ signal }) => apiClient.get<Record<string, unknown>>(`${BASE}/compare`, params as Record<string, unknown>, signal),
     enabled: !!params,
     staleTime: 60_000,

@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 
 export interface HrDocumentType {
@@ -47,7 +47,7 @@ export function useHrDocumentTypes(options?: { enabled?: boolean }) {
     enabled:
       (canManageDocuments || canViewDocuments || canViewOwnDocuments) &&
       (options?.enabled ?? true),
-    queryKey: [...queryKeys.hr.documentTypes(), "all"] as const,
+    queryKey: [...humanResourcesQueryKeys.hr.documentTypes(), "all"] as const,
     queryFn: async ({ signal }) => {
       const res = await apiClient.get<
         PaginatedHrDocumentTypes | HrDocumentType[]
@@ -61,7 +61,7 @@ export function useHrDocumentTypes(options?: { enabled?: boolean }) {
 export function useHrDocumentTypesPage(page: number, limit: number) {
   const canManageDocuments = useCan("hr:documents:manage");
   return useQuery<PaginatedHrDocumentTypes>({
-    queryKey: [...queryKeys.hr.documentTypes(), { page, limit }] as const,
+    queryKey: [...humanResourcesQueryKeys.hr.documentTypes(), { page, limit }] as const,
     queryFn: ({ signal }) =>
       apiClient.get<PaginatedHrDocumentTypes>("/hr/document-types", {
         page,
@@ -103,7 +103,7 @@ export function useCreateHrDocumentType() {
       }),
     onSuccess: () =>
       queryClient.invalidateQueries({
-        queryKey: queryKeys.hr.documentTypes(),
+        queryKey: humanResourcesQueryKeys.hr.documentTypes(),
       }),
   });
 }
@@ -119,7 +119,7 @@ export function useUpdateHrDocumentType() {
       apiClient.patch(`/hr/document-types/${documentTypeId}`, documentType),
     onSuccess: () =>
       queryClient.invalidateQueries({
-        queryKey: queryKeys.hr.documentTypes(),
+        queryKey: humanResourcesQueryKeys.hr.documentTypes(),
       }),
   });
 }
@@ -134,7 +134,7 @@ export function useDeactivateHrDocumentType() {
       }),
     onSuccess: () =>
       queryClient.invalidateQueries({
-        queryKey: queryKeys.hr.documentTypes(),
+        queryKey: humanResourcesQueryKeys.hr.documentTypes(),
       }),
   });
 }

@@ -2,7 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useCan } from "@/hooks/api/access";
 import type { CursorPage } from "@/hooks/api/accounting";
 import type {
@@ -58,7 +59,7 @@ export type ListReminderPoliciesParams = {
 export function useReminderPolicies(params: ListReminderPoliciesParams = {}) {
   const can = useCan("accounting:reminders:read");
   return useQuery<ListResponse<ReminderPolicy>, Error>({
-    queryKey: queryKeys.accounting.arReminderPolicies(params),
+    queryKey: accountingAndSupportQueryKeys.accounting.arReminderPolicies(params),
     queryFn: ({ signal }) =>
       apiClient.get<ListResponse<ReminderPolicy>>(
         "/accounting/reminders/policies",
@@ -184,9 +185,9 @@ export function useUpdateInvoiceCollection() {
         body,
       ),
     onMutate: async (variables) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.invoice.all });
+      await queryClient.cancelQueries({ queryKey: platformCoreQueryKeys.invoice.all });
       const snapshots = queryClient.getQueriesData<ListResponse<ArInvoice>>({
-        queryKey: queryKeys.invoice.all,
+        queryKey: platformCoreQueryKeys.invoice.all,
       });
       for (const [key, data] of snapshots) {
         if (!data) continue;
@@ -216,7 +217,7 @@ export function useUpdateInvoiceCollection() {
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.invoice.all });
     },
   });
 }

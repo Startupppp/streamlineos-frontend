@@ -22,7 +22,7 @@ import { FilterPill, FilterPillGroup } from "@/components/ui/filter-pill";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
@@ -74,7 +74,7 @@ function useRecognitions() {
   const canView = useCan("hr:engagement:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<Recognition[]>({
-    queryKey: queryKeys.hr.hrRecognition,
+    queryKey: humanResourcesQueryKeys.hr.hrRecognition,
     queryFn: ({ signal }) => apiClient.get<Recognition[]>("/hr/recognition", undefined, signal),
     staleTime: 60_000,
     enabled: canView && hrEnabled,
@@ -87,7 +87,7 @@ function useCreateRecognition() {
     mutationKey: ["hr", "recognition", "create"],
     mutationFn: (data: { toUserId: string; message: string; category: string }) =>
       apiClient.post<Recognition>("/hr/recognition", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.hrRecognition }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrRecognition }),
   });
 }
 

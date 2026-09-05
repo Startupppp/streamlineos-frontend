@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import type {
   Risk, Decision,
@@ -21,7 +21,7 @@ export function useProjectRisks(projectId: number, filters?: ListFilters) {
   if (filters?.status) params["status"] = filters.status;
 
   return useQuery<Risk[]>({
-    queryKey: queryKeys.projects.risks.list(
+    queryKey: buildWorkQueryKeys.projects.risks.list(
       projectId,
       Object.keys(params).length > 0 ? params : undefined,
     ),
@@ -38,7 +38,7 @@ export function useCreateRisk(projectId: number) {
     mutationFn: (data: CreateRiskInput) =>
       apiClient.post<Risk>(`/build/${projectId}/risks`, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.risks.list(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.risks.list(projectId) });
     },
   });
 }
@@ -50,8 +50,8 @@ export function useUpdateRisk(projectId: number) {
     mutationFn: ({ id, ...data }: UpdateRiskInput & { id: number }) =>
       apiClient.patch<Risk>(`/build/${projectId}/risks/${id}`, data),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.risks.list(projectId) });
-      qc.invalidateQueries({ queryKey: queryKeys.projects.risks.detail(projectId, vars.id) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.risks.list(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.risks.detail(projectId, vars.id) });
     },
   });
 }
@@ -63,7 +63,7 @@ export function useDeleteRisk(projectId: number) {
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/build/${projectId}/risks/${id}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.risks.list(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.risks.list(projectId) });
     },
   });
 }
@@ -74,7 +74,7 @@ export function useProjectDecisions(projectId: number, filters?: ListFilters) {
   if (filters?.status) params["status"] = filters.status;
 
   return useQuery<Decision[]>({
-    queryKey: queryKeys.projects.decisions.list(
+    queryKey: buildWorkQueryKeys.projects.decisions.list(
       projectId,
       Object.keys(params).length > 0 ? params : undefined,
     ),
@@ -91,7 +91,7 @@ export function useCreateDecision(projectId: number) {
     mutationFn: (data: CreateDecisionInput) =>
       apiClient.post<Decision>(`/build/${projectId}/decisions`, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.decisions.list(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.decisions.list(projectId) });
     },
   });
 }
@@ -103,8 +103,8 @@ export function useUpdateDecision(projectId: number) {
     mutationFn: ({ id, ...data }: UpdateDecisionInput & { id: number }) =>
       apiClient.patch<Decision>(`/build/${projectId}/decisions/${id}`, data),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.decisions.list(projectId) });
-      qc.invalidateQueries({ queryKey: queryKeys.projects.decisions.detail(projectId, vars.id) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.decisions.list(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.decisions.detail(projectId, vars.id) });
     },
   });
 }
@@ -116,7 +116,7 @@ export function useDeleteDecision(projectId: number) {
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/build/${projectId}/decisions/${id}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.decisions.list(projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.decisions.list(projectId) });
     },
   });
 }

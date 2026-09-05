@@ -2,7 +2,7 @@ import "server-only";
 
 import { dehydrate, type DehydratedState } from "@tanstack/react-query";
 import { createServerQueryClient } from "./server-query-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { serverGet } from "@/lib/server-fetch";
 import type { ProjectWithDetails } from "@/types/projects";
 
@@ -30,7 +30,7 @@ export async function prefetchBuildProject(projectId: number): Promise<{
 }> {
   const queryClient = await createServerQueryClient();
   const project = await queryClient.fetchQuery({
-    queryKey: queryKeys.projects.detail(projectId),
+    queryKey: buildWorkQueryKeys.projects.detail(projectId),
     queryFn: () => serverGet<ProjectWithDetails>(`/build/${projectId}`),
     staleTime: 30_000,
   });

@@ -7,7 +7,8 @@ import {
   keepPreviousData,
 } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -27,7 +28,7 @@ import { applyMailActionToCaches, restoreMailCaches } from "@/hooks/api/mail-act
 export function useMailAccounts() {
   const can = useCan("mail:inbox:view");
   return useQuery({
-    queryKey: queryKeys.mail.accounts(),
+    queryKey: directoryAndOwnershipQueryKeys.mail.accounts(),
     queryFn: ({ signal }) => apiClient.get<MailAccount[]>("/mail/accounts", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: can,
@@ -43,7 +44,7 @@ export function useMailMessages(params: MailMessagesParams) {
   if (params.limit) queryParams.limit = params.limit;
 
   return useInfiniteQuery({
-    queryKey: queryKeys.mail.messages(queryParams),
+    queryKey: directoryAndOwnershipQueryKeys.mail.messages(queryParams),
     queryFn: ({ pageParam , signal }) => {
       const searchParams = new URLSearchParams();
       if (params.folder) searchParams.set("folder", params.folder);
@@ -64,7 +65,7 @@ export function useMailMessages(params: MailMessagesParams) {
 export function useMailThread(accountId: number | undefined, threadId: string | undefined) {
   const can = useCan("mail:inbox:view");
   return useQuery({
-    queryKey: queryKeys.mail.thread(accountId ?? 0, threadId ?? ""),
+    queryKey: directoryAndOwnershipQueryKeys.mail.thread(accountId ?? 0, threadId ?? ""),
     queryFn: ({ signal }) =>
       apiClient.get<MailMessageDetail[]>(
         `/mail/threads/${threadId}?accountId=${accountId}`, undefined, signal,
@@ -77,7 +78,7 @@ export function useMailThread(accountId: number | undefined, threadId: string | 
 export function useMailMessage(accountId: number | undefined, messageId: string | undefined) {
   const can = useCan("mail:inbox:view");
   return useQuery({
-    queryKey: queryKeys.mail.message(accountId ?? 0, messageId ?? ""),
+    queryKey: directoryAndOwnershipQueryKeys.mail.message(accountId ?? 0, messageId ?? ""),
     queryFn: ({ signal }) =>
       apiClient.get<MailMessageDetail>(
         `/mail/messages/${messageId}?accountId=${accountId}`, undefined, signal,
@@ -97,8 +98,8 @@ export function useSendMail() {
       apiClient.post<{ messageId: string }>("/mail/send", body, operation.configFor(body)),
     onSuccess: () => {
       operation.settle();
-      void qc.invalidateQueries({ queryKey: queryKeys.mail.all });
-      void qc.invalidateQueries({ queryKey: queryKeys.inbox.all });
+      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.mail.all });
+      void qc.invalidateQueries({ queryKey: platformCoreQueryKeys.inbox.all });
     },
   });
 }
@@ -112,8 +113,8 @@ export function useReplyMail() {
       apiClient.post<{ messageId: string }>("/mail/reply", body, operation.configFor(body)),
     onSuccess: () => {
       operation.settle();
-      void qc.invalidateQueries({ queryKey: queryKeys.mail.all });
-      void qc.invalidateQueries({ queryKey: queryKeys.inbox.all });
+      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.mail.all });
+      void qc.invalidateQueries({ queryKey: platformCoreQueryKeys.inbox.all });
     },
   });
 }
@@ -185,8 +186,8 @@ export function useMailAction() {
       restoreMailCaches(qc, context);
     },
     onSettled: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.mail.all });
-      void qc.invalidateQueries({ queryKey: queryKeys.inbox.all });
+      void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.mail.all });
+      void qc.invalidateQueries({ queryKey: platformCoreQueryKeys.inbox.all });
     },
   });
 }

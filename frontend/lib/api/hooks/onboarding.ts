@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 
 export interface PersonalDetailsPayload {
   phone: string;
@@ -34,7 +34,7 @@ export interface PersonalDetails {
 
 export function usePersonalDetailsQuery() {
   return useQuery({
-    queryKey: queryKeys.onboardingFlow.personalDetails(),
+    queryKey: platformCoreQueryKeys.onboardingFlow.personalDetails(),
     queryFn: ({ signal }) =>
       apiClient.get<PersonalDetails>("/onboarding/personal-details", undefined, signal),
     staleTime: 30_000,
@@ -50,7 +50,7 @@ export function usePersonalInfoMutation() {
       apiClient.patch<void>("/onboarding/personal-details", payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.onboardingFlow.personalDetails(),
+        queryKey: platformCoreQueryKeys.onboardingFlow.personalDetails(),
       });
     },
   });
@@ -71,7 +71,7 @@ export type BankDetails = BankDetailsPayload;
 
 export function useBankDetailsQuery() {
   return useQuery({
-    queryKey: queryKeys.onboardingFlow.bankDetails(),
+    queryKey: platformCoreQueryKeys.onboardingFlow.bankDetails(),
     queryFn: ({ signal }) => apiClient.get<BankDetails>("/onboarding/bank-details", undefined, signal),
     staleTime: 30_000,
   });
@@ -86,7 +86,7 @@ export function useBankDetailsMutation() {
       apiClient.patch<void>("/onboarding/bank-details", payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.onboardingFlow.bankDetails(),
+        queryKey: platformCoreQueryKeys.onboardingFlow.bankDetails(),
       });
     },
   });

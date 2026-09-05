@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import type {
   RoadmapStatus,
   FeedbackStatus,
@@ -141,7 +141,7 @@ export function useRoadmapItems(filters: RoadmapItemFilters = {}) {
   const params: Record<string, unknown> = { ...filters };
   const canView = useCan("build:roadmap:view");
   return useQuery({
-    queryKey: queryKeys.roadmap.items(params),
+    queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(params),
     queryFn: ({ signal }) => apiClient.get<CursorPaginated<RoadmapItem>>("/build/roadmap", params, signal),
     enabled: canView,
     staleTime: 30_000,
@@ -155,7 +155,7 @@ export function useCreateRoadmapItem() {
     mutationKey: ["projects", "roadmap", "create"],
     mutationFn: (input: CreateRoadmapItemInput) =>
       apiClient.post<RoadmapItem>("/build/roadmap", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
   });
 }
 
@@ -165,7 +165,7 @@ export function useUpdateRoadmapItem() {
     mutationKey: ["projects", "roadmap", "update"],
     mutationFn: ({ id, ...input }: UpdateRoadmapItemInput & { id: number }) =>
       apiClient.patch<RoadmapItem>(`/build/roadmap/${id}`, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
   });
 }
 
@@ -175,7 +175,7 @@ export function useDeleteRoadmapItem() {
     mutationKey: ["projects", "roadmap", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/build/roadmap/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
   });
 }
 
@@ -183,7 +183,7 @@ export function useFeedbackPosts(filters: FeedbackPostFilters = {}) {
   const params: Record<string, unknown> = { ...filters };
   const canView = useCan("build:roadmap:view");
   return useQuery({
-    queryKey: queryKeys.roadmap.feedback(params),
+    queryKey: knowledgeAndSurveysQueryKeys.roadmap.feedback(params),
     queryFn: ({ signal }) => apiClient.get<CursorPaginated<FeedbackPost>>("/build/feedback", params, signal),
     enabled: canView,
     staleTime: 30_000,
@@ -197,7 +197,7 @@ export function useUpdateFeedbackPost() {
     mutationKey: ["projects", "feedback", "update"],
     mutationFn: ({ id, ...input }: UpdateFeedbackPostInput & { id: number }) =>
       apiClient.patch<FeedbackPost>(`/build/feedback/${id}`, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
   });
 }
 
@@ -207,7 +207,7 @@ export function useMergeFeedbackPost() {
     mutationKey: ["projects", "feedback", "merge"],
     mutationFn: ({ id, targetPostId }: { id: number; targetPostId: number }) =>
       apiClient.post<FeedbackPost>(`/build/feedback/${id}/merge`, { targetPostId }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
   });
 }
 
@@ -217,7 +217,7 @@ export function useDeleteFeedbackPost() {
     mutationKey: ["projects", "feedback", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/build/feedback/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
   });
 }
 
@@ -225,7 +225,7 @@ export function useChangelog(filters: ChangelogFilters = {}) {
   const params: Record<string, unknown> = { ...filters };
   const canView = useCan("build:roadmap:view");
   return useQuery({
-    queryKey: queryKeys.roadmap.changelog(params),
+    queryKey: knowledgeAndSurveysQueryKeys.roadmap.changelog(params),
     queryFn: ({ signal }) => apiClient.get<CursorPaginated<ChangelogEntry>>("/build/changelog", params, signal),
     enabled: canView,
     staleTime: 30_000,
@@ -239,7 +239,7 @@ export function useCreateChangelogEntry() {
     mutationKey: ["projects", "changelog", "create"],
     mutationFn: (input: CreateChangelogEntryInput) =>
       apiClient.post<ChangelogEntry>("/build/changelog", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
   });
 }
 
@@ -249,7 +249,7 @@ export function useUpdateChangelogEntry() {
     mutationKey: ["projects", "changelog", "update"],
     mutationFn: ({ id, ...input }: UpdateChangelogEntryInput & { id: number }) =>
       apiClient.patch<ChangelogEntry>(`/build/changelog/${id}`, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
   });
 }
 
@@ -259,13 +259,13 @@ export function useDeleteChangelogEntry() {
     mutationKey: ["projects", "changelog", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/build/changelog/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.all }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.all }),
   });
 }
 
 export function usePublicRoadmap(orgId: string) {
   return useQuery({
-    queryKey: queryKeys.roadmap.publicBoard(orgId),
+    queryKey: knowledgeAndSurveysQueryKeys.roadmap.publicBoard(orgId),
     queryFn: ({ signal }) => apiClient.get<PublicRoadmapBoard>("/public/roadmap", { org: orgId }, signal),
     enabled: Boolean(orgId),
     staleTime: 60_000,
@@ -279,7 +279,7 @@ export function usePublicVote(orgId: string) {
     mutationKey: ["projects", "roadmap", "vote"],
     mutationFn: (input: PublicVoteInput) =>
       apiClient.post<PublicVoteResult>(`/public/roadmap/vote?org=${encodeURIComponent(orgId)}`, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.publicBoard(orgId) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.publicBoard(orgId) }),
   });
 }
 
@@ -292,6 +292,6 @@ export function useSubmitPublicFeedback(orgId: string) {
         `/public/roadmap/feedback?org=${encodeURIComponent(orgId)}`,
         input,
       ),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.roadmap.publicBoard(orgId) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.roadmap.publicBoard(orgId) }),
   });
 }

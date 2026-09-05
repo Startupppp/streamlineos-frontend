@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
@@ -61,7 +61,7 @@ type PolicyPreviewInput = {
 export function usePayrollPolicyCurrent() {
   const canView = useCan("payroll:policies:view");
   return useQuery({
-    queryKey: queryKeys.payroll.policy(),
+    queryKey: payrollQueryKeys.payroll.policy(),
     queryFn: ({ signal }) => apiClient.get<PolicyCurrentResult>("/payroll/policies/current", undefined, signal),
     staleTime: 5 * 60_000,
     enabled: canView,
@@ -71,7 +71,7 @@ export function usePayrollPolicyCurrent() {
 export function useToggleImpact(toggle: string, enabled = false) {
   const canView = useCan("payroll:policies:view");
   return useQuery({
-    queryKey: queryKeys.payroll.toggleImpact(toggle),
+    queryKey: payrollQueryKeys.payroll.toggleImpact(toggle),
     queryFn: ({ signal }) =>
       apiClient.get<ToggleImpactResult>("/payroll/policies/toggle-impact", {
         toggle,
@@ -88,7 +88,7 @@ export function useCreatePolicy() {
     mutationFn: (data: CreatePolicyInput) =>
       apiClient.post<PolicyRow>("/payroll/policies", data),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.payroll.policy() }),
+      qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.policy() }),
   });
 }
 
@@ -112,7 +112,7 @@ export function useUpdatePolicy() {
     mutationFn: ({ policyId, data }: UpdatePolicyInput) =>
       apiClient.patch<PolicyRow>(`/payroll/policies/${policyId}`, data),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.payroll.policy() }),
+      qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.policy() }),
   });
 }
 
@@ -126,14 +126,14 @@ export function useActivatePolicy() {
         data,
       ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.payroll.all }),
+      qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.all }),
   });
 }
 
 export function usePolicyVersions(policyId: number, enabled = true) {
   const canView = useCan("payroll:policies:view");
   return useQuery({
-    queryKey: queryKeys.payroll.policyVersions(policyId),
+    queryKey: payrollQueryKeys.payroll.policyVersions(policyId),
     queryFn: ({ signal }) =>
       apiClient.get<VersionRow[]>(`/payroll/policies/${policyId}/versions`, undefined, signal),
     staleTime: 2 * 60_000,
@@ -152,9 +152,9 @@ export function useCreatePolicyVersion() {
       ),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({
-        queryKey: queryKeys.payroll.policyVersions(variables.policyId),
+        queryKey: payrollQueryKeys.payroll.policyVersions(variables.policyId),
       });
-      qc.invalidateQueries({ queryKey: queryKeys.payroll.policy() });
+      qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.policy() });
     },
   });
 }

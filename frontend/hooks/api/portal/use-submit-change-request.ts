@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { portalApiClient } from "@/lib/portal-api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import type {
   ChangeRequestInput,
 } from "@/features/portal/lib/change-request-schema";
@@ -18,7 +18,7 @@ export function useSubmitChangeRequest(projectId: number) {
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.portal.projectOverview(projectId),
+        queryKey: directoryAndOwnershipQueryKeys.portal.projectOverview(projectId),
       });
     },
   });

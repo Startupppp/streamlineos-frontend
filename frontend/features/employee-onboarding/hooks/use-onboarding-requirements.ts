@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import {
   onboardingRequirementsSchema,
   type OnboardingRequirements,
@@ -10,7 +10,7 @@ import {
 
 export function useOnboardingRequirements(country: string, enabled = true) {
   return useQuery({
-    queryKey: queryKeys.onboardingFlow.requirements(country),
+    queryKey: platformCoreQueryKeys.onboardingFlow.requirements(country),
     queryFn: async ({ signal }) => {
       const res = await apiClient.get<unknown>("/onboarding/requirements", {
         country,

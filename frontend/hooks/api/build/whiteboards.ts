@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type WhiteboardVisibility = "project" | "private" | "public";
@@ -79,7 +79,7 @@ export interface SetWhiteboardSharesInput {
 export function useWhiteboards(projectId: number) {
   const canView = useCan("build:view");
   return useQuery({
-    queryKey: queryKeys.whiteboards.list(projectId),
+    queryKey: accountingAndSupportQueryKeys.whiteboards.list(projectId),
     queryFn: ({ signal }) => apiClient.get<WhiteboardSummary[]>(`/build/${projectId}/whiteboards`, undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 30_000,
@@ -89,7 +89,7 @@ export function useWhiteboards(projectId: number) {
 export function useWhiteboard(projectId: number, whiteboardId: number | null) {
   const canView = useCan("build:view");
   return useQuery({
-    queryKey: queryKeys.whiteboards.detail(whiteboardId ?? 0),
+    queryKey: accountingAndSupportQueryKeys.whiteboards.detail(whiteboardId ?? 0),
     queryFn: ({ signal }) =>
       apiClient.get<WhiteboardDetail>(`/build/${projectId}/whiteboards/${whiteboardId}`, undefined, signal),
     enabled: canView && !!projectId && !!whiteboardId,
@@ -103,7 +103,7 @@ export function useCreateWhiteboard(projectId: number) {
     mutationKey: ["projects", "whiteboards", "create"],
     mutationFn: (name: string) =>
       apiClient.post<WhiteboardDetail>(`/build/${projectId}/whiteboards`, { name }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.whiteboards.list(projectId) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.whiteboards.list(projectId) }),
   });
 }
 
@@ -114,8 +114,8 @@ export function useUpdateWhiteboard(projectId: number) {
     mutationFn: ({ id, ...input }: UpdateWhiteboardInput) =>
       apiClient.patch<WhiteboardDetail>(`/build/${projectId}/whiteboards/${id}`, input),
     onSuccess: (updated) => {
-      qc.setQueryData(queryKeys.whiteboards.detail(updated.id), updated);
-      qc.invalidateQueries({ queryKey: queryKeys.whiteboards.list(projectId) });
+      qc.setQueryData(accountingAndSupportQueryKeys.whiteboards.detail(updated.id), updated);
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.whiteboards.list(projectId) });
     },
   });
 }
@@ -126,7 +126,7 @@ export function useDeleteWhiteboard(projectId: number) {
     mutationKey: ["projects", "whiteboards", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/build/${projectId}/whiteboards/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.whiteboards.list(projectId) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.whiteboards.list(projectId) }),
   });
 }
 
@@ -140,8 +140,8 @@ export function useUpdateWhiteboardSharing(projectId: number) {
         input,
       ),
     onSuccess: (_: unknown, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.whiteboards.detail(variables.id) });
-      qc.invalidateQueries({ queryKey: queryKeys.whiteboards.list(projectId) });
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.whiteboards.detail(variables.id) });
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.whiteboards.list(projectId) });
     },
   });
 }
@@ -156,7 +156,7 @@ export function useRotateWhiteboardShareToken(projectId: number) {
         {},
       ),
     onSuccess: (_: unknown, id) => {
-      qc.invalidateQueries({ queryKey: queryKeys.whiteboards.detail(id) });
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.whiteboards.detail(id) });
     },
   });
 }
@@ -171,7 +171,7 @@ export function useSetWhiteboardShares(projectId: number) {
         { shares },
       ),
     onSuccess: (_: unknown, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.whiteboards.detail(variables.id) });
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.whiteboards.detail(variables.id) });
     },
   });
 }
@@ -185,7 +185,7 @@ export function useRemoveWhiteboardShare(projectId: number) {
         `/build/${projectId}/whiteboards/${id}/shares/${userId}`,
       ),
     onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.whiteboards.detail(variables.id) });
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.whiteboards.detail(variables.id) });
     },
   });
 }

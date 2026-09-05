@@ -2,7 +2,7 @@
 
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 
 export type SupportActivityAction =
   | "created"
@@ -30,7 +30,7 @@ export interface SupportActivityEntry {
 
 export function useSupportActivity(ticketId: number) {
   return useGatedQuery("support:tickets:view", {
-    queryKey: queryKeys.supportActivity.list(ticketId),
+    queryKey: accountingAndSupportQueryKeys.supportActivity.list(ticketId),
     queryFn: ({ signal }) =>
       apiClient.get<SupportActivityEntry[]>(`/support/${ticketId}/activity`, undefined, signal),
     enabled: Number.isFinite(ticketId) && ticketId > 0,

@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export function useAddReaction(projectId: number, ticketId: number) {
@@ -15,7 +15,7 @@ export function useAddReaction(projectId: number, ticketId: number) {
         { emoji }
       ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.projects.ticket(ticketId) }),
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.ticket(ticketId) }),
   });
 }
 
@@ -28,6 +28,6 @@ export function useRemoveReaction(projectId: number, ticketId: number) {
         `/build/${projectId}/tickets/${ticketId}/comments/${commentId}/reactions/${encodeURIComponent(emoji)}`
       ),
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.projects.ticket(ticketId) }),
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.ticket(ticketId) }),
   });
 }

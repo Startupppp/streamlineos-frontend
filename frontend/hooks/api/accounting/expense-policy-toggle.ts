@@ -2,10 +2,10 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-const policiesKey = [...queryKeys.accounting.all, "expenses", "policies"] as const;
+const policiesKey = [...accountingAndSupportQueryKeys.accounting.all, "expenses", "policies"] as const;
 
 interface TogglePolicyInput {
   policyId: number;

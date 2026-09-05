@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -39,7 +39,7 @@ export function useOrgDelegations(params?: {
 }) {
   const canManageDelegations = useCan("hr:workflows:manage");
   return useQuery<DelegationsListResponse>({
-    queryKey: [...queryKeys.hr.hrDelegationsAll, "org", params],
+    queryKey: [...humanResourcesQueryKeys.hr.hrDelegationsAll, "org", params],
     queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
       if (params?.scope) p["scope"] = params.scope;

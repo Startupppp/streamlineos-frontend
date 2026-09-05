@@ -23,7 +23,7 @@ import { motion } from "framer-motion";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { ArrowRight } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import {
   InvitationCard,
   InvitationHero,
@@ -63,7 +63,7 @@ export default function InvitationPage() {
     error: invitationError,
     isPending: isValidating,
   } = useQuery({
-    queryKey: queryKeys.invitation.token(token ?? ""),
+    queryKey: platformCoreQueryKeys.invitation.token(token ?? ""),
     queryFn: ({ signal }) =>
       apiClient.get<{
         email: string;

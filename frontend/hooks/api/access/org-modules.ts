@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useAccess, useCan } from "@/hooks/api/access";
 import { ORG_MODULE_NAME, normalizeOrgModuleKey } from "@/lib/module-vocabulary";
 import type { AccessResponse } from "@/types/access";
@@ -87,7 +87,7 @@ export function useEnabledModules(): string[] {
 export function useOrgModules() {
   const canManage = useCan("settings:manage");
   return useQuery<OrgModule[], Error>({
-    queryKey: queryKeys.access.orgModules(),
+    queryKey: platformCoreQueryKeys.access.orgModules(),
     queryFn: async ({ signal }) =>
       normalizeOrgModulesResponse(
         await apiClient.get("/access/org-modules", undefined, signal, orgModulesContract),
@@ -113,22 +113,22 @@ export function useToggleOrgModule() {
       apiClient.patch<void>(`/access/org-modules/${moduleKey}`, { enabled }),
     onMutate: async ({ moduleKey, enabled }) => {
       await Promise.all([
-        qc.cancelQueries({ queryKey: queryKeys.access.orgModules() }),
-        qc.cancelQueries({ queryKey: queryKeys.access.all }),
+        qc.cancelQueries({ queryKey: platformCoreQueryKeys.access.orgModules() }),
+        qc.cancelQueries({ queryKey: platformCoreQueryKeys.access.all }),
       ]);
       const previousValue = qc.getQueryData<unknown>(
-        queryKeys.access.orgModules(),
+        platformCoreQueryKeys.access.orgModules(),
       );
       const previousModules =
         previousValue === undefined
           ? undefined
           : normalizeOrgModulesResponse(previousValue);
       const previousAccess = qc.getQueriesData<AccessResponse>({
-        queryKey: queryKeys.access.all,
+        queryKey: platformCoreQueryKeys.access.all,
       });
 
       qc.setQueryData<OrgModule[]>(
-        queryKeys.access.orgModules(),
+        platformCoreQueryKeys.access.orgModules(),
         previousModules?.map((module) =>
           module.moduleKey === moduleKey ? { ...module, enabled } : module,
         ),
@@ -149,7 +149,7 @@ export function useToggleOrgModule() {
     },
     onError: (_error, _variables, context) => {
       if (context?.previousModules) {
-        qc.setQueryData(queryKeys.access.orgModules(), context.previousModules);
+        qc.setQueryData(platformCoreQueryKeys.access.orgModules(), context.previousModules);
       }
       for (const [queryKey, data] of context?.previousAccess ?? []) {
         qc.setQueryData(queryKey, data);
@@ -159,8 +159,8 @@ export function useToggleOrgModule() {
       clearBackendTokenCache();
     },
     onSettled: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.access.orgModules() });
-      void qc.invalidateQueries({ queryKey: queryKeys.access.all });
+      void qc.invalidateQueries({ queryKey: platformCoreQueryKeys.access.orgModules() });
+      void qc.invalidateQueries({ queryKey: platformCoreQueryKeys.access.all });
     },
   });
 }

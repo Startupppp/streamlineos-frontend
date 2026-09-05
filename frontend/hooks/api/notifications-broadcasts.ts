@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type {
   Broadcast,
   BroadcastListResponse,
@@ -21,7 +21,7 @@ export const useBroadcasts = (
   const canView = useCan("notifications:broadcasts:view");
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<BroadcastListResponse, Error>({
-    queryKey: queryKeys.notifications.broadcasts(params),
+    queryKey: platformCoreQueryKeys.notifications.broadcasts(params),
     queryFn: ({ signal }) =>
       apiClient.get<BroadcastListResponse>(
         "/broadcasts",
@@ -39,7 +39,7 @@ export const useCreateBroadcast = () => {
     mutationKey: ["notifications", "broadcasts", "create"],
     mutationFn: (dto) => apiClient.post<Broadcast>("/broadcasts", dto),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.broadcasts() });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.broadcasts() });
     },
   });
 };
@@ -50,8 +50,8 @@ export const useUpdateBroadcast = () => {
     mutationKey: ["notifications", "broadcasts", "update"],
     mutationFn: ({ id, ...dto }) => apiClient.patch<Broadcast>(`/broadcasts/${id}`, dto),
     onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.broadcasts() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.broadcast(vars.id) });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.broadcasts() });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.broadcast(vars.id) });
     },
   });
 };
@@ -62,7 +62,7 @@ export const usePublishBroadcast = () => {
     mutationKey: ["notifications", "broadcasts", "publish"],
     mutationFn: (id) => apiClient.post<{ success: boolean }>(`/broadcasts/${id}/publish`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.broadcasts() });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.broadcasts() });
     },
   });
 };
@@ -73,7 +73,7 @@ export const useCancelBroadcast = () => {
     mutationKey: ["notifications", "broadcasts", "cancel"],
     mutationFn: (id) => apiClient.post<{ success: boolean }>(`/broadcasts/${id}/cancel`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.broadcasts() });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.broadcasts() });
     },
   });
 };
@@ -84,7 +84,7 @@ export const useDeleteBroadcast = () => {
     mutationKey: ["notifications", "broadcasts", "delete"],
     mutationFn: (id) => apiClient.delete<{ success: boolean }>(`/broadcasts/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.broadcasts() });
+      queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.notifications.broadcasts() });
     },
   });
 };

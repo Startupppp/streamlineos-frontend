@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import type {
   JournalBatch,
@@ -17,7 +17,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 export function useJournalBatches(params?: { periodKey?: string; page?: number; limit?: number }) {
   const canView = useCan("payroll:accounting:view");
   return useQuery({
-    queryKey: queryKeys.payroll.journalBatches(params as Record<string, unknown> | undefined),
+    queryKey: payrollQueryKeys.payroll.journalBatches(params as Record<string, unknown> | undefined),
     queryFn: ({ signal }) =>
       apiClient.get<PaginatedJournalBatches>(
         "/payroll/accounting/journal-batches",
@@ -31,7 +31,7 @@ export function useJournalBatches(params?: { periodKey?: string; page?: number; 
 export function usePeriodReconciliation(periodKey: string, enabled = true) {
   const canView = useCan("payroll:accounting:view");
   return useQuery({
-    queryKey: queryKeys.payroll.periodReconciliation(periodKey),
+    queryKey: payrollQueryKeys.payroll.periodReconciliation(periodKey),
     queryFn: ({ signal }) =>
       apiClient.get<PeriodReconciliationReport>(
         "/payroll/accounting/journal-batches/period-reconciliation",
@@ -45,12 +45,12 @@ export function usePeriodReconciliation(periodKey: string, enabled = true) {
 function useInvalidateBatches() {
   const qc = useQueryClient();
   return (batchId?: number) => {
-    void qc.invalidateQueries({ queryKey: queryKeys.payroll.journalBatchesAll });
+    void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.journalBatchesAll });
     void qc.invalidateQueries({
-      queryKey: [...queryKeys.payroll.all, "period-reconciliation"],
+      queryKey: [...payrollQueryKeys.payroll.all, "period-reconciliation"],
     });
     if (batchId !== undefined) {
-      void qc.invalidateQueries({ queryKey: queryKeys.payroll.journalBatch(batchId) });
+      void qc.invalidateQueries({ queryKey: payrollQueryKeys.payroll.journalBatch(batchId) });
     }
   };
 }

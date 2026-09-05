@@ -3,7 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 
 export interface OvertimeRequest {
@@ -32,7 +32,7 @@ export function useOvertimeRequests(params?: { cursor?: string; pageSize?: numbe
   const canView = useCan("hr:attendance:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...queryKeys.hr.all, "overtimeRequests", params ?? {}],
+    queryKey: [...humanResourcesQueryKeys.hr.all, "overtimeRequests", params ?? {}],
     queryFn: ({ signal }) =>
       apiClient.get<OvertimeRequestsResponse>(
         "/hr/overtime",
@@ -50,7 +50,7 @@ export function useCreateOvertimeRequest() {
     mutationKey: ["hr", "overtime", "create"],
     mutationFn: (data: { date: string; hours: string; reason?: string; convertToCompOff?: boolean }) =>
       apiClient.post<OvertimeRequest>("/hr/overtime", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "overtimeRequests"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "overtimeRequests"] }),
   });
 }
 
@@ -59,7 +59,7 @@ export function useApproveOvertime() {
   return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "overtime", "approve"],
     mutationFn: (id: number) => apiClient.patch<OvertimeRequest>(`/hr/overtime/${id}/approve`, {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "overtimeRequests"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "overtimeRequests"] }),
   });
 }
 
@@ -68,7 +68,7 @@ export function useRejectOvertime() {
   return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "overtime", "reject"],
     mutationFn: (id: number) => apiClient.patch<OvertimeRequest>(`/hr/overtime/${id}/reject`, {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "overtimeRequests"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "overtimeRequests"] }),
   });
 }
 
@@ -76,7 +76,7 @@ export function useCompOffBalance() {
   const canView = useCan("hr:attendance:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...queryKeys.hr.all, "compOffBalance"],
+    queryKey: [...humanResourcesQueryKeys.hr.all, "compOffBalance"],
     queryFn: ({ signal }) => apiClient.get<CompOffBalance[]>("/hr/overtime/comp-off", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canView,

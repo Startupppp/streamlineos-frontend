@@ -3,7 +3,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import type { InboxKind, UnifiedInboxResponse } from "@/types/inbox";
 
 export interface UnifiedInboxParams {
@@ -21,7 +21,7 @@ export function useUnifiedInbox(
   const limit = params?.limit ?? 25;
 
   return useInfiniteQuery<UnifiedInboxResponse, Error>({
-    queryKey: queryKeys.inbox.unified({
+    queryKey: platformCoreQueryKeys.inbox.unified({
       limit: params?.limit,
       kinds: params?.kinds,
       unreadOnly: params?.unreadOnly,

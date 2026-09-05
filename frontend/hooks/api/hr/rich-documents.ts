@@ -3,7 +3,7 @@
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 
 export interface RichDocument {
@@ -34,7 +34,7 @@ export interface RichDocumentListParams {
 }
 
 const richDocKeys = {
-  all: [...queryKeys.hr.all, "richDocuments"] as const,
+  all: [...humanResourcesQueryKeys.hr.all, "richDocuments"] as const,
   lists: () => [...richDocKeys.all, "list"] as const,
   list: (params: Record<string, unknown>) => [...richDocKeys.all, "list", params] as const,
   detail: (documentId: number) =>

@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 
 export interface ComplianceCalendarEvent {
@@ -22,7 +22,7 @@ export interface ComplianceCalendarResponse {
 export function useComplianceCalendar(year: number, month: number) {
   const canManage = useCan("hr:compliance:manage");
   return useQuery<ComplianceCalendarResponse>({
-    queryKey: queryKeys.hr.complianceCalendar(year, month),
+    queryKey: humanResourcesQueryKeys.hr.complianceCalendar(year, month),
     queryFn: ({ signal }) =>
       apiClient.get<ComplianceCalendarResponse>("/hr/compliance/calendar", {
         year: String(year),

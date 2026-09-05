@@ -2,7 +2,9 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 
 interface LoginHistoryEntry {
   id: string;
@@ -33,15 +35,15 @@ export function useUpdateMyProfile() {
     mutationFn: (data: { name?: string; image?: string }) =>
       apiClient.patch<{ success: true }>("/me/profile", data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.hr.employees() });
-      void qc.invalidateQueries({ queryKey: queryKeys.organization.members() });
+      void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.employees() });
+      void qc.invalidateQueries({ queryKey: platformCoreQueryKeys.organization.members() });
     },
   });
 }
 
 export function useLoginHistory(params?: { page?: number; limit?: number; success?: boolean }) {
   return useQuery({
-    queryKey: queryKeys.auth.loginHistory(params as Record<string, unknown>),
+    queryKey: supportAndWorkflowsQueryKeys.auth.loginHistory(params as Record<string, unknown>),
     queryFn: ({ signal }) =>
       apiClient.get<LoginHistoryPage>("/me/login-history", {
         page: params?.page ?? 1,

@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface SupportTicketDraft {
@@ -25,8 +25,8 @@ export function useSnoozeTicket() {
         snoozedUntil: snoozedUntil.toISOString(),
       }),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.support.detail(vars.ticketId) });
-      qc.invalidateQueries({ queryKey: queryKeys.support.all });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.support.detail(vars.ticketId) });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.support.all });
     },
   });
 }
@@ -38,8 +38,8 @@ export function useUnsnoozeTicket() {
     mutationFn: (ticketId: number) =>
       apiClient.delete<{ success: boolean }>(`/support/${ticketId}/snooze`),
     onSuccess: (_, ticketId) => {
-      qc.invalidateQueries({ queryKey: queryKeys.support.detail(ticketId) });
-      qc.invalidateQueries({ queryKey: queryKeys.support.all });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.support.detail(ticketId) });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.support.all });
     },
   });
 }
@@ -58,15 +58,15 @@ export function useSplitTicket() {
       description?: string;
     }) => apiClient.post<{ id: number }>(`/support/${ticketId}/split`, { title, description }),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.support.detail(vars.ticketId) });
-      qc.invalidateQueries({ queryKey: queryKeys.support.all });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.support.detail(vars.ticketId) });
+      qc.invalidateQueries({ queryKey: platformCoreQueryKeys.support.all });
     },
   });
 }
 
 export function useTicketDraft(ticketId: number) {
   return useGatedQuery("support:tickets:view", {
-    queryKey: [...queryKeys.support.detail(ticketId), "draft"] as const,
+    queryKey: [...platformCoreQueryKeys.support.detail(ticketId), "draft"] as const,
     queryFn: ({ signal }) => apiClient.get<SupportTicketDraft | null>(`/support/${ticketId}/draft`, undefined, signal),
     enabled: Number.isFinite(ticketId) && ticketId > 0,
     staleTime: 60_000,
@@ -87,7 +87,7 @@ export function useUpsertTicketDraft() {
       isInternal?: boolean;
     }) => apiClient.put<SupportTicketDraft>(`/support/${ticketId}/draft`, { body, isInternal }),
     onSuccess: (_, vars) =>
-      qc.invalidateQueries({ queryKey: [...queryKeys.support.detail(vars.ticketId), "draft"] }),
+      qc.invalidateQueries({ queryKey: [...platformCoreQueryKeys.support.detail(vars.ticketId), "draft"] }),
   });
 }
 
@@ -98,6 +98,6 @@ export function useDeleteTicketDraft() {
     mutationFn: (ticketId: number) =>
       apiClient.delete<{ success: boolean }>(`/support/${ticketId}/draft`),
     onSuccess: (_, ticketId) =>
-      qc.invalidateQueries({ queryKey: [...queryKeys.support.detail(ticketId), "draft"] }),
+      qc.invalidateQueries({ queryKey: [...platformCoreQueryKeys.support.detail(ticketId), "draft"] }),
   });
 }

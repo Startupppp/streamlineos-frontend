@@ -10,7 +10,7 @@ import {
   useChatOrgUsers, useToggleReaction, useChatPins, usePinMessage,
   useUnpinMessage, useSavedMessages, useSaveMessage, useUnsaveMessage,
 } from "@/hooks/api/chat";
-import { queryKeys } from "@/lib/query-keys";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { orgScopedStorageKey, useOrgStorageScope } from "@/lib/org-scoped-storage";
 import { useChatRealtime } from "@/hooks/api/chat-realtime";
 import { useStartHuddle, useJoinHuddle, useActiveHuddle } from "@/hooks/api/chat-huddles";
@@ -226,8 +226,8 @@ export function useMessagePanelData({
 
   useEffect(() => {
     if (pollResult && pollResult.messages.length > 0) {
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.messages(channelId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.messages(channelId) });
+      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.myChannels() });
       setLastPollTime(new Date().toISOString());
     }
   }, [pollResult, channelId, queryClient]);

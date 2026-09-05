@@ -2,7 +2,7 @@
 
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 
 export type TicketRiskLevel =
   | "ok"
@@ -18,7 +18,7 @@ export interface TicketRisk {
 
 export function useTicketRisk(ticketId: number) {
   return useGatedQuery("support:tickets:view", {
-    queryKey: queryKeys.supportTicketRisk.detail(ticketId),
+    queryKey: supportAndWorkflowsQueryKeys.supportTicketRisk.detail(ticketId),
     queryFn: ({ signal }) => apiClient.get<TicketRisk>(`/support/${ticketId}/risk`, undefined, signal),
     staleTime: 30_000,
     enabled: Number.isFinite(ticketId) && ticketId > 0,

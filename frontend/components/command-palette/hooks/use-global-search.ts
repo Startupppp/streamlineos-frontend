@@ -2,7 +2,7 @@
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
 
 export interface GlobalSearchResult {
   id: number;
@@ -30,7 +30,7 @@ export function useGlobalSearch(query: string) {
   const enabled = trimmed.length >= GLOBAL_SEARCH_MIN_LENGTH;
 
   const { data, isFetching } = useQuery({
-    queryKey: queryKeys.globalSearch.query(trimmed),
+    queryKey: platformCoreQueryKeys.globalSearch.query(trimmed),
     queryFn: ({ signal }) =>
       apiClient.get<GlobalSearchResponse>("/search", { q: trimmed }, signal),
     staleTime: 30_000,

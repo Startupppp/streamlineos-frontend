@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useCan } from "@/hooks/api/access";
 import type { CursorPage } from "@/hooks/api/accounting";
 import type {
@@ -38,15 +38,15 @@ export interface ListRunsParams {
 }
 
 const assetKeys = {
-  all: [...queryKeys.accounting.all, "assets"] as const,
+  all: [...accountingAndSupportQueryKeys.accounting.all, "assets"] as const,
   categories: (params?: object) =>
-    [...queryKeys.accounting.all, "assets", "categories", params] as const,
+    [...accountingAndSupportQueryKeys.accounting.all, "assets", "categories", params] as const,
   assets: (params?: object) =>
-    [...queryKeys.accounting.all, "assets", "list", params] as const,
+    [...accountingAndSupportQueryKeys.accounting.all, "assets", "list", params] as const,
   asset: (id: number) =>
-    [...queryKeys.accounting.all, "assets", "detail", id] as const,
+    [...accountingAndSupportQueryKeys.accounting.all, "assets", "detail", id] as const,
   runs: (params?: object) =>
-    [...queryKeys.accounting.all, "assets", "depreciation-runs", params] as const,
+    [...accountingAndSupportQueryKeys.accounting.all, "assets", "depreciation-runs", params] as const,
 };
 
 function toQuery<P extends object>(params: P): Record<string, string> {

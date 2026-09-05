@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import type { OrgChartCursorPage, OrgChartQuery } from "./types";
 
 function toRequestParams(params: OrgChartQuery): Record<string, unknown> {
@@ -27,7 +27,7 @@ export function useHrOrgChart(
   const requestParams = toRequestParams(params);
 
   return useQuery({
-    queryKey: [...queryKeys.hr.orgChart(), orgId, userId, requestParams] as const,
+    queryKey: [...humanResourcesQueryKeys.hr.orgChart(), orgId, userId, requestParams] as const,
     queryFn: ({ signal }): Promise<OrgChartCursorPage> =>
       apiClient.get<OrgChartCursorPage>("/hr/org-chart", requestParams, signal),
     staleTime: 2 * 60_000,

@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -39,7 +39,7 @@ export interface CommentDraft {
 export function useMyCommentDrafts() {
   const canView = useCan("build:tickets:view");
   return useQuery<CommentDraft[]>({
-    queryKey: queryKeys.projects.commentDrafts.mine(),
+    queryKey: buildWorkQueryKeys.projects.commentDrafts.mine(),
     queryFn: ({ signal }) => apiClient.get<CommentDraft[]>("/build/comment-drafts/mine", undefined, signal),
     enabled: canView,
     staleTime: 60_000,
@@ -53,7 +53,7 @@ export function useUpsertCommentDraft() {
     mutationFn: ({ ticketId, body }: { ticketId: number; body: string }) =>
       apiClient.put<CommentDraft>(`/build/comment-drafts/tickets/${ticketId}`, { body }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.commentDrafts.mine() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
     },
   });
 }
@@ -65,7 +65,7 @@ export function useDeleteCommentDraft() {
     mutationFn: (id: number) =>
       apiClient.delete<{ deleted: boolean }>(`/build/comment-drafts/${id}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.commentDrafts.mine() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
     },
   });
 }
@@ -77,7 +77,7 @@ export function useDeleteCommentDraftByTicket() {
     mutationFn: (ticketId: number) =>
       apiClient.delete<{ deleted: boolean }>(`/build/comment-drafts/tickets/${ticketId}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.commentDrafts.mine() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
     },
   });
 }
@@ -89,7 +89,7 @@ export function useDeleteAllCommentDrafts() {
     mutationFn: () =>
       apiClient.delete<{ deleted: boolean }>("/build/comment-drafts/mine"),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.commentDrafts.mine() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.commentDrafts.mine() });
     },
   });
 }

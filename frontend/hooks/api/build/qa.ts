@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type {
   TestSuite,
   TestCase,
@@ -32,7 +32,7 @@ interface TestRunFilters {
 export function useTestSuites(projectId?: number) {
   const canView = useCan("build:qa:view");
   return useQuery<TestSuite[]>({
-    queryKey: queryKeys.projects.qa.suites(projectId ?? 0),
+    queryKey: buildWorkQueryKeys.projects.qa.suites(projectId ?? 0),
     queryFn: ({ signal }) => apiClient.get<TestSuite[]>(`/build/${projectId}/test-suites`, undefined, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
@@ -48,7 +48,7 @@ export function useTestCases(projectId?: number, filters?: TestCaseFilters) {
   if (filters?.automationStatus) params["automationStatus"] = filters.automationStatus;
 
   return useQuery<TestCase[]>({
-    queryKey: queryKeys.projects.qa.cases(projectId ?? 0, filters),
+    queryKey: buildWorkQueryKeys.projects.qa.cases(projectId ?? 0, filters),
     queryFn: ({ signal }) => apiClient.get<TestCase[]>(`/build/${projectId}/test-cases`, params, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
@@ -63,7 +63,7 @@ export function useCreateTestCase() {
     mutationFn: ({ projectId, ...data }: CreateTestCaseInput & { projectId: number }) =>
       apiClient.post<TestCase>(`/build/${projectId}/test-cases`, data),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.qa.casesAll(vars.projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.casesAll(vars.projectId) });
     },
   });
 }
@@ -79,7 +79,7 @@ export function useUpdateTestCase() {
     }: UpdateTestCaseInput & { projectId: number; id: number }) =>
       apiClient.patch<TestCase>(`/build/${projectId}/test-cases/${id}`, data),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.qa.casesAll(vars.projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.casesAll(vars.projectId) });
     },
   });
 }
@@ -91,7 +91,7 @@ export function useDeleteTestCase() {
     mutationFn: ({ projectId, id }: { projectId: number; id: number }) =>
       apiClient.delete<unknown>(`/build/${projectId}/test-cases/${id}`),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.qa.casesAll(vars.projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.casesAll(vars.projectId) });
     },
   });
 }
@@ -102,7 +102,7 @@ export function useTestRuns(projectId?: number, filters?: TestRunFilters) {
   if (filters?.status) params["status"] = filters.status;
 
   return useQuery<TestRun[]>({
-    queryKey: queryKeys.projects.qa.runs(projectId ?? 0, filters?.status),
+    queryKey: buildWorkQueryKeys.projects.qa.runs(projectId ?? 0, filters?.status),
     queryFn: ({ signal }) => apiClient.get<TestRun[]>(`/build/${projectId}/test-runs`, params, signal),
     enabled: canView && !!projectId,
     staleTime: 60_000,
@@ -112,7 +112,7 @@ export function useTestRuns(projectId?: number, filters?: TestRunFilters) {
 export function useTestRunDetail(projectId?: number, runId?: number) {
   const canView = useCan("build:qa:view");
   return useQuery<TestRunDetail>({
-    queryKey: queryKeys.projects.qa.run(projectId ?? 0, runId ?? 0),
+    queryKey: buildWorkQueryKeys.projects.qa.run(projectId ?? 0, runId ?? 0),
     queryFn: ({ signal }) => apiClient.get<TestRunDetail>(`/build/${projectId}/test-runs/${runId}`, undefined, signal),
     enabled: canView && !!projectId && !!runId,
     staleTime: 30_000,
@@ -126,7 +126,7 @@ export function useCreateTestRun() {
     mutationFn: ({ projectId, ...data }: CreateTestRunInput & { projectId: number }) =>
       apiClient.post<TestRun>(`/build/${projectId}/test-runs`, data),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.qa.runs(vars.projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.runs(vars.projectId) });
     },
   });
 }
@@ -142,8 +142,8 @@ export function useUpdateTestRun() {
     }: UpdateTestRunInput & { projectId: number; id: number }) =>
       apiClient.patch<TestRun>(`/build/${projectId}/test-runs/${id}`, data),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.qa.runs(vars.projectId) });
-      qc.invalidateQueries({ queryKey: queryKeys.projects.qa.run(vars.projectId, vars.id) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.runs(vars.projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.run(vars.projectId, vars.id) });
     },
   });
 }
@@ -155,7 +155,7 @@ export function useDeleteTestRun() {
     mutationFn: ({ projectId, id }: { projectId: number; id: number }) =>
       apiClient.delete<unknown>(`/build/${projectId}/test-runs/${id}`),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.qa.runs(vars.projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.runs(vars.projectId) });
     },
   });
 }
@@ -175,7 +175,7 @@ export function useUpdateTestResult() {
         data,
       ),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.qa.run(vars.projectId, vars.runId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.run(vars.projectId, vars.runId) });
     },
   });
 }
@@ -201,8 +201,8 @@ export function useCreateBugFromResult() {
         data,
       ),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.qa.run(vars.projectId, vars.runId) });
-      qc.invalidateQueries({ queryKey: queryKeys.projects.bugs.list(vars.projectId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.qa.run(vars.projectId, vars.runId) });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.bugs.list(vars.projectId) });
     },
   });
 }

@@ -3,7 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 
 
@@ -42,7 +42,7 @@ export function useDocumentTemplates(type?: string) {
   const hrEnabled = useModuleEnabled("hr");
   const params = type ? { type } : undefined;
   return useQuery({
-    queryKey: queryKeys.hr.documentTemplates(params as Record<string, unknown> | undefined),
+    queryKey: humanResourcesQueryKeys.hr.documentTemplates(params as Record<string, unknown> | undefined),
     queryFn: ({ signal }) =>
       apiClient.get<DocumentTemplate[]>(
         "/hr/documents/templates",
@@ -57,7 +57,7 @@ export function useDocumentTemplate(templateId: number) {
   const canView = useCan("hr:documents:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: queryKeys.hr.documentTemplate(templateId),
+    queryKey: humanResourcesQueryKeys.hr.documentTemplate(templateId),
     queryFn: ({ signal }) =>
       apiClient.get<DocumentTemplate>(`/hr/documents/templates/${templateId}`, undefined, signal),
     staleTime: 2 * 60_000,
@@ -71,7 +71,7 @@ export function useCreateDocumentTemplate() {
     mutationKey: ["hr", "document-templates", "create"],
     mutationFn: (data: CreateDocumentTemplateInput) =>
       apiClient.post<DocumentTemplate>("/hr/documents/templates", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.documentTemplates() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentTemplates() }),
   });
 }
 
@@ -82,8 +82,8 @@ export function useUpdateDocumentTemplate() {
     mutationFn: ({ templateId, ...data }: UpdateDocumentTemplateInput & { templateId: number }) =>
       apiClient.put<DocumentTemplate>(`/hr/documents/templates/${templateId}`, data),
     onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.documentTemplates() });
-      qc.invalidateQueries({ queryKey: queryKeys.hr.documentTemplate(variables.templateId) });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentTemplates() });
+      qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentTemplate(variables.templateId) });
     },
   });
 }
@@ -94,7 +94,7 @@ export function useDeleteDocumentTemplate() {
     mutationKey: ["hr", "document-templates", "delete"],
     mutationFn: (templateId: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/documents/templates/${templateId}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.documentTemplates() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentTemplates() }),
   });
 }
 
@@ -104,7 +104,7 @@ export function useSetDocumentTemplateDefault() {
     mutationKey: ["hr", "document-templates", "set-default"],
     mutationFn: ({ templateId, isDefault }: { templateId: number; isDefault: boolean }) =>
       apiClient.patch<DocumentTemplate>(`/hr/documents/templates/${templateId}`, { isDefault }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.documentTemplates() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentTemplates() }),
   });
 }
 
@@ -125,7 +125,7 @@ export function useDocumentTemplateVersions(templateId: number) {
   const canView = useCan("hr:documents:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...queryKeys.hr.documentTemplate(templateId), "versions"],
+    queryKey: [...humanResourcesQueryKeys.hr.documentTemplate(templateId), "versions"],
     queryFn: ({ signal }) =>
       apiClient.get<DocumentTemplateVersion[]>(
         `/hr/documents/templates/${templateId}/versions`

@@ -1,11 +1,20 @@
 "use client";
 
+import dynamic from "next/dynamic";
+
 import {
   CommandPaletteContext,
   useCommandPaletteState,
 } from "../hooks/use-command-palette";
 import { useKeyboardShortcuts } from "../hooks/use-keyboard-shortcuts";
-import { ShortcutsHelpDialog } from "./shortcuts-help-dialog";
+
+const ShortcutsHelpDialog = dynamic(
+  () =>
+    import("./shortcuts-help-dialog").then((module) =>
+      module.ShortcutsHelpDialog,
+    ),
+  { ssr: false },
+);
 
 interface Props {
   children: React.ReactNode;
@@ -23,7 +32,7 @@ export function CommandPaletteProvider({ children, createTicketDialog }: Props) 
   return (
     <CommandPaletteContext.Provider value={state}>
       <KeyboardShortcutsRegistrar />
-      <ShortcutsHelpDialog />
+      {state.helpOpen ? <ShortcutsHelpDialog /> : null}
       {createTicketDialog}
       {children}
     </CommandPaletteContext.Provider>

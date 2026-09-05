@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export type KbArticleStatus = "draft" | "published" | "archived";
@@ -146,7 +146,7 @@ interface SubmitKbFeedbackInput {
 
 export function useSupportKbCategories(options?: { enabled?: boolean }) {
   return useGatedQuery("support:kb:view", {
-    queryKey: queryKeys.supportKb.categories(),
+    queryKey: accountingAndSupportQueryKeys.supportKb.categories(),
     queryFn: ({ signal }) => apiClient.get<KbCategory[]>("/support/kb/categories", undefined, signal),
     staleTime: 60_000,
     enabled: options?.enabled ?? true,
@@ -159,7 +159,7 @@ export function useCreateSupportKbCategory() {
     mutationKey: ["supportKb", "categories", "create"],
     mutationFn: (input: CreateKbCategoryInput) =>
       apiClient.post<KbCategory>("/support/kb/categories", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportKb.categories() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.supportKb.categories() }),
   });
 }
 
@@ -169,7 +169,7 @@ export function useUpdateSupportKbCategory() {
     mutationKey: ["supportKb", "categories", "update"],
     mutationFn: ({ id, ...input }: UpdateKbCategoryInput & { id: number }) =>
       apiClient.patch<KbCategory>(`/support/kb/categories/${id}`, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportKb.categories() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.supportKb.categories() }),
   });
 }
 
@@ -180,8 +180,8 @@ export function useDeleteSupportKbCategory() {
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/support/kb/categories/${id}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.supportKb.categories() });
-      qc.invalidateQueries({ queryKey: [...queryKeys.supportKb.all, "articles"] });
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.supportKb.categories() });
+      qc.invalidateQueries({ queryKey: [...accountingAndSupportQueryKeys.supportKb.all, "articles"] });
     },
   });
 }
@@ -189,7 +189,7 @@ export function useDeleteSupportKbCategory() {
 export function useSupportKbArticles(params?: KbArticlesParams, options?: { enabled?: boolean }) {
   const queryParams: Record<string, unknown> = { ...params };
   return useGatedQuery("support:kb:view", {
-    queryKey: queryKeys.supportKb.articles(queryParams),
+    queryKey: accountingAndSupportQueryKeys.supportKb.articles(queryParams),
     queryFn: ({ signal }) => apiClient.get<KbArticleListItem[]>("/support/kb/articles", queryParams, signal),
     staleTime: 30_000,
     enabled: options?.enabled ?? true,
@@ -199,7 +199,7 @@ export function useSupportKbArticles(params?: KbArticlesParams, options?: { enab
 
 export function useSupportKbArticle(id: number) {
   return useGatedQuery("support:kb:view", {
-    queryKey: queryKeys.supportKb.article(id),
+    queryKey: accountingAndSupportQueryKeys.supportKb.article(id),
     queryFn: ({ signal }) => apiClient.get<KbArticleDetail>(`/support/kb/articles/${id}`, undefined, signal),
     enabled: Number.isFinite(id) && id > 0,
     staleTime: 15_000,
@@ -208,7 +208,7 @@ export function useSupportKbArticle(id: number) {
 
 export function useSupportKbArticleFeedback(id: number) {
   return useGatedQuery("support:kb:view", {
-    queryKey: [...queryKeys.supportKb.article(id), "feedback"] as const,
+    queryKey: [...accountingAndSupportQueryKeys.supportKb.article(id), "feedback"] as const,
     queryFn: ({ signal }) => apiClient.get<KbArticleFeedbackItem[]>(`/support/kb/articles/${id}/feedback`, undefined, signal),
     enabled: Number.isFinite(id) && id > 0,
     staleTime: 30_000,
@@ -221,7 +221,7 @@ export function useCreateSupportKbArticle() {
     mutationKey: ["supportKb", "articles", "create"],
     mutationFn: (input: CreateKbArticleInput) =>
       apiClient.post<KbArticleListItem>("/support/kb/articles", input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.supportKb.all, "articles"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...accountingAndSupportQueryKeys.supportKb.all, "articles"] }),
   });
 }
 
@@ -232,8 +232,8 @@ export function useUpdateSupportKbArticle() {
     mutationFn: ({ id, ...input }: UpdateKbArticleInput & { id: number }) =>
       apiClient.patch<KbArticleListItem>(`/support/kb/articles/${id}`, input),
     onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: [...queryKeys.supportKb.all, "articles"] });
-      qc.invalidateQueries({ queryKey: queryKeys.supportKb.article(variables.id) });
+      qc.invalidateQueries({ queryKey: [...accountingAndSupportQueryKeys.supportKb.all, "articles"] });
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.supportKb.article(variables.id) });
     },
   });
 }
@@ -244,7 +244,7 @@ export function useDeleteSupportKbArticle() {
     mutationKey: ["supportKb", "articles", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/support/kb/articles/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.supportKb.all, "articles"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...accountingAndSupportQueryKeys.supportKb.all, "articles"] }),
   });
 }
 
@@ -258,7 +258,7 @@ export function useSubmitSupportKbFeedback() {
         body,
       ),
     onSuccess: (_, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.supportKb.publicArticle(variables.orgId, variables.slug) });
+      qc.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.supportKb.publicArticle(variables.orgId, variables.slug) });
     },
   });
 }

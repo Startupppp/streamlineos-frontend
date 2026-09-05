@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 
 export type TicketActivityAction =
   | "created"
@@ -34,7 +34,7 @@ export interface TicketActivityEntry {
 export function useTicketActivity(projectId: number, ticketId: number) {
   const canView = useCan("build:tickets:view");
   return useQuery({
-    queryKey: queryKeys.ticketActivity.list(ticketId),
+    queryKey: accountingAndSupportQueryKeys.ticketActivity.list(ticketId),
     queryFn: ({ signal }) =>
       apiClient.get<TicketActivityEntry[]>(
         `/build/${projectId}/tickets/${ticketId}/activity`, undefined, signal,

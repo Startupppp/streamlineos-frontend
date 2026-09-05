@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import type {
   PmWorkspace,
@@ -31,7 +31,7 @@ export function usePmWorkspaces(params?: ListPmWorkspacesParams) {
   if (params?.status) queryParams["status"] = params.status;
 
   return useQuery<PmWorkspacesPage>({
-    queryKey: queryKeys.projects.pmWorkspaces.list(
+    queryKey: buildWorkQueryKeys.projects.pmWorkspaces.list(
       Object.keys(queryParams).length > 0 ? queryParams : undefined,
     ),
     queryFn: ({ signal }) => apiClient.get<PmWorkspacesPage>(BASE, queryParams, signal),
@@ -47,7 +47,7 @@ export function useCreatePmWorkspace() {
     mutationFn: (data: CreatePmWorkspaceInput) =>
       apiClient.post<PmWorkspace>(BASE, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.pmWorkspaces.list() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.pmWorkspaces.list() });
     },
   });
 }
@@ -62,9 +62,9 @@ export function useUpdatePmWorkspace() {
     }: UpdatePmWorkspaceInput & { pmWorkspaceId: string }) =>
       apiClient.patch<PmWorkspace>(`${BASE}/${pmWorkspaceId}`, data),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.pmWorkspaces.list() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.pmWorkspaces.list() });
       qc.invalidateQueries({
-        queryKey: queryKeys.projects.pmWorkspaces.detail(vars.pmWorkspaceId),
+        queryKey: buildWorkQueryKeys.projects.pmWorkspaces.detail(vars.pmWorkspaceId),
       });
     },
   });
@@ -77,7 +77,7 @@ export function useDeletePmWorkspace() {
     mutationFn: (pmWorkspaceId: string) =>
       apiClient.delete<void>(`${BASE}/${pmWorkspaceId}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.pmWorkspaces.list() });
+      qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.pmWorkspaces.list() });
     },
   });
 }
@@ -97,7 +97,7 @@ export function usePmWorkspaceMembers(
   if (params?.limit) queryParams["limit"] = String(params.limit);
 
   return useQuery<PmWorkspaceMembersPage>({
-    queryKey: queryKeys.projects.pmWorkspaces.members(
+    queryKey: buildWorkQueryKeys.projects.pmWorkspaces.members(
       pmWorkspaceId ?? "",
       Object.keys(queryParams).length > 0 ? queryParams : undefined,
     ),
@@ -119,7 +119,7 @@ export function useAddPmWorkspaceMember(pmWorkspaceId: string) {
       apiClient.post<PmWorkspaceMember>(`${BASE}/${pmWorkspaceId}/members`, data),
     onSuccess: () => {
       qc.invalidateQueries({
-        queryKey: queryKeys.projects.pmWorkspaces.members(pmWorkspaceId),
+        queryKey: buildWorkQueryKeys.projects.pmWorkspaces.members(pmWorkspaceId),
       });
     },
   });
@@ -135,7 +135,7 @@ export function useRemovePmWorkspaceMember(pmWorkspaceId: string) {
       ),
     onSuccess: () => {
       qc.invalidateQueries({
-        queryKey: queryKeys.projects.pmWorkspaces.members(pmWorkspaceId),
+        queryKey: buildWorkQueryKeys.projects.pmWorkspaces.members(pmWorkspaceId),
       });
     },
   });

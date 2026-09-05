@@ -3,7 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
-import { queryKeys } from "@/lib/query-keys";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 
 export interface ShiftTemplate {
@@ -44,7 +44,7 @@ export function useHrShifts() {
   const canView = useCan("hr:attendance:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...queryKeys.hr.all, "shifts"],
+    queryKey: [...humanResourcesQueryKeys.hr.all, "shifts"],
     queryFn: ({ signal }) => apiClient.get<ShiftTemplate[]>("/hr/shifts", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canView,
@@ -57,7 +57,7 @@ export function useCreateShift() {
     mutationKey: ["hr", "shifts", "create"],
     mutationFn: (data: { name: string; type: string; startTime: string; endTime: string; breakMinutes?: number; isNightShift?: boolean; gracePeriodMinutes?: number }) =>
       apiClient.post<ShiftTemplate>("/hr/shifts", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "shifts"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "shifts"] }),
   });
 }
 
@@ -67,7 +67,7 @@ export function useUpdateShift() {
     mutationKey: ["hr", "shifts", "update"],
     mutationFn: ({ id, ...data }: { id: number; name?: string; type?: string; startTime?: string; endTime?: string; breakMinutes?: number; isNightShift?: boolean; gracePeriodMinutes?: number }) =>
       apiClient.patch<ShiftTemplate>(`/hr/shifts/${id}`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "shifts"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "shifts"] }),
   });
 }
 
@@ -76,7 +76,7 @@ export function useDeleteShift() {
   return useAuthorizedMutation("hr:attendance:manage", {
     mutationKey: ["hr", "shifts", "delete"],
     mutationFn: (id: number) => apiClient.delete(`/hr/shifts/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "shifts"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "shifts"] }),
   });
 }
 
@@ -84,7 +84,7 @@ export function useShiftAssignments() {
   const canView = useCan("hr:attendance:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...queryKeys.hr.all, "shiftAssignments"],
+    queryKey: [...humanResourcesQueryKeys.hr.all, "shiftAssignments"],
     queryFn: ({ signal }) => apiClient.get<ShiftAssignment[]>("/hr/shifts/assignments", undefined, signal),
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canView,
@@ -95,7 +95,7 @@ export function useShiftSwaps() {
   const canView = useCan("hr:attendance:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...queryKeys.hr.all, "shiftSwaps"],
+    queryKey: [...humanResourcesQueryKeys.hr.all, "shiftSwaps"],
     queryFn: ({ signal }) => apiClient.get<ShiftSwap[]>("/hr/shifts/swaps", undefined, signal),
     staleTime: 30_000,
     enabled: hrEnabled && canView,
@@ -108,6 +108,6 @@ export function useUpdateSwapStatus() {
     mutationKey: ["hr", "shifts", "swapStatus"],
     mutationFn: ({ id, status }: { id: number; status: string }) =>
       apiClient.patch<ShiftSwap>(`/hr/shifts/swaps/${id}`, { status }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "shiftSwaps"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.all, "shiftSwaps"] }),
   });
 }
