@@ -41,8 +41,10 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 // Finance Settings group.
 // The digest exists so a route or its permission cannot change without somebody
 // saying why.
+// Updated 2026-09-06: Workflows nav group gained module: "workflows" (nav gate fix) and
+// Variables/Secrets/Access routes moved to /workflows/settings/* (route-conformance §8).
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "14b8d281a14cd2db5cfb79f3783eb80976f75bde62b8d79d43af4086818d3b37";
+  "3bfb08350c8353fe7409c1e79263b7633ecaa583c62d95c5166584802f0dc894";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {

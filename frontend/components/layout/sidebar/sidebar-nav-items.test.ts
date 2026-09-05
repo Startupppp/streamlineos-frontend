@@ -3,7 +3,9 @@ import {
   getNavGroupsForProduct,
   getProductFromPathname,
   isNavRouteActive,
+  NAV_GROUPS,
 } from "./sidebar-nav-items";
+import { MANIFEST } from "@/lib/module-manifest";
 
 function scopesOf(keys: readonly string[]): Record<string, "all"> {
   return Object.fromEntries(keys.map((key) => [key, "all" as const]));
@@ -207,5 +209,42 @@ describe("Administration information architecture", () => {
     expect(getProductFromPathname("/billing/invoices/invoice-1")).toBe(
       "finance",
     );
+  });
+});
+
+describe("module-gate completeness", () => {
+  // Modules that have a dedicated sidebar product key and are gated via that product.
+  // They don't need a NavGroup.module because the product itself carries the gating.
+  const PRODUCT_KEYED_MODULE_IDS = new Set(
+    MANIFEST.modules
+      .filter((m) => m.productKey !== null)
+      .map((m) => m.id),
+  );
+  // Platform-internal manifest modules that are always enabled (no @RequireModule gate).
+  // These share a permission prefix with admin groups but never gate a nav group.
+  const ALWAYS_ENABLED_MODULE_IDS = new Set([
+    "billing", "calendar", "directory", "mail", "notifications",
+    "settings", "tasks", "feedbucket",
+  ]);
+
+  it("every nav group gated on an independently-enabled module permission carries a module property", () => {
+    const violations: string[] = [];
+    for (const group of NAV_GROUPS) {
+      const perm = group.requiredPermission;
+      if (!perm) continue;
+      const permStr = Array.isArray(perm) ? perm[0] : perm;
+      const modulePrefix = permStr.split(":")[0] ?? "";
+      // Skip if the module prefix has a product key (gating handled at the product level)
+      // or is a platform-internal service that is always available.
+      if (PRODUCT_KEYED_MODULE_IDS.has(modulePrefix)) continue;
+      if (ALWAYS_ENABLED_MODULE_IDS.has(modulePrefix)) continue;
+      // Any remaining manifest module with no product key and no always-enabled exemption
+      // must gate its nav group via the module property so disabled tenants don't see it.
+      const isManifestModule = MANIFEST.modules.some((m) => m.id === modulePrefix);
+      if (!isManifestModule) continue;
+      if (!group.module)
+        violations.push(`"${group.label}" (product=${group.product}) requires "${permStr}" but has no module property`);
+    }
+    expect(violations).toEqual([]);
   });
 });

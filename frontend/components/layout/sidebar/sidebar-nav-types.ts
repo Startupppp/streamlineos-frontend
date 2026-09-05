@@ -14,7 +14,8 @@ export type ProductKey =
   | "surveys"
   | "administration"
   | "payroll"
-  | "sign";
+  | "sign"
+  | "workflows";
 
 export type PermissionRequirement = PermissionKey | PermissionKey[];
 

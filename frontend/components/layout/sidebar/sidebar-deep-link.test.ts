@@ -19,7 +19,7 @@ import type { NavGroup, NavRoute, ProductKey } from "./sidebar-nav-types";
  * fits, and highlights — those need a browser, and the ticket says so.
  */
 
-const EVERY_MODULE = [...Object.keys(ORG_MODULE_NAME), "timesheets"];
+const EVERY_MODULE = [...Object.keys(ORG_MODULE_NAME), "timesheets", "workflows"];
 const DECLARED_GROUPS: NavGroup[] = [...NAV_GROUPS, ...HOME_NAV_GROUPS];
 
 function groupsShownFor(product: ProductKey): NavGroup[] {

@@ -4,7 +4,7 @@ import { NAV_GROUPS, getNavGroupsForProduct } from "./sidebar-nav-items";
 import { PRODUCT_DEFINITIONS } from "./sidebar-products";
 import type { NavGroup, ProductKey } from "./sidebar-nav-types";
 
-const EVERY_MODULE = [...Object.keys(ORG_MODULE_NAME), "timesheets"];
+const EVERY_MODULE = [...Object.keys(ORG_MODULE_NAME), "timesheets", "workflows"];
 
 const EVERY_PRODUCT: ProductKey[] = PRODUCT_DEFINITIONS.map(
   (product) => product.key,

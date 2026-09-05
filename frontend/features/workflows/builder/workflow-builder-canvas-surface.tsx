@@ -1,3 +1,4 @@
+import "@xyflow/react/dist/style.css";
 import type { DragEvent, MouseEvent } from "react";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -70,7 +71,7 @@ export function WorkflowBuilderCanvasSurface({ initialEdges, initialNodes, onDef
 
   return (
     <div className="flex-1 min-h-0 flex">
-      <div className="flex-1" onDrop={handleDrop} onDragOver={handleDragOver}>
+      <div className="flex-1 h-full" onDrop={handleDrop} onDragOver={handleDragOver}>
         <ReactFlow nodes={nodes} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={handleConnect} onNodeClick={handleNodeClick} onPaneClick={handlePaneClick} nodeTypes={workflowNodeTypes} defaultEdgeOptions={DEFAULT_EDGE_OPTIONS} fitView deleteKeyCode="Delete" className="bg-muted/30">
           <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="var(--border)" />
           <Controls className="border border-border shadow-sm rounded-lg overflow-hidden" />

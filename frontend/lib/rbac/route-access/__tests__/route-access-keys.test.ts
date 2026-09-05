@@ -228,4 +228,22 @@ describe("route-access registry keys", () => {
       }
     }
   });
+
+  it("BITE: workflows settings routes resolve as permission-gated — confirms the route move to /workflows/settings/*", () => {
+    const settingsRoutes: Array<{ path: string; expectedPermission: string }> = [
+      { path: "/workflows/settings/variables", expectedPermission: "workflows:variables:manage" },
+      { path: "/workflows/settings/secrets", expectedPermission: "workflows:secrets:manage" },
+      { path: "/workflows/settings/access", expectedPermission: "workflows:access:view" },
+    ];
+    for (const { path, expectedPermission } of settingsRoutes) {
+      const decision = resolveRouteAccess(path);
+      expect(decision.kind).toBe("permission");
+      if (decision.kind === "permission") {
+        const keys = Array.isArray(decision.permission)
+          ? decision.permission
+          : [decision.permission];
+        expect(keys).toContain(expectedPermission);
+      }
+    }
+  });
 });

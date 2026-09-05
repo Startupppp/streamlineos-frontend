@@ -5,6 +5,7 @@ export const WORKFLOWS_NAV_GROUPS: NavGroup[] = [
 {
     label: "Workflows",
     product: "administration",
+    module: "workflows",
     requiredPermission: "workflows:workflows:view",
     routes: [
       {
@@ -47,19 +48,19 @@ export const WORKFLOWS_NAV_GROUPS: NavGroup[] = [
       {
         label: "Variables",
         icon: Sliders,
-        href: "/workflows/variables",
+        href: "/workflows/settings/variables",
         requiredPermission: "workflows:variables:manage",
       },
       {
         label: "Secrets",
         icon: Lock,
-        href: "/workflows/secrets",
+        href: "/workflows/settings/secrets",
         requiredPermission: "workflows:secrets:manage",
       },
       {
         label: "Access",
         icon: Lock,
-        href: "/workflows/access",
+        href: "/workflows/settings/access",
         requiredPermission: "workflows:access:view",
       },
     ],
