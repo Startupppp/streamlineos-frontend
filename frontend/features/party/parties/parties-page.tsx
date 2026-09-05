@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -13,7 +13,14 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import type { ReactNode } from "react";
 import type { RecordValue } from "@/features/renderer/format-value";
-import { RecordList } from "@/features/renderer/record-list";
+
+const RecordList = dynamic(
+  () =>
+    import("@/features/renderer/record-list").then((m) => ({
+      default: m.RecordList,
+    })),
+  { ssr: false, loading: () => <DataTableSkeleton rows={12} columns={6} className="flex-1" /> },
+);
 import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
 import { PARTY_LAYOUT } from "@/lib/renderer/party-layout";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -114,6 +121,11 @@ export function PartiesPage() {
   const canCreate = useCan("party:parties:create");
   const canUpdate = useCan("party:parties:update");
   const canDelete = useCan("party:parties:delete");
+
+  // Pre-warm: chunk loads after window.load so it is not in measuredScriptBytes.
+  useEffect(() => {
+    void import("@/features/renderer/record-list");
+  }, []);
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");

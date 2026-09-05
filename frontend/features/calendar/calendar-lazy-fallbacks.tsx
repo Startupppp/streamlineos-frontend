@@ -4,8 +4,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format, isToday, isTomorrow } from "date-fns";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 
-const MAX_AGENDA_EVENTS = 6;
-
 function agendaDate(start: string): string {
   const d = new Date(start);
   if (isToday(d)) return "Today";
@@ -18,14 +16,20 @@ function agendaTime(start: string, allDay: boolean | undefined): string {
   return format(new Date(start), "h:mm a");
 }
 
-export function CalendarAgendaPreview({ events }: { events: CalendarListItem[] }) {
+export function CalendarAgendaPreview({
+  events,
+  maxEvents = 6,
+}: {
+  events: CalendarListItem[];
+  maxEvents?: number;
+}) {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
   const upcoming = events
     .filter((e) => new Date(e.start) >= todayStart)
     .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
-    .slice(0, MAX_AGENDA_EVENTS);
+    .slice(0, maxEvents);
 
   if (upcoming.length === 0)
     return (

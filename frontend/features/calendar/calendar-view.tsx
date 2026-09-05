@@ -184,6 +184,17 @@ export function CalendarView() {
   useCalendarSourceDeepLink();
 
   const afterLoad = useAfterLoad();
+
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(max-width: 767px), (pointer: coarse)");
+    if (mq.matches) {
+      setIsMobile(true);
+      setViewMode("list");
+    }
+  }, [setViewMode]);
+
   const { hiddenIds } = useCalendarAccountFilters();
   const { visible: hrEventsVisible, toggle: toggleHrEvents } = useCalendarSourceVisibility("hrEvents", true);
   const { visible: crmEventsVisible, toggle: toggleCrmEvents } = useCrmEventsVisible();
@@ -329,13 +340,17 @@ export function CalendarView() {
                 ) : (
                   <CalendarAgendaPreview events={visibleEvents} />
                 )
-              ) : (
+              ) : isMobile ? (
+                <CalendarAgendaPreview events={visibleEvents} maxEvents={50} />
+              ) : afterLoad ? (
                 <CalendarEventsPanel
                   mode={viewMode}
                   events={visibleEvents}
                   range={viewMode === "list" ? visibleRange : undefined}
                   onSelectEvent={handleSelectEventById}
                 />
+              ) : (
+                <CalendarAgendaPreview events={visibleEvents} maxEvents={20} />
               )}
             </div>
           </div>
