@@ -117,6 +117,22 @@ const OWN_ERROR_BOUNDARY: ReadonlyArray<{ route: string; reason: string }> = [
   },
 ];
 
+/**
+ * Routes allowed to ship without a segment `loading.tsx`.
+ *
+ * Empty, and meant to stay that way. It exists because the alternative to a
+ * named exemption is an unnamed one: this column drifted to eight missing files
+ * precisely because the ratchet *read* `loading.tsx` when it happened to be
+ * there and never required it, so the in-component `isLoading` marker answered
+ * for the segment fallback — which it cannot, being a different mechanism. A
+ * route with no `loading.tsx` has no Suspense boundary for the segment, so a
+ * slow server render shows the previous screen rather than a skeleton.
+ *
+ * Anything added here carries a written reason, the way `NO_DATA_ROUTES` does.
+ * "It was easier" is not one.
+ */
+const LOADING_EXEMPT_ROUTES: ReadonlyArray<{ route: string; reason: string }> = [];
+
 /** The `(authenticated)` slash-path for a discovered route directory. */
 function routePath(routeDir: string): string {
   return relative(join(FRONTEND_ROOT, "app", "(authenticated)"), routeDir).replace(/\\/g, "/");
@@ -310,6 +326,34 @@ describe("G8 — inventory routes answer all five states", () => {
       .map(routePath);
 
     expect(uncovered).toEqual([]);
+  });
+
+  it("gives every inventory route with a page.tsx its own segment loading.tsx", () => {
+    // The guard on the guard again: a walk that finds nothing reports zero
+    // missing files, which is indistinguishable from a complete column.
+    expect(routes.length).toBeGreaterThan(40);
+
+    const exempt = new Set(LOADING_EXEMPT_ROUTES.map(({ route }) => route));
+    const missing = routes
+      .map(routePath)
+      .filter((rel) => !exempt.has(rel))
+      .filter((rel) =>
+        !existsSync(join(FRONTEND_ROOT, "app", "(authenticated)", rel, "loading.tsx")),
+      );
+
+    expect(missing).toEqual([]);
+  });
+
+  it("keeps the loading exemptions pointing at routes that still exist", () => {
+    // An exemption for a route that has been deleted or renamed is a hole
+    // nobody can see: it silences nothing today and silences the wrong thing
+    // tomorrow, when a new route happens to take the name.
+    const known = new Set(routes.map(routePath));
+    const stale = LOADING_EXEMPT_ROUTES.filter(({ route }) => !known.has(route)).map(
+      ({ route, reason }) => `${route} — ${reason}`,
+    );
+
+    expect(stale).toEqual([]);
   });
 
   it("keeps each named segment owning its own boundary", () => {
