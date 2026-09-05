@@ -1,6 +1,6 @@
 "use client";
-
 import dynamic from "next/dynamic";
+
 import Link from "next/link";
 import { Search, CalendarDays, MessageSquare } from "lucide-react";
 import {
@@ -17,7 +17,6 @@ import { PmWorkspaceContextChip } from "./pm-workspace-context-chip";
 import { QuickCreateButton } from "./quick-create-button";
 import { UserAvatarMenu } from "./user-avatar-menu";
 import { SidebarCollapseToggle } from "./sidebar-collapse-toggle";
-
 const NotificationBell = dynamic(
   () =>
     import("@/features/notifications/notification-bell").then(

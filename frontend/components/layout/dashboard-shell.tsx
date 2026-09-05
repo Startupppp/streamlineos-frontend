@@ -29,6 +29,7 @@ import { isPortalChromelessPath } from "./sidebar/sidebar-nav-items";
 import { ShellOfflineBanner } from "./shell-offline-banner";
 import { useRouteFocus } from "@/hooks/common/use-route-focus";
 import { cn } from "@/lib/utils";
+import { WELCOME_POP_KEY } from "@/lib/welcome-pop";
 
 const SuccessChecklist = dynamic(
   () =>
@@ -86,6 +87,7 @@ export function DashboardShell({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [productSwitcherOpen, setProductSwitcherOpen] = useState(false);
   const [isChatConversationOpen, setIsChatConversationOpen] = useState(false);
+  const [welcomeToastActive, setWelcomeToastActive] = useState(false);
 
   const { hideSidebar, navGroups } = useProductSidebarVisibility();
   const {
@@ -176,6 +178,12 @@ export function DashboardShell({
     };
   }, []);
 
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem(WELCOME_POP_KEY) === "1") setWelcomeToastActive(true);
+    } catch {}
+  }, []);
+
   if ((accessLoading && !access) || (accessError && !access))
     return (
       <div className="flex h-dvh flex-col overflow-hidden">
@@ -246,8 +254,8 @@ export function DashboardShell({
                   <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden [&>:first-child]:h-full [&>:first-child]:min-h-0 [&>:first-child]:flex-1">
                     {children}
                   </div>
-                  <WelcomeToast />
-                  <SuccessChecklist />
+                  {welcomeToastActive && <WelcomeToast />}
+                  {access?.isOrgOwner === true && <SuccessChecklist />}
                 </div>
               </main>
             </div>
