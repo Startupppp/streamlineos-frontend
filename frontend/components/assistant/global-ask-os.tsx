@@ -13,9 +13,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ChevronDown } from "lucide-react";
 import { type InfiniteData, useQueryClient } from "@tanstack/react-query";
-import { AnimatedLogo } from "@/components/brand/animated-logo";
 import {
   useAskAI,
   useAiConversations,
@@ -38,6 +36,7 @@ import { AskOsChatView } from "./ask-os-chat-view";
 import { AskOsConversationList } from "./ask-os-conversation-list";
 import { useAskOs } from "./ask-os-context";
 import { AskOsPanelHeader } from "./ask-os-panel-header";
+import { AskOsLauncher } from "./ask-os-launcher";
 
 const CONTEXT_WINDOW = 24;
 interface Draft {
@@ -49,7 +48,7 @@ export function GlobalAskOs() {
   const reduce = useReducedMotion();
   const hydrated = useHydrated();
   const isMobile = useIsMobile();
-  const { open, setOpen, toggle } = useAskOs();
+  const { open, setOpen } = useAskOs();
   const queryClient = useQueryClient();
   const [input, setInput] = useState("");
   const [failure, setFailure] = useState<AiFailureState | null>(null);
@@ -80,7 +79,7 @@ export function GlobalAskOs() {
     hasNextPage: conversationHasNext,
     isFetchingNextPage: isFetchingNextConversations,
     fetchNextPage: fetchNextConversations,
-  } = useAiConversations(view === "conversations");
+  } = useAiConversations(open && view === "conversations");
   const {
     data: messageData,
     isLoading,
@@ -472,28 +471,7 @@ export function GlobalAskOs() {
           </motion.div>
         )}
       </AnimatePresence>
-      <motion.button
-        type="button"
-        onClick={toggle}
-        initial={reduce ? false : { opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={panelTransition}
-        whileTap={reduce ? undefined : { scale: 0.98 }}
-        aria-expanded={open}
-        aria-label={
-          open ? "Minimize Ask OS assistant" : "Open Ask OS assistant"
-        }
-        className={`hidden md:flex h-6 w-full items-center gap-1 bg-primary px-1.5 py-0 text-primary-foreground shadow-lg ring-1 ring-inset ring-primary/20 transition-colors hover:bg-primary/90 ${open ? "" : "rounded-tl-lg"}`}
-      >
-        <AnimatedLogo size={13} gradient />
-        <span className="flex-1 text-left text-micro font-semibold leading-none tracking-wide">
-          ASK OS
-        </span>
-        <ChevronDown
-          className={`h-2.5 w-2.5 shrink-0 text-primary-foreground/70 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-          aria-hidden
-        />
-      </motion.button>
+      <AskOsLauncher />
     </div>,
     document.body,
   );

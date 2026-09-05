@@ -3,6 +3,9 @@
 **What this file is:** A complete audit index of every page route in `frontend/app/`. Each row is one `page.tsx` file. It exists so the §3 workflow ("go" = next unchecked page) has a durable, ordered queue and so any contributor can confirm a route's module, primary hooks, and §8 Definition-of-Done status at a glance.
 
 **How to use it:**
+
+Focused shared-shell verification (2026-09-05): Ask OS now loads its full runtime on first opening and preserves state after minimizing; Inbox no longer preloads its closed notification drawer on mount. The two focused suites pass 6 tests and frontend source typecheck passes. This does not mark individual page audits or measured browser performance complete.
+
 - `- [ ]` = not yet audited for this cycle. `- [x]` = audited; mark done after Audit → Plan → Confirm → Edit.
 - §8 DoD columns: **L**ist · **C**reate · **E**dit · **D**elete · **F**ilters · **P**agination · **Perm** · **States** (loading/error/empty/denied). `✓` confirmed present, `✗` confirmed missing, `?` not yet verified.
 - Hooks column shows the primary TanStack Query hooks seen in the `page.tsx` or its direct feature import. Routes that delegate entirely to a feature component show `→ feature/`.

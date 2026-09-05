@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -122,10 +122,6 @@ export function InboxShell() {
     archivingId,
     deletingId,
   } = useInboxActions();
-
-  useEffect(() => {
-    void import("@/features/notifications/notification-detail-drawer");
-  }, []);
 
   const items = useMemo(
     () => data?.pages.flatMap((p) => p.items) ?? [],
