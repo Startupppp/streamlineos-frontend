@@ -700,12 +700,20 @@ Health checks distinguish database unavailable, migration mismatch, queue/outbox
 > the 51-suite run below: forward/backward trace (`lot-genealogy`), holds cannot sell
 > (`quality-hold`, `inspection-plan-receipt-hold`, `fefo-expiry`), recall impact reproducible
 > (`recall-simulate-execute`), valuation ties to movements (`landed-cost`, `write-off`,
-> `ledger-corrections`, `return-inspection`, `return-approval`). **"Audit export can be
-> regenerated" is not proven.** Its dedicated spec,
-> `src/modules/inventory/audit-export/__tests__/audit-export.db.spec.ts`, is `describe.skip`
-> unless `INV_DB_TESTS=1` and has never run; the two seeded specs that touch an export endpoint
-> (`lot-genealogy`, `pack-fields`) assert a single export, not that a prior export can be
-> reproduced byte-for-byte. Follow-up: T15.
+> `ledger-corrections`, `return-inspection`, `return-approval`).
+>
+> **Re-recorded 2026-09-05 (T15): the fifth clause now has a running spec, and it found a defect.**
+> `audit-export.db.spec.ts` is default-on and green (`EXIT=0`): the warehouse predicate really
+> excludes another warehouse's movements, the checksum is unmoved by the annotation columns 0529
+> still allows to change, and a fact column cannot be moved at all (`23514`, "append-only"). The
+> settlement half was wrong. `isEvidenceSettled` compared `pg_snapshot_xmin` against a pinned
+> `pg_snapshot_xmax`, and a snapshot's `xmax` is `latestCompletedXid + 1` — a *running* transaction
+> can hold an xid equal to it, which was reproduced here — so a pin could be called settled while a
+> row below the ledger ceiling was still able to commit, and a regenerated export would not match.
+> `pinEvidence` now pins `GREATEST(pg_current_xact_id(), pg_snapshot_xmax(...))`, which is strictly
+> above every id assigned before the pin, and the spec holds a genuinely concurrent writer open to
+> prove it. Still not proven: that two exports of the same window are byte-for-byte identical
+> *through the endpoint* — the checksum stability is asserted at the document layer, not end to end.
 
 ### Phase 5 — AI inventory control plane and integrations
 
@@ -715,17 +723,38 @@ Health checks distinguish database unavailable, migration mismatch, queue/outbox
 
 **Exit gate:** every answer cites evidence; every proposal maps to a deterministic command; no AI write occurs without the same permissions/approval/idempotency as a human; deterministic operations work when AI is down; eval thresholds are recorded.
 
-> **Status 2026-09-05 — PARTLY MET (G5).** Four of five clauses proven by
-> `src/modules/inventory/ai/evals/__tests__/inv-ai-evals.spec.ts` — ~31 cases across
-> `golden | refusal | tenant | injection | malformed`, each category asserted non-empty, register
-> and executed set asserted bidirectionally. It runs offline against a scripted gateway (no model
-> call) under plain `pnpm test`, so evidence-citation, injection resistance, tenant scope and
-> refusal are regression-locked; `ops-brief` passes in the seeded run; and deterministic operation
-> without AI is the default, since no seeded spec in the 51-suite run touches the gateway.
-> **"Eval thresholds are recorded" is NOT met.** `inv-ai-evals.spec.ts` does not import
-> `EVAL_ACCEPTANCE` or `meetsGate`; it is pass/fail regression assertion, not a scored gate. The
-> tier that does record thresholds — `evals/ai-eval-runner.ts:32` — has **no inventory suite**
-> among its 13 `*.eval.spec.ts` files. No inventory number is written down anywhere. Follow-up: T21.
+> **Status 2026-09-05 — MET (G5), all five clauses.** Four clauses are proven by
+> `src/modules/inventory/ai/evals/__tests__/inv-ai-evals.spec.ts` — 31 cases across
+> `golden | refusal | tenant | injection | malformed`, register and executed set asserted
+> bidirectionally. It runs offline against a scripted gateway (no model call) under plain
+> `pnpm test`, so evidence-citation, injection resistance, tenant scope and refusal are
+> regression-locked; `ops-brief` passes in the seeded run; and deterministic operation without AI
+> is the default, since no seeded spec in the 51-suite run touches the gateway.
+>
+> **"Eval thresholds are recorded" is now met.** T21 put ten inventory numbers in
+> `EVAL_ACCEPTANCE` (`evals/ai-eval-runner.ts`) and had `inv-ai-evals.spec.ts` assert through
+> `meetsGate`: five rate gates (`INVENTORY_GOLDEN_GROUNDING_RATE`, `_REFUSAL_RATE`,
+> `_TENANT_SCOPE_RATE`, `_INJECTION_RESISTANCE_RATE`, `_MALFORMED_REJECTION_RATE`, all **1.0**)
+> and five corpus floors (`INVENTORY_MIN_*_CASES` = 8/4/7/7/5, set AT the measured counts). Every
+> rate is 1.0 on purpose and that is the recorded position, not a placeholder: the other products'
+> figures sit under 1.0 because their criteria are measurements of an extractor, whereas
+> inventory's five are safety properties of the server — an answer cites evidence or it does not,
+> a warehouse predicate binds the caller's assignment or it does not. There is no honest tolerance
+> to spend. One report is scored per category, because `meetsGate` divides by `report.total` and a
+> single blended report would measure seven injection cases against thirty-one.
+>
+> **The `meetsGate` defect this ticket found is fixed.** `evals/ai-eval-runner.ts` used to
+> `continue` past a threshold whose criterion was absent from the report and return `true` for an
+> empty one, so a mistyped key was a green gate measuring nothing — four suites carried a
+> hand-written `expect(Object.keys(report.byCriterion))` beside their call because of it. It now
+> throws on a missing criterion, on a non-finite threshold (a mistyped catalog key reads as
+> `undefined`, and every comparison against `undefined` is false), and on an empty report;
+> `gatesPresentIn` is the explicit form for the eleven call sites that deliberately hand it the
+> whole catalog. Five permanent unit tests in `evals/scorers.unit.spec.ts` pin all three holes.
+> Proven to bite: mistyped key past `tsc` → `meetsGate` throws (`EXIT=1`); mistyped key without a
+> cast → `TS2820` (`EXIT=2`); threshold deleted from the catalog → `TS2322` (`EXIT=2`); corpus
+> floor above the real count → red (`EXIT=1`); one injection case regressed → the injection rate
+> gate red (`EXIT=1`). Follow-up: T21 (done).
 
 ## 11. Ticket execution contract
 
@@ -808,14 +837,14 @@ specs. That spec is not evidence for anything below.
 
 | # | Criterion (§12) | Status | Evidence, or what is missing |
 |---|---|---|---|
-| 12.1 | Live catalog, Drizzle schema, journal and contract tests agree | **Partly met** | Proven: `src/db/cold-build-integrity.spec.ts` (13 tests, `EXIT=0`) holds journal↔filesystem, `NOT_JOURNALLED` is `[]`; `pnpm db:bootstrap` reaches `REACHED_HEAD 630/630` twice, idempotent; `check:migration-chain` / `check:migration-ledger` run in `ci.yml`. **Missing:** the live-catalog↔Drizzle half. Its only inventory spec, `inventory-schema-parity.db.spec.ts`, is `describe.skip` unless `INV_DB_TESTS=1` — set in no workflow, no `.env.example`, no `.env.gates`. Never run. → **T15** |
-| 12.2 | Tenant path, composite relationships, lifecycle, indexes, approved RLS posture | **Partly met** | Proven: `check:tenant-indexes`, `check:scope-application`, `check:record-access`, `check:restrict-fks`, `check:tenant-isolation` all in `ci.yml`; eleven inventory isolation specs run under `pnpm test`; `scope-matrix` green in the run above. **Missing:** RLS *as the application role*. `inventory-rls.db.spec.ts` — the only spec that probes as a `NOBYPASSRLS` role — is `INV_DB_TESTS`-gated and has never run. `pnpm db:verify-rls` probes synthetic `rls_probe` tables and contains **zero** `inv_` table names. → **T15** |
-| 12.3 | Ledger immutable, projection-rebuildable, reconciled, concurrency-safe | **Partly met** | Proven: immutability is enforced in the database, not asserted in prose — `migrations/0529_ledger_corrections_and_immutability.sql:67-113` installs `trg_inv_stock_transactions_no_restatement`, verified present on `inv_t02_probe`; `ledger-corrections.seeded-e2e-spec.ts:222-263` fires four raw `UPDATE`s and asserts each is refused. Concurrency: `stock-concurrency` seeded spec + `stock-level-locks.spec.ts`. Reconciliation is non-vacuous by construction — `golden-path.seeded-e2e-spec.ts:544` deliberately mutates to prove the report can fail. **Missing, two things.** "Immutable" is UPDATE-only: 0529 installs **no DELETE guard**, and says why (organisations cascade-delete into the table), so the ledger is no-restatement, not append-only. And projection **rebuild** has no seeded coverage; `reconciliation.db.spec.ts` is `INV_DB_TESTS`-gated and has never run. → **T15** |
+| 12.1 | Live catalog, Drizzle schema, journal and contract tests agree | **Partly met** | Proven: `src/db/cold-build-integrity.spec.ts` (13 tests, `EXIT=0`) holds journal↔filesystem, `NOT_JOURNALLED` is `[]`; `pnpm db:bootstrap` reaches `REACHED_HEAD 630/630` twice, idempotent; `check:migration-chain` / `check:migration-ledger` run in `ci.yml`. **Re-recorded 2026-09-05 (T15): the live-catalog↔Drizzle half now runs.** `inventory-schema-parity.db.spec.ts` is no longer flag-gated — the tier runs on the presence of `DATABASE_URL` and skips loudly by name without one (`src/test/db-spec-gate.ts`), `pnpm test:db` runs it, and `ci.yml` runs that in `golden-path`. Measured against a migrated `inv_agents_0905`: `EXIT=0`, and its first real run found two `inv_*` tables (`inv_projects`, `inv_project_requirements`) with row-level security switched off — fixed by migration `0911`. `pnpm check:db-spec-gates` fails when a database spec is gated on a variable nothing sets (bite proven, `EXIT=1` → `EXIT=0`). Remaining gap is elsewhere in the criterion, not here. |
+| 12.2 | Tenant path, composite relationships, lifecycle, indexes, approved RLS posture | **Partly met** | Proven: `check:tenant-indexes`, `check:scope-application`, `check:record-access`, `check:restrict-fks`, `check:tenant-isolation` all in `ci.yml`; eleven inventory isolation specs run under `pnpm test`; `scope-matrix` green in the run above. **Re-recorded 2026-09-05 (T15): RLS as the application role is now proven.** `inventory-rls.db.spec.ts` runs (`EXIT=0`, 17 probes) against `streamline_app` (`rolbypassrls = f`) over seven representative `inv_*` tables — no tenant context denies `42501`, the wrong tenant returns nothing, a cross-tenant write is refused by `WITH CHECK`. Two defects came out of the first real run: the suite had been opening a single connection on `DATABASE_URL` and applying `SET LOCAL ROLE` only when `APP_DATABASE_URL` was *absent*, so supplying the deployed role ran every probe as the BYPASSRLS owner — caught by its own anti-vacuity test; and `inv_projects` / `inv_project_requirements` had no policy at all (migration `0911`). `pnpm db:verify-rls` is still synthetic-only; the `inv_` evidence is this spec. |
+| 12.3 | Ledger immutable, projection-rebuildable, reconciled, concurrency-safe | **Partly met** | Proven: immutability is enforced in the database, not asserted in prose — `migrations/0529_ledger_corrections_and_immutability.sql:67-113` installs `trg_inv_stock_transactions_no_restatement`, verified present on `inv_t02_probe`; `ledger-corrections.seeded-e2e-spec.ts:222-263` fires four raw `UPDATE`s and asserts each is refused. Concurrency: `stock-concurrency` seeded spec + `stock-level-locks.spec.ts`. Reconciliation is non-vacuous by construction — `golden-path.seeded-e2e-spec.ts:544` deliberately mutates to prove the report can fail. **Missing, two things.** "Immutable" is UPDATE-only: 0529 installs **no DELETE guard**, and says why (organisations cascade-delete into the table), so the ledger is no-restatement, not append-only. **Re-recorded 2026-09-05 (T15): projection rebuild is now covered, and it was broken.** `reconciliation.db.spec.ts` runs (`EXIT=0`). Its first real run found that `reconciliationQueries.rebuild`'s `ledger` CTE was still grouped on the five-column grain while its three correlated subqueries referenced `l.handling_unit_id` and `l.ownership` — so the statement failed to parse (`42703 column l.handling_unit_id does not exist`) on **every call for every organisation**, and "projection-rebuildable" had never been true. NEO-4/NEO-11 widened `bucketDrift`'s copy of that CTE and missed this one. Fixed; the rebuild, its no-op repeat and the five drift checks now pass against Postgres. The DELETE-guard gap above is unchanged. |
 | 12.4 | All commands strict-Zod, permissioned, scoped, transactional, **idempotent**, audited, tested | **Not met — but now measured** | The count of *known* non-retryable commands is still **zero**: issue #37 found five commands whose status guard stood in front of the claim it invalidated — `loads.dispatch`, `so-lifecycle.confirmSo`, `approveAdjustment`, `cancelTransfer`, and `so-fulfillment.pickSo`, the fifth found by the new ratchet on its first run — and all five are fixed (`310abf574`, `cd889bef7`). `idempotent-guard-placement.spec.ts` holds the line over the ~39 methods that claim a key (`EXIT=0`). **T17 replaced the hand list and classified the whole surface.** `MUST_TAKE_A_KEY` — 18 handler names typed out by hand — is deleted. The population is now derived from the controllers (`inventory-mutating-routes.ts`: **214** mutating routes across **71** controllers, **55** taking `@IdempotencyKey()`), and every route that does not take a key must carry a class and a reason in `inventory-command-classification.ts` or the check fails. An unclassified new route fails (`EXIT=1`, proven), a classification pointing at a deleted handler fails (`EXIT=1`, proven), and a route reaching a service method that declares an `idempotencyKey` parameter without taking one fails (`EXIT=1`, proven — this is the rule that would have caught `recalls.controller::create` on its first run rather than in review). **What the classification found: 'all commands are idempotent' is false by 40 routes.** Of the 159 unkeyed routes — 13 `NO_PERSISTENCE` (verified write-free), 88 `CONVERGING`, 14 `REPEATABLE_OPERATION`, 4 `CLAIMS_ITS_OWN_KEY`, and **40 `DUPLICATES_ON_RETRY`**: creates whose retry raises a second document (`products/create`, `purchase-orders/create`, `sales-orders/create`, `shipments/create`, `webhooks/create`, `landed-cost/addCharge`, `sales-orders/invoice`, and 33 more). Those 40 are recorded as findings and bounded by an assertion, not exempted. Adding a key to any of them is a separate change with its own retry test. The clause stays **not met** — but it is now measured, ratcheted, and cannot silently grow. → **T17 (classification landed), fixes still open** |
 | 12.5 | Twenty domains integrated end-to-end | **Met** | The 51-suite / 561-test run above, `0` failures, covering all twenty named domains including the three easiest to omit: exports (`lot-genealogy`, `pack-fields`), webhooks (`carrier-status`, `receiving`, `stock-events`) and channels (`neo-golden-path`). Navigation now resolves too: `sidebar-nav-inventory-reachability.test.ts` asserts both directions over 56 nav hrefs and 86 routes, with all 30 orphans named. Recorded limit, not a gap in the criterion: on a pull request CI runs only the two golden paths (see 12.9). |
 | 12.6 | CRM outside product scope; only documented compatibility adapters | **Met** | `grep -rn "from ['\"].*crm" src/modules/inventory/` and `grep -rln "crm_" src/modules/inventory/` both return nothing. Recorded limit: this is a fact about today's tree, not a held line — no ratchet asserts it, so nothing would fail if an import appeared tomorrow. |
 | 12.7 | Every frontend route: current visual language + loading/empty/error/denied/success/mobile/accessibility | **Not met** | **Four of the seven states are ratcheted, three are not.** `app/(authenticated)/inventory/inventory-route-states.test.ts` (green, part of a 5-suite / 30-test `EXIT=0` run) requires loading, empty, error and denied across 86 routes, reads code rather than prose so a marker in a comment cannot pass a route, and carries anti-vacuity floors. Counts: **86 `page.tsx` / 85 `loading.tsx` / 2 `error.tsx`**, with five reasoned `NO_DATA_ROUTES` exemptions and one reasoned `LOADING_EXEMPT_ROUTES` entry (`inventory/pick-lists`, whose whole body is a `redirect()`). **Success, mobile and accessibility are unratcheted** — the ratchet's own header calls success "the only one anybody checks by hand". Accessibility is the sharpest: eleven files use `test-utils/axe.ts` and **none of them is inventory**. Visual language is held only by repo-wide gates (`check:colors`, `check:empty-states`, `check:icon-labels`, all `EXIT=0`), nothing inventory-specific. → **T18** |
-| 12.8 | AI evidence-grounded, provider-abstracted, schema-validated, human-confirmed, never required | **Partly met** | Proven: `inv-ai-evals.spec.ts` (~31 cases, `golden \| refusal \| tenant \| injection \| malformed`) runs offline under plain `pnpm test`; inventory makes no direct OpenRouter call. **Missing:** no recorded threshold — see the Phase 5 gate above. → **T21** |
+| 12.8 | AI evidence-grounded, provider-abstracted, schema-validated, human-confirmed, never required | **Met** | Proven: `inv-ai-evals.spec.ts` (31 cases, `golden \| refusal \| tenant \| injection \| malformed`) runs offline under plain `pnpm test`; inventory makes no direct OpenRouter call. **T21 recorded the thresholds that were missing:** ten inventory keys in `EVAL_ACCEPTANCE` — five rate gates at 1.0 and five corpus floors at the measured case counts — asserted through `meetsGate`, one report per category. It also fixed `meetsGate` itself, which skipped a threshold whose criterion was absent and passed an empty report, so a mistyped key was a green gate checking nothing; it now throws on a missing criterion, a non-finite threshold and an empty report, with five unit tests pinning each. → **T21 (done)** |
 | 12.9 | Twelve gate types have recorded evidence | **Not met** | Four of twelve have **no** inventory evidence and no way to produce it today; two more exist but have never run. Table below. Separately: **no CI run has touched this branch since 2026-09-01.** → **T16, T20** |
 | 12.10 | Rollback, backup/restore, migration, feature-flag and cutover rehearsals on a disposable production-sized environment | **Not met** | Migration is the only one rehearsed: `pnpm db:bootstrap` to `REACHED_HEAD 630/630`, twice, on the disposable `inv_t02_probe`. It is **forward-only**, and that database is empty — not production-sized. **Rollback: nothing executes a `.down.sql` anywhere in the repo.** `check:migration-rollback` passes `EXIT=0` but is static, and its baseline cutoff is **839** — all **65** inventory migrations sit at or below it, so the gate enforces **zero** of them while reporting green. Backup/restore: `drill:pitr` exists, unrun here, needs credentials. Feature flags: defaults are documented in `inventory-neo-handoff.md` §7 and `check:feature-flag-governance` exists. **Cutover: no rehearsal exists at all.** → **T19** |
 | 12.11 | Branch reviewable, micro-comments resolved, pushed with a complete handoff | **Partly met** | Both branches are clean and pushed — frontend `3bbdfabe7`, backend `333e45e12`, each equal to its `origin/` ref; PRs frontend#32 and backend#16 are open against `main`. **Missing:** the handoff is not yet complete. `docs/inventory-neo-handoff.md` §6 described three defects as open that had been fixed for five days (issue #36), and the closing SHA list is still an empty placeholder. Issue #47 owns this and is open. |
@@ -825,7 +854,7 @@ specs. That spec is not evidence for anything below.
 | Gate | Inventory evidence | Verdict |
 |---|---|---|
 | unit | ~127 inventory spec paths under the root jest config; runs in `pnpm test` | **Recorded** |
-| integration | 7 inventory `.db.spec.ts` files — all `describe.skip` unless `INV_DB_TESTS=1`, which is set nowhere | **Never run** |
+| integration | 7 inventory `.db.spec.ts` files, default-on since 2026-09-05 (T15): `pnpm test:db` → `EXIT=0`, 7 suites / 70 tests against a migrated database; `pnpm check:db-spec-gates` in `ci.yml` fails if one regresses to a flag nothing sets, and `pnpm test:db` runs in `golden-path` whenever `CI_DATABASE_URL` is present (skipped, not green, without it) | **Recorded** |
 | e2e | 52 seeded specs; 51 green in the run above | **Recorded** |
 | property | `fast-check` / `jsverify` return **zero** hits in `pnpm-lock.yaml`; no `fc.assert` / `fc.property` anywhere | **Absent repo-wide** |
 | concurrency | `stock-concurrency.seeded-e2e-spec.ts` (green), `stock-level-locks.spec.ts` | **Recorded** |
