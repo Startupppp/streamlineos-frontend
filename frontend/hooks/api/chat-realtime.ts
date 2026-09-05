@@ -333,7 +333,11 @@ export function useChatRealtime(channelId: number | null): {
       const existing = guardedHandlers.get(event);
       if (existing !== undefined) return existing;
       const wrapped = (msg: InboundMessage): void => {
-        const declared = (msg.data as { userId?: unknown } | null | undefined)?.userId;
+        const data: unknown = msg.data;
+        const declared: unknown =
+          data !== null && typeof data === "object" && "userId" in data
+            ? data.userId
+            : undefined;
         if (
           !isTrustedChatFrame(
             event,

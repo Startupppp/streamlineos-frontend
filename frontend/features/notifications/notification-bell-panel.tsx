@@ -46,7 +46,7 @@ function NotificationItem({
   notification: Notification;
   onItemClick: (n: Notification) => void;
 }) {
-  const catKey = (notification.category ?? "SYSTEM") as NotificationCategory;
+  const catKey = notification.category;
   const config =
     NOTIFICATION_CATEGORY_CONFIG[catKey] ?? NOTIFICATION_CATEGORY_CONFIG.SYSTEM;
   const Icon = config.icon;

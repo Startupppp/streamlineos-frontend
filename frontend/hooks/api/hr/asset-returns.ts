@@ -47,9 +47,9 @@ export function useCreateAssetReturn(
     mutationFn: (data: CreateAssetReturnInput) =>
       apiClient.post<AssetReturn>("/hr/asset-returns", data),
     ...options,
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assetReturnsList() });
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
 }
@@ -66,9 +66,9 @@ export function useMarkAssetReturned(
         condition,
       }),
     ...options,
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.assetReturnsList() });
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
 }

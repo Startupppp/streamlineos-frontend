@@ -98,7 +98,7 @@ export function FeedbackSheet({
             <Label>Recommendation</Label>
             <Select
               value={recommendation}
-              onValueChange={(value) => setRecommendation(value as Recommendation)}
+              onValueChange={(value) => { if (value === "HIRE" || value === "NO_HIRE" || value === "MAYBE") setRecommendation(value); }}
             >
               <SelectTrigger aria-label="Recommendation">
                 <SelectValue placeholder="Select a recommendation" />

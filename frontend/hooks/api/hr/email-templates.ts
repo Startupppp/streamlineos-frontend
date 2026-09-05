@@ -72,9 +72,9 @@ export function useCreateEmailTemplate(
     mutationFn: (data: CreateEmailTemplateInput) =>
       apiClient.post<EmailTemplate>("/hr/email-templates", data),
     ...options,
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.emailTemplatesList() });
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
 }
@@ -88,9 +88,9 @@ export function useUpdateEmailTemplate(
     mutationFn: ({ id, ...data }: UpdateEmailTemplateInput) =>
       apiClient.patch<EmailTemplate>(`/hr/email-templates/${id}`, data),
     ...options,
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.emailTemplatesList() });
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
 }
@@ -104,9 +104,9 @@ export function useDeleteEmailTemplate(
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/hr/email-templates/${id}`),
     ...options,
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.emailTemplatesList() });
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
 }

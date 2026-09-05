@@ -78,9 +78,9 @@ export function useCreateHeadcountRequest(
     mutationFn: (data: CreateHeadcountRequestInput) =>
       apiClient.post("/hr/recruitment/headcount", data),
     ...options,
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.headcountRequests() });
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
 }
@@ -94,9 +94,9 @@ export function useUpdateHeadcountRequest(
     mutationFn: ({ id, ...data }: UpdateHeadcountRequestInput) =>
       apiClient.patch(`/hr/recruitment/headcount/${id}`, data),
     ...options,
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.headcountRequests() });
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
 }
@@ -110,9 +110,9 @@ export function useRejectHeadcountRequest(
     mutationFn: ({ id, reason }: RejectHeadcountRequestInput) =>
       apiClient.post(`/hr/recruitment/headcount/${id}/reject`, { reason }),
     ...options,
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.headcountRequests() });
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
 }
@@ -126,9 +126,9 @@ export function useApproveHeadcountRequest(
     mutationFn: (id: number) =>
       apiClient.post(`/hr/recruitment/headcount/${id}/approve`, {}),
     ...options,
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.headcountRequests() });
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
 }
@@ -142,9 +142,9 @@ export function useCreateHeadcountJob(
     mutationFn: (id: number) =>
       apiClient.post<{ jobId: number }>(`/hr/recruitment/headcount/${id}/create-job`, {}),
     ...options,
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.headcountRequests() });
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
 }

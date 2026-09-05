@@ -112,7 +112,6 @@ export function extractTokenAnyValue(css: string, tokenName: string): string | u
 export function ratioOf(css: string, fgToken: string, bgToken: string): number {
   const fg = extractTokenAnyValue(css, fgToken);
   const bg = extractTokenAnyValue(css, bgToken);
-  expect(fg).toBeDefined();
-  expect(bg).toBeDefined();
-  return contrastRatio(fg as string, bg as string);
+  if (!fg || !bg) throw new Error(`Token not found in CSS: ${fgToken} / ${bgToken}`);
+  return contrastRatio(fg, bg);
 }

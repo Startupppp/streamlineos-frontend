@@ -59,9 +59,9 @@ export function useCreateFnfSettlement(
     mutationFn: (data: CreateFnfSettlementInput) =>
       apiClient.post<FnfSettlement>("/hr/fnf", data),
     ...options,
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.fnfList() });
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
 }
@@ -75,9 +75,9 @@ export function useCompleteFnfSettlement(
     mutationFn: (id: number) =>
       apiClient.patch<{ success: boolean }>(`/hr/fnf/${id}`, { status: "PAID" }),
     ...options,
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.fnfList() });
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
 }

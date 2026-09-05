@@ -400,12 +400,12 @@ export function useCreateOrgHoliday(
     mutationFn: (input: AddHolidayInput) =>
       apiClient.post<OrgHoliday>("/organization/holidays", input),
     ...options,
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: platformCoreQueryKeys.organization.holidays });
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
-    onError: (error, variables, context) => {
-      options?.onError?.(error, variables, context);
+    onError: (error, variables, context, mutFnCtx) => {
+      options?.onError?.(error, variables, context, mutFnCtx);
     },
   });
 }
@@ -418,12 +418,12 @@ export function useDeleteOrgHoliday(
     mutationKey: ["org", "holidays", "delete"],
     mutationFn: (id: string) => apiClient.delete(`/organization/holidays/${id}`),
     ...options,
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: platformCoreQueryKeys.organization.holidays });
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
-    onError: (error, variables, context) => {
-      options?.onError?.(error, variables, context);
+    onError: (error, variables, context, mutFnCtx) => {
+      options?.onError?.(error, variables, context, mutFnCtx);
     },
   });
 }
