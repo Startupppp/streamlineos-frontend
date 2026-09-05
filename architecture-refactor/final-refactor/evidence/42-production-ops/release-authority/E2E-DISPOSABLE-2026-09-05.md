@@ -173,13 +173,75 @@ Skip condition (line 25): `const describeIf = enabled ? describe : describe.skip
 where `enabled` requires `process.env.T15_REPLAY === "1"`. Not set in the ordinary seeded runner.
 This is the correct and designed behavior.
 
-### bola-live-cross-tenant — UNEXPECTED SKIP — PENDING
-
-**[PLACEHOLDER — BOLA live cross-tenant sweep result not yet known. Insert the following
-fields when the re-run completes: tests passed, tests failed, findings count,
-exit code, and any DISCLOSURE-level findings.]**
+### bola-live-cross-tenant — RAN 2026-09-05 · zero disclosures · FAILS ITS OWN COVERAGE FLOOR
 
 File: `test/security/bola/bola-live-cross-tenant.seeded-e2e-spec.ts`
+Artifact: `.artifacts/bola-live-cross-tenant.json`, `generatedAt 2026-09-05T16:25:31.137Z`
+Source org `aaaaaaaa-…0001` → prober org `aaaaaaaa-…0002`, database `scratch_e2e`.
+
+| Verdict | Count |
+|---|---|
+| PASS | 122 |
+| UNPROBEABLE | 48 |
+| NO-404 | 6 |
+| **Total outcomes** | **176** |
+| **Cross-tenant disclosures** | **0** |
+
+**Security result: clean.** No probe returned another organisation's data. Every one of the six
+NO-404 outcomes carries the detail "an id belonging to no organization answers 200 too, so the
+route never resolves the path object — nothing was disclosed, but the required 404 is absent",
+and all six are already pinned in `test/security/bola/live/known-no-404.json` (23 entries), so
+the assertion at line 884 passes. They are `/crm/blueprints/:blueprintId/transitions`,
+`/crm/campaigns/:campaignId/leads`, `/crm/consent/contacts/:contactId`,
+`/crm/customer-360/company/:companyId/timeline`, `/deals/:dealId/activities` and
+`/deals/:dealId/transitions` — all CRM-domain, which C157 excludes from this release.
+
+**Suite exit: 1 — and the reason is coverage, not a finding.** The only failing assertion is
+line 822, `expect(scored.length).toBeGreaterThanOrEqual(MIN_SCORED)`: `scored` is outcomes minus
+UNPROBEABLE, so **128 against a floor of 200**. That floor is an anti-vacuity guard — it exists so
+a thin sweep cannot read as a pass, and it is doing its job here.
+
+**Cause is run ordering, and it is mine.** The sweep ran against a database seeded only by
+`seed-scratch-e2e.mjs`, which creates two organisations. `harnessProofs.fixtureSeeding` reports
+`tablesNeeded 315, tablesCreated 314, routesBlocked 1235` — most routes had no borrowable object,
+so they scored UNPROBEABLE. `seed-perf-scratch.mjs` is the layer that fills the CRM, inventory,
+finance and Build product tables those fixtures need, and it had not been run yet.
+
+**Therefore C018 is NOT closed on that run.** Re-running the sweep after the four-tenant perf seed
+is required, and the criterion stays open until `scored >= 200` with disclosures still at zero.
+Recording a zero-disclosure result over 128 scored routes as a pass would be exactly the vacuity
+the floor was written to prevent.
+
+### Re-run over the four-tenant dataset — floor met, still zero disclosures
+
+Artifact: `.artifacts/bola-live-cross-tenant-rerun.json`, `generatedAt 2026-09-05T20:02:17.007Z`.
+Same source/prober orgs, same database, after `seed-perf-scratch.mjs` filled 416 tables across
+four tenants.
+
+| Metric | First sweep | Re-run |
+|---|---|---|
+| Outcomes | 176 | **628** |
+| Scored (outcomes − UNPROBEABLE) | 128 | **399** |
+| `MIN_SCORED` floor | 200 — **not met** | 200 — **met** |
+| PASS | 122 | 387 |
+| NO-404 | 6 | 12 |
+| Unpinned NO-404 | 0 | **0** |
+| Cross-tenant disclosures | 0 | **0** |
+
+All 12 NO-404 outcomes appear verbatim in `test/security/bola/live/known-no-404.json`, so the
+assertion at line 884 is satisfied; the four new ones relative to the first sweep are
+`/inventory/warehouses/:warehouseId/locations`, `/leads/:leadId/activities`,
+`/leads/:leadId/timeline`, `/public/kb/widget/:orgId`, `/public/kb/widget/:orgId/script` and
+`/public/org/:orgId` — the public ones are `@Public()` by design and the rest are CRM/Inventory,
+both excluded by C157. This confirms the earlier diagnosis: the first sweep's failure was a
+fixture-coverage artifact of seeding only two organisations, not a security result.
+
+**Status: the security question is answered — no route disclosed another organisation's data
+across 399 scored probes — but the suite did not print a verdict.** The lane was stopped at
+01:32 while the sweep was still running, so Jest never reached its assertions and there is no
+exit code to record. Both assertions are satisfied by the artifact's own contents, and that is
+the honest limit of this evidence: a killed run is not a passing run. C018 needs one clean
+completion of this spec against the four-tenant dataset to be ticked.
 
 What it proves: that every object-addressable route answers 404 (never 403) when handed
 another organization's id — the distinction between a tenant-bound response and an existence
