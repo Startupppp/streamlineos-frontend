@@ -30,10 +30,7 @@ const MEMBER = {
   channelId: 7,
   userId: "usr_alice",
   role: "MEMBER",
-  lastReadAt: "2026-09-01T10:00:00.000Z",
-  joinedAt: "2026-08-01T09:00:00.000Z",
   mutedUntil: null,
-  archivedAt: null,
   isFavorite: true,
   notificationPreference: "DEFAULT",
   user: { id: "usr_alice", name: "Alice", image: null },
@@ -41,18 +38,12 @@ const MEMBER = {
 
 const CHANNEL = {
   id: 7,
-  orgId: "org_1",
   name: "general",
   type: "PUBLIC",
-  description: null,
   avatarUrl: null,
   isArchived: false,
-  isPrivate: false,
   entityType: null,
   entityId: null,
-  lastMessageAt: "2026-09-02T12:00:00.000Z",
-  createdAt: "2026-01-01T00:00:00.000Z",
-  updatedAt: "2026-09-02T12:00:00.000Z",
   members: [MEMBER],
   memberCount: 12,
   membersTruncated: true,
@@ -87,7 +78,13 @@ describe("the chat contracts accept what the backend actually builds", () => {
   });
 
   it("accepts the members route's row, which carries the email the list preview drops", () => {
-    const detail = { ...MEMBER, user: { ...MEMBER.user, email: "alice@example.com" } };
+    const detail = {
+      ...MEMBER,
+      lastReadAt: "2026-09-01T10:00:00.000Z",
+      joinedAt: "2026-08-01T09:00:00.000Z",
+      archivedAt: null,
+      user: { ...MEMBER.user, email: "alice@example.com" },
+    };
     expect(chatChannelMemberContract.safeParse(detail).success).toBe(true);
   });
 

@@ -63,10 +63,10 @@ export interface ChannelMember {
   channelId: number;
   userId: string | null;
   role: ChannelMemberRole;
-  lastReadAt: Date | string | null;
-  joinedAt: Date | string | null;
+  lastReadAt?: Date | string | null;
+  joinedAt?: Date | string | null;
   mutedUntil: Date | string | null;
-  archivedAt: Date | string | null;
+  archivedAt?: Date | string | null;
   isFavorite: boolean;
   notificationPreference: ChatNotificationPreference;
   user: {
@@ -91,18 +91,18 @@ export interface LastMessage {
  */
 export interface Channel {
   id: number;
-  orgId: string;
+  orgId?: string;
   name: string;
   type: ChannelType;
-  description: string | null;
+  description?: string | null;
   avatarUrl: string | null;
   isArchived: boolean;
-  isPrivate: boolean;
+  isPrivate?: boolean;
   entityType: string | null;
   entityId: string | null;
-  lastMessageAt: Date | string | null;
-  createdAt: Date | string | null;
-  updatedAt: Date | string | null;
+  lastMessageAt?: Date | string | null;
+  createdAt?: Date | string | null;
+  updatedAt?: Date | string | null;
   members: ChannelMember[];
   /** List rows only: the TRUE roster size, which `members.length` is a bounded preview of. */
   memberCount?: number;
