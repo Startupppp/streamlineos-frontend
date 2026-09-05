@@ -128,9 +128,7 @@ const UNRESOLVED_ROUTE_FILES = new Map([
   ["hooks/api/org-hierarchy.ts", 1],
   ["hooks/api/users/bulk-mutations.ts", 1],
   ["hooks/common/use-file-url.ts", 1],
-  ["features/crm/import/bulk-import-section.tsx", 1],
-  ["features/hr/document-review/upload-doc-sheet.tsx", 1],
-  ["features/settings/delegations/delegations-page.tsx", 2],
+  ["hooks/api/crm/bulk-import.ts", 1],
   ["features/shared/import-export/import-export-grid.tsx", 1],
   ["lib/ably.ts", 1],
 ]);

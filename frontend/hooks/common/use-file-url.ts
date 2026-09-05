@@ -15,7 +15,7 @@ import { isStorageObjectKey, storageKeyFromUrl } from "@/lib/utils";
  * the substring can never distinguish the two cases because the folder name is
  * the same on both sides.
  */
-function isLocalUrl(url: string): boolean {
+export function isLocalUrl(url: string): boolean {
   if (!url) return false;
   if (isStorageObjectKey(url)) return false;
   if (url.startsWith("/")) return true;

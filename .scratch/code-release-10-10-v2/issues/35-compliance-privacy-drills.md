@@ -20,7 +20,7 @@
 - [ ] **PRD-C185** — Approve AI/integration providers, regions, PII minimization, retention, deletion and disclosure.
 - [ ] **PRD-C186** — Run deployed export, correction, portability, erasure, legal-hold, transfer, cross-tenant and repeat-request drills.
 - [ ] **PRD-C187** — Prove deployed object/search/vector/cache/downstream deletion plus backup aging and restore-time deletion.
-- [ ] **PRD-C188** — Run retention/legal-hold drills and store a redacted, hashed evidence bundle.
+- [x] **PRD-C188** — Run retention/legal-hold drills and store a redacted, hashed evidence bundle.
 - [ ] **PRD-C189** — Close or formally disposition every production/security/privacy/compliance P0/P1 finding.
 
 ## Completion evidence

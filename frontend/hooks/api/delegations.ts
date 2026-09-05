@@ -1,9 +1,10 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseMutationOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
+import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export interface Delegation {
   id: string;
@@ -47,33 +48,44 @@ export interface GrantDelegationInput {
 }
 
 export function useReceivedDelegations(params: DelegationListParams) {
-  return useQuery<DelegationPage>({
+  return useGatedQuery<DelegationPage>("settings:rbac:manage", {
     queryKey: supportAndWorkflowsQueryKeys.delegations.received(params),
     queryFn: ({ signal }) => {
       const urlParams = new URLSearchParams({ limit: String(params.limit) });
       if (params.cursor) urlParams.set("cursor", params.cursor);
       if (params.search) urlParams.set("search", params.search);
-      return apiClient.get<DelegationPage>(`/access/delegations?${urlParams.toString()}`, undefined, signal);
+      return apiClient.get<DelegationPage>(
+        `/access/delegations?${urlParams.toString()}`,
+        undefined,
+        signal,
+      );
     },
     staleTime: 60_000,
   });
 }
 
 export function useGrantedDelegations(params: DelegationListParams) {
-  return useQuery<DelegationPage>({
+  return useGatedQuery<DelegationPage>("settings:rbac:manage", {
     queryKey: supportAndWorkflowsQueryKeys.delegations.given(params),
     queryFn: ({ signal }) => {
       const urlParams = new URLSearchParams({ limit: String(params.limit) });
       if (params.cursor) urlParams.set("cursor", params.cursor);
       if (params.search) urlParams.set("search", params.search);
-      return apiClient.get<DelegationPage>(`/access/delegations/given?${urlParams.toString()}`, undefined, signal);
+      return apiClient.get<DelegationPage>(
+        `/access/delegations/given?${urlParams.toString()}`,
+        undefined,
+        signal,
+      );
     },
     staleTime: 60_000,
   });
 }
 
 export function useRevokeDelegation(
-  options?: Omit<UseMutationOptions<unknown, Error, string>, "mutationKey" | "mutationFn">,
+  options?: Omit<
+    UseMutationOptions<unknown, Error, string>,
+    "mutationKey" | "mutationFn"
+  >,
 ) {
   const qc = useQueryClient();
   return useMutation<unknown, Error, string>({
@@ -81,14 +93,19 @@ export function useRevokeDelegation(
     mutationFn: (id: string) => apiClient.delete(`/access/delegations/${id}`),
     ...options,
     onSuccess: (data, variables, context, mutFnCtx) => {
-      void qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.delegations.all });
+      void qc.invalidateQueries({
+        queryKey: supportAndWorkflowsQueryKeys.delegations.all,
+      });
       options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
   });
 }
 
 export function useGrantDelegation(
-  options?: Omit<UseMutationOptions<unknown, Error, GrantDelegationInput>, "mutationKey" | "mutationFn">,
+  options?: Omit<
+    UseMutationOptions<unknown, Error, GrantDelegationInput>,
+    "mutationKey" | "mutationFn"
+  >,
 ) {
   return useMutation<unknown, Error, GrantDelegationInput>({
     mutationKey: ["delegations", "grant"],

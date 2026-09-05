@@ -1,8 +1,13 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
-export type PushPermissionState = "unsupported" | "default" | "granted" | "denied";
+export type PushPermissionState =
+  | "unsupported"
+  | "default"
+  | "granted"
+  | "denied";
 
 const OPT_OUT_KEY = "streamline.push.opted-out";
 
@@ -18,22 +23,32 @@ const OPT_OUT_KEY = "streamline.push.opted-out";
  * has something worth offering — that is `enable()`.
  */
 export function usePushSubscription(userId: string | undefined) {
-  const [permission, setPermission] = useState<PushPermissionState>("unsupported");
+  const [permission, setPermission] =
+    useState<PushPermissionState>("unsupported");
   const [isEnabling, setIsEnabling] = useState(false);
   const [isDisabling, setIsDisabling] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [optedOut, setOptedOut] = useState(false);
 
-  /**
-   * Permission is not something we can read once. A user revokes it from browser
-   * site settings with the tab still open, and nothing tells the tab unless it
-   * subscribes — so a single read on mount left the card claiming "Push
-   * notifications are on" for the rest of the session, and the denied branch it
-   * already renders could never be reached after mount. The Permissions API is
-   * the live signal; the visibility re-read is the fallback for browsers that
-   * reject `notifications` there, and it also catches a change made in another
-   * tab or in OS settings.
-   */
+  const { mutate: registerPushSubscription } = useMutation({
+    mutationFn: ({
+      endpoint,
+      p256dh,
+      auth,
+    }: {
+      endpoint: string;
+      p256dh: string;
+      auth: string;
+    }) =>
+      apiClient.post("/push/subscribe", {
+        endpoint,
+        p256dh,
+        auth,
+        userAgent: navigator.userAgent.slice(0, 255),
+      }),
+    onSuccess: () => setIsSubscribed(true),
+  });
+
   useEffect(() => {
     if (typeof window === "undefined" || !("Notification" in window)) return;
     const readPermission = () => setPermission(Notification.permission);
@@ -94,23 +109,16 @@ export function usePushSubscription(userId: string | undefined) {
     const handleWorkerMessage = (event: MessageEvent) => {
       if (optedOut || !isSubscriptionChangedMessage(event.data)) return;
       const { endpoint, p256dh, auth } = event.data;
-      void apiClient
-        .post("/push/subscribe", {
-          endpoint,
-          p256dh,
-          auth,
-          userAgent: navigator.userAgent.slice(0, 255),
-        })
-        .then(() => setIsSubscribed(true))
-        .catch(() => undefined);
+      registerPushSubscription({ endpoint, p256dh, auth });
     };
 
     container.addEventListener("message", handleWorkerMessage);
     return () => container.removeEventListener("message", handleWorkerMessage);
-  }, [userId, optedOut]);
+  }, [userId, optedOut, registerPushSubscription]);
 
   const enable = useCallback(async (): Promise<PushPermissionState> => {
-    if (typeof window === "undefined" || !("Notification" in window)) return "unsupported";
+    if (typeof window === "undefined" || !("Notification" in window))
+      return "unsupported";
     setIsEnabling(true);
     try {
       writeOptOut(false);
@@ -151,7 +159,15 @@ export function usePushSubscription(userId: string | undefined) {
     }
   }, []);
 
-  return { permission, enable, disable, isEnabling, isDisabling, isSubscribed, optedOut };
+  return {
+    permission,
+    enable,
+    disable,
+    isEnabling,
+    isDisabling,
+    isSubscribed,
+    optedOut,
+  };
 }
 
 interface PushSubscriptionChangedMessage {
@@ -165,8 +181,10 @@ function isSubscriptionChangedMessage(
   value: unknown,
 ): value is PushSubscriptionChangedMessage {
   if (typeof value !== "object" || value === null) return false;
-  if (!("type" in value) || value.type !== "push-subscription-changed") return false;
-  if (!("endpoint" in value) || typeof value.endpoint !== "string") return false;
+  if (!("type" in value) || value.type !== "push-subscription-changed")
+    return false;
+  if (!("endpoint" in value) || typeof value.endpoint !== "string")
+    return false;
   if (!("p256dh" in value) || typeof value.p256dh !== "string") return false;
   if (!("auth" in value) || typeof value.auth !== "string") return false;
   return true;
@@ -189,7 +207,9 @@ function writeOptOut(value: boolean): void {
   }
 }
 
-async function queryNotificationPermission(): Promise<PermissionStatus | undefined> {
+async function queryNotificationPermission(): Promise<
+  PermissionStatus | undefined
+> {
   if (!("permissions" in navigator)) return undefined;
   try {
     return await navigator.permissions.query({ name: "notifications" });
@@ -233,7 +253,9 @@ async function unsubscribeFromPush(): Promise<void> {
   if (existing === null) return;
   const endpoint = existing.endpoint;
   await existing.unsubscribe();
-  await apiClient.delete(`/push/subscribe?endpoint=${encodeURIComponent(endpoint)}`);
+  await apiClient.delete(
+    `/push/subscribe?endpoint=${encodeURIComponent(endpoint)}`,
+  );
 }
 
 async function createSubscription(

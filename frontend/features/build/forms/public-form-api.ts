@@ -35,16 +35,21 @@ async function messageFrom(res: Response, fallback: string): Promise<string> {
   return fallback;
 }
 
-export async function fetchPublicForm(
-  token: string,
+export async function fetchPublicFormByPath(
+  path: string,
 ): Promise<PublicFormDefinition> {
-  const path = `/public/forms/${token}`;
   const res = await fetch(buildUrl(path), { headers: withCorrelation(new Headers()) });
   if (!res.ok)
     throw new Error(
       await messageFrom(res, "Form not found or no longer active."),
     );
   return parseApiResponse(res, publicFormDefinitionContract, path);
+}
+
+export async function fetchPublicForm(
+  token: string,
+): Promise<PublicFormDefinition> {
+  return fetchPublicFormByPath(`/public/forms/${token}`);
 }
 
 export async function submitPublicForm(

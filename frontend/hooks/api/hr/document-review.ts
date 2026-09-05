@@ -91,11 +91,11 @@ export function useUploadOnboardingDoc(selfUpload: boolean) {
       "onboarding-documents",
       selfUpload ? "self-upload" : "admin-upload",
     ],
-    mutationFn: (data: UploadOnboardingDocData) =>
-      apiClient.post(
-        selfUpload ? "/hr/onboarding-docs/me" : "/hr/onboarding-docs",
-        data,
-      ),
+    mutationFn: (data: UploadOnboardingDocData) => {
+      if (selfUpload)
+        return apiClient.post("/hr/onboarding-docs/me", data);
+      return apiClient.post("/hr/onboarding-docs", data);
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.onboardingDocsAll });
     },
