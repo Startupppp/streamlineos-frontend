@@ -6,32 +6,24 @@ import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { useChatChannels } from "@/hooks/api/chat-core-read";
-import { useChatGlobalNotifications } from "@/hooks/api/chat-notifications";
 import { ChannelSidebar } from "@/features/chat/channel-sidebar";
-
 import { EmptyChatState } from "@/features/chat/empty-chat-state";
-import { ChatAblyProvider } from "@/features/chat/ably-provider";
 import { useChatSidebarCollapse } from "@/features/chat/chat-shell";
-import { useChatPresence } from "@/features/chat/use-chat-presence";
+import { useAfterLoad } from "@/hooks/common/use-after-load";
 import {
   ChatOverlayFallback,
   ChatPanelFallback,
 } from "@/features/chat/chat-lazy-fallbacks";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 
-/**
- * The message panel is the heaviest subtree in chat -- panel view, message list,
- * bubbles, the composer and their data hooks -- and on a bare `/chat` landing it
- * is never mounted at all: `activeChannelId` initialises only from `?channel=`,
- * nothing auto-selects a first channel, and with no channel the branch below
- * renders `EmptyChatState` instead. Loading it eagerly therefore put the entire
- * conversation surface in the first-load chunk to render a zero-state.
- *
- * `ssr: false` with the panel skeleton keeps the `?channel=` deep link honest:
- * that path pays one chunk fetch and shows the same skeleton the panel already
- * uses while its own data loads, rather than a blank column.
- */
+const ChatAblySuite = dynamic(
+  () =>
+    import("@/features/chat/chat-ably-suite").then((m) => ({
+      default: m.ChatAblySuite,
+    })),
+  { ssr: false },
+);
+
 const MessagePanel = dynamic(
   () =>
     import("@/features/chat/message-panel").then((m) => ({
@@ -64,24 +56,8 @@ const NewGroupDialog = dynamic(
   { ssr: false, loading: () => <ChatOverlayFallback label="Loading new channel" /> },
 );
 
-function ChatNotifications({
-  activeChannelId,
-  currentUserId,
-}: {
-  activeChannelId: number | null;
-  currentUserId: string | undefined;
-}) {
-  const { data: channels } = useChatChannels();
-  useChatGlobalNotifications(channels, activeChannelId, currentUserId);
-  return null;
-}
-
-function ChatPresenceManager() {
-  useChatPresence();
-  return null;
-}
-
 export function ChatHomePage() {
+  const afterLoad = useAfterLoad();
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
   const router = useRouter();
@@ -185,15 +161,35 @@ export function ChatHomePage() {
     };
   }, []);
 
+  const panelChildren = activeChannelId && currentUserId ? (
+    <MessagePanel
+      channelId={activeChannelId}
+      currentUserId={currentUserId}
+      onBack={handleBack}
+      onToggleInfo={handleToggleInfo}
+      showInfoPanel={showInfoPanel}
+      autoStartCall={
+        pendingCallAction?.channelId === activeChannelId
+          ? pendingCallAction.type
+          : null
+      }
+      onAutoStartHandled={handleAutoStartHandled}
+      isSidebarCollapsed={sidebarCollapsed}
+      onToggleSidebar={handleToggleSidebar}
+    />
+  ) : (
+    <EmptyChatState
+      onNewDM={handleNewDM}
+      onNewChannel={handleNewChannel}
+      onSearch={handleSearch}
+      isSidebarCollapsed={sidebarCollapsed}
+      onToggleSidebar={handleToggleSidebar}
+    />
+  );
+
   return (
-    <ChatAblyProvider>
-      <ChatPresenceManager />
-      <ChatNotifications
-        activeChannelId={activeChannelId}
-        currentUserId={currentUserId}
-      />
-      <div className="flex flex-1 min-h-0 flex-col">
-        <div className="flex flex-1 min-h-0 min-w-0 bg-background">
+    <div className="flex flex-1 min-h-0 flex-col">
+      <div className="flex flex-1 min-h-0 min-w-0 bg-background">
         <div
           className={cn(
             "relative z-0 flex flex-col shrink-0 border-r border-border/40 bg-card/50 transition-[width] duration-300 ease-in-out overflow-hidden",
@@ -220,22 +216,15 @@ export function ChatHomePage() {
             showMobileList && "hidden md:flex",
           )}
         >
-          {activeChannelId && currentUserId ? (
-            <MessagePanel
-              channelId={activeChannelId}
+          {afterLoad ? (
+            <ChatAblySuite
+              activeChannelId={activeChannelId}
               currentUserId={currentUserId}
-              onBack={handleBack}
-              onToggleInfo={handleToggleInfo}
-              showInfoPanel={showInfoPanel}
-              autoStartCall={
-                pendingCallAction?.channelId === activeChannelId
-                  ? pendingCallAction.type
-                  : null
-              }
-              onAutoStartHandled={handleAutoStartHandled}
-              isSidebarCollapsed={sidebarCollapsed}
-              onToggleSidebar={handleToggleSidebar}
-            />
+            >
+              {panelChildren}
+            </ChatAblySuite>
+          ) : activeChannelId && currentUserId ? (
+            <ChatPanelFallback label="Loading conversation" />
           ) : (
             <EmptyChatState
               onNewDM={handleNewDM}
@@ -298,8 +287,7 @@ export function ChatHomePage() {
             hideTrigger
           />
         )}
-        </div>
       </div>
-    </ChatAblyProvider>
+    </div>
   );
 }

@@ -2,7 +2,6 @@
 
 import { memo, type ComponentType } from "react";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -19,11 +18,6 @@ import { cn } from "@/lib/utils";
 import { PriorityBadge } from "@/features/build/shared/priority-badge";
 import { StatusBadge } from "@/components/shared/ticket-status-badge";
 import { PmPanel, PM_ROW } from "@/features/build/shared/pm-chrome";
-import {
-  listItem,
-  listItemReduced,
-  pmSnappy,
-} from "@/lib/motion-presets";
 import {
   FLEX_TITLE_SLOT,
   TEXT_ONE_LINE,
@@ -63,14 +57,8 @@ export const WorkItemRow = memo(function WorkItemRow({
   item: WorkRowShape;
   index?: number;
 }) {
-  const shouldReduceMotion = useReducedMotion();
-
   return (
-    <motion.div
-      variants={shouldReduceMotion ? listItemReduced : listItem}
-      transition={pmSnappy}
-      whileHover={shouldReduceMotion ? undefined : { x: 2 }}
-    >
+    <div className="transition-transform duration-150 hover:translate-x-0.5">
       <Link
         href={
           item.ticketNumber != null
@@ -110,7 +98,7 @@ export const WorkItemRow = memo(function WorkItemRow({
           <ChevronRight className="h-3 w-3 -translate-x-1 text-muted-foreground opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100" />
         </div>
       </Link>
-    </motion.div>
+    </div>
   );
 });
 
@@ -122,7 +110,6 @@ export function BucketSection({
   items: MyWorkItem[];
 }) {
   const cfg = BUCKET_CONFIG[bucket];
-  const shouldReduceMotion = useReducedMotion();
 
   return (
     <PmPanel>
@@ -135,22 +122,11 @@ export function BucketSection({
           {items.length}
         </span>
       </div>
-      <motion.div
-        initial="hidden"
-        animate="show"
-        variants={{
-          hidden: {},
-          show: {
-            transition: shouldReduceMotion
-              ? { duration: 0 }
-              : { staggerChildren: 0.03, delayChildren: 0.04 },
-          },
-        }}
-      >
+      <div>
         {items.map((item) => (
           <WorkItemRow key={item.id} item={item} />
         ))}
-      </motion.div>
+      </div>
     </PmPanel>
   );
 }

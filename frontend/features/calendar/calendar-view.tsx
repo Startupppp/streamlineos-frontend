@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
-import { useAfterLoad } from "@/hooks/common/use-after-load";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { startOfMonth, endOfMonth, addMonths, subMonths, format } from "date-fns";
@@ -23,16 +22,15 @@ import {
 } from "@/hooks/api/calendar";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import {
+  CalendarAgendaPreview,
   CalendarListFallback,
   CalendarOverlayFallback,
   CalendarSheetFallback,
 } from "./calendar-lazy-fallbacks";
 import { useCalendarAccountFilters } from "./use-calendar-account-filters";
-import { useHrCalendarEventsMapped, useHrEventsVisible } from "./use-hr-calendar-events";
 import { useCrmEventsVisible } from "./use-crm-calendar-events";
 import { useCalendarSourceVisibility } from "./use-calendar-source-visibility";
 import { useCalendarSourceDeepLink } from "./use-calendar-source-deeplink";
-import { useAttendanceCalendarEvents } from "./use-attendance-calendar-events";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useFinalizeIntegrationConnection } from "@/hooks/api/integrations";
 import { useCalendarConnections } from "./use-calendar-connections";
@@ -41,14 +39,14 @@ import {
   CalendarToolbarPrimaryActions,
 } from "./calendar-toolbar";
 import { CalendarMonthYearPicker } from "./calendar-month-year-picker";
-import { useEventPropGetter } from "./use-event-prop-getter";
 import { useCalendarComputed } from "./use-calendar-computed";
 import { useCalendarViewState } from "./use-calendar-view-state";
+import { useAfterLoad } from "@/hooks/common/use-after-load";
 
-const BigCalendarWrapper = dynamic(
+const CalendarGridLayer = dynamic(
   () =>
-    import("./big-calendar-wrapper").then((m) => ({
-      default: m.BigCalendarWrapper,
+    import("./calendar-grid-layer").then((m) => ({
+      default: m.CalendarGridLayer,
     })),
   { ssr: false, loading: () => <CalendarListFallback label="Loading calendar" /> },
 );
@@ -110,9 +108,9 @@ const CalendarAccountsSheet = dynamic(
 );
 
 const NO_CALENDAR_EVENTS: CalendarListItem[] = [];
+const NO_HR_EVENTS: import("./big-calendar-wrapper").BigCalEvent[] = [];
 
 export function CalendarView() {
-  const afterLoad = useAfterLoad();
   const router = useRouter();
   const searchParams = useSearchParams();
   const {
@@ -185,31 +183,20 @@ export function CalendarView() {
 
   useCalendarSourceDeepLink();
 
+  const afterLoad = useAfterLoad();
   const { hiddenIds } = useCalendarAccountFilters();
-  const { visible: hrEventsVisible, toggle: toggleHrEvents } = useHrEventsVisible();
+  const { visible: hrEventsVisible, toggle: toggleHrEvents } = useCalendarSourceVisibility("hrEvents", true);
   const { visible: crmEventsVisible, toggle: toggleCrmEvents } = useCrmEventsVisible();
   const {
     visible: attendanceEventsVisible,
     toggle: toggleAttendanceEvents,
   } = useCalendarSourceVisibility("attendance", true);
-  const { hrCalEvents } = useHrCalendarEventsMapped(rangeStart, rangeEnd, hrEventsVisible);
-  const selfAttendanceEvents = useAttendanceCalendarEvents(rangeStart, rangeEnd, attendanceEventsVisible);
-  const calendarEvents = useMemo(() => {
-    const aggregateAttendanceDates = new Set(
-      events
-        .filter((event) => event.source === "attendance")
-        .map((event) => format(new Date(event.start), "yyyy-MM-dd")),
-    );
-    return [
-      ...events,
-      ...selfAttendanceEvents.filter(
-        (event) =>
-          !aggregateAttendanceDates.has(
-            format(new Date(event.start), "yyyy-MM-dd"),
-          ),
-      ),
-    ];
-  }, [events, selfAttendanceEvents]);
+
+  const [gridCalendarEvents, setGridCalendarEvents] = useState<CalendarListItem[]>([]);
+  const handleGridCalendarEventsChange = useCallback(
+    (evts: CalendarListItem[]) => setGridCalendarEvents(evts),
+    [],
+  );
   // External events take only the date range, so waiting for the connection
   // list before asking is a pure waterfall. Ask optimistically and stop only
   // once we know the org has no active connection.
@@ -220,28 +207,31 @@ export function CalendarView() {
   );
 
   const selectedEvent = useMemo<CalendarListItem | null>(
-    () =>
-      selectedEventId !== null
-        ? (calendarEvents.find((e) => e.id === selectedEventId) ?? null)
-        : null,
-    [selectedEventId, calendarEvents],
+    () => {
+      if (selectedEventId === null) return null;
+      return (
+        events.find((e) => e.id === selectedEventId) ??
+        gridCalendarEvents.find((e) => e.id === selectedEventId) ??
+        null
+      );
+    },
+    [selectedEventId, events, gridCalendarEvents],
   );
 
-  const { allCalEvents, visibleEvents, visibleRange } = useCalendarComputed({
-    events: calendarEvents,
+  const { visibleEvents, visibleRange } = useCalendarComputed({
+    events,
     externalData,
     hiddenIds,
     connections,
     currentDate,
     view,
-    hrCalEvents,
+    hrCalEvents: NO_HR_EVENTS,
     hrVisible: hrEventsVisible,
     crmVisible: crmEventsVisible,
     attendanceVisible: attendanceEventsVisible,
   });
 
   const handleRetryEvents = useCallback(() => { void refetchEvents(); }, [refetchEvents]);
-  const eventPropGetter = useEventPropGetter();
 
   const finalizeMutate = finalize.mutate;
   useEffect(() => {
@@ -315,10 +305,18 @@ export function CalendarView() {
             >
               {viewMode === "calendar" ? (
                 afterLoad ? (
-                  <BigCalendarWrapper
-                    events={allCalEvents}
-                    date={currentDate}
+                  <CalendarGridLayer
+                    events={events}
+                    externalData={externalData}
+                    hiddenIds={hiddenIds}
+                    connections={connections}
+                    currentDate={currentDate}
                     view={view}
+                    rangeStart={rangeStart}
+                    rangeEnd={rangeEnd}
+                    hrEventsVisible={hrEventsVisible}
+                    crmEventsVisible={crmEventsVisible}
+                    attendanceEventsVisible={attendanceEventsVisible}
                     calHeight={calHeight}
                     onView={setView}
                     onNavigate={setCurrentDate}
@@ -326,10 +324,10 @@ export function CalendarView() {
                       isCalendarOverlayOpen ? undefined : guardedSelectSlot
                     }
                     onSelectEvent={handleSelectEvent}
-                    eventPropGetter={eventPropGetter}
+                    onCalendarEventsChange={handleGridCalendarEventsChange}
                   />
                 ) : (
-                  <CalendarListFallback label="Loading calendar" />
+                  <CalendarAgendaPreview events={visibleEvents} />
                 )
               ) : (
                 <CalendarEventsPanel

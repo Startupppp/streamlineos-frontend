@@ -13,14 +13,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import type { ReactNode } from "react";
 import type { RecordValue } from "@/features/renderer/format-value";
-
-const RecordList = dynamic(
-  () =>
-    import("@/features/renderer/record-list").then((m) => ({
-      default: m.RecordList,
-    })),
-  { ssr: false },
-);
+import { RecordList } from "@/features/renderer/record-list";
 import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
 import { PARTY_LAYOUT } from "@/lib/renderer/party-layout";
 import { EmptyState } from "@/components/ui/empty-state";

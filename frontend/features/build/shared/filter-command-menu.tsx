@@ -56,6 +56,7 @@ export type { FilterState } from "@/features/shared/list-view";
 
 export interface FilterCommandMenuProps {
   activeFilterCount: number;
+  defaultOpen?: boolean;
   statusItems: StatusFilterOption[];
   statusConfig: Record<string, StatusConfigEntry>;
   members: Member[];
@@ -81,6 +82,7 @@ export interface FilterCommandMenuProps {
 
 export function FilterCommandMenu({
   activeFilterCount,
+  defaultOpen,
   statusItems,
   statusConfig,
   members,
@@ -104,7 +106,7 @@ export function FilterCommandMenu({
   onDueDateToChange,
 }: FilterCommandMenuProps) {
   const isMobile = useIsMobile();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen ?? false);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<FilterCategory | null>(null);
   const [navDirection, setNavDirection] = useState(1);
