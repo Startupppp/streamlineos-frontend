@@ -2,9 +2,9 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, dirname, relative } from "node:path";
 
 /**
- * G8 — every inventory route answers all five questions.
+ * G8 — every inventory route answers PRD §12.7's questions.
  *
- * A route can be wrong in five ways and only one of them is visible in a
+ * A route can be wrong in several ways and only one of them is visible in a
  * screenshot of the happy path:
  *
  *   * **loading** — a spinner where a skeleton belongs, or nothing at all;
@@ -16,9 +16,17 @@ import { join, dirname, relative } from "node:path";
  *     simply lacks the permission, so "you may not see this" and "there is
  *     nothing here" become the same screen. That is the defect A6 was raised
  *     for and it has come back more than once;
- *   * **success** — the only one anybody checks by hand.
+ *   * **success** — until T18, the only one anybody checked by hand. Now half
+ *     of it is here (a route that writes has to say the write landed) and half
+ *     is next door in `inventory-a11y.test.tsx`, which mounts loaded surfaces
+ *     and looks for the rows, because "it renders the data" is not a question
+ *     source can answer;
+ *   * **mobile** — narrowly, and the T18 block below says exactly how narrowly:
+ *     no class pins content wider than the device. Not "it fits";
+ *   * **accessibility** — mounted and axe'd next door; what is held here is the
+ *     count, so the suite cannot quietly go back to covering nothing.
  *
- * Auditing that by eye across 67 routes is a thing you do once and never again.
+ * Auditing that by eye across 85 routes is a thing you do once and never again.
  * This does it on every run, which is the only version that keeps being true.
  *
  * **What it can and cannot see.** It follows a route's `page.tsx` into the
@@ -152,6 +160,204 @@ const LOADING_EXEMPT_ROUTES: ReadonlyArray<{ route: string; reason: string }> = 
   },
 ];
 
+// ---------------------------------------------------------------------------
+// T18 — the three §12.7 states nothing was holding.
+//
+// PRD §12.7 (`prd:719`) asks every route for seven: loading, empty, error,
+// denied, success, mobile and accessibility. The four above were ratcheted by
+// T07/T08 and the header of this file admitted the rest: "**success** — the only
+// one anybody checks by hand." The three below close that, each as far as it can
+// honestly go and no further.
+// ---------------------------------------------------------------------------
+
+/**
+ * ACCESSIBILITY. The suite that mounts inventory surfaces and runs axe on them.
+ *
+ * `frontend/test-utils/axe.ts` had eleven users and not one was inventory, which
+ * is the least defensible gap in the module: the harness was already wired, the
+ * RF screens already mounted under jsdom, and 86 routes had no accessibility
+ * assertion of any kind.
+ *
+ * What this holds is the *count*, not the assertions — those live next door in
+ * `inventory-a11y.test.tsx`, which is where a mount belongs. What a count ratchet
+ * is for is the failure mode a suite cannot catch about itself: being deleted,
+ * or being quietly hollowed out until it mounts nothing. Both show up here.
+ */
+const A11Y_SUITE = join(ROUTES_DIR, "inventory-a11y.test.tsx");
+
+/**
+ * Floors, not exact counts.
+ *
+ * Adding a covered surface must not require editing this file — only a suite
+ * that has stopped covering things should. Eleven is what T18 shipped; the
+ * floors sit at that, so the next session may add and may not remove.
+ */
+const A11Y_MIN_ROUTE_SURFACES = 6;
+const A11Y_MIN_SHARED_SURFACES = 5;
+
+/**
+ * SUCCESS. A route that writes has to tell the reader the write landed.
+ *
+ * "Renders something on the happy path" is not a checkable claim — every page
+ * renders something, so a marker for it would pass on an empty div and teach
+ * nobody anything. The checkable half of §12.7's success state is the one with a
+ * failure mode: an operator taps Confirm, nothing visible changes, and they tap
+ * again. So the question asked here is narrower and answerable — a route whose
+ * UI tree performs a write must also carry, *in that same tree*, something that
+ * happens when the write succeeds.
+ *
+ * `@/hooks` is deliberately outside the walk (see the import filter in
+ * `routeFiles`), so an `onSuccess` inside a query hook cannot answer for a
+ * screen. The marker has to be in the page, its client, or a component it
+ * renders — which is where a visible confirmation would live.
+ *
+ * The other half of success — that a *loaded* surface actually shows its rows —
+ * is not answerable from source at all and is asserted by mounting, in
+ * `inventory-a11y.test.tsx`'s "T18 success" block.
+ */
+const WRITE_MARKERS = ["useMutation", "mutateAsync", ".mutate("] as const;
+const SUCCESS_MARKERS = ["toast.success", "toast.promise", "onSuccess"] as const;
+
+/**
+ * Routes whose write is confirmed by something this check cannot see.
+ *
+ * Five, each verified against source before being written, and each naming the
+ * mechanism so the claim can be checked rather than taken on trust. Two shapes:
+ * a POST that is really a read, and a state machine whose badge is the receipt.
+ */
+const SUCCESS_EXEMPT_ROUTES: ReadonlyArray<{ route: string; reason: string }> = [
+  {
+    route: "inventory/ai",
+    reason:
+      "Its three panels POST to read. inventory-copilot-panel.tsx says so in its own header — 'no button that writes — the copilot reads' — and demand-risk-panel.tsx's explain.mutate() asks for an explanation. The answer arriving on screen is the confirmation; a toast saying 'asked successfully' would be noise over the actual result. anomaly-queue-panel.tsx's review.mutate() is a real write, and its receipt is the reviewed row leaving the queue.",
+  },
+  {
+    route: "inventory/forecasting",
+    reason:
+      "replenishment-simulator-sheet.tsx:110 simulate.mutate() requests a projection and nothing is persisted. The simulated numbers replacing the form are the success state.",
+  },
+  {
+    route: "inventory/cycle-counts/[countId]",
+    reason:
+      "Five lifecycle transitions (start, review, post, cancel, update lines). cycle-count-detail-client.tsx:58 passes status={count?.status} to the shell, so the badge and the available actions both change on success — a toast would restate what the screen already shows.",
+  },
+  {
+    route: "inventory/physical-audits/[auditId]",
+    reason:
+      "The same shape as the cycle count above; physical-audit-detail-client.tsx:58 passes status={audit?.status} through to the shell.",
+  },
+  {
+    route: "inventory/lots/[lotId]",
+    reason:
+      "One transition, ACTIVE <-> BLOCKED. lot-detail-client.tsx:112 renders badge={LOT_STATUS_LABEL[lot.status]} and :123 swaps the action label with it, so the control the operator just used changes under their finger.",
+  },
+];
+
+/**
+ * MOBILE — and what this is not.
+ *
+ * jsdom has no layout. "It fits at 375px" is not a sentence any assertion in
+ * this repository can truthfully say, and a green tick would make it convincing
+ * while it stayed untrue. `rf-surface-render.test.tsx` states the same refusal in
+ * its own header, and the device run is issue #45, blocked on a credential.
+ *
+ * What *is* checkable in source is the narrower thing that actually breaks a
+ * handheld: a class that pins content wider than the screen, which is a
+ * horizontal scroll under another name. `max-w-[Npx]` is a cap and not a floor,
+ * so it is excluded; a breakpoint prefix means the width only applies above that
+ * breakpoint, so `sm:w-[480px]` is excluded too. What is left — an unprefixed
+ * `w-[Npx]` or `min-w-[Npx]` wider than the device — is the real thing.
+ *
+ * Not covered, stated plainly so nobody reads a pass as more than it is: tap
+ * target sizes, overlap, reflow, text scaling, whether a table degrades to cards,
+ * anything measured in pixels at runtime, and every width expressed in a way this
+ * regex does not see (a style attribute, a CSS file, a rem value, a grid template).
+ */
+const DEVICE_WIDTH = 375;
+const PINNED_WIDTH = /(?<![a-z-])(sm:|md:|lg:|xl:|2xl:)?(?:min-)?w-\[(\d+)px\]/g;
+const HORIZONTAL_SCROLL = /overflow-x-(?:auto|scroll)/;
+
+/**
+ * Files allowed to pin something wider than the device.
+ *
+ * Three, all the same shape: an evidence table inside an explicit
+ * `overflow-x-auto` region on a desktop analyst surface. That is a horizontal
+ * scroll on a phone and the reason says so — it is an accepted compromise, not
+ * a claim that it is fine. It is not accepted anywhere near RF, which is why
+ * `rf-surface.test.ts` bans `overflow-x-auto` outright on that surface.
+ *
+ * The exemption is *verified*, not granted: the guard below re-reads each file
+ * and fails unless the wide class really does sit inside a horizontal scroll
+ * region, within three lines of it. A proximity check is not DOM ancestry and
+ * does not pretend to be — but it is the difference between an exemption that
+ * states a fact and one that asserts a hope.
+ */
+const PINNED_WIDTH_EXEMPT_FILES: ReadonlyArray<{ file: string; reason: string }> = [
+  {
+    file: "features/inventory/components/replenishment/transfer-evidence-panel.tsx",
+    reason:
+      "min-w-[560px] on the evidence table at :56, directly inside the overflow-x-auto at :55. Seven columns of transfer evidence a planner reads at a desk; scrolling it sideways on a phone is worse than not shipping it, and better than dropping the columns that justify the recommendation.",
+  },
+  {
+    file: "features/inventory/components/replenishment/po-batch-preview-panel.tsx",
+    reason:
+      "min-w-[520px] at :59 inside the overflow-x-auto at :58. The batch a buyer is about to raise; the same argument.",
+  },
+  {
+    file: "features/inventory/components/replenishment/forecast-drift-evidence-sheet.tsx",
+    reason:
+      "min-w-[420px] at :145 inside the overflow-x-auto at :144. Drift evidence in a sheet, opened from a desktop analyst screen.",
+  },
+];
+
+/**
+ * Reads the string values of one key out of a named array literal in a source file.
+ *
+ * This is how the a11y count ratchet sees the suite next door without importing
+ * it — importing would run it, and a ratchet that has to run the thing it is
+ * ratcheting cannot report on that thing being broken.
+ */
+function namedListValues(source: string, constName: string, key: string): string[] {
+  const start = source.indexOf(`const ${constName}`);
+  if (start === -1) return [];
+  const end = source.indexOf("\n];", start);
+  if (end === -1) return [];
+  return [...source.slice(start, end).matchAll(new RegExp(`${key}:\\s*"([^"]+)"`, "g"))]
+    .map((match) => match[1] ?? "")
+    .filter((value) => value.length > 0);
+}
+
+/**
+ * Strips comments while preserving line numbers, so an offender can be pointed at.
+ *
+ * `code()` below collapses block comments to a single space, which is right for a
+ * substring check and wrong here — the line numbers in a failure message are how
+ * somebody finds the class, and a comment three lines long would shift every
+ * number after it. This blanks a block comment in place instead. Doing it at all
+ * matters: a header that discusses `min-w-[900px]` in prose is exactly the shape
+ * `rf-surface-render.test.tsx` has, and reading prose as code is how a checker
+ * starts reporting documentation.
+ */
+function stripComments(text: string): string {
+  return text
+    .replace(/\/\*[\s\S]*?\*\//g, (block) => block.replace(/[^\n]/g, " "))
+    .replace(/(^|[^:])\/\/[^\n]*/g, "$1");
+}
+
+/** Unprefixed pinned widths past the device, per file, with the line they sit on. */
+function pinnedWidths(file: RouteFile): Array<{ className: string; line: number }> {
+  const found: Array<{ className: string; line: number }> = [];
+  const stripped = stripComments(file.text).split("\n");
+  for (const [index, line] of stripped.entries()) {
+    for (const match of line.matchAll(PINNED_WIDTH)) {
+      if (match[1]) continue;
+      if (Number(match[2]) <= DEVICE_WIDTH) continue;
+      found.push({ className: match[0], line: index + 1 });
+    }
+  }
+  return found;
+}
+
 /** The `(authenticated)` slash-path for a discovered route directory. */
 function routePath(routeDir: string): string {
   return relative(join(FRONTEND_ROOT, "app", "(authenticated)"), routeDir).replace(/\\/g, "/");
@@ -201,7 +407,12 @@ function routeDirs(dir: string, acc: string[] = []): string[] {
  * when they have had one all along — a false positive, which is the failure mode
  * that gets a checker switched off.
  */
-function resolveModule(specifier: string, fromDir: string): string | null {
+interface RouteFile {
+  path: string;
+  text: string;
+}
+
+function resolveModule(specifier: string, fromDir: string): RouteFile | null {
   const base = specifier.startsWith("@/")
     ? join(FRONTEND_ROOT, specifier.slice(2))
     : specifier.startsWith(".")
@@ -209,7 +420,7 @@ function resolveModule(specifier: string, fromDir: string): string | null {
       : null;
   if (base === null) return null;
   for (const candidate of [`${base}.tsx`, `${base}.ts`, join(base, "index.tsx")]) {
-    if (existsSync(candidate)) return readFileSync(candidate, "utf8");
+    if (existsSync(candidate)) return { path: candidate, text: readFileSync(candidate, "utf8") };
   }
   return null;
 }
@@ -226,17 +437,26 @@ function resolveModule(specifier: string, fromDir: string): string | null {
  */
 const MAX_HOPS = 2;
 
-function routeSource(routeDir: string): string {
+/**
+ * The files a route's UI is built from, in walk order.
+ *
+ * T18 split this out of `routeSource` because two of the three states it added
+ * are *file* questions, not text ones: "which file pins a width wider than the
+ * device" and "is that same file a horizontal scroll region" cannot be asked of
+ * a concatenated string, and an exemption that cannot name a file is one nobody
+ * can check.
+ */
+function routeFiles(routeDir: string): RouteFile[] {
   const pagePath = join(routeDir, "page.tsx");
-  let source = readFileSync(pagePath, "utf8");
+  const files: RouteFile[] = [{ path: pagePath, text: readFileSync(pagePath, "utf8") }];
 
-  for (const dir of [routeDir, dirname(pagePath)]) {
-    const loading = join(dir, "loading.tsx");
-    if (existsSync(loading)) source += "\n" + readFileSync(loading, "utf8");
-  }
+  const loading = join(routeDir, "loading.tsx");
+  if (existsSync(loading)) files.push({ path: loading, text: readFileSync(loading, "utf8") });
 
   const seen = new Set<string>();
-  let frontier: Array<{ text: string; dir: string }> = [{ text: source, dir: routeDir }];
+  let frontier: Array<{ text: string; dir: string }> = [
+    { text: files.map((file) => file.text).join("\n"), dir: routeDir },
+  ];
   for (let hop = 0; hop < MAX_HOPS; hop++) {
     const next: Array<{ text: string; dir: string }> = [];
     for (const { text, dir } of frontier) {
@@ -250,15 +470,21 @@ function routeSource(routeDir: string): string {
           : join(dir, specifier);
         if (seen.has(resolvedFrom)) continue;
         seen.add(resolvedFrom);
-        const text2 = resolveModule(specifier, dir);
-        if (text2 === null) continue;
-        source += "\n" + text2;
-        next.push({ text: text2, dir: dirname(resolvedFrom) });
+        const resolved = resolveModule(specifier, dir);
+        if (resolved === null) continue;
+        files.push(resolved);
+        next.push({ text: resolved.text, dir: dirname(resolvedFrom) });
       }
     }
     frontier = next;
   }
-  return source;
+  return files;
+}
+
+function routeSource(routeDir: string): string {
+  return routeFiles(routeDir)
+    .map((file) => file.text)
+    .join("\n");
 }
 
 /**
@@ -286,7 +512,7 @@ function missingStates(source: string): StateName[] {
   );
 }
 
-describe("G8 — inventory routes answer all five states", () => {
+describe("G8 — inventory routes answer the states PRD §12.7 requires", () => {
   const routes = routeDirs(ROUTES_DIR);
 
   it("finds the inventory routes at all, so a broken walk cannot pass silently", () => {
@@ -431,4 +657,155 @@ describe("G8 — inventory routes answer all five states", () => {
 
     expect(offenders).toEqual([]);
   });
+
+  // -------------------------------------------------------------------------
+  // T18 — accessibility, success and mobile.
+  // -------------------------------------------------------------------------
+
+  it("keeps inventory covered by a suite that actually runs axe", () => {
+    // The guard on the guard: a parse that finds nothing reports zero
+    // uncovered surfaces, which reads exactly like full coverage.
+    expect(routes.length).toBeGreaterThan(40);
+    expect(existsSync(A11Y_SUITE)).toBe(true);
+
+    const suite = readFileSync(A11Y_SUITE, "utf8");
+    const covered = namedListValues(suite, "A11Y_COVERED_ROUTES", "route");
+    const shared = namedListValues(suite, "A11Y_COVERED_SHARED", "file");
+
+    expect(covered.length).toBeGreaterThanOrEqual(A11Y_MIN_ROUTE_SURFACES);
+    expect(shared.length).toBeGreaterThanOrEqual(A11Y_MIN_SHARED_SURFACES);
+
+    // A list of surfaces is not coverage, and counting call sites *here* does not
+    // establish it either — the first version of this assertion counted the
+    // helper names in that file's text and passed with every call replaced by
+    // `await Promise.resolve(`, because the declarations and the helper bodies
+    // made up the difference. Counting text is the wrong instrument. So the
+    // suite counts its own axe runs at runtime and enforces two per named
+    // surface in `afterAll`; what is checked from out here is that the guard is
+    // still present, because a runtime floor somebody deleted enforces nothing.
+    expect(suite).toContain("axeRunCount");
+    expect(suite).toContain("afterAll(");
+    expect(suite).toMatch(/expect\(axeRunCount\)\.toBeGreaterThanOrEqual\(promised\)/);
+
+    // And it must be the repository's own axe, not a second configuration that
+    // could quietly disable a rule for inventory alone.
+    expect(suite).toContain('from "@/test-utils/axe"');
+  });
+
+  it("keeps the a11y coverage list pointing at routes and files that still exist", () => {
+    // The same argument as the loading exemptions: an entry naming a deleted or
+    // renamed surface silences nothing today and the wrong thing tomorrow, and
+    // here it also inflates the count that the floor above is measuring.
+    const suite = readFileSync(A11Y_SUITE, "utf8");
+
+    // `existsSync` on the route's own page rather than membership in `routes`:
+    // `routeDirs` walks *below* the inventory root and so never yields
+    // "inventory" itself, and the module landing page is the highest-traffic
+    // surface the a11y suite covers. Asking the filesystem is also the more
+    // direct question — a route is live when it has a page.
+    const staleRoutes = namedListValues(suite, "A11Y_COVERED_ROUTES", "route").filter(
+      (route) =>
+        !existsSync(join(FRONTEND_ROOT, "app", "(authenticated)", route, "page.tsx")),
+    );
+    const staleFiles = namedListValues(suite, "A11Y_COVERED_SHARED", "file").filter(
+      (file) => !existsSync(join(FRONTEND_ROOT, file)),
+    );
+
+    expect({ staleRoutes, staleFiles }).toEqual({ staleRoutes: [], staleFiles: [] });
+  });
+
+  it("tells the reader a write landed on every route that writes", () => {
+    // The guard on the guard. A walk that finds no writing routes reports no
+    // silent writes, which is indistinguishable from every write being confirmed.
+    const exempt = new Set(SUCCESS_EXEMPT_ROUTES.map(({ route }) => route));
+    const offenders: string[] = [];
+    let writingRoutes = 0;
+
+    for (const routeDir of routes) {
+      const rel = routePath(routeDir);
+      if (IN_FLIGHT_ELSEWHERE.has(rel)) continue;
+      const source = code(routeSource(routeDir));
+      if (!WRITE_MARKERS.some((marker) => source.includes(marker))) continue;
+      writingRoutes++;
+      if (exempt.has(rel)) continue;
+      if (!SUCCESS_MARKERS.some((marker) => source.includes(marker))) offenders.push(rel);
+    }
+
+    expect(writingRoutes).toBeGreaterThan(40);
+    expect(offenders).toEqual([]);
+  });
+
+  it("keeps the success exemptions pointing at routes that still write", () => {
+    // Two ways an exemption here goes stale, and both matter: the route is gone,
+    // or the route stopped writing. The second is the one that would otherwise
+    // sit here forever, excusing a screen that no longer needs excusing.
+    const known = new Set(routes.map(routePath));
+    const byPath = new Map(routes.map((routeDir) => [routePath(routeDir), routeDir]));
+
+    const stale = SUCCESS_EXEMPT_ROUTES.filter(({ route }) => {
+      if (!known.has(route)) return true;
+      const routeDir = byPath.get(route);
+      if (routeDir === undefined) return true;
+      return !WRITE_MARKERS.some((marker) => code(routeSource(routeDir)).includes(marker));
+    }).map(({ route }) => route);
+
+    expect(stale).toEqual([]);
+    // A reason is the whole mechanism here — the list is only as good as the
+    // argument each line carries, and a stub reason is an unexplained exemption
+    // wearing the shape of an explained one.
+    for (const { reason } of SUCCESS_EXEMPT_ROUTES)
+      expect(reason.length).toBeGreaterThan(80);
+  });
+
+  it("never pins an inventory route wider than the device it has to fit", () => {
+    // NOT a claim that anything fits: jsdom has no layout and this reads source.
+    // See PINNED_WIDTH above for exactly what is and is not covered.
+    expect(routes.length).toBeGreaterThan(40);
+
+    const exempt = new Set(PINNED_WIDTH_EXEMPT_FILES.map(({ file }) => file));
+    const offenders = new Set<string>();
+
+    for (const routeDir of routes) {
+      for (const file of routeFiles(routeDir)) {
+        const rel = relative(FRONTEND_ROOT, file.path).replace(/\\/g, "/");
+        if (exempt.has(rel)) continue;
+        for (const { className, line } of pinnedWidths(file))
+          offenders.add(`${rel}:${line} — ${className} (device is ${DEVICE_WIDTH}px)`);
+      }
+    }
+
+    expect([...offenders].sort()).toEqual([]);
+  });
+
+  it("earns each pinned-width exemption instead of granting it", () => {
+    // An exemption that only says "this is fine" is a rubber stamp. Each of
+    // these claims a specific arrangement — a wide table directly inside a
+    // horizontal scroll region — so the claim is re-read from the file and
+    // checked. A file that stops being a scroll region, or stops being wide,
+    // fails here rather than keeping a licence it no longer needs.
+    const unearned: string[] = [];
+
+    for (const { file, reason } of PINNED_WIDTH_EXEMPT_FILES) {
+      const path = join(FRONTEND_ROOT, file);
+      if (!existsSync(path)) {
+        unearned.push(`${file} — the file no longer exists`);
+        continue;
+      }
+      const lines = stripComments(readFileSync(path, "utf8")).split("\n");
+      const wide = pinnedWidths({ path, text: readFileSync(path, "utf8") });
+      if (wide.length === 0) {
+        unearned.push(`${file} — no longer pins anything past ${DEVICE_WIDTH}px, so the exemption is stale`);
+        continue;
+      }
+      for (const { className, line } of wide) {
+        const window = lines.slice(Math.max(0, line - 4), line).join("\n");
+        if (!HORIZONTAL_SCROLL.test(window))
+          unearned.push(`${file}:${line} — ${className} is not inside a horizontal scroll region`);
+      }
+      if (reason.length < 60) unearned.push(`${file} — the reason is a stub`);
+    }
+
+    expect(unearned).toEqual([]);
+  });
+
 });
