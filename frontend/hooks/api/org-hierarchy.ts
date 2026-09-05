@@ -404,9 +404,6 @@ export function useCreateOrgHoliday(
       void qc.invalidateQueries({ queryKey: platformCoreQueryKeys.organization.holidays });
       options?.onSuccess?.(data, variables, context, mutFnCtx);
     },
-    onError: (error, variables, context, mutFnCtx) => {
-      options?.onError?.(error, variables, context, mutFnCtx);
-    },
   });
 }
 
@@ -421,9 +418,6 @@ export function useDeleteOrgHoliday(
     onSuccess: (data, variables, context, mutFnCtx) => {
       void qc.invalidateQueries({ queryKey: platformCoreQueryKeys.organization.holidays });
       options?.onSuccess?.(data, variables, context, mutFnCtx);
-    },
-    onError: (error, variables, context, mutFnCtx) => {
-      options?.onError?.(error, variables, context, mutFnCtx);
     },
   });
 }

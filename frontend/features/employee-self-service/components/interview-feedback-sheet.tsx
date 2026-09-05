@@ -49,6 +49,11 @@ export function FeedbackSheet({
   const [notes, setNotes] = useState("");
   const submit = useSubmitAssignedInterviewScorecard(interview?.id ?? 0);
 
+  const handleRecommendationChange = useCallback((value: string) => {
+    if (value === "HIRE" || value === "NO_HIRE" || value === "MAYBE")
+      setRecommendation(value);
+  }, []);
+
   const handleSubmit = useCallback(async () => {
     if (!interview) return;
     try {
@@ -98,7 +103,7 @@ export function FeedbackSheet({
             <Label>Recommendation</Label>
             <Select
               value={recommendation}
-              onValueChange={(value) => { if (value === "HIRE" || value === "NO_HIRE" || value === "MAYBE") setRecommendation(value); }}
+              onValueChange={handleRecommendationChange}
             >
               <SelectTrigger aria-label="Recommendation">
                 <SelectValue placeholder="Select a recommendation" />
