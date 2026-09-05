@@ -868,22 +868,85 @@ specs. That spec is not evidence for anything below.
 
 #### And none of it runs in CI
 
+> **Re-recorded 2026-09-05 (T20). Two of the three causes are fixed; the third is a billing
+> block on the GitHub account and no commit can clear it.** The paragraph below is kept
+> because its *conclusion* still holds — no inventory ratchet has yet executed in CI — but its
+> diagnosis was incomplete, and "no run has been triggered" turned out to have a mechanism
+> nobody had named.
+
 Verified rather than assumed, because "we have a ratchet" and "a ratchet runs" are different claims.
 
 Both jest configs would in fact reach these ratchets: the backend's root config takes
 `roots: [src]` with `testRegex .*\.spec\.ts$`, and the frontend's `next/jest` default picks up
 `*.test.ts` anywhere. Both `pnpm test` invocations sit in a workflow. The failure is upstream of that.
 
-- `gh run list --branch feat/inventory-world-class-implementation` — the **last run on either
-  repo's branch is 2026-09-01**. Backend head is now `333e45e12`, a dozen or so commits later. Every
-  ratchet this programme added post-dates the last CI run, so **none has ever executed in CI**.
-- `gh pr checks 16 --repo Startupppp/streamlineos-backend` → `no checks reported`.
-  `gh pr checks 32 --repo Startupppp/streamlineos-frontend` → one check, Vercel, failing on a
-  plan restriction.
-- In the last run that did happen (backend `33489746534`, head `1dc1c85a7`), the `verify` job
-  **failed at `Lint` and never reached `Test`** — so even then no ratchet ran. `tenant-isolation`
-  and `live-evals` were `skipped` (schedule/dispatch only). Only `golden-path` succeeded, and its
-  pattern selects three specs of 52.
+**Cause 1 — nothing triggered. FIXED (backend `bd7a6482b`, frontend `973068de2`).**
+`on.push.branches` was `[main]` in both repos, so a push to a feature branch matched no `push`
+trigger and the only route left was `pull_request`. GitHub raises that event from the pull
+request's **merge** commit, and it stops raising it once the PR conflicts with its base. The
+correlation is exact, in both repositories independently:
+
+| Repo | `refs/pull/N/merge` last written | Last `pull_request` run started | Gap |
+|---|---|---|---|
+| backend #16 | 2026-09-01T08:57:59Z | 2026-09-01T08:58:01Z | 2 s |
+| frontend #32 | 2026-09-01T08:47:02Z | 2026-09-01T08:47:05Z | 3 s |
+
+Both PRs are now `mergeable: CONFLICTING`, `mergeStateStatus: DIRTY`, and both merge refs have
+been frozen since that morning. So the trigger did not degrade — it stopped, in the same second
+the merge ref stopped being computed, and stayed stopped through a dozen pushes. Directly
+verified rather than inferred: pushing backend `ac817d505` at 2026-09-05T08:52Z produced
+`total_count: 0` workflow runs, while a push to `main` four minutes earlier produced three.
+`push` now also matches `feat/**`, which does not depend on a PR being mergeable. It works:
+runs `33956979744` and `33957379017` exist on this branch, event `push` — **the first workflow
+runs on it since 2026-09-01.**
+
+Recorded, because it changes how every future branch should be read: **a merge conflict with
+`main` silently switches CI off for a whole branch.** Nothing reports it. `gh pr checks` says
+"no checks reported", which reads like a configuration gap rather than a disabled gate.
+
+**Cause 2 — `Lint` hid `Test` and thirty gates. FIXED (backend `bd7a6482b`, `88d55cdd5`;
+frontend `973068de2`).** `verify` ran Typecheck, **Lint**, **Test**, Build and thirty `check:*`
+gates as one sequential job. In run `33489746534`, Lint failed at step 7 and steps **8–37**
+— Test and every gate — reported `skipped`. The frontend was worse: `Run Tests` sat below
+`Lint` in its single job, so the suite reported `-` on every run it was ever part of. Lint is
+red with **244 backend / 48 frontend** errors inherited from `main` and explicitly out of this
+programme's scope; the point is that a stranger's lint error switched off every inventory
+ratchet. GitHub's own job graph is the proof the shape changed:
+
+| Run | Jobs |
+|---|---|
+| `33489746534` (old) | `golden-path`, `verify`, `tenant-isolation`, `live-evals` — Test was step 8 **inside** `verify`, and `skipped` |
+| `33956979744` (new) | `Lint`, `Test`, `Inventory ratchets`, `verify`, `golden-path`, `tenant-isolation`, `live-evals` — five peers, no `needs:`, all attempted in the same second, **none skipped** |
+
+Both repos also gained a job that runs the inventory ratchets **by name** — five backend
+(`inventory-reachability`, `inventory-schema-reachability`, `available-formula`,
+`idempotent-guard-placement`, `cold-build-integrity`; T16 has since added two more) and six
+frontend (`rf-surface`, `inventory-route-states`, `inventory-a11y`,
+`sidebar-nav-inventory-reachability`, `available-formula`, `inventory-keys`) — with `--ci` and
+no `--passWithNoTests`, so a pattern matching nothing exits 1, plus a step asserting each spec
+file exists so a rename fails loudly instead of vanishing. The shape itself is now ratcheted:
+`src/scripts/ci-job-independence.spec.ts` fails if Test moves back into `verify`, if a `needs:`
+reintroduces the dependency, if the push trigger reverts to `[main]`, if a named ratchet is
+dropped, if `--passWithNoTests` appears, or if a ratchet is added without its existence check
+(seven bite proofs, `EXIT=1` each).
+
+**Cause 3 — GitHub Actions billing. NOT FIXED, and not fixable from a repository.**
+Since roughly 2026-09-05T08:00Z every job in **both** repos, on **`main` as well as this
+branch**, fails 2–3 seconds after it is created with `steps: []` and this annotation:
+
+> The job was not started because recent account payments have failed or your spending limit
+> needs to be increased. Please check the 'Billing & plans' section in your settings
+
+Bounded by measurement: the scheduled `Database gates` run at 07:56:53Z executed for 1m4s; every
+run from 08:48Z onward has `steps: 0`. Actions itself is enabled (`{"enabled": true}` in both
+repos) and `main` built normally as recently as 2026-09-04, so this is neither a disabled-Actions
+nor a workflow problem. **It requires the account owner to clear the payment failure or raise the
+spending limit. Until that happens no job in either repository can start, so the two acceptance
+criteria that require a run — inventory ratchets visible by name in a log, and a run where lint
+is red and tests still report — cannot be produced, by this or any commit.** What is proven is
+structural, from GitHub's job graph rather than from logs: the jobs exist, they are peers, and
+none is skipped.
+
 
 ## 13. Current implementation context
 
