@@ -56,6 +56,7 @@ export function TruncatedText({
   const [truncated, setTruncated] = React.useState(false);
   const [open, setOpen] = React.useState(false);
   const observerRef = React.useRef<ResizeObserver | null>(null);
+  const rafRef = React.useRef<number>(0);
 
   const measure = React.useCallback(
     (node: HTMLSpanElement) => {
@@ -71,10 +72,14 @@ export function TruncatedText({
   const setNode = React.useCallback(
     (node: HTMLSpanElement | null) => {
       observerRef.current?.disconnect();
+      cancelAnimationFrame(rafRef.current);
       observerRef.current = null;
       if (!node) return;
       measure(node);
-      const observer = new ResizeObserver(() => measure(node));
+      const observer = new ResizeObserver(() => {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = requestAnimationFrame(() => measure(node));
+      });
       observer.observe(node);
       observerRef.current = observer;
     },
