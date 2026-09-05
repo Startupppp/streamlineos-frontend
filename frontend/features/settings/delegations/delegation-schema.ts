@@ -1,32 +1,5 @@
 import { z } from "zod";
 
-export interface Delegation {
-  id: string;
-  orgId: string;
-  delegatorId: string;
-  delegateeId: string;
-  delegatorName?: string | null;
-  delegateeName?: string | null;
-  permissions: string[];
-  startsAt: string;
-  endsAt: string;
-  reason: string | null;
-  status: string;
-  lifecycle: "ACTIVE" | "SCHEDULED" | "EXPIRED" | "REVOKED";
-  createdAt: string;
-  revokedAt: string | null;
-  revokedBy: string | null;
-}
-
-export interface DelegationPage {
-  data: Delegation[];
-  pagination: {
-    limit: number;
-    nextCursor: string | null;
-    hasMore: boolean;
-  };
-}
-
 export const MAX_DELEGATION_DAYS = 90;
 const MAX_DELEGATION_MS = MAX_DELEGATION_DAYS * 24 * 60 * 60 * 1000;
 

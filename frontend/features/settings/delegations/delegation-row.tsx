@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import type { Delegation } from "./delegation-schema";
+import type { Delegation } from "@/hooks/api/delegations";
 
 export function DelegationSkeletons({ count }: { count: number }) {
   return (

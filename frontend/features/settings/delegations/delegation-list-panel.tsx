@@ -7,7 +7,7 @@ import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { DELEGATION_PAGE_SIZE_OPTIONS } from "./delegation-list-state";
 import { DelegationSkeletons, DelegationRow } from "./delegation-row";
-import type { Delegation } from "./delegation-schema";
+import type { Delegation } from "@/hooks/api/delegations";
 
 export interface DelegationListPanelProps {
   isLoading: boolean;
