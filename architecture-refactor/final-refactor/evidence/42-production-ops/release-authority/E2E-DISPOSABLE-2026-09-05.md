@@ -218,12 +218,12 @@ Artifact: `.artifacts/bola-live-cross-tenant-rerun.json`, `generatedAt 2026-09-0
 Same source/prober orgs, same database, after `seed-perf-scratch.mjs` filled 416 tables across
 four tenants.
 
-| Metric | First sweep | Re-run |
+| Metric | First sweep | Re-run (final artifact state) |
 |---|---|---|
-| Outcomes | 176 | **628** |
-| Scored (outcomes − UNPROBEABLE) | 128 | **399** |
+| Outcomes | 176 | **653** |
+| Scored (outcomes − UNPROBEABLE) | 128 | **415** |
 | `MIN_SCORED` floor | 200 — **not met** | 200 — **met** |
-| PASS | 122 | 387 |
+| PASS | 122 | 403 |
 | NO-404 | 6 | 12 |
 | Unpinned NO-404 | 0 | **0** |
 | Cross-tenant disclosures | 0 | **0** |
@@ -237,11 +237,24 @@ both excluded by C157. This confirms the earlier diagnosis: the first sweep's fa
 fixture-coverage artifact of seeding only two organisations, not a security result.
 
 **Status: the security question is answered — no route disclosed another organisation's data
-across 399 scored probes — but the suite did not print a verdict.** The lane was stopped at
-01:32 while the sweep was still running, so Jest never reached its assertions and there is no
-exit code to record. Both assertions are satisfied by the artifact's own contents, and that is
-the honest limit of this evidence: a killed run is not a passing run. C018 needs one clean
-completion of this spec against the four-tenant dataset to be ticked.
+across 415 scored probes — but the suite never printed a verdict.** Three runs were attempted;
+none completed:
+
+| Attempt | Artifact | Outcome |
+|---|---|---|
+| 1 (two-tenant seed) | `bola-live-cross-tenant.json` | exit 1 — scored 128 < floor 200 |
+| 2 (four-tenant seed) | `bola-live-cross-tenant-rerun.json` | stopped 01:36, floor met, no verdict |
+| 3 (clean, for an exit code) | none written | stopped 01:41, ~2 min after boot |
+
+Attempts 2 and 3 were stopped externally, not by the harness and not by a failure. Both
+assertions are satisfied by attempt 2's artifact contents, and that is the honest limit of this
+evidence: **a killed run is not a passing run.**
+
+**C018 remains NOT ticked.** It needs exactly one uninterrupted completion of this spec against
+the four-tenant dataset. Everything else the criterion asks for is in place: the database is
+disposable and at head (695/695 after the AR-02 journal repair), the fixtures are
+production-shaped across four tenants, all 15 named domains are covered, and the module suite
+passed 27/27 with 0 failures. The one remaining artifact is an exit code.
 
 What it proves: that every object-addressable route answers 404 (never 403) when handed
 another organization's id — the distinction between a tenant-bound response and an existence
