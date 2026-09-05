@@ -2,6 +2,7 @@
 
 import { useMemo, useCallback, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import dynamic from "next/dynamic";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -22,7 +23,10 @@ import { cn } from "@/lib/utils";
 import { isPast, isToday, parseISO } from "date-fns";
 import { MY_WORK_VIEWS, parseMyWorkView } from "./my-work-view";
 import { MyWorkViewBody } from "./my-work-view-body-lazy";
-import { GroupingSidebar } from "./grouping-sidebar";
+const GroupingSidebar = dynamic(
+  () => import("./grouping-sidebar").then((m) => ({ default: m.GroupingSidebar })),
+  { ssr: false, loading: () => null },
+);
 import { mapAllWorkTicketToKanban, buildTicketMetaMap } from "./map-all-work-ticket";
 import { BucketSection, AllWorkListSkeleton, BUCKET_ORDER } from "./my-work-rows";
 import type { DueBucket } from "./my-work-rows";
@@ -130,6 +134,7 @@ export function MyWorkPage({ pmWorkspaceId }: MyWorkPageProps) {
   const activeView = parseMyWorkView(rawView);
 
   const [showGroupingSidebar, setShowGroupingSidebar] = useState(false);
+  const [groupingMounted, setGroupingMounted] = useState(false);
   const [displayOptions, setDisplayOptions] = useDisplayOptions(DISPLAY_STORAGE_ID);
 
   const extraFilters = useMemo(
@@ -290,6 +295,7 @@ export function MyWorkPage({ pmWorkspaceId }: MyWorkPageProps) {
   );
 
   function handleToggleSidebar() {
+    setGroupingMounted(true);
     setShowGroupingSidebar((prev) => !prev);
   }
 
@@ -459,12 +465,14 @@ export function MyWorkPage({ pmWorkspaceId }: MyWorkPageProps) {
                 )}
               </div>
 
-              <GroupingSidebar
-                open={showGroupingSidebar}
-                onOpenChange={setShowGroupingSidebar}
-                tickets={activeData?.data}
-                isLoading={isLoading}
-              />
+              {groupingMounted ? (
+                <GroupingSidebar
+                  open={showGroupingSidebar}
+                  onOpenChange={setShowGroupingSidebar}
+                  tickets={activeData?.data}
+                  isLoading={isLoading}
+                />
+              ) : null}
             </div>
           </PmSection>
         </PmPageShell>

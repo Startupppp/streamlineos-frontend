@@ -9,7 +9,12 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import { DatePicker } from "@/components/ui/date-picker";
+import dynamic from "next/dynamic";
+
+const DatePicker = dynamic(
+  () => import("@/components/ui/date-picker").then((m) => ({ default: m.DatePicker })),
+  { ssr: false, loading: () => null },
+);
 import { Check, CalendarRange } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getUserDisplayName } from "@/lib/person-display";

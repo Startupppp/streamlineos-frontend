@@ -2,7 +2,12 @@
 
 import { type ChangeEvent, type KeyboardEvent, type ReactNode, type RefObject } from "react";
 import { Check, Search, CalendarRange } from "lucide-react";
-import { DatePicker } from "@/components/ui/date-picker";
+import dynamic from "next/dynamic";
+
+const DatePicker = dynamic(
+  () => import("@/components/ui/date-picker").then((m) => ({ default: m.DatePicker })),
+  { ssr: false, loading: () => null },
+);
 import { cn } from "@/lib/utils";
 import { StatusConfigDot } from "@/components/ui/status-config-dot";
 import { getStatusEntry, type StatusConfigEntry } from "@/lib/status-config";
