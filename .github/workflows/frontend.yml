@@ -1,9 +1,21 @@
 name: Frontend CI/CD
 
+# 2026-09-05 (ticket 20) — WHY `feat/**` IS HERE.
+#
+# `push` was `[main]` only, so a feature branch's sole trigger was `pull_request`,
+# which GitHub raises from the PR's MERGE commit and stops raising once the PR
+# conflicts with its base. `refs/pull/32/merge` was last written
+# 2026-09-01T08:47:02Z and the last `pull_request` run on this branch started
+# 2026-09-01T08:47:05Z — three seconds later, then nothing, through every push
+# since. Same mechanism, same day, independently, in the backend repo.
+#
+# So none of the inventory ratchets had ever executed in CI. A gate a merge
+# conflict can switch off is not a gate.
 on:
   push:
     branches:
       - main
+      - "feat/**"
     paths:
       - frontend/**
       - .github/workflows/frontend.yml
@@ -74,8 +86,101 @@ jobs:
       - name: Web Vitals budgets are enforceable
         run: pnpm run check:web-vitals-budget:self-test
 
+      # `Run Tests` used to sit here, below `Lint`. Lint is red with debt inherited
+      # from main, so the suite reported `-` on every run it was ever part of. It
+      # is the `tests` job below now, with no `needs:`.
+      - name: Build
+        run: pnpm run build
+
+  # No `needs:` — that is the point. Unfiltered on purpose: a `--testPathPattern`
+  # run reports green while every suite outside the filter is red.
+  tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
       - name: Run Tests
         run: pnpm test --runInBand
 
-      - name: Build
-        run: pnpm run build
+  # The six frontend inventory ratchets, BY NAME. `tests` above runs them too,
+  # but only as part of one shared verdict for the whole suite; named here they
+  # are readable in the log and cannot be silenced by an unrelated red suite.
+  # `--ci` with no `--passWithNoTests`, so a pattern that matches nothing exits 1.
+  inventory-ratchets:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Ratchet - rf-surface
+        run: pnpm exec jest --ci --testPathPattern=rf-surface
+
+      - name: Ratchet - inventory-route-states
+        run: pnpm exec jest --ci --testPathPattern=inventory-route-states
+
+      - name: Ratchet - inventory-a11y
+        run: pnpm exec jest --ci --testPathPattern=inventory-a11y
+
+      - name: Ratchet - sidebar-nav-inventory-reachability
+        run: pnpm exec jest --ci --testPathPattern=sidebar-nav-inventory-reachability
+
+      - name: Ratchet - available-formula
+        run: pnpm exec jest --ci --testPathPattern=available-formula
+
+      - name: Ratchet - inventory-keys
+        run: pnpm exec jest --ci --testPathPattern=inventory-keys
+
+      # Anti-vacuity: a renamed ratchet must fail loudly rather than stop existing.
+      - name: The six ratchets exist
+        run: |
+          set -euo pipefail
+          missing=0
+          for f in \
+            "app/(authenticated)/inventory/rf/rf-surface.test.ts" \
+            "app/(authenticated)/inventory/inventory-route-states.test.ts" \
+            "app/(authenticated)/inventory/inventory-a11y.test.tsx" \
+            "components/layout/sidebar/sidebar-nav-inventory-reachability.test.ts" \
+            "hooks/api/inventory/available-formula.test.ts" \
+            "lib/query-keys/inventory-keys.test.ts" ; do
+            if [ ! -f "$f" ]; then echo "MISSING RATCHET: $f"; missing=1; fi
+          done
+          exit $missing
