@@ -143,7 +143,10 @@
       "maxThirdPartyBytes": 102400,
       "measuredFirstLoadJsBytes": 303639,
       "measuredPageChunkBytes": 27914,
-      "lazyLoadedModules": [],
+      "lazyLoadedModules": [
+        "ticket-detail-with-ably",
+        "create-ticket-dialog"
+      ],
       "note": "Support ticket inbox.",
       "measuredCssBytes": 58587,
       "measuredImageBytes": 6976,
@@ -219,7 +222,18 @@
       "measuredPostLoadTotalBytes": 328835
     },
     "/calendar": {
-      "lazyLoadedModules": [],
+      "lazyLoadedModules": [
+        "big-calendar-wrapper",
+        "calendar-events-panel",
+        "event-create-dialog",
+        "create-ticket-from-calendar-dialog",
+        "event-detail-sheet",
+        "external-event-detail-sheet",
+        "hr-event-detail-sheet",
+        "calendar-accounts-sheet",
+        "meeting-follow-up-panel",
+        "meeting-prep-panel"
+      ],
       "note": "Unified calendar — one route serves every module's event sources. Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
       "measuredFirstLoadJsBytes": 332642,
       "measuredPageChunkBytes": 61418,
@@ -235,7 +249,10 @@
       "measuredPostLoadTotalBytes": 345138
     },
     "/notifications": {
-      "lazyLoadedModules": [],
+      "lazyLoadedModules": [
+        "notification-detail-drawer",
+        "notification-bell-panel"
+      ],
       "note": "Notification centre. Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
       "measuredFirstLoadJsBytes": 303473,
       "measuredPageChunkBytes": 31892,
@@ -251,7 +268,12 @@
       "measuredPostLoadTotalBytes": 358178
     },
     "/settings": {
-      "lazyLoadedModules": [],
+      "lazyLoadedModules": [
+        "settings-security",
+        "mfa-settings",
+        "avatar-crop-dialog",
+        "settings-edit-name-form"
+      ],
       "note": "Global administration landing. Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
       "measuredFirstLoadJsBytes": 278127,
       "measuredPageChunkBytes": 6546,
@@ -267,7 +289,10 @@
       "measuredPostLoadTotalBytes": 341453
     },
     "/build/my-work": {
-      "lazyLoadedModules": [],
+      "lazyLoadedModules": [
+        "my-work-view-body",
+        "grouping-sidebar"
+      ],
       "note": "Build my-work — one of the heaviest first-load routes in the build (3.02 MB uncompressed). Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
       "measuredFirstLoadJsBytes": 352529,
       "measuredPageChunkBytes": 81305,
@@ -300,7 +325,12 @@
       "measuredPostLoadTotalBytes": 297775
     },
     "/parties": {
-      "lazyLoadedModules": [],
+      "lazyLoadedModules": [
+        "record-list",
+        "party-form-dialog",
+        "party-detail-sheet",
+        "party-delete-dialog"
+      ],
       "note": "Business parties (CRM contacts, customers, vendors) — the route lives at /parties, not /crm/parties. Added by ticket 26's second pass to widen coverage from 12 routes to 13; it inherits every default ceiling rather than being handed one shaped around its current size.",
       "measuredScriptBytes": 578395,
       "measuredTotalBytes": 727563,

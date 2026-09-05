@@ -28,5 +28,6 @@
 
 ## Completion evidence
 
+- PRD-C085 remains open because its p50/p95/p99 release figures require a fresh production-shaped capture at the final release commit. The budget contracts and measurement gates exist, but stored measurements from an earlier commit are not valid completion evidence; do not close this criterion from a local mock or verifier replay.
 - Record applicable frontend/root and backend commit SHAs, commands, pass/fail/skip counts, and artifact locations.
 - Update the source PRD checkbox states and the traceability manifest in the same completion commit.

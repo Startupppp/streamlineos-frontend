@@ -4,7 +4,7 @@
 
 **Blocked by:** 02–30 — all immediate implementation tickets
 
-**Status:** ready-for-agent
+**Status:** blocked on PRD-C018/C156/C158. PRD-C161 is owner-dispositioned and synchronized with the source PRD; it is not measured deployment evidence.
 
 **Source:** `architecture-refactor/PRD-10-10-CODE-RELEASE-TODO.md`
 
@@ -23,7 +23,8 @@
 - [ ] **PRD-C158** — Backend/frontend builds, typechecks, focused tests, disposable E2E and architecture gates pass at one commit.
 - [x] **PRD-C159** — Two empty bootstraps and an interrupted-then-resumed bootstrap produce the same expected database catalog from the new authorized baseline; no legacy watermark upgrade claim is required.
 - [x] **PRD-C160** — No unresolved code-level P0/P1 finding remains.
-- [ ] **PRD-C161** — Release authority records commit, evidence, accepted code-level residual risks and date.
+- [x] **PRD-C161** — Release authority records commit, evidence, accepted code-level residual risks and date.
+  Closed by owner disposition, not measurement. Record: `architecture-refactor/final-refactor/evidence/42-production-ops/release-authority/OWNER-DISPOSITION-2026-09-04.md`.
 
 ## Completion evidence
 

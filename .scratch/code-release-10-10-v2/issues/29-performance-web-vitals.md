@@ -4,7 +4,7 @@
 
 **Blocked by:** 06–23 — product and platform slices; 27 — Cleanup contraction; 28 — File cohesion and named handlers
 
-**Status:** ready-for-agent
+**Status:** active — static contracts reconciled; fresh production-build and production-shaped measurements remain
 
 **Source:** `architecture-refactor/PRD-10-10-CODE-RELEASE-TODO.md`
 
@@ -26,3 +26,19 @@
 
 - Record applicable frontend/root and backend commit SHAs, commands, pass/fail/skip counts, and artifact locations.
 - Update the source PRD checkbox states and the traceability manifest in the same completion commit.
+
+## Current reconciliation — 2026-09-05
+
+- The route bundle contract now names the lazy boundaries already present for Support Inbox, Calendar, Notifications, Settings, Build My Work and Parties. CRM remains excluded from the release verdict.
+- `pnpm run check:route-bundle-budget:self-test` passes. The lightweight contract check is intentionally red: all 13 stored over-the-wire script measurements exceed 524,288 bytes. Those measurements predate later shell/lazy-loading changes, so they are neither silently accepted nor represented as current evidence.
+- C151's lazy-boundary inventory defect is corrected. C006, C139, C149 and C151 remain open until a current production build is captured and its route, byte and Web Vitals gates pass.
+- C140–C143 and C145 remain open until the production-shaped benchmark database and Redis profile are available at the final release SHA. Local source inspection cannot truthfully manufacture latency percentiles, cache-hit measurements or retained query plans.
+- C148 remains open until the fresh baseline and comparison capture exist. A regression comparison without two equivalent captures would be a decorative gate rather than evidence.
+
+### Required final measurement commands
+
+Run these once on a clean release candidate, not once per implementation session:
+
+1. Backend production-shaped read-cost and HTTP capture as the non-owner application role, with Redis enabled, then merge the capture into the benchmark and route-budget contracts.
+2. Frontend production build, route-bundle measurement, authenticated Web Vitals measurement on both reference profiles, and representative browser journeys.
+3. Re-run the strict benchmark, route-budget, bundle-budget and Web Vitals gates at the same recorded frontend/backend SHAs.
