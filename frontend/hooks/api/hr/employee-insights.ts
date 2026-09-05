@@ -161,7 +161,7 @@ export function useFindExpert(params: FindExpertParams) {
     queryFn: ({ signal }) =>
       apiClient.get<ExpertResult[]>(
         "/hr/employees/find-expert",
-        params as unknown as Record<string, string>,
+        params,
         signal,
       ),
     enabled: hrEnabled && canView && params.skill.trim().length > 0,

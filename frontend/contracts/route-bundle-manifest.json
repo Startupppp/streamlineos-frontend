@@ -67,14 +67,14 @@
       "measuredCssBytes": 58718,
       "measuredImageBytes": 3076,
       "measuredFontBytes": 55580,
-      "measuredThirdPartyBytes": 1349,
-      "measuredServerPayloadBytes": 20774,
+      "measuredThirdPartyBytes": 17656,
+      "measuredServerPayloadBytes": 20849,
       "imageBudgetNote": "The shell paints one brand mark (public/logo.svg, 2,872 B over the wire) and a cold-cache load requests it twice, once for the loading screen and once for the header. The previous declaration of 0 asserted the route ships no image at all, which measurement contradicts; 8 kB is the honest ceiling for one brand mark and it still fails if a route starts shipping photography.",
-      "measuredScriptBytes": 508324,
-      "measuredTotalBytes": 650313,
+      "measuredScriptBytes": 803324,
+      "measuredTotalBytes": 984562,
       "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition, and the measuredScriptBytes figure on this route is from the 2026-09-02 capture on build 5KxS0uW9Wrm0BIVYZicTs — it predates the @animateicons fix (see notes.animateIconsFixed2026_09_03) and therefore overstates. On post-fix build 5WVxD_Jbi032lOZ_Z0NdN the shell's largest identifiable library is framer-motion (95,216 B raw / 30,554 B gzip, first load of 601 of 601 routes); @animateicons/react/lucide is now 147,629 B raw / 14,273 B gzip carrying exactly the 90 icons the app imports, down from 481,691 / 55,886 carrying all 248. The still-open share of this breach has no single owner-chunk: /dashboard's largest first-load scripts are a long tail of shared authenticated shell, not one missing lazy boundary.",
-      "measuredPostLoadScriptBytes": 186742,
-      "measuredPostLoadTotalBytes": 218614
+      "measuredPostLoadScriptBytes": 168933,
+      "measuredPostLoadTotalBytes": 181647
     },
     "/inbox": {
       "maxImageBytes": 8192,
@@ -88,14 +88,14 @@
       "measuredCssBytes": 58718,
       "measuredImageBytes": 3076,
       "measuredFontBytes": 55580,
-      "measuredThirdPartyBytes": 2698,
-      "measuredServerPayloadBytes": 20551,
+      "measuredThirdPartyBytes": 5977,
+      "measuredServerPayloadBytes": 20602,
       "imageBudgetNote": "The shell paints one brand mark (public/logo.svg, 2,872 B over the wire) and a cold-cache load requests it twice, once for the loading screen and once for the header. The previous declaration of 0 asserted the route ships no image at all, which measurement contradicts; 8 kB is the honest ceiling for one brand mark and it still fails if a route starts shipping photography.",
       "measuredScriptBytes": 486142,
-      "measuredTotalBytes": 629257,
+      "measuredTotalBytes": 632587,
       "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition, and the measuredScriptBytes figure on this route is from the 2026-09-02 capture on build 5KxS0uW9Wrm0BIVYZicTs — it predates the @animateicons fix (see notes.animateIconsFixed2026_09_03) and therefore overstates. On post-fix build 5WVxD_Jbi032lOZ_Z0NdN the shell's largest identifiable library is framer-motion (95,216 B raw / 30,554 B gzip, first load of 601 of 601 routes); @animateicons/react/lucide is now 147,629 B raw / 14,273 B gzip carrying exactly the 90 icons the app imports, down from 481,691 / 55,886 carrying all 248. The still-open share of this breach has no single owner-chunk: /dashboard's largest first-load scripts are a long tail of shared authenticated shell, not one missing lazy boundary.",
       "measuredPostLoadScriptBytes": 183186,
-      "measuredPostLoadTotalBytes": 205913
+      "measuredPostLoadTotalBytes": 199293
     },
     "/build/inbox": {
       "maxImageBytes": 8192,
@@ -110,14 +110,14 @@
       "measuredCssBytes": 58718,
       "measuredImageBytes": 6488,
       "measuredFontBytes": 55580,
-      "measuredThirdPartyBytes": 0,
-      "measuredServerPayloadBytes": 21159,
+      "measuredThirdPartyBytes": 6100,
+      "measuredServerPayloadBytes": 21129,
       "imageBudgetNote": "The shell paints one brand mark (public/logo.svg, 2,872 B over the wire) and a cold-cache load requests it twice, once for the loading screen and once for the header. The previous declaration of 0 asserted the route ships no image at all, which measurement contradicts; 8 kB is the honest ceiling for one brand mark and it still fails if a route starts shipping photography.",
       "byteCaptureNote": "No cold-cache byte pass in the 2026-09-02 capture: the navigation landed on /signin because the app signs itself out on a refused /me/access, and the driver discards byte totals for a page it did not ask for rather than recording another page's bytes as this route's.",
-      "measuredScriptBytes": 490283,
-      "measuredTotalBytes": 634720,
-      "measuredPostLoadScriptBytes": 186742,
-      "measuredPostLoadTotalBytes": 224181
+      "measuredScriptBytes": 709392,
+      "measuredTotalBytes": 869012,
+      "measuredPostLoadScriptBytes": 0,
+      "measuredPostLoadTotalBytes": 10166
     },
     "/crm/inbox": {
       "maxImageBytes": 8192,
@@ -151,14 +151,14 @@
       "measuredCssBytes": 58718,
       "measuredImageBytes": 6976,
       "measuredFontBytes": 55580,
-      "measuredThirdPartyBytes": 0,
-      "measuredServerPayloadBytes": 24381,
+      "measuredThirdPartyBytes": 4932,
+      "measuredServerPayloadBytes": 24332,
       "imageBudgetNote": "The shell paints one brand mark (public/logo.svg, 2,872 B over the wire) and a cold-cache load requests it twice, once for the loading screen and once for the header. The previous declaration of 0 asserted the route ships no image at all, which measurement contradicts; 8 kB is the honest ceiling for one brand mark and it still fails if a route starts shipping photography.",
-      "measuredScriptBytes": 503697,
-      "measuredTotalBytes": 651844,
+      "measuredScriptBytes": 789124,
+      "measuredTotalBytes": 970150,
       "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition, and the measuredScriptBytes figure on this route is from the 2026-09-02 capture on build 5KxS0uW9Wrm0BIVYZicTs — it predates the @animateicons fix (see notes.animateIconsFixed2026_09_03) and therefore overstates. On post-fix build 5WVxD_Jbi032lOZ_Z0NdN the shell's largest identifiable library is framer-motion (95,216 B raw / 30,554 B gzip, first load of 601 of 601 routes); @animateicons/react/lucide is now 147,629 B raw / 14,273 B gzip carrying exactly the 90 icons the app imports, down from 481,691 / 55,886 carrying all 248. The still-open share of this breach has no single owner-chunk: /dashboard's largest first-load scripts are a long tail of shared authenticated shell, not one missing lazy boundary.",
       "measuredPostLoadScriptBytes": 177352,
-      "measuredPostLoadTotalBytes": 209542
+      "measuredPostLoadTotalBytes": 194501
     },
     "/dashboard": {
       "maxImageBytes": 16384,
@@ -175,15 +175,15 @@
       ],
       "note": "Home dashboard — the shared-chunk baseline every other route's measuredPageChunkBytes is taken against, so its page-only additive is 0 by definition.",
       "measuredCssBytes": 79625,
-      "measuredImageBytes": 3331,
+      "measuredImageBytes": 1502,
       "measuredFontBytes": 0,
-      "measuredThirdPartyBytes": 1176521,
+      "measuredThirdPartyBytes": 82606,
       "measuredServerPayloadBytes": 0,
-      "measuredScriptBytes": 1093565,
-      "measuredTotalBytes": 1176521,
+      "measuredScriptBytes": 1479,
+      "measuredTotalBytes": 82606,
       "breachOwnerNote": "Re-measured 2026-09-03 for ticket 06 on production build 5o4xLkSDla7WoSLqCH9rB (next build exit 0) with `node scripts/measure-route-bundles.mjs`: measuredFirstLoadJsBytes 405507 -> 386063 (-19444 B gzip, -4.8%), 38 -> 36 chunks, after moving PublicDocumentsCard, MyIssuesCard, SprintCard, TeamCard, RecentProjectsCard and RecentActivityCard behind next/dynamic and mounting UploadDocSheet only once it is opened. Every other route moved <=11 B on the same build, so the saving is attributable to that change and not to the rebuild. WHY THE measuredScriptBytes BREACH IS NOT CLOSED, MEASURED RATHER THAN ASSERTED: of /dashboard's 405507 B first-load gzip before the change, only 25619 B (6.3%) sat in chunks no other route references; the remaining 379888 B sit in chunks referenced by 193-461 of the 602 built routes (shared authenticated shell). After the change the dashboard-exclusive share is 14933 B, so the entire remaining addressable surface inside features/dashboard is ~15 kB gzip against an 80705 B measuredScriptBytes overage. All 13 measured routes breach measuredScriptBytes; /dashboard's overage is the 6th smallest. measuredScriptBytes/measuredTotalBytes/measuredPostLoad* on this route were NOT re-measured for ticket 06 (that needs the Chrome-over-CDP harness plus a minted NextAuth cookie) and therefore still carry the sDZBsbi1qW6Z9JlIhCg68 figures, which now overstate this route by roughly the 19444 B removed. NOTE FOR THE NEXT REFRESH: /dashboard is the baseline measuredPageChunkBytes is taken against, so lowering it raises most other routes' page-only figures; re-measured on 5o4xLkSDla7WoSLqCH9rB every route still sits under maxPageChunkBytes (largest /build/my-work 194410 of 204800).",
-      "measuredPostLoadScriptBytes": 915430,
-      "measuredPostLoadTotalBytes": 1073883
+      "measuredPostLoadScriptBytes": 762348,
+      "measuredPostLoadTotalBytes": 915250
     },
     "/chat": {
       "lazyLoadedModules": [
@@ -210,16 +210,16 @@
       "note": "Chat home — realtime surface; the widest client-state route in the shell. Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size. 2026-09-04: measuredFirstLoadJsBytes 436828 -> 347566 and measuredPageChunkBytes 165602 -> 76342 (-89262 B gzip, -53.9% of the page-only figure), measured A/B on two production builds of the same commit.",
       "measuredFirstLoadJsBytes": 348066,
       "measuredPageChunkBytes": 76485,
-      "measuredScriptBytes": 679390,
-      "measuredTotalBytes": 845318,
+      "measuredScriptBytes": 810085,
+      "measuredTotalBytes": 989525,
       "measuredCssBytes": 58718,
       "measuredImageBytes": 10694,
       "measuredFontBytes": 55580,
-      "measuredThirdPartyBytes": 8798,
-      "measuredServerPayloadBytes": 21860,
+      "measuredThirdPartyBytes": 0,
+      "measuredServerPayloadBytes": 21930,
       "breachOwnerNote": "REWRITTEN 2026-09-04. The previous note here was the shared boilerplate carried by eight routes ('shared-shell weight, not this route's own composition'), and on THIS route it was false: /chat's page-only figure was 165602 B gzip, more than double the next heaviest (/build/my-work at 81305), and lazyLoadedModules was recorded as [] while seven files under features/chat already used next/dynamic. Both statements were wrong about the same route.\n\nWHAT WAS FIXED, MEASURED NOT ASSERTED: MessagePanel is now behind next/dynamic. activeChannelId initialises only from `?channel=` and nothing auto-selects a first channel, so a bare /chat landing renders EmptyChatState and never mounts the panel — the entire conversation subtree (panel view, message list, bubbles, composer, their data hooks) was being shipped in the first-load chunk to render a zero-state. ChannelItemMenu (and the add-members dialog it owns) and the hover MessageActions toolbar also moved behind dynamic boundaries; the toolbar's root is `absolute opacity-0 group-hover:opacity-100 pointer-events-none`, so a null fallback costs no layout box and nothing visible. Result: page-only 165602 -> 76342 B gzip, 38 -> 35 chunks, /chat now 4th heaviest page chunk of the 13 rather than 1st. Attribution is an A/B on two builds of the same commit: every other measured route moved <= 3 B and the /dashboard baseline moved 0 B.\n\nWHY measuredScriptBytes IS STILL 897897 AND STILL BREACHES: that field is a cold-cache over-the-wire capture needing the Chrome-over-CDP harness plus a minted NextAuth cookie, which this pass did not run, so it has NOT been re-measured and is deliberately left at its old value rather than being adjusted by hand. It is now known to OVERSTATE this route by roughly the 89262 B removed. Re-run the capture before quoting it.\n\nTHE BREACH IS STRUCTURAL AND NO ROUTE CAN CLEAR IT. /dashboard is the baseline every page-only figure is taken against — its page-only weight is 0 by definition — and it still measures 499576 measuredScriptBytes against the 524288 ceiling. That leaves 24712 B of headroom for ANY route's own code, which is why all 13 measured routes breach this field. The remaining work is in the shared authenticated shell, not here: app/(authenticated)/layout.tsx pulls a 159-file / 649425-source-byte eager subtree, which includes the whole lib/query-keys barrel. That barrel is one object literal spreading 16 per-domain modules, so tree-shaking cannot drop the unused 15 — every consumer gets all of it, and it lands in a single 12913 B gzip chunk referenced by 579 of 601 routes. Splitting it is an app-wide refactor of 350+ call sites and was not attempted here. Do NOT raise maxScriptBytes to make this green.",
       "measuredPostLoadScriptBytes": 194418,
-      "measuredPostLoadTotalBytes": 220537
+      "measuredPostLoadTotalBytes": 230491
     },
     "/calendar": {
       "lazyLoadedModules": [
@@ -238,15 +238,15 @@
       "measuredFirstLoadJsBytes": 332642,
       "measuredPageChunkBytes": 61418,
       "byteCaptureNote": "No cold-cache byte pass in the 2026-09-02 capture: the navigation landed on /signin because the app signs itself out on a refused /me/access, and the driver discards byte totals for a page it did not ask for rather than recording another page's bytes as this route's.",
-      "measuredScriptBytes": 680920,
-      "measuredTotalBytes": 841726,
+      "measuredScriptBytes": 815421,
+      "measuredTotalBytes": 981019,
       "measuredCssBytes": 58718,
       "measuredImageBytes": 3076,
       "measuredFontBytes": 55580,
-      "measuredThirdPartyBytes": 9305,
-      "measuredServerPayloadBytes": 21816,
+      "measuredThirdPartyBytes": 9584,
+      "measuredServerPayloadBytes": 21878,
       "measuredPostLoadScriptBytes": 241063,
-      "measuredPostLoadTotalBytes": 279445
+      "measuredPostLoadTotalBytes": 267074
     },
     "/notifications": {
       "lazyLoadedModules": [
@@ -256,16 +256,16 @@
       "note": "Notification centre. Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
       "measuredFirstLoadJsBytes": 303473,
       "measuredPageChunkBytes": 31892,
-      "measuredScriptBytes": 648724,
-      "measuredTotalBytes": 799410,
+      "measuredScriptBytes": 783225,
+      "measuredTotalBytes": 936700,
       "measuredCssBytes": 58718,
       "measuredImageBytes": 3076,
       "measuredFontBytes": 55580,
-      "measuredThirdPartyBytes": 8903,
-      "measuredServerPayloadBytes": 21917,
+      "measuredThirdPartyBytes": 1419,
+      "measuredServerPayloadBytes": 21999,
       "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition, and the measuredScriptBytes figure on this route is from the 2026-09-02 capture on build 5KxS0uW9Wrm0BIVYZicTs — it predates the @animateicons fix (see notes.animateIconsFixed2026_09_03) and therefore overstates. On post-fix build 5WVxD_Jbi032lOZ_Z0NdN the shell's largest identifiable library is framer-motion (95,216 B raw / 30,554 B gzip, first load of 601 of 601 routes); @animateicons/react/lucide is now 147,629 B raw / 14,273 B gzip carrying exactly the 90 icons the app imports, down from 481,691 / 55,886 carrying all 248. The still-open share of this breach has no single owner-chunk: /dashboard's largest first-load scripts are a long tail of shared authenticated shell, not one missing lazy boundary.",
-      "measuredPostLoadScriptBytes": 106554,
-      "measuredPostLoadTotalBytes": 130487
+      "measuredPostLoadScriptBytes": 168933,
+      "measuredPostLoadTotalBytes": 187307
     },
     "/settings": {
       "lazyLoadedModules": [
@@ -278,15 +278,15 @@
       "measuredFirstLoadJsBytes": 278127,
       "measuredPageChunkBytes": 6546,
       "byteCaptureNote": "No cold-cache byte pass in the 2026-09-02 capture: the navigation landed on /signin because the app signs itself out on a refused /me/access, and the driver discards byte totals for a page it did not ask for rather than recording another page's bytes as this route's.",
-      "measuredScriptBytes": 540037,
-      "measuredTotalBytes": 686306,
+      "measuredScriptBytes": 477658,
+      "measuredTotalBytes": 633430,
       "measuredCssBytes": 58718,
       "measuredImageBytes": 3076,
       "measuredFontBytes": 55580,
-      "measuredThirdPartyBytes": 3918,
-      "measuredServerPayloadBytes": 22485,
+      "measuredThirdPartyBytes": 7253,
+      "measuredServerPayloadBytes": 22501,
       "measuredPostLoadScriptBytes": 238683,
-      "measuredPostLoadTotalBytes": 275806
+      "measuredPostLoadTotalBytes": 275962
     },
     "/build/my-work": {
       "lazyLoadedModules": [
@@ -296,16 +296,16 @@
       "note": "Build my-work — one of the heaviest first-load routes in the build (3.02 MB uncompressed). Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
       "measuredFirstLoadJsBytes": 352529,
       "measuredPageChunkBytes": 81305,
-      "measuredScriptBytes": 535143,
-      "measuredTotalBytes": 678285,
+      "measuredScriptBytes": 711306,
+      "measuredTotalBytes": 855619,
       "measuredCssBytes": 58718,
       "measuredImageBytes": 3076,
       "measuredFontBytes": 55580,
-      "measuredThirdPartyBytes": 0,
-      "measuredServerPayloadBytes": 23276,
+      "measuredThirdPartyBytes": 1220,
+      "measuredServerPayloadBytes": 23227,
       "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition, and the measuredScriptBytes figure on this route is from the 2026-09-02 capture on build 5KxS0uW9Wrm0BIVYZicTs — it predates the @animateicons fix (see notes.animateIconsFixed2026_09_03) and therefore overstates. On post-fix build 5WVxD_Jbi032lOZ_Z0NdN the shell's largest identifiable library is framer-motion (95,216 B raw / 30,554 B gzip, first load of 601 of 601 routes); @animateicons/react/lucide is now 147,629 B raw / 14,273 B gzip carrying exactly the 90 icons the app imports, down from 481,691 / 55,886 carrying all 248. The still-open share of this breach has no single owner-chunk: /dashboard's largest first-load scripts are a long tail of shared authenticated shell, not one missing lazy boundary.",
       "measuredPostLoadScriptBytes": 186742,
-      "measuredPostLoadTotalBytes": 213385
+      "measuredPostLoadTotalBytes": 220945
     },
     "/crm/leads": {
       "lazyLoadedModules": [],
@@ -332,15 +332,15 @@
         "party-delete-dialog"
       ],
       "note": "Business parties (CRM contacts, customers, vendors) — the route lives at /parties, not /crm/parties. Added by ticket 26's second pass to widen coverage from 12 routes to 13; it inherits every default ceiling rather than being handed one shaped around its current size.",
-      "measuredScriptBytes": 695878,
-      "measuredTotalBytes": 835837,
+      "measuredScriptBytes": 648538,
+      "measuredTotalBytes": 813569,
       "measuredCssBytes": 58718,
       "measuredImageBytes": 3076,
       "measuredFontBytes": 55580,
-      "measuredThirdPartyBytes": 0,
-      "measuredServerPayloadBytes": 20093,
-      "measuredPostLoadScriptBytes": 80761,
-      "measuredPostLoadTotalBytes": 106659,
+      "measuredThirdPartyBytes": 15853,
+      "measuredServerPayloadBytes": 23204,
+      "measuredPostLoadScriptBytes": 98570,
+      "measuredPostLoadTotalBytes": 128754,
       "measuredFirstLoadJsBytes": 316955,
       "measuredPageChunkBytes": 45374
     }
