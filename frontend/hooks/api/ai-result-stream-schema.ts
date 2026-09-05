@@ -3,6 +3,7 @@ import { z } from "zod";
 export const aiResultFrameSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("text"), text: z.string() }),
   z.object({ type: z.literal("result"), data: z.unknown() }),
+  z.object({ type: z.literal("error"), message: z.string() }),
 ]);
 
 export const aiResultUsageSchema = z.object({

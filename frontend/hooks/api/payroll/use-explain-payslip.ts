@@ -1,43 +1,21 @@
 "use client";
 
-import { toast } from "sonner";
-import { apiClient } from "@/lib/api-client";
-import { getErrorMessage } from "@/lib/get-error-message";
+import type { z } from "zod";
+import { streamAiResult, type AiResultStreamOptions } from "@/hooks/api/ai-result-stream";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import type { AiAbortInput } from "@/hooks/api/ai-abort";
-import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
+import { payslipExplanationSchema, payslipEvidenceCitationSchema } from "./payslip-explanation-schema";
 
-export interface PayslipEvidenceCitation {
-  path: string;
-  label: string;
-  value: unknown;
-  source: "payroll_engine";
-}
-
-export interface PayslipExplanationResult {
-  explanation: string;
-  evidenceSnapshot: Record<string, unknown>;
-  citations: PayslipEvidenceCitation[];
-  capability?: {
-    mode: "explain_draft_only";
-    autonomousPayrollDecisions: boolean;
-    honestyLabel: string;
-  };
-  forbiddenActions?: string[];
-  aiUsage?: AiUsageMeta;
-}
+export type PayslipEvidenceCitation = z.infer<typeof payslipEvidenceCitationSchema>;
+export type PayslipExplanationResult = z.infer<typeof payslipExplanationSchema>;
 
 export function useExplainPayslip(publicationId: number) {
-  return useAuthorizedMutation<PayslipExplanationResult, Error, AiAbortInput | void>("self:payslips", {
+  return useAuthorizedMutation<PayslipExplanationResult, Error, AiResultStreamOptions | void>("self:payslips", {
     mutationKey: ["payroll", "ess", "payslips", publicationId, "ai-explain"],
     mutationFn: (input) =>
-      apiClient.post<PayslipExplanationResult>(
-        `/payroll/me/payslips/${publicationId}/ai/explain`,
-        {},
-        { signal: input?.signal },
-      ),
-    onError: (error) => {
-      toast.error(getErrorMessage(error));
-    },
+      streamAiResult({
+        path: `/payroll/me/payslips/${publicationId}/ai/explain/stream`,
+        schema: payslipExplanationSchema,
+        ...input,
+      }),
   });
 }

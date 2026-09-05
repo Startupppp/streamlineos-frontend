@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { Sparkles, Send, ThumbsUp, ThumbsDown, BookMarked, FileText, Paperclip } from "lucide-react";
 import Link from "next/link";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -14,6 +14,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { AiCitationChips, type Citation } from "@/components/ai/ai-citation-chips";
 import { AiUsageChip } from "@/components/ai/ai-usage-chip";
 import { useKbAsk, useKbAiAnswerFeedback } from "@/hooks/api/kb/ask";
+import { isAiStreamAbort } from "@/hooks/api/ai-text-stream";
 import { usePublicAskSupportKb, type KbAnswer } from "@/hooks/api/support/kb-rag";
 import type { KbAskResponse, KbAskCitation } from "@/types/kb";
 
@@ -108,6 +109,7 @@ function AuthedAskPanel({ className, articleId }: { className?: string; articleI
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState<KbAskResponse | null>(null);
   const [feedbackGiven, setFeedbackGiven] = useState(false);
+  const [draft, setDraft] = useState("");
   const askMutation = useKbAsk();
   const submissionRef = useRef(0);
 
@@ -129,15 +131,22 @@ function AuthedAskPanel({ className, articleId }: { className?: string; articleI
     if (askMutation.isPending) return;
     const id = ++submissionRef.current;
     setFeedbackGiven(false);
+    setDraft("");
+    setAnswer(null);
+    function handleToken(token: string) {
+      if (submissionRef.current === id) setDraft((current) => current + token);
+    }
     askMutation.mutate(
-      { question: trimmed },
+      { question: trimmed, onToken: handleToken },
       {
         onSuccess: (data) => {
           if (submissionRef.current !== id) return;
           setAnswer(data);
+          setDraft("");
         },
         onError: (e) => {
           if (submissionRef.current !== id) return;
+          if (isAiStreamAbort(e)) return;
           toast.error(getErrorMessage(e));
         },
       },
@@ -147,6 +156,8 @@ function AuthedAskPanel({ className, articleId }: { className?: string; articleI
   function handleFeedbackGiven() {
     setFeedbackGiven(true);
   }
+  function handleStop() { askMutation.stop(); }
+  function handleRegenerate() { askMutation.resetAttempt(); submitQuestion(); }
 
   const citations = answer ? buildCitations(answer.citations) : [];
 
@@ -185,7 +196,10 @@ function AuthedAskPanel({ className, articleId }: { className?: string; articleI
             Ask
           </LoadingButton>
         </form>
-
+        {askMutation.isPending && <Button variant="outline" onClick={handleStop}>Stop generating</Button>}
+        {draft && <p className="whitespace-pre-wrap text-label" aria-label="Answer draft">{draft}</p>}
+        {draft && !askMutation.isPending && !answer && <p role="status" className="text-xs text-muted-foreground">This answer is incomplete.</p>}
+        {askMutation.isError && !askMutation.isPending && <Button variant="outline" onClick={handleRegenerate}>Generate a new answer</Button>}
         {answer && !askMutation.isPending && (
           <div className="rounded-lg border bg-muted/30 p-2.5 space-y-2">
             <div className="flex items-start justify-between gap-2">
@@ -219,6 +233,15 @@ function PublicAskPanel({ className, orgId }: { className?: string; orgId: strin
   const [answer, setAnswer] = useState<KbAnswer | null>(null);
   const publicAsk = usePublicAskSupportKb();
   const submissionRef = useRef(0);
+  const controllerRef = useRef<AbortController | null>(null);
+  const [draft, setDraft] = useState("");
+
+  useEffect(() => () => {
+    submissionRef.current += 1;
+    controllerRef.current?.abort();
+  }, [orgId]);
+
+  function handleStop() { controllerRef.current?.abort(); }
 
   function handleQuestionChange(event: ChangeEvent<HTMLInputElement>) {
     setQuestion(event.target.value);
@@ -231,18 +254,31 @@ function PublicAskPanel({ className, orgId }: { className?: string; orgId: strin
       toast.error("Please enter a longer question");
       return;
     }
-    if (publicAsk.isPending) return;
+    if (controllerRef.current) return;
     const id = ++submissionRef.current;
+    const controller = new AbortController();
+    controllerRef.current = controller;
+    setDraft("");
+    setAnswer(null);
+    function handleToken(token: string) {
+      if (submissionRef.current === id && !controller.signal.aborted)
+        setDraft((current) => current + token);
+    }
     publicAsk.mutate(
-      { orgId, question: trimmed },
+      { orgId, question: trimmed, signal: controller.signal, onToken: handleToken },
       {
         onSuccess: (data) => {
           if (submissionRef.current !== id) return;
           setAnswer(data);
+          setDraft("");
         },
         onError: (e) => {
           if (submissionRef.current !== id) return;
+          if (isAiStreamAbort(e)) return;
           toast.error(getErrorMessage(e));
+        },
+        onSettled: () => {
+          if (controllerRef.current === controller) controllerRef.current = null;
         },
       },
     );
@@ -279,6 +315,9 @@ function PublicAskPanel({ className, orgId }: { className?: string; orgId: strin
           </LoadingButton>
         </form>
 
+        {publicAsk.isPending && <Button variant="outline" onClick={handleStop}>Stop generating</Button>}
+        {draft && <p className="whitespace-pre-wrap text-label" aria-label="Answer draft">{draft}</p>}
+        {draft && !publicAsk.isPending && !answer && <p role="status" className="text-xs text-muted-foreground">This answer is incomplete.</p>}
         {answer && !publicAsk.isPending && (
           <div className="rounded-lg border bg-muted/30 p-2.5 space-y-2">
             <p className="text-label whitespace-pre-wrap leading-relaxed">{answer.answer}</p>

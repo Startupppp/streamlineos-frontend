@@ -61,12 +61,12 @@ export function InvoiceDraftDialog({
         description: "Draft a client-facing summary of the billable work",
         surface: "sheet",
         disabledReason: groups.length === 0 ? "No billable work in range" : undefined,
-        run: async () => {
+        run: async (signal, onToken) => {
           const res = await generateBillingNarrative({
             projectId: projectId ?? undefined,
             startDate,
             endDate,
-          });
+          }, { signal, onToken });
           return { text: res.text, aiUsage: res.aiUsage };
         },
       },

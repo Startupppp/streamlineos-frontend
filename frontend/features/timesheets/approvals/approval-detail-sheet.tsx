@@ -123,9 +123,9 @@ export function ApprovalDetailSheet({
         key: "summarize-period",
         label: "Summarize this timesheet",
         description: "Narrate hours by project, billable ratio, and notable patterns",
-        run: async () => {
-          const res = await fetchTimesheetPeriodSummary(periodId);
-          return { text: res.narration };
+        run: async (signal, onToken) => {
+          const res = await fetchTimesheetPeriodSummary(periodId, { signal, onToken });
+          return { text: res.narration, aiUsage: res.aiUsage };
         },
       },
     ];
@@ -141,8 +141,8 @@ export function ApprovalDetailSheet({
         description: "Constructive feedback grounded in this timesheet",
         surface: "popover",
         applyLabel: "Use this",
-        run: async () => {
-          const res = await draftRejectionReason(periodId, rejectReason.trim() || undefined);
+        run: async (signal, onToken) => {
+          const res = await draftRejectionReason(periodId, rejectReason.trim() || undefined, { signal, onToken });
           return { text: res.text, aiUsage: res.aiUsage };
         },
         onApply: (text) => setRejectReason(text),

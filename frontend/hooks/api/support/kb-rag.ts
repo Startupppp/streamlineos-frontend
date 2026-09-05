@@ -5,6 +5,9 @@ import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { streamAiText } from "@/hooks/api/ai-text-stream";
+import type { AiResultStreamOptions } from "@/hooks/api/ai-result-stream";
+import { publicKbSourcesSchema } from "./kb-rag-schema";
 
 export interface KbAnswerSource {
   articleId: number;
@@ -46,8 +49,18 @@ interface PublicAskKbInput {
 export function usePublicAskSupportKb() {
   return useMutation({
     mutationKey: ["supportKb", "rag", "public-ask"],
-    mutationFn: ({ orgId, question }: PublicAskKbInput) =>
-      apiClient.post<KbAnswer>("/public/kb/ask", { org: orgId, question }),
+    mutationFn: async ({ orgId, question, signal, onToken }: PublicAskKbInput & AiResultStreamOptions): Promise<KbAnswer> => {
+      let sources: KbAnswerSource[] = [];
+      function handleHeaders(headers: Headers) {
+        const value = headers.get("x-kb-sources");
+        if (!value) return;
+        const raw: unknown = JSON.parse(decodeURIComponent(value));
+        sources = publicKbSourcesSchema.parse(raw);
+      }
+      const result = await streamAiText({ path: "/public/kb/stream-ask", body: { org: orgId, question }, signal, onToken, onHeaders: handleHeaders });
+      if (result.status === "cancelled") throw new DOMException("Generation stopped", "AbortError");
+      return { answer: result.text, sources, hasContext: sources.length > 0 };
+    },
   });
 }
 

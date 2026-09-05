@@ -3,10 +3,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { IDEMPOTENCY_HEADER } from "@/lib/idempotency-key";
 
-const post = jest.fn();
+interface StreamRequest { headers?: Record<string, string>; signal?: AbortSignal }
+const post = jest.fn<Promise<unknown>, [StreamRequest]>();
 
-jest.mock("@/lib/api-client", () => ({
-  apiClient: { post: (...args: unknown[]) => post(...args) },
+jest.mock("@/hooks/api/ai-result-stream", () => ({
+  streamAiResult: (request: StreamRequest) => post(request),
 }));
 
 jest.mock("@/hooks/api/authorized-mutation", () => ({
@@ -27,9 +28,7 @@ function wrapper({ children }: { children: ReactNode }) {
 }
 
 function keySentOnCall(index: number): string {
-  const config = post.mock.calls[index]?.[2] as
-    | { headers?: Record<string, string> }
-    | undefined;
+  const config = post.mock.calls[index]?.[0];
   const key = config?.headers?.[IDEMPOTENCY_HEADER];
   if (typeof key !== "string" || key.length === 0)
     throw new Error(`call ${index} sent no ${IDEMPOTENCY_HEADER}`);
@@ -106,6 +105,17 @@ describe("useKbAsk idempotency key", () => {
     expect(keySentOnCall(1)).not.toBe(keySentOnCall(0));
   });
 
+  it("only resets a failed paid attempt when the user explicitly requests a new answer", async () => {
+    post.mockRejectedValue(new Error("The previous generation was interrupted"));
+    const { result } = renderHook(() => useKbAsk(), { wrapper });
+    const input = { question: "leave policy?" };
+    await act(async () => { await expect(result.current.mutateAsync(input)).rejects.toThrow(); });
+    const firstKey = keySentOnCall(0);
+    act(() => result.current.resetAttempt());
+    await act(async () => { await expect(result.current.mutateAsync(input)).rejects.toThrow(); });
+    expect(keySentOnCall(1)).not.toBe(firstKey);
+  });
+
   /** An AbortSignal is not part of the question's identity and does not survive JSON.stringify. */
   it("keeps the signal out of the key's signature but still passes it through", async () => {
     post.mockRejectedValue(new Error("network timeout"));
@@ -124,7 +134,7 @@ describe("useKbAsk idempotency key", () => {
     });
 
     expect(keySentOnCall(1)).toBe(keySentOnCall(0));
-    expect((post.mock.calls[0]?.[2] as { signal?: AbortSignal }).signal).toBeInstanceOf(
+    expect(post.mock.calls[0]?.[0].signal).toBeInstanceOf(
       AbortSignal,
     );
   });
