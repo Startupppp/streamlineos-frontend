@@ -1,6 +1,25 @@
 import { createHash } from "node:crypto";
 import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 
+// Moved 2026-09-05 by T09: two inventory navigation changes, both of them the
+// nav half of a URL that answered 404.
+//   * The Reports parent moved from /inventory/reports/stock-summary to
+//     /inventory/reports. It had been aliasing its own first child because the
+//     segment above them had no page at all, so clicking the group and clicking
+//     Stock Summary were the same destination and nobody ever met the hole; a
+//     reader who typed the obvious URL, or bookmarked the group, did.
+//     /inventory/reports is now a hub that derives its seven cards from these
+//     very children, so the group lands on the group and the hub cannot drift
+//     from the nav that describes it.
+//   * Operations gained one child, "Pick lists" (/inventory/operations/picking,
+//     gated on inventory:sales-orders:read — the key the wave workbench itself
+//     asks for, not the Operations parent's purchase-orders/sales-orders pair).
+//     `inventory.md:1358` says "Do not 404 /inventory/pick-lists if you keep
+//     picking under operations — then make operations picking the pick-list
+//     surface and say so in nav." Picking is kept under operations, so
+//     /inventory/pick-lists is now a redirect to the workbench, and this entry
+//     is the "say so in nav" half: before it, the word "pick" appeared nowhere
+//     in the inventory sidebar and the only route that said it was a 404.
 // Changed 2026-08-31 by the origin/main merge: 266 commits of navigation work
 // landed alongside this branch — route-access management (`enforce-route-access`),
 // My Payroll repointed at the canonical /me/pay with its vacuous gate dropped,
@@ -97,7 +116,7 @@ import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 // neither side's digest describes it and the merge cannot inherit one of them --
 // this is the hash of the merged graph, recomputed and re-read, not copied across.
 const EXPECTED_NAVIGATION_INVENTORY_DIGEST =
-  "9cdd400d74f8b8b18a2f71d734bd2f6f0c7f4c43097bf9e3d8879dfa5d2e2b7a";
+  "34e1af910e68bad4320180d3025888c60f233d85bf4e289c1efd650c9ae014d3";
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {

@@ -1,4 +1,4 @@
-import { LayoutDashboard, HardHat, Store, FileText, BarChart3, ClipboardList, ShieldCheck, TrendingUp, Package, Globe, ClipboardCheck, RefreshCcw, History, BarChart2, Building2, SlidersHorizontal, Calculator, Tag, Warehouse, ArrowLeftRight, ShoppingCart, Truck, Activity, Layers, TrendingDown, Scan, Boxes, CalendarClock, Container, Upload, RotateCcw, PackageCheck, DollarSign, Scale, Gauge, Sparkles } from "lucide-react";
+import { LayoutDashboard, ListChecks, HardHat, Store, FileText, BarChart3, ClipboardList, ShieldCheck, TrendingUp, Package, Globe, ClipboardCheck, RefreshCcw, History, BarChart2, Building2, SlidersHorizontal, Calculator, Tag, Warehouse, ArrowLeftRight, ShoppingCart, Truck, Activity, Layers, TrendingDown, Scan, Boxes, CalendarClock, Container, Upload, RotateCcw, PackageCheck, DollarSign, Scale, Gauge, Sparkles } from "lucide-react";
 import type { NavGroup } from "./sidebar-nav-types";
 
 export const INVENTORY_NAV_GROUPS: NavGroup[] = [
@@ -105,11 +105,35 @@ export const INVENTORY_NAV_GROUPS: NavGroup[] = [
           "inventory:purchase-orders:read",
           "inventory:sales-orders:read",
         ],
+        children: [
+          {
+            /**
+             * T09. `inventory.md:1358` — "Do not 404 `/inventory/pick-lists` if
+             * you keep picking under operations — then make operations picking
+             * the pick-list surface and say so in nav." Picking is kept under
+             * operations, so this is the nav half of that sentence: the wave
+             * workbench listed under the name people look for. Without it the
+             * word "pick" appeared nowhere in the inventory sidebar, and the
+             * only route that said it was a 404. Gated on the key the workbench
+             * itself asks for, not on the Operations parent's pair.
+             */
+            label: "Pick lists",
+            icon: ListChecks,
+            href: "/inventory/operations/picking",
+            requiredPermission: "inventory:sales-orders:read",
+          },
+        ],
       },
       {
+        /**
+         * T09. The parent used to point at `/inventory/reports/stock-summary`,
+         * aliasing its own first child, because `/inventory/reports` had no
+         * page and answered 404. It has a hub now — derived from these very
+         * children — so the group lands on the group.
+         */
         label: "Reports",
         icon: BarChart3,
-        href: "/inventory/reports/stock-summary",
+        href: "/inventory/reports",
         requiredPermission: "inventory:reports:read",
         children: [
           {

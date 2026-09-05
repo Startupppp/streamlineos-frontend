@@ -60,6 +60,17 @@ type StateName = keyof typeof STATE_MARKERS;
 const NO_DATA_ROUTES = new Set<string>([
   // The module hub renders links, not data.
   "inventory",
+  // T09. The reports hub over the seven leaf reports. It renders links derived
+  // from the navigation model and asks the server nothing of its own, so it has
+  // no collection that could be empty. It still owes — and answers — loading,
+  // error and denied, because deciding which cards to show is itself a read of
+  // `/me/access`.
+  "inventory/reports",
+  // T09. `/inventory/pick-lists` is an alias, not a screen: its whole body is a
+  // `redirect()` to `/inventory/operations/picking`, which `inventory.md:1358`
+  // names as the pick-list surface. It renders nothing, so it has no state to
+  // show; giving it four would be four branches that can never execute.
+  "inventory/pick-lists",
   // A settings form has no collection, so it has no empty state — the same
   // argument as a `/new` route. It still owes loading, error and denied.
   "inventory/settings",
@@ -120,7 +131,7 @@ const OWN_ERROR_BOUNDARY: ReadonlyArray<{ route: string; reason: string }> = [
 /**
  * Routes allowed to ship without a segment `loading.tsx`.
  *
- * Empty, and meant to stay that way. It exists because the alternative to a
+ * One entry, and meant to stay near zero. It exists because the alternative to a
  * named exemption is an unnamed one: this column drifted to eight missing files
  * precisely because the ratchet *read* `loading.tsx` when it happened to be
  * there and never required it, so the in-component `isLoading` marker answered
@@ -129,9 +140,17 @@ const OWN_ERROR_BOUNDARY: ReadonlyArray<{ route: string; reason: string }> = [
  * slow server render shows the previous screen rather than a skeleton.
  *
  * Anything added here carries a written reason, the way `NO_DATA_ROUTES` does.
- * "It was easier" is not one.
+ * "It was easier" is not one. The bar the single entry below clears: the route
+ * cannot render at all, so a `loading.tsx` beside it is not a thin skeleton but
+ * a fallback for a screen that does not exist.
  */
-const LOADING_EXEMPT_ROUTES: ReadonlyArray<{ route: string; reason: string }> = [];
+const LOADING_EXEMPT_ROUTES: ReadonlyArray<{ route: string; reason: string }> = [
+  {
+    route: "inventory/pick-lists",
+    reason:
+      "The route's whole body is redirect() to /inventory/operations/picking, so it never renders. A segment fallback here could only flash the skeleton of a screen that does not exist, which is a file added to satisfy a checker rather than a reader.",
+  },
+];
 
 /** The `(authenticated)` slash-path for a discovered route directory. */
 function routePath(routeDir: string): string {

@@ -97,6 +97,38 @@ const RfQueuePage = require("./page").default as () => ReactElement;
 const RfPickPage = require("./pick/[pickListId]/page").default as () => ReactElement;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const RfPutawayPage = require("./putaway/[taskId]/page").default as () => ReactElement;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const RfPickQueuePage = require("./pick/page").default as () => ReactElement;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const RfPutawayQueuePage = require("./putaway/page").default as () => ReactElement;
+
+/** One of each kind, so a queue that forgets to filter is visibly wrong. */
+const MIXED_QUEUE = [
+  {
+    kind: "PICK",
+    id: 1,
+    reference: "PICK-0001",
+    summary: "3 lines to pick",
+    warehouseId: 1,
+    href: "/inventory/rf/pick/1",
+  },
+  {
+    kind: "PUTAWAY",
+    id: 2,
+    reference: "PUT-0002",
+    summary: "1 pallet to put away",
+    warehouseId: 1,
+    href: "/inventory/rf/putaway/2",
+  },
+  {
+    kind: "COUNT",
+    id: 3,
+    reference: "CNT-0003",
+    summary: "12 bins to count",
+    warehouseId: null,
+    href: "/inventory/cycle-counts?count=3",
+  },
+];
 
 beforeEach(() => {
   useCan.mockReturnValue(true);
@@ -251,6 +283,104 @@ describe("NEO-5 - the rendered RF surface has no data table", () => {
     const { container } = render(<RfQueuePage />);
     expectNoTable(container);
     expect(screen.queryByText(/nothing assigned to you/i)).not.toBeInTheDocument();
+    expect(container.textContent ?? "").toMatch(/permission|access/i);
+  });
+});
+
+describe("T09 - the per-kind RF queues answer instead of 404ing", () => {
+  // `/inventory/rf/pick` and `/inventory/rf/putaway` had no page at all: only the
+  // route behind a task id was routable, so a scanner that dropped the trailing
+  // digits, or an operator backing one level out of a task, hit a dead end while
+  // holding the device one-handed. These mount the two new screens and ask the
+  // same questions of them as of every other RF surface, plus the one that is
+  // theirs alone: a queue for one kind shows that kind and nothing else.
+
+  it("shows the picker only their picks, one tap each", () => {
+    rfQueue.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      isDenied: false,
+      refetch: jest.fn(),
+      tasks: MIXED_QUEUE,
+    });
+
+    const { container } = render(<RfPickQueuePage />);
+    expectNoTable(container);
+    expectNothingWiderThanTheDevice(container);
+
+    const list = screen.getByRole("list");
+    const items = within(list).getAllByRole("listitem");
+    expect(items).toHaveLength(1);
+    expect(within(list).getByText("PICK-0001")).toBeInTheDocument();
+    expect(within(list).queryByText("PUT-0002")).not.toBeInTheDocument();
+    expect(within(list).queryByText("CNT-0003")).not.toBeInTheDocument();
+    expect(within(list).getAllByRole("link")).toHaveLength(1);
+
+    // The way out is the thing that makes this a screen and not a cul-de-sac:
+    // whatever brought the operator here, one thumb reaches the full queue.
+    expect(screen.getByLabelText(/back to tasks/i)).toHaveAttribute(
+      "href",
+      "/inventory/rf",
+    );
+  });
+
+  it("shows the receiver only their putaway tasks", () => {
+    rfQueue.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      isDenied: false,
+      refetch: jest.fn(),
+      tasks: MIXED_QUEUE,
+    });
+
+    const { container } = render(<RfPutawayQueuePage />);
+    expectNoTable(container);
+    expectNothingWiderThanTheDevice(container);
+
+    const list = screen.getByRole("list");
+    expect(within(list).getAllByRole("listitem")).toHaveLength(1);
+    expect(within(list).getByText("PUT-0002")).toBeInTheDocument();
+    expect(within(list).queryByText("PICK-0001")).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/back to tasks/i)).toHaveAttribute(
+      "href",
+      "/inventory/rf",
+    );
+  });
+
+  it("says nothing is assigned rather than pretending the queue is broken", () => {
+    // An operator whose picks are all done sees an empty state that names the
+    // way to get more work. It is not an error and it is not a permission
+    // problem, and saying either would send them to find a supervisor.
+    rfQueue.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      isDenied: false,
+      refetch: jest.fn(),
+      tasks: MIXED_QUEUE.filter((task) => task.kind !== "PICK"),
+    });
+
+    const { container } = render(<RfPickQueuePage />);
+    expectNoTable(container);
+    expect(screen.queryByRole("list")).not.toBeInTheDocument();
+    expect(container.textContent ?? "").toMatch(/no picks assigned to you/i);
+  });
+
+  it("says denied rather than showing an empty queue", () => {
+    // The same collapse the queue screen is checked for: somebody who may not
+    // read picks is told so, not shown "nothing assigned to you", which is a
+    // different and untrue sentence.
+    useCan.mockReturnValue(false);
+    rfQueue.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      isDenied: true,
+      refetch: jest.fn(),
+      tasks: [],
+    });
+
+    const { container } = render(<RfPickQueuePage />);
+    expectNoTable(container);
+    expect(screen.queryByText(/no picks assigned to you/i)).not.toBeInTheDocument();
     expect(container.textContent ?? "").toMatch(/permission|access/i);
   });
 });
