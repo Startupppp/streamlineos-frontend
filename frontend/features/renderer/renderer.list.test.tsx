@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { PARTY_LAYOUT } from "@/lib/renderer/party-layout";
 import { validateLayout, type RecordLayout } from "@/lib/renderer/layout";
 import { RecordList } from "./record-list";
+import { ShellVariantProvider } from "@/components/layout/shell-variant-context";
 
 const rows = [
   {
@@ -235,5 +236,55 @@ describe("the mobile card", () => {
       />,
     );
     expect(screen.getAllByText("Acme Trading").length).toBeGreaterThan(0);
+  });
+});
+
+describe("RecordList — mobile shell variant", () => {
+  function renderMobile(ui: React.ReactElement) {
+    return render(
+      <ShellVariantProvider variant="mobile">{ui}</ShellVariantProvider>,
+    );
+  }
+
+  it("renders exactly as many cards as rows and no table element", () => {
+    const { container } = renderMobile(
+      <RecordList layout={PARTY_LAYOUT} rows={rows} getRowKey={key} />,
+    );
+    expect(container.querySelector("table")).toBeNull();
+    const cards = container.querySelectorAll('[class*="rounded-lg border border-border bg-card"]');
+    expect(cards).toHaveLength(rows.length);
+  });
+
+  it("still carries the row actions on each card", () => {
+    renderMobile(
+      <RecordList
+        layout={PARTY_LAYOUT}
+        rows={rows}
+        getRowKey={key}
+        actions={() => <button type="button">Edit</button>}
+      />,
+    );
+    expect(screen.getAllByRole("button", { name: "Edit" })).toHaveLength(rows.length);
+  });
+
+  it("calls onRowClick with the clicked row", () => {
+    const onRowClick = jest.fn();
+    renderMobile(
+      <RecordList
+        layout={PARTY_LAYOUT}
+        rows={rows}
+        getRowKey={key}
+        onRowClick={onRowClick}
+      />,
+    );
+    fireEvent.click(screen.getAllByText("Globex")[0]!);
+    expect(onRowClick).toHaveBeenCalledWith(rows[1]);
+  });
+
+  it("supplies a touch target meeting the 44px guidance", () => {
+    const { container } = renderMobile(
+      <RecordList layout={PARTY_LAYOUT} rows={rows} getRowKey={key} />,
+    );
+    expect(container.innerHTML).toContain("min-h-11");
   });
 });

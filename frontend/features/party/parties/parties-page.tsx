@@ -208,13 +208,13 @@ export function PartiesPage() {
     void refetch();
   }
 
-  function handleEditRow(row: BusinessParty) {
+  const handleEditRow = useCallback((row: BusinessParty) => {
     setEditTarget(row);
-  }
+  }, []);
 
-  function handleDeleteRow(row: BusinessParty) {
+  const handleDeleteRow = useCallback((row: BusinessParty) => {
     setDeleteTarget(row);
-  }
+  }, []);
 
   function handleDeleteConfirm() {
     if (!deleteTarget) return;
@@ -227,19 +227,19 @@ export function PartiesPage() {
     });
   }
 
-  // Columns, labels, alignment, the legal-name subtitle and the mobile card all
-  // come from PARTY_LAYOUT now. Row actions stay here because what a row can do
-  // depends on this caller's permissions, which is not a property of the shape.
-  const renderRowActions = (row: RecordValue): ReactNode =>
-    canManageRow ? (
-      <PartyRowActions
-        party={row as unknown as BusinessParty}
-        canEdit={canUpdate}
-        canDelete={canDelete}
-        onEdit={handleEditRow}
-        onDelete={handleDeleteRow}
-      />
-    ) : null;
+  const renderRowActions = useCallback(
+    (row: RecordValue): ReactNode =>
+      canManageRow ? (
+        <PartyRowActions
+          party={row as unknown as BusinessParty}
+          canEdit={canUpdate}
+          canDelete={canDelete}
+          onEdit={handleEditRow}
+          onDelete={handleDeleteRow}
+        />
+      ) : null,
+    [canManageRow, canUpdate, canDelete, handleEditRow, handleDeleteRow],
+  );
 
   const rows = data?.data ?? [];
   const [density, setDensity] = useDensity();

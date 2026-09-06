@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { formatFieldText, renderFieldValue, resolveField, type RecordValue } from "./format-value";
 import { densityAttribute, type DensityMode } from "@/lib/design-tokens";
 import { DEFAULT_MONEY_DISPLAY, type MoneyDisplay } from "@/lib/format-utils";
+import { useShellVariant } from "@/components/layout/shell-variant-context";
 
 type BorrowedProps = Pick<
   DataTableProps<RecordValue>,
@@ -95,6 +96,7 @@ export function RecordList({
   density = "comfortable",
   money = DEFAULT_MONEY_DISPLAY,
 }: RecordListProps) {
+  const shellVariant = useShellVariant();
   const columns = useMemo<DataTableColumn<RecordValue>[]>(
     () =>
       layout.list.columns.map((column) => {
@@ -203,6 +205,41 @@ export function RecordList({
       </div>
     );
   };
+
+  if (shellVariant === "mobile") {
+    return (
+      <div
+        {...densityAttribute(density)}
+        className={cn("flex min-w-0 flex-col gap-2 p-2", className)}
+      >
+        {rows.map((row, index) => (
+          <div
+            key={getRowKey(row, index)}
+            role={onRowClick ? "button" : undefined}
+            tabIndex={onRowClick ? 0 : undefined}
+            onClick={onRowClick ? () => onRowClick(row) : undefined}
+            onKeyDown={
+              onRowClick
+                ? (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onRowClick(row);
+                    }
+                  }
+                : undefined
+            }
+            className={cn(
+              "rounded-lg border border-border bg-card text-left touch-manipulation",
+              onRowClick &&
+                "cursor-pointer active:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            )}
+          >
+            {mobileCard(row)}
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     /*
