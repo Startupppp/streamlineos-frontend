@@ -49,9 +49,7 @@ const WelcomeToast = dynamic(
   { ssr: false },
 );
 
-import { ChatMobileBottomNav as ChatMobileBottomNavSync } from "@/features/chat/chat-mobile-bottom-nav";
-
-const ChatMobileBottomNavLazy = dynamic(
+const ChatMobileBottomNav = dynamic(
   () =>
     import("@/features/chat/chat-mobile-bottom-nav").then(
       (m) => m.ChatMobileBottomNav,
@@ -320,11 +318,8 @@ export function DashboardShell({
           )}
 
           <MobileModuleBottomNav />
-          {isChatRoute && shellVariant === "mobile" && (
-            <ChatMobileBottomNavSync onOpenMobileMenu={handleOpenMobileMenu} />
-          )}
-          {isChatRoute && shellVariant !== "mobile" && (
-            <ChatMobileBottomNavLazy onOpenMobileMenu={handleOpenMobileMenu} />
+          {isChatRoute && (
+            <ChatMobileBottomNav onOpenMobileMenu={handleOpenMobileMenu} />
           )}
           {!(isChatRoute && isChatConversationOpen) && (
             <MobileShellFab

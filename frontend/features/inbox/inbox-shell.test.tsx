@@ -128,19 +128,8 @@ jest.mock("@/features/notifications/notification-list-skeleton", () => ({
   NotificationListSkeleton: () => null,
 }));
 
-jest.mock("next/dynamic", () => {
-  const React = jest.requireActual<typeof import("react")>("react");
-  return (importFn: () => Promise<React.ComponentType<Record<string, unknown>>>) => {
-    function DynamicProxy(props: Record<string, unknown>) {
-      const [Comp, setComp] = React.useState<React.ComponentType<Record<string, unknown>> | null>(null);
-      React.useEffect(() => {
-        void importFn().then((m) => setComp(() => m));
-      }, []);
-      return Comp ? React.createElement(Comp, props) : null;
-    }
-    return DynamicProxy;
-  };
-});
+jest.mock("next/dynamic", () => () =>
+  jest.requireMock<{ InboxVirtualList: unknown }>("./inbox-virtual-list").InboxVirtualList);
 
 jest.mock("@/lib/utils", () => ({
   cn: (...args: string[]) => args.filter(Boolean).join(" "),

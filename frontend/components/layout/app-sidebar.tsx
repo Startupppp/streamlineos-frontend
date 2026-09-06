@@ -9,8 +9,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { usePendingApprovals } from "@/hooks/api/dashboard";
-import { useChatUnreadTotal } from "@/hooks/api/chat";
-import { useUnreadNotificationCount } from "@/hooks/api/notifications";
+import { useChatUnreadTotal } from "@/hooks/api/chat-core-read";
+import { useUnreadNotificationCount } from "@/hooks/api/notifications-inbox";
 import {
   getNavGroupsForProduct,
   getProductFromPathname,

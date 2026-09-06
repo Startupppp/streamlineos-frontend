@@ -21,7 +21,7 @@ const ChatAblySuite = dynamic(
     import("@/features/chat/chat-ably-suite").then((m) => ({
       default: m.ChatAblySuite,
     })),
-  { ssr: false },
+  { ssr: false, loading: () => <ChatPanelFallback label="Loading chat" /> },
 );
 
 const MessagePanel = dynamic(
