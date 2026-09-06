@@ -79,10 +79,9 @@ export function NotificationsInboxPage() {
     limit: 30,
   });
 
-  const notifications = pages?.pages.flat();
+  const items = useMemo(() => pages?.pages.flat() ?? [], [pages]);
   const { data: unreadData } = useUnreadNotificationCount();
   const unreadCount = unreadData?.count ?? 0;
-  const items = useMemo(() => notifications ?? [], [notifications]);
 
   const handleRetry = useCallback(() => {
     void refetch();
