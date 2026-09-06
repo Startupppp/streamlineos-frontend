@@ -79,12 +79,12 @@ export function toDefaultForm(
   };
 }
 
-export function toEditForm(event: CalendarListItem): FormState {
+export function toEditForm(event: CalendarListItem, rrule?: string | null): FormState {
   const start = new Date(event.start);
   const end = new Date(event.end);
   const startDate = format(start, "yyyy-MM-dd");
-  const recurrence = event.rrule
-    ? parseRrule(event.rrule)
+  const recurrence = rrule
+    ? parseRrule(rrule)
     : defaultRecurrenceState(startDate);
   return {
     title: event.title,

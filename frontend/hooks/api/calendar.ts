@@ -135,29 +135,41 @@ export interface CalendarListItem {
     | "task"
     | "holiday"
     | "attendance";
-  /**
-   * IANA zone the event was authored in. `start`/`end` are absolute instants,
-   * so rendering them in the reader's zone is right about the moment and wrong
-   * about the label. Aggregate sources with no authored zone send `null`.
-   */
   timezone?: string | null;
   location?: string | null;
-  meetingUrl?: string | null;
   description?: string | null;
   creatorName?: string | null;
   entityId?: string | null;
   entityType?: string | null;
   projectId?: number | null;
-  linkedTicket?: {
+  myRsvpStatus?: string | null;
+}
+
+export interface CalendarEventDetail {
+  id: number;
+  title: string;
+  startDate: string;
+  endDate: string;
+  allDay: boolean;
+  timezone: string;
+  color: string | null;
+  category: string;
+  entityType: string | null;
+  entityId: string | null;
+  location: string | null;
+  meetingUrl: string | null;
+  description: string | null;
+  creatorName: string | null;
+  myRsvpStatus: string | null;
+  linkedTicket: {
     id: number;
     key: string;
     title: string;
     projectId: number;
     status: string;
   } | null;
-  myRsvpStatus?: string | null;
-  rrule?: string | null;
-  isRecurring?: boolean | null;
+  rrule: string | null;
+  isRecurring: boolean;
 }
 
 export interface ParsedCalendarEventId {
@@ -482,5 +494,16 @@ export function useRetryEventSync() {
     onSuccess: (_, { eventId }) => {
       void qc.invalidateQueries({ queryKey: calendarSyncStatusKey(eventId) });
     },
+  });
+}
+
+export function useCalendarEvent(eventId: number | null) {
+  const can = useCan("calendar:read");
+  return useQuery({
+    queryKey: platformHierarchyQueryKeys.calendar.eventDetail(eventId ?? 0),
+    queryFn: ({ signal }) =>
+      apiClient.get<CalendarEventDetail>(`/calendar/events/${eventId}`, undefined, signal),
+    enabled: can && eventId !== null,
+    staleTime: 60 * 1000,
   });
 }

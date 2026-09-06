@@ -21,6 +21,7 @@ import type {
   BuildApprovalInboxItem,
 } from "@/types/inbox";
 import { cn } from "@/lib/utils";
+import { useAfterLoad } from "@/hooks/common/use-after-load";
 import {
   parseNotifType,
   parseNotifPriority,
@@ -90,6 +91,7 @@ function InboxViewTab({ view, label, isActive, onSelect }: InboxViewTabProps) {
 
 export function InboxShell() {
   const router = useRouter();
+  const afterLoad = useAfterLoad();
   const [view, setView] = useState<InboxView>("ALL");
   const [selectedNotification, setSelectedNotification] =
     useState<Notification | null>(null);
@@ -217,8 +219,10 @@ export function InboxShell() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col gap-2">
-        {isLoading ? (
-          <NotificationListSkeleton count={10} />
+        {!afterLoad || isLoading ? (
+          <div className="flex-1 min-h-0">
+            <NotificationListSkeleton count={10} />
+          </div>
         ) : isError ? (
           <ErrorState
             className="flex-1"

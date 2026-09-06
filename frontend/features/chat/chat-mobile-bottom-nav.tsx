@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+
 import {
   CompassIcon,
   MenuIcon,
@@ -9,6 +10,7 @@ import {
   SearchIcon,
 } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +19,24 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getChatMobileBottomNavClassName } from "@/components/layout/mobile/chat-mobile-chrome-layout";
 import { ChatPresenceMenu } from "./chat-presence-menu";
+
+const EXPLORE_LINK_CLASS =
+  "inline-flex min-w-11 flex-col items-center gap-0.5 rounded-md py-1 text-micro text-muted-foreground hover:bg-accent hover:text-accent-foreground";
+
+function ExploreNavLink() {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Link
+      href="/chat/channels"
+      aria-label="Explore channels"
+      className={EXPLORE_LINK_CLASS}
+      {...hoverHandlers}
+    >
+      <CompassIcon ref={iconRef} size={20} />
+      <span>Explore</span>
+    </Link>
+  );
+}
 
 interface ChatMobileBottomNavProps {
   onOpenMobileMenu: () => void;
@@ -29,14 +49,9 @@ function dispatchChatEvent(name: string) {
 export function ChatMobileBottomNav({
   onOpenMobileMenu,
 }: ChatMobileBottomNavProps) {
-  const router = useRouter();
-
   const handleSearch = useCallback(() => {
     dispatchChatEvent("chat:open-search");
   }, []);
-  const handleExplore = useCallback(() => {
-    router.push("/chat/channels");
-  }, [router]);
   const handleNewDM = useCallback(() => {
     dispatchChatEvent("chat:open-new-dm");
   }, []);
@@ -67,16 +82,7 @@ export function ChatMobileBottomNav({
         >
           Search
         </AnimatedIconButton>
-        <AnimatedIconButton
-          icon={CompassIcon}
-          iconSize={20}
-          variant="ghost"
-          className="h-auto min-w-11 flex-col gap-0.5 py-1 text-micro text-muted-foreground"
-          onClick={handleExplore}
-          aria-label="Explore channels"
-        >
-          Explore
-        </AnimatedIconButton>
+        <ExploreNavLink />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <AnimatedIconButton

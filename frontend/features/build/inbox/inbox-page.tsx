@@ -4,10 +4,13 @@ import * as React from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { InboxList } from "./inbox-list";
 import { InboxPreviewPane } from "./inbox-preview-pane";
+import { useShellVariant } from "@/components/layout/shell-variant-context";
 import type { Notification } from "@/types/notifications";
 import { cn } from "@/lib/utils";
 
 export function InboxPage() {
+  const shellVariant = useShellVariant();
+  const isDesktopShell = shellVariant === "desktop";
   const [selectedNotification, setSelectedNotification] =
     React.useState<Notification | null>(null);
   const [selectionDismissed, setSelectionDismissed] = React.useState(false);
@@ -57,17 +60,21 @@ export function InboxPage() {
           />
         </div>
 
-        <div
-          className={cn(
-            "min-h-0 min-w-0 flex-1 basis-0 flex-col overflow-hidden",
-            hasSelection ? "flex" : "hidden lg:flex",
-          )}
-        >
-          <InboxPreviewPane
-            notification={selectedNotification}
-            onClose={handleClearSelection}
-          />
-        </div>
+        {(isDesktopShell || hasSelection) ? (
+          <div
+            className={cn(
+              "min-h-0 min-w-0 flex-1 basis-0 flex-col overflow-hidden",
+              hasSelection ? "flex" : "hidden lg:flex",
+            )}
+          >
+            <InboxPreviewPane
+              notification={selectedNotification}
+              onClose={handleClearSelection}
+            />
+          </div>
+        ) : (
+          <div className="hidden lg:flex min-h-0 min-w-0 flex-1 basis-0 flex-col overflow-hidden" aria-hidden />
+        )}
       </div>
     </PageWrapper>
   );

@@ -38,6 +38,7 @@ interface UseEventCreateDialogProps {
   onOpenChange: (open: boolean) => void;
   defaultSlot?: { start: Date; end: Date } | null;
   event?: CalendarListItem | null;
+  rrule?: string | null;
 }
 
 export function useEventCreateDialog({
@@ -45,6 +46,7 @@ export function useEventCreateDialog({
   onOpenChange,
   defaultSlot,
   event,
+  rrule,
 }: UseEventCreateDialogProps) {
   const isEdit = !!event;
   const editNumericId = useMemo(
@@ -52,10 +54,10 @@ export function useEventCreateDialog({
     [isEdit, event],
   );
   const [form, setForm] = useState<FormState>(() =>
-    isEdit && event ? toEditForm(event) : toDefaultForm(defaultSlot),
+    isEdit && event ? toEditForm(event, rrule) : toDefaultForm(defaultSlot),
   );
   const [showEndDate, setShowEndDate] = useState(() =>
-    needsEndDateField(isEdit && event ? toEditForm(event) : toDefaultForm(defaultSlot)),
+    needsEndDateField(isEdit && event ? toEditForm(event, rrule) : toDefaultForm(defaultSlot)),
   );
   const [dateTimeError, setDateTimeError] = useState("");
   const [titleError, setTitleError] = useState("");
@@ -71,7 +73,7 @@ export function useEventCreateDialog({
 
   useEffect(() => {
     if (!open) return;
-    const base = isEdit && event ? toEditForm(event) : toDefaultForm(defaultSlot);
+    const base = isEdit && event ? toEditForm(event, rrule) : toDefaultForm(defaultSlot);
     setForm(isEdit ? base : { ...base, syncConnectionId: "none" });
     setShowEndDate(needsEndDateField(base));
     setDateTimeError("");
@@ -223,7 +225,7 @@ export function useEventCreateDialog({
     const result = buildEventPayload({ form, showEndDate, linkedTicket, existingEntityId, isEdit });
     if (result.error !== null) { toast.error(result.error); return; }
 
-    if (isEdit && event?.rrule) {
+    if (isEdit && rrule) {
       seriesScope.openWithPayload(result.payload);
       return;
     }
@@ -249,7 +251,7 @@ export function useEventCreateDialog({
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
-  }, [form, showEndDate, isEdit, event, createEvent, updateEvent, handleClose, existingEntityId, linkedTicket, seriesScope]);
+  }, [form, showEndDate, isEdit, event, rrule, createEvent, updateEvent, handleClose, existingEntityId, linkedTicket, seriesScope]);
 
   const handleOpenTicketPicker = useCallback(() => setTicketPickerOpen(true), []);
 

@@ -26,6 +26,7 @@ import { QueueViewRail } from "@/features/support/inbox/queue-view-rail";
 import { useInboxShortcuts } from "@/features/support/inbox/use-inbox-shortcuts";
 import { AgentAvailabilityToggle } from "@/features/support/inbox/agent-availability-toggle";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
+import { useShellVariant } from "@/components/layout/shell-variant-context";
 
 function TicketDetailSkeleton() {
   return (
@@ -93,6 +94,8 @@ function InboxContent() {
   const router = useRouter();
   const pathname = usePathname();
   const [, startTransition] = useTransition();
+  const shellVariant = useShellVariant();
+  const isDesktopShell = shellVariant === "desktop";
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } = useQueryParamOpen("create");
 
@@ -227,15 +230,17 @@ function InboxContent() {
         noInternalScroll
         contentClassName="flex overflow-hidden !py-0 !px-0"
       >
-        <div className={cn("hidden md:flex", selectedTicketId && "md:flex")}>
-          <QueueViewRail
-            activeQueueId={queueIdFilter ? Number(queueIdFilter) : null}
-            onSelectQueue={handleSelectQueue}
-            onApplyView={handleApplyView}
-            snoozedActive={snoozedFilter}
-            onToggleSnoozed={handleToggleSnoozed}
-          />
-        </div>
+        {isDesktopShell && (
+          <div className={cn("hidden md:flex", selectedTicketId && "md:flex")}>
+            <QueueViewRail
+              activeQueueId={queueIdFilter ? Number(queueIdFilter) : null}
+              onSelectQueue={handleSelectQueue}
+              onApplyView={handleApplyView}
+              snoozedActive={snoozedFilter}
+              onToggleSnoozed={handleToggleSnoozed}
+            />
+          </div>
+        )}
 
         {isError ? (
           <div className="flex-1 flex items-center justify-center">

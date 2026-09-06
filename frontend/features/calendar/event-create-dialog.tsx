@@ -10,6 +10,7 @@ interface EventCreateDialogProps {
   onOpenChange: (open: boolean) => void;
   defaultSlot?: { start: Date; end: Date } | null;
   event?: CalendarListItem | null;
+  rrule?: string | null;
 }
 
 export function EventCreateDialog({
@@ -17,6 +18,7 @@ export function EventCreateDialog({
   onOpenChange,
   defaultSlot,
   event,
+  rrule,
 }: EventCreateDialogProps) {
   const {
     form,
@@ -56,7 +58,7 @@ export function EventCreateDialog({
     handleRecurrenceChange,
     handleSeriesScopeConfirm,
     handleSeriesScopeOpenChange,
-  } = useEventCreateDialog({ open, onOpenChange, defaultSlot, event });
+  } = useEventCreateDialog({ open, onOpenChange, defaultSlot, event, rrule });
 
   return (
     <>

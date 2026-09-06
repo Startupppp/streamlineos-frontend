@@ -17,6 +17,7 @@ export const platformHierarchyQueryKeys = {
     hrSupplemental: (from: string, to: string) =>
       [...base, "calendar", "hr-supplemental", from, to] as const,
     sources: () => [...base, "calendar", "sources"] as const,
+    eventDetail: (eventId: number) => [...base, "calendar", "event", eventId] as const,
   },
 
   integrations: {

@@ -1,0 +1,518 @@
+{
+  "generatedAtMs": 1788664463989,
+  "generatedAt": "2026-09-06T03:14:23.989Z",
+  "baseUrl": "http://localhost:1001",
+  "targetUrl": "http://localhost:1001",
+  "serverMode": "production",
+  "buildId": "-E8-bUMPJK5kSaZcktVD0",
+  "releaseSha": "f81f1ebf0177dd9c9800006891fca0c7199ae861",
+  "releaseDirty": true,
+  "repeat": 4,
+  "authenticatedRoutes": [
+    "/notifications",
+    "/settings"
+  ],
+  "desktop": {
+    "lcp": {
+      "p75_ms": 777
+    },
+    "inp": {
+      "p75_ms": null
+    },
+    "cls": {
+      "p75": 0
+    },
+    "fcp": {
+      "p75_ms": 320
+    },
+    "ttfb": {
+      "p95_ms": 35.15
+    },
+    "longTasks": {
+      "p75_ms": 0
+    },
+    "usedJsHeap": {
+      "p75_bytes": 8157109
+    }
+  },
+  "mobile": {
+    "lcp": {
+      "p75_ms": 1810
+    },
+    "inp": {
+      "p75_ms": null
+    },
+    "cls": {
+      "p75": 0
+    },
+    "fcp": {
+      "p75_ms": 605
+    },
+    "ttfb": {
+      "p95_ms": 28.445000019669532
+    },
+    "longTasks": {
+      "p75_ms": 358.5
+    },
+    "usedJsHeap": {
+      "p75_bytes": 8289812.25
+    }
+  },
+  "byRoute": {
+    "/notifications": {
+      "desktop": {
+        "lcp": {
+          "p75_ms": 779
+        },
+        "inp": {
+          "p75_ms": null
+        },
+        "cls": {
+          "p75": 0
+        },
+        "fcp": {
+          "p75_ms": 327
+        },
+        "ttfb": {
+          "p95_ms": 34.3
+        },
+        "longTasks": {
+          "p75_ms": 13
+        },
+        "usedJsHeap": {
+          "p75_bytes": 8152680
+        },
+        "interactions": {
+          "samples": 4,
+          "performed": 0
+        }
+      },
+      "desktopContent": {
+        "url": "http://localhost:1001/org-setup",
+        "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
+        "words": 118,
+        "brandedLoader": false,
+        "errorBoundary": false,
+        "navLinks": 0
+      },
+      "mobile": {
+        "lcp": {
+          "p75_ms": 1747
+        },
+        "inp": {
+          "p75_ms": null
+        },
+        "cls": {
+          "p75": 0
+        },
+        "fcp": {
+          "p75_ms": 581
+        },
+        "ttfb": {
+          "p95_ms": 29.105000022053716
+        },
+        "longTasks": {
+          "p75_ms": 330.75
+        },
+        "usedJsHeap": {
+          "p75_bytes": 8267955
+        },
+        "interactions": {
+          "samples": 4,
+          "performed": 0
+        }
+      },
+      "mobileContent": {
+        "url": "http://localhost:1001/org-setup",
+        "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
+        "words": 37,
+        "brandedLoader": false,
+        "errorBoundary": false,
+        "navLinks": 0
+      }
+    },
+    "/settings": {
+      "desktop": {
+        "lcp": {
+          "p75_ms": 777
+        },
+        "inp": {
+          "p75_ms": null
+        },
+        "cls": {
+          "p75": 0
+        },
+        "fcp": {
+          "p75_ms": 317
+        },
+        "ttfb": {
+          "p95_ms": 33.270000001788134
+        },
+        "longTasks": {
+          "p75_ms": 0
+        },
+        "usedJsHeap": {
+          "p75_bytes": 8159131
+        },
+        "interactions": {
+          "samples": 4,
+          "performed": 0
+        }
+      },
+      "desktopContent": {
+        "url": "http://localhost:1001/org-setup",
+        "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
+        "words": 118,
+        "brandedLoader": false,
+        "errorBoundary": false,
+        "navLinks": 0
+      },
+      "mobile": {
+        "lcp": {
+          "p75_ms": 1834
+        },
+        "inp": {
+          "p75_ms": null
+        },
+        "cls": {
+          "p75": 0
+        },
+        "fcp": {
+          "p75_ms": 610
+        },
+        "ttfb": {
+          "p95_ms": 24.02000004053116
+        },
+        "longTasks": {
+          "p75_ms": 493.25
+        },
+        "usedJsHeap": {
+          "p75_bytes": 8353076
+        },
+        "interactions": {
+          "samples": 4,
+          "performed": 0
+        }
+      },
+      "mobileContent": {
+        "url": "http://localhost:1001/org-setup",
+        "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
+        "words": 14,
+        "brandedLoader": false,
+        "errorBoundary": true,
+        "navLinks": 0
+      }
+    }
+  },
+  "firstLoadBytesByRoute": {},
+  "serverTtfb": {
+    "method": "plain Node fetch to first response byte, no browser, no CPU or network emulation",
+    "repeat": 4,
+    "byRoute": {
+      "/notifications": {
+        "count": 4,
+        "statuses": [
+          307
+        ],
+        "p50_ms": 33.23489999999583,
+        "p75_ms": 36.263700000003155,
+        "p95_ms": 38.50890000000218
+      },
+      "/settings": {
+        "count": 4,
+        "statuses": [
+          307
+        ],
+        "p50_ms": 24.091499999994994,
+        "p75_ms": 25.151224999994156,
+        "p95_ms": 25.9653650000022
+      }
+    },
+    "note": "The browser TTFB above includes the emulated RTT (150ms on the mobile profile) and the browser's own scheduling. This figure is the server render on its own."
+  },
+  "perceivedResponsiveness": {
+    "target_ms": 100,
+    "method": "in-page click on an in-app nav link, timed to the first DOM mutation on the same clock",
+    "byRoute": {
+      "/notifications": {
+        "desktop": {
+          "measured": false,
+          "reason": "no in-app link in view"
+        },
+        "mobile": {
+          "measured": false,
+          "reason": "no in-app link in view"
+        }
+      },
+      "/settings": {
+        "desktop": {
+          "measured": false,
+          "reason": "no in-app link in view"
+        },
+        "mobile": {
+          "measured": false,
+          "reason": "no in-app link in view"
+        }
+      }
+    }
+  },
+  "authorization": {
+    "minNavLinksForAuthorizedShell": 3,
+    "samplesMeasured": 16,
+    "unauthorizedSamples": [
+      {
+        "index": 0,
+        "url": "http://localhost:1001/org-setup",
+        "navLinks": 0,
+        "words": 118
+      },
+      {
+        "index": 1,
+        "url": "http://localhost:1001/org-setup",
+        "navLinks": 0,
+        "words": 118
+      },
+      {
+        "index": 2,
+        "url": "http://localhost:1001/org-setup",
+        "navLinks": 0,
+        "words": 118
+      },
+      {
+        "index": 3,
+        "url": "http://localhost:1001/org-setup",
+        "navLinks": 0,
+        "words": 118
+      },
+      {
+        "index": 4,
+        "url": "http://localhost:1001/org-setup",
+        "navLinks": 0,
+        "words": 118
+      },
+      {
+        "index": 5,
+        "url": "http://localhost:1001/org-setup",
+        "navLinks": 0,
+        "words": 118
+      },
+      {
+        "index": 6,
+        "url": "http://localhost:1001/org-setup",
+        "navLinks": 0,
+        "words": 118
+      },
+      {
+        "index": 7,
+        "url": "http://localhost:1001/org-setup",
+        "navLinks": 0,
+        "words": 118
+      },
+      {
+        "index": 8,
+        "url": "http://localhost:1001/org-setup",
+        "navLinks": 0,
+        "words": 37
+      },
+      {
+        "index": 9,
+        "url": "http://localhost:1001/org-setup",
+        "navLinks": 0,
+        "words": 37
+      },
+      {
+        "index": 10,
+        "url": "http://localhost:1001/org-setup",
+        "navLinks": 0,
+        "words": 37
+      },
+      {
+        "index": 11,
+        "url": "http://localhost:1001/org-setup",
+        "navLinks": 0,
+        "words": 37
+      },
+      {
+        "index": 12,
+        "url": "http://localhost:1001/org-setup",
+        "navLinks": 0,
+        "words": 14
+      },
+      {
+        "index": 13,
+        "url": "http://localhost:1001/org-setup",
+        "navLinks": 0,
+        "words": 37
+      },
+      {
+        "index": 14,
+        "url": "http://localhost:1001/org-setup",
+        "navLinks": 0,
+        "words": 37
+      },
+      {
+        "index": 15,
+        "url": "http://localhost:1001/org-setup",
+        "navLinks": 0,
+        "words": 14
+      }
+    ],
+    "verdict": "capture is NOT evidence for these budgets: the shell rendered without authorized navigation"
+  },
+  "routeFailures": {
+    "count": 0,
+    "failures": [],
+    "verdict": "every requested route/profile pair completed"
+  },
+  "hydration": {
+    "navigationsInspected": 16,
+    "mismatchesFound": 0,
+    "findings": [],
+    "verdict": "no React hydration mismatch was logged on any measured navigation"
+  },
+  "contentAssertion": {
+    "minWordsPerSample": 10,
+    "samplesMeasured": 16,
+    "offRouteSamples": [
+      {
+        "index": 0,
+        "requested": "/notifications",
+        "url": "http://localhost:1001/org-setup"
+      },
+      {
+        "index": 1,
+        "requested": "/notifications",
+        "url": "http://localhost:1001/org-setup"
+      },
+      {
+        "index": 2,
+        "requested": "/notifications",
+        "url": "http://localhost:1001/org-setup"
+      },
+      {
+        "index": 3,
+        "requested": "/notifications",
+        "url": "http://localhost:1001/org-setup"
+      },
+      {
+        "index": 4,
+        "requested": "/settings",
+        "url": "http://localhost:1001/org-setup"
+      },
+      {
+        "index": 5,
+        "requested": "/settings",
+        "url": "http://localhost:1001/org-setup"
+      },
+      {
+        "index": 6,
+        "requested": "/settings",
+        "url": "http://localhost:1001/org-setup"
+      },
+      {
+        "index": 7,
+        "requested": "/settings",
+        "url": "http://localhost:1001/org-setup"
+      },
+      {
+        "index": 8,
+        "requested": "/notifications",
+        "url": "http://localhost:1001/org-setup"
+      },
+      {
+        "index": 9,
+        "requested": "/notifications",
+        "url": "http://localhost:1001/org-setup"
+      },
+      {
+        "index": 10,
+        "requested": "/notifications",
+        "url": "http://localhost:1001/org-setup"
+      },
+      {
+        "index": 11,
+        "requested": "/notifications",
+        "url": "http://localhost:1001/org-setup"
+      },
+      {
+        "index": 12,
+        "requested": "/settings",
+        "url": "http://localhost:1001/org-setup"
+      },
+      {
+        "index": 13,
+        "requested": "/settings",
+        "url": "http://localhost:1001/org-setup"
+      },
+      {
+        "index": 14,
+        "requested": "/settings",
+        "url": "http://localhost:1001/org-setup"
+      },
+      {
+        "index": 15,
+        "requested": "/settings",
+        "url": "http://localhost:1001/org-setup"
+      }
+    ],
+    "unusableSamples": [
+      {
+        "index": 12,
+        "url": "http://localhost:1001/org-setup",
+        "words": 14,
+        "brandedLoader": false,
+        "errorBoundary": true
+      },
+      {
+        "index": 15,
+        "url": "http://localhost:1001/org-setup",
+        "words": 14,
+        "brandedLoader": false,
+        "errorBoundary": true
+      }
+    ],
+    "verdict": "capture is NOT usable evidence"
+  },
+  "settle": {
+    "quietMs": 500,
+    "capMs": 6000,
+    "samplesMeasured": 16,
+    "cappedSamples": 0,
+    "capped": [],
+    "wordsByRoute": {
+      "/notifications": {
+        "desktop": 118,
+        "mobile": 37
+      },
+      "/settings": {
+        "desktop": 118,
+        "mobile": 14
+      }
+    },
+    "verdict": "every sample was taken after the DOM went quiet, so late-arriving data is inside the measurement"
+  },
+  "conditions": {
+    "driver": "frontend/scripts/measure-web-vitals.mjs",
+    "desktop": "1440x900, no CPU or network throttling",
+    "mobile": "390x844@3x, 4x CPU, 1.6 Mbps down / 750 Kbps up, 150ms RTT",
+    "authMethod": "minted NextAuth session cookie, set once via CDP and reused for every navigation",
+    "themeMode": "light",
+    "themeNote": "The app reads its theme from localStorage[\"streamlineos-app-theme-mode\"] and falls back to DEFAULT_APP_THEME_MODE (\"light\"), consulting prefers-color-scheme only when the stored value is \"system\". This run wrote \"light\" into that key before every document, so the emulated media feature and the rendered theme agree; emulating prefers-color-scheme alone would have measured light while claiming dark.",
+    "firstPartyOrigins": [
+      "http://localhost:1001",
+      "http://localhost:1500"
+    ],
+    "cache": "vitals navigations run with the HTTP cache enabled after one discarded warm-up; firstLoadBytesByRoute is a separate cache-disabled pass",
+    "serverModeDerivation": "the build id in the served HTML is compared against .next/BUILD_ID; it is not asserted by this driver",
+    "host": {
+      "cpuCount": 12,
+      "loadAverage1mAtStart": 0,
+      "loadAverage1mAtEnd": 0,
+      "note": "A throttled mobile profile on a contended host measures the host. Compare captures only at similar load; a 1m average above the CPU count means the numbers are not the application's."
+    }
+  }
+}

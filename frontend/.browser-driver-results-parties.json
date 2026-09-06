@@ -1,0 +1,594 @@
+{
+  "generatedAtMs": 1788665754810,
+  "generatedAt": "2026-09-06T03:35:54.810Z",
+  "baseUrl": "http://localhost:1002",
+  "targetUrl": "http://localhost:1002",
+  "serverMode": "production",
+  "buildId": "DXn4uSYmmIdIOV6J2z2uf",
+  "releaseSha": "f81f1ebf0177dd9c9800006891fca0c7199ae861",
+  "releaseDirty": true,
+  "repeat": 4,
+  "authenticatedRoutes": [
+    "/parties",
+    "/dashboard"
+  ],
+  "desktop": {
+    "lcp": {
+      "p75_ms": 2017
+    },
+    "inp": {
+      "p75_ms": 2080
+    },
+    "cls": {
+      "p75": 0
+    },
+    "fcp": {
+      "p75_ms": 1495
+    },
+    "ttfb": {
+      "p95_ms": 137.9549999564886
+    },
+    "longTasks": {
+      "p75_ms": 1716.75
+    },
+    "usedJsHeap": {
+      "p75_bytes": 33457547
+    }
+  },
+  "mobile": {
+    "lcp": {
+      "p75_ms": 1840
+    },
+    "inp": {
+      "p75_ms": 1496
+    },
+    "cls": {
+      "p75": 0
+    },
+    "fcp": {
+      "p75_ms": 1148
+    },
+    "ttfb": {
+      "p95_ms": 126.02000000476838
+    },
+    "longTasks": {
+      "p75_ms": 3497
+    },
+    "usedJsHeap": {
+      "p75_bytes": 48806685
+    }
+  },
+  "byRoute": {
+    "/dashboard": {
+      "desktop": {
+        "lcp": {
+          "p75_ms": 2333
+        },
+        "inp": {
+          "p75_ms": null
+        },
+        "cls": {
+          "p75": 0
+        },
+        "fcp": {
+          "p75_ms": 1378
+        },
+        "ttfb": {
+          "p95_ms": 145.55499995946883
+        },
+        "longTasks": {
+          "p75_ms": 1076.5
+        },
+        "usedJsHeap": {
+          "p75_bytes": 33474053.5
+        },
+        "interactions": {
+          "samples": 4,
+          "performed": 0
+        }
+      },
+      "desktopContent": {
+        "url": "http://localhost:1002/dashboard",
+        "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
+        "words": 8,
+        "brandedLoader": false,
+        "errorBoundary": false,
+        "navLinks": 4
+      },
+      "mobile": {
+        "lcp": {
+          "p75_ms": 1603
+        },
+        "inp": {
+          "p75_ms": 1536
+        },
+        "cls": {
+          "p75": 0
+        },
+        "fcp": {
+          "p75_ms": 1100
+        },
+        "ttfb": {
+          "p95_ms": 126.21500000655651
+        },
+        "longTasks": {
+          "p75_ms": 3493.25
+        },
+        "usedJsHeap": {
+          "p75_bytes": 48816238.75
+        },
+        "interactions": {
+          "samples": 4,
+          "performed": 4
+        }
+      },
+      "mobileContent": {
+        "url": "http://localhost:1002/dashboard",
+        "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
+        "words": 20,
+        "brandedLoader": false,
+        "errorBoundary": false,
+        "navLinks": 4
+      }
+    }
+  },
+  "firstLoadBytesByRoute": {
+    "/dashboard": {
+      "scriptBytes": 503384,
+      "stylesheetBytes": 58863,
+      "imageBytes": 3135,
+      "fontBytes": 55710,
+      "documentBytes": 20022,
+      "otherBytes": 2557,
+      "thirdPartyBytes": 0,
+      "totalBytes": 643671,
+      "windowTotals": {
+        "scriptBytes": 503384,
+        "stylesheetBytes": 58863,
+        "imageBytes": 3135,
+        "fontBytes": 55710,
+        "documentBytes": 20022,
+        "otherBytes": 5692,
+        "thirdPartyBytes": 0,
+        "totalBytes": 646806
+      },
+      "postLoadTotals": {
+        "scriptBytes": 0,
+        "stylesheetBytes": 0,
+        "imageBytes": 0,
+        "fontBytes": 0,
+        "documentBytes": 0,
+        "otherBytes": 3135,
+        "thirdPartyBytes": 0,
+        "totalBytes": 3135
+      },
+      "notableResources": [
+        {
+          "kind": "font",
+          "thirdParty": false,
+          "bytes": 30945,
+          "url": "http://localhost:1002/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2"
+        },
+        {
+          "kind": "font",
+          "thirdParty": false,
+          "bytes": 24765,
+          "url": "http://localhost:1002/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2"
+        },
+        {
+          "kind": "image",
+          "thirdParty": false,
+          "bytes": 3135,
+          "url": "http://localhost:1002/logo.svg"
+        },
+        {
+          "kind": "script",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1003/_next/static/chunks/3gd_fjq_q4b15.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1003/_next/static/chunks/11ujnsgirrdje.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1003/_next/static/chunks/3wi21j4x49obn.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1003/_next/static/chunks/turbopack-22_s8hmozidsw.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1003/_next/static/chunks/279uwxceqwh4n.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1003/_next/static/chunks/246l-z30bj5vg.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1003/_next/static/chunks/38o983xqkvs99.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1003/_next/static/chunks/3quu_5il8kvpe.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1003/_next/static/chunks/19eivberb1vjs.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1003/_next/static/chunks/3k10b0bte63f2.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1003/_next/static/chunks/29ur5xcfypvcq.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1003/_next/static/chunks/2haq0y66hfqwz.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1003/_next/static/chunks/0qsbsffz7b6fc.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1003/_next/static/chunks/0mz4a5oed2yb4.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1003/_next/static/chunks/0v_td532j9y0u.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1003/_next/static/chunks/1e4t9ifsu_biz.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": true,
+          "bytes": 0,
+          "url": "http://localhost:1003/_next/static/chunks/1injrl9v3udng.js"
+        }
+      ],
+      "largestScripts": [
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 74972,
+          "url": "http://localhost:1002/_next/static/chunks/3k10b0bte63f2.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 44217,
+          "url": "http://localhost:1002/_next/static/chunks/279uwxceqwh4n.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 28818,
+          "url": "http://localhost:1002/_next/static/chunks/3obnu1uf7c8ke.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 19593,
+          "url": "http://localhost:1002/_next/static/chunks/1mbhdoltrypqi.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 16351,
+          "url": "http://localhost:1002/_next/static/chunks/0m6lwyh9j2nb1.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 16053,
+          "url": "http://localhost:1002/_next/static/chunks/177cas1izqqsp.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 15334,
+          "url": "http://localhost:1002/_next/static/chunks/0dscj4twjuiuk.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 14669,
+          "url": "http://localhost:1002/_next/static/chunks/3g986ab2xalu3.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 14344,
+          "url": "http://localhost:1002/_next/static/chunks/19a9yoca0r26p.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 12134,
+          "url": "http://localhost:1002/_next/static/chunks/2haq0y66hfqwz.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 12064,
+          "url": "http://localhost:1002/_next/static/chunks/27ie0-cy9p70q.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11836,
+          "url": "http://localhost:1002/_next/static/chunks/137ttz72jw807.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11667,
+          "url": "http://localhost:1002/_next/static/chunks/3wi21j4x49obn.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11641,
+          "url": "http://localhost:1002/_next/static/chunks/01ymyzss-ty1a.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11637,
+          "url": "http://localhost:1002/_next/static/chunks/2129zx1pmm2l0.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11466,
+          "url": "http://localhost:1002/_next/static/chunks/3quu_5il8kvpe.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11399,
+          "url": "http://localhost:1002/_next/static/chunks/16ghl-6br7uop.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10896,
+          "url": "http://localhost:1002/_next/static/chunks/19eivberb1vjs.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10688,
+          "url": "http://localhost:1002/_next/static/chunks/0v_td532j9y0u.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10344,
+          "url": "http://localhost:1002/_next/static/chunks/3gd_fjq_q4b15.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10338,
+          "url": "http://localhost:1002/_next/static/chunks/2xb_45cx66pa7.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10279,
+          "url": "http://localhost:1002/_next/static/chunks/29pcs38zce7c1.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10073,
+          "url": "http://localhost:1002/_next/static/chunks/29ur5xcfypvcq.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9943,
+          "url": "http://localhost:1002/_next/static/chunks/1vxah3yig9q5p.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9920,
+          "url": "http://localhost:1002/_next/static/chunks/38o983xqkvs99.js"
+        }
+      ],
+      "largestPostLoadScripts": []
+    }
+  },
+  "serverTtfb": {
+    "method": "plain Node fetch to first response byte, no browser, no CPU or network emulation",
+    "repeat": 4,
+    "byRoute": {
+      "/parties": {
+        "count": 4,
+        "statuses": [
+          200
+        ],
+        "p50_ms": 114.44844999999623,
+        "p75_ms": 128.05432499999006,
+        "p95_ms": 135.8013449999882
+      },
+      "/dashboard": {
+        "count": 4,
+        "statuses": [
+          200
+        ],
+        "p50_ms": 106.29559999999765,
+        "p75_ms": 115.56932499999675,
+        "p95_ms": 124.95218500000337
+      }
+    },
+    "note": "The browser TTFB above includes the emulated RTT (150ms on the mobile profile) and the browser's own scheduling. This figure is the server render on its own."
+  },
+  "perceivedResponsiveness": {
+    "target_ms": 100,
+    "method": "in-page click on an in-app nav link, timed to the first DOM mutation on the same clock",
+    "byRoute": {
+      "/dashboard": {
+        "desktop": {
+          "measured": false,
+          "reason": "no in-app link in view"
+        },
+        "mobile": {
+          "measured": false,
+          "reason": "no in-app link in view"
+        }
+      }
+    }
+  },
+  "authorization": {
+    "minNavLinksForAuthorizedShell": 3,
+    "samplesMeasured": 13,
+    "unauthorizedSamples": [],
+    "verdict": "every measured sample rendered an authorized shell"
+  },
+  "routeFailures": {
+    "count": 2,
+    "failures": [
+      {
+        "route": "/parties",
+        "profile": "desktop",
+        "error": "Runtime.evaluate: Inspected target navigated or closed"
+      },
+      {
+        "route": "/parties",
+        "profile": "mobile",
+        "error": "Runtime.evaluate: Inspected target navigated or closed"
+      }
+    ],
+    "verdict": "these route/profile pairs produced no measurement and are absent from byRoute"
+  },
+  "hydration": {
+    "navigationsInspected": 13,
+    "mismatchesFound": 0,
+    "findings": [],
+    "verdict": "no React hydration mismatch was logged on any measured navigation"
+  },
+  "contentAssertion": {
+    "minWordsPerSample": 10,
+    "samplesMeasured": 13,
+    "offRouteSamples": [
+      {
+        "index": 0,
+        "requested": "/parties",
+        "url": "http://localhost:1003/build/inbox"
+      },
+      {
+        "index": 8,
+        "requested": "/parties",
+        "url": "http://localhost:1003/support/inbox"
+      }
+    ],
+    "unusableSamples": [
+      {
+        "index": 4,
+        "url": "http://localhost:1002/dashboard",
+        "words": 8,
+        "brandedLoader": false,
+        "errorBoundary": false
+      },
+      {
+        "index": 5,
+        "url": "http://localhost:1002/dashboard",
+        "words": 8,
+        "brandedLoader": false,
+        "errorBoundary": false
+      },
+      {
+        "index": 6,
+        "url": "http://localhost:1002/dashboard",
+        "words": 8,
+        "brandedLoader": false,
+        "errorBoundary": false
+      },
+      {
+        "index": 7,
+        "url": "http://localhost:1002/dashboard",
+        "words": 8,
+        "brandedLoader": false,
+        "errorBoundary": false
+      }
+    ],
+    "verdict": "capture is NOT usable evidence"
+  },
+  "settle": {
+    "quietMs": 500,
+    "capMs": 6000,
+    "samplesMeasured": 13,
+    "cappedSamples": 0,
+    "capped": [],
+    "wordsByRoute": {
+      "/dashboard": {
+        "desktop": 8,
+        "mobile": 20
+      }
+    },
+    "verdict": "every sample was taken after the DOM went quiet, so late-arriving data is inside the measurement"
+  },
+  "conditions": {
+    "driver": "frontend/scripts/measure-web-vitals.mjs",
+    "desktop": "1440x900, no CPU or network throttling",
+    "mobile": "390x844@3x, 4x CPU, 1.6 Mbps down / 750 Kbps up, 150ms RTT",
+    "authMethod": "minted NextAuth session cookie, set once via CDP and reused for every navigation",
+    "themeMode": "light",
+    "themeNote": "The app reads its theme from localStorage[\"streamlineos-app-theme-mode\"] and falls back to DEFAULT_APP_THEME_MODE (\"light\"), consulting prefers-color-scheme only when the stored value is \"system\". This run wrote \"light\" into that key before every document, so the emulated media feature and the rendered theme agree; emulating prefers-color-scheme alone would have measured light while claiming dark.",
+    "firstPartyOrigins": [
+      "http://localhost:1002",
+      "http://localhost:1500"
+    ],
+    "cache": "vitals navigations run with the HTTP cache enabled after one discarded warm-up; firstLoadBytesByRoute is a separate cache-disabled pass",
+    "serverModeDerivation": "the build id in the served HTML is compared against .next/BUILD_ID; it is not asserted by this driver",
+    "host": {
+      "cpuCount": 12,
+      "loadAverage1mAtStart": 0,
+      "loadAverage1mAtEnd": 0,
+      "note": "A throttled mobile profile on a contended host measures the host. Compare captures only at similar load; a 1m average above the CPU count means the numbers are not the application's."
+    }
+  }
+}

@@ -1,300 +1,882 @@
 {
-  "generatedAtMs": 1788648753989,
-  "generatedAt": "2026-09-05T22:52:33.989Z",
+  "generatedAtMs": 1788662199831,
+  "generatedAt": "2026-09-06T02:36:39.831Z",
   "baseUrl": "http://localhost:1000",
   "targetUrl": "http://localhost:1000",
   "serverMode": "production",
-  "buildId": "Hk6IaL01sTxEpdulqhQj7",
-  "releaseSha": "d0b913ed83a73f8eefcab4746b61749aa64c8753",
-  "releaseDirty": false,
-  "repeat": 3,
+  "buildId": "GQiapG3nhbJrPgAQe28t4",
+  "releaseSha": "f81f1ebf0177dd9c9800006891fca0c7199ae861",
+  "releaseDirty": true,
+  "repeat": 6,
   "authenticatedRoutes": [
+    "/mail",
+    "/inbox",
+    "/build/inbox",
+    "/support/inbox",
     "/dashboard",
+    "/chat",
+    "/calendar",
     "/notifications",
-    "/mail"
+    "/settings",
+    "/build/my-work",
+    "/parties"
   ],
   "desktop": {
     "lcp": {
-      "p75_ms": 2152
+      "p75_ms": 228
     },
     "inp": {
-      "p75_ms": 168
+      "p75_ms": 96
     },
     "cls": {
-      "p75": 0.002771275398662551
+      "p75": 0.0007445987654320987
     },
     "fcp": {
-      "p75_ms": 792
+      "p75_ms": 204
     },
     "ttfb": {
-      "p95_ms": 8628.299999999996
+      "p95_ms": 83.67500002682209
     },
     "longTasks": {
-      "p75_ms": 922
+      "p75_ms": 250.5
     },
     "usedJsHeap": {
-      "p75_bytes": 17715593
+      "p75_bytes": 15029247.75
     }
   },
   "mobile": {
     "lcp": {
-      "p75_ms": 1320
+      "p75_ms": 869
     },
     "inp": {
-      "p75_ms": 2408
+      "p75_ms": 640
     },
     "cls": {
       "p75": 0
     },
     "fcp": {
-      "p75_ms": 1176
+      "p75_ms": 553
     },
     "ttfb": {
-      "p95_ms": 828.8599999666213
+      "p95_ms": 91.34999997913837
     },
     "longTasks": {
-      "p75_ms": 5231
+      "p75_ms": 1240
     },
     "usedJsHeap": {
-      "p75_bytes": 11775633
+      "p75_bytes": 12031755.5
     }
   },
   "byRoute": {
-    "/dashboard": {
+    "/mail": {
       "desktop": {
         "lcp": {
-          "p75_ms": 2848
+          "p75_ms": 191
         },
         "inp": {
-          "p75_ms": 156
+          "p75_ms": 64
         },
         "cls": {
-          "p75": 0.002771275398662551
+          "p75": 0.0007445987654320987
         },
         "fcp": {
-          "p75_ms": 1008
+          "p75_ms": 191
         },
         "ttfb": {
-          "p95_ms": 1340.2099999964237
+          "p95_ms": 81.22499999403954
         },
         "longTasks": {
-          "p75_ms": 753
+          "p75_ms": 153.5
         },
         "usedJsHeap": {
-          "p75_bytes": 16691176
+          "p75_bytes": 12912705
         },
         "interactions": {
-          "samples": 3,
-          "performed": 3
+          "samples": 6,
+          "performed": 6
         }
       },
       "desktopContent": {
-        "url": "http://localhost:1000/dashboard",
-        "title": "(99+) StreamlineOS",
+        "url": "http://localhost:1000/mail",
+        "title": "StreamlineOS — The operating system for modern teams",
         "visibilityState": "visible",
-        "words": 150,
+        "words": 47,
         "brandedLoader": false,
         "errorBoundary": false,
         "navLinks": 16
       },
       "mobile": {
         "lcp": {
-          "p75_ms": 1196
+          "p75_ms": 408
         },
         "inp": {
-          "p75_ms": 2464
+          "p75_ms": 48
         },
         "cls": {
-          "p75": 0.03069091067259242
+          "p75": 0
         },
         "fcp": {
-          "p75_ms": 918
+          "p75_ms": 408
         },
         "ttfb": {
-          "p95_ms": 168.05000002980233
+          "p95_ms": 55.82500000298023
         },
         "longTasks": {
-          "p75_ms": 6566.5
+          "p75_ms": 694
         },
         "usedJsHeap": {
-          "p75_bytes": 13622090.5
+          "p75_bytes": 11531439.75
         },
         "interactions": {
-          "samples": 3,
-          "performed": 3
+          "samples": 6,
+          "performed": 6
+        }
+      },
+      "mobileContent": {
+        "url": "http://localhost:1000/mail",
+        "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
+        "words": 27,
+        "brandedLoader": false,
+        "errorBoundary": false,
+        "navLinks": 4
+      }
+    },
+    "/inbox": {
+      "desktop": {
+        "lcp": {
+          "p75_ms": 220
+        },
+        "inp": {
+          "p75_ms": 108
+        },
+        "cls": {
+          "p75": 0.0007445987654320987
+        },
+        "fcp": {
+          "p75_ms": 220
+        },
+        "ttfb": {
+          "p95_ms": 70.34999997913837
+        },
+        "longTasks": {
+          "p75_ms": 242
+        },
+        "usedJsHeap": {
+          "p75_bytes": 13170382
+        },
+        "interactions": {
+          "samples": 6,
+          "performed": 6
+        }
+      },
+      "desktopContent": {
+        "url": "http://localhost:1000/inbox",
+        "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
+        "words": 48,
+        "brandedLoader": false,
+        "errorBoundary": false,
+        "navLinks": 16
+      },
+      "mobile": {
+        "lcp": {
+          "p75_ms": 475
+        },
+        "inp": {
+          "p75_ms": 790
+        },
+        "cls": {
+          "p75": 0
+        },
+        "fcp": {
+          "p75_ms": 475
+        },
+        "ttfb": {
+          "p95_ms": 56.62500001490116
+        },
+        "longTasks": {
+          "p75_ms": 1169.5
+        },
+        "usedJsHeap": {
+          "p75_bytes": 10343032.25
+        },
+        "interactions": {
+          "samples": 6,
+          "performed": 6
+        }
+      },
+      "mobileContent": {
+        "url": "http://localhost:1000/inbox",
+        "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
+        "words": 29,
+        "brandedLoader": false,
+        "errorBoundary": false,
+        "navLinks": 4
+      }
+    },
+    "/build/inbox": {
+      "desktop": {
+        "lcp": {
+          "p75_ms": 238
+        },
+        "inp": {
+          "p75_ms": 96
+        },
+        "cls": {
+          "p75": 0.0007445987654320987
+        },
+        "fcp": {
+          "p75_ms": 238
+        },
+        "ttfb": {
+          "p95_ms": 92.7250000089407
+        },
+        "longTasks": {
+          "p75_ms": 234.75
+        },
+        "usedJsHeap": {
+          "p75_bytes": 13152961.5
+        },
+        "interactions": {
+          "samples": 6,
+          "performed": 6
+        }
+      },
+      "desktopContent": {
+        "url": "http://localhost:1000/build/inbox",
+        "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
+        "words": 54,
+        "brandedLoader": false,
+        "errorBoundary": false,
+        "navLinks": 10
+      },
+      "mobile": {
+        "lcp": {
+          "p75_ms": 479
+        },
+        "inp": {
+          "p75_ms": 608
+        },
+        "cls": {
+          "p75": 0
+        },
+        "fcp": {
+          "p75_ms": 479
+        },
+        "ttfb": {
+          "p95_ms": 54.275000005960464
+        },
+        "longTasks": {
+          "p75_ms": 910.25
+        },
+        "usedJsHeap": {
+          "p75_bytes": 10162264.5
+        },
+        "interactions": {
+          "samples": 6,
+          "performed": 6
+        }
+      },
+      "mobileContent": {
+        "url": "http://localhost:1000/build/inbox",
+        "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
+        "words": 28,
+        "brandedLoader": false,
+        "errorBoundary": false,
+        "navLinks": 4
+      }
+    },
+    "/support/inbox": {
+      "desktop": {
+        "lcp": {
+          "p75_ms": 192
+        },
+        "inp": {
+          "p75_ms": 76
+        },
+        "cls": {
+          "p75": 0.0007445987654320987
+        },
+        "fcp": {
+          "p75_ms": 192
+        },
+        "ttfb": {
+          "p95_ms": 74.25
+        },
+        "longTasks": {
+          "p75_ms": 150.5
+        },
+        "usedJsHeap": {
+          "p75_bytes": 13464175
+        },
+        "interactions": {
+          "samples": 6,
+          "performed": 6
+        }
+      },
+      "desktopContent": {
+        "url": "http://localhost:1000/support/inbox",
+        "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
+        "words": 53,
+        "brandedLoader": false,
+        "errorBoundary": false,
+        "navLinks": 8
+      },
+      "mobile": {
+        "lcp": {
+          "p75_ms": 911
+        },
+        "inp": {
+          "p75_ms": 282
+        },
+        "cls": {
+          "p75": 0
+        },
+        "fcp": {
+          "p75_ms": 509
+        },
+        "ttfb": {
+          "p95_ms": 53.79999998211861
+        },
+        "longTasks": {
+          "p75_ms": 979.5
+        },
+        "usedJsHeap": {
+          "p75_bytes": 10702106
+        },
+        "interactions": {
+          "samples": 6,
+          "performed": 6
+        }
+      },
+      "mobileContent": {
+        "url": "http://localhost:1000/support/inbox",
+        "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
+        "words": 30,
+        "brandedLoader": false,
+        "errorBoundary": false,
+        "navLinks": 4
+      }
+    },
+    "/dashboard": {
+      "desktop": {
+        "lcp": {
+          "p75_ms": 195
+        },
+        "inp": {
+          "p75_ms": 64
+        },
+        "cls": {
+          "p75": 0.0007445987654320987
+        },
+        "fcp": {
+          "p75_ms": 195
+        },
+        "ttfb": {
+          "p95_ms": 60.67499999701977
+        },
+        "longTasks": {
+          "p75_ms": 131.5
+        },
+        "usedJsHeap": {
+          "p75_bytes": 16940439.25
+        },
+        "interactions": {
+          "samples": 6,
+          "performed": 6
+        }
+      },
+      "desktopContent": {
+        "url": "http://localhost:1000/dashboard",
+        "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
+        "words": 51,
+        "brandedLoader": false,
+        "errorBoundary": false,
+        "navLinks": 16
+      },
+      "mobile": {
+        "lcp": {
+          "p75_ms": 451
+        },
+        "inp": {
+          "p75_ms": 300
+        },
+        "cls": {
+          "p75": 0
+        },
+        "fcp": {
+          "p75_ms": 451
+        },
+        "ttfb": {
+          "p95_ms": 39.3999999910593
+        },
+        "longTasks": {
+          "p75_ms": 857
+        },
+        "usedJsHeap": {
+          "p75_bytes": 13190220
+        },
+        "interactions": {
+          "samples": 6,
+          "performed": 6
         }
       },
       "mobileContent": {
         "url": "http://localhost:1000/dashboard",
         "title": "StreamlineOS — The operating system for modern teams",
         "visibilityState": "visible",
-        "words": 129,
+        "words": 32,
         "brandedLoader": false,
         "errorBoundary": false,
         "navLinks": 4
-      },
-      "mobileLayoutShifts": [
-        {
-          "value": 0.0404,
-          "atMs": 11684,
-          "sources": [
-            "div.h-full.min-h-0.flex-1"
-          ]
+      }
+    },
+    "/chat": {
+      "desktop": {
+        "lcp": {
+          "p75_ms": 193
         },
-        {
-          "value": 0.0207,
-          "atMs": 13132,
-          "sources": [
-            "div.h-full.min-h-0.flex-1",
-            "button.inline-flex.items-center.justify-center",
-            "div.flex.flex-col.items-end"
-          ]
+        "inp": {
+          "p75_ms": 78
+        },
+        "cls": {
+          "p75": 0.0007445987654320987
+        },
+        "fcp": {
+          "p75_ms": 193
+        },
+        "ttfb": {
+          "p95_ms": 63.474999979138374
+        },
+        "longTasks": {
+          "p75_ms": 119.25
+        },
+        "usedJsHeap": {
+          "p75_bytes": 15034037.25
+        },
+        "interactions": {
+          "samples": 6,
+          "performed": 6
         }
-      ]
+      },
+      "desktopContent": {
+        "url": "http://localhost:1000/chat",
+        "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
+        "words": 55,
+        "brandedLoader": false,
+        "errorBoundary": false,
+        "navLinks": 17
+      },
+      "mobile": {
+        "lcp": {
+          "p75_ms": 426
+        },
+        "inp": {
+          "p75_ms": 126
+        },
+        "cls": {
+          "p75": 0
+        },
+        "fcp": {
+          "p75_ms": 426
+        },
+        "ttfb": {
+          "p95_ms": 44.1000000089407
+        },
+        "longTasks": {
+          "p75_ms": 1031.5
+        },
+        "usedJsHeap": {
+          "p75_bytes": 14413126.25
+        },
+        "interactions": {
+          "samples": 6,
+          "performed": 6
+        }
+      },
+      "mobileContent": {
+        "url": "http://localhost:1000/chat",
+        "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
+        "words": 15,
+        "brandedLoader": false,
+        "errorBoundary": false,
+        "navLinks": 2
+      }
+    },
+    "/calendar": {
+      "desktop": {
+        "lcp": {
+          "p75_ms": 1247
+        },
+        "inp": {
+          "p75_ms": 38
+        },
+        "cls": {
+          "p75": 0.0012073356722608025
+        },
+        "fcp": {
+          "p75_ms": 167
+        },
+        "ttfb": {
+          "p95_ms": 63.150000020861626
+        },
+        "longTasks": {
+          "p75_ms": 298.25
+        },
+        "usedJsHeap": {
+          "p75_bytes": 15672379
+        },
+        "interactions": {
+          "samples": 6,
+          "performed": 6
+        }
+      },
+      "desktopContent": {
+        "url": "http://localhost:1000/calendar",
+        "title": "Calendar | StreamlineOS · StreamlineOS",
+        "visibilityState": "visible",
+        "words": 47,
+        "brandedLoader": false,
+        "errorBoundary": false,
+        "navLinks": 16
+      },
+      "mobile": {
+        "lcp": {
+          "p75_ms": 621
+        },
+        "inp": {
+          "p75_ms": 48
+        },
+        "cls": {
+          "p75": 0.0013861647650863695
+        },
+        "fcp": {
+          "p75_ms": 371
+        },
+        "ttfb": {
+          "p95_ms": 61.25
+        },
+        "longTasks": {
+          "p75_ms": 668
+        },
+        "usedJsHeap": {
+          "p75_bytes": 12273167.25
+        },
+        "interactions": {
+          "samples": 6,
+          "performed": 6
+        }
+      },
+      "mobileContent": {
+        "url": "http://localhost:1000/calendar",
+        "title": "Calendar | StreamlineOS · StreamlineOS",
+        "visibilityState": "visible",
+        "words": 24,
+        "brandedLoader": false,
+        "errorBoundary": false,
+        "navLinks": 4
+      }
     },
     "/notifications": {
       "desktop": {
         "lcp": {
-          "p75_ms": 7226
+          "p75_ms": 196
         },
         "inp": {
-          "p75_ms": 192
+          "p75_ms": 104
         },
         "cls": {
-          "p75": 0.0015795449674211248
+          "p75": 0.0007445987654320987
         },
         "fcp": {
-          "p75_ms": 7226
+          "p75_ms": 196
         },
         "ttfb": {
-          "p95_ms": 12113.63000000119
+          "p95_ms": 64.77499997615814
         },
         "longTasks": {
-          "p75_ms": 948
+          "p75_ms": 183
         },
         "usedJsHeap": {
-          "p75_bytes": 17911842.5
+          "p75_bytes": 13255400.75
         },
         "interactions": {
-          "samples": 3,
-          "performed": 3
+          "samples": 6,
+          "performed": 6
         }
       },
       "desktopContent": {
         "url": "http://localhost:1000/notifications",
         "title": "StreamlineOS — The operating system for modern teams",
         "visibilityState": "visible",
-        "words": 453,
+        "words": 61,
         "brandedLoader": false,
         "errorBoundary": false,
         "navLinks": 22
       },
       "mobile": {
         "lcp": {
-          "p75_ms": 1386
+          "p75_ms": 1050
         },
         "inp": {
-          "p75_ms": 2756
+          "p75_ms": 1052
         },
         "cls": {
           "p75": 0
         },
         "fcp": {
-          "p75_ms": 1144
+          "p75_ms": 698
         },
         "ttfb": {
-          "p95_ms": 837.9999999582767
+          "p95_ms": 61.82500001788139
         },
         "longTasks": {
-          "p75_ms": 5477
+          "p75_ms": 2562.25
         },
         "usedJsHeap": {
-          "p75_bytes": 11588454.5
+          "p75_bytes": 11266399.5
         },
         "interactions": {
-          "samples": 3,
-          "performed": 3
+          "samples": 6,
+          "performed": 6
         }
       },
       "mobileContent": {
         "url": "http://localhost:1000/notifications",
-        "title": "StreamlineOS",
+        "title": "StreamlineOS — The operating system for modern teams",
         "visibilityState": "visible",
-        "words": 42,
+        "words": 38,
         "brandedLoader": false,
         "errorBoundary": false,
         "navLinks": 11
       }
     },
-    "/mail": {
+    "/settings": {
       "desktop": {
         "lcp": {
-          "p75_ms": 1684
+          "p75_ms": 181
         },
         "inp": {
-          "p75_ms": 96
+          "p75_ms": 62
         },
         "cls": {
-          "p75": 0.0015687237439986283
+          "p75": 0.0007445987654320987
         },
         "fcp": {
-          "p75_ms": 414
+          "p75_ms": 181
         },
         "ttfb": {
-          "p95_ms": 352.2599999785423
+          "p95_ms": 66.8999999910593
         },
         "longTasks": {
-          "p75_ms": 425
+          "p75_ms": 224.25
         },
         "usedJsHeap": {
-          "p75_bytes": 13884770
+          "p75_bytes": 13627713.75
         },
         "interactions": {
-          "samples": 3,
-          "performed": 3
+          "samples": 6,
+          "performed": 6
         }
       },
       "desktopContent": {
-        "url": "http://localhost:1000/mail",
+        "url": "http://localhost:1000/settings",
         "title": "StreamlineOS — The operating system for modern teams",
         "visibilityState": "visible",
-        "words": 95,
+        "words": 122,
         "brandedLoader": false,
         "errorBoundary": false,
-        "navLinks": 16
+        "navLinks": 22
       },
       "mobile": {
         "lcp": {
-          "p75_ms": 1572
+          "p75_ms": 556
         },
         "inp": {
-          "p75_ms": 776
+          "p75_ms": 352
         },
         "cls": {
           "p75": 0
         },
         "fcp": {
-          "p75_ms": 1294
+          "p75_ms": 556
         },
         "ttfb": {
-          "p95_ms": 634.2799999892711
+          "p95_ms": 104.32500000298023
         },
         "longTasks": {
-          "p75_ms": 2216.5
+          "p75_ms": 1144.5
         },
         "usedJsHeap": {
-          "p75_bytes": 11070206
+          "p75_bytes": 12154579.5
         },
         "interactions": {
-          "samples": 3,
-          "performed": 3
+          "samples": 6,
+          "performed": 6
         }
       },
       "mobileContent": {
-        "url": "http://localhost:1000/mail",
-        "title": "StreamlineOS",
+        "url": "http://localhost:1000/settings",
+        "title": "StreamlineOS — The operating system for modern teams",
         "visibilityState": "visible",
-        "words": 27,
+        "words": 82,
+        "brandedLoader": false,
+        "errorBoundary": false,
+        "navLinks": 4
+      }
+    },
+    "/build/my-work": {
+      "desktop": {
+        "lcp": {
+          "p75_ms": 211
+        },
+        "inp": {
+          "p75_ms": 86
+        },
+        "cls": {
+          "p75": 0.0007445987654320987
+        },
+        "fcp": {
+          "p75_ms": 211
+        },
+        "ttfb": {
+          "p95_ms": 74.34999996423721
+        },
+        "longTasks": {
+          "p75_ms": 165.5
+        },
+        "usedJsHeap": {
+          "p75_bytes": 13466285
+        },
+        "interactions": {
+          "samples": 6,
+          "performed": 6
+        }
+      },
+      "desktopContent": {
+        "url": "http://localhost:1000/build/my-work",
+        "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
+        "words": 44,
+        "brandedLoader": false,
+        "errorBoundary": false,
+        "navLinks": 10
+      },
+      "mobile": {
+        "lcp": {
+          "p75_ms": 1055
+        },
+        "inp": {
+          "p75_ms": 964
+        },
+        "cls": {
+          "p75": 0
+        },
+        "fcp": {
+          "p75_ms": 697
+        },
+        "ttfb": {
+          "p95_ms": 79.97499997913837
+        },
+        "longTasks": {
+          "p75_ms": 1527.25
+        },
+        "usedJsHeap": {
+          "p75_bytes": 10829630
+        },
+        "interactions": {
+          "samples": 6,
+          "performed": 6
+        }
+      },
+      "mobileContent": {
+        "url": "http://localhost:1000/build/my-work",
+        "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
+        "words": 30,
+        "brandedLoader": false,
+        "errorBoundary": false,
+        "navLinks": 4
+      }
+    },
+    "/parties": {
+      "desktop": {
+        "lcp": {
+          "p75_ms": 271
+        },
+        "inp": {
+          "p75_ms": 150
+        },
+        "cls": {
+          "p75": 0.0015545846193415636
+        },
+        "fcp": {
+          "p75_ms": 271
+        },
+        "ttfb": {
+          "p95_ms": 81.80000001192093
+        },
+        "longTasks": {
+          "p75_ms": 414.75
+        },
+        "usedJsHeap": {
+          "p75_bytes": 13544008
+        },
+        "interactions": {
+          "samples": 6,
+          "performed": 6
+        }
+      },
+      "desktopContent": {
+        "url": "http://localhost:1000/parties",
+        "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
+        "words": 65,
+        "brandedLoader": false,
+        "errorBoundary": false,
+        "navLinks": 19
+      },
+      "mobile": {
+        "lcp": {
+          "p75_ms": 1416
+        },
+        "inp": {
+          "p75_ms": 1436
+        },
+        "cls": {
+          "p75": 0
+        },
+        "fcp": {
+          "p75_ms": 863
+        },
+        "ttfb": {
+          "p95_ms": 99.5249999910593
+        },
+        "longTasks": {
+          "p75_ms": 3530.5
+        },
+        "usedJsHeap": {
+          "p75_bytes": 10645398
+        },
+        "interactions": {
+          "samples": 6,
+          "performed": 6
+        }
+      },
+      "mobileContent": {
+        "url": "http://localhost:1000/parties",
+        "title": "StreamlineOS — The operating system for modern teams",
+        "visibilityState": "visible",
+        "words": 38,
         "brandedLoader": false,
         "errorBoundary": false,
         "navLinks": 4
@@ -302,346 +884,340 @@
     }
   },
   "firstLoadBytesByRoute": {
-    "/dashboard": {
-      "scriptBytes": 521908,
-      "stylesheetBytes": 58745,
-      "imageBytes": 3076,
-      "fontBytes": 55580,
-      "documentBytes": 21083,
-      "otherBytes": 2492,
-      "thirdPartyBytes": 23226,
-      "totalBytes": 662884,
+    "/mail": {
+      "scriptBytes": 516061,
+      "stylesheetBytes": 59021,
+      "imageBytes": 3214,
+      "fontBytes": 55868,
+      "documentBytes": 21187,
+      "otherBytes": 2636,
+      "thirdPartyBytes": 0,
+      "totalBytes": 657987,
       "windowTotals": {
-        "scriptBytes": 628462,
-        "stylesheetBytes": 58745,
-        "imageBytes": 6152,
-        "fontBytes": 55580,
-        "documentBytes": 21083,
-        "otherBytes": 22879,
-        "thirdPartyBytes": 23226,
-        "totalBytes": 792901
+        "scriptBytes": 704734,
+        "stylesheetBytes": 59021,
+        "imageBytes": 6428,
+        "fontBytes": 55868,
+        "documentBytes": 21187,
+        "otherBytes": 20340,
+        "thirdPartyBytes": 0,
+        "totalBytes": 867578
       },
       "postLoadTotals": {
-        "scriptBytes": 106554,
+        "scriptBytes": 188673,
         "stylesheetBytes": 0,
-        "imageBytes": 3076,
+        "imageBytes": 3214,
         "fontBytes": 0,
         "documentBytes": 0,
-        "otherBytes": 20387,
+        "otherBytes": 17704,
         "thirdPartyBytes": 0,
-        "totalBytes": 130017
+        "totalBytes": 209591
       },
       "notableResources": [
         {
           "kind": "font",
           "thirdParty": false,
-          "bytes": 30880,
+          "bytes": 31024,
           "url": "http://localhost:1000/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2"
         },
         {
           "kind": "font",
           "thirdParty": false,
-          "bytes": 24700,
+          "bytes": 24844,
           "url": "http://localhost:1000/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2"
-        },
-        {
-          "kind": "script",
-          "thirdParty": true,
-          "bytes": 9394,
-          "url": "chrome://resources/mojo/components/omnibox/composebox/composebox_query.mojom-webui.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": true,
-          "bytes": 5356,
-          "url": "chrome://resources/mojo/ui/gfx/geometry/mojom/geometry.mojom-webui.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": true,
-          "bytes": 4159,
-          "url": "chrome://resources/mojo/components/omnibox/browser/omnibox.mojom-webui.js"
         },
         {
           "kind": "image",
           "thirdParty": false,
-          "bytes": 3076,
+          "bytes": 3214,
           "url": "http://localhost:1000/logo.svg"
-        },
-        {
-          "kind": "script",
-          "thirdParty": true,
-          "bytes": 2171,
-          "url": "chrome://resources/mojo/ui/base/mojom/window_open_disposition.mojom-webui.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": true,
-          "bytes": 872,
-          "url": "chrome://resources/mojo/mojo/public/mojom/base/unguessable_token.mojom-webui.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": true,
-          "bytes": 655,
-          "url": "chrome://resources/mojo/mojo/public/mojom/base/unguessable_token_converter.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": true,
-          "bytes": 619,
-          "url": "chrome://resources/mojo/mojo/public/mojom/base/unguessable_token.mojom-converters.js"
         }
       ],
       "largestScripts": [
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 74913,
+          "bytes": 75051,
           "url": "http://localhost:1000/_next/static/chunks/3k10b0bte63f2.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 44158,
+          "bytes": 44296,
           "url": "http://localhost:1000/_next/static/chunks/279uwxceqwh4n.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 28759,
+          "bytes": 28897,
           "url": "http://localhost:1000/_next/static/chunks/3obnu1uf7c8ke.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 19475,
-          "url": "http://localhost:1000/_next/static/chunks/1y1ccjn6zqch1.js"
+          "bytes": 19620,
+          "url": "http://localhost:1000/_next/static/chunks/3h6hobend1iw_.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 16292,
+          "bytes": 16430,
           "url": "http://localhost:1000/_next/static/chunks/0m6lwyh9j2nb1.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 15994,
+          "bytes": 16132,
           "url": "http://localhost:1000/_next/static/chunks/177cas1izqqsp.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 15248,
-          "url": "http://localhost:1000/_next/static/chunks/0-fke9op99yp5.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 14610,
+          "bytes": 14748,
           "url": "http://localhost:1000/_next/static/chunks/3g986ab2xalu3.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 14256,
-          "url": "http://localhost:1000/_next/static/chunks/3bg2yxcldemuv.js"
+          "bytes": 14423,
+          "url": "http://localhost:1000/_next/static/chunks/19a9yoca0r26p.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 13621,
-          "url": "http://localhost:1000/_next/static/chunks/2ilp-ikkcuoos.js"
+          "bytes": 13781,
+          "url": "http://localhost:1000/_next/static/chunks/2ed9wn33jyl1o.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12075,
+          "bytes": 12213,
           "url": "http://localhost:1000/_next/static/chunks/2haq0y66hfqwz.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11777,
-          "url": "http://localhost:1000/_next/static/chunks/137ttz72jw807.js"
+          "bytes": 11769,
+          "url": "http://localhost:1000/_next/static/chunks/0x7l-3tm_twwz.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11608,
-          "url": "http://localhost:1000/_next/static/chunks/3mm2qmihvctrz.js"
+          "bytes": 11750,
+          "url": "http://localhost:1000/_next/static/chunks/0kvhb4uw00ni4.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11407,
+          "bytes": 11545,
           "url": "http://localhost:1000/_next/static/chunks/3quu_5il8kvpe.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11340,
+          "bytes": 11478,
           "url": "http://localhost:1000/_next/static/chunks/16ghl-6br7uop.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10837,
+          "bytes": 11421,
+          "url": "http://localhost:1000/_next/static/chunks/2fi7qv47crgzl.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10975,
           "url": "http://localhost:1000/_next/static/chunks/19eivberb1vjs.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10659,
-          "url": "http://localhost:1000/_next/static/chunks/3sers8-eydsfd.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 10629,
+          "bytes": 10767,
           "url": "http://localhost:1000/_next/static/chunks/0v_td532j9y0u.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10285,
+          "bytes": 10738,
+          "url": "http://localhost:1000/_next/static/chunks/2rcf8f3a1gah-.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10447,
+          "url": "http://localhost:1000/_next/static/chunks/1qygs66g3fvnl.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10423,
           "url": "http://localhost:1000/_next/static/chunks/3gd_fjq_q4b15.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10279,
-          "url": "http://localhost:1000/_next/static/chunks/18jb9zsorbums.js"
+          "bytes": 10417,
+          "url": "http://localhost:1000/_next/static/chunks/2xb_45cx66pa7.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10220,
+          "bytes": 10358,
           "url": "http://localhost:1000/_next/static/chunks/29pcs38zce7c1.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10114,
+          "bytes": 10252,
           "url": "http://localhost:1000/_next/static/chunks/0njqifu22xw-c.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10014,
+          "bytes": 10152,
           "url": "http://localhost:1000/_next/static/chunks/29ur5xcfypvcq.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9922,
-          "url": "http://localhost:1000/_next/static/chunks/2t7cga_8d-qqz.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 9884,
-          "url": "http://localhost:1000/_next/static/chunks/1vxah3yig9q5p.js"
+          "bytes": 10060,
+          "url": "http://localhost:1000/_next/static/chunks/0o25h4udznyh3.js"
         }
       ],
       "largestPostLoadScripts": [
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 55744,
+          "bytes": 62517,
+          "url": "http://localhost:1000/feedbucket-widget.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 55882,
           "url": "http://localhost:1000/_next/static/chunks/2i4o_u836_j1p.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9107,
-          "url": "http://localhost:1000/_next/static/chunks/139f7q2jkszi1.js"
+          "bytes": 9244,
+          "url": "http://localhost:1000/_next/static/chunks/0a9uzuwfc1pir.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9018,
+          "bytes": 9156,
           "url": "http://localhost:1000/_next/static/chunks/3awrltcd60vvz.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 8578,
+          "bytes": 8716,
           "url": "http://localhost:1000/_next/static/chunks/2gf3xjyhonazx.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 8197,
+          "bytes": 8335,
           "url": "http://localhost:1000/_next/static/chunks/0sc8s1ylgiuo0.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 7233,
+          "bytes": 7371,
           "url": "http://localhost:1000/_next/static/chunks/15sn-nqvja077.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 6823,
+          "bytes": 6961,
           "url": "http://localhost:1000/_next/static/chunks/13cfuy31oy_3k.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 1854,
+          "bytes": 5972,
+          "url": "http://localhost:1000/_next/static/chunks/2ksaxlzxg-yeg.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 3694,
+          "url": "http://localhost:1000/_next/static/chunks/0ua-pucewyttz.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 2947,
+          "url": "http://localhost:1000/_next/static/chunks/2os5y_skbul8q.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 2946,
+          "url": "http://localhost:1000/_next/static/chunks/0ovw-r5cahezc.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 2940,
+          "url": "http://localhost:1000/_next/static/chunks/3z-hrhwc9lxsh.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 1992,
           "url": "http://localhost:1000/_next/static/chunks/0ral29h6y7zex.js"
         }
       ]
     },
-    "/notifications": {
-      "scriptBytes": 502510,
-      "stylesheetBytes": 58745,
-      "imageBytes": 3076,
-      "fontBytes": 55580,
-      "documentBytes": 22202,
-      "otherBytes": 2492,
+    "/inbox": {
+      "scriptBytes": 493603,
+      "stylesheetBytes": 59021,
+      "imageBytes": 3214,
+      "fontBytes": 55868,
+      "documentBytes": 20951,
+      "otherBytes": 2636,
       "thirdPartyBytes": 0,
-      "totalBytes": 644605,
+      "totalBytes": 635293,
       "windowTotals": {
-        "scriptBytes": 680086,
-        "stylesheetBytes": 58745,
-        "imageBytes": 6152,
-        "fontBytes": 55580,
-        "documentBytes": 22202,
-        "otherBytes": 46440,
+        "scriptBytes": 678582,
+        "stylesheetBytes": 59021,
+        "imageBytes": 6428,
+        "fontBytes": 55868,
+        "documentBytes": 20951,
+        "otherBytes": 33886,
         "thirdPartyBytes": 0,
-        "totalBytes": 869205
+        "totalBytes": 854736
       },
       "postLoadTotals": {
-        "scriptBytes": 177576,
+        "scriptBytes": 184979,
         "stylesheetBytes": 0,
-        "imageBytes": 3076,
+        "imageBytes": 3214,
         "fontBytes": 0,
         "documentBytes": 0,
-        "otherBytes": 43948,
+        "otherBytes": 31250,
         "thirdPartyBytes": 0,
-        "totalBytes": 224600
+        "totalBytes": 219443
       },
       "notableResources": [
         {
           "kind": "font",
           "thirdParty": false,
-          "bytes": 30880,
+          "bytes": 31024,
           "url": "http://localhost:1000/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2"
         },
         {
           "kind": "font",
           "thirdParty": false,
-          "bytes": 24700,
+          "bytes": 24844,
           "url": "http://localhost:1000/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2"
         },
         {
           "kind": "image",
           "thirdParty": false,
-          "bytes": 3076,
+          "bytes": 3214,
           "url": "http://localhost:1000/logo.svg"
         }
       ],
@@ -649,151 +1225,151 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 74913,
+          "bytes": 75051,
           "url": "http://localhost:1000/_next/static/chunks/3k10b0bte63f2.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 44158,
+          "bytes": 44296,
           "url": "http://localhost:1000/_next/static/chunks/279uwxceqwh4n.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 28759,
+          "bytes": 28897,
           "url": "http://localhost:1000/_next/static/chunks/3obnu1uf7c8ke.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 21636,
-          "url": "http://localhost:1000/_next/static/chunks/19a0l0j8-3j6u.js"
+          "bytes": 19620,
+          "url": "http://localhost:1000/_next/static/chunks/3h6hobend1iw_.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 19475,
-          "url": "http://localhost:1000/_next/static/chunks/1y1ccjn6zqch1.js"
+          "bytes": 19591,
+          "url": "http://localhost:1000/_next/static/chunks/403c24wz_d9im.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 16292,
+          "bytes": 16430,
           "url": "http://localhost:1000/_next/static/chunks/0m6lwyh9j2nb1.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 15994,
+          "bytes": 16132,
           "url": "http://localhost:1000/_next/static/chunks/177cas1izqqsp.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 14610,
+          "bytes": 14748,
           "url": "http://localhost:1000/_next/static/chunks/3g986ab2xalu3.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 14256,
-          "url": "http://localhost:1000/_next/static/chunks/3bg2yxcldemuv.js"
+          "bytes": 14423,
+          "url": "http://localhost:1000/_next/static/chunks/19a9yoca0r26p.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 13621,
-          "url": "http://localhost:1000/_next/static/chunks/2ilp-ikkcuoos.js"
+          "bytes": 13781,
+          "url": "http://localhost:1000/_next/static/chunks/2ed9wn33jyl1o.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12075,
+          "bytes": 12213,
           "url": "http://localhost:1000/_next/static/chunks/2haq0y66hfqwz.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11608,
-          "url": "http://localhost:1000/_next/static/chunks/3mm2qmihvctrz.js"
+          "bytes": 11750,
+          "url": "http://localhost:1000/_next/static/chunks/0kvhb4uw00ni4.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11407,
+          "bytes": 11545,
           "url": "http://localhost:1000/_next/static/chunks/3quu_5il8kvpe.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11340,
+          "bytes": 11478,
           "url": "http://localhost:1000/_next/static/chunks/16ghl-6br7uop.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10837,
+          "bytes": 10975,
           "url": "http://localhost:1000/_next/static/chunks/19eivberb1vjs.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10659,
-          "url": "http://localhost:1000/_next/static/chunks/3sers8-eydsfd.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 10629,
+          "bytes": 10767,
           "url": "http://localhost:1000/_next/static/chunks/0v_td532j9y0u.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10285,
+          "bytes": 10738,
+          "url": "http://localhost:1000/_next/static/chunks/2rcf8f3a1gah-.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10423,
           "url": "http://localhost:1000/_next/static/chunks/3gd_fjq_q4b15.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10279,
-          "url": "http://localhost:1000/_next/static/chunks/18jb9zsorbums.js"
+          "bytes": 10417,
+          "url": "http://localhost:1000/_next/static/chunks/2xb_45cx66pa7.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10220,
+          "bytes": 10358,
           "url": "http://localhost:1000/_next/static/chunks/29pcs38zce7c1.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10114,
+          "bytes": 10252,
           "url": "http://localhost:1000/_next/static/chunks/0njqifu22xw-c.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10014,
+          "bytes": 10152,
           "url": "http://localhost:1000/_next/static/chunks/29ur5xcfypvcq.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9922,
-          "url": "http://localhost:1000/_next/static/chunks/2t7cga_8d-qqz.js"
+          "bytes": 10060,
+          "url": "http://localhost:1000/_next/static/chunks/0o25h4udznyh3.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9884,
+          "bytes": 10022,
           "url": "http://localhost:1000/_next/static/chunks/1vxah3yig9q5p.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9861,
+          "bytes": 9999,
           "url": "http://localhost:1000/_next/static/chunks/38o983xqkvs99.js"
         }
       ],
@@ -801,390 +1377,2784 @@
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 62379,
+          "bytes": 62517,
           "url": "http://localhost:1000/feedbucket-widget.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 55744,
+          "bytes": 55882,
           "url": "http://localhost:1000/_next/static/chunks/2i4o_u836_j1p.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9107,
-          "url": "http://localhost:1000/_next/static/chunks/139f7q2jkszi1.js"
+          "bytes": 9244,
+          "url": "http://localhost:1000/_next/static/chunks/0a9uzuwfc1pir.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9018,
+          "bytes": 9156,
           "url": "http://localhost:1000/_next/static/chunks/3awrltcd60vvz.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 8578,
+          "bytes": 8716,
           "url": "http://localhost:1000/_next/static/chunks/2gf3xjyhonazx.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 8197,
+          "bytes": 8335,
           "url": "http://localhost:1000/_next/static/chunks/0sc8s1ylgiuo0.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 7233,
+          "bytes": 7371,
           "url": "http://localhost:1000/_next/static/chunks/15sn-nqvja077.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 6823,
+          "bytes": 6961,
           "url": "http://localhost:1000/_next/static/chunks/13cfuy31oy_3k.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 5834,
+          "bytes": 5972,
           "url": "http://localhost:1000/_next/static/chunks/2ksaxlzxg-yeg.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 2809,
+          "bytes": 2947,
           "url": "http://localhost:1000/_next/static/chunks/2os5y_skbul8q.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 1854,
+          "bytes": 2946,
+          "url": "http://localhost:1000/_next/static/chunks/0ovw-r5cahezc.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 2940,
+          "url": "http://localhost:1000/_next/static/chunks/3z-hrhwc9lxsh.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 1992,
           "url": "http://localhost:1000/_next/static/chunks/0ral29h6y7zex.js"
         }
       ]
     },
-    "/mail": {
-      "scriptBytes": 510321,
-      "stylesheetBytes": 58745,
-      "imageBytes": 0,
-      "fontBytes": 55580,
-      "documentBytes": 21062,
-      "otherBytes": 2492,
+    "/build/inbox": {
+      "scriptBytes": 497882,
+      "stylesheetBytes": 59021,
+      "imageBytes": 6764,
+      "fontBytes": 55868,
+      "documentBytes": 21474,
+      "otherBytes": 2636,
       "thirdPartyBytes": 0,
-      "totalBytes": 648200,
+      "totalBytes": 643645,
       "windowTotals": {
-        "scriptBytes": 729077,
-        "stylesheetBytes": 58745,
-        "imageBytes": 13619,
-        "fontBytes": 55580,
-        "documentBytes": 21062,
-        "otherBytes": 64249,
+        "scriptBytes": 686555,
+        "stylesheetBytes": 59021,
+        "imageBytes": 9978,
+        "fontBytes": 55868,
+        "documentBytes": 21474,
+        "otherBytes": 32875,
         "thirdPartyBytes": 0,
-        "totalBytes": 942332
+        "totalBytes": 865771
       },
       "postLoadTotals": {
-        "scriptBytes": 218756,
+        "scriptBytes": 188673,
         "stylesheetBytes": 0,
-        "imageBytes": 13619,
+        "imageBytes": 3214,
         "fontBytes": 0,
         "documentBytes": 0,
-        "otherBytes": 61757,
+        "otherBytes": 30239,
         "thirdPartyBytes": 0,
-        "totalBytes": 294132
+        "totalBytes": 222126
       },
       "notableResources": [
         {
           "kind": "font",
           "thirdParty": false,
-          "bytes": 30880,
+          "bytes": 31024,
           "url": "http://localhost:1000/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2"
         },
         {
           "kind": "font",
           "thirdParty": false,
-          "bytes": 24700,
+          "bytes": 24844,
           "url": "http://localhost:1000/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2"
+        },
+        {
+          "kind": "image",
+          "thirdParty": false,
+          "bytes": 3550,
+          "url": "http://localhost:1000/illustrations/empty-mail.svg"
+        },
+        {
+          "kind": "image",
+          "thirdParty": false,
+          "bytes": 3214,
+          "url": "http://localhost:1000/logo.svg"
         }
       ],
       "largestScripts": [
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 74913,
+          "bytes": 75051,
           "url": "http://localhost:1000/_next/static/chunks/3k10b0bte63f2.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 44158,
+          "bytes": 44296,
           "url": "http://localhost:1000/_next/static/chunks/279uwxceqwh4n.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 28759,
+          "bytes": 28897,
           "url": "http://localhost:1000/_next/static/chunks/3obnu1uf7c8ke.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 19475,
-          "url": "http://localhost:1000/_next/static/chunks/1y1ccjn6zqch1.js"
+          "bytes": 19620,
+          "url": "http://localhost:1000/_next/static/chunks/3h6hobend1iw_.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 16292,
+          "bytes": 16430,
           "url": "http://localhost:1000/_next/static/chunks/0m6lwyh9j2nb1.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 15994,
+          "bytes": 16132,
           "url": "http://localhost:1000/_next/static/chunks/177cas1izqqsp.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 14610,
+          "bytes": 14748,
           "url": "http://localhost:1000/_next/static/chunks/3g986ab2xalu3.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 14256,
-          "url": "http://localhost:1000/_next/static/chunks/3bg2yxcldemuv.js"
+          "bytes": 14423,
+          "url": "http://localhost:1000/_next/static/chunks/19a9yoca0r26p.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 13621,
-          "url": "http://localhost:1000/_next/static/chunks/2ilp-ikkcuoos.js"
+          "bytes": 13781,
+          "url": "http://localhost:1000/_next/static/chunks/2ed9wn33jyl1o.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 12075,
+          "bytes": 12213,
           "url": "http://localhost:1000/_next/static/chunks/2haq0y66hfqwz.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11631,
-          "url": "http://localhost:1000/_next/static/chunks/0x7l-3tm_twwz.js"
+          "bytes": 12118,
+          "url": "http://localhost:1000/_next/static/chunks/2kjjithlnwurg.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11608,
-          "url": "http://localhost:1000/_next/static/chunks/3mm2qmihvctrz.js"
+          "bytes": 12017,
+          "url": "http://localhost:1000/_next/static/chunks/29pa-lafdn879.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11407,
+          "bytes": 11750,
+          "url": "http://localhost:1000/_next/static/chunks/0kvhb4uw00ni4.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11545,
           "url": "http://localhost:1000/_next/static/chunks/3quu_5il8kvpe.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11340,
+          "bytes": 11478,
           "url": "http://localhost:1000/_next/static/chunks/16ghl-6br7uop.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 11283,
-          "url": "http://localhost:1000/_next/static/chunks/2fi7qv47crgzl.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 10837,
+          "bytes": 10975,
           "url": "http://localhost:1000/_next/static/chunks/19eivberb1vjs.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10659,
-          "url": "http://localhost:1000/_next/static/chunks/3sers8-eydsfd.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 10629,
+          "bytes": 10767,
           "url": "http://localhost:1000/_next/static/chunks/0v_td532j9y0u.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10309,
-          "url": "http://localhost:1000/_next/static/chunks/1qygs66g3fvnl.js"
+          "bytes": 10738,
+          "url": "http://localhost:1000/_next/static/chunks/2rcf8f3a1gah-.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10285,
+          "bytes": 10423,
           "url": "http://localhost:1000/_next/static/chunks/3gd_fjq_q4b15.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10279,
-          "url": "http://localhost:1000/_next/static/chunks/18jb9zsorbums.js"
+          "bytes": 10417,
+          "url": "http://localhost:1000/_next/static/chunks/2xb_45cx66pa7.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10220,
+          "bytes": 10358,
           "url": "http://localhost:1000/_next/static/chunks/29pcs38zce7c1.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10114,
+          "bytes": 10252,
           "url": "http://localhost:1000/_next/static/chunks/0njqifu22xw-c.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10014,
+          "bytes": 10152,
           "url": "http://localhost:1000/_next/static/chunks/29ur5xcfypvcq.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 9922,
-          "url": "http://localhost:1000/_next/static/chunks/2t7cga_8d-qqz.js"
+          "bytes": 10060,
+          "url": "http://localhost:1000/_next/static/chunks/0o25h4udznyh3.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10022,
+          "url": "http://localhost:1000/_next/static/chunks/1vxah3yig9q5p.js"
         }
       ],
       "largestPostLoadScripts": [
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 62379,
+          "bytes": 62517,
           "url": "http://localhost:1000/feedbucket-widget.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 55744,
+          "bytes": 55882,
           "url": "http://localhost:1000/_next/static/chunks/2i4o_u836_j1p.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 19111,
-          "url": "http://localhost:1000/_next/static/chunks/0_mr1i8obpsg2.js"
+          "bytes": 9244,
+          "url": "http://localhost:1000/_next/static/chunks/0a9uzuwfc1pir.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 10509,
-          "url": "http://localhost:1000/_next/static/chunks/0zm2ba89e-0g_.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 9107,
-          "url": "http://localhost:1000/_next/static/chunks/139f7q2jkszi1.js"
-        },
-        {
-          "kind": "script",
-          "thirdParty": false,
-          "bytes": 9018,
+          "bytes": 9156,
           "url": "http://localhost:1000/_next/static/chunks/3awrltcd60vvz.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 8578,
+          "bytes": 8716,
           "url": "http://localhost:1000/_next/static/chunks/2gf3xjyhonazx.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 8197,
+          "bytes": 8335,
           "url": "http://localhost:1000/_next/static/chunks/0sc8s1ylgiuo0.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 7233,
+          "bytes": 7371,
           "url": "http://localhost:1000/_next/static/chunks/15sn-nqvja077.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 6823,
+          "bytes": 6961,
           "url": "http://localhost:1000/_next/static/chunks/13cfuy31oy_3k.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 5834,
+          "bytes": 5972,
           "url": "http://localhost:1000/_next/static/chunks/2ksaxlzxg-yeg.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 3556,
+          "bytes": 3694,
           "url": "http://localhost:1000/_next/static/chunks/0ua-pucewyttz.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 2809,
+          "bytes": 2947,
           "url": "http://localhost:1000/_next/static/chunks/2os5y_skbul8q.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 2808,
+          "bytes": 2946,
           "url": "http://localhost:1000/_next/static/chunks/0ovw-r5cahezc.js"
         },
         {
           "kind": "script",
           "thirdParty": false,
-          "bytes": 2802,
+          "bytes": 2940,
           "url": "http://localhost:1000/_next/static/chunks/3z-hrhwc9lxsh.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 1992,
+          "url": "http://localhost:1000/_next/static/chunks/0ral29h6y7zex.js"
+        }
+      ]
+    },
+    "/support/inbox": {
+      "scriptBytes": 511572,
+      "stylesheetBytes": 59021,
+      "imageBytes": 7252,
+      "fontBytes": 55868,
+      "documentBytes": 24674,
+      "otherBytes": 2636,
+      "thirdPartyBytes": 0,
+      "totalBytes": 661023,
+      "windowTotals": {
+        "scriptBytes": 690579,
+        "stylesheetBytes": 59021,
+        "imageBytes": 10466,
+        "fontBytes": 55868,
+        "documentBytes": 24674,
+        "otherBytes": 27866,
+        "thirdPartyBytes": 0,
+        "totalBytes": 868474
+      },
+      "postLoadTotals": {
+        "scriptBytes": 179007,
+        "stylesheetBytes": 0,
+        "imageBytes": 3214,
+        "fontBytes": 0,
+        "documentBytes": 0,
+        "otherBytes": 25230,
+        "thirdPartyBytes": 0,
+        "totalBytes": 207451
+      },
+      "notableResources": [
+        {
+          "kind": "font",
+          "thirdParty": false,
+          "bytes": 31024,
+          "url": "http://localhost:1000/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2"
+        },
+        {
+          "kind": "font",
+          "thirdParty": false,
+          "bytes": 24844,
+          "url": "http://localhost:1000/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2"
+        },
+        {
+          "kind": "image",
+          "thirdParty": false,
+          "bytes": 4038,
+          "url": "http://localhost:1000/illustrations/empty-ticket.svg"
+        },
+        {
+          "kind": "image",
+          "thirdParty": false,
+          "bytes": 3214,
+          "url": "http://localhost:1000/logo.svg"
+        }
+      ],
+      "largestScripts": [
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 75051,
+          "url": "http://localhost:1000/_next/static/chunks/3k10b0bte63f2.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 44296,
+          "url": "http://localhost:1000/_next/static/chunks/279uwxceqwh4n.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 28897,
+          "url": "http://localhost:1000/_next/static/chunks/3obnu1uf7c8ke.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 19620,
+          "url": "http://localhost:1000/_next/static/chunks/3h6hobend1iw_.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 17996,
+          "url": "http://localhost:1000/_next/static/chunks/12dehppsvwh6e.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 16430,
+          "url": "http://localhost:1000/_next/static/chunks/0m6lwyh9j2nb1.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 16132,
+          "url": "http://localhost:1000/_next/static/chunks/177cas1izqqsp.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 14748,
+          "url": "http://localhost:1000/_next/static/chunks/3g986ab2xalu3.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 14423,
+          "url": "http://localhost:1000/_next/static/chunks/19a9yoca0r26p.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 13781,
+          "url": "http://localhost:1000/_next/static/chunks/2ed9wn33jyl1o.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 12213,
+          "url": "http://localhost:1000/_next/static/chunks/2haq0y66hfqwz.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11750,
+          "url": "http://localhost:1000/_next/static/chunks/0kvhb4uw00ni4.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11545,
+          "url": "http://localhost:1000/_next/static/chunks/3quu_5il8kvpe.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11478,
+          "url": "http://localhost:1000/_next/static/chunks/16ghl-6br7uop.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10975,
+          "url": "http://localhost:1000/_next/static/chunks/19eivberb1vjs.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10767,
+          "url": "http://localhost:1000/_next/static/chunks/0v_td532j9y0u.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10738,
+          "url": "http://localhost:1000/_next/static/chunks/2rcf8f3a1gah-.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10423,
+          "url": "http://localhost:1000/_next/static/chunks/3gd_fjq_q4b15.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10417,
+          "url": "http://localhost:1000/_next/static/chunks/2xb_45cx66pa7.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10358,
+          "url": "http://localhost:1000/_next/static/chunks/29pcs38zce7c1.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10252,
+          "url": "http://localhost:1000/_next/static/chunks/0njqifu22xw-c.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10152,
+          "url": "http://localhost:1000/_next/static/chunks/29ur5xcfypvcq.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10079,
+          "url": "http://localhost:1000/_next/static/chunks/12m9axkqercd8.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10060,
+          "url": "http://localhost:1000/_next/static/chunks/0o25h4udznyh3.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10022,
+          "url": "http://localhost:1000/_next/static/chunks/1vxah3yig9q5p.js"
+        }
+      ],
+      "largestPostLoadScripts": [
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 62517,
+          "url": "http://localhost:1000/feedbucket-widget.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 55882,
+          "url": "http://localhost:1000/_next/static/chunks/2i4o_u836_j1p.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9244,
+          "url": "http://localhost:1000/_next/static/chunks/0a9uzuwfc1pir.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9156,
+          "url": "http://localhost:1000/_next/static/chunks/3awrltcd60vvz.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 8716,
+          "url": "http://localhost:1000/_next/static/chunks/2gf3xjyhonazx.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 8335,
+          "url": "http://localhost:1000/_next/static/chunks/0sc8s1ylgiuo0.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 7371,
+          "url": "http://localhost:1000/_next/static/chunks/15sn-nqvja077.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 6961,
+          "url": "http://localhost:1000/_next/static/chunks/13cfuy31oy_3k.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 2947,
+          "url": "http://localhost:1000/_next/static/chunks/2os5y_skbul8q.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 2946,
+          "url": "http://localhost:1000/_next/static/chunks/0ovw-r5cahezc.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 2940,
+          "url": "http://localhost:1000/_next/static/chunks/3z-hrhwc9lxsh.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 1992,
+          "url": "http://localhost:1000/_next/static/chunks/0ral29h6y7zex.js"
+        }
+      ]
+    },
+    "/dashboard": {
+      "scriptBytes": 504285,
+      "stylesheetBytes": 59021,
+      "imageBytes": 3214,
+      "fontBytes": 55868,
+      "documentBytes": 21200,
+      "otherBytes": 2636,
+      "thirdPartyBytes": 0,
+      "totalBytes": 646224,
+      "windowTotals": {
+        "scriptBytes": 684039,
+        "stylesheetBytes": 59021,
+        "imageBytes": 6428,
+        "fontBytes": 55868,
+        "documentBytes": 21200,
+        "otherBytes": 34232,
+        "thirdPartyBytes": 0,
+        "totalBytes": 860788
+      },
+      "postLoadTotals": {
+        "scriptBytes": 179754,
+        "stylesheetBytes": 0,
+        "imageBytes": 3214,
+        "fontBytes": 0,
+        "documentBytes": 0,
+        "otherBytes": 31596,
+        "thirdPartyBytes": 0,
+        "totalBytes": 214564
+      },
+      "notableResources": [
+        {
+          "kind": "font",
+          "thirdParty": false,
+          "bytes": 31024,
+          "url": "http://localhost:1000/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2"
+        },
+        {
+          "kind": "font",
+          "thirdParty": false,
+          "bytes": 24844,
+          "url": "http://localhost:1000/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2"
+        },
+        {
+          "kind": "image",
+          "thirdParty": false,
+          "bytes": 3214,
+          "url": "http://localhost:1000/logo.svg"
+        }
+      ],
+      "largestScripts": [
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 75051,
+          "url": "http://localhost:1000/_next/static/chunks/3k10b0bte63f2.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 44296,
+          "url": "http://localhost:1000/_next/static/chunks/279uwxceqwh4n.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 28897,
+          "url": "http://localhost:1000/_next/static/chunks/3obnu1uf7c8ke.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 19620,
+          "url": "http://localhost:1000/_next/static/chunks/3h6hobend1iw_.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 16430,
+          "url": "http://localhost:1000/_next/static/chunks/0m6lwyh9j2nb1.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 16132,
+          "url": "http://localhost:1000/_next/static/chunks/177cas1izqqsp.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 15386,
+          "url": "http://localhost:1000/_next/static/chunks/0-fke9op99yp5.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 14748,
+          "url": "http://localhost:1000/_next/static/chunks/3g986ab2xalu3.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 14423,
+          "url": "http://localhost:1000/_next/static/chunks/19a9yoca0r26p.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 13781,
+          "url": "http://localhost:1000/_next/static/chunks/2ed9wn33jyl1o.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 12213,
+          "url": "http://localhost:1000/_next/static/chunks/2haq0y66hfqwz.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11915,
+          "url": "http://localhost:1000/_next/static/chunks/137ttz72jw807.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11750,
+          "url": "http://localhost:1000/_next/static/chunks/0kvhb4uw00ni4.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11545,
+          "url": "http://localhost:1000/_next/static/chunks/3quu_5il8kvpe.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11478,
+          "url": "http://localhost:1000/_next/static/chunks/16ghl-6br7uop.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10975,
+          "url": "http://localhost:1000/_next/static/chunks/19eivberb1vjs.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10767,
+          "url": "http://localhost:1000/_next/static/chunks/0v_td532j9y0u.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10738,
+          "url": "http://localhost:1000/_next/static/chunks/2rcf8f3a1gah-.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10423,
+          "url": "http://localhost:1000/_next/static/chunks/3gd_fjq_q4b15.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10417,
+          "url": "http://localhost:1000/_next/static/chunks/2xb_45cx66pa7.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10358,
+          "url": "http://localhost:1000/_next/static/chunks/29pcs38zce7c1.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10252,
+          "url": "http://localhost:1000/_next/static/chunks/0njqifu22xw-c.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10152,
+          "url": "http://localhost:1000/_next/static/chunks/29ur5xcfypvcq.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10060,
+          "url": "http://localhost:1000/_next/static/chunks/0o25h4udznyh3.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10022,
+          "url": "http://localhost:1000/_next/static/chunks/1vxah3yig9q5p.js"
+        }
+      ],
+      "largestPostLoadScripts": [
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 62517,
+          "url": "http://localhost:1000/feedbucket-widget.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 55882,
+          "url": "http://localhost:1000/_next/static/chunks/2i4o_u836_j1p.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9244,
+          "url": "http://localhost:1000/_next/static/chunks/0a9uzuwfc1pir.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9156,
+          "url": "http://localhost:1000/_next/static/chunks/3awrltcd60vvz.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 8716,
+          "url": "http://localhost:1000/_next/static/chunks/2gf3xjyhonazx.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 8335,
+          "url": "http://localhost:1000/_next/static/chunks/0sc8s1ylgiuo0.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 7371,
+          "url": "http://localhost:1000/_next/static/chunks/15sn-nqvja077.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 6961,
+          "url": "http://localhost:1000/_next/static/chunks/13cfuy31oy_3k.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 3694,
+          "url": "http://localhost:1000/_next/static/chunks/0ua-pucewyttz.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 2946,
+          "url": "http://localhost:1000/_next/static/chunks/0ovw-r5cahezc.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 2940,
+          "url": "http://localhost:1000/_next/static/chunks/3z-hrhwc9lxsh.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 1992,
+          "url": "http://localhost:1000/_next/static/chunks/0ral29h6y7zex.js"
+        }
+      ]
+    },
+    "/chat": {
+      "scriptBytes": 497586,
+      "stylesheetBytes": 59021,
+      "imageBytes": 10970,
+      "fontBytes": 55868,
+      "documentBytes": 22271,
+      "otherBytes": 2636,
+      "thirdPartyBytes": 0,
+      "totalBytes": 648352,
+      "windowTotals": {
+        "scriptBytes": 750063,
+        "stylesheetBytes": 59021,
+        "imageBytes": 14184,
+        "fontBytes": 55868,
+        "documentBytes": 22271,
+        "otherBytes": 32716,
+        "thirdPartyBytes": 0,
+        "totalBytes": 934123
+      },
+      "postLoadTotals": {
+        "scriptBytes": 252477,
+        "stylesheetBytes": 0,
+        "imageBytes": 3214,
+        "fontBytes": 0,
+        "documentBytes": 0,
+        "otherBytes": 30080,
+        "thirdPartyBytes": 0,
+        "totalBytes": 285771
+      },
+      "notableResources": [
+        {
+          "kind": "font",
+          "thirdParty": false,
+          "bytes": 31024,
+          "url": "http://localhost:1000/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2"
+        },
+        {
+          "kind": "font",
+          "thirdParty": false,
+          "bytes": 24844,
+          "url": "http://localhost:1000/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2"
+        },
+        {
+          "kind": "image",
+          "thirdParty": false,
+          "bytes": 7756,
+          "url": "http://localhost:1000/illustrations/chat.svg"
+        },
+        {
+          "kind": "image",
+          "thirdParty": false,
+          "bytes": 3214,
+          "url": "http://localhost:1000/logo.svg"
+        }
+      ],
+      "largestScripts": [
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 75051,
+          "url": "http://localhost:1000/_next/static/chunks/3k10b0bte63f2.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 44296,
+          "url": "http://localhost:1000/_next/static/chunks/279uwxceqwh4n.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 28897,
+          "url": "http://localhost:1000/_next/static/chunks/3obnu1uf7c8ke.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 19620,
+          "url": "http://localhost:1000/_next/static/chunks/3h6hobend1iw_.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 16430,
+          "url": "http://localhost:1000/_next/static/chunks/0m6lwyh9j2nb1.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 16132,
+          "url": "http://localhost:1000/_next/static/chunks/177cas1izqqsp.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 14748,
+          "url": "http://localhost:1000/_next/static/chunks/3g986ab2xalu3.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 14423,
+          "url": "http://localhost:1000/_next/static/chunks/19a9yoca0r26p.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 14123,
+          "url": "http://localhost:1000/_next/static/chunks/19aves9bjciv7.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 13781,
+          "url": "http://localhost:1000/_next/static/chunks/2ed9wn33jyl1o.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 12213,
+          "url": "http://localhost:1000/_next/static/chunks/2haq0y66hfqwz.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11750,
+          "url": "http://localhost:1000/_next/static/chunks/0kvhb4uw00ni4.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11545,
+          "url": "http://localhost:1000/_next/static/chunks/3quu_5il8kvpe.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11478,
+          "url": "http://localhost:1000/_next/static/chunks/16ghl-6br7uop.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10975,
+          "url": "http://localhost:1000/_next/static/chunks/19eivberb1vjs.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10767,
+          "url": "http://localhost:1000/_next/static/chunks/0v_td532j9y0u.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10738,
+          "url": "http://localhost:1000/_next/static/chunks/2rcf8f3a1gah-.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10423,
+          "url": "http://localhost:1000/_next/static/chunks/3gd_fjq_q4b15.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10417,
+          "url": "http://localhost:1000/_next/static/chunks/2xb_45cx66pa7.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10358,
+          "url": "http://localhost:1000/_next/static/chunks/29pcs38zce7c1.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10252,
+          "url": "http://localhost:1000/_next/static/chunks/0njqifu22xw-c.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10152,
+          "url": "http://localhost:1000/_next/static/chunks/29ur5xcfypvcq.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10060,
+          "url": "http://localhost:1000/_next/static/chunks/0o25h4udznyh3.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10022,
+          "url": "http://localhost:1000/_next/static/chunks/1vxah3yig9q5p.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9999,
+          "url": "http://localhost:1000/_next/static/chunks/38o983xqkvs99.js"
+        }
+      ],
+      "largestPostLoadScripts": [
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 62517,
+          "url": "http://localhost:1000/feedbucket-widget.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 55882,
+          "url": "http://localhost:1000/_next/static/chunks/2i4o_u836_j1p.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 50719,
+          "url": "http://localhost:1000/_next/static/chunks/1odqbo2mc4mp2.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9244,
+          "url": "http://localhost:1000/_next/static/chunks/0a9uzuwfc1pir.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9156,
+          "url": "http://localhost:1000/_next/static/chunks/3awrltcd60vvz.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 8716,
+          "url": "http://localhost:1000/_next/static/chunks/2gf3xjyhonazx.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 8335,
+          "url": "http://localhost:1000/_next/static/chunks/0sc8s1ylgiuo0.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 7706,
+          "url": "http://localhost:1000/_next/static/chunks/03z02-9l-tn56.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 7371,
+          "url": "http://localhost:1000/_next/static/chunks/15sn-nqvja077.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 6961,
+          "url": "http://localhost:1000/_next/static/chunks/13cfuy31oy_3k.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 5972,
+          "url": "http://localhost:1000/_next/static/chunks/2ksaxlzxg-yeg.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 5279,
+          "url": "http://localhost:1000/_next/static/chunks/3jd1kir6asi3v.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 3694,
+          "url": "http://localhost:1000/_next/static/chunks/0ua-pucewyttz.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 3040,
+          "url": "http://localhost:1000/_next/static/chunks/1tnf100mi7o13.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 2947,
+          "url": "http://localhost:1000/_next/static/chunks/2os5y_skbul8q.js"
+        }
+      ]
+    },
+    "/calendar": {
+      "scriptBytes": 510863,
+      "stylesheetBytes": 59021,
+      "imageBytes": 3214,
+      "fontBytes": 55868,
+      "documentBytes": 23509,
+      "otherBytes": 2636,
+      "thirdPartyBytes": 0,
+      "totalBytes": 655111,
+      "windowTotals": {
+        "scriptBytes": 791474,
+        "stylesheetBytes": 63286,
+        "imageBytes": 6428,
+        "fontBytes": 55868,
+        "documentBytes": 23509,
+        "otherBytes": 24892,
+        "thirdPartyBytes": 0,
+        "totalBytes": 965457
+      },
+      "postLoadTotals": {
+        "scriptBytes": 280611,
+        "stylesheetBytes": 4265,
+        "imageBytes": 3214,
+        "fontBytes": 0,
+        "documentBytes": 0,
+        "otherBytes": 22256,
+        "thirdPartyBytes": 0,
+        "totalBytes": 310346
+      },
+      "notableResources": [
+        {
+          "kind": "font",
+          "thirdParty": false,
+          "bytes": 31024,
+          "url": "http://localhost:1000/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2"
+        },
+        {
+          "kind": "font",
+          "thirdParty": false,
+          "bytes": 24844,
+          "url": "http://localhost:1000/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2"
+        },
+        {
+          "kind": "image",
+          "thirdParty": false,
+          "bytes": 3214,
+          "url": "http://localhost:1000/logo.svg"
+        }
+      ],
+      "largestScripts": [
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 75051,
+          "url": "http://localhost:1000/_next/static/chunks/3k10b0bte63f2.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 44296,
+          "url": "http://localhost:1000/_next/static/chunks/279uwxceqwh4n.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 28897,
+          "url": "http://localhost:1000/_next/static/chunks/3obnu1uf7c8ke.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 19620,
+          "url": "http://localhost:1000/_next/static/chunks/3h6hobend1iw_.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 17387,
+          "url": "http://localhost:1000/_next/static/chunks/2umdcw8vqzff-.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 16430,
+          "url": "http://localhost:1000/_next/static/chunks/0m6lwyh9j2nb1.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 16132,
+          "url": "http://localhost:1000/_next/static/chunks/177cas1izqqsp.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 14748,
+          "url": "http://localhost:1000/_next/static/chunks/3g986ab2xalu3.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 14423,
+          "url": "http://localhost:1000/_next/static/chunks/19a9yoca0r26p.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 13781,
+          "url": "http://localhost:1000/_next/static/chunks/2ed9wn33jyl1o.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 12213,
+          "url": "http://localhost:1000/_next/static/chunks/2haq0y66hfqwz.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11750,
+          "url": "http://localhost:1000/_next/static/chunks/0kvhb4uw00ni4.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11545,
+          "url": "http://localhost:1000/_next/static/chunks/3quu_5il8kvpe.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11478,
+          "url": "http://localhost:1000/_next/static/chunks/16ghl-6br7uop.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10975,
+          "url": "http://localhost:1000/_next/static/chunks/19eivberb1vjs.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10767,
+          "url": "http://localhost:1000/_next/static/chunks/0v_td532j9y0u.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10738,
+          "url": "http://localhost:1000/_next/static/chunks/2rcf8f3a1gah-.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10423,
+          "url": "http://localhost:1000/_next/static/chunks/3gd_fjq_q4b15.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10417,
+          "url": "http://localhost:1000/_next/static/chunks/2xb_45cx66pa7.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10358,
+          "url": "http://localhost:1000/_next/static/chunks/29pcs38zce7c1.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10252,
+          "url": "http://localhost:1000/_next/static/chunks/0njqifu22xw-c.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10152,
+          "url": "http://localhost:1000/_next/static/chunks/29ur5xcfypvcq.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10079,
+          "url": "http://localhost:1000/_next/static/chunks/12m9axkqercd8.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10060,
+          "url": "http://localhost:1000/_next/static/chunks/0o25h4udznyh3.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10022,
+          "url": "http://localhost:1000/_next/static/chunks/1vxah3yig9q5p.js"
+        }
+      ],
+      "largestPostLoadScripts": [
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 62517,
+          "url": "http://localhost:1000/feedbucket-widget.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 55882,
+          "url": "http://localhost:1000/_next/static/chunks/2i4o_u836_j1p.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 45932,
+          "url": "http://localhost:1000/_next/static/chunks/2bjrsupyntvvp.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 18955,
+          "url": "http://localhost:1000/_next/static/chunks/0bc2_5vbxyyy0.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11267,
+          "url": "http://localhost:1000/_next/static/chunks/2fu8sib9tqfm9.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9244,
+          "url": "http://localhost:1000/_next/static/chunks/0a9uzuwfc1pir.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9156,
+          "url": "http://localhost:1000/_next/static/chunks/3awrltcd60vvz.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 8716,
+          "url": "http://localhost:1000/_next/static/chunks/2gf3xjyhonazx.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 8335,
+          "url": "http://localhost:1000/_next/static/chunks/0sc8s1ylgiuo0.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 7864,
+          "url": "http://localhost:1000/_next/static/chunks/0u504fjqdjuw0.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 7429,
+          "url": "http://localhost:1000/_next/static/chunks/0gt0nuzoc00s1.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 7371,
+          "url": "http://localhost:1000/_next/static/chunks/15sn-nqvja077.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 7131,
+          "url": "http://localhost:1000/_next/static/chunks/31ukhmauhnxi-.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 6961,
+          "url": "http://localhost:1000/_next/static/chunks/13cfuy31oy_3k.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 5972,
+          "url": "http://localhost:1000/_next/static/chunks/2ksaxlzxg-yeg.js"
+        }
+      ]
+    },
+    "/notifications": {
+      "scriptBytes": 508250,
+      "stylesheetBytes": 59021,
+      "imageBytes": 3214,
+      "fontBytes": 55868,
+      "documentBytes": 22325,
+      "otherBytes": 2636,
+      "thirdPartyBytes": 0,
+      "totalBytes": 651314,
+      "windowTotals": {
+        "scriptBytes": 693229,
+        "stylesheetBytes": 59021,
+        "imageBytes": 6428,
+        "fontBytes": 55868,
+        "documentBytes": 22325,
+        "otherBytes": 54815,
+        "thirdPartyBytes": 0,
+        "totalBytes": 891686
+      },
+      "postLoadTotals": {
+        "scriptBytes": 184979,
+        "stylesheetBytes": 0,
+        "imageBytes": 3214,
+        "fontBytes": 0,
+        "documentBytes": 0,
+        "otherBytes": 52179,
+        "thirdPartyBytes": 0,
+        "totalBytes": 240372
+      },
+      "notableResources": [
+        {
+          "kind": "font",
+          "thirdParty": false,
+          "bytes": 31024,
+          "url": "http://localhost:1000/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2"
+        },
+        {
+          "kind": "font",
+          "thirdParty": false,
+          "bytes": 24844,
+          "url": "http://localhost:1000/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2"
+        },
+        {
+          "kind": "image",
+          "thirdParty": false,
+          "bytes": 3214,
+          "url": "http://localhost:1000/logo.svg"
+        }
+      ],
+      "largestScripts": [
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 75051,
+          "url": "http://localhost:1000/_next/static/chunks/3k10b0bte63f2.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 44296,
+          "url": "http://localhost:1000/_next/static/chunks/279uwxceqwh4n.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 28897,
+          "url": "http://localhost:1000/_next/static/chunks/3obnu1uf7c8ke.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 21774,
+          "url": "http://localhost:1000/_next/static/chunks/19a0l0j8-3j6u.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 19620,
+          "url": "http://localhost:1000/_next/static/chunks/3h6hobend1iw_.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 16430,
+          "url": "http://localhost:1000/_next/static/chunks/0m6lwyh9j2nb1.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 16132,
+          "url": "http://localhost:1000/_next/static/chunks/177cas1izqqsp.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 14748,
+          "url": "http://localhost:1000/_next/static/chunks/3g986ab2xalu3.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 14423,
+          "url": "http://localhost:1000/_next/static/chunks/19a9yoca0r26p.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 13781,
+          "url": "http://localhost:1000/_next/static/chunks/2ed9wn33jyl1o.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 12213,
+          "url": "http://localhost:1000/_next/static/chunks/2haq0y66hfqwz.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11750,
+          "url": "http://localhost:1000/_next/static/chunks/0kvhb4uw00ni4.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11545,
+          "url": "http://localhost:1000/_next/static/chunks/3quu_5il8kvpe.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11478,
+          "url": "http://localhost:1000/_next/static/chunks/16ghl-6br7uop.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10975,
+          "url": "http://localhost:1000/_next/static/chunks/19eivberb1vjs.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10767,
+          "url": "http://localhost:1000/_next/static/chunks/0v_td532j9y0u.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10738,
+          "url": "http://localhost:1000/_next/static/chunks/2rcf8f3a1gah-.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10423,
+          "url": "http://localhost:1000/_next/static/chunks/3gd_fjq_q4b15.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10417,
+          "url": "http://localhost:1000/_next/static/chunks/2xb_45cx66pa7.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10358,
+          "url": "http://localhost:1000/_next/static/chunks/29pcs38zce7c1.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10252,
+          "url": "http://localhost:1000/_next/static/chunks/0njqifu22xw-c.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10152,
+          "url": "http://localhost:1000/_next/static/chunks/29ur5xcfypvcq.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10060,
+          "url": "http://localhost:1000/_next/static/chunks/0o25h4udznyh3.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10022,
+          "url": "http://localhost:1000/_next/static/chunks/1vxah3yig9q5p.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9999,
+          "url": "http://localhost:1000/_next/static/chunks/38o983xqkvs99.js"
+        }
+      ],
+      "largestPostLoadScripts": [
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 62517,
+          "url": "http://localhost:1000/feedbucket-widget.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 55882,
+          "url": "http://localhost:1000/_next/static/chunks/2i4o_u836_j1p.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9244,
+          "url": "http://localhost:1000/_next/static/chunks/0a9uzuwfc1pir.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9156,
+          "url": "http://localhost:1000/_next/static/chunks/3awrltcd60vvz.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 8716,
+          "url": "http://localhost:1000/_next/static/chunks/2gf3xjyhonazx.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 8335,
+          "url": "http://localhost:1000/_next/static/chunks/0sc8s1ylgiuo0.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 7371,
+          "url": "http://localhost:1000/_next/static/chunks/15sn-nqvja077.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 6961,
+          "url": "http://localhost:1000/_next/static/chunks/13cfuy31oy_3k.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 5972,
+          "url": "http://localhost:1000/_next/static/chunks/2ksaxlzxg-yeg.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 2947,
+          "url": "http://localhost:1000/_next/static/chunks/2os5y_skbul8q.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 2946,
+          "url": "http://localhost:1000/_next/static/chunks/0ovw-r5cahezc.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 2940,
+          "url": "http://localhost:1000/_next/static/chunks/3z-hrhwc9lxsh.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 1992,
+          "url": "http://localhost:1000/_next/static/chunks/0ral29h6y7zex.js"
+        }
+      ]
+    },
+    "/settings": {
+      "scriptBytes": 485119,
+      "stylesheetBytes": 59021,
+      "imageBytes": 3214,
+      "fontBytes": 55868,
+      "documentBytes": 22147,
+      "otherBytes": 2636,
+      "thirdPartyBytes": 0,
+      "totalBytes": 628005,
+      "windowTotals": {
+        "scriptBytes": 726420,
+        "stylesheetBytes": 59021,
+        "imageBytes": 6428,
+        "fontBytes": 55868,
+        "documentBytes": 22147,
+        "otherBytes": 32876,
+        "thirdPartyBytes": 0,
+        "totalBytes": 902760
+      },
+      "postLoadTotals": {
+        "scriptBytes": 241301,
+        "stylesheetBytes": 0,
+        "imageBytes": 3214,
+        "fontBytes": 0,
+        "documentBytes": 0,
+        "otherBytes": 30240,
+        "thirdPartyBytes": 0,
+        "totalBytes": 274755
+      },
+      "notableResources": [
+        {
+          "kind": "font",
+          "thirdParty": false,
+          "bytes": 31024,
+          "url": "http://localhost:1000/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2"
+        },
+        {
+          "kind": "font",
+          "thirdParty": false,
+          "bytes": 24844,
+          "url": "http://localhost:1000/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2"
+        },
+        {
+          "kind": "image",
+          "thirdParty": false,
+          "bytes": 3214,
+          "url": "http://localhost:1000/logo.svg"
+        }
+      ],
+      "largestScripts": [
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 75051,
+          "url": "http://localhost:1000/_next/static/chunks/3k10b0bte63f2.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 44296,
+          "url": "http://localhost:1000/_next/static/chunks/279uwxceqwh4n.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 28897,
+          "url": "http://localhost:1000/_next/static/chunks/3obnu1uf7c8ke.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 19620,
+          "url": "http://localhost:1000/_next/static/chunks/3h6hobend1iw_.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 16430,
+          "url": "http://localhost:1000/_next/static/chunks/0m6lwyh9j2nb1.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 16132,
+          "url": "http://localhost:1000/_next/static/chunks/177cas1izqqsp.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 14748,
+          "url": "http://localhost:1000/_next/static/chunks/3g986ab2xalu3.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 14423,
+          "url": "http://localhost:1000/_next/static/chunks/19a9yoca0r26p.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 13781,
+          "url": "http://localhost:1000/_next/static/chunks/2ed9wn33jyl1o.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 12213,
+          "url": "http://localhost:1000/_next/static/chunks/2haq0y66hfqwz.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11750,
+          "url": "http://localhost:1000/_next/static/chunks/0kvhb4uw00ni4.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11545,
+          "url": "http://localhost:1000/_next/static/chunks/3quu_5il8kvpe.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11478,
+          "url": "http://localhost:1000/_next/static/chunks/16ghl-6br7uop.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10975,
+          "url": "http://localhost:1000/_next/static/chunks/19eivberb1vjs.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10767,
+          "url": "http://localhost:1000/_next/static/chunks/0v_td532j9y0u.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10738,
+          "url": "http://localhost:1000/_next/static/chunks/2rcf8f3a1gah-.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10567,
+          "url": "http://localhost:1000/_next/static/chunks/0oahshlokz5p_.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10423,
+          "url": "http://localhost:1000/_next/static/chunks/3gd_fjq_q4b15.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10417,
+          "url": "http://localhost:1000/_next/static/chunks/2xb_45cx66pa7.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10358,
+          "url": "http://localhost:1000/_next/static/chunks/29pcs38zce7c1.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10252,
+          "url": "http://localhost:1000/_next/static/chunks/0njqifu22xw-c.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10152,
+          "url": "http://localhost:1000/_next/static/chunks/29ur5xcfypvcq.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10060,
+          "url": "http://localhost:1000/_next/static/chunks/0o25h4udznyh3.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10022,
+          "url": "http://localhost:1000/_next/static/chunks/1vxah3yig9q5p.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9999,
+          "url": "http://localhost:1000/_next/static/chunks/38o983xqkvs99.js"
+        }
+      ],
+      "largestPostLoadScripts": [
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 62517,
+          "url": "http://localhost:1000/feedbucket-widget.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 55882,
+          "url": "http://localhost:1000/_next/static/chunks/2i4o_u836_j1p.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 16280,
+          "url": "http://localhost:1000/_next/static/chunks/3smnino-c82_3.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11460,
+          "url": "http://localhost:1000/_next/static/chunks/2omjyxysoytiq.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9244,
+          "url": "http://localhost:1000/_next/static/chunks/0a9uzuwfc1pir.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9156,
+          "url": "http://localhost:1000/_next/static/chunks/3awrltcd60vvz.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9138,
+          "url": "http://localhost:1000/_next/static/chunks/1wi8xjhls9cqc.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 8716,
+          "url": "http://localhost:1000/_next/static/chunks/2gf3xjyhonazx.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 8335,
+          "url": "http://localhost:1000/_next/static/chunks/0sc8s1ylgiuo0.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 7429,
+          "url": "http://localhost:1000/_next/static/chunks/0gt0nuzoc00s1.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 7371,
+          "url": "http://localhost:1000/_next/static/chunks/15sn-nqvja077.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 7131,
+          "url": "http://localhost:1000/_next/static/chunks/31ukhmauhnxi-.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 6961,
+          "url": "http://localhost:1000/_next/static/chunks/13cfuy31oy_3k.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 5972,
+          "url": "http://localhost:1000/_next/static/chunks/2ksaxlzxg-yeg.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 4884,
+          "url": "http://localhost:1000/_next/static/chunks/20qejrst0hlfz.js"
+        }
+      ]
+    },
+    "/build/my-work": {
+      "scriptBytes": 529511,
+      "stylesheetBytes": 59021,
+      "imageBytes": 3214,
+      "fontBytes": 55868,
+      "documentBytes": 23545,
+      "otherBytes": 2636,
+      "thirdPartyBytes": 0,
+      "totalBytes": 673795,
+      "windowTotals": {
+        "scriptBytes": 718184,
+        "stylesheetBytes": 59021,
+        "imageBytes": 6428,
+        "fontBytes": 55868,
+        "documentBytes": 23545,
+        "otherBytes": 38228,
+        "thirdPartyBytes": 0,
+        "totalBytes": 901274
+      },
+      "postLoadTotals": {
+        "scriptBytes": 188673,
+        "stylesheetBytes": 0,
+        "imageBytes": 3214,
+        "fontBytes": 0,
+        "documentBytes": 0,
+        "otherBytes": 35592,
+        "thirdPartyBytes": 0,
+        "totalBytes": 227479
+      },
+      "notableResources": [
+        {
+          "kind": "font",
+          "thirdParty": false,
+          "bytes": 31024,
+          "url": "http://localhost:1000/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2"
+        },
+        {
+          "kind": "font",
+          "thirdParty": false,
+          "bytes": 24844,
+          "url": "http://localhost:1000/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2"
+        },
+        {
+          "kind": "image",
+          "thirdParty": false,
+          "bytes": 3214,
+          "url": "http://localhost:1000/logo.svg"
+        }
+      ],
+      "largestScripts": [
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 75051,
+          "url": "http://localhost:1000/_next/static/chunks/3k10b0bte63f2.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 44296,
+          "url": "http://localhost:1000/_next/static/chunks/279uwxceqwh4n.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 28897,
+          "url": "http://localhost:1000/_next/static/chunks/3obnu1uf7c8ke.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 19620,
+          "url": "http://localhost:1000/_next/static/chunks/3h6hobend1iw_.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 16430,
+          "url": "http://localhost:1000/_next/static/chunks/0m6lwyh9j2nb1.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 16132,
+          "url": "http://localhost:1000/_next/static/chunks/177cas1izqqsp.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 15413,
+          "url": "http://localhost:1000/_next/static/chunks/16qx10z-wy0pk.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 14748,
+          "url": "http://localhost:1000/_next/static/chunks/3g986ab2xalu3.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 14423,
+          "url": "http://localhost:1000/_next/static/chunks/19a9yoca0r26p.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 13781,
+          "url": "http://localhost:1000/_next/static/chunks/2ed9wn33jyl1o.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 12213,
+          "url": "http://localhost:1000/_next/static/chunks/2haq0y66hfqwz.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11750,
+          "url": "http://localhost:1000/_next/static/chunks/0kvhb4uw00ni4.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11545,
+          "url": "http://localhost:1000/_next/static/chunks/3quu_5il8kvpe.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11478,
+          "url": "http://localhost:1000/_next/static/chunks/16ghl-6br7uop.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10975,
+          "url": "http://localhost:1000/_next/static/chunks/19eivberb1vjs.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10767,
+          "url": "http://localhost:1000/_next/static/chunks/0v_td532j9y0u.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10738,
+          "url": "http://localhost:1000/_next/static/chunks/2rcf8f3a1gah-.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10572,
+          "url": "http://localhost:1000/_next/static/chunks/2tssr9dexdt2z.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10442,
+          "url": "http://localhost:1000/_next/static/chunks/31fkudqp89782.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10423,
+          "url": "http://localhost:1000/_next/static/chunks/3gd_fjq_q4b15.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10417,
+          "url": "http://localhost:1000/_next/static/chunks/2xb_45cx66pa7.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10358,
+          "url": "http://localhost:1000/_next/static/chunks/29pcs38zce7c1.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10252,
+          "url": "http://localhost:1000/_next/static/chunks/0njqifu22xw-c.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10152,
+          "url": "http://localhost:1000/_next/static/chunks/29ur5xcfypvcq.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10060,
+          "url": "http://localhost:1000/_next/static/chunks/0o25h4udznyh3.js"
+        }
+      ],
+      "largestPostLoadScripts": [
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 62517,
+          "url": "http://localhost:1000/feedbucket-widget.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 55882,
+          "url": "http://localhost:1000/_next/static/chunks/2i4o_u836_j1p.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9244,
+          "url": "http://localhost:1000/_next/static/chunks/0a9uzuwfc1pir.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9156,
+          "url": "http://localhost:1000/_next/static/chunks/3awrltcd60vvz.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 8716,
+          "url": "http://localhost:1000/_next/static/chunks/2gf3xjyhonazx.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 8335,
+          "url": "http://localhost:1000/_next/static/chunks/0sc8s1ylgiuo0.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 7371,
+          "url": "http://localhost:1000/_next/static/chunks/15sn-nqvja077.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 6961,
+          "url": "http://localhost:1000/_next/static/chunks/13cfuy31oy_3k.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 5972,
+          "url": "http://localhost:1000/_next/static/chunks/2ksaxlzxg-yeg.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 3694,
+          "url": "http://localhost:1000/_next/static/chunks/0ua-pucewyttz.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 2947,
+          "url": "http://localhost:1000/_next/static/chunks/2os5y_skbul8q.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 2946,
+          "url": "http://localhost:1000/_next/static/chunks/0ovw-r5cahezc.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 2940,
+          "url": "http://localhost:1000/_next/static/chunks/3z-hrhwc9lxsh.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 1992,
+          "url": "http://localhost:1000/_next/static/chunks/0ral29h6y7zex.js"
+        }
+      ]
+    },
+    "/parties": {
+      "scriptBytes": 521016,
+      "stylesheetBytes": 59021,
+      "imageBytes": 3214,
+      "fontBytes": 55868,
+      "documentBytes": 23532,
+      "otherBytes": 2636,
+      "thirdPartyBytes": 0,
+      "totalBytes": 665287,
+      "windowTotals": {
+        "scriptBytes": 709689,
+        "stylesheetBytes": 59021,
+        "imageBytes": 6428,
+        "fontBytes": 55868,
+        "documentBytes": 23532,
+        "otherBytes": 28529,
+        "thirdPartyBytes": 0,
+        "totalBytes": 883067
+      },
+      "postLoadTotals": {
+        "scriptBytes": 188673,
+        "stylesheetBytes": 0,
+        "imageBytes": 3214,
+        "fontBytes": 0,
+        "documentBytes": 0,
+        "otherBytes": 25893,
+        "thirdPartyBytes": 0,
+        "totalBytes": 217780
+      },
+      "notableResources": [
+        {
+          "kind": "font",
+          "thirdParty": false,
+          "bytes": 31024,
+          "url": "http://localhost:1000/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2"
+        },
+        {
+          "kind": "font",
+          "thirdParty": false,
+          "bytes": 24844,
+          "url": "http://localhost:1000/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2"
+        },
+        {
+          "kind": "image",
+          "thirdParty": false,
+          "bytes": 3214,
+          "url": "http://localhost:1000/logo.svg"
+        }
+      ],
+      "largestScripts": [
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 75051,
+          "url": "http://localhost:1000/_next/static/chunks/3k10b0bte63f2.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 44296,
+          "url": "http://localhost:1000/_next/static/chunks/279uwxceqwh4n.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 28897,
+          "url": "http://localhost:1000/_next/static/chunks/3obnu1uf7c8ke.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 19620,
+          "url": "http://localhost:1000/_next/static/chunks/3h6hobend1iw_.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 19249,
+          "url": "http://localhost:1000/_next/static/chunks/0_mr1i8obpsg2.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 16430,
+          "url": "http://localhost:1000/_next/static/chunks/0m6lwyh9j2nb1.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 16132,
+          "url": "http://localhost:1000/_next/static/chunks/177cas1izqqsp.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 14748,
+          "url": "http://localhost:1000/_next/static/chunks/3g986ab2xalu3.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 14423,
+          "url": "http://localhost:1000/_next/static/chunks/19a9yoca0r26p.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 13781,
+          "url": "http://localhost:1000/_next/static/chunks/2ed9wn33jyl1o.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 12213,
+          "url": "http://localhost:1000/_next/static/chunks/2haq0y66hfqwz.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11750,
+          "url": "http://localhost:1000/_next/static/chunks/0kvhb4uw00ni4.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11545,
+          "url": "http://localhost:1000/_next/static/chunks/3quu_5il8kvpe.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 11478,
+          "url": "http://localhost:1000/_next/static/chunks/16ghl-6br7uop.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10975,
+          "url": "http://localhost:1000/_next/static/chunks/19eivberb1vjs.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10767,
+          "url": "http://localhost:1000/_next/static/chunks/0v_td532j9y0u.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10738,
+          "url": "http://localhost:1000/_next/static/chunks/2rcf8f3a1gah-.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10449,
+          "url": "http://localhost:1000/_next/static/chunks/2p6_mc5rfyvsq.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10423,
+          "url": "http://localhost:1000/_next/static/chunks/3gd_fjq_q4b15.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10417,
+          "url": "http://localhost:1000/_next/static/chunks/2xb_45cx66pa7.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10358,
+          "url": "http://localhost:1000/_next/static/chunks/29pcs38zce7c1.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10252,
+          "url": "http://localhost:1000/_next/static/chunks/0njqifu22xw-c.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10152,
+          "url": "http://localhost:1000/_next/static/chunks/29ur5xcfypvcq.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10060,
+          "url": "http://localhost:1000/_next/static/chunks/0o25h4udznyh3.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 10022,
+          "url": "http://localhost:1000/_next/static/chunks/1vxah3yig9q5p.js"
+        }
+      ],
+      "largestPostLoadScripts": [
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 62517,
+          "url": "http://localhost:1000/feedbucket-widget.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 55882,
+          "url": "http://localhost:1000/_next/static/chunks/2i4o_u836_j1p.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9244,
+          "url": "http://localhost:1000/_next/static/chunks/0a9uzuwfc1pir.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 9156,
+          "url": "http://localhost:1000/_next/static/chunks/3awrltcd60vvz.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 8716,
+          "url": "http://localhost:1000/_next/static/chunks/2gf3xjyhonazx.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 8335,
+          "url": "http://localhost:1000/_next/static/chunks/0sc8s1ylgiuo0.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 7371,
+          "url": "http://localhost:1000/_next/static/chunks/15sn-nqvja077.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 6961,
+          "url": "http://localhost:1000/_next/static/chunks/13cfuy31oy_3k.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 5972,
+          "url": "http://localhost:1000/_next/static/chunks/2ksaxlzxg-yeg.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 3694,
+          "url": "http://localhost:1000/_next/static/chunks/0ua-pucewyttz.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 2947,
+          "url": "http://localhost:1000/_next/static/chunks/2os5y_skbul8q.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 2946,
+          "url": "http://localhost:1000/_next/static/chunks/0ovw-r5cahezc.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 2940,
+          "url": "http://localhost:1000/_next/static/chunks/3z-hrhwc9lxsh.js"
+        },
+        {
+          "kind": "script",
+          "thirdParty": false,
+          "bytes": 1992,
+          "url": "http://localhost:1000/_next/static/chunks/0ral29h6y7zex.js"
         }
       ]
     }
   },
   "serverTtfb": {
     "method": "plain Node fetch to first response byte, no browser, no CPU or network emulation",
-    "repeat": 3,
+    "repeat": 6,
     "byRoute": {
-      "/dashboard": {
-        "count": 3,
+      "/mail": {
+        "count": 6,
         "statuses": [
           200
         ],
-        "p50_ms": 150.71809999999823,
-        "p75_ms": 181.03345000000263,
-        "p95_ms": 205.28573000000614
+        "p50_ms": 63.60775000002468,
+        "p75_ms": 68.11485000001267,
+        "p95_ms": 73.73295000000508
+      },
+      "/inbox": {
+        "count": 6,
+        "statuses": [
+          200
+        ],
+        "p50_ms": 56.06140000000596,
+        "p75_ms": 72.78179999999702,
+        "p95_ms": 79.13984999994864
+      },
+      "/build/inbox": {
+        "count": 6,
+        "statuses": [
+          200
+        ],
+        "p50_ms": 58.148549999983516,
+        "p75_ms": 59.753675000043586,
+        "p95_ms": 67.16797500001849
+      },
+      "/support/inbox": {
+        "count": 6,
+        "statuses": [
+          200
+        ],
+        "p50_ms": 63.413650000002235,
+        "p75_ms": 66.3534000000218,
+        "p95_ms": 75.97010000000591
+      },
+      "/dashboard": {
+        "count": 6,
+        "statuses": [
+          200
+        ],
+        "p50_ms": 47.66394999995828,
+        "p75_ms": 51.1087000000407,
+        "p95_ms": 56.89355000000796
+      },
+      "/chat": {
+        "count": 6,
+        "statuses": [
+          200
+        ],
+        "p50_ms": 56.958700000017416,
+        "p75_ms": 59.11550000004354,
+        "p95_ms": 61.244775000057416
+      },
+      "/calendar": {
+        "count": 6,
+        "statuses": [
+          200
+        ],
+        "p50_ms": 68.84409999998752,
+        "p75_ms": 72.22722500003874,
+        "p95_ms": 72.83235000006971
       },
       "/notifications": {
-        "count": 3,
+        "count": 6,
         "statuses": [
           200
         ],
-        "p50_ms": 118.21439999999711,
-        "p75_ms": 140.51919999999518,
-        "p95_ms": 158.36303999999365
+        "p50_ms": 57.525250000006054,
+        "p75_ms": 58.91412500003935,
+        "p95_ms": 59.20660000006319
       },
-      "/mail": {
-        "count": 3,
+      "/settings": {
+        "count": 6,
         "statuses": [
           200
         ],
-        "p50_ms": 209.51660000000265,
-        "p75_ms": 224.24605000000156,
-        "p95_ms": 236.02961000000067
+        "p50_ms": 57.5660500000231,
+        "p75_ms": 68.4476250000298,
+        "p95_ms": 81.20530000003055
+      },
+      "/build/my-work": {
+        "count": 6,
+        "statuses": [
+          200
+        ],
+        "p50_ms": 51.33874999999534,
+        "p75_ms": 57.76935000001686,
+        "p95_ms": 88.00532500000554
+      },
+      "/parties": {
+        "count": 6,
+        "statuses": [
+          200
+        ],
+        "p50_ms": 43.76449999999022,
+        "p75_ms": 44.97737499998766,
+        "p95_ms": 46.66240000000107
       }
     },
     "note": "The browser TTFB above includes the emulated RTT (150ms on the mobile profile) and the browser's own scheduling. This figure is the server render on its own."
@@ -1193,49 +4163,181 @@
     "target_ms": 100,
     "method": "in-page click on an in-app nav link, timed to the first DOM mutation on the same clock",
     "byRoute": {
+      "/mail": {
+        "desktop": {
+          "measured": true,
+          "ms": 2.5,
+          "href": "/dashboard"
+        },
+        "mobile": {
+          "measured": true,
+          "ms": 13.199999988079071,
+          "href": "/dashboard"
+        }
+      },
+      "/inbox": {
+        "desktop": {
+          "measured": true,
+          "ms": 2.299999952316284,
+          "href": "/dashboard"
+        },
+        "mobile": {
+          "measured": true,
+          "ms": 13.600000023841858,
+          "href": "/dashboard"
+        }
+      },
+      "/build/inbox": {
+        "desktop": {
+          "measured": true,
+          "ms": 1.5,
+          "href": "/build/command-center"
+        },
+        "mobile": {
+          "measured": true,
+          "ms": 14.100000023841858,
+          "href": "/build/command-center"
+        }
+      },
+      "/support/inbox": {
+        "desktop": {
+          "measured": true,
+          "ms": 1.600000023841858,
+          "href": "/support"
+        },
+        "mobile": {
+          "measured": true,
+          "ms": 13.899999976158142,
+          "href": "/support"
+        }
+      },
       "/dashboard": {
         "desktop": {
           "measured": true,
-          "ms": 2.399999976158142,
+          "ms": 1.800000011920929,
           "href": "/inbox"
         },
         "mobile": {
           "measured": true,
-          "ms": 37.5,
+          "ms": 13.600000023841858,
           "href": "/inbox"
+        }
+      },
+      "/chat": {
+        "desktop": {
+          "measured": true,
+          "ms": 2,
+          "href": "/dashboard"
+        },
+        "mobile": {
+          "measured": false,
+          "reason": "no in-app link in view"
+        }
+      },
+      "/calendar": {
+        "desktop": {
+          "measured": true,
+          "ms": 2.400000035762787,
+          "href": "/dashboard"
+        },
+        "mobile": {
+          "measured": true,
+          "ms": 10.899999976158142,
+          "href": "/dashboard"
         }
       },
       "/notifications": {
         "desktop": {
           "measured": true,
-          "ms": 6.300000011920929,
+          "ms": 2.199999988079071,
           "href": "/dashboard"
         },
         "mobile": {
           "measured": true,
-          "ms": 101.89999997615814,
+          "ms": 1091.300000011921,
           "href": "/notifications/preferences"
         }
       },
-      "/mail": {
+      "/settings": {
         "desktop": {
           "measured": true,
-          "ms": 4.800000011920929,
-          "href": "/dashboard"
+          "ms": 2.199999988079071,
+          "href": "/settings/organization"
         },
         "mobile": {
           "measured": true,
-          "ms": 96.80000001192093,
-          "href": "/dashboard"
+          "ms": 17.80000001192093,
+          "href": "/settings/organization"
+        }
+      },
+      "/build/my-work": {
+        "desktop": {
+          "measured": true,
+          "ms": 1.5,
+          "href": "/build/command-center"
+        },
+        "mobile": {
+          "measured": true,
+          "ms": 19.100000023841858,
+          "href": "/build/command-center"
+        }
+      },
+      "/parties": {
+        "desktop": {
+          "measured": true,
+          "ms": 1.600000023841858,
+          "href": "/crm"
+        },
+        "mobile": {
+          "measured": true,
+          "ms": 22.80000001192093,
+          "href": "/crm"
         }
       }
     }
   },
   "authorization": {
     "minNavLinksForAuthorizedShell": 3,
-    "samplesMeasured": 18,
-    "unauthorizedSamples": [],
-    "verdict": "every measured sample rendered an authorized shell"
+    "samplesMeasured": 132,
+    "unauthorizedSamples": [
+      {
+        "index": 96,
+        "url": "http://localhost:1000/chat",
+        "navLinks": 2,
+        "words": 15
+      },
+      {
+        "index": 97,
+        "url": "http://localhost:1000/chat",
+        "navLinks": 2,
+        "words": 15
+      },
+      {
+        "index": 98,
+        "url": "http://localhost:1000/chat",
+        "navLinks": 2,
+        "words": 15
+      },
+      {
+        "index": 99,
+        "url": "http://localhost:1000/chat",
+        "navLinks": 2,
+        "words": 15
+      },
+      {
+        "index": 100,
+        "url": "http://localhost:1000/chat",
+        "navLinks": 2,
+        "words": 15
+      },
+      {
+        "index": 101,
+        "url": "http://localhost:1000/chat",
+        "navLinks": 2,
+        "words": 15
+      }
+    ],
+    "verdict": "capture is NOT evidence for these budgets: the shell rendered without authorized navigation"
   },
   "routeFailures": {
     "count": 0,
@@ -1243,14 +4345,14 @@
     "verdict": "every requested route/profile pair completed"
   },
   "hydration": {
-    "navigationsInspected": 18,
+    "navigationsInspected": 132,
     "mismatchesFound": 0,
     "findings": [],
     "verdict": "no React hydration mismatch was logged on any measured navigation"
   },
   "contentAssertion": {
     "minWordsPerSample": 10,
-    "samplesMeasured": 18,
+    "samplesMeasured": 132,
     "offRouteSamples": [],
     "unusableSamples": [],
     "verdict": "every measured sample rendered real page content"
@@ -1258,21 +4360,53 @@
   "settle": {
     "quietMs": 500,
     "capMs": 6000,
-    "samplesMeasured": 18,
+    "samplesMeasured": 132,
     "cappedSamples": 0,
     "capped": [],
     "wordsByRoute": {
+      "/mail": {
+        "desktop": 47,
+        "mobile": 27
+      },
+      "/inbox": {
+        "desktop": 48,
+        "mobile": 29
+      },
+      "/build/inbox": {
+        "desktop": 54,
+        "mobile": 28
+      },
+      "/support/inbox": {
+        "desktop": 53,
+        "mobile": 30
+      },
       "/dashboard": {
-        "desktop": 150,
-        "mobile": 129
+        "desktop": 51,
+        "mobile": 32
+      },
+      "/chat": {
+        "desktop": 55,
+        "mobile": 15
+      },
+      "/calendar": {
+        "desktop": 47,
+        "mobile": 24
       },
       "/notifications": {
-        "desktop": 453,
-        "mobile": 42
+        "desktop": 61,
+        "mobile": 38
       },
-      "/mail": {
-        "desktop": 95,
-        "mobile": 27
+      "/settings": {
+        "desktop": 122,
+        "mobile": 82
+      },
+      "/build/my-work": {
+        "desktop": 44,
+        "mobile": 30
+      },
+      "/parties": {
+        "desktop": 65,
+        "mobile": 38
       }
     },
     "verdict": "every sample was taken after the DOM went quiet, so late-arriving data is inside the measurement"
