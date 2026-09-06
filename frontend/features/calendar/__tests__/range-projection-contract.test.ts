@@ -22,17 +22,20 @@ function interfaceFields(source: string, name: string): string[] {
   expect(block).not.toBeNull();
   return (block?.[1] ?? "")
     .split("\n")
-    .map((line) => /^\s*([A-Za-z][A-Za-z0-9]*)\??:/.exec(line)?.[1])
+    .map((line) => /^  ([A-Za-z][A-Za-z0-9]*)\??:/.exec(line)?.[1])
     .filter((name): name is string => name !== undefined);
 }
 
 function schemaFields(source: string, name: string): string[] {
-  const re = new RegExp(`export const ${name} = z\\.object\\(\\{([\\s\\S]*?)\\}\\)`);
-  const block = re.exec(source);
-  expect(block).not.toBeNull();
-  return [...(block?.[1] ?? "").matchAll(/^\s*([A-Za-z][A-Za-z0-9]*):/gm)].map(
-    (m) => m[1] ?? "",
-  );
+  const startRe = new RegExp(`export const ${name} = z\\.object\\(\\{`);
+  const start = startRe.exec(source);
+  expect(start).not.toBeNull();
+  const afterStart = source.slice((start?.index ?? 0) + (start?.[0].length ?? 0));
+  const closeMatch = /^\}\);/m.exec(afterStart);
+  const block = closeMatch ? afterStart.slice(0, closeMatch.index) : afterStart;
+  return [...block.matchAll(/^  ([A-Za-z][A-Za-z0-9]*):/gm)]
+    .map((m) => m[1] ?? "")
+    .filter((f) => f.length > 0);
 }
 
 describe("range projection contract — CalendarListItem vs calendarEventItemSchema", () => {
