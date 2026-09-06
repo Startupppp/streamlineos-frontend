@@ -19,7 +19,7 @@ import { backendPath } from "@/test-utils/backend-repo";
  * TypeScript project.
  */
 const FE_ROOT = path.join(__dirname, "..", "..", "..");
-const HOOKS = path.join(FE_ROOT, "hooks", "api", "calendar.ts");
+const HOOKS = path.join(FE_ROOT, "hooks", "api", "calendar-mutations.ts");
 const BACKEND_SERVICE = backendPath("src", "modules", "calendar", "calendar-event-wire.ts");
 
 /** The keys of `calendarEventWireColumns` in the backend wire module. */

@@ -80,3 +80,5 @@ docs/superpowers/
 # minted test session token — never commit
 .capture-cookie*
 .build-lock
+.capture-final.json
+.run-build.mjs

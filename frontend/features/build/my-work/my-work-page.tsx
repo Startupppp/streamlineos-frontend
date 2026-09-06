@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { useMemo, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -17,16 +17,19 @@ import { DisplayOptionsPanel } from "@/features/build/views/display-options-pane
 import { useDisplayOptions } from "@/features/build/views/use-display-options";
 import { Button } from "@/components/ui/button";
 import { PanelRight } from "lucide-react";
-import { useAllWork } from "@/hooks/api/build/all-work";
-import type { AllWorkTicket } from "@/types/projects";
 import { cn } from "@/lib/utils";
-import { isPast, isToday, parseISO } from "date-fns";
 import { useAfterLoad } from "@/hooks/common/use-after-load";
-import { MY_WORK_VIEWS, parseMyWorkView } from "./my-work-view";
+import { MY_WORK_VIEWS } from "./my-work-view";
 import { MyWorkViewBody } from "./my-work-view-body-lazy";
-import { mapAllWorkTicketToKanban, buildTicketMetaMap } from "./map-all-work-ticket";
 import { BucketSection, AllWorkListSkeleton, BUCKET_ORDER } from "./my-work-rows";
-import type { DueBucket } from "./my-work-rows";
+import {
+  useMyWorkData,
+  parseWorkTab,
+  parseMyWorkView,
+  WORK_TABS,
+  TAB_CONFIG,
+  MY_WORK_FILTER_PARAMS,
+} from "./use-my-work-data";
 
 const GroupingSidebar = dynamic(
   () => import("./grouping-sidebar").then((m) => ({ default: m.GroupingSidebar })),
@@ -42,92 +45,6 @@ const TicketFilterBar = dynamic(
 
 const DISPLAY_STORAGE_ID = -1;
 
-type WorkTab = "assigned" | "created" | "subscribed" | "activity";
-
-const TAB_CONFIG: Record<WorkTab, { label: string }> = {
-  assigned: { label: "Assigned" },
-  created: { label: "Created" },
-  subscribed: { label: "Subscribed" },
-  activity: { label: "Activity" },
-};
-
-const WORK_TABS: readonly WorkTab[] = [
-  "assigned",
-  "created",
-  "subscribed",
-  "activity",
-];
-
-function parseWorkTab(value: string | null): WorkTab {
-  if (
-    value === "created" ||
-    value === "subscribed" ||
-    value === "activity"
-  )
-    return value;
-  return "assigned";
-}
-
-function getDueBucket(dueDate: string | null): DueBucket {
-  if (!dueDate) return "none";
-  try {
-    const d = parseISO(dueDate);
-    if (isToday(d)) return "today";
-    if (isPast(d)) return "overdue";
-    return "upcoming";
-  } catch {
-    return "none";
-  }
-}
-
-function buildAllWorkFilters(params: URLSearchParams) {
-  const q = params.get("q") ?? "";
-  const status = params.get("status") ?? "";
-  const priority = params.get("priority") ?? "";
-  const type = params.get("type") ?? "";
-  const assigneeId = params.get("assigneeId") ?? "";
-  const labels = params.get("labels") ?? "";
-  const projectIds = params.get("projectIds") ?? "";
-  return {
-    ...(q ? { search: q } : {}),
-    ...(status ? { status } : {}),
-    ...(priority ? { priority } : {}),
-    ...(type ? { type } : {}),
-    ...(assigneeId ? { assigneeId } : {}),
-    ...(labels ? { labelIds: labels } : {}),
-    ...(projectIds ? { projectIds } : {}),
-  };
-}
-
-function toDueBucketMap(
-  tickets: AllWorkTicket[],
-): Record<DueBucket, AllWorkTicket[]> {
-  const buckets: Record<DueBucket, AllWorkTicket[]> = {
-    overdue: [],
-    today: [],
-    upcoming: [],
-    none: [],
-  };
-  for (const t of tickets) {
-    buckets[getDueBucket(t.dueDate)].push(t);
-  }
-  return buckets;
-}
-
-const MY_WORK_FILTER_PARAMS = [
-  "q",
-  "status",
-  "priority",
-  "type",
-  "assigneeId",
-  "labels",
-  "cycle",
-  "projectIds",
-  "sprintId",
-  "dueDateFrom",
-  "dueDateTo",
-] as const;
-
 interface MyWorkPageProps {
   pmWorkspaceId?: string;
 }
@@ -137,151 +54,36 @@ export function MyWorkPage({ pmWorkspaceId }: MyWorkPageProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const rawTab = searchParams.get("tab");
-  const activeTab = parseWorkTab(rawTab);
-  const rawView = searchParams.get("view");
-  const activeView = parseMyWorkView(rawView);
+  const activeTab = parseWorkTab(searchParams.get("tab"));
+  const activeView = parseMyWorkView(searchParams.get("view"));
 
   const [showGroupingSidebar, setShowGroupingSidebar] = useState(false);
   const [groupingMounted, setGroupingMounted] = useState(false);
   const [displayOptions, setDisplayOptions] = useDisplayOptions(DISPLAY_STORAGE_ID);
   const filterBarReady = useAfterLoad();
 
-  const hasActiveFilters = useMemo(
-    () => MY_WORK_FILTER_PARAMS.some((p) => {
-      const v = searchParams.get(p);
-      return v !== null && v !== "";
-    }),
-    [searchParams],
-  );
-
-  const extraFilters = useMemo(
-    () => buildAllWorkFilters(searchParams),
-    [searchParams],
-  );
-
-  const assignedFilters = useMemo(
-    () => ({
-      scope: "mine" as const,
-      ...extraFilters,
-      ...(pmWorkspaceId ? { pmWorkspaceId } : {}),
-      limit: 100,
-    }),
-    [extraFilters, pmWorkspaceId],
-  );
-  const createdFilters = useMemo(
-    () => ({
-      scope: "created" as const,
-      ...extraFilters,
-      ...(pmWorkspaceId ? { pmWorkspaceId } : {}),
-      orderBy: "created" as const,
-      orderDir: "desc" as const,
-      limit: 100,
-    }),
-    [extraFilters, pmWorkspaceId],
-  );
-  const subscribedFilters = useMemo(
-    () => ({
-      scope: "subscribed" as const,
-      ...extraFilters,
-      ...(pmWorkspaceId ? { pmWorkspaceId } : {}),
-      orderBy: "updated" as const,
-      orderDir: "desc" as const,
-      limit: 100,
-    }),
-    [extraFilters, pmWorkspaceId],
-  );
-  const activityFilters = useMemo(
-    () => ({
-      scope: "mine" as const,
-      ...extraFilters,
-      ...(pmWorkspaceId ? { pmWorkspaceId } : {}),
-      orderBy: "updated" as const,
-      orderDir: "desc" as const,
-      limit: 100,
-    }),
-    [extraFilters, pmWorkspaceId],
-  );
-
   const {
-    data: assignedData,
-    isLoading: assignedLoading,
-    isError: assignedError,
-    refetch: refetchAssigned,
-  } = useAllWork(assignedFilters, { enabled: activeTab === "assigned" });
-
-  const {
-    data: createdData,
-    isLoading: createdLoading,
-    isError: createdError,
-    refetch: refetchCreated,
-  } = useAllWork(createdFilters, { enabled: activeTab === "created" });
-
-  const {
-    data: subscribedData,
-    isLoading: subscribedLoading,
-    isError: subscribedError,
-    refetch: refetchSubscribed,
-  } = useAllWork(subscribedFilters, { enabled: activeTab === "subscribed" });
-
-  const {
-    data: activityData,
-    isLoading: activityLoading,
-    isError: activityError,
-    refetch: refetchActivity,
-  } = useAllWork(activityFilters, { enabled: activeTab === "activity" });
-
-  const isLoading =
-    activeTab === "assigned"
-      ? assignedLoading
-      : activeTab === "created"
-        ? createdLoading
-        : activeTab === "subscribed"
-          ? subscribedLoading
-          : activityLoading;
-
-  const isError =
-    activeTab === "assigned"
-      ? assignedError
-      : activeTab === "created"
-        ? createdError
-        : activeTab === "subscribed"
-          ? subscribedError
-          : activityError;
-
-  const activeData =
-    activeTab === "assigned"
-      ? assignedData
-      : activeTab === "created"
-        ? createdData
-        : activeTab === "subscribed"
-          ? subscribedData
-          : activityData;
-
-  const handleRetry = useCallback(() => {
-    if (activeTab === "assigned") void refetchAssigned();
-    else if (activeTab === "created") void refetchCreated();
-    else if (activeTab === "subscribed") void refetchSubscribed();
-    else void refetchActivity();
-  }, [activeTab, refetchAssigned, refetchCreated, refetchSubscribed, refetchActivity]);
-
-  const filtersActive = Object.keys(extraFilters).length > 0;
-
-  const handleClearFilters = useCallback(() => {
-    const params = new URLSearchParams(searchParams.toString());
-    for (const param of MY_WORK_FILTER_PARAMS) params.delete(param);
-    const qs = params.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  }, [router, pathname, searchParams]);
+    hasActiveFilters,
+    isLoading,
+    isError,
+    activeData,
+    handleRetry,
+    filtersActive,
+    handleClearFilters,
+    kanbanTickets,
+    ticketMeta,
+    dueBuckets,
+    showViewSwitcher,
+    showBucketList,
+    emptyTitle,
+    emptyDescription,
+  } = useMyWorkData({ activeTab, activeView, pmWorkspaceId });
 
   const handleTabChange = useCallback(
     (value: string) => {
       const params = new URLSearchParams(searchParams.toString());
-      if (value === "assigned") {
-        params.delete("tab");
-      } else {
-        params.set("tab", value);
-      }
+      if (value === "assigned") params.delete("tab");
+      else params.set("tab", value);
       params.delete("view");
       router.replace(
         params.toString() ? `${pathname}?${params.toString()}` : pathname,
@@ -295,11 +97,8 @@ export function MyWorkPage({ pmWorkspaceId }: MyWorkPageProps) {
     (next: string) => {
       if (!MY_WORK_VIEWS.includes(next as (typeof MY_WORK_VIEWS)[number])) return;
       const params = new URLSearchParams(searchParams.toString());
-      if (next === "list") {
-        params.delete("view");
-      } else {
-        params.set("view", next);
-      }
+      if (next === "list") params.delete("view");
+      else params.set("view", next);
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     },
     [router, pathname, searchParams],
@@ -316,43 +115,6 @@ export function MyWorkPage({ pmWorkspaceId }: MyWorkPageProps) {
     setGroupingMounted(true);
     setShowGroupingSidebar((prev) => !prev);
   }
-
-  const kanbanTickets = useMemo(() => {
-    if (!activeData?.data) return [];
-    return activeData.data.map(mapAllWorkTicketToKanban);
-  }, [activeData]);
-
-  const ticketMeta = useMemo(() => {
-    if (!activeData?.data) return buildTicketMetaMap([]);
-    return buildTicketMetaMap(activeData.data);
-  }, [activeData]);
-
-  const dueBuckets = useMemo(() => {
-    if (activeTab !== "assigned" || activeView !== "list") return null;
-    if (!activeData?.data) return null;
-    return toDueBucketMap(activeData.data);
-  }, [activeTab, activeView, activeData]);
-
-  const showViewSwitcher = activeTab === "assigned";
-  const showBucketList = activeTab === "assigned" && activeView === "list";
-
-  const emptyTitle =
-    activeTab === "created"
-      ? "No tickets created by you"
-      : activeTab === "subscribed"
-        ? "No subscribed tickets"
-        : activeTab === "activity"
-          ? "No recently updated tickets"
-          : "Nothing assigned to you";
-
-  const emptyDescription =
-    activeTab === "created"
-      ? "Tickets you reported or created across all projects will appear here."
-      : activeTab === "subscribed"
-        ? "Tickets you are watching will appear here."
-        : activeTab === "activity"
-          ? "Your recently updated assigned tickets will appear here."
-          : "Tickets assigned to you across all projects will appear here.";
 
   const groupingSidebarButton = (
     <Button
@@ -386,10 +148,7 @@ export function MyWorkPage({ pmWorkspaceId }: MyWorkPageProps) {
             tabs={
               <TabsList>
                 {WORK_TABS.map((tab) => (
-                  <TabsTrigger
-                    key={tab}
-                    value={tab}
-                  >
+                  <TabsTrigger key={tab} value={tab}>
                     {TAB_CONFIG[tab].label}
                   </TabsTrigger>
                 ))}

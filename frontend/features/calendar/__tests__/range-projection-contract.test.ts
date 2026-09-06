@@ -3,7 +3,7 @@ import * as path from "path";
 import { backendPath } from "@/test-utils/backend-repo";
 
 const FE_ROOT = path.join(__dirname, "..", "..", "..");
-const HOOKS = path.join(FE_ROOT, "hooks", "api", "calendar.ts");
+const HOOKS = path.join(FE_ROOT, "hooks", "api", "calendar-types.ts");
 const BACKEND_SCHEMA = backendPath(
   "src",
   "modules",

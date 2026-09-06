@@ -21,7 +21,7 @@ import { backendPath } from "@/test-utils/backend-repo";
  * reinstating `syncError` on either side alone fails here.
  */
 const FE_ROOT = path.join(__dirname, "..", "..", "..");
-const HOOKS = path.join(FE_ROOT, "hooks", "api", "calendar.ts");
+const HOOKS = path.join(FE_ROOT, "hooks", "api", "calendar-mutations.ts");
 const DIALOG = path.join(FE_ROOT, "features", "calendar", "use-event-create-dialog.ts");
 const BACKEND_SERVICE = backendPath("src", "modules", "calendar", "calendar.service.ts");
 

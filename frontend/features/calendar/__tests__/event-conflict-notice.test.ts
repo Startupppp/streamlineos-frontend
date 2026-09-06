@@ -74,7 +74,7 @@ describe("calendar create conflicts — the server's work is not discarded", () 
 
   it("the client response type declares every conflict field the server sends", () => {
     const hooks = fs.readFileSync(
-      path.join(FE_ROOT, "hooks", "api", "calendar.ts"),
+      path.join(FE_ROOT, "hooks", "api", "calendar-mutations.ts"),
       "utf8",
     );
     const block = /interface MutateCalendarEventResponse \{([\s\S]*?)\n\}/.exec(hooks);
