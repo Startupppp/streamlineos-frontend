@@ -20,6 +20,7 @@ import {
   INBOX_RENDER_PAGE_SIZE,
   resolveInboxVisibleCount,
 } from "./inbox-render-window";
+import { useShellVariant } from "@/components/layout/shell-variant-context";
 
 type InboxTab = NotificationSection | "MENTIONS";
 
@@ -43,24 +44,6 @@ interface InboxListProps {
 
 function isMentionNotification(n: Notification): boolean {
   return typeof n.eventKey === "string" && n.eventKey.includes("mention");
-}
-
-const DESKTOP_INBOX_MEDIA = "(min-width: 1024px)";
-
-function useDesktopInboxViewport(): boolean {
-  const [isDesktop, setIsDesktop] = React.useState(false);
-
-  React.useEffect(() => {
-    const mql = window.matchMedia(DESKTOP_INBOX_MEDIA);
-    function handleChange() {
-      setIsDesktop(mql.matches);
-    }
-    mql.addEventListener("change", handleChange);
-    handleChange();
-    return () => mql.removeEventListener("change", handleChange);
-  }, []);
-
-  return isDesktop;
 }
 
 function InboxListSkeleton() {
@@ -94,7 +77,7 @@ export function InboxList({
   onClearSelection,
   onFilterChange,
 }: InboxListProps) {
-  const isDesktopInbox = useDesktopInboxViewport();
+  const isDesktopInbox = useShellVariant() === "desktop";
   const [activeTab, setActiveTab] = React.useState<InboxTab>("UNREAD");
 
   const querySection: NotificationSection = activeTab === "MENTIONS" ? "ALL" : activeTab;
