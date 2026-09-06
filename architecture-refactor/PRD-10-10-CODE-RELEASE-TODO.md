@@ -663,6 +663,15 @@ These decisions are final for this release and remove implementation alternative
       recorded here rather than silenced, and the CRM figures are carried as debt for the CRM lane.
       Evidence: [CO-LOCATED-MEASUREMENT-2026-09-05.md](final-refactor/evidence/42-production-ops/release-authority/CO-LOCATED-MEASUREMENT-2026-09-05.md).
 
+- [x] Eliminate request waterfalls where dependencies are known, prefetch only likely/authorized routes and prevent speculative prefetch from leaking or overloading tenant data.
+      Evidence: ticket 27 is 7/7 closed; five avoidable waterfalls were removed and navigation prefetch now occurs only on authorized user intent with href deduplication.
+- [x] Virtualize or incrementally render large chat, calendar, inbox, notification, directory, HR and Build collections while preserving accessibility and cursor correctness.
+      Evidence: ticket 27 records bounded rendering for every named collection family with cursor/accessibility-focused coverage.
+- [x] Optimize images, fonts and eligible static assets, use HTTP compression for text responses and keep upload/media transformations asynchronous.
+      Evidence: ticket 27 closed its asset/lazy-boundary criterion and ticket 33 implemented asynchronous upload transformations; final route-byte/Web Vitals acceptance remains separately open in ticket 26.
+- [x] Measure memory, render count, long tasks and hydration mismatches on representative Home/module journeys; eliminate avoidable rerenders and main-thread blocking.
+      Evidence: ticket 27 recorded 0 hydration mismatches across 192 checks, stable post-GC memory and measured desktop/mobile long-task results.
+
 #### 12.3 AI gateway, retrieval and streaming
 
 - [x] Route every AI feature through one backend AI gateway with small model/provider interfaces, centralized timeouts, usage accounting, policy, redaction and observable error modes; no frontend direct-provider calls.

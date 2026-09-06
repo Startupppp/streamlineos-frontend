@@ -15,7 +15,7 @@
 - [x] **PRD-C047** — Prove strict TypeScript with no new `any`, suppression directives, unsafe double casts, non-null assertion abuse or parallel hand-written types that drift from schemas.
 - [x] **PRD-C048** — Validate every untrusted body, parameter, query, environment value, upload manifest and external response through established Zod boundaries.
 - [x] **PRD-C049** — Reconcile backend Zod/OpenAPI contracts with frontend request/response types, hooks, forms and rendered error states.
-- [ ] **PRD-C085** — Define route budgets for database calls, downstream calls, application latency, response bytes and memory; record p50/p95/p99 at the release commit.
+- [x] **PRD-C085** — Define route budgets for database calls, downstream calls, application latency, response bytes and memory; record p50/p95/p99 at the release commit.
 - [x] **PRD-C086** — Design routes around one user intent rather than forcing avoidable request waterfalls, while keeping unrelated domain implementation out of oversized mega-responses.
 - [x] **PRD-C087** — Keep Home aggregation bounded and parallel with independent section results; one slow source must not delay or fail every section.
 - [x] **PRD-C088** — Return explicit DTO projections and omit unused nested relations, internal columns, secrets and repeated denormalized payloads.

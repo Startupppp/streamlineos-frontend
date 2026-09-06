@@ -14,7 +14,7 @@
 
 - [x] **PRD-C008** — **Calendar/Inbox/Knowledge:** complete v2 tickets 13, 14 and 16 respectively, including provider drift, sync correctness, bounded read paths, ACL-aware retrieval and current performance evidence.
 - [x] **PRD-C014** — **Current P0/P1 audit:** resolve or formally disposition Payroll financial-integrity gaps in v2 ticket 08, notification/email permission and delivery gaps in v2 ticket 15, security findings in v2 ticket 22, and every surviving P0/P1 before v2 ticket 31.
-- [ ] **PRD-C018** — Run disposable-database E2E for Organization/RBAC, Home, Settings, HRMS, Payroll, Build, Billing, Payments, Accounting, Chat, Calendar, Notifications, Knowledge, Workflows and Inbox/mail.
+- [x] **PRD-C018** — Run disposable-database E2E for Organization/RBAC, Home, Settings, HRMS, Payroll, Build, Billing, Payments, Accounting, Chat, Calendar, Notifications, Knowledge, Workflows and Inbox/mail.
 - [x] **PRD-C019** — Record each command, release SHA, database identity, dataset shape, pass/fail/skip counts and failure artifacts.
 - [x] **PRD-C020** — At the same commit run backend build/typecheck, spec typecheck, frontend typecheck, OpenAPI freshness, cycle, file-size, dead-code, tenant-isolation, RLS, permission, cache, outbox, idempotency, migration, vulnerability, license and SBOM gates.
 - [x] **PRD-C021** — Resolve every code-level P0/P1 finding and assign owner/deadline to accepted lower-severity residual risks.
