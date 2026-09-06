@@ -14,3 +14,33 @@ export async function register() {
   } as unknown as typeof globalThis.setTimeout;
   Object.setPrototypeOf(globalThis.setTimeout, orig);
 }
+
+export function onRequestError(
+  err: unknown,
+  request: { path: string; method: string },
+  context: {
+    routerKind: string;
+    routePath: string;
+    routeType: string;
+    renderSource?: string;
+  }
+): void {
+  const message = err instanceof Error ? err.message : String(err);
+  const stack = err instanceof Error ? (err.stack ?? "") : "";
+  const cause =
+    err instanceof Error && err.cause instanceof Error
+      ? `\n  cause: ${err.cause.message}\n  causeStack: ${err.cause.stack ?? ""}`
+      : "";
+  const digest =
+    typeof err === "object" &&
+    err !== null &&
+    "digest" in err &&
+    typeof err.digest === "string"
+      ? `\n  digest: ${err.digest}`
+      : "";
+  console.error(
+    `[onRequestError] ${context.routeType} ${request.method} ${request.path} → ${context.routePath}` +
+      (context.renderSource ? ` (${context.renderSource})` : "") +
+      `\n  message: ${message}${digest}${cause}\n  stack: ${stack}`,
+  );
+}
