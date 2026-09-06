@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -21,7 +21,6 @@ import type {
   BuildApprovalInboxItem,
 } from "@/types/inbox";
 import { cn } from "@/lib/utils";
-import { useAfterLoad } from "@/hooks/common/use-after-load";
 import {
   parseNotifType,
   parseNotifPriority,
@@ -91,7 +90,6 @@ function InboxViewTab({ view, label, isActive, onSelect }: InboxViewTabProps) {
 
 export function InboxShell() {
   const router = useRouter();
-  const afterLoad = useAfterLoad();
   const [view, setView] = useState<InboxView>("ALL");
   const [selectedNotification, setSelectedNotification] =
     useState<Notification | null>(null);
@@ -129,6 +127,7 @@ export function InboxShell() {
     () => data?.pages.flatMap((p) => p.items) ?? [],
     [data],
   );
+  const deferredItems = useDeferredValue(items);
   const deniedPermission = deniedPermissionFor(
     view,
     data?.pages[0]?.sources ?? [],
@@ -219,7 +218,7 @@ export function InboxShell() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col gap-2">
-        {!afterLoad || isLoading ? (
+        {isLoading ? (
           <div className="flex-1 min-h-0">
             <NotificationListSkeleton count={10} />
           </div>
@@ -248,7 +247,7 @@ export function InboxShell() {
         ) : (
           <div className="flex-1 min-h-0 overflow-hidden">
             <InboxVirtualList
-              items={items}
+              items={deferredItems}
               hasNextPage={hasNextPage ?? false}
               isFetchingNextPage={isFetchingNextPage}
               isOnline={isOnline}

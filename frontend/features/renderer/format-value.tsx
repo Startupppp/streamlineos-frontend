@@ -1,7 +1,12 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { statusToneClasses } from "@/lib/design-tokens";
-import { DEFAULT_MONEY_DISPLAY, formatMoney, formatPercent, type MoneyDisplay } from "@/lib/format-utils";
+import {
+  DEFAULT_MONEY_DISPLAY,
+  formatMoney,
+  formatPercent,
+  type MoneyDisplay,
+} from "@/lib/format-utils";
 import {
   DEFAULT_BOOLEAN_OPTIONS,
   fieldByName,
@@ -13,6 +18,19 @@ import {
 import { referenceHref } from "@/lib/renderer/reference-route";
 
 export type RecordValue = Record<string, unknown>;
+
+const DATE_FORMATTER = new Intl.DateTimeFormat(undefined, {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+});
+const DATETIME_FORMATTER = new Intl.DateTimeFormat(undefined, {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+});
 
 function asText(value: unknown): string {
   if (value === null || value === undefined) return "";
@@ -26,38 +44,15 @@ function formatDate(value: unknown): string {
   const text = asText(value);
   if (!text) return "";
   const parsed = new Date(text);
-  return Number.isNaN(parsed.getTime())
-    ? text
-    : parsed.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  return Number.isNaN(parsed.getTime()) ? text : DATE_FORMATTER.format(parsed);
 }
 
-/**
- * Money renders in the organisation's own currency, never a hardcoded symbol.
- *
- * The display is threaded in rather than read from a hook here, because this is
- * a plain function called from cells and `useOrgDisplay` is a hook — the three
- * renderer components read it once and pass it down. Absent, it falls back to
- * the documented default, so a caller that has not wired it yet renders a
- * plausible number rather than a raw integer.
- *
- * An unparseable value is left as it arrived. A malformed amount rendered as a
- * confident "₹0.00" is worse than one that visibly looks wrong.
- */
 function formatMoneyField(value: unknown, display: MoneyDisplay): string {
   const text = asText(value);
   if (!text) return "";
   return Number.isFinite(Number(text)) ? formatMoney(text, display) : text;
 }
 
-/**
- * A percentage as the API stores it: 12.4 means 12.4%.
- *
- * Not `Intl`'s `style: "percent"`, which divides by a hundred — every CRM
- * endpoint here sends the figure already scaled, and the two conventions
- * silently differ by two orders of magnitude. There is no minimum fraction
- * digit, so a round sixty reads "60%" rather than "60.0%"; a table of figures
- * padded with decimals nobody asked for is density spent on nothing.
- */
 function formatPercentField(value: unknown, display: MoneyDisplay): string {
   const text = asText(value);
   if (!text) return "";
@@ -73,28 +68,16 @@ function formatDateTime(value: unknown): string {
   const parsed = new Date(text);
   return Number.isNaN(parsed.getTime())
     ? text
-    : parsed.toLocaleString(undefined, {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-      });
+    : DATETIME_FORMATTER.format(parsed);
 }
 
-/**
- * A boolean as one of two options.
- *
- * `false` is a value, not an absence — an inactive pricebook is not a pricebook
- * with no state — so it renders its own label rather than the em dash the engine
- * shows for nothing. Only null and undefined are nothing.
- *
- * The description supplies the two labels through `options` if it wants domain
- * words ("Active"/"Inactive"), and gets "Yes"/"No" if it does not.
- */
-function booleanOption(field: FieldSpec, value: unknown): SelectOption | undefined {
+function booleanOption(
+  field: FieldSpec,
+  value: unknown,
+): SelectOption | undefined {
   if (value === null || value === undefined || value === "") return undefined;
-  const truthy = value === true || value === "true" || value === 1 || value === "1";
+  const truthy =
+    value === true || value === "true" || value === 1 || value === "1";
   const options = field.options ?? DEFAULT_BOOLEAN_OPTIONS;
   return options.find((option) => option.value === String(truthy));
 }
@@ -112,55 +95,37 @@ export function formatFieldText(
   if (field.kind === "boolean") return booleanOption(field, value)?.label ?? "";
 
   if (field.kind === "select" || field.kind === "badge") {
-    const option = field.options?.find((candidate) => candidate.value === asText(value));
+    const option = field.options?.find(
+      (candidate) => candidate.value === asText(value),
+    );
     return option?.label ?? asText(value);
   }
 
   return asText(value);
 }
 
-/**
- * One place that decides how a value looks.
- *
- * A badge takes its colour from the status tokens, so both themes come from the
- * same class and no screen has to remember a `dark:` twin. An email or phone is
- * actionable rather than inert text, because on a record surface the reason you
- * are looking at it is usually to use it.
- */
 export function renderFieldValue(
   field: FieldSpec,
   value: unknown,
   display: MoneyDisplay = DEFAULT_MONEY_DISPLAY,
-  /**
-   * The record the value came from, so a reference can find the sibling field
-   * carrying its name. Optional, because every other kind renders from its own
-   * value alone and a caller that has only a value should not have to invent a
-   * record to pass.
-   */
+
   record?: RecordValue,
 ): ReactNode {
   if (field.kind === "reference") {
     const id = asText(value);
     if (!id) return <span className="text-muted-foreground">—</span>;
 
-    const label = field.referenceLabel ? asText(record?.[field.referenceLabel]) : "";
+    const label = field.referenceLabel
+      ? asText(record?.[field.referenceLabel])
+      : "";
 
-    /*
-      The row's own domain wins over the field's, because a polymorphic pointer
-      has no single one. Falls back to `referenceTo` when the row carries
-      nothing — a lead list whose rows all point at leads should not need the
-      column repeated on every record.
-    */
     const domain = field.referenceToField
-      ? asText(record?.[field.referenceToField]).toLowerCase() || field.referenceTo
+      ? asText(record?.[field.referenceToField]).toLowerCase() ||
+        field.referenceTo
       : field.referenceTo;
     const href = referenceHref(domain, id);
     const shown = label || id;
 
-    /*
-      No route for this domain means plain text, not a link to nowhere. A
-      reference the product has no page for is still a fact about the record.
-    */
     if (!href) return shown;
 
     return (
@@ -173,14 +138,6 @@ export function renderFieldValue(
   const text = formatFieldText(field, value, display);
   if (!text) return <span className="text-muted-foreground">—</span>;
 
-  /*
-    A signed figure is toned from the same status tokens a badge uses, so ROI
-    green and "active" green are the same green in both themes. The description
-    said which direction is good news; nothing here knows what a campaign is.
-
-    Weight rather than a second colour carries the emphasis, and the minus sign
-    is still there — colour is never the only thing distinguishing the two cases.
-  */
   const signTone = toneForSignedValue(field, value);
   if (signTone) {
     const tone = statusToneClasses(signTone);
@@ -201,7 +158,9 @@ export function renderFieldValue(
   }
 
   if (field.kind === "badge" || field.kind === "select") {
-    const option = field.options?.find((candidate) => candidate.value === asText(value));
+    const option = field.options?.find(
+      (candidate) => candidate.value === asText(value),
+    );
     if (!option?.tone) return text;
     const tone = statusToneClasses(option.tone);
     return (
@@ -252,19 +211,12 @@ export function resolveField(layout: RecordLayout, name: string): FieldSpec {
   );
 }
 
-/**
- * A typed record as the engine's row shape.
- *
- * An interface is not assignable to `Record<string, unknown>` — TypeScript gives
- * an implicit index signature to type aliases and withholds it from interfaces —
- * so every surface handing the engine its rows would otherwise carry a double
- * cast. Copying the own enumerable properties produces the index signature
- * honestly, in one place, instead of asserting it at forty call sites.
- */
 export function asRecordValue<T extends object>(row: T): RecordValue {
   return Object.fromEntries(Object.entries(row));
 }
 
-export function asRecordValues<T extends object>(rows: readonly T[]): RecordValue[] {
+export function asRecordValues<T extends object>(
+  rows: readonly T[],
+): RecordValue[] {
   return rows.map(asRecordValue);
 }

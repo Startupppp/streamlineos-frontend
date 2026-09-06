@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useCallback } from "react";
+import { useState, useDeferredValue, useTransition, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useSupportTickets, useSupportStats } from "@/hooks/api/support";
@@ -129,6 +129,7 @@ function InboxContent() {
   const { data: stats, isLoading: statsLoading } = useSupportStats();
 
   const tickets = ticketsData?.items ?? [];
+  const deferredTickets = useDeferredValue(tickets);
 
   const handleOpenCreate = useCallback(() => openCreate(), [openCreate]);
   useInboxShortcuts({
@@ -253,7 +254,7 @@ function InboxContent() {
           </div>
         ) : (
           <TicketList
-            tickets={tickets}
+            tickets={deferredTickets}
             isLoading={isLoading}
             selectedTicketId={selectedTicketId}
             onSelect={setSelectedTicketId}

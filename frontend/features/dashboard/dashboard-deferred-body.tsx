@@ -3,7 +3,6 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useAfterLoad } from "@/hooks/common/use-after-load";
 import {
   useRecentProjects,
   useTeamAttendance,
@@ -114,7 +113,6 @@ export function DashboardDeferredBody({ access }: DashboardDeferredBodyProps) {
     canViewSignEnvelopes,
   } = access;
 
-  const afterLoad = useAfterLoad();
   const [deferredVisible, setDeferredVisible] = useState(false);
 
   const {
@@ -123,7 +121,7 @@ export function DashboardDeferredBody({ access }: DashboardDeferredBodyProps) {
     error: projectsError,
     refetch: refetchProjects,
   } = useRecentProjects({
-    enabled: deferredVisible && afterLoad && projectsEnabled && canViewTickets,
+    enabled: deferredVisible && projectsEnabled && canViewTickets,
   });
   const {
     data: teamAttendance,
@@ -131,7 +129,7 @@ export function DashboardDeferredBody({ access }: DashboardDeferredBodyProps) {
     error: teamError,
     refetch: refetchTeam,
   } = useTeamAttendance({
-    enabled: deferredVisible && afterLoad && hrEnabled && canViewAttendance,
+    enabled: deferredVisible && hrEnabled && canViewAttendance,
   });
   const teamAvailability = useMemo(
     () =>
@@ -151,7 +149,7 @@ export function DashboardDeferredBody({ access }: DashboardDeferredBodyProps) {
     error: activityError,
     refetch: refetchActivity,
   } = useRecentActivity({
-    enabled: deferredVisible && afterLoad && projectsEnabled && canViewTickets,
+    enabled: deferredVisible && projectsEnabled && canViewTickets,
   });
   /**
    * No `deferredVisible` here, deliberately. `DashboardClient` observes the
@@ -172,10 +170,10 @@ export function DashboardDeferredBody({ access }: DashboardDeferredBodyProps) {
     error: sprintError,
     refetch: refetchSprint,
   } = useActiveSprintSummary({
-    enabled: deferredVisible && afterLoad && projectsEnabled,
+    enabled: deferredVisible && projectsEnabled,
   });
   const { data: todayActivities } = useTodayActivities({
-    enabled: deferredVisible && afterLoad && crmEnabled && canViewCrmLeads,
+    enabled: deferredVisible && crmEnabled && canViewCrmLeads,
   });
 
   const shownMeetingToastRef = useRef(false);

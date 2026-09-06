@@ -137,6 +137,7 @@ export function InboxList({
     () => notifications.slice(0, visibleCount),
     [notifications, visibleCount],
   );
+  const deferredVisibleNotifications = React.useDeferredValue(visibleNotifications);
 
   function handleLoadMore() {
     setPagesShown((p) => p + 1);
@@ -244,7 +245,7 @@ export function InboxList({
         {!isLoading && !isError && (total > 0 || hasNextPage) && (
           <div>
             <div role="list" aria-label="Notifications">
-              {visibleNotifications.map((notification, index) => (
+              {deferredVisibleNotifications.map((notification, index) => (
                 <div
                   key={notification.id}
                   role="listitem"

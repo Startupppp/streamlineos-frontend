@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 import { ChannelSidebar } from "@/features/chat/channel-sidebar";
 import { EmptyChatState } from "@/features/chat/empty-chat-state";
 import { useChatSidebarCollapse } from "@/features/chat/chat-shell";
-import { useAfterLoad } from "@/hooks/common/use-after-load";
 import {
   ChatOverlayFallback,
   ChatPanelFallback,
@@ -57,7 +56,6 @@ const NewGroupDialog = dynamic(
 );
 
 export function ChatHomePage() {
-  const afterLoad = useAfterLoad();
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
   const router = useRouter();
@@ -216,24 +214,12 @@ export function ChatHomePage() {
             showMobileList && "hidden md:flex",
           )}
         >
-          {afterLoad ? (
-            <ChatAblySuite
-              activeChannelId={activeChannelId}
-              currentUserId={currentUserId}
-            >
-              {panelChildren}
-            </ChatAblySuite>
-          ) : activeChannelId && currentUserId ? (
-            <ChatPanelFallback label="Loading conversation" />
-          ) : (
-            <EmptyChatState
-              onNewDM={handleNewDM}
-              onNewChannel={handleNewChannel}
-              onSearch={handleSearch}
-              isSidebarCollapsed={sidebarCollapsed}
-              onToggleSidebar={handleToggleSidebar}
-            />
-          )}
+          <ChatAblySuite
+            activeChannelId={activeChannelId}
+            currentUserId={currentUserId}
+          >
+            {panelChildren}
+          </ChatAblySuite>
         </div>
 
         <AnimatePresence>

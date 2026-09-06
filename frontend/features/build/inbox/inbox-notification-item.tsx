@@ -77,7 +77,7 @@ function formatStatusLabel(status: string): string {
   return statusConfig[status]?.label ?? status.replace(/_/g, " ");
 }
 
-export function InboxNotificationItem({
+export const InboxNotificationItem = React.memo(function InboxNotificationItem({
   notification,
   isSelected,
   onSelect,
@@ -230,4 +230,4 @@ export function InboxNotificationItem({
       </div>
     </div>
   );
-}
+});

@@ -6,7 +6,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { useAfterLoad } from "@/hooks/common/use-after-load";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { useParties, useDeleteParty } from "@/hooks/api/party/parties";
 import { useCan } from "@/hooks/api/access";
@@ -20,7 +19,12 @@ const RecordList = dynamic(
     import("@/features/renderer/record-list").then((m) => ({
       default: m.RecordList,
     })),
-  { ssr: false, loading: () => <DataTableSkeleton rows={12} columns={6} className="flex-1" /> },
+  {
+    ssr: false,
+    loading: () => (
+      <DataTableSkeleton rows={12} columns={6} className="flex-1" />
+    ),
+  },
 );
 import { DensityToggle, useDensity } from "@/features/renderer/density-toggle";
 import { PARTY_LAYOUT } from "@/lib/renderer/party-layout";
@@ -122,16 +126,19 @@ export function PartiesPage() {
   const canCreate = useCan("party:parties:create");
   const canUpdate = useCan("party:parties:update");
   const canDelete = useCan("party:parties:delete");
-  const afterLoad = useAfterLoad();
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [partyTypeFilter, setPartyTypeFilter] = useState<PartyTypeFilter>("ALL");
+  const [partyTypeFilter, setPartyTypeFilter] =
+    useState<PartyTypeFilter>("ALL");
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
 
-  const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } =
-    useQueryParamOpen("create");
+  const {
+    open: createOpen,
+    onOpenChange: setCreateOpen,
+    setOpen: openCreate,
+  } = useQueryParamOpen("create");
   const [editTarget, setEditTarget] = useState<BusinessParty | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<BusinessParty | null>(null);
 
@@ -148,7 +155,9 @@ export function PartiesPage() {
       if (partyId) params.set("partyId", partyId);
       else params.delete("partyId");
       const query = params.toString();
-      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+      router.replace(query ? `${pathname}?${query}` : pathname, {
+        scroll: false,
+      });
     },
     [pathname, router, searchParams],
   );
@@ -245,7 +254,9 @@ export function PartiesPage() {
   const [density, setDensity] = useDensity();
   const pagination = data?.pagination;
   const isFiltered =
-    !!debouncedSearch.trim() || partyTypeFilter !== "ALL" || roleFilter !== "ALL";
+    !!debouncedSearch.trim() ||
+    partyTypeFilter !== "ALL" ||
+    roleFilter !== "ALL";
 
   const filtersBar = (
     <div className={FILTER_TOOLBAR_ROW}>
@@ -284,7 +295,10 @@ export function PartiesPage() {
           setPage(1);
         }}
       >
-        <SelectTrigger className={FILTER_SELECT_TRIGGER} aria-label="Filter by role">
+        <SelectTrigger
+          className={FILTER_SELECT_TRIGGER}
+          aria-label="Filter by role"
+        >
           <SelectValue placeholder="All roles" />
         </SelectTrigger>
         <SelectContent>
@@ -303,11 +317,13 @@ export function PartiesPage() {
       title="Business Parties"
       subtitle="Customers, vendors and partners"
       filters={filtersBar}
-      actions={canCreate ? <AddPartyButton onClick={handleOpenCreate} /> : undefined}
+      actions={
+        canCreate ? <AddPartyButton onClick={handleOpenCreate} /> : undefined
+      }
     >
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-hidden">
         <div className="flex min-h-0 flex-1 flex-col">
-          {isLoading || !afterLoad ? (
+          {isLoading ? (
             <DataTableSkeleton rows={12} columns={6} className="flex-1" />
           ) : isError ? (
             <ErrorState className={CONTENT_FILL_PANEL} onRetry={handleRetry} />
@@ -373,7 +389,10 @@ export function PartiesPage() {
       )}
 
       {openPartyId !== null && (
-        <PartyDetailSheet partyId={openPartyId} onOpenChange={handleDetailOpenChange} />
+        <PartyDetailSheet
+          partyId={openPartyId}
+          onOpenChange={handleDetailOpenChange}
+        />
       )}
 
       {deleteTarget && (

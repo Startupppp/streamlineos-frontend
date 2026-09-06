@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Clock, AlertTriangle, CheckCircle2, Pause } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -36,7 +36,7 @@ interface TicketListItemProps {
   onSelect: (id: number) => void;
 }
 
-function TicketListItem({ ticket, isSelected, onSelect }: TicketListItemProps) {
+const TicketListItem = memo(function TicketListItem({ ticket, isSelected, onSelect }: TicketListItemProps) {
   const handleClick = useCallback(() => onSelect(ticket.id), [ticket.id, onSelect]);
   const StatusIcon = STATUS_ICONS[ticket.status] ?? Clock;
   const isBreached =
@@ -87,7 +87,7 @@ function TicketListItem({ ticket, isSelected, onSelect }: TicketListItemProps) {
       </div>
     </button>
   );
-}
+});
 
 interface TicketListProps {
   tickets: SupportTicket[];

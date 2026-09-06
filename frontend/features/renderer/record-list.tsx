@@ -1,13 +1,28 @@
 "use client";
 
-import { useMemo, type ReactNode } from "react";
-import { DataTable, type DataTableColumn, type DataTableProps } from "@/components/ui/data-table";
-import { isNumericField, moneyDisplayFor, type RecordLayout } from "@/lib/renderer/layout";
+import { memo, useCallback, useMemo, type ReactNode } from "react";
+import {
+  DataTable,
+  type DataTableColumn,
+  type DataTableProps,
+} from "@/components/ui/data-table";
+import {
+  isNumericField,
+  moneyDisplayFor,
+  type RecordLayout,
+} from "@/lib/renderer/layout";
 import { cn } from "@/lib/utils";
-import { formatFieldText, renderFieldValue, resolveField, type RecordValue } from "./format-value";
+import {
+  formatFieldText,
+  renderFieldValue,
+  resolveField,
+  type RecordValue,
+} from "./format-value";
 import { densityAttribute, type DensityMode } from "@/lib/design-tokens";
 import { DEFAULT_MONEY_DISPLAY, type MoneyDisplay } from "@/lib/format-utils";
 import { useShellVariant } from "@/components/layout/shell-variant-context";
+
+const MOBILE_SYNC_LIMIT = 20;
 
 type BorrowedProps = Pick<
   DataTableProps<RecordValue>,
@@ -68,18 +83,91 @@ export interface RecordListProps extends BorrowedProps {
   money?: MoneyDisplay;
 }
 
-/**
- * Turns a layout description into the columns `DataTable` already knows how to
- * render.
- *
- * Deliberately not a second table. The platform has exactly one, and it already
- * owns density, sticky headers, pagination and the card fallback below the
- * breakpoint; a parallel implementation would fork all of that and drift. What
- * the engine contributes is that the columns, their labels, their alignment and
- * the mobile card are all derived from the description instead of being written
- * out per screen — which is what lets a tenant's own arrangement drive them
- * later.
- */
+interface MobileRecordCardProps {
+  row: RecordValue;
+  layout: RecordLayout;
+  money: MoneyDisplay;
+  leading: ((row: RecordValue) => ReactNode) | undefined;
+  actions: ((row: RecordValue) => ReactNode) | undefined;
+  onRowClick: ((row: RecordValue) => void) | undefined;
+}
+
+const MobileRecordCard = memo(function MobileRecordCard({
+  row,
+  layout,
+  money,
+  leading,
+  actions,
+  onRowClick,
+}: MobileRecordCardProps) {
+  const primary =
+    layout.list.columns.find((c) => c.primary) ?? layout.list.columns[0];
+  const primaryField = resolveField(
+    layout,
+    primary?.field ?? layout.titleField,
+  );
+
+  const handleClick = useCallback(() => onRowClick?.(row), [onRowClick, row]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        onRowClick?.(row);
+      }
+    },
+    [onRowClick, row],
+  );
+
+  return (
+    <div
+      role={onRowClick ? "button" : undefined}
+      tabIndex={onRowClick ? 0 : undefined}
+      onClick={onRowClick ? handleClick : undefined}
+      onKeyDown={onRowClick ? handleKeyDown : undefined}
+      className={cn(
+        "rounded-lg border border-border bg-card text-left touch-manipulation",
+        onRowClick &&
+          "cursor-pointer active:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+      )}
+    >
+      <div className="flex min-h-11 min-w-0 items-start gap-gap-field p-card-pad">
+        {leading ? (
+          <span className="shrink-0 pt-0.5">{leading(row)}</span>
+        ) : null}
+        <div className="flex min-w-0 flex-1 flex-col gap-gap-inline">
+          <span className="truncate text-sm font-medium">
+            {renderFieldValue(
+              primaryField,
+              row[primaryField.name],
+              moneyDisplayFor(primaryField, row, money),
+              row,
+            )}
+          </span>
+          <span className="flex flex-wrap items-center gap-gap-field">
+            {layout.list.columns
+              .filter((column) => column.field !== primaryField.name)
+              .map((column) => {
+                const field = resolveField(layout, column.field);
+                const display = moneyDisplayFor(field, row, money);
+                const text = formatFieldText(field, row[column.field], display);
+                if (!text) return null;
+                return (
+                  <span
+                    key={column.field}
+                    className="text-dense text-muted-foreground"
+                  >
+                    {renderFieldValue(field, row[column.field], display, row)}
+                  </span>
+                );
+              })}
+          </span>
+        </div>
+        {actions ? <span className="shrink-0">{actions(row)}</span> : null}
+      </div>
+    </div>
+  );
+});
+
 export function RecordList({
   layout,
   rows,
@@ -115,11 +203,19 @@ export function RecordList({
                 return typeof value === "number" ? value : String(value ?? "");
               }
             : undefined,
-          className: cn(numeric && "text-right font-mono tabular-nums", column.width),
+          className: cn(
+            numeric && "text-right font-mono tabular-nums",
+            column.width,
+          ),
           headerClassName: numeric ? "text-right" : undefined,
           cell: (row) => {
             const display = moneyDisplayFor(field, row, money);
-            const value = renderFieldValue(field, row[column.field], display, row);
+            const value = renderFieldValue(
+              field,
+              row[column.field],
+              display,
+              row,
+            );
             if (!column.subtitle) return value;
 
             const subtitle = resolveField(layout, column.subtitle);
@@ -131,9 +227,14 @@ export function RecordList({
 
             return (
               <div className="flex min-w-0 flex-col gap-0.5">
-                <span className="truncate font-medium text-foreground">{value}</span>
+                <span className="truncate font-medium text-foreground">
+                  {value}
+                </span>
                 {subtitleText ? (
-                  <span className="truncate text-dense text-muted-foreground" title={subtitleText}>
+                  <span
+                    className="truncate text-dense text-muted-foreground"
+                    title={subtitleText}
+                  >
                     {subtitleText}
                   </span>
                 ) : null}
@@ -145,44 +246,46 @@ export function RecordList({
     [layout, money],
   );
 
-  const allColumns = useMemo<DataTableColumn<RecordValue>[]>(
-    () => {
-      const withLeading = leading
-        ? [
-            { key: "leading", header: "", className: "w-10", cell: leading },
-            ...columns,
-          ]
-        : columns;
+  const allColumns = useMemo<DataTableColumn<RecordValue>[]>(() => {
+    const withLeading = leading
+      ? [
+          { key: "leading", header: "", className: "w-10", cell: leading },
+          ...columns,
+        ]
+      : columns;
 
-      return actions
-        ? [...withLeading, { key: "actions", header: "", className: "w-10", cell: actions }]
-        : withLeading;
-    },
-    [columns, actions, leading],
-  );
+    return actions
+      ? [
+          ...withLeading,
+          { key: "actions", header: "", className: "w-10", cell: actions },
+        ]
+      : withLeading;
+  }, [columns, actions, leading]);
 
-  const primary = layout.list.columns.find((column) => column.primary) ?? layout.list.columns[0];
+  const primary =
+    layout.list.columns.find((column) => column.primary) ??
+    layout.list.columns[0];
 
   const mobileCard = (row: RecordValue): ReactNode => {
-    const primaryField = resolveField(layout, primary?.field ?? layout.titleField);
+    const primaryField = resolveField(
+      layout,
+      primary?.field ?? layout.titleField,
+    );
 
-    /*
-      The row's controls come to the phone too.
-
-      They did not, at first, and that was a defect rather than a decision: below
-      the breakpoint the table is replaced by these cards, so a list whose card
-      dropped `leading` and `actions` left a task that could not be ticked done
-      and a row that could not be opened — on the device where ticking something
-      done is most of what anybody wants. Principle 5 names those jobs
-      explicitly. What the card still drops is columns, not capability.
-    */
     return (
       <div className="flex min-h-11 min-w-0 items-start gap-gap-field p-card-pad">
-        {leading ? <span className="shrink-0 pt-0.5">{leading(row)}</span> : null}
+        {leading ? (
+          <span className="shrink-0 pt-0.5">{leading(row)}</span>
+        ) : null}
 
         <div className="flex min-w-0 flex-1 flex-col gap-gap-inline">
           <span className="truncate text-sm font-medium">
-            {renderFieldValue(primaryField, row[primaryField.name], moneyDisplayFor(primaryField, row, money), row)}
+            {renderFieldValue(
+              primaryField,
+              row[primaryField.name],
+              moneyDisplayFor(primaryField, row, money),
+              row,
+            )}
           </span>
           <span className="flex flex-wrap items-center gap-gap-field">
             {layout.list.columns
@@ -193,7 +296,10 @@ export function RecordList({
                 const text = formatFieldText(field, row[column.field], display);
                 if (!text) return null;
                 return (
-                  <span key={column.field} className="text-dense text-muted-foreground">
+                  <span
+                    key={column.field}
+                    className="text-dense text-muted-foreground"
+                  >
                     {renderFieldValue(field, row[column.field], display, row)}
                   </span>
                 );
@@ -207,47 +313,28 @@ export function RecordList({
   };
 
   if (shellVariant === "mobile") {
+    const visible = rows.slice(0, MOBILE_SYNC_LIMIT);
     return (
       <div
         {...densityAttribute(density)}
         className={cn("flex min-w-0 flex-col gap-2 p-2", className)}
       >
-        {rows.map((row, index) => (
-          <div
+        {visible.map((row, index) => (
+          <MobileRecordCard
             key={getRowKey(row, index)}
-            role={onRowClick ? "button" : undefined}
-            tabIndex={onRowClick ? 0 : undefined}
-            onClick={onRowClick ? () => onRowClick(row) : undefined}
-            onKeyDown={
-              onRowClick
-                ? (e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      onRowClick(row);
-                    }
-                  }
-                : undefined
-            }
-            className={cn(
-              "rounded-lg border border-border bg-card text-left touch-manipulation",
-              onRowClick &&
-                "cursor-pointer active:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-            )}
-          >
-            {mobileCard(row)}
-          </div>
+            row={row}
+            layout={layout}
+            money={money}
+            leading={leading}
+            actions={actions}
+            onRowClick={onRowClick}
+          />
         ))}
       </div>
     );
   }
 
   return (
-    /*
-      `data-density` sits on a wrapper rather than on <html>, so one pipeline
-      list can be dense while the rest of the product is not. The tokens are
-      declared for any element carrying the attribute, and cascade to this
-      subtree only.
-    */
     <div {...densityAttribute(density)} className="flex min-w-0 flex-col">
       <DataTable
         data={rows}

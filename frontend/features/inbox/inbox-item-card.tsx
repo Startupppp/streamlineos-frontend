@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import { Mail, CheckCircle, Clock, Paperclip } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -136,7 +136,7 @@ export interface InboxItemCardProps {
   isDeleting?: boolean;
 }
 
-export function InboxItemCard({
+export const InboxItemCard = memo(function InboxItemCard({
   item,
   onNotificationClick,
   onMailClick,
@@ -204,4 +204,4 @@ export function InboxItemCard({
     default:
       return assertNever(item);
   }
-}
+});
