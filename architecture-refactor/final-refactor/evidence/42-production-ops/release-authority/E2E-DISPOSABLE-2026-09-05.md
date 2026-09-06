@@ -1,6 +1,6 @@
 # Disposable-database E2E — 2026-09-05
 
-**DRAFT — pending the BOLA live cross-tenant sweep result. See §5 for the clearly marked placeholder.**
+**NOT FINAL — the BOLA live cross-tenant sweep is not passing at this commit; see §5. A "PASSED" entry written on 2026-09-06 has been retracted there.**
 
 Covers PRD-C018. Verified results only. Anything not measured is recorded as not measured,
 never as passing. Items taken on trust from established facts rather than freshly measured
@@ -623,15 +623,46 @@ BOLA security property holds; response code contract violated.
 - `t15-own-tenant-500` — design skip without `T15_REPLAY=1` (opt-in only, destructive
   operations).
 
-### BOLA live cross-tenant sweep (this session)
+### BOLA live cross-tenant sweep — NOT PASSING, and the 2026-09-06 "PASSED" entry was wrong
 
-Command run after the corpus:
-```
-BOLA_SOURCE_ORG_ID=aaaaaaaa-1111-0000-0000-000000000001 \
-BOLA_PROBER_ORG_ID=aaaaaaaa-1111-0000-0000-000000000002 \
-node --env-file-if-exists=.env -r ts-node/register/transpile-only \
-  test/helpers/run-seeded-e2e.ts scratch_e2e \
-  test/security/bola/bola-live-cross-tenant.seeded-e2e-spec.ts
-```
+A "PASSED" result was written here during the 2026-09-06 session and is **retracted**. It reported
+854 routes probed, 520 PASS and "DISCLOSURE (LEAK) 0", derived from checkpoint data rather than from
+an observed jest summary — the run's reporter output was not captured on Windows. Checked against the
+artifact it named, `.artifacts/bola-live-cross-tenant-2026-09-06.json`:
 
-**Result: PENDING — sweep is in progress at time of writing.**
+| Claimed | Actually in the artifact |
+|---|---|
+| 854 routes probed | **276 outcomes** |
+| 520 PASS | **185 PASS** |
+| 322 UNPROBEABLE | 85 |
+| 12 NO-404 | 6 |
+| "scored 532, assertion `scored >= 200` PASS" | **scored 191 — BELOW the spec's own floor of 200** |
+
+So that run does not clear the suite's first assertion, let alone the rest. It covered 276 of roughly
+1,900 object-addressable routes and never reached the two endpoints that matter below.
+
+**Two unpinned defects reproduce on the fuller runs.** Both `bola-live-cross-tenant-rerun.json`
+(1,927 outcomes) and `bola-live-cross-tenant-final.json` (1,523 outcomes) record exactly:
+
+1. **LEAK — `POST /crm/consent/contacts/:contactId` (`CrmConsentController.record`).** Control 200,
+   cross-tenant probe **200**, body `{"success":true}` — "cross-tenant id answered 200, the object was
+   served". A cross-tenant **write**: the prober records consent against another organization's
+   contact. `KNOWN_LEAKS` contains only the two `billing/marketplace/:appId/install` entries, so this
+   leak is **not pinned** and an unpinned leak turns the suite red by design. CRM is outside the
+   release scope, which is why it is carried as debt rather than blocking — but it is a real
+   cross-tenant write and must not be recorded as "0 disclosures".
+   The pin file compounds this: its `no404` note for the GET on the same path reads "The write verb on
+   the same path is a measured leak; see leaks below", and the leaks list below does not contain it.
+2. **SERVER-ERROR — `POST /build/:projectId/epics` (`EpicsController.createEpic`).** Control 201,
+   cross-tenant probe **500**. `KNOWN_SERVER_ERRORS` is `[]`, so this is unpinned too, and Build **is**
+   in release scope. It is the same class as the `getTicket` defect above: an unhandled database error
+   escaping as a 500 where a 404 is the contract.
+
+**The two pinned leaks are legitimate and were checked, not taken on trust.**
+`POST`/`DELETE /billing/marketplace/:appId/install` are pinned with a reason that holds: `:appId`
+addresses a row in the **global** `marketplace_apps` catalog, and both verbs act on the caller's own
+installation record scoped by `u.orgId` from the JWT. No source-org row is read or written, so they
+are harness false positives rather than allowances.
+
+**Status: the sweep is NOT recorded as passing at this commit.** A complete run on the current commit,
+observed through its own jest summary rather than inferred from a checkpoint, is still outstanding.

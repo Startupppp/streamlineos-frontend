@@ -816,8 +816,26 @@ These decisions are final for this release and remove implementation alternative
       would swallow an RLS failure: a `42501` means the tenant GUC was not set for that statement, so the
       catch would hide a tenant-context bug behind a clean-looking 404. This needs the missing GUC context
       diagnosed first; it must not be closed by a `catch`. Owner: the Build module owner.
-      The `bola-live-cross-tenant` sweep was launched with `BOLA_SOURCE_ORG_ID` / `BOLA_PROBER_ORG_ID` so it
-      runs rather than design-skips, and is **still running — its verdict is NOT recorded here and must not
+      **The BOLA live cross-tenant sweep is NOT passing, and a "PASSED" claim recorded on 2026-09-06 was
+      retracted after checking it against its own artifact.** That claim reported 854 routes probed, 520
+      PASS and zero disclosures, derived from checkpoint data rather than an observed jest summary. The
+      artifact it named holds **276 outcomes** (185 PASS / 85 UNPROBEABLE / 6 NO-404), so **scored = 191,
+      below the spec's own `scored >= 200` floor** — that run does not clear the suite's first assertion,
+      and it never reached the two endpoints below.
+      Two **unpinned** defects reproduce on the fuller runs (1,927 and 1,523 outcomes):
+      **(1) LEAK — `POST /crm/consent/contacts/:contactId`.** Control 200, cross-tenant probe **200**, body
+      `{"success":true}`: the prober records consent against another organization's contact. A cross-tenant
+      **write**. `KNOWN_LEAKS` holds only the two `billing/marketplace/:appId/install` entries, so this is
+      unpinned and turns the suite red by design. CRM is outside release scope, so it is carried as debt
+      rather than blocking this release — but it is a real cross-tenant write and is not "zero
+      disclosures". The pin file also mis-describes it: the `no404` note on the GET for the same path says
+      the write verb "is a measured leak; see leaks below", and the leaks list does not contain it.
+      **(2) SERVER-ERROR — `POST /build/:projectId/epics`.** Control 201, cross-tenant probe **500**, and
+      `KNOWN_SERVER_ERRORS` is `[]`, so it is unpinned. Build **is** in release scope. Same class as the
+      `getTicket` defect: an unhandled database error escaping as a 500 where 404 is the contract.
+      The two pinned billing leaks were checked rather than trusted and are legitimate: `:appId` addresses
+      a row in the global `marketplace_apps` catalog and both verbs act on the caller's own installation
+      scoped by `u.orgId`, so no source-org row is touched — harness false positives, not allowances.
       be read as passing.**
       Per PRD-C016, prerequisite-blocked gates never count as passing, so this stays open.
       Owner: the repository owner.
