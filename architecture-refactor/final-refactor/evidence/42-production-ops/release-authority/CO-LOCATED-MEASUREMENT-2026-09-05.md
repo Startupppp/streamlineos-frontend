@@ -313,6 +313,43 @@ late). The gate additionally refused this capture because 2 of 6 mobile `/build/
 the 6 s settle cap (the DOM never went quiet), which it treats as a CLS floor. Both are assigned
 (shell interaction; calendar/parties/my-work) and the capture is repeated after those changes.
 
+**Capture 7 (2026-09-06 12:26–12:37, build `2a-9evJ8ytb3UkEfxw10p`, root `7ffeae48a`, 132 samples,
+0 off-route, 0 hydration mismatches).** Measured after the server-selected shell variant, the
+server prefetches, the virtualised and deferred lists, and the My Work bundle work. p75 per
+route/profile (ms; CLS unitless):
+
+| Route | mobile INP | mobile LCP | mobile CLS | desktop INP | desktop LCP |
+|---|---:|---:|---:|---:|---:|
+| `/mail` | 56 | 466 | 0.000 | 88 | 223 |
+| `/inbox` | **734** | 525 | 0.000 | 110 | 274 |
+| `/build/inbox` | **646** | 834 | 0.000 | 130 | 212 |
+| `/support/inbox` | **322** | 1007 | 0.000 | 96 | 243 |
+| `/dashboard` | **368** | 543 | 0.000 | 80 | 254 |
+| `/chat` | **336** | 809 | 0.000 | 86 | 187 |
+| `/calendar` | 64 | 841 | 0.001 | 54 | **1762** |
+| `/notifications` | 80 | 967 | 0.000 | 120 | 318 |
+| `/settings` | 164 | 428 | 0.032 | 86 | 222 |
+| `/build/my-work` | **208** | 426 | 0.001 | 86 | 212 |
+| `/parties` | **770** | 1064 | 0.000 | 80 | **2137** |
+
+**Bold = breach** against INP p75 ≤ 200 and desktop LCP ≤ 1500. Every mobile LCP, every CLS and
+every TTFB passes, and desktop INP passes on all eleven routes (54–130 ms). Against capture 2 the
+mobile INP work landed where it was aimed: `/notifications` 1028 → 80, `/settings` 670 → 164,
+`/mail` 846 → 56, `/calendar` 892 → 64, `/build/my-work` 1022 → 208, `/parties` 1262 → 770. Mobile
+LCP on `/calendar` fell 4458 → 841 and desktop LCP breaches went from two to two but moved: this
+capture introduced one. **The two desktop LCP breaches are a regression this capture caught**:
+`/parties` went 271 → 2137 ms and `/calendar` 1247 → 1762 ms in the same session that made those
+pages async server components awaiting a prefetch before returning their tree — awaiting the
+backend round trip inside the page body blocks the HTML response, so first paint now waits on the
+list query. It is assigned with the remaining mobile INP breaches; the fix is to stream the shell
+and let the prefetched query arrive in a later flush rather than to drop the prefetch.
+
+Six mobile `/chat` samples were refused as evidence: the page renders 2 distinct in-app navigation
+links and the driver requires 3 before it will treat a sample as an authorised shell. An earlier
+attempt added `sr-only` links purely to satisfy that counter; it was reverted, because moving a
+number by feeding the instrument is the failure mode these gates exist to prevent. The route is
+therefore recorded as unmeasured on mobile, not as passing.
+
 Over-the-wire bytes before the load event (`measuredScriptBytes` ceiling 524,288; bytes):
 
 | Route | script | css | font | image | third-party | document | total |
