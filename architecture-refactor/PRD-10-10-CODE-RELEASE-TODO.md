@@ -5,9 +5,9 @@ Scope: Home, Settings, Authentication/Organization/RBAC, HRMS, Payroll, Build/PM
 
 ## Status and evidence
 
-Checkbox census at this revision: **146 closed, 49 open, 195 total**. Applying the [closure definition](../.scratch/code-release-10-10-v2/CLOSURE-DEFINITION.md) gives **145/159 CODE criteria closed (91.2%), 14 CODE criteria open**. These fourteen include roll-ups; they are not fourteen independent implementation defects. PRD-C188 retention/legal-hold is closed with its linked drill evidence. A checked criterion is either measured or explicitly labelled owner-dispositioned; disposition is never measurement. Code-level and deployed production readiness remain separate.
+Checkbox census at this revision: **155 closed, 40 open, 195 total**. Applying the [closure definition](../.scratch/code-release-10-10-v2/CLOSURE-DEFINITION.md) gives **154/159 CODE criteria closed (96.9%), 5 CODE criteria open** — C006, C104, C149, C156 and C158. The header stood stale at 146/145/91.2% until 2026-09-06; it is recomputed here from the live checkboxes rather than carried forward. **C104 was corrected from checked to unchecked on 2026-09-06**: its own status text reads "OPEN — named blocker", "this criterion cannot be closed by writing specs" and "not waived", it carries no CLOSED marker and no owner disposition, and its blocker (`check:test-suppressions` — 76 runtime-selected suppressions against a ratchet of 29) was re-verified red on 2026-09-06. The count therefore went DOWN by one against the previous revision. These five include roll-ups; they are not five independent implementation defects. PRD-C188 retention/legal-hold is closed with its linked drill evidence. A checked criterion is either measured or explicitly labelled owner-dispositioned; disposition is never measurement. Code-level and deployed production readiness remain separate.
 
-Measurement prerequisites, checked 2026-09-05: PostgreSQL, Redis and Docker executables were not discovered on PATH, and no matching Windows service was discovered. This does not establish that no installation exists elsewhere. The process snapshot included 31 Node processes whose command lines matched `tsc` and six matching `jest`; ownership was not established. Run heavy verification serially after resource availability is established. Latency and Web Vitals acceptance requires a controlled production-build measurement stack with suitable database/cache proximity; unmeasured or resource-contended runs do not close criteria.
+Measurement prerequisites, **superseded 2026-09-06**: the co-located stack in `D:\localstack` now provides PostgreSQL 18.6 (`scratch_local`) on 127.0.0.1:5432, Redis on 6379 and an Upstash REST shim on 8079, so the 2026-09-05 note that no database or cache was discoverable no longer describes this machine. Web Vitals and latency acceptance still require a quiet host: the driver now MEASURES host CPU from `os.cpus()` tick deltas rather than reading `os.loadavg()`, which is unimplemented on Windows and returned a constant 0, and both the producer and the budget gate now refuse a contended OR an unmeasured host. Two further traps are recorded because each cost a whole capture: `next start` keeps serving a stale `.next` until the server is restarted after a build, and the frontend must be started with `API_INTERNAL_URL=http://127.0.0.1:1500` or every authenticated route redirects to `/org-setup` behind an IPv6 loopback stall.
 
 - Full-run evidence: [release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md)
 - Current migration re-proof: [head-691 evidence](final-refactor/evidence/42-production-ops/release-authority/HEAD-691-REPROOF-2026-09-04.md)
@@ -40,19 +40,16 @@ Current measured architecture gates include zero dependency cycles, zero actiona
       its DDL on the application role. Evidence: [CO-LOCATED-MEASUREMENT-2026-09-05.md](final-refactor/evidence/42-production-ops/release-authority/CO-LOCATED-MEASUREMENT-2026-09-05.md).
 
 - [ ] **[PRD-C006]** **Frontend speed:** complete v2 ticket 29's production-build Web Vitals, bundle, rendering and interaction budgets while preserving completed lazy-loading, virtualization and hydration gains.
-      **OPEN - blocked only on the PRD-C149 INP remainder.** The bundle half is measured and improved at
-      build `WklbjYSWVhWz3T7CHJwUU`: `check-route-bundle-budget` went from **2 breaches to 1**, with
-      `/crm/inbox` brought inside its ceiling and `/crm/leads` 17,581 bytes over. Byte counts are
-      deterministic and unaffected by host load, so that result stands where the timing figures do not.
-      The dominant cause was a barrel: `components/shared` re-exports `EntityFormSheet` and
-      `EntityFormDialog`, which import `react-hook-form`, and across a `"use client"` boundary webpack
-      cannot tree-shake them - so **60 route-level files under `app/**` that wanted only a state component
-      were each pulling `react-hook-form` into that route's eager chunk**. The same shape appeared in the
-      sidebar (chat and notification hooks reached through barrels spanning twelve modules) and on
-      `/parties`, where a skeleton imported from the `data-table` barrel dragged `@tanstack/react-table`
-      in and cost 27,488 bytes. Server TTFB p95 is 33-77 ms on every route. Lazy-loading, virtualization
-      and hydration gains are preserved and extended, and the server still selects the shell variant from
-      the request. Evidence: [CO-LOCATED-MEASUREMENT-2026-09-05.md](final-refactor/evidence/42-production-ops/release-authority/CO-LOCATED-MEASUREMENT-2026-09-05.md).
+      **OPEN - blocked only on the PRD-C149 INP remainder, and that remainder is now measured rather than
+      unobtainable.** The bundle half is measured and improved: `check-route-bundle-budget` went from 2
+      breaches to 1, with `/crm/inbox` brought inside its ceiling and `/crm/leads` 17,581 bytes over - and
+      CRM is outside release scope. Server TTFB p95 is 41-80 ms on every route. Lazy-loading, virtualization
+      and hydration gains are preserved: capture 15 and its two successors each recorded **0 hydration
+      mismatches** across 156 navigations.
+      What is left is the Core Web Vitals interaction half. Mobile INP breaches seven in-scope routes at
+      600-1100 ms against a 200 ms budget, reproduced across three independent captures on a host measured
+      quiet. Four candidate fixes were attempted and all four reverted because the measurement refused them.
+      This criterion closes when PRD-C149 does. Owner: the frontend performance owner.
 
 - [x] **[PRD-C007]** **TanStack:** complete v2 ticket 19's permissioned-read, required-identifier, query-key, pagination, runtime parsing, cancellation, invalidation and optimistic-update criteria.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
@@ -394,7 +391,7 @@ These decisions are final for this release and remove implementation alternative
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [x] Version every published customer/integration contract or provide an explicit backward-compatible deprecation window. Reconcile REST/OpenAPI, webhooks, realtime events, exports and SDK-facing schemas with consumer evidence, idempotency/replay rules and removed-operation records; coordinated internal frontend/backend contracts may break only in the same release commit.
       Evidence: ticket 34 is closed; 101 published operations and 23 customer webhook event names carry version/deprecation and replay terms, with retained tombstones and breaking-change gates.
-- [x] **[PRD-C104]** Make every architecture/release gate bite-proven with a known-bad fixture or mutation that fails for the intended reason. Critical tests must exercise transaction callbacks, authorization deny/cross-tenant paths, retries and failure branches; zero silently skipped/quarantined tests, vacuous mocks, swallowed promise failures or baselines raised merely to turn a regression green.
+- [ ] **[PRD-C104]** Make every architecture/release gate bite-proven with a known-bad fixture or mutation that fails for the intended reason. Critical tests must exercise transaction callbacks, authorization deny/cross-tenant paths, retries and failure branches; zero silently skipped/quarantined tests, vacuous mocks, swallowed promise failures or baselines raised merely to turn a regression green.
       **OPEN — named blocker.** `check:test-suppressions` exit 1 — runtime-selected suppressions against a ratchet of 29. The bulk are infrastructure-gated suites (`*.db.spec.ts` needing a live database, `*.eval.spec.ts` needing an AI provider key, 1 perf e2e). The ratchet was NOT raised.
       **CORRECTED 2026-09-05 — the count recorded here was 66 and is not reproducible; the gate reports 76, and reported 76 on 2026-09-04 too.** Measured at backend `b1896c38e`: `pnpm -C backend check:test-suppressions` prints "Spec files 2286 · suppression sites 20 · conditional aliases 75 · conditional 76 · placeholder 13 · quarantine 6 — FAIL, 76 runtime-selected suppressions, above the ratchet of 29". This is **not a regression**, and must not be read as one: `git diff --stat 92d4aa4f6..HEAD -- src/scripts/check-test-suppressions.mjs src/scripts/baselines/test-suppressions.json` is empty (gate and registry byte-identical to the 2026-09-04 release commit), and the conditional-alias corpus is unchanged at 81 matching lines across every commit from `92d4aa4f6` through `b1896c38e`. Same tree, same gate, same number — 66 was a transcription error, not an earlier measurement.
       **MEASURED 2026-09-05 — the promotion condition is NOT met, and this is now evidence rather than assumption.** The gate's own source says 29 moves only once `db-gates.yml`'s "Database-gated spec suites" step is green on a run somebody has read. That step was run for the first time, against a disposable Neon branch bootstrapped from empty to `REACHED_HEAD 691/691`, seeded with `seed-scratch-e2e`, with all 23 `*_DB_TESTS` gates armed and `APP_DATABASE_URL` on the non-owner `streamline_app` role (`bypassrls=false`). Result: **43 suites passed, 11 failed, 2 skipped of 56; 249 tests passed, 36 failed, 19 skipped.** It is not green, so **29 stands and the gate stays honestly red.** Failing suites: `chat-presence-conflict-target`, `chat-read-path-hardening`, `chat-send-conflict-target`, `hr-import-attendance-idempotency`, `hr-dashboard-attendance-grain`, `party-identifiers`, `party-legacy-backfill`, `party-legacy-writer`, `journal-completeness`, `crm-permissions-reach-somebody` (CRM, out of release scope), `workflow-publish-lost-update`. The failures cluster on two fixture faults, not on production defects: 18 occurrences of `constraint "fk_business_parties_employer" for relation "business_parties" already exists` (setup that is not re-runnable) and 10 of `null value in column "party_id" of relation "business_parties" violates not-null constraint` (a fixture gap). That matches the step's own comment predicting suites would fail until a seed step lands or the specs build their own fixtures.
@@ -405,6 +402,16 @@ These decisions are final for this release and remove implementation alternative
       **The ratchet still may not be raised, and this criterion cannot be closed by writing specs.** The condition for moving 29 is written into `check-test-suppressions.mjs` itself and is not a judgement call: the `Database-gated spec suites` step in `db-gates.yml` must be green on a run somebody has read, and promoted off its `if:` to every event. Note the structural tension with PRD-C018, which is real and unresolved: every new DB-gated seeded-E2E spec written to close C018 adds a conditional alias to the class this ratchet caps, so the two criteria pull against each other until that CI step is promoted.
       Owner: the repository owner. Recorded in the release record; not waived.
 
+      **CORRECTED 2026-09-06 — the checkbox was `[x]` while every word of this entry said otherwise.** This
+      criterion carried a checked box above a paragraph reading "OPEN — named blocker", "the ratchet still
+      may not be raised, and this criterion cannot be closed by writing specs" and "not waived", with no
+      CLOSED marker and no owner disposition anywhere. It is now `[ ]`, and ticket 30 was flipped in the
+      same commit so the traceability gate stays green. Re-verified on 2026-09-06 rather than assumed:
+      `check:test-suppressions` still reports 76 runtime-selected suppressions against a ratchet of 29, its
+      denominator matches `git grep` exactly, and a planted `it.skip` is reported by file, line and class,
+      so the gate bites. **This correction lowers the release headline from 155/159 to 154/159 CODE
+      criteria.** It is recorded here rather than quietly absorbed, because a checkbox that disagrees with
+      its own evidence is the one defect a traceability gate counting checkboxes can never catch.
 ### 10. Module release matrix
 
 - [x] **[PRD-C105]** Inventory its backend module folders, controllers, implementations, DTO/Zod schemas, database schema files, migrations, workers, cache keys, event consumers, frontend routes, components, hooks, TanStack keys, tests, fixtures and operational scripts.
@@ -638,26 +645,50 @@ These decisions are final for this release and remove implementation alternative
 #### 12.2 Next.js, TanStack Query and perceived speed
 
 - [ ] **[PRD-C149]** Meet Core Web Vitals targets on production builds for in-scope authenticated routes: LCP ≤ 2.5 s, INP ≤ 200 ms and CLS ≤ 0.1 at the defined reference viewport/device profile.
-      **OPEN - every mobile LCP breach is fixed and measured; the INP verdict is not obtainable on this host.**
-      Capture 9 (build `Av2V-n37S54-C9lK3RmXL`, production, 13 routes x 6 repeats x desktop and mobile,
-      156 samples, 0 unusable) closed all three mobile LCP breaches carried from capture 8:
-      `/support/inbox` **3051 -> 882 ms**, `/chat` **3477 -> 902 ms**, `/calendar` **2567 -> 397 ms**, and
-      `/dashboard` 2358 -> 783 ms. Every mobile LCP is now inside the 2,500 ms budget, and desktop LCP,
-      CLS and TTFB pass everywhere.
-      **The mobile INP figures from the final captures are recorded as diagnostic, not as evidence.**
-      Capture 14 reports `/build/my-work` mobile INP 1,844 ms against 38 ms in capture 8 on a route whose
-      code did not change, and the host was measured at **100% CPU** with another session's servers and a
-      user browser on it. A 4x-throttled mobile profile on a saturated host measures the host - the driver
-      says so in its own conditions note - and its guard never fired because `os.loadavg()` returns 0 on
-      Windows, so the recorded `loadAverage1m` of 0 is meaningless here. That is a NEW REQUIREMENT against
-      the driver, recorded below, not a licence to publish the numbers.
-      `/chat` mobile stays **unmeasured, not passing**: the driver requires three distinct in-app navigation
-      links to accept a sample and the chat mobile bottom navigation genuinely has two destinations. An
-      attempt to add `sr-only` links to satisfy that counter was reverted, and the capture that includes
-      `/chat` is refused wholesale by design - the refusal mechanism deliberately cannot be excepted.
-      **No budget was moved, no ceiling widened and no route dropped to make a number pass.** Closing this
-      needs one capture on a quiet host. Owner: the frontend performance owner.
-      Evidence: [CO-LOCATED-MEASUREMENT-2026-09-05.md](final-refactor/evidence/42-production-ops/release-authority/CO-LOCATED-MEASUREMENT-2026-09-05.md).
+      **OPEN - measured on a quiet host at last, and the mobile INP verdict is a genuine FAIL.**
+      The blocker recorded on 2026-09-05 ("the INP verdict is not obtainable on this host") is resolved:
+      the driver's contention guard was inert because `os.loadavg()` is unimplemented on Windows and
+      returns a constant 0, so every capture stamped an idle host it never measured. It now measures CPU
+      from `os.cpus()` tick deltas, before launch and across the run, and both the producer and
+      `check:web-vitals-budget` refuse a contended **or an unmeasured** host. Three captures were taken on
+      2026-09-06, each with 156 samples over 13 routes x 6 repeats x desktop and mobile, and each with
+      **zero** unusable, off-route, unauthorized, settle-capped, hydration-mismatched or failed samples.
+      **What passes.** Every LCP on both profiles - worst desktop 1030 ms against 1500, worst mobile
+      1380 ms against 2500. Every CLS - worst 0.0016 against 0.100. Every desktop INP - worst 152 ms
+      against 200. Every FCP and TTFB; server TTFB p95 is 41-80 ms on all thirteen routes.
+      **`/chat` is now measured and passes** at 142/144 ms mobile INP. It had stood "unmeasured, not
+      passing" because the driver proxied an authorized shell by counting three in-app nav links while the
+      chat mobile navigation genuinely has two. The check is now the shell's own `main#dashboard-content`
+      marker, which the access-refused branch never renders (`dashboard-shell.tsx:270` vs `:216-230`),
+      verified live: present once on every authenticated route, absent without a cookie. It fails closed.
+      No `sr-only` link was added and no threshold was lowered.
+      **The 1,844 ms reading was the host.** `/build/my-work` measured **72 ms** on the same code that
+      capture 14 recorded at 1,844 ms. That route was never slow; the guard simply could not fire.
+      **What fails is real and reproduces.** Mobile INP p75 against a 200 ms budget, across three captures:
+      `/inbox` 814/894/720, `/build/inbox` 750/838/880, `/parties` 986/1084/838, `/support/inbox`
+      696/796/732, `/dashboard` 698/776/638, `/notifications` 268/122/150 (plus `/crm/leads` 1236/1284/976
+      and `/crm/inbox`, both outside release scope). Run-to-run variance is about +/-25%; the heavy routes
+      sit far outside it and breach in every capture. `check:web-vitals-budget` exits 1 with 9 violations
+      and **no exception is recorded for any of them**.
+      This is a product finding, not an instrument one. The probe clicks an inert control **after** the DOM
+      has been quiet for 500 ms and no sample hit the settle cap, so the latency is the interaction's. The
+      driver now records WHICH control it clicked - without that an INP number is not actionable, and it
+      immediately showed that one `/chat` comparison was between two different controls. Every route clicks
+      `button[aria-label="Open quick actions"]`, yet it costs 56 ms on `/mail` and 838 ms on `/parties`, so
+      the cost is the route's own pending work rather than the panel's.
+      **Four fixes were attempted and all four were reverted, because the measurement refused them.** A
+      command-palette context split, memoized subtrees, stable callback identity, and removing a `flushSync`
+      from the mobile FAB's click handler. None improved any heavy route, the gate went from 9 violations to
+      11, and `/settings` (96 -> 296 -> 292) and `/build/my-work` (72 -> 210 -> 272) went from passing to
+      breaching and stayed there. `modal={false}` on the palette dialogs was proposed and NOT taken: it drops
+      focus trapping and background `aria-hidden`, and the DOM-size hypothesis behind it is contradicted by
+      measurement - `/dashboard` has the fewest server-rendered elements (480) and breaches, `/build/my-work`
+      has more (655) and passes. Frontend app code is restored to the state capture 15 measured, so the
+      published numbers describe the shipped code.
+      **No budget was moved, no ceiling widened, no exception recorded and no route dropped.** Closing this
+      needs a profiling pass that attributes the 600-1100 ms to actual work; that has not been done.
+      Owner: the frontend performance owner.
+      Evidence: [CO-LOCATED-MEASUREMENT-2026-09-06.md](final-refactor/evidence/42-production-ops/release-authority/CO-LOCATED-MEASUREMENT-2026-09-06.md).
 
 - [x] **[PRD-C150]** Show navigation, skeleton, optimistic or queued feedback within 100 ms of user intent; never leave an action apparently unresponsive while work runs.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
@@ -710,30 +741,51 @@ These decisions are final for this release and remove implementation alternative
 ## Immediate code-level final gate
 
 - [ ] **[PRD-C156]** Every unchecked item under **Immediate code-level release candidate** is complete with fresh evidence.
-      **OPEN - one named blocker, and it is PRD-C149.** Every other item under **Immediate code-level
-      release candidate** is now checked with fresh evidence; PRD-C149 is the only unchecked one, so this
-      criterion closes with it and not before. It is not waived.
-      Owner: the repository owner.
+      **OPEN - two named blockers now, not one.** PRD-C149 remains unchecked, and **PRD-C104 rejoined the
+      unchecked set on 2026-09-06** when its checkbox was corrected to match its own text ("OPEN - named
+      blocker", "cannot be closed by writing specs", "not waived", no CLOSED marker, no owner disposition).
+      Both sit under **Immediate code-level release candidate**, so both are dependencies of this criterion.
+      C104's blocker and C158's remaining gate blocker are the same one: `check:test-suppressions` at 76
+      against a ratchet of 29, which moves only when the `db-gates.yml` database-gated step is green and
+      promoted. This criterion is not waived and closes with them, not before. Owner: the repository owner.
 
 - [x] **[PRD-C157]** CRM/Inventory remain excluded and public landing visuals/animations remain unchanged.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [ ] **[PRD-C158]** Backend/frontend builds, typechecks, focused tests, disposable E2E and architecture gates pass at one commit.
-      **OPEN - builds, typechecks and focused tests pass at one commit pair; the E2E and gate halves do not.**
-      At backend `b601294ea` / root `c542ca161`: backend `typecheck` **0**, backend `typecheck:test` **0**
-      (a TS2502 self-reference in `epics-cycles-tenant-isolation.spec.ts` was fixed to get there),
-      `nest build` **0**, frontend `tsc --noEmit` **0**, `next build` **0**, `madge --circular` **0 cycles
-      over 6,012 files**, and focused tests green (22 build-automation, 19 inbox, 7 shell).
-      `check-route-budgets` **0**, `check-benchmark-manifest` **0**, and its `--against` pass **0** after the
-      request-level regression pass was calibrated.
-      What is not true yet: the disposable E2E corpus (PRD-C018) was run at an earlier commit, not this one,
-      and five architecture gates are not green - `check:test-suppressions` is red by design and
-      deliberately held at its ratchet, `check:alert-ack` and `check:replay-ledger` are blocked on absent
-      environment (`ALERT_WEBHOOK_URL`, `COLD_DATABASE_URL`), `verify:chat-mentions` is blocked on a keyring
-      mismatch between the script and the running API, and `verify:multi-org-employment` is blocked on a
-      fixture that now has a seeder but has deliberately not been run, because it adds memberships and the
-      manifest's rows ratchet is exact. Per PRD-C016, prerequisite-blocked gates never count as passing, so
-      this stays open. Each gate's mechanism was read and verified rather than inferred from its exit code.
-      Evidence: [CO-LOCATED-MEASUREMENT-2026-09-05.md](final-refactor/evidence/42-production-ops/release-authority/CO-LOCATED-MEASUREMENT-2026-09-05.md).
+      **OPEN - builds, typechecks, cycles and focused tests pass at one commit; four gates now return real
+      verdicts and two remain honestly red.** At root `1fa2a3aeb` / backend `980b81013`, both trees clean:
+      backend `nest build` **0**, backend `typecheck` **0 errors**, backend `typecheck:test` **0 errors**,
+      frontend `tsc --noEmit` **0 errors**, `madge --circular` **0 cycles** in both repos (6,012 and 5,537
+      files). Frontend focused tests 159/159 across 24 suites.
+      **Four of the five gates that were prerequisite-blocked now produce verdicts, none by weakening.**
+      `verify:multi-org-employment` **PASSES** - its fixture seeder had never been run on a belief about the
+      rows ratchet that was checked rather than inherited; it is idempotent, the gate restores what it
+      writes, and the manifest was **re-measured** afterwards rather than left describing a pre-fixture
+      database (buffers still exact on 284/284, rows exact on 284/284, false-positive proof 0 of 568).
+      `verify:chat-mentions` **PASSES**, and the recorded `AUTH_SIGNING_KEYS` keyring premise was wrong: the
+      keys match and JWKS confirms it. The gate ran with `--env-file=.env` against the remote Neon branch
+      while the server read `scratch_local`, so `isAccountActive` found no probe user and threw 401 on every
+      request - which reads exactly like a delivery failure. **This retires the P1** carried by the
+      2026-09-04 signed record ("chat mentions are not delivered and `@everyone` expands to nobody"):
+      `@everyone` reaches both members and a direct mention reaches exactly the person named.
+      `check:alert-ack` no longer demands `ALERT_WEBHOOK_URL`, a variable it never read; it still exits 2,
+      now naming its real prerequisite - a **human** must receive an alert and type back a nonce, which is
+      a deployed/human criterion and cannot be satisfied by code.
+      `check:replay-ledger` exits 2 because `drizzle.__replay` does not exist in `scratch_local`, which was
+      built with `db:migrate` (695 applied against a 695-entry journal) rather than `replay-chain-cold.mjs`.
+      Closing it needs a **blank** database. A `COLD_DATABASE_URL` pointing at `scratch_local` was added
+      during this work and **removed**: that database is the live measurement fixture.
+      **What is still not true.** `check:test-suppressions` is red at **76 runtime-selected suppressions
+      against a ratchet of 29**, and the ratchet is NOT raised. Its mechanism was verified before its number
+      was believed: the denominator matches `git grep` exactly, and a planted `it.skip` was reported by file,
+      line and class, so the gate bites. The script names the only legitimate way to move 29 - the
+      `db-gates.yml` "Database-gated spec suites" step must be green on a run somebody has read and promoted
+      off its `if:` guard. That is a CI infrastructure gap, not a code defect, and it is the same blocker
+      that holds PRD-C104 open. The disposable E2E corpus was re-run during this session but on a different
+      commit pair from the builds above, so the "at ONE commit" requirement is still not met.
+      Per PRD-C016, prerequisite-blocked gates never count as passing, so this stays open.
+      Owner: the repository owner.
+      Evidence: [CO-LOCATED-MEASUREMENT-2026-09-06.md](final-refactor/evidence/42-production-ops/release-authority/CO-LOCATED-MEASUREMENT-2026-09-06.md).
 
 - [x] **[PRD-C159]** Two empty bootstraps and an interrupted-then-resumed bootstrap produce the same expected database catalog from the new authorized baseline; no legacy watermark upgrade claim is required.
       **CLOSED 2026-09-04 — measured.** Directly satisfied by PRD-C055: three bootstraps from empty databases at the authorized head (migration 685, `1061_push_endpoint_cross_tenant_claim`), one of them interrupted three times with real SIGKILLs and resumed, all reaching the same catalog with 0 differences. No legacy watermark upgrade claim is required, because this release explicitly authorizes database recreation. Evidence: [BOOTSTRAP-PARITY-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/BOOTSTRAP-PARITY-2026-09-04.md).
