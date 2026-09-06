@@ -280,6 +280,54 @@ to detect.
 
 ---
 
+---
+
+## 7. Capture 19 at HEAD — and a correction to §6's attribution
+
+Build `0IC5b2bqJGAhjVaGKGF9O`, matching `.next/BUILD_ID` exactly, so provenance is **current** rather
+than stale. Host 16.3% before launch, **46.2% median** across the run, zero contended readings. All
+six evidence blocks clean: 0 unusable, 0 off-route, 0 unauthorized, 0 settle-capped, 0 hydration
+mismatches, 0 route failures.
+
+This capture measures **exactly the same frontend source as capture 15** — this session's four INP
+changes were reverted before it. Any difference between the two columns is therefore measurement
+variance, not code:
+
+| route | capture 15 | capture 19 (identical source) | delta |
+|---|---|---|---|
+| /mail | 54 | 54 | 0 |
+| /settings | 96 | **296** | +200 |
+| /build/my-work | 72 | **234** | +162 |
+| /notifications | 268 | **118** | -150 |
+| /support/inbox | 696 | **422** | -274 |
+| /crm/inbox | 852 | **318** | -534 |
+| /crm/leads | 1236 | **846** | -390 |
+| /inbox | 814 | 862 | +48 |
+| /parties | 986 | 998 | +12 |
+| /dashboard | 698 | 720 | +22 |
+
+`check:web-vitals-budget` reports **10** violations here, **9** in capture 15 and **11** in capture 17
+— a range of three on a metric where two of those captures share identical source.
+
+**This corrects the reasoning recorded in the revert commit `9b6d4bb1f`.** That commit justified
+backing out the four INP changes partly on "two passing routes started breaching and stayed there"
+— `/settings` 96 → 296 → 292 and `/build/my-work` 72 → 210 → 272. Capture 19 reproduces both
+elevated figures (296 and 234) on source with **none of those changes applied**, so they were never
+attributable to them. The revert's other ground stands unchanged: no heavy route improved, and the
+changes were reasoned rather than measured.
+
+**The methodological finding is the durable one: at 6 repeats, mobile INP p75 on this corpus cannot
+attribute a 100-300 ms movement to a code change.** Route-level swings of that size occur between
+runs of identical code. Any future attempt on these breaches must establish a variance band from
+repeated captures of one build before claiming a fix, or it will measure noise and call it progress.
+
+What survives all four captures is the finding itself, because it is far outside that band: the heavy
+routes breach a 200 ms budget in **every** capture — /inbox 814/894/720/862, /parties 986/1084/838/998,
+/build/inbox 750/838/880/856, /dashboard 698/776/638/720 — while /mail (54-56) and /calendar (62-80)
+pass in every one.
+
+---
+
 ## 5. Commits
 
 | Repo | SHA | Change |

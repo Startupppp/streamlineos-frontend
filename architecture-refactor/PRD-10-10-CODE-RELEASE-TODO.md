@@ -685,6 +685,17 @@ These decisions are final for this release and remove implementation alternative
       measurement - `/dashboard` has the fewest server-rendered elements (480) and breaches, `/build/my-work`
       has more (655) and passes. Frontend app code is restored to the state capture 15 measured, so the
       published numbers describe the shipped code.
+      **CORRECTED 2026-09-06 (capture 19) — the attribution above was wrong, the finding was not.** A
+      fourth capture at build `0IC5b2bqJGAhjVaGKGF9O`, whose id matches `.next/BUILD_ID` so provenance is
+      current, measures **exactly the same frontend source as capture 15** (the four changes were reverted
+      before it). `/settings` reads **296 ms** where capture 15 read 96, and `/build/my-work` **234 ms**
+      where it read 72 — on identical code. Those two "regressions" were therefore never caused by the four
+      changes. The gate itself reports 9, 11 and 10 violations across three captures, two of which share
+      identical source. **At 6 repeats this metric cannot attribute a 100-300 ms movement to a code
+      change**, and any future attempt must establish a variance band from repeated captures of one build
+      before claiming a fix. The breaches themselves sit far outside that band and reproduce in all four
+      captures — /inbox 814/894/720/862, /parties 986/1084/838/998, /build/inbox 750/838/880/856,
+      /dashboard 698/776/638/720 — while /mail (54-56) and /calendar (62-80) pass in every one.
       **No budget was moved, no ceiling widened, no exception recorded and no route dropped.** Closing this
       needs a profiling pass that attributes the 600-1100 ms to actual work; that has not been done.
       Owner: the frontend performance owner.
