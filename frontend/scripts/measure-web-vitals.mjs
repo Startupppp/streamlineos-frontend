@@ -194,10 +194,15 @@ export function findUnusableSamples(samples, minWords = 10) {
 export function findUnauthorizedSamples(samples, minNavLinks = 3) {
   return samples
     .map((s, index) => ({ index, content: s.content ?? {} }))
-    .filter(({ content }) => (content.navLinks ?? 0) < minNavLinks)
+    .filter(({ content }) => {
+      if (content.authorizedShell === true) return false;
+      if (content.authorizedShell === false) return true;
+      return (content.navLinks ?? 0) < minNavLinks;
+    })
     .map(({ index, content }) => ({
       index,
       url: content.url ?? null,
+      authorizedShell: content.authorizedShell ?? null,
       navLinks: content.navLinks ?? 0,
       words: content.words ?? null,
     }));
@@ -761,6 +766,7 @@ async function collectSample(cdp) {
         words: (document.body?.innerText ?? '').trim().split(/\\s+/).filter(Boolean).length,
         brandedLoader: !!document.querySelector('[data-app-loading-screen]') || (document.body?.innerText ?? '').includes('Syncing organization'),
         errorBoundary: ${JSON.stringify(SHELL_FAILURE_COPY)}.some((needle) => (document.body?.innerText ?? '').includes(needle)),
+        authorizedShell: !!document.querySelector('main#dashboard-content'),
         navLinks: new Set(Array.from(document.querySelectorAll('a.nav-item[href^="/"], nav a[href^="/"]')).map((a) => a.getAttribute('href'))).size
       })`,
     )) ?? "{}",
@@ -1153,6 +1159,7 @@ async function run() {
       byRoute: intentByRoute,
     },
     authorization: {
+      discriminator: "main#dashboard-content presence (primary); nav-link count is corroborating evidence and the fallback for captures predating this field",
       minNavLinksForAuthorizedShell: MIN_AUTHORIZED_NAV_LINKS,
       samplesMeasured: allSamples.length,
       unauthorizedSamples: unauthorized,
@@ -1276,8 +1283,8 @@ async function run() {
 
   if (unauthorized.length > 0) {
     console.error(
-      `\nREFUSED as evidence: ${unauthorized.length}/${allSamples.length} sample(s) rendered fewer than ` +
-        `${MIN_AUTHORIZED_NAV_LINKS} distinct in-app navigation links. These budgets govern AUTHORIZED routes; a shell ` +
+      `\nREFUSED as evidence: ${unauthorized.length}/${allSamples.length} sample(s) did not render ` +
+        `the authorized shell marker (main#dashboard-content). These budgets govern AUTHORIZED routes; a shell ` +
         `whose /me/access was refused paints almost nothing, so its LCP, FCP and INP flatter the product. ` +
         `The numbers were still written to ${out} for diagnosis.`,
     );
@@ -1510,6 +1517,21 @@ async function selfTest() {
   check(
     "an authorized shell is not refused",
     findUnauthorizedSamples([{ content: { navLinks: 41, url: "/dashboard" } }], 3).length,
+    0,
+  );
+  check(
+    "an access-refused shell (no marker, 0 nav links) is still refused",
+    findUnauthorizedSamples([{ content: { authorizedShell: false, navLinks: 0, url: "/dashboard" } }], 3).length,
+    1,
+  );
+  check(
+    "a legitimate chat mobile shell (marker present, 1 nav link) is accepted",
+    findUnauthorizedSamples([{ content: { authorizedShell: true, navLinks: 1, url: "/chat" } }], 3).length,
+    0,
+  );
+  check(
+    "a shell with the marker but zero nav links is accepted — authorized shell rendered, navigation intentionally hidden (open conversation)",
+    findUnauthorizedSamples([{ content: { authorizedShell: true, navLinks: 0, url: "/chat" } }], 3).length,
     0,
   );
 
