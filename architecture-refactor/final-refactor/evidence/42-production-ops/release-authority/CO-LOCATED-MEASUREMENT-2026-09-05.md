@@ -135,6 +135,57 @@ Five gates were run one at a time and read against their own source rather than 
 None of the five is broken, and none is masking a defect in the code it checks. No ratchet, ceiling or
 baseline was moved to change any of these results.
 
+### 2026-09-06, later pass — what the frontend captures settled and what they could not
+
+Four captures were taken after the frontend performance work landed. They settle the byte half and
+refuse the timing half, and the split is worth stating precisely because the two are not equally
+trustworthy.
+
+**Settled — bundle bytes.** `check-route-bundle-budget` went from 2 breaches to 1 at build
+`WklbjYSWVhWz3T7CHJwUU`: `/crm/inbox` is inside its 524,288-byte ceiling and `/crm/leads` is 17,581
+bytes over. Byte counts are deterministic and do not move with host load, so this result stands.
+The recorded `/crm/leads` figure had been **813,370 bytes and was stale** — a 2026-09-02 capture on a
+build predating the icon fix, which the manifest's own `breachOwnerNote` says overstates. Re-measured
+it was 572,722, so the real gap was 48,434 rather than 289,082. Chasing the stale number would have
+been three agents' work against a defect that had already been half fixed.
+
+**Refused — Core Web Vitals timings.** The final capture reports `/build/my-work` mobile INP at
+1,844 ms against 38 ms in capture 8, on a route whose code did not change. The host was measured at
+**100% CPU** with twenty node processes and a user browser on it. A 4x-throttled mobile profile on a
+saturated host measures the host, and the driver says exactly that in its own `conditions.host` note —
+but **its guard never fired, because `os.loadavg()` returns 0 on Windows**, so every capture in this
+series recorded `loadAverage1mAtStart: 0` and `loadAverage1mAtEnd: 0` regardless of the real load.
+That is a defect in the instrument, not in the app: a contention guard that cannot observe contention
+on the platform it runs on is inert, and it read green while the numbers it guards were meaningless.
+Recorded as a NEW REQUIREMENT against the driver — it should read CPU time or process count on
+Windows, or refuse to publish rather than stamp a zero it did not measure.
+
+**What the timing captures did establish, on a quieter host earlier in the sequence:** all three mobile
+LCP breaches carried from capture 8 are closed — `/support/inbox` 3,051 -> 882 ms, `/chat`
+3,477 -> 902 ms, `/calendar` 2,567 -> 397 ms, `/dashboard` 2,358 -> 783 ms — and server TTFB p95 is
+33-77 ms on every route.
+
+**Two process traps, both of which produced numbers that looked like code defects:**
+
+1. A capture ran against a `next start` server whose port was still held by an earlier instance. The
+   new server failed with `EADDRINUSE` and the old one kept serving — but the rebuild had already
+   overwritten `.next`, so its in-memory manifest pointed at chunks that no longer existed. Result:
+   **154 of 156 samples hit an error boundary on every route**, which reads as an app-wide regression
+   and was nothing of the kind. `pkill -f "next start"` does not reach these processes on Windows;
+   the port has to be resolved to a PID with `netstat -ano` and stopped with `taskkill`.
+2. `/chat` mobile is refused as evidence and the refusal cannot be excepted — by design, because the
+   exceptions mechanism annotates budget failures and deliberately cannot excuse a capture the
+   producer itself disowned. The cause is that the driver requires three distinct in-app navigation
+   links and chat's mobile bottom navigation genuinely has two destinations. An `sr-only` link added
+   to satisfy that counter was reverted. Including `/chat` therefore refuses the whole capture; it is
+   reported unmeasured rather than measured-and-passing.
+
+**One deferral was reverted as instrument-gaming rather than accepted.** An agent gated `/crm/leads`'
+record list behind `useAfterLoad` and stated the intent plainly: the chunk "is not counted in
+`measuredScriptBytes` ... because the download starts after `window.load`". That moves the
+measurement rather than the work, and it makes the table appear late for every user. Removing it put
+17,581 bytes back on the books, which is why that route is still recorded as over rather than fixed.
+
 ## Captures
 
 ### C143 — cache-hit latency and Redis outage

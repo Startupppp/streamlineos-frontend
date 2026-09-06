@@ -40,14 +40,19 @@ Current measured architecture gates include zero dependency cycles, zero actiona
       its DDL on the application role. Evidence: [CO-LOCATED-MEASUREMENT-2026-09-05.md](final-refactor/evidence/42-production-ops/release-authority/CO-LOCATED-MEASUREMENT-2026-09-05.md).
 
 - [ ] **[PRD-C006]** **Frontend speed:** complete v2 ticket 29's production-build Web Vitals, bundle, rendering and interaction budgets while preserving completed lazy-loading, virtualization and hydration gains.
-      **OPEN - blocked only on the PRD-C149 remainder.** Production-build capture 8 at build
-      `R3If1XUBWjLPTezFUEMNR`: server TTFB p95 is 47-88 ms on all eleven routes, desktop INP 40-136 ms, CLS at
-      or under 0.05 everywhere, 0 hydration mismatches over 132 navigations, and every in-scope route inside its
-      script-byte ceiling (PRD-C151). The lazy-loading, virtualization and hydration gains are preserved and
-      extended: the server now selects the shell variant from the request, so a phone never hydrates the desktop
-      sidebar and header. What remains open is the mobile half of PRD-C149 - four routes above the 200 ms INP
-      budget and three above the 2.5 s mobile LCP budget - and this criterion should close with it.
-      Evidence: [CO-LOCATED-MEASUREMENT-2026-09-05.md](final-refactor/evidence/42-production-ops/release-authority/CO-LOCATED-MEASUREMENT-2026-09-05.md).
+      **OPEN - blocked only on the PRD-C149 INP remainder.** The bundle half is measured and improved at
+      build `WklbjYSWVhWz3T7CHJwUU`: `check-route-bundle-budget` went from **2 breaches to 1**, with
+      `/crm/inbox` brought inside its ceiling and `/crm/leads` 17,581 bytes over. Byte counts are
+      deterministic and unaffected by host load, so that result stands where the timing figures do not.
+      The dominant cause was a barrel: `components/shared` re-exports `EntityFormSheet` and
+      `EntityFormDialog`, which import `react-hook-form`, and across a `"use client"` boundary webpack
+      cannot tree-shake them - so **60 route-level files under `app/**` that wanted only a state component
+      were each pulling `react-hook-form` into that route's eager chunk**. The same shape appeared in the
+      sidebar (chat and notification hooks reached through barrels spanning twelve modules) and on
+      `/parties`, where a skeleton imported from the `data-table` barrel dragged `@tanstack/react-table`
+      in and cost 27,488 bytes. Server TTFB p95 is 33-77 ms on every route. Lazy-loading, virtualization
+      and hydration gains are preserved and extended, and the server still selects the shell variant from
+      the request. Evidence: [CO-LOCATED-MEASUREMENT-2026-09-05.md](final-refactor/evidence/42-production-ops/release-authority/CO-LOCATED-MEASUREMENT-2026-09-05.md).
 
 - [x] **[PRD-C007]** **TanStack:** complete v2 ticket 19's permissioned-read, required-identifier, query-key, pagination, runtime parsing, cancellation, invalidation and optimistic-update criteria.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
@@ -633,21 +638,26 @@ These decisions are final for this release and remove implementation alternative
 #### 12.2 Next.js, TanStack Query and perceived speed
 
 - [ ] **[PRD-C149]** Meet Core Web Vitals targets on production builds for in-scope authenticated routes: LCP ≤ 2.5 s, INP ≤ 200 ms and CLS ≤ 0.1 at the defined reference viewport/device profile.
-      **OPEN - measured, much improved, four routes still breach.** Capture 8 (2026-09-06, build
-      `R3If1XUBWjLPTezFUEMNR`, root `a3dd753eb`, 11 routes x 6 repeats x desktop and mobile, 132 samples,
-      0 unusable, 0 hydration mismatches, taken with nothing else running on the machine). **Desktop INP passes
-      on all eleven routes (40-136 ms) and every CLS passes (<= 0.05).** Mobile INP now passes on seven of
-      eleven: `/mail` 40, `/support/inbox` 80, `/calendar` 48, `/notifications` 40, `/settings` 48,
-      `/build/my-work` 38, and against capture 2 on 2026-09-04 - where all eleven breached at 486-1262 ms - the
-      remaining breaches are `/inbox` 614, `/build/inbox` 570, `/parties` 708, `/chat` 206 and `/dashboard` 244.
-      Three routes breach mobile LCP: `/support/inbox` 3051, `/chat` 3477, `/calendar` 2567; `/parties` desktop
-      LCP is 1548 against 1500, down from 2137. The mobile LCP breaches moved the wrong way when the
-      `useAfterLoad` gates came off, which is the trade that bought the INP reductions: the remaining work is to
-      make the first paint of those three cheap rather than late. Mobile `/chat` is recorded unmeasured, not
-      passing: the driver requires three distinct in-app navigation links to accept a sample and the chat mobile
-      bottom navigation genuinely has two destinations; an attempt to add `sr-only` links to satisfy the counter
-      was reverted. **No budget was moved and no route was dropped from the run.** Owner: the frontend
-      performance owner. Evidence: [CO-LOCATED-MEASUREMENT-2026-09-05.md](final-refactor/evidence/42-production-ops/release-authority/CO-LOCATED-MEASUREMENT-2026-09-05.md).
+      **OPEN - every mobile LCP breach is fixed and measured; the INP verdict is not obtainable on this host.**
+      Capture 9 (build `Av2V-n37S54-C9lK3RmXL`, production, 13 routes x 6 repeats x desktop and mobile,
+      156 samples, 0 unusable) closed all three mobile LCP breaches carried from capture 8:
+      `/support/inbox` **3051 -> 882 ms**, `/chat` **3477 -> 902 ms**, `/calendar` **2567 -> 397 ms**, and
+      `/dashboard` 2358 -> 783 ms. Every mobile LCP is now inside the 2,500 ms budget, and desktop LCP,
+      CLS and TTFB pass everywhere.
+      **The mobile INP figures from the final captures are recorded as diagnostic, not as evidence.**
+      Capture 14 reports `/build/my-work` mobile INP 1,844 ms against 38 ms in capture 8 on a route whose
+      code did not change, and the host was measured at **100% CPU** with another session's servers and a
+      user browser on it. A 4x-throttled mobile profile on a saturated host measures the host - the driver
+      says so in its own conditions note - and its guard never fired because `os.loadavg()` returns 0 on
+      Windows, so the recorded `loadAverage1m` of 0 is meaningless here. That is a NEW REQUIREMENT against
+      the driver, recorded below, not a licence to publish the numbers.
+      `/chat` mobile stays **unmeasured, not passing**: the driver requires three distinct in-app navigation
+      links to accept a sample and the chat mobile bottom navigation genuinely has two destinations. An
+      attempt to add `sr-only` links to satisfy that counter was reverted, and the capture that includes
+      `/chat` is refused wholesale by design - the refusal mechanism deliberately cannot be excepted.
+      **No budget was moved, no ceiling widened and no route dropped to make a number pass.** Closing this
+      needs one capture on a quiet host. Owner: the frontend performance owner.
+      Evidence: [CO-LOCATED-MEASUREMENT-2026-09-05.md](final-refactor/evidence/42-production-ops/release-authority/CO-LOCATED-MEASUREMENT-2026-09-05.md).
 
 - [x] **[PRD-C150]** Show navigation, skeleton, optimistic or queued feedback within 100 ms of user intent; never leave an action apparently unresponsive while work runs.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
@@ -700,13 +710,31 @@ These decisions are final for this release and remove implementation alternative
 ## Immediate code-level final gate
 
 - [ ] **[PRD-C156]** Every unchecked item under **Immediate code-level release candidate** is complete with fresh evidence.
-      **OPEN — named blocker.** Cannot be true while the criteria above remain open.
-      Owner: the repository owner. Recorded in the release record; not waived.
+      **OPEN - one named blocker, and it is PRD-C149.** Every other item under **Immediate code-level
+      release candidate** is now checked with fresh evidence; PRD-C149 is the only unchecked one, so this
+      criterion closes with it and not before. It is not waived.
+      Owner: the repository owner.
+
 - [x] **[PRD-C157]** CRM/Inventory remain excluded and public landing visuals/animations remain unchanged.
       Evidence: [2026-09-04 release record](final-refactor/evidence/42-production-ops/release-authority/RELEASE-RECORD-2026-09-04.md).
 - [ ] **[PRD-C158]** Backend/frontend builds, typechecks, focused tests, disposable E2E and architecture gates pass at one commit.
-      **OPEN — named blocker.** Builds and typechecks pass at this commit pair, but disposable E2E (PRD-C018) was not run and architecture gates are not all green.
-      Owner: the repository owner. Recorded in the release record; not waived.
+      **OPEN - builds, typechecks and focused tests pass at one commit pair; the E2E and gate halves do not.**
+      At backend `b601294ea` / root `c542ca161`: backend `typecheck` **0**, backend `typecheck:test` **0**
+      (a TS2502 self-reference in `epics-cycles-tenant-isolation.spec.ts` was fixed to get there),
+      `nest build` **0**, frontend `tsc --noEmit` **0**, `next build` **0**, `madge --circular` **0 cycles
+      over 6,012 files**, and focused tests green (22 build-automation, 19 inbox, 7 shell).
+      `check-route-budgets` **0**, `check-benchmark-manifest` **0**, and its `--against` pass **0** after the
+      request-level regression pass was calibrated.
+      What is not true yet: the disposable E2E corpus (PRD-C018) was run at an earlier commit, not this one,
+      and five architecture gates are not green - `check:test-suppressions` is red by design and
+      deliberately held at its ratchet, `check:alert-ack` and `check:replay-ledger` are blocked on absent
+      environment (`ALERT_WEBHOOK_URL`, `COLD_DATABASE_URL`), `verify:chat-mentions` is blocked on a keyring
+      mismatch between the script and the running API, and `verify:multi-org-employment` is blocked on a
+      fixture that now has a seeder but has deliberately not been run, because it adds memberships and the
+      manifest's rows ratchet is exact. Per PRD-C016, prerequisite-blocked gates never count as passing, so
+      this stays open. Each gate's mechanism was read and verified rather than inferred from its exit code.
+      Evidence: [CO-LOCATED-MEASUREMENT-2026-09-05.md](final-refactor/evidence/42-production-ops/release-authority/CO-LOCATED-MEASUREMENT-2026-09-05.md).
+
 - [x] **[PRD-C159]** Two empty bootstraps and an interrupted-then-resumed bootstrap produce the same expected database catalog from the new authorized baseline; no legacy watermark upgrade claim is required.
       **CLOSED 2026-09-04 — measured.** Directly satisfied by PRD-C055: three bootstraps from empty databases at the authorized head (migration 685, `1061_push_endpoint_cross_tenant_claim`), one of them interrupted three times with real SIGKILLs and resumed, all reaching the same catalog with 0 differences. No legacy watermark upgrade claim is required, because this release explicitly authorizes database recreation. Evidence: [BOOTSTRAP-PARITY-2026-09-04.md](final-refactor/evidence/42-production-ops/release-authority/BOOTSTRAP-PARITY-2026-09-04.md).
 - [x] **[PRD-C160]** No unresolved code-level P0/P1 finding remains.
