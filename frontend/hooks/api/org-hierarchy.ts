@@ -395,7 +395,7 @@ export function useCreateOrgHoliday(
   options?: Omit<UseMutationOptions<OrgHoliday, Error, AddHolidayInput>, "mutationKey" | "mutationFn">,
 ) {
   const qc = useQueryClient();
-  return useMutation<OrgHoliday, Error, AddHolidayInput>({
+  return useAuthorizedMutation<OrgHoliday, Error, AddHolidayInput>("settings:manage", {
     mutationKey: ["org", "holidays", "create"],
     mutationFn: (input: AddHolidayInput) =>
       apiClient.post<OrgHoliday>("/organization/holidays", input),
@@ -411,7 +411,7 @@ export function useDeleteOrgHoliday(
   options?: Omit<UseMutationOptions<void, Error, string>, "mutationKey" | "mutationFn">,
 ) {
   const qc = useQueryClient();
-  return useMutation<void, Error, string>({
+  return useAuthorizedMutation<void, Error, string>("settings:manage", {
     mutationKey: ["org", "holidays", "delete"],
     mutationFn: (id: string) => apiClient.delete(`/organization/holidays/${id}`),
     ...options,

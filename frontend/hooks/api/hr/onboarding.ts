@@ -198,13 +198,9 @@ export function useMyOnboardingDocList() {
 
 export function useSubmitOnboardingDoc() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation<unknown, Error, { documentTypeId: number; fileUrl: string; fileName: string }>("self:onboarding-docs", {
     mutationKey: ["hr", "onboarding-doc", "submit"],
-    mutationFn: (body: {
-      documentTypeId: number;
-      fileUrl: string;
-      fileName: string;
-    }) => apiClient.post("/hr/onboarding-docs/me", body),
+    mutationFn: (body) => apiClient.post("/hr/onboarding-docs/me", body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.myOnboardingDocs() });
     },

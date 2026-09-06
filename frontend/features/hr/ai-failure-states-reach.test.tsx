@@ -84,7 +84,7 @@ let briefMutation: ReturnType<typeof useMutation>;
 function BriefHarness() {
   briefMutation = useMutation({
     mutationKey: ["executive-brief", "generate"],
-    mutationFn: () => post("/ai/executive-brief/generate"),
+    mutationFn: () => post(),
   });
   return <ExecutiveBriefPage />;
 }

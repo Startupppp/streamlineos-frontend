@@ -6,13 +6,8 @@ import { addDays, differenceInCalendarDays, format, subDays } from "date-fns";
 import { apiClient } from "@/lib/api-client";
 import type { HrCalendarEvent } from "@/hooks/api/hr/hr-calendar";
 import type { BigCalEvent } from "./big-calendar-wrapper";
-import { useCalendarSourceVisibility } from "./use-calendar-source-visibility";
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
-
-export function useHrEventsVisible() {
-  return useCalendarSourceVisibility("hrEvents", true);
-}
 
 /**
  * `/hr/calendar` refuses a window wider than 62 days, and the calendar view asks

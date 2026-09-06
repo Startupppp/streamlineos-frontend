@@ -6,6 +6,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import type { UseMutationOptions, UseQueryOptions } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
@@ -54,7 +55,7 @@ export function useCreateFnfSettlement(
   options?: UseMutationOptions<FnfSettlement, Error, CreateFnfSettlementInput>,
 ) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation<FnfSettlement, Error, CreateFnfSettlementInput>("hr:exit:manage", {
     mutationKey: ["hr", "fnf", "create"],
     mutationFn: (data: CreateFnfSettlementInput) =>
       apiClient.post<FnfSettlement>("/hr/fnf", data),

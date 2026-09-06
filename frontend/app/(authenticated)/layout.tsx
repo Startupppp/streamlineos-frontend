@@ -7,6 +7,7 @@ import { resolveWizardGate } from "../../lib/wizard-gate";
 import { requireSession } from "../../lib/rbac/require-permission";
 import { getServerAccess } from "../../lib/rbac/get-server-access";
 import { prefetchAccess } from "../../lib/prefetch/access";
+import { resolveShellVariant } from "../../lib/shell-variant";
 import { DashboardShell } from "../../components/layout/dashboard-shell";
 import { GlobalCreateTicketDialog } from "../../features/build/tickets/global-create-ticket-dialog";
 import { AppThemeScript } from "../../components/theme/app-theme-script";
@@ -45,6 +46,8 @@ export default async function DashboardLayout({
   const defaultCollapsed =
     cookieStore.get("sidebar-collapsed")?.value === "true";
 
+  const shellVariant = resolveShellVariant(requestHeaders);
+
   return (
     <AppThemeProvider>
       <AppThemeScript nonce={nonce} />
@@ -52,6 +55,7 @@ export default async function DashboardLayout({
         <DashboardShell
           userId={session.user.id}
           defaultCollapsed={defaultCollapsed}
+          shellVariant={shellVariant}
           createTicketDialog={<GlobalCreateTicketDialog />}
         >
           {children}

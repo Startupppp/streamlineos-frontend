@@ -135,8 +135,6 @@ const DOUBLE_CAST_LEDGER = new Map([
   ["features/party/parties/party-detail-sheet.tsx", { count: 1, seam: "narrow-me", invariant: "the same RecordValue index-signature seam as parties-page.tsx, widening a fetched party into the layout-driven RecordDetail. Same fix: a generic parameter on the renderer." }],
   ["features/party/parties/party-form-dialog.tsx", { count: 1, seam: "narrow-me", invariant: "the same RecordValue index-signature seam, widening form defaults into the layout-driven record form. Same fix: a generic parameter on the renderer." }],
 
-  // -- narrow-me: a params object handed to a query-string builder --
-  ["hooks/api/hr/employees.ts", { count: 1, seam: "narrow-me", invariant: "`FindExpertParams` is an interface of string and optional-string fields handed to apiClient.get's `Record<string, string>` query-parameter argument. An interface has no implicit index signature, and `department?: string` is `string | undefined`, so it cannot satisfy `Record<string, string>` either way. The honest fix is for the client to accept `Record<string, string | undefined>` and drop undefined keys when building the query string. Owned by the response-contracts lane, which holds hooks/api/**." }],
 ]);
 
 /**

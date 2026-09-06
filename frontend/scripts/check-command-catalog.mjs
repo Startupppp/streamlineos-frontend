@@ -116,6 +116,34 @@ const OFF_CLIENT_HOOKS = new Map([
     "useGenerateJobDescription",
     "PERMISSIONED hr:interviews:manage — the request goes through streamAiText (POST /ai/generate-jd/stream), an SSE transport that never touches apiClient. The contract snapshot carries no /stream operations at all, so the key was checked against the decorator at head: hr-ai.controller.ts generateJdStream is @Post(\"generate-jd/stream\") @RequirePermission(\"hr:interviews:manage\"), the same key as the buffered /ai/generate-jd the snapshot does hold.",
   ],
+  [
+    "useSubmitPublicForm",
+    "PUBLIC — submitPublicForm helper calls raw fetch(buildUrl('/public/forms/{token}/submit')); the route is @Public() with no session required.",
+  ],
+  [
+    "useSubmitIntake",
+    "PUBLIC — submitIntake helper calls raw fetch(buildUrl('/public/intake/{projectId}')); the route is @Public() with no session required.",
+  ],
+  [
+    "useKbAsk",
+    "PERMISSIONED kb:pages:view — mutationFn uses streamAiResult({ path: '/kb/ask/stream', ... }) SSE transport; declared key matches @RequirePermission on the stream endpoint.",
+  ],
+  [
+    "useExplainPayslip",
+    "PERMISSIONED self:payslips — mutationFn uses streamAiResult for the SSE stream at /payroll/me/payslips/{id}/ai/explain/stream; declared key matches the endpoint.",
+  ],
+  [
+    "usePublicAskSupportKb",
+    "PUBLIC — mutationFn uses streamAiText({ path: '/public/kb/stream-ask', ... }) SSE transport; the route is @Public() with no session required.",
+  ],
+  [
+    "useUploadOnboardingDoc",
+    "branches on selfUpload: POST /hr/onboarding-docs/me (x-permission: self:onboarding-docs) for the employee's own upload, or POST /hr/onboarding-docs (x-permission: hr:onboarding:manage) for HR admin upload; both apiClient calls live in the module-local uploadOnboardingDocRequest helper so each branch is separately authorised by the backend.",
+  ],
+  [
+    "useBulkImport",
+    "PERMISSIONED — endpoint is entity.endpoint, a per-entity URL resolved at runtime from BulkEntity; the scanner cannot follow a property reference. All CRM bulk-import endpoints are permissioned and the entity type system guarantees valid permissioned paths.",
+  ],
 ]);
 
 /**

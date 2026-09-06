@@ -186,6 +186,17 @@ const nextConfig: NextConfig = {
     {
       source: "/(.*)",
       headers: [
+        /**
+         * Advertise that we select the shell variant from Sec-CH-UA-Mobile so
+         * the browser sends it on the next navigation.  Caches must vary on it
+         * (and User-Agent for the UA fallback path) so they never serve the
+         * mobile shell to a desktop or vice-versa.  The Vary header on static
+         * _next/static/** assets is harmless — those URLs are content-addressed
+         * and served Cache-Control: immutable, so no proxy varies their cache
+         * by this header in practice.
+         */
+        { key: "Accept-CH", value: "Sec-CH-UA-Mobile" },
+        { key: "Vary", value: "Sec-CH-UA-Mobile, User-Agent" },
         { key: "X-Frame-Options", value: "DENY" },
         { key: "X-Content-Type-Options", value: "nosniff" },
         { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },

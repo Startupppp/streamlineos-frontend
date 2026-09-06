@@ -6,6 +6,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import type { UseMutationOptions, UseQueryOptions } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
@@ -67,7 +68,7 @@ export function useCreateEmailTemplate(
   options?: UseMutationOptions<EmailTemplate, Error, CreateEmailTemplateInput>,
 ) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation<EmailTemplate, Error, CreateEmailTemplateInput>("hr:email-templates:manage", {
     mutationKey: ["hr", "email-templates", "create"],
     mutationFn: (data: CreateEmailTemplateInput) =>
       apiClient.post<EmailTemplate>("/hr/email-templates", data),
@@ -83,7 +84,7 @@ export function useUpdateEmailTemplate(
   options?: UseMutationOptions<EmailTemplate, Error, UpdateEmailTemplateInput>,
 ) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation<EmailTemplate, Error, UpdateEmailTemplateInput>("hr:email-templates:manage", {
     mutationKey: ["hr", "email-templates", "update"],
     mutationFn: ({ id, ...data }: UpdateEmailTemplateInput) =>
       apiClient.patch<EmailTemplate>(`/hr/email-templates/${id}`, data),
@@ -114,7 +115,7 @@ export function useDeleteEmailTemplate(
 export function useGenerateAiEmailTemplate(
   options?: UseMutationOptions<AiGenerateResult, Error, GenerateAiEmailTemplateInput>,
 ) {
-  return useMutation({
+  return useAuthorizedMutation<AiGenerateResult, Error, GenerateAiEmailTemplateInput>("hr:email-templates:manage", {
     mutationKey: ["hr", "email-templates", "generate-ai"],
     mutationFn: (data: GenerateAiEmailTemplateInput) =>
       apiClient.post<AiGenerateResult>("/hr/email-templates/generate-ai", data),

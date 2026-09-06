@@ -6,6 +6,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import type { UseMutationOptions, UseQueryOptions } from "@tanstack/react-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
@@ -73,7 +74,7 @@ export function useCreateHeadcountRequest(
   options?: UseMutationOptions<unknown, Error, CreateHeadcountRequestInput>,
 ) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation<unknown, Error, CreateHeadcountRequestInput>("hr:employees:view", {
     mutationKey: ["hr", "headcount", "create"],
     mutationFn: (data: CreateHeadcountRequestInput) =>
       apiClient.post("/hr/recruitment/headcount", data),
@@ -89,7 +90,7 @@ export function useUpdateHeadcountRequest(
   options?: UseMutationOptions<unknown, Error, UpdateHeadcountRequestInput>,
 ) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation<unknown, Error, UpdateHeadcountRequestInput>("hr:employees:view", {
     mutationKey: ["hr", "headcount", "update"],
     mutationFn: ({ id, ...data }: UpdateHeadcountRequestInput) =>
       apiClient.patch(`/hr/recruitment/headcount/${id}`, data),
@@ -105,7 +106,7 @@ export function useRejectHeadcountRequest(
   options?: UseMutationOptions<unknown, Error, RejectHeadcountRequestInput>,
 ) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation<unknown, Error, RejectHeadcountRequestInput>("hr:employees:manage", {
     mutationKey: ["hr", "headcount", "reject"],
     mutationFn: ({ id, reason }: RejectHeadcountRequestInput) =>
       apiClient.post(`/hr/recruitment/headcount/${id}/reject`, { reason }),
@@ -121,7 +122,7 @@ export function useApproveHeadcountRequest(
   options?: UseMutationOptions<unknown, Error, number>,
 ) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation<unknown, Error, number>("hr:employees:manage", {
     mutationKey: ["hr", "headcount", "approve"],
     mutationFn: (id: number) =>
       apiClient.post(`/hr/recruitment/headcount/${id}/approve`, {}),

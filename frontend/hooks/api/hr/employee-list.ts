@@ -120,6 +120,7 @@ export function useInfiniteHrEmployees(
   const canView = useCan("hr:employees:view");
   const hrEnabled = useModuleEnabled("hr");
   const limit = params?.limit ?? 20;
+  const initialPageParam: string | undefined = undefined;
   return useInfiniteQuery({
     queryKey: [
       ...humanResourcesQueryKeys.hr.employees(params),
@@ -133,7 +134,7 @@ export function useInfiniteHrEmployees(
       );
       return normalizeEmployeeCursorResponse(res, limit);
     },
-    initialPageParam: undefined as string | undefined,
+    initialPageParam,
     getNextPageParam: (lastPage) => lastPage.pageInfo.nextCursor ?? undefined,
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canView && (options?.enabled ?? true),

@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const REVIEW_DOCS_PAGE_SIZE = 20;
 
@@ -53,17 +54,9 @@ export function useEmployeeOnboardingDocs(
 
 export function useReviewDocument() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation<{ success: boolean }, Error, { docId: number; status: "APPROVED" | "RE_UPLOAD_REQUESTED"; remarks?: string }>("hr:onboarding:manage", {
     mutationKey: ["hr", "onboarding-docs", "review"],
-    mutationFn: ({
-      docId,
-      status,
-      remarks,
-    }: {
-      docId: number;
-      status: "APPROVED" | "RE_UPLOAD_REQUESTED";
-      remarks?: string;
-    }) =>
+    mutationFn: ({ docId, status, remarks }) =>
       apiClient.patch<{ success: boolean }>(`/hr/onboarding-docs/${docId}`, {
         status,
         remarks,
@@ -83,6 +76,12 @@ interface UploadOnboardingDocData {
   targetUserId?: string;
 }
 
+function uploadOnboardingDocRequest(selfUpload: boolean, data: UploadOnboardingDocData) {
+  if (selfUpload)
+    return apiClient.post("/hr/onboarding-docs/me", data);
+  return apiClient.post("/hr/onboarding-docs", data);
+}
+
 export function useUploadOnboardingDoc(selfUpload: boolean) {
   const qc = useQueryClient();
   return useMutation({
@@ -91,11 +90,7 @@ export function useUploadOnboardingDoc(selfUpload: boolean) {
       "onboarding-documents",
       selfUpload ? "self-upload" : "admin-upload",
     ],
-    mutationFn: (data: UploadOnboardingDocData) => {
-      if (selfUpload)
-        return apiClient.post("/hr/onboarding-docs/me", data);
-      return apiClient.post("/hr/onboarding-docs", data);
-    },
+    mutationFn: (data: UploadOnboardingDocData) => uploadOnboardingDocRequest(selfUpload, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.onboardingDocsAll });
     },

@@ -2,6 +2,7 @@
 import dynamic from "next/dynamic";
 
 import Link from "next/link";
+import type { ShellVariant } from "@/lib/shell-variant";
 import { Search, CalendarDays, MessageSquare } from "lucide-react";
 import {
   Tooltip,
@@ -188,25 +189,29 @@ export function GlobalHeader({
   showSidebarToggle = true,
   mobileNavOpen = false,
   hideAdminChrome = false,
+  shellVariant = "desktop",
 }: {
   isSidebarCollapsed?: boolean;
   onToggleSidebar?: () => void;
   showSidebarToggle?: boolean;
   mobileNavOpen?: boolean;
   hideAdminChrome?: boolean;
+  shellVariant?: ShellVariant;
 }) {
   return (
     <header className="h-14 border-b border-sidebar-border bg-sidebar text-sidebar-foreground shrink-0 z-40 relative">
       <TooltipProvider>
-        <div className="hidden md:block h-full">
-          <DesktopHeader
-            isSidebarCollapsed={isSidebarCollapsed}
-            onToggleSidebar={onToggleSidebar}
-            showSidebarToggle={showSidebarToggle}
-            hideAdminChrome={hideAdminChrome}
-          />
-        </div>
-        <div className="md:hidden h-full">
+        {shellVariant === "desktop" && (
+          <div className="hidden md:block h-full">
+            <DesktopHeader
+              isSidebarCollapsed={isSidebarCollapsed}
+              onToggleSidebar={onToggleSidebar}
+              showSidebarToggle={showSidebarToggle}
+              hideAdminChrome={hideAdminChrome}
+            />
+          </div>
+        )}
+        <div className={shellVariant === "desktop" ? "md:hidden h-full" : "h-full"}>
           <MobileHeader hidden={mobileNavOpen} />
         </div>
       </TooltipProvider>

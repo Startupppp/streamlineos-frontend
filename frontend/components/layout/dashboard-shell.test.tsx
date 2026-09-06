@@ -139,6 +139,7 @@ describe("DashboardShell mobile navigation", () => {
       <DashboardShell
         userId="user-1"
         defaultCollapsed={false}
+        shellVariant="desktop"
       >
         <div>Content</div>
       </DashboardShell>,
@@ -165,11 +166,57 @@ describe("DashboardShell mobile navigation", () => {
       <DashboardShell
         userId="user-1"
         defaultCollapsed={false}
+        shellVariant="desktop"
       >
         <div>Content</div>
       </DashboardShell>,
     );
 
     expect(productSwitcherCalls.at(-1)).toEqual({ drawerOnly: true });
+  });
+});
+
+describe("DashboardShell shell variant", () => {
+  beforeEach(() => {
+    drawerCalls.length = 0;
+    productSwitcherCalls.length = 0;
+  });
+
+  it("desktop variant renders both the desktop aside and the mobile drawer AppSidebar", () => {
+    render(
+      <DashboardShell
+        userId="user-1"
+        defaultCollapsed={false}
+        shellVariant="desktop"
+      >
+        <div>Content</div>
+      </DashboardShell>,
+    );
+    // Mock AppSidebar renders a "Navigate" button in each location.
+    // Desktop: aside (desktop) + Drawer (mobile menu) = 2 buttons.
+    expect(screen.getAllByRole("button", { name: "Navigate" })).toHaveLength(2);
+  });
+
+  it("mobile variant renders only the mobile drawer AppSidebar, not the desktop aside", () => {
+    render(
+      <DashboardShell
+        userId="user-1"
+        defaultCollapsed={false}
+        shellVariant="mobile"
+      >
+        <div>Content</div>
+      </DashboardShell>,
+    );
+    // Only the Drawer AppSidebar is mounted; the desktop aside is skipped.
+    expect(screen.getAllByRole("button", { name: "Navigate" })).toHaveLength(1);
+  });
+
+  it("defaults to desktop behaviour when shellVariant is omitted", () => {
+    render(
+      <DashboardShell userId="user-1" defaultCollapsed={false}>
+        <div>Content</div>
+      </DashboardShell>,
+    );
+    expect(screen.getAllByRole("button", { name: "Navigate" })).toHaveLength(2);
   });
 });

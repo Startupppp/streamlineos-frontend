@@ -9,12 +9,12 @@ import { storageKeyFromUrl } from "@/lib/utils";
 export function useAttachmentSignedUrl(fileUrl: string) {
   return useQuery<string>({
     queryKey: platformCoreQueryKeys.attachmentSignedUrl(fileUrl),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       if (!fileUrl) return fileUrl;
       const reference = storageKeyFromUrl(fileUrl);
       if (isLocalUrl(reference)) return reference;
       try {
-        const data = await apiClient.get<{ url: string }>("/storage/download", storageReferenceParams(reference));
+        const data = await apiClient.get<{ url: string }>("/storage/download", storageReferenceParams(reference), signal);
         return data.url;
       } catch {
         return fileUrl;

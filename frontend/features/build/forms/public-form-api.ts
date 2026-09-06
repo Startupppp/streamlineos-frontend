@@ -27,7 +27,7 @@ async function messageFrom(res: Response, fallback: string): Promise<string> {
   return fallback;
 }
 
-async function fetchPublicFormByPath(
+export async function fetchPublicFormByPath(
   path: string,
 ): Promise<PublicFormDefinition> {
   const res = await fetch(buildUrl(path), {

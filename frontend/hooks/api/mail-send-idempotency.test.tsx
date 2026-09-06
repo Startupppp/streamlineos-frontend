@@ -132,7 +132,7 @@ describe("a retried send replays instead of sending twice", () => {
       wrapper: wrapperFor(newClient()),
     });
 
-    const reply: ReplyMailBody = { accountId: 1, messageId: "m-0", bodyHtml: "thanks" };
+    const reply: ReplyMailBody = { accountId: 1, messageId: "m-0", bodyHtml: "thanks", to: [] };
     await send(result, reply);
     await send(result, reply);
 

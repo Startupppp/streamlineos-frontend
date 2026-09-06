@@ -221,7 +221,7 @@ const surfaces: Surface[] = [
   },
   {
     name: "Opening Balances — Post opening balances",
-    render: () => <OpeningBalancesEditor />,
+    render: () => <OpeningBalancesEditor onSuccess={() => {}} />,
     control: /post opening balances/i,
     writeKey: "accounting:journal:create",
     readKey: "accounting:journal:read",

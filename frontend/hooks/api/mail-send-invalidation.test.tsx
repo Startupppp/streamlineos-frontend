@@ -50,6 +50,7 @@ const REPLY: ReplyMailBody = {
   messageId: "msg-1",
   threadId: "thread-1",
   bodyHtml: "<p>Reply</p>",
+  to: [],
 };
 
 function newClient(): QueryClient {

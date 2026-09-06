@@ -30,6 +30,7 @@ import { ShellOfflineBanner } from "./shell-offline-banner";
 import { useRouteFocus } from "@/hooks/common/use-route-focus";
 import { cn } from "@/lib/utils";
 import { WELCOME_POP_KEY } from "@/lib/welcome-pop";
+import type { ShellVariant } from "@/lib/shell-variant";
 
 const SuccessChecklist = dynamic(
   () =>
@@ -66,6 +67,13 @@ function setSidebarCookie(collapsed: boolean) {
 interface DashboardShellProps {
   userId: string;
   defaultCollapsed: boolean;
+  /**
+   * Determined server-side from `Sec-CH-UA-Mobile` / User-Agent.
+   * Defaults to "desktop" so the shell remains unchanged when not provided.
+   * A desktop browser resized narrow still gets "desktop" (CSS breakpoints
+   * handle the visual layout for that case).
+   */
+  shellVariant?: ShellVariant;
   children: React.ReactNode;
   createTicketDialog?: React.ReactNode;
 }
@@ -73,6 +81,7 @@ interface DashboardShellProps {
 export function DashboardShell({
   userId,
   defaultCollapsed,
+  shellVariant = "desktop",
   children,
   createTicketDialog,
 }: DashboardShellProps) {
@@ -238,12 +247,13 @@ export function DashboardShell({
               showSidebarToggle={!hideSidebar}
               mobileNavOpen={mobileMenuOpen}
               hideAdminChrome={isPortalRoute}
+              shellVariant={shellVariant}
             />
 
             <ShellOfflineBanner />
 
             <div className="flex min-h-0 flex-1 overflow-hidden">
-              {!hideSidebar && (
+              {shellVariant === "desktop" && !hideSidebar && (
                 <aside
                   aria-label="Sidebar"
                   style={{ width: sidebarW }}

@@ -1,10 +1,11 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import type { UseMutationOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { supportAndWorkflowsQueryKeys } from "@/lib/query-keys/support-and-workflows";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 export interface Delegation {
   id: string;
@@ -88,7 +89,7 @@ export function useRevokeDelegation(
   >,
 ) {
   const qc = useQueryClient();
-  return useMutation<unknown, Error, string>({
+  return useAuthorizedMutation<unknown, Error, string>("settings:rbac:manage", {
     mutationKey: [...supportAndWorkflowsQueryKeys.delegations.all, "revoke"],
     mutationFn: (id: string) => apiClient.delete(`/access/delegations/${id}`),
     ...options,
@@ -107,7 +108,7 @@ export function useGrantDelegation(
     "mutationKey" | "mutationFn"
   >,
 ) {
-  return useMutation<unknown, Error, GrantDelegationInput>({
+  return useAuthorizedMutation<unknown, Error, GrantDelegationInput>("settings:rbac:manage", {
     mutationKey: ["delegations", "grant"],
     mutationFn: (values: GrantDelegationInput) =>
       apiClient.post("/access/delegations", {

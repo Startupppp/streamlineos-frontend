@@ -76,6 +76,30 @@ const MOBILE_PROFILE = {
   latencyMs: 150,
   downloadBps: 1_600_000 / 8,
   uploadBps: 750_000 / 8,
+  /**
+   * DevTools' own mobile emulation always sets the UA override — without it,
+   * the browser keeps the desktop UA it launched with, so `Sec-CH-UA-Mobile`
+   * is never sent as `?1` and the server cannot distinguish a mobile session
+   * from a desktop one (it would always serve the desktop shell). This is a
+   * fidelity fix to the instrument, not a budget change.
+   */
+  userAgent:
+    "Mozilla/5.0 (Linux; Android 12; Pixel 6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Mobile Safari/537.36",
+  userAgentMetadata: {
+    brands: [
+      { brand: "Not)A;Brand", version: "99" },
+      { brand: "Google Chrome", version: "127" },
+      { brand: "Chromium", version: "127" },
+    ],
+    fullVersion: "127.0.6533.88",
+    platform: "Android",
+    platformVersion: "12",
+    architecture: "",
+    model: "Pixel 6",
+    mobile: true,
+    bitness: "",
+    wow64: false,
+  },
 };
 
 /**
@@ -516,6 +540,8 @@ async function applyProfile(cdp, profile) {
     await cdp.send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
     await cdp.send("Emulation.setCPUThrottlingRate", { rate: 1 });
     await cdp.send("Network.emulateNetworkConditions", { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1, connectionType: "none" });
+    // Ensure no mobile UA override carries over from a prior mobile run.
+    await cdp.send("Emulation.setUserAgentOverride", { userAgent: "" }).catch(() => {});
     return;
   }
   await cdp.send("Emulation.setDeviceMetricsOverride", {
@@ -531,6 +557,14 @@ async function applyProfile(cdp, profile) {
     downloadThroughput: MOBILE_PROFILE.downloadBps,
     uploadThroughput: MOBILE_PROFILE.uploadBps,
     connectionType: "cellular4g",
+  });
+  // Set a real mobile Chrome UA so the browser sends Sec-CH-UA-Mobile: ?1 and
+  // the server can select the correct shell variant. DevTools' own device
+  // emulation always applies the UA; without it the session appears as a desktop
+  // browser and receives the desktop shell regardless of the device metrics.
+  await cdp.send("Emulation.setUserAgentOverride", {
+    userAgent: MOBILE_PROFILE.userAgent,
+    userAgentMetadata: MOBILE_PROFILE.userAgentMetadata,
   });
 }
 
@@ -1438,11 +1472,33 @@ async function selfTest() {
     false,
   );
 
+  // Mobile profile UA override — fidelity check.
+  check(
+    "MOBILE_PROFILE has a userAgent string",
+    typeof MOBILE_PROFILE.userAgent === "string" && MOBILE_PROFILE.userAgent.length > 0,
+    true,
+  );
+  check(
+    "MOBILE_PROFILE.userAgentMetadata marks the device as mobile",
+    MOBILE_PROFILE.userAgentMetadata?.mobile,
+    true,
+  );
+  check(
+    "MOBILE_PROFILE.userAgentMetadata platform is Android",
+    MOBILE_PROFILE.userAgentMetadata?.platform,
+    "Android",
+  );
+  check(
+    "MOBILE_PROFILE.userAgentMetadata has at least one brand entry",
+    Array.isArray(MOBILE_PROFILE.userAgentMetadata?.brands) && MOBILE_PROFILE.userAgentMetadata.brands.length > 0,
+    true,
+  );
+
   if (failed) {
     console.error("\nSELF-TEST FAILED");
     process.exit(1);
   }
-  console.log("\nSELF-TEST PASSED — percentiles, server-mode derivation, resource classification, byte accounting and the settle wait all behave");
+  console.log("\nSELF-TEST PASSED — percentiles, server-mode derivation, resource classification, byte accounting, the settle wait, and the mobile UA config all behave");
 }
 
 if (SELF_TEST)

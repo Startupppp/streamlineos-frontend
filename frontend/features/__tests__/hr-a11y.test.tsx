@@ -30,8 +30,8 @@ import { expectNoAxeViolations } from "@/test-utils/axe";
 import { atViewport } from "@/test-utils/viewport";
 import type { SkillsMatrixData } from "@/hooks/api/hr/employees";
 
-const mockUseSkillsMatrix = jest.fn();
-const mockUseCan = jest.fn(() => true);
+const mockUseSkillsMatrix = jest.fn<unknown, unknown[]>();
+const mockUseCan = jest.fn<boolean, unknown[]>(() => true);
 
 jest.mock("@/hooks/api/hr", () => ({
   useSkillsMatrix: (...args: unknown[]) => mockUseSkillsMatrix(...args),

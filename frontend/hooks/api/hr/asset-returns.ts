@@ -8,6 +8,7 @@ import {
 import type { UseMutationOptions, UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import type { AssetReturn } from "@/features/hr/asset-returns/asset-return-constants";
 
@@ -42,7 +43,7 @@ export function useCreateAssetReturn(
   options?: UseMutationOptions<AssetReturn, Error, CreateAssetReturnInput>,
 ) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation<AssetReturn, Error, CreateAssetReturnInput>("hr:assets:manage", {
     mutationKey: ["hr", "asset-returns", "create"],
     mutationFn: (data: CreateAssetReturnInput) =>
       apiClient.post<AssetReturn>("/hr/asset-returns", data),

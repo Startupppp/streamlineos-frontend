@@ -2,11 +2,9 @@ import {
   contrastRatio,
   darkCss,
   lightCss,
-  ratioOf,
   resolvePair,
   WCAG_AA_LARGE,
   WCAG_AA_NORMAL,
-  WCAG_NON_TEXT,
   type TokenPair,
 } from "@/test-utils/globals-css-tokens";
 
