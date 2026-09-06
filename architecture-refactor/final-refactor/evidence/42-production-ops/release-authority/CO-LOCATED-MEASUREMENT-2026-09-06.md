@@ -220,6 +220,66 @@ invites the destruction of every row count recorded in §3.
 
 ---
 
+---
+
+## 6. Capture 15 — the first capture that asserted its own host
+
+Build `WklbjYSWVhWz3T7CHJwUU`, production, authenticated, 13 routes x 6 repeats x desktop
+(1440x900) and mobile (390x844, 4x CPU throttle) = **156 samples**. Every self-assessment block is
+clean: **0** unusable, **0** off-route, **0** unauthorized, **0** settle-capped, **0** hydration
+mismatches, **0** route failures.
+
+Host, measured rather than assumed: **47.4%** busy before launch (ceiling 50), **32.4%** median across
+346 in-run samples (ceiling 75), 13.2% after the browser exited. Max in-run reading was 99.8% — a
+transient burst, which is exactly why the verdict is taken on the median. Capture verdict: *the host
+was quiet enough for these timings to be the application's.*
+
+| route | desktop LCP | desktop INP | mobile LCP | **mobile INP** | worst CLS |
+|---|---|---|---|---|---|
+| /mail | 200 | 78 | 435 | **54** | 0.0007 |
+| /calendar | 156 | 78 | 460 | **62** | 0.0014 |
+| /build/my-work | 231 | 86 | 718 | **72** | 0.0008 |
+| /settings | 213 | 86 | 536 | **96** | 0.0007 |
+| /chat | 1030 | 80 | 474 | **142** | 0.0007 |
+| /notifications | 264 | 118 | 1151 | **268** | 0.0013 |
+| /support/inbox | 216 | 94 | 1100 | **696** | 0.0007 |
+| /dashboard | 210 | 84 | 503 | **698** | 0.0007 |
+| /build/inbox | 185 | 80 | 540 | **750** | 0.0007 |
+| /inbox | 194 | 88 | 563 | **814** | 0.0007 |
+| /parties | 247 | 152 | 1380 | **986** | 0.0016 |
+| /crm/inbox (out of scope) | 155 | 76 | 1117 | **852** | 0.0007 |
+| /crm/leads (out of scope) | 224 | 150 | 1377 | **1236** | 0.0007 |
+
+**What passes.** Every LCP on both profiles — worst desktop 1030 ms against 1500, worst mobile
+1380 ms against 2500. Every CLS — worst 0.0016 against 0.100. Every desktop INP — worst 152 ms
+against 200. Every FCP and TTFB, on both profiles; server TTFB p95 is 41-80 ms on all thirteen routes.
+
+**`/chat` is now measured, and it passes.** It had stood as "unmeasured, not passing" because the
+nav-link proxy refused it. With the shell-marker discriminator it produced 12 clean samples: mobile
+LCP 474 ms, mobile INP **142 ms**, CLS 0.0007. Nothing was excepted to achieve that.
+
+**The 1,844 ms reading was the host, and this proves it.** `/build/my-work` mobile INP measured
+**72 ms** here against **1,844 ms** in capture 14 on identical code. The route was never slow; the
+earlier capture was taken at 100% CPU behind a guard that could not fire.
+
+**What fails, and it is real.** Mobile INP breaches on **seven in-scope routes** — /inbox 814,
+/build/inbox 750, /support/inbox 696, /dashboard 698, /parties 986, /notifications 268 — against a
+200 ms budget, plus /crm/inbox 852 and /crm/leads 1236 which are outside release scope.
+`check:web-vitals-budget` exits 1 with 9 violations and no exception recorded for any of them.
+
+This is a product finding, not an instrument one. The probe clicks an inert control (the global header
+Search button) **after** the DOM has been quiet for 500 ms, and no sample hit the settle cap — so the
+latency is caused by the interaction. The same button costs 54 ms on /mail and 814 ms on /inbox, so
+the cost scales with what the route has mounted rather than with the overlay itself. Mobile INP p75
+tracks long-task time closely: every route above ~1,000 ms of long tasks breaches, every route below
+~950 ms passes.
+
+**No budget was moved, no ceiling widened, no exception recorded and no route dropped.** The gate is
+red because the product is slow on a throttled mobile CPU, which is the outcome this criterion exists
+to detect.
+
+---
+
 ## 5. Commits
 
 | Repo | SHA | Change |
