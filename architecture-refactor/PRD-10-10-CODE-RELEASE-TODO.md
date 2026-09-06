@@ -836,6 +836,20 @@ These decisions are final for this release and remove implementation alternative
       The two pinned billing leaks were checked rather than trusted and are legitimate: `:appId` addresses
       a row in the global `marketplace_apps` catalog and both verbs act on the caller's own installation
       scoped by `u.orgId`, so no source-org row is touched — harness false positives, not allowances.
+      **Latest attempt: TIMED OUT, exit 1 — and the gate cannot go green as configured.** 4.08 hours,
+      1,937 routes attempted, jest `1 failed, 9 passed`, `Exceeded timeout of 14400000 ms for a test`,
+      `[e2e-suite-exit-guard] Exiting 1`. The route catalog is built live from the running server's OpenAPI
+      spec so it grows with the API; at roughly 7 s per route that is ~3.8 h of probing against a 4 h
+      per-test limit. **A gate that cannot finish cannot pass**, recorded as a harness defect rather than
+      repaired by quietly raising the limit.
+      Its nine assertion tests did run and reported no disclosures, but they ran over what a timed-out run
+      had scored, and that is **absence of evidence, not a clean result**: the newest artifact holds 479
+      scored outcomes and neither `POST /crm/consent/contacts/:contactId` nor `POST /build/:projectId/epics`
+      appears in it. Only their GET siblings were reached. The two defective routes are write verbs the run
+      never got to, so the LEAK and SERVER-ERROR above are not retracted by it.
+      The harness additionally printed `2 pinned LEAK routes did not reproduce — remove them from
+      live/known-no-404.json`. Not acted on: a run that stopped before scoring those routes is not evidence
+      they are fixed, and unpinning on that basis deletes a recorded defect instead of repairing it.
       be read as passing.**
       Per PRD-C016, prerequisite-blocked gates never count as passing, so this stays open.
       Owner: the repository owner.
