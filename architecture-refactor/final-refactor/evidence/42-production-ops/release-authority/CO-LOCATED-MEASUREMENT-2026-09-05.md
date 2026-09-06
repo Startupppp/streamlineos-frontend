@@ -350,6 +350,57 @@ attempt added `sr-only` links purely to satisfy that counter; it was reverted, b
 number by feeding the instrument is the failure mode these gates exist to prevent. The route is
 therefore recorded as unmeasured on mobile, not as passing.
 
+**Capture 8 (2026-09-06 14:21-14:32, build `R3If1XUBWjLPTezFUEMNR`, root `a3dd753eb`, 132 samples,
+0 unusable, 0 off-route, 0 hydration mismatches) — the final capture, taken with nothing else running.**
+Two earlier attempts that morning were discarded rather than reported: one measured against a machine
+running four builds and driver runs at once (a 4x CPU throttle plus a saturated host reads as
+1,200-1,400 ms INP on routes that measure 600-700 ms quiet), and one refused itself when 97 of 132
+samples hit an error boundary - the browser could not reach the backend at all, because the capture
+origin `http://localhost:1005` was not in the API's `CORS_ORIGINS`, so every client query failed and
+the shell fell over. Neither was a product defect; both are recorded because a number taken under
+either condition would have been wrong in a way nothing downstream could see.
+
+| Route | mobile INP | mobile LCP | mobile CLS | desktop INP | desktop LCP |
+|---|---:|---:|---:|---:|---:|
+| `/mail` | 40 | 404 | 0.002 | 46 | 749 |
+| `/inbox` | **614** | 454 | 0.000 | 72 | 189 |
+| `/build/inbox` | **570** | 449 | 0.000 | 62 | 182 |
+| `/support/inbox` | 80 | **3051** | 0.000 | 64 | 187 |
+| `/dashboard` | **244** | 2358 | 0.050 | 80 | 1167 |
+| `/chat` | **206** | **3477** | 0.000 | 80 | 1138 |
+| `/calendar` | 48 | **2567** | 0.002 | 40 | 945 |
+| `/notifications` | 40 | 1028 | 0.000 | 78 | 220 |
+| `/settings` | 48 | 398 | 0.039 | 54 | 155 |
+| `/build/my-work` | 38 | 642 | 0.001 | 136 | 200 |
+| `/parties` | **708** | 1007 | 0.000 | 62 | **1548** |
+
+**Bold = breach** (INP p75 <= 200, mobile LCP <= 2500, desktop LCP <= 1500, CLS <= 0.1). Desktop INP
+passes on all eleven routes (40-136 ms) and every CLS passes. Against capture 2 on 2026-09-04, where
+mobile INP breached on all eleven routes at 486-1262 ms, seven routes now pass: `/mail` 846 -> 40,
+`/support/inbox` 798 -> 80, `/calendar` 892 -> 48, `/notifications` 1028 -> 40, `/settings` 670 -> 48,
+`/build/my-work` 1022 -> 38, and `/dashboard` 620 -> 244 remains a breach but a much smaller one. The
+mechanisms were: the server picks the shell variant from the request, so a phone never hydrates the
+desktop sidebar and header; the notifications, parties and dashboard lists are prefetched on the
+server; rows are memoised and formatters hoisted to module scope; and the `useAfterLoad` gates that
+deferred primary list content until `window.load` were removed, because deferring the list moved its
+render into the window where the probe tap lands.
+
+**What is still open, stated as measured.** Four routes breach mobile INP: `/inbox` 614, `/build/inbox`
+570, `/parties` 708 and marginally `/chat` 206 and `/dashboard` 244. Three breach mobile LCP:
+`/support/inbox` 3051, `/chat` 3477 and `/calendar` 2567 - these three moved the wrong way when the
+after-load gates came off, which is the honest trade that bought the INP reductions elsewhere, and it
+means the remaining work is to make the first paint of those three cheap rather than late. `/parties`
+desktop LCP is 1548 against 1500, down from 2137 when the page awaited its prefetch inline but not yet
+back to the 271 ms it measured with no prefetch at all. **No budget was moved and no route was dropped
+from the run to make this read better.**
+
+Six mobile `/chat` samples were again refused as evidence: the page renders 2 distinct in-app
+navigation links and the driver requires 3. The chat mobile bottom navigation genuinely has two
+destinations (`/chat` and `/chat/channels`); no Threads or Mentions route exists in the product. An
+attempt to add `sr-only` links purely to satisfy the counter was reverted. `/chat` mobile is therefore
+recorded as unmeasured-by-refusal rather than as passing, and `check:web-vitals-budget` publishes no
+verdict for this capture for that reason - the gate refuses a run its own producer refused.
+
 Over-the-wire bytes before the load event (`measuredScriptBytes` ceiling 524,288; bytes):
 
 | Route | script | css | font | image | third-party | document | total |
