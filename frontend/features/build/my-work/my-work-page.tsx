@@ -9,9 +9,9 @@ import { ErrorState } from "@/components/shared/error-state";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PmPageShell, PmSection } from "@/features/build/shared/pm-chrome";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import { TicketFilterBar } from "@/features/build/shared/ticket-filter-bar";
 import { ViewSwitcher } from "@/features/build/views/view-switcher";
 import { DisplayOptionsPanel } from "@/features/build/views/display-options-panel";
 import { useDisplayOptions } from "@/features/build/views/use-display-options";
@@ -21,15 +21,24 @@ import { useAllWork } from "@/hooks/api/build/all-work";
 import type { AllWorkTicket } from "@/types/projects";
 import { cn } from "@/lib/utils";
 import { isPast, isToday, parseISO } from "date-fns";
+import { useAfterLoad } from "@/hooks/common/use-after-load";
 import { MY_WORK_VIEWS, parseMyWorkView } from "./my-work-view";
 import { MyWorkViewBody } from "./my-work-view-body-lazy";
+import { mapAllWorkTicketToKanban, buildTicketMetaMap } from "./map-all-work-ticket";
+import { BucketSection, AllWorkListSkeleton, BUCKET_ORDER } from "./my-work-rows";
+import type { DueBucket } from "./my-work-rows";
+
 const GroupingSidebar = dynamic(
   () => import("./grouping-sidebar").then((m) => ({ default: m.GroupingSidebar })),
   { ssr: false, loading: () => null },
 );
-import { mapAllWorkTicketToKanban, buildTicketMetaMap } from "./map-all-work-ticket";
-import { BucketSection, AllWorkListSkeleton, BUCKET_ORDER } from "./my-work-rows";
-import type { DueBucket } from "./my-work-rows";
+const TicketFilterBar = dynamic(
+  () =>
+    import("@/features/build/shared/ticket-filter-bar").then((m) => ({
+      default: m.TicketFilterBar,
+    })),
+  { ssr: false },
+);
 
 const DISPLAY_STORAGE_ID = -1;
 
@@ -136,6 +145,15 @@ export function MyWorkPage({ pmWorkspaceId }: MyWorkPageProps) {
   const [showGroupingSidebar, setShowGroupingSidebar] = useState(false);
   const [groupingMounted, setGroupingMounted] = useState(false);
   const [displayOptions, setDisplayOptions] = useDisplayOptions(DISPLAY_STORAGE_ID);
+  const filterBarReady = useAfterLoad();
+
+  const hasActiveFilters = useMemo(
+    () => MY_WORK_FILTER_PARAMS.some((p) => {
+      const v = searchParams.get(p);
+      return v !== null && v !== "";
+    }),
+    [searchParams],
+  );
 
   const extraFilters = useMemo(
     () => buildAllWorkFilters(searchParams),
@@ -377,12 +395,19 @@ export function MyWorkPage({ pmWorkspaceId }: MyWorkPageProps) {
                 ))}
               </TabsList>
             }
-            filters={() => (
-              <TicketFilterBar
-                showSprintFilter={false}
-                showAssigneeFilter={false}
-              />
-            )}
+            filters={() =>
+              filterBarReady ? (
+                <TicketFilterBar
+                  showSprintFilter={false}
+                  showAssigneeFilter={false}
+                />
+              ) : (
+                <div className={cn("flex w-full flex-col gap-1.5", hasActiveFilters && "pb-1")}>
+                  <Skeleton className="h-9 w-full" />
+                  {hasActiveFilters && <Skeleton className="h-6 w-2/3" />}
+                </div>
+              )
+            }
             actions={
               showViewSwitcher ? (
                 <>

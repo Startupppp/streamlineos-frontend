@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { memo, type ComponentType } from "react";
+import { memo, useEffect, useTransition, useState, type ComponentType } from "react";
 import Link from "next/link";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -50,6 +50,8 @@ export const BUCKET_CONFIG: Record<
   upcoming: { label: "Upcoming", icon: Clock, iconClass: "text-primary" },
   none: { label: "No Due Date", icon: CheckCircle2, iconClass: "text-muted-foreground" },
 };
+
+export const BUCKET_SYNC_LIMIT = 20;
 
 export const WorkItemRow = memo(function WorkItemRow({
   item,
@@ -102,7 +104,7 @@ export const WorkItemRow = memo(function WorkItemRow({
   );
 });
 
-export function BucketSection({
+export const BucketSection = memo(function BucketSection({
   bucket,
   items,
 }: {
@@ -110,6 +112,18 @@ export function BucketSection({
   items: MyWorkItem[];
 }) {
   const cfg = BUCKET_CONFIG[bucket];
+  const [, startTransition] = useTransition();
+  const [visibleCount, setVisibleCount] = useState(() =>
+    Math.min(items.length, BUCKET_SYNC_LIMIT),
+  );
+
+  useEffect(() => {
+    if (items.length > BUCKET_SYNC_LIMIT) {
+      startTransition(() => setVisibleCount(items.length));
+    } else {
+      setVisibleCount(items.length);
+    }
+  }, [items.length]);
 
   return (
     <PmPanel>
@@ -123,13 +137,13 @@ export function BucketSection({
         </span>
       </div>
       <div>
-        {items.map((item) => (
+        {items.slice(0, visibleCount).map((item) => (
           <WorkItemRow key={item.id} item={item} />
         ))}
       </div>
     </PmPanel>
   );
-}
+});
 
 export function AllWorkListSkeleton() {
   return (
@@ -142,4 +156,3 @@ export function AllWorkListSkeleton() {
     </PmPanel>
   );
 }
-
