@@ -1,31 +1,56 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, useMemo } from "react";
+import { createContext, useCallback, useContext, useMemo, useState } from "react";
 
-interface CommandPaletteContextValue {
+interface CommandPaletteState {
   paletteOpen: boolean;
-  setPaletteOpen: (open: boolean) => void;
   helpOpen: boolean;
-  setHelpOpen: (open: boolean) => void;
   createTicketOpen: boolean;
   createTicketProjectId: number | null;
+}
+
+interface CommandPaletteActions {
+  setPaletteOpen: (open: boolean) => void;
+  setHelpOpen: (open: boolean) => void;
   openCreateTicket: (projectId?: number | null) => void;
   closeCreateTicket: () => void;
 }
 
-export const CommandPaletteContext = createContext<CommandPaletteContextValue | null>(null);
+type CommandPaletteContextValue = CommandPaletteState & CommandPaletteActions;
+
+export const CommandPaletteStateContext =
+  createContext<CommandPaletteState | null>(null);
+
+export const CommandPaletteActionsContext =
+  createContext<CommandPaletteActions | null>(null);
 
 export function useCommandPalette(): CommandPaletteContextValue {
-  const ctx = useContext(CommandPaletteContext);
-  if (!ctx) throw new Error("useCommandPalette must be used inside CommandPaletteProvider");
-  return ctx;
+  const state = useContext(CommandPaletteStateContext);
+  const actions = useContext(CommandPaletteActionsContext);
+  if (!state || !actions)
+    throw new Error("useCommandPalette must be used inside CommandPaletteProvider");
+  return useMemo(() => ({ ...state, ...actions }), [state, actions]);
 }
 
-export function useCommandPaletteState(): CommandPaletteContextValue {
+export function useCommandPaletteActions(): CommandPaletteActions {
+  const actions = useContext(CommandPaletteActionsContext);
+  if (!actions)
+    throw new Error(
+      "useCommandPaletteActions must be used inside CommandPaletteProvider",
+    );
+  return actions;
+}
+
+export function useCommandPaletteState(): {
+  state: CommandPaletteState;
+  actions: CommandPaletteActions;
+} {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [createTicketOpen, setCreateTicketOpen] = useState(false);
-  const [createTicketProjectId, setCreateTicketProjectId] = useState<number | null>(null);
+  const [createTicketProjectId, setCreateTicketProjectId] = useState<
+    number | null
+  >(null);
 
   const openCreateTicket = useCallback((projectId?: number | null) => {
     setCreateTicketProjectId(projectId ?? null);
@@ -37,17 +62,15 @@ export function useCommandPaletteState(): CommandPaletteContextValue {
     setCreateTicketProjectId(null);
   }, []);
 
-  return useMemo(
-    () => ({
-      paletteOpen,
-      setPaletteOpen,
-      helpOpen,
-      setHelpOpen,
-      createTicketOpen,
-      createTicketProjectId,
-      openCreateTicket,
-      closeCreateTicket,
-    }),
-    [paletteOpen, helpOpen, createTicketOpen, createTicketProjectId, openCreateTicket, closeCreateTicket],
+  const actions = useMemo<CommandPaletteActions>(
+    () => ({ setPaletteOpen, setHelpOpen, openCreateTicket, closeCreateTicket }),
+    [setPaletteOpen, setHelpOpen, openCreateTicket, closeCreateTicket],
   );
+
+  const state = useMemo<CommandPaletteState>(
+    () => ({ paletteOpen, helpOpen, createTicketOpen, createTicketProjectId }),
+    [paletteOpen, helpOpen, createTicketOpen, createTicketProjectId],
+  );
+
+  return { state, actions };
 }

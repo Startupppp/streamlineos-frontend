@@ -96,7 +96,7 @@ interface TicketListProps {
   onSelect: (id: number) => void;
 }
 
-export function TicketList({
+export const TicketList = memo(function TicketList({
   tickets,
   isLoading,
   selectedTicketId,
@@ -144,4 +144,4 @@ export function TicketList({
       </ScrollArea>
     </div>
   );
-}
+});

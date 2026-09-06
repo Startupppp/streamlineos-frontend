@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useState, useEffect, useRef } from "react";
-import { flushSync } from "react-dom";
 import dynamic from "next/dynamic";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -68,7 +67,7 @@ export function MobileShellFab({
   const handleClose = useCallback(() => setFabOpen(false), []);
 
   const handleToggleFab = useCallback(() => {
-    flushSync(() => setFabOpen((open) => !open));
+    setFabOpen((open) => !open);
   }, []);
 
   const {
@@ -89,7 +88,7 @@ export function MobileShellFab({
         event.preventDefault();
         return;
       }
-      flushSync(() => setFabOpen((open) => !open));
+      setFabOpen((open) => !open);
     },
     [consumeSuppressClick],
   );

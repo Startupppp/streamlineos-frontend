@@ -1,9 +1,11 @@
 "use client";
 
+import { memo } from "react";
 import dynamic from "next/dynamic";
 
 import {
-  CommandPaletteContext,
+  CommandPaletteActionsContext,
+  CommandPaletteStateContext,
   useCommandPaletteState,
 } from "../hooks/use-command-palette";
 import { useKeyboardShortcuts } from "../hooks/use-keyboard-shortcuts";
@@ -26,15 +28,19 @@ function KeyboardShortcutsRegistrar() {
   return null;
 }
 
+const MemoizedKeyboardShortcutsRegistrar = memo(KeyboardShortcutsRegistrar);
+
 export function CommandPaletteProvider({ children, createTicketDialog }: Props) {
-  const state = useCommandPaletteState();
+  const { state, actions } = useCommandPaletteState();
 
   return (
-    <CommandPaletteContext.Provider value={state}>
-      <KeyboardShortcutsRegistrar />
-      {state.helpOpen ? <ShortcutsHelpDialog /> : null}
-      {createTicketDialog}
-      {children}
-    </CommandPaletteContext.Provider>
+    <CommandPaletteActionsContext.Provider value={actions}>
+      <CommandPaletteStateContext.Provider value={state}>
+        <MemoizedKeyboardShortcutsRegistrar />
+        {state.helpOpen ? <ShortcutsHelpDialog /> : null}
+        {createTicketDialog}
+        {children}
+      </CommandPaletteStateContext.Provider>
+    </CommandPaletteActionsContext.Provider>
   );
 }

@@ -20,23 +20,23 @@ export function InboxPage() {
     React.useState<Notification | null>(null);
   const [selectionDismissed, setSelectionDismissed] = React.useState(false);
 
-  function handleSelect(notification: Notification) {
+  const handleSelect = React.useCallback((notification: Notification) => {
     setSelectionDismissed(false);
     setSelectedNotification(notification);
-  }
+  }, []);
 
-  function handleClearSelection() {
+  const handleClearSelection = React.useCallback(() => {
     setSelectionDismissed(true);
     setSelectedNotification(null);
-  }
+  }, []);
 
-  function handleAutoClearSelection() {
+  const handleAutoClearSelection = React.useCallback(() => {
     setSelectedNotification(null);
-  }
+  }, []);
 
-  function handleFilterChange() {
+  const handleFilterChange = React.useCallback(() => {
     setSelectionDismissed(false);
-  }
+  }, []);
 
   const hasSelection = selectedNotification != null;
 

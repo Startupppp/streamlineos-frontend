@@ -1106,6 +1106,13 @@ async function run() {
             interactions: {
               samples: routeSamples.length,
               performed: routeSamples.filter((sample) => sample.interaction?.interacted === true).length,
+              /*
+               * WHICH control the probe clicked. Without this an INP number is not
+               * actionable: the selector list is ordered and falls through, so two
+               * routes can report wildly different INP because they were clicked on
+               * different controls, and a reader cannot tell that from the number.
+               */
+              selectors: [...new Set(routeSamples.map((sample) => sample.interaction?.selector).filter((sel) => typeof sel === "string"))],
             },
           };
           byRoute[route][`${profile}Content`] = routeSamples.at(-1)?.content ?? null;

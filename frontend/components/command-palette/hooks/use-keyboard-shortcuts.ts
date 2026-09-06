@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { useCommandPalette } from "./use-command-palette";
+import { useCommandPaletteActions } from "./use-command-palette";
 
 function isInputTarget(e: KeyboardEvent): boolean {
   const target = e.target;
@@ -24,7 +24,7 @@ function extractProjectId(pathname: string): number | null {
 }
 
 export function useKeyboardShortcuts() {
-  const { setPaletteOpen, setHelpOpen, openCreateTicket } = useCommandPalette();
+  const { setPaletteOpen, setHelpOpen, openCreateTicket } = useCommandPaletteActions();
   const router = useRouter();
   const pathname = usePathname();
   const chordTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
