@@ -1,3 +1,5 @@
+const shortDateFmt = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
+
 export function formatRelativeTime(date: Date | string | null): string {
   if (!date) return "";
   const now = new Date();
@@ -12,5 +14,5 @@ export function formatRelativeTime(date: Date | string | null): string {
   if (diffMin < 60) return `${diffMin}m ago`;
   if (diffHr < 24) return `${diffHr}h ago`;
   if (diffDay < 7) return `${diffDay}d ago`;
-  return then.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return shortDateFmt.format(then);
 }

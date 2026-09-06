@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import { Archive, Pin, PinOff } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
@@ -72,7 +72,7 @@ function TrashButton({
   );
 }
 
-export function NotificationCard({
+function NotificationCardInner({
   id,
   title,
   message,
@@ -297,3 +297,5 @@ export function NotificationCard({
     </div>
   );
 }
+
+export const NotificationCard = memo(NotificationCardInner);

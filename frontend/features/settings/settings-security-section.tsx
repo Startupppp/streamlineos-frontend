@@ -3,16 +3,9 @@
 import dynamic from "next/dynamic";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { useShellVariant } from "@/components/layout/shell-variant-context";
+import { useAfterLoad } from "@/hooks/common/use-after-load";
 
-/**
- * The security half of /settings, fetched after first paint.
- *
- * Password change and MFA enrolment both sit below the profile card and neither
- * is what the page is opened for, but between them they drag react-hook-form,
- * the QR/OTP surface and their own contracts into the route's first load. The
- * profile form above them stays eager, so the part of the page that is actually
- * above the fold still renders from the server.
- */
 function SecuritySkeleton() {
   return (
     <div className="space-y-3" role="status" aria-busy="true">
@@ -41,10 +34,14 @@ const MfaSettings = dynamic(
 );
 
 export function SettingsSecuritySection() {
+  const variant = useShellVariant();
+  const loaded = useAfterLoad();
+  const mfaVisible = variant === "desktop" || loaded;
+
   return (
     <>
       <SettingsSecurity />
-      <MfaSettings />
+      {mfaVisible ? <MfaSettings /> : <SecuritySkeleton />}
     </>
   );
 }

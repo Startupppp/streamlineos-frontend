@@ -23,8 +23,35 @@ jest.mock("next/link", () => ({
   useLinkStatus: () => ({ pending: false }),
 }));
 
+let currentPathname = "/build";
+
 jest.mock("next/navigation", () => ({
-  usePathname: () => "/build",
+  usePathname: () => currentPathname,
+}));
+
+jest.mock("@/features/chat/chat-mobile-bottom-nav", () => ({
+  ChatMobileBottomNav: function MockChatMobileBottomNav({
+    onOpenMobileMenu,
+  }: {
+    onOpenMobileMenu: () => void;
+  }) {
+    return (
+      <nav aria-label="Chat navigation" data-testid="chat-mobile-nav">
+        <button type="button" onClick={onOpenMobileMenu} aria-label="Menu">
+          Menu
+        </button>
+        <button type="button" aria-label="Search conversations">
+          Search
+        </button>
+        <button type="button" aria-label="Explore channels">
+          Explore
+        </button>
+        <button type="button" aria-label="Create">
+          Create
+        </button>
+      </nav>
+    );
+  },
 }));
 
 jest.mock("./app-sidebar", () => ({
@@ -57,10 +84,6 @@ jest.mock("./mobile/mobile-shell-fab", () => ({
       Open menu
     </button>
   ),
-}));
-
-jest.mock("@/features/chat/chat-mobile-bottom-nav", () => ({
-  ChatMobileBottomNav: () => null,
 }));
 
 jest.mock("./command-palette", () => ({
@@ -130,6 +153,7 @@ jest.mock("@/components/command-palette", () => ({
 
 describe("DashboardShell mobile navigation", () => {
   beforeEach(() => {
+    currentPathname = "/build";
     drawerCalls.length = 0;
     productSwitcherCalls.length = 0;
   });
@@ -178,6 +202,7 @@ describe("DashboardShell mobile navigation", () => {
 
 describe("DashboardShell shell variant", () => {
   beforeEach(() => {
+    currentPathname = "/build";
     drawerCalls.length = 0;
     productSwitcherCalls.length = 0;
   });
@@ -218,5 +243,48 @@ describe("DashboardShell shell variant", () => {
       </DashboardShell>,
     );
     expect(screen.getAllByRole("button", { name: "Navigate" })).toHaveLength(2);
+  });
+});
+
+describe("DashboardShell /chat mobile bottom nav", () => {
+  beforeEach(() => {
+    currentPathname = "/chat";
+    drawerCalls.length = 0;
+    productSwitcherCalls.length = 0;
+  });
+
+  afterEach(() => {
+    currentPathname = "/build";
+  });
+
+  it("mobile variant on /chat renders ChatMobileBottomNav synchronously with ≥ 3 in-app nav links", () => {
+    render(
+      <DashboardShell
+        userId="user-1"
+        defaultCollapsed={false}
+        shellVariant="mobile"
+      >
+        <div>Content</div>
+      </DashboardShell>,
+    );
+
+    const chatNav = screen.queryByTestId("chat-mobile-nav");
+    expect(chatNav).not.toBeNull();
+    const buttons = chatNav?.querySelectorAll("button, a[href]") ?? [];
+    expect(buttons.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("desktop variant on /chat does not render the synchronous ChatMobileBottomNav", () => {
+    render(
+      <DashboardShell
+        userId="user-1"
+        defaultCollapsed={false}
+        shellVariant="desktop"
+      >
+        <div>Content</div>
+      </DashboardShell>,
+    );
+
+    expect(screen.queryByRole("navigation", { name: "Chat navigation" })).toBeNull();
   });
 });

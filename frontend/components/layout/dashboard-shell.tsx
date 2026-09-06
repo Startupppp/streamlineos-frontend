@@ -27,6 +27,7 @@ import {
 } from "./mobile/mobile-module-nav-items";
 import { isPortalChromelessPath } from "./sidebar/sidebar-nav-items";
 import { ShellOfflineBanner } from "./shell-offline-banner";
+import { ShellVariantProvider } from "./shell-variant-context";
 import { useRouteFocus } from "@/hooks/common/use-route-focus";
 import { cn } from "@/lib/utils";
 import { WELCOME_POP_KEY } from "@/lib/welcome-pop";
@@ -48,7 +49,9 @@ const WelcomeToast = dynamic(
   { ssr: false },
 );
 
-const ChatMobileBottomNav = dynamic(
+import { ChatMobileBottomNav as ChatMobileBottomNavSync } from "@/features/chat/chat-mobile-bottom-nav";
+
+const ChatMobileBottomNavLazy = dynamic(
   () =>
     import("@/features/chat/chat-mobile-bottom-nav").then(
       (m) => m.ChatMobileBottomNav,
@@ -279,7 +282,9 @@ export function DashboardShell({
                   )}
                 >
                   <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden [&>:first-child]:h-full [&>:first-child]:min-h-0 [&>:first-child]:flex-1">
-                    {children}
+                    <ShellVariantProvider variant={shellVariant}>
+                      {children}
+                    </ShellVariantProvider>
                   </div>
                   {welcomeToastActive && <WelcomeToast />}
                   {enhancementsReady ? <SuccessChecklist /> : null}
@@ -315,8 +320,11 @@ export function DashboardShell({
           )}
 
           <MobileModuleBottomNav />
-          {isChatRoute && (
-            <ChatMobileBottomNav onOpenMobileMenu={handleOpenMobileMenu} />
+          {isChatRoute && shellVariant === "mobile" && (
+            <ChatMobileBottomNavSync onOpenMobileMenu={handleOpenMobileMenu} />
+          )}
+          {isChatRoute && shellVariant !== "mobile" && (
+            <ChatMobileBottomNavLazy onOpenMobileMenu={handleOpenMobileMenu} />
           )}
           {!(isChatRoute && isChatConversationOpen) && (
             <MobileShellFab
