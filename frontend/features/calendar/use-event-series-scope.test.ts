@@ -57,8 +57,6 @@ const MOVED_OCCURRENCE: CalendarListItem = {
   end: "2026-03-19T14:30:00.000Z",
   category: "meeting",
   source: "event",
-  rrule: "FREQ=WEEKLY;COUNT=8",
-  isRecurring: true,
 };
 
 const PAYLOAD: CalendarEventPayload = {

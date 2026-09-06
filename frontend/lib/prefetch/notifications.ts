@@ -18,6 +18,8 @@ function lowestNotificationId(page: Notification[]): number | undefined {
   return lowest;
 }
 
+const FIRST_PAGE: number | undefined = undefined;
+
 export async function prefetchNotificationsInbox() {
   const queryClient = await createServerQueryClient();
 
@@ -34,7 +36,7 @@ export async function prefetchNotificationsInbox() {
         );
         return page.data;
       },
-      initialPageParam: undefined as number | undefined,
+      initialPageParam: FIRST_PAGE,
       pages: 1,
       getNextPageParam: (lastPage: Notification[]) =>
         lastPage.length < INBOX_LIMIT ? undefined : lowestNotificationId(lastPage),
