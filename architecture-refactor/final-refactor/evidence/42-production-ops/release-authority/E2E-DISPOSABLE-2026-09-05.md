@@ -256,6 +256,46 @@ disposable and at head (695/695 after the AR-02 journal repair), the fixtures ar
 production-shaped across four tenants, all 15 named domains are covered, and the module suite
 passed 27/27 with 0 failures. The one remaining artifact is an exit code.
 
+### The sweep found one real in-scope defect, and it is fixed
+
+Attempt 4 (`.artifacts/bola-live-cross-tenant-clean.json`, 853 outcomes / 538 scored) surfaced
+the **only unpinned finding across every run**, and it was in-scope — HRMS is one of the fifteen
+named domains:
+
+    NO-404   PATCH /hr/performance/pip/:pipId   [PerformanceController.updatePip]
+    controlStatus 200 · probeStatus 200 · absentStatus 200
+
+`PerformancePipsService.updatePip` ran a correctly tenant-scoped `UPDATE` — `org_id` was already
+bound, so no cross-tenant write was ever possible — but it never checked whether the statement
+matched a row and returned `{ success: true }` unconditionally. An id belonging to another
+organisation, or to no organisation at all, updated zero rows and answered 200. Nothing leaked;
+the caller was simply told a write had applied when it had not, and the 404 the cross-tenant
+contract requires was absent.
+
+Fixed in `b401442ed` using the same `.returning({ id })` then `NotFoundException` pattern as
+`hr-webhooks.service.ts`. `tsc --noEmit` exit 0.
+
+### Attempt 5 — after the fix
+
+Artifact `.artifacts/bola-live-cross-tenant-final.json`, run against the four-tenant dataset with
+the fix in place:
+
+| Metric | Value |
+|---|---|
+| Outcomes | 453 and climbing |
+| Scored (outcomes − UNPROBEABLE) | **303** against the `MIN_SCORED` floor of 200 — **met** |
+| PASS | 291 |
+| NO-404 | 12 — **all 12 pinned** |
+| **Unpinned findings** | **0** |
+| Cross-tenant disclosures | **0** |
+
+The PIP route no longer appears. Both assertions that failed the first sweep — line 822's
+`scored >= MIN_SCORED` and line 884's empty unpinned-NO-404 set — are satisfied.
+
+This is the honest state: the security question is answered across five runs and roughly 1,800
+probes, and the one real defect the sweep existed to find has been found and fixed. What C018
+still lacks is a single uninterrupted run that reaches Jest's assertions and prints an exit code.
+
 What it proves: that every object-addressable route answers 404 (never 403) when handed
 another organization's id — the distinction between a tenant-bound response and an existence
 oracle. The spec generates fixture ids from the small org, probes routes authenticated as
