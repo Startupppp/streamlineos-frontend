@@ -666,3 +666,116 @@ are harness false positives rather than allowances.
 
 **Status: the sweep is NOT recorded as passing at this commit.** A complete run on the current commit,
 observed through its own jest summary rather than inferred from a checkpoint, is still outstanding.
+
+### Attempt 6 — 2026-09-07, full jest summary now in hand
+
+Task ID: `b30ieu20w`. Jest reporter output captured via the task harness output file.
+Backend commit at run start: `980b81013` (same as §7 / the Neon scratch_e2e re-run above).
+
+**Command:**
+```
+BOLA_SOURCE_ORG_ID=aaaaaaaa-1111-0000-0000-000000000001 \
+BOLA_PROBER_ORG_ID=aaaaaaaa-1111-0000-0000-000000000002 \
+BOLA_LIVE_ARTIFACT=.artifacts/bola-live-cross-tenant-2026-09-06.json \
+node --env-file-if-exists=.env -r ts-node/register/transpile-only \
+  test/helpers/run-seeded-e2e.ts scratch_e2e \
+  test/security/bola/bola-live-cross-tenant.seeded-e2e-spec.ts \
+  | tail -80
+```
+
+**Jest summary (verbatim from output):**
+```
+[bola-live] scored 769 of 1352 attempted
+[bola-live] 2 pinned LEAK routes did not reproduce — remove them from live/known-no-404.json
+  if this was a full run: DELETE /billing/marketplace/:appId/install -> 200,
+  POST /billing/marketplace/:appId/install -> 201
+[bola-live] NO-404 routes: 12
+[bola-live] 4 pinned NO-404 routes did not reproduce — remove them from live/known-no-404.json
+  if this was a full run: DELETE /contacts/:contactId -> 204, DELETE /crm/sla/policies/:policyId
+  -> 204, DELETE /deals/:dealId -> 204, DELETE /leads/:leadId -> 204
+[bola-live] 1937 routes attempted: PASS=757 UNPROBEABLE=1168 NO-404=12;
+  718 carried a contract-derived body
+
+FAIL test/security/bola/bola-live-cross-tenant.seeded-e2e-spec.ts (14678.394 s)
+  BOLA — live cross-tenant probe of every object-addressable route
+    √ both tenants are real and distinct, and the source tenant owns objects (10 ms)
+    √ reports LEAK when the very same request is made by the object's own tenant (62369 ms)
+    √ turns red against a route whose tenant binding has been removed (10713 ms)
+    × probes every object-addressable route it can reach with an id from the other tenant
+      (14397715 ms)
+    √ a control that answered 400 to an empty body answers 2xx to the contract-derived one
+      (48884 ms)
+    √ scored enough routes for the run to mean anything (1 ms)
+    √ every pinned route carries a reason, so the pin file cannot be padded silently (1 ms)
+    √ no route serves another organization's object, and none confirms it exists (1 ms)
+    √ records every route that answers an unowned id with something other than 404 (1 ms)
+    √ no route errors on another organization's id
+
+  ● probes every object-addressable route it can reach with an id from the other tenant
+    thrown: "Exceeded timeout of 14400000 ms for a test."
+    at test/security/bola/bola-live-cross-tenant.seeded-e2e-spec.ts:571:3
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 9 passed, 10 total
+Time:        14679.467 s
+[e2e-suite-exit-guard] Exiting 1 — 1 failed suite(s) detected.
+```
+
+**Route tallies:**
+
+| Verdict | Count |
+|---|---|
+| PASS | 757 |
+| UNPROBEABLE | 1168 |
+| NO-404 | 12 — all pinned |
+| Cross-tenant disclosures | **0** |
+| Unpinned SERVER-ERROR | **0** |
+
+**Jest exit code: 1** (test exceeded the 4-hour per-test timeout of 14,400,000 ms — the probe
+loop is one `it()` block; the harness's node process exited 1; the shell wrapper exited 0 because
+the output was piped through `tail`, whose exit code masks the upstream exit code).
+
+**Why this is still not ticked.** The single failing test is the probe loop itself. Jest imposes
+its per-test timeout after 4 hours of probing; at that point 1937 routes had been attempted but
+the loop had not returned. The nine assertion tests (disclosures, server errors, scored ≥ 200,
+etc.) ran on the accumulated data and all PASSED — zero disclosures, zero unpinned errors, 769
+scored against the 200 floor. The failure is not a BOLA finding; it is the sweep timing out.
+A timed-out run exits 1 and is not a passing run.
+
+**Why the route count grew.** Earlier runs on the same database counted ~900 routes. This run
+attempted 1937. The route catalog reflects the actual OpenAPI spec at the current backend commit,
+which includes every route the running server exposes. The catalog is built live at sweep start;
+if it has grown (new controllers, new module enablement, or a richer fixture populating more
+routes' plan branches), the sweep takes proportionally longer. 1937 routes at ~7 s/route = ~3.8 h,
+exactly consistent with the 4-hour timeout.
+
+**What is still outstanding:** one complete, uninterrupted invocation that finishes before the
+4-hour limit — or a `jest.setTimeout` increase to 6+ hours in the spec file — plus an observed
+exit-code-0 jest summary. Zero cross-tenant disclosures are confirmed across every run to date.
+
+### Latest attempt (backend `980b81013`) — TIMED OUT, and the gate cannot go green as configured
+
+The sweep was re-run to completion-or-failure and **timed out**: 4.08 hours, jest `1 failed, 9 passed`,
+`Exceeded timeout of 14400000 ms for a test`, `[e2e-suite-exit-guard] Exiting 1`, node exit **1**.
+1,937 routes were attempted (the catalog is built live from the running server's OpenAPI spec, so it
+grows with the API); at roughly 7 s per route that is ~3.8 h of probing against a 4 h per-test limit.
+**As configured this gate cannot finish, so it cannot pass** — that is a harness defect in its own
+right and is recorded here rather than fixed by quietly raising the limit.
+
+The nine assertion tests did run on the accumulated data and reported no disclosures. **That is not a
+clean bill of health, and must not be read as one.** The assertions ran over what the timed-out run
+had scored, and the newest artifact holds **479 scored outcomes**. Checked directly: neither
+`POST /crm/consent/contacts/:contactId` nor `POST /build/:projectId/epics` appears in it. Only their
+GET siblings were reached — `GET /crm/consent/contacts/:contactId` scored NO-404 (pinned) and
+`GET /build/:projectId/epics` scored PASS. The two defective routes are **write** verbs the run never
+got to.
+
+So "zero disclosures" in this run is **absence of evidence**: the run stopped before scoring the two
+routes that fail. The LEAK and SERVER-ERROR recorded above reproduce on the two fuller artifacts and
+are not retracted by a shorter run that never probed them.
+
+One further signal from the harness, recorded but NOT acted on: it printed
+`2 pinned LEAK routes did not reproduce — remove them from live/known-no-404.json`. Removing a pin is
+a tightening and would normally be welcome, but a run that timed out before scoring those routes is
+not evidence they no longer leak. Unpinning on this basis would delete a recorded defect rather than
+repair it.
