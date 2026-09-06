@@ -117,13 +117,30 @@ Two distinct `employmentId`s, each org reading only its own designation, is the 
 gate protects: a person employed by two organizations must hold wholly independent employment records
 per organization.
 
-**Consequence recorded rather than hidden.** `contracts/benchmark-manifest.json` now stores
-`tenantRows` describing a pre-fixture database, and two `resultRows` values would move on the next
-fresh measurement: `org-members-list@small` 10 → 11 and `employee-reporting-line-lookup@small`
-51 → 52. The `large` counterparts are paginated at 100 results and do not move. The remedy is a
-re-measure — a re-capture of measured facts — and explicitly **not** a widening of the rows ratchet,
-which stays exact. `check:benchmark-manifest` opens no database and is unaffected; it still reports
-`STATUS: PARTIAL — in scope 241/244 (98.8%)`, exit 0.
+**Consequence measured, not left stale.** The fixture moved `contracts/benchmark-manifest.json`, so the
+manifest was **re-measured** with the exact parameters its own `reproduce` field records
+(`--samples=50 --replicates=3 --concurrency=8 --iterations=48 --plans --write`) rather than left
+describing a pre-fixture database. One of the two predicted moves was **refuted by the measurement**:
+`org-members-list@small` did go 10 → 11, but `employee-reporting-line-lookup@small` stayed at **51**,
+because it queries `hr_reporting_lines` — a table the fixture does not write to — and a new employment
+record does not create a reporting line. The prediction was reasoning; the measurement is the answer.
+
+Fields that moved fall into two classes and nothing else. **Fixture consequences:** dataset
+`tenantRows` (`org-access` large 504 → 505, small 14 → 15; `hr` large 43972 → 43974, small 496 → 498)
+and the member-scanning benchmarks — `org-members-list`, `fanout-all-members-page`,
+`dashboard-member-headcount`, `employee-record-list-canonical`, `module-access-roster`. **Ordinary
+noise:** calendar and vector-ANN buffer counts, some of which went *down* (`vector-ann-direct-under-rls`
+1533 → 1513), which is the signature of buffer-cache state rather than of a data change.
+
+A third apparent class was investigated and dissolved: a `dashboard-announcements` diff showing
+`tenantRows: undefined → 400` was an artifact of the comparison script, which matched two benchmarks
+sharing one id by `Array.find()`. Matched by `source`, every ratcheted value is identical before and
+after.
+
+**No ratchet was widened.** Buffers stay exact on 284/284 pairs and rows exact on 284/284; statement
+counts and plan shape stay EXACT; timing stays DISARMED as before. The false-positive proof still
+fires on 0 of 568 unchanged-code comparisons. `check:benchmark-manifest` reports the same status as
+before the fixture: `STATUS: PARTIAL — in scope 241/244 (98.8%)`, exit 0.
 
 ### `verify:chat-mentions` — now PASSES, and a recorded P1 does not reproduce
 
