@@ -421,6 +421,52 @@ using `node -e "crypto.createHash('sha256')..."`.
 
 ---
 
+## Complete run on the co-located disposable database — 2026-09-06
+
+The run the earlier sections asked for: the whole in-scope corpus, one command, one exit code, on
+an explicitly identified disposable database at the current migration head.
+
+| Item | Value |
+|---|---|
+| Database | `scratch_local` on the co-located PostgreSQL 18.6 (`127.0.0.1:5432`), cold-built by `apply-chain-cold.mjs`, ledger 695/695 against the 695-entry journal, application role `streamline_app` granted on every table; fixtures from the three seed layers (four tenants) — see [CO-LOCATED-MEASUREMENT-2026-09-05.md](CO-LOCATED-MEASUREMENT-2026-09-05.md) |
+| Commit pair at run start | backend `fb59a5478` · root `e7d70a88f` |
+| Command | `runs/run-local-seeded-e2e.sh` → `node --env-file-if-exists=.env -r ts-node/register/transpile-only test/helpers/run-seeded-e2e.ts scratch_local <30 in-scope specs>` (09:26–09:43 IST) |
+| Suites | **27 passed · 1 failed · 2 skipped** of 30 (`Tests: 157 passed, 11 skipped, 168 total`) |
+| Log | `runs/seeded-corpus-final.log`, sha256 `86d05e39475b410e…` |
+
+The one failure is `test/perf/route-budget-http.seeded-e2e-spec.ts`, and it did not fail on an
+assertion: Jest reported `Jest worker encountered 4 child process exceptions, exceeding retry limit`
+with no exception text — the worker process was killed from outside (a concurrent session's
+process sweep; the same signature took two standalone replicates and the port-1501 backend the same
+morning). The instrument itself completed twice standalone on this database at 08:25 and 08:38 with
+**94 measured / 8 refused / 0 failed of 102** on both tenants; those two replicates are the recorded
+request-level figures (CO-LOCATED record, C085/C141). The two skipped suites are the two opt-in
+BOLA sweeps (`bola-live-cross-tenant`, `t15-own-tenant-500`), which skip by design without
+`BOLA_SOURCE_ORG_ID`/`BOLA_PROBER_ORG_ID` and are run separately (next section). Every other
+in-scope domain — Organization/RBAC, Home, Settings, HRMS, Payroll, Build, Billing, Payments,
+Accounting, Chat, Calendar, Notifications, Knowledge, Workflows, Inbox/mail — passed with zero
+unexpected skips.
+
+### Live cross-tenant BOLA sweep on the same database
+
+A concurrent session ran the full sweep on this database (04:12–08:22 IST, artifact
+`.artifacts/bola-live-cross-tenant-final.json`, 1,523 outcomes): PASS 682 · UNPROBEABLE 825 ·
+NO-404 13 (all pinned, CRM/Inventory/deals/leads and the three intentionally public `/public/*`
+routes) · **INCONCLUSIVE 1 · SERVER-ERROR 1 · LEAK 1**. The three non-pass outcomes are defects,
+not pins, and were handed to a fix before this record was closed:
+
+| Verdict | Route | What the sweep saw |
+|---|---|---|
+| LEAK | `POST /crm/consent/contacts/:contactId` | a prober from another organisation recorded consent against the source org's contact and got `200 {"success":true}`; an unknown id got 500 |
+| SERVER-ERROR | `POST /build/:projectId/epics` | a foreign `projectId` answered 500 instead of 404 |
+| INCONCLUSIVE | `PATCH /leads/:leadId/status` | a foreign lead id answered 409 — an existence oracle |
+
+CRM is outside the code-release scope; a cross-tenant write that succeeds is fixed regardless.
+The sweep's own exit code (`scored ≥ 200`, zero unpinned NO-404, zero disclosures) is recorded
+below once the fixes are in.
+
+---
+
 ## Not measured
 
 Typecheck and full test suite not run (not a requirement for C018; recorded as not run per
