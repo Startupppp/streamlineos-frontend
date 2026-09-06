@@ -459,6 +459,46 @@ export async function sampleCpuBusyPercent(windowMs) {
  */
 export const HOST_BUSY_CEILING_PERCENT = 50;
 
+/**
+ * The bracketing readings cannot see a spike that starts and ends inside the run, and the run is
+ * where a 4x-throttled mobile profile is most easily poisoned. This sampler runs throughout, so the
+ * load profile across the capture is recorded rather than inferred from its endpoints.
+ *
+ * Our own load is inside these readings — one throttled renderer plus this process — so the ceiling
+ * is deliberately higher than the pre-launch one rather than the same number reused. A capture is
+ * refused on the MEDIAN, not on any single spike: one transient burst is normal on a real desktop,
+ * a sustained majority-busy host is not.
+ */
+export const HOST_BUSY_DURING_RUN_CEILING_PERCENT = 75;
+
+export function startHostSampler(intervalMs) {
+  const samples = [];
+  let stopped = false;
+  const loop = async () => {
+    while (!stopped) {
+      const busy = await sampleCpuBusyPercent(intervalMs);
+      if (!stopped && busy !== null) samples.push(busy);
+    }
+  };
+  const done = loop();
+  return {
+    async stop() {
+      stopped = true;
+      await done;
+      return samples;
+    },
+  };
+}
+
+/** Median of a numeric series; null for an empty one, so "no samples" cannot read as "quiet". */
+export function medianBusy(samples) {
+  if (samples.length === 0) return null;
+  const sorted = [...samples].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  const value = sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+  return Number(value.toFixed(1));
+}
+
 /** os.loadavg() returns [0, 0, 0] on Windows rather than failing, so a 0 there is unmeasured, not idle. */
 export const LOADAVG_IS_MEASURED = process.platform !== "win32";
 
@@ -921,6 +961,7 @@ async function run() {
   const serverMode = resolveServerMode({ buildIdOnDisk, html: probeHtml });
 
   const busyBeforeLaunch = await sampleCpuBusyPercent(1000);
+  const hostSampler = startHostSampler(2000);
 
   const userDataDir = join(tmpdir(), `sl-vitals-${randomBytes(6).toString("hex")}`);
   const proc = spawn(
@@ -1112,12 +1153,20 @@ async function run() {
     }
   }
 
+  const busyDuringRun = await hostSampler.stop();
   const busyAfterCapture = await sampleCpuBusyPercent(1000);
   const hostReadings = [
     { when: "beforeLaunch", busyPercent: busyBeforeLaunch },
     { when: "afterCapture", busyPercent: busyAfterCapture },
   ];
-  const hostContended = contendedReadings(hostReadings, HOST_BUSY_CEILING_PERCENT);
+  const busyDuringRunMedian = medianBusy(busyDuringRun);
+  const hostContended = [
+    ...contendedReadings(hostReadings, HOST_BUSY_CEILING_PERCENT),
+    ...contendedReadings(
+      [{ when: "duringRun (median)", busyPercent: busyDuringRunMedian }],
+      HOST_BUSY_DURING_RUN_CEILING_PERCENT,
+    ),
+  ];
 
   const serverTtfb = await measureServerTtfb(baseUrl, routes, `${cookieName}=${cookieValue}`, repeat);
   for (const [route, t] of Object.entries(serverTtfb))
@@ -1212,6 +1261,14 @@ async function run() {
       cpuCount: cpus().length,
       busyPercentBeforeLaunch: busyBeforeLaunch,
       busyPercentAfterCapture: busyAfterCapture,
+      busyPercentDuringRun: {
+        ceilingPercent: HOST_BUSY_DURING_RUN_CEILING_PERCENT,
+        samples: busyDuringRun.length,
+        median: busyDuringRunMedian,
+        min: busyDuringRun.length > 0 ? Math.min(...busyDuringRun) : null,
+        max: busyDuringRun.length > 0 ? Math.max(...busyDuringRun) : null,
+        note: "includes this capture's own browser and driver, so its ceiling is higher than the pre-launch one; judged on the median so a single transient burst does not refuse a good run",
+      },
       contendedReadings: hostContended,
       verdict:
         hostContended.length === 0
@@ -1535,6 +1592,23 @@ async function selfTest() {
     0,
   );
 
+  check("the median of an empty series is null, so no samples cannot read as a quiet host", medianBusy([]), null);
+  check("the median of an odd series is its middle value", medianBusy([10, 90, 20]), 20);
+  check("the median of an even series averages the middle pair", medianBusy([10, 20, 30, 90]), 25);
+  check(
+    "one transient burst does not refuse a run whose median is quiet",
+    contendedReadings([{ when: "duringRun (median)", busyPercent: medianBusy([12, 14, 99, 15]) }], 75).length,
+    0,
+  );
+  check(
+    "a sustained busy host during the run is refused",
+    contendedReadings([{ when: "duringRun (median)", busyPercent: medianBusy([88, 91, 76, 95]) }], 75).length,
+    1,
+  );
+  const sampler = startHostSampler(60);
+  await sleep(260);
+  const sampled = await sampler.stop();
+  check("the background sampler collects a series across the run", sampled.length >= 2, true);
   check(
     "a quiet host produces no contended reading",
     contendedReadings([{ when: "beforeLaunch", busyPercent: 6.2 }, { when: "afterCapture", busyPercent: 9.1 }], 50).length,
