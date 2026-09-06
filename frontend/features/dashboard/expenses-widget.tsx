@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { Receipt, Plus } from "lucide-react";
 import { WidgetCard } from "@/components/ui/widget-card";
 import { Badge } from "@/components/ui/badge";
@@ -18,9 +19,16 @@ import {
   STATUS_LABELS,
   STATUS_STYLES,
 } from "@/features/hr/expenses/expense-constants";
-import { CreateExpenseDialog } from "@/features/hr/expenses/components/create-expense-dialog";
 import { useDashboardAccess } from "@/features/dashboard/use-dashboard-access";
 import type { ExpenseWithRelations } from "@/types/hr/expenses";
+
+const CreateExpenseDialog = dynamic(
+  () =>
+    import("@/features/hr/expenses/components/create-expense-dialog").then(
+      (m) => ({ default: m.CreateExpenseDialog }),
+    ),
+  { ssr: false },
+);
 
 const WIDGET_PAGE_SIZE = 5;
 

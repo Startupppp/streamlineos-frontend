@@ -42,6 +42,7 @@ import { CalendarMonthYearPicker } from "./calendar-month-year-picker";
 import { useCalendarComputed } from "./use-calendar-computed";
 import { useCalendarViewState } from "./use-calendar-view-state";
 import { useAfterLoad } from "@/hooks/common/use-after-load";
+import { useShellVariant } from "@/components/layout/shell-variant-context";
 
 const CalendarGridLayer = dynamic(
   () =>
@@ -185,15 +186,11 @@ export function CalendarView() {
 
   const afterLoad = useAfterLoad();
 
-  const [isMobile, setIsMobile] = useState(false);
+  const shellVariant = useShellVariant();
+  const isMobile = shellVariant === "mobile";
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const mq = window.matchMedia("(max-width: 767px), (pointer: coarse)");
-    if (mq.matches) {
-      setIsMobile(true);
-      setViewMode("list");
-    }
-  }, [setViewMode]);
+    if (isMobile) setViewMode("list");
+  }, [isMobile, setViewMode]);
 
   const { hiddenIds } = useCalendarAccountFilters();
   const { visible: hrEventsVisible, toggle: toggleHrEvents } = useCalendarSourceVisibility("hrEvents", true);

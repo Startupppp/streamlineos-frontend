@@ -4,7 +4,7 @@ import { useCallback, useMemo, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import {
   DropdownMenu,

@@ -114,6 +114,7 @@ export function DashboardDeferredBody({ access }: DashboardDeferredBodyProps) {
   } = access;
 
   const [deferredVisible, setDeferredVisible] = useState(false);
+  const [batch2Ready, setBatch2Ready] = useState(false);
 
   const {
     data: recentProjects,
@@ -196,6 +197,12 @@ export function DashboardDeferredBody({ access }: DashboardDeferredBodyProps) {
       }
     }
   }, [todayActivities]);
+
+  useEffect(() => {
+    if (!deferredVisible) return;
+    const id = setTimeout(() => setBatch2Ready(true), 0);
+    return () => clearTimeout(id);
+  }, [deferredVisible]);
 
   const handleDeferredVisible = useCallback(() => {
     setDeferredVisible(true);
@@ -300,7 +307,7 @@ export function DashboardDeferredBody({ access }: DashboardDeferredBodyProps) {
           </motion.div>
         )}
 
-        {hrEnabled && (
+        {batch2Ready && hrEnabled && (
           <motion.div
             variants={fadeUp}
             initial="hidden"
@@ -316,7 +323,7 @@ export function DashboardDeferredBody({ access }: DashboardDeferredBodyProps) {
           </motion.div>
         )}
 
-        {showDocumentsCard && (
+        {batch2Ready && showDocumentsCard && (
           <motion.div
             variants={fadeUp}
             initial="hidden"
@@ -328,7 +335,7 @@ export function DashboardDeferredBody({ access }: DashboardDeferredBodyProps) {
           </motion.div>
         )}
 
-        {projectsEnabled && (
+        {batch2Ready && projectsEnabled && (
           <motion.div
             variants={fadeUp}
             initial="hidden"
@@ -358,7 +365,7 @@ export function DashboardDeferredBody({ access }: DashboardDeferredBodyProps) {
           </motion.div>
         )}
 
-        {showBottomRow && (
+        {batch2Ready && showBottomRow && (
           <motion.div
             variants={fadeUp}
             initial="hidden"

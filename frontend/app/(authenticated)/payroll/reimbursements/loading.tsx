@@ -1,7 +1,7 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export function ReimbursementsPageSkeleton() {

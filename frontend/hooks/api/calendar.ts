@@ -76,24 +76,12 @@ export function useCalendarMemberLookup({
 
 // ---- Range-list hooks ----
 
-/**
- * `/calendar/events` is filtered server-side by the caller's per-source
- * preferences, so the enabled set is a correctness dimension of the response
- * and belongs in the key — without it two different aggregations share one
- * cache entry and a toggle is only papered over by a blanket invalidation.
- */
 export function useCalendarEvents(start: Date, end: Date) {
   const canView = useCan("calendar:read");
-  const { data: sources } = useCalendarSources();
-  const enabledSources =
-    sources === undefined
-      ? undefined
-      : sources.filter((source) => source.enabled).map((source) => source.key).sort();
   return useQuery({
     queryKey: platformHierarchyQueryKeys.calendar.events(
       start.toISOString(),
       end.toISOString(),
-      enabledSources,
     ),
     queryFn: ({ signal }) =>
       apiClient.get<CalendarEventsResponse>("/calendar/events", {
@@ -101,7 +89,7 @@ export function useCalendarEvents(start: Date, end: Date) {
         end: end.toISOString(),
       }, signal),
     staleTime: 2 * 60 * 1000,
-    enabled: canView && enabledSources !== undefined,
+    enabled: canView,
   });
 }
 

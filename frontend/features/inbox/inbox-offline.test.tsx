@@ -26,7 +26,7 @@ jest.mock("@/lib/get-error-message", () => ({
   getErrorMessage: (e: unknown) => (e instanceof Error ? e.message : "error"),
 }));
 
-jest.mock("@/hooks/api/notifications", () => ({
+jest.mock("@/hooks/api/notifications-inbox", () => ({
   useMarkNotificationRead: () => ({ mutate: markReadMutate }),
   useArchiveNotification: () => ({
     mutate: archiveMutate,
@@ -130,7 +130,19 @@ jest.mock("@/components/shared/no-permission-state", () => ({
 jest.mock("@/features/notifications/notification-list-skeleton", () => ({
   NotificationListSkeleton: () => null,
 }));
-jest.mock("next/dynamic", () => () => () => null);
+jest.mock("next/dynamic", () => {
+  const React = jest.requireActual<typeof import("react")>("react");
+  return (importFn: () => Promise<React.ComponentType<Record<string, unknown>>>) => {
+    function DynamicProxy(props: Record<string, unknown>) {
+      const [Comp, setComp] = React.useState<React.ComponentType<Record<string, unknown>> | null>(null);
+      React.useEffect(() => {
+        void importFn().then((m) => setComp(() => m));
+      }, []);
+      return Comp ? React.createElement(Comp, props) : null;
+    }
+    return DynamicProxy;
+  };
+});
 jest.mock("@/lib/utils", () => ({
   cn: (...args: string[]) => args.filter(Boolean).join(" "),
 }));
@@ -151,8 +163,8 @@ function setOnline(online: boolean) {
   });
 }
 
-function mountInbox(): CapturedListProps {
-  render(<InboxShell />);
+async function mountInbox(): Promise<CapturedListProps> {
+  await act(async () => { render(<InboxShell />); });
   if (!captured) throw new Error("InboxVirtualList never received its props");
   return captured;
 }
@@ -168,16 +180,16 @@ describe("InboxShell — offline handling", () => {
     setOnline(true);
   });
 
-  it("fires the mutation normally while online, so the guard is not a blanket block", () => {
-    mountInbox();
+  it("fires the mutation normally while online, so the guard is not a blanket block", async () => {
+    await mountInbox();
     act(() => captured?.onArchive(1));
 
     expect(archiveMutate).toHaveBeenCalledTimes(1);
     expect(getToast().error).not.toHaveBeenCalled();
   });
 
-  it("refuses a doomed archive while offline and says why", () => {
-    mountInbox();
+  it("refuses a doomed archive while offline and says why", async () => {
+    await mountInbox();
     setOnline(false);
     act(() => captured?.onArchive(1));
 
@@ -185,8 +197,8 @@ describe("InboxShell — offline handling", () => {
     expect(getToast().error).toHaveBeenCalledWith(INBOX_OFFLINE_MESSAGE);
   });
 
-  it("refuses delete and approve while offline too", () => {
-    mountInbox();
+  it("refuses delete and approve while offline too", async () => {
+    await mountInbox();
     setOnline(false);
     act(() => captured?.onDelete(1));
     act(() => captured?.onApprove(1));
@@ -196,8 +208,8 @@ describe("InboxShell — offline handling", () => {
     expect(getToast().error).toHaveBeenCalledTimes(2);
   });
 
-  it("skips the passive mark-read on open while offline, without nagging the reader", () => {
-    mountInbox();
+  it("skips the passive mark-read on open while offline, without nagging the reader", async () => {
+    await mountInbox();
     setOnline(false);
     act(() => captured?.onNotificationClick({ id: 1, isRead: false, link: null }));
 
@@ -205,8 +217,8 @@ describe("InboxShell — offline handling", () => {
     expect(getToast().error).not.toHaveBeenCalled();
   });
 
-  it("reconnecting restores the action without a remount", () => {
-    mountInbox();
+  it("reconnecting restores the action without a remount", async () => {
+    await mountInbox();
     setOnline(false);
     act(() => captured?.onArchive(1));
     expect(archiveMutate).not.toHaveBeenCalled();
@@ -217,8 +229,8 @@ describe("InboxShell — offline handling", () => {
     expect(archiveMutate).toHaveBeenCalledTimes(1);
   });
 
-  it("hands the list its connectivity, so paging cannot stall on a paused fetch", () => {
-    mountInbox();
+  it("hands the list its connectivity, so paging cannot stall on a paused fetch", async () => {
+    await mountInbox();
     expect(captured?.isOnline).toBe(true);
 
     setOnline(false);

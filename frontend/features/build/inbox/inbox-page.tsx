@@ -1,12 +1,17 @@
 "use client";
 
 import * as React from "react";
+import dynamic from "next/dynamic";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { InboxList } from "./inbox-list";
-import { InboxPreviewPane } from "./inbox-preview-pane";
 import { useShellVariant } from "@/components/layout/shell-variant-context";
 import type { Notification } from "@/types/notifications";
 import { cn } from "@/lib/utils";
+
+const InboxPreviewPane = dynamic(
+  () => import("./inbox-preview-pane").then((m) => ({ default: m.InboxPreviewPane })),
+  { ssr: false },
+);
 
 export function InboxPage() {
   const shellVariant = useShellVariant();

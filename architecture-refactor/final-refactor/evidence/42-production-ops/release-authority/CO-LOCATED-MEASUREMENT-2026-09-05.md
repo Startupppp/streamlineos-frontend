@@ -95,6 +95,46 @@ Found on 2026-09-06 by the second pass over the same stack (backend `b4bd4ac90`,
 
 Two more environment findings from this pass, both recorded so the next operator does not lose an hour to them: (1) the PostgreSQL 18 cluster crashed under memory pressure at 04:50 IST (an autovacuum worker died with `0xC0000142` while six agents and two builds held the box at 3.8 GB free of 31 GB) and from then on every new backend failed with Windows error 487 (`could not reserve shared memory region`), which clients see only as a bare `ECONNRESET`; `pg_ctl restart` recovered it in 40 s, and the two HTTP replicates and the manifest run that started in that window were discarded rather than merged. (2) Another session staged a comment-only edit to the applied migration `1064_revenue_events_currency.sql`; the seeded preflight hashes migration bytes, so it refused every run until the disposable database's ledger row for `1064` was re-pointed at the current bytes — the same class as fixture defect 7 above, and again no schema object changed.
 
+Found on 2026-09-06 by the third pass (backend `bf51e66a6`):
+
+| Route / worker | Failure | Root cause | Fix |
+|---|---|---|---|
+| `POST /build/{projectId}/tickets` | 17 swallowed after-commit failures on the reference tenant. The route still answered 201, and `merge-http-route-budgets` refused to publish the entire route-budget capture because of them | `createAutomation` never checked a `set_status` action's value against `project_statuses`, so the live BOLA sweep's `bola-<nonce>` probe strings were stored as status names on four automations. Every later ticket creation in that project fired all four, and each violated the composite FK `fk_tickets_status (org_id, project_id, status)` from migration `0146`, aborting the tenant transaction. The after-commit hook caught it, logged, and returned — so the failure was real, repeated and invisible to the caller | three places, because any one alone leaves a hole: the runner checks the status exists in that project and skips with a named warning instead of throwing into the hook; `createAutomation` and `updateAutomation` reject an unknown status with 422 naming it, so the row can no longer be written; the scratch seed plants one valid automation so the corpus exercises the path. 22 focused tests, and a verification capture records `deferredFailures` 0 on that route against 17 before, with no non-zero `deferredFailures` across all 188 measured routes |
+
+This one is worth stating plainly as a product defect rather than a fixture artifact: **any user who could create an automation could name a status their project does not have, and every subsequent ticket creation in that project would fail its after-commit hook silently.** The sweep found it by accident; the measurement is what made it visible.
+
+### Fixture integrity — what a mutating security sweep leaves behind
+
+The BOLA sweep and the seeded corpus write to the same disposable database the benchmarks measure. Three
+pieces of residue were found and repaired before the final capture, and they are recorded because each one
+had already distorted a published number:
+
+| Residue | How it read | Repair |
+|---|---|---|
+| 775 of 1,149 tickets in the reference project sat in a status named `bola-eac92cee`, and the original `TODO` and `IN_PROGRESS` rows were gone | the sweep created a status, then deleted `TODO` with reassignment — correct, authorized application behaviour. But **69% of the project's tickets were in a status no application filter matches**, so every read filtering on the app's own vocabulary (`ACTIVE_TICKET_STATUSES`) measured an empty set and read as a fast query rather than a broken fixture. This is the exact failure the seed's own comment warns about | the 775 tickets returned to `TODO` (type-preserving: the junk status was `unstarted`), the four `bola-*` statuses and five `bola-*` automations deleted. The original `TODO`/`IN_PROGRESS` split is unrecoverable and was collapsed into `TODO` rather than invented |
+| the reference tenant's only MONTHLY leave policy was `is_active = false`; every other tenant's was true | `run-read-cost-budgets` resolves `leaveTypeIds` from active MONTHLY policies, so both `leave-accrual-ledger-dedup@large` and `leave-accrual-balance-read@large` skipped as "no fixture data for this budget". Manifest coverage silently fell from **241/244 to 239/244** with no gate turning red — the instrument reported the skip honestly, but a published number had moved | the policy reactivated, restoring the seed's invariant of exactly one active MONTHLY policy per tenant. Both budgets now have real workloads (501 and 500 rows) |
+| four `bola-*` automations on the reference project | the after-commit failures above | deleted with the statuses |
+
+The lesson is not that the sweep is wrong to write — it is required to, and the routes behaved correctly.
+It is that **a measurement fixture and a mutating security corpus cannot share a database without a
+restoration step between them**, and that a fixture defect degrades a coverage number quietly rather than
+failing a gate.
+
+### Gates that are not green, each with a verified reason
+
+Five gates were run one at a time and read against their own source rather than their exit codes:
+
+| Gate | Exit | Mechanism | Verdict |
+|---|---|---|---|
+| `check:test-suppressions` | 1 | scans 2,319 spec files, classifies unconditional skips and runtime-gated aliases, caps the conditional class at a ratchet of 29 | **Red by design and deliberately held.** 76 conditional suppressions against a ratchet of 29. The script's own note records that the raise was considered and refused at release close, because the `db-gates.yml` step that would run those suites is unproven. **The count has not grown:** measured with the gate's own alias pattern, the release-close commit `f184b875f` and `HEAD` both carry 71 files / 72 matches, and exactly one conditional site was added across every commit since — in the release-close batch itself. An earlier reading that it had grown by ten is not supported by the history |
+| `check:alert-ack` | 2 | reads a drill state file and verifies a human confirmed a nonce inside its TTL | Blocked on environment: `ALERT_WEBHOOK_URL` is unset, so no measurement was attempted. Needs a configured webhook and a human drill |
+| `check:replay-ledger` | 2 | compares `drizzle.__replay` on a cold-bootstrap database against the journal | Blocked on environment: `COLD_DATABASE_URL` unset; no database was opened |
+| `verify:chat-mentions` | 1 | seeds an org, subscribes two users over Ably, posts a mention through the live API, asserts exactly one delivery | Blocked on environment: the API on :1500 is up and answers a structured 401, but the script's `AUTH_SIGNING_KEYS` and the running server's keyring differ, so the token is rejected before the assertion runs |
+| `verify:multi-org-employment` | 1 | finds a user with two active memberships and proves their employment records are independent | Blocked on fixture: no user holds two active memberships; the script reports `{"skipped":true}` by design. No seeder creates this fixture |
+
+None of the five is broken, and none is masking a defect in the code it checks. No ratchet, ceiling or
+baseline was moved to change any of these results.
+
 ## Captures
 
 ### C143 — cache-hit latency and Redis outage

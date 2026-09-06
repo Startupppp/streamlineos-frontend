@@ -4,6 +4,7 @@ import { useState, useDeferredValue, useTransition, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useSupportTickets, useSupportStats } from "@/hooks/api/support";
+import { useAccess } from "@/hooks/api/access";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon } from "@animateicons/react/lucide";
 import {
@@ -15,8 +16,8 @@ import {
 } from "@/components/ui/select";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
-import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { EmptyTicketIllustration } from "@/components/illustrations";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import type { SupportTicketStatus, SupportTicketPriority } from "@/types/support";
 import { ErrorState } from "@/components/shared/error-state";
@@ -118,7 +119,7 @@ function InboxContent() {
     [searchParams, router, pathname]
   );
 
-  const { data: ticketsData, isLoading, isError, refetch } = useSupportTickets({
+  const ticketsResult = useSupportTickets({
     ...(isTicketStatus(statusFilter) ? { status: statusFilter } : {}),
     ...(isTicketPriority(priorityFilter) ? { priority: priorityFilter } : {}),
     ...(queueIdFilter ? { queueId: Number(queueIdFilter) } : {}),
@@ -126,7 +127,10 @@ function InboxContent() {
     ...(channelFilter ? { channel: channelFilter } : {}),
     ...(snoozedFilter ? { snoozed: true } : {}),
   });
+  const { data: ticketsData, isError, refetch } = ticketsResult;
+  const isLoading = ticketsResult.isLoading || ticketsResult.access.pending;
   const { data: stats, isLoading: statsLoading } = useSupportStats();
+  const { data: accessData, isError: accessFailed, refetch: refetchAccess } = useAccess();
 
   const tickets = ticketsData?.items ?? [];
   const deferredTickets = useDeferredValue(tickets);
@@ -176,6 +180,21 @@ function InboxContent() {
 
   function handleRetry() {
     void refetch();
+  }
+
+  function handleAccessRetry() {
+    void refetchAccess();
+  }
+
+  if (accessFailed && !accessData) {
+    return (
+      <ErrorState
+        className="flex-1"
+        title="Couldn't check your access"
+        description="Your permissions couldn't be loaded. Please try again."
+        onRetry={handleAccessRetry}
+      />
+    );
   }
 
   return (
@@ -252,6 +271,10 @@ function InboxContent() {
               compact
             />
           </div>
+        ) : ticketsResult.access.denied ? (
+          <div className="flex-1 flex items-center justify-center">
+            <NoPermissionState permission="support:tickets:view" compact />
+          </div>
         ) : (
           <TicketList
             tickets={deferredTickets}
@@ -284,9 +307,5 @@ function InboxContent() {
 }
 
 export function SupportInboxPage() {
-  return (
-    <DashboardGate permission="dashboard:support:view">
-      <InboxContent />
-    </DashboardGate>
-  );
+  return <InboxContent />;
 }

@@ -11,7 +11,7 @@ import {
   FILTER_SELECT_TRIGGER,
   FILTER_TOOLBAR_ROW,
 } from "@/components/ui/content-fill-panel";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";

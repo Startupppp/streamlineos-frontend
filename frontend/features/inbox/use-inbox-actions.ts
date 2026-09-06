@@ -17,13 +17,8 @@ import {
   usePinNotification,
   useUnpinNotification,
   useSnoozeNotification,
-} from "@/hooks/api/notifications";
+} from "@/hooks/api/notifications-inbox";
 
-/**
- * Re-exported from the shared hook, which is where the guard itself now lives:
- * `/notifications` fired all fourteen of its mutations offline while this surface
- * guarded all eight of its, so one copy serves both.
- */
 export const INBOX_OFFLINE_MESSAGE = OFFLINE_MESSAGE;
 
 export interface InboxActions {

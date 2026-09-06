@@ -19,7 +19,7 @@ jest.mock("next-auth/react", () => ({
 
 jest.mock("sonner", () => ({ toast: { error: jest.fn(), success: jest.fn() } }));
 
-jest.mock("@/hooks/api/notifications", () => {
+jest.mock("@/hooks/api/notifications-inbox", () => {
   const idle = () => ({ mutate: jest.fn(), isPending: false, variables: undefined });
   return {
     useMarkNotificationRead: idle,

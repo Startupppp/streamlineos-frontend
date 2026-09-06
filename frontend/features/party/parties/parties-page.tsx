@@ -10,7 +10,7 @@ import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { useParties, useDeleteParty } from "@/hooks/api/party/parties";
 import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import type { ReactNode } from "react";
 import type { RecordValue } from "@/features/renderer/format-value";
 

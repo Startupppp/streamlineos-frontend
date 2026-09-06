@@ -18,6 +18,7 @@ import { InboxNotificationItem } from "./inbox-notification-item";
 import {
   INBOX_FETCH_PAGE_SIZE,
   INBOX_RENDER_PAGE_SIZE,
+  INBOX_MOBILE_RENDER_PAGE_SIZE,
   resolveInboxVisibleCount,
 } from "./inbox-render-window";
 import { useShellVariant } from "@/components/layout/shell-variant-context";
@@ -78,6 +79,7 @@ export function InboxList({
   onFilterChange,
 }: InboxListProps) {
   const isDesktopInbox = useShellVariant() === "desktop";
+  const renderPageSize = isDesktopInbox ? INBOX_RENDER_PAGE_SIZE : INBOX_MOBILE_RENDER_PAGE_SIZE;
   const [activeTab, setActiveTab] = React.useState<InboxTab>("UNREAD");
 
   const querySection: NotificationSection = activeTab === "MENTIONS" ? "ALL" : activeTab;
@@ -131,7 +133,7 @@ export function InboxList({
     [activeTab, rawNotifications],
   );
   const total = notifications.length;
-  const visibleCount = resolveInboxVisibleCount(total, pagesShown);
+  const visibleCount = resolveInboxVisibleCount(total, pagesShown, renderPageSize);
   const heldCount = total - visibleCount;
   const visibleNotifications = React.useMemo(
     () => notifications.slice(0, visibleCount),
@@ -269,7 +271,7 @@ export function InboxList({
                   className="text-dense text-primary hover:underline disabled:opacity-50"
                 >
                   {heldCount > 0
-                    ? `Show ${Math.min(heldCount, INBOX_RENDER_PAGE_SIZE)} more (${visibleCount} of ${total})`
+                    ? `Show ${Math.min(heldCount, renderPageSize)} more (${visibleCount} of ${total})`
                     : isFetchingNextPage
                       ? "Loading…"
                       : "Load older notifications"}

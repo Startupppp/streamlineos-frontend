@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { MembersPage } from "@/features/build/members/members-page";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 
 export const metadata = {
   title: "Members",

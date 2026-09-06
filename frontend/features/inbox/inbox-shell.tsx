@@ -8,8 +8,8 @@ import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { NotificationListSkeleton } from "@/features/notifications/notification-list-skeleton";
 import { NotificationDetailDrawerLazy } from "@/features/notifications/notification-detail-drawer-lazy";
+import dynamic from "next/dynamic";
 import { useUnifiedInbox } from "@/hooks/api/inbox";
-import { InboxVirtualList } from "./inbox-virtual-list";
 import { useInboxActions } from "./use-inbox-actions";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Inbox } from "lucide-react";
@@ -26,6 +26,11 @@ import {
   parseNotifPriority,
   parseNotifCategory,
 } from "./inbox-schema";
+import type { InboxVirtualListProps } from "./inbox-virtual-list";
+
+const InboxVirtualList = dynamic<InboxVirtualListProps>(
+  () => import("./inbox-virtual-list").then((m) => m.InboxVirtualList),
+);
 
 type InboxView = "ALL" | "NOTIFICATIONS" | "MAIL" | "APPROVALS";
 

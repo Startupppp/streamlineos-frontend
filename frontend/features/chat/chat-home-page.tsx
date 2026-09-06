@@ -14,6 +14,7 @@ import {
   ChatPanelFallback,
 } from "@/features/chat/chat-lazy-fallbacks";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { useShellVariant } from "@/components/layout/shell-variant-context";
 
 const ChatAblySuite = dynamic(
   () =>
@@ -75,6 +76,8 @@ export function ChatHomePage() {
   const [emptyGroupOpen, setEmptyGroupOpen] = useState(false);
   const [showSearchFocus, setShowSearchFocus] = useState(false);
   const { sidebarCollapsed, handleToggleSidebar } = useChatSidebarCollapse();
+  const isMobile = useShellVariant() === "mobile";
+  const [ablySuiteReady, setAblySuiteReady] = useState(false);
 
   const handleSelectChannel = useCallback((channelId: number) => {
     setActiveChannelId(channelId);
@@ -159,6 +162,19 @@ export function ChatHomePage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!isMobile || !showMobileList) return;
+    if (typeof window.requestIdleCallback === "function") {
+      const idleId = window.requestIdleCallback(
+        () => setAblySuiteReady(true),
+        { timeout: 1500 },
+      );
+      return () => window.cancelIdleCallback(idleId);
+    }
+    const timeoutId = window.setTimeout(() => setAblySuiteReady(true), 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [isMobile, showMobileList]);
+
   const panelChildren = activeChannelId && currentUserId ? (
     <MessagePanel
       channelId={activeChannelId}
@@ -208,19 +224,21 @@ export function ChatHomePage() {
           />
         </div>
 
-        <div
-          className={cn(
-            "relative z-10 flex-1 flex flex-col min-w-0",
-            showMobileList && "hidden md:flex",
-          )}
-        >
-          <ChatAblySuite
-            activeChannelId={activeChannelId}
-            currentUserId={currentUserId}
+        {(!isMobile || !showMobileList || ablySuiteReady) && (
+          <div
+            className={cn(
+              "relative z-10 flex-1 flex flex-col min-w-0",
+              isMobile && showMobileList && "hidden",
+            )}
           >
-            {panelChildren}
-          </ChatAblySuite>
-        </div>
+            <ChatAblySuite
+              activeChannelId={activeChannelId}
+              currentUserId={currentUserId}
+            >
+              {isMobile && showMobileList ? null : panelChildren}
+            </ChatAblySuite>
+          </div>
+        )}
 
         <AnimatePresence>
           {showInfoPanel && activeChannelId && (

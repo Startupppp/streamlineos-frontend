@@ -6,7 +6,7 @@ import { AlertTriangle, Banknote, Clock, TrendingDown } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { ErrorState } from "@/components/shared";
 import { EmptyDealsIllustration } from "@/components/illustrations";
 import {

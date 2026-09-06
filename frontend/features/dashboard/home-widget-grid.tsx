@@ -1,11 +1,11 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
 import { HomeSectionBoundary } from "./home-section-boundary";
-
 const LeaveBalanceWidget = dynamic(
   () =>
     import("@/features/dashboard/hr-widgets").then((m) => ({
@@ -91,6 +91,13 @@ export function HomeWidgetGrid({
   canSelfAttendance,
 }: HomeWidgetGridProps) {
   const { fadeUp } = useMotionVariants();
+
+  const [batch2Ready, setBatch2Ready] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setBatch2Ready(true), 0);
+    return () => clearTimeout(id);
+  }, []);
+
   return (
     <motion.div
       variants={fadeUp}
@@ -122,22 +129,26 @@ export function HomeWidgetGrid({
       <HomeSectionBoundary sectionLabel="Upcoming events">
         <UpcomingEventsWidget />
       </HomeSectionBoundary>
-      {canViewExecutive ? (
+      {batch2Ready && canViewExecutive ? (
         <HomeSectionBoundary sectionLabel="Business pulse">
           <BusinessPulseWidget />
         </HomeSectionBoundary>
       ) : null}
-      {hrEnabled && canSelfAttendance ? (
+      {batch2Ready && hrEnabled && canSelfAttendance ? (
         <HomeSectionBoundary sectionLabel="My attendance">
           <MyAttendanceWidget />
         </HomeSectionBoundary>
       ) : null}
-      <HomeSectionBoundary sectionLabel="Payroll">
-        <PayrollWidget />
-      </HomeSectionBoundary>
-      <HomeSectionBoundary sectionLabel="Expenses">
-        <ExpensesWidget />
-      </HomeSectionBoundary>
+      {batch2Ready ? (
+        <HomeSectionBoundary sectionLabel="Payroll">
+          <PayrollWidget />
+        </HomeSectionBoundary>
+      ) : null}
+      {batch2Ready ? (
+        <HomeSectionBoundary sectionLabel="Expenses">
+          <ExpensesWidget />
+        </HomeSectionBoundary>
+      ) : null}
     </motion.div>
   );
 }

@@ -20,7 +20,7 @@ jest.mock("@/lib/get-error-message", () => ({
   getErrorMessage: (e: unknown) => (e instanceof Error ? e.message : "error"),
 }));
 
-jest.mock("@/hooks/api/notifications", () => ({
+jest.mock("@/hooks/api/notifications-inbox", () => ({
   useMarkNotificationRead: () => ({ mutate: jest.fn() }),
   useArchiveNotification: () => ({
     mutate: jest.fn(),
@@ -128,7 +128,19 @@ jest.mock("@/features/notifications/notification-list-skeleton", () => ({
   NotificationListSkeleton: () => null,
 }));
 
-jest.mock("next/dynamic", () => () => () => null);
+jest.mock("next/dynamic", () => {
+  const React = jest.requireActual<typeof import("react")>("react");
+  return (importFn: () => Promise<React.ComponentType<Record<string, unknown>>>) => {
+    function DynamicProxy(props: Record<string, unknown>) {
+      const [Comp, setComp] = React.useState<React.ComponentType<Record<string, unknown>> | null>(null);
+      React.useEffect(() => {
+        void importFn().then((m) => setComp(() => m));
+      }, []);
+      return Comp ? React.createElement(Comp, props) : null;
+    }
+    return DynamicProxy;
+  };
+});
 
 jest.mock("@/lib/utils", () => ({
   cn: (...args: string[]) => args.filter(Boolean).join(" "),
@@ -160,7 +172,7 @@ function getSonerMock() {
 }
 
 function getNotificationsMock() {
-  return jest.requireMock<NotificationsMock>("@/hooks/api/notifications");
+  return jest.requireMock<NotificationsMock>("@/hooks/api/notifications-inbox");
 }
 
 beforeEach(() => {
@@ -171,7 +183,7 @@ beforeEach(() => {
 });
 
 describe("inbox lifecycle mutations — error toast on failure", () => {
-  it("calls toast.error when archive mutation fails", () => {
+  it("calls toast.error when archive mutation fails", async () => {
     getNotificationsMock().useArchiveNotification = () => ({
       mutate: (id: number, opts?: { onError?: (e: Error) => void }) => {
         opts?.onError?.(new Error("Archive failed"));
@@ -180,7 +192,7 @@ describe("inbox lifecycle mutations — error toast on failure", () => {
       variables: undefined,
     });
 
-    render(<InboxShell />);
+    await act(async () => { render(<InboxShell />); });
 
     expect(capturedOnArchive).not.toBeNull();
     act(() => capturedOnArchive!(1));
@@ -188,7 +200,7 @@ describe("inbox lifecycle mutations — error toast on failure", () => {
     expect(getSonerMock().toast.error).toHaveBeenCalledWith("Archive failed");
   });
 
-  it("no toast.error when archive has no onError — proves OLD code would fail this test", () => {
+  it("no toast.error when archive has no onError — proves OLD code would fail this test", async () => {
     getNotificationsMock().useArchiveNotification = () => ({
       mutate: (id: number) => {
         void id;
@@ -197,7 +209,7 @@ describe("inbox lifecycle mutations — error toast on failure", () => {
       variables: undefined,
     });
 
-    render(<InboxShell />);
+    await act(async () => { render(<InboxShell />); });
 
     expect(capturedOnArchive).not.toBeNull();
     act(() => capturedOnArchive!(1));
@@ -205,7 +217,7 @@ describe("inbox lifecycle mutations — error toast on failure", () => {
     expect(getSonerMock().toast.error).not.toHaveBeenCalled();
   });
 
-  it("calls toast.success when approve succeeds", () => {
+  it("calls toast.success when approve succeeds", async () => {
     getNotificationsMock().useApproveNotification = () => ({
       mutate: (id: number, opts?: { onSuccess?: () => void; onError?: (e: Error) => void }) => {
         opts?.onSuccess?.();
@@ -214,7 +226,7 @@ describe("inbox lifecycle mutations — error toast on failure", () => {
       variables: undefined,
     });
 
-    render(<InboxShell />);
+    await act(async () => { render(<InboxShell />); });
 
     expect(capturedOnApprove).not.toBeNull();
     act(() => capturedOnApprove!(1));
@@ -222,7 +234,7 @@ describe("inbox lifecycle mutations — error toast on failure", () => {
     expect(getSonerMock().toast.success).toHaveBeenCalledWith("Approved");
   });
 
-  it("calls toast.success when reject succeeds", () => {
+  it("calls toast.success when reject succeeds", async () => {
     getNotificationsMock().useRejectNotification = () => ({
       mutate: (id: number, opts?: { onSuccess?: () => void; onError?: (e: Error) => void }) => {
         opts?.onSuccess?.();
@@ -231,7 +243,7 @@ describe("inbox lifecycle mutations — error toast on failure", () => {
       variables: undefined,
     });
 
-    render(<InboxShell />);
+    await act(async () => { render(<InboxShell />); });
 
     expect(capturedOnReject).not.toBeNull();
     act(() => capturedOnReject!(1));
@@ -239,7 +251,7 @@ describe("inbox lifecycle mutations — error toast on failure", () => {
     expect(getSonerMock().toast.success).toHaveBeenCalledWith("Rejected");
   });
 
-  it("calls toast.error when approve fails", () => {
+  it("calls toast.error when approve fails", async () => {
     getNotificationsMock().useApproveNotification = () => ({
       mutate: (id: number, opts?: { onSuccess?: () => void; onError?: (e: Error) => void }) => {
         opts?.onError?.(new Error("Approve failed"));
@@ -248,7 +260,7 @@ describe("inbox lifecycle mutations — error toast on failure", () => {
       variables: undefined,
     });
 
-    render(<InboxShell />);
+    await act(async () => { render(<InboxShell />); });
 
     expect(capturedOnApprove).not.toBeNull();
     act(() => capturedOnApprove!(1));
