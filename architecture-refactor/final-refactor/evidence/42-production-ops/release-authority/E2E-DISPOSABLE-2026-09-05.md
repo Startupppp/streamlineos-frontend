@@ -473,3 +473,165 @@ Typecheck and full test suite not run (not a requirement for C018; recorded as n
 the house standard). BOLA live cross-tenant result not available — see §5. Live row counts
 not queried (no database connection in this session); constants read from source instead.
 T15 replay not run — opt-in by design. Lint not run.
+
+---
+
+## Neon scratch_e2e re-run — 2026-09-06 (current commit)
+
+Full in-scope corpus on the disposable Neon database (`scratch_e2e`) at the current backend
+and root commit, with `BOLA_SOURCE_ORG_ID` / `BOLA_PROBER_ORG_ID` provided so the sweep
+can run instead of skip.
+
+### Commits
+
+| Repo | HEAD SHA | Subject |
+|---|---|---|
+| Root | `ff19d2a2516ee3cf56e980b2f28c299c4206f4ed` | revert(perf): put flushSync back — removing it measured worse, not better |
+| Backend | `980b81013746be3e807a05ccf3147743272580f0` | fix(ops): stop check:alert-ack demanding a variable it never reads |
+
+### Database and bootstrap
+
+Database: `scratch_e2e` on Neon branch `br-sparkling-block-az4pth1h`. Bootstrapped in
+previous session: `apply-chain-cold.mjs` at 695/695, seed layers 1 (`seed-scratch-e2e.mjs
+--purge`) and 3 (`seed-perf-scratch.mjs`) completed. Database live and at head; no re-seed
+or re-migration required.
+
+**Schema privilege gap discovered and fixed (harness-level, not product defect):**
+`scratch_e2e` on its Neon branch lacked `GRANT USAGE ON SCHEMA public TO streamline_app`.
+The app role's `current_schema()` resolved to `build_events` (first schema in its search
+path with USAGE), making all public-schema tables invisible at boot. Effect: `PermissionCatalogSyncService`
+failed → permissions table missing code-defined keys → FK violations in seed-builder's role
+grants → 401 on all authenticated requests → 27/29 suites FAILED in the first run.
+Fixed once, via the owner role on `scratch_e2e` direct URL:
+```sql
+GRANT USAGE ON SCHEMA public TO streamline_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO streamline_app;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO streamline_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO streamline_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO streamline_app;
+```
+Not a product defect — the `scratch_e2e` Neon branch did not inherit the same default
+privilege setup as the production database. Verified fix: `has_schema_privilege('streamline_app',
+'public', 'USAGE') = true`; app role queries `modules_catalog`, `user_sessions`,
+`permissions` without error.
+
+### Command
+
+```
+node --env-file-if-exists=.env -r ts-node/register/transpile-only \
+  test/helpers/run-seeded-e2e.ts scratch_e2e \
+  test/accounting/accounting-ledger-isolation.seeded-e2e-spec.ts \
+  test/billing/ai-credits-reserve-race.seeded-e2e-spec.ts \
+  test/billing/billing-entitlement-and-seat-isolation.seeded-e2e-spec.ts \
+  test/build/build-ticket-scope-and-isolation.seeded-e2e-spec.ts \
+  test/calendar/calendar-conflict.seeded-e2e-spec.ts \
+  test/calendar/calendar-occurrence-exception.seeded-e2e-spec.ts \
+  test/calendar/calendar-range-payload-attribution.seeded-e2e-spec.ts \
+  test/calendar/calendar-recurrence-dst.seeded-e2e-spec.ts \
+  test/calendar/calendar-reminder-sweep.seeded-e2e-spec.ts \
+  test/calendar/calendar-sync-status-divergence.seeded-e2e-spec.ts \
+  test/chat/chat-channel-membership-isolation.seeded-e2e-spec.ts \
+  test/db/postgres-error-shape.seeded-e2e-spec.ts \
+  test/home/home-module-universal-access.seeded-e2e-spec.ts \
+  test/home/home-self-service-universal.seeded-e2e-spec.ts \
+  test/hr/hr-policy-cross-tenant.seeded-e2e-spec.ts \
+  test/kb/kb-acl-purge-reindex.seeded-e2e-spec.ts \
+  test/kb/kb-page-visibility.seeded-e2e-spec.ts \
+  test/mail/mail-account-isolation.seeded-e2e-spec.ts \
+  test/notifications/notification-recipient-isolation.seeded-e2e-spec.ts \
+  test/notifications/notifications-list-contract.seeded-e2e-spec.ts \
+  test/payments/manual-payment-methods.seeded-e2e-spec.ts \
+  test/payments/payment-record-isolation.seeded-e2e-spec.ts \
+  test/payroll/payroll-run-authorization.seeded-e2e-spec.ts \
+  test/perf/calendar-events-route-cost.seeded-e2e-spec.ts \
+  test/perf/route-budget-http.seeded-e2e-spec.ts \
+  test/perf/search-route-cost.seeded-e2e-spec.ts \
+  test/security/gdpr-export-cross-module-privacy.seeded-e2e-spec.ts \
+  test/settings/settings-per-person-grant-lifecycle.seeded-e2e-spec.ts \
+  test/settings/settings-rbac-authorization.seeded-e2e-spec.ts \
+  test/support/support-ticket-follow.seeded-e2e-spec.ts \
+  test/workflows/workflow-definition-isolation.seeded-e2e-spec.ts
+# Duration: 1942.933 s (~32 minutes)
+# Runner exit: 1 (2 failed suites)
+```
+
+### Suite result (before spec fixes)
+
+| Attribute | Value |
+|---|---|
+| Suites passed | 27 |
+| Suites failed | 2 |
+| Suites skipped | 2 |
+| Tests passed | 161 |
+| Tests failed | 2 |
+| Tests skipped | 9 |
+| Duration | 1942.933 s |
+| Runner exit | 1 |
+
+### Failure diagnosis
+
+#### 1. `test/calendar/calendar-recurrence-dst.seeded-e2e-spec.ts` — spec defect
+
+**Failing assertion (line 170):** `expect(items.length).toBeGreaterThan(0)` — received 0.
+
+**Root cause:** The third test filters `(item) => item.isRecurring` on the range API
+response. Unit tests `calendar-aggregate-projection.spec.ts` ("does not include isRecurring
+on range items (detail-only field)") and `calendar-events-wire-shape.spec.ts`
+(`expect(ev).not.toHaveProperty("isRecurring")`) both assert that `isRecurring` is
+deliberately absent from the list endpoint's wire shape. The filter always yields 0 because
+the field is never in the response. Tests 1 and 2 pass because they filter by
+`item.id.startsWith(\`event-\${id}-\`)`.
+
+**Classification: spec defect (harness problem).**
+
+**Fix applied:** `test/calendar/calendar-recurrence-dst.seeded-e2e-spec.ts` line 168 —
+changed filter from `(item) => item.isRecurring` to
+`(item) => createdEventIds.some((id) => item.id.startsWith(\`event-\${String(id)}-\`))`.
+
+**Verification:** Ran the spec alone after fix:
+`Test Suites: 1 passed, 1 total · Tests: 3 passed, 3 total · Time: 66.829 s`
+
+#### 2. `test/build/build-ticket-scope-and-isolation.seeded-e2e-spec.ts` — product defect
+
+**Failing assertion (line 263):** `expect(response.status).toBe(404)` — received 500.
+
+**Test:** "CROSS-TENANT read — org A member asking for org B's ticket by id answers 404,
+not 403 or 200". Request: `GET /build/{homeProjectId}/tickets/{neighbourTicketId}` using
+org A's manager token. `homeProjectId` belongs to org A; `neighbourTicketId` belongs to org B.
+
+**Root cause:** `backend/src/modules/build/core/projects-tickets-detail.service.ts`
+`getTicket()` method (line 102) calls `this.db.query.tickets.findFirst({where: ..., with:
+{project, sprint, assignee, reporter, assignees, comments, attachments, labels}})`. The
+Drizzle relational query fails with `sqlstate: "42501"` (insufficient privilege). The error
+log shows: `"Unhandled exception" · "Failed query: select tickets.id, ... tickets_project.data
+as project ..." · sqlstate: "42501"`. The `organization_members` table (joined via the
+`assignee`/`assignees` relations) has an RLS policy (`0383_rls_org_members_identity_read.sql`)
+that calls `app.current_org_id_or_null()`. The unhandled DB exception propagates as a 500
+rather than being caught and shaped into a `ProjectsTicketNotFoundException` (404).
+
+**Impact:** A member of org A can trigger an uncaught server error by requesting any ticket
+ID that does not exist in their org. The cross-tenant isolation itself is not breached (the
+query correctly includes `eq(tickets.orgId, u.orgId)`) but the error handling is absent.
+BOLA security property holds; response code contract violated.
+
+**Classification: product defect.** Not fixed in this session.
+
+### Skipped suites (by design)
+
+- `bola-live-cross-tenant` — design skip without BOLA org IDs in the corpus run; running
+  separately (see next section).
+- `t15-own-tenant-500` — design skip without `T15_REPLAY=1` (opt-in only, destructive
+  operations).
+
+### BOLA live cross-tenant sweep (this session)
+
+Command run after the corpus:
+```
+BOLA_SOURCE_ORG_ID=aaaaaaaa-1111-0000-0000-000000000001 \
+BOLA_PROBER_ORG_ID=aaaaaaaa-1111-0000-0000-000000000002 \
+node --env-file-if-exists=.env -r ts-node/register/transpile-only \
+  test/helpers/run-seeded-e2e.ts scratch_e2e \
+  test/security/bola/bola-live-cross-tenant.seeded-e2e-spec.ts
+```
+
+**Result: PENDING — sweep is in progress at time of writing.**

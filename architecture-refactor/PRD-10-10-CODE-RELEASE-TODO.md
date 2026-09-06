@@ -783,6 +783,31 @@ These decisions are final for this release and remove implementation alternative
       off its `if:` guard. That is a CI infrastructure gap, not a code defect, and it is the same blocker
       that holds PRD-C104 open. The disposable E2E corpus was re-run during this session but on a different
       commit pair from the builds above, so the "at ONE commit" requirement is still not met.
+      **The disposable E2E was re-run on 2026-09-06 and it FOUND A DEFECT.** Full in-scope corpus on the
+      disposable Neon database `scratch_e2e` (branch `br-sparkling-block-az4pth1h`), bootstrapped and
+      seeded: **27 suites passed, 2 failed, 2 skipped; 161 tests passed, 2 failed, 9 skipped**, runner exit
+      1, 1,943 s. So the E2E does **not** pass, and this criterion could not close even if the commit pair
+      were aligned.
+      One failure was a spec defect and is fixed: `calendar-recurrence-dst` filtered the range response on
+      `isRecurring`, which that projection does not return, so it matched 0 items; it now filters to the
+      events the test itself created, with the existing `toBeGreaterThan(0)` still guarding vacuity.
+      The other is a **product defect, NOT fixed**: `build-ticket-scope-and-isolation` expects a
+      cross-tenant ticket read to answer 404 and receives **500**.
+      `projects-tickets-detail.service.ts:102` runs a Drizzle relational `findFirst` whose `assignee` /
+      `assignees` relations join `organization_members`, whose RLS policy
+      (`0383_rls_org_members_identity_read.sql`) calls `app.current_org_id_or_null()`; the query raises
+      `42501` and the unhandled exception propagates as a 500 instead of being shaped into
+      `ProjectsTicketNotFoundException`. **Tenant isolation itself holds** — the query carries
+      `eq(tickets.orgId, u.orgId)` and no cross-tenant row is returned — so this is a response-contract and
+      error-handling defect, not a BOLA breach. Any member can trigger an uncaught server error by asking
+      for a ticket id absent from their org.
+      **The obvious fix is a trap and was deliberately not applied.** Catching the `42501` and returning 404
+      would swallow an RLS failure: a `42501` means the tenant GUC was not set for that statement, so the
+      catch would hide a tenant-context bug behind a clean-looking 404. This needs the missing GUC context
+      diagnosed first; it must not be closed by a `catch`. Owner: the Build module owner.
+      The `bola-live-cross-tenant` sweep was launched with `BOLA_SOURCE_ORG_ID` / `BOLA_PROBER_ORG_ID` so it
+      runs rather than design-skips, and is **still running — its verdict is NOT recorded here and must not
+      be read as passing.**
       Per PRD-C016, prerequisite-blocked gates never count as passing, so this stays open.
       Owner: the repository owner.
       Evidence: [CO-LOCATED-MEASUREMENT-2026-09-06.md](final-refactor/evidence/42-production-ops/release-authority/CO-LOCATED-MEASUREMENT-2026-09-06.md).
