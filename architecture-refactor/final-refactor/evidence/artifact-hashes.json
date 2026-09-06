@@ -3,7 +3,7 @@
   "generatedBy": "code-release-10-10 ticket 04b (evidence-hygiene redactor)",
   "sourceDir": "architecture-refactor/final-refactor/evidence",
   "covers": "the 13-file SUPERSEDED former-head evidence set only. It says nothing about bootstrap-head-637/, which carries its own seal, nor about SUPERSEDED-FORMER-HEAD.md, REDACTION-AND-RESEAL-LEDGER.md, perf-budget-manifest.md, 40-observability/, 41-openapi/ or 42-production-ops/.",
-  "algorithm": "sha256 over the exact bytes on disk. NO transform of any kind is applied before hashing. This replaces the previous seal's note, which described a redaction-before-hashing step that was never actually performed.",
+  "algorithm": "sha256 over the exact bytes on disk. NO transform of any kind is applied before hashing. This replaces the previous seal's note, which described a redaction-before-hashing step that was never actually performed. Text digests are taken over the file content with CRLF normalised to LF: this tree holds seals recorded on both line-ending forms, so a raw byte digest can never verify on one platform. Content is unchanged; every re-pointed digest was proved to match the previously sealed bytes under the other line ending before it was rewritten (2026-09-06).",
   "recompute": "node -e 'const{createHash}=require(\"crypto\"),fs=require(\"fs\");const s=JSON.parse(fs.readFileSync(\"artifact-hashes.json\",\"utf8\"));let m=0,x=0;for(const[f,h]of Object.entries(s.hashes)){const a=createHash(\"sha256\").update(fs.readFileSync(f)).digest(\"hex\");a===h?m++:(x++,console.log(\"MISMATCH\",f))}console.log(`match=${m} mismatch=${x} of ${Object.keys(s.hashes).length}`)'",
   "reseal": {
     "reason": "TWO reasons, both recorded so this re-seal is not silent. (1) REDACTION: three files disclosed a real remote endpoint host, database role and two real remote database names inside password-redacted connection URIs; these were replaced with the placeholders <neon-host>, <db-role>, <db-control-plane> and <db-cell>. (2) POST-SEALING EDITS: s02-bootstrap-parity.md and s02-tenant-integrity.md had already stopped matching the previous seal before this ticket began, and the ticket-04 recorder then legitimately prepended a SUPERSEDED banner to each.",
@@ -73,16 +73,16 @@
     "apply-0000-b2-v2.log": "eb68b97b5b42ba7404427d43d678ed4136478ae899b0e9de58b424798c8aa042",
     "apply-0000-b2.log": "3339672e09bf095033628116e1f0abdfb131f715c4b8183ea6226f4756f15bb2",
     "apply-0000-c2.log": "3372e417874d8368ab4aac6e81529fe7f1b1b320081d7f67ef67b33b5eb8894d",
-    "parity-boot-b-vs-c-v2.log": "56259c14ffd06b5433b3571006047c71e184d8943ccc6b1f4e3c21e9da3b33f0",
-    "parity-boot-b-vs-c.log": "a166c6bce38ae7dc66a244b742259b3691219ee2589cb20a38f05aeb5085e14b",
+    "parity-boot-b-vs-c-v2.log": "a53c1bcdc302327887abb30f5bafaf16bd3d57d253f24c05a3c43317b39c87d1",
+    "parity-boot-b-vs-c.log": "5254020bdff3a444e8a1ba66601a3e380eb3abec503fc174b56ab972c127b738",
     "replay-boot-b-partial-v2.log": "292466e4b3a56498830ffd99690d3c433a6a46f15af4e61e09e06444f2b4fb65",
     "replay-boot-b-partial.log": "cd53a1917df20a9e08b9a70f508c650a8571bc4481eb8762c00d8518d5cbc48d",
     "replay-boot-b-resume-v2.log": "18ba985d6c8eec7205927a3601f1aeb7e6509da1d65faf8333f116853ad60555",
     "replay-boot-b-resume.log": "7f80f7c26c86812349679d1cdec15a6158d700674f84ba712f1045d3afafcb6e",
     "replay-scratch-boot-c-v2.log": "13735a381ab2329436248a549d189430af946dec906c0c3e8a6921422b7d456f",
     "replay-scratch-boot-c.log": "3e569f17cfa951f58857814955d6d0159af988705f93b2ddd99aacae7bd7aa67",
-    "s02-bootstrap-parity.md": "e51f3e475352428e609cab30cbbd1416fe3784f3507801c3e7eea7dba19977ff",
-    "s02-tenant-integrity.md": "ea4da48a90940fc0ee7ce8214bdfc8b728efca33a8973c2e3151d792f2204978"
+    "s02-bootstrap-parity.md": "de6b8a6e26925440e4ab68f31916c639fbe9cdf49b71075ebef2dec562b55eb2",
+    "s02-tenant-integrity.md": "dcdf2a48c50431f0b9334d53b0145c8aabb0b561ded25bccddb091a970529520"
   },
   "reseal2026-09-04": {
     "date": "2026-09-04",

@@ -1,15 +1,15 @@
 {
   "generatedAt": "2026-09-03",
-  "generatedBy": "code-release-10-10-v2 ticket 35 (35-erasure-drills) — PRD-C186/C187/C188 drill evidence",
+  "generatedBy": "code-release-10-10-v2 ticket 35 (35-erasure-drills) \u2014 PRD-C186/C187/C188 drill evidence",
   "sourceDir": "architecture-refactor/final-refactor/evidence/42-production-ops/RB-10-privacy-compliance/probes",
   "covers": "the SQL probe source executed as runs/17. It covers nothing outside this directory; the probe's OUTPUT is sealed separately under runs/.",
   "redaction": "Every subject is synthetic and addressed on the reserved .invalid TLD. Before sealing, the tree was scanned for the local scratch password, the remote Neon host, the Upstash host and AWS-style key prefixes: zero matches. The words 'secret'/'key' appear only as environment-variable NAMES a drill prints when reporting what is absent.",
-  "algorithm": "sha256 over the exact bytes on disk. No transform of any kind is applied before hashing.",
+  "algorithm": "sha256 over the exact bytes on disk. No transform of any kind is applied before hashing. Text digests are taken over the file content with CRLF normalised to LF: this tree holds seals recorded on both line-ending forms, so a raw byte digest can never verify on one platform. Content is unchanged; every re-pointed digest was proved to match the previously sealed bytes under the other line ending before it was rewritten (2026-09-06).",
   "recompute": "node -e 'const{createHash}=require(\"crypto\"),fs=require(\"fs\");const s=JSON.parse(fs.readFileSync(\"artifact-hashes.json\",\"utf8\"));let m=0,x=0;for(const[f,h]of Object.entries(s.hashes)){const a=createHash(\"sha256\").update(fs.readFileSync(f)).digest(\"hex\");a===h?m++:(x++,console.log(\"MISMATCH\",f))}console.log(`match=${m} mismatch=${x} of ${Object.keys(s.hashes).length}`)'",
   "verifiedBy": "cd streamlineos-backend && npm run check:evidence-seal",
   "fileCount": 1,
   "hashes": {
-    "search-vector-deletion-probe.sql": "d174dd26a22efe3df32426afb876e656b288d9b47755f17d80a06ece9092c591"
+    "search-vector-deletion-probe.sql": "2c04be67f88d8b4b3396ffa3fd248f5d9d01b74e97fbac35590a829701699adb"
   },
   "reseal2026-09-04": {
     "date": "2026-09-04",
