@@ -280,21 +280,37 @@ Fixed in `b401442ed` using the same `.returning({ id })` then `NotFoundException
 Artifact `.artifacts/bola-live-cross-tenant-final.json`, run against the four-tenant dataset with
 the fix in place:
 
+Final artifact state, `generatedAt 2026-09-06T01:39:14.339Z`:
+
 | Metric | Value |
 |---|---|
-| Outcomes | 453 and climbing |
-| Scored (outcomes − UNPROBEABLE) | **303** against the `MIN_SCORED` floor of 200 — **met** |
-| PASS | 291 |
+| Outcomes | **903** |
+| Scored (outcomes − UNPROBEABLE) | **569** against the `MIN_SCORED` floor of 200 — **met** |
+| PASS | 556 |
 | NO-404 | 12 — **all 12 pinned** |
+| INCONCLUSIVE | 1 — pinned (`PATCH /leads/:leadId/status -> 409`) |
 | **Unpinned findings** | **0** |
 | Cross-tenant disclosures | **0** |
+| **`PATCH /hr/performance/pip/:pipId`** | **PASS** |
 
-The PIP route no longer appears. Both assertions that failed the first sweep — line 822's
-`scored >= MIN_SCORED` and line 884's empty unpinned-NO-404 set — are satisfied.
+That last row is the point. The route that was the only unpinned finding across every prior
+sweep is now scored PASS by the same probe that failed it, so the fix is confirmed by
+measurement rather than by inspection. This run is also the widest of the five — 569 scored
+against a floor of 200.
 
-This is the honest state: the security question is answered across five runs and roughly 1,800
-probes, and the one real defect the sweep existed to find has been found and fixed. What C018
-still lacks is a single uninterrupted run that reaches Jest's assertions and prints an exit code.
+Both assertions that failed the first sweep — line 822's `scored >= MIN_SCORED` and line 884's
+empty unpinned-NO-404 set — are satisfied.
+
+### Why this is still not ticked
+
+Five runs, roughly 2,700 probes, and no exit code. Runs 2, 3 and 5 were each stopped externally
+while still sweeping — not by a failure, not by the harness, and not by me. The security
+question is answered as thoroughly as this spec can answer it, and the one real defect it
+existed to find was found and fixed. What remains is purely procedural: one uninterrupted
+execution that reaches Jest's assertions.
+
+C018 should be ticked on the first such run, and not before. A killed run is not a passing run,
+however good its artifact looks.
 
 What it proves: that every object-addressable route answers 404 (never 403) when handed
 another organization's id — the distinction between a tenant-bound response and an existence
