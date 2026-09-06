@@ -414,6 +414,55 @@ function sleep(ms) {
 }
 
 /**
+ * WAS THE HOST QUIET ENOUGH FOR THESE NUMBERS TO BE THE APPLICATION'S?
+ *
+ * The predecessor of this block stamped `loadAverage1m: 0` beside a note saying a 1m average above
+ * the CPU count means the numbers are not the application's. Both were meaningless on this
+ * platform: `os.loadavg()` is unimplemented on Windows and returns [0, 0, 0] always, so the guard
+ * read "perfectly idle" while the host sat at 100% CPU under another session's servers and a user
+ * browser. That capture recorded /build/my-work mobile INP at 1,844 ms against 38 ms on code that
+ * had not changed. A 4x-throttled mobile profile on a saturated host measures the host.
+ *
+ * os.cpus() carries per-core cumulative tick counters on every platform, so a delta over a real
+ * interval is a measurement rather than a constant. The baseline is taken BEFORE the browser
+ * launches: it answers "was the host already busy before we added our own load?", which is the only
+ * contention question a driver can honestly ask about load it did not create.
+ */
+export async function sampleCpuBusyPercent(windowMs) {
+  const read = () => {
+    let idle = 0;
+    let total = 0;
+    for (const core of cpus()) {
+      for (const value of Object.values(core.times)) total += value;
+      idle += core.times.idle;
+    }
+    return { idle, total };
+  };
+  const before = read();
+  await sleep(windowMs);
+  const after = read();
+  const totalDelta = after.total - before.total;
+  if (totalDelta <= 0) return null;
+  const busy = 1 - (after.idle - before.idle) / totalDelta;
+  return Number((Math.min(Math.max(busy, 0), 1) * 100).toFixed(1));
+}
+
+/**
+ * The ceiling governs the PRE-LAUNCH baseline, not load during the run — the capture's own browser
+ * is legitimately busy. 50% leaves the throttled mobile profile a full core of headroom on any
+ * multi-core host while still refusing the saturated case that produced the 1,844 ms reading.
+ */
+export const HOST_BUSY_CEILING_PERCENT = 50;
+
+/** os.loadavg() returns [0, 0, 0] on Windows rather than failing, so a 0 there is unmeasured, not idle. */
+export const LOADAVG_IS_MEASURED = process.platform !== "win32";
+
+/** Pure, so the self-test drives it without a host. An unmeasured reading is a refusal, not a pass. */
+export function contendedReadings(readings, ceilingPercent) {
+  return readings.filter((r) => r.busyPercent === null || r.busyPercent > ceilingPercent);
+}
+
+/**
  * A CDP request has no deadline of its own, and `Runtime.evaluate` with
  * `awaitPromise` resolves only when the page's promise does. A renderer that
  * never settles therefore parks the driver forever: this run's predecessor sat
@@ -865,6 +914,8 @@ async function run() {
   const probeHtml = await probe.text();
   const serverMode = resolveServerMode({ buildIdOnDisk, html: probeHtml });
 
+  const busyBeforeLaunch = await sampleCpuBusyPercent(1000);
+
   const userDataDir = join(tmpdir(), `sl-vitals-${randomBytes(6).toString("hex")}`);
   const proc = spawn(
     browserPath,
@@ -898,7 +949,6 @@ async function run() {
   log(`base ${baseUrl} · routes ${routes.join(", ")} · repeat ${repeat}`);
   log(`serverMode resolved to "${serverMode}" (build id on disk: ${buildIdOnDisk || "none"})`);
 
-  const loadAtStart = loadavg();
   const byProfile = {};
   const byRoute = {};
   const bytesByRoute = {};
@@ -1056,6 +1106,13 @@ async function run() {
     }
   }
 
+  const busyAfterCapture = await sampleCpuBusyPercent(1000);
+  const hostReadings = [
+    { when: "beforeLaunch", busyPercent: busyBeforeLaunch },
+    { when: "afterCapture", busyPercent: busyAfterCapture },
+  ];
+  const hostContended = contendedReadings(hostReadings, HOST_BUSY_CEILING_PERCENT);
+
   const serverTtfb = await measureServerTtfb(baseUrl, routes, `${cookieName}=${cookieValue}`, repeat);
   for (const [route, t] of Object.entries(serverTtfb))
     log(`[server] ${route} ttfb p50=${t.p50_ms?.toFixed(0) ?? "n/a"} p75=${t.p75_ms?.toFixed(0) ?? "n/a"} p95=${t.p95_ms?.toFixed(0) ?? "n/a"} statuses=${t.statuses.join(",")}`);
@@ -1142,6 +1199,18 @@ async function run() {
           ? "every sample was taken after the DOM went quiet, so late-arriving data is inside the measurement"
           : "some samples hit the settle cap and may have been taken before the page finished arriving — read their CLS as a floor",
     },
+    hostContention: {
+      ceilingPercent: HOST_BUSY_CEILING_PERCENT,
+      method: "os.cpus() idle/total tick deltas over a 1000ms window; the baseline is taken before the browser launches, the second reading after it exits",
+      cpuCount: cpus().length,
+      busyPercentBeforeLaunch: busyBeforeLaunch,
+      busyPercentAfterCapture: busyAfterCapture,
+      contendedReadings: hostContended,
+      verdict:
+        hostContended.length === 0
+          ? "the host was quiet enough for these timings to be the application's"
+          : "capture is NOT evidence for timing budgets: the host was contended, and a throttled profile on a contended host measures the host",
+    },
     conditions: {
       driver: "frontend/scripts/measure-web-vitals.mjs",
       desktop: "1440x900, no CPU or network throttling",
@@ -1159,9 +1228,11 @@ async function run() {
       serverModeDerivation: "the build id in the served HTML is compared against .next/BUILD_ID; it is not asserted by this driver",
       host: {
         cpuCount: cpus().length,
-        loadAverage1mAtStart: Number(loadAtStart[0].toFixed(2)),
-        loadAverage1mAtEnd: Number(loadavg()[0].toFixed(2)),
-        note: "A throttled mobile profile on a contended host measures the host. Compare captures only at similar load; a 1m average above the CPU count means the numbers are not the application's.",
+        loadAverage1m: LOADAVG_IS_MEASURED ? Number(loadavg()[0].toFixed(2)) : null,
+        loadAverageNote: LOADAVG_IS_MEASURED
+          ? "os.loadavg() is implemented on this platform."
+          : "os.loadavg() is NOT implemented on this platform and returns 0 — recorded as null rather than as an idle host. Read hostContention instead.",
+        note: "A throttled mobile profile on a contended host measures the host. hostContention carries the measured figure this run was judged on.",
       },
     },
   };
@@ -1440,6 +1511,33 @@ async function selfTest() {
     "an authorized shell is not refused",
     findUnauthorizedSamples([{ content: { navLinks: 41, url: "/dashboard" } }], 3).length,
     0,
+  );
+
+  check(
+    "a quiet host produces no contended reading",
+    contendedReadings([{ when: "beforeLaunch", busyPercent: 6.2 }, { when: "afterCapture", busyPercent: 9.1 }], 50).length,
+    0,
+  );
+  check(
+    "the saturated host that produced the 1,844ms INP reading is refused",
+    contendedReadings([{ when: "beforeLaunch", busyPercent: 100 }, { when: "afterCapture", busyPercent: 98 }], 50).map((r) => r.when),
+    ["beforeLaunch", "afterCapture"],
+  );
+  check(
+    "a host that could not be measured is refused rather than read as idle",
+    contendedReadings([{ when: "beforeLaunch", busyPercent: null }], 50).length,
+    1,
+  );
+  check(
+    "the ceiling is exclusive, so a host exactly at it is not refused",
+    contendedReadings([{ when: "beforeLaunch", busyPercent: 50 }], 50).length,
+    0,
+  );
+  const busySample = await sampleCpuBusyPercent(120);
+  check(
+    "the sampler returns a real percentage on this platform, where os.loadavg() returns 0 forever",
+    typeof busySample === "number" && busySample >= 0 && busySample <= 100,
+    true,
   );
 
   check("the API origin is read out of the package env file", readEnvValue("# c\nNEXT_PUBLIC_API_URL=http://localhost:1500\n", "NEXT_PUBLIC_API_URL"), "http://localhost:1500");

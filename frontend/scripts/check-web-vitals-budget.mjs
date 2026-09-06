@@ -376,6 +376,12 @@ const EVIDENCE_SIGNALS = [
     what: "sample(s) hit the settle cap before the DOM went quiet",
     why: "their CLS is a FLOOR — late-arriving data shifted after the measurement stopped, so a met budget may not be met",
   },
+  {
+    block: "hostContention",
+    field: "contendedReadings",
+    what: "host CPU reading(s) were above the ceiling, or could not be measured at all",
+    why: "a 4x-throttled mobile profile on a busy host measures the host: the 2026-09-05 capture read /build/my-work mobile INP at 1,844 ms against 38 ms on unchanged code, at 100% CPU",
+  },
 ];
 
 /** The count a signal carries, whether it is recorded as an array of samples or as a number. */
@@ -831,6 +837,14 @@ async function selfTest() {
     routeFailures: { count: 0, failures: [], verdict: "every requested route/profile pair completed" },
     hydration: { navigationsInspected: 8, mismatchesFound: 0, findings: [], verdict: "no React hydration mismatch was logged" },
     settle: { samplesMeasured: 8, cappedSamples: 0, capped: [], verdict: "every sample was taken after the DOM went quiet" },
+    hostContention: {
+      ceilingPercent: 50,
+      cpuCount: 8,
+      busyPercentBeforeLaunch: 6.2,
+      busyPercentAfterCapture: 9.1,
+      contendedReadings: [],
+      verdict: "the host was quiet enough for these timings to be the application's",
+    },
   };
   const greenRefusals = checkCaptureEvidence({ ...greenBlocks, buildId: "b1" });
 
@@ -852,6 +866,24 @@ async function selfTest() {
   const routeFailed = { ...greenBlocks, routeFailures: { count: 2, failures: [], verdict: "these pairs produced no measurement" } };
   const hydrationBad = { ...greenBlocks, hydration: { ...greenBlocks.hydration, mismatchesFound: 3 } };
   const settleCapped = { ...greenBlocks, settle: { ...greenBlocks.settle, cappedSamples: 4 } };
+  const hostBusy = {
+    ...greenBlocks,
+    hostContention: {
+      ...greenBlocks.hostContention,
+      busyPercentBeforeLaunch: 100,
+      contendedReadings: [{ when: "beforeLaunch", busyPercent: 100 }],
+      verdict: "capture is NOT evidence for timing budgets",
+    },
+  };
+  // os.loadavg() on Windows returns 0 forever; an UNMEASURED host must refuse exactly as a busy one does.
+  const hostUnmeasured = {
+    ...greenBlocks,
+    hostContention: {
+      ...greenBlocks.hostContention,
+      busyPercentBeforeLaunch: null,
+      contendedReadings: [{ when: "beforeLaunch", busyPercent: null }],
+    },
+  };
   const blockAbsent = { ...greenBlocks };
   delete blockAbsent.contentAssertion;
   const blockGarbled = { ...greenBlocks, settle: { ...greenBlocks.settle, cappedSamples: "some" } };
@@ -869,6 +901,9 @@ async function selfTest() {
     checkCaptureEvidence(routeFailed)[0].count === 2 &&
     checkCaptureEvidence(hydrationBad).length === 1 &&
     checkCaptureEvidence(settleCapped).length === 1 &&
+    checkCaptureEvidence(hostBusy).length === 1 &&
+    checkCaptureEvidence(hostBusy)[0].count === 1 &&
+    checkCaptureEvidence(hostUnmeasured).length === 1 &&
     // Two signals live on contentAssertion, so an absent block must refuse for BOTH, not once.
     checkCaptureEvidence(blockAbsent).length === 2 &&
     checkCaptureEvidence(blockAbsent).every((r) => r.message.includes("no `contentAssertion` block")) &&
@@ -879,7 +914,7 @@ async function selfTest() {
     `Capture evidence: clean capture -> ${greenRefusals.length} refusal(s) (expected 0); the shipped ` +
       `error-boundary capture -> ${poisonedRefusals.length} (expected 1, naming ` +
       `${poisonedRefusals[0]?.routes?.join(",") ?? "no route"}); off-route, unauthorized, route-failure, ` +
-      `hydration and settle-cap fixtures each refuse; an ABSENT block refuses ` +
+      `hydration, settle-cap, busy-host and unmeasured-host fixtures each refuse; an ABSENT block refuses ` +
       `${checkCaptureEvidence(blockAbsent).length} time(s) (expected 2 — two signals live on it)`,
   );
 
