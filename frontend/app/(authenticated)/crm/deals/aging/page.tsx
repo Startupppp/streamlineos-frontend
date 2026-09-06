@@ -7,7 +7,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
-import { ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
 import { EmptyDealsIllustration } from "@/components/illustrations";
 import {
   CONTENT_FILL_PANEL,

@@ -62,6 +62,8 @@ onSuccess: (data, variables, context, mutFnCtx) => {
 
 **Ownership.** A shared component lives in one place, imported through a barrel, never copied. Second consumer ⇒ promote it to `components/shared` (or `components/ui` for a primitive) and update every importer; feature → feature imports are banned (root §9). **Adding or extending a shared component means adding its row to §15 in the same change** — that index is how the next session finds it instead of writing a third variant.
 
+**Barrel exception for route-level files.** Route files under `app/**` (`page.tsx`, `error.tsx`, `loading.tsx`, `not-found.tsx`) that import only `ErrorState`, `LoadingState`, or `NoPermissionState` must deep-import from the leaf (`@/components/shared/error-state`, `@/components/shared/loading-state`, `@/components/shared/no-permission-state`) rather than the barrel. The `components/shared` barrel re-exports `EntityFormSheet` and `EntityFormDialog`, which pull in `react-hook-form`; across a `"use client"` boundary webpack cannot tree-shake them, so any barrel import adds ~10–11 KB gzipped to the route's eager chunk even when no form is present. Feature components that already use the form shells continue to import through the barrel.
+
 **Props & attributes**
 - Explicit typed props (`interface XProps`), no `any`, no `React.FC`; derive from Zod with `z.infer` where a schema exists.
 - Composition over prop drilling — never thread a prop more than 2 levels; use `children` or feature context.

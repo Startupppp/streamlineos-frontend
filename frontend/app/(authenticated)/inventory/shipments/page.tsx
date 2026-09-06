@@ -21,7 +21,7 @@ import {
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
-import { ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
 import { ShipmentDetailSheet } from "@/features/inventory/components/shipping/shipment-detail-sheet";
 import { ShipmentCreateDialog } from "@/features/inventory/components/shipping/shipment-create-dialog";
 import {

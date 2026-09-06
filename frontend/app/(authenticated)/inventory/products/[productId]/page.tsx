@@ -15,7 +15,8 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { LoadingState } from "@/components/shared/loading-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { useProduct, useStockLevels, type StockLevelRow } from "@/hooks/api/inventory";

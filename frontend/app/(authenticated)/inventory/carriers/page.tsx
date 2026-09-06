@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
-import { ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
 import { CarrierSheet } from "@/features/inventory/components/shipping/carrier-sheet";
 import { useCarriers, type Carrier } from "@/hooks/api/inventory/shipping";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";

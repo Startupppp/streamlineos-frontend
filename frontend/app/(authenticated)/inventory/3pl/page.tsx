@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
-import { ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptySearchIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";

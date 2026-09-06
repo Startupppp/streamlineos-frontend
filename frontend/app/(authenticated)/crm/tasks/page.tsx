@@ -19,7 +19,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyTasksIllustration } from "@/components/illustrations";
-import { ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { type RecordValue } from "@/features/renderer";
 import { useDensity } from "@/features/renderer/density-toggle";

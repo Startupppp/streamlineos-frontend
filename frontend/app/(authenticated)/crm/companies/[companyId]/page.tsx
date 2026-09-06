@@ -47,7 +47,7 @@ import { Customer360Section } from "@/features/crm/shared/customer-360-section";
 import { Customer360Timeline } from "@/features/crm/shared/customer-360-timeline";
 import { formatCurrency } from "@/lib/format-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
 
 /** How this panel frames a lead: who they are, where they are, and how they arrived. */
 const RELATED_LEAD_COLUMNS = ["name", "email", "status", "priority", "source"] as const;

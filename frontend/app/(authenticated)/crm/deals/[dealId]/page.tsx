@@ -48,7 +48,7 @@ import { DealLinkedRecordsCard } from "@/features/crm/deals/detail/deal-linked-r
 import { DealStageHistory } from "@/features/crm/deals/detail/deal-stage-history";
 import { DealQuotesSection } from "@/features/crm/deals/deal-quotes-section";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
 import { DealInlineAiMenu } from "@/features/crm/shared/crm-inline-ai-menu";
 
 export default function DealDetailPage({

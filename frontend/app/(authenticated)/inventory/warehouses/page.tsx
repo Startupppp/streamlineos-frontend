@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import {

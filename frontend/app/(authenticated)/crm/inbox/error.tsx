@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
 import { isChunkLoadError, reportError } from "@/lib/observability";
 
 interface InboxErrorProps {

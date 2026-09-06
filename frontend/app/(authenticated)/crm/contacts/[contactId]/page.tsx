@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
 import { RecordDetail, asRecordValue } from "@/features/renderer";
 import { useTenantLayout } from "@/features/renderer/use-tenant-layout";
 import { CONTACT_LAYOUT } from "@/lib/renderer/crm/contact-layout";

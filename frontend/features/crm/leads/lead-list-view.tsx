@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { EmptyLeadsIllustration } from "@/components/illustrations";
@@ -7,31 +8,35 @@ import { ErrorState } from "@/components/shared/error-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { RecordList } from "@/features/renderer/record-list";
 import { useLeadLayout } from "./use-lead-layout";
 import { useSalesTeamCapacity } from "@/hooks/api/leads";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import type { DensityMode } from "@/lib/design-tokens";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
 import type { Lead, LeadPriority, PipelineStatus } from "@/types/leads";
-import { BulkActionsBar, ConversionModal, LostModal } from "./lead-actions";
 import { toLeadRecords } from "./lead-record";
 import { LeadRowControls } from "./lead-row-controls";
 import { useLeadMutations, type ConversionDetails } from "./use-lead-mutations";
 
-/**
- * The lead list, rendered from the description.
- *
- * No columns are written here. Which fields appear, how they align, which
- * badges they wear and what the mobile card says all come from `LEAD_LAYOUT`,
- * and the tenant's own arrangement of it — which is what replaced the
- * per-browser column-visibility dropdown the old table carried. A column set
- * saved in one person's localStorage was never a product feature; it was a
- * setting that hid the same field from everyone who opened a different browser.
- *
- * What is left is what a description cannot say: who may change a row, and what
- * a status change costs.
- */
+const RecordList = dynamic(
+  () => import("@/features/renderer/record-list").then((m) => ({ default: m.RecordList })),
+  { ssr: false, loading: () => <DataTableSkeleton rows={12} columns={8} className="flex-1" /> },
+);
+
+const BulkActionsBar = dynamic(
+  () => import("./lead-actions").then((m) => ({ default: m.BulkActionsBar })),
+  { ssr: false },
+);
+
+const ConversionModal = dynamic(
+  () => import("./lead-actions").then((m) => ({ default: m.ConversionModal })),
+  { ssr: false },
+);
+
+const LostModal = dynamic(
+  () => import("./lead-actions").then((m) => ({ default: m.LostModal })),
+  { ssr: false },
+);
 
 interface LeadListViewProps {
   leads: Lead[];
@@ -99,10 +104,6 @@ export function LeadListView({
   const selectedArray = useMemo(() => [...selectedIds], [selectedIds]);
   const canSelect = canUpdate || canAssign || canDelete;
 
-  /**
-   * The table addresses rows by the string key `getRowKey` produced; the bulk
-   * bar and every lead endpoint address them by their numeric id.
-   */
   const selection = useMemo(
     () => ({
       selected: new Set<string | number>([...selectedIds].map(String)),
@@ -115,8 +116,6 @@ export function LeadListView({
 
   const handleStatusChange = useCallback(
     (lead: Lead, status: PipelineStatus) => {
-      // Both endings need a reason before they are recorded, so they ask before
-      // they fire rather than after.
       if (status === "CONVERTED") {
         setConverting({ leadId: lead.id, leadName: lead.name });
         return;
@@ -258,33 +257,39 @@ export function LeadListView({
         }}
       />
 
-      <BulkActionsBar
-        selectedIds={selectedIds}
-        selectedArray={selectedArray}
-        leads={leads}
-        teamMembers={teamMembers}
-        canUpdate={canUpdate}
-        canAssign={canAssign}
-        canDelete={canDelete}
-        onBulkUpdate={mutations.bulkUpdate}
-        onBulkDelete={handleBulkDelete}
-        onClearSelection={handleClearSelection}
-      />
+      {selectedIds.size > 0 && (
+        <BulkActionsBar
+          selectedIds={selectedIds}
+          selectedArray={selectedArray}
+          leads={leads}
+          teamMembers={teamMembers}
+          canUpdate={canUpdate}
+          canAssign={canAssign}
+          canDelete={canDelete}
+          onBulkUpdate={mutations.bulkUpdate}
+          onBulkDelete={handleBulkDelete}
+          onClearSelection={handleClearSelection}
+        />
+      )}
 
-      <ConversionModal
-        open={!!converting}
-        leadName={converting?.leadName}
-        onClose={handleConversionClose}
-        onSubmit={handleConversionSubmit}
-        canCreateDeal={canCreateDeal}
-      />
+      {!!converting && (
+        <ConversionModal
+          open={true}
+          leadName={converting.leadName}
+          onClose={handleConversionClose}
+          onSubmit={handleConversionSubmit}
+          canCreateDeal={canCreateDeal}
+        />
+      )}
 
-      <LostModal
-        open={!!losing}
-        leadName={losing?.leadName}
-        onClose={handleLostClose}
-        onSubmit={handleLostSubmit}
-      />
+      {!!losing && (
+        <LostModal
+          open={true}
+          leadName={losing.leadName}
+          onClose={handleLostClose}
+          onSubmit={handleLostSubmit}
+        />
+      )}
     </>
   );
 }

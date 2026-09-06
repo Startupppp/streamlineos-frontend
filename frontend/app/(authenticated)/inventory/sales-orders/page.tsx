@@ -23,7 +23,7 @@ import {
   EmptySearchIllustration,
 } from "@/components/illustrations";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
