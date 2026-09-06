@@ -29,7 +29,7 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon"
 import { useIsMobile } from "@/hooks/common/use-mobile"
 import { useCan } from "@/hooks/api/access"
 import { useEnabledModules } from "@/hooks/api/access/org-modules"
-import { useCommandPaletteActions } from "@/components/command-palette/hooks/use-command-palette"
+import { useCommandPalette } from "@/components/command-palette/hooks/use-command-palette"
 import { cn } from "@/lib/utils"
 import { matchesOrgModule } from "@/lib/module-vocabulary"
 import type { PermissionKey } from "@/lib/rbac/permissions"
@@ -294,7 +294,7 @@ export function QuickCreateButton() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const { openCreateTicket } = useCommandPaletteActions()
+  const { openCreateTicket } = useCommandPalette()
   const { iconRef, hoverHandlers } = useAnimatedIcon()
   const enableHoverOpen = !isMobile
 

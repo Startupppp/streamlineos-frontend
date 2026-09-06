@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import {
@@ -95,7 +95,7 @@ interface DashboardDeferredBodyProps {
   access: DashboardAccess;
 }
 
-export const DashboardDeferredBody = memo(function DashboardDeferredBody({ access }: DashboardDeferredBodyProps) {
+export function DashboardDeferredBody({ access }: DashboardDeferredBodyProps) {
   const { fadeUp } = useMotionVariants();
   const router = useRouter();
   const {
@@ -417,4 +417,4 @@ export const DashboardDeferredBody = memo(function DashboardDeferredBody({ acces
       </>
     </DeferredDashboardContent>
   );
-});
+}

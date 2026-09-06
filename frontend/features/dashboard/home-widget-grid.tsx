@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { useMotionVariants } from "@/lib/motion-variants";
@@ -84,7 +84,7 @@ export interface HomeWidgetGridProps {
   canSelfAttendance: boolean;
 }
 
-export const HomeWidgetGrid = memo(function HomeWidgetGrid({
+export function HomeWidgetGrid({
   projectsEnabled,
   hrEnabled,
   canViewExecutive,
@@ -151,4 +151,4 @@ export const HomeWidgetGrid = memo(function HomeWidgetGrid({
       ) : null}
     </motion.div>
   );
-});
+}

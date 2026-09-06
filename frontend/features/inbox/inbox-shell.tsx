@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useDeferredValue, useMemo, useRef, useState } from "react";
+import { useCallback, useDeferredValue, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -132,8 +132,6 @@ export function InboxShell() {
     () => data?.pages.flatMap((p) => p.items) ?? [],
     [data],
   );
-  const itemsRef = useRef(items);
-  itemsRef.current = items;
   const deferredItems = useDeferredValue(items);
   const deniedPermission = deniedPermissionFor(
     view,
@@ -147,7 +145,7 @@ export function InboxShell() {
         router.push(n.link);
         return;
       }
-      const fullNotif = itemsRef.current
+      const fullNotif = items
         .filter((i) => i.kind === "notification" || i.kind === "broadcast")
         .find((i) => i.id === n.id);
       if (
@@ -178,7 +176,7 @@ export function InboxShell() {
         setDrawerOpen(true);
       }
     },
-    [markReadOnOpen, router],
+    [items, markReadOnOpen, router],
   );
 
   const handleMailClick = useCallback(

@@ -8,7 +8,7 @@ import {
 } from "@animateicons/react/lucide";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { useAskOs } from "@/components/assistant/ask-os-context";
-import { useCommandPaletteActions } from "@/components/command-palette";
+import { useCommandPalette } from "@/components/command-palette";
 import { UserAvatarMenu } from "../header/user-avatar-menu";
 
 interface FabPanelBodyProps {
@@ -50,7 +50,7 @@ function FabMenuRow({
 export function FabPanelBody({ onClose, onOpenMobileMenu }: FabPanelBodyProps) {
   const [profileOpen, setProfileOpen] = useState(false);
   const { open: askOsOpen, toggle: toggleAskOs } = useAskOs();
-  const { setPaletteOpen } = useCommandPaletteActions();
+  const { setPaletteOpen } = useCommandPalette();
 
   const handleAskOs = useCallback(() => {
     onClose();

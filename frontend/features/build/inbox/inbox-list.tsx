@@ -104,12 +104,12 @@ export function InboxList({
   const { mutate: markRead } = useMarkNotificationRead();
   const { mutate: markAllRead, isPending: isMarkingAll } = useMarkAllNotificationsRead();
 
-  const handleSelect = React.useCallback((notification: Notification) => {
+  function handleSelect(notification: Notification) {
     if (!notification.isRead) {
       markRead(notification.id);
     }
     onSelect(notification);
-  }, [markRead, onSelect]);
+  }
 
   function handleTabChange(value: string) {
     if (isInboxTab(value)) {
