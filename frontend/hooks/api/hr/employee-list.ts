@@ -120,13 +120,12 @@ export function useInfiniteHrEmployees(
   const canView = useCan("hr:employees:view");
   const hrEnabled = useModuleEnabled("hr");
   const limit = params?.limit ?? 20;
-  const initialPageParam: string | undefined = undefined;
   return useInfiniteQuery({
     queryKey: [
       ...humanResourcesQueryKeys.hr.employees(params),
       "pages",
     ] as const,
-    queryFn: async ({ pageParam, signal }): Promise<EmployeeCursorPage> => {
+    queryFn: async ({ pageParam, signal }: { pageParam: string | undefined; signal: AbortSignal }): Promise<EmployeeCursorPage> => {
       const res = await apiClient.get<Employee[] | EmployeeCursorPage>(
         "/hr/employees",
         { ...params, cursor: pageParam },
@@ -134,7 +133,7 @@ export function useInfiniteHrEmployees(
       );
       return normalizeEmployeeCursorResponse(res, limit);
     },
-    initialPageParam,
+    initialPageParam: undefined,
     getNextPageParam: (lastPage) => lastPage.pageInfo.nextCursor ?? undefined,
     staleTime: 2 * 60_000,
     enabled: hrEnabled && canView && (options?.enabled ?? true),

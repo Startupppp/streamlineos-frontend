@@ -77,10 +77,9 @@ export function useEmployeeTimeline(
   const canView = useCan("hr:employees:view");
   const hrEnabled = useModuleEnabled("hr");
   const limit = params?.limit ?? 20;
-  const initialPageParam: string | null = null;
   return useInfiniteQuery({
     queryKey: humanResourcesQueryKeys.hr.employeeTimeline(employmentId ?? 0, { limit }),
-    queryFn: ({ pageParam, signal }) =>
+    queryFn: ({ pageParam, signal }: { pageParam: string | null; signal: AbortSignal }) =>
       apiClient.get<HrTimelineResponse>(
         `/hr/employees/${employmentId}/timeline`,
         {
@@ -88,8 +87,8 @@ export function useEmployeeTimeline(
           ...(pageParam !== null ? { cursor: pageParam } : {}),
         }, signal,
       ),
-    initialPageParam,
-    getNextPageParam: (lastPage) => lastPage.pageInfo.nextCursor ?? undefined,
+    initialPageParam: null,
+    getNextPageParam: (lastPage) => lastPage.pageInfo.nextCursor,
     enabled: hrEnabled && !!employmentId && canView,
     staleTime: 2 * 60_000,
   });
