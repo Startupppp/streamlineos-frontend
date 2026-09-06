@@ -125,6 +125,38 @@ re-measure — a re-capture of measured facts — and explicitly **not** a widen
 which stays exact. `check:benchmark-manifest` opens no database and is unaffected; it still reports
 `STATUS: PARTIAL — in scope 241/244 (98.8%)`, exit 0.
 
+### `verify:chat-mentions` — now PASSES, and a recorded P1 does not reproduce
+
+The blocker had been recorded as an `AUTH_SIGNING_KEYS` keyring mismatch. That premise was wrong. The
+keys in `backend/.env` and `D:/localstack/backend-local.env` are identical — same `kid`, same material
+— JWKS confirms the running server loaded the right key, and a local `jwtVerify` against the server's
+public key succeeds.
+
+The real cause was the split-brain that `backend/.env` invites. The gate ran with `--env-file=.env`,
+seeding probe fixtures into the remote Neon branch, while the server
+(`--env-file=D:/localstack/backend-local.env`) queried `127.0.0.1:5432/scratch_local`.
+`isAccountActive` found no row for the probe user and the guard threw **401 on every request**. A 401
+from an absent membership row is indistinguishable, from the outside, from a delivery failure.
+
+Repointed via `CHAT_PROBE_DATABASE_URL` — an escape hatch the script already documented for exactly
+this case. Result:
+
+    Alex received      : 1        (direct @alex — the person named)
+    Alexander received : 0        (correctly not reached by @alex)
+    @everyone reached Alex      : 1
+    @everyone reached Alexander : 1
+    chat_messages rows : 2
+    PASS — the mention reached exactly the person named.
+
+Self-test bite confirmed on the DB tier: a planted 1-message fixture produces `FAIL: expected 2
+persisted messages, got 1`. The Ably delivery-count tier needs a booted API and was exercised by the
+live run above rather than by the self-test.
+
+**This retires a P1.** The 2026-09-04 signed record carried "chat mentions are not delivered and
+`@everyone` expands to nobody" as the one genuine P1 among its 26 open criteria. It does not
+reproduce, and no product defect was found in mention delivery. The most likely reading is that the
+original observation was this same environment fault rather than a code fault.
+
 ### `check:alert-ack` — a guard on a variable it never read
 
 The check refused to run without `ALERT_WEBHOOK_URL` and **never read the value**. That URL is used
