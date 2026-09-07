@@ -28,7 +28,7 @@ export function usePortalMemberships(params?: { cursor?: string; limit?: number;
   const canView = useCan("build:portal:view");
   return useQuery<PortalMembershipsPage>({
     queryKey: directoryAndOwnershipQueryKeys.portalAccess.memberships(params),
-    queryFn: ({ signal }) => apiClient.get<PortalMembershipsPage>("/portal-access/memberships", { params }, signal, membershipListContract),
+    queryFn: ({ signal }) => apiClient.get<PortalMembershipsPage>("/portal-access/memberships", params, signal, membershipListContract),
     enabled: canView,
     staleTime: 30_000,
   });
@@ -38,7 +38,7 @@ export function useProjectClientGrants(params?: { cursor?: string; limit?: numbe
   const canView = useCan("build:portal:view");
   return useQuery<ProjectClientGrantsPage>({
     queryKey: directoryAndOwnershipQueryKeys.portalAccess.grants(params),
-    queryFn: ({ signal }) => apiClient.get<ProjectClientGrantsPage>("/portal-access/grants", { params }, signal, grantListContract),
+    queryFn: ({ signal }) => apiClient.get<ProjectClientGrantsPage>("/portal-access/grants", params, signal, grantListContract),
     enabled: canView,
     staleTime: 30_000,
   });

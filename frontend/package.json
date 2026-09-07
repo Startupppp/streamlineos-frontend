@@ -32,6 +32,8 @@
     "check:icon-labels": "node scripts/check-no-unlabeled-icon-buttons.mjs",
     "check:icon-labels:self-test": "node scripts/check-no-unlabeled-icon-buttons.mjs --self-test",
     "check:query-scope": "node scripts/check-query-scope.mjs",
+    "check:request-params": "node scripts/check-request-params.mjs",
+    "check:request-params:self-test": "node scripts/check-request-params.mjs --self-test",
     "check:query-scope:self-test": "node scripts/check-query-scope.mjs --self-test",
     "check:query-signal": "node scripts/check-query-signal.mjs",
     "check:query-signal:self-test": "node scripts/check-query-signal.mjs --self-test",
