@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseMutationOptions, UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -70,7 +66,7 @@ export function useMarkAssetReturned(
   options?: UseMutationOptions<AssetReturn, Error, MarkAssetReturnedInput>,
 ) {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation<AssetReturn, Error, MarkAssetReturnedInput>("hr:assets:manage", {
     mutationKey: ["hr", "asset-returns", "mark-returned"],
     mutationFn: ({ id, condition }: MarkAssetReturnedInput) =>
       apiClient.patch<AssetReturn>(`/hr/asset-returns/${id}`, {

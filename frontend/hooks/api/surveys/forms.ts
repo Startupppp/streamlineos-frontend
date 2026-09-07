@@ -158,7 +158,7 @@ function useSurveyLifecycleAction(action: "pause" | "close" | "archive") {
 
 export function usePublishSurvey() {
   const qc = useQueryClient();
-  return useMutation({
+  return useAuthorizedMutation("surveys:publish", {
     mutationKey: ["surveys", "publish"] as const,
     mutationFn: (surveyId: number) => apiClient.post(`/surveys/${surveyId}/publish`, undefined, undefined, surveyVersionRowC),
     onSuccess: (_, surveyId) => {
