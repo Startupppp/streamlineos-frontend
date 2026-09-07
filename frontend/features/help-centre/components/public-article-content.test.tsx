@@ -24,17 +24,12 @@ const mockArticle: PublicKbArticle = {
   slug: "getting-started",
   excerpt: "Everything you need to get up and running.",
   content: ARTICLE_BODY,
-  categoryId: 2,
   categoryName: "Guides",
-  categorySlug: "guides",
   views: 120,
-  helpfulCount: 10,
-  notHelpfulCount: 2,
   tags: ["onboarding", "setup"],
   seoTitle: "Getting Started | StreamlineOS Help",
   seoDescription: "Learn how to get started.",
   publishedAt: "2024-03-01T00:00:00.000Z",
-  updatedAt: "2024-03-15T00:00:00.000Z",
 };
 
 describe("PublicArticleContent", () => {

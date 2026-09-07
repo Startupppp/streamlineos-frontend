@@ -69,7 +69,7 @@ const CATEGORIES: AdminBlogCategory[] = [
     description: "Tech articles",
     color: "#3b82f6",
     postCount: 5,
-    createdAt: "2026-01-01T00:00:00.000Z",
+    createdAt: new Date("2026-01-01T00:00:00.000Z"),
   },
   {
     id: "cat-2",
@@ -78,7 +78,7 @@ const CATEGORIES: AdminBlogCategory[] = [
     description: null,
     color: null,
     postCount: 2,
-    createdAt: "2026-01-02T00:00:00.000Z",
+    createdAt: new Date("2026-01-02T00:00:00.000Z"),
   },
 ];
 

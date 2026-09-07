@@ -40,7 +40,7 @@ const mockGet = jest.mocked(apiClient.get);
 
 const PAGE_CAP = 100;
 
-const EPOCH = new Date("2026-01-01T00:00:00.000Z");
+const EPOCH = "2026-01-01T00:00:00.000Z";
 
 function account(id: number): Account {
   return {
@@ -51,6 +51,8 @@ function account(id: number): Account {
     accountType: "EXPENSE",
     parentAccountId: null,
     isActive: true,
+    normalBalance: "DEBIT",
+    isSystem: false,
     description: null,
     createdAt: EPOCH,
     updatedAt: EPOCH,

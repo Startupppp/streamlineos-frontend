@@ -48,7 +48,7 @@ jest.mock("date-fns", () => ({
 import { TicketList } from "@/features/support/inbox/ticket-list";
 import type { SupportTicket } from "@/types/support";
 
-const NOW = new Date("2026-09-01T09:00:00Z");
+const NOW = "2026-09-01T09:00:00.000Z";
 
 function makeTicket(overrides: Partial<SupportTicket> = {}): SupportTicket {
   return {
@@ -58,23 +58,29 @@ function makeTicket(overrides: Partial<SupportTicket> = {}): SupportTicket {
     category: "Technical",
     description: null,
     clientId: null,
+    requesterEmail: null,
+    requesterName: null,
     priority: "HIGH",
     status: "OPEN",
-    assigneeId: null,
+    assigneeMembershipId: null,
     queueId: null,
     mergedIntoTicketId: null,
     snoozedUntil: null,
     snoozedBy: null,
-    createdBy: "user-1",
+    createdByMembershipId: 11,
     slaDeadline: null,
     firstResponseDueAt: null,
     firstRespondedAt: null,
     slaPausedAt: null,
+    slaPausedMinutes: 0,
+    slaEscalationLevel: 0,
     resolvedAt: null,
     closedAt: null,
+    sourceChannel: "web",
+    sourceMessageId: null,
     client: null,
-    assignee: null,
-    creator: { id: "user-1", name: "Alice" },
+    assigneeMembership: null,
+    creatorMembership: { id: 11, user: { id: "user-1", name: "Alice" } },
     createdAt: NOW,
     updatedAt: NOW,
     ...overrides,

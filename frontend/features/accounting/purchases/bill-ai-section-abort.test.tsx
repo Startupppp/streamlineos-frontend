@@ -79,8 +79,8 @@ const BILL: PurchaseBill = {
   notes: null,
   expenseAccountCode: "5000",
   createdBy: "user-1",
-  createdAt: new Date("2026-01-31T00:00:00.000Z"),
-  updatedAt: new Date("2026-01-31T00:00:00.000Z"),
+  createdAt: "2026-01-31T00:00:00.000Z",
+  updatedAt: "2026-01-31T00:00:00.000Z",
   items: [],
 };
 
