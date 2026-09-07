@@ -2,26 +2,28 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { EmptyLeadsIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useLeadLayout } from "./use-lead-layout";
 import { useSalesTeamCapacity } from "@/hooks/api/leads";
-import { useOrgDisplay } from "@/hooks/api/org-display";
 import type { DensityMode } from "@/lib/design-tokens";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
 import type { Lead, LeadPriority, PipelineStatus } from "@/types/leads";
-import { toLeadRecords } from "./lead-record";
-import { LeadRowControls } from "./lead-row-controls";
 import { useLeadMutations, type ConversionDetails } from "./use-lead-mutations";
 
-const RecordList = dynamic(
-  () => import("@/components/renderer/record-list").then((m) => ({ default: m.RecordList })),
-  { ssr: false, loading: () => <DataTableSkeleton rows={12} columns={8} className="flex-1" /> },
+const LEAD_TABLE_SKELETON_COLUMNS = 8;
+
+const LeadRecordTable = dynamic(
+  () => import("./lead-record-table").then((m) => ({ default: m.LeadRecordTable })),
+  {
+    ssr: false,
+    loading: () => (
+      <DataTableSkeleton rows={12} columns={LEAD_TABLE_SKELETON_COLUMNS} className="flex-1" />
+    ),
+  },
 );
 
 const BulkActionsBar = dynamic(
@@ -90,9 +92,6 @@ export function LeadListView({
   onClearFilters,
   onCreateLead,
 }: LeadListViewProps) {
-  const router = useRouter();
-  const layout = useLeadLayout();
-  const money = useOrgDisplay();
   const mutations = useLeadMutations();
 
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -105,18 +104,8 @@ export function LeadListView({
     [teamCapacity],
   );
 
-  const rows = useMemo(() => toLeadRecords(leads), [leads]);
-  const leadById = useMemo(() => new Map(leads.map((lead) => [String(lead.id), lead])), [leads]);
   const selectedArray = useMemo(() => [...selectedIds], [selectedIds]);
   const canSelect = canUpdate || canAssign || canDelete;
-
-  const selection = useMemo(
-    () => ({
-      selected: new Set<string | number>([...selectedIds].map(String)),
-      onChange: (next: Set<string | number>) => setSelectedIds(new Set([...next].map(Number))),
-    }),
-    [selectedIds],
-  );
 
   const handleClearSelection = useCallback(() => setSelectedIds(new Set()), []);
 
@@ -175,42 +164,12 @@ export function LeadListView({
     [losing, mutations],
   );
 
-  const renderActions = useCallback(
-    (row: Record<string, unknown>) => {
-      const lead = leadById.get(String(row.id));
-      if (!lead) return null;
-      return (
-        <LeadRowControls
-          lead={lead}
-          onStatusChange={handleStatusChange}
-          onPriorityChange={handlePriorityChange}
-          onAssign={handleAssign}
-          teamMembers={teamMembers}
-          canUpdate={canUpdate}
-          canAssign={canAssign}
-        />
-      );
-    },
-    [
-      leadById,
-      handleStatusChange,
-      handlePriorityChange,
-      handleAssign,
-      teamMembers,
-      canUpdate,
-      canAssign,
-    ],
-  );
-
-  const handleRowClick = useCallback(
-    (row: Record<string, unknown>) => router.push(`/crm/leads/${String(row.id)}`),
-    [router],
-  );
-
   const isFiltered = activeFilterLabels.length > 0;
 
   if (isLoading)
-    return <DataTableSkeleton rows={12} columns={layout.list.columns.length} className="flex-1" />;
+    return (
+      <DataTableSkeleton rows={12} columns={LEAD_TABLE_SKELETON_COLUMNS} className="flex-1" />
+    );
 
   if (isError)
     return (
@@ -241,18 +200,19 @@ export function LeadListView({
 
   return (
     <>
-      <RecordList
-        layout={layout}
-        rows={rows}
-        getRowKey={(row) => String(row.id)}
-        actions={canUpdate || canAssign ? renderActions : undefined}
-        selection={canSelect ? selection : undefined}
-        onRowClick={handleRowClick}
+      <LeadRecordTable
+        leads={leads}
         density={density}
-        money={money}
-        minWidth="1280px"
-        className={CONTENT_FILL_PANEL}
-        pagination={{ pageSize }}
+        pageSize={pageSize}
+        selectedIds={selectedIds}
+        onSelectionChange={setSelectedIds}
+        canSelect={canSelect}
+        canUpdate={canUpdate}
+        canAssign={canAssign}
+        teamMembers={teamMembers}
+        onStatusChange={handleStatusChange}
+        onPriorityChange={handlePriorityChange}
+        onAssign={handleAssign}
       />
 
       {(cursorPage > 1 || hasMore) ? (

@@ -308,21 +308,31 @@
       "measuredPostLoadTotalBytes": 242845
     },
     "/crm/leads": {
-      "lazyLoadedModules": [],
-      "note": "CRM leads — one of the heaviest first-load routes in the build (3.00 MB uncompressed). Added by ticket 26 to widen coverage from 6 routes to 12; it inherits every default ceiling rather than being handed one shaped around its current size.",
+      "lazyLoadedModules": [
+        "leads-kanban",
+        "leads-funnel-view",
+        "lead-detail-sheet",
+        "create-lead-sheet",
+        "lead-export-dialog",
+        "lead-record-table",
+        "record-list",
+        "lead-actions"
+      ],
+      "note": "CRM leads. The route's own first load is the header, stats, filters and the empty/error states; the board, the funnel, both sheets, the export dialog and the rendered table (with the tenant layout, the record projection and the row menu behind it) are all next/dynamic. It inherits every default ceiling rather than being handed one shaped around its current size.",
       "measuredFirstLoadJsBytes": 353463,
       "measuredPageChunkBytes": 85487,
-      "breachOwnerNote": "Over-the-wire JS breach is shared-shell weight, not this route's own composition, and the measuredScriptBytes figure on this route is from the 2026-09-02 capture on build 5KxS0uW9Wrm0BIVYZicTs — it predates the @animateicons fix (see notes.animateIconsFixed2026_09_03) and therefore overstates. On post-fix build 5WVxD_Jbi032lOZ_Z0NdN the shell's largest identifiable library is framer-motion (95,216 B raw / 30,554 B gzip, first load of 601 of 601 routes); @animateicons/react/lucide is now 147,629 B raw / 14,273 B gzip carrying exactly the 90 icons the app imports, down from 481,691 / 55,886 carrying all 248. The still-open share of this breach has no single owner-chunk: /dashboard's largest first-load scripts are a long tail of shared authenticated shell, not one missing lazy boundary.",
-      "byteCaptureNote": "No cold-cache byte pass in the 2026-09-02 capture: the navigation landed on /signin because the app signs itself out on a refused /me/access, and the driver discards byte totals for a page it did not ask for rather than recording another page's bytes as this route's.",
-      "measuredScriptBytes": 541869,
-      "measuredTotalBytes": 688393,
-      "measuredCssBytes": 59021,
-      "measuredImageBytes": 3214,
-      "measuredFontBytes": 55868,
-      "measuredThirdPartyBytes": 0,
-      "measuredServerPayloadBytes": 25785,
-      "measuredPostLoadScriptBytes": 183930,
-      "measuredPostLoadTotalBytes": 222770
+      "breachOwnerNote": "Breach CLOSED 2026-09-07 on build zDxhwA5Fv-cebeVFECmUD: measuredScriptBytes 541,869 -> 480,636 (43,652 under the 524,288 ceiling). The earlier note claimed the 541,869 figure was a stale 2026-09-02 capture that overstated; that is wrong and is retracted — the 2026-09-06 capture on build 0IC5b2bqJGAhjVaGKGF9O reproduced 541,869 exactly, so the breach was current. Three changes closed it, largest first: (1) Zod's whole runtime (239,553 B raw / 53,875 B gzip) had re-entered the FIRST LOAD OF EVERY AUTHENTICATED ROUTE through a value import of three contracts in hooks/api/notifications-inbox.ts, which the sidebar imports — the three are now lazyContract, the contracts still parse every response; (2) features/crm/leads/use-lead-mutations.ts imported the hooks/api/crm barrel for useCreateDeal, dragging 15 unrelated CRM hook modules and, through them, the aggregate lib/query-keys (185,016 B raw over 32 modules) — now a deep import, with hooks/api/crm/deals.ts and hooks/api/crm/metadata.ts taking their key slices directly; (3) the rendered table moved behind its own next/dynamic boundary (features/crm/leads/lead-record-table.tsx), deferring the tenant layout, the record projection and the row menu (80,307 B raw over 14 modules). Deterministic first-load chunk total fell 326,344 -> 312,714 B gzip(9); route-only additive 56,993 -> 40,882.",
+      "byteCaptureNote": "Captured 2026-09-07 against a local production server (next start, NEXT_PUBLIC_API_URL pointed at the local API) with a minted session for a seeded CRM tenant carrying 960 leads; the driver's landed-path guard passed, so these are this route's own cold-cache bytes and not another page's. The 2026-09-02 run recorded no byte pass at all: it landed on /signin after a refused /me/access and the driver discards byte totals for a page it did not ask for.",
+      "measuredScriptBytes": 480636,
+      "measuredTotalBytes": 623416,
+      "measuredCssBytes": 57021,
+      "measuredImageBytes": 3602,
+      "measuredFontBytes": 53868,
+      "measuredThirdPartyBytes": 1388,
+      "measuredServerPayloadBytes": 25653,
+      "measuredPostLoadScriptBytes": 112486,
+      "measuredPostLoadTotalBytes": 131606,
+      "firstLoadJsNote": "measuredFirstLoadJsBytes/measuredPageChunkBytes above are still the 2026-09-02 figures. measure-route-bundles.mjs --write is all-or-nothing across the 13 routes, and three of them (/build/inbox, /notifications, /settings) still carry Zod through their own value-import path, so refreshing this row would have rewritten theirs too. On build zDxhwA5Fv-cebeVFECmUD this route measures 312,714 B gzip(9) first load, 40,882 route-only."
     },
     "/parties": {
       "lazyLoadedModules": [
