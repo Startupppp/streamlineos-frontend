@@ -12,12 +12,14 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 
 const STATUS_VARIANT: Record<KbArticleStatus, "secondary" | "default" | "outline"> = {
   draft: "secondary",
+  in_review: "secondary",
   published: "default",
   archived: "outline",
 };
 
 const STATUS_LABEL: Record<KbArticleStatus, string> = {
   draft: "Draft",
+  in_review: "In review",
   published: "Published",
   archived: "Archived",
 };

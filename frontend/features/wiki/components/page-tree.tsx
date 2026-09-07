@@ -54,7 +54,7 @@ export default function PageTree({ nodes, isLoading, onCloseMobile }: PageTreePr
 
   const rootNodes = nodes
     .filter((n) => n.parentPageId === null)
-    .sort((a, b) => a.sortOrder - b.sortOrder);
+    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
   if (rootNodes.length === 0) {
     return (

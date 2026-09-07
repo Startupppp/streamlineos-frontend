@@ -10,11 +10,15 @@ import { useGatedQuery } from "@/hooks/api/gated-query";
 
 export type ParticipantStatus =
   | "invited"
+  | "delivered"
   | "opened"
   | "started"
+  | "partial"
   | "completed"
+  | "disqualified"
   | "bounced"
-  | "unsubscribed";
+  | "unsubscribed"
+  | "expired";
 
 const surveyParticipantListC = lazyContract(() =>
   import("./survey-participants-schema").then((m) => m.surveyParticipantListContract),

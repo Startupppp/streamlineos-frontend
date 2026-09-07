@@ -50,7 +50,7 @@ export default function MovePageDialog({
     const depthA = getPageDepth(nodes, a.id);
     const depthB = getPageDepth(nodes, b.id);
     if (depthA !== depthB) return depthA - depthB;
-    return a.sortOrder - b.sortOrder;
+    return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
   });
 
   function handleConfirm() {

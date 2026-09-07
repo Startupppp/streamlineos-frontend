@@ -81,7 +81,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
 
   const children = allNodes
     .filter((n) => n.parentPageId === node.id)
-    .sort((a, b) => a.sortOrder - b.sortOrder);
+    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
   const hasActiveDescendant = children.some(
     (c) =>

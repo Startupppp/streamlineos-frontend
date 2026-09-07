@@ -56,15 +56,8 @@ export const kbSpaceMemberContract = z.object({
 export const kbSpaceMemberListContract = z.array(kbSpaceMemberContract);
 
 export const kbSettingsContract = z.object({
-  id: z.number().int(),
-  orgId: z.string(),
-  defaultVisibility: z.string(),
-  aiEnabled: z.boolean(),
-  publicPortalEnabled: z.boolean(),
-  customDomain: z.string().nullable(),
-  branding: z.record(z.string(), z.unknown()).nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  trashRetentionDays: z.number().int(),
+  chatHistoryRetentionDays: z.number().int(),
 });
 
 export const kbTagContract = z.object({

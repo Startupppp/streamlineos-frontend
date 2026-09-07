@@ -1,4 +1,6 @@
 "use client";
+import type { z } from "zod";
+import type { kbSettingsContract as kbSettingsContractDef } from "@/hooks/api/kb/kb-spaces-settings-schema";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
@@ -7,17 +9,7 @@ import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-sur
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-export type KbSettings = {
-  id: number;
-  orgId: string;
-  defaultVisibility: string;
-  aiEnabled: boolean;
-  publicPortalEnabled: boolean;
-  customDomain: string | null;
-  branding: Record<string, unknown> | null;
-  createdAt: string;
-  updatedAt: string;
-};
+export type KbSettings = z.infer<typeof kbSettingsContractDef>;
 
 const kbSettingsContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-spaces-settings-schema").then((m) => m.kbSettingsContract),
